@@ -50,7 +50,18 @@ export async function loginAction(formData: FormData) {
     throw new Error('Authentication failed');
   }
 
-  logger.info('User authenticated successfully', { userId: authData.user.id });
+  logger.info('User authenticated successfully', { 
+    userId: authData.user.id,
+    email: authData.user.email,
+    hasSession: !!authData.session,
+    sessionExpiresAt: authData.session?.expires_at,
+  });
+  
+  // Verify session cookies will be set
+  if (!authData.session) {
+    logger.error('No session returned from authentication', { userId: authData.user.id });
+    throw new Error('Authentication failed - no session created');
+  }
   
   // Check if user has completed onboarding based on key fields
   const { data: profile, error: profileError } = await supabase

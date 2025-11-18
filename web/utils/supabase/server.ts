@@ -48,11 +48,20 @@ export async function getSupabaseServerClient(): Promise<SupabaseClient<Database
     throw new Error('Missing required Supabase environment variables');
   }
 
+  const isProduction = process.env.NODE_ENV === 'production'
+  
   const cookieAdapter = {
     get: (name: string) => cookieStore?.get(name)?.value,
     set: (name: string, value: string, options: Record<string, unknown>) => {
       try {
-        cookieStore?.set(name, value, options)
+        // Ensure proper cookie settings for production
+        cookieStore?.set(name, value, {
+          ...options,
+          secure: isProduction, // HTTPS only in production
+          sameSite: 'lax' as const, // CSRF protection
+          path: '/', // Available site-wide
+          httpOnly: options.httpOnly !== false, // Default to httpOnly for security
+        })
       } catch {
         // Ignore errors when cookies are unavailable (e.g., build time)
       }
