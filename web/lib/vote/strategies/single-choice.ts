@@ -123,11 +123,11 @@ export class SingleChoiceStrategy implements VotingStrategy {
         auditReceipt,
         responseTime: 0, // Will be set by the engine
         metadata: {
-          votingMethod: 'single'
+          votingMethod: 'single',
+          choice: voteData.choice,
+          optionText: poll.options[voteData.choice ?? 0],
         },
         ...(privacyLevel !== undefined ? { privacyLevel } : {}),
-        choice: voteData.choice,
-        optionText: poll.options[voteData.choice ?? 0],
       };
 
     } catch (error) {
