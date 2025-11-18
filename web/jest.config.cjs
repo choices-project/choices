@@ -3,17 +3,16 @@ module.exports = {
   // Global timeout settings
   testTimeout: 30000, // 30 seconds per test
   slowTestThreshold: 10, // Mark tests as slow if they take more than 10 seconds
-  
-  // Use separate Babel config for Jest (allows Next.js to use SWC)
-  transform: {
-    '^.+\\.(js|jsx|ts|tsx)$': ['babel-jest', { configFile: './jest/babel.config.cjs' }]
-  },
 
   projects: [
     {
       displayName: 'client',
       testEnvironment: 'jsdom',
       testTimeout: 20000, // 20 seconds for client tests
+      // Use separate Babel config for Jest (allows Next.js to use SWC)
+      transform: {
+        '^.+\\.(js|jsx|ts|tsx)$': ['babel-jest', { configFile: '<rootDir>/jest/babel.config.cjs' }]
+      },
       setupFiles: ['<rootDir>/jest.setup.js'],
       setupFilesAfterEnv: [
         '<rootDir>/jest.setup.after.js',
@@ -63,6 +62,10 @@ module.exports = {
       displayName: 'server',
       testEnvironment: 'jsdom',
       testTimeout: 25000, // 25 seconds for server tests
+      // Use separate Babel config for Jest (allows Next.js to use SWC)
+      transform: {
+        '^.+\\.(js|jsx|ts|tsx)$': ['babel-jest', { configFile: '<rootDir>/jest/babel.config.cjs' }]
+      },
       setupFiles: ['<rootDir>/jest.setup.js'],
       setupFilesAfterEnv: [
         '<rootDir>/jest.setup.after.js',
@@ -114,6 +117,10 @@ module.exports = {
       displayName: 'contracts',
       testEnvironment: 'node',
       testTimeout: 20000,
+      // Use separate Babel config for Jest (allows Next.js to use SWC)
+      transform: {
+        '^.+\\.(js|jsx|ts|tsx)$': ['babel-jest', { configFile: '<rootDir>/jest/babel.config.cjs' }]
+      },
       setupFiles: ['<rootDir>/jest.setup.js'],
       testMatch: [
         '<rootDir>/tests/contracts/**/*.test.{ts,tsx,js,jsx}',
