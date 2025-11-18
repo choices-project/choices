@@ -2306,6 +2306,117 @@
         "continue": "Continuar"
       },
       "progress": "Paso {current} de {total}"
+    },
+    "interests": {
+      "title": "Tus Intereses",
+      "subtitle": "Selecciona los temas sobre los que quieres ver encuestas. Puedes cambiarlos en cualquier momento.",
+      "actions": {
+        "save": "Guardar",
+        "reset": "Restablecer"
+      },
+      "summary": {
+        "count": "{selected} de {total} seleccionados",
+        "allSelected": "Todos los intereses seleccionados",
+        "customSelection": "Selección personalizada",
+        "noneSelected": "Selecciona al menos un interés para mejores recomendaciones"
+      },
+      "options": {
+        "climateChange": "Cambio Climático",
+        "healthcare": "Salud",
+        "education": "Educación",
+        "economy": "Economía",
+        "immigration": "Migración",
+        "criminalJustice": "Justicia Penal",
+        "votingRights": "Derechos de Voto",
+        "technology": "Tecnología",
+        "foreignPolicy": "Política Exterior",
+        "socialSecurity": "Seguridad Social",
+        "gunControl": "Control de Armas",
+        "abortionRights": "Derechos Reproductivos",
+        "lgbtqRights": "Derechos LGBTQ+",
+        "racialJustice": "Justicia Racial",
+        "infrastructure": "Infraestructura"
+      },
+      "benefits": {
+        "title": "Cómo te ayuda:",
+        "items": {
+          "seePolls": "Mira encuestas sobre temas que te importan",
+          "personalizedContent": "Recibe recomendaciones personalizadas",
+          "findRepresentatives": "Encuentra representantes que compartan tus intereses",
+          "trackProgress": "Sigue el progreso de los temas que te importan"
+        }
+      }
+    },
+    "complete": {
+      "success": {
+        "title": "¡Bienvenido a Choices!",
+        "subtitle": "Ya estás listo para hacer oír tu voz.",
+        "celebration": "🎉 ¡Incorporación completada! +50 puntos obtenidos"
+      },
+      "summary": {
+        "title": "Resumen de Tu Perfil",
+        "userFallback": "Usuario",
+        "ready": "Listo para participar",
+        "valuesTitle": "Lo que te importa",
+        "communityTitle": "Enfoque comunitario",
+        "participationTitle": "Tu estilo de participación",
+        "privacy": {
+          "title": "Configuración de privacidad",
+          "shareProfile": "Compartir perfil públicamente",
+          "shareDemographics": "Compartir datos demográficos",
+          "allowAnalytics": "Permitir analíticas"
+        }
+      },
+      "participation": {
+        "observer": "Observador",
+        "contributor": "Contribuidor",
+        "leader": "Líder",
+        "default": "Participante"
+      },
+      "next": {
+        "title": "¿Qué sigue?",
+        "steps": {
+          "findCandidates": "Encuentra a tus candidatos locales y descubre quién realmente te representa",
+          "askQuestions": "Haz preguntas directamente a los candidatos y sigue sus respuestas",
+          "followMoney": "Ve quién financia a quién y detecta políticos \"comprados\"",
+          "connectVoters": "Conecta con otros votantes que se preocupan por la democracia"
+        }
+      },
+      "contribute": {
+        "title": "Ayuda a Construir la Revolución Democrática",
+        "subtitle": "Este es un proyecto de código abierto que lucha por la democracia. ¡Cada contribución ayuda a equilibrar el terreno!",
+        "code": {
+          "title": "Contribuciones de Código",
+          "description": "Ayúdanos a crear funciones, corregir errores y mejorar la plataforma",
+          "details": {
+            "frontend": "Frontend: React, TypeScript, Tailwind",
+            "backend": "Backend: Node.js, Supabase, PostgreSQL",
+            "apis": "APIs: Integración de datos gubernamentales",
+            "privacy": "Privacidad: Arquitectura de conocimiento cero"
+          },
+          "action": "Ver en GitHub"
+        },
+        "community": {
+          "title": "Otras Formas de Ayudar",
+          "description": "¿No eres desarrollador? ¡Hay otras maneras de contribuir!",
+          "details": {
+            "reportBugs": "Reporta errores y sugiere funciones",
+            "documentation": "Ayuda con la documentación",
+            "share": "Comparte con amigos y familia",
+            "test": "Prueba nuevas funciones"
+          },
+          "action": "Únete a la Comunidad"
+        },
+        "note": {
+          "label": "Nota:",
+          "message": "Estamos explorando formas éticas de aceptar contribuciones financieras. Por ahora nos enfocamos en contribuciones de código y comunidad para mantener la plataforma verdaderamente independiente."
+        }
+      },
+      "actions": {
+        "back": "Volver",
+        "complete": "Completar Configuración",
+        "saving": "Guardando tu perfil..."
+      }
     }
   },
   "polls": {

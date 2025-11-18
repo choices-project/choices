@@ -1137,6 +1137,117 @@
         "continue": "Continue"
       },
       "progress": "Step {current} of {total}"
+    },
+    "interests": {
+      "title": "Your Interests",
+      "subtitle": "Select topics you'd like to see polls about. You can change these anytime.",
+      "actions": {
+        "save": "Save",
+        "reset": "Reset"
+      },
+      "summary": {
+        "count": "{selected} of {total} selected",
+        "allSelected": "All interests selected",
+        "customSelection": "Custom selection",
+        "noneSelected": "Select at least one interest for better content recommendations"
+      },
+      "options": {
+        "climateChange": "Climate Change",
+        "healthcare": "Healthcare",
+        "education": "Education",
+        "economy": "Economy",
+        "immigration": "Immigration",
+        "criminalJustice": "Criminal Justice",
+        "votingRights": "Voting Rights",
+        "technology": "Technology",
+        "foreignPolicy": "Foreign Policy",
+        "socialSecurity": "Social Security",
+        "gunControl": "Gun Control",
+        "abortionRights": "Abortion Rights",
+        "lgbtqRights": "LGBTQ+ Rights",
+        "racialJustice": "Racial Justice",
+        "infrastructure": "Infrastructure"
+      },
+      "benefits": {
+        "title": "How this helps you:",
+        "items": {
+          "seePolls": "See polls about topics you care about",
+          "personalizedContent": "Get personalized content recommendations",
+          "findRepresentatives": "Find representatives who share your interests",
+          "trackProgress": "Track progress on issues that matter to you"
+        }
+      }
+    },
+    "complete": {
+      "success": {
+        "title": "Welcome to Choices!",
+        "subtitle": "You're all set up and ready to make your voice heard.",
+        "celebration": "🎉 Onboarding Complete! +50 points earned"
+      },
+      "summary": {
+        "title": "Your Profile Summary",
+        "userFallback": "User",
+        "ready": "Ready to participate",
+        "valuesTitle": "What matters to you",
+        "communityTitle": "Community focus",
+        "participationTitle": "Your participation style",
+        "privacy": {
+          "title": "Privacy settings",
+          "shareProfile": "Share profile publicly",
+          "shareDemographics": "Share demographics",
+          "allowAnalytics": "Allow analytics"
+        }
+      },
+      "participation": {
+        "observer": "Observer",
+        "contributor": "Contributor",
+        "leader": "Leader",
+        "default": "Participant"
+      },
+      "next": {
+        "title": "What's next?",
+        "steps": {
+          "findCandidates": "Find your local candidates and see who's really representing you",
+          "askQuestions": "Ask questions directly to candidates and track their responses",
+          "followMoney": "See who's funding whom and spot \"bought off\" politicians",
+          "connectVoters": "Connect with other voters who care about democracy"
+        }
+      },
+      "contribute": {
+        "title": "Help Build the Democratic Revolution",
+        "subtitle": "This is an open source project fighting for democracy. Every contribution helps level the playing field!",
+        "code": {
+          "title": "Code Contributions",
+          "description": "Help us build features, fix bugs, and improve the platform",
+          "details": {
+            "frontend": "Frontend: React, TypeScript, Tailwind",
+            "backend": "Backend: Node.js, Supabase, PostgreSQL",
+            "apis": "APIs: Government data integration",
+            "privacy": "Privacy: Zero-knowledge architecture"
+          },
+          "action": "View on GitHub"
+        },
+        "community": {
+          "title": "Other Ways to Help",
+          "description": "Not a developer? There are other ways to contribute!",
+          "details": {
+            "reportBugs": "Report bugs and suggest features",
+            "documentation": "Help with documentation",
+            "share": "Share with friends and family",
+            "test": "Test new features"
+          },
+          "action": "Join Community"
+        },
+        "note": {
+          "label": "Note:",
+          "message": "We're exploring ethical ways to accept financial contributions. For now, we focus on code and community contributions to keep the platform truly independent."
+        }
+      },
+      "actions": {
+        "back": "Back",
+        "complete": "Complete Setup",
+        "saving": "Saving your profile..."
+      }
     }
   },
   "polls": {
