@@ -172,6 +172,10 @@ jest.mock('next-intl', () => {
     locale = 'en',
     messages = englishMessages,
     children,
+  }: {
+    locale?: string;
+    messages?: Record<string, unknown>;
+    children?: React.ReactNode;
   }) => {
     const value = {
       locale,
@@ -308,6 +312,7 @@ process.env.SUPABASE_SERVICE_ROLE_KEY ??= 'test-service-role-key';
 // Mock analytics and external service calls
 const createAuthAnalyticsMock = (modulePath: string) => {
   const actual = jest.requireActual<typeof import('@/features/analytics/lib/auth-analytics')>(modulePath);
+  // @ts-expect-error - Overriding private method for testing purposes
   class MockAuthAnalytics extends actual.AuthAnalytics {
     // Override network-bound method so tests remain deterministic
     // eslint-disable-next-line class-methods-use-this
