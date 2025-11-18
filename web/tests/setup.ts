@@ -110,7 +110,6 @@ jest.mock('@/lib/stores/storage', () => {
 // Minimal mocks for i18n and next/navigation used by many components in tests
 jest.mock('next-intl', () => {
   const React = jest.requireActual<typeof import('react')>('react');
-  // eslint-disable-next-line @typescript-eslint/no-var-requires
   const englishMessages = require('../messages/en.json') as Record<string, unknown>;
 
   const humanizeKey = (key: string): string => {
@@ -315,7 +314,6 @@ const createAuthAnalyticsMock = (modulePath: string) => {
   // @ts-expect-error - Overriding private method for testing purposes
   class MockAuthAnalytics extends actual.AuthAnalytics {
     // Override network-bound method so tests remain deterministic
-    // eslint-disable-next-line class-methods-use-this
     async sendToExternalService(): Promise<void> {
       return Promise.resolve();
     }

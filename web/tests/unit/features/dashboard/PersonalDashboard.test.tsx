@@ -125,7 +125,6 @@ const mockedCountdownUtils = jest.requireMock('@/features/civics/utils/civicsCou
 const mockedI18n = jest.requireMock('@/hooks/useI18n') as MockedI18nModule;
 
 // Use the real English catalogue so test expectations keep pace with i18n updates
-// eslint-disable-next-line @typescript-eslint/no-var-requires
 const englishMessages = require('../../../../messages/en.json') as Record<string, unknown>;
 
 const resolveMessage = (messages: Record<string, unknown>, key: string): string | undefined =>
