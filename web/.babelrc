@@ -20,8 +20,5 @@
         "allowDeclareFields": true
       }
     ]
-  ],
-  "plugins": [
-    "istanbul"
   ]
 }

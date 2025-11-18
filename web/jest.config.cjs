@@ -4,6 +4,8 @@ module.exports = {
   testTimeout: 30000, // 30 seconds per test
   slowTestThreshold: 10, // Mark tests as slow if they take more than 10 seconds
 
+  coverageProvider: 'v8',
+
   projects: [
     {
       displayName: 'client',
