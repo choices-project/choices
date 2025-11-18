@@ -374,7 +374,7 @@ describe('PersonalDashboard', () => {
      expect(mockGetUserRepresentatives).toHaveBeenCalled();
    });
 
-  it('renders election countdown card for representatives when data is available', () => {
+  it('renders election countdown card for representatives when data is available', async () => {
     const profile: ProfileValue = {
       id: 'user-1',
       display_name: 'Sam Civic',
