@@ -11,7 +11,9 @@ module.exports = {
       testTimeout: 20000, // 20 seconds for client tests
       // Use separate Babel config for Jest (allows Next.js to use SWC)
       transform: {
-        '^.+\\.(js|jsx|ts|tsx)$': ['babel-jest', { configFile: '<rootDir>/jest/babel.config.cjs' }]
+        '^.+\\.(js|jsx|ts|tsx)$': ['babel-jest', { 
+          configFile: require('path').resolve(__dirname, 'jest/babel.config.cjs')
+        }]
       },
       setupFiles: ['<rootDir>/jest.setup.js'],
       setupFilesAfterEnv: [
@@ -64,7 +66,9 @@ module.exports = {
       testTimeout: 25000, // 25 seconds for server tests
       // Use separate Babel config for Jest (allows Next.js to use SWC)
       transform: {
-        '^.+\\.(js|jsx|ts|tsx)$': ['babel-jest', { configFile: '<rootDir>/jest/babel.config.cjs' }]
+        '^.+\\.(js|jsx|ts|tsx)$': ['babel-jest', { 
+          configFile: require('path').resolve(__dirname, 'jest/babel.config.cjs')
+        }]
       },
       setupFiles: ['<rootDir>/jest.setup.js'],
       setupFilesAfterEnv: [
@@ -119,7 +123,9 @@ module.exports = {
       testTimeout: 20000,
       // Use separate Babel config for Jest (allows Next.js to use SWC)
       transform: {
-        '^.+\\.(js|jsx|ts|tsx)$': ['babel-jest', { configFile: '<rootDir>/jest/babel.config.cjs' }]
+        '^.+\\.(js|jsx|ts|tsx)$': ['babel-jest', { 
+          configFile: require('path').resolve(__dirname, 'jest/babel.config.cjs')
+        }]
       },
       setupFiles: ['<rootDir>/jest.setup.js'],
       testMatch: [
