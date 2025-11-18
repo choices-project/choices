@@ -30,6 +30,9 @@ jobs:
     - name: Use repo's npm version
       run: npm i -g npm@${{ env.NPM_VERSION }}
 
+    - name: Install root dependencies
+      run: npm ci
+
     - name: Governance check
       run: npm run governance:check
 
