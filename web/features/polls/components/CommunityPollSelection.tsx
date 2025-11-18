@@ -8,7 +8,7 @@ import {
   Award,
   Zap,
 } from 'lucide-react';
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useState } from 'react';
 
 import { useI18n } from '@/hooks/useI18n';
 import {
@@ -120,6 +120,20 @@ export default function CommunityPollSelection() {
     });
   }, [polls]);
 
+  const formatWeek = useCallback(
+    (dateString: string) => {
+      const date = new Date(dateString);
+      if (Number.isNaN(date.getTime())) {
+        return t('polls.community.week.current');
+      }
+      const weekStart = new Date(date);
+      weekStart.setDate(date.getDate() - date.getDay());
+      const isoDate = weekStart.toISOString().split('T')[0];
+      return isoDate ?? t('polls.community.week.current');
+    },
+    [t],
+  );
+
   const weeklySelections: WeeklySelection[] = useMemo(() => {
     if (!pollSuggestions.length) {
       return [];
@@ -208,17 +222,6 @@ export default function CommunityPollSelection() {
       default: return 'text-gray-600 bg-gray-100';
     }
   };
-
-  const formatWeek = useCallback((dateString: string) => {
-    const date = new Date(dateString);
-    if (Number.isNaN(date.getTime())) {
-      return t('polls.community.week.current');
-    }
-    const weekStart = new Date(date);
-    weekStart.setDate(date.getDate() - date.getDay());
-    const isoDate = weekStart.toISOString().split('T')[0];
-    return isoDate ?? t('polls.community.week.current');
-  }, [t]);
 
   const renderTrendingView = () => (
     <div className="space-y-6">
