@@ -20,8 +20,6 @@ The i18n system uses:
 
 ## Phase 1: Core Civic Features ✅ COMPLETE
 
-## Phase 3: Polls Features ✅ COMPLETE
-
 ### Civics Components
 
 #### ✅ Address Lookup & Navigation
@@ -219,6 +217,121 @@ The i18n system uses:
 
 ---
 
+## Phase 3: Polls Features ✅ COMPLETE
+
+### Polls Components
+
+#### ✅ Poll Creation
+- **`CreatePollForm.tsx`** - Fully localized
+  - Form title, close button aria-label
+  - Field labels, placeholders, counters
+  - Action buttons (create, cancel, creating)
+  - Namespace: `polls.create.form.*`
+
+- **`CreatePollPage.tsx`** - Fully localized
+  - Wizard steps (details, options, audience, review)
+  - Privacy and voting method labels
+  - Notifications (tooManyTags, signInRequired, accessDenied, rateLimit, validationErrors, creationFailed, pollCreated)
+  - Share dialog (title, description, poll metadata, link copy, social share, milestone alerts)
+  - Page header, error summary, footer navigation
+  - Namespace: `polls.create.*`
+
+- **`AccessiblePollWizard.tsx`** - Fully localized
+  - Boolean setting labels (allowMultipleVotes, allowAnonymousVotes, showResults, allowComments, requireAuthentication, preventDuplicateVotes)
+  - Namespace: `polls.create.wizard.audience.settings.*`
+
+#### ✅ Poll Viewing & Interaction
+- **`PollClient.tsx`** - Fully localized
+  - Breadcrumbs, privacy/voting method labels
+  - Error messages, poll option fallback text
+  - Voting status messages (closed, notOpen, signInRequired, votingRestricted)
+  - Notifications (voteRecorded, voteFailed, linkCopied, copyFailed)
+  - Buttons (share, analytics, printSummary, vote, voting, voted)
+  - Loading message, leading option section
+  - Stats cards (totalVotes, participation, status)
+  - Milestone alerts section
+  - Poll creation date
+  - Namespace: `polls.view.*`
+
+- **`OptimizedPollResults.tsx`** - Fully localized
+  - Status labels (ended, active, ongoing)
+  - Error messages (title, retry)
+  - Empty state, performance metrics
+  - Privacy protection (kAnonymity, budget)
+  - Voting status (canVote, cannotVote, hasVoted, notVoted)
+  - Results summary and refreshing announcements
+  - Namespace: `polls.results.*`
+
+- **`PollCard.tsx`** - Fully localized
+  - Untitled poll fallback, unknown creator
+  - Created by/on/ends on dates
+  - Options heading, option items, more options
+  - Votes and participation counts
+  - Voting method labels, status labels
+  - Action buttons (view, vote)
+  - Namespace: `polls.card.*`
+
+#### ✅ Poll Management
+- **`PostCloseBanner.tsx`** - Fully localized
+  - Status info (closed, locked, post-close) with titles, descriptions, badges
+  - Baseline established, locked at dates
+  - Post-close voting available message
+  - Management action buttons (enablePostClose, lockPoll)
+  - Namespace: `polls.postCloseBanner.*`
+
+- **`PollShare.tsx`** - Fully localized
+  - Title, default title, native share text
+  - Direct link label and copy button states
+  - Social media platform names (Twitter, Facebook, LinkedIn, Email)
+  - QR Code section (title, show/hide, alt text, generating, scan hint, download/copy)
+  - Embed Poll section (title, code label, copy embed code)
+  - Email share body
+  - Namespace: `polls.share.*`
+
+#### ✅ Poll Discovery & Filtering
+- **`PollsPage.tsx`** - Fully localized
+  - Page title and subtitle
+  - Breadcrumbs (home, dashboard, polls)
+  - Empty states (title, filters, ctaMessage)
+  - CTAs (create, view, results)
+  - Metadata (votes)
+  - Pagination (showing, pageLabel, previous, next)
+  - Namespace: `polls.page.*`
+
+- **`PollFiltersPanel.tsx`** - Fully localized
+  - Search placeholder and aria-label
+  - Hashtags (label, addPlaceholder, addAria, remove)
+  - Status filters (all, active, closed, trending)
+  - Trending section (heading, headingWithCount, count)
+  - Categories label
+  - Namespace: `polls.filters.*`
+
+#### ✅ Poll Templates
+- **`PollTemplatesPage.tsx`** - Fully localized
+  - Title and subtitle
+  - Search placeholder
+  - Categories (all, allTemplates)
+  - Sort options (popular, recent, rating, name)
+  - Difficulty labels (beginner, intermediate, advanced)
+  - Metadata (estimatedTime, usageCount)
+  - Results count, actions (use, preview)
+  - Empty state (title, message, clearFilters)
+  - Namespace: `polls.templates.*`
+
+#### ✅ Community Poll Selection
+- **`CommunityPollSelection.tsx`** - Fully localized
+  - Title and subtitle
+  - Week selection (select, current, last, twoWeeksAgo, threeWeeksAgo)
+  - Tabs (trending, selected, analytics)
+  - Selection criteria (title, engagement.*, platform.*)
+  - Trending suggestions (title, suggestedBy, votes, cost, engagement)
+  - Actions (vote, approve)
+  - Selected polls (weekOf, totalVotes, criteria.title, polls.*)
+  - Analytics (totalSuggestions, currentlyPublished, communityVotes, acrossFeatured, featuredPolls, thisWeek, categoryBreakdown)
+  - Namespace: `polls.community.*`
+
+---
+
 ## Message Catalogue Structure
 
 ### Current Namespaces
@@ -254,12 +367,24 @@ contact.*
 
 candidates.*
   - profile.* (correction.*)
+
+polls.*
+  - create.* (form.*, privacy.*, votingMethod.*, notifications.*, share.*, wizard.*, page.*)
+  - view.* (privacy.*, votingMethod.*, breadcrumbs.*, errors.*, status.*, options.*, notifications.*, buttons.*, loading.*, leadingOption.*, stats.*, milestones.*, created)
+  - postCloseBanner.* (status.*, baselineEstablished, lockedAt, postCloseAvailable, buttons.*)
+  - share.* (title, defaultTitle, nativeShareText, nativeShare, directLink.*, copy, copied, social.*, emailBody, qrCode.*, embed.*)
+  - results.* (heading, refreshing, summary, status.*, error.*, empty, type, totalVotes, uniqueVoters, performance.*, privacy.*, votingStatus.*)
+  - card.* (untitled, unknownCreator, createdBy, createdOn, endsOn, optionsHeading, optionItem, moreOptions, votes, participation, votingMethod.*, status.*, actions.*)
+  - page.* (title, subtitle, breadcrumbs.*, empty.*, cta.*, metadata.*, pagination.*)
+  - filters.* (search.*, hashtags.*, status.*, trending.*, categories.*)
+  - templates.* (title, subtitle, search.*, categories.*, sort.*, difficulty.*, metadata.*, resultsCount, actions.*, empty.*)
+  - community.* (title, subtitle, week.*, tabs.*, selection.*, trending.*, suggestion.*, actions.*, selected.*, analytics.*)
 ```
 
 ### Translation Coverage
 
-- **English (`en.json`):** ~1,990 lines, comprehensive coverage
-- **Spanish (`es.json`):** ~1,990 lines, comprehensive coverage
+- **English (`en.json`):** ~2,420 lines, comprehensive coverage
+- **Spanish (`es.json`):** ~2,420 lines, comprehensive coverage
 - **Snapshot (`en.snapshot.json`):** Auto-generated, kept in sync via CI
 
 ---
