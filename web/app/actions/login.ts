@@ -37,6 +37,7 @@ export async function loginAction(formData: FormData) {
   }
 
   // Use Supabase native authentication
+  // The Supabase SSR cookie adapter should automatically set cookies when signInWithPassword succeeds
   const { data: authData, error: authError } = await supabase.auth.signInWithPassword({
     email,
     password,
@@ -51,22 +52,38 @@ export async function loginAction(formData: FormData) {
     throw new Error('Authentication failed');
   }
 
-  logger.info('User authenticated successfully', {
+  logger.info('User authenticated successfully', { 
     userId: authData.user.id,
     email: authData.user.email,
     hasSession: !!authData.session,
     sessionExpiresAt: authData.session?.expires_at,
   });
-
+  
   // Verify session cookies will be set
   if (!authData.session) {
     logger.error('No session returned from authentication', { userId: authData.user.id });
     throw new Error('Authentication failed - no session created');
   }
 
-  // Explicitly set session cookies for server actions
-  // Supabase SSR should handle this via cookie adapter, but we ensure it works
-  // Supabase SSR stores the session as JSON in a cookie named sb-{project-ref}-auth-token
+  // Force Supabase SSR to refresh the session to ensure cookies are set via adapter
+  // This ensures the cookie adapter's set function is called
+  try {
+    const { data: { session: refreshedSession }, error: refreshError } = await supabase.auth.getSession();
+    if (refreshError) {
+      logger.warn('Session refresh after login failed', { error: refreshError.message });
+    } else if (refreshedSession) {
+      logger.info('Session refreshed successfully, cookies should be set via adapter', {
+        userId: authData.user.id,
+        hasAccessToken: !!refreshedSession.access_token,
+      });
+    }
+  } catch (refreshErr) {
+    logger.warn('Error refreshing session after login', { error: refreshErr instanceof Error ? refreshErr.message : 'Unknown' });
+  }
+
+  // Explicitly set session cookies for server actions as backup
+  // Supabase SSR cookie adapter should have set cookies via getSession() above,
+  // but we also set them manually to ensure they're available
   try {
     const cookieStore = cookies()
     const isProduction = process.env.NODE_ENV === 'production'
@@ -76,25 +93,21 @@ export async function loginAction(formData: FormData) {
     const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || ''
     const projectRef = supabaseUrl.match(/https?:\/\/([^.]+)\.supabase\.co/)?.[1] || 'default'
     
-    // Supabase SSR uses this cookie name and stores the entire session as JSON
+    // Supabase SSR uses this cookie name - it stores just the access token, not JSON
     const ssrAuthTokenName = `sb-${projectRef}-auth-token`
     
-    // Store the entire session object as JSON (what Supabase SSR expects)
-    const sessionData = JSON.stringify({
-      access_token: authData.session.access_token,
-      refresh_token: authData.session.refresh_token,
-      expires_in: authData.session.expires_in,
-      expires_at: authData.session.expires_at,
-      token_type: authData.session.token_type,
-      user: {
-        id: authData.user.id,
-        email: authData.user.email,
-        // Include other user fields that might be needed
-      },
+    // Supabase SSR stores the access token directly (not as JSON)
+    cookieStore.set(ssrAuthTokenName, authData.session.access_token, {
+      httpOnly: true,
+      secure: isProduction,
+      sameSite: 'lax',
+      path: '/',
+      maxAge: maxAge,
     })
 
-    // Set Supabase SSR cookie (what createServerClient expects)
-    cookieStore.set(ssrAuthTokenName, sessionData, {
+    // Also set refresh token in separate cookie (Supabase SSR pattern)
+    const ssrRefreshTokenName = `sb-${projectRef}-auth-token.refresh`
+    cookieStore.set(ssrRefreshTokenName, authData.session.refresh_token, {
       httpOnly: true,
       secure: isProduction,
       sameSite: 'lax',
@@ -122,6 +135,7 @@ export async function loginAction(formData: FormData) {
     logger.info('Session cookies set explicitly', {
       userId: authData.user.id,
       ssrAuthTokenName,
+      ssrRefreshTokenName,
       hasAccessToken: !!authData.session.access_token,
       hasRefreshToken: !!authData.session.refresh_token,
       secure: isProduction,
