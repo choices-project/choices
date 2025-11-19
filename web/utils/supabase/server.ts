@@ -68,8 +68,8 @@ export async function getSupabaseServerClient(): Promise<SupabaseClient<Database
           httpOnly: options.httpOnly !== false, // Default to httpOnly for security
         }
         cookieStore?.set(name, value, cookieOptions)
-        logger.debug('Supabase SSR cookie set', { 
-          name, 
+        logger.debug('Supabase SSR cookie set', {
+          name,
           hasValue: !!value,
           secure: isProduction,
           sameSite: 'lax',

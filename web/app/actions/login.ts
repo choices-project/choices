@@ -52,13 +52,13 @@ export async function loginAction(formData: FormData) {
     throw new Error('Authentication failed');
   }
 
-  logger.info('User authenticated successfully', { 
+  logger.info('User authenticated successfully', {
     userId: authData.user.id,
     email: authData.user.email,
     hasSession: !!authData.session,
     sessionExpiresAt: authData.session?.expires_at,
   });
-  
+
   // Verify session cookies will be set
   if (!authData.session) {
     logger.error('No session returned from authentication', { userId: authData.user.id });
@@ -92,10 +92,10 @@ export async function loginAction(formData: FormData) {
     // Extract project reference from Supabase URL for cookie naming
     const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || ''
     const projectRef = supabaseUrl.match(/https?:\/\/([^.]+)\.supabase\.co/)?.[1] || 'default'
-    
+
     // Supabase SSR uses this cookie name - it stores just the access token, not JSON
     const ssrAuthTokenName = `sb-${projectRef}-auth-token`
-    
+
     // Supabase SSR stores the access token directly (not as JSON)
     cookieStore.set(ssrAuthTokenName, authData.session.access_token, {
       httpOnly: true,
