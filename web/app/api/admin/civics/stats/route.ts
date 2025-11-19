@@ -1,5 +1,3 @@
-'use server'
-
 /**
  * Admin: Civics Stats Summary
  * GET /api/admin/civics/stats

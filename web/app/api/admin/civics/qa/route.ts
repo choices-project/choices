@@ -1,5 +1,3 @@
-'use server'
-
 /**
  * Admin: Civics Data QA
  * GET /api/admin/civics/qa

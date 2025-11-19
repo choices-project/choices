@@ -1,5 +1,3 @@
-'use server'
-
 /**
  * Admin: Verify Civics Database Connectivity and Shape
  *

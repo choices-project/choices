@@ -1,5 +1,3 @@
-'use server'
-
 /**
  * Admin: Candidate Onboarding Stats
  * GET /api/admin/candidates/stats

@@ -1,5 +1,3 @@
-'use server'
-
 import type { NextRequest } from 'next/server';
 
 import { withErrorHandling, successResponse, forbiddenError, validationError, errorResponse, methodNotAllowed } from '@/lib/api';
