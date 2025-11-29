@@ -1,5 +1,11 @@
 import { expect, test } from '@playwright/test';
 
+import {
+  ensureLoggedOut,
+  loginTestUser,
+  waitForPageReady,
+} from '../helpers/e2e-setup';
+
 /**
  * Session persistence and cookie management tests for choices-app.com
  * 
@@ -18,11 +24,15 @@ test.describe('Choices App - Session & Cookie Management', () => {
   test('should set secure cookies in production', async ({ page, context }) => {
     test.skip(!TEST_USER_EMAIL || !TEST_USER_PASSWORD, 'Test credentials not configured');
 
-    await page.goto('/auth');
-    await page.fill('input[type="email"]', TEST_USER_EMAIL!);
-    await page.fill('input[type="password"]', TEST_USER_PASSWORD!);
-    await page.click('button[type="submit"]');
-    await page.waitForURL(/\/(dashboard|onboarding)/, { timeout: 15_000 });
+    await ensureLoggedOut(page);
+
+    await loginTestUser(page, {
+      email: TEST_USER_EMAIL!,
+      password: TEST_USER_PASSWORD!,
+      username: TEST_USER_EMAIL!.split('@')[0] ?? 'test-user',
+    });
+    await waitForPageReady(page);
+    await expect(page).toHaveURL(/\/(dashboard|onboarding)/, { timeout: 15_000 });
 
     // Check cookie security settings
     const cookies = await context.cookies();
@@ -59,11 +69,13 @@ test.describe('Choices App - Session & Cookie Management', () => {
     const context1 = await browser.newContext();
     const page1 = await context1.newPage();
     
-    await page1.goto('/auth');
-    await page1.fill('input[type="email"]', TEST_USER_EMAIL!);
-    await page1.fill('input[type="password"]', TEST_USER_PASSWORD!);
-    await page1.click('button[type="submit"]');
-    await page1.waitForURL(/\/(dashboard|onboarding)/, { timeout: 15_000 });
+    await loginTestUser(page1, {
+      email: TEST_USER_EMAIL!,
+      password: TEST_USER_PASSWORD!,
+      username: TEST_USER_EMAIL!.split('@')[0] ?? 'test-user',
+    });
+    await waitForPageReady(page1);
+    await expect(page1).toHaveURL(/\/(dashboard|onboarding)/, { timeout: 15_000 });
 
     // Get cookies from first context
     const cookies = await context1.cookies();
@@ -88,12 +100,16 @@ test.describe('Choices App - Session & Cookie Management', () => {
   test('should authenticate API requests with cookies', async ({ page }) => {
     test.skip(!TEST_USER_EMAIL || !TEST_USER_PASSWORD, 'Test credentials not configured');
 
+    await ensureLoggedOut(page);
+
     // Login
-    await page.goto('/auth');
-    await page.fill('input[type="email"]', TEST_USER_EMAIL!);
-    await page.fill('input[type="password"]', TEST_USER_PASSWORD!);
-    await page.click('button[type="submit"]');
-    await page.waitForURL(/\/(dashboard|onboarding)/, { timeout: 15_000 });
+    await loginTestUser(page, {
+      email: TEST_USER_EMAIL!,
+      password: TEST_USER_PASSWORD!,
+      username: TEST_USER_EMAIL!.split('@')[0] ?? 'test-user',
+    });
+    await waitForPageReady(page);
+    await expect(page).toHaveURL(/\/(dashboard|onboarding)/, { timeout: 15_000 });
 
     // Navigate to dashboard which makes API calls
     await page.goto('/dashboard');
@@ -134,11 +150,13 @@ test.describe('Choices App - Session & Cookie Management', () => {
 
     // Login in first tab
     const page1 = await context.newPage();
-    await page1.goto('/auth');
-    await page1.fill('input[type="email"]', TEST_USER_EMAIL!);
-    await page1.fill('input[type="password"]', TEST_USER_PASSWORD!);
-    await page1.click('button[type="submit"]');
-    await page1.waitForURL(/\/(dashboard|onboarding)/, { timeout: 15_000 });
+    await loginTestUser(page1, {
+      email: TEST_USER_EMAIL!,
+      password: TEST_USER_PASSWORD!,
+      username: TEST_USER_EMAIL!.split('@')[0] ?? 'test-user',
+    });
+    await waitForPageReady(page1);
+    await expect(page1).toHaveURL(/\/(dashboard|onboarding)/, { timeout: 15_000 });
 
     // Open second tab
     const page2 = await context.newPage();
@@ -156,12 +174,16 @@ test.describe('Choices App - Session & Cookie Management', () => {
   test('should handle cookie expiration gracefully', async ({ page }) => {
     test.skip(!TEST_USER_EMAIL || !TEST_USER_PASSWORD, 'Test credentials not configured');
 
+    await ensureLoggedOut(page);
+
     // Login
-    await page.goto('/auth');
-    await page.fill('input[type="email"]', TEST_USER_EMAIL!);
-    await page.fill('input[type="password"]', TEST_USER_PASSWORD!);
-    await page.click('button[type="submit"]');
-    await page.waitForURL(/\/(dashboard|onboarding)/, { timeout: 15_000 });
+    await loginTestUser(page, {
+      email: TEST_USER_EMAIL!,
+      password: TEST_USER_PASSWORD!,
+      username: TEST_USER_EMAIL!.split('@')[0] ?? 'test-user',
+    });
+    await waitForPageReady(page);
+    await expect(page).toHaveURL(/\/(dashboard|onboarding)/, { timeout: 15_000 });
 
     // Get cookies and check expiration
     const cookies = await page.context().cookies();
@@ -180,11 +202,15 @@ test.describe('Choices App - Session & Cookie Management', () => {
   test('should set cookies with correct SameSite attribute', async ({ page }) => {
     test.skip(!TEST_USER_EMAIL || !TEST_USER_PASSWORD, 'Test credentials not configured');
 
-    await page.goto('/auth');
-    await page.fill('input[type="email"]', TEST_USER_EMAIL!);
-    await page.fill('input[type="password"]', TEST_USER_PASSWORD!);
-    await page.click('button[type="submit"]');
-    await page.waitForURL(/\/(dashboard|onboarding)/, { timeout: 15_000 });
+    await ensureLoggedOut(page);
+
+    await loginTestUser(page, {
+      email: TEST_USER_EMAIL!,
+      password: TEST_USER_PASSWORD!,
+      username: TEST_USER_EMAIL!.split('@')[0] ?? 'test-user',
+    });
+    await waitForPageReady(page);
+    await expect(page).toHaveURL(/\/(dashboard|onboarding)/, { timeout: 15_000 });
 
     const cookies = await page.context().cookies();
     const authCookies = cookies.filter(cookie => 

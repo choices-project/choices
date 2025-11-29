@@ -1,5 +1,13 @@
 import { expect, test } from '@playwright/test';
 
+import {
+  ensureLoggedOut,
+  loginAsAdmin,
+  loginTestUser,
+  loginWithPassword,
+  waitForPageReady,
+} from '../helpers/e2e-setup';
+
 /**
  * Comprehensive authentication tests for choices-app.com
  * 
@@ -31,19 +39,19 @@ test.describe('Choices App - Authentication Flow', () => {
   test('should successfully log in with valid credentials', async ({ page }) => {
     test.skip(!TEST_USER_EMAIL || !TEST_USER_PASSWORD, 'Test credentials not configured');
 
-    // Navigate to login page
-    await page.goto('/auth');
-    await page.waitForLoadState('networkidle');
+    await ensureLoggedOut(page);
 
-    // Fill in login form
-    await page.fill('input[type="email"]', TEST_USER_EMAIL!);
-    await page.fill('input[type="password"]', TEST_USER_PASSWORD!);
+    // Use helper function that handles auth form selectors
+    await loginTestUser(page, {
+      email: TEST_USER_EMAIL!,
+      password: TEST_USER_PASSWORD!,
+      username: TEST_USER_EMAIL!.split('@')[0] ?? 'test-user',
+    });
 
-    // Submit login form
-    await page.click('button[type="submit"]');
+    await waitForPageReady(page);
 
     // Wait for redirect after login
-    await page.waitForURL(/\/(dashboard|onboarding)/, { timeout: 15_000 });
+    await expect(page).toHaveURL(/\/(dashboard|onboarding)/, { timeout: 15_000 });
 
     // Verify we're authenticated
     const url = page.url();
@@ -67,12 +75,16 @@ test.describe('Choices App - Authentication Flow', () => {
   test('should persist session across page navigations', async ({ page }) => {
     test.skip(!TEST_USER_EMAIL || !TEST_USER_PASSWORD, 'Test credentials not configured');
 
+    await ensureLoggedOut(page);
+
     // Login first
-    await page.goto('/auth');
-    await page.fill('input[type="email"]', TEST_USER_EMAIL!);
-    await page.fill('input[type="password"]', TEST_USER_PASSWORD!);
-    await page.click('button[type="submit"]');
-    await page.waitForURL(/\/(dashboard|onboarding)/, { timeout: 15_000 });
+    await loginTestUser(page, {
+      email: TEST_USER_EMAIL!,
+      password: TEST_USER_PASSWORD!,
+      username: TEST_USER_EMAIL!.split('@')[0] ?? 'test-user',
+    });
+    await waitForPageReady(page);
+    await expect(page).toHaveURL(/\/(dashboard|onboarding)/, { timeout: 15_000 });
 
     // Navigate to different pages and verify session persists
     const pagesToTest = ['/dashboard', '/polls', '/profile'];
@@ -93,12 +105,16 @@ test.describe('Choices App - Authentication Flow', () => {
   test('should authenticate API requests after login', async ({ page }) => {
     test.skip(!TEST_USER_EMAIL || !TEST_USER_PASSWORD, 'Test credentials not configured');
 
+    await ensureLoggedOut(page);
+
     // Login
-    await page.goto('/auth');
-    await page.fill('input[type="email"]', TEST_USER_EMAIL!);
-    await page.fill('input[type="password"]', TEST_USER_PASSWORD!);
-    await page.click('button[type="submit"]');
-    await page.waitForURL(/\/(dashboard|onboarding)/, { timeout: 15_000 });
+    await loginTestUser(page, {
+      email: TEST_USER_EMAIL!,
+      password: TEST_USER_PASSWORD!,
+      username: TEST_USER_EMAIL!.split('@')[0] ?? 'test-user',
+    });
+    await waitForPageReady(page);
+    await expect(page).toHaveURL(/\/(dashboard|onboarding)/, { timeout: 15_000 });
 
     // Navigate to dashboard
     await page.goto('/dashboard');
@@ -125,13 +141,14 @@ test.describe('Choices App - Authentication Flow', () => {
   });
 
   test('should handle invalid credentials gracefully', async ({ page }) => {
-    await page.goto('/auth');
-    await page.waitForLoadState('networkidle');
+    await ensureLoggedOut(page);
 
-    // Try to login with invalid credentials
-    await page.fill('input[type="email"]', 'invalid@example.com');
-    await page.fill('input[type="password"]', 'wrongpassword');
-    await page.click('button[type="submit"]');
+    // Try to login with invalid credentials using helper
+    await loginWithPassword(page, {
+      email: 'invalid@example.com',
+      password: 'wrongpassword',
+      username: 'invalid',
+    }, { path: '/auth', expectRedirect: undefined });
 
     // Should show error message
     await page.waitForTimeout(2000);
@@ -146,12 +163,16 @@ test.describe('Choices App - Authentication Flow', () => {
   test('should logout and clear session', async ({ page }) => {
     test.skip(!TEST_USER_EMAIL || !TEST_USER_PASSWORD, 'Test credentials not configured');
 
+    await ensureLoggedOut(page);
+
     // Login first
-    await page.goto('/auth');
-    await page.fill('input[type="email"]', TEST_USER_EMAIL!);
-    await page.fill('input[type="password"]', TEST_USER_PASSWORD!);
-    await page.click('button[type="submit"]');
-    await page.waitForURL(/\/(dashboard|onboarding)/, { timeout: 15_000 });
+    await loginTestUser(page, {
+      email: TEST_USER_EMAIL!,
+      password: TEST_USER_PASSWORD!,
+      username: TEST_USER_EMAIL!.split('@')[0] ?? 'test-user',
+    });
+    await waitForPageReady(page);
+    await expect(page).toHaveURL(/\/(dashboard|onboarding)/, { timeout: 15_000 });
 
     // Get cookies before logout
     const cookiesBefore = await page.context().cookies();
@@ -188,12 +209,16 @@ test.describe('Choices App - Authentication Flow', () => {
   test('should maintain session after page refresh', async ({ page }) => {
     test.skip(!TEST_USER_EMAIL || !TEST_USER_PASSWORD, 'Test credentials not configured');
 
+    await ensureLoggedOut(page);
+
     // Login
-    await page.goto('/auth');
-    await page.fill('input[type="email"]', TEST_USER_EMAIL!);
-    await page.fill('input[type="password"]', TEST_USER_PASSWORD!);
-    await page.click('button[type="submit"]');
-    await page.waitForURL(/\/(dashboard|onboarding)/, { timeout: 15_000 });
+    await loginTestUser(page, {
+      email: TEST_USER_EMAIL!,
+      password: TEST_USER_PASSWORD!,
+      username: TEST_USER_EMAIL!.split('@')[0] ?? 'test-user',
+    });
+    await waitForPageReady(page);
+    await expect(page).toHaveURL(/\/(dashboard|onboarding)/, { timeout: 15_000 });
 
     const urlBeforeRefresh = page.url();
 
@@ -209,12 +234,16 @@ test.describe('Choices App - Authentication Flow', () => {
   test('admin user can access admin routes', async ({ page }) => {
     test.skip(!TEST_ADMIN_EMAIL || !TEST_ADMIN_PASSWORD, 'Admin credentials not configured');
 
+    await ensureLoggedOut(page);
+
     // Login as admin
-    await page.goto('/auth');
-    await page.fill('input[type="email"]', TEST_ADMIN_EMAIL!);
-    await page.fill('input[type="password"]', TEST_ADMIN_PASSWORD!);
-    await page.click('button[type="submit"]');
-    await page.waitForURL(/\/(dashboard|onboarding)/, { timeout: 15_000 });
+    await loginAsAdmin(page, {
+      email: TEST_ADMIN_EMAIL!,
+      password: TEST_ADMIN_PASSWORD!,
+      username: TEST_ADMIN_EMAIL!.split('@')[0] ?? 'admin',
+    });
+    await waitForPageReady(page);
+    await expect(page).toHaveURL(/\/(dashboard|onboarding)/, { timeout: 15_000 });
 
     // Navigate to admin route
     await page.goto('/admin');

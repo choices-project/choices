@@ -1,5 +1,11 @@
 import { expect, test } from '@playwright/test';
 
+import {
+  ensureLoggedOut,
+  loginTestUser,
+  waitForPageReady,
+} from '../helpers/e2e-setup';
+
 /**
  * Dashboard functionality tests for choices-app.com
  * 
@@ -18,12 +24,16 @@ test.describe('Choices App - Dashboard Functionality', () => {
   test.beforeEach(async ({ page }) => {
     test.skip(!TEST_USER_EMAIL || !TEST_USER_PASSWORD, 'Test credentials not configured');
 
+    await ensureLoggedOut(page);
+
     // Login before each test
-    await page.goto('/auth');
-    await page.fill('input[type="email"]', TEST_USER_EMAIL!);
-    await page.fill('input[type="password"]', TEST_USER_PASSWORD!);
-    await page.click('button[type="submit"]');
-    await page.waitForURL(/\/(dashboard|onboarding)/, { timeout: 15_000 });
+    await loginTestUser(page, {
+      email: TEST_USER_EMAIL!,
+      password: TEST_USER_PASSWORD!,
+      username: TEST_USER_EMAIL!.split('@')[0] ?? 'test-user',
+    });
+    await waitForPageReady(page);
+    await expect(page).toHaveURL(/\/(dashboard|onboarding)/, { timeout: 15_000 });
   });
 
   test('should load dashboard successfully', async ({ page }) => {

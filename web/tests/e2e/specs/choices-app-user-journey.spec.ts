@@ -1,5 +1,11 @@
 import { expect, test } from '@playwright/test';
 
+import {
+  ensureLoggedOut,
+  loginTestUser,
+  waitForPageReady,
+} from '../helpers/e2e-setup';
+
 /**
  * End-to-end user journey tests for choices-app.com
  * 
@@ -33,9 +39,11 @@ test.describe('Choices App - Complete User Journey', () => {
     await page.waitForLoadState('networkidle');
 
     // Step 3: Login
-    await page.fill('input[type="email"]', TEST_USER_EMAIL!);
-    await page.fill('input[type="password"]', TEST_USER_PASSWORD!);
-    await page.click('button[type="submit"]');
+    await loginTestUser(page, {
+      email: TEST_USER_EMAIL!,
+      password: TEST_USER_PASSWORD!,
+      username: TEST_USER_EMAIL!.split('@')[0] ?? 'test-user',
+    });
 
     // Step 4: Wait for redirect
     await page.waitForURL(/\/(dashboard|onboarding)/, { timeout: 15_000 });
@@ -77,12 +85,16 @@ test.describe('Choices App - Complete User Journey', () => {
   test('navigation flow after login', async ({ page }) => {
     test.skip(!TEST_USER_EMAIL || !TEST_USER_PASSWORD, 'Test credentials not configured');
 
+    await ensureLoggedOut(page);
+
     // Login
-    await page.goto('/auth');
-    await page.fill('input[type="email"]', TEST_USER_EMAIL!);
-    await page.fill('input[type="password"]', TEST_USER_PASSWORD!);
-    await page.click('button[type="submit"]');
-    await page.waitForURL(/\/(dashboard|onboarding)/, { timeout: 15_000 });
+    await loginTestUser(page, {
+      email: TEST_USER_EMAIL!,
+      password: TEST_USER_PASSWORD!,
+      username: TEST_USER_EMAIL!.split('@')[0] ?? 'test-user',
+    });
+    await waitForPageReady(page);
+    await expect(page).toHaveURL(/\/(dashboard|onboarding)/, { timeout: 15_000 });
 
     // Test navigation to different pages
     const pages = [
@@ -107,12 +119,16 @@ test.describe('Choices App - Complete User Journey', () => {
   test('session persistence during navigation', async ({ page }) => {
     test.skip(!TEST_USER_EMAIL || !TEST_USER_PASSWORD, 'Test credentials not configured');
 
+    await ensureLoggedOut(page);
+
     // Login
-    await page.goto('/auth');
-    await page.fill('input[type="email"]', TEST_USER_EMAIL!);
-    await page.fill('input[type="password"]', TEST_USER_PASSWORD!);
-    await page.click('button[type="submit"]');
-    await page.waitForURL(/\/(dashboard|onboarding)/, { timeout: 15_000 });
+    await loginTestUser(page, {
+      email: TEST_USER_EMAIL!,
+      password: TEST_USER_PASSWORD!,
+      username: TEST_USER_EMAIL!.split('@')[0] ?? 'test-user',
+    });
+    await waitForPageReady(page);
+    await expect(page).toHaveURL(/\/(dashboard|onboarding)/, { timeout: 15_000 });
 
     // Navigate through multiple pages
     const navigationSequence = ['/dashboard', '/polls', '/dashboard', '/profile', '/dashboard'];
@@ -130,12 +146,16 @@ test.describe('Choices App - Complete User Journey', () => {
   test('error recovery after failed API call', async ({ page }) => {
     test.skip(!TEST_USER_EMAIL || !TEST_USER_PASSWORD, 'Test credentials not configured');
 
+    await ensureLoggedOut(page);
+
     // Login
-    await page.goto('/auth');
-    await page.fill('input[type="email"]', TEST_USER_EMAIL!);
-    await page.fill('input[type="password"]', TEST_USER_PASSWORD!);
-    await page.click('button[type="submit"]');
-    await page.waitForURL(/\/(dashboard|onboarding)/, { timeout: 15_000 });
+    await loginTestUser(page, {
+      email: TEST_USER_EMAIL!,
+      password: TEST_USER_PASSWORD!,
+      username: TEST_USER_EMAIL!.split('@')[0] ?? 'test-user',
+    });
+    await waitForPageReady(page);
+    await expect(page).toHaveURL(/\/(dashboard|onboarding)/, { timeout: 15_000 });
 
     await page.goto('/dashboard');
     await page.waitForLoadState('networkidle');
@@ -168,12 +188,16 @@ test.describe('Choices App - Complete User Journey', () => {
   test('multiple rapid page navigations maintain session', async ({ page }) => {
     test.skip(!TEST_USER_EMAIL || !TEST_USER_PASSWORD, 'Test credentials not configured');
 
+    await ensureLoggedOut(page);
+
     // Login
-    await page.goto('/auth');
-    await page.fill('input[type="email"]', TEST_USER_EMAIL!);
-    await page.fill('input[type="password"]', TEST_USER_PASSWORD!);
-    await page.click('button[type="submit"]');
-    await page.waitForURL(/\/(dashboard|onboarding)/, { timeout: 15_000 });
+    await loginTestUser(page, {
+      email: TEST_USER_EMAIL!,
+      password: TEST_USER_PASSWORD!,
+      username: TEST_USER_EMAIL!.split('@')[0] ?? 'test-user',
+    });
+    await waitForPageReady(page);
+    await expect(page).toHaveURL(/\/(dashboard|onboarding)/, { timeout: 15_000 });
 
     // Rapidly navigate between pages
     for (let i = 0; i < 5; i++) {
