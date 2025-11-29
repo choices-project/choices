@@ -14,23 +14,25 @@ The choices-app.com E2E test suite provides extensive coverage of:
 
 ### Environment Variables
 
-Set these environment variables before running tests:
+Environment variables are automatically loaded from `.env.local` in the project root. The following variables are used:
 
 ```bash
 # Required for authentication tests
-export E2E_USER_EMAIL="your-test-user@example.com"
-export E2E_USER_PASSWORD="your-test-password"
+E2E_USER_EMAIL="your-test-user@example.com"
+E2E_USER_PASSWORD="your-test-password"
 
 # Optional: Admin tests
-export E2E_ADMIN_EMAIL="admin@example.com"
-export E2E_ADMIN_PASSWORD="admin-password"
+E2E_ADMIN_EMAIL="admin@example.com"
+E2E_ADMIN_PASSWORD="admin-password"
 
 # Alternative variable names (also supported)
-export CHOICES_APP_TEST_EMAIL="your-test-user@example.com"
-export CHOICES_APP_TEST_PASSWORD="your-test-password"
-export CHOICES_APP_ADMIN_EMAIL="admin@example.com"
-export CHOICES_APP_ADMIN_PASSWORD="admin-password"
+CHOICES_APP_TEST_EMAIL="your-test-user@example.com"
+CHOICES_APP_TEST_PASSWORD="your-test-password"
+CHOICES_APP_ADMIN_EMAIL="admin@example.com"
+CHOICES_APP_ADMIN_PASSWORD="admin-password"
 ```
+
+**Note**: If `.env.local` doesn't exist or variables aren't set, you can also export them in your shell before running tests. The tests will check for both `E2E_*` and `CHOICES_APP_*` variable names.
 
 ### Test Credentials
 

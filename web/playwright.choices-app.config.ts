@@ -1,4 +1,11 @@
 import { defineConfig, devices } from '@playwright/test';
+import * as dotenv from 'dotenv';
+import path from 'path';
+
+// Load environment variables from .env.local (same pattern as check-env.ts)
+const cwd = process.cwd();
+dotenv.config({ path: path.join(cwd, '.env.local') });
+dotenv.config({ path: path.join(cwd, '.env.test.local') });
 
 /**
  * Playwright configuration for testing choices-app.com (production)
@@ -9,6 +16,7 @@ import { defineConfig, devices } from '@playwright/test';
  * - Multiple browser testing
  * - Comprehensive retry strategy
  * - Detailed reporting
+ * - Automatic loading of .env.local for test credentials
  */
 export default defineConfig({
   testDir: './tests/e2e',
