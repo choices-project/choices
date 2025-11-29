@@ -2,9 +2,9 @@ import { expect, test } from '@playwright/test';
 
 import {
   ensureLoggedOut,
-  loginTestUser,
   waitForPageReady,
 } from '../helpers/e2e-setup';
+import { loginToProduction } from '../helpers/production-auth';
 
 /**
  * Session persistence and cookie management tests for choices-app.com
@@ -26,10 +26,9 @@ test.describe('Choices App - Session & Cookie Management', () => {
 
     await ensureLoggedOut(page);
 
-    await loginTestUser(page, {
+    await loginToProduction(page, {
       email: TEST_USER_EMAIL!,
       password: TEST_USER_PASSWORD!,
-      username: TEST_USER_EMAIL!.split('@')[0] ?? 'test-user',
     });
     await waitForPageReady(page);
     await expect(page).toHaveURL(/\/(dashboard|onboarding)/, { timeout: 15_000 });
@@ -103,10 +102,9 @@ test.describe('Choices App - Session & Cookie Management', () => {
     await ensureLoggedOut(page);
 
     // Login
-    await loginTestUser(page, {
+    await loginToProduction(page, {
       email: TEST_USER_EMAIL!,
       password: TEST_USER_PASSWORD!,
-      username: TEST_USER_EMAIL!.split('@')[0] ?? 'test-user',
     });
     await waitForPageReady(page);
     await expect(page).toHaveURL(/\/(dashboard|onboarding)/, { timeout: 15_000 });
@@ -177,10 +175,9 @@ test.describe('Choices App - Session & Cookie Management', () => {
     await ensureLoggedOut(page);
 
     // Login
-    await loginTestUser(page, {
+    await loginToProduction(page, {
       email: TEST_USER_EMAIL!,
       password: TEST_USER_PASSWORD!,
-      username: TEST_USER_EMAIL!.split('@')[0] ?? 'test-user',
     });
     await waitForPageReady(page);
     await expect(page).toHaveURL(/\/(dashboard|onboarding)/, { timeout: 15_000 });
@@ -204,10 +201,9 @@ test.describe('Choices App - Session & Cookie Management', () => {
 
     await ensureLoggedOut(page);
 
-    await loginTestUser(page, {
+    await loginToProduction(page, {
       email: TEST_USER_EMAIL!,
       password: TEST_USER_PASSWORD!,
-      username: TEST_USER_EMAIL!.split('@')[0] ?? 'test-user',
     });
     await waitForPageReady(page);
     await expect(page).toHaveURL(/\/(dashboard|onboarding)/, { timeout: 15_000 });

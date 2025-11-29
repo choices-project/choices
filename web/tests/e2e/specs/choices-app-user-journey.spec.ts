@@ -2,9 +2,9 @@ import { expect, test } from '@playwright/test';
 
 import {
   ensureLoggedOut,
-  loginTestUser,
   waitForPageReady,
 } from '../helpers/e2e-setup';
+import { loginToProduction } from '../helpers/production-auth';
 
 /**
  * End-to-end user journey tests for choices-app.com
@@ -39,10 +39,9 @@ test.describe('Choices App - Complete User Journey', () => {
     await page.waitForLoadState('networkidle');
 
     // Step 3: Login
-    await loginTestUser(page, {
+    await loginToProduction(page, {
       email: TEST_USER_EMAIL!,
       password: TEST_USER_PASSWORD!,
-      username: TEST_USER_EMAIL!.split('@')[0] ?? 'test-user',
     });
 
     // Step 4: Wait for redirect
@@ -88,10 +87,9 @@ test.describe('Choices App - Complete User Journey', () => {
     await ensureLoggedOut(page);
 
     // Login
-    await loginTestUser(page, {
+    await loginToProduction(page, {
       email: TEST_USER_EMAIL!,
       password: TEST_USER_PASSWORD!,
-      username: TEST_USER_EMAIL!.split('@')[0] ?? 'test-user',
     });
     await waitForPageReady(page);
     await expect(page).toHaveURL(/\/(dashboard|onboarding)/, { timeout: 15_000 });
@@ -122,10 +120,9 @@ test.describe('Choices App - Complete User Journey', () => {
     await ensureLoggedOut(page);
 
     // Login
-    await loginTestUser(page, {
+    await loginToProduction(page, {
       email: TEST_USER_EMAIL!,
       password: TEST_USER_PASSWORD!,
-      username: TEST_USER_EMAIL!.split('@')[0] ?? 'test-user',
     });
     await waitForPageReady(page);
     await expect(page).toHaveURL(/\/(dashboard|onboarding)/, { timeout: 15_000 });
@@ -149,10 +146,9 @@ test.describe('Choices App - Complete User Journey', () => {
     await ensureLoggedOut(page);
 
     // Login
-    await loginTestUser(page, {
+    await loginToProduction(page, {
       email: TEST_USER_EMAIL!,
       password: TEST_USER_PASSWORD!,
-      username: TEST_USER_EMAIL!.split('@')[0] ?? 'test-user',
     });
     await waitForPageReady(page);
     await expect(page).toHaveURL(/\/(dashboard|onboarding)/, { timeout: 15_000 });
@@ -191,10 +187,9 @@ test.describe('Choices App - Complete User Journey', () => {
     await ensureLoggedOut(page);
 
     // Login
-    await loginTestUser(page, {
+    await loginToProduction(page, {
       email: TEST_USER_EMAIL!,
       password: TEST_USER_PASSWORD!,
-      username: TEST_USER_EMAIL!.split('@')[0] ?? 'test-user',
     });
     await waitForPageReady(page);
     await expect(page).toHaveURL(/\/(dashboard|onboarding)/, { timeout: 15_000 });
