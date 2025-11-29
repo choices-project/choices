@@ -15,27 +15,47 @@ export async function loginToProduction(
 ): Promise<void> {
   // Navigate to auth page
   await page.goto('/auth', { waitUntil: 'domcontentloaded', timeout: 60_000 });
-  await page.waitForLoadState('networkidle', { timeout: 30_000 });
+  
+  // Wait for page to be ready - give it more time for production
+  await page.waitForLoadState('networkidle', { timeout: 30_000 }).catch(() => {
+    // Continue even if networkidle times out
+  });
+  
+  // Additional wait for React hydration
+  await page.waitForTimeout(2000);
 
-  // Try multiple selector strategies for email field
+  // Try multiple selector strategies for email field with longer timeout
   const emailSelectors = [
     '[data-testid="login-email"]',
     'input[type="email"]',
     'input[name="email"]',
     '#email',
+    'input[placeholder*="email" i]',
+    'input[placeholder*="Email" i]',
   ];
 
   let emailField = null;
   for (const selector of emailSelectors) {
-    const field = page.locator(selector).first();
-    if (await field.isVisible({ timeout: 5000 }).catch(() => false)) {
-      emailField = field;
-      break;
+    try {
+      const field = page.locator(selector).first();
+      await field.waitFor({ state: 'visible', timeout: 10_000 });
+      if (await field.isVisible()) {
+        emailField = field;
+        break;
+      }
+    } catch {
+      // Continue to next selector
     }
   }
 
   if (!emailField) {
-    throw new Error('Could not find email input field on auth page');
+    // Take a screenshot for debugging
+    await page.screenshot({ path: 'test-results/auth-page-debug.png', fullPage: true });
+    const pageContent = await page.textContent('body');
+    throw new Error(
+      `Could not find email input field on auth page. Page URL: ${page.url()}. ` +
+      `Page contains: ${pageContent?.substring(0, 200)}...`
+    );
   }
 
   // Try multiple selector strategies for password field
@@ -44,14 +64,21 @@ export async function loginToProduction(
     'input[type="password"]',
     'input[name="password"]',
     '#password',
+    'input[placeholder*="password" i]',
+    'input[placeholder*="Password" i]',
   ];
 
   let passwordField = null;
   for (const selector of passwordSelectors) {
-    const field = page.locator(selector).first();
-    if (await field.isVisible({ timeout: 5000 }).catch(() => false)) {
-      passwordField = field;
-      break;
+    try {
+      const field = page.locator(selector).first();
+      await field.waitFor({ state: 'visible', timeout: 10_000 });
+      if (await field.isVisible()) {
+        passwordField = field;
+        break;
+      }
+    } catch {
+      // Continue to next selector
     }
   }
 
@@ -70,14 +97,21 @@ export async function loginToProduction(
     'input[type="submit"]',
     'button:has-text("Sign in")',
     'button:has-text("Login")',
+    'button:has-text("Sign In")',
+    'form button[type="submit"]',
   ];
 
   let submitButton = null;
   for (const selector of submitSelectors) {
-    const button = page.locator(selector).first();
-    if (await button.isVisible({ timeout: 5000 }).catch(() => false)) {
-      submitButton = button;
-      break;
+    try {
+      const button = page.locator(selector).first();
+      await button.waitFor({ state: 'visible', timeout: 10_000 });
+      if (await button.isVisible()) {
+        submitButton = button;
+        break;
+      }
+    } catch {
+      // Continue to next selector
     }
   }
 
