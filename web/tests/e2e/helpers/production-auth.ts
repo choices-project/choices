@@ -36,17 +36,29 @@ export async function loginToProduction(
   // Additional wait for React hydration and client-side rendering
   await page.waitForTimeout(5000);
   
+  // Check if we need to toggle to login mode (page might default to sign up)
+  try {
+    const toggleButton = page.locator('[data-testid="auth-toggle"]').first();
+    const toggleText = await toggleButton.textContent({ timeout: 5000 }).catch(() => null);
+    if (toggleText?.includes('Already have an account') || toggleText?.includes('Sign in')) {
+      await toggleButton.click();
+      await page.waitForTimeout(1000); // Wait for form to switch
+    }
+  } catch {
+    // Toggle might not exist or already in login mode
+  }
+  
   // Try to wait for the page to be fully interactive
   try {
     await page.waitForFunction(
       () => {
         const emailInput = document.querySelector('#email, input[name="email"], input[type="email"]');
-        return emailInput !== null;
+        return emailInput !== null && emailInput.offsetParent !== null; // Check if visible
       },
-      { timeout: 10_000 }
+      { timeout: 15_000 }
     );
   } catch {
-    // Continue anyway
+    // Continue anyway - maybe the page structure is different
   }
 
   // Try multiple selector strategies for email field - prioritize #email (matches actual page structure)
