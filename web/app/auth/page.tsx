@@ -3,7 +3,7 @@
 import { Eye, EyeOff, Lock, Mail, UserPlus, CheckCircle2, AlertCircle } from 'lucide-react';
 import dynamicImport from 'next/dynamic';
 import { useRouter } from 'next/navigation';
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 
 import { loginWithPassword, registerUser } from '@/features/auth/lib/api';
 import {
@@ -20,9 +20,9 @@ import { getSupabaseBrowserClient } from '@/utils/supabase/client';
 // Prevent static generation for auth page
 export const dynamic = 'force-dynamic';
 
+// Safe fallback component that doesn't use hooks
 const PasskeyLoadingFallback = () => {
-  const { t } = useI18n();
-  return <div className="text-center text-sm text-gray-500">{t('auth.loadingOptions')}</div>;
+  return <div className="text-center text-sm text-gray-500">Loading authentication options...</div>;
 };
 
 const PasskeyControls = dynamicImport(() => import('@/features/auth/components/PasskeyControls'), {
@@ -32,11 +32,23 @@ const PasskeyControls = dynamicImport(() => import('@/features/auth/components/P
 
 export default function AuthPage() {
   const router = useRouter();
-  const { t } = useI18n();
   const [isSignUp, setIsSignUp] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [message, setMessage] = useState<string | null>(null);
+  const [isMounted, setIsMounted] = useState(false);
+  
+  // Initialize i18n safely after mount
+  let t: (key: string, params?: Record<string, unknown>) => string;
+  try {
+    const i18n = useI18n();
+    t = i18n.t;
+  } catch (error) {
+    // Fallback if i18n fails
+    logger.error('Failed to initialize i18n', { error });
+    t = (key: string) => key;
+  }
+  
   const userError = useUserError();
   const isLoading = useUserLoading();
   const {
@@ -47,384 +59,254 @@ export default function AuthPage() {
   const initializeAuth = useUserStore((state) => state.initializeAuth);
   const setSessionAndDerived = useUserStore((state) => state.setSessionAndDerived);
 
-
-  // Form state
-  const [formData, setFormData] = useState({
-    email: '',
-    password: '',
-    confirmPassword: '',
-    displayName: ''
-  });
-
-  // Performance tracking - properly implemented
-  React.useEffect(() => {
-    const startTime = performance.now();
-    const timer = setTimeout(() => {
-      const endTime = performance.now();
-      const loadTime = endTime - startTime;
-      logger.info('Auth page load time', { loadTime });
-    }, 100);
-    return () => clearTimeout(timer);
+  // Ensure component is mounted before using client-side features
+  useEffect(() => {
+    setIsMounted(true);
   }, []);
 
-  // Note: Removed user/isLoading checks to avoid hydration mismatch
-  // User authentication will be handled by the form submission
-
-  // Native DOM event handler as workaround for Playwright onClick issues
-  const handleToggle = (e: Event) => {
-    e.preventDefault();
-    logger.info('Native toggle clicked! Current isSignUp', { isSignUp });
-    setIsSignUp(!isSignUp);
-    clearAuthError();
-    setMessage(null);
-    setFormData({ email: '', password: '', confirmPassword: '', displayName: '' });
-    logger.info('Native toggle after setState! New isSignUp should be', { newIsSignUp: !isSignUp });
-  };
-
-  const syncSupabaseSession = React.useCallback(async () => {
-    try {
-      const supabase = await getSupabaseBrowserClient();
-      const {
-        data: { session },
-      } = await supabase.auth.getSession();
-
-      if (session?.user) {
-        initializeAuth(session.user, session, true);
-        setSessionAndDerived(session);
-      } else {
-        initializeAuth(null, null, false);
+  // Initialize auth state on mount
+  useEffect(() => {
+    if (!isMounted) return;
+    
+    const initAuth = async () => {
+      try {
+        await initializeAuth();
+      } catch (error) {
+        logger.error('Failed to initialize auth', { error });
       }
-    } catch (error) {
-      logger.error('Auth page failed to synchronize Supabase session', error);
-    }
-  }, [initializeAuth, setSessionAndDerived]);
+    };
+    
+    initAuth();
+  }, [isMounted, initializeAuth]);
 
-
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     clearAuthError();
     setMessage(null);
+    setAuthLoading(true);
 
-    const translateError = (key: string) => t(`auth.errors.${key}`);
-    const applyError = (key: string) => setAuthError(translateError(key));
+    const formData = new FormData(e.currentTarget);
+    const email = formData.get('email') as string;
+    const password = formData.get('password') as string;
+    const confirmPassword = formData.get('confirmPassword') as string;
 
-    // Client-side validation
-    if (!formData.email) {
-      applyError('emailRequired');
+    if (!email || !password) {
+      setAuthError(t('auth.errors.missingFields'));
+      setAuthLoading(false);
       return;
     }
-    if (!formData.password) {
-      applyError('passwordRequired');
+
+    if (isSignUp && password !== confirmPassword) {
+      setAuthError(t('auth.errors.passwordMismatch'));
+      setAuthLoading(false);
       return;
-    }
-    if (isSignUp) {
-      if (!formData.displayName) {
-        applyError('displayNameRequired');
-        return;
-      }
-      if (formData.password !== formData.confirmPassword) {
-        applyError('passwordsMismatch');
-        return;
-      }
     }
 
     try {
-      setAuthLoading(true);
       if (isSignUp) {
-        // Create context object for security
-        const context: ServerActionContext = {
-          userAgent: typeof window !== 'undefined' ? window.navigator.userAgent : 'unknown',
-        };
-
-        const result = await registerUser({
-          email: formData.email,
-          username: formData.displayName.toLowerCase().replace(/\s+/g, '_'),
-          password: formData.password,
-          context,
-        });
-        if (result.ok) {
-          await syncSupabaseSession();
-          setMessage(t('auth.success.accountCreated'));
+        const result = await registerUser({ email, password });
+        if (result.success) {
+          setMessage(t('auth.success.registered'));
           setTimeout(() => {
             router.push('/onboarding');
-          }, 1000);
+          }, 2000);
         } else {
-          setAuthError(result.error ?? translateError('registrationFailed'));
+          setAuthError(result.error || t('auth.errors.registrationFailed'));
         }
       } else {
-        // Create FormData for login
-        try {
-          await loginWithPassword({
-            email: formData.email,
-            password: formData.password,
-          });
-          await syncSupabaseSession();
-          // If we reach here, loginAction did not throw an error,
-          // but it also handles redirection internally.
-          // We might not see this message if redirection happens immediately.
-          setMessage(t('auth.success.login'));
-          // The router.push might not be necessary if loginAction handles redirect
-          // but keeping it as a fallback or for clarity if loginAction doesn't always redirect.
+        const result = await loginWithPassword({ email, password });
+        if (result.success && result.session) {
+          setSessionAndDerived(result.session);
+          setMessage(t('auth.success.loggedIn'));
           setTimeout(() => {
             router.push('/dashboard');
           }, 1000);
-        } catch (loginError: unknown) {
-          // loginAction might throw an error if authentication fails
-          const errorMessage = loginError instanceof Error ? loginError.message : translateError('loginFailed');
-          setAuthError(errorMessage ?? translateError('loginFailed'));
+        } else {
+          setAuthError(result.error || t('auth.errors.loginFailed'));
         }
       }
-    } catch (err) {
-      const errorMessage = err instanceof Error ? err.message : translateError('unexpected');
-      setAuthError(errorMessage ?? translateError('unexpected'));
-    }
-    finally {
+    } catch (error) {
+      logger.error('Auth action failed', { error });
+      setAuthError(t('auth.errors.generic'));
+    } finally {
       setAuthLoading(false);
     }
   };
 
-  return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50 flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8">
-      <div className="max-w-md w-full space-y-8">
-        {/* Hydration sentinel for E2E tests */}
-        <div data-testid="auth-hydrated" hidden>{'1'}</div>
+  // Show loading state until mounted
+  if (!isMounted) {
+    return (
+      <div className="flex min-h-screen items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4" />
+          <p className="text-sm text-gray-500">Loading...</p>
+        </div>
+      </div>
+    );
+  }
 
+  return (
+    <div className="flex min-h-screen items-center justify-center bg-gray-50 px-4 py-12 sm:px-6 lg:px-8">
+      <div className="w-full max-w-md space-y-8">
         <div>
-          <h1 className="mt-6 text-center text-4xl font-extrabold text-gray-900">
-            {isSignUp ? t('auth.heading.signUp') : t('auth.heading.signIn')}
-          </h1>
+          <h2 className="mt-6 text-center text-3xl font-bold tracking-tight text-gray-900">
+            {isSignUp ? t('auth.title.signUp') : t('auth.title.signIn')}
+          </h2>
           <p className="mt-2 text-center text-sm text-gray-600">
-            {isSignUp ? t('auth.subheading.signUp') : t('auth.subheading.signIn')}
+            {isSignUp
+              ? t('auth.subtitle.signUp')
+              : t('auth.subtitle.signIn')}
           </p>
         </div>
 
-        {/* Toggle between Sign In and Sign Up - outside form for better functionality */}
-        <div className="text-center mb-4">
-          <button
-            type="button"
-            ref={(button) => {
-              if (button) {
-                // Remove existing listeners to avoid duplicates
-                button.removeEventListener('click', handleToggle);
-                // Add native DOM event listener as workaround for Playwright
-                button.addEventListener('click', handleToggle);
-              }
-            }}
-            className="text-blue-600 hover:underline text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 rounded px-2 py-1"
-            data-testid="auth-toggle"
-            tabIndex={0}
-          >
-            {isSignUp ? t('auth.toggle.toSignIn') : t('auth.toggle.toSignUp')}
-          </button>
-        </div>
-
-          <form onSubmit={handleSubmit} className="mt-8 space-y-6 transition-all duration-300 ease-in-out" data-testid="login-form">
-          {/* CSRF Token */}
-          <input type="hidden" name="csrf-token" value="test-csrf-token" data-testid="csrf-token" />
-              {userError && (
-                <div
-                  className="bg-red-50 border border-red-200 rounded-md p-4"
-                  data-testid="auth-error"
-                  role="alert"
-                  aria-live="assertive"
-                >
-                  <div className="flex">
-                    <AlertCircle className="h-5 w-5 text-red-400" />
-                    <div className="ml-3">
-                      <p className="text-sm text-red-700">{userError}</p>
-                    </div>
-                  </div>
-                </div>
-              )}
-
-              {/* Error Summary */}
-              <div data-testid="error-summary" className="bg-red-50 border border-red-200 rounded-md p-4 hidden" role="alert">
-                <p className="text-sm text-red-700">{t('auth.form.errorSummaryTitle')}</p>
-                <div data-testid="error-count" className="text-xs text-red-600 mt-1">{t('auth.form.errorSummaryCount', { count: '3' })}</div>
-              </div>
-
-              {/* Rate Limit Message */}
-              <div data-testid="rate-limit-message" className="bg-yellow-50 border border-yellow-200 rounded-md p-4 hidden" role="alert">
-                <p className="text-sm text-yellow-700">{t('auth.form.rateLimited')}</p>
-              </div>
-
+        <form className="mt-8 space-y-6" onSubmit={handleSubmit}>
           {message && (
-            <div className="bg-green-50 border border-green-200 rounded-md p-4" data-testid="auth-success">
+            <div className="rounded-md bg-green-50 p-4">
               <div className="flex">
-                <CheckCircle2 className="h-5 w-5 text-green-400" />
+                <div className="flex-shrink-0">
+                  <CheckCircle2 className="h-5 w-5 text-green-400" aria-hidden="true" />
+                </div>
                 <div className="ml-3">
-                  <p className="text-sm text-green-700">{message}</p>
+                  <p className="text-sm font-medium text-green-800">{message}</p>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {userError && (
+            <div className="rounded-md bg-red-50 p-4">
+              <div className="flex">
+                <div className="flex-shrink-0">
+                  <AlertCircle className="h-5 w-5 text-red-400" aria-hidden="true" />
+                </div>
+                <div className="ml-3">
+                  <p className="text-sm font-medium text-red-800">{userError}</p>
                 </div>
               </div>
             </div>
           )}
 
           <div className="space-y-4">
-                {/* Display Name (Sign Up only) */}
-                {isSignUp && (
-                  <div>
-                    <label htmlFor="displayName" className="block text-sm font-medium text-gray-700 mb-1">
-                      {t('auth.form.displayNameLabel')}
-                    </label>
-                    <div className="relative">
-                      <input
-                        type="text"
-                        id="displayName"
-                        name="displayName"
-                        value={formData.displayName}
-                        onChange={(e) => setFormData({...formData, displayName: e.target.value})}
-                        required={isSignUp}
-                        className="w-full pl-10 pr-3 py-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500 focus-visible:ring-2 focus-visible:ring-blue-500"
-                        placeholder={t('auth.form.displayNamePlaceholder')}
-                        data-testid="auth-display-name"
-                        aria-label={t('auth.form.displayNameAria')}
-                      />
-                      <UserPlus className="absolute left-3 top-2.5 h-5 w-5 text-gray-400" />
-                    </div>
-                    <div data-testid="display-name-validation" className="mt-1 text-xs text-green-600">
-                      {t('auth.form.displayNameValidation')}
-                    </div>
-                    <div data-testid="display-name-error" className="mt-1 text-xs text-red-600 hidden">
-                      {t('auth.form.displayNameError')}
-                    </div>
-                  </div>
-                )}
-
-            {/* Email */}
             <div>
-              <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-1">
-                {t('auth.form.emailLabel')}
+              <label htmlFor="email" className="block text-sm font-medium text-gray-700">
+                {t('auth.form.email')}
               </label>
-              <div className="relative">
+              <div className="mt-1 relative">
+                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                  <Mail className="h-5 w-5 text-gray-400" aria-hidden="true" />
+                </div>
                 <input
-                  type="email"
                   id="email"
                   name="email"
-                  value={formData.email}
-                  onChange={(e) => setFormData({...formData, email: e.target.value})}
+                  type="email"
+                  autoComplete="email"
                   required
-                  className="w-full pl-10 pr-3 py-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500 focus-visible:ring-2 focus-visible:ring-blue-500"
+                  className="appearance-none block w-full pl-10 pr-3 py-2 border border-gray-300 rounded-md placeholder-gray-400 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
                   placeholder={t('auth.form.emailPlaceholder')}
-                      data-testid="login-email"
-                  aria-label={t('auth.form.emailAria')}
                 />
-                <Mail className="absolute left-3 top-2.5 h-5 w-5 text-gray-400" />
-              </div>
-              <div data-testid="email-validation" className="mt-1 text-xs text-green-600">
-                {t('auth.form.emailValidation')}
-              </div>
-              <div data-testid="email-error" className="mt-1 text-xs text-red-600 hidden">
-                {t('auth.form.emailError')}
               </div>
             </div>
 
-            {/* Password */}
             <div>
-              <label htmlFor="password" className="block text-sm font-medium text-gray-700 mb-1">
-                {t('auth.form.passwordLabel')}
+              <label htmlFor="password" className="block text-sm font-medium text-gray-700">
+                {t('auth.form.password')}
               </label>
-              <div className="relative">
+              <div className="mt-1 relative">
+                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                  <Lock className="h-5 w-5 text-gray-400" aria-hidden="true" />
+                </div>
                 <input
-                  type={showPassword ? 'text' : 'password'}
                   id="password"
                   name="password"
-                  value={formData.password}
-                  onChange={(e) => setFormData({...formData, password: e.target.value})}
+                  type={showPassword ? 'text' : 'password'}
+                  autoComplete={isSignUp ? 'new-password' : 'current-password'}
                   required
-                  className="w-full pl-10 pr-10 py-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500 focus-visible:ring-2 focus-visible:ring-blue-500"
+                  className="appearance-none block w-full pl-10 pr-3 py-2 border border-gray-300 rounded-md placeholder-gray-400 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
                   placeholder={t('auth.form.passwordPlaceholder')}
-                  data-testid="login-password"
-                  aria-label={t('auth.form.passwordAria')}
                 />
-                <Lock className="absolute left-3 top-2.5 h-5 w-5 text-gray-400" />
-                    <button
-                      type="button"
-                      onClick={() => setShowPassword(!showPassword)}
-                      className="absolute right-3 top-2.5 text-gray-400 hover:text-gray-600"
-                      aria-label={t(showPassword ? 'auth.form.hidePassword' : 'auth.form.showPassword')}
-                      data-testid="password-toggle"
-                      tabIndex={-1}
-                    >
-                      {showPassword ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
-                    </button>
-              </div>
-              <div data-testid="password-strength" className="mt-1 text-xs text-green-600">
-                {t('auth.form.passwordStrength')}
-              </div>
-              <div data-testid="password-security" className="mt-1 text-xs text-green-600">
-                {t('auth.form.passwordSecurity')}
-              </div>
-              <div data-testid="password-error" className="mt-1 text-xs text-red-600 hidden">
-                {t('auth.errors.passwordRequired')}
+                <button
+                  type="button"
+                  className="absolute inset-y-0 right-0 pr-3 flex items-center"
+                  onClick={() => setShowPassword(!showPassword)}
+                  aria-label={showPassword ? t('auth.form.hidePassword') : t('auth.form.showPassword')}
+                >
+                  {showPassword ? (
+                    <EyeOff className="h-5 w-5 text-gray-400" aria-hidden="true" />
+                  ) : (
+                    <Eye className="h-5 w-5 text-gray-400" aria-hidden="true" />
+                  )}
+                </button>
               </div>
             </div>
 
-            {/* Confirm Password (Sign Up only) */}
             {isSignUp && (
               <div>
-                <label htmlFor="confirmPassword" className="block text-sm font-medium text-gray-700 mb-1">
-                  {t('auth.form.confirmPasswordLabel')}
+                <label htmlFor="confirmPassword" className="block text-sm font-medium text-gray-700">
+                  {t('auth.form.confirmPassword')}
                 </label>
-                <div className="relative">
+                <div className="mt-1 relative">
+                  <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                    <Lock className="h-5 w-5 text-gray-400" aria-hidden="true" />
+                  </div>
                   <input
-                    type={showConfirmPassword ? 'text' : 'password'}
                     id="confirmPassword"
                     name="confirmPassword"
-                    value={formData.confirmPassword}
-                    onChange={(e) => setFormData({...formData, confirmPassword: e.target.value})}
-                    required={isSignUp}
-                    className="w-full pl-10 pr-10 py-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500 focus-visible:ring-2 focus-visible:ring-blue-500"
-                    placeholder={t('auth.form.passwordPlaceholder')}
-                    data-testid="auth-confirm-password"
-                    aria-label={t('auth.form.confirmPasswordAria')}
+                    type={showConfirmPassword ? 'text' : 'password'}
+                    autoComplete="new-password"
+                    required
+                    className="appearance-none block w-full pl-10 pr-3 py-2 border border-gray-300 rounded-md placeholder-gray-400 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
+                    placeholder={t('auth.form.confirmPasswordPlaceholder')}
                   />
-                  <Lock className="absolute left-3 top-2.5 h-5 w-5 text-gray-400" />
-                      <button
-                        type="button"
-                        onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-                        className="absolute right-3 top-2.5 text-gray-400 hover:text-gray-600"
-                        aria-label={t(showConfirmPassword ? 'auth.form.hidePassword' : 'auth.form.showPassword')}
-                        data-testid="password-toggle"
-                        tabIndex={-1}
-                      >
-                        {showConfirmPassword ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
-                      </button>
-                </div>
-                <div data-testid="password-match" className="mt-1 text-xs text-green-600">
-                  {t('auth.form.passwordsMatch')}
+                  <button
+                    type="button"
+                    className="absolute inset-y-0 right-0 pr-3 flex items-center"
+                    onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                    aria-label={showConfirmPassword ? t('auth.form.hidePassword') : t('auth.form.showPassword')}
+                  >
+                    {showConfirmPassword ? (
+                      <EyeOff className="h-5 w-5 text-gray-400" aria-hidden="true" />
+                    ) : (
+                      <Eye className="h-5 w-5 text-gray-400" aria-hidden="true" />
+                    )}
+                  </button>
                 </div>
               </div>
             )}
           </div>
 
-
-          {/* Submit Button */}
-              <button
-                type="submit"
-                className="w-full bg-blue-600 text-white py-2 px-4 rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition duration-150 ease-in-out"
-                data-testid="login-submit"
-                aria-busy={isLoading}
-                disabled={isLoading}
+          <div>
+            <button
+              type="submit"
+              disabled={isLoading}
+              className="group relative flex w-full justify-center rounded-md border border-transparent bg-blue-600 py-2 px-4 text-sm font-medium text-white hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed"
             >
-              {isLoading ? t('auth.form.working') : isSignUp ? t('auth.form.submit.signUp') : t('auth.form.submit.signIn')}
+              {isLoading
+                ? t('auth.form.submitting')
+                : isSignUp
+                  ? t('auth.form.signUp')
+                  : t('auth.form.signIn')}
             </button>
+          </div>
+
+          <div className="text-center">
+            <button
+              type="button"
+              onClick={() => {
+                setIsSignUp(!isSignUp);
+                clearAuthError();
+                setMessage(null);
+              }}
+              className="text-sm text-blue-600 hover:text-blue-500"
+            >
+              {isSignUp
+                ? t('auth.form.alreadyHaveAccount')
+                : t('auth.form.needAccount')}
+            </button>
+          </div>
         </form>
 
-        {/* Passkey Authentication */}
-        <div className="border-t pt-6">
-          <div className="relative">
-            <div className="absolute inset-0 flex items-center">
-              <div className="w-full border-t border-gray-300" />
-            </div>
-            <div className="relative flex justify-center text-sm">
-              <span className="px-2 bg-gradient-to-br from-blue-50 via-white to-purple-50 text-gray-500">
-                {t('auth.form.altSignInDivider')}
-              </span>
-            </div>
-          </div>
-          <div className="mt-4">
-            <PasskeyControls />
-          </div>
+        <div className="mt-6">
+          <PasskeyControls />
         </div>
       </div>
     </div>
