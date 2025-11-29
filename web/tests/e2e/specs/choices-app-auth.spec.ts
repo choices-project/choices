@@ -2,11 +2,9 @@ import { expect, test } from '@playwright/test';
 
 import {
   ensureLoggedOut,
-  loginAsAdmin,
-  loginTestUser,
-  loginWithPassword,
   waitForPageReady,
 } from '../helpers/e2e-setup';
+import { loginToProduction } from '../helpers/production-auth';
 
 /**
  * Comprehensive authentication tests for choices-app.com
@@ -41,11 +39,10 @@ test.describe('Choices App - Authentication Flow', () => {
 
     await ensureLoggedOut(page);
 
-    // Use helper function that handles auth form selectors
-    await loginTestUser(page, {
+    // Use production-specific login helper
+    await loginToProduction(page, {
       email: TEST_USER_EMAIL!,
       password: TEST_USER_PASSWORD!,
-      username: TEST_USER_EMAIL!.split('@')[0] ?? 'test-user',
     });
 
     await waitForPageReady(page);
@@ -78,10 +75,9 @@ test.describe('Choices App - Authentication Flow', () => {
     await ensureLoggedOut(page);
 
     // Login first
-    await loginTestUser(page, {
+    await loginToProduction(page, {
       email: TEST_USER_EMAIL!,
       password: TEST_USER_PASSWORD!,
-      username: TEST_USER_EMAIL!.split('@')[0] ?? 'test-user',
     });
     await waitForPageReady(page);
     await expect(page).toHaveURL(/\/(dashboard|onboarding)/, { timeout: 15_000 });
@@ -143,12 +139,13 @@ test.describe('Choices App - Authentication Flow', () => {
   test('should handle invalid credentials gracefully', async ({ page }) => {
     await ensureLoggedOut(page);
 
-    // Try to login with invalid credentials using helper
-    await loginWithPassword(page, {
+    // Try to login with invalid credentials
+    await loginToProduction(page, {
       email: 'invalid@example.com',
       password: 'wrongpassword',
-      username: 'invalid',
-    }, { path: '/auth', expectRedirect: undefined });
+    }).catch(() => {
+      // Expected to fail - that's what we're testing
+    });
 
     // Should show error message
     await page.waitForTimeout(2000);
@@ -166,10 +163,9 @@ test.describe('Choices App - Authentication Flow', () => {
     await ensureLoggedOut(page);
 
     // Login first
-    await loginTestUser(page, {
+    await loginToProduction(page, {
       email: TEST_USER_EMAIL!,
       password: TEST_USER_PASSWORD!,
-      username: TEST_USER_EMAIL!.split('@')[0] ?? 'test-user',
     });
     await waitForPageReady(page);
     await expect(page).toHaveURL(/\/(dashboard|onboarding)/, { timeout: 15_000 });
@@ -237,10 +233,9 @@ test.describe('Choices App - Authentication Flow', () => {
     await ensureLoggedOut(page);
 
     // Login as admin
-    await loginAsAdmin(page, {
+    await loginToProduction(page, {
       email: TEST_ADMIN_EMAIL!,
       password: TEST_ADMIN_PASSWORD!,
-      username: TEST_ADMIN_EMAIL!.split('@')[0] ?? 'admin',
     });
     await waitForPageReady(page);
     await expect(page).toHaveURL(/\/(dashboard|onboarding)/, { timeout: 15_000 });
