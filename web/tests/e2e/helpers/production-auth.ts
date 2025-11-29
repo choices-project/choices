@@ -21,15 +21,22 @@ export async function loginToProduction(
     // Continue even if networkidle times out
   });
   
+  // Wait for any form or input to appear (React hydration)
+  try {
+    await page.waitForSelector('input, form', { timeout: 15_000 });
+  } catch {
+    // Continue anyway
+  }
+  
   // Additional wait for React hydration
-  await page.waitForTimeout(2000);
+  await page.waitForTimeout(3000);
 
-  // Try multiple selector strategies for email field with longer timeout
+  // Try multiple selector strategies for email field - prioritize #email (matches actual page structure)
   const emailSelectors = [
-    '[data-testid="login-email"]',
-    'input[type="email"]',
-    'input[name="email"]',
     '#email',
+    'input[name="email"]',
+    'input[type="email"]',
+    '[data-testid="login-email"]',
     'input[placeholder*="email" i]',
     'input[placeholder*="Email" i]',
   ];
@@ -58,12 +65,12 @@ export async function loginToProduction(
     );
   }
 
-  // Try multiple selector strategies for password field
+  // Try multiple selector strategies for password field - prioritize #password (matches actual page structure)
   const passwordSelectors = [
-    '[data-testid="login-password"]',
-    'input[type="password"]',
-    'input[name="password"]',
     '#password',
+    'input[name="password"]',
+    'input[type="password"]',
+    '[data-testid="login-password"]',
     'input[placeholder*="password" i]',
     'input[placeholder*="Password" i]',
   ];
