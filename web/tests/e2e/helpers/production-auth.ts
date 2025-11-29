@@ -4,7 +4,7 @@ import { waitForPageReady } from './e2e-setup';
 
 /**
  * Production-specific authentication helpers
- * 
+ *
  * These functions are designed for testing production environments (choices-app.com)
  * where test IDs may not be available. They use more generic selectors.
  */
@@ -15,21 +15,39 @@ export async function loginToProduction(
 ): Promise<void> {
   // Navigate to auth page
   await page.goto('/auth', { waitUntil: 'domcontentloaded', timeout: 60_000 });
-  
+
   // Wait for page to be ready - give it more time for production
   await page.waitForLoadState('networkidle', { timeout: 30_000 }).catch(() => {
     // Continue even if networkidle times out
   });
-  
+
   // Wait for any form or input to appear (React hydration)
   try {
-    await page.waitForSelector('input, form', { timeout: 15_000 });
+    // Wait for either an input field or a form element
+    await Promise.race([
+      page.waitForSelector('input[type="email"], input#email, input[name="email"]', { timeout: 20_000 }),
+      page.waitForSelector('form', { timeout: 20_000 }),
+      page.waitForSelector('input', { timeout: 20_000 }),
+    ]);
+  } catch {
+    // Continue anyway - maybe the page structure is different
+  }
+  
+  // Additional wait for React hydration and client-side rendering
+  await page.waitForTimeout(5000);
+  
+  // Try to wait for the page to be fully interactive
+  try {
+    await page.waitForFunction(
+      () => {
+        const emailInput = document.querySelector('#email, input[name="email"], input[type="email"]');
+        return emailInput !== null;
+      },
+      { timeout: 10_000 }
+    );
   } catch {
     // Continue anyway
   }
-  
-  // Additional wait for React hydration
-  await page.waitForTimeout(3000);
 
   // Try multiple selector strategies for email field - prioritize #email (matches actual page structure)
   const emailSelectors = [
