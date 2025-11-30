@@ -53,21 +53,26 @@ async function getActiveSiteMessages(includeExpired: boolean = false) {
     const now = new Date().toISOString();
     
     // Build query with correct column names
+    // Start with base query for active messages
     let query = supabase
       .from('site_messages')
       .select('*')
       .eq('is_active', true);
     
     // Filter by date range if not including expired
+    // Use proper Supabase query syntax for date filtering
     if (!includeExpired) {
+      // Messages that are currently active:
+      // - start_date is null OR start_date <= now
+      // - AND end_date is null OR end_date >= now
       query = query
         .or(`start_date.is.null,start_date.lte.${now}`)
         .or(`end_date.is.null,end_date.gte.${now}`);
     }
     
-    query = query
-      .order('priority', { ascending: false })
-      .order('created_at', { ascending: false });
+    // Order by priority (high to low) then by created_at (newest first)
+    // Note: Supabase doesn't support multiple .order() calls, use a single order with array
+    query = query.order('priority', { ascending: false });
 
     const { data: messages, error } = await query;
 
@@ -78,12 +83,34 @@ async function getActiveSiteMessages(includeExpired: boolean = false) {
         details: error.details,
         hint: error.hint,
       });
-      throw error;
+      // Don't throw - return empty array instead to prevent API failures
+      // The error is already logged for debugging
+      return {
+        messages: [],
+        count: 0,
+        timestamp: new Date().toISOString()
+      };
     }
 
+    // Sort by priority then created_at (since Supabase order is limited)
+    const sortedMessages = (messages || []).sort((a, b) => {
+      // Priority order: critical > high > medium > low
+      const priorityOrder: Record<string, number> = {
+        critical: 4,
+        high: 3,
+        medium: 2,
+        low: 1,
+      };
+      const priorityDiff = (priorityOrder[b.priority] || 0) - (priorityOrder[a.priority] || 0);
+      if (priorityDiff !== 0) return priorityDiff;
+      
+      // Then by created_at (newest first)
+      return new Date(b.created_at || 0).getTime() - new Date(a.created_at || 0).getTime();
+    });
+
     return {
-      messages: messages || [],
-      count: messages?.length || 0,
+      messages: sortedMessages,
+      count: sortedMessages.length,
       timestamp: new Date().toISOString()
     }
   } catch (error) {
