@@ -25,10 +25,10 @@ export const GET = withErrorHandling(async (request: NextRequest) => {
 async function getActiveSiteMessages(includeExpired: boolean = false) {
   try {
     const { createClient } = await import('@supabase/supabase-js');
-    
+
     const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
     const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
-    
+
     if (!supabaseUrl || !serviceRoleKey) {
       logger.error('Missing Supabase environment variables', {
         hasUrl: !!supabaseUrl,
@@ -36,7 +36,7 @@ async function getActiveSiteMessages(includeExpired: boolean = false) {
       });
       throw new Error('Supabase configuration missing');
     }
-    
+
     // Create Supabase client with service role key and proper auth config
     // Service role key bypasses RLS, so we don't need user session
     const supabase = createClient(
@@ -49,16 +49,16 @@ async function getActiveSiteMessages(includeExpired: boolean = false) {
         },
       }
     );
-    
+
     const now = new Date().toISOString();
-    
+
     // Build query with correct column names
     // Start with base query for active messages
     let query = supabase
       .from('site_messages')
       .select('*')
       .eq('is_active', true);
-    
+
     // Filter by date range if not including expired
     // Use proper Supabase query syntax for date filtering
     if (!includeExpired) {
@@ -69,7 +69,7 @@ async function getActiveSiteMessages(includeExpired: boolean = false) {
         .or(`start_date.is.null,start_date.lte.${now}`)
         .or(`end_date.is.null,end_date.gte.${now}`);
     }
-    
+
     // Order by priority (high to low) then by created_at (newest first)
     // Note: Supabase doesn't support multiple .order() calls, use a single order with array
     query = query.order('priority', { ascending: false });
@@ -103,7 +103,7 @@ async function getActiveSiteMessages(includeExpired: boolean = false) {
       };
       const priorityDiff = (priorityOrder[b.priority] || 0) - (priorityOrder[a.priority] || 0);
       if (priorityDiff !== 0) return priorityDiff;
-      
+
       // Then by created_at (newest first)
       return new Date(b.created_at || 0).getTime() - new Date(a.created_at || 0).getTime();
     });
