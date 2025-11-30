@@ -26,10 +26,28 @@ async function getActiveSiteMessages(includeExpired: boolean = false) {
   try {
     const { createClient } = await import('@supabase/supabase-js');
     
-    // Create Supabase client properly
+    const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+    const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+    
+    if (!supabaseUrl || !serviceRoleKey) {
+      logger.error('Missing Supabase environment variables', {
+        hasUrl: !!supabaseUrl,
+        hasServiceKey: !!serviceRoleKey,
+      });
+      throw new Error('Supabase configuration missing');
+    }
+    
+    // Create Supabase client with service role key and proper auth config
+    // Service role key bypasses RLS, so we don't need user session
     const supabase = createClient(
-      process.env.NEXT_PUBLIC_SUPABASE_URL!,
-      process.env.SUPABASE_SERVICE_ROLE_KEY!
+      supabaseUrl,
+      serviceRoleKey,
+      {
+        auth: {
+          persistSession: false, // Don't persist session for service role
+          autoRefreshToken: false, // No token refresh needed for service role
+        },
+      }
     );
     
     const now = new Date().toISOString();
@@ -54,7 +72,12 @@ async function getActiveSiteMessages(includeExpired: boolean = false) {
     const { data: messages, error } = await query;
 
     if (error) {
-      logger.error('Supabase error fetching site messages:', error);
+      logger.error('Supabase error fetching site messages', {
+        error: error.message,
+        code: error.code,
+        details: error.details,
+        hint: error.hint,
+      });
       throw error;
     }
 
@@ -64,7 +87,10 @@ async function getActiveSiteMessages(includeExpired: boolean = false) {
       timestamp: new Date().toISOString()
     }
   } catch (error) {
-    logger.error('Error in getActiveSiteMessages:', error);
+    logger.error('Error in getActiveSiteMessages', {
+      error: error instanceof Error ? error.message : String(error),
+      stack: error instanceof Error ? error.stack : undefined,
+    });
     throw error;
   }
 }

@@ -32,10 +32,10 @@ export async function loginToProduction(
   } catch {
     // Continue anyway - maybe the page structure is different
   }
-  
+
   // Additional wait for React hydration and client-side rendering
   await page.waitForTimeout(5000);
-  
+
   // Check if we need to toggle to login mode (page might default to sign up)
   try {
     const toggleButton = page.locator('[data-testid="auth-toggle"]').first();
@@ -47,7 +47,7 @@ export async function loginToProduction(
   } catch {
     // Toggle might not exist or already in login mode
   }
-  
+
   // Try to wait for the page to be fully interactive
   try {
     await page.waitForFunction(
