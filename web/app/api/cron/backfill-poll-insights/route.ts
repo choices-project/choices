@@ -1,4 +1,3 @@
-'use server'
 
 /**
  * Cron: Backfill Poll Demographic Insights

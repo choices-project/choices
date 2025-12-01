@@ -13,7 +13,7 @@ const MOCK_REPRESENTATIVES: Representative[] = [
     name: 'Representative One',
     office: 'Mayor',
     level: 'local',
-    photo_url: null,
+    primary_photo_url: undefined,
     party: 'Independent',
     ocdDivisionIds: ['ocd-division/country:us/state:ca/place:san_francisco'],
     division_ids: ['ocd-division/country:us/state:ca/place:san_francisco'],
@@ -22,10 +22,14 @@ const MOCK_REPRESENTATIVES: Representative[] = [
     activities: [
       {
         id: 1,
+        representative_id: 1,
         type: 'town_hall',
         title: 'Hosted neighborhood town hall',
         description: 'Discussed community safety improvements',
         date: '2025-05-01',
+        source: 'test',
+        created_at: '2025-01-01T00:00:00Z',
+        updated_at: '2025-01-01T00:00:00Z',
       },
     ],
     committees: [],
