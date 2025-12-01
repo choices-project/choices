@@ -64,6 +64,8 @@ export const GET = withErrorHandling(async (request: NextRequest) => {
       environment,
       maintenance: process.env.NEXT_PUBLIC_MAINTENANCE === '1',
       version: appVersion
+    }, {
+      timestamp,
     });
   }
 
