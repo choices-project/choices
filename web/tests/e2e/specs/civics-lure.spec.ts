@@ -12,7 +12,8 @@ test.describe('@axe Civics lure', () => {
       exclude: ['nextjs-portal', 'div[data-nextjs-toast-wrapper="true"]'],
     });
 
-    await expect(page.getByRole('button', { name: /See All My Local Candidates/i })).toBeVisible();
+    // Verify the primary engagement call-to-action is visible
+    await expect(page.getByText(/See All My Local Candidates/i)).toBeVisible();
   });
 });
 

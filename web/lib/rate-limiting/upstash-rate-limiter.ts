@@ -60,12 +60,20 @@ class UpstashRateLimiter {
   private violations: ViolationData[] = [];
   private readonly maxViolationsInMemory = 1000;
   private redisClient: Awaited<ReturnType<typeof getRedisClient>> | null = null;
+  private cleanupInterval: NodeJS.Timeout | null = null;
 
   constructor() {
     // Clean up old violations periodically
-    setInterval(() => {
+    this.cleanupInterval = setInterval(() => {
       this.cleanupOldViolations();
     }, 60 * 60 * 1000); // Every hour
+
+    // In test and server environments, ensure this interval does not keep the
+    // event loop alive on its own. This prevents Jest from reporting an open
+    // handle while still running periodic cleanup in production.
+    if (this.cleanupInterval && typeof this.cleanupInterval.unref === 'function') {
+      this.cleanupInterval.unref();
+    }
   }
 
   private async getRedisClient(): Promise<Awaited<ReturnType<typeof getRedisClient>>> {

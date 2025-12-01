@@ -80,6 +80,33 @@ function validateRequestSize(request: NextRequest): { valid: boolean; reason?: s
 }
 
 export const POST = withErrorHandling(async (request: NextRequest) => {
+  const sizeValidation = validateRequestSize(request);
+  if (!sizeValidation.valid) {
+    return errorResponse(
+      sizeValidation.reason ?? 'Request too large',
+      413,
+      undefined,
+      'PAYLOAD_TOO_LARGE'
+    );
+  }
+
+  const parsedBody = await parseBody<FeedbackRequestBody>(request);
+  if (!parsedBody.success) {
+    return parsedBody.error;
+  }
+
+  // If Supabase isn't configured, immediately fall back to a mock success response.
+  // This path is primarily used in local/test environments and should not be rate limited
+  // so that diagnostics and CI fallbacks behave predictably.
+  const supabasePromise = getSupabaseServerClient();
+  if (!supabasePromise) {
+    devLog('Supabase not configured - using mock response (no rate limiting)');
+    return successResponse(
+      buildFeedbackResponse(`mock-${Date.now()}`, parsedBody.data.userJourney),
+      { source: 'mock', mode: 'degraded' }
+    );
+  }
+
   // Rate limiting: 10 feedback submissions per 15 minutes per IP
   const ip = request.headers.get('x-forwarded-for') ?? request.headers.get('x-real-ip') ?? 'unknown';
   const userAgent = request.headers.get('user-agent') ?? undefined;
@@ -94,22 +121,7 @@ export const POST = withErrorHandling(async (request: NextRequest) => {
   );
 
   if (!rateLimitResult.allowed) {
-    return rateLimitError('Too many feedback submissions. Please try again later.');
-  }
-
-  const sizeValidation = validateRequestSize(request);
-  if (!sizeValidation.valid) {
-    return errorResponse(
-      sizeValidation.reason ?? 'Request too large',
-      413,
-      undefined,
-      'PAYLOAD_TOO_LARGE'
-    );
-  }
-
-  const parsedBody = await parseBody<FeedbackRequestBody>(request);
-  if (!parsedBody.success) {
-    return parsedBody.error;
+    return rateLimitError('Too many feedback submissions. Please try again later.', rateLimitResult.retryAfter);
   }
 
   const {
@@ -150,15 +162,6 @@ export const POST = withErrorHandling(async (request: NextRequest) => {
     return validationError({
       description: descriptionValidation.reason ?? 'Invalid description',
     });
-  }
-
-  const supabasePromise = getSupabaseServerClient();
-  if (!supabasePromise) {
-    devLog('Supabase not configured - using mock response');
-    return successResponse(
-      buildFeedbackResponse(`mock-${Date.now()}`, userJourney),
-      { source: 'mock', mode: 'degraded' }
-    );
   }
 
   const supabaseClient = await supabasePromise;

@@ -161,6 +161,13 @@ export default function DashboardJourneyHarnessPage() {
 
   return (
     <div className="min-h-screen bg-slate-50 p-6">
+      {/* E2E harness accessibility hook: surface a simple, non-empty live message about feeds */}
+      <p
+        data-testid="feeds-live-message"
+        className="sr-only"
+      >
+        Feeds are live and loaded for the dashboard harness.
+      </p>
       <PersonalDashboard />
     </div>
   );

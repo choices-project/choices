@@ -94,6 +94,9 @@ function HarnessFeedDataProvider({
         title: t('feeds.provider.notifications.error.title'),
         message,
       });
+      // Surface critical feed errors to assistive technologies with an assertive announcement
+      // so screen reader users get immediate feedback when refresh fails.
+      ScreenReaderSupport.announce(message, 'assertive');
     },
     [addNotification, t],
   );

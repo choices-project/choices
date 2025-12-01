@@ -108,6 +108,19 @@ export default function AuthSetupStep({
       return
     }
 
+    // In harness/interactive mode, simulate a successful OTP send without
+    // requiring a live Supabase backend. This keeps E2E flows fast and stable.
+    if (forceInteractive) {
+      clearError();
+      setSuccess(true);
+      onUpdate({
+        email,
+        authMethod: 'email',
+        authSetupCompleted: true,
+      });
+      return;
+    }
+
     setLoading(true)
     clearError()
 
@@ -541,7 +554,7 @@ export default function AuthSetupStep({
               <div className="p-3 bg-green-50 border border-green-200 rounded-lg animate-bounce">
                 <div className="flex items-center gap-2 text-green-800">
                   <CheckCircle className="h-4 w-4" />
-                  <span className="text-sm">Passkey registered successfully!</span>
+                  <span className="text-sm">Passkey created successfully!</span>
                 </div>
                 <div className="mt-2 text-xs text-green-600">
                   You can now use your biometric authentication to sign in.

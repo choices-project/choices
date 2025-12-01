@@ -7,6 +7,7 @@ import EnhancedFeedbackWidget from '@/components/EnhancedFeedbackWidget';
 import { AppShell } from '@/components/shared/AppShell';
 import FontProvider from '@/components/shared/FontProvider';
 import GlobalNavigation from '@/components/shared/GlobalNavigation';
+import { UserNotificationContainer } from '@/components/notifications/UserNotificationContainer';
 import SiteMessages from '@/components/SiteMessages';
 import { AuthProvider } from '@/contexts/AuthContext';
 import { usePollCreatedListener } from '@/features/polls/hooks/usePollCreatedListener';
@@ -60,6 +61,7 @@ export default function AppLayout({
                 }
               >
                 {children}
+                <UserNotificationContainer />
               </Suspense>
             </UserStoreProvider>
           </AuthProvider>
@@ -80,6 +82,7 @@ export default function AppLayout({
                 feedback={!DISABLE_FEEDBACK_WIDGET ? <EnhancedFeedbackWidget /> : null}
               >
                 {children}
+                <UserNotificationContainer />
               </AppShell>
             </ServiceWorkerProvider>
           </UserStoreProvider>
