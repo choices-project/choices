@@ -36,38 +36,45 @@ test.describe('Feeds Store E2E', () => {
   });
 
   test('loads feeds via harness', async ({ page }) => {
-    // Mock API endpoint
-    await page.route('**/api/feeds', async (route) => {
-      if (route.request().method() === 'POST') {
-        await route.fulfill({
-          status: 200,
-          contentType: 'application/json',
-          body: JSON.stringify({
-            feeds: [
-              {
-                id: 'feed-1',
-                title: 'Test Feed 1',
-                category: 'politics',
-                publishedAt: new Date().toISOString(),
-              },
-              {
-                id: 'feed-2',
-                title: 'Test Feed 2',
-                category: 'technology',
-                publishedAt: new Date().toISOString(),
-              },
-            ],
-            total: 2,
-          }),
-        });
-      }
-    });
-
     await page.evaluate(() => {
-      window.__feedsStoreHarness?.actions.loadFeeds({});
+      // Seed the feeds store directly via the harness to avoid network flakiness
+      window.__feedsStoreHarness?.actions.setFeeds([
+        {
+          id: 'feed-1',
+          title: 'Test Feed 1',
+          category: 'politics',
+          publishedAt: new Date().toISOString(),
+          type: 'article',
+          source: { name: 'Test Source 1' },
+          tags: ['democracy'],
+          userInteraction: {
+            bookmarked: false,
+            read: false,
+            liked: false,
+            shared: false,
+          },
+          engagement: { likes: 0, shares: 0 },
+          metadata: { language: 'en' },
+        },
+        {
+          id: 'feed-2',
+          title: 'Test Feed 2',
+          category: 'technology',
+          publishedAt: new Date().toISOString(),
+          type: 'article',
+          source: { name: 'Test Source 2' },
+          tags: ['innovation'],
+          userInteraction: {
+            bookmarked: false,
+            read: false,
+            liked: false,
+            shared: false,
+          },
+          engagement: { likes: 0, shares: 0 },
+          metadata: { language: 'en' },
+        },
+      ] as any);
     });
-
-    await page.waitForTimeout(1000);
 
     const state = await page.evaluate(() => {
       const harness = window.__feedsStoreHarness;

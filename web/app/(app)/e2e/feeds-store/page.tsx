@@ -23,6 +23,7 @@ import type {
 
 export type FeedsStoreHarness = {
   actions: {
+    setFeeds: FeedsStore['setFeeds'];
     loadFeeds: FeedsStore['loadFeeds'];
     refreshFeeds: FeedsStore['refreshFeeds'];
     loadMoreFeeds: FeedsStore['loadMoreFeeds'];
@@ -71,6 +72,7 @@ function FeedsStoreHarnessView() {
   const setSelectedCategory = useFeedsStore((state) => state.setSelectedCategory);
   const resetFeedsState = useFeedsStore((state) => state.resetFeedsState);
   const updatePreferences = useFeedsStore((state) => state.updatePreferences);
+  const setFeeds = useFeedsStore((state) => state.setFeeds);
 
   useEffect(() => {
     if (process.env.NODE_ENV !== 'production') {
@@ -90,6 +92,7 @@ function FeedsStoreHarnessView() {
         setSelectedCategory,
         resetFeedsState,
         updatePreferences,
+        setFeeds,
       },
       selectors: {
         getState: () => useFeedsStore.getState(),
@@ -123,6 +126,7 @@ function FeedsStoreHarnessView() {
     setSelectedCategory,
     resetFeedsState,
     updatePreferences,
+    setFeeds,
   ]);
 
   const summary = useMemo(
