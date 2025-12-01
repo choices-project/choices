@@ -98,9 +98,6 @@ export default function FeedCore({
   const [activeTab, setActiveTab] = useState('feed');
   const [isDarkMode, setIsDarkMode] = useState(false);
   const [isClient, setIsClient] = useState(false);
-  // Scroll-to-top functionality is handled by InfiniteScroll component
-  // Keeping setShowScrollTop for potential future use
-  const [, setShowScrollTop] = useState(false);
   const [isPulling, setIsPulling] = useState(false);
   const [pullDistance, setPullDistance] = useState(0);
   

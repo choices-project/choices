@@ -25,7 +25,6 @@ import {
 } from '@heroicons/react/24/outline';
 import React, { useMemo, useEffect, useState } from 'react';
 
-import { useI18n } from '@/hooks/useI18n';
 import {
   trackCivicsRepresentativeEvent,
   type CivicsRepresentativeEventBase
@@ -33,6 +32,7 @@ import {
 import { useElectionCountdown, formatElectionDate } from '@/features/civics/utils/civicsCountdownUtils';
 import { getRepresentativeDivisionIds } from '@/features/civics/utils/divisions';
 import { useFeatureFlag } from '@/features/pwa/hooks/useFeatureFlags';
+import { useI18n } from '@/hooks/useI18n';
 import {
   useAnalyticsActions,
   useContactActions,

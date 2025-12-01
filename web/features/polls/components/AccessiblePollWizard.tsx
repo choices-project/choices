@@ -50,6 +50,7 @@ const BOOLEAN_SETTING_CONFIGS: Array<{ key: BooleanSettingKey; label: string }> 
 ];
 
 export function AccessiblePollWizard() {
+  // eslint-disable-next-line unused-imports/no-unused-vars
   const { t } = useI18n();
   const {
     data,
@@ -145,15 +146,6 @@ export function AccessiblePollWizard() {
     },
     [steps],
   );
-
-  const booleanSettingConfigs = useMemo<Array<{ key: BooleanSettingKey; label: string }>>(() => [
-    { key: 'allowMultipleVotes', label: t('polls.create.wizard.audience.settings.allowMultipleVotes.label') },
-    { key: 'allowAnonymousVotes', label: t('polls.create.wizard.audience.settings.allowAnonymousVotes.label') },
-    { key: 'showResults', label: t('polls.create.wizard.audience.settings.showResults.label') },
-    { key: 'allowComments', label: t('polls.create.wizard.audience.settings.allowComments.label') },
-    { key: 'requireAuthentication', label: t('polls.create.wizard.audience.settings.requireAuthentication.label') },
-    { key: 'preventDuplicateVotes', label: t('polls.create.wizard.audience.settings.preventDuplicateVotes.label') },
-  ], [t]);
 
   const currentStepLabel = useMemo(() => resolveStepLabel(currentStep), [currentStep, resolveStepLabel]);
   const stepPositionLabel = useMemo(

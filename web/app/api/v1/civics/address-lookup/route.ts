@@ -214,18 +214,16 @@ function extractStateFromAddress(address: string): string {
     'virginia': 'VA', 'washington': 'WA', 'west virginia': 'WV', 'wisconsin': 'WI', 'wyoming': 'WY'
   };
 
-  const lowerAddress = address.toLowerCase();
-
   for (const [stateName, stateCode] of Object.entries(stateMap)) {
     const pattern = new RegExp(`\\b${stateName}\\b`, 'i');
-    if (pattern.test(address)) {
+    if (pattern.test(address.toLowerCase())) {
       return stateCode;
     }
   }
 
   for (const [, stateCode] of Object.entries(stateMap)) {
     const pattern = new RegExp(`\\b${stateCode}\\b`, 'i');
-    if (pattern.test(address)) {
+    if (pattern.test(address.toLowerCase())) {
       return stateCode;
     }
   }
@@ -275,6 +273,11 @@ export const POST = withErrorHandling(async (request: NextRequest) => {
 
   if (!address || typeof address !== 'string') {
     return validationError({ address: 'Address is required' });
+  }
+
+  const validation = validateAddressInput(address);
+  if (!validation.valid) {
+    return validationError({ address: validation.error ?? 'Invalid address' });
   }
 
   const addrH = generateAddressHMAC(address);

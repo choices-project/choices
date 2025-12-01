@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-var-requires */
 /**
  * Hashtag Store Dashboard Integration Tests
  * 
@@ -213,4 +214,7 @@ describe('Hashtag Store Dashboard Integration', () => {
     expect(unfollowHashtagRequest).toHaveBeenCalledWith('hashtag-1');
   });
 });
+
+/* eslint-enable @typescript-eslint/no-var-requires */
+
 

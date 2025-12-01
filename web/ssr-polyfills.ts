@@ -52,11 +52,8 @@ if (typeof window === 'undefined') {
   if (typeof (globalThis as any).localStorage === 'undefined') {
     (globalThis as any).localStorage = {
       getItem: () => null,
-      // eslint-disable-next-line @typescript-eslint/no-empty-function
       setItem: () => {},
-      // eslint-disable-next-line @typescript-eslint/no-empty-function
       removeItem: () => {},
-      // eslint-disable-next-line @typescript-eslint/no-empty-function
       clear: () => {},
       key: () => null,
       length: 0,
@@ -66,11 +63,8 @@ if (typeof window === 'undefined') {
   if (typeof (globalThis as any).sessionStorage === 'undefined') {
     (globalThis as any).sessionStorage = {
       getItem: () => null,
-      // eslint-disable-next-line @typescript-eslint/no-empty-function
       setItem: () => {},
-      // eslint-disable-next-line @typescript-eslint/no-empty-function
       removeItem: () => {},
-      // eslint-disable-next-line @typescript-eslint/no-empty-function
       clear: () => {},
       key: () => null,
       length: 0,
@@ -99,18 +93,13 @@ if (typeof window === 'undefined') {
   if (typeof (globalThis as any).performance === 'undefined') {
     (globalThis as any).performance = {
       now: () => Date.now(),
-      // eslint-disable-next-line @typescript-eslint/no-empty-function
       mark: () => {},
-      // eslint-disable-next-line @typescript-eslint/no-empty-function
       measure: () => {},
       getEntries: () => [],
       getEntriesByName: () => [],
       getEntriesByType: () => [],
-      // eslint-disable-next-line @typescript-eslint/no-empty-function
       clearMarks: () => {},
-      // eslint-disable-next-line @typescript-eslint/no-empty-function
       clearMeasures: () => {},
-      // eslint-disable-next-line @typescript-eslint/no-empty-function
       clearResourceTimings: () => {},
     };
   }
@@ -136,37 +125,26 @@ if (typeof window === 'undefined') {
   // Define browser observer APIs
   if (typeof (globalThis as any).ResizeObserver === 'undefined') {
     (globalThis as any).ResizeObserver = class ResizeObserver {
-      // eslint-disable-next-line @typescript-eslint/no-empty-function
       constructor() {}
-      // eslint-disable-next-line @typescript-eslint/no-empty-function
       observe() {}
-      // eslint-disable-next-line @typescript-eslint/no-empty-function
       unobserve() {}
-      // eslint-disable-next-line @typescript-eslint/no-empty-function
       disconnect() {}
     };
   }
 
   if (typeof (globalThis as any).IntersectionObserver === 'undefined') {
     (globalThis as any).IntersectionObserver = class IntersectionObserver {
-      // eslint-disable-next-line @typescript-eslint/no-empty-function
       constructor() {}
-      // eslint-disable-next-line @typescript-eslint/no-empty-function
       observe() {}
-      // eslint-disable-next-line @typescript-eslint/no-empty-function
       unobserve() {}
-      // eslint-disable-next-line @typescript-eslint/no-empty-function
       disconnect() {}
     };
   }
 
   if (typeof (globalThis as any).MutationObserver === 'undefined') {
     (globalThis as any).MutationObserver = class MutationObserver {
-      // eslint-disable-next-line @typescript-eslint/no-empty-function
       constructor() {}
-      // eslint-disable-next-line @typescript-eslint/no-empty-function
       observe() {}
-      // eslint-disable-next-line @typescript-eslint/no-empty-function
       disconnect() {}
       takeRecords() { return []; }
     };
@@ -175,11 +153,8 @@ if (typeof window === 'undefined') {
   // Define EventTarget and Event classes
   if (typeof (globalThis as any).EventTarget === 'undefined') {
     (globalThis as any).EventTarget = class EventTarget {
-      // eslint-disable-next-line @typescript-eslint/no-empty-function
       constructor() {}
-      // eslint-disable-next-line @typescript-eslint/no-empty-function
       addEventListener() {}
-      // eslint-disable-next-line @typescript-eslint/no-empty-function
       removeEventListener() {}
       dispatchEvent() { return true; }
     };
@@ -193,9 +168,7 @@ if (typeof window === 'undefined') {
       type: string;
       target: any = null;
       currentTarget: any = null;
-      // eslint-disable-next-line @typescript-eslint/no-empty-function
       preventDefault() {}
-      // eslint-disable-next-line @typescript-eslint/no-empty-function
       stopPropagation() {}
     };
   }

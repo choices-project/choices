@@ -26,8 +26,8 @@ import type { SupabaseClient } from '@supabase/supabase-js';
 
 import { isFeatureEnabled } from '@/lib/core/feature-flags';
 import { logger } from '@/lib/utils/logger';
-import type { TrustTier } from '@/types/features/analytics';
 import type { CivicAction } from '@/types/database';
+import type { TrustTier } from '@/types/features/analytics';
 import { getSupabaseServerClient } from '@/utils/supabase/server';
 
 

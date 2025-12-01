@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-var-requires */
 import { fireEvent, render, screen } from '@testing-library/react';
 import * as React from 'react';
 
@@ -90,4 +91,7 @@ describe('ProfilePage export dialog accessibility', () => {
     expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
   });
 });
+
+/* eslint-enable @typescript-eslint/no-var-requires */
+
 

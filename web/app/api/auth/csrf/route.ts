@@ -27,6 +27,8 @@ export const GET = withErrorHandling(async () => {
     message: 'CSRF token retrieved successfully'
   });
 
+  logger.info('CSRF token issued');
+
   // Set CSRF cookie in response
   const isProduction = process.env.NODE_ENV === "production";
   response.cookies.set(CSRF_COOKIE, csrfToken, {

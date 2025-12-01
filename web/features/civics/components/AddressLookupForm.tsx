@@ -17,8 +17,8 @@ import React, { useCallback, useEffect, useRef, useState } from 'react';
 
 import { VoterRegistrationCTA } from '@/features/civics/components/VoterRegistrationCTA';
 import { getStateCodeFromDivisions } from '@/features/civics/utils/divisions';
-import { isFeatureEnabled } from '@/lib/core/feature-flags';
 import { useI18n } from '@/hooks/useI18n';
+import { isFeatureEnabled } from '@/lib/core/feature-flags';
 import {
   useUserActions,
   useUserAddressLoading,
@@ -157,7 +157,7 @@ export function AddressLookupForm({ onLookup, className = '' }: AddressLookupFor
   }, [userDivisionIds.length, userCurrentState, fetchVoterRegistration]);
 
   // Feature flag check - don't render if disabled
-  if (!isFeatureEnabled('CIVICS_ADDRESS_LOOKUP')) {
+  if (!isEnabled) {
     return null;
   }
 

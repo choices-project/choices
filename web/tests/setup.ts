@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-var-requires */
 /**
  * Jest Test Setup
  *
@@ -654,4 +655,7 @@ export const getMS = () => {
     }
   };
 };
+
+/* eslint-enable @typescript-eslint/no-var-requires */
+
 

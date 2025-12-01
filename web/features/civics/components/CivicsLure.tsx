@@ -417,7 +417,7 @@ export default function CivicsLure({ userLocation, onEngage }: CivicsLureProps) 
             </span>
           </div>
           <div className="text-2xl font-bold text-blue-600">
-            {isLoading ? '—' : numberFormatter.format(totalLocalRepresentatives)}
+            {isLoading ? dashPlaceholder : numberFormatter.format(totalLocalRepresentatives)}
           </div>
           <div className="text-sm text-gray-500">
             {t('civics.lure.stats.candidates.caption', {

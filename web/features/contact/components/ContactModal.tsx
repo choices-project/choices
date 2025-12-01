@@ -28,8 +28,8 @@ import React, { useState, useEffect, useMemo, useCallback, useRef } from 'react'
 import { useRepresentativeCtaAnalytics } from '@/features/civics/hooks/useRepresentativeCtaAnalytics';
 import { formatElectionDate } from '@/features/civics/utils/civicsCountdownUtils';
 import { useFeatureFlag } from '@/features/pwa/hooks/useFeatureFlags';
-import { useAccessibleDialog } from '@/lib/accessibility/useAccessibleDialog';
 import { useI18n } from '@/hooks/useI18n';
+import { useAccessibleDialog } from '@/lib/accessibility/useAccessibleDialog';
 
 import { useContactMessages, useContactThreads } from '../hooks/useContactMessages';
 import { useMessageTemplates } from '../hooks/useMessageTemplates';

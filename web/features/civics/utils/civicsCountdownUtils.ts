@@ -1,6 +1,5 @@
 import { useEffect, useMemo, useRef } from 'react';
 
-import { useI18n } from '@/hooks/useI18n';
 import {
   useAnalyticsActions,
   useClearElections,
@@ -82,7 +81,6 @@ export const useElectionCountdown = (
     analytics,
   }: ElectionCountdownOptions = {},
 ) => {
-  const { t, currentLanguage } = useI18n();
   const fetchElections = useFetchElectionsForDivisions();
   const clearElections = useClearElections();
   const elections = useElectionsForDivisions(divisionIds);

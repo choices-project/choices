@@ -8,10 +8,6 @@ import { devLog } from '@/lib/utils/logger';
 import type { PWAAuth } from '../lib/pwa-auth-integration';
 import type { PWAManager, PWAWebAuthn, PrivacyStorage } from '../lib/pwa-utils';
 
-type PWAManagerInstance = PWAManager;
-type PWAWebAuthnInstance = PWAWebAuthn;
-type PrivacyStorageInstance = PrivacyStorage;
-
 type PWAUtils = {
   pwaAuth: PWAAuth;
   pwaManager: PWAManager;

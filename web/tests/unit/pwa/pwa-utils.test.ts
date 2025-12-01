@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-empty-function */
 /** @jest-environment jsdom */
 
 import { jest } from '@jest/globals';
@@ -43,8 +42,7 @@ describe('PWA client utilities', () => {
 
   describe('queueAction', () => {
     // The registration spy is intentionally a no-op; we only assert invocation
-    // eslint-disable-next-line @typescript-eslint/no-empty-function
-    const registerSpy = jest.fn(async (_tag: string) => {});
+    const registerSpy = jest.fn(async (_tag: string) => undefined);
     let originalServiceWorkerRegistration: unknown;
 
     beforeEach(() => {
@@ -166,4 +164,4 @@ describe('PWA client utilities', () => {
   });
 });
 
-/* eslint-enable @typescript-eslint/no-empty-function */
+

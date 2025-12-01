@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-empty-function */
 /**
  * @jest-environment jsdom
  */
@@ -42,10 +41,7 @@ describe('SiteMessages', () => {
     window.localStorage.clear();
 
     // Announcements are captured via spy in tests; implementation is intentionally a no-op
-    announceSpy = jest
-      .spyOn(ScreenReaderSupport, 'announce')
-      // eslint-disable-next-line @typescript-eslint/no-empty-function
-      .mockImplementation(() => {});
+    announceSpy = jest.spyOn(ScreenReaderSupport, 'announce').mockImplementation(() => undefined);
   });
 
   afterEach(() => {
@@ -76,4 +72,4 @@ describe('SiteMessages', () => {
   });
 });
 
-/* eslint-enable @typescript-eslint/no-empty-function */
+

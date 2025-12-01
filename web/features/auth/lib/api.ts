@@ -4,13 +4,6 @@
  * Shared client helpers for authentication actions to keep components/tests consistent.
  */
 
-// These helpers are an intentional bridge from feature-level code to app actions
-// eslint-disable-next-line boundaries/element-types
-import { loginAction } from '@/app/actions/login';
-// eslint-disable-next-line boundaries/element-types
-import { register } from '@/app/actions/register';
-import type { ServerActionContext } from '@/lib/core/auth/server-actions';
-
 import {
   beginRegister,
   beginAuthenticate,

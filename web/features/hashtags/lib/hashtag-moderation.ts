@@ -119,6 +119,12 @@ export async function getHashtagModeration(hashtagId: string): Promise<HashtagAp
       ...(pendingFlags.length > 0 ? { moderation_reason: 'Pending review' } : {}),
     } as HashtagModeration;
 
+    logger.debug('Transformed hashtag flags for moderation view', {
+      hashtagId,
+      totalFlags: transformedFlags.length,
+      pendingFlags: pendingFlags.length,
+    });
+
     return {
       success: true,
       data: moderationData

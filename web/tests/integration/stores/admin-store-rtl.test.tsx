@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-var-requires */
 /**
  * Admin Store RTL (React Testing Library) Tests
  * 
@@ -231,4 +232,7 @@ describe('Admin Store RTL Tests', () => {
     });
   });
 });
+
+/* eslint-enable @typescript-eslint/no-var-requires */
+
 

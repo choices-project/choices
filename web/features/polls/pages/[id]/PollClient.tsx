@@ -17,8 +17,8 @@ import {
   type PollBallotContext,
 } from '@/features/voting/lib/pollAdapters';
 import { useVotingActions, useVotingError, useVotingIsVoting } from '@/features/voting/lib/store';
-import { useI18n } from '@/hooks/useI18n';
 import { useAuth } from '@/hooks/useAuth';
+import { useI18n } from '@/hooks/useI18n';
 import { useNotificationActions } from '@/lib/stores';
 import { useAppActions } from '@/lib/stores/appStore';
 import { cn } from '@/lib/utils';
