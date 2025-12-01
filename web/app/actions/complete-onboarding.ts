@@ -10,6 +10,7 @@ import {
   type ServerActionContext
 } from '@/lib/core/auth/server-actions'
 import { logger } from '@/lib/utils/logger'
+import { sanitizeFormData } from '@/lib/utils/log-sanitizer'
 import { getSupabaseServerClient } from '@/utils/supabase/server'
 
 // Validation schema
@@ -23,7 +24,6 @@ const OnboardingSchema = z.object({
 export function completeOnboardingAction(formData: FormData) {
   logger.info('=== COMPLETE ONBOARDING ACTION CALLED ===');
   // Sanitize FormData before logging
-  const { sanitizeFormData } = await import('@/lib/utils/log-sanitizer');
   logger.info('FormData entries', { entries: sanitizeFormData(formData) });
   logger.info('E2E environment', { e2e: process.env.E2E });
 
@@ -38,8 +38,7 @@ export const completeOnboarding = createSecureServerAction(
   async (formData: FormData, context: ServerActionContext) => {
     logger.info('=== COMPLETE ONBOARDING SERVER ACTION CALLED ===');
     // Sanitize FormData before logging
-  const { sanitizeFormData } = await import('@/lib/utils/log-sanitizer');
-  logger.info('FormData entries', { entries: sanitizeFormData(formData) });
+    logger.info('FormData entries', { entries: sanitizeFormData(formData) });
     logger.info('E2E environment', { e2e: process.env.E2E });
     // Keys and values already sanitized via sanitizeFormData above
     logger.info('FormData keys', { keys: Array.from(formData.keys()) });
