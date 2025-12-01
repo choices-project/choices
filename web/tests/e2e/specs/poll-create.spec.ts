@@ -33,8 +33,9 @@ test.describe('@axe Poll creation wizard', () => {
         if (navigator.serviceWorker) {
           const originalScope = navigator.serviceWorker;
           const fakeRegistration = {
-            addEventListener: () => {},
-            removeEventListener: () => {},
+            // These no-op implementations are intentional for Playwright tests
+            addEventListener: () => undefined,
+            removeEventListener: () => undefined,
             unregister: () => Promise.resolve(true),
             update: () => Promise.resolve(),
             scope: '/',
@@ -48,8 +49,9 @@ test.describe('@axe Poll creation wizard', () => {
             ready: Promise.resolve(fakeRegistration),
             getRegistrations: () => Promise.resolve([fakeRegistration]),
             getRegistration: () => Promise.resolve(fakeRegistration),
-            addEventListener: () => {},
-            removeEventListener: () => {},
+            // No-op listeners for Playwright environment
+            addEventListener: () => undefined,
+            removeEventListener: () => undefined,
           });
         }
       } catch {

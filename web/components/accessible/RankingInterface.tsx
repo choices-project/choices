@@ -88,7 +88,8 @@ export function AccessibleRankingInterface({
   const [showInstructions, setShowInstructions] = useState(true);
   
   const containerRef = useRef<HTMLDivElement>(null);
-  const candidateRefs = useRef<(HTMLDivElement | null)[]>([]);
+  // Store references to the interactive candidate buttons for proper focus management
+  const candidateRefs = useRef<(HTMLButtonElement | null)[]>([]);
   const instructionsRef = useRef<HTMLDivElement>(null);
 
   // ============================================================================

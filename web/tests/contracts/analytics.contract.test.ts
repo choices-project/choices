@@ -29,17 +29,25 @@ jest.mock('@/features/analytics/lib/privacyFilters', () => ({
 jest.mock('@/lib/auth/adminGuard', () => ({
   canAccessAnalytics: jest.fn(() => true),
   logAnalyticsAccess: jest.fn(),
-  logAnalyticsAccessToDatabase: jest.fn(async () => {}),
+  logAnalyticsAccessToDatabase: jest.fn(async () => {
+    // In tests we just ensure this hook is invoked; no-op persistence
+    return Promise.resolve();
+  }),
 }));
 
 jest.mock('@/lib/cache/analytics-cache', () => {
   const actual = jest.requireActual('@/lib/cache/analytics-cache');
   return {
     ...actual,
-    getCached: jest.fn(async (_key: string, _ttl: number, fetcher: () => Promise<any>) => ({
-      data: await fetcher(),
-      fromCache: false,
-    })),
+    getCached: jest.fn(
+      async (_key: string, _ttl: number, fetcher: () => Promise<any>) => {
+        const data = await fetcher();
+        return {
+          data,
+          fromCache: false,
+        };
+      },
+    ),
     generateCacheKey: jest.fn(() => 'cache-key'),
   };
 });
@@ -61,9 +69,11 @@ const mockPrivacyBuilder = {
   getDemographics: jest.fn(),
 };
 
+// Dynamic require is intentional here to isolate route modules per test
 const isolateRoute = (path: string) => () => {
   let routeModule: any;
   jest.isolateModules(() => {
+    // eslint-disable-next-line import/no-dynamic-require
     routeModule = require(path);
   });
   return routeModule;

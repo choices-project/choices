@@ -173,7 +173,11 @@ describe('votingStore', () => {
     const store = createTestVotingStore();
     const clearSpy = jest.spyOn(global, 'clearInterval');
 
-    const handleOne = setInterval(() => {}, 1000);
+    const handleOne = setInterval(
+      // eslint-disable-next-line @typescript-eslint/no-empty-function
+      () => {},
+      1000,
+    );
     const timerId = store.getState().registerTimer(handleOne);
     expect(store.getState().timerHandles[timerId]).toBe(handleOne);
 
@@ -181,7 +185,11 @@ describe('votingStore', () => {
     expect(clearSpy).toHaveBeenCalledWith(handleOne);
     expect(store.getState().timerHandles[timerId]).toBeUndefined();
 
-    const handleTwo = setInterval(() => {}, 1000);
+    const handleTwo = setInterval(
+      // eslint-disable-next-line @typescript-eslint/no-empty-function
+      () => {},
+      1000,
+    );
     store.getState().registerTimer(handleTwo);
     store.getState().reset();
 

@@ -40,7 +40,11 @@ describe('SiteMessages', () => {
 
     window.localStorage.clear();
 
-    announceSpy = jest.spyOn(ScreenReaderSupport, 'announce').mockImplementation(() => {});
+    // Announcements are captured via spy in tests; implementation is intentionally a no-op
+    announceSpy = jest
+      .spyOn(ScreenReaderSupport, 'announce')
+      // eslint-disable-next-line @typescript-eslint/no-empty-function
+      .mockImplementation(() => {});
   });
 
   afterEach(() => {

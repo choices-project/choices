@@ -37,13 +37,16 @@ function UserNotificationItem({
   return (
     <div
       className="relative rounded-lg border border-slate-200 bg-white p-4 shadow-sm transition-all duration-300 hover:shadow-md"
-      onClick={handleClick}
       role={priority === 'assertive' ? 'alert' : 'status'}
       aria-live={priority}
       aria-atomic="true"
     >
       <div className="flex items-start">
-        <div className="flex-1">
+        <button
+          type="button"
+          onClick={handleClick}
+          className="flex-1 text-left"
+        >
           {notification.title && (
             <h3 className="text-sm font-medium text-slate-900">
               {notification.title}
@@ -54,7 +57,7 @@ function UserNotificationItem({
               {notification.message}
             </p>
           )}
-        </div>
+        </button>
         <div className="ml-4 flex-shrink-0">
           <button
             type="button"

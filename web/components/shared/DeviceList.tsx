@@ -200,72 +200,75 @@ export const DeviceList: React.FC<DeviceListProps> = ({
       </div>
 
       {/* Device List */}
-      <div className="space-y-3">
+      <ul className="space-y-3">
         {memoizedDevices.map((device) => (
-          <div
-            key={device.id}
-            className={`flex items-center justify-between p-4 border rounded-lg transition-colors ${
-              selectedDevice === device.id ? 'border-blue-500 bg-blue-50' : 'border-gray-200 hover:border-gray-300'
-            }`}
-            data-testid="device-item"
-            role="listitem"
-            tabIndex={0}
-            onKeyDown={(e) => {
-              if (e.key === 'Enter' || e.key === ' ') {
-                setSelectedDevice(device.id)
-              }
-            }}
-            onClick={() => setSelectedDevice(device.id)}
-          >
-            {/* Device Info */}
-            <div className="flex items-center space-x-3">
-              <div className="flex-shrink-0">
-                {getDeviceIcon(device.type)}
+          <li key={device.id}>
+            <button
+              type="button"
+              className={`flex w-full items-center justify-between p-4 border rounded-lg transition-colors text-left ${
+                selectedDevice === device.id ? 'border-blue-500 bg-blue-50' : 'border-gray-200 hover:border-gray-300'
+              }`}
+              data-testid="device-item"
+              onClick={() => setSelectedDevice(device.id)}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter' || e.key === ' ') {
+                  e.preventDefault()
+                  setSelectedDevice(device.id)
+                }
+              }}
+            >
+              {/* Device Info */}
+              <div className="flex items-center space-x-3">
+                <div className="flex-shrink-0">
+                  {getDeviceIcon(device.type)}
+                </div>
+                <div>
+                  <h4 className="font-medium text-gray-900">{device.name}</h4>
+                  <p className="text-sm text-gray-500">
+                    Last used: {new Date(device.lastUsed).toLocaleDateString()}
+                  </p>
+                  {device.isActive && (
+                    <span className="inline-block w-2 h-2 bg-green-500 rounded-full mr-2" />
+                  )}
+                </div>
               </div>
-              <div>
-                <h4 className="font-medium text-gray-900">{device.name}</h4>
-                <p className="text-sm text-gray-500">
-                  Last used: {new Date(device.lastUsed).toLocaleDateString()}
-                </p>
-                {device.isActive && (
-                  <span className="inline-block w-2 h-2 bg-green-500 rounded-full mr-2" />
+
+              {/* Device Actions */}
+              <div className="flex items-center space-x-2">
+                {onGenerateQR && (
+                  <button
+                    type="button"
+                    onClick={(e) => {
+                      e.stopPropagation()
+                      handleGenerateQR(device.id)
+                    }}
+                    className="p-2 text-gray-500 hover:text-blue-500 hover:bg-blue-50 rounded"
+                    title="Generate QR Code"
+                    data-testid="qr-code-button"
+                  >
+                    <QrCode className="w-4 h-4" />
+                  </button>
+                )}
+                
+                {onRemoveDevice && (
+                  <button
+                    type="button"
+                    onClick={(e) => {
+                      e.stopPropagation()
+                      handleRemoveDevice(device.id)
+                    }}
+                    className="p-2 text-gray-500 hover:text-red-500 hover:bg-red-50 rounded"
+                    title="Remove Device"
+                    data-testid="remove-device-button"
+                  >
+                    <Trash2 className="w-4 h-4" />
+                  </button>
                 )}
               </div>
-            </div>
-
-            {/* Device Actions */}
-            <div className="flex items-center space-x-2">
-              {onGenerateQR && (
-                <button
-                  onClick={(e) => {
-                    e.stopPropagation()
-                    handleGenerateQR(device.id)
-                  }}
-                  className="p-2 text-gray-500 hover:text-blue-500 hover:bg-blue-50 rounded"
-                  title="Generate QR Code"
-                  data-testid="qr-code-button"
-                >
-                  <QrCode className="w-4 h-4" />
-                </button>
-              )}
-              
-              {onRemoveDevice && (
-                <button
-                  onClick={(e) => {
-                    e.stopPropagation()
-                    handleRemoveDevice(device.id)
-                  }}
-                  className="p-2 text-gray-500 hover:text-red-500 hover:bg-red-50 rounded"
-                  title="Remove Device"
-                  data-testid="remove-device-button"
-                >
-                  <Trash2 className="w-4 h-4" />
-                </button>
-              )}
-            </div>
-          </div>
+            </button>
+          </li>
         ))}
-      </div>
+      </ul>
 
       {/* QR Code Modal */}
       {showQRCode && (

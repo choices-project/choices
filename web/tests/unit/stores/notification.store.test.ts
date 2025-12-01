@@ -20,7 +20,10 @@ describe('notificationStore', () => {
   beforeEach(() => {
     jest.useFakeTimers();
 
+    // Logging is observed via spies; implementations are intentionally no-ops
+    // eslint-disable-next-line @typescript-eslint/no-empty-function
     warnSpy = jest.spyOn(console, 'warn').mockImplementation(() => {});
+    // eslint-disable-next-line @typescript-eslint/no-empty-function
     infoSpy = jest.spyOn(logger, 'info').mockImplementation(() => {});
 
     notificationStore = createTestNotificationStore();

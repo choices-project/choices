@@ -13,7 +13,7 @@ import {
   RefreshCw,
   Lock
 } from 'lucide-react'
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect } from 'react';
 
 import type { DeviceFingerprint, PWAFeatures, PWAUser } from '@/types/pwa';
 
@@ -157,17 +157,12 @@ export function PWAUserProfile({ user, onUpdate: _onUpdate }: PWAUserProfileProp
     }
   }
 
-  const tierInfo = useMemo(
-    () => (user ? TIER_META[user.trustTier] ?? TIER_META.T0 : TIER_META.T0),
-    [user ? user.trustTier : 'T0'],
-  );
-  const visibilityInfo = useMemo(
-    () =>
-      user
-        ? VISIBILITY_META[user.profileVisibility] ?? VISIBILITY_META.pseudonymous
-        : VISIBILITY_META.pseudonymous,
-    [user ? user.profileVisibility : 'pseudonymous'],
-  )
+  const tierInfo: TierDisplayMeta = user
+    ? TIER_META[user.trustTier] ?? TIER_META.T0
+    : TIER_META.T0;
+  const visibilityInfo: VisibilityDisplayMeta = user
+    ? VISIBILITY_META[user.profileVisibility] ?? VISIBILITY_META.pseudonymous
+    : VISIBILITY_META.pseudonymous;
   const VisibilityIcon = visibilityInfo.icon
 
   return (

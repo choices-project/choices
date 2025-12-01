@@ -86,7 +86,7 @@ export function HashtagInput({
   };
 
   // Handle hashtag validation and addition
-  const handleAddHashtag = async (hashtagText: string) => {
+  const handleAddHashtag = useCallback(async (hashtagText: string) => {
     const normalizedHashtag = hashtagText.startsWith('#')
       ? hashtagText.slice(1)
       : hashtagText;
@@ -118,7 +118,7 @@ export function HashtagInput({
     setInputValue('');
     setShowSuggestionsList(false);
     setValidationError(null);
-  };
+  }, [validateHashtagName, value, maxHashtags, onChange]);
 
   // Handle suggestion selection
   const handleSuggestionClick = useCallback(

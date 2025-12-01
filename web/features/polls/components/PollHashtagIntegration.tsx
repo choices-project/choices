@@ -101,7 +101,7 @@ export default function PollHashtagIntegrationComponent({
   const [engagementTotals, setEngagementTotals] = useState<{ view: number; click: number; share: number } | null>(null);
 
   // Track hashtag engagement in real-time
-  const _trackHashtagEngagement = (action: 'view' | 'click' | 'share') => {
+  const trackHashtagEngagement = React.useCallback((action: 'view' | 'click' | 'share') => {
     logger.info(`Hashtag engagement tracked: ${action}`);
     // Persist engagement via API (best-effort, non-blocking)
     void (async () => {
@@ -119,7 +119,7 @@ export default function PollHashtagIntegrationComponent({
         // Swallow errors to avoid impacting UX
       }
     })();
-  };
+  }, [poll.id, poll.hashtags]);
 
   // Hashtag store hooks
   const trendingHashtags = useTrendingHashtags();
@@ -131,7 +131,7 @@ export default function PollHashtagIntegrationComponent({
   useEffect(() => {
     void getTrendingHashtags();
     // Record a view when the component mounts
-    _trackHashtagEngagement('view');
+    trackHashtagEngagement('view');
     // Fetch aggregated engagement totals (best-effort)
     void (async () => {
       try {
@@ -154,7 +154,7 @@ export default function PollHashtagIntegrationComponent({
         // ignore
       }
     })();
-  }, [getTrendingHashtags, poll.id]);
+  }, [getTrendingHashtags, poll.id, trackHashtagEngagement]);
 
   // Handle hashtag updates with enhanced analytics
   const handleHashtagUpdate = (newHashtags: string[]) => {
@@ -348,7 +348,7 @@ export default function PollHashtagIntegrationComponent({
                       showCount={true}
                       showCategory={true}
                       clickable={true}
-                      onHashtagClick={() => _trackHashtagEngagement('click')}
+                      onHashtagClick={() => trackHashtagEngagement('click')}
                     />
                   )}
                 </div>

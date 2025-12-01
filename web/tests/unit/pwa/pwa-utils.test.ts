@@ -41,6 +41,8 @@ describe('PWA client utilities', () => {
   });
 
   describe('queueAction', () => {
+    // The registration spy is intentionally a no-op; we only assert invocation
+    // eslint-disable-next-line @typescript-eslint/no-empty-function
     const registerSpy = jest.fn(async (_tag: string) => {});
     let originalServiceWorkerRegistration: unknown;
 
@@ -48,7 +50,9 @@ describe('PWA client utilities', () => {
       registerSpy.mockClear();
       originalServiceWorkerRegistration = (globalThis as unknown as { ServiceWorkerRegistration?: unknown }).ServiceWorkerRegistration;
 
-      const MockServiceWorkerRegistration: any = function MockServiceWorkerRegistration() {};
+      const MockServiceWorkerRegistration: any = function MockServiceWorkerRegistration() {
+        // Intentionally empty constructor for test double
+      };
       MockServiceWorkerRegistration.prototype.sync = {};
 
       Object.defineProperty(globalThis, 'ServiceWorkerRegistration', {

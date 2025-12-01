@@ -5,7 +5,7 @@
  */
 
 import { createClient } from '@supabase/supabase-js';
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useMemo } from 'react';
 
 import { useAnalyticsActions } from '@/lib/stores/analyticsStore';
 import { logger } from '@/lib/utils/logger';
@@ -497,9 +497,10 @@ export function useEnhancedAnalytics(options: UseEnhancedAnalyticsOptions = {}) 
       ? createClient<Database>(supabaseUrl, supabaseAnonKey)
       : null;
 
-  const enhancedAnalytics = supabase
-    ? new EnhancedAnalyticsService(supabase)
-    : null;
+  const enhancedAnalytics = useMemo(
+    () => (supabase ? new EnhancedAnalyticsService(supabase) : null),
+    [supabase],
+  );
 
   const {
     setDashboard: setAnalyticsDashboard,
@@ -626,7 +627,17 @@ export function useEnhancedAnalytics(options: UseEnhancedAnalyticsOptions = {}) 
       setLoading(false);
       setAnalyticsLoading(false);
     }
-  }, [pollId, userId, sessionId, enableNewSchema, enhancedAnalytics]);
+  }, [
+    pollId,
+    userId,
+    sessionId,
+    enableNewSchema,
+    enhancedAnalytics,
+    setAnalyticsDashboard,
+    updateUserBehavior,
+    setAnalyticsLoading,
+    setAnalyticsError,
+  ]);
 
   // Track feature usage
   const trackFeatureUsage = useCallback(async (

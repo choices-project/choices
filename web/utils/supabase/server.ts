@@ -38,7 +38,7 @@ export async function getSupabaseServerClient(): Promise<SupabaseClient<Database
   } catch {
     // During build or static rendering, cookies() may be unavailable.
     // Fall back to a no-op cookie adapter so we can still construct the client.
-    cookieStore = undefined as any; // eslint-disable-line no-restricted-syntax
+    cookieStore = undefined as any;
   }
 
   const { createServerClient } = await import('@supabase/ssr') // dynamic!

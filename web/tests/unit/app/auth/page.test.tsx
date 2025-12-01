@@ -6,6 +6,8 @@ import { render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import React from 'react';
 
+// This test intentionally exercises the real auth page component end-to-end
+// eslint-disable-next-line boundaries/element-types
 import AuthPage from '@/app/auth/page';
 import { mockSupabaseClient } from '@/tests/utils/supabase';
 
