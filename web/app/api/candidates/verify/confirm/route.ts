@@ -55,6 +55,10 @@ export const POST = withErrorHandling(async (request: NextRequest) => {
   let body: any;
   try {
     body = await request.json();
+    // Trim code if it's a string to handle leading/trailing whitespace
+    if (body && typeof body.code === 'string') {
+      body.code = body.code.trim();
+    }
   } catch (error: unknown) {
     // Handle JSON parsing errors
     return NextResponse.json(
@@ -79,7 +83,11 @@ export const POST = withErrorHandling(async (request: NextRequest) => {
       const firstError = result.error.errors[0];
       // Map Zod errors to expected test messages
       if (firstError && Array.isArray(firstError.path) && firstError.path.length > 0 && firstError.path[0] === 'code') {
-        if (firstError.code === 'invalid_type' || body?.code === undefined || body?.code === null) {
+        // Check for empty/whitespace strings
+        const codeValue = body?.code;
+        const isEmptyOrWhitespace = typeof codeValue === 'string' && codeValue.trim().length === 0;
+        
+        if (firstError.code === 'invalid_type' || codeValue === undefined || codeValue === null || isEmptyOrWhitespace) {
           errorMessage = 'Code is required';
         } else if (firstError.code === 'too_small') {
           errorMessage = 'Code is required';
@@ -91,9 +99,12 @@ export const POST = withErrorHandling(async (request: NextRequest) => {
       } else if (firstError && typeof firstError.message === 'string' && firstError.message) {
         errorMessage = firstError.message;
       }
-    } else if (body?.code === undefined || body?.code === null) {
-      // Fallback if error structure is unexpected
-      errorMessage = 'Code is required';
+    } else {
+      // Fallback: check if code is missing, null, or empty/whitespace
+      const codeValue = body?.code;
+      if (codeValue === undefined || codeValue === null || (typeof codeValue === 'string' && codeValue.trim().length === 0)) {
+        errorMessage = 'Code is required';
+      }
     }
     
     return NextResponse.json(
@@ -233,6 +244,7 @@ export const POST = withErrorHandling(async (request: NextRequest) => {
         invalid: true,
         attemptsRemaining,
         failedAttempts: attemptsAfter,
+        maxAttempts,
         ...(isLocked ? { locked: true } : {}),
       },
       { status: 400 }

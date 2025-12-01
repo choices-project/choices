@@ -32,6 +32,19 @@ jest.mock('@/lib/core/security/rate-limit', () => {
 
 const { mockRateLimitCheck } = jest.requireMock('@/lib/core/security/rate-limit');
 
+// Mock the actual rate limiter used by the route
+jest.mock('@/lib/rate-limiting/api-rate-limiter', () => ({
+  apiRateLimiter: {
+    checkLimit: jest.fn(),
+  },
+}));
+
+// Get the mock function after the mock is set up
+const mockApiRateLimiterModule = jest.requireMock('@/lib/rate-limiting/api-rate-limiter') as {
+  apiRateLimiter: { checkLimit: jest.Mock };
+};
+const mockApiRateLimiterCheckLimit = mockApiRateLimiterModule.apiRateLimiter.checkLimit;
+
 jest.mock('@/lib/api', () => {
   const createResponse = (status: number, payload: unknown) => ({
     status,
@@ -87,6 +100,11 @@ describe('Candidate Verification Edge Cases', () => {
     jest.clearAllMocks();
     mockRateLimitCheck.mockResolvedValue({
       success: true,
+      allowed: true,
+      remaining: 9,
+      resetTime: new Date(Date.now() + 15 * 60 * 1000),
+    });
+    mockApiRateLimiterCheckLimit.mockResolvedValue({
       allowed: true,
       remaining: 9,
       resetTime: new Date(Date.now() + 15 * 60 * 1000),
@@ -424,8 +442,7 @@ describe('Candidate Verification Edge Cases', () => {
     });
 
     it('should handle rate limit exceeded', async () => {
-      mockRateLimitCheck.mockResolvedValue({
-        success: true,
+      mockApiRateLimiterCheckLimit.mockResolvedValue({
         allowed: false,
         remaining: 0,
         resetTime: new Date(Date.now() + 15 * 60 * 1000),

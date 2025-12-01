@@ -17,6 +17,19 @@ jest.mock('@/lib/core/security/rate-limit', () => ({
   rateLimitMiddleware: jest.fn()
 }));
 
+// Mock the actual rate limiter used by the route
+jest.mock('@/lib/rate-limiting/api-rate-limiter', () => ({
+  apiRateLimiter: {
+    checkLimit: jest.fn(),
+  },
+}));
+
+// Get the mock function after the mock is set up
+const mockApiRateLimiterModule = jest.requireMock('@/lib/rate-limiting/api-rate-limiter') as {
+  apiRateLimiter: { checkLimit: jest.Mock };
+};
+const mockApiRateLimiterCheckLimit = mockApiRateLimiterModule.apiRateLimiter.checkLimit;
+
 jest.mock('@/utils/supabase/server', () => ({
   getSupabaseServerClient: jest.fn()
 }));
@@ -143,13 +156,27 @@ describe('POST /api/candidates/verify/confirm - Expired Code Handling', () => {
     const { rateLimitMiddleware } = await import('@/lib/core/security/rate-limit');
     jest.mocked(rateLimitMiddleware).mockResolvedValue(mockRateLimit);
     
+    // Setup apiRateLimiter mock
+    mockApiRateLimiterCheckLimit.mockResolvedValue({
+      allowed: true,
+      remaining: 9,
+      resetTime: new Date(Date.now() + 15 * 60 * 1000),
+    });
+    
     // Import the handler after mocks are set up
     const module = await import('@/app/api/candidates/verify/confirm/route');
     POST = module.POST;
 
     // Setup mock request
     mockRequest = {
-      headers: new Headers(),
+      headers: {
+        get: (key: string) => {
+          const lower = key.toLowerCase();
+          if (lower === 'x-forwarded-for' || lower === 'x-real-ip') return '127.0.0.1';
+          if (lower === 'user-agent') return 'jest';
+          return null;
+        },
+      } as Headers,
       nextUrl: new URL('http://localhost/api/candidates/verify/confirm'),
       json: jest.fn().mockResolvedValue({ code: '123456' })
     } as unknown as NextRequest;
@@ -284,13 +311,27 @@ describe('POST /api/candidates/verify/confirm - Wrong Code Handling', () => {
     const { rateLimitMiddleware } = await import('@/lib/core/security/rate-limit');
     jest.mocked(rateLimitMiddleware).mockResolvedValue(mockRateLimit);
     
+    // Setup apiRateLimiter mock
+    mockApiRateLimiterCheckLimit.mockResolvedValue({
+      allowed: true,
+      remaining: 9,
+      resetTime: new Date(Date.now() + 15 * 60 * 1000),
+    });
+    
     const module = await import('@/app/api/candidates/verify/confirm/route');
     POST = module.POST;
 
     mockRequest = {
-      headers: new Headers(),
+      headers: {
+        get: (key: string) => {
+          const lower = key.toLowerCase();
+          if (lower === 'x-forwarded-for' || lower === 'x-real-ip') return '127.0.0.1';
+          if (lower === 'user-agent') return 'jest';
+          return null;
+        },
+      } as Headers,
       nextUrl: new URL('http://localhost/api/candidates/verify/confirm'),
-      json: jest.fn().mockResolvedValue({ code: 'wrong-code' })
+      json: jest.fn().mockResolvedValue({ code: '999999' }) // Wrong code (valid format but doesn't match)
     } as unknown as NextRequest;
   });
 
@@ -439,11 +480,25 @@ describe('POST /api/candidates/verify/confirm - Successful Verification', () => 
   beforeEach(async () => {
     jest.clearAllMocks();
     
+    // Setup apiRateLimiter mock
+    mockApiRateLimiterCheckLimit.mockResolvedValue({
+      allowed: true,
+      remaining: 9,
+      resetTime: new Date(Date.now() + 15 * 60 * 1000),
+    });
+    
     const module = await import('@/app/api/candidates/verify/confirm/route');
     POST = module.POST;
 
     mockRequest = {
-      headers: new Headers(),
+      headers: {
+        get: (key: string) => {
+          const lower = key.toLowerCase();
+          if (lower === 'x-forwarded-for' || lower === 'x-real-ip') return '127.0.0.1';
+          if (lower === 'user-agent') return 'jest';
+          return null;
+        },
+      } as Headers,
       nextUrl: new URL('http://localhost/api/candidates/verify/confirm'),
       json: jest.fn().mockResolvedValue({ code: '123456' })
     } as unknown as NextRequest;
@@ -563,16 +618,30 @@ describe('POST /api/candidates/verify/confirm - Rate Limiting', () => {
   let mockRequest: NextRequest;
   let mockSupabase: MockSupabaseClient;
   let mockRateLimit: RateLimitResult;
+  let currentMockApiRateLimiterCheckLimit: jest.Mock;
 
   beforeEach(async () => {
     jest.clearAllMocks();
     jest.resetModules();
     
+    // Re-get the mock after resetModules
+    const mockApiRateLimiterModule = jest.requireMock('@/lib/rate-limiting/api-rate-limiter') as {
+      apiRateLimiter: { checkLimit: jest.Mock };
+    };
+    currentMockApiRateLimiterCheckLimit = mockApiRateLimiterModule.apiRateLimiter.checkLimit;
+    
     const module = await import('@/app/api/candidates/verify/confirm/route');
     POST = module.POST;
 
     mockRequest = {
-      headers: new Headers(),
+      headers: {
+        get: (key: string) => {
+          const lower = key.toLowerCase();
+          if (lower === 'x-forwarded-for' || lower === 'x-real-ip') return '127.0.0.1';
+          if (lower === 'user-agent') return 'jest';
+          return null;
+        },
+      } as Headers,
       nextUrl: new URL('http://localhost/api/candidates/verify/confirm'),
       json: jest.fn().mockResolvedValue({ code: '123456' })
     } as unknown as NextRequest;
@@ -587,10 +656,21 @@ describe('POST /api/candidates/verify/confirm - Rate Limiting', () => {
 
     const { rateLimitMiddleware } = await import('@/lib/core/security/rate-limit');
     jest.mocked(rateLimitMiddleware).mockResolvedValue(mockRateLimit);
+    
+    // Setup apiRateLimiter mock
+    currentMockApiRateLimiterCheckLimit.mockResolvedValue({
+      allowed: true,
+      remaining: 9,
+      resetTime: new Date(Date.now() + 15 * 60 * 1000),
+    });
   });
 
   it('should reject when rate limit is exceeded', async () => {
-    mockRateLimit.allowed = false;
+    currentMockApiRateLimiterCheckLimit.mockResolvedValue({
+      allowed: false,
+      remaining: 0,
+      resetTime: new Date(Date.now() + 15 * 60 * 1000),
+    });
 
     const response = await POST(mockRequest);
     const data = await response.json();
@@ -602,14 +682,19 @@ describe('POST /api/candidates/verify/confirm - Rate Limiting', () => {
   });
 
   it('should enforce 10 attempts per 15 minutes limit', async () => {
-    const { createRateLimiter } = await import('@/lib/core/security/rate-limit');
+    // Make a request to trigger rate limit check
+    await POST(mockRequest);
 
-    // Verify rate limiter is created with correct configuration
-    expect(createRateLimiter).toHaveBeenCalledWith({
-      interval: 15 * 60 * 1000, // 15 minutes
-      uniqueTokenPerInterval: 10, // 10 attempts per interval
-      maxBurst: 5 // 5 rapid attempts allowed
-    });
+    // Verify apiRateLimiter.checkLimit was called with correct configuration
+    expect(currentMockApiRateLimiterCheckLimit).toHaveBeenCalledWith(
+      expect.any(String), // IP address
+      '/api/candidates/verify/confirm',
+      {
+        maxRequests: 10,
+        windowMs: 15 * 60 * 1000, // 15 minutes
+        userAgent: expect.any(String),
+      }
+    );
   });
 });
 
@@ -627,7 +712,14 @@ describe('POST /api/candidates/verify/confirm - Input Validation', () => {
     POST = module.POST;
 
     mockRequest = {
-      headers: new Headers(),
+      headers: {
+        get: (key: string) => {
+          const lower = key.toLowerCase();
+          if (lower === 'x-forwarded-for' || lower === 'x-real-ip') return '127.0.0.1';
+          if (lower === 'user-agent') return 'jest';
+          return null;
+        },
+      } as Headers,
       nextUrl: new URL('http://localhost/api/candidates/verify/confirm'),
       json: jest.fn()
     } as unknown as NextRequest;
@@ -645,6 +737,13 @@ describe('POST /api/candidates/verify/confirm - Input Validation', () => {
 
     const { rateLimitMiddleware } = await import('@/lib/core/security/rate-limit');
     jest.mocked(rateLimitMiddleware).mockResolvedValue(mockRateLimit);
+    
+    // Setup apiRateLimiter mock
+    mockApiRateLimiterCheckLimit.mockResolvedValue({
+      allowed: true,
+      remaining: 9,
+      resetTime: new Date(Date.now() + 15 * 60 * 1000),
+    });
   });
 
   it('should reject request with missing code', async () => {
