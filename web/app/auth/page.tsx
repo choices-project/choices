@@ -126,15 +126,17 @@ export default function AuthPage() {
           setAuthError(result.error || t('auth.errors.registrationFailed'));
         }
       } else {
-        const result = await loginWithPassword({ email, password });
-        if (result.success && result.session) {
-          setSessionAndDerived(result.session);
+        try {
+          await loginWithPassword({ email, password });
+          // loginAction redirects on success, so we won't reach here
+          // But if we do, it means no redirect happened
           setMessage(t('auth.success.loggedIn'));
           setTimeout(() => {
             router.push('/dashboard');
           }, 1000);
-        } else {
-          setAuthError(result.error || t('auth.errors.loginFailed'));
+        } catch (error) {
+          const errorMessage = error instanceof Error ? error.message : t('auth.errors.loginFailed');
+          setAuthError(errorMessage);
         }
       }
     } catch (error) {

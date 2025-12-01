@@ -15,6 +15,16 @@ import { getSupabaseServerClient } from '@/utils/supabase/server';
 
 export const dynamic = 'force-dynamic'
 
+// Validation schema for user updates
+const updateUserSchema = z.object({
+  userId: z.string().min(1, 'User ID is required'),
+  updates: z.object({
+    username: z.string().optional(),
+    email: z.string().email().optional(),
+    is_admin: z.boolean().optional(),
+  }),
+});
+
 export const GET = withErrorHandling(async (request: NextRequest) => {
   // Single admin gate - returns 401 if not admin
   const authGate = await requireAdminOr401()

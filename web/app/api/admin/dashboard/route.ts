@@ -314,7 +314,7 @@ async function loadAdminAnalytics(supabase: any) {
       const date = new Date(startDate);
       date.setDate(date.getDate() + i);
       const dateStr = date.toISOString().split('T')[0];
-      const newUsers = userGrowthMap.get(dateStr) || 0;
+      const newUsers = userGrowthMap.get(dateStr ?? '') || 0;
       cumulative += newUsers;
       return {
         date: dateStr,
@@ -362,7 +362,7 @@ async function loadAdminAnalytics(supabase: any) {
       const date = new Date(startDate);
       date.setDate(date.getDate() + i);
       const dateStr = date.toISOString().split('T')[0];
-      const activity = pollActivityMap.get(dateStr) || { polls: 0, votes: 0 };
+      const activity = pollActivityMap.get(dateStr ?? '') || { polls: 0, votes: 0 };
       return {
         date: dateStr,
         polls_created: activity.polls,
