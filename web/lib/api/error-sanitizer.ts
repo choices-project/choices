@@ -88,7 +88,7 @@ export function sanitizeSupabaseError(error: unknown): string {
   const message = error instanceof Error ? error.message : String(error);
   
   // Remove Supabase-specific sensitive info
-  let sanitized = message
+  const sanitized = message
     .replace(/https?:\/\/[^.]+\.supabase\.(co|io)\/[^\s]+/g, '[SUPABASE_URL]')
     .replace(/sb-[a-zA-Z0-9_-]+/g, '[SUPABASE_KEY]');
 

@@ -157,22 +157,16 @@ export function PWAUserProfile({ user, onUpdate: _onUpdate }: PWAUserProfileProp
     }
   }
 
-  if (!user) {
-    return (
-      <div className="bg-white rounded-lg border border-gray-200 p-6" data-testid="pwa-user-profile-empty">
-        <div className="text-center">
-          <User className="w-12 h-12 text-gray-400 mx-auto mb-4" />
-          <h3 className="text-lg font-medium text-gray-900 mb-2">No Profile Found</h3>
-          <p className="text-gray-600">Please create a profile to get started.</p>
-        </div>
-      </div>
-    )
-  }
-
-  const tierInfo = useMemo(() => TIER_META[user.trustTier] ?? TIER_META.T0, [user.trustTier])
+  const tierInfo = useMemo(
+    () => (user ? TIER_META[user.trustTier] ?? TIER_META.T0 : TIER_META.T0),
+    [user ? user.trustTier : 'T0'],
+  );
   const visibilityInfo = useMemo(
-    () => VISIBILITY_META[user.profileVisibility] ?? VISIBILITY_META.pseudonymous,
-    [user.profileVisibility]
+    () =>
+      user
+        ? VISIBILITY_META[user.profileVisibility] ?? VISIBILITY_META.pseudonymous
+        : VISIBILITY_META.pseudonymous,
+    [user ? user.profileVisibility : 'pseudonymous'],
   )
   const VisibilityIcon = visibilityInfo.icon
 
@@ -187,9 +181,15 @@ export function PWAUserProfile({ user, onUpdate: _onUpdate }: PWAUserProfileProp
             </div>
             <div>
               <h2 className="text-xl font-bold text-gray-900">
-                {user.pseudonym ?? `User ${user.stableId.slice(0, 8)}`}
+                {user
+                  ? user.pseudonym ?? `User ${user.stableId.slice(0, 8)}`
+                  : 'User'}
               </h2>
-              <p className="text-sm text-gray-600">Member since {new Date(user.createdAt).toLocaleDateString()}</p>
+              {user && (
+                <p className="text-sm text-gray-600">
+                  Member since {new Date(user.createdAt).toLocaleDateString()}
+                </p>
+              )}
             </div>
           </div>
           <button

@@ -1,9 +1,9 @@
 import type { NextRequest } from 'next/server';
 
 import { withErrorHandling, successResponse, errorResponse, validationError, methodNotAllowed } from '@/lib/api';
+import { stripUndefinedDeep } from '@/lib/util/clean';
 import { logger } from '@/lib/utils/logger';
 import { getSupabaseServerClient } from '@/utils/supabase/server';
-import { stripUndefinedDeep } from '@/lib/util/clean';
 
 export const dynamic = 'force-dynamic';
 
@@ -14,7 +14,7 @@ function extractDomain(email: string): string | null {
   return domain && domain.length > 0 ? domain : null;
 }
 
-export const POST = withErrorHandling(async (request: NextRequest) => {
+export const POST = withErrorHandling(async (_request: NextRequest) => {
   const supabase = await getSupabaseServerClient();
   if (!supabase) return errorResponse('Auth/DB not available', 500);
 

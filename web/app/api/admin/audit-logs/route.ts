@@ -83,12 +83,14 @@ export const GET = withErrorHandling(async (request: NextRequest) => {
 
     // Return statistics if requested
     if (wantsStats) {
-      const startDate = searchParams.get('startDate') 
-        ? new Date(searchParams.get('startDate')!)
+      const startDateParam = searchParams.get('startDate');
+      const startDate = startDateParam 
+        ? new Date(startDateParam)
         : new Date(Date.now() - 7 * 24 * 60 * 60 * 1000); // Last 7 days
       
-      const endDate = searchParams.get('endDate')
-        ? new Date(searchParams.get('endDate')!)
+      const endDateParam = searchParams.get('endDate');
+      const endDate = endDateParam
+        ? new Date(endDateParam)
         : new Date();
 
       const stats = await auditLog.getStats(startDate, endDate);
@@ -113,12 +115,14 @@ export const GET = withErrorHandling(async (request: NextRequest) => {
     );
     const offset = parseInt(searchParams.get('offset') || '0');
 
-    const startDate = searchParams.get('startDate')
-      ? new Date(searchParams.get('startDate')!)
+    const startDateParam = searchParams.get('startDate');
+    const startDate = startDateParam
+      ? new Date(startDateParam)
       : undefined;
     
-    const endDate = searchParams.get('endDate')
-      ? new Date(searchParams.get('endDate')!)
+    const endDateParam = searchParams.get('endDate');
+    const endDate = endDateParam
+      ? new Date(endDateParam)
       : undefined;
 
     // Build filters

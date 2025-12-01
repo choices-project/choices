@@ -126,9 +126,6 @@ export default function PollHeatmap({
 }: PollHeatmapProps) {
   const { t, currentLanguage } = useI18n();
   const summarySectionId = useId();
-  const cardHeadingId = useId();
-  const cardDescriptionId = useId();
-  const chartRegionId = useId();
   const { fetchPollHeatmap } = useAnalyticsActions();
   const pollHeatmap = useAnalyticsPollHeatmap();
   const data = pollHeatmap.data;
@@ -305,49 +302,6 @@ export default function PollHeatmap({
 
     return t('analytics.heatmap.summaryFallback', summaryTotals);
   }, [activePolls, data.length, formatDecimal, formatNumber, t, topPoll, totalVotes]);
-
-  const summaryCards = useMemo(() => {
-    const cards = [
-      {
-        id: 'heatmap-total-votes',
-        label: t('analytics.heatmap.summaryCards.totalVotes.label'),
-        subtitle: t('analytics.heatmap.summaryCards.totalVotes.subtitle'),
-        value: formatNumber(totalVotes),
-        sr: t('analytics.heatmap.summaryCards.totalVotes.sr', { value: formatNumber(totalVotes) }),
-      },
-      {
-        id: 'heatmap-avg-engagement',
-        label: t('analytics.heatmap.summaryCards.avgEngagement.label'),
-        subtitle: t('analytics.heatmap.summaryCards.avgEngagement.subtitle'),
-        value: formatDecimal(avgEngagement),
-        sr: t('analytics.heatmap.summaryCards.avgEngagement.sr', {
-          value: formatDecimal(avgEngagement),
-        }),
-      },
-      {
-        id: 'heatmap-active-polls',
-        label: t('analytics.heatmap.summaryCards.activePolls.label'),
-        subtitle: t('analytics.heatmap.summaryCards.activePolls.subtitle'),
-        value: formatNumber(activePolls),
-        sr: t('analytics.heatmap.summaryCards.activePolls.sr', { value: formatNumber(activePolls) }),
-      },
-    ];
-
-    if (topPoll) {
-      cards.push({
-        id: 'heatmap-top-poll',
-        label: t('analytics.heatmap.summaryCards.topPoll.label'),
-        subtitle: t('analytics.heatmap.summaryCards.topPoll.subtitle'),
-        value: topPoll.title,
-        sr: t('analytics.heatmap.summaryCards.topPoll.sr', {
-          title: topPoll.title,
-          engagement: formatDecimal(topPoll.engagement_score),
-        }),
-      });
-    }
-
-    return cards;
-  }, [activePolls, formatDecimal, formatNumber, t, topPoll, totalVotes, avgEngagement]);
 
   useEffect(() => {
     if (isLoading || !summaryIntro) {

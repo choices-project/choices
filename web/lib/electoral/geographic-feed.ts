@@ -182,7 +182,9 @@ export class GeographicElectoralFeed {
                 divisionToReps.set(key, []);
               }
               if (row.representative) {
-                divisionToReps.get(key)!.push({
+                const reps = divisionToReps.get(key);
+                if (!reps) continue;
+                reps.push({
                   id: row.representative.id,
                   name: row.representative.name,
                   party: row.representative.party ?? null,

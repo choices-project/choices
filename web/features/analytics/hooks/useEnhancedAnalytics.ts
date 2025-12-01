@@ -489,12 +489,17 @@ export function useEnhancedAnalytics(options: UseEnhancedAnalyticsOptions = {}) 
   const [lastUpdated, setLastUpdated] = useState<Date | null>(null);
 
   // Initialize Supabase client and enhanced analytics service
-  const supabase = createClient<Database>(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
-  );
+  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+  const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
 
-  const enhancedAnalytics = new EnhancedAnalyticsService(supabase);
+  const supabase =
+    supabaseUrl && supabaseAnonKey
+      ? createClient<Database>(supabaseUrl, supabaseAnonKey)
+      : null;
+
+  const enhancedAnalytics = supabase
+    ? new EnhancedAnalyticsService(supabase)
+    : null;
 
   const {
     setDashboard: setAnalyticsDashboard,
@@ -650,9 +655,9 @@ export function useEnhancedAnalytics(options: UseEnhancedAnalyticsOptions = {}) 
   const trackSessionActivity = useCallback(
     async (action: string, page: string, metadata: SessionMetadata = {}) => {
       try {
-      if (IS_E2E_HARNESS) {
-        return;
-      }
+        if (IS_E2E_HARNESS || !enhancedAnalytics) {
+          return;
+        }
         if (!sessionId) return;
 
         const payload: Parameters<EnhancedAnalyticsService['trackUserSession']>[0] = {

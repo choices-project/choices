@@ -105,7 +105,10 @@ export async function safeJsonWithRetry<T>(
     await new Promise(resolve => setTimeout(resolve, delay));
   }
   
-  return lastError!;
+  if (lastError) {
+    return lastError;
+  }
+  throw new Error('Request failed after retries with no error object');
 }
 
 

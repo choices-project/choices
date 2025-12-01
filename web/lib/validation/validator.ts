@@ -298,7 +298,9 @@ export function validateAndTransform<T, U>(
       failure.error = validationResult.error;
     }
     if (validationResult.details !== undefined) {
-      failure.details = validationResult.details as unknown as import('zod').ZodError;
+      // eslint-disable-next-line @typescript-eslint/consistent-type-imports
+      type ZodError = import('zod').ZodError;
+      failure.details = validationResult.details as unknown as ZodError;
     }
     return failure;
   }

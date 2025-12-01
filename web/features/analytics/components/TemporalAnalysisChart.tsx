@@ -949,11 +949,11 @@ function generateMockData(_range: string): TemporalData {
   }));
 
   // Calculate peak values
-  const peakHourData: HourlyData = hourly.length > 0
-    ? hourly.reduce((max, h) => (h.activity > max.activity ? h : max), hourly[0]!)
+  const peakHourData: HourlyData = hourly.length > 0 && hourly[0]
+    ? hourly.reduce((max, h) => (h.activity > max.activity ? h : max), hourly[0])
     : { hour: 0, activity: 0, label: '12 AM' };
-  const peakDayData: DailyData = daily.length > 0
-    ? daily.reduce((max, d) => (d.activity > max.activity ? d : max), daily[0]!)
+  const peakDayData: DailyData = daily.length > 0 && daily[0]
+    ? daily.reduce((max, d) => (d.activity > max.activity ? d : max), daily[0])
     : { day: 'Monday', activity: 0, dayIndex: 0 };
   const avgActivity = hourly.length > 0 ? hourly.reduce((sum, h) => sum + h.activity, 0) / hourly.length : 0;
 

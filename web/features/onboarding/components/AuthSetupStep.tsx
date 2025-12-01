@@ -60,7 +60,7 @@ export default function AuthSetupStep({
   data,
   onUpdate,
   onNext,
-  onBack,
+  onBack: _onBack,
   forceInteractive = false,
 }: AuthSetupStepProps) {
   const [authMethod, setAuthMethod] = useState<AuthMethod>(data?.authMethod || 'email')
@@ -70,7 +70,7 @@ export default function AuthSetupStep({
 
   const userError = useUserError();
   const isLoading = useUserLoading();
-  const { setLoading, setError, clearError, signOut } = useUserActions();
+  const { setLoading, setError, clearError, signOut: _signOut } = useUserActions();
   const initializeAuth = useUserStore((state) => state.initializeAuth);
   const setSessionAndDerived = useUserStore((state) => state.setSessionAndDerived);
 
@@ -97,25 +97,10 @@ export default function AuthSetupStep({
     }
   }, [initializeAuth, setSessionAndDerived]);
 
-  // E2E bypass: If we're in test environment, render a simple version
-  if (
+  const showE2EBasic =
     !forceInteractive &&
     (process.env.NODE_ENV === 'test' ||
-      process.env.NEXT_PUBLIC_SUPABASE_URL === 'https://test.supabase.co')
-  ) {
-    return (
-      <div className="max-w-2xl mx-auto text-center">
-        <h2 className="text-2xl font-bold mb-4">Authentication Setup</h2>
-        <p className="text-gray-600 mb-6">Choose your authentication method</p>
-        <button
-          onClick={onNext}
-          className="bg-blue-600 text-white px-6 py-2 rounded-md hover:bg-blue-700"
-        >
-          Continue
-        </button>
-      </div>
-    )
-  }
+      process.env.NEXT_PUBLIC_SUPABASE_URL === 'https://test.supabase.co');
 
   const handleEmailSignup = async () => {
     if (!email) {
@@ -620,17 +605,33 @@ export default function AuthSetupStep({
   )
 
   const renderContent = () => {
-    if (currentSection === 'overview') {
-      return renderOverview()
-    } else if (currentSection === 'setup') {
-      return renderSetup()
+    if (showE2EBasic) {
+      return (
+        <div className="max-w-2xl mx-auto text-center">
+          <h2 className="text-2xl font-bold mb-4">Authentication Setup</h2>
+          <p className="text-gray-600 mb-6">Choose your authentication method</p>
+          <button
+            onClick={onNext}
+            className="bg-blue-600 text-white px-6 py-2 rounded-md hover:bg-blue-700"
+          >
+            Continue
+          </button>
+        </div>
+      );
     }
-    return renderOverview()
-  }
+
+    if (currentSection === 'overview') {
+      return renderOverview();
+    }
+    if (currentSection === 'setup') {
+      return renderSetup();
+    }
+    return renderOverview();
+  };
 
   return (
     <div className="max-w-6xl mx-auto px-4 py-8">
       {renderContent()}
     </div>
-  )
+  );
 }

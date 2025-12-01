@@ -505,7 +505,6 @@ const createContactActions = (
   const fetchMessages: ContactActions['fetchMessages'] = async (threadId, options = {}) => {
     const { append = false, force = false, ...restOptions } = options;
     const state = get();
-    const meta = state.messagesMetaByThreadId[threadId];
 
     if (state.messagesLoadingByThreadId[threadId] && !force) {
       return state.messagesByThreadId[threadId] ?? [];
@@ -685,13 +684,11 @@ const createContactActions = (
           thread.messageCount = Math.max(0, thread.messageCount - 1);
         }
 
-        if (draft.messagesMetaByThreadId[input.threadId]) {
+        const meta = draft.messagesMetaByThreadId[input.threadId];
+        if (meta) {
           draft.messagesMetaByThreadId[input.threadId] = {
-            ...draft.messagesMetaByThreadId[input.threadId]!,
-            total: Math.max(
-              0,
-              (draft.messagesMetaByThreadId[input.threadId]?.total ?? 1) - 1,
-            ),
+            ...meta,
+            total: Math.max(0, (meta.total ?? 1) - 1),
             lastFetchedAt: Date.now(),
           };
         }

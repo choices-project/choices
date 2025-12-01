@@ -232,7 +232,10 @@ export class GoogleCivicErrorHandler {
       }
     }
 
-    throw lastError!;
+    if (lastError) {
+      throw lastError;
+    }
+    throw new Error('Google Civic API request failed with unknown error');
   }
 
   /**

@@ -178,7 +178,12 @@ export class CivicsIntegrationService {
         };
         if (committee.start_date) committeeData.start_date = committee.start_date;
         if (committee.end_date) committeeData.end_date = committee.end_date;
-        committeeMap.get(repId)!.push(committeeData);
+        const committeesForRep = committeeMap.get(repId);
+        if (!committeesForRep) {
+          committeeMap.set(repId, [committeeData]);
+        } else {
+          committeesForRep.push(committeeData);
+        }
       }
 
       return committeeMap;
@@ -237,7 +242,12 @@ export class CivicsIntegrationService {
           crosswalkMap.set(repId, []);
         }
 
-        crosswalkMap.get(repId)!.push(item);
+        const entries = crosswalkMap.get(repId);
+        if (!entries) {
+          crosswalkMap.set(repId, [item]);
+        } else {
+          entries.push(item);
+        }
       }
 
       return crosswalkMap;

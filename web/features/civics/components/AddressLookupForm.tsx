@@ -74,11 +74,6 @@ export function AddressLookupForm({ onLookup, className = '' }: AddressLookupFor
 
   const isLoading = addressLoading || repLoading;
 
-  // Feature flag check - don't render if disabled
-  if (!isFeatureEnabled('CIVICS_ADDRESS_LOOKUP')) {
-    return null;
-  }
-
   const handleSubmit = useCallback(async (event: React.FormEvent) => {
     event.preventDefault();
 
@@ -137,6 +132,11 @@ export function AddressLookupForm({ onLookup, className = '' }: AddressLookupFor
     setRegistrationStateCode((previous) => (previous === normalizedState ? previous : normalizedState));
     void fetchVoterRegistration(normalizedState);
   }, [userDivisionIds.length, userCurrentState, fetchVoterRegistration]);
+
+  // Feature flag check - don't render if disabled
+  if (!isFeatureEnabled('CIVICS_ADDRESS_LOOKUP')) {
+    return null;
+  }
 
   return (
     <div className={`civics-address-lookup ${className}`}>

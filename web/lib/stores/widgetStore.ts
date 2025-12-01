@@ -11,7 +11,7 @@
 import { enableMapSet } from 'immer';
 import type { ReactNode } from 'react';
 import { createElement, createContext, useContext, useMemo } from 'react';
-import { create, useStore } from 'zustand';
+import { create } from 'zustand';
 import type { StateCreator, StoreApi } from 'zustand';
 import { persist } from 'zustand/middleware';
 import { immer } from 'zustand/middleware/immer';
@@ -157,20 +157,11 @@ const applyWidgetUpdates = (base: WidgetConfig, updates: Partial<WidgetConfig>):
 
   if (updates.position) {
     next.position = { ...next.position, ...updates.position };
-    if (process.env.NODE_ENV !== 'production') {
-      console.info(
-        '[widgetStore] applyWidgetUpdates position',
-        JSON.stringify(
-          {
-            base: { x: base.position.x, y: base.position.y },
-            updates: updates.position,
-            next: next.position,
-          },
-          null,
-          2,
-        ),
-      );
-    }
+    logger.debug('[widgetStore] applyWidgetUpdates position', {
+      base: { x: base.position.x, y: base.position.y },
+      updates: updates.position,
+      next: next.position,
+    });
   }
 
   if (updates.size) {
@@ -440,12 +431,10 @@ export const widgetStoreCreator = (
 
   loadLayout: (layout: DashboardLayout) => {
     set((draft) => {
-      if (process.env.NODE_ENV !== 'production') {
-        console.info('[widgetStore] loadLayout', {
-          layoutId: layout.id,
-          widgetCount: layout.widgets.length,
-        });
-      }
+      logger.debug('[widgetStore] loadLayout', {
+        layoutId: layout.id,
+        widgetCount: layout.widgets.length,
+      });
       applyLayoutToState(draft, layout);
       pushLayoutToHistory(draft, layout);
       logger.info('Layout loaded', { layoutId: layout.id, widgetCount: layout.widgets.length });
@@ -505,14 +494,12 @@ export const widgetStoreCreator = (
       (currentState.currentLayoutChecksum === null ||
         currentState.currentLayoutChecksum !== layoutChecksum);
 
-    if (process.env.NODE_ENV !== 'production') {
-      console.info('[widgetStore] initializeLayout call', {
-        layoutId: layout?.id ?? null,
-        shouldApplyLayout,
-        prevChecksum: currentState.currentLayoutChecksum,
-        nextChecksum: layoutChecksum,
-      });
-    }
+    logger.debug('[widgetStore] initializeLayout call', {
+      layoutId: layout?.id ?? null,
+      shouldApplyLayout,
+      prevChecksum: currentState.currentLayoutChecksum,
+      nextChecksum: layoutChecksum,
+    });
 
     set((draft) => {
       if (layout) {
@@ -521,15 +508,13 @@ export const widgetStoreCreator = (
           if (pushToHistory) {
             pushLayoutToHistory(draft, layout);
           }
-          if (process.env.NODE_ENV !== 'production') {
-            console.info('[widgetStore] initializeLayout applied layout', {
-              layoutId: layout.id,
-              historyLength: draft.history.length,
-              historyIndex: draft.historyIndex,
-            });
-          }
-        } else if (process.env.NODE_ENV !== 'production') {
-          console.info('[widgetStore] initializeLayout skipped layout apply', {
+          logger.debug('[widgetStore] initializeLayout applied layout', {
+            layoutId: layout.id,
+            historyLength: draft.history.length,
+            historyIndex: draft.historyIndex,
+          });
+        } else {
+          logger.debug('[widgetStore] initializeLayout skipped layout apply', {
             layoutId: layout.id,
           });
         }
@@ -543,9 +528,7 @@ export const widgetStoreCreator = (
         draft.widgets = new Map();
         draft.history = [];
         draft.historyIndex = -1;
-        if (process.env.NODE_ENV !== 'production') {
-          console.info('[widgetStore] initializeLayout cleared layout');
-        }
+        logger.debug('[widgetStore] initializeLayout cleared layout');
       }
 
       if (selectedWidgetId !== undefined) {
@@ -636,25 +619,23 @@ export const widgetStoreCreator = (
     set((draft) => {
       const widget = draft.widgets.get(widgetId);
       if (!widget) {
-        logger.warn('Widget not found', { widgetId });
-        if (process.env.NODE_ENV !== 'production') {
-          console.info('[widgetStore] updateWidget missing widget', { widgetId, hasKeys: Array.from(draft.widgets.keys()) });
-        }
+        logger.warn('Widget not found', {
+          widgetId,
+          hasKeys: Array.from(draft.widgets.keys()),
+        });
         return;
       }
-
+      
       const updatedWidget = applyWidgetUpdates(widget, changes);
       updatedWidget.updatedAt =
         changes.updatedAt !== undefined ? coerceDate(changes.updatedAt) : new Date();
-
+      
       draft.widgets.set(widgetId, updatedWidget);
-      if (process.env.NODE_ENV !== 'production') {
-        console.info('[widgetStore] updateWidget applied', {
-          widgetId,
-          position: 'position' in changes ? updatedWidget.position : undefined,
-          size: 'size' in changes ? updatedWidget.size : undefined,
-        });
-      }
+      logger.debug('[widgetStore] updateWidget applied', {
+        widgetId,
+        position: 'position' in changes ? updatedWidget.position : undefined,
+        size: 'size' in changes ? updatedWidget.size : undefined,
+      });
 
       if (draft.currentLayout) {
         const index = draft.currentLayout.widgets.findIndex((entry) => entry.id === widgetId);
@@ -674,14 +655,12 @@ export const widgetStoreCreator = (
         logger.warn('Widget not found for move', { widgetId });
         return;
       }
-
-      if (process.env.NODE_ENV !== 'production') {
-        console.info('[widgetStore] moveWidget draft snapshot', {
-          widgetId,
-          currentPosition: { ...widget.position },
-          nextPosition: position,
-        });
-      }
+      
+      logger.debug('[widgetStore] moveWidget draft snapshot', {
+        widgetId,
+        currentPosition: { ...widget.position },
+        nextPosition: position,
+      });
 
       widget.position = { ...widget.position, ...position };
       widget.updatedAt = new Date();
@@ -746,9 +725,7 @@ export const widgetStoreCreator = (
         return;
       }
       draft.selectedWidgetId = widgetId;
-      if (process.env.NODE_ENV !== 'production') {
-        console.info('[widgetStore] setSelectedWidget', widgetId);
-      }
+      logger.debug('[widgetStore] setSelectedWidget', { widgetId });
     });
   },
 
@@ -761,9 +738,7 @@ export const widgetStoreCreator = (
   setKeyboardMode: (mode: WidgetState['keyboardMode']) => {
     set((draft) => {
       draft.keyboardMode = mode;
-      if (process.env.NODE_ENV !== 'production') {
-        console.info('[widgetStore] setKeyboardMode', mode);
-      }
+      logger.debug('[widgetStore] setKeyboardMode', { mode });
     });
   },
 
@@ -777,23 +752,6 @@ export const widgetStoreCreator = (
     const maxX = Math.max(0, GRID_COLUMNS - widget.size.w);
     const nextX = Math.max(0, Math.min(maxX, widget.position.x + deltaX));
     const nextY = Math.max(0, widget.position.y + deltaY);
-
-    if (process.env.NODE_ENV !== 'production') {
-      console.info(
-        '[widgetStore] nudgeWidgetPosition',
-        JSON.stringify(
-          {
-            widgetId,
-            deltaX,
-            deltaY,
-            current: { x: widget.position.x, y: widget.position.y },
-            next: { x: nextX, y: nextY },
-          },
-          null,
-          2,
-        ),
-      );
-    }
 
     if (nextX === widget.position.x && nextY === widget.position.y) {
       return widget.position;
@@ -824,16 +782,6 @@ export const widgetStoreCreator = (
       Math.min(Math.min(maxW, GRID_COLUMNS - widget.position.x), proposedWidth),
     );
     const nextHeight = Math.max(minH, Math.min(maxH, proposedHeight));
-
-    if (process.env.NODE_ENV !== 'production') {
-      console.info('[widgetStore] nudgeWidgetSize', {
-        widgetId,
-        deltaW,
-        deltaH,
-        current: { w: widget.size.w, h: widget.size.h },
-        next: { w: nextWidth, h: nextHeight },
-      });
-    }
 
     if (nextWidth === widget.size.w && nextHeight === widget.size.h) {
       return widget.size;

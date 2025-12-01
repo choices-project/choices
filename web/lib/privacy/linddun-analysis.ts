@@ -179,7 +179,7 @@ export class PrivacyThreatAssessmentManager {
       }
     }
     
-    const overallRisk = Math.max(...threats.map(t => t.riskLevel));
+    const overallRisk = threats.length > 0 ? Math.max(...threats.map(t => t.riskLevel)) : 0;
     const recommendations = this.generateRecommendations(threats);
     const complianceScore = this.calculateComplianceScore(threats);
     const mitigationStatus = this.calculateMitigationStatus(threats);
@@ -208,7 +208,7 @@ export class PrivacyThreatAssessmentManager {
     
     // Aggregate threats by dimension
     const aggregatedThreats = this.aggregateThreatsByDimension(allThreats);
-    const overallRisk = Math.max(...aggregatedThreats.map(t => t.riskLevel));
+    const overallRisk = aggregatedThreats.length > 0 ? Math.max(...aggregatedThreats.map(t => t.riskLevel)) : 0;
     const recommendations = this.generateRecommendations(aggregatedThreats);
     const complianceScore = this.calculateComplianceScore(aggregatedThreats);
     const mitigationStatus = this.calculateMitigationStatus(aggregatedThreats);
@@ -342,14 +342,20 @@ export class PrivacyThreatAssessmentManager {
       if (!dimensionMap.has(threat.dimension)) {
         dimensionMap.set(threat.dimension, []);
       }
-      dimensionMap.get(threat.dimension)!.push(threat);
+      const list = dimensionMap.get(threat.dimension);
+      if (!list) return;
+      list.push(threat);
     });
     
     const aggregated: LINDDUNThreat[] = [];
     
     dimensionMap.forEach((dimensionThreats, _dimension) => {
-      const maxRisk = Math.max(...dimensionThreats.map(t => t.riskLevel));
-      const representativeThreat = dimensionThreats.find(t => t.riskLevel === maxRisk)!;
+      const maxRisk = dimensionThreats.length > 0 ? Math.max(...dimensionThreats.map(t => t.riskLevel)) : 0;
+      const representativeThreat =
+        dimensionThreats.find(t => t.riskLevel === maxRisk) ?? dimensionThreats[0];
+      if (!representativeThreat) {
+        return;
+      }
       
       aggregated.push({
         ...representativeThreat,

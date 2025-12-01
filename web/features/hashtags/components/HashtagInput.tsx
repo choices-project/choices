@@ -62,7 +62,7 @@ export function HashtagInput({
       try {
         await getSuggestions(inputValue);
         setShowSuggestionsList(true);
-      } catch (error) {
+      } catch {
         // errors surface via store
       } finally {
         setIsLoading(false);

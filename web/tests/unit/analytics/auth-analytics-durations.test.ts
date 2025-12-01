@@ -1,4 +1,5 @@
 import { describe, it, expect } from '@jest/globals';
+
 import { AuthAnalytics, AuthEventType, AuthMethod } from '@/features/analytics/lib/auth-analytics';
 
 describe('AuthAnalytics duration handling', () => {

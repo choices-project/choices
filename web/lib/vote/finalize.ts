@@ -747,7 +747,11 @@ export async function createPollSnapshot(pollId: string): Promise<string> {
     throw new Error(`Failed to create snapshot: ${result.error}`);
   }
   
-  return result.snapshotId!;
+  if (!result.snapshotId) {
+    throw new Error('Snapshot created but no snapshotId returned');
+  }
+  
+  return result.snapshotId;
 }
 
 // ============================================================================

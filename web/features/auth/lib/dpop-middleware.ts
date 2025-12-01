@@ -93,9 +93,17 @@ async function validateDPoPBinding(
   jti: string
 ): Promise<boolean> {
   try {
+    const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+    const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+
+    if (!supabaseUrl || !serviceRoleKey) {
+      logger.error('DPoP validation error: Supabase environment not configured');
+      return false;
+    }
+
     const supabase = createClient(
-      process.env.NEXT_PUBLIC_SUPABASE_URL!,
-      process.env.SUPABASE_SERVICE_ROLE_KEY!
+      supabaseUrl,
+      serviceRoleKey
     );
 
     const { data, error } = await supabase.rpc('validate_dpop_binding', {

@@ -6,12 +6,11 @@ import { devLog } from '@/lib/utils/logger';
 
 // Import types from respective PWA modules
 import type { PWAAuth } from '../lib/pwa-auth-integration';
+import type * as PWAUtilsModule from '../lib/pwa-utils';
 
-type PWAUtilsModule = typeof import('../lib/pwa-utils');
-
-type PWAManagerInstance = InstanceType<PWAUtilsModule['PWAManager']>;
-type PWAWebAuthnInstance = InstanceType<PWAUtilsModule['PWAWebAuthn']>;
-type PrivacyStorageInstance = InstanceType<PWAUtilsModule['PrivacyStorage']>;
+type PWAManagerInstance = InstanceType<PWAUtilsModule.PWAManager>;
+type PWAWebAuthnInstance = InstanceType<PWAUtilsModule.PWAWebAuthn>;
+type PrivacyStorageInstance = InstanceType<PWAUtilsModule.PrivacyStorage>;
 
 type PWAUtils = {
   pwaAuth: PWAAuth;

@@ -106,8 +106,10 @@ export const GET = withErrorHandling(async (request: NextRequest) => {
             trendsByDate.set(date, { votes: 0, voters: new Set() });
           }
 
-          const dayData = trendsByDate.get(date)!;
-          dayData.votes += 1;
+          const dayData = trendsByDate.get(date);
+          if (dayData) {
+            dayData.votes += 1;
+          }
         });
 
         // Convert to array and calculate metrics

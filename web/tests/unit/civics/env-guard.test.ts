@@ -26,7 +26,8 @@ describe('assertPepperConfig', () => {
       
       jest.resetModules();
       // eslint-disable-next-line @typescript-eslint/no-var-requires
-      const { assertPepperConfig } = require('@/lib/civics/env-guard');
+      // eslint-disable-next-line @typescript-eslint/no-var-requires
+    const { assertPepperConfig } = require('@/lib/civics/env-guard');
       
       // In test mode, should require PRIVACY_PEPPER_DEV
       expect(() => assertPepperConfig()).toThrow();
@@ -36,7 +37,8 @@ describe('assertPepperConfig', () => {
       // If PRIVACY_PEPPER_DEV is set, verify it doesn't throw
       jest.resetModules();
       // eslint-disable-next-line @typescript-eslint/no-var-requires
-      const { assertPepperConfig } = require('@/lib/civics/env-guard');
+      // eslint-disable-next-line @typescript-eslint/no-var-requires
+    const { assertPepperConfig } = require('@/lib/civics/env-guard');
       expect(() => assertPepperConfig()).not.toThrow();
     }
     
@@ -51,6 +53,7 @@ describe('assertPepperConfig', () => {
     // 32 bytes of hex (64 hex chars) with prefix
     process.env.PRIVACY_PEPPER_CURRENT = 'hex:' + 'a'.repeat(64);
     
+    // eslint-disable-next-line @typescript-eslint/no-var-requires
     const { assertPepperConfig } = require('@/lib/civics/env-guard');
     expect(() => assertPepperConfig()).not.toThrow();
   });
@@ -60,7 +63,8 @@ describe('assertPepperConfig', () => {
     // (which is common in CI/test setups)
     if (process.env.PRIVACY_PEPPER_DEV) {
       // If it's set, verify the function doesn't throw
-      const { assertPepperConfig } = require('@/lib/civics/env-guard');
+      // eslint-disable-next-line @typescript-eslint/no-var-requires
+    const { assertPepperConfig } = require('@/lib/civics/env-guard');
       expect(() => assertPepperConfig()).not.toThrow();
       return;
     }
@@ -69,6 +73,7 @@ describe('assertPepperConfig', () => {
     delete process.env.PRIVACY_PEPPER_DEV;
     delete process.env.PRIVACY_PEPPER_CURRENT;
     
+    // eslint-disable-next-line @typescript-eslint/no-var-requires
     const { assertPepperConfig } = require('@/lib/civics/env-guard');
     expect(() => assertPepperConfig()).toThrow(/PRIVACY_PEPPER_DEV/);
   });

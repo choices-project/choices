@@ -96,7 +96,9 @@ export default function FeedCore({
   const [activeTab, setActiveTab] = useState('feed');
   const [isDarkMode, setIsDarkMode] = useState(false);
   const [isClient, setIsClient] = useState(false);
-  const [showScrollTop, setShowScrollTop] = useState(false);
+  // Scroll-to-top functionality is handled by InfiniteScroll component
+  // Keeping setShowScrollTop for potential future use
+  const [, setShowScrollTop] = useState(false);
   const [isPulling, setIsPulling] = useState(false);
   const [pullDistance, setPullDistance] = useState(0);
   
@@ -220,9 +222,7 @@ export default function FeedCore({
     }
   }, [isDarkMode]);
 
-  const scrollToTop = useCallback(() => {
-    window.scrollTo({ top: 0, behavior: 'smooth' });
-  }, []);
+  // Scroll-to-top functionality is handled by InfiniteScroll component
 
   const handleHashtagSubmit = useCallback((e: React.FormEvent) => {
     e.preventDefault();

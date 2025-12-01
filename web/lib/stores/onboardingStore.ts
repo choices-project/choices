@@ -436,7 +436,9 @@ export const createOnboardingActions = (
       queueMicrotask(async () => {
         try {
           await get().saveProgress();
-        } catch {}
+        } catch {
+          // Ignore save errors in background task
+        }
       });
       return next as OnboardingStore;
     }),

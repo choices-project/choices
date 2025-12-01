@@ -251,9 +251,16 @@ export const POST = withErrorHandling(async (request: NextRequest) => {
     }
 
     // Use validated/sanitized values
-    const validatedRepId = repIdValidation.parsedId!;
+    if (!repIdValidation.parsedId || !priorityValidation.parsedPriority) {
+      return validationError({
+        representativeId: !repIdValidation.parsedId ? 'Invalid representative ID' : '',
+        priority: !priorityValidation.parsedPriority ? 'Invalid priority' : '',
+      });
+    }
+    
+    const validatedRepId = repIdValidation.parsedId;
     const sanitizedSubject = subjectValidation.sanitized;
-    const validatedPriority = priorityValidation.parsedPriority!;
+    const validatedPriority = priorityValidation.parsedPriority;
 
     // Check if representative exists (representativeId is database primary key)
     const { data: representative, error: repError } = await supabase

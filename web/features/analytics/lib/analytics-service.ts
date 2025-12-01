@@ -71,7 +71,7 @@ type CivicDatabaseEntryUpsertPayload = {
   trust_tier_upgrade_date: string | null;
 };
 
-type ErrorWithCode = Error & { code?: string };
+type _ErrorWithCode = Error & { code?: string };
 
 const isRecord = (value: unknown): value is Record<string, unknown> =>
   typeof value === 'object' && value !== null && !Array.isArray(value);

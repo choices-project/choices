@@ -41,7 +41,7 @@ export function useFeatureFlags() {
   }
 
   // Fetch flags from API and sync with appStore
-  const fetchFlags = async () => {
+  const fetchFlags = useCallback(async () => {
     setIsLoading(true);
     setError(null);
     
@@ -71,12 +71,12 @@ export function useFeatureFlags() {
     } finally {
       setIsLoading(false);
     }
-  };
+  }, [setFeatureFlags]);
 
   // Auto-fetch flags on mount
   useEffect(() => {
-    fetchFlags();
-  }, []);
+    void fetchFlags();
+  }, [fetchFlags]);
 
   return {
     // State

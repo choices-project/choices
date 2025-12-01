@@ -57,38 +57,35 @@ export default function ProfilePage() {
     );
   }
 
-  if (error || !profile) {
+  const profileData = (profile ?? null) as UserProfile | null;
+  const profilePreferences = useMemo(() => {
+    if (!profileData) return {};
+    if (typeof profileData !== 'object' || !('preferences' in profileData)) return {};
+    const prefs = (profileData as Record<string, unknown>).preferences;
+    return prefs && typeof prefs === 'object' ? (prefs as Record<string, unknown>) : {};
+  }, [profileData]);
+
+  const profilePrivacySettings = useMemo(() => {
+    if (!profileData) return {};
+    if (typeof profileData !== 'object' || !('privacy_settings' in profileData)) return {};
+    const settings = (profileData as Record<string, unknown>).privacy_settings;
+    return settings && typeof settings === 'object'
+      ? (settings as Record<string, unknown>)
+      : {};
+  }, [profileData]);
+
+  if (error || !profileData) {
     return (
       <div className="max-w-2xl mx-auto p-6">
         <Alert variant="destructive">
           <AlertTriangle className="h-4 w-4" />
-      <AlertDescription>
-        {profileError ?? 'Failed to load profile. Please try again.'}
+          <AlertDescription>
+            {profileError ?? 'Failed to load profile. Please try again.'}
           </AlertDescription>
         </Alert>
       </div>
     );
   }
-
-  const profileData = profile as UserProfile;
-  const profilePreferences = useMemo(() => {
-    if (profileData && typeof profileData === 'object' && 'preferences' in profileData) {
-      const prefs = (profileData as Record<string, unknown>).preferences;
-      if (prefs && typeof prefs === 'object') {
-        return prefs as Record<string, unknown>;
-      }
-    }
-    return {};
-  }, [profileData]);
-  const profilePrivacySettings = useMemo(() => {
-    if (profileData && typeof profileData === 'object' && 'privacy_settings' in profileData) {
-      const settings = (profileData as Record<string, unknown>).privacy_settings;
-      if (settings && typeof settings === 'object') {
-        return settings as Record<string, unknown>;
-      }
-    }
-    return {};
-  }, [profileData]);
 
   return (
     <div className="max-w-4xl mx-auto p-6 space-y-6">

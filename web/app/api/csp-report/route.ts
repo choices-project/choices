@@ -14,9 +14,9 @@
 import type { NextRequest} from 'next/server';
 
 import { withErrorHandling, successResponse, validationError, corsPreflightResponse } from '@/lib/api';
+import { stripUndefinedDeep } from '@/lib/util/clean';
 import { logger } from '@/lib/utils/logger';
 import { getSupabaseServerClient } from '@/utils/supabase/server';
-import { stripUndefinedDeep } from '@/lib/util/clean';
 
 type CSPViolation = {
   'document-uri': string;

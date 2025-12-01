@@ -67,7 +67,10 @@ export const GET = withErrorHandling(async (_request: NextRequest) => {
           if (!tierGroups.has(tier)) {
             tierGroups.set(tier, []);
           }
-          tierGroups.get(tier)!.push(u);
+          const tierGroup = tierGroups.get(tier);
+          if (tierGroup) {
+            tierGroup.push(u);
+          }
         });
 
         // Calculate metrics per tier

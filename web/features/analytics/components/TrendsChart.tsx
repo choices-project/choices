@@ -263,11 +263,15 @@ export default function TrendsChart({
     const trendDirectionKey =
       voteTrend > 2 ? 'increasing' : voteTrend < -2 ? 'decreasing' : 'steady';
 
+    if (!peakVotesPoint || !peakParticipationPoint) {
+      return '';
+    }
+
     return t('analytics.trends.chart.summary', {
-      peakVotesDate: formatDate(peakVotesPoint!.date),
-      peakVotes: formatNumber(peakVotesPoint!.votes),
-      peakParticipationDate: formatDate(peakParticipationPoint!.date),
-      peakParticipation: formatPercent(peakParticipationPoint!.participation),
+      peakVotesDate: formatDate(peakVotesPoint.date),
+      peakVotes: formatNumber(peakVotesPoint.votes),
+      peakParticipationDate: formatDate(peakParticipationPoint.date),
+      peakParticipation: formatPercent(peakParticipationPoint.participation),
       trendDirection: t(`analytics.trends.trendDirections.${trendDirectionKey}`),
       range: currentRangeLabel,
     });
@@ -280,28 +284,11 @@ export default function TrendsChart({
     peakVotesPoint,
     currentRangeLabel,
     t,
+    getTrend,
   ]);
 
-  const axisStats = useMemo(() => {
-    if (!data.length) {
-      return null;
-    }
-    const dates = data.map((point) => point.date);
-    const votes = data.map((point) => point.votes);
-    const participation = data.map((point) => point.participation);
-    const velocity = data.map((point) => point.velocity);
-
-    return {
-      startDate: dates[0],
-      endDate: dates[dates.length - 1],
-      minVotes: Math.min(...votes),
-      maxVotes: Math.max(...votes),
-      minParticipation: Math.min(...participation),
-      maxParticipation: Math.max(...participation),
-      minVelocity: Math.min(...velocity),
-      maxVelocity: Math.max(...velocity),
-    };
-  }, [data]);
+  // Axis stats computation removed - not used in rendering
+  // If needed for future features, can be restored
 
   useEffect(() => {
     void fetchTrends(defaultRange, {

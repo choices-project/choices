@@ -9,10 +9,10 @@ import {
   parseBody,
 } from '@/lib/api';
 import { apiRateLimiter } from '@/lib/rate-limiting/api-rate-limiter';
+import { stripUndefinedDeep } from '@/lib/util/clean';
 import { devLog, logger } from '@/lib/utils/logger';
 import type { Json } from '@/types/supabase';
 import { getSupabaseServerClient } from '@/utils/supabase/server';
-import { stripUndefinedDeep } from '@/lib/util/clean';
 
 export const dynamic = 'force-dynamic';
 

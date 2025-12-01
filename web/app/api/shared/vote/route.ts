@@ -15,10 +15,14 @@ export const POST = withErrorHandling(async (request: NextRequest) => {
     });
   }
 
-    const supabase = createClient(
-      process.env.NEXT_PUBLIC_SUPABASE_URL!,
-      process.env.SUPABASE_SERVICE_ROLE_KEY!
-    );
+    const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+    const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+    
+    if (!supabaseUrl || !supabaseKey) {
+      throw new Error('Supabase configuration missing');
+    }
+    
+    const supabase = createClient(supabaseUrl, supabaseKey);
 
     // Check if poll exists and is shareable
     const { data: poll, error: pollError } = await supabase

@@ -7,10 +7,14 @@ export const GET = withErrorHandling(async (
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) => {
-    const supabase = createClient(
-      process.env.NEXT_PUBLIC_SUPABASE_URL!,
-      process.env.SUPABASE_SERVICE_ROLE_KEY!
-    );
+    const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+    const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+    
+    if (!supabaseUrl || !supabaseKey) {
+      throw new Error('Supabase configuration missing');
+    }
+    
+    const supabase = createClient(supabaseUrl, supabaseKey);
 
     // Await params in Next.js 15
     const { id } = await params;

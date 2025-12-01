@@ -18,7 +18,7 @@ import {
 } from '@/features/voting/lib/pollAdapters';
 import { useVotingActions, useVotingError, useVotingIsVoting } from '@/features/voting/lib/store';
 import { useAuth } from '@/hooks/useAuth';
-import { useNotificationActions, useAnalyticsStore } from '@/lib/stores';
+import { useNotificationActions } from '@/lib/stores';
 import { useAppActions } from '@/lib/stores/appStore';
 import { cn } from '@/lib/utils';
 import { logger } from '@/lib/utils/logger';

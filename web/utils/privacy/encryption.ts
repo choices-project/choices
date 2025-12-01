@@ -67,6 +67,10 @@ export class UserEncryption {
       throw new Error('User key not initialized. Call generateUserKey first.');
     }
 
+    if (!this.salt) {
+      throw new Error('Salt not initialized. Call generateUserKey first.');
+    }
+
     const iv = crypto.getRandomValues(new Uint8Array(12));
     const encoded = new TextEncoder().encode(JSON.stringify(data));
     
@@ -78,7 +82,7 @@ export class UserEncryption {
     
     return {
       encryptedData: encrypted,
-      salt: this.salt!,
+      salt: this.salt,
       iv: iv
     };
   }

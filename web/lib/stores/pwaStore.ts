@@ -805,7 +805,8 @@ export const createPWAActions = (
         setLoading(true);
         setError(null);
 
-        const { installation, offline, update, preferences, performance } = get();
+        // Exclude 'update' from export - it's not part of PWAStorePersistedState
+        const { installation, offline, preferences, performance } = get();
         const data: PWAStorePersistedState = {
           installation,
           offline,

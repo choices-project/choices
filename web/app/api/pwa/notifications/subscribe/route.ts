@@ -230,7 +230,7 @@ async function validateSubscription(subscription: any): Promise<boolean> {
 /**
  * Store push subscription in database
  */
-async function storeSubscription(data: any): Promise<string> {
+async function _storeSubscription(_data: any): Promise<string> {
   // Deprecated helper retained for backwards compatibility.
   throw new Error('storeSubscription helper is no longer used. Use Supabase persistence directly.');
 }

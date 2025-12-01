@@ -57,6 +57,8 @@ export function FeatureWrapper({
   className,
   style
 }: FeatureWrapperProps): React.ReactElement | null {
+  const { enabled, disabled: _disabled, loading } = useFeatureFlag(feature);
+
   if (IS_E2E_HARNESS) {
     return (
       <div className={className} style={style}>
@@ -64,7 +66,6 @@ export function FeatureWrapper({
       </div>
     );
   }
-  const { enabled, disabled: _disabled, loading } = useFeatureFlag(feature);
 
   // Show loading state if requested and loading
   if (showLoading && loading) {
@@ -136,6 +137,8 @@ export function FeatureWrapperBatch({
   className,
   style
 }: FeatureWrapperBatchProps): React.ReactElement | null {
+  const { allEnabled, anyEnabled: anyEnabledResult, loading } = useFeatureFlagsBatch(features);
+
   if (IS_E2E_HARNESS) {
     return (
       <div className={className} style={style}>
@@ -143,7 +146,6 @@ export function FeatureWrapperBatch({
       </div>
     );
   }
-  const { allEnabled, anyEnabled: anyEnabledResult, loading } = useFeatureFlagsBatch(features);
 
   // Show loading state if requested and loading
   if (showLoading && loading) {
@@ -218,6 +220,8 @@ export function FeatureWrapperWithDependencies({
   className,
   style
 }: FeatureWrapperWithDependenciesProps): React.ReactElement | null {
+  const { enabled, disabled: _disabled, dependenciesMet, loading } = useFeatureFlagWithDependencies(feature);
+
   if (IS_E2E_HARNESS) {
     return (
       <div className={className} style={style}>
@@ -225,7 +229,6 @@ export function FeatureWrapperWithDependencies({
       </div>
     );
   }
-  const { enabled, disabled: _disabled, dependenciesMet, loading } = useFeatureFlagWithDependencies(feature);
 
   // Show loading state if requested and loading
   if (showLoading && loading) {
@@ -280,7 +283,12 @@ export function withFeatureFlag<P extends object>(
   fallback?: React.ComponentType<P>
 ) {
   return function WithFeatureFlagComponent(props: P): React.ReactElement | null {
+    // Hooks must always run, even in harness mode
     const { enabled, disabled: _disabled, loading } = useFeatureFlag(feature);
+
+    if (IS_E2E_HARNESS) {
+      return <WrappedComponent {...props} />;
+    }
 
     if (loading) {
       return <div>Loading...</div>;

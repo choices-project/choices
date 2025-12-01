@@ -37,7 +37,7 @@ try {
   if (typeof global.WritableStream === 'undefined' && WritableStream) {
     global.WritableStream = WritableStream;
   }
-} catch (_) {
+} catch {
   // stream/web is available in supported Node versions; ignore if unavailable.
 }
 
