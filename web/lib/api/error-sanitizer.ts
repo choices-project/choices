@@ -150,12 +150,22 @@ export function sanitizeErrorForLogging(error: unknown): {
       ? sanitizeErrorMessage(error.message)
       : error.message;
     
-    return {
+    const result: {
+      message: string;
+      name?: string;
+      stack?: string;
+      sanitized: boolean;
+    } = {
       message,
       name: error.name,
-      stack: isProduction ? undefined : error.stack,
       sanitized: isProduction,
     };
+    
+    if (!isProduction && error.stack) {
+      result.stack = error.stack;
+    }
+    
+    return result;
   }
 
   return {

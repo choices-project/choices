@@ -226,7 +226,7 @@ export function methodNotAllowed(
 
 /**
  * Create an internal server error response
- * 
+ *
  * SECURITY: Never exposes sensitive information like stack traces, database errors,
  * or internal paths in production. Only generic error messages are returned.
  *
@@ -239,14 +239,14 @@ export function serverError(
 ): NextResponse<ApiErrorResponse> {
   // In production, always return generic message
   const isProduction = process.env.NODE_ENV === 'production';
-  const message = isProduction 
-    ? 'Internal server error' 
+  const message = isProduction
+    ? 'Internal server error'
     : (error instanceof Error ? error.message : 'Internal server error');
-  
+
   // Only include stack in development and if explicitly requested
   const shouldIncludeStack = !isProduction && includeStack;
-  const details = shouldIncludeStack && error instanceof Error 
-    ? { stack: error.stack } 
+  const details = shouldIncludeStack && error instanceof Error
+    ? { stack: error.stack }
     : undefined;
 
   // Log full error details server-side for debugging
@@ -269,7 +269,7 @@ export function serverError(
 
 /**
  * Wrap an async API handler with error handling
- * 
+ *
  * SECURITY: Ensures errors never expose sensitive information.
  * All errors are logged server-side but only generic messages are returned to clients.
  *
@@ -292,13 +292,13 @@ export function withErrorHandling<T extends any[]>(
         stack: error instanceof Error ? error.stack : undefined,
         name: error instanceof Error ? error.name : undefined,
         // Sanitize any potential sensitive data
-        ...(error instanceof Error && error.cause 
-          ? { cause: String(error.cause) } 
+        ...(error instanceof Error && error.cause
+          ? { cause: String(error.cause) }
           : {}),
       };
-      
+
       logger.error('API Error:', errorDetails);
-      
+
       // Return sanitized error response (never includes stack or sensitive info)
       return serverError(error, false);
     }

@@ -18,8 +18,7 @@ test.describe('Production Edge Cases', () => {
     const response = await page.goto(`https://choices-app.com${longPath}`, {
       waitUntil: 'domcontentloaded',
       timeout: 30_000,
-      failOnStatusCode: false,
-    });
+    }).catch(() => null);
 
     const status = response?.status() || 0;
 
@@ -42,8 +41,7 @@ test.describe('Production Edge Cases', () => {
       const response = await page.goto(`https://choices-app.com${path}`, {
         waitUntil: 'domcontentloaded',
         timeout: 30_000,
-        failOnStatusCode: false,
-      });
+      }).catch(() => null);
 
       const status = response?.status() || 0;
 
