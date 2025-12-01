@@ -1,4 +1,4 @@
-import { http, HttpResponse } from 'msw';
+import { http, HttpResponse, type JsonBodyType } from 'msw';
 
 import { CIVICS_ADDRESS_LOOKUP, CIVICS_STATE_FIXTURE } from '../fixtures/api/civics';
 import { buildDashboardData } from '../fixtures/api/dashboard';
@@ -20,7 +20,8 @@ import { buildShareAnalytics } from '../fixtures/api/share';
 
 import { mockError, mockSuccess } from './utils/envelope';
 
-const json = (body: unknown, status = 200) => HttpResponse.json(body, { status });
+const json = <T extends JsonBodyType>(body: T, status = 200) =>
+  HttpResponse.json<T>(body, { status });
 
 const clonePoll = (poll: MockPollRecord): MockPollRecord => ({
   ...poll,
