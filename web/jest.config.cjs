@@ -115,8 +115,7 @@ module.exports = {
         '!**/scripts.disabled/**',
         '!**/archive/**'
       ],
-    }
-    ,
+    },
     {
       displayName: 'contracts',
       testEnvironment: 'node',
@@ -135,7 +134,7 @@ module.exports = {
         '/build/',
         '/dist/',
       ],
-    }
+    },
   ],
   // Coverage configuration (metrics only; thresholds are tracked via dashboards, not hard-gated in Jest)
   coverageDirectory: '<rootDir>/coverage',

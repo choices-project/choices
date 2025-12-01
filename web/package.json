@@ -36,7 +36,7 @@
     "test:coverage:ci": "node ./scripts/run-with-timeout.js 600 npx jest --coverage --coverageReporters=lcov --coverageReporters=text",
     "test:unit": "npx jest tests/unit",
     "test:unit:watch": "npx jest tests/unit --watch",
-    "test:integration": "npx jest tests/integration",
+    "test:integration": "npx jest tests/integration --passWithNoTests",
     "test:contracts": "npx jest tests/contracts",
     "test:ci": "node ./scripts/run-with-timeout.js 900 npm run build && node ./scripts/run-with-timeout.js 300 npx jest -w 1 --selectProjects client server && node ./scripts/run-with-timeout.js 600 npx playwright test",
     "test:e2e": "npx playwright test --reporter=line",

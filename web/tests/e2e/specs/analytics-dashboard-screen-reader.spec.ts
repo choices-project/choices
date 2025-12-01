@@ -15,11 +15,12 @@ test.describe('@screen-reader Analytics dashboard harness', () => {
     await refreshButton.waitFor({ state: 'visible' });
     await refreshButton.click();
 
-    const liveRegion = page.locator('#main-content').locator('[role="status"]').first();
+    const mainRegion = page.getByRole('main', { name: /Analytics dashboard/i });
+    const liveRegion = mainRegion.locator('[role="status"]').first();
     await expect(liveRegion).toContainText(/Analytics updated at/i, { timeout: 15_000 });
 
     await page.getByRole('tab', { name: 'Trends' }).click();
-    await expect(page.locator('#main-content')).toBeFocused({ timeout: 10_000 });
+    await expect(mainRegion).toBeFocused({ timeout: 10_000 });
   });
 });
 
