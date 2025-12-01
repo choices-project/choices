@@ -21,7 +21,9 @@ const allowedDevWsOrigins = allowedDevOrigins.map((origin) => {
   return origin;
 });
 
-/** @type {import('next').NextConfig} */
+const isVercel = Boolean(process.env.VERCEL);
+
+/** @type {import('next').NextConfig & { allowedDevOrigins?: string[] }} */
 const nextConfig = {
   // Enable SWC minification for better performance
   swcMinify: true,
@@ -556,8 +558,8 @@ const nextConfig = {
     ignoreDuringBuilds: false
   },
 
-  // Output configuration - enable for Docker deployments
-  output: 'standalone',
+  // Output configuration - enable standalone only for non-Vercel (e.g. Docker) deployments
+  ...(isVercel ? {} : { output: 'standalone' }),
 
   // Trailing slash
   trailingSlash: false,
