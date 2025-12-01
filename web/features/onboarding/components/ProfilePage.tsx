@@ -46,17 +46,6 @@ export default function ProfilePage() {
     setShowExportConfirm(false);
   };
 
-  if (isLoading) {
-    return (
-      <div className="flex items-center justify-center min-h-[400px]">
-        <div className="flex items-center space-x-2">
-          <Loader2 className="h-6 w-6 animate-spin" />
-          <span>Loading profile...</span>
-        </div>
-      </div>
-    );
-  }
-
   const profileData = (profile ?? null) as UserProfile | null;
   const profilePreferences = useMemo(() => {
     if (!profileData) return {};
@@ -73,6 +62,17 @@ export default function ProfilePage() {
       ? (settings as Record<string, unknown>)
       : {};
   }, [profileData]);
+
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center min-h-[400px]">
+        <div className="flex items-center space-x-2">
+          <Loader2 className="h-6 w-6 animate-spin" />
+          <span>Loading profile...</span>
+        </div>
+      </div>
+    );
+  }
 
   if (error || !profileData) {
     return (

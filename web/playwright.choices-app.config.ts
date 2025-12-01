@@ -1,8 +1,7 @@
 import path from 'path';
 
-import * as dotenv from 'dotenv';
-
 import { defineConfig, devices } from '@playwright/test';
+import * as dotenv from 'dotenv';
 
 // Load environment variables from .env.local (same pattern as check-env.ts)
 const cwd = process.cwd();

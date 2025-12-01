@@ -255,16 +255,28 @@ export default function TrendsChart({
     );
   }, [data]);
 
+  // Axis stats computation removed - not used in rendering
+  // If needed for future features, can be restored
+
+  useEffect(() => {
+    void fetchTrends(defaultRange, {
+      fallback: (r) => generateMockData(r as DateRange),
+    });
+  }, [defaultRange, fetchTrends]);
+
   const chartSummaryText = useMemo(() => {
     if (!data.length || !peakVotesPoint || !peakParticipationPoint) {
       return '';
     }
-    const voteTrend = getTrend('votes');
-    const trendDirectionKey =
-      voteTrend > 2 ? 'increasing' : voteTrend < -2 ? 'decreasing' : 'steady';
-
-    if (!peakVotesPoint || !peakParticipationPoint) {
-      return '';
+    // Use a simple, inline trend calculation here to avoid referencing
+    // getTrend before its declaration in this function scope.
+    const firstVotes = data[0]?.votes;
+    const lastVotes = data[data.length - 1]?.votes;
+    let trendDirectionKey: 'increasing' | 'decreasing' | 'steady' = 'steady';
+    if (typeof firstVotes === 'number' && typeof lastVotes === 'number' && firstVotes !== 0) {
+      const voteTrend = ((lastVotes - firstVotes) / firstVotes) * 100;
+      trendDirectionKey =
+        voteTrend > 2 ? 'increasing' : voteTrend < -2 ? 'decreasing' : 'steady';
     }
 
     return t('analytics.trends.chart.summary', {
@@ -276,7 +288,7 @@ export default function TrendsChart({
       range: currentRangeLabel,
     });
   }, [
-    data.length,
+    data,
     formatDate,
     formatNumber,
     formatPercent,
@@ -284,17 +296,7 @@ export default function TrendsChart({
     peakVotesPoint,
     currentRangeLabel,
     t,
-    getTrend,
   ]);
-
-  // Axis stats computation removed - not used in rendering
-  // If needed for future features, can be restored
-
-  useEffect(() => {
-    void fetchTrends(defaultRange, {
-      fallback: (r) => generateMockData(r as DateRange),
-    });
-  }, [defaultRange, fetchTrends]);
 
   const handleExport = useCallback(() => {
     if (data.length === 0) return;

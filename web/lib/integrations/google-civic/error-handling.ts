@@ -200,7 +200,7 @@ export class GoogleCivicErrorHandler {
     operation: () => Promise<T>,
     context?: ErrorContext
   ): Promise<T> {
-    let lastError: GoogleCivicApiError;
+    let lastError: GoogleCivicApiError | null = null;
     
     for (let attempt = 1; attempt <= this.retryConfig.maxAttempts; attempt++) {
       try {
@@ -221,12 +221,20 @@ export class GoogleCivicErrorHandler {
           this.retryConfig.maxDelay
         );
 
-        logger.warn('Google Civic API operation failed, retrying', {
-          attempt,
-          delay,
-          error: lastError.message,
-          context
-        });
+        if (lastError) {
+          logger.warn('Google Civic API operation failed, retrying', {
+            attempt,
+            delay,
+            error: lastError.message,
+            context
+          });
+        } else {
+          logger.warn('Google Civic API operation failed with unknown error, retrying', {
+            attempt,
+            delay,
+            context
+          });
+        }
 
         await this.sleep(delay);
       }

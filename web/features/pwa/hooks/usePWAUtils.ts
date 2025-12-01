@@ -6,11 +6,11 @@ import { devLog } from '@/lib/utils/logger';
 
 // Import types from respective PWA modules
 import type { PWAAuth } from '../lib/pwa-auth-integration';
-import type * as PWAUtilsModule from '../lib/pwa-utils';
+import type { PWAManager, PWAWebAuthn, PrivacyStorage } from '../lib/pwa-utils';
 
-type PWAManagerInstance = InstanceType<PWAUtilsModule.PWAManager>;
-type PWAWebAuthnInstance = InstanceType<PWAUtilsModule.PWAWebAuthn>;
-type PrivacyStorageInstance = InstanceType<PWAUtilsModule.PrivacyStorage>;
+type PWAManagerInstance = PWAManager;
+type PWAWebAuthnInstance = PWAWebAuthn;
+type PrivacyStorageInstance = PrivacyStorage;
 
 type PWAUtils = {
   pwaAuth: PWAAuth;
@@ -39,10 +39,10 @@ export function usePWAUtils() {
         ])
         
         // Import PWA utilities
-        const [pwaUtilsModule, bridgeModule] = (await Promise.all([
+        const [pwaUtilsModule, bridgeModule] = await Promise.all([
           import('../lib/pwa-utils'),
           import('../lib/service-worker-bridge'),
-        ])) as [PWAUtilsModule, typeof import('../lib/service-worker-bridge')]
+        ]);
         
         setUtils({
           pwaAuth: pwaAuthModule.pwaAuth,
