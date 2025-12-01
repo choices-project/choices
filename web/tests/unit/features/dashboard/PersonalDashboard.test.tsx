@@ -140,6 +140,7 @@ const translationMap: Record<string, string> = {
   'dashboard.personal.metrics.pollVotes': 'Votes on polls',
   'dashboard.personal.representatives.title': 'Upcoming elections',
   'dashboard.personal.representatives.description': 'Track key election dates and contacts in your area.',
+  'dashboard.personal.representatives.countdown.title': 'Upcoming elections',
   'dashboard.personal.representatives.countdown.description': 'In {days} days',
   'dashboard.personal.trending.title': 'Trending topics',
 };

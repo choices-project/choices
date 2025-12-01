@@ -52,35 +52,48 @@ export const POST = withErrorHandling(async (request: NextRequest) => {
 
   // Validate request body with Zod schema
   let code: string;
-  let requestBody: any;
+  let body: any;
   try {
-    requestBody = await request.json();
-    const validated = verifyCodeSchema.parse(requestBody);
-    code = validated.code;
-  } catch (error) {
+    body = await request.json();
+  } catch (error: unknown) {
+    // Handle JSON parsing errors
+    return NextResponse.json(
+      {
+        success: false,
+        error: 'Validation failed',
+        details: {
+          code: 'Code is required',
+        },
+      },
+      { status: 400 }
+    );
+  }
+  
+  const result = verifyCodeSchema.safeParse(body);
+  
+  if (!result.success) {
     // Extract Zod error message for details.code
     let errorMessage = 'Validation failed';
-    if (error instanceof z.ZodError) {
-      const errors = error.errors;
-      if (Array.isArray(errors) && errors.length > 0) {
-        const firstError = errors[0];
-        // Map Zod errors to expected test messages
-        if (Array.isArray(firstError.path) && firstError.path.length > 0 && firstError.path[0] === 'code') {
-          if (firstError.code === 'invalid_type' || requestBody?.code === undefined || requestBody?.code === null) {
-            errorMessage = 'Code is required';
-          } else if (firstError.code === 'too_small') {
-            errorMessage = 'Code is required';
-          } else if (typeof firstError.message === 'string') {
-            errorMessage = firstError.message;
-          } else {
-            errorMessage = 'Code is required';
-          }
-        } else if (typeof firstError.message === 'string') {
+    
+    if (result.error && Array.isArray(result.error.errors) && result.error.errors.length > 0) {
+      const firstError = result.error.errors[0];
+      // Map Zod errors to expected test messages
+      if (firstError && Array.isArray(firstError.path) && firstError.path.length > 0 && firstError.path[0] === 'code') {
+        if (firstError.code === 'invalid_type' || body?.code === undefined || body?.code === null) {
+          errorMessage = 'Code is required';
+        } else if (firstError.code === 'too_small') {
+          errorMessage = 'Code is required';
+        } else if (typeof firstError.message === 'string' && firstError.message) {
           errorMessage = firstError.message;
+        } else {
+          errorMessage = 'Code is required';
         }
+      } else if (firstError && typeof firstError.message === 'string' && firstError.message) {
+        errorMessage = firstError.message;
       }
-    } else if (error instanceof Error && typeof error.message === 'string') {
-      errorMessage = error.message;
+    } else if (body?.code === undefined || body?.code === null) {
+      // Fallback if error structure is unexpected
+      errorMessage = 'Code is required';
     }
     
     return NextResponse.json(
@@ -94,6 +107,8 @@ export const POST = withErrorHandling(async (request: NextRequest) => {
       { status: 400 }
     );
   }
+  
+  code = result.data.code;
 
   const { data: challenge } = await (supabase as any)
     .from('candidate_email_challenges')
