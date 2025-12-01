@@ -13,7 +13,15 @@ export const GET = withErrorHandling(async (request: NextRequest) => {
     const messages = await getActiveSiteMessages(includeExpired)
     return successResponse(messages);
   } catch (error) {
-    logger.warn('Error fetching site messages (returning empty):', error instanceof Error ? error : new Error(String(error)))
+    // Log error but return empty array instead of failing
+    // This ensures the API always returns a valid response
+    logger.warn('Error fetching site messages (returning empty):', {
+      error: error instanceof Error ? error.message : String(error),
+      stack: error instanceof Error ? error.stack : undefined,
+    });
+    
+    // Return success response with empty data instead of error
+    // This prevents the API from returning 500 errors
     return successResponse({
       messages: [],
       count: 0,
