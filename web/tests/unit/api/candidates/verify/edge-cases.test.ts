@@ -37,6 +37,8 @@ jest.mock('@/lib/api', () => {
     status,
     json: async () => payload,
   });
+  const validationError = (details: unknown) => createResponse(400, { success: false, details });
+  const errorResponse = (message: string, status = 500) => createResponse(status, { success: false, error: message });
   return {
     __esModule: true,
     withErrorHandling:
@@ -44,8 +46,25 @@ jest.mock('@/lib/api', () => {
       (...args: any[]) =>
         handler(...args),
     successResponse: (data: unknown) => createResponse(200, { success: true, data }),
-    validationError: (details: unknown) => createResponse(400, { success: false, details }),
-    errorResponse: (message: string, status = 500) => createResponse(status, { success: false, error: message }),
+    validationError,
+    errorResponse,
+    parseBody: async (request: any, schema?: any) => {
+      const body = await request.json();
+      if (schema) {
+        try {
+          const validated = schema.parse(body);
+          return { success: true as const, data: validated };
+        } catch (error: any) {
+          return {
+            success: false as const,
+            error: validationError(
+              error instanceof Error ? { _error: error.message } : { _error: 'Validation failed' }
+            ),
+          };
+        }
+      }
+      return { success: true as const, data: body };
+    },
   };
 });
 

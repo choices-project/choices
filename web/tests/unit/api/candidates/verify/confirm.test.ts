@@ -60,6 +60,24 @@ jest.mock('@/lib/api', () => {
     },
     errorResponse: (message: string, status = 500) =>
       createResponse(status, { success: false, error: message }),
+    parseBody: async (request: any, schema?: any) => {
+      const body = await request.json();
+      if (schema) {
+        try {
+          const validated = schema.parse(body);
+          return { success: true as const, data: validated };
+        } catch (error: any) {
+          const validationError = (details: unknown) => createResponse(400, { success: false, error: 'Validation error', details });
+          return {
+            success: false as const,
+            error: validationError(
+              error instanceof Error ? { _error: error.message } : { _error: 'Validation failed' }
+            ),
+          };
+        }
+      }
+      return { success: true as const, data: body };
+    },
   };
 });
 

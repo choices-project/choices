@@ -54,7 +54,23 @@ export const POST = withErrorHandling(async (request: NextRequest) => {
   if (!challenge) return validationError({ code: 'Invalid or expired code' });
   if (challenge.used_at) return validationError({ code: 'Code already used' });
   if (new Date(challenge.expires_at).getTime() < Date.now()) {
-    return validationError({ code: 'Code expired' });
+    const expiredAt = new Date(challenge.expires_at);
+    const now = Date.now();
+    const diffMs = now - expiredAt.getTime();
+    const diffMinutes = Math.floor(diffMs / (1000 * 60));
+    const diffHours = Math.floor(diffMinutes / 60);
+    
+    let timeMessage = '';
+    if (diffHours >= 1) {
+      timeMessage = `${diffHours} hour${diffHours > 1 ? 's' : ''}`;
+    } else {
+      timeMessage = `${diffMinutes} minute${diffMinutes > 1 ? 's' : ''}`;
+    }
+    
+    return validationError({ 
+      code: `Code expired ${timeMessage} ago. Please request a new code.`,
+      expired: true
+    });
   }
   if (challenge.code !== code) return validationError({ code: 'Invalid code' });
 

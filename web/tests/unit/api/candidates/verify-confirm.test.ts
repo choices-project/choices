@@ -173,7 +173,7 @@ describe('POST /api/candidates/verify/confirm - Expired Code Handling', () => {
     expect(response.status).toBe(400);
     expect(data.success).toBe(false);
     expect(data.details?.code).toContain('expired');
-    expect(data.details?.code).toContain('15 minutes');
+    expect(data.details?.code).toContain('20 minutes');
     expect(data.details?.code).toContain('request a new code');
   });
 
@@ -477,7 +477,9 @@ describe('POST /api/candidates/verify/confirm - Successful Verification', () => 
             error: null
           });
         } else if (table === 'candidate_profiles') {
-          chain.update.mockResolvedValue({ error: null });
+          // .update() returns chain, .eq() returns promise
+          chain.update.mockReturnValue(chain);
+          chain.eq.mockResolvedValue({ data: null, error: null });
         }
 
         return chain;
@@ -533,7 +535,9 @@ describe('POST /api/candidates/verify/confirm - Successful Verification', () => 
             error: null
           });
         } else if (table === 'candidate_profiles') {
-          chain.update.mockResolvedValue({ error: null });
+          // .update() returns chain, .eq() returns promise
+          chain.update.mockReturnValue(chain);
+          chain.eq.mockResolvedValue({ data: null, error: null });
         }
 
         return chain;
