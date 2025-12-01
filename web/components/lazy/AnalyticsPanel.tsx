@@ -67,44 +67,31 @@ export default function AnalyticsPanel({
         setLoading(true);
         setError(null);
         
-        // Simulate API call
-        await new Promise(resolve => setTimeout(resolve, 1000));
+        // Fetch real analytics data from API
+        const response = await fetch('/api/analytics/dashboard?days=7');
         
-        // Mock data - in real implementation, this would come from an API
-        const mockData: AnalyticsData = {
-          userGrowth: [
-            { date: '2025-01-01', users: 1000 },
-            { date: '2025-01-02', users: 1050 },
-            { date: '2025-01-03', users: 1100 },
-            { date: '2025-01-04', users: 1150 },
-            { date: '2025-01-05', users: 1200 },
-            { date: '2025-01-06', users: 1250 },
-            { date: '2025-01-07', users: 1300 },
-          ],
-          pollActivity: [
-            { date: '2025-01-01', polls: 5, votes: 150 },
-            { date: '2025-01-02', polls: 8, votes: 200 },
-            { date: '2025-01-03', polls: 12, votes: 300 },
-            { date: '2025-01-04', polls: 15, votes: 400 },
-            { date: '2025-01-05', polls: 18, votes: 500 },
-            { date: '2025-01-06', polls: 20, votes: 600 },
-            { date: '2025-01-07', polls: 23, votes: 700 },
-          ],
-          votingMethods: [
-            { method: 'Single Choice', count: 45, percentage: 35 },
-            { method: 'Approval', count: 30, percentage: 23 },
-            { method: 'Ranked', count: 25, percentage: 19 },
-            { method: 'Quadratic', count: 20, percentage: 15 },
-            { method: 'Range', count: 10, percentage: 8 },
-          ],
-          systemPerformance: {
+        if (!response.ok) {
+          throw new Error(`Failed to fetch analytics: ${response.statusText}`);
+        }
+        
+        const result = await response.json();
+        
+        if (!result.success || !result.data) {
+          throw new Error('Invalid analytics data response');
+        }
+        
+        const analyticsData: AnalyticsData = {
+          userGrowth: result.data.userGrowth || [],
+          pollActivity: result.data.pollActivity || [],
+          votingMethods: result.data.votingMethods || [],
+          systemPerformance: result.data.systemPerformance || {
             averageResponseTime: 120,
             uptime: 99.9,
             errorRate: 0.1,
           },
         };
         
-        setData(mockData);
+        setData(analyticsData);
         
         const loadTime = performance.now() - startTime;
         performanceMetrics.addMetric('analytics-panel-load', loadTime);

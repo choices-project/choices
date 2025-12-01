@@ -1,7 +1,9 @@
 # Environment Variables Documentation
 
-**Last Updated:** November 16, 2025  
+**Last Updated:** November 30, 2025  
 **Status:** ✅ Current (verified against codebase)
+
+> **Note:** The file `scratch/final_work_TODO/MISSING_ENV_VARS.md` is outdated and has been superseded by this document. This is the canonical source for environment variable documentation.
 
 This document lists all environment variables required for the Choices application.
 
@@ -65,6 +67,14 @@ This document lists all environment variables required for the Choices applicati
   - Default: `onboarding@resend.dev` (test email)
   - Production: Should use verified domain (e.g., `candidates@yourdomain.com`)
   - Used by: Candidate journey emails
+
+- `RESEND_WEBHOOK_SECRET` (optional, recommended for production)
+  - Secret key for verifying Resend webhook signatures
+  - Used by: `/api/webhooks/resend` endpoint for signature verification
+  - Security: ⚠️ Server-only, prevents unauthorized webhook calls
+  - Get from: Resend dashboard → Webhooks → Signing Secret
+  - Format: Base64-encoded secret (Resend uses Svix for webhooks)
+  - Note: If not set, webhook signature verification is disabled (not recommended for production)
 
 ### Google Civic Information API
 - `GOOGLE_CIVIC_API_KEY` (required for address lookup)

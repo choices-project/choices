@@ -1,6 +1,6 @@
 # State Management Guide
 
-_Last updated: November 10, 2025_
+_Last updated: November 30, 2025_
 
 This document summarizes the agreed-on patterns for Zustand stores in the Choices web app. It replaces the scattered checklists under `scratch/gpt5-codex/store-roadmaps/` (see consolidation notes below).
 
@@ -109,13 +109,27 @@ Current harness coverage: `admin-store`, `analytics-store`, `app-store`, `auth-a
 
 ---
 
+## Recent Updates (November 2025)
+
+### Security Enhancements
+
+- **Log Sanitization**: All stores should use `sanitizeForLogging()` from `@/lib/utils/log-sanitizer` when logging state that may contain sensitive data (passwords, tokens, PII).
+- **Input Validation**: API routes now use Zod schemas for type-safe validation. Store actions that call APIs should validate inputs before sending.
+- **Rate Limiting**: Admin and sensitive endpoints now have rate limiting. Store actions that make API calls should handle rate limit errors gracefully.
+
+### Testing Improvements
+
+- **CI Gates**: All tests (unit, contract, smoke) are now blocking gates in CI. Ensure new store tests are reliable and don't flake.
+- **Contract Tests**: API routes have contract tests that verify request/response schemas. Store actions should match these contracts.
+
 ## References
 
 - Notification store modernization PRs — see `web/lib/stores/notificationStore.ts`, `web/features/civics/utils/civicsCountdownUtils.ts` (election notification hook), and tests covering analytics + countdown notifications (`web/tests/unit/stores/notification.integration.test.tsx`, `web/tests/unit/features/civics/useElectionCountdown.test.ts`).
 - Voter registration store example — see `web/lib/stores/voterRegistrationStore.ts` and `tests/unit/stores/voter-registration.store.test.ts` for a fetch-centric pattern that still fits the shared helpers.
 - Development setup & testing commands — `docs/DEVELOPMENT.md`, `docs/TESTING.md`.
-- Technical backlog — `docs/ROADMAP.md`.  
+- Technical backlog — `docs/ROADMAP_SINGLE_SOURCE.md` (canonical roadmap).  
 - Canonical utilities — `docs/UTILS_GUIDE.md`.
+- Security patterns — `docs/RATE_LIMITING_AUDIT.md`, `docs/INPUT_VALIDATION_AUDIT.md`, `docs/SENSITIVE_LOG_AUDIT.md`.
 
 ---
 

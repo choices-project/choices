@@ -37,18 +37,11 @@ export default function AuthPage() {
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [message, setMessage] = useState<string | null>(null);
   const [isMounted, setIsMounted] = useState(false);
-  
+
   // Initialize i18n safely after mount
-  let t: (key: string, params?: Record<string, unknown>) => string;
-  try {
-    const i18n = useI18n();
-    t = i18n.t;
-  } catch (error) {
-    // Fallback if i18n fails
-    logger.error('Failed to initialize i18n', { error });
-    t = (key: string) => key;
-  }
-  
+  const i18n = useI18n();
+  const t = i18n.t;
+
   const userError = useUserError();
   const isLoading = useUserLoading();
   const {
@@ -67,15 +60,26 @@ export default function AuthPage() {
   // Initialize auth state on mount
   useEffect(() => {
     if (!isMounted) return;
-    
+
     const initAuth = async () => {
       try {
-        await initializeAuth();
+        const supabase = await getSupabaseBrowserClient();
+        const { data: { session }, error } = await supabase.auth.getSession();
+
+        if (error) {
+          logger.warn('Failed to get session on auth page init', { error });
+          initializeAuth(null, null, false);
+          return;
+        }
+
+        const user = session?.user ?? null;
+        initializeAuth(user, session, Boolean(user));
       } catch (error) {
         logger.error('Failed to initialize auth', { error });
+        initializeAuth(null, null, false);
       }
     };
-    
+
     initAuth();
   }, [isMounted, initializeAuth]);
 
@@ -104,8 +108,16 @@ export default function AuthPage() {
 
     try {
       if (isSignUp) {
-        const result = await registerUser({ email, password });
-        if (result.success) {
+        const username = email.split('@')[0] || `user_${Date.now()}`;
+        const result = await registerUser({
+          email,
+          password,
+          username,
+          context: {
+            userAgent: typeof navigator !== 'undefined' ? navigator.userAgent : 'unknown',
+          },
+        });
+        if (result.ok) {
           setMessage(t('auth.success.registered'));
           setTimeout(() => {
             router.push('/onboarding');
@@ -201,6 +213,7 @@ export default function AuthPage() {
                   type="email"
                   autoComplete="email"
                   required
+                  data-testid="login-email"
                   className="appearance-none block w-full pl-10 pr-3 py-2 border border-gray-300 rounded-md placeholder-gray-400 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
                   placeholder={t('auth.form.emailPlaceholder')}
                 />
@@ -221,6 +234,7 @@ export default function AuthPage() {
                   type={showPassword ? 'text' : 'password'}
                   autoComplete={isSignUp ? 'new-password' : 'current-password'}
                   required
+                  data-testid="login-password"
                   className="appearance-none block w-full pl-10 pr-3 py-2 border border-gray-300 rounded-md placeholder-gray-400 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
                   placeholder={t('auth.form.passwordPlaceholder')}
                 />
@@ -254,6 +268,7 @@ export default function AuthPage() {
                     type={showConfirmPassword ? 'text' : 'password'}
                     autoComplete="new-password"
                     required
+                    data-testid="auth-confirm-password"
                     className="appearance-none block w-full pl-10 pr-3 py-2 border border-gray-300 rounded-md placeholder-gray-400 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
                     placeholder={t('auth.form.confirmPasswordPlaceholder')}
                   />
@@ -277,6 +292,7 @@ export default function AuthPage() {
           <div>
             <button
               type="submit"
+              data-testid="login-submit"
               disabled={isLoading}
               className="group relative flex w-full justify-center rounded-md border border-transparent bg-blue-600 py-2 px-4 text-sm font-medium text-white hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed"
             >
@@ -291,6 +307,7 @@ export default function AuthPage() {
           <div className="text-center">
             <button
               type="button"
+              data-testid="auth-toggle"
               onClick={() => {
                 setIsSignUp(!isSignUp);
                 clearAuthError();

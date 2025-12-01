@@ -1,20 +1,48 @@
 import type { NextRequest } from 'next/server';
+import { z } from 'zod';
 
-import { withErrorHandling, successResponse, errorResponse, validationError } from '@/lib/api';
+import { withErrorHandling, successResponse, errorResponse, validationError, rateLimitError, parseBody } from '@/lib/api';
+import { apiRateLimiter } from '@/lib/rate-limiting/api-rate-limiter';
 import { getSupabaseServerClient } from '@/utils/supabase/server';
 
 export const dynamic = 'force-dynamic';
 
+// Validation schema for verification code
+const verifyCodeSchema = z.object({
+  code: z.string().min(1, 'Code is required').regex(/^\d{6}$/, 'Code must be 6 digits'),
+});
+
 export const POST = withErrorHandling(async (request: NextRequest) => {
+  // Rate limiting: 10 verification attempts per 15 minutes per IP
+  const ip = request.headers.get('x-forwarded-for') ?? request.headers.get('x-real-ip') ?? 'unknown';
+  const userAgent = request.headers.get('user-agent') ?? undefined;
+  const rateLimitResult = await apiRateLimiter.checkLimit(
+    ip,
+    '/api/candidates/verify/confirm',
+    {
+      maxRequests: 10,
+      windowMs: 15 * 60 * 1000, // 15 minutes
+      ...(userAgent ? { userAgent } : {})
+    }
+  );
+
+  if (!rateLimitResult.allowed) {
+    return rateLimitError('Too many verification attempts. Please try again later.');
+  }
+
   const supabase = await getSupabaseServerClient();
   if (!supabase) return errorResponse('Auth/DB not available', 500);
 
   const { data: { user } } = await supabase.auth.getUser();
   if (!user || !user.email) return errorResponse('Authentication required', 401);
 
-  const body = await request.json().catch(() => ({}));
-  const code = String(body?.code ?? '').trim();
-  if (!code) return validationError({ code: 'Code is required' });
+  // Validate request body with Zod schema
+  const parsed = await parseBody<z.infer<typeof verifyCodeSchema>>(request, verifyCodeSchema);
+  if (!parsed.success) {
+    return parsed.error;
+  }
+
+  const { code } = parsed.data;
 
   const { data: challenge } = await (supabase as any)
     .from('candidate_email_challenges')

@@ -8,6 +8,7 @@ import {
   rateLimitError,
   parseBody,
 } from '@/lib/api';
+import { apiRateLimiter } from '@/lib/rate-limiting/api-rate-limiter';
 import { devLog, logger } from '@/lib/utils/logger';
 import type { Json } from '@/types/supabase';
 import { getSupabaseServerClient } from '@/utils/supabase/server';
@@ -79,6 +80,23 @@ function validateRequestSize(request: NextRequest): { valid: boolean; reason?: s
 }
 
 export const POST = withErrorHandling(async (request: NextRequest) => {
+  // Rate limiting: 10 feedback submissions per 15 minutes per IP
+  const ip = request.headers.get('x-forwarded-for') ?? request.headers.get('x-real-ip') ?? 'unknown';
+  const userAgent = request.headers.get('user-agent') ?? undefined;
+  const rateLimitResult = await apiRateLimiter.checkLimit(
+    ip,
+    '/api/feedback',
+    {
+      maxRequests: 10,
+      windowMs: 15 * 60 * 1000, // 15 minutes
+      ...(userAgent ? { userAgent } : {})
+    }
+  );
+
+  if (!rateLimitResult.allowed) {
+    return rateLimitError('Too many feedback submissions. Please try again later.');
+  }
+
   const sizeValidation = validateRequestSize(request);
   if (!sizeValidation.valid) {
     return errorResponse(

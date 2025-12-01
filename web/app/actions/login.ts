@@ -4,6 +4,7 @@ import { cookies } from 'next/headers'
 import { redirect } from 'next/navigation'
 
 import { logger } from '@/lib/utils/logger'
+import { sanitizeFormData } from '@/lib/utils/log-sanitizer'
 import { getSupabaseServerClient } from '@/utils/supabase/server'
 
 /**
@@ -19,7 +20,9 @@ import { getSupabaseServerClient } from '@/utils/supabase/server'
  */
 export async function loginAction(formData: FormData) {
   logger.info('Modern Supabase login action called');
-  logger.debug('FormData entries', Object.fromEntries(formData.entries()));
+  // Sanitize FormData to prevent logging passwords
+  const sanitized = sanitizeFormData(formData);
+  logger.debug('FormData entries (sanitized)', sanitized);
 
   // Extract form data
   const email = formData.get('email') as string;

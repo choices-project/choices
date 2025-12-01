@@ -265,7 +265,7 @@ async function loadAdminOverview(supabase: any): Promise<AdminDashboardData['ove
 /**
  * Load admin analytics data
  */
-async function loadAdminAnalytics(_supabase: any) {
+async function loadAdminAnalytics(supabase: any) {
   const cacheKey = 'admin:analytics';
   const cache = await getRedisClient();
   const cacheTTLSeconds = 60 * 10;
@@ -277,33 +277,143 @@ async function loadAdminAnalytics(_supabase: any) {
   }
 
   try {
-    // Mock analytics data for now - would integrate with real analytics
+    // Fetch real analytics data from Supabase
+    const startDate = new Date();
+    startDate.setDate(startDate.getDate() - 7);
+    const startDateStr = startDate.toISOString().split('T')[0];
+
+    // Get user growth (last 7 days)
+    const { data: users, error: usersError } = await supabase
+      .from('user_profiles')
+      .select('created_at')
+      .gte('created_at', startDateStr)
+      .order('created_at', { ascending: true });
+
+    if (usersError) {
+      logger.error('Error fetching user growth:', usersError);
+    }
+
+    // Get initial user count
+    const { count: initialCount } = await supabase
+      .from('user_profiles')
+      .select('*', { count: 'exact', head: true })
+      .lt('created_at', startDateStr);
+
+    // Group users by date
+    const userGrowthMap = new Map<string, number>();
+    let cumulative = initialCount ?? 0;
+
+    users?.forEach((user: any) => {
+      const date = user.created_at?.split('T')[0];
+      if (date) {
+        userGrowthMap.set(date, (userGrowthMap.get(date) || 0) + 1);
+      }
+    });
+
+    const user_growth = Array.from({ length: 7 }, (_, i) => {
+      const date = new Date(startDate);
+      date.setDate(date.getDate() + i);
+      const dateStr = date.toISOString().split('T')[0];
+      const newUsers = userGrowthMap.get(dateStr) || 0;
+      cumulative += newUsers;
+      return {
+        date: dateStr,
+        new_users: newUsers,
+        total_users: cumulative,
+      };
+    });
+
+    // Get poll activity (last 7 days)
+    const { data: polls, error: pollsError } = await supabase
+      .from('polls')
+      .select('id, created_at')
+      .gte('created_at', startDateStr);
+
+    const { data: votes, error: votesError } = await supabase
+      .from('votes')
+      .select('id, created_at, poll_id')
+      .gte('created_at', startDateStr);
+
+    if (pollsError || votesError) {
+      logger.error('Error fetching poll activity:', pollsError || votesError);
+    }
+
+    // Group polls and votes by date
+    const pollActivityMap = new Map<string, { polls: number; votes: number }>();
+    polls?.forEach((poll: any) => {
+      const date = poll.created_at?.split('T')[0];
+      if (date) {
+        const current = pollActivityMap.get(date) || { polls: 0, votes: 0 };
+        current.polls++;
+        pollActivityMap.set(date, current);
+      }
+    });
+
+    votes?.forEach((vote: any) => {
+      const date = vote.created_at?.split('T')[0];
+      if (date) {
+        const current = pollActivityMap.get(date) || { polls: 0, votes: 0 };
+        current.votes++;
+        pollActivityMap.set(date, current);
+      }
+    });
+
+    const poll_activity = Array.from({ length: 7 }, (_, i) => {
+      const date = new Date(startDate);
+      date.setDate(date.getDate() + i);
+      const dateStr = date.toISOString().split('T')[0];
+      const activity = pollActivityMap.get(dateStr) || { polls: 0, votes: 0 };
+      return {
+        date: dateStr,
+        polls_created: activity.polls,
+        votes_cast: activity.votes,
+      };
+    });
+
+    // Get top categories
+    const { data: categoryData, error: categoryError } = await supabase
+      .from('polls')
+      .select('category, id')
+      .gte('created_at', startDateStr)
+      .not('category', 'is', null);
+
+    if (categoryError) {
+      logger.error('Error fetching categories:', categoryError);
+    }
+
+    const categoryMap = new Map<string, { poll_count: number; vote_count: number }>();
+    const pollIds = new Set(polls?.map((p: any) => p.id) || []);
+
+    categoryData?.forEach((poll: any) => {
+      const category = poll.category || 'Uncategorized';
+      const current = categoryMap.get(category) || { poll_count: 0, vote_count: 0 };
+      current.poll_count++;
+      categoryMap.set(category, current);
+    });
+
+    // Count votes per category
+    votes?.forEach((vote: any) => {
+      const poll = polls?.find((p: any) => p.id === vote.poll_id);
+      if (poll?.category) {
+        const current = categoryMap.get(poll.category) || { poll_count: 0, vote_count: 0 };
+        current.vote_count++;
+        categoryMap.set(poll.category, current);
+      }
+    });
+
+    const top_categories = Array.from(categoryMap.entries())
+      .map(([category, counts]) => ({
+        category,
+        poll_count: counts.poll_count,
+        vote_count: counts.vote_count,
+      }))
+      .sort((a, b) => b.poll_count - a.poll_count)
+      .slice(0, 5);
+
     const result = {
-      user_growth: [
-        { date: '2025-10-12', new_users: 15, total_users: 150 },
-        { date: '2025-10-13', new_users: 23, total_users: 173 },
-        { date: '2025-10-14', new_users: 18, total_users: 191 },
-        { date: '2025-10-15', new_users: 31, total_users: 222 },
-        { date: '2025-10-16', new_users: 27, total_users: 249 },
-        { date: '2025-10-17', new_users: 35, total_users: 284 },
-        { date: '2025-10-18', new_users: 42, total_users: 326 }
-      ],
-      poll_activity: [
-        { date: '2025-10-12', polls_created: 8, votes_cast: 156 },
-        { date: '2025-10-13', polls_created: 12, votes_cast: 234 },
-        { date: '2025-10-14', polls_created: 9, votes_cast: 187 },
-        { date: '2025-10-15', polls_created: 15, votes_cast: 298 },
-        { date: '2025-10-16', polls_created: 11, votes_cast: 221 },
-        { date: '2025-10-17', polls_created: 18, votes_cast: 356 },
-        { date: '2025-10-18', polls_created: 14, votes_cast: 289 }
-      ],
-      top_categories: [
-        { category: 'Politics', poll_count: 45, vote_count: 1234 },
-        { category: 'Technology', poll_count: 32, vote_count: 987 },
-        { category: 'Environment', poll_count: 28, vote_count: 756 },
-        { category: 'Education', poll_count: 21, vote_count: 543 },
-        { category: 'Health', poll_count: 18, vote_count: 432 }
-      ]
+      user_growth,
+      poll_activity,
+      top_categories,
     };
 
     await cache.set(cacheKey, result, cacheTTLSeconds);

@@ -1,11 +1,38 @@
 import type { NextRequest } from 'next/server';
+import { z } from 'zod';
 
-import { withErrorHandling, successResponse, forbiddenError, validationError, errorResponse, methodNotAllowed } from '@/lib/api';
+import { withErrorHandling, successResponse, forbiddenError, validationError, errorResponse, methodNotAllowed, rateLimitError, parseBody } from '@/lib/api';
+import { apiRateLimiter } from '@/lib/rate-limiting/api-rate-limiter';
 import { getSupabaseServerClient } from '@/utils/supabase/server';
 
 export const dynamic = 'force-dynamic';
 
+// Validation schema for audit revert
+const revertAuditSchema = z.object({
+  type: z.enum(['candidate', 'representative'], {
+    errorMap: () => ({ message: 'Type must be "candidate" or "representative"' }),
+  }),
+  id: z.string().min(1, 'ID is required'),
+});
+
 export const POST = withErrorHandling(async (request: NextRequest) => {
+  // Rate limiting: 10 revert operations per minute (strict limit for sensitive operation)
+  const ip = request.headers.get('x-forwarded-for') ?? request.headers.get('x-real-ip') ?? 'unknown';
+  const userAgent = request.headers.get('user-agent') ?? undefined;
+  const rateLimitResult = await apiRateLimiter.checkLimit(
+    ip,
+    '/api/admin/audit/revert',
+    {
+      maxRequests: 10,
+      windowMs: 60 * 1000, // 1 minute
+      ...(userAgent ? { userAgent } : {})
+    }
+  );
+
+  if (!rateLimitResult.allowed) {
+    return rateLimitError('Too many revert operations. Please wait before trying again.');
+  }
+
   const adminHeader = request.headers.get('x-admin-key') ?? request.headers.get('authorization')?.replace(/^Bearer\s+/i, '') ?? '';
   const adminKey = process.env.ADMIN_MONITORING_KEY ?? '';
   if (!adminKey || adminHeader !== adminKey) {
@@ -14,12 +41,13 @@ export const POST = withErrorHandling(async (request: NextRequest) => {
   const supabase = await getSupabaseServerClient();
   if (!supabase) return errorResponse('DB not available', 500);
 
-  const body = await request.json().catch(() => ({}));
-  const type = String(body.type ?? '');
-  const id = String(body.id ?? '');
-  if (!['candidate', 'representative'].includes(type) || !id) {
-    return validationError({ _: 'type and id required' });
+  // Validate request body with Zod schema
+  const parsed = await parseBody<z.infer<typeof revertAuditSchema>>(request, revertAuditSchema);
+  if (!parsed.success) {
+    return parsed.error;
   }
+
+  const { type, id } = parsed.data;
 
   if (type === 'candidate') {
     const { data: row } = await (supabase as any)

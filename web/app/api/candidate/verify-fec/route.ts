@@ -1,8 +1,15 @@
 import type { NextRequest } from 'next/server'
+import { z } from 'zod'
 
-import { withErrorHandling, successResponse, authError, errorResponse, validationError, forbiddenError } from '@/lib/api';
+import { withErrorHandling, successResponse, authError, errorResponse, validationError, forbiddenError, parseBody } from '@/lib/api';
 import { createFECClient } from '@/lib/integrations/fec'
 import { getSupabaseServerClient } from '@/utils/supabase/server'
+
+// Validation schema for FEC verification
+const verifyFecSchema = z.object({
+  platformId: z.string().uuid('Platform ID must be a valid UUID'),
+  fecId: z.string().min(1, 'FEC ID is required').regex(/^[A-Z0-9]+$/, 'FEC ID must contain only uppercase letters and numbers'),
+});
 
 export const POST = withErrorHandling(async (request: NextRequest) => {
   const supabase = await getSupabaseServerClient()
@@ -16,15 +23,13 @@ export const POST = withErrorHandling(async (request: NextRequest) => {
     return authError('Authentication required');
   }
 
-  const body = await request.json()
-  const { platformId, fecId } = body
-
-  if (!platformId || !fecId) {
-    return validationError({ 
-      platformId: !platformId ? 'Platform ID is required' : '',
-      fecId: !fecId ? 'FEC ID is required' : ''
-    });
+  // Validate request body with Zod schema
+  const parsed = await parseBody<z.infer<typeof verifyFecSchema>>(request, verifyFecSchema);
+  if (!parsed.success) {
+    return parsed.error;
   }
+
+  const { platformId, fecId } = parsed.data;
 
     // Verify user owns the platform
     const { data: platform } = await supabase
@@ -95,16 +100,27 @@ export const POST = withErrorHandling(async (request: NextRequest) => {
   }, undefined, 201);
 });
 
+// Validation schema for GET query params
+const getFecQuerySchema = z.object({
+  fecId: z.string().min(1, 'FEC ID is required').regex(/^[A-Z0-9]+$/, 'FEC ID must contain only uppercase letters and numbers'),
+});
+
 export const GET = withErrorHandling(async (request: NextRequest) => {
   const searchParams = request.nextUrl.searchParams
   const fecId = searchParams.get('fecId')
 
-  if (!fecId) {
-    return validationError({ fecId: 'FEC ID required' });
+  // Validate query parameter
+  const queryResult = getFecQuerySchema.safeParse({ fecId });
+  if (!queryResult.success) {
+    return validationError(
+      queryResult.error.flatten().fieldErrors as Record<string, string>
+    );
   }
 
+  const validatedFecId = queryResult.data.fecId;
+
   const fecClient = createFECClient()
-  const candidate = await fecClient.verifyCandidate(fecId)
+  const candidate = await fecClient.verifyCandidate(validatedFecId)
 
   if (!candidate) {
     return successResponse({
@@ -113,7 +129,7 @@ export const GET = withErrorHandling(async (request: NextRequest) => {
     });
   }
 
-  const isActive = await fecClient.isCandidateActive(fecId)
+  const isActive = await fecClient.isCandidateActive(validatedFecId)
 
   return successResponse({
     found: true,
