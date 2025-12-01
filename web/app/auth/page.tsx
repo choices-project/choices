@@ -49,7 +49,6 @@ export default function AuthPage() {
     clearError: clearAuthError,
   } = useUserActions();
   const initializeAuth = useUserStore((state) => state.initializeAuth);
-  const setSessionAndDerived = useUserStore((state) => state.setSessionAndDerived);
 
   // Ensure component is mounted before using client-side features
   useEffect(() => {

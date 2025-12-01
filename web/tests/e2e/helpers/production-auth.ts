@@ -53,7 +53,7 @@ export async function loginToProduction(
     await page.waitForFunction(
       () => {
         const emailInput = document.querySelector('#email, input[name="email"], input[type="email"]');
-        return emailInput !== null && emailInput.offsetParent !== null; // Check if visible
+        return emailInput !== null && (emailInput as HTMLElement).offsetParent !== null; // Check if visible
       },
       { timeout: 15_000 }
     );
