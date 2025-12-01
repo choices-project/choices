@@ -590,15 +590,18 @@ export async function setupExternalAPIMocks(page: Page, overrides: Partial<Exter
         rawOptions?: string[];
       },
     ): MockPollRecord => {
+      const pollId = payload.id ?? `poll-${polls.length + 1}`;
+      const options: MockPollOption[] =
+        payload.options ??
+        payload.rawOptions?.map((text, index) => ({
+          id: `${pollId}-option-${index + 1}`,
+          text,
+        })) ??
+        [];
       const poll = createPollRecord({
-        id: payload.id ?? `poll-${polls.length + 1}`,
+        id: pollId,
         ...payload,
-        options:
-          payload.options ??
-          payload.rawOptions?.map((text, index) => ({
-            id: `${payload.id ?? `poll-${polls.length + 1}`}-option-${index + 1}`,
-            text,
-          })),
+        options,
       });
       polls.push({
         ...poll,
