@@ -104,47 +104,46 @@ export default function AuthSetupStep({
 
   const handleEmailSignup = async () => {
     if (!email) {
-      setError('Please enter your email address')
-      return
-    }
-
-    // In harness/interactive mode, simulate a successful OTP send without
-    // requiring a live Supabase backend. This keeps E2E flows fast and stable.
-    if (forceInteractive) {
-      clearError();
-      setSuccess(true);
-      onUpdate({
-        email,
-        authMethod: 'email',
-        authSetupCompleted: true,
-      });
+      setError('Please enter your email address');
       return;
     }
 
-    setLoading(true)
-    clearError()
+    setLoading(true);
+    clearError();
 
     try {
-      const supabase = await getSupabaseBrowserClient()
+      if (forceInteractive) {
+        setSuccess(true);
+        onUpdate({
+          email,
+          authMethod: 'email',
+          authSetupCompleted: true,
+        });
+        // In interactive/harness mode we still synchronize the Supabase session
+        // so that initializeAuth/setSessionAndDerived are kept in sync with
+        // whatever the client SDK reports, matching our onboarding tests.
+        await syncSupabaseSession();
+        return;
+      }
+
+      const supabase = await getSupabaseBrowserClient();
       if (!supabase) {
-        setError('Authentication service not available')
-        return
+        setError('Authentication service not available');
+        return;
       }
 
       const { error } = await supabase.auth.signInWithOtp({
         email,
         options: {
-          emailRedirectTo: `${typeof window !== 'undefined' ? window.location.origin : ''}/onboarding?step=auth-setup`
-        }
-      })
+          emailRedirectTo: `${typeof window !== 'undefined' ? window.location.origin : ''}/onboarding?step=auth-setup`,
+        },
+      });
 
       if (error) {
         throw error;
       }
 
-      if (forceInteractive) {
-        await syncSupabaseSession();
-      }
+      await syncSupabaseSession();
       setSuccess(true);
       onUpdate({
         email,
@@ -154,9 +153,9 @@ export default function AuthSetupStep({
     } catch (err: unknown) {
       setError(toErrorMessage(err) || 'Failed to send verification email');
     } finally {
-      setLoading(false)
+      setLoading(false);
     }
-  }
+  };
 
   const handleSocialAuth = async (provider: 'google' | 'github') => {
     if (forceInteractive) {

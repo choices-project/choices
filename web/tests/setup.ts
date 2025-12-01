@@ -11,7 +11,7 @@ import '@testing-library/jest-dom';
 import { webcrypto } from 'crypto';
 import { TextDecoder, TextEncoder } from 'util';
 
-import type React from 'react';
+import * as React from 'react';
 
 import { authServer } from './msw/server';
 
@@ -28,12 +28,12 @@ afterEach(() => {
 });
 
 jest.mock('lucide-react', () => {
-  const React = jest.requireActual('react') as typeof React;
+  const ActualReact = jest.requireActual('react') as typeof React;
   const icons: Record<string, unknown> = {};
 
   const createIcon = (name: string) =>
-    React.forwardRef<SVGSVGElement, React.SVGProps<SVGSVGElement>>((props, ref) =>
-      React.createElement('svg', { ref, 'data-icon': name, ...props }),
+    ActualReact.forwardRef<SVGSVGElement, React.SVGProps<SVGSVGElement>>((props, ref) =>
+      ActualReact.createElement('svg', { ref, 'data-icon': name, ...props }),
     );
 
   return new Proxy(

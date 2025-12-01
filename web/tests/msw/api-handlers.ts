@@ -20,6 +20,10 @@ import { buildShareAnalytics } from '../fixtures/api/share';
 
 import { mockError, mockSuccess } from './utils/envelope';
 
+// Loosen MSW handler typings for test fixtures to avoid noisy generic type
+// incompatibilities while preserving the actual runtime behavior.
+const httpAny = http as any;
+
 const json = <T extends JsonBodyType>(body: T, status = 200) =>
   HttpResponse.json<T>(body, { status });
 
@@ -31,16 +35,23 @@ const clonePoll = (poll: MockPollRecord): MockPollRecord => ({
 const polls: MockPollRecord[] = POLL_FIXTURES.map(clonePoll);
 
 const ensurePoll = (input: Partial<MockPollRecord> & { rawOptions?: string[] }) => {
-  const poll = createPollRecord({
+  const base: Partial<MockPollRecord> = {
     id: input.id ?? `poll-${polls.length + 1}`,
     ...input,
-    options:
-      input.options ??
-      input.rawOptions?.map((text, index) => ({
-        id: `${input.id ?? `poll-${polls.length + 1}`}-option-${index + 1}`,
-        text,
-      })),
-  });
+  };
+
+  const derivedOptions =
+    input.options ??
+    (input.rawOptions
+      ? input.rawOptions.map((text, index) => ({
+          id: `${input.id ?? `poll-${polls.length + 1}`}-option-${index + 1}`,
+          text,
+        }))
+      : undefined);
+
+  const poll = createPollRecord(
+    derivedOptions ? { ...base, options: derivedOptions } : base,
+  );
 
   polls.push(clonePoll(poll));
   return poll;
@@ -60,7 +71,7 @@ const buildPaginationMetadata = () => ({
 const getPollById = (id: string | undefined) => polls.find((poll) => poll.id === id);
 
 export const apiHandlers = [
-  http.get('/api/polls', () =>
+  httpAny.get('/api/polls', () =>
     json(
       mockSuccess(
         { polls },
@@ -69,13 +80,24 @@ export const apiHandlers = [
     ),
   ),
 
-  http.post('/api/polls', async ({ request }) => {
-    const payload = await request.json().catch(() => ({}));
+  httpAny.post('/api/polls', async ({ request }: { request: any }) => {
+    type PollCreatePayload = {
+      title?: unknown;
+      description?: unknown;
+      category?: unknown;
+      options?: unknown;
+    };
+
+    const payload = (await request.json().catch(() => ({}))) as PollCreatePayload;
     const poll = ensurePoll({
-      title: typeof payload?.title === 'string' ? payload.title : undefined,
-      description: typeof payload?.description === 'string' ? payload.description : undefined,
-      category: typeof payload?.category === 'string' ? payload.category : undefined,
-      rawOptions: Array.isArray(payload?.options) ? payload.options : undefined,
+      ...(typeof payload.title === 'string' ? { title: payload.title } : {}),
+      ...(typeof payload.description === 'string'
+        ? { description: payload.description }
+        : {}),
+      ...(typeof payload.category === 'string' ? { category: payload.category } : {}),
+      ...(Array.isArray(payload.options)
+        ? { rawOptions: payload.options as string[] }
+        : {}),
     });
 
     return json(
@@ -84,32 +106,38 @@ export const apiHandlers = [
     );
   }),
 
-  http.get('/api/polls/:id', ({ params }) => {
-    const poll = getPollById(params.id as string | undefined);
+  httpAny.get(
+    '/api/polls/:id',
+    (({ params }: { params: { id?: string } }) => {
+      const poll = getPollById(params.id as string | undefined);
+      if (!poll) {
+        return json(mockError('Poll not found', { code: 'NOT_FOUND' }), 404);
+      }
+
+      return json(mockSuccess(poll));
+    }) as any,
+  ),
+
+  httpAny.post(
+    '/api/polls/:id/vote',
+    async ({ params, request }: { params: any; request: any }) => {
+      const poll = getPollById(params.id as string | undefined);
     if (!poll) {
       return json(mockError('Poll not found', { code: 'NOT_FOUND' }), 404);
     }
-
-    return json(mockSuccess(poll));
-  }),
-
-  http.post('/api/polls/:id/vote', async ({ params, request }) => {
-    const poll = getPollById(params.id as string | undefined);
-    if (!poll) {
-      return json(mockError('Poll not found', { code: 'NOT_FOUND' }), 404);
-    }
-    const payload = await request.json().catch(() => ({}));
+      const payload = await request.json().catch(() => ({}));
     const optionId = typeof payload?.optionId === 'string' ? payload.optionId : poll.options[0]?.id ?? null;
 
-    return json(
-      mockSuccess({
-        pollId: poll.id,
-        optionId,
-      }),
-    );
-  }),
+      return json(
+        mockSuccess({
+          pollId: poll.id,
+          optionId,
+        }),
+      );
+    },
+  ),
 
-  http.get('/api/polls/:id/results', ({ params }) => {
+  httpAny.get('/api/polls/:id/results', ({ params }: { params: any }) => {
     const poll = getPollById(params.id as string | undefined);
     if (!poll) {
       return json(mockError('Poll not found', { code: 'NOT_FOUND' }), 404);
@@ -126,7 +154,7 @@ export const apiHandlers = [
     );
   }),
 
-  http.get('/api/dashboard', ({ request }) => {
+  httpAny.get('/api/dashboard', ({ request }: { request: any }) => {
     const hasAuthHeader = request.headers.get('authorization')?.startsWith('Bearer ');
     if (!hasAuthHeader) {
       return json(mockError('Admin authentication required', { code: 'AUTH_ERROR' }), 401);
@@ -134,7 +162,7 @@ export const apiHandlers = [
     return json(mockSuccess(buildDashboardData(polls)));
   }),
 
-  http.post('/api/v1/civics/address-lookup', () =>
+  httpAny.post('/api/v1/civics/address-lookup', () =>
     json(
       mockSuccess(CIVICS_ADDRESS_LOOKUP, {
         integration: 'google-civic',
@@ -143,17 +171,17 @@ export const apiHandlers = [
     ),
   ),
 
-  http.get('/api/v1/civics/by-state', () =>
+  httpAny.get('/api/v1/civics/by-state', () =>
     json(
       mockSuccess(CIVICS_STATE_FIXTURE),
     ),
   ),
 
-  http.get('/api/notifications', () =>
+  httpAny.get('/api/notifications', () =>
     json(mockSuccess(buildNotificationList())),
   ),
 
-  http.post('/api/notifications', async ({ request }) => {
+  httpAny.post('/api/notifications', async ({ request }: { request: any }) => {
     const body = await request.json().catch(() => ({}));
     return json(
       mockSuccess(
@@ -166,7 +194,7 @@ export const apiHandlers = [
     );
   }),
 
-  http.put('/api/notifications', async ({ request }) => {
+  httpAny.put('/api/notifications', async ({ request }: { request: any }) => {
     const body = await request.json().catch(() => ({}));
     return json(
       mockSuccess({
@@ -176,23 +204,23 @@ export const apiHandlers = [
     );
   }),
 
-  http.post('/api/pwa/notifications/subscribe', () =>
+  httpAny.post('/api/pwa/notifications/subscribe', () =>
     json(mockSuccess(PWA_SUBSCRIPTION_FIXTURE)),
   ),
 
-  http.post('/api/pwa/notifications/send', () =>
+  httpAny.post('/api/pwa/notifications/send', () =>
     json(mockSuccess(PWA_NOTIFICATION_FIXTURE)),
   ),
 
-  http.post('/api/pwa/offline/process', () =>
+  httpAny.post('/api/pwa/offline/process', () =>
     json(mockSuccess(PWA_OFFLINE_FIXTURE)),
   ),
 
-  http.post('/api/pwa/offline/sync', () =>
+  httpAny.post('/api/pwa/offline/sync', () =>
     json(mockSuccess(PWA_OFFLINE_FIXTURE)),
   ),
 
-  http.post('/api/share', async ({ request }) => {
+  httpAny.post('/api/share', async ({ request }: { request: any }) => {
     const body = await request.json().catch(() => ({}));
     return json(
       mockSuccess({
@@ -204,7 +232,7 @@ export const apiHandlers = [
     );
   }),
 
-  http.get(/\/api\/share.*/, ({ request }) => {
+  httpAny.get(/\/api\/share.*/, ({ request }: { request: any }) => {
     const url = new URL(request.url);
     const days = Number(url.searchParams.get('days') ?? '7');
     const platform = url.searchParams.get('platform') ?? 'all';
@@ -220,7 +248,7 @@ export const apiHandlers = [
     );
   }),
 
-  http.get('/api/shared/poll/:id', ({ params }) =>
+  httpAny.get('/api/shared/poll/:id', ({ params }: { params: any }) =>
     json(
       mockSuccess({
         poll: {
@@ -242,7 +270,7 @@ export const apiHandlers = [
     ),
   ),
 
-  http.post('/api/shared/vote', async ({ request }) => {
+  httpAny.post('/api/shared/vote', async ({ request }: { request: any }) => {
     const body = await request.json().catch(() => ({}));
     return json(
       mockSuccess({

@@ -2,8 +2,8 @@
 
 import React, { useEffect, useRef } from 'react';
 
-import { useNotifications, useNotificationActions } from '@/lib/stores';
 import ScreenReaderSupport from '@/lib/accessibility/screen-reader';
+import { useNotifications, useNotificationActions } from '@/lib/stores';
 
 type UserNotification = ReturnType<typeof useNotifications>[number];
 

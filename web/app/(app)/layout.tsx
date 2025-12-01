@@ -4,10 +4,10 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import React, { Suspense, useState } from 'react';
 
 import EnhancedFeedbackWidget from '@/components/EnhancedFeedbackWidget';
+import { UserNotificationContainer } from '@/components/notifications/UserNotificationContainer';
 import { AppShell } from '@/components/shared/AppShell';
 import FontProvider from '@/components/shared/FontProvider';
 import GlobalNavigation from '@/components/shared/GlobalNavigation';
-import { UserNotificationContainer } from '@/components/notifications/UserNotificationContainer';
 import SiteMessages from '@/components/SiteMessages';
 import { AuthProvider } from '@/contexts/AuthContext';
 import { usePollCreatedListener } from '@/features/polls/hooks/usePollCreatedListener';
