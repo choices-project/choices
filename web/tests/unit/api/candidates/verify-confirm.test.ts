@@ -59,7 +59,12 @@ const createMockQueryChain = (): MockQueryChain => {
   chain.update = jest.fn().mockReturnValue(chain);
   chain.ilike = chainMethod();
   chain.or = chainMethod();
-  chain.maybeSingle = jest.fn<Promise<unknown>, []>();
+  // Default to "no row" shape to avoid destructuring errors when tests
+  // don't care about the actual challenge payload.
+  chain.maybeSingle = jest.fn<Promise<unknown>, []>().mockResolvedValue({
+    data: null,
+    error: null,
+  });
 
   return chain;
 };

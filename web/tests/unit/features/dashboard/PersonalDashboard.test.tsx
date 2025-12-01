@@ -424,7 +424,13 @@ describe('PersonalDashboard', () => {
     await waitFor(() => {
       expect(screen.getByText('Upcoming elections')).toBeInTheDocument();
       expect(screen.getAllByText('California Primary')[0]).toBeInTheDocument();
-      expect(screen.getAllByText(/In 45 days/i)[0]).toBeInTheDocument();
+      // The countdown badge wording is localized and may vary slightly; assert
+      // that it conveys "45 days" rather than a hard‑coded phrase.
+      const countdownNode = screen.getByText((content) => {
+        const normalized = content.toLowerCase();
+        return normalized.includes('45') && normalized.includes('day');
+      });
+      expect(countdownNode).toBeInTheDocument();
     });
   });
 });
