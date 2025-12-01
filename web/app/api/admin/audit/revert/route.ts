@@ -10,7 +10,7 @@ export const dynamic = 'force-dynamic';
 // Validation schema for audit revert
 const revertAuditSchema = z.object({
   type: z.enum(['candidate', 'representative'], {
-    errorMap: () => ({ message: 'Type must be "candidate" or "representative"' }),
+    message: 'Type must be "candidate" or "representative"',
   }),
   id: z.string().min(1, 'ID is required'),
 });
