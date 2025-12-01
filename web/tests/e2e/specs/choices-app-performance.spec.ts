@@ -2,7 +2,7 @@ import { test, expect } from '@playwright/test';
 
 /**
  * Performance Tests for choices-app.com
- * 
+ *
  * These tests verify performance metrics and identify bottlenecks.
  */
 
@@ -13,31 +13,31 @@ test.describe('Production Performance Tests', () => {
 
   test('Homepage should load within performance budget', async ({ page }) => {
     const startTime = Date.now();
-    
+
     await page.goto('https://choices-app.com', { waitUntil: 'domcontentloaded', timeout: 60_000 });
-    
+
     const domContentLoaded = Date.now() - startTime;
-    
+
     await page.waitForLoadState('networkidle', { timeout: 30_000 }).catch(() => {});
     const fullyLoaded = Date.now() - startTime;
-    
+
     // Performance budgets
     expect(domContentLoaded, 'DOM content should load within 3 seconds').toBeLessThan(3000);
     expect(fullyLoaded, 'Page should fully load within 10 seconds').toBeLessThan(10000);
-    
+
     console.log(`Performance metrics: DOM=${domContentLoaded}ms, Full=${fullyLoaded}ms`);
   });
 
   test('Auth page should load quickly', async ({ page }) => {
     const startTime = Date.now();
-    
+
     await page.goto('https://choices-app.com/auth', { waitUntil: 'domcontentloaded', timeout: 60_000 });
-    
+
     const loadTime = Date.now() - startTime;
-    
+
     // Auth page should be fast (no heavy data loading)
     expect(loadTime, 'Auth page should load within 3 seconds').toBeLessThan(3000);
-    
+
     console.log(`Auth page load time: ${loadTime}ms`);
   });
 
@@ -137,7 +137,7 @@ test.describe('Production Performance Tests', () => {
     page.on('response', async (response) => {
       const url = response.url();
       const contentType = response.headers()['content-type'] || '';
-      
+
       if (contentType.startsWith('image/')) {
         const headers = response.headers();
         const contentLength = headers['content-length'];
@@ -163,13 +163,13 @@ test.describe('Production Performance Tests', () => {
     console.log('Image formats:', formats);
 
     // Images should use modern formats (webp, avif)
-    const modernFormats = imageRequests.filter(img => 
-      img.url.includes('.webp') || 
+    const modernFormats = imageRequests.filter(img =>
+      img.url.includes('.webp') ||
       img.url.includes('.avif') ||
       img.format === 'webp' ||
       img.format === 'avif'
     );
-    
+
     if (imageRequests.length > 0) {
       const modernFormatRatio = modernFormats.length / imageRequests.length;
       console.log(`Modern format ratio: ${(modernFormatRatio * 100).toFixed(1)}%`);

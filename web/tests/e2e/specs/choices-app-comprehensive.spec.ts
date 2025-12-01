@@ -2,7 +2,7 @@ import { test, expect } from '@playwright/test';
 
 /**
  * Comprehensive E2E Tests for choices-app.com
- * 
+ *
  * These tests challenge the entire application to find issues and improve quality.
  */
 
@@ -19,7 +19,7 @@ test.describe('Comprehensive Production Tests', () => {
       '/auth',
       '/polls', // Public polls page
     ];
-    
+
     // Optional pages (may require auth or be in route groups)
     const optionalPages = [
       '/feed', // In (app) route group - may require auth
@@ -54,7 +54,7 @@ test.describe('Comprehensive Production Tests', () => {
         });
       }
     }
-    
+
     // Test optional pages (404 is acceptable if they require auth)
     for (const path of optionalPages) {
       try {
@@ -86,11 +86,11 @@ test.describe('Comprehensive Production Tests', () => {
 
     // All pages should load (200, redirect, or 404 is acceptable for optional pages)
     // 404 is OK for pages that might not exist (like /feed if it's in a route group)
-    const failedPages = results.filter(r => 
+    const failedPages = results.filter(r =>
       (r.status >= 500) || // Server errors are not OK
       (r.status >= 400 && r.status < 500 && r.hasError) // 4xx with error text might indicate issues
     );
-    
+
     if (failedPages.length > 0) {
       throw new Error(`Pages failed to load: ${failedPages.map(r => `${r.path} (${r.status})`).join(', ')}`);
     }
@@ -129,9 +129,9 @@ test.describe('Comprehensive Production Tests', () => {
             // - Standard format: { success: true, data: ... } or { success: false, error: ... }
             // - Legacy format: { status: ..., ... } or { error: ... } (still acceptable)
             // - Health endpoint may return { status: 'ok', ... } which is OK
-            hasConsistentFormat = 
-              'success' in data || 
-              'error' in data || 
+            hasConsistentFormat =
+              'success' in data ||
+              'error' in data ||
               'status' in data || // Health endpoint format
               (typeof data === 'object' && data !== null); // Any valid JSON object
           } catch {

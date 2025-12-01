@@ -1,6 +1,6 @@
 import type { NextRequest} from 'next/server';
 
-import { withErrorHandling, successResponse } from '@/lib/api';
+import { withErrorHandling, successResponse, methodNotAllowed } from '@/lib/api';
 import { logger } from '@/lib/utils/logger'
 
 export const dynamic = 'force-dynamic'
@@ -29,6 +29,12 @@ export const GET = withErrorHandling(async (request: NextRequest) => {
     });
   }
 });
+
+// Handle unsupported methods
+export const POST = withErrorHandling(async () => methodNotAllowed(['GET']));
+export const PUT = withErrorHandling(async () => methodNotAllowed(['GET']));
+export const PATCH = withErrorHandling(async () => methodNotAllowed(['GET']));
+export const DELETE = withErrorHandling(async () => methodNotAllowed(['GET']));
 
 async function getActiveSiteMessages(includeExpired: boolean = false) {
   try {
@@ -129,4 +135,3 @@ async function getActiveSiteMessages(includeExpired: boolean = false) {
     throw error;
   }
 }
-
