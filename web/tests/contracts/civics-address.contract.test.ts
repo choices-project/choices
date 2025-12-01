@@ -7,10 +7,17 @@ import { createNextRequest } from '@/tests/contracts/helpers/request';
 const mockSetJurisdictionCookie = jest.fn();
 const mockAssertPepperConfig = jest.fn();
 
-jest.mock('@/lib/civics/privacy-utils', () => ({
-  setJurisdictionCookie: jest.fn(async (...args: unknown[]) => mockSetJurisdictionCookie(...args)),
-  generateAddressHMAC: jest.fn(() => 'hash'),
-}));
+jest.mock('@/lib/civics/privacy-utils', () => {
+  // Preserve real implementations for validation and feature checks
+  // while overriding only the pieces that touch cookies/HMACs.
+  // This ensures validateAddressInput remains a real function.
+  const actual = jest.requireActual<typeof import('@/lib/civics/privacy-utils')>('@/lib/civics/privacy-utils');
+  return {
+    ...actual,
+    setJurisdictionCookie: jest.fn(async (...args: unknown[]) => mockSetJurisdictionCookie(...args)),
+    generateAddressHMAC: jest.fn(() => 'hash'),
+  };
+});
 
 jest.mock('@/lib/civics/env-guard', () => ({
   assertPepperConfig: jest.fn((...args: unknown[]) => mockAssertPepperConfig(...args)),
