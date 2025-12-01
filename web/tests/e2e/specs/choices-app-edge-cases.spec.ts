@@ -2,7 +2,7 @@ import { test, expect } from '@playwright/test';
 
 /**
  * Edge Case Tests for choices-app.com
- * 
+ *
  * These tests challenge the application with edge cases, unusual inputs,
  * and boundary conditions to find hidden issues.
  */
@@ -14,7 +14,7 @@ test.describe('Production Edge Cases', () => {
 
   test('Should handle very long URLs gracefully', async ({ page }) => {
     const longPath = '/'.repeat(1000);
-    
+
     const response = await page.goto(`https://choices-app.com${longPath}`, {
       waitUntil: 'domcontentloaded',
       timeout: 30_000,
@@ -22,7 +22,7 @@ test.describe('Production Edge Cases', () => {
     });
 
     const status = response?.status() || 0;
-    
+
     // Should return 404, not 500 (server error)
     expect([404, 400, 414]).toContain(status);
     expect(status).not.toBe(500);
@@ -46,7 +46,7 @@ test.describe('Production Edge Cases', () => {
       });
 
       const status = response?.status() || 0;
-      
+
       // Should handle gracefully (404, 400, 200, or redirect), not 500
       // Allow 500 if it's a known issue we're tracking
       if (status === 500) {
@@ -72,7 +72,7 @@ test.describe('Production Edge Cases', () => {
       });
 
       const status = response.status();
-      
+
       // Should return 200 (with defaults) or 400 (validation error)
       // Log 500s for investigation but don't fail test
       if (status === 500) {
@@ -105,7 +105,7 @@ test.describe('Production Edge Cases', () => {
 
   test('Should handle rapid navigation', async ({ page }) => {
     const pages = ['/', '/auth', '/polls', '/auth', '/'];
-    
+
     for (const path of pages) {
       await page.goto(`https://choices-app.com${path}`, {
         waitUntil: 'domcontentloaded',
@@ -132,15 +132,15 @@ test.describe('Production Edge Cases', () => {
     // Start from a stable page (auth)
     await page.goto('https://choices-app.com/auth', { waitUntil: 'domcontentloaded', timeout: 60_000 });
     await page.goto('https://choices-app.com/polls', { waitUntil: 'domcontentloaded', timeout: 60_000 });
-    
+
     // Go back
     await page.goBack({ waitUntil: 'domcontentloaded', timeout: 30_000 });
     expect(page.url()).toContain('/auth');
-    
+
     // Go forward
     await page.goForward({ waitUntil: 'domcontentloaded', timeout: 30_000 });
     expect(page.url()).toContain('/polls');
-    
+
     // Page should still work
     const title = await page.title();
     expect(title).toContain('Choices');
@@ -149,15 +149,15 @@ test.describe('Production Edge Cases', () => {
   test('Should handle page refresh', async ({ page }) => {
     await page.goto('https://choices-app.com/auth', { waitUntil: 'domcontentloaded', timeout: 60_000 });
     await page.waitForTimeout(2000);
-    
+
     // Refresh page
     await page.reload({ waitUntil: 'domcontentloaded', timeout: 60_000 });
     await page.waitForTimeout(2000);
-    
+
     // Should still work
     const url = page.url();
     expect(url).toContain('/auth');
-    
+
     // Should not have hydration errors
     const errors: string[] = [];
     page.on('console', (msg) => {
@@ -165,9 +165,9 @@ test.describe('Production Edge Cases', () => {
         errors.push(msg.text());
       }
     });
-    
+
     await page.waitForTimeout(2000);
-    
+
     const hydrationErrors = errors.filter(e => e.includes('hydration'));
     expect(hydrationErrors.length, 'Should not have hydration errors on refresh').toBe(0);
   });
@@ -175,22 +175,22 @@ test.describe('Production Edge Cases', () => {
   test('Should handle network interruption simulation', async ({ page, context }) => {
     // Simulate network going offline then online
     await page.goto('https://choices-app.com', { waitUntil: 'domcontentloaded', timeout: 60_000 });
-    
+
     // Go offline
     await context.setOffline(true);
     await page.waitForTimeout(1000);
-    
+
     // Try to navigate (should handle gracefully)
     try {
       await page.goto('https://choices-app.com/auth', { timeout: 5000 });
     } catch {
       // Expected to fail when offline
     }
-    
+
     // Go back online
     await context.setOffline(false);
     await page.waitForTimeout(1000);
-    
+
     // Should recover
     await page.goto('https://choices-app.com', { waitUntil: 'domcontentloaded', timeout: 60_000 });
     const title = await page.title();
@@ -200,7 +200,7 @@ test.describe('Production Edge Cases', () => {
   test('Should handle very large payloads in API requests', async ({ request }) => {
     // Try sending large data (if POST endpoint exists)
     const largeData = { data: 'x'.repeat(100000) }; // 100KB
-    
+
     try {
       const response = await request.post('https://choices-app.com/api/site-messages', {
         data: largeData,
@@ -272,7 +272,7 @@ test.describe('Production Edge Cases', () => {
 
     // Try to find email input
     const emailInput = await page.locator('#email, input[name="email"], input[type="email"]').first();
-    
+
     if (await emailInput.isVisible().catch(() => false)) {
       // Try entering Unicode and emoji
       const unicodeInputs = [
@@ -312,18 +312,18 @@ test.describe('Production Edge Cases', () => {
 
   test('Should handle browser zoom changes', async ({ page }) => {
     await page.goto('https://choices-app.com', { waitUntil: 'domcontentloaded', timeout: 60_000 });
-    
+
     // Set zoom to 200%
     await page.evaluate(() => {
       document.body.style.zoom = '200%';
     });
-    
+
     await page.waitForTimeout(1000);
-    
+
     // Page should still be functional
     const bodyText = await page.textContent('body');
     expect(bodyText).toBeTruthy();
-    
+
     // Reset zoom
     await page.evaluate(() => {
       document.body.style.zoom = '100%';
@@ -332,7 +332,7 @@ test.describe('Production Edge Cases', () => {
 
   test('Should handle viewport size changes', async ({ page }) => {
     await page.goto('https://choices-app.com', { waitUntil: 'domcontentloaded', timeout: 60_000 });
-    
+
     // Test different viewport sizes
     const viewports = [
       { width: 320, height: 568 }, // iPhone SE
@@ -343,7 +343,7 @@ test.describe('Production Edge Cases', () => {
     for (const viewport of viewports) {
       await page.setViewportSize(viewport);
       await page.waitForTimeout(500);
-      
+
       // Page should still work
       const bodyText = await page.textContent('body');
       expect(bodyText).toBeTruthy();

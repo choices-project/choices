@@ -226,16 +226,39 @@ export function methodNotAllowed(
 
 /**
  * Create an internal server error response
+ * 
+ * SECURITY: Never exposes sensitive information like stack traces, database errors,
+ * or internal paths in production. Only generic error messages are returned.
  *
  * @example
  * return serverError(error);
  */
 export function serverError(
   error?: Error | unknown,
-  includeStack: boolean = process.env.NODE_ENV === 'development'
+  includeStack: boolean = false // Never include stack in production
 ): NextResponse<ApiErrorResponse> {
-  const message = error instanceof Error ? error.message : 'Internal server error';
-  const details = includeStack && error instanceof Error ? { stack: error.stack } : undefined;
+  // In production, always return generic message
+  const isProduction = process.env.NODE_ENV === 'production';
+  const message = isProduction 
+    ? 'Internal server error' 
+    : (error instanceof Error ? error.message : 'Internal server error');
+  
+  // Only include stack in development and if explicitly requested
+  const shouldIncludeStack = !isProduction && includeStack;
+  const details = shouldIncludeStack && error instanceof Error 
+    ? { stack: error.stack } 
+    : undefined;
+
+  // Log full error details server-side for debugging
+  if (error instanceof Error) {
+    logger.error('Server error occurred', {
+      message: error.message,
+      stack: error.stack,
+      name: error.name,
+    });
+  } else {
+    logger.error('Unknown server error', { error: String(error) });
+  }
 
   return errorResponse(message, 500, details, 'SERVER_ERROR');
 }
@@ -246,6 +269,9 @@ export function serverError(
 
 /**
  * Wrap an async API handler with error handling
+ * 
+ * SECURITY: Ensures errors never expose sensitive information.
+ * All errors are logged server-side but only generic messages are returned to clients.
  *
  * @example
  * export const GET = withErrorHandling(async (request) => {
@@ -260,8 +286,21 @@ export function withErrorHandling<T extends any[]>(
     try {
       return await handler(...args);
     } catch (error) {
-      logger.error('API Error:', error);
-      return serverError(error);
+      // Log full error details server-side
+      const errorDetails = {
+        message: error instanceof Error ? error.message : String(error),
+        stack: error instanceof Error ? error.stack : undefined,
+        name: error instanceof Error ? error.name : undefined,
+        // Sanitize any potential sensitive data
+        ...(error instanceof Error && error.cause 
+          ? { cause: String(error.cause) } 
+          : {}),
+      };
+      
+      logger.error('API Error:', errorDetails);
+      
+      // Return sanitized error response (never includes stack or sensitive info)
+      return serverError(error, false);
     }
   };
 }
