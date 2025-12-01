@@ -65,15 +65,16 @@ type ScrollableJsonProps = {
 const ScrollableJson = ({ label, dataTestId, value }: ScrollableJsonProps) => (
   <article className='rounded-lg border border-slate-200 bg-white p-4 shadow-sm'>
     <h3 className='text-sm font-semibold uppercase tracking-wide text-slate-500'>{label}</h3>
-    <pre
+    <div
       data-testid={dataTestId}
       className='mt-2 max-h-48 overflow-auto rounded bg-slate-50 p-2 text-xs focus:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500 focus-visible:ring-offset-2 focus-visible:ring-offset-white'
-      tabIndex={0}
       role='region'
       aria-label={`${label} JSON output`}
     >
-      {value}
-    </pre>
+      <pre className='whitespace-pre-wrap'>
+        {value}
+      </pre>
+    </div>
   </article>
 );
 

@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 
 
 type PollResult = {
@@ -26,11 +26,7 @@ export function PollResults({ pollId, trustTiers }: PollResultsProps) {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  useEffect(() => {
-    fetchResults();
-  }, [pollId, trustTiers]);
-
-  const fetchResults = async () => {
+  const fetchResults = useCallback(async () => {
     try {
       setLoading(true);
       // Build URL with multiple tier support
@@ -53,7 +49,11 @@ export function PollResults({ pollId, trustTiers }: PollResultsProps) {
     } finally {
       setLoading(false);
     }
-  };
+  }, [pollId, trustTiers]);
+
+  useEffect(() => {
+    void fetchResults();
+  }, [fetchResults]);
 
   if (loading) {
     return (

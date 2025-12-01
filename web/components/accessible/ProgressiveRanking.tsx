@@ -454,18 +454,18 @@ function CandidateCard({
   };
 
   return (
-    <div
-      className={`candidate-card ${focused ? 'focused' : ''} ${isRanked ? 'ranked' : ''}`}
-      role="listitem"
-      tabIndex={0}
-      onKeyDown={handleKeyDown}
-      onClick={() => onSelectionToggle(candidate.id)}
-      onFocus={() => setFocused(true)}
-      onBlur={() => setFocused(false)}
-      aria-label={`${candidate.name}, currently ranked ${rank}`}
-      data-selected={isRanked}
-    >
-      <div className="candidate-info">
+    <div role="listitem" aria-label={`${candidate.name}, currently ranked ${rank}`}>
+      <button
+        type="button"
+        className={`candidate-card ${focused ? 'focused' : ''} ${isRanked ? 'ranked' : ''}`}
+        tabIndex={0}
+        onKeyDown={handleKeyDown}
+        onClick={() => onSelectionToggle(candidate.id)}
+        onFocus={() => setFocused(true)}
+        onBlur={() => setFocused(false)}
+        data-selected={isRanked}
+      >
+        <div className="candidate-info">
         <h4 className="candidate-name">{candidate.name}</h4>
         {candidate.party && (
           <span className="candidate-party">({candidate.party})</span>
@@ -517,10 +517,10 @@ function CandidateCard({
             </div>
           </div>
         )}
-      </div>
-      
-      {/* Rank Indicator */}
-      <div className="rank-indicator">
+        </div>
+        
+        {/* Rank Indicator */}
+        <div className="rank-indicator">
         {isRanked ? (
           <>
             <span className="rank-number" aria-hidden="true">{rank}</span>
@@ -529,7 +529,8 @@ function CandidateCard({
         ) : (
           <span className="unranked">Not ranked</span>
         )}
-      </div>
+        </div>
+      </button>
     </div>
   );
 }

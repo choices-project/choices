@@ -11,7 +11,7 @@
 'use client';
 
 import { Send, Paperclip, Clock, CheckCircle, CheckCircle2, AlertCircle, User, Building2 } from 'lucide-react';
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 
 import { contactMessagingService } from '@/lib/contact/real-time-messaging';
 import type { Message } from '@/lib/contact/real-time-messaging';
@@ -179,48 +179,10 @@ export function MessageThread({
   const MAX_MESSAGE_LENGTH = 10000;
 
   // ============================================================================
-  // EFFECTS
-  // ============================================================================
-
-  // Load initial messages
-  useEffect(() => {
-    loadMessages();
-  }, [threadId]);
-
-  // Auto-scroll to bottom when new messages arrive
-  useEffect(() => {
-    scrollToBottom();
-  }, [messages]);
-
-  // Real-time message updates
-  useEffect(() => {
-    if (!threadId) return;
-
-    const handleNewMessage = (message: Message) => {
-      setMessages(prev => {
-        // Check if message already exists to avoid duplicates
-        const exists = prev.some(m => m.id === message.id);
-        if (exists) return prev;
-        
-        return [...prev, message].sort((a, b) => 
-          new Date(a.timestamp).getTime() - new Date(b.timestamp).getTime()
-        );
-      });
-    };
-
-    const unsubscribe = contactMessagingService.subscribeToMessages(
-      threadId,
-      handleNewMessage
-    );
-
-    return unsubscribe;
-  }, [threadId]);
-
-  // ============================================================================
   // FUNCTIONS
   // ============================================================================
 
-  const loadMessages = async () => {
+  const loadMessages = useCallback(async () => {
     try {
       setIsLoading(true);
       setError(null);
@@ -240,7 +202,7 @@ export function MessageThread({
     } finally {
       setIsLoading(false);
     }
-  };
+  }, [threadId]);
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -281,6 +243,44 @@ export function MessageThread({
       handleSendMessage(e);
     }
   };
+
+  // ============================================================================
+  // EFFECTS
+  // ============================================================================
+
+  // Load initial messages
+  useEffect(() => {
+    void loadMessages();
+  }, [loadMessages]);
+
+  // Auto-scroll to bottom when new messages arrive
+  useEffect(() => {
+    scrollToBottom();
+  }, [messages]);
+
+  // Real-time message updates
+  useEffect(() => {
+    if (!threadId) return;
+
+    const handleNewMessage = (message: Message) => {
+      setMessages(prev => {
+        // Check if message already exists to avoid duplicates
+        const exists = prev.some(m => m.id === message.id);
+        if (exists) return prev;
+
+        return [...prev, message].sort((a, b) =>
+          new Date(a.timestamp).getTime() - new Date(b.timestamp).getTime()
+        );
+      });
+    };
+
+    const unsubscribe = contactMessagingService.subscribeToMessages(
+      threadId,
+      handleNewMessage
+    );
+
+    return unsubscribe;
+  }, [threadId]);
 
   // ============================================================================
   // RENDER

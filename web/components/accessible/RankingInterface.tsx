@@ -355,17 +355,20 @@ export function AccessibleRankingInterface({
         {getDisplayCandidates().map((candidate, index) => (
           <div
             key={candidate.id}
-            ref={(el) => { candidateRefs.current[index] = el; }}
             role="listitem"
-            tabIndex={state.focusedIndex === index ? 0 : -1}
-            className={`candidate-card ${state.focusedIndex === index ? 'focused' : ''} ${isCandidateRanked(candidate.id) ? 'ranked' : ''}`}
-            onKeyDown={(e) => handleKeyboardNavigation(e, candidate.id)}
-            onClick={() => handleCandidateClick(candidate.id)}
-            onFocus={() => handleFocus(index)}
             aria-label={`${candidate.name}, currently ranked ${getCandidateRank(candidate.id)}`}
             aria-describedby={`candidate-${candidate.id}-description`}
-            data-selected={isCandidateRanked(candidate.id)}
           >
+            <button
+              ref={(el) => { candidateRefs.current[index] = el; }}
+              type="button"
+              tabIndex={state.focusedIndex === index ? 0 : -1}
+              className={`candidate-card ${state.focusedIndex === index ? 'focused' : ''} ${isCandidateRanked(candidate.id) ? 'ranked' : ''}`}
+              onKeyDown={(e) => handleKeyboardNavigation(e, candidate.id)}
+              onClick={() => handleCandidateClick(candidate.id)}
+              onFocus={() => handleFocus(index)}
+              data-selected={isCandidateRanked(candidate.id)}
+            >
             <div className="candidate-info">
               <h3 className="candidate-name">{candidate.name}</h3>
               {candidate.party && (
@@ -412,6 +415,7 @@ export function AccessibleRankingInterface({
                 <span className="unranked">Not ranked</span>
               )}
             </div>
+            </button>
           </div>
         ))}
       </div>

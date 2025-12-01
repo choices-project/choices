@@ -122,6 +122,7 @@ function FeedsStoreHarnessView() {
     unbookmarkFeed,
     setSelectedCategory,
     resetFeedsState,
+    updatePreferences,
   ]);
 
   const summary = useMemo(

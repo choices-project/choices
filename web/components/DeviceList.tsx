@@ -164,21 +164,20 @@ export const DeviceList: React.FC<DeviceListProps> = ({
       {/* Device List */}
       <div className="space-y-3">
         {memoizedDevices.map((device) => (
-          <div
-            key={device.id}
-            className={`flex items-center justify-between p-4 border rounded-lg transition-colors ${
-              selectedDevice === device.id ? 'border-blue-500 bg-blue-50' : 'border-gray-200 hover:border-gray-300'
-            }`}
-            data-testid="device-item"
-            role="listitem"
-            tabIndex={0}
-            onKeyDown={(e) => {
-              if (e.key === 'Enter' || e.key === ' ') {
-                setSelectedDevice(device.id)
-              }
-            }}
-            onClick={() => setSelectedDevice(device.id)}
-          >
+          <div key={device.id} role="listitem" data-testid="device-item">
+            <button
+              type="button"
+              className={`flex w-full items-center justify-between p-4 border rounded-lg transition-colors ${
+                selectedDevice === device.id ? 'border-blue-500 bg-blue-50' : 'border-gray-200 hover:border-gray-300'
+              }`}
+              tabIndex={0}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter' || e.key === ' ') {
+                  setSelectedDevice(device.id)
+                }
+              }}
+              onClick={() => setSelectedDevice(device.id)}
+            >
             {/* Device Info */}
             <div className="flex items-center space-x-3">
               <div className="flex-shrink-0">
@@ -225,6 +224,7 @@ export const DeviceList: React.FC<DeviceListProps> = ({
                 </button>
               )}
             </div>
+            </button>
           </div>
         ))}
       </div>

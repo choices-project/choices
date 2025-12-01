@@ -56,7 +56,7 @@ export default function VotingStoreHarnessPage() {
     window.__votingStoreHarness = harness;
     return () => {
       if (window.__votingStoreHarness === harness) {
-        window.__votingStoreHarness = undefined;
+        delete window.__votingStoreHarness;
       }
     };
   }, [clearAllTimers, clearTimer, registerTimer, reset, setBallots, setElections, setVotingRecords]);
