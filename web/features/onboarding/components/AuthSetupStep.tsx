@@ -17,6 +17,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { PasskeyButton } from '@/features/auth/components/PasskeyButton'
+import { useI18n } from '@/hooks/useI18n';
 import { useUserActions, useUserError, useUserLoading, useUserStore } from '@/lib/stores';
 import { logger } from '@/lib/utils/logger';
 import { getSupabaseBrowserClient } from '@/utils/supabase/client'
@@ -647,9 +648,22 @@ export default function AuthSetupStep({
     return renderOverview();
   };
 
+  const renderBypass = () => (
+    <div className="max-w-2xl mx-auto text-center">
+      <h2 className="text-2xl font-bold mb-4">Authentication Setup</h2>
+      <p className="text-gray-600 mb-6">Authentication is bypassed in this environment.</p>
+      <button
+        onClick={onNext}
+        className="bg-blue-600 text-white px-6 py-2 rounded-md hover:bg-blue-700"
+      >
+        Continue
+      </button>
+    </div>
+  );
+
   return (
     <div className="max-w-6xl mx-auto px-4 py-8">
-      {isBypass ? renderBypass : renderContent()}
+      {isBypass ? renderBypass() : renderContent()}
     </div>
   );
 }

@@ -25,6 +25,7 @@ import {
 } from '@heroicons/react/24/outline';
 import React, { useMemo, useEffect, useState } from 'react';
 
+import { useI18n } from '@/hooks/useI18n';
 import {
   trackCivicsRepresentativeEvent,
   type CivicsRepresentativeEventBase

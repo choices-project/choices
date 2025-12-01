@@ -36,6 +36,7 @@ type UnifiedFeedProps = {
   enableHashtagPolls?: boolean;
   enableMobileOptimization?: boolean;
   showTrending?: boolean;
+  maxItems?: number;
 };
 
 /**

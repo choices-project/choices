@@ -5,6 +5,7 @@ import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 
 import { PrivacyLevelSelector } from '@/components/ui/PrivacyLevelSelector';
 import { usePollCreateController } from '@/features/polls/pages/create/hooks';
+import { useI18n } from '@/hooks/useI18n';
 import ScreenReaderSupport from '@/lib/accessibility/screen-reader';
 import type { PollPrivacyLevel } from '@/lib/polls/types';
 import type { PollWizardSubmissionResult } from '@/lib/polls/wizard/submission';

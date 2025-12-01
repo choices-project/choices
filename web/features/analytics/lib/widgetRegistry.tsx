@@ -402,7 +402,7 @@ const registryEntries: WidgetRegistryEntry[] = [
         permissions: ['admin'],
       },
     },
-    KpiAnalyticsWidget,
+    createPlaceholderWidget('KPI cards with trend deltas will be available soon.'),
     {
       position: { x: 0, y: 0 },
       size: { w: 3, h: 2 },
@@ -471,7 +471,7 @@ const registryEntries: WidgetRegistryEntry[] = [
         permissions: ['admin'],
       },
     },
-    FunnelAnalyticsWidget,
+    createPlaceholderWidget('Conversion funnels will be available in a future release.'),
     {
       position: { x: 0, y: 0 },
       size: { w: 4, h: 4 },

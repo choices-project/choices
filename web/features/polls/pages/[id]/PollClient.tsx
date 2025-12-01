@@ -17,6 +17,7 @@ import {
   type PollBallotContext,
 } from '@/features/voting/lib/pollAdapters';
 import { useVotingActions, useVotingError, useVotingIsVoting } from '@/features/voting/lib/store';
+import { useI18n } from '@/hooks/useI18n';
 import { useAuth } from '@/hooks/useAuth';
 import { useNotificationActions } from '@/lib/stores';
 import { useAppActions } from '@/lib/stores/appStore';
@@ -330,8 +331,26 @@ export default function PollClient({ poll }: PollClientProps) {
   const pollStatus = poll.status ?? 'active';
   const canVote = poll.canVote ?? false;
   const participationCount = typeof poll.participation === 'number' ? poll.participation : 0;
-  const privacyLabel = PRIVACY_LABELS[poll.privacyLevel ?? 'public'] ?? (poll.privacyLevel ?? 'Public');
-  const votingLabel = VOTING_LABELS[poll.votingMethod ?? 'single'] ?? (poll.votingMethod ?? 'Single choice');
+  const privacyLabel = useMemo(() => {
+    const labels: Record<string, string> = {
+      public: t('polls.create.privacy.public'),
+      private: t('polls.create.privacy.private'),
+      unlisted: t('polls.create.privacy.unlisted'),
+    };
+    const key = poll.privacyLevel ?? 'public';
+    return labels[key] ?? (poll.privacyLevel ?? 'Public');
+  }, [poll.privacyLevel, t]);
+
+  const votingLabel = useMemo(() => {
+    const labels: Record<string, string> = {
+      single: t('polls.create.votingMethod.single'),
+      multiple: t('polls.create.votingMethod.multiple'),
+      approval: t('polls.create.votingMethod.approval'),
+      ranked: t('polls.create.votingMethod.ranked'),
+    };
+    const key = poll.votingMethod ?? 'single';
+    return labels[key] ?? (poll.votingMethod ?? 'Single choice');
+  }, [poll.votingMethod, t]);
 
   const votingStatusMessage: VotingStatusMessage | null = useMemo(() => {
     if (pollStatus !== 'active') {

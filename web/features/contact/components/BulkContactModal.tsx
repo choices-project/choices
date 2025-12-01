@@ -23,6 +23,7 @@ import React, { useState, useEffect, useMemo, useCallback, useRef } from 'react'
 import { trackCivicsRepresentativeEvent } from '@/features/civics/analytics/civicsAnalyticsEvents';
 import { useElectionCountdown, formatElectionDate } from '@/features/civics/utils/civicsCountdownUtils';
 import { useFeatureFlag } from '@/features/pwa/hooks/useFeatureFlags';
+import { useI18n } from '@/hooks/useI18n';
 import { useAccessibleDialog } from '@/lib/accessibility/useAccessibleDialog';
 import { useAnalyticsActions, useContactActions } from '@/lib/stores';
 import type { Representative } from '@/types/representative';
@@ -194,7 +195,7 @@ export default function BulkContactModal({
   useEffect(() => {
     if (selectedTemplate) {
       const initialValues: Record<string, string> = {};
-      selectedTemplate.placeholders.forEach(placeholder => {
+      selectedTemplate.placeholders.forEach((placeholder: { key: string }) => {
         initialValues[placeholder.key] = localTemplateValues[placeholder.key] ?? '';
       });
       setLocalTemplateValues(initialValues);
@@ -643,7 +644,7 @@ export default function BulkContactModal({
                   {t('contact.bulkModal.templates.fillLabel')}
                 </p>
                 <div className="space-y-3">
-                  {selectedTemplate.placeholders.map(placeholder => (
+                  {selectedTemplate.placeholders.map((placeholder: { key: string; label: string; required?: boolean; example?: string }) => (
                     <div key={placeholder.key}>
                       <label className="block text-xs font-medium text-gray-700 mb-1">
                         {placeholder.label}

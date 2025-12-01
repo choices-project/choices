@@ -165,9 +165,6 @@ const EnhancedFeedbackWidget: React.FC = () => {
   const isHarnessMode =
     process.env.NEXT_PUBLIC_ENABLE_E2E_HARNESS === '1' || (pathname?.startsWith('/e2e/') ?? false)
 
-  const isHarnessMode =
-    process.env.NEXT_PUBLIC_ENABLE_E2E_HARNESS === '1' || (pathname?.startsWith('/e2e/') ?? false)
-
   const trackerOptions = useMemo<FeedbackTrackerOptions | undefined>(() => {
     if (typeof navigator === 'undefined' || isHarnessMode) {
       return undefined

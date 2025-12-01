@@ -13,8 +13,6 @@ import { TextDecoder, TextEncoder } from 'util';
 
 import * as React from 'react';
 
-import { authServer } from './msw/server';
-
 // Note: Avoid importing the React type name directly to prevent self-referential typeof issues below.
 
 // Defer loading MSW server until runtime to avoid top-level transform issues.
@@ -320,7 +318,7 @@ const createAuthAnalyticsMock = (modulePath: string) => {
   // @ts-expect-error - Overriding private method for testing purposes
   class MockAuthAnalytics extends actual.AuthAnalytics {
     // Override network-bound method so tests remain deterministic
-    async sendToExternalService(): Promise<void> {
+    override async sendToExternalService(): Promise<void> {
       return Promise.resolve();
     }
   }
@@ -475,10 +473,11 @@ const createSupabaseResponse = (
           error: null
         };
       }
+      const count = Array.isArray(list) ? list.length : undefined;
       return {
         data: list,
         error: null,
-        count: Array.isArray(list) ? list.length : undefined
+        ...(count !== undefined ? { count } : {})
       };
     }
     case 'error': {

@@ -126,6 +126,7 @@ export default function PollHeatmap({
 }: PollHeatmapProps) {
   const { t, currentLanguage } = useI18n();
   const summarySectionId = useId();
+  const chartRegionId = useId();
   const { fetchPollHeatmap } = useAnalyticsActions();
   const pollHeatmap = useAnalyticsPollHeatmap();
   const data = pollHeatmap.data;
@@ -302,6 +303,16 @@ export default function PollHeatmap({
 
     return t('analytics.heatmap.summaryFallback', summaryTotals);
   }, [activePolls, data.length, formatDecimal, formatNumber, t, topPoll, totalVotes]);
+
+  const chartSummaryText = useMemo(() => {
+    if (data.length === 0) {
+      return 'No poll engagement data available for the current filters.';
+    }
+
+    return `Showing ${formatNumber(data.length)} polls with a total of ${formatNumber(
+      totalVotes,
+    )} votes. Highest engagement score is ${formatDecimal(maxEngagement)}.`;
+  }, [data.length, formatDecimal, formatNumber, maxEngagement, totalVotes]);
 
   useEffect(() => {
     if (isLoading || !summaryIntro) {

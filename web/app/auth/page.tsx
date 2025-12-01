@@ -111,9 +111,6 @@ export default function AuthPage() {
           email,
           password,
           username,
-          context: {
-            userAgent: typeof navigator !== 'undefined' ? navigator.userAgent : 'unknown',
-          },
         });
         if (result.ok) {
           setMessage(t('auth.success.registered'));

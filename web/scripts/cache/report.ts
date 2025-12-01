@@ -45,7 +45,13 @@ main().catch((error) => {
 });
 
 function printRows(rows: TableRow[]) {
-  const headers = Object.keys(rows[0]) as Array<keyof TableRow>;
+  const firstRow = rows[0];
+  if (!firstRow) {
+    logger.warn('[cache-report] No rows to print.');
+    return;
+  }
+
+  const headers = Object.keys(firstRow) as Array<keyof TableRow>;
   const headerLine = headers.join('\t');
   logger.info(`[cache-report]\n${headerLine}`);
 

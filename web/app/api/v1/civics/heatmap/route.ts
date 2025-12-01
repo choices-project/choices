@@ -29,6 +29,19 @@ export const dynamic = 'force-dynamic';
 export const runtime = 'nodejs';
 export const revalidate = 0;
 
+type HeatmapResult = {
+  heatmap: Array<{
+    district_id: string;
+    district_name: string;
+    state: string;
+    level: string;
+    engagement_count: number;
+    representative_count: number;
+  }>;
+  k_anonymity: number;
+  generated_at: string;
+};
+
 export const GET = withErrorHandling(async (request: NextRequest) => {
   const supabase = await getSupabaseServerClient();
   const { data: { user } } = await supabase.auth.getUser();
@@ -57,18 +70,6 @@ export const GET = withErrorHandling(async (request: NextRequest) => {
       cacheKey,
       CACHE_TTL.DISTRICT_HEATMAP,
       async () => {
-        type HeatmapResult = {
-          heatmap: Array<{
-            district_id: string;
-            district_name: string;
-            state: string;
-            level: string;
-            engagement_count: number;
-            representative_count: number;
-          }>;
-          k_anonymity: number;
-          generated_at: string;
-        };
         // Initialize privacy-aware query builder
         const queryBuilder = new PrivacyAwareQueryBuilder(supabase);
 
@@ -167,7 +168,7 @@ export const GET = withErrorHandling(async (request: NextRequest) => {
       minCount
     });
 
-        return {
+        const heatmapResult: HeatmapResult = {
           heatmap,
           k_anonymity: minCount,
           generated_at: new Date().toISOString()
@@ -176,11 +177,13 @@ export const GET = withErrorHandling(async (request: NextRequest) => {
       }
     );
 
+    const typedResult = result as HeatmapResult | null;
+
     return successResponse(
       {
-        heatmap: result?.heatmap ?? [],
-        kAnonymity: result?.k_anonymity ?? minCount,
-        generatedAt: result?.generated_at ?? new Date().toISOString()
+        heatmap: typedResult?.heatmap ?? [],
+        kAnonymity: typedResult?.k_anonymity ?? minCount,
+        generatedAt: typedResult?.generated_at ?? new Date().toISOString()
       },
       {
         cache: {

@@ -27,6 +27,7 @@ import type { SupabaseClient } from '@supabase/supabase-js';
 import { isFeatureEnabled } from '@/lib/core/feature-flags';
 import { logger } from '@/lib/utils/logger';
 import type { TrustTier } from '@/types/features/analytics';
+import type { CivicAction } from '@/types/database';
 import { getSupabaseServerClient } from '@/utils/supabase/server';
 
 
@@ -347,8 +348,14 @@ export async function getRepresentativesByLocation(
 
     logger.info('Fetching representatives by location', {
       location,
-      filters
+      filters,
     });
+
+    const supabase = await getSupabaseServerClient();
+    if (!supabase) {
+      logger.error('Failed to get Supabase client for representatives lookup');
+      return [];
+    }
 
     // Build query for representatives_core table
     let query = supabase

@@ -16,6 +16,7 @@ import { immer } from 'zustand/middleware/immer';
 
 import { performanceMetrics } from '@/lib/performance/performance-metrics';
 import { createAutoRefreshTimer, createPerformanceMonitor } from '@/lib/performance/performanceMonitorService';
+import { logger } from '@/lib/utils/logger';
 
 import { createBaseStoreActions } from './baseStoreActions';
 import { createSafeStorage } from './storage';

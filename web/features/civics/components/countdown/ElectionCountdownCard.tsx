@@ -4,7 +4,7 @@ import {
   Clock3,
   Loader2
 } from 'lucide-react';
-import React from 'react';
+import React, { useMemo } from 'react';
 
 
 import { useI18n } from '@/hooks/useI18n';

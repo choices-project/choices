@@ -100,27 +100,6 @@ export default function PollHashtagIntegrationComponent({
   );
   const [engagementTotals, setEngagementTotals] = useState<{ view: number; click: number; share: number } | null>(null);
 
-  // Track hashtag engagement in real-time
-  const trackHashtagEngagement = React.useCallback((action: 'view' | 'click' | 'share') => {
-    logger.info(`Hashtag engagement tracked: ${action}`);
-    // Persist engagement via API (best-effort, non-blocking)
-    void (async () => {
-      try {
-        await fetch('/api/analytics/hashtag/engagement', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            pollId: poll.id,
-            action,
-            hashtags: poll.hashtags ?? []
-          })
-        });
-      } catch {
-        // Swallow errors to avoid impacting UX
-      }
-    })();
-  }, [poll.id, poll.hashtags]);
-
   // Hashtag store hooks
   const trendingHashtags = useTrendingHashtags();
   const hashtags = useHashtagList();

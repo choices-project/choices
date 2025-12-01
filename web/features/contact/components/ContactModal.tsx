@@ -29,6 +29,7 @@ import { useRepresentativeCtaAnalytics } from '@/features/civics/hooks/useRepres
 import { formatElectionDate } from '@/features/civics/utils/civicsCountdownUtils';
 import { useFeatureFlag } from '@/features/pwa/hooks/useFeatureFlags';
 import { useAccessibleDialog } from '@/lib/accessibility/useAccessibleDialog';
+import { useI18n } from '@/hooks/useI18n';
 
 import { useContactMessages, useContactThreads } from '../hooks/useContactMessages';
 import { useMessageTemplates } from '../hooks/useMessageTemplates';
@@ -154,7 +155,7 @@ export default function ContactModal({
   useEffect(() => {
     if (selectedTemplate) {
       const initialValues: Record<string, string> = {};
-      selectedTemplate.placeholders.forEach(placeholder => {
+      selectedTemplate.placeholders.forEach((placeholder: { key: string }) => {
         initialValues[placeholder.key] = localTemplateValues[placeholder.key] ?? '';
       });
       setLocalTemplateValues(initialValues);
@@ -465,7 +466,7 @@ export default function ContactModal({
                   {t('contact.modal.templates.fillLabel')}
                 </p>
                 <div className="space-y-3">
-                  {selectedTemplate.placeholders.map(placeholder => (
+                  {selectedTemplate.placeholders.map((placeholder: { key: string; label: string; required?: boolean; example?: string }) => (
                     <div key={placeholder.key}>
                       <label className="block text-xs font-medium text-gray-700 mb-1">
                         {placeholder.label}

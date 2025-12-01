@@ -139,6 +139,14 @@ export default function TemporalAnalysisChart({
   const refreshLabel = t('analytics.buttons.refresh');
   const exportLabel = t('analytics.buttons.export');
 
+  const axisText = useMemo(
+    () => ({
+      hourOfDay: t('analytics.temporal.axes.hourOfDay'),
+      timestamp: t('analytics.temporal.axes.timestamp'),
+    }),
+    [t],
+  );
+
   const loadTemporal = useCallback(async (range?: DateRange) => {
     const targetRange = range ?? dateRange ?? defaultDateRange;
     await fetchTemporal(targetRange, {

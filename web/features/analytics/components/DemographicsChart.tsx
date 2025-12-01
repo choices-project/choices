@@ -109,6 +109,9 @@ export default function DemographicsChart({
   const cardHeadingId = useId();
   const cardDescriptionId = useId();
   const privacyHeadingId = useId();
+  const trustSummaryId = useId();
+  const districtSummaryId = useId();
+  const educationSummaryId = useId();
   const isMobile = useIsMobile();
   const [activeTab, setActiveTab] = useState(defaultTab);
   const previousSummaryAnnouncementRef = useRef<string | null>(null);
@@ -307,6 +310,47 @@ export default function DemographicsChart({
         : '',
     [data, formatNumber, optedInCount, t],
   );
+
+  const axisLabels = useMemo(
+    () => ({
+      districts: 'District',
+      userCount: 'User count',
+    }),
+    [],
+  );
+
+  const trustSummaryText = useMemo(() => {
+    if (!data || !data.trustTiers.length) return '';
+    const topTier = data.trustTiers[0];
+    if (!topTier) {
+      return '';
+    }
+    return `Trust tier ${topTier.tier} has the largest group with ${topTier.count.toLocaleString()} users, representing ${topTier.percentage.toFixed(
+      1,
+    )}% of opted-in users.`;
+  }, [data]);
+
+  const districtSummaryText = useMemo(() => {
+    if (!data || !data.districts.length) return '';
+    const topDistrict = data.districts[0];
+    if (!topDistrict) {
+      return '';
+    }
+    return `District ${topDistrict.district} has the highest participation with ${topDistrict.count.toLocaleString()} users, or ${topDistrict.percentage.toFixed(
+      1,
+    )}% of the visible sample.`;
+  }, [data]);
+
+  const educationSummaryText = useMemo(() => {
+    if (!data || !data.education.length) return '';
+    const topEducation = data.education[0];
+    if (!topEducation) {
+      return '';
+    }
+    return `${topEducation.level} is the most common education level, with ${topEducation.count.toLocaleString()} users (${topEducation.percentage.toFixed(
+      1,
+    )}%).`;
+  }, [data]);
 
   useEffect(() => {
     void refreshDemographics();

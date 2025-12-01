@@ -120,7 +120,7 @@ export class LocationService {
           ...(cityComp?.long_name ? { city: cityComp.long_name } : {}),
           ...(countyComp?.long_name ? { county: countyComp.long_name } : {}),
         };
-        this.cache.set(address, location);
+        this.cache.set(address, { result: location, timestamp: Date.now() });
         return location;
       }
 
