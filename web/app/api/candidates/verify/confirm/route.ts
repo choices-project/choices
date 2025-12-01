@@ -177,6 +177,7 @@ export const POST = withErrorHandling(async (request: NextRequest) => {
         },
         locked: true,
         attemptsRemaining: 0,
+        canRequestNew: true,
       },
       { status: 400 }
     );
@@ -245,7 +246,7 @@ export const POST = withErrorHandling(async (request: NextRequest) => {
         attemptsRemaining,
         failedAttempts: attemptsAfter,
         maxAttempts,
-        ...(isLocked ? { locked: true } : {}),
+        ...(isLocked ? { locked: true, canRequestNew: true } : {}),
       },
       { status: 400 }
     );

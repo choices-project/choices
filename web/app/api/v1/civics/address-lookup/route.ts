@@ -277,6 +277,10 @@ export const POST = withErrorHandling(async (request: NextRequest) => {
 
   const validation = validateAddressInput(address);
   if (!validation.valid) {
+    // Return 503 for feature disabled, 400 for other validation errors
+    if (validation.error?.toLowerCase().includes('disabled')) {
+      return errorResponse(validation.error ?? 'Feature disabled', 503);
+    }
     return validationError({ address: validation.error ?? 'Invalid address' });
   }
 

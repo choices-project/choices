@@ -376,11 +376,13 @@ describe('Candidate Verification Edge Cases', () => {
       // Code is not empty, so it will try to validate and fail
       expect(payload1.details).toBeDefined();
 
-      // Code too long (7 digits) - should validate but fail on mismatch
+      // Code too long (7 digits) - should fail validation (not wrong code error)
       const res2 = (await POST(buildRequest({ code: '1234567' }))) as Response;
       expect(res2.status).toBe(400);
       const payload2 = await res2.json();
-      expect(payload2.details.invalid).toBe(true);
+      // Wrong-length codes fail validation, not wrong-code handling
+      expect(payload2.details).toBeDefined();
+      expect(payload2.details.code).toBeDefined();
     });
   });
 
