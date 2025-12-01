@@ -114,7 +114,7 @@ test.describe('Production Edge Cases', () => {
 
     // Should not crash or show errors
     const errors = await page.evaluate(() => {
-      return window.console._errors || [];
+      return (window.console as any)._errors || [];
     }).catch(() => []);
 
     const criticalErrors = errors.filter((e: string) =>
