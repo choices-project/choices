@@ -4,7 +4,7 @@ import type { NextRequest } from 'next/server';
 import { withErrorHandling, successResponse, notFoundError, toCamelCase } from '@/lib/api';
 
 export const GET = withErrorHandling(async (
-  request: NextRequest,
+  _request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) => {
     const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;

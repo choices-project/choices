@@ -95,11 +95,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
     let mounted = true
 
-    const bootstrapAuth = async () => {
+    const bootstrapAuth = async (): Promise<(() => void) | undefined> => {
       try {
         const supabase = await getSupabaseBrowserClient()
 
-        if (!mounted) return
+        if (!mounted) return undefined
 
         // Get initial session
         const { data: { session } } = await supabase.auth.getSession()
@@ -114,6 +114,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         const { data: { subscription } } = supabase.auth.onAuthStateChange(
           async (event: string, session: Session | null) => {
             if (mounted) {
+              // Log auth state changes for debugging
+              if (process.env.NODE_ENV === 'development') {
+                logger.debug('Auth state changed', { event, hasSession: !!session, userId: session?.user?.id })
+              }
               setSession(session)
               setUser(session?.user ?? null)
               setLoading(false)
@@ -128,6 +132,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         if (mounted) {
           setLoading(false)
         }
+        return undefined
       }
     }
 

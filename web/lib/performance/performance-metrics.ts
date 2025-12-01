@@ -221,16 +221,19 @@ class PerformanceMetricsCollector {
     const ttfb = this.getLatestMetric('ttfb');
 
     if (lcp && fid && cls && fcp && ttfb) {
-      return {
+      // Cache computed vitals for performance
+      this.coreWebVitals = {
         lcp: lcp.value,
         fid: fid.value,
         cls: cls.value,
         fcp: fcp.value,
         ttfb: ttfb.value,
       };
+      return this.coreWebVitals;
     }
 
-    return null;
+    // Return cached vitals if available, even if not all metrics are present
+    return this.coreWebVitals;
   }
 
   /**

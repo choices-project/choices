@@ -828,6 +828,21 @@ export class GeographicElectoralFeed {
   ): Promise<Array<{ type: 'question' | 'endorsement' | 'concern' | 'suggestion'; target: string; description: string; urgency: 'high' | 'medium' | 'low' }>> {
     const opportunities = [];
 
+    // Log location context for engagement opportunities
+    logger.debug('Generating engagement opportunities', {
+      location: {
+        state: location.state,
+        city: location.city,
+        zipCode: location.zipCode
+      },
+      officialsCount: {
+        federal: currentOfficials.federal.length,
+        state: currentOfficials.state.length,
+        local: currentOfficials.local.length
+      },
+      activeRacesCount: activeRaces.length
+    });
+
     // Add opportunities based on current officials
     for (const official of Object.values(currentOfficials).flat()) {
       if (official && typeof official === 'object' && 'name' in official) {

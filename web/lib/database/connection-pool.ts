@@ -2,10 +2,10 @@
 
 /**
  * Database Connection Pool Manager
- * 
+ *
  * Implements intelligent connection pooling, monitoring, and management
  * for database connections in the Choices platform.
- * 
+ *
  * Created: September 15, 2025
  * Agent D - Database Specialist
  */
@@ -69,7 +69,7 @@ type PoolStats = {
 
 /**
  * Database Connection Pool Manager
- * 
+ *
  * Manages database connections with intelligent pooling, monitoring, and optimization.
  */
 export class ConnectionPoolManager {
@@ -82,7 +82,7 @@ export class ConnectionPoolManager {
     reject: (error: Error) => void
     timestamp: number
   }> = []
-  
+
   private stats: PoolStats = {
     totalCreated: 0,
     totalDestroyed: 0,
@@ -123,12 +123,12 @@ export class ConnectionPoolManager {
     try {
       // Create minimum connections
       await this.createMinimumConnections()
-      
+
       // Start background processes
       this.startCleanupProcess()
       this.startValidationProcess()
       this.startLeakDetection()
-      
+
       this.isInitialized = true
       logger.info('Connection pool initialized', {
         minConnections: this.config.minConnections,
@@ -145,11 +145,11 @@ export class ConnectionPoolManager {
    */
   private async createMinimumConnections(): Promise<void> {
     const promises = []
-    
+
     for (let i = 0; i < this.config.minConnections; i++) {
       promises.push(this.createConnection())
     }
-    
+
     await Promise.all(promises)
   }
 
@@ -161,7 +161,7 @@ export class ConnectionPoolManager {
       const connection = await getSupabaseServerClient()
       const connectionId = this.generateConnectionId()
       const now = Date.now()
-      
+
       const wrapper: ConnectionWrapper = {
         id: connectionId,
         connection,
@@ -172,13 +172,13 @@ export class ConnectionPoolManager {
         validationCount: 0,
         lastValidation: now
       }
-      
+
       this.connections.set(connectionId, wrapper)
       this.idleConnections.add(connectionId)
       this.stats.totalCreated++
-      
+
       logger.debug('Database connection created', { connectionId })
-      
+
       return connectionId
     } catch (error) {
       logger.error('Failed to create database connection', error instanceof Error ? error : new Error('Unknown error'))
@@ -195,11 +195,11 @@ export class ConnectionPoolManager {
     }
 
     const startTime = Date.now()
-    
+
     try {
       // Try to get an idle connection first
       let connectionId = this.getIdleConnection()
-      
+
       if (!connectionId) {
         // No idle connections, try to create a new one
         if (this.connections.size < this.config.maxConnections) {
@@ -209,11 +209,11 @@ export class ConnectionPoolManager {
           connectionId = await this.waitForConnection()
         }
       }
-      
+
       if (!connectionId) {
         throw new Error('Failed to acquire connection')
       }
-      
+
       // Mark connection as active
       const wrapper = this.connections.get(connectionId)
       if (!wrapper) {
@@ -222,21 +222,21 @@ export class ConnectionPoolManager {
       wrapper.isActive = true
       wrapper.isIdle = false
       wrapper.lastUsed = Date.now()
-      
+
       this.idleConnections.delete(connectionId)
       this.activeConnections.add(connectionId)
       this.stats.totalAcquired++
-      
+
       const acquisitionTime = Date.now() - startTime
       this.stats.connectionAcquisitionTime = acquisitionTime
-      
-      logger.debug('Connection acquired', { 
-        connectionId, 
+
+      logger.debug('Connection acquired', {
+        connectionId,
         acquisitionTime,
         activeConnections: this.activeConnections.size,
         idleConnections: this.idleConnections.size
       })
-      
+
       return wrapper.connection
     } catch (error) {
       this.stats.totalTimeouts++
@@ -252,14 +252,14 @@ export class ConnectionPoolManager {
     try {
       // Find the connection wrapper
       let connectionId: string | null = null
-      
+
       for (const [id, wrapper] of Array.from(this.connections.entries())) {
         if (wrapper.connection === connection) {
           connectionId = id
           break
         }
       }
-      
+
       if (!connectionId) {
         logger.warn('Attempted to release unknown connection')
         return
@@ -273,18 +273,18 @@ export class ConnectionPoolManager {
       
       // Validate connection before returning to pool
       const isValid = await this.validateConnection(wrapper)
-      
+
       if (isValid) {
         // Return to idle pool
         wrapper.isActive = false
         wrapper.isIdle = true
         wrapper.lastUsed = Date.now()
-        
+
         this.activeConnections.delete(connectionId)
         this.idleConnections.add(connectionId)
         this.stats.totalReleased++
-        
-        logger.debug('Connection released', { 
+
+        logger.debug('Connection released', {
           connectionId,
           activeConnections: this.activeConnections.size,
           idleConnections: this.idleConnections.size
@@ -306,14 +306,14 @@ export class ConnectionPoolManager {
     if (this.idleConnections.size === 0) {
       return null
     }
-    
+
     const connectionId = this.idleConnections.values().next().value
     if (connectionId === undefined) {
       return null
     }
-    
+
     this.idleConnections.delete(connectionId)
-    
+
     return connectionId
   }
 
@@ -329,7 +329,7 @@ export class ConnectionPoolManager {
         }
         reject(new Error('Connection acquisition timeout'))
       }, this.config.acquireTimeoutMillis)
-      
+
       this.pendingRequests.push({
         resolve: (connectionId: string) => {
           clearTimeout(timeout)
@@ -350,32 +350,32 @@ export class ConnectionPoolManager {
   private async validateConnection(wrapper: ConnectionWrapper): Promise<boolean> {
     try {
       const startTime = Date.now()
-      
+
       // Execute validation query
       const { error } = await wrapper.connection
         .from('polls')
         .select('id')
         .limit(1)
-      
+
       const validationTime = Date.now() - startTime
       wrapper.validationCount++
       wrapper.lastValidation = Date.now()
       this.stats.totalValidated++
-      
+
       if (error) {
-        logger.warn('Connection validation failed', error, { 
+        logger.warn('Connection validation failed', error, {
           connectionId: wrapper.id,
           validationTime
         })
         return false
       }
-      
-      logger.debug('Connection validated', { 
+
+      logger.debug('Connection validated', {
         connectionId: wrapper.id,
         validationTime,
         validationCount: wrapper.validationCount
       })
-      
+
       return true
     } catch (error) {
       this.stats.validationFailures++
@@ -395,19 +395,19 @@ export class ConnectionPoolManager {
       if (!wrapper) {
         return
       }
-      
+
       // Close the connection if it has a close method
       if (wrapper.connection && 'close' in wrapper.connection && typeof wrapper.connection.close === 'function') {
         await (wrapper.connection as { close: () => Promise<void> }).close()
       }
-      
+
       // Remove from all sets
       this.connections.delete(connectionId)
       this.idleConnections.delete(connectionId)
       this.activeConnections.delete(connectionId)
-      
+
       this.stats.totalDestroyed++
-      
+
       logger.debug('Connection destroyed', { connectionId })
     } catch (error) {
       logger.error('Error destroying connection', error instanceof Error ? error : new Error('Unknown error'), {
@@ -449,7 +449,7 @@ export class ConnectionPoolManager {
   private async cleanupIdleConnections(): Promise<void> {
     const now = Date.now()
     const connectionsToDestroy: string[] = []
-    
+
     for (const connectionId of Array.from(this.idleConnections)) {
       const wrapper = this.connections.get(connectionId)
       if (!wrapper) {
@@ -461,23 +461,23 @@ export class ConnectionPoolManager {
         connectionsToDestroy.push(connectionId)
         continue
       }
-      
+
       // Check if connection has been idle too long
       if (now - wrapper.lastUsed > this.config.idleTimeoutMillis) {
         connectionsToDestroy.push(connectionId)
         continue
       }
     }
-    
+
     // Destroy old/idle connections (but keep minimum)
     const toDestroy = connectionsToDestroy.slice(0, Math.max(0, connectionsToDestroy.length - this.config.minConnections))
-    
+
     for (const connectionId of toDestroy) {
       await this.destroyConnection(connectionId)
     }
-    
+
     if (toDestroy.length > 0) {
-      logger.info('Cleaned up idle connections', { 
+      logger.info('Cleaned up idle connections', {
         destroyed: toDestroy.length,
         remaining: this.connections.size
       })
@@ -489,17 +489,18 @@ export class ConnectionPoolManager {
    */
   private async validateAllConnections(): Promise<void> {
     const validationPromises = []
-    
+
     for (const [connectionId, wrapper] of Array.from(this.connections.entries())) {
       validationPromises.push(
         this.validateConnection(wrapper).then(isValid => {
           if (!isValid) {
             return this.destroyConnection(connectionId)
           }
+          return undefined
         })
       )
     }
-    
+
     await Promise.all(validationPromises)
   }
 
@@ -508,7 +509,7 @@ export class ConnectionPoolManager {
    */
   private detectConnectionLeaks(): void {
     const now = Date.now()
-    
+
     for (const connectionId of Array.from(this.activeConnections)) {
       const wrapper = this.connections.get(connectionId)
       if (!wrapper) {
@@ -531,10 +532,10 @@ export class ConnectionPoolManager {
    */
   getMetrics(): PoolMetrics {
     const now = Date.now()
-    const pendingWaitTime = this.pendingRequests.length > 0 
+    const pendingWaitTime = this.pendingRequests.length > 0
       ? now - Math.min(...this.pendingRequests.map(req => req.timestamp))
       : 0
-    
+
     return {
       activeConnections: this.activeConnections.size,
       idleConnections: this.idleConnections.size,
@@ -567,39 +568,39 @@ export class ConnectionPoolManager {
     const metrics = this.getMetrics()
     const issues: string[] = []
     const recommendations: string[] = []
-    
+
     // Check connection utilization
     const utilizationRate = (metrics.activeConnections / this.config.maxConnections) * 100
-    
+
     if (utilizationRate > 90) {
       issues.push('High connection utilization')
       recommendations.push('Consider increasing maxConnections')
     }
-    
+
     // Check for connection leaks
     if (metrics.connectionLeaks > 0) {
       issues.push('Connection leaks detected')
       recommendations.push('Review connection release patterns')
     }
-    
+
     // Check for timeouts
     if (metrics.connectionTimeouts > 0) {
       issues.push('Connection acquisition timeouts')
       recommendations.push('Consider increasing acquireTimeoutMillis')
     }
-    
+
     // Check for validation failures
     if (metrics.validationFailures > 0) {
       issues.push('Connection validation failures')
       recommendations.push('Check database connectivity and configuration')
     }
-    
+
     // Check for pending requests
     if (metrics.pendingRequests > 0) {
       issues.push('Pending connection requests')
       recommendations.push('Consider increasing maxConnections or reducing load')
     }
-    
+
     let status: 'healthy' | 'degraded' | 'unhealthy'
     if (issues.length === 0) {
       status = 'healthy'
@@ -608,7 +609,7 @@ export class ConnectionPoolManager {
     } else {
       status = 'unhealthy'
     }
-    
+
     return { status, issues, recommendations }
   }
 
@@ -624,7 +625,7 @@ export class ConnectionPoolManager {
    */
   async shutdown(): Promise<void> {
     logger.info('Shutting down connection pool')
-    
+
     // Clear intervals
     if (this.cleanupInterval) {
       clearInterval(this.cleanupInterval)
@@ -635,20 +636,20 @@ export class ConnectionPoolManager {
     if (this.leakDetectionInterval) {
       clearInterval(this.leakDetectionInterval)
     }
-    
+
     // Reject pending requests
     for (const request of this.pendingRequests) {
       request.reject(new Error('Connection pool shutdown'))
     }
     this.pendingRequests = []
-    
+
     // Destroy all connections
     const destroyPromises = Array.from(this.connections.keys()).map(connectionId =>
       this.destroyConnection(connectionId)
     )
-    
+
     await Promise.all(destroyPromises)
-    
+
     this.isInitialized = false
     logger.info('Connection pool shutdown complete')
   }

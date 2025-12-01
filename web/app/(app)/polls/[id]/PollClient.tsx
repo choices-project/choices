@@ -11,6 +11,7 @@ import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { PollShare } from '@/features/polls';
 import PostCloseBanner from '@/features/polls/components/PostCloseBanner';
 import { useRecordPollEvent } from '@/features/polls/hooks/usePollAnalytics';
 import {
@@ -782,6 +783,11 @@ export default function PollClient({ poll }: PollClientProps) {
             <span>•</span>
             <span>Ends {formatDate(poll.endtime)}</span>
           </div>
+        </div>
+
+        {/* Share Section */}
+        <div className="mb-8">
+          <PollShare pollId={poll.id} poll={{ title: poll.title, description: poll.description }} />
         </div>
 
         {/* Error Display */}

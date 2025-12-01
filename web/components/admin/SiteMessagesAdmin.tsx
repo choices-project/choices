@@ -1,9 +1,9 @@
 'use client'
 
-import { 
-  AlertCircle, 
-  Info, 
-  CheckCircle, 
+import {
+  AlertCircle,
+  Info,
+  CheckCircle,
   MessageSquare,
   Plus,
   Edit,
@@ -37,8 +37,15 @@ export default function SiteMessagesAdmin({
   const [messages, setMessages] = useState<SiteMessage[]>([])
   const [isLoading, setIsLoading] = useState(true)
   const [showCreateForm, setShowCreateForm] = useState(false)
-  const [_editingMessage, _setEditingMessage] = useState<SiteMessage | null>(null)
+  const [editingMessage, setEditingMessage] = useState<SiteMessage | null>(null)
   const [newMessage, setNewMessage] = useState<Partial<SiteMessage>>({
+    title: '',
+    message: '',
+    type: 'info',
+    priority: 'medium',
+    is_active: true
+  })
+  const [editFormData, setEditFormData] = useState<Partial<SiteMessage>>({
     title: '',
     message: '',
     type: 'info',
@@ -54,34 +61,32 @@ export default function SiteMessagesAdmin({
   const loadMessages = async () => {
     try {
       setIsLoading(true)
-      // In a real implementation, this would fetch from an API
-      // For now, we'll use mock data
-      const mockMessages: SiteMessage[] = [
-        {
-          id: '1',
-          title: 'Welcome to Choices!',
-          message: 'Thank you for joining our platform. We are excited to have you here!',
-          type: 'success',
-          priority: 'medium',
-          created_at: new Date().toISOString(),
-          updated_at: new Date().toISOString(),
-          is_active: true
-        },
-        {
-          id: '2',
-          title: 'System Maintenance',
-          message: 'We will be performing scheduled maintenance on Sunday at 2 AM EST.',
-          type: 'warning',
-          priority: 'high',
-          created_at: new Date().toISOString(),
-          updated_at: new Date().toISOString(),
-          expires_at: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString(),
-          is_active: true
-        }
-      ]
-      setMessages(mockMessages)
+      const response = await fetch('/api/admin/site-messages')
+      if (!response.ok) {
+        throw new Error(`Failed to fetch messages: ${response.statusText}`)
+      }
+      const result = await response.json()
+      if (result.success && result.data?.messages) {
+        // Map database fields to component type
+        const mappedMessages: SiteMessage[] = result.data.messages.map((msg: any) => ({
+          id: msg.id,
+          title: msg.title,
+          message: msg.message,
+          type: (msg.type || 'info') as SiteMessage['type'],
+          priority: (msg.priority || 'medium') as SiteMessage['priority'],
+          created_at: msg.created_at || new Date().toISOString(),
+          updated_at: msg.updated_at || new Date().toISOString(),
+          expires_at: msg.end_date || undefined,
+          is_active: msg.is_active ?? true
+        }))
+        setMessages(mappedMessages)
+      } else {
+        devLog('Unexpected response format:', result)
+        setMessages([])
+      }
     } catch (error) {
       devLog('Error loading messages:', error)
+      setMessages([])
     } finally {
       setIsLoading(false)
     }
@@ -89,43 +94,101 @@ export default function SiteMessagesAdmin({
 
   const handleCreateMessage = async () => {
     try {
-      const baseMessage = {
-        id: Date.now().toString(),
-        title: newMessage.title ?? '',
-        message: newMessage.message ?? '',
-        type: newMessage.type ?? 'info',
-        priority: newMessage.priority ?? 'medium',
-        created_at: new Date().toISOString(),
-        updated_at: new Date().toISOString(),
-        is_active: newMessage.is_active ?? true,
-      };
-      
-      const message: SiteMessage = newMessage.expires_at 
-        ? { ...baseMessage, expires_at: newMessage.expires_at }
-        : baseMessage;
-      
-      setMessages(prev => [...prev, message])
-      setNewMessage({
-        title: '',
-        message: '',
-        type: 'info',
-        priority: 'medium',
-        is_active: true
+      const response = await fetch('/api/admin/site-messages', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+  body: JSON.stringify({
+          title: newMessage.title,
+          message: newMessage.message,
+          type: newMessage.type || 'info',
+    priority: newMessage.priority || 'medium',
+          status: newMessage.is_active ? 'active' : 'inactive',
+          is_active: newMessage.is_active ?? true,
+          end_date: newMessage.expires_at || null,
+        }),
       })
-      setShowCreateForm(false)
+
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}))
+        throw new Error(errorData.error || `Failed to create message: ${response.statusText}`)
+      }
+
+      const result = await response.json()
+      if (result.success && result.data?.siteMessage) {
+        const createdMessage = result.data.siteMessage
+        const mappedMessage: SiteMessage = {
+          id: createdMessage.id,
+          title: createdMessage.title,
+          message: createdMessage.message,
+          type: (createdMessage.type || 'info') as SiteMessage['type'],
+          priority: (createdMessage.priority || 'medium') as SiteMessage['priority'],
+          created_at: createdMessage.created_at || new Date().toISOString(),
+          updated_at: createdMessage.updated_at || new Date().toISOString(),
+          expires_at: createdMessage.end_date || undefined,
+          is_active: createdMessage.is_active ?? true
+        }
+        setMessages(prev => [mappedMessage, ...prev])
+        setNewMessage({
+          title: '',
+          message: '',
+          type: 'info',
+          priority: 'medium',
+          is_active: true
+        })
+        setShowCreateForm(false)
+      }
     } catch (error) {
       devLog('Error creating message:', error)
     }
   }
 
-  const _handleUpdateMessage = async (message: SiteMessage) => {
+  const handleUpdateMessage = async () => {
+    if (!editingMessage) return
+
     try {
-      setMessages(prev => prev.map(m => 
-        m.id === message.id 
-          ? { ...message, updated_at: new Date().toISOString() }
-          : m
-      ))
-      _setEditingMessage(null)
+      const response = await fetch(`/api/admin/site-messages/${editingMessage.id}`, {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          title: editFormData.title,
+          message: editFormData.message,
+          type: editFormData.type || 'info',
+          priority: editFormData.priority || 'medium',
+          is_active: editFormData.is_active ?? true,
+          status: editFormData.is_active ? 'active' : 'inactive',
+          end_date: editFormData.expires_at || null,
+        }),
+      })
+
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}))
+        throw new Error(errorData.error || `Failed to update message: ${response.statusText}`)
+      }
+
+      const result = await response.json()
+      if (result.success && result.data?.siteMessage) {
+        const updatedMessage = result.data.siteMessage
+        const mappedMessage: SiteMessage = {
+          id: updatedMessage.id,
+          title: updatedMessage.title,
+          message: updatedMessage.message,
+          type: (updatedMessage.type || 'info') as SiteMessage['type'],
+          priority: (updatedMessage.priority || 'medium') as SiteMessage['priority'],
+          created_at: updatedMessage.created_at || editingMessage.created_at,
+          updated_at: updatedMessage.updated_at || new Date().toISOString(),
+          expires_at: updatedMessage.end_date || undefined,
+          is_active: updatedMessage.is_active ?? true
+        }
+        setMessages(prev => prev.map(m =>
+          m.id === editingMessage.id ? mappedMessage : m
+        ))
+        setEditingMessage(null)
+        devLog('Message updated successfully', { messageId: editingMessage.id })
+      }
     } catch (error) {
       devLog('Error updating message:', error)
     }
@@ -133,7 +196,20 @@ export default function SiteMessagesAdmin({
 
   const handleDeleteMessage = async (id: string) => {
     try {
-      setMessages(prev => prev.filter(m => m.id !== id))
+      const response = await fetch(`/api/admin/site-messages/${id}`, {
+        method: 'DELETE',
+      })
+
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}))
+        throw new Error(errorData.error || `Failed to delete message: ${response.statusText}`)
+      }
+
+      const result = await response.json()
+      if (result.success) {
+        setMessages(prev => prev.filter(m => m.id !== id))
+        devLog('Message deleted successfully', { messageId: id })
+      }
     } catch (error) {
       devLog('Error deleting message:', error)
     }
@@ -141,11 +217,39 @@ export default function SiteMessagesAdmin({
 
   const handleToggleActive = async (id: string) => {
     try {
-      setMessages(prev => prev.map(m => 
-        m.id === id 
-          ? { ...m, is_active: !m.is_active, updated_at: new Date().toISOString() }
-          : m
-      ))
+      const message = messages.find(m => m.id === id)
+      if (!message) return
+
+      const newActiveState = !message.is_active
+      const response = await fetch(`/api/admin/site-messages/${id}`, {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          is_active: newActiveState,
+          status: newActiveState ? 'active' : 'inactive',
+        }),
+      })
+
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}))
+        throw new Error(errorData.error || `Failed to toggle message status: ${response.statusText}`)
+      }
+
+      const result = await response.json()
+      if (result.success && result.data?.siteMessage) {
+        const updatedMessage = result.data.siteMessage
+        setMessages(prev => prev.map(m =>
+          m.id === id
+            ? {
+                ...m,
+                is_active: updatedMessage.is_active ?? newActiveState,
+                updated_at: updatedMessage.updated_at || new Date().toISOString()
+              }
+            : m
+        ))
+      }
     } catch (error) {
       devLog('Error toggling message status:', error)
     }
@@ -207,6 +311,119 @@ export default function SiteMessagesAdmin({
           New Message
         </button>
       </div>
+
+      {/* Edit Form */}
+      {editingMessage && (
+        <div className="bg-white border border-gray-200 rounded-lg p-6">
+          <h3 className="text-lg font-semibold mb-4">Edit Message</h3>
+          <div className="space-y-4">
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">Title</label>
+              <input
+                type="text"
+                value={editFormData.title}
+                onChange={(e) => setEditFormData(prev => ({ ...prev, title: e.target.value }))}
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                placeholder="Message title"
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">Message</label>
+              <textarea
+                value={editFormData.message}
+                onChange={(e) => setEditFormData(prev => ({ ...prev, message: e.target.value }))}
+                rows={3}
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                placeholder="Message content"
+              />
+            </div>
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Type</label>
+                <select
+                  value={editFormData.type}
+                  onChange={(e) => setEditFormData(prev => ({ ...prev, type: e.target.value as any }))}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                >
+                  <option value="info">Info</option>
+                  <option value="warning">Warning</option>
+                  <option value="success">Success</option>
+                  <option value="error">Error</option>
+                  <option value="feedback">Feedback</option>
+                </select>
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Priority</label>
+                <select
+                  value={editFormData.priority}
+                  onChange={(e) => setEditFormData(prev => ({ ...prev, priority: e.target.value as any }))}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                >
+                  <option value="low">Low</option>
+                  <option value="medium">Medium</option>
+                  <option value="high">High</option>
+                  <option value="critical">Critical</option>
+                </select>
+              </div>
+            </div>
+            <div className="flex items-center gap-4">
+              <label className="flex items-center gap-2">
+                <input
+                  type="checkbox"
+                  checked={editFormData.is_active}
+                  onChange={(e) => setEditFormData(prev => ({ ...prev, is_active: e.target.checked }))}
+                  className="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+                />
+                <span className="text-sm text-gray-700">Active</span>
+              </label>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Expires At (Optional)</label>
+                <input
+                  type="datetime-local"
+                  value={editFormData.expires_at ? new Date(editFormData.expires_at).toISOString().slice(0, 16) : ''}
+                  onChange={(e) => {
+                    const expiresAt = e.target.value ? new Date(e.target.value).toISOString() : undefined;
+                    setEditFormData(prev => {
+                      const updated = { ...prev };
+                      if (expiresAt) {
+                        updated.expires_at = expiresAt;
+                      } else {
+                        delete updated.expires_at;
+                      }
+                      return updated;
+                    });
+                  }}
+                  className="px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                />
+              </div>
+            </div>
+            <div className="flex justify-end gap-3">
+              <button
+                onClick={() => {
+                  setEditingMessage(null)
+                  setEditFormData({
+                    title: '',
+                    message: '',
+                    type: 'info',
+                    priority: 'medium',
+                    is_active: true
+                  })
+                }}
+                className="px-4 py-2 text-gray-600 border border-gray-300 rounded-lg hover:bg-gray-50"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleUpdateMessage}
+                disabled={!editFormData.title || !editFormData.message}
+                className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                Update Message
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Create Form */}
       {showCreateForm && (
@@ -357,9 +574,21 @@ export default function SiteMessagesAdmin({
               </div>
               <div className="flex items-center gap-2 ml-4">
                 <button
-                  onClick={() => _setEditingMessage(message)}
+                  onClick={() => {
+                    setEditingMessage(message)
+                    setEditFormData({
+                      title: message.title,
+                      message: message.message,
+                      type: message.type,
+                      priority: message.priority,
+                      is_active: message.is_active,
+                      ...(message.expires_at ? { expires_at: message.expires_at } : {})
+                    })
+                    setShowCreateForm(false) // Close create form if open
+                  }}
                   className="p-1 text-gray-400 hover:text-gray-600 transition-colors"
                   title="Edit message"
+                  aria-label="Edit message"
                 >
                   <Edit className="h-4 w-4" />
                 </button>

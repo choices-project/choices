@@ -60,7 +60,11 @@ import type { NextRequest } from 'next/server';
 
 import { withErrorHandling, successResponse, validationError, errorResponse, methodNotAllowed } from '@/lib/api';
 import { assertPepperConfig } from '@/lib/civics/env-guard';
-import { generateAddressHMAC, setJurisdictionCookie } from '@/lib/civics/privacy-utils';
+import {
+  generateAddressHMAC,
+  setJurisdictionCookie,
+  validateAddressInput,
+} from '@/lib/civics/privacy-utils';
 import { logger } from '@/lib/utils/logger';
 
 export const dynamic = 'force-dynamic';
@@ -213,13 +217,15 @@ function extractStateFromAddress(address: string): string {
   const lowerAddress = address.toLowerCase();
 
   for (const [stateName, stateCode] of Object.entries(stateMap)) {
-    if (lowerAddress.includes(stateName)) {
+    const pattern = new RegExp(`\\b${stateName}\\b`, 'i');
+    if (pattern.test(address)) {
       return stateCode;
     }
   }
 
   for (const [, stateCode] of Object.entries(stateMap)) {
-    if (lowerAddress.includes(stateCode.toLowerCase())) {
+    const pattern = new RegExp(`\\b${stateCode}\\b`, 'i');
+    if (pattern.test(address)) {
       return stateCode;
     }
   }

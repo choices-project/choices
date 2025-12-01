@@ -173,6 +173,16 @@ export default function ApprovalVoting({
                   }
                   ${approvedOptions.includes(optionId) ? 'border-green-500 bg-green-50' : 'border-gray-200'}
                 `}
+                role="checkbox"
+                aria-checked={approvedOptions.includes(optionId)}
+                tabIndex={isDisabled ? -1 : 0}
+                onKeyDown={(e) => {
+                  if (isDisabled) return;
+                  if (e.key === 'Enter' || e.key === ' ') {
+                    e.preventDefault();
+                    handleOptionToggle(optionId);
+                  }
+                }}
               >
                 <div className="flex items-start space-x-3">
                   <div className="flex-shrink-0 mt-1">

@@ -335,6 +335,8 @@ const nextConfig = {
           'https://vercel.live',
           'https://vitals.vercel-insights.com',
           'https://challenges.cloudflare.com', // Turnstile
+          'https://fonts.googleapis.com', // Google Fonts
+          'https://fonts.gstatic.com', // Google Fonts
           'wss://*.supabase.co',
           'wss://*.supabase.io',
         ],

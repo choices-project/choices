@@ -150,6 +150,7 @@ export default function InfiniteScroll({
       container.addEventListener('scroll', handleScroll);
       return () => container.removeEventListener('scroll', handleScroll);
     }
+    return undefined;
   }, [handleScroll]);
 
   // Default loading component

@@ -15,6 +15,8 @@
 import { ChevronDownIcon, ChevronUpIcon } from '@heroicons/react/24/outline';
 import React, { useState, useRef, useEffect } from 'react';
 
+import { useI18n } from '@/hooks/useI18n';
+
 type ProgressiveDisclosureProps = {
   children: React.ReactNode;
   trigger: React.ReactNode;
@@ -40,6 +42,7 @@ export default function ProgressiveDisclosure({
   iconPosition = 'right',
   ariaLabel
 }: ProgressiveDisclosureProps) {
+  const { t } = useI18n();
   
   const [internalExpanded, setInternalExpanded] = useState(false);
   const [contentHeight, setContentHeight] = useState(0);
@@ -87,7 +90,12 @@ export default function ProgressiveDisclosure({
         onKeyDown={handleKeyDown}
         className="w-full flex items-center justify-between p-4 text-left hover:bg-gray-50 transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-inset"
         aria-expanded={expanded}
-        aria-label={ariaLabel ?? (expanded ? 'Collapse content' : 'Expand content')}
+        aria-label={
+          ariaLabel ??
+          (expanded
+            ? t('common.progressiveDisclosure.collapse')
+            : t('common.progressiveDisclosure.expand'))
+        }
         disabled={isAnimating}
       >
         <div className="flex-1">

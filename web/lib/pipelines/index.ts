@@ -1,39 +1,14 @@
 /**
  * Data Pipelines Module
- * 
- * Complete data pipeline system for government data ingestion, transformation,
- * and validation. Designed for batch processing with proper rate limiting
- * and API citizenship.
+ *
+ * NOTE: Data ingestion, transformation, and validation pipelines have been
+ * moved to the standalone civics-backend service at /services/civics-backend.
+ *
+ * This module is kept for potential future use but currently has no exports.
+ *
+ * For data ingestion, see: /services/civics-backend
+ * For user-facing address lookup, see: /api/v1/civics/address-lookup
  */
 
-export { 
-  DataIngestionPipeline,
-  createDataIngestionPipeline,
-  defaultIngestionConfig,
-  type IngestionConfig,
-  type IngestionJob,
-  type IngestionResult
-} from './data-ingestion';
-
-export { 
-  DataTransformationPipeline,
-  createDataTransformationPipeline,
-  PRIORITY_STATES,
-  GOVERNMENT_LEVELS,
-  type GovernmentLevel,
-  type DataTarget,
-  type TransformationResult,
-  type NormalizedRepresentative,
-  type NormalizedBill
-} from './data-transformation';
-
-export { 
-  DataValidationPipeline,
-  createDataValidationPipeline,
-  type ValidationRule,
-  type ValidationResult,
-  type ValidationError,
-  type ValidationWarning,
-  type ValidationFix,
-  type DeduplicationResult
-} from './data-validation';
+// This module is intentionally empty as all ingestion functionality
+// has been moved to the standalone backend service.

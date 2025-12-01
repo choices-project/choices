@@ -4,11 +4,18 @@ module.exports = {
   testTimeout: 30000, // 30 seconds per test
   slowTestThreshold: 10, // Mark tests as slow if they take more than 10 seconds
 
+  coverageProvider: 'v8',
+
   projects: [
     {
       displayName: 'client',
       testEnvironment: 'jsdom',
       testTimeout: 20000, // 20 seconds for client tests
+      // Use separate Babel config for Jest (allows Next.js to use SWC)
+      // babel-jest will automatically find .babelrc.cjs in the root
+      transform: {
+        '^.+\\.(js|jsx|ts|tsx)$': 'babel-jest'
+      },
       setupFiles: ['<rootDir>/jest.setup.js'],
       setupFilesAfterEnv: [
         '<rootDir>/jest.setup.after.js',
@@ -58,6 +65,11 @@ module.exports = {
       displayName: 'server',
       testEnvironment: 'jsdom',
       testTimeout: 25000, // 25 seconds for server tests
+      // Use separate Babel config for Jest (allows Next.js to use SWC)
+      // babel-jest will automatically find .babelrc.cjs in the root
+      transform: {
+        '^.+\\.(js|jsx|ts|tsx)$': 'babel-jest'
+      },
       setupFiles: ['<rootDir>/jest.setup.js'],
       setupFilesAfterEnv: [
         '<rootDir>/jest.setup.after.js',
@@ -125,7 +137,7 @@ module.exports = {
       ],
     }
   ],
-  // Coverage configuration
+  // Coverage configuration (metrics only; thresholds are tracked via dashboards, not hard-gated in Jest)
   coverageDirectory: '<rootDir>/coverage',
   coverageReporters: ['text', 'lcov', 'html', 'json-summary'],
   coverageThreshold: {

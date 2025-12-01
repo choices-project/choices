@@ -430,6 +430,9 @@ export default function ComprehensiveAdminDashboard({ className = '' }: Comprehe
               </div>
             </CardContent>
           </Card>
+
+          {/* Share Analytics */}
+          <ShareAnalyticsPanel refreshInterval={60000} />
         </TabsContent>
 
         <TabsContent value="messages" className="space-y-6">

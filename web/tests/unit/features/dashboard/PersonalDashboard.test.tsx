@@ -374,7 +374,7 @@ describe('PersonalDashboard', () => {
      expect(mockGetUserRepresentatives).toHaveBeenCalled();
    });
 
-  it('renders election countdown card for representatives when data is available', () => {
+  it('renders election countdown card for representatives when data is available', async () => {
     const profile: ProfileValue = {
       id: 'user-1',
       display_name: 'Sam Civic',
@@ -421,8 +421,10 @@ describe('PersonalDashboard', () => {
 
     render(<PersonalDashboard />);
 
-    expect(screen.getByText('Upcoming elections')).toBeInTheDocument();
-    expect(screen.getAllByText('California Primary')[0]).toBeInTheDocument();
-    expect(screen.getAllByText(/In 45 days/i)[0]).toBeInTheDocument();
+    await waitFor(() => {
+      expect(screen.getByText('Upcoming elections')).toBeInTheDocument();
+      expect(screen.getAllByText('California Primary')[0]).toBeInTheDocument();
+      expect(screen.getAllByText(/In 45 days/i)[0]).toBeInTheDocument();
+    });
   });
 });

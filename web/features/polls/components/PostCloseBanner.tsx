@@ -6,6 +6,7 @@ import React from 'react';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
+import { useI18n } from '@/hooks/useI18n';
 
 type PostCloseBannerProps = {
   pollStatus: 'closed' | 'locked' | 'post-close';
@@ -28,34 +29,36 @@ export function PostCloseBanner({
   canManage = false,
   className
 }: PostCloseBannerProps) {
+  const { t, currentLanguage } = useI18n();
+  
   const getStatusInfo = () => {
     switch (pollStatus) {
       case 'closed':
         return {
           icon: <Clock className="h-4 w-4" />,
-          title: 'Poll Closed',
-          description: 'This poll has been closed and is no longer accepting votes.',
+          title: t('polls.postCloseBanner.status.closed.title'),
+          description: t('polls.postCloseBanner.status.closed.description'),
           color: 'border-gray-200 bg-gray-50',
           textColor: 'text-gray-800',
-          badge: { variant: 'secondary' as const, text: 'Closed' }
+          badge: { variant: 'secondary' as const, text: t('polls.postCloseBanner.status.closed.badge') }
         };
       case 'locked':
         return {
           icon: <Lock className="h-4 w-4" />,
-          title: 'Poll Locked',
-          description: 'This poll has been locked and results are final.',
+          title: t('polls.postCloseBanner.status.locked.title'),
+          description: t('polls.postCloseBanner.status.locked.description'),
           color: 'border-red-200 bg-red-50',
           textColor: 'text-red-800',
-          badge: { variant: 'destructive' as const, text: 'Locked' }
+          badge: { variant: 'destructive' as const, text: t('polls.postCloseBanner.status.locked.badge') }
         };
       case 'post-close':
         return {
           icon: <AlertTriangle className="h-4 w-4" />,
-          title: 'Post-Close Voting Active',
-          description: 'This poll is in post-close mode. Votes are being tracked separately.',
+          title: t('polls.postCloseBanner.status.postClose.title'),
+          description: t('polls.postCloseBanner.status.postClose.description'),
           color: 'border-yellow-200 bg-yellow-50',
           textColor: 'text-yellow-800',
-          badge: { variant: 'outline' as const, text: 'Post-Close' }
+          badge: { variant: 'outline' as const, text: t('polls.postCloseBanner.status.postClose.badge') }
         };
       default:
         return null;
@@ -66,7 +69,7 @@ export function PostCloseBanner({
   if (!statusInfo) return null;
 
   const formatDate = (date: Date) => {
-    return new Intl.DateTimeFormat('en-US', {
+    return new Intl.DateTimeFormat(currentLanguage === 'es' ? 'es-ES' : 'en-US', {
       month: 'short',
       day: 'numeric',
       year: 'numeric',
@@ -102,7 +105,7 @@ export function PostCloseBanner({
                   <div className="flex items-center space-x-2">
                     <CheckCircle className="h-3 w-3 text-green-600" />
                     <span className="text-gray-600">
-                      Baseline established: {formatDate(baselineAt)}
+                      {t('polls.postCloseBanner.baselineEstablished', { date: formatDate(baselineAt) })}
                     </span>
                   </div>
                 )}
@@ -110,7 +113,7 @@ export function PostCloseBanner({
                   <div className="flex items-center space-x-2">
                     <Lock className="h-3 w-3 text-red-600" />
                     <span className="text-gray-600">
-                      Locked at: {formatDate(lockedAt)}
+                      {t('polls.postCloseBanner.lockedAt', { date: formatDate(lockedAt) })}
                     </span>
                   </div>
                 )}
@@ -118,7 +121,7 @@ export function PostCloseBanner({
                   <div className="flex items-center space-x-2">
                     <Info className="h-3 w-3 text-blue-600" />
                     <span className="text-gray-600">
-                      Post-close voting is available
+                      {t('polls.postCloseBanner.postCloseAvailable')}
                     </span>
                   </div>
                 )}
@@ -136,7 +139,7 @@ export function PostCloseBanner({
                   onClick={onEnablePostClose}
                   className="text-xs"
                 >
-                  Enable Post-Close
+                  {t('polls.postCloseBanner.buttons.enablePostClose')}
                 </Button>
               )}
               {pollStatus === 'post-close' && onLockPoll && (
@@ -146,7 +149,7 @@ export function PostCloseBanner({
                   onClick={onLockPoll}
                   className="text-xs"
                 >
-                  Lock Poll
+                  {t('polls.postCloseBanner.buttons.lockPoll')}
                 </Button>
               )}
             </div>

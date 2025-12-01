@@ -38,7 +38,7 @@ export default function RechartsPieImpl({
             dataKey={dataKey}
             nameKey={nameKey}
           >
-            {data.map((entry, index) => (
+            {data.map((_entry, index) => (
               <Cell key={`cell-${index}`} fill={colors[index % colors.length]} />
             ))}
           </Pie>

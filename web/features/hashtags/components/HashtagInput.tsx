@@ -93,26 +93,22 @@ export function HashtagInput({
 
     if (!normalizedHashtag.trim()) return;
 
-    // Validate hashtag
     const validation = await validateHashtagName(normalizedHashtag);
     if (!validation || !validation.is_valid) {
       setValidationError(validation?.errors?.[0] ?? 'Invalid hashtag');
       return;
     }
 
-    // Check if already exists
     if (value.includes(normalizedHashtag)) {
       setValidationError('Hashtag already added');
       return;
     }
 
-    // Check max hashtags
     if (value.length >= maxHashtags) {
       setValidationError(`Maximum ${maxHashtags} hashtags allowed`);
       return;
     }
 
-    // Add hashtag
     const newHashtags = [...value, normalizedHashtag];
     onChange(newHashtags);
     setInputValue('');

@@ -3,6 +3,13 @@ import { act } from '@testing-library/react';
 import type { PollWizardSubmissionResult } from '@/lib/polls/wizard/submission';
 import { pollWizardStoreUtils, usePollWizardStore } from '@/lib/stores/pollWizardStore';
 
+function expectDefined<T>(value: T | undefined, context: string): T {
+  if (value === undefined) {
+    throw new Error(`Expected ${context} to be defined`);
+  }
+  return value;
+}
+
 describe('pollWizardStore', () => {
   const seedValidWizardData = () => {
     act(() => {

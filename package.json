@@ -2,7 +2,7 @@
   "name": "choices-repo",
   "private": true,
   "engines": {
-    "node": ">=24.11.0",
+    "node": ">=22.0.0 <25.0.0",
     "npm": ">=10.9.3"
   },
   "volta": {
@@ -25,6 +25,7 @@
   },
   "dependencies": {
     "pg": "8.13.1",
+    "shell-quote": "^1.8.3",
     "zod": "4.1.3"
   }
 }

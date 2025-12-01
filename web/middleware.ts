@@ -126,8 +126,14 @@ function getClientIP(request: NextRequest): string {
  * Validate and sanitize request
  */
 function validateRequest(request: NextRequest): { valid: boolean; reason?: string } {
-  const _url = request.nextUrl
+  const url = request.nextUrl
   const method = request.method
+
+  // Validate URL path for security
+  const pathname = url.pathname
+  if (pathname.includes('..') || pathname.includes('//')) {
+    return { valid: false, reason: 'Invalid URL path' }
+  }
 
   // Block suspicious requests
   if (method === 'POST' || method === 'PUT' || method === 'DELETE') {

@@ -302,6 +302,7 @@ export default function CivicsLure({ userLocation, onEngage }: CivicsLureProps) 
     });
   }, [dateFormatter, locationRepresentatives, t]);
 
+  const dashPlaceholder = t('common.placeholders.emDash');
   const totalLocalRepresentatives = locationRepresentatives.length;
   const totalActivities = useMemo(
     () =>
@@ -402,7 +403,7 @@ export default function CivicsLure({ userLocation, onEngage }: CivicsLureProps) 
 
       {representativeError && (
         <div className="mb-6 rounded-lg border border-red-200 bg-red-50 p-4 text-sm text-red-700">
-          {representativeError}
+          {t('civics.lure.errors.representatives', { message: representativeError })}
         </div>
       )}
 

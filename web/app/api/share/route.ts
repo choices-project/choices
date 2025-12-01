@@ -105,7 +105,7 @@ export const GET = withErrorHandling(async (request: NextRequest) => {
     // Build query for share analytics
     const startDate = new Date(Date.now() - days * 24 * 60 * 60 * 1000).toISOString();
 
-    let query = (supabase as any)
+    let query = supabase
       .from('analytics_events')
       .select('*')
       .eq('event_type', 'share')

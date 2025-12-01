@@ -338,14 +338,49 @@ export default function TrendsChart({
     ? data.reduce((sum, d) => sum + d.velocity, 0) / data.length
     : 0;
 
-  // Calculate trend direction
-  const getTrend = (metric: 'votes' | 'participation' | 'velocity'): number => {
-    if (data.length < 2) return 0;
-    const first = data[0]?.[metric];
-    const last = data[data.length - 1]?.[metric];
-    if (first === undefined || last === undefined || first === 0) return 0;
-    return ((last - first) / first) * 100;
-  };
+  const formatTrendValue = useCallback(
+    (value: number) => percentFormatter.format(Math.abs(value)),
+    [percentFormatter],
+  );
+
+  const summaryIntro = useMemo(
+    () =>
+      t('analytics.trends.summaryIntro', {
+        totalVotes: formatNumber(totalVotes),
+        avgParticipation: formatPercent(avgParticipation),
+        avgVelocity: formatNumber(avgVelocity),
+      }),
+    [avgParticipation, avgVelocity, formatNumber, formatPercent, t, totalVotes],
+  );
+
+  useEffect(() => {
+    if (isLoading || !summaryIntro) {
+      return;
+    }
+
+    if (previousSummaryAnnouncementRef.current === summaryIntro) {
+      return;
+    }
+
+    ScreenReaderSupport.announce(summaryIntro, 'polite');
+    previousSummaryAnnouncementRef.current = summaryIntro;
+  }, [isLoading, summaryIntro]);
+
+  useEffect(() => {
+    if (!error) {
+      return;
+    }
+
+    if (previousErrorRef.current === error) {
+      return;
+    }
+
+    ScreenReaderSupport.announce(
+      `Activity trends data could not be fetched. ${error}`,
+      'assertive',
+    );
+    previousErrorRef.current = error;
+  }, [error]);
 
   const formatTrendValue = useCallback(
     (value: number) => percentFormatter.format(Math.abs(value)),

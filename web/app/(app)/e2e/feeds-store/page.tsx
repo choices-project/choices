@@ -133,7 +133,7 @@ function FeedsStoreHarnessView() {
       hasMore: pagination.hasMore,
       remaining: pagination.remaining,
     }),
-    [feeds.length, filteredFeeds.length, pagination],
+    [feeds.length, filteredFeeds.length, pagination.totalAvailable, pagination.hasMore, pagination.remaining],
   );
 
   return (

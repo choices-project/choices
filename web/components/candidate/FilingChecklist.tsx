@@ -88,7 +88,6 @@ export function FilingChecklist({
                     className={`text-left text-sm cursor-pointer ${
                       isChecked ? 'text-green-800 line-through' : 'text-gray-900'
                     }`}
-                    onClick={() => toggleItem(item.id)}
                   >
                     {item.label}
                   </button>

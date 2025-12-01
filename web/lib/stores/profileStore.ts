@@ -29,6 +29,7 @@ import type {
   UserProfile
 } from '@/types/profile';
 
+import { createBaseStoreActions } from './baseStoreActions';
 import { createSafeStorage } from './storage';
 import type { BaseStore } from './types';
 
@@ -127,27 +128,14 @@ export const createInitialProfileState = (): ProfileState => ({
 
 export const initialProfileState: ProfileState = createInitialProfileState();
 
+type ImmerProfileSetter = (recipe: (draft: ProfileStore) => void) => void;
+
 export const createProfileActions = (
-  set: Parameters<ProfileStoreCreator>[0],
-  get: Parameters<ProfileStoreCreator>[1]
+  setState: ImmerProfileSetter,
+  getState: () => ProfileStore
 ): ProfileActions => {
-  const setProfileState = set as unknown as (fn: (draft: ProfileState) => void) => void;
-  const setState = (recipe: (draft: ProfileState) => void) => {
-    setProfileState(recipe);
-  };
-
   const actions = {
-    setLoading: (loading: boolean) => setState((state) => {
-      state.isLoading = loading;
-    }),
-
-    setError: (error: string | null) => setState((state) => {
-      state.error = error;
-    }),
-
-    clearError: () => setState((state) => {
-      state.error = null;
-    }),
+    ...createBaseStoreActions<ProfileStore>(setState),
 
     setProfile: (profile: ProfileUser | null) => setState((state) => {
       state.profile = profile;
@@ -186,7 +174,7 @@ export const createProfileActions = (
         });
 
         if (result.success) {
-          get().updateProfileCompleteness();
+          getState().updateProfileCompleteness();
         }
 
         return result;
@@ -320,7 +308,7 @@ export const createProfileActions = (
 
       try {
         const { updateProfile } = await import('@/features/profile/lib/profile-service');
-        const currentState = get();
+        const currentState = getState();
         const result = await updateProfile({ display_name: currentState.profile?.display_name } as ProfileUpdateData);
 
         if (result.success) {
@@ -373,7 +361,7 @@ export const createProfileActions = (
         });
 
         if (result.success) {
-          get().updateProfileCompleteness();
+          getState().updateProfileCompleteness();
         }
 
         return result;
@@ -390,7 +378,7 @@ export const createProfileActions = (
     },
 
     refreshProfile: async () => {
-      return get().loadProfile();
+      return getState().loadProfile();
     },
 
     exportProfile: async (options?: ExportOptions) => {
@@ -506,7 +494,7 @@ export const createProfileActions = (
     }),
 
     updateProfileCompleteness: () => {
-      const state = get();
+      const state = getState();
       const profile = state.profile ?? state.userProfile;
 
       if (!profile) {
@@ -539,7 +527,7 @@ export const createProfileActions = (
     },
 
     getProfileCompleteness: () => {
-      const state = get();
+      const state = getState();
       return {
         isComplete: state.isProfileComplete,
         percentage: state.profileCompleteness,
@@ -548,14 +536,14 @@ export const createProfileActions = (
     },
 
     getDisplayName: () => {
-      const state = get();
+      const state = getState();
       const profile = state.profile ?? state.userProfile;
       if (!profile) return 'User';
       return profile.display_name ?? profile.username ?? profile.email?.split('@')[0] ?? 'User';
     },
 
     getInitials: () => {
-      const displayName = get().getDisplayName();
+      const displayName = getState().getDisplayName();
       return displayName
         .split(' ')
         .map((word: string) => word.charAt(0))
@@ -565,7 +553,7 @@ export const createProfileActions = (
     },
 
     getTrustTierDisplay: () => {
-      const profile = get().profile ?? get().userProfile;
+      const profile = getState().profile ?? getState().userProfile;
       if (!profile) return 'Unknown';
 
       const tierNames: Record<string, string> = {
@@ -579,7 +567,7 @@ export const createProfileActions = (
     },
 
     isAdmin: () => {
-      const profile = get().profile ?? get().userProfile;
+      const profile = getState().profile ?? getState().userProfile;
       return (profile && 'is_admin' in profile) ? profile.is_admin ?? false : false;
     },
 
@@ -597,15 +585,20 @@ export const createProfileActions = (
     }),
 
     clearProfile: () => {
-      get().resetProfile();
+      getState().resetProfile();
     }
   } satisfies ProfileActions;
 
   return actions;
 };
 
-export const profileStoreCreator: ProfileStoreCreator = (set, get) =>
-  Object.assign(createInitialProfileState(), createProfileActions(set, get));
+export const profileStoreCreator: ProfileStoreCreator = (set, get) => {
+  const setState = set as unknown as ImmerProfileSetter;
+  return {
+    ...createInitialProfileState(),
+    ...createProfileActions(setState, get)
+  };
+};
 
 export const useProfileStore = create<ProfileStore>()(
   devtools(

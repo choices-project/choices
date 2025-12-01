@@ -64,8 +64,13 @@ const MOCK_LOCATIONS: Record<string, LocationResult> = {
   }
 };
 
+type CachedLocationResult = {
+  result: LocationResult;
+  timestamp: number;
+};
+
 export class LocationService {
-  private cache: Map<string, LocationResult> = new Map();
+  private cache: Map<string, CachedLocationResult> = new Map();
   private cacheTimeout = 5 * 60 * 1000; // 5 minutes
 
   /**
@@ -75,11 +80,14 @@ export class LocationService {
     try {
       logger.info('🌍 LocationService: Geocoding address:', address);
       
-      // Check cache first
+      // Check cache first with timeout validation
       const cached = this.cache.get(address);
-      if (cached) {
+      if (cached && (Date.now() - cached.timestamp) < this.cacheTimeout) {
         logger.info('📍 LocationService: Using cached result');
-        return cached;
+        return cached.result;
+      } else if (cached) {
+        // Cache expired, remove it
+        this.cache.delete(address);
       }
 
       // Prefer Google Maps Geocoding API if available
@@ -120,7 +128,7 @@ export class LocationService {
       const mockResult = MOCK_LOCATIONS[address];
       if (mockResult) {
         logger.info('📍 LocationService: Using mock data');
-        this.cache.set(address, mockResult);
+        this.cache.set(address, { result: mockResult, timestamp: Date.now() });
         return mockResult;
       }
       logger.info('❌ LocationService: Address not found and no API key configured');

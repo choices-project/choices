@@ -1,9 +1,9 @@
 /**
  * Message Thread Component
- * 
+ *
  * Displays a conversation thread between a user and representative.
  * Supports real-time message updates, message status indicators, and reply functionality.
- * 
+ *
  * Created: January 23, 2025
  * Status: ✅ IMPLEMENTATION READY
  */
@@ -120,7 +120,7 @@ function MessageBubble({ message, isCurrentUser, representative }: MessageBubble
           }`}
         >
           <p className="text-sm whitespace-pre-wrap">{message.content}</p>
-          
+
           {/* Attachments */}
           {(message as any).metadata?.attachments && (message as any).metadata.attachments.length > 0 && (
             <div className="mt-2 space-y-1">
@@ -158,11 +158,11 @@ function MessageBubble({ message, isCurrentUser, representative }: MessageBubble
 // MAIN COMPONENT
 // ============================================================================
 
-export function MessageThread({ 
-  threadId, 
-  currentUserId, 
-  representative, 
-  className = '' 
+export function MessageThread({
+  threadId,
+  currentUserId,
+  representative,
+  className = ''
 }: MessageThreadProps) {
   // State
   const [messages, setMessages] = useState<Message[]>([]);
@@ -170,7 +170,7 @@ export function MessageThread({
   const [isLoading, setIsLoading] = useState(true);
   const [isSending, setIsSending] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  
+
   // Refs
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
@@ -210,7 +210,7 @@ export function MessageThread({
 
   const handleSendMessage = async (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     if (!newMessage.trim() || isSending) return;
 
     const messageContent = newMessage.trim();
@@ -286,6 +286,44 @@ export function MessageThread({
   // RENDER
   // ============================================================================
 
+  // ============================================================================
+  // EFFECTS
+  // ============================================================================
+
+  // Load initial messages
+  useEffect(() => {
+    void loadMessages();
+  }, [loadMessages]);
+
+  // Auto-scroll to bottom when new messages arrive
+  useEffect(() => {
+    scrollToBottom();
+  }, [messages]);
+
+  // Real-time message updates
+  useEffect(() => {
+    if (!threadId) return;
+
+    const handleNewMessage = (message: Message) => {
+      setMessages(prev => {
+        // Check if message already exists to avoid duplicates
+        const exists = prev.some(m => m.id === message.id);
+        if (exists) return prev;
+
+        return [...prev, message].sort((a, b) =>
+          new Date(a.timestamp).getTime() - new Date(b.timestamp).getTime()
+        );
+      });
+    };
+
+    const unsubscribe = contactMessagingService.subscribeToMessages(
+      threadId,
+      handleNewMessage
+    );
+
+    return unsubscribe;
+  }, [threadId]);
+
   if (isLoading) {
     return (
       <div className={`flex items-center justify-center h-64 ${className}`}>
@@ -345,7 +383,7 @@ export function MessageThread({
             />
           ))
         )}
-        
+
         <div ref={messagesEndRef} />
       </div>
 
@@ -373,7 +411,7 @@ export function MessageThread({
               </span>
             </div>
           </div>
-          
+
           <button
             type="submit"
             disabled={!newMessage.trim() || isSending || newMessage.length > MAX_MESSAGE_LENGTH}

@@ -599,24 +599,39 @@ export default function DemographicsChart({
               {/* Pie Chart */}
               <div>
                 <h3 className="text-xs md:text-sm font-semibold text-gray-900 mb-3 md:mb-4">Distribution</h3>
-                <ResponsiveContainer width="100%" height={isMobile ? 250 : 300}>
-                  <PieChart>
-                    <Pie
-                      data={data.trustTiers}
-                      dataKey="count"
-                      nameKey="tier"
-                      cx="50%"
-                      cy="50%"
-                      outerRadius={100}
-                      label={({ tier, percentage }) => `${tier}: ${percentage}%`}
+                <div
+                  role="group"
+                  aria-labelledby={`${summarySectionId}-trust-heading`}
+                  aria-describedby={trustSummaryText ? trustSummaryId : undefined}
+                >
+                  <ResponsiveContainer width="100%" height={isMobile ? 250 : 300}>
+                    <PieChart>
+                      <Pie
+                        data={data.trustTiers}
+                        dataKey="count"
+                        nameKey="tier"
+                        cx="50%"
+                        cy="50%"
+                        outerRadius={100}
+                        label={({ tier, percentage }) => `${tier}: ${percentage}%`}
+                      >
+                        {data.trustTiers.map((_entry, index) => (
+                          <Cell key={`cell-${index}`} fill={COLORS.trust[index % COLORS.trust.length]} />
+                        ))}
+                      </Pie>
+                      <Tooltip />
+                    </PieChart>
+                  </ResponsiveContainer>
+                  {trustSummaryText ? (
+                    <p
+                      id={trustSummaryId}
+                      className="mt-2 text-xs text-muted-foreground"
+                      aria-live="polite"
                     >
-                      {data.trustTiers.map((entry, index) => (
-                        <Cell key={`cell-${index}`} fill={COLORS.trust[index % COLORS.trust.length]} />
-                      ))}
-                    </Pie>
-                    <Tooltip />
-                  </PieChart>
-                </ResponsiveContainer>
+                      {trustSummaryText}
+                    </p>
+                  ) : null}
+                </div>
               </div>
 
               {/* Stats */}
@@ -708,46 +723,72 @@ export default function DemographicsChart({
                 Showing top 10 districts only. Districts with fewer than {data.k_anonymity} users are hidden.
               </p>
             </div>
-            <ResponsiveContainer width="100%" height={isMobile ? 300 : 350}>
-              <BarChart data={data.districts} margin={isMobile ? { top: 10, right: 5, left: 0, bottom: 80 } : { top: 20, right: 30, left: 20, bottom: 60 }}>
-                <CartesianGrid strokeDasharray="3 3" />
-                <XAxis 
-                  dataKey="district"
-                  angle={-45}
-                  textAnchor="end"
-                  height={isMobile ? 90 : 80}
-                  tick={{ fontSize: isMobile ? 9 : 12 }}
-                />
-                <YAxis 
-                  {...(isMobile ? {} : { label: { value: 'User Count', angle: -90, position: 'insideLeft' } })}
-                  tick={{ fontSize: isMobile ? 10 : 12 }}
-                />
-                <Tooltip 
-                  content={({ active, payload }) => {
-                    if (!active || !payload || payload.length === 0) return null;
-                    const data = payload[0]?.payload;
-                    if (!data) return null;
-                    return (
-                      <div className="bg-white p-3 border border-gray-200 rounded-lg shadow-lg">
-                        <p className="font-semibold text-gray-900">{data.district}</p>
-                        <p className="text-sm text-gray-600">
-                          Count: <span className="font-medium">{data.count.toLocaleString()}</span>
-                        </p>
-                        <p className="text-sm text-gray-600">
-                          Percentage: <span className="font-medium">{data.percentage}%</span>
-                        </p>
-                      </div>
-                    );
-                  }}
-                />
-                <Legend />
-                <Bar dataKey="count" name="User Count">
-                  {data.districts.map((entry, index) => (
-                    <Cell key={`cell-${index}`} fill={COLORS.district[index % COLORS.district.length]} />
-                  ))}
-                </Bar>
-              </BarChart>
-            </ResponsiveContainer>
+            <div
+              role="group"
+              aria-labelledby={`${summarySectionId}-district-heading`}
+              aria-describedby={districtSummaryText ? districtSummaryId : undefined}
+            >
+              <ResponsiveContainer width="100%" height={isMobile ? 300 : 350}>
+                <BarChart data={data.districts} margin={isMobile ? { top: 10, right: 5, left: 0, bottom: 80 } : { top: 20, right: 30, left: 20, bottom: 60 }}>
+                  <CartesianGrid strokeDasharray="3 3" />
+                  <XAxis 
+                    dataKey="district"
+                    angle={-45}
+                    textAnchor="end"
+                    height={isMobile ? 90 : 80}
+                    tick={{ fontSize: isMobile ? 9 : 12 }}
+                    label={{
+                      value: axisLabels.districts,
+                      position: 'insideBottom',
+                      offset: -(isMobile ? 70 : 50),
+                      style: { fontSize: isMobile ? 9 : 12 },
+                    }}
+                  />
+                  <YAxis 
+                    label={{
+                      value: axisLabels.userCount,
+                      angle: -90,
+                      position: 'insideLeft',
+                      style: { fontSize: isMobile ? 10 : 12 },
+                    }}
+                    tick={{ fontSize: isMobile ? 10 : 12 }}
+                  />
+                  <Tooltip 
+                    content={({ active, payload }) => {
+                      if (!active || !payload || payload.length === 0) return null;
+                      const data = payload[0]?.payload;
+                      if (!data) return null;
+                      return (
+                        <div className="bg-white p-3 border border-gray-200 rounded-lg shadow-lg">
+                          <p className="font-semibold text-gray-900">{data.district}</p>
+                          <p className="text-sm text-gray-600">
+                            Count: <span className="font-medium">{data.count.toLocaleString()}</span>
+                          </p>
+                          <p className="text-sm text-gray-600">
+                            Percentage: <span className="font-medium">{data.percentage}%</span>
+                          </p>
+                        </div>
+                      );
+                    }}
+                  />
+                  <Legend />
+                  <Bar dataKey="count" name={axisLabels.userCount}>
+                    {data.districts.map((_entry, index) => (
+                      <Cell key={`cell-${index}`} fill={COLORS.district[index % COLORS.district.length]} />
+                    ))}
+                  </Bar>
+                </BarChart>
+              </ResponsiveContainer>
+              {districtSummaryText ? (
+                <p
+                  id={districtSummaryId}
+                  className="mt-2 text-sm text-muted-foreground"
+                  aria-live="polite"
+                >
+                  {districtSummaryText}
+                </p>
+              ) : null}
+            </div>
           </TabsContent>
 
           {/* Education Tab */}
@@ -762,7 +803,11 @@ export default function DemographicsChart({
             </p>
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 md:gap-6">
               {/* Pie Chart */}
-              <div>
+              <div
+                role="group"
+                aria-labelledby={`${summarySectionId}-education-heading`}
+                aria-describedby={educationSummaryText ? educationSummaryId : undefined}
+              >
                 <h3 className="text-xs md:text-sm font-semibold text-gray-900 mb-3 md:mb-4">Distribution</h3>
                 <ResponsiveContainer width="100%" height={isMobile ? 250 : 300}>
                   <PieChart>
@@ -775,13 +820,22 @@ export default function DemographicsChart({
                       outerRadius={100}
                       label={({ level, percentage }) => `${level}: ${percentage}%`}
                     >
-                      {data.education.map((entry, index) => (
+                      {data.education.map((_entry, index) => (
                         <Cell key={`cell-${index}`} fill={COLORS.education[index % COLORS.education.length]} />
                       ))}
                     </Pie>
                     <Tooltip />
                   </PieChart>
                 </ResponsiveContainer>
+                {educationSummaryText ? (
+                  <p
+                    id={educationSummaryId}
+                    className="mt-2 text-xs text-muted-foreground"
+                    aria-live="polite"
+                  >
+                    {educationSummaryText}
+                  </p>
+                ) : null}
               </div>
 
               {/* Stats */}

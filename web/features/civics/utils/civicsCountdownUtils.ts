@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useRef } from 'react';
 
+import { useI18n } from '@/hooks/useI18n';
 import {
   useAnalyticsActions,
   useClearElections,
@@ -34,13 +35,16 @@ export const getElectionCountdown = (isoDate: string | undefined): number | null
   return diffDays;
 };
 
-export const formatElectionDate = (isoDate: string | undefined): string => {
+export const formatElectionDate = (
+  isoDate: string | undefined,
+  locale?: string,
+): string => {
   if (!isoDate) {
     return '';
   }
 
   try {
-    return new Date(isoDate).toLocaleDateString(undefined, {
+    return new Date(isoDate).toLocaleDateString(locale ?? undefined, {
       month: 'short',
       day: 'numeric',
       year: 'numeric',
@@ -78,6 +82,7 @@ export const useElectionCountdown = (
     analytics,
   }: ElectionCountdownOptions = {},
 ) => {
+  const { t, currentLanguage } = useI18n();
   const fetchElections = useFetchElectionsForDivisions();
   const clearElections = useClearElections();
   const elections = useElectionsForDivisions(divisionIds);

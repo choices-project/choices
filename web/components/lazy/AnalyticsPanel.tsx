@@ -7,10 +7,10 @@
 
 import React, { useState, useEffect, Suspense } from 'react';
 import { 
-ResponsiveContainer, 
-  LineChart as LineChartType, 
-  BarChart as BarChartType, 
-  PieChart as PieChartType,
+  ResponsiveContainer,
+  LineChart,
+  BarChart,
+  PieChart,
   XAxis,
   YAxis,
   CartesianGrid,
@@ -23,14 +23,6 @@ ResponsiveContainer,
 
 import { performanceMetrics } from '@/lib/performance/performance-metrics';
 import logger from '@/lib/utils/logger';
-
-// Import chart components directly for proper typing
-
-// Lazy load heavy chart components
-const _Chart = React.lazy(() => import('recharts').then(module => ({ default: module.ResponsiveContainer })));
-const _LineChart = React.lazy(() => import('recharts').then(module => ({ default: module.LineChart })));
-const _BarChart = React.lazy(() => import('recharts').then(module => ({ default: module.BarChart })));
-const _PieChart = React.lazy(() => import('recharts').then(module => ({ default: module.PieChart })));
 
 type AnalyticsData = {
   userGrowth: Array<{ date: string; users: number }>;
@@ -266,7 +258,7 @@ export default function AnalyticsPanel({
             <h3 className="text-lg font-semibold text-gray-900 mb-4">User Growth</h3>
             <Suspense fallback={<div className="h-64 bg-gray-100 rounded animate-pulse" />}>
               <ResponsiveContainer width="100%" height={300}>
-                <LineChartType data={data.userGrowth}>
+                <LineChart data={data.userGrowth}>
                   <XAxis dataKey="date" />
                   <YAxis />
                   <CartesianGrid strokeDasharray="3 3" />
@@ -279,7 +271,7 @@ export default function AnalyticsPanel({
                     strokeWidth={2}
                     name="Users"
                   />
-                </LineChartType>
+                </LineChart>
               </ResponsiveContainer>
             </Suspense>
           </div>
@@ -291,7 +283,7 @@ export default function AnalyticsPanel({
             <h3 className="text-lg font-semibold text-gray-900 mb-4">Poll Activity</h3>
             <Suspense fallback={<div className="h-64 bg-gray-100 rounded animate-pulse" />}>
               <ResponsiveContainer width="100%" height={300}>
-                <BarChartType data={data.pollActivity}>
+                <BarChart data={data.pollActivity}>
                   <XAxis dataKey="date" />
                   <YAxis />
                   <CartesianGrid strokeDasharray="3 3" />
@@ -299,7 +291,7 @@ export default function AnalyticsPanel({
                   <Legend />
                   <Bar dataKey="polls" fill="#10B981" name="Polls" />
                   <Bar dataKey="votes" fill="#8B5CF6" name="Votes" />
-                </BarChartType>
+                </BarChart>
               </ResponsiveContainer>
             </Suspense>
           </div>
@@ -311,7 +303,7 @@ export default function AnalyticsPanel({
             <h3 className="text-lg font-semibold text-gray-900 mb-4">Voting Methods Distribution</h3>
             <Suspense fallback={<div className="h-64 bg-gray-100 rounded animate-pulse" />}>
               <ResponsiveContainer width="100%" height={300}>
-                <PieChartType>
+                <PieChart>
                   <Pie
                     data={data.votingMethods}
                     dataKey="count"
@@ -324,7 +316,7 @@ export default function AnalyticsPanel({
                   />
                   <Tooltip />
                   <Legend />
-                </PieChartType>
+                </PieChart>
               </ResponsiveContainer>
             </Suspense>
           </div>

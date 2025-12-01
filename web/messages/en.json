@@ -3,7 +3,35 @@
     "language": "Language"
   },
   "common": {
-    "skipToContent": "Skip to main content"
+    "skipToContent": "Skip to main content",
+    "actions": {
+      "cancel": "Cancel",
+      "retry": "Retry"
+    },
+    "progressiveDisclosure": {
+      "expand": "Expand content",
+      "collapse": "Collapse content"
+    },
+    "placeholders": {
+      "emDash": "—"
+    },
+    "theme": {
+      "label": "Theme",
+      "select": "Select theme",
+      "options": "Theme options",
+      "changed": "Theme changed to {theme}"
+    },
+    "devices": {
+      "title": "Your Devices",
+      "listLabel": "Device list",
+      "loading": "Loading devices...",
+      "loadFailed": "Failed to load devices",
+      "empty": "No devices found",
+      "add": "Add Device"
+    },
+    "messages": {
+      "dismiss": "Dismiss message"
+    }
   },
   "navigation": {
     "home": "Home",
@@ -690,6 +718,472 @@
         "continue": "Continue",
         "reminder": "You can always add this information later"
       }
+    },
+    "profile": {
+      "test": {
+        "title": "Profile Setup",
+        "subtitle": "Set up your profile information"
+      },
+      "overview": {
+        "title": "Set Up Your Profile",
+        "subtitle": "Help us personalize your experience while keeping you in control. **Everything is optional** - you can skip any step or change settings later.",
+        "whyWeAsk": "**Why we ask:** Your profile helps us show you relevant candidates and issues, but we never share your personal information. Your privacy is protected with end-to-end encryption.",
+        "cards": {
+          "profile": {
+            "title": "Profile",
+            "description": "Set your display name and profile visibility",
+            "features": {
+              "chooseName": "Choose display name",
+              "setVisibility": "Set visibility level",
+              "controlPrivacy": "Control privacy"
+            }
+          },
+          "visibility": {
+            "title": "Visibility",
+            "description": "Control who can see your profile and activity",
+            "features": {
+              "public": "Public profiles",
+              "private": "Private options",
+              "anonymous": "Anonymous voting"
+            }
+          },
+          "notifications": {
+            "title": "Notifications",
+            "description": "Choose how you want to be notified",
+            "features": {
+              "email": "Email notifications",
+              "push": "Push notifications",
+              "custom": "Custom preferences"
+            }
+          }
+        }
+      },
+      "profile": {
+        "title": "Your Profile",
+        "subtitle": "Set up your basic profile information",
+        "cardTitle": "Profile Information",
+        "cardDescription": "This information will be visible to other users based on your privacy settings"
+      },
+      "fields": {
+        "displayName": {
+          "label": "Display Name (Optional)",
+          "placeholder": "Enter your display name or leave blank",
+          "error": "Display name is required",
+          "howWeUse": "**How we use this:** Shows your name when you ask questions to candidates or comment on issues. You can use your real name, a pseudonym, or leave it blank to stay anonymous."
+        },
+        "visibility": {
+          "label": "Profile Visibility",
+          "howWeUse": "**How we use this:** Controls who can see your profile and activity. Choose what feels comfortable for you - you can always change this later."
+        }
+      },
+      "visibility": {
+        "public": {
+          "label": "Public",
+          "description": "Anyone can see your profile and activity",
+          "badge": "Most Social"
+        },
+        "friendsOnly": {
+          "label": "Friends Only",
+          "description": "Only people you connect with can see your profile",
+          "badge": "Balanced"
+        },
+        "private": {
+          "label": "Private",
+          "description": "Only you can see your profile details",
+          "badge": "Private"
+        },
+        "anonymous": {
+          "label": "Anonymous",
+          "description": "Vote and participate without revealing your identity",
+          "badge": "Most Private"
+        }
+      },
+      "preferences": {
+        "title": "Notification Preferences",
+        "subtitle": "Choose how you want to stay updated",
+        "cardTitle": "Notification Settings",
+        "cardDescription": "Control how and when you receive notifications",
+        "whyWeOffer": "**Why we offer notifications:** Stay updated on important political developments, candidate responses to your questions, and new features that help you participate in democracy.",
+        "email": {
+          "label": "Email Notifications (Optional)",
+          "description": "Get updates about candidate responses, election news, and platform updates"
+        },
+        "push": {
+          "label": "Browser Notifications (Optional)",
+          "description": "Get real-time alerts when candidates respond to your questions"
+        },
+        "whatYoullReceive": {
+          "title": "What you'll receive:",
+          "candidateResponses": "Responses from candidates to your questions",
+          "campaignFinance": "Updates on campaign finance transparency",
+          "newCandidates": "New candidates in your area",
+          "electionDeadlines": "Important election deadlines and events",
+          "platformUpdates": "Platform updates and new features"
+        }
+      },
+      "complete": {
+        "title": "Profile Summary",
+        "subtitle": "Review your profile and notification settings",
+        "cardTitle": "Your Settings",
+        "displayName": "Display Name",
+        "notSet": "Not set",
+        "visibility": "Profile Visibility",
+        "emailNotifications": "Email Notifications",
+        "pushNotifications": "Push Notifications",
+        "enabled": "Enabled",
+        "disabled": "Disabled"
+      },
+      "actions": {
+        "startSetup": "Start Setup",
+        "skip": "Skip for now - I'll set this up later",
+        "back": "Back",
+        "nextNotifications": "Next: Notifications",
+        "reviewSettings": "Review Settings",
+        "completeSetup": "Complete Setup",
+        "continue": "Continue"
+      }
+    },
+    "auth": {
+      "test": {
+        "title": "Authentication Setup",
+        "subtitle": "Choose your authentication method"
+      },
+      "overview": {
+        "title": "Secure Your Account",
+        "subtitle": "Choose how you'd like to authenticate. You can always change this later.",
+        "continueWith": "Continue with {method}"
+      },
+      "setup": {
+        "title": "Set Up Authentication",
+        "subtitle": "Complete your authentication setup"
+      },
+      "options": {
+        "ariaLabel": "Select {method} authentication method",
+        "email": {
+          "title": "Email",
+          "description": "Secure login with email verification",
+          "bullets": {
+            "noPassword": "No password needed",
+            "magicLink": "Magic link login",
+            "secure": "Secure verification"
+          }
+        },
+        "social": {
+          "title": "Social Login",
+          "description": "Sign in with Google or GitHub",
+          "bullets": {
+            "oneClick": "One-click login",
+            "trusted": "Trusted providers",
+            "enhanced": "Enhanced security"
+          }
+        },
+        "webauthn": {
+          "title": "Passkey",
+          "description": "Secure biometric authentication",
+          "bullets": {
+            "biometric": "Fingerprint/Face ID",
+            "noPassword": "No passwords",
+            "maximum": "Maximum security"
+          }
+        },
+        "anonymous": {
+          "title": "Anonymous",
+          "description": "Vote without creating an account",
+          "bullets": {
+            "noPersonal": "No personal info",
+            "maximum": "Maximum privacy",
+            "limited": "Limited features"
+          }
+        },
+        "skip": {
+          "title": "Skip for Now",
+          "description": "Set up authentication later",
+          "bullets": {
+            "continue": "Continue onboarding",
+            "setupLater": "Setup later",
+            "limited": "Limited access"
+          }
+        }
+      },
+      "email": {
+        "cardTitle": "Email Authentication",
+        "cardDescription": "We'll send you a secure login link",
+        "fields": {
+          "email": {
+            "label": "Email Address",
+            "placeholder": "your@email.com"
+          }
+        },
+        "validation": {
+          "required": "Please enter your email address"
+        },
+        "errors": {
+          "sendFailed": "Failed to send verification email"
+        },
+        "success": {
+          "checkEmail": "Check your email for the login link!",
+          "sent": "We've sent a secure login link to your email address."
+        },
+        "actions": {
+          "sending": "Sending...",
+          "sendLink": "Send Login Link"
+        }
+      },
+      "social": {
+        "google": "Google",
+        "github": "GitHub",
+        "cardTitle": "Social Authentication",
+        "cardDescription": "Choose your preferred social login provider",
+        "actions": {
+          "continueWithGoogle": "Continue with Google",
+          "continueWithGitHub": "Continue with GitHub"
+        },
+        "errors": {
+          "signInFailed": "Failed to sign in with {provider}"
+        }
+      },
+      "webauthn": {
+        "cardTitle": "Passkey Authentication",
+        "cardDescription": "Set up secure biometric authentication",
+        "benefits": {
+          "title": "Secure & Convenient",
+          "biometric": "Use your fingerprint or Face ID",
+          "noPassword": "No passwords to remember",
+          "crossDevice": "Works across all your devices",
+          "maximum": "Maximum security with privacy"
+        },
+        "actions": {
+          "create": "Create Passkey"
+        },
+        "success": {
+          "registered": "Passkey registered successfully!",
+          "canUse": "You can now use your biometric authentication to sign in."
+        }
+      },
+      "anonymous": {
+        "cardTitle": "Anonymous Access",
+        "cardDescription": "You can vote anonymously without creating an account",
+        "limitations": {
+          "title": "Limited Features",
+          "noPolls": "Cannot create polls",
+          "noPreferences": "Cannot save preferences",
+          "limitedAnalytics": "Limited access to analytics",
+          "noResearch": "Cannot participate in research"
+        },
+        "actions": {
+          "continue": "Continue Anonymously"
+        }
+      },
+      "errors": {
+        "unexpected": "An unexpected error occurred. Please try again.",
+        "serviceUnavailable": "Authentication service not available",
+        "dismiss": "Dismiss"
+      },
+      "actions": {
+        "continue": "Continue",
+        "back": "Back"
+      }
+    },
+    "values": {
+      "title": "What matters to you?",
+      "subtitle": "Select up to 5 issues that are most important to you. This helps us show you relevant polls and connect you with like-minded people.",
+      "concerns": {
+        "title": "Primary Concerns ({count}/{max})"
+      },
+      "categories": {
+        "economic": {
+          "title": "Economic Justice",
+          "concerns": {
+            "fairWages": "fair wages",
+            "affordableHousing": "affordable housing",
+            "healthcareAccess": "healthcare access",
+            "educationFunding": "education funding",
+            "smallBusinessSupport": "small business support",
+            "workerRights": "worker rights"
+          }
+        },
+        "environmental": {
+          "title": "Environmental Protection",
+          "concerns": {
+            "climateAction": "climate action",
+            "cleanEnergy": "clean energy",
+            "conservation": "conservation",
+            "sustainableLiving": "sustainable living",
+            "pollutionReduction": "pollution reduction"
+          }
+        },
+        "community": {
+          "title": "Community Wellbeing",
+          "concerns": {
+            "communitySafety": "community safety",
+            "mentalHealth": "mental health",
+            "elderlyCare": "elderly care",
+            "youthPrograms": "youth programs",
+            "disabilityRights": "disability rights",
+            "immigrationReform": "immigration reform"
+          }
+        },
+        "systemic": {
+          "title": "Systemic Change",
+          "concerns": {
+            "corporateAccountability": "corporate accountability",
+            "governmentTransparency": "government transparency",
+            "campaignFinanceReform": "campaign finance reform",
+            "votingRights": "voting rights",
+            "mediaIntegrity": "media integrity"
+          }
+        }
+      },
+      "community": {
+        "title": "Where do you want to make an impact?",
+        "local": {
+          "label": "My local community",
+          "description": "City and neighborhood issues"
+        },
+        "regional": {
+          "label": "My region/state",
+          "description": "State and regional concerns"
+        },
+        "national": {
+          "label": "National issues",
+          "description": "Country-wide challenges"
+        },
+        "global": {
+          "label": "Global challenges",
+          "description": "International cooperation"
+        }
+      },
+      "participation": {
+        "title": "How would you like to participate?",
+        "observer": {
+          "label": "Observer",
+          "description": "I prefer to observe and learn from others"
+        },
+        "contributor": {
+          "label": "Contributor",
+          "description": "I want to contribute ideas and suggestions"
+        },
+        "leader": {
+          "label": "Leader",
+          "description": "I want to help lead discussions and initiatives"
+        }
+      },
+      "actions": {
+        "back": "Back",
+        "continue": "Continue"
+      },
+      "progress": "Step {current} of {total}"
+    },
+    "interests": {
+      "title": "Your Interests",
+      "subtitle": "Select topics you'd like to see polls about. You can change these anytime.",
+      "actions": {
+        "save": "Save",
+        "reset": "Reset"
+      },
+      "summary": {
+        "count": "{selected} of {total} selected",
+        "allSelected": "All interests selected",
+        "customSelection": "Custom selection",
+        "noneSelected": "Select at least one interest for better content recommendations"
+      },
+      "options": {
+        "climateChange": "Climate Change",
+        "healthcare": "Healthcare",
+        "education": "Education",
+        "economy": "Economy",
+        "immigration": "Immigration",
+        "criminalJustice": "Criminal Justice",
+        "votingRights": "Voting Rights",
+        "technology": "Technology",
+        "foreignPolicy": "Foreign Policy",
+        "socialSecurity": "Social Security",
+        "gunControl": "Gun Control",
+        "abortionRights": "Abortion Rights",
+        "lgbtqRights": "LGBTQ+ Rights",
+        "racialJustice": "Racial Justice",
+        "infrastructure": "Infrastructure"
+      },
+      "benefits": {
+        "title": "How this helps you:",
+        "items": {
+          "seePolls": "See polls about topics you care about",
+          "personalizedContent": "Get personalized content recommendations",
+          "findRepresentatives": "Find representatives who share your interests",
+          "trackProgress": "Track progress on issues that matter to you"
+        }
+      }
+    },
+    "complete": {
+      "success": {
+        "title": "Welcome to Choices!",
+        "subtitle": "You're all set up and ready to make your voice heard.",
+        "celebration": "🎉 Onboarding Complete! +50 points earned"
+      },
+      "summary": {
+        "title": "Your Profile Summary",
+        "userFallback": "User",
+        "ready": "Ready to participate",
+        "valuesTitle": "What matters to you",
+        "communityTitle": "Community focus",
+        "participationTitle": "Your participation style",
+        "privacy": {
+          "title": "Privacy settings",
+          "shareProfile": "Share profile publicly",
+          "shareDemographics": "Share demographics",
+          "allowAnalytics": "Allow analytics"
+        }
+      },
+      "participation": {
+        "observer": "Observer",
+        "contributor": "Contributor",
+        "leader": "Leader",
+        "default": "Participant"
+      },
+      "next": {
+        "title": "What's next?",
+        "steps": {
+          "findCandidates": "Find your local candidates and see who's really representing you",
+          "askQuestions": "Ask questions directly to candidates and track their responses",
+          "followMoney": "See who's funding whom and spot \"bought off\" politicians",
+          "connectVoters": "Connect with other voters who care about democracy"
+        }
+      },
+      "contribute": {
+        "title": "Help Build the Democratic Revolution",
+        "subtitle": "This is an open source project fighting for democracy. Every contribution helps level the playing field!",
+        "code": {
+          "title": "Code Contributions",
+          "description": "Help us build features, fix bugs, and improve the platform",
+          "details": {
+            "frontend": "Frontend: React, TypeScript, Tailwind",
+            "backend": "Backend: Node.js, Supabase, PostgreSQL",
+            "apis": "APIs: Government data integration",
+            "privacy": "Privacy: Zero-knowledge architecture"
+          },
+          "action": "View on GitHub"
+        },
+        "community": {
+          "title": "Other Ways to Help",
+          "description": "Not a developer? There are other ways to contribute!",
+          "details": {
+            "reportBugs": "Report bugs and suggest features",
+            "documentation": "Help with documentation",
+            "share": "Share with friends and family",
+            "test": "Test new features"
+          },
+          "action": "Join Community"
+        },
+        "note": {
+          "label": "Note:",
+          "message": "We're exploring ethical ways to accept financial contributions. For now, we focus on code and community contributions to keep the platform truly independent."
+        }
+      },
+      "actions": {
+        "back": "Back",
+        "complete": "Complete Setup",
+        "saving": "Saving your profile..."
+      }
     }
   },
   "polls": {
@@ -799,6 +1293,57 @@
     }
   },
   "feeds": {
+    "core": {
+      "error": {
+        "title": "Error loading feed",
+        "retry": "Try again"
+      },
+      "pullToRefresh": {
+        "pull": "↓ Pull to refresh",
+        "release": "↓ Release to refresh"
+      },
+      "header": {
+        "title": "Unified Feed",
+        "refresh": "Refresh",
+        "refreshing": "Refreshing..."
+      },
+      "themeToggle": {
+        "light": "Switch to light mode",
+        "dark": "Switch to dark mode"
+      },
+      "filters": {
+        "title": "Content Filters",
+        "districtLabel": "Your District: {district}",
+        "districtToggleOn": "✓ Filtered",
+        "districtToggleOff": "Filter by District",
+        "districtDisable": "Disable district filter",
+        "districtEnable": "Enable district filter",
+        "districtHelper": "Showing content for {district} and platform-wide items",
+        "hashtagPlaceholder": "Add hashtags to filter (e.g., climate)",
+        "hashtagAria": "Filter by hashtag",
+        "trendingHeading": "Trending Hashtags",
+        "selectedRemoveAria": "Remove {tag} filter"
+      },
+      "tabs": {
+        "feed": "Feed",
+        "polls": "Polls",
+        "analytics": "Analytics"
+      },
+      "empty": {
+        "filters": "No content matches your filters",
+        "default": "No feeds available",
+        "polls": "Polls view coming soon",
+        "analytics": "Analytics not available"
+      },
+      "actions": {
+        "bookmark": "Bookmark",
+        "share": "Share"
+      },
+      "status": {
+        "online": "Online",
+        "items": "{count, plural, one {{count} item} other {{count} items}}"
+      }
+    },
     "infiniteScroll": {
       "loadingMore": "Loading more...",
       "end": {

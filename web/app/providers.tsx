@@ -6,6 +6,7 @@ import type { ReactNode } from 'react';
 
 import type { SupportedLocale } from '@/lib/i18n/config';
 import { DEFAULT_TIME_ZONE } from '@/lib/i18n/config';
+import { logger } from '@/lib/utils/logger';
 
 type ProvidersProps = {
   children: ReactNode;
@@ -21,7 +22,9 @@ export function Providers({ children, locale, messages }: ProvidersProps) {
       timeZone={DEFAULT_TIME_ZONE}
       onError={(error) => {
         if (process.env.NODE_ENV !== 'production') {
-          console.warn('[i18n]', error.code, error.message);
+          logger.warn('[i18n]', error.code, error.message);
+        } else {
+          logger.error('[i18n]', new Error(error.message));
         }
       }}
     >

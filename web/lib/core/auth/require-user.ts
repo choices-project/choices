@@ -1,6 +1,6 @@
 /**
  * Require User Helper
- * 
+ *
  * Server-side authentication helper for API routes and server actions.
  * Provides consistent user authentication with proper error handling.
  */
@@ -67,7 +67,7 @@ export async function requireUser(
           origin: originValidation.origin,
           path: request.nextUrl.pathname
         });
-        
+
         return {
           error: 'Invalid origin',
           status: 403
@@ -198,7 +198,7 @@ export async function requireUserForAction(
   // For server actions, we need to get the request from headers
   // This is a simplified version - in practice, you'd need to pass the request
   const supabase = await getSupabaseServerClient();
-  
+
   if (!supabase) {
     return {
       error: 'Authentication service not available',
@@ -311,7 +311,7 @@ export async function getCurrentUser(): Promise<User | null> {
       .select('is_admin')
       .eq('user_id', user.id)
       .single();
-    
+
     const isAdmin = (adminProfile as any)?.is_admin === true;
 
     const userProfile = profile && !('error' in profile) ? profile as UserProfile : null;

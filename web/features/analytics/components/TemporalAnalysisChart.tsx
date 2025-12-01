@@ -667,6 +667,12 @@ export default function TemporalAnalysisChart({
                     angle={-45}
                     textAnchor="end"
                     height={60}
+                    label={{
+                      value: axisText.hourOfDay,
+                      position: 'insideBottom',
+                      offset: -40,
+                      style: { fontSize: 11 },
+                    }}
                   />
                   <YAxis label={{ value: t('analytics.temporal.axes.activityCount'), angle: -90, position: 'insideLeft' }} />
                   <Tooltip
@@ -814,6 +820,12 @@ export default function TemporalAnalysisChart({
                     angle={-45}
                     textAnchor="end"
                     height={60}
+                    label={{
+                      value: axisText.timestamp,
+                      position: 'insideBottom',
+                      offset: -40,
+                      style: { fontSize: 11 },
+                    }}
                   />
                   <YAxis label={{ value: t('analytics.temporal.axes.velocity'), angle: -90, position: 'insideLeft' }} />
                   <Tooltip

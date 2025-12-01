@@ -33,6 +33,7 @@ const createBallot = (overrides: Partial<Ballot> = {}): Ballot => ({
   ...overrides,
 });
 
+
 const createVotingRecord = (overrides: Partial<VotingRecord> = {}): VotingRecord => ({
   id: 'record-1',
   ballotId: 'ballot-1',

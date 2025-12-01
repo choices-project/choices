@@ -8,6 +8,7 @@
  * Status: ✅ ACTIVE
  */
 
+import { useMemo } from 'react';
 import { create } from 'zustand';
 import type { StateCreator } from 'zustand';
 import { devtools, persist } from 'zustand/middleware';
@@ -412,28 +413,72 @@ export const useModerationLoading = () =>
 export const useModerationError = () =>
   useHashtagModerationStore((state) => state.error);
 
-export const useModerationActions = () =>
-  useHashtagModerationStore((state) => ({
-    setIsOpen: state.setIsOpen,
-    setFlagType: state.setFlagType,
-    setReason: state.setReason,
-    resetForm: state.resetForm,
-    setIsSubmitting: state.setIsSubmitting,
-    setError: state.setError,
-    clearError: state.clearError,
-    setLoading: state.setLoading,
-    setModerationQueue: state.setModerationQueue,
-    setSelectedModeration: state.setSelectedModeration,
-    addModeration: state.addModeration,
-    updateModeration: state.updateModeration,
-    removeModeration: state.removeModeration,
-    submitFlag: state.submitFlag,
-    approveFlag: state.approveFlag,
-    rejectFlag: state.rejectFlag,
-    loadModerationQueue: state.loadModerationQueue,
-    refreshQueue: state.refreshQueue,
-    resetHashtagModerationState: state.resetHashtagModerationState,
-  }));
+export const useModerationActions = () => {
+  const setIsOpen = useHashtagModerationStore((state) => state.setIsOpen);
+  const setFlagType = useHashtagModerationStore((state) => state.setFlagType);
+  const setReason = useHashtagModerationStore((state) => state.setReason);
+  const resetForm = useHashtagModerationStore((state) => state.resetForm);
+  const setIsSubmitting = useHashtagModerationStore((state) => state.setIsSubmitting);
+  const setError = useHashtagModerationStore((state) => state.setError);
+  const clearError = useHashtagModerationStore((state) => state.clearError);
+  const setLoading = useHashtagModerationStore((state) => state.setLoading);
+  const setModerationQueue = useHashtagModerationStore((state) => state.setModerationQueue);
+  const setSelectedModeration = useHashtagModerationStore((state) => state.setSelectedModeration);
+  const addModeration = useHashtagModerationStore((state) => state.addModeration);
+  const updateModeration = useHashtagModerationStore((state) => state.updateModeration);
+  const removeModeration = useHashtagModerationStore((state) => state.removeModeration);
+  const submitFlag = useHashtagModerationStore((state) => state.submitFlag);
+  const approveFlag = useHashtagModerationStore((state) => state.approveFlag);
+  const rejectFlag = useHashtagModerationStore((state) => state.rejectFlag);
+  const loadModerationQueue = useHashtagModerationStore((state) => state.loadModerationQueue);
+  const refreshQueue = useHashtagModerationStore((state) => state.refreshQueue);
+  const resetHashtagModerationState = useHashtagModerationStore((state) => state.resetHashtagModerationState);
+
+  return useMemo(
+    () => ({
+      setIsOpen,
+      setFlagType,
+      setReason,
+      resetForm,
+      setIsSubmitting,
+      setError,
+      clearError,
+      setLoading,
+      setModerationQueue,
+      setSelectedModeration,
+      addModeration,
+      updateModeration,
+      removeModeration,
+      submitFlag,
+      approveFlag,
+      rejectFlag,
+      loadModerationQueue,
+      refreshQueue,
+      resetHashtagModerationState,
+    }),
+    [
+      setIsOpen,
+      setFlagType,
+      setReason,
+      resetForm,
+      setIsSubmitting,
+      setError,
+      clearError,
+      setLoading,
+      setModerationQueue,
+      setSelectedModeration,
+      addModeration,
+      updateModeration,
+      removeModeration,
+      submitFlag,
+      approveFlag,
+      rejectFlag,
+      loadModerationQueue,
+      refreshQueue,
+      resetHashtagModerationState,
+    ]
+  );
+};
 
 export const useModerationStats = () =>
   useHashtagModerationStore((state) => {

@@ -306,6 +306,14 @@ export class FECClient {
   private checkRateLimits(): void {
     const now = Date.now();
     
+    // Check if hourly reset is needed (1 hour has passed since last reset)
+    const timeSinceLastReset = now - this.lastHourlyReset;
+    if (timeSinceLastReset >= 60 * 60 * 1000) {
+      this.hourlyRequestCount = 0;
+      this.lastHourlyReset = now;
+      logger.debug('Hourly request counter reset', { lastReset: this.lastHourlyReset });
+    }
+    
     // Check hourly limit
     if (this.hourlyRequestCount >= this.config.rateLimit.requestsPerHour) {
       throw new FECApiError(

@@ -4,5 +4,6 @@ export { default as TranslatedText } from './TranslatedText';
 export { DeviceList } from './DeviceList';
 export { default as BurgerMenu } from './BurgerMenu';
 export { default as LanguageSelector } from './LanguageSelector';
+export { default as ThemeSelector } from './ThemeSelector';
 export { default as SiteMessages } from './SiteMessages';
 export { AppShell } from './AppShell';

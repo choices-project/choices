@@ -1,9 +1,9 @@
 /**
  * Contact Messages API Endpoint
- * 
+ *
  * Handles CRUD operations for contact messages between users and representatives.
  * Supports real-time messaging, message status updates, and delivery tracking.
- * 
+ *
  * Created: January 23, 2025
  * Updated: November 6, 2025 - Modernized
  * Status: ✅ PRODUCTION READY
@@ -56,19 +56,7 @@ type CreateMessageRequest = {
 }
 
 // MessageResponse type reserved for future API response standardization
-type _MessageResponse = {
-  id: string;
-  threadId: string;
-  senderId: string;
-  recipientId: string;
-  content: string;
-  subject: string;
-  status: string;
-  priority: string;
-  createdAt: string;
-  attachments: any[];
-  metadata: any;
-}
+// Removed unused type to fix build error - can be re-added when needed
 
 // ============================================================================
 // POST - Create New Message
@@ -76,7 +64,7 @@ type _MessageResponse = {
 
 export const POST = withErrorHandling(async (request: NextRequest) => {
   const startTime = Date.now();
-  
+
   // Rate limiting: 10 messages per minute per user
   const ip = request.headers.get('x-forwarded-for') ?? request.headers.get('x-real-ip') ?? 'unknown';
   const userAgent = request.headers.get('user-agent');
@@ -207,7 +195,7 @@ export const POST = withErrorHandling(async (request: NextRequest) => {
 
     // Handle thread: get existing or create new
     let finalThreadId: string;
-    
+
     if (threadId) {
       // Validate thread exists and belongs to user
       const threadIdValidation = validateThreadId(threadId);
@@ -217,21 +205,21 @@ export const POST = withErrorHandling(async (request: NextRequest) => {
           'Invalid thread ID'
         );
       }
-      
+
       const { data: existingThread, error: threadError } = await supabase
         .from('contact_threads')
         .select('id, user_id')
         .eq('id', threadIdValidation.parsedId)
         .single();
-      
+
       if (threadError || !existingThread) {
         return notFoundError('Thread not found');
       }
-      
+
       if (existingThread.user_id !== user.id) {
         return forbiddenError('Unauthorized access to thread');
       }
-      
+
       finalThreadId = threadIdValidation.parsedId;
     } else {
       // Create new thread
@@ -246,12 +234,12 @@ export const POST = withErrorHandling(async (request: NextRequest) => {
         })
         .select('id')
         .single();
-      
+
       if (threadError || !newThread) {
         logger.error('Failed to create thread', new Error(threadError?.message ?? 'Unknown error'), { error: threadError });
         return errorResponse('Failed to create thread', 500);
       }
-      
+
       finalThreadId = newThread.id;
     }
 
@@ -303,8 +291,8 @@ export const POST = withErrorHandling(async (request: NextRequest) => {
         retry_count: 1
       });
 
-    // Send notification to representative (if they have notifications enabled)
-    await sendRepresentativeNotification(supabase, message, representative);
+    // Send notification to user (constituent) that message was sent
+    await sendRepresentativeNotification(supabase, message, representative, user.id);
 
     const responseTime = Date.now() - startTime;
     logger.info('Message created successfully', {
@@ -455,44 +443,74 @@ export const GET = withErrorHandling(async (request: NextRequest) => {
 async function sendRepresentativeNotification(
   supabase: any,
   message: any,
-  representative: any
+  representative: any,
+  userId: string
 ) {
   try {
-    // Check if representative has notifications enabled using new schema
+    // Notify the user (constituent) who sent the message that it was delivered
+    // Check user's notification preferences
     const { data: userProfile } = await supabase
       .from('user_profiles')
-      .select('privacy_settings')
-      .eq('user_id', representative.user_id)
+      .select('privacy_settings, notification_preferences')
+      .eq('user_id', userId)
       .single();
 
-    const contactMessagesEnabled = userProfile?.privacy_settings?.contact_messages !== false;
+    // Check if user has contact message notifications enabled
+    // Default to true if not explicitly disabled
+    const privacySettings = userProfile?.privacy_settings as Record<string, unknown> | null;
+    const contactNotificationsEnabled = 
+      privacySettings?.contact_messages !== false && 
+      privacySettings?.contact_notifications !== false;
 
-    if (contactMessagesEnabled) {
-      // Create notification
-      await supabase
-        .from('admin_notifications')
+    // Also check notification_preferences if available
+    const notificationPreferences = userProfile?.notification_preferences as Record<string, unknown> | null;
+    const pushContactEnabled = notificationPreferences?.contact_messages !== false;
+
+    if (contactNotificationsEnabled || pushContactEnabled) {
+      // Create in-app notification for the user
+      const { error: notificationError } = await supabase
+        .from('notification_log')
         .insert({
-          type: 'new_message',
-          title: 'New Message from Constituent',
-          message: `You have received a new message from a constituent regarding: ${message.subject}`,
-          data: {
+          user_id: userId,
+          type: 'contact_message_sent',
+          title: 'Message Sent',
+          body: `Your message to ${representative.name} (${representative.office}) has been sent successfully.`,
+          payload: {
             messageId: message.id,
             threadId: message.thread_id,
-            senderId: message.sender_id,
+            representativeId: representative.id,
+            representativeName: representative.name,
+            subject: message.subject,
             priority: message.priority
           },
-          user_id: representative.user_id,
-          status: 'unread'
+          status: 'sent'
         });
 
-      logger.info('Representative notification sent', {
-        representativeId: representative.id,
-        messageId: message.id
-      });
+      if (notificationError) {
+        logger.warn('Failed to create user notification', {
+          userId,
+          messageId: message.id,
+          error: notificationError
+        });
+      } else {
+        logger.info('User notification sent for contact message', {
+          userId,
+          messageId: message.id,
+          representativeId: representative.id
+        });
+      }
     }
+
+    // Optional: If representative has a user account, notify them too
+    // This would require a lookup to see if representative_id maps to a user account
+    // For now, we'll skip this as representatives typically don't have user accounts
   } catch (error) {
     const errorMessage = error instanceof Error ? error.message : String(error ?? 'Unknown error');
-    logger.error('Failed to send representative notification', new Error(errorMessage), { error });
+    logger.error('Failed to send contact notification', new Error(errorMessage), { 
+      error,
+      userId,
+      messageId: message.id 
+    });
     // Don't fail the message creation if notification fails
   }
 }

@@ -190,6 +190,13 @@ export class PrivacyAwareSocialDiscoveryManager {
     pollId: string
   ): Promise<SimilarUser[]> {
     try {
+      // Log user context for privacy audit (userId used for logging only, not in data)
+      logger.debug('Finding similar users with privacy protection', {
+        userId,
+        pollId,
+        interestsCount: userInterests.length
+      });
+      
       // Get aggregated insights (never individual user data)
       const aggregatedInsights = await this.getAggregatedInsights(userInterests, pollId);
       

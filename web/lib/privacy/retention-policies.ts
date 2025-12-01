@@ -338,10 +338,16 @@ export class DataRetentionManager {
     const cleanupInterval = 24 * 60 * 60 * 1000; // 24 hours
     const initialDelay = this.getTimeUntilNextCleanup();
     
-    setTimeout(() => {
+    // Store cleanup schedule for each data type
+    const scheduleTimeout = setTimeout(() => {
       this.runScheduledCleanup();
-      setInterval(() => this.runScheduledCleanup(), cleanupInterval);
+      const intervalId = setInterval(() => this.runScheduledCleanup(), cleanupInterval);
+      // Store interval ID for potential cleanup
+      this.cleanupSchedule.set('main', intervalId as unknown as NodeJS.Timeout);
     }, initialDelay);
+    
+    // Store initial timeout
+    this.cleanupSchedule.set('initial', scheduleTimeout);
   }
 
   /**
@@ -639,6 +645,13 @@ export function shouldRetainData(dataType: string, exceptions: string[]): boolea
     'active_account',
     'security_incident'
   ];
+  
+  // Log data type for audit trail
+  logger.debug('Checking data retention', {
+    dataType,
+    exceptionsCount: exceptions.length,
+    hasExceptions: exceptions.length > 0
+  });
   
   return exceptions.some(exception => retentionExceptions.includes(exception));
 }

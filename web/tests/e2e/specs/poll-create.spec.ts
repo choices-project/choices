@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-empty-function */
 import { expect, test } from '@playwright/test';
 
 import { runAxeAudit } from '../helpers/accessibility';
@@ -170,3 +171,4 @@ test.describe('@axe Poll creation wizard', () => {
   });
 });
 
+/* eslint-enable @typescript-eslint/no-empty-function */

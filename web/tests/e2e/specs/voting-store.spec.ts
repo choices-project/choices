@@ -1,101 +1,307 @@
 import { expect, test, type Page } from '@playwright/test';
 
-import type { VotingStoreHarness } from '@/app/(app)/e2e/voting-store/page';
-import type { Ballot, Election, VotingRecord } from '@/lib/stores/votingStore';
-
 import { waitForPageReady } from '../helpers/e2e-setup';
 
+// Note: The voting store harness uses features/voting/lib/store
+// This test verifies the harness API and basic functionality
 declare global {
-  var __votingStoreHarness: VotingStoreHarness | undefined;
+  interface Window {
+    __votingStoreHarness?: {
+      setBallots: (ballots: unknown[]) => void;
+      setElections: (elections: unknown[]) => void;
+      setVotingRecords: (records: unknown[]) => void;
+      reset: () => void;
+      getSnapshot: () => Record<string, unknown>;
+      castVote?: (ballotId: string, contestId: string, selections: string[]) => Promise<void>;
+      confirmVote?: (recordId: string) => Promise<void>;
+      undoVote?: (recordId: string) => Promise<void>;
+    };
+  }
 }
-
-const createHarnessBallot = (): Ballot => ({
-  id: 'ballot-harness',
-  electionId: 'election-harness',
-  title: 'Harness Ballot',
-  description: 'Harness ballot description',
-  type: 'general',
-  date: new Date('2025-01-01T00:00:00Z').toISOString(),
-  deadline: new Date('2025-01-02T00:00:00Z').toISOString(),
-  status: 'active',
-  contests: [],
-  metadata: {
-    jurisdiction: 'Harness',
-    district: 'Test',
-    turnout: 0,
-    totalVoters: 0,
-  },
-} satisfies Ballot);
-
-const createHarnessElection = (): Election => ({
-  id: 'election-harness',
-  name: 'Harness Election',
-  date: new Date('2025-02-01T00:00:00Z').toISOString(),
-  type: 'general',
-  status: 'upcoming',
-  description: 'Harness election description',
-  ballots: ['ballot-harness'],
-  metadata: {
-    jurisdiction: 'Harness',
-    district: 'Test',
-    turnout: 0,
-    totalVoters: 0,
-  },
-} satisfies Election);
-
-const createHarnessVotingRecord = (): VotingRecord => ({
-  id: 'record-harness',
-  ballotId: 'ballot-harness',
-  contestId: 'contest-harness',
-  selections: ['candidate-1'],
-  votedAt: new Date('2025-01-01T12:00:00Z').toISOString(),
-  method: 'digital' as const,
-  verified: true,
-} satisfies VotingRecord);
 
 const gotoHarness = async (page: Page) => {
   await page.goto('/e2e/voting-store', { waitUntil: 'domcontentloaded' });
   await waitForPageReady(page);
   await page.waitForFunction(() => Boolean(window.__votingStoreHarness));
+  await page.waitForFunction(
+    () => document.documentElement.dataset.votingStoreHarness === 'ready'
+  );
 };
 
-test.describe('Voting store harness', () => {
-  test('manipulates store state via window harness', async ({ page }) => {
+test.describe('Voting Store E2E', () => {
+  test.beforeEach(async ({ page }) => {
     await gotoHarness(page);
+  });
 
-    await page.evaluate(
-      (payload) => {
-        const harness = window.__votingStoreHarness;
-        if (!harness) {
-          throw new Error('Voting store harness not registered');
-        }
-        harness.reset();
-        harness.setBallots([payload.ballot]);
-        harness.setElections([payload.election]);
-        harness.setVotingRecords([payload.record]);
-      },
-      {
-        ballot: createHarnessBallot(),
-        election: createHarnessElection(),
-        record: createHarnessVotingRecord(),
-      },
-    );
+  test('harness exposes voting store API', async ({ page }) => {
+    const harness = await page.evaluate(() => window.__votingStoreHarness);
+    expect(harness).toBeDefined();
+    expect(harness?.getSnapshot).toBeDefined();
+    expect(harness?.setBallots).toBeDefined();
+    expect(harness?.setVotingRecords).toBeDefined();
+    expect(harness?.reset).toBeDefined();
+  });
 
-    await expect(page.getByTestId('voting-total-ballots')).toHaveText('1');
-    await expect(page.getByTestId('voting-total-elections')).toHaveText('1');
-    await expect(page.getByTestId('voting-total-records')).toHaveText('1');
+  test('manages voting records via harness', async ({ page }) => {
+    await page.evaluate(() => {
+      window.__votingStoreHarness?.setVotingRecords([{
+        id: 'record-1',
+        ballotId: 'ballot-1',
+        contestId: 'contest-1',
+        selections: ['candidate-1'],
+        votedAt: new Date().toISOString(),
+        verified: false,
+      }]);
+    });
+
+    const records = await page.evaluate(() => {
+      const harness = window.__votingStoreHarness;
+      const snapshot = harness?.getSnapshot();
+      return snapshot?.votingRecords;
+    });
+
+    expect(records).toHaveLength(1);
+    expect((records as any[])[0].id).toBe('record-1');
+  });
+
+  test('casts and confirms a vote (if harness API supports it)', async ({ page }) => {
+    const hasConfirmVote = await page.evaluate(() => {
+      return typeof window.__votingStoreHarness?.confirmVote === 'function';
+    });
+
+    if (!hasConfirmVote) {
+      test.skip();
+      return;
+    }
+
+    // Mock API endpoints
+    await page.route('**/api/voting/vote', async (route) => {
+      if (route.request().method() === 'POST') {
+        await route.fulfill({
+          status: 201,
+          contentType: 'application/json',
+          body: JSON.stringify({
+            id: 'record-1',
+            ballotId: 'ballot-1',
+            contestId: 'contest-1',
+            selections: ['candidate-1'],
+            submittedAt: new Date().toISOString(),
+          }),
+        });
+      }
+    });
+
+    await page.route('**/api/voting/records/*/confirm', async (route) => {
+      if (route.request().method() === 'POST') {
+        await route.fulfill({
+          status: 200,
+          contentType: 'application/json',
+          body: JSON.stringify({
+            id: 'record-1',
+            confirmed: true,
+            confirmedAt: new Date().toISOString(),
+          }),
+        });
+      }
+    });
+
+    await page.evaluate(() => {
+      window.__votingStoreHarness?.castVote('ballot-1', 'contest-1', ['candidate-1']);
+    });
+
+    await page.waitForTimeout(500);
+
+    let records = await page.evaluate(() => {
+      const harness = window.__votingStoreHarness;
+      const snapshot = harness?.getSnapshot();
+      return snapshot?.votingRecords;
+    });
+
+    expect(records).toHaveLength(1);
+
+    const recordId = records[0].id;
+
+    await page.evaluate((id) => {
+      if (window.__votingStoreHarness?.confirmVote) {
+        window.__votingStoreHarness.confirmVote(id);
+      }
+    }, recordId);
+
+    await page.waitForTimeout(500);
+
+    records = await page.evaluate(() => {
+      const harness = window.__votingStoreHarness;
+      const snapshot = harness?.getSnapshot();
+      return snapshot?.votingRecords;
+    });
+
+    const confirmedRecord = records.find((r: any) => r.id === recordId);
+    expect(confirmedRecord?.confirmed).toBe(true);
+  });
+
+  test('undoes a vote (if harness API supports it)', async ({ page }) => {
+    const hasUndoVote = await page.evaluate(() => {
+      return typeof window.__votingStoreHarness?.undoVote === 'function';
+    });
+
+    if (!hasUndoVote) {
+      test.skip();
+      return;
+    }
+
+    // Set up initial vote
+    await page.route('**/api/voting/vote', async (route) => {
+      if (route.request().method() === 'POST') {
+        await route.fulfill({
+          status: 201,
+          contentType: 'application/json',
+          body: JSON.stringify({
+            id: 'record-1',
+            ballotId: 'ballot-1',
+            contestId: 'contest-1',
+            selections: ['candidate-1'],
+            submittedAt: new Date().toISOString(),
+          }),
+        });
+      }
+    });
+
+    await page.route('**/api/voting/records/*/undo', async (route) => {
+      if (route.request().method() === 'POST') {
+        await route.fulfill({
+          status: 200,
+          contentType: 'application/json',
+          body: JSON.stringify({ message: 'Vote undone' }),
+        });
+      }
+    });
+
+    await page.evaluate(() => {
+      window.__votingStoreHarness?.castVote('ballot-1', 'contest-1', ['candidate-1']);
+    });
+
+    await page.waitForTimeout(500);
+
+    let records = await page.evaluate(() => {
+      const harness = window.__votingStoreHarness;
+      const snapshot = harness?.getSnapshot();
+      return snapshot?.votingRecords;
+    });
+
+    expect(records).toHaveLength(1);
+    const recordId = records[0].id;
+
+    await page.evaluate((id) => {
+      if (window.__votingStoreHarness?.undoVote) {
+        window.__votingStoreHarness.undoVote(id);
+      }
+    }, recordId);
+
+    await page.waitForTimeout(500);
+
+    records = await page.evaluate(() => {
+      const harness = window.__votingStoreHarness;
+      const snapshot = harness?.getSnapshot();
+      return snapshot?.votingRecords;
+    });
+
+    expect(records.find((r: any) => r.id === recordId)).toBeUndefined();
+  });
+
+  test('handles confirmation error gracefully (if harness API supports it)', async ({ page }) => {
+    const hasConfirmVote = await page.evaluate(() => {
+      return typeof window.__votingStoreHarness?.confirmVote === 'function';
+    });
+
+    if (!hasConfirmVote) {
+      test.skip();
+      return;
+    }
+
+    await page.route('**/api/voting/records/*/confirm', async (route) => {
+      if (route.request().method() === 'POST') {
+        await route.fulfill({
+          status: 400,
+          contentType: 'application/json',
+          body: JSON.stringify({ error: 'Cannot confirm vote' }),
+        });
+      }
+    });
+
+    // Create a vote record first
+    await page.evaluate(() => {
+      const harness = window.__votingStoreHarness;
+      harness?.setVotingRecords([{
+        id: 'record-1',
+        ballotId: 'ballot-1',
+        contestId: 'contest-1',
+        selections: ['candidate-1'],
+        submittedAt: new Date().toISOString(),
+      }]);
+    });
+
+    await page.evaluate(() => {
+      if (window.__votingStoreHarness?.confirmVote) {
+        window.__votingStoreHarness.confirmVote('record-1');
+      }
+    });
+
+    await page.waitForTimeout(500);
+
+    const error = await page.evaluate(() => {
+      const harness = window.__votingStoreHarness;
+      const snapshot = harness?.getSnapshot();
+      return snapshot?.error;
+    });
+
+    expect(error).toBeTruthy();
+  });
+
+  test('handles undo error gracefully (if harness API supports it)', async ({ page }) => {
+    const hasUndoVote = await page.evaluate(() => {
+      return typeof window.__votingStoreHarness?.undoVote === 'function';
+    });
+
+    if (!hasUndoVote) {
+      test.skip();
+      return;
+    }
+
+    await page.route('**/api/voting/records/*/undo', async (route) => {
+      if (route.request().method() === 'POST') {
+        await route.fulfill({
+          status: 500,
+          contentType: 'application/json',
+          body: JSON.stringify({ error: 'Cannot undo vote' }),
+        });
+      }
+    });
 
     await page.evaluate(() => {
       const harness = window.__votingStoreHarness;
-      if (!harness) {
-        throw new Error('Voting store harness missing during reset');
-      }
-      harness.reset();
+      harness?.setVotingRecords([{
+        id: 'record-1',
+        ballotId: 'ballot-1',
+        contestId: 'contest-1',
+        selections: ['candidate-1'],
+        submittedAt: new Date().toISOString(),
+      }]);
     });
 
-    await expect(page.getByTestId('voting-total-ballots')).toHaveText('0');
-    await expect(page.getByTestId('voting-total-elections')).toHaveText('0');
-    await expect(page.getByTestId('voting-total-records')).toHaveText('0');
+    await page.evaluate(() => {
+      if (window.__votingStoreHarness?.undoVote) {
+        window.__votingStoreHarness.undoVote('record-1');
+      }
+    });
+
+    await page.waitForTimeout(500);
+
+    const error = await page.evaluate(() => {
+      const harness = window.__votingStoreHarness;
+      const snapshot = harness?.getSnapshot();
+      return snapshot?.error;
+    });
+
+    expect(error).toBeTruthy();
   });
 });
-

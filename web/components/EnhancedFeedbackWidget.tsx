@@ -53,7 +53,15 @@ const createDefaultUserJourney = (): UserJourney => {
       screenResolution: 'unknown',
       viewportSize: 'unknown',
       timeOnPage: 0,
-      sessionId: `anonymous_${Math.random().toString(36).slice(2)}`,
+      sessionId: (() => {
+        // Use cryptographically secure random number generator
+        if (typeof crypto !== 'undefined' && crypto.getRandomValues) {
+          const array = new Uint8Array(11);
+          crypto.getRandomValues(array);
+          return `anonymous_${Array.from(array, byte => byte.toString(36)).join('').slice(0, 11)}`;
+        }
+        return `anonymous_${Math.random().toString(36).slice(2)}`;
+      })(),
       sessionStartTime: now,
       totalPageViews: 0,
       activeFeatures: [],
@@ -86,7 +94,15 @@ const createDefaultUserJourney = (): UserJourney => {
     screenResolution: `${window.screen.width}x${window.screen.height}`,
     viewportSize: `${window.innerWidth}x${window.innerHeight}`,
     timeOnPage: 0,
-    sessionId: `anonymous_${Math.random().toString(36).slice(2)}`,
+    sessionId: (() => {
+      // Use cryptographically secure random number generator
+      if (typeof crypto !== 'undefined' && crypto.getRandomValues) {
+        const array = new Uint8Array(11);
+        crypto.getRandomValues(array);
+        return `anonymous_${Array.from(array, byte => byte.toString(36)).join('').slice(0, 11)}`;
+      }
+      return `anonymous_${Math.random().toString(36).slice(2)}`;
+    })(),
     sessionStartTime: now,
     totalPageViews: 0,
     activeFeatures: [],
@@ -139,9 +155,15 @@ const EnhancedFeedbackWidget: React.FC = () => {
   const descriptionFieldId = useId()
 
   // Get analytics store state and actions with proper memoization
-  const { trackEvent, trackUserAction, setLoading: _setAnalyticsLoading, setError: setAnalyticsError } = useAnalyticsActions()
-  const _isLoadingAnalytics = useAnalyticsLoading()
+  const { trackEvent, trackUserAction, setLoading: setAnalyticsLoading, setError: setAnalyticsError } = useAnalyticsActions()
+  const isLoadingAnalytics = useAnalyticsLoading()
   const error = useAnalyticsError()
+  
+  // Use loading state to show loading indicator (combine analytics and submission loading)
+  const isProcessing = isLoadingAnalytics || isSubmitting
+
+  const isHarnessMode =
+    process.env.NEXT_PUBLIC_ENABLE_E2E_HARNESS === '1' || (pathname?.startsWith('/e2e/') ?? false)
 
   const isHarnessMode =
     process.env.NEXT_PUBLIC_ENABLE_E2E_HARNESS === '1' || (pathname?.startsWith('/e2e/') ?? false)
@@ -337,9 +359,10 @@ const EnhancedFeedbackWidget: React.FC = () => {
   }
 
   const handleSubmit = async () => {
-    if (isSubmitting) return // Prevent double submission
+    if (isSubmitting || isProcessing) return // Prevent double submission
 
     setIsSubmitting(true)
+    setAnalyticsLoading(true) // Track analytics loading state
 
     try {
       let feedbackContext: FeedbackContext
@@ -478,6 +501,7 @@ const EnhancedFeedbackWidget: React.FC = () => {
       })
     } finally {
       setIsSubmitting(false)
+      setAnalyticsLoading(false) // Clear analytics loading state
     }
   }
 
@@ -677,7 +701,7 @@ const EnhancedFeedbackWidget: React.FC = () => {
                         <button
                           type="button"
                           onClick={handleSubmit}
-                          disabled={isSubmitting}
+                          disabled={isSubmitting || isProcessing}
                           className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50"
                         >
                           {isSubmitting ? 'Submitting...' : 'Submit Feedback'}
@@ -737,7 +761,7 @@ const EnhancedFeedbackWidget: React.FC = () => {
                         <button
                           type="button"
                           onClick={handleSubmit}
-                          disabled={isSubmitting}
+                          disabled={isSubmitting || isProcessing}
                           className="w-full p-3 text-sm text-gray-600 hover:text-gray-800 disabled:opacity-50"
                         >
                           {isSubmitting ? 'Submitting...' : 'Submit Feedback'}

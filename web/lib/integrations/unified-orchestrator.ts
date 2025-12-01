@@ -9,10 +9,7 @@
  */
 
 import {
-  extractDivisionMetadata,
-  determineRaceImportance,
   estimateDeadline,
-  buildLookupAddress,
   deriveKeyIssuesFromBills,
   determineOfficeCode,
   normalizeDistrict,
@@ -738,7 +735,7 @@ export class UnifiedDataOrchestrator {
 
   // Explicitly surface missing implementations so callers can degrade gracefully
   async getUpcomingElections(location: UserLocation): Promise<ElectoralRace[]> {
-    const address = buildLookupAddress(location);
+    const address = this.buildLookupAddress(location);
 
     if (!this.clients.googleCivic) {
       logger.warn('Google Civic client not available when requesting upcoming elections');
@@ -984,7 +981,7 @@ export class UnifiedDataOrchestrator {
     election: GoogleCivicElectionInfo['elections'][number],
     location: UserLocation,
   ): Promise<ElectoralRace | null> {
-    const { stateCode, district, jurisdiction } = extractDivisionMetadata(
+    const { stateCode, district, jurisdiction } = this.extractDivisionMetadata(
       election.ocdDivisionId,
       location.stateCode,
     );
@@ -1022,7 +1019,7 @@ export class UnifiedDataOrchestrator {
       constituentQuestions: 0,
       candidateResponses: 0,
       status: 'upcoming',
-      importance: determineRaceImportance(election.name, jurisdiction),
+      importance: this.determineRaceImportance(election.name, jurisdiction),
     };
 
     const electionContext = {

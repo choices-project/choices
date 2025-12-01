@@ -1,6 +1,6 @@
 /**
  * Integration Monitoring System
- * 
+ *
  * Comprehensive monitoring system for external API integrations with
  * performance tracking, error monitoring, and alerting capabilities.
  */
@@ -124,7 +124,7 @@ export class IntegrationMonitor {
       if (!this.errorCounts.has(apiName)) {
         this.errorCounts.set(apiName, new Map());
       }
-      
+
       const errorMap = this.errorCounts.get(apiName);
       if (errorMap) {
         if (errorType) {
@@ -138,7 +138,7 @@ export class IntegrationMonitor {
 
     // Update metrics
     this.updateMetrics(apiName, success, responseTime, errorType, statusCode);
-    
+
     // Check alert rules
     this.checkAlertRules(apiName);
   }
@@ -185,7 +185,7 @@ export class IntegrationMonitor {
     try {
       const isHealthy = await healthCheckFn();
       const responseTime = Date.now() - startTime;
-      
+
       if (!isHealthy) {
         status = 'unhealthy';
       } else if (responseTime > 5000) { // 5 seconds
@@ -215,7 +215,7 @@ export class IntegrationMonitor {
       };
 
       this.healthChecks.set(apiName, healthCheck);
-      
+
       logger.debug('Health check completed', { apiName, status, responseTime });
       return healthCheck;
     } catch (error) {
@@ -238,7 +238,7 @@ export class IntegrationMonitor {
       };
 
       this.healthChecks.set(apiName, healthCheck);
-      
+
       logger.error('Health check failed', { apiName, error: lastError, responseTime });
       return healthCheck;
     }
@@ -258,7 +258,7 @@ export class IntegrationMonitor {
   getRecentMetrics(apiName: string, hours: number = 24): IntegrationMetrics[] {
     const metricsList = this.metrics.get(apiName) ?? [];
     const cutoff = Date.now() - (hours * 60 * 60 * 1000);
-    
+
     return metricsList.filter(metrics => metrics.timestamp.getTime() > cutoff);
   }
 
@@ -358,26 +358,58 @@ export class IntegrationMonitor {
 
     const metricsList = this.metrics.get(apiName);
     if (!metricsList) return;
-    
+
     let currentMetrics = metricsList[metricsList.length - 1];
 
     // Create new metrics entry if none exists or if it's been more than 1 hour
     if (!currentMetrics || Date.now() - currentMetrics.timestamp.getTime() > 60 * 60 * 1000) {
       currentMetrics = this.createNewMetrics(apiName);
       metricsList.push(currentMetrics);
-      
+
       // Keep only last 168 entries (1 week of hourly metrics)
       if (metricsList.length > 168) {
         metricsList.splice(0, metricsList.length - 168);
       }
     }
 
-    // Update current metrics
+    // Update current metrics with response time and error type
     currentMetrics.requests.total++;
+    if (responseTime > 0) {
+      // Track response time in the responseTimes array for percentile calculations
+      const responseTimes = this.responseTimes.get(apiName) ?? [];
+      responseTimes.push(responseTime);
+      // Keep only last 1000 response times for memory efficiency
+      if (responseTimes.length > 1000) {
+        responseTimes.shift();
+      }
+      this.responseTimes.set(apiName, responseTimes);
+    }
+
     if (success) {
       currentMetrics.requests.successful++;
     } else {
       currentMetrics.requests.failed++;
+      // Track error type for failed requests
+      // Note: errors object is already initialized in createNewMetrics, so we just update it
+      // Ensure errors object exists (should already exist from createNewMetrics)
+      if (!currentMetrics.errors) {
+        currentMetrics.errors = {
+          total: 0,
+          byType: {},
+          byStatusCode: {}
+        };
+      }
+
+      // Track error type if provided
+      if (errorType) {
+        currentMetrics.errors.byType[errorType] = (currentMetrics.errors.byType[errorType] || 0) + 1;
+      }
+
+      // Track status code if provided
+      if (statusCode) {
+        currentMetrics.errors.byStatusCode[statusCode] = (currentMetrics.errors.byStatusCode[statusCode] || 0) + 1;
+      }
+
       if (statusCode === 429) {
         currentMetrics.requests.rateLimited++;
       }
@@ -390,7 +422,7 @@ export class IntegrationMonitor {
       const p95Index = Math.floor(sorted.length * 0.95);
       const p99Index = Math.floor(sorted.length * 0.99);
       const maxIndex = sorted.length - 1;
-      
+
       currentMetrics.performance = {
         averageResponseTime: responseTimes.reduce((sum, time) => sum + time, 0) / responseTimes.length,
         p95ResponseTime: sorted[p95Index] ?? 0,
@@ -401,12 +433,18 @@ export class IntegrationMonitor {
     }
 
     // Update error metrics
+    // Note: errors.total should equal requests.failed (one error per failed request)
+    // The errorMap tracks error types and status codes separately, but the total
+    // should be based on the number of failed requests, not the sum of error map entries
+    currentMetrics.errors.total = currentMetrics.requests.failed;
+    
     const errorMap = this.errorCounts.get(apiName);
     if (errorMap) {
-      currentMetrics.errors.total = Array.from(errorMap.values()).reduce((sum, count) => sum + count, 0);
+      // Extract error types (non-status entries)
       currentMetrics.errors.byType = Object.fromEntries(
         Array.from(errorMap.entries()).filter(([key]) => !key.startsWith('status_'))
       );
+      // Extract status codes (status_ prefixed entries)
       currentMetrics.errors.byStatusCode = Object.fromEntries(
         Array.from(errorMap.entries())
           .filter(([key]) => key.startsWith('status_'))
@@ -474,7 +512,7 @@ export class IntegrationMonitor {
       if (value === null) continue;
 
       const shouldAlert = this.evaluateCondition(value, rule.operator, rule.threshold);
-      
+
       if (shouldAlert) {
         this.createAlert(rule, value);
         rule.lastTriggered = new Date();
@@ -488,12 +526,12 @@ export class IntegrationMonitor {
   private getMetricValue(metrics: IntegrationMetrics, metric: string): number | null {
     const parts = metric.split('.');
     let value: unknown = metrics;
-    
+
     for (const part of parts) {
       value = (value as Record<string, unknown>)[part];
       if (value === undefined) return null;
     }
-    
+
     return typeof value === 'number' ? value : null;
   }
 
@@ -529,7 +567,7 @@ export class IntegrationMonitor {
     };
 
     this.alerts.push(alert);
-    
+
     logger.warn('Alert triggered', {
       alertId: alert.id,
       apiName: alert.apiName,

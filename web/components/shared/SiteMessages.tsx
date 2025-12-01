@@ -11,6 +11,8 @@ import {
 } from 'lucide-react'
 import React, { useState } from 'react'
 
+import { useI18n } from '@/hooks/useI18n'
+
 
 type SiteMessage = {
   id: string
@@ -36,6 +38,7 @@ export default function SiteMessages({
   showDismiss = true,
   messages: propMessages = [] // Messages passed from server-side rendering
 }: SiteMessagesProps) {
+  const { t } = useI18n()
   const [messages, _setMessages] = useState<SiteMessage[]>(propMessages)
   const [dismissedMessages, setDismissedMessages] = useState<Set<string>>(new Set())
   const [expandedMessages, setExpandedMessages] = useState<Set<string>>(new Set())
@@ -144,7 +147,7 @@ export default function SiteMessages({
                       <button
                         onClick={() => handleDismiss(message.id)}
                         className="flex-shrink-0 p-1 text-gray-400 hover:text-gray-600 transition-colors"
-                        aria-label="Dismiss message"
+                        aria-label={t('common.messages.dismiss')}
                       >
                         <X className="h-4 w-4" />
                       </button>

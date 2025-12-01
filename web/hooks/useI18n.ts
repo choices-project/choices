@@ -6,6 +6,7 @@ import { useCallback } from 'react';
 
 import { setLocaleCookie } from '@/lib/i18n/client';
 import { isSupportedLocale, type SupportedLocale } from '@/lib/i18n/config';
+import { logger } from '@/lib/utils/logger';
 
 type TranslationParamValue = string | number | boolean | null | undefined;
 type TranslationParams = Record<string, TranslationParamValue>;
@@ -46,7 +47,9 @@ export const useI18n = () => {
         return rawTranslate(key, safeParams);
       } catch (error) {
         if (process.env.NODE_ENV !== 'production') {
-          console.warn(`[i18n] Missing translation for key "${key}"`, error);
+          logger.warn(`[i18n] Missing translation for key "${key}"`, error);
+        } else {
+          logger.error(`[i18n] Missing translation for key "${key}"`, error instanceof Error ? error : undefined);
         }
         return fallbackTranslate(key, params);
       }

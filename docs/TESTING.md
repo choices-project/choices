@@ -41,6 +41,8 @@ npm run test:e2e:axe
 
 Utilities:
 - `npm run lint` — ESLint (use before submitting PRs).
+- `npm run lint:hooks` — Focused React Hooks audit (`react-hooks/rules-of-hooks` + `react-hooks/exhaustive-deps` forced to `error`), useful before large refactors.
+- `npm run lint:locale` — FormatJS literal-string enforcement for `/app/(app)/candidates/**` and `features/civics/**`; blocks CI if untranslated copy slips in.
 - `npm run type-check` — TypeScript project references check.
 - `npm run governance:check` — Verifies store/API changes have the required roadmap/doc/changelog updates (CI gate).
 

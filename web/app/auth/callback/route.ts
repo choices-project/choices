@@ -45,8 +45,8 @@ async function getRedirectDestination(supabase: any, user: any, requestedRedirec
 export async function GET(request: Request) {
   const { searchParams, origin } = new URL(request.url)
   const code = searchParams.get('code')
-  const _next = searchParams.get('next') ?? '/dashboard'
-  const redirectTo = searchParams.get('redirectTo') ?? '/dashboard'
+  const nextParam = searchParams.get('next') ?? '/dashboard'
+  const redirectTo = searchParams.get('redirectTo') ?? nextParam
   const error = searchParams.get('error')
   const errorDescription = searchParams.get('error_description')
 
@@ -64,7 +64,7 @@ export async function GET(request: Request) {
     try {
       const supabaseClient = await supabase;
       const { data, error: exchangeError } = await supabaseClient.auth.exchangeCodeForSession(code)
-      
+
       if (exchangeError) {
         devLog('Session exchange error:', { error: exchangeError })
         return NextResponse.redirect(
@@ -74,10 +74,10 @@ export async function GET(request: Request) {
 
       if (data.session && data.user) {
         devLog('Successfully authenticated user:', { email: data.user.email })
-        
+
         // Determine the appropriate redirect destination
         const finalRedirect = await getRedirectDestination(supabase, data.user, redirectTo)
-        
+
         devLog(`Redirecting user to: ${finalRedirect}`, { redirectTo: finalRedirect })
         return NextResponse.redirect(`${origin}${finalRedirect}`)
       } else {

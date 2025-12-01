@@ -383,7 +383,7 @@ const registryEntries: WidgetRegistryEntry[] = [
     {
       type: 'kpi-card',
       name: 'KPI Card',
-      description: 'Single key performance indicator display',
+      description: 'Display a single KPI with trend deltas',
       icon: '📊',
       category: 'general',
       defaultSize: { w: 3, h: 2 },
@@ -392,16 +392,17 @@ const registryEntries: WidgetRegistryEntry[] = [
         resizable: true,
         draggable: true,
         configurable: true,
-        exportable: true,
+        exportable: false,
       },
       dataSource: '/api/analytics/kpi',
       supportedExports: [],
-      requiredPermission: 'T2',
+      requiredPermission: 'admin',
       dataRequirements: {
-        permissions: ['T2'],
+        adminOnly: true,
+        permissions: ['admin'],
       },
     },
-    createPlaceholderWidget('Configure KPI source to enable this widget.'),
+    KpiAnalyticsWidget,
     {
       position: { x: 0, y: 0 },
       size: { w: 3, h: 2 },
@@ -409,7 +410,7 @@ const registryEntries: WidgetRegistryEntry[] = [
       settings: {
         refreshInterval: 60_000,
         filters: {
-          metric: 'total_users',
+          metric: 'dau',
         },
       },
     }
@@ -444,6 +445,42 @@ const registryEntries: WidgetRegistryEntry[] = [
       minSize: { w: 4, h: 3 },
       settings: {
         refreshInterval: 300_000,
+      },
+    }
+  ),
+  createWidgetEntry(
+    {
+      type: 'funnel',
+      name: 'Conversion Funnel',
+      description: 'Track onboarding, poll creation, or civic-action funnels',
+      icon: '🪣',
+      category: 'engagement',
+      defaultSize: { w: 4, h: 4 },
+      minSize: { w: 3, h: 3 },
+      capabilities: {
+        resizable: true,
+        draggable: true,
+        configurable: true,
+        exportable: false,
+      },
+      dataSource: '/api/analytics/funnels',
+      supportedExports: [],
+      requiredPermission: 'admin',
+      dataRequirements: {
+        adminOnly: true,
+        permissions: ['admin'],
+      },
+    },
+    FunnelAnalyticsWidget,
+    {
+      position: { x: 0, y: 0 },
+      size: { w: 4, h: 4 },
+      minSize: { w: 3, h: 3 },
+      settings: {
+        refreshInterval: 300_000,
+        filters: {
+          funnel: 'onboarding',
+        },
       },
     }
   ),

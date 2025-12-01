@@ -1,9 +1,9 @@
 /**
  * PollHeatmap Component
- * 
+ *
  * Visualizes poll engagement data in a heatmap format.
  * Shows which polls are getting the most engagement and when.
- * 
+ *
  * Features:
  * - Poll engagement intensity visualization
  * - Time-based patterns (which polls are hot right now)
@@ -12,7 +12,7 @@
  * - Color-coded intensity (cool → warm → hot)
  * - CSV export functionality
  * - Admin-only access
- * 
+ *
  * Created: November 5, 2025
  * Status: ✅ Production-ready
  */
@@ -88,9 +88,9 @@ const DEFAULT_CATEGORIES = [
  */
 const getEngagementColor = (score: number, maxScore: number): string => {
   if (maxScore === 0) return '#3b82f6'; // blue-500
-  
+
   const ratio = score / maxScore;
-  
+
   if (ratio < 0.25) {
     // Cool - Blue to Cyan
     return `hsl(${200 + ratio * 40}, 80%, 50%)`;
@@ -242,11 +242,11 @@ export default function PollHeatmap({
     const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
     const link = document.createElement('a');
     const url = URL.createObjectURL(blob);
-    
+
     link.setAttribute('href', url);
     link.setAttribute('download', `poll-heatmap-${Date.now()}.csv`);
     link.style.visibility = 'hidden';
-    
+
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
@@ -254,7 +254,7 @@ export default function PollHeatmap({
 
   // Calculate statistics
   const totalVotes = data.reduce((sum, p) => sum + p.total_votes, 0);
-  const avgEngagement = data.length > 0 
+  const avgEngagement = data.length > 0
     ? data.reduce((sum, p) => sum + p.engagement_score, 0) / data.length
     : 0;
   const activePolls = data.filter(p => p.is_active).length;
@@ -483,21 +483,38 @@ export default function PollHeatmap({
             <p className="text-sm">Try selecting a different category</p>
           </div>
         ) : (
-          <div className="h-96">
+          <div
+            className="h-96"
+            role="group"
+            aria-labelledby={`${chartRegionId}-title`}
+            aria-describedby={`${chartRegionId}-summary`}
+          >
+            <p id={`${chartRegionId}-title`} className="sr-only">
+              Poll engagement heatmap
+            </p>
+            <p id={`${chartRegionId}-summary`} className="sr-only" aria-live="polite">
+              {chartSummaryText}
+            </p>
             <ResponsiveContainer width="100%" height="100%">
               <BarChart data={chartData} margin={{ top: 20, right: 30, left: 20, bottom: 80 }}>
                 <CartesianGrid strokeDasharray="3 3" />
-                <XAxis 
-                  dataKey="name" 
+                <XAxis
+                  dataKey="name"
                   angle={-45}
                   textAnchor="end"
                   height={100}
                   tick={{ fontSize: 11 }}
+                  label={{
+                    value: 'Poll titles (sorted by engagement)',
+                    position: 'insideBottom',
+                    offset: -60,
+                    style: { fontSize: 11 },
+                  }}
                 />
-                <YAxis 
-                  label={{ value: 'Engagement Score', angle: -90, position: 'insideLeft' }}
+                <YAxis
+                  label={{ value: 'Engagement score', angle: -90, position: 'insideLeft' }}
                 />
-                <Tooltip 
+                <Tooltip
                   content={({ active, payload }) => {
                     if (!active || !payload || payload.length === 0) return null;
                     const poll = payload[0]?.payload?.fullData;
@@ -536,14 +553,17 @@ export default function PollHeatmap({
                 <Legend />
                 <Bar dataKey="engagement" name="Engagement Score">
                   {chartData.map((entry, index) => (
-                    <Cell 
-                      key={`cell-${index}`} 
+                    <Cell
+                      key={`cell-${index}`}
                       fill={getEngagementColor(entry.engagement, maxEngagement)}
                     />
                   ))}
                 </Bar>
               </BarChart>
             </ResponsiveContainer>
+            <p className="mt-2 text-sm text-muted-foreground" aria-live="polite">
+              {chartSummaryText}
+            </p>
           </div>
         )}
 
@@ -559,7 +579,7 @@ export default function PollHeatmap({
                 .map((poll, index) => {
                   const emoji = getEngagementEmoji(poll.engagement_score, maxEngagement);
                   return (
-                    <div 
+                    <div
                       key={poll.poll_id}
                       className="flex items-center justify-between p-3 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors"
                     >

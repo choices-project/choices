@@ -23,20 +23,6 @@ import { useAppActions } from '@/lib/stores/appStore';
 import { cn } from '@/lib/utils';
 import { logger } from '@/lib/utils/logger';
 
-const PRIVACY_LABELS: Record<string, string> = {
-  public: 'Public',
-  private: 'Private',
-  unlisted: 'Unlisted',
-};
-
-const VOTING_LABELS: Record<string, string> = {
-  single: 'Single choice',
-  multiple: 'Multiple selection',
-  approval: 'Approval voting',
-  ranked: 'Ranked choice',
-  quadratic: 'Quadratic voting',
-};
-
 type VotingStatusMessage = {
   title: string;
   description: string;
@@ -90,6 +76,7 @@ type NormalizedOption = {
 };
 
 export default function PollClient({ poll }: PollClientProps) {
+  const { t } = useI18n();
   const { user } = useAuth();
   const router = useRouter();
   const { addNotification } = useNotificationActions();
@@ -196,7 +183,7 @@ export default function PollClient({ poll }: PollClientProps) {
 
   const fetchPollData = useCallback(async () => {
     try {
-      const generalError = 'Failed to load poll results. Please try again later.';
+      const generalError = t('polls.view.errors.loadResultsFailed');
 
       setLoading(true);
       setVotingLoading(true);
@@ -226,7 +213,7 @@ export default function PollClient({ poll }: PollClientProps) {
         clearVotingError();
       }
     } catch (err) {
-      const errorMessage = err instanceof Error ? err.message : 'Failed to load poll data';
+      const errorMessage = err instanceof Error ? err.message : t('polls.view.errors.loadDataFailed');
       setResults(null);
       setError(errorMessage);
       setVotingError(errorMessage);
@@ -234,7 +221,7 @@ export default function PollClient({ poll }: PollClientProps) {
       setLoading(false);
       setVotingLoading(false);
     }
-  }, [pollId, clearVotingError, setVotingError, setVotingLoading]);
+  }, [pollId, clearVotingError, setVotingError, setVotingLoading, t]);
 
   useEffect(() => {
     void fetchPollData();
@@ -287,7 +274,7 @@ export default function PollClient({ poll }: PollClientProps) {
   const normalizedOptions: NormalizedOption[] = useMemo(() => {
     return pollOptions.map((option, index) => {
       const id = typeof option === 'string' ? String(index) : option.id ?? String(index);
-      const text = typeof option === 'string' ? option : option.text ?? `Option ${index + 1}`;
+      const text = typeof option === 'string' ? option : option.text ?? t('polls.view.options.fallback', { number: index + 1 });
       const baseVotes = typeof option === 'string' ? 0 : option.votes ?? option.voteCount ?? 0;
       const votes = optionVoteLookup.get(id) ?? optionVoteLookup.get(String(index)) ?? baseVotes;
 
@@ -298,7 +285,7 @@ export default function PollClient({ poll }: PollClientProps) {
         votes,
       };
     });
-  }, [optionVoteLookup, pollOptions]);
+  }, [optionVoteLookup, pollOptions, t]);
 
   const initialVoteTotal = useMemo(
     () =>
@@ -348,30 +335,29 @@ export default function PollClient({ poll }: PollClientProps) {
 
   const votingStatusMessage: VotingStatusMessage | null = useMemo(() => {
     if (pollStatus !== 'active') {
-      const title = pollStatus === 'closed' ? 'Poll has closed' : 'Poll not yet open';
+      const title = pollStatus === 'closed' ? t('polls.view.status.closed.title') : t('polls.view.status.notOpen.title');
       const description = pollStatus === 'closed'
-        ? 'Results are read-only. Reach out to the poll owner if you believe this poll should be reopened.'
-        : 'This poll is in draft or scheduled mode. The owner can publish it to start collecting votes.';
+        ? t('polls.view.status.closed.description')
+        : t('polls.view.status.notOpen.description');
       return { title, description };
     }
 
     if (!user) {
       return {
-        title: 'Sign in to vote',
-        description: 'We need to verify your account before recording a vote. Sign in, then come back to participate.',
+        title: t('polls.view.status.signInRequired.title'),
+        description: t('polls.view.status.signInRequired.description'),
       };
     }
 
     if (!canVote) {
       return {
-        title: 'Voting restricted',
-        description:
-          'This poll is limited to a specific audience. If you should have access, ask the poll owner to add you or adjust privacy.',
+        title: t('polls.view.status.votingRestricted.title'),
+        description: t('polls.view.status.votingRestricted.description'),
       };
     }
 
     return null;
-  }, [canVote, pollStatus, user]);
+  }, [canVote, pollStatus, t, user]);
 
   const [selectedOption, setSelectedOption] = useState<string | null>(poll.userVote ?? null);
   const [hasVoted, setHasVoted] = useState(Boolean(poll.userVote));
@@ -450,7 +436,7 @@ export default function PollClient({ poll }: PollClientProps) {
 
       if (!response.ok) {
         const errorData = await response.json().catch(() => null);
-        throw new Error(errorData?.error ?? 'Failed to vote');
+        throw new Error(errorData?.error ?? t('polls.view.errors.voteFailed'));
       }
 
       const payload = await response.json();
@@ -469,8 +455,8 @@ export default function PollClient({ poll }: PollClientProps) {
       });
       addNotification({
         type: 'success',
-        title: 'Vote recorded',
-        message: 'Thanks for participating!',
+        title: t('polls.view.notifications.voteRecorded.title'),
+        message: t('polls.view.notifications.voteRecorded.message'),
         duration: 3000,
       });
       void fetchPollData();
@@ -493,12 +479,12 @@ export default function PollClient({ poll }: PollClientProps) {
         id: voteId,
       };
     } catch (err) {
-      const errorMessage = err instanceof Error ? err.message : 'Failed to vote';
+      const errorMessage = err instanceof Error ? err.message : t('polls.view.errors.voteFailed');
       setError(errorMessage);
       setVotingError(errorMessage);
       addNotification({
         type: 'error',
-        title: 'Unable to vote',
+        title: t('polls.view.notifications.voteFailed.title'),
         message: errorMessage,
         duration: 4000,
       });
@@ -525,8 +511,8 @@ export default function PollClient({ poll }: PollClientProps) {
       await navigator.clipboard.writeText(shareUrl);
       addNotification({
         type: 'success',
-        title: 'Link copied',
-        message: 'Share the link to bring more voters in.',
+        title: t('polls.view.notifications.linkCopied.title'),
+        message: t('polls.view.notifications.linkCopied.message'),
         duration: 3000,
       });
       recordPollEvent('detail_copy_link', {
@@ -536,8 +522,8 @@ export default function PollClient({ poll }: PollClientProps) {
     } catch (error) {
       addNotification({
         type: 'error',
-        title: 'Unable to copy link',
-        message: error instanceof Error ? error.message : 'Please copy the link manually.',
+        title: t('polls.view.notifications.copyFailed.title'),
+        message: error instanceof Error ? error.message : t('polls.view.notifications.copyFailed.message'),
         duration: 4000,
       });
     }
@@ -571,20 +557,20 @@ export default function PollClient({ poll }: PollClientProps) {
         </div>
         <div className="flex flex-wrap items-center gap-2">
           <Button type="button" variant="outline" onClick={handleCopyShareLink}>
-            <Share2 className="mr-2 h-4 w-4" /> Share
+            <Share2 className="mr-2 h-4 w-4" /> {t('polls.view.buttons.share')}
           </Button>
           <Button type="button" variant="secondary" onClick={handleOpenAnalytics}>
-            <BarChart3 className="mr-2 h-4 w-4" /> Analytics
+            <BarChart3 className="mr-2 h-4 w-4" /> {t('polls.view.buttons.analytics')}
           </Button>
           <Button type="button" variant="ghost" onClick={handlePrintSummary}>
-            <Printer className="mr-2 h-4 w-4" /> Print summary
+            <Printer className="mr-2 h-4 w-4" /> {t('polls.view.buttons.printSummary')}
           </Button>
         </div>
       </div>
 
       {loading && (
         <div className="rounded-lg border border-dashed border-muted-foreground/40 bg-muted/10 p-4 text-sm text-muted-foreground">
-          Updating results…
+          {t('polls.view.loading')}
         </div>
       )}
 
@@ -601,10 +587,10 @@ export default function PollClient({ poll }: PollClientProps) {
               <Trophy className="h-5 w-5 text-amber-700" />
             </div>
             <div>
-              <p className="text-sm font-semibold uppercase text-amber-700">Leading option</p>
+              <p className="text-sm font-semibold uppercase text-amber-700">{t('polls.view.leadingOption.label')}</p>
               <p className="mt-1 text-lg font-semibold text-amber-900">{topOption.text}</p>
               <p className="text-sm text-amber-800">
-                {topOption.votes.toLocaleString()} votes ({getVotePercentage(topOption.votes)}% of {computedTotalVotes.toLocaleString()} total)
+                {t('polls.view.leadingOption.votes', { votes: topOption.votes, percentage: getVotePercentage(topOption.votes), total: computedTotalVotes })}
               </p>
             </div>
           </div>
@@ -613,46 +599,45 @@ export default function PollClient({ poll }: PollClientProps) {
 
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
         <div className="rounded-lg border bg-white p-4 shadow-sm">
-          <p className="text-xs uppercase text-muted-foreground">Total votes</p>
+          <p className="text-xs uppercase text-muted-foreground">{t('polls.view.stats.totalVotes')}</p>
           <p className="mt-2 text-2xl font-semibold text-foreground">{computedTotalVotes.toLocaleString()}</p>
         </div>
         <div className="rounded-lg border bg-white p-4 shadow-sm">
-          <p className="text-xs uppercase text-muted-foreground">Participation</p>
+          <p className="text-xs uppercase text-muted-foreground">{t('polls.view.stats.participation')}</p>
           <p className="mt-2 text-2xl font-semibold text-foreground">{participationCount.toLocaleString()}</p>
         </div>
         <div className="rounded-lg border bg-white p-4 shadow-sm">
-          <p className="text-xs uppercase text-muted-foreground">Status</p>
+          <p className="text-xs uppercase text-muted-foreground">{t('polls.view.stats.status')}</p>
           <p className={cn('mt-2 text-2xl font-semibold capitalize', pollStatus === 'closed' ? 'text-red-600' : 'text-emerald-600')}>
-            {pollStatus}
+            {pollStatus === 'closed' ? t('polls.view.status.closed.label') : pollStatus === 'active' ? t('polls.view.status.active.label') : t('polls.view.status.draft.label')}
           </p>
         </div>
       </div>
 
       <div className="grid gap-4 rounded-lg border bg-white p-4 shadow-sm sm:grid-cols-2">
         <div>
-          <p className="text-xs uppercase text-muted-foreground">Milestone alerts</p>
+          <p className="text-xs uppercase text-muted-foreground">{t('polls.view.milestones.label')}</p>
           {enabledMilestones.length === 0 ? (
             <p className="mt-2 text-sm text-muted-foreground">
-              Choose the vote counts you want to be notified about. We will alert you when your poll reaches those
-              milestones.
+              {t('polls.view.milestones.empty')}
             </p>
           ) : (
             <p className="mt-2 text-sm text-muted-foreground">
-              Tracking {enabledMilestones.map((milestone) => milestone.toLocaleString()).join(', ')} votes.
+              {t('polls.view.milestones.tracking', { milestones: enabledMilestones.map((milestone) => milestone.toLocaleString()).join(', ') })}
             </p>
           )}
           {nextMilestone && (
             <p className="mt-3 text-sm text-emerald-700">
-              Next up: {nextMilestone.toLocaleString()} votes. Encourage your audience to participate!
+              {t('polls.view.milestones.nextUp', { count: nextMilestone })}
             </p>
           )}
           {reachedMilestones.length > 0 && (
             <div className="mt-3 text-sm">
-              <p className="font-semibold text-foreground">Already achieved</p>
+              <p className="font-semibold text-foreground">{t('polls.view.milestones.achieved')}</p>
               <div className="mt-2 flex flex-wrap gap-2">
                 {reachedMilestones.map((milestone) => (
                   <Badge key={`reached-${milestone}`} variant="secondary">
-                    {milestone.toLocaleString()} votes
+                    {t('polls.view.milestones.votesBadge', { count: milestone })}
                   </Badge>
                 ))}
               </div>
@@ -666,13 +651,13 @@ export default function PollClient({ poll }: PollClientProps) {
               className="flex items-center justify-between rounded-md border border-border/60 px-3 py-2"
             >
               <div>
-                <p className="text-sm font-medium text-foreground">{milestone.toLocaleString()} votes</p>
-                <p className="text-xs text-muted-foreground">Notify me when this poll reaches {milestone} votes.</p>
+                <p className="text-sm font-medium text-foreground">{t('polls.view.milestones.itemLabel', { count: milestone })}</p>
+                <p className="text-xs text-muted-foreground">{t('polls.view.milestones.itemDescription', { count: milestone })}</p>
               </div>
               <Switch
                 checked={Boolean(milestonePreferences[milestone])}
                 onCheckedChange={(checked: boolean) => handleMilestoneToggle(milestone, checked)}
-                aria-label={`Toggle milestone notification for ${milestone} votes`}
+                aria-label={t('polls.view.milestones.toggleAria', { count: milestone })}
               />
             </div>
           ))}
@@ -703,7 +688,7 @@ export default function PollClient({ poll }: PollClientProps) {
             <div className="flex items-center justify-between mb-2">
               <span className="font-medium text-gray-900">{option.text}</span>
               <span className="text-sm text-gray-500">
-                {option.votes.toLocaleString()} votes ({getVotePercentage(option.votes)}%)
+                {t('polls.view.options.voteCount', { votes: option.votes, percentage: getVotePercentage(option.votes) })}
               </span>
             </div>
 
@@ -722,7 +707,7 @@ export default function PollClient({ poll }: PollClientProps) {
                 disabled={storeIsVoting || hasVoted}
                 data-testid={`vote-button-${option.index}`}
               >
-                {selectedOption === option.id ? 'Voted' : storeIsVoting ? 'Voting…' : 'Vote'}
+                {selectedOption === option.id ? t('polls.view.buttons.voted') : storeIsVoting ? t('polls.view.buttons.voting') : t('polls.view.buttons.vote')}
               </Button>
             )}
           </div>
@@ -740,7 +725,7 @@ export default function PollClient({ poll }: PollClientProps) {
         {poll.createdAt && (
           <>
             <span>•</span>
-            <span>Created {new Date(poll.createdAt).toLocaleString()}</span>
+            <span>{t('polls.view.created', { date: new Date(poll.createdAt).toLocaleString() })}</span>
           </>
         )}
       </div>

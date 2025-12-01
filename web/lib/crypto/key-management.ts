@@ -2,18 +2,18 @@
 // PHASE 1: SECURE KEY MANAGEMENT WITH AES-GCM
 // ============================================================================
 // Agent A1 - Infrastructure Specialist
-// 
+//
 // This module implements secure key management with AES-GCM encryption,
 // IV uniqueness, key rotation, and non-extractable keys for the
 // Ranked Choice Democracy Revolution platform.
-// 
+//
 // Features:
 // - AES-GCM IV uniqueness enforcement
 // - Non-extractable key generation
 // - Key rotation and versioning
 // - Deterministic hashing for audits
 // - Passphrase-wrapped key backup
-// 
+//
 // Created: January 15, 2025
 // Status: Phase 1 Implementation
 // ============================================================================
@@ -93,12 +93,12 @@ export class SecureKeyManager {
 
   async generateUserKey(keyId?: string): Promise<SecureKey> {
     const id = keyId ?? this.generateKeyId();
-    
+
     // Generate non-extractable AES-GCM key
     const key = await crypto.subtle.generateKey(
-      { 
-        name: 'AES-GCM', 
-        length: 256 
+      {
+        name: 'AES-GCM',
+        length: 256
       },
       false, // non-extractable
       ['encrypt', 'decrypt']
@@ -116,7 +116,7 @@ export class SecureKeyManager {
     };
 
     this.keys.set(id, secureKey);
-    
+
     // Set as current key if none exists
     if (!this.currentKeyId) {
       this.currentKeyId = id;
@@ -127,12 +127,12 @@ export class SecureKeyManager {
 
   async generateServerKey(keyId?: string): Promise<SecureKey> {
     const id = keyId ?? this.generateKeyId();
-    
+
     // Generate extractable server key for backup/rotation
     const key = await crypto.subtle.generateKey(
-      { 
-        name: 'AES-GCM', 
-        length: 256 
+      {
+        name: 'AES-GCM',
+        length: 256
       },
       true, // extractable for server operations
       ['encrypt', 'decrypt', 'wrapKey', 'unwrapKey']
@@ -252,7 +252,7 @@ export class SecureKeyManager {
   // ============================================================================
 
   async wrapKeyWithPassphrase(
-    keyId: string, 
+    keyId: string,
     passphrase: string
   ): Promise<WrappedKey> {
     const key = this.getKey(keyId);
@@ -303,7 +303,7 @@ export class SecureKeyManager {
   }
 
   async unwrapKeyWithPassphrase(
-    wrappedKey: WrappedKey, 
+    wrappedKey: WrappedKey,
     passphrase: string
   ): Promise<SecureKey> {
     const encoder = new TextEncoder();
@@ -372,7 +372,7 @@ export class SecureKeyManager {
 
     // Generate new key
     const newKey = await this.generateUserKey(`${keyId}_v${oldKey.version + 1}`);
-    
+
     // Update current key if this was the current key
     if (this.currentKeyId === keyId) {
       this.currentKeyId = newKey.id;
@@ -417,6 +417,14 @@ export class SecureKeyManager {
     // Canonicalize JSON for deterministic hashing
     const canonicalJson = JSON.stringify(data, Object.keys(data).sort());
     return this.deterministicHash(canonicalJson);
+  }
+
+  /**
+   * Generate deterministic IV from seed for audit purposes
+   * WARNING: Only use for non-cryptographic purposes (audits, logging)
+   */
+  generateDeterministicIV(seed: string): Uint8Array {
+    return this.generateIVFromSeed(seed);
   }
 
   // ============================================================================
@@ -514,8 +522,8 @@ export async function generateSecureIV(): Promise<Uint8Array> {
 }
 
 export async function deriveKeyFromPassphrase(
-  passphrase: string, 
-  salt: Uint8Array, 
+  passphrase: string,
+  salt: Uint8Array,
   iterations: number = 200_000
 ): Promise<CryptoKey> {
   const encoder = new TextEncoder();

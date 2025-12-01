@@ -10,7 +10,8 @@ import {
   Eye,
   Star,
   Tag,
-  Calendar
+  Calendar,
+  AlertTriangle
 } from 'lucide-react';
 import React from 'react';
 
@@ -95,6 +96,7 @@ export const FeedbackList: React.FC<FeedbackListProps> = ({
     switch (type) {
       case 'bug': return <Bug className="w-4 h-4" />;
       case 'feature': return <Lightbulb className="w-4 h-4" />;
+      case 'correction': return <AlertTriangle className="w-4 h-4" />;
       default: return <MessageSquare className="w-4 h-4" />;
     }
   };
@@ -103,6 +105,7 @@ export const FeedbackList: React.FC<FeedbackListProps> = ({
     switch (type) {
       case 'bug': return 'bg-red-100 text-red-700';
       case 'feature': return 'bg-blue-100 text-blue-700';
+      case 'correction': return 'bg-amber-100 text-amber-700';
       default: return 'bg-green-100 text-green-700';
     }
   };

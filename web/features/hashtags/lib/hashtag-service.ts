@@ -847,8 +847,22 @@ export async function getHashtagAnalytics(
   hashtagId: string,
   period: '24h' | '7d' | '30d' | '90d' | '1y' = '7d'
 ): Promise<HashtagApiResponse<HashtagAnalytics>> {
-  const _supabase = await ensureSupabaseClient(); // kept for parity if needed later
+  const supabase = await ensureSupabaseClient();
   try {
+    // Verify hashtag exists using supabase client
+    const { data: hashtag, error: hashtagError } = await supabase
+      .from('hashtags')
+      .select('id')
+      .eq('id', hashtagId)
+      .single();
+
+    if (hashtagError || !hashtag) {
+      return {
+        success: false,
+        error: 'Hashtag not found'
+      };
+    }
+
     // Import the analytics function from hashtag-analytics.ts
     const { calculateHashtagAnalytics } = await import('./hashtag-analytics');
     const analytics = await calculateHashtagAnalytics(hashtagId, period);
@@ -909,7 +923,6 @@ export async function getHashtagStats(): Promise<HashtagApiResponse<any>> {
  * Validate hashtag name
  */
 export async function validateHashtagName(name: string): Promise<HashtagApiResponse<HashtagValidation>> {
-  const _supabase = await ensureSupabaseClient(); // ensure client ready for potential calls
   try {
     const normalizedName = name.toLowerCase().replace(/^#/, '');
     const errors: string[] = [];
@@ -929,8 +942,13 @@ export async function validateHashtagName(name: string): Promise<HashtagApiRespo
       errors.push('Hashtag can only contain letters, numbers, and underscores');
     }
 
-    const existing = await getHashtagByName(normalizedName);
-    const isAvailable = !existing.success || !existing.data;
+    // Check if hashtag already exists using getHashtagByName
+    const existingHashtag = await getHashtagByName(normalizedName);
+    const isAvailable = !existingHashtag.success || !existingHashtag.data;
+
+    if (!isAvailable) {
+      warnings.push('Hashtag already exists');
+    }
 
     const availability: HashtagValidation['availability'] = {
       is_available: errors.length === 0 && isAvailable,

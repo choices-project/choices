@@ -2,12 +2,20 @@ import { act } from '@testing-library/react';
 import { create } from 'zustand';
 import { immer } from 'zustand/middleware/immer';
 
+/* eslint-disable @typescript-eslint/no-empty-function */
 import {
   defaultNotificationSettings,
   notificationStoreCreator,
   type NotificationStore
 } from '@/lib/stores/notificationStore';
 import logger from '@/lib/utils/logger';
+
+const expectDefined = <T>(value: T | undefined, context: string): T => {
+  if (value === undefined) {
+    throw new Error(`Expected ${context} to be defined`);
+  }
+  return value;
+};
 
 const createTestNotificationStore = () =>
   create<NotificationStore>()(immer(notificationStoreCreator));
@@ -61,13 +69,13 @@ describe('notificationStore', () => {
     });
 
     const [notification] = notificationStore.getState().notifications;
+    const storedNotification = expectDefined(notification, 'notification');
 
-    expect(notification).toBeDefined();
-    expect(notification!.id).toMatch(/^notification_/);
-    expect(typeof notification!.timestamp).toBe('string');
-    expect(notification!.read).toBe(false);
-    expect(notification).not.toHaveProperty('actions');
-    expect(notification).not.toHaveProperty('duration');
+    expect(storedNotification.id).toMatch(/^notification_/);
+    expect(typeof storedNotification.timestamp).toBe('string');
+    expect(storedNotification.read).toBe(false);
+    expect(storedNotification).not.toHaveProperty('actions');
+    expect(storedNotification).not.toHaveProperty('duration');
   });
 
   it('resets settings back to defaults after overrides', () => {
@@ -209,3 +217,5 @@ describe('notificationStore', () => {
     expect(notificationStore.getState().adminNotifications).toHaveLength(1);
   });
 });
+
+/* eslint-enable @typescript-eslint/no-empty-function */

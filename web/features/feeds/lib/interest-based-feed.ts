@@ -7,7 +7,7 @@ import { NextResponse } from 'next/server';
 
 
 import { logger } from '@/lib/utils/logger';
-import type { Database } from '@/types/database';
+// Database types are used directly when needed
 import { getSupabaseServerClient } from '@/utils/supabase/server';
 
 import { hashtagPollsIntegrationService } from './hashtag-polls-integration';
@@ -40,8 +40,7 @@ export type Demographics = {
   [key: string]: unknown;
 }
 
-// Database types
-type _UserProfile = Database['public']['Tables']['user_profiles']['Row'];
+// Database types are used directly when needed
 
 export type PersonalizedPollFeed = {
   userId: string;
@@ -323,7 +322,10 @@ export class InterestBasedPollFeed {
   async getCivicRecommendations(userId: string, locationData: any): Promise<any> {
     try {
       const parsedLocation = this.parseLocationData(JSON.stringify(locationData));
-      if (!parsedLocation) return [];
+      if (!parsedLocation) {
+        logger.debug('No location data available for civic recommendations', { userId });
+        return [];
+      }
 
       // Get representatives for user's district
       const { data: representatives, error: repError } = await this.supabase

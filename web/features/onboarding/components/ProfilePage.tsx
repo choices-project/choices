@@ -40,6 +40,23 @@ export default function ProfilePage() {
   
   const [showExportConfirm, setShowExportConfirm] = useState(false);
 
+  const profilePreferences = useMemo(() => {
+    const p = profile as unknown as UserProfile | undefined;
+    const prefs = p && typeof p === 'object' ? (p as Record<string, unknown>).preferences : undefined;
+    if (prefs && typeof prefs === 'object') {
+      return prefs as Record<string, unknown>;
+    }
+    return {};
+  }, [profile]);
+  const profilePrivacySettings = useMemo(() => {
+    const p = profile as unknown as UserProfile | undefined;
+    const settings = p && typeof p === 'object' ? (p as Record<string, unknown>).privacy_settings : undefined;
+    if (settings && typeof settings === 'object') {
+      return settings as Record<string, unknown>;
+    }
+    return {};
+  }, [profile]);
+
   // Handle export data
   const handleExportData = () => {
     void exportMutation.exportProfile({ includeActivity: true, includeVotes: true, includeComments: true, format: 'json' });

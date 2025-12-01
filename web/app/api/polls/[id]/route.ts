@@ -6,7 +6,7 @@ import { getSupabaseServerClient } from '@/utils/supabase/server';
 export const dynamic = 'force-dynamic';
 
 export const GET = withErrorHandling(async (
-  request: NextRequest,
+  _request: NextRequest,
   { params }: { params: { id: string } }
 ) => {
     const pollId = params.id;

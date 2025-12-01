@@ -1,14 +1,14 @@
 /**
  * Server Actions Enhancement Module
  * Comprehensive security and reliability enhancements for Server Actions
- * 
+ *
  * Features:
  * - Idempotency key generation and validation
  * - Session management integration
  * - Proper error handling and validation
  * - Security logging and monitoring
  * - Rate limiting integration
- * 
+ *
  * Created: 2025-08-27
  * Status: Critical security enhancement
  */
@@ -16,17 +16,18 @@
 import { redirect } from 'next/navigation'
 import { z } from 'zod'
 
-import { 
-  withIdempotency, 
+import {
+  withIdempotency,
   generateIdempotencyKey,
-  type IdempotencyOptions 
+  type IdempotencyOptions
 } from '@/lib/core/auth/idempotency-atomic'
-import { 
-  setSessionCookie, 
+import {
+  setSessionCookie,
   rotateSessionToken,
   clearSessionCookie
 } from '@/lib/core/auth/session-cookies'
 import { getSecurityConfig } from '@/lib/core/security/config'
+import { apiRateLimiter } from '@/lib/rate-limiting/api-rate-limiter'
 import { logger } from '@/lib/utils/logger'
 
 // Common validation schemas
@@ -74,7 +75,7 @@ export function createSecureServerAction<TInput, TOutput>(
   return async (input: TInput): Promise<TOutput> => {
     const idempotencyKey = generateIdempotencyKey()
     const securityConfig = getSecurityConfig()
-    
+
     const result = await withIdempotency(idempotencyKey, async () => {
       try {
         // Validate input if schema provided
@@ -101,7 +102,7 @@ export function createSecureServerAction<TInput, TOutput>(
             context.userRole ?? 'user',
             context.userId
           )
-          
+
           setSessionCookie(newSessionToken, {
             maxAge: 60 * 60 * 24 * 7, // 1 week
             secure: process.env.NODE_ENV === 'production',
@@ -130,11 +131,11 @@ export function createSecureServerAction<TInput, TOutput>(
         throw error
       }
     }, options.idempotency ?? { namespace: 'server-action' })
-    
+
     if (result.success && result.data) {
       return result.data
     }
-    
+
     throw new Error('Server action failed')
   }
 }
@@ -169,7 +170,7 @@ export async function requireAdmin(context: ServerActionContext): Promise<{
   sessionToken: string
 }> {
   const user = await getAuthenticatedUser(context)
-  
+
   if (user.userRole !== 'admin') {
     logger.warn('Unauthorized admin access attempt', {
       userId: user.userId,
@@ -193,7 +194,7 @@ export function secureRedirect(url: string, sessionToken?: string) {
       sameSite: 'lax'
     })
   }
-  
+
   redirect(url)
 }
 
@@ -209,23 +210,23 @@ export function secureLogout() {
  * Form data validation helper
  */
 export function validateFormData<T>(
-  formData: FormData, 
+  formData: FormData,
   schema: z.ZodSchema<T>
 ): T {
   const rawData = Object.fromEntries(formData.entries())
-  
+
   try {
     return schema.parse(rawData)
   } catch (error) {
     if (error instanceof z.ZodError) {
       const zodError = error
       const fieldErrors: Record<string, string> = {}
-      
+
       zodError.issues.forEach((issue) => {
         const field = issue.path.join('.')
         fieldErrors[field] = issue.message
       })
-      
+
       throw new Error(`Validation failed: ${JSON.stringify(fieldErrors)}`)
     }
     throw error
@@ -235,20 +236,57 @@ export function validateFormData<T>(
 /**
  * Rate limiting helper for server actions
  */
-export function checkRateLimit(
-  endpoint: string, 
-  userId?: string, 
+export async function checkRateLimit(
+  endpoint: string,
+  userId?: string,
   ipAddress?: string
-): boolean {
+): Promise<boolean> {
   const securityConfig = getSecurityConfig()
-  const _key = userId ?? ipAddress ?? 'anonymous'
-  
-  // Check against security config for rate limiting
-  const _maxRequests = securityConfig.rateLimit.sensitiveEndpoints[endpoint] ?? 
+  const key = userId ?? ipAddress ?? 'unknown'
+
+  // Get rate limit configuration
+  const maxRequests = securityConfig.rateLimit.sensitiveEndpoints[endpoint] ??
                      securityConfig.rateLimit.maxRequests
-  
-  logger.debug(`Rate limit check for ${endpoint} with key: ${_key}`)
-  return true
+  const windowMs = securityConfig.rateLimit.windowMs ?? (15 * 60 * 1000) // 15 minutes default
+
+  try {
+    // Check rate limit using API rate limiter
+    const rateLimitResult = await apiRateLimiter.checkLimit(
+      key,
+      endpoint,
+      {
+        maxRequests,
+        windowMs
+      }
+    )
+
+    if (!rateLimitResult.allowed) {
+      logger.warn('Rate limit exceeded for server action', {
+        endpoint,
+        key: key.substring(0, 8) + '...',
+        maxRequests,
+        totalHits: rateLimitResult.totalHits,
+        retryAfter: rateLimitResult.retryAfter
+      })
+      return false
+    }
+
+    logger.debug('Rate limit check passed', {
+      endpoint,
+      key: key.substring(0, 8) + '...',
+      remaining: rateLimitResult.remaining,
+      maxRequests
+    })
+
+    return true
+  } catch (error) {
+    // On error, log and allow the request (fail open for availability)
+    logger.error('Rate limit check failed, allowing request', {
+      endpoint,
+      error: error instanceof Error ? error.message : 'Unknown error'
+    })
+    return true
+  }
 }
 
 /**
@@ -260,7 +298,7 @@ export function logSecurityEvent(
   context: ServerActionContext
 ) {
   const securityConfig = getSecurityConfig()
-  
+
   logger.info(`Security Event: ${event}`, Object.assign({}, details, {
     userId: context.userId,
     userRole: context.userRole,
@@ -275,10 +313,21 @@ export function logSecurityEvent(
  */
 export function sanitizeInput(input: string): string {
   // Remove potentially dangerous characters and patterns
+  // Fix: Match script tags with optional whitespace in closing tag
+  // Fix: Check for data: and vbscript: URL schemes
+  // Fix: Better multi-character sanitization
   return input
-    .replace(/<script\b[^<]*(?:(?!<\/script>)<[^<]*)*<\/script>/gi, '')
-    .replace(/javascript:/gi, '')
+    // Remove script tags (including with whitespace: </script >, </script  >, etc.)
+    .replace(/<script\b[^<]*(?:(?!<\/script\s*>)<[^<]*)*<\/script\s*>/gi, '')
+    // Remove javascript:, data:, and vbscript: URL schemes
+    .replace(/(javascript|data|vbscript):/gi, '')
+    // Remove event handlers (onclick, onerror, etc.)
     .replace(/on\w+\s*=/gi, '')
+    // Remove HTML entities that could be used for injection
+    .replace(/&lt;/g, '<')
+    .replace(/&gt;/g, '>')
+    .replace(/&quot;/g, '"')
+    .replace(/&#x?[0-9a-f]+;/gi, '')
     .trim()
 }
 
@@ -286,7 +335,7 @@ export function sanitizeInput(input: string): string {
  * Error response helper
  */
 export function createErrorResponse(
-  message: string, 
+  message: string,
   statusCode: number = 400,
   details?: Record<string, unknown>
 ) {
@@ -303,7 +352,7 @@ export function createErrorResponse(
  * Success response helper
  */
 export function createSuccessResponse<T>(
-  data: T, 
+  data: T,
   message?: string
 ) {
   return {

@@ -4,19 +4,22 @@ import { cookies, headers } from 'next/headers'
 import type { AbstractIntlMessages } from 'next-intl';
 import React from 'react'
 
+import { SkipNavLink, SkipNavTarget } from '@/components/accessibility/SkipNavLink';
+import SiteFooter from '@/components/layout/SiteFooter';
 import {
   DEFAULT_LOCALE,
   LOCALE_COOKIE_NAME,
   type SupportedLocale,
   resolveLocale,
-} from '@/lib/i18n/config'
+} from '@/lib/i18n/config';
 
-import { Providers } from './providers'
-import './globals.css'
+import { Providers } from './providers';
+import './globals.css';
 
 export const metadata: Metadata = {
   title: 'Choices - Democratic Polling Platform',
   description: 'A privacy-first, unbiased polling platform for democratic participation',
+  metadataBase: new URL(process.env.NEXT_PUBLIC_SITE_URL ?? 'https://choices.vote'),
   manifest: '/manifest.json',
   appleWebApp: {
     capable: true,
@@ -26,7 +29,30 @@ export const metadata: Metadata = {
   formatDetection: {
     telephone: false,
   },
-}
+  openGraph: {
+    title: 'Choices - Democratic Polling Platform',
+    description: 'Join a privacy-first civic network for unbiased polling and community action.',
+    url: process.env.NEXT_PUBLIC_SITE_URL ?? 'https://choices.vote',
+    siteName: 'Choices',
+    images: [
+      {
+        url: '/og/choices-og.png',
+        width: 1200,
+        height: 630,
+        alt: 'Choices logo with civic engagement charts',
+      },
+    ],
+    type: 'website',
+  },
+  twitter: {
+    card: 'summary_large_image',
+    site: '@choices_vote',
+    creator: '@choices_vote',
+    title: 'Choices - Privacy-First Civic Platform',
+    description: 'Vote on issues, manage civic actions, and track impact with real-time analytics.',
+    images: ['/og/choices-og.png'],
+  },
+};
 
 export const viewport = {
   width: 'device-width',
@@ -34,7 +60,7 @@ export const viewport = {
   maximumScale: 5,
   userScalable: true,
   themeColor: '#3b82f6',
-}
+};
 
 type IntlMessages = AbstractIntlMessages;
 
@@ -51,7 +77,7 @@ async function loadMessages(locale: SupportedLocale): Promise<IntlMessages> {
 export default async function RootLayout({
   children,
 }: {
-  children: React.ReactNode
+  children: React.ReactNode;
 }) {
   const cookieStore = cookies();
   const headerStore = headers();
@@ -100,13 +126,19 @@ export default async function RootLayout({
         <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
         <meta name="format-detection" content="telephone=no" />
       </head>
-      <body>
+      <body className="bg-slate-50 text-gray-900">
+        <SkipNavLink />
         <Providers locale={locale} messages={messages}>
-          {children}
+          <SkipNavTarget>
+            <main className="min-h-screen bg-slate-50">
+              {children}
+            </main>
+          </SkipNavTarget>
+          <SiteFooter />
         </Providers>
 
         {/* PWA Background is handled in app layout */}
       </body>
     </html>
-  )
+  );
 }

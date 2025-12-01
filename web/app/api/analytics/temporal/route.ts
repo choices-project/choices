@@ -154,10 +154,10 @@ export const GET = withErrorHandling(async (request: NextRequest) => {
 
         return {
           hourly,
-          daily,
+          daily: daily.map(d => ({ ...d, day: d.day ?? null })),
           velocity,
           peakHour: peakHour.hour,
-          peakDay: peakDay.day,
+          peakDay: peakDay.day ?? null,
           avgActivity,
           generatedAt: new Date().toISOString()
         };

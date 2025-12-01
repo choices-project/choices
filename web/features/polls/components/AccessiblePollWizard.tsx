@@ -11,6 +11,7 @@ import { Input } from '@/components/ui/input';
 import { useRecordPollEvent } from '@/features/polls/hooks/usePollAnalytics';
 import { usePollCreateController } from '@/features/polls/pages/create/hooks';
 import type { PollWizardSubmissionResult } from '@/features/polls/pages/create/schema';
+import { useI18n } from '@/hooks/useI18n';
 import ScreenReaderSupport from '@/lib/accessibility/screen-reader';
 import { useAccessibleDialog } from '@/lib/accessibility/useAccessibleDialog';
 import type { PollWizardSettings } from '@/lib/polls/types';
@@ -49,6 +50,7 @@ const BOOLEAN_SETTING_CONFIGS: Array<{ key: BooleanSettingKey; label: string }> 
 ];
 
 export function AccessiblePollWizard() {
+  const { t } = useI18n();
   const {
     data,
     errors,
@@ -143,6 +145,15 @@ export function AccessiblePollWizard() {
     },
     [steps],
   );
+
+  const booleanSettingConfigs = useMemo<Array<{ key: BooleanSettingKey; label: string }>>(() => [
+    { key: 'allowMultipleVotes', label: t('polls.create.wizard.audience.settings.allowMultipleVotes.label') },
+    { key: 'allowAnonymousVotes', label: t('polls.create.wizard.audience.settings.allowAnonymousVotes.label') },
+    { key: 'showResults', label: t('polls.create.wizard.audience.settings.showResults.label') },
+    { key: 'allowComments', label: t('polls.create.wizard.audience.settings.allowComments.label') },
+    { key: 'requireAuthentication', label: t('polls.create.wizard.audience.settings.requireAuthentication.label') },
+    { key: 'preventDuplicateVotes', label: t('polls.create.wizard.audience.settings.preventDuplicateVotes.label') },
+  ], [t]);
 
   const currentStepLabel = useMemo(() => resolveStepLabel(currentStep), [currentStep, resolveStepLabel]);
   const stepPositionLabel = useMemo(

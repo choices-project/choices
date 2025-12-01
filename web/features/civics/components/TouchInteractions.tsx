@@ -14,6 +14,8 @@
 
 import React, { useRef, useCallback, useState, useEffect } from 'react';
 
+import { useI18n } from '@/hooks/useI18n';
+
 import type { TouchPoint, TouchState } from '../lib/types/civics-types';
 
 
@@ -50,7 +52,7 @@ export default function TouchInteractions({
   className = '',
   disabled = false
 }: TouchInteractionsProps) {
-  
+  const { t } = useI18n();
   const [touchState, setTouchState] = useState<TouchState>({
     start: null,
     end: null,
@@ -60,9 +62,20 @@ export default function TouchInteractions({
     initialDistance: null,
     lastDistance: null
   });
-  
   const [isTouching, setIsTouching] = useState(false);
   const elementRef = useRef<HTMLDivElement>(null);
+  const [liveMessage, setLiveMessage] = useState('');
+
+  const surfaceLabel = disabled
+    ? t('civics.touchInteractions.surface.disabled')
+    : t('civics.touchInteractions.surface.label');
+
+  const announceLiveUpdate = useCallback(
+    (key: string) => {
+      setLiveMessage(t(`civics.touchInteractions.live.${key}`));
+    },
+    [t],
+  );
 
   // Calculate distance between two touches
   const calculateDistance = useCallback((touch1: React.Touch, touch2: React.Touch) => {
@@ -122,6 +135,7 @@ export default function TouchInteractions({
     }));
 
     setIsTouching(true);
+    announceLiveUpdate('touchStart');
 
     // Start long press timer
     const timer = setTimeout(() => {
@@ -130,13 +144,14 @@ export default function TouchInteractions({
         isLongPress: true
       }));
       onLongPress?.();
+      announceLiveUpdate('longPress');
     }, longPressDelay);
 
     setTouchState(prev => ({
       ...prev,
       longPressTimer: timer
     }));
-  }, [disabled, onLongPress, longPressDelay, calculateDistance]);
+  }, [announceLiveUpdate, calculateDistance, disabled, longPressDelay, onLongPress]);
 
   // Handle touch move
   const handleTouchMove = useCallback((e: React.TouchEvent) => {
@@ -159,8 +174,10 @@ export default function TouchInteractions({
         if (Math.abs(distanceChange) > 10) { // Threshold for pinch detection
           if (distanceChange > 0) {
             onPinchOut?.();
+            announceLiveUpdate('pinchOut');
           } else {
             onPinchIn?.();
+            announceLiveUpdate('pinchIn');
           }
         }
         return;
@@ -195,7 +212,17 @@ export default function TouchInteractions({
         clearLongPressTimer();
       }
     }
-  }, [disabled, touchState.start, touchState.initialDistance, touchState.lastDistance, clearLongPressTimer, calculateDistance, onPinchIn, onPinchOut]);
+  }, [
+    announceLiveUpdate,
+    calculateDistance,
+    clearLongPressTimer,
+    disabled,
+    onPinchIn,
+    onPinchOut,
+    touchState.initialDistance,
+    touchState.lastDistance,
+    touchState.start,
+  ]);
 
   // Handle touch end
   const handleTouchEnd = useCallback((e: React.TouchEvent) => {
@@ -237,6 +264,8 @@ export default function TouchInteractions({
     if (distance < swipeThreshold || deltaTime > 300) {
       // It's a tap
       onTap?.();
+      announceLiveUpdate('tap');
+      announceLiveUpdate('touchEnd');
       return;
     }
 
@@ -248,17 +277,23 @@ export default function TouchInteractions({
       // Horizontal swipe
       if (deltaX > 0) {
         onSwipeRight?.();
+        announceLiveUpdate('swipeRight');
       } else {
         onSwipeLeft?.();
+        announceLiveUpdate('swipeLeft');
       }
     } else {
       // Vertical swipe
       if (deltaY > 0) {
         onSwipeDown?.();
+        announceLiveUpdate('swipeDown');
       } else {
         onSwipeUp?.();
+        announceLiveUpdate('swipeUp');
       }
     }
+
+    announceLiveUpdate('touchEnd');
 
     // Reset state
     setTouchState({
@@ -270,7 +305,19 @@ export default function TouchInteractions({
       initialDistance: null,
       lastDistance: null
     });
-  }, [disabled, touchState.start, touchState.isLongPress, clearLongPressTimer, swipeThreshold, onSwipeLeft, onSwipeRight, onSwipeUp, onSwipeDown, onTap]);
+  }, [
+    announceLiveUpdate,
+    clearLongPressTimer,
+    disabled,
+    onSwipeDown,
+    onSwipeLeft,
+    onSwipeRight,
+    onSwipeUp,
+    onTap,
+    swipeThreshold,
+    touchState.isLongPress,
+    touchState.start,
+  ]);
 
   // Handle touch cancel
   const handleTouchCancel = useCallback(() => {
@@ -285,7 +332,8 @@ export default function TouchInteractions({
       initialDistance: null,
       lastDistance: null
     });
-  }, [clearLongPressTimer]);
+    announceLiveUpdate('touchCancel');
+  }, [clearLongPressTimer, announceLiveUpdate]);
 
   // Cleanup on unmount
   useEffect(() => {
@@ -302,12 +350,16 @@ export default function TouchInteractions({
       onTouchMove={handleTouchMove}
       onTouchEnd={handleTouchEnd}
       onTouchCancel={handleTouchCancel}
+      aria-label={surfaceLabel}
       style={{
         touchAction: 'pan-x pan-y',
         userSelect: 'none'
       }}
     >
       {children}
+      <div className="sr-only" aria-live="polite">
+        {liveMessage}
+      </div>
     </div>
   );
 }

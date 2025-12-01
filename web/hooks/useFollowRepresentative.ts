@@ -1,9 +1,9 @@
 /**
  * useFollowRepresentative Hook
- * 
+ *
  * Client-side hook for following/unfollowing representatives
  * Manages local state and syncs with API
- * 
+ *
  * Created: January 26, 2025
  * Status: ✅ PRODUCTION
  */
@@ -49,7 +49,7 @@ export function useFollowRepresentative(representativeId: number | null) {
         setStatus(prev => ({ ...prev, loading: true, error: null }));
 
         const response = await fetch(`/api/representatives/${representativeId}/follow`);
-        
+
         if (!response.ok) {
           if (response.status === 401) {
             // Not authenticated - not an error, just not following
@@ -60,7 +60,7 @@ export function useFollowRepresentative(representativeId: number | null) {
         }
 
         const _data = await response.json();
-        
+
         setStatus({
           following: _data.following ?? false,
           loading: false,
@@ -104,8 +104,19 @@ export function useFollowRepresentative(representativeId: number | null) {
         throw new Error(errorData.error ?? 'Failed to follow representative');
       }
 
-      const _data = await response.json();
-      
+      const data = await response.json();
+
+      // Validate response data
+      if (!data || typeof data !== 'object') {
+        throw new Error('Invalid response format');
+      }
+
+      // Log successful follow for analytics
+      logger.debug('Representative followed successfully', {
+        representativeId,
+        responseData: data
+      });
+
       setStatus({
         following: true,
         loading: false,

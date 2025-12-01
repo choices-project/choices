@@ -1,9 +1,9 @@
 /**
  * Contact Threads API Endpoint
- * 
+ *
  * Handles CRUD operations for message threads between users and representatives.
  * Provides thread management, filtering, and real-time updates.
- * 
+ *
  * Created: January 23, 2025
  * Status: ✅ IMPLEMENTATION READY
  */
@@ -42,24 +42,7 @@ type CreateThreadRequest = {
 }
 
 // ThreadResponse type reserved for future API response standardization
-type _ThreadResponse = {
-  id: string;
-  userId: string;
-  representativeId: string;
-  subject: string;
-  status: string;
-  priority: string;
-  createdAt: string;
-  updatedAt: string;
-  lastMessageAt: string;
-  messageCount: number;
-  representative: {
-    id: string;
-    name: string;
-    office: string;
-    party: string;
-  };
-}
+// Removed unused type to fix build error - can be re-added when needed
 
 // ============================================================================
 // GET - Retrieve User Threads
@@ -110,7 +93,7 @@ export const GET = withErrorHandling(async (request: NextRequest) => {
         )
       `)
       .eq('user_id', user.id)
-      .order(sortBy === 'last_message_at' ? 'last_message_at' : sortBy === 'created_at' ? 'created_at' : 'updated_at', 
+      .order(sortBy === 'last_message_at' ? 'last_message_at' : sortBy === 'created_at' ? 'created_at' : 'updated_at',
              { ascending: sortOrder === 'asc' })
       .range(offset, offset + limit - 1);
 

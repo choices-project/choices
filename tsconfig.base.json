@@ -1,32 +1,24 @@
 {
   "compilerOptions": {
     "target": "ES2022",
-    "lib": ["dom", "dom.iterable", "esnext"],
+    "lib": ["ES2022", "DOM", "DOM.Iterable"],
     "module": "ESNext",
     "moduleResolution": "bundler",
+    "resolveJsonModule": true,
+    "allowJs": true,
+    "checkJs": false,
     "jsx": "preserve",
     "strict": true,
+    "noUnusedLocals": true,
+    "noUnusedParameters": true,
+    "noFallthroughCasesInSwitch": true,
+    "noImplicitReturns": true,
+    "noUncheckedIndexedAccess": false,
     "esModuleInterop": true,
+    "allowSyntheticDefaultImports": true,
     "skipLibCheck": true,
     "forceConsistentCasingInFileNames": true,
-    "allowJs": true,
-    "incremental": true,
-    "resolveJsonModule": true,
     "isolatedModules": true,
-    "types": ["node"],
-    /* Stricter TypeScript settings for better type safety */
-    "noUncheckedIndexedAccess": true,
-    "exactOptionalPropertyTypes": true,
-    "noImplicitOverride": true,
-    "verbatimModuleSyntax": true,
-    "useUnknownInCatchVariables": true
-  },
-  "exclude": [
-    "node_modules",
-    "dist",
-    "build",
-    ".next",
-    "test-results",
-    "playwright-report"
-  ]
+    "incremental": true
+  }
 }

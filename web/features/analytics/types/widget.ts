@@ -28,6 +28,7 @@ export type WidgetType =
   | 'temporal-analysis'
   | 'trust-tier-comparison'
   | 'kpi-card'
+  | 'funnel'
   | 'custom-table'
   | 'custom-query'
   | 'pwa-offline-queue'

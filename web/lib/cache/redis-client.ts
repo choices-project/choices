@@ -189,9 +189,17 @@ export class RedisClient {
 
       this.client.on('reconnecting', () => {
         this.connectionAttempts++
-        logger.info('Redis client reconnecting', {
-          attempt: this.connectionAttempts
-        })
+        if (this.connectionAttempts >= this.maxConnectionAttempts) {
+          logger.error('Redis connection attempts exceeded maximum', {
+            attempts: this.connectionAttempts,
+            maxAttempts: this.maxConnectionAttempts
+          })
+        } else {
+          logger.info('Redis client reconnecting', {
+            attempt: this.connectionAttempts,
+            maxAttempts: this.maxConnectionAttempts
+          })
+        }
       })
 
       // Connect to Redis

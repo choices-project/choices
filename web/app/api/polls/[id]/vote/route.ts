@@ -504,7 +504,7 @@ export const HEAD = withErrorHandling(async (request: NextRequest, { params }: {
   return new NextResponse(null, { status: count && count > 0 ? 200 : 204 });
 });
 
-export const GET = withErrorHandling(async (request: NextRequest, { params }: { params: { id: string } }) => {
+export const GET = withErrorHandling(async (_request: NextRequest, { params }: { params: { id: string } }) => {
   const pollId = params.id;
 
   if (!pollId) {

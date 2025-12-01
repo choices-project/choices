@@ -14,10 +14,10 @@ type PrivacyStorageInstance = PrivacyStorage;
 
 type PWAUtils = {
   pwaAuth: PWAAuth;
-  pwaManager: PWAManagerInstance;
+  pwaManager: PWAManager;
   pwaAnalytics: null; // Archived PWA feature
-  pwaWebAuthn: PWAWebAuthnInstance;
-  privacyStorage: PrivacyStorageInstance;
+  pwaWebAuthn: PWAWebAuthn;
+  privacyStorage: PrivacyStorage;
 }
 
 export function usePWAUtils() {

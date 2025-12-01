@@ -321,7 +321,15 @@ export class AnalyticsEngine {
     
     let sessionId = sessionStorage.getItem('analytics-session-id');
     if (!sessionId) {
-      sessionId = `session-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
+      // Use cryptographically secure random number generator
+      if (typeof crypto !== 'undefined' && crypto.getRandomValues) {
+        const array = new Uint8Array(9);
+        crypto.getRandomValues(array);
+        const randomPart = Array.from(array, byte => byte.toString(36)).join('').slice(0, 9);
+        sessionId = `session-${Date.now()}-${randomPart}`;
+      } else {
+        sessionId = `session-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
+      }
       sessionStorage.setItem('analytics-session-id', sessionId);
     }
     return sessionId;

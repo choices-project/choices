@@ -2,17 +2,18 @@
 
 This document captures feature readiness and maps to the live flag inventory in `web/lib/core/feature-flags.ts`. Treat this as the source for product/engineering coordination; track execution details in `docs/ROADMAP_SINGLE_SOURCE.md`.
 
-| Feature | Flag Key | Current State | Key References | Notes / Next Steps |
+This table mirrors the live flag inventory in `web/lib/core/feature-flags.ts`. Treat it as the “what ships when” planner for Product/Eng. Execution minutiae continue to live in `docs/ROADMAP_SINGLE_SOURCE.md`.
+
+| Feature | Flag Key | Current State | Evidence | Next Steps |
 | --- | --- | --- | --- | --- |
-| Automated Poll Generation | `AUTOMATED_POLLS` | Not implemented | – | No API or UI scaffolding detected. Requires product definition. |
+| Automated Poll Generation | `AUTOMATED_POLLS` | Not started | – | No API or UI scaffolding detected. Requires product definition. |
 | Advanced Privacy (ZK / DP) | `ADVANCED_PRIVACY` | Concept only | – | No differential privacy or ZKP pipelines present. Remove flag or scope a privacy initiative. |
-| Social Sharing (Master) | `SOCIAL_SHARING` | **Partial** | `web/app/api/share/route.ts`, `web/features/polls/components/PollShare.tsx` | API logs events only; nothing is persisted. UI opens share URLs but lacks analytics, fallback UX, or civics integration. Needs Supabase persistence + admin dashboards. |
-| Social Sharing – Polls | `SOCIAL_SHARING_POLLS` | Partial (rides on master flag) | Same as above | Enable only after master feature writes analytics and exposes metrics. |
+| Social Sharing (Master) | `SOCIAL_SHARING` | Partial (API + poll UI) | `web/app/api/share/route.ts`, `web/features/polls/components/PollShare.tsx` | Persist analytics events (Supabase table + dashboard) and design civics-specific affordances before flipping on by default. |
+| Social Sharing – Polls | `SOCIAL_SHARING_POLLS` | Inherits master flag | Same as above | Enable only when master feature has observability + moderation hooks. |
 | Social Sharing – Civics | `SOCIAL_SHARING_CIVICS` | Not implemented | – | No civics-specific sharing surfaces. Decide whether to keep the flag. |
-| Social Sharing – Visual | `SOCIAL_SHARING_VISUAL` | Not implemented | – | No OG/video/image generation pipeline. Remove or plan dedicated project. |
-| Social Sharing – OpenGraph | `SOCIAL_SHARING_OG` | Not implemented | – | No dynamic OG image service. Needs infra decision. |
+| Social Sharing – Visual / OG | `SOCIAL_SHARING_VISUAL`, `SOCIAL_SHARING_OG` | Not implemented | – | No OG/video/image generation pipeline. Remove or plan dedicated project. |
 | Social Signup (OAuth) | `SOCIAL_SIGNUP` | Not implemented | Auth flows rely on email + WebAuthn only | Add dedicated OAuth controllers, Supabase provider config, and onboarding UX. |
-| Contact Information System | `CONTACT_INFORMATION_SYSTEM` | Prototype APIs exist, data incomplete | `web/app/api/contact/*` | Endpoints exist but no consumer UI beyond admin. Clarify scope (CRM vs. MVP) and complete ingestion + notification flows. |
+| Contact Information System | `CONTACT_INFORMATION_SYSTEM` | Alpha: APIs + ingestion complete, UI pending | `docs/CONTACT_SYSTEM_SCOPE.md`, `docs/CONTACT_SYSTEM_COMPLETION.md`, `web/app/api/contact/*` | Ship admin UI + notification hooks; add MSW fixtures and Playwright coverage before graduating to beta. |
 | Civics Testing Strategy | `CIVICS_TESTING_STRATEGY` | Not implemented | – | No automated validation for civics datasets. Needs definition. |
 | Device Flow Auth | `DEVICE_FLOW_AUTH` | Not implemented | – | Separate from WebAuthn. Requires OAuth 2.0 Device Authorization Grant handlers, polling UX, rate limiting, and Supabase token issuance. |
 | Performance Optimization Suite | `PERFORMANCE_OPTIMIZATION` | Partially implemented | `web/lib/performance/*`, `web/lib/core/database/optimizer.ts` | Plenty of utilities exist but many callers are unused. Audit actual adoption before enabling globally. |

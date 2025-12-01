@@ -29,6 +29,7 @@ import { Card, CardContent, CardHeader } from '@/components/ui/card';
 import { ElectionCountdownBadge } from '@/features/civics/components/countdown/ElectionCountdownBadge';
 import { useRepresentativeCtaAnalytics } from '@/features/civics/hooks/useRepresentativeCtaAnalytics';
 import { useFollowRepresentative } from '@/hooks/useFollowRepresentative';
+import { useI18n } from '@/hooks/useI18n';
 import type { RepresentativeCardProps } from '@/types/representative';
 
 export function RepresentativeCard({
@@ -40,6 +41,7 @@ export function RepresentativeCard({
   onClick,
   className = ''
 }: RepresentativeCardProps) {
+  const { t } = useI18n();
   const { following, loading, error, toggle } = useFollowRepresentative(representative.id);
   const {
     divisionIds,
@@ -146,7 +148,10 @@ export function RepresentativeCard({
             </div>
             <p className="text-sm text-gray-600 mt-1">
               {representative.state}
-              {representative.district && ` • District ${representative.district}`}
+              {representative.district &&
+                ` • ${t('civics.representatives.card.district', {
+                  district: representative.district,
+                })}`}
             </p>
 
             {divisionIds.length > 0 && (
@@ -169,16 +174,23 @@ export function RepresentativeCard({
           {/* Committees */}
           {representative.committees && representative.committees.length > 0 && (
             <div className="mb-4">
-              <h4 className="text-sm font-medium text-gray-700 mb-2">Committees</h4>
+              <h4 className="text-sm font-medium text-gray-700 mb-2">
+                {t('civics.representatives.card.committees.heading')}
+              </h4>
               <div className="space-y-1">
                 {representative.committees.slice(0, 3).map((committee, index) => (
                   <div key={index} className="text-xs text-gray-600">
-                    <span className="font-medium">{committee.role}:</span> {committee.committee_name}
+                    {t('civics.representatives.card.committees.item', {
+                      role: committee.role,
+                      name: committee.committee_name,
+                    })}
                   </div>
                 ))}
                 {representative.committees.length > 3 && (
                   <div className="text-xs text-gray-500">
-                    +{representative.committees.length - 3} more committees
+                    {t('civics.representatives.card.committees.more', {
+                      count: representative.committees.length - 3,
+                    })}
                   </div>
                 )}
               </div>
@@ -220,7 +232,7 @@ export function RepresentativeCard({
                   rel="noopener noreferrer"
                   className="hover:text-blue-600 truncate flex items-center space-x-1"
                 >
-                  <span>Website</span>
+                  <span>{t('civics.representatives.card.contact.website')}</span>
                   <ExternalLink className="w-3 h-3" />
                 </a>
               </div>
@@ -264,7 +276,7 @@ export function RepresentativeCard({
           {/* Data Quality Indicator */}
           <div className="mt-3 pt-3 border-t border-gray-200">
             <div className="flex items-center justify-between text-xs text-gray-500">
-              <span>Data Quality</span>
+              <span>{t('civics.representatives.card.dataQuality.label')}</span>
               <div className="flex items-center space-x-1">
                 <div className="w-16 h-1 bg-gray-200 rounded-full overflow-hidden">
                   <div
@@ -295,17 +307,19 @@ export function RepresentativeCard({
               {loading ? (
                 <>
                   <Loader2 className="w-4 h-4 mr-1 animate-spin" />
-                  {following ? 'Unfollowing...' : 'Following...'}
+                  {following
+                    ? t('civics.representatives.card.actions.unfollowing')
+                    : t('civics.representatives.card.actions.following')}
                 </>
               ) : following ? (
                 <>
                   <HeartOff className="w-4 h-4 mr-1" />
-                  Unfollow
+                  {t('civics.representatives.card.actions.unfollow')}
                 </>
               ) : (
                 <>
                   <Heart className="w-4 h-4 mr-1" />
-                  Follow
+                  {t('civics.representatives.card.actions.follow')}
                 </>
               )}
             </Button>
@@ -316,11 +330,13 @@ export function RepresentativeCard({
               onClick={handleContact}
               className="flex-1"
             >
-              Contact
+              {t('civics.representatives.card.contact.button')}
             </Button>
           </div>
           {error && (
-            <p className="text-xs text-red-600 mt-2">{error}</p>
+            <p className="text-xs text-red-600 mt-2">
+              {t('civics.representatives.card.errors.follow', { message: error })}
+            </p>
           )}
         </div>
       )}

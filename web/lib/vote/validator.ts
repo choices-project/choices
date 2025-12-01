@@ -8,7 +8,7 @@
  * Updated: September 15, 2025
  */
 
-import { devLog } from '@/lib/utils/logger';
+import { devLog, logger } from '@/lib/utils/logger';
 
 import { getSupabaseServerClient } from '../../utils/supabase/server';
 
@@ -154,6 +154,17 @@ export class VoteValidator {
     poll: PollData, 
     userId?: string
   ): Promise<VoteValidation> {
+      // Log vote data context for audit trail
+      const voteChoicesCount = voteData.rankings?.length ?? 
+                                voteData.approvals?.length ?? 
+                                (voteData.choice !== undefined ? 1 : 0);
+      logger.debug('Validating business rules', {
+        pollId: poll.id,
+        userId: userId ?? 'anonymous',
+        voteChoicesCount,
+        pollStatus: poll.status
+      });
+    
     // Check if poll is active
     if (poll.status !== 'active') {
       return {
@@ -212,6 +223,14 @@ export class VoteValidator {
     poll: PollData, 
     userId?: string
   ): Promise<VoteValidation> {
+    // Log vote data context for security audit
+    logger.debug('Validating security constraints', {
+      pollId: poll.id,
+      userId: userId ?? 'anonymous',
+      hasVoteData: !!voteData,
+      requiresVerification: poll.votingConfig.requireVerification
+    });
+    
     // Check authentication requirements
     if (poll.votingConfig.requireVerification && !userId) {
       return {
@@ -616,9 +635,37 @@ export class VoteValidator {
   /**
    * Check rate limit for user
    */
-  private async checkRateLimit(_userId: string): Promise<boolean> {
-    // This would implement actual rate limiting logic
-    // For now, return false (no rate limiting)
-    return false;
+  private async checkRateLimit(userId: string): Promise<boolean> {
+    try {
+      // Use API rate limiter with userId as the key
+      // For vote validation, we use a stricter limit: 10 votes per 15 minutes
+      const { apiRateLimiter } = await import('@/lib/rate-limiting/api-rate-limiter');
+      const result = await apiRateLimiter.checkLimit(
+        userId,
+        'vote',
+        {
+          maxRequests: 10,
+          windowMs: 15 * 60 * 1000, // 15 minutes
+        }
+      );
+      
+      if (!result.allowed) {
+        logger.warn('Vote rate limit exceeded', {
+          userId,
+          remaining: result.remaining,
+          retryAfter: result.retryAfter,
+        });
+        return true; // Rate limited
+      }
+      
+      return false; // Not rate limited
+    } catch (error) {
+      // On error, allow the vote (fail open for availability)
+      logger.error('Rate limit check failed, allowing vote', {
+        userId,
+        error: error instanceof Error ? error.message : 'Unknown error',
+      });
+      return false;
+    }
   }
 }

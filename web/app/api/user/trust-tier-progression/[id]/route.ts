@@ -5,7 +5,7 @@ import { withErrorHandling, successResponse, errorResponse } from '@/lib/api';
 import { logger } from '@/lib/utils/logger';
 
 export const GET = withErrorHandling(async (
-  request: NextRequest,
+  _request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) => {
     const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;

@@ -1,9 +1,10 @@
+/* eslint-disable @typescript-eslint/no-empty-function */
 /**
  * Minimal SSR Polyfills
- * 
+ *
  * This file provides minimal polyfills for Next.js SSR environment
  * to handle the 'self is not defined' error and other essential browser globals.
- * 
+ *
  * This is specifically designed to fix the SSR issues with Supabase
  * without importing complex Node.js modules that cause build issues.
  */
@@ -211,3 +212,4 @@ if (typeof window === 'undefined') {
 }
 
 export {}
+/* eslint-enable @typescript-eslint/no-empty-function */

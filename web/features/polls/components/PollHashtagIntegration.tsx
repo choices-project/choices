@@ -19,7 +19,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Separator } from '@/components/ui/separator';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { HashtagInput, HashtagDisplay } from '@/features/hashtags';
-import type { Hashtag, PollHashtagIntegration } from '@/features/hashtags/types';
+import type { Hashtag, PollHashtagIntegration as PollHashtagIntegrationType } from '@/features/hashtags/types';
 import {
   useHashtagActions,
   useHashtagStats,
@@ -38,7 +38,7 @@ type PollHashtagIntegrationProps = {
   className?: string;
 }
 
-const createIntegrationFromPoll = (poll: Poll): PollHashtagIntegration => {
+const createIntegrationFromPoll = (poll: Poll): PollHashtagIntegrationType => {
   const hashtags = Array.isArray(poll.hashtags)
     ? poll.hashtags.filter((value): value is string => typeof value === 'string')
     : [];
@@ -47,7 +47,7 @@ const createIntegrationFromPoll = (poll: Poll): PollHashtagIntegration => {
     ? ((poll as Record<string, unknown>).total_views as number)
     : 0;
 
-  const integration: PollHashtagIntegration = {
+  const integration: PollHashtagIntegrationType = {
     poll_id: poll.id,
     hashtags,
     hashtag_engagement: {
@@ -69,9 +69,9 @@ const createIntegrationFromPoll = (poll: Poll): PollHashtagIntegration => {
 const createIntegrationWithHashtags = (
   poll: Poll,
   hashtags: string[],
-  previous?: PollHashtagIntegration | null,
+  previous?: PollHashtagIntegrationType | null,
   trendingScore?: number,
-): PollHashtagIntegration => {
+): PollHashtagIntegrationType => {
   const primaryHashtag = previous?.primary_hashtag ?? hashtags[0];
 
   return {
@@ -95,7 +95,7 @@ export default function PollHashtagIntegrationComponent({
   className
 }: PollHashtagIntegrationProps) {
   const [activeTab, setActiveTab] = useState('hashtags');
-  const [hashtagIntegration, setHashtagIntegration] = useState<PollHashtagIntegration | null>(
+  const [hashtagIntegration, setHashtagIntegration] = useState<PollHashtagIntegrationType | null>(
     poll.hashtags ? createIntegrationFromPoll(poll) : null
   );
   const [engagementTotals, setEngagementTotals] = useState<{ view: number; click: number; share: number } | null>(null);
@@ -126,6 +126,25 @@ export default function PollHashtagIntegrationComponent({
   const hashtags = useHashtagList();
   const { trendingCount } = useHashtagStats();
   const { getTrendingHashtags } = useHashtagActions();
+
+  const trackHashtagEngagement = React.useCallback((action: 'view' | 'click' | 'share') => {
+    logger.info(`Hashtag engagement tracked: ${action}`);
+    void (async () => {
+      try {
+        await fetch('/api/analytics/hashtag/engagement', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            pollId: poll.id,
+            action,
+            hashtags: poll.hashtags ?? []
+          })
+        });
+      } catch {
+        // Swallow errors to avoid impacting UX
+      }
+    })();
+  }, [poll.hashtags, poll.id]);
 
   // Load trending hashtags on mount
   useEffect(() => {

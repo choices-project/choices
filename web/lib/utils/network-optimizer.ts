@@ -1,9 +1,9 @@
 /**
  * Network Optimization Utilities
- * 
+ *
  * Provides utilities for optimizing network requests, caching,
  * and reducing API calls for better performance.
- * 
+ *
  * Created: January 27, 2025
  * Status: ✅ ACTIVE
  */
@@ -40,6 +40,7 @@ export type NetworkMetrics = {
  */
 export class NetworkOptimizer {
   private cache = new Map<string, { data: unknown; timestamp: number; ttl: number }>();
+  private debounceTimeouts = new Map<string, NodeJS.Timeout>();
   private requestQueue = new Map<string, Promise<unknown>>();
   private metrics: NetworkMetrics = {
     totalRequests: 0,
@@ -79,7 +80,7 @@ export class NetworkOptimizer {
 
     try {
       const result = await requestPromise;
-      
+
       // Cache the result if configured
       if (config.method === 'GET' && config.cache && result) {
         this.setCache(cacheKey, result, config.cache);
@@ -95,7 +96,16 @@ export class NetworkOptimizer {
    * Make the actual network request
    */
   private async makeRequest<T>(config: RequestConfig, startTime: number): Promise<T> {
-    const { url, method, headers = {}, body, retries = 3, timeout = 10000 } = config;
+    // Merge default config with request config (defaultConfig takes precedence for defaults)
+    const mergedConfig = {
+      ...this.defaultConfig,
+      ...config,
+      headers: {
+        ...this.defaultConfig.headers,
+        ...config.headers,
+      },
+    };
+    const { url, method, headers = {}, body, retries = 3, timeout = 10000 } = mergedConfig;
 
     for (let attempt = 0; attempt <= retries; attempt++) {
       try {
@@ -128,8 +138,8 @@ export class NetworkOptimizer {
 
         // Update metrics
         this.metrics.totalRequests++;
-        this.metrics.averageResponseTime = 
-          (this.metrics.averageResponseTime * (this.metrics.totalRequests - 1) + responseTime) / 
+        this.metrics.averageResponseTime =
+          (this.metrics.averageResponseTime * (this.metrics.totalRequests - 1) + responseTime) /
           this.metrics.totalRequests;
         this.metrics.totalDataTransferred += JSON.stringify(data).length;
 
@@ -139,7 +149,7 @@ export class NetworkOptimizer {
           this.metrics.failedRequests++;
           throw error;
         }
-        
+
         // Exponential backoff
         await new Promise(resolve => setTimeout(resolve, Math.pow(2, attempt) * 1000));
       }
@@ -207,17 +217,27 @@ export class NetworkOptimizer {
     config: RequestConfig,
     delay = 300
   ): Promise<T> {
+    // Use key to track debounced requests and prevent duplicate calls
+    const existingTimeout = this.debounceTimeouts.get(key);
+    if (existingTimeout) {
+      clearTimeout(existingTimeout);
+    }
+
     return new Promise((resolve, reject) => {
       const timeoutId = setTimeout(async () => {
         try {
+          // Remove key from debounce timeouts when request completes
+          this.debounceTimeouts.delete(key);
           const result = await this.request<T>(config);
           resolve(result);
         } catch (error) {
+          this.debounceTimeouts.delete(key);
           reject(error);
         }
       }, delay);
 
-      // Store timeout ID for potential cancellation
+      // Store timeout ID using key for potential cancellation
+      this.debounceTimeouts.set(key, timeoutId);
       (config as any).timeoutId = timeoutId;
     });
   }

@@ -1,9 +1,9 @@
 /**
  * Hashtag Analytics Service
- * 
+ *
  * Advanced analytics and trending algorithms for hashtag performance tracking
  * Includes cross-feature discovery, engagement analysis, and predictive insights
- * 
+ *
  * Created: October 10, 2025
  * Updated: October 11, 2025
  * Status: ✅ ACTIVE
@@ -28,11 +28,16 @@ import {
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
 const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
 
-if (!supabaseUrl || !supabaseAnonKey) {
-  throw new Error('Supabase environment variables are not configured for hashtag analytics.');
-}
-
-const supabase = createClient(supabaseUrl, supabaseAnonKey);
+// Lazily-configured Supabase client: avoid throwing at module load time so builds
+// (including CI/E2E) can succeed even when env vars are not present.
+const supabase =
+  supabaseUrl && supabaseAnonKey
+    ? createClient(supabaseUrl, supabaseAnonKey)
+    : new Proxy({} as ReturnType<typeof createClient>, {
+        get(_target, _prop) {
+          throw new Error('Supabase environment variables are not configured for hashtag analytics.');
+        },
+      });
 
 // ============================================================================
 // ANALYTICS CORE FUNCTIONS
@@ -49,21 +54,35 @@ export async function calculateHashtagAnalytics(
     const startDate = getPeriodStartDate(period);
     const endDate = new Date().toISOString();
 
+    // Get usage count for validation using helper function
+    const days = period === '24h' ? 1 : period === '7d' ? 7 : period === '30d' ? 30 : period === '90d' ? 90 : 365;
+    const usageCountValidation = await _getUsageCount(hashtagId, days);
+
     // Get usage data
     const usageData = await getHashtagUsageData(hashtagId, startDate, endDate);
-    
+
+    // Log usage count validation for debugging and validation
+    if (process.env.NODE_ENV === 'development') {
+      logger.debug('Hashtag usage count validation', {
+        hashtagId,
+        period,
+        usageCountValidation,
+        usageDataTotal: usageData.totalUsage
+      });
+    }
+
     // Get engagement data
     const engagementData = await getHashtagEngagementData(hashtagId, startDate, endDate);
-    
+
     // Get user data
     const userData = await getHashtagUserData(hashtagId, startDate, endDate);
-    
+
     // Get content data
     const contentData = await getHashtagContentData(hashtagId, startDate, endDate);
-    
-    // Calculate metrics
+
+    // Calculate metrics - use validated usage count if available
     const metrics = {
-      usage_count: usageData.totalUsage,
+      usage_count: usageCountValidation > 0 ? usageCountValidation : usageData.totalUsage,
       unique_users: userData.uniqueUsers,
       engagement_rate: calculateEngagementRate(Number(usageData.totalViews), Number(engagementData.totalInteractions)),
       growth_rate: calculateGrowthRate(usageData.currentUsage, usageData.previousUsage),
@@ -168,7 +187,11 @@ export async function calculateTrendingHashtags(
       const growthRate = calculateGrowthRate(metrics.usageCount, 0); // Simplified for now
       const engagementRate = calculateEngagementRate(metrics.usageCount, metrics.usageCount);
       const recency = 1; // Simplified for now
-      
+
+      // Calculate peak and current positions using helper functions
+      const peakPosition = await _calculatePeakPosition(hashtag.id);
+      const currentPosition = await _calculateCurrentPosition(hashtag.id);
+
       const trendScore = calculateTrendingScore(
         metrics.usageCount,
         growthRate,
@@ -181,8 +204,24 @@ export async function calculateTrendingHashtags(
         trend_score: trendScore,
         growth_rate: growthRate,
         peak_usage: metrics.peakUsage,
+        peak_position: peakPosition,
+        current_position: currentPosition,
         time_period: '24h'
       });
+    }
+
+    // If category is provided, get category trends for additional context
+    if (category) {
+      try {
+        const categoryTrends = await _getCategoryTrends(category);
+        logger.debug('Category trends retrieved', {
+          category,
+          trendingCount: categoryTrends.trending_hashtags,
+          averageTrendScore: categoryTrends.average_trend_score
+        });
+      } catch (error) {
+        logger.warn('Failed to get category trends', { category, error });
+      }
     }
 
     // Sort by trend score and return top results
@@ -212,7 +251,7 @@ export async function getHashtagPerformanceInsights(hashtagId: string): Promise<
   try {
     const analytics = await calculateHashtagAnalytics(hashtagId, '7d');
     const performance = getHashtagPerformanceLevel(analytics.engagement_rate);
-    
+
     const insights: string[] = [];
     const recommendations: string[] = [];
 
@@ -293,13 +332,13 @@ export async function getCrossFeatureDiscovery(
 
     // Get profile-based suggestions
     const profileSuggestions = await getProfileBasedSuggestions(userId, currentHashtagIds, limit);
-    
+
     // Get poll-based suggestions
     const pollSuggestions = await getPollBasedSuggestions(userId, currentHashtagIds, limit);
-    
+
     // Get feed-based suggestions
     const feedSuggestions = await getFeedBasedSuggestions(userId, currentHashtagIds, limit);
-    
+
     // Get trending suggestions
     const trendingSuggestions = await getTrendingSuggestions(currentHashtagIds, limit);
 
@@ -328,7 +367,7 @@ function getPeriodStartDate(period: string): string {
     '90d': 90 * 24 * 60 * 60 * 1000,
     '1y': 365 * 24 * 60 * 60 * 1000
   };
-  
+
   const startTime = new Date(now.getTime() - (periods[period as keyof typeof periods] || periods['7d']));
   return startTime.toISOString();
 }
@@ -382,7 +421,7 @@ async function getHashtagUserData(hashtagId: string, startDate: string, endDate:
   if (error) throw error;
 
   const uniqueUsers = new Set(data?.map(d => d.user_id).filter(Boolean));
-  
+
   return {
     uniqueUsers: uniqueUsers.size,
     topUsers: Array.from(uniqueUsers).slice(0, 10)
@@ -439,10 +478,10 @@ async function getRelatedHashtags(hashtagId: string): Promise<string[]> {
 
     // Combine and deduplicate results
     const relatedNames = new Set<string>();
-    
+
     // Add category-based related hashtags
     relatedHashtags?.forEach((h: any) => relatedNames.add(h.name));
-    
+
     // Add co-occurring hashtags
     coOccurringHashtags?.forEach((h: any) => {
       if (h.hashtag?.name) {
@@ -484,7 +523,7 @@ async function getSentimentDistribution(hashtagId: string, startDate: string, en
     });
 
     const total = sentimentCounts.positive + sentimentCounts.neutral + sentimentCounts.negative;
-    
+
     if (total === 0) {
       return {
         positive: 0.6,
@@ -631,7 +670,7 @@ async function getDemographicDistribution(hashtagId: string, startDate: string, 
 
 async function _getUsageCount(hashtagId: string, days: number): Promise<number> {
   const startDate = new Date(Date.now() - days * 24 * 60 * 60 * 1000);
-  
+
   const { data, error } = await supabase
     .from('hashtag_usage')
     .select('id')
@@ -916,7 +955,7 @@ async function _calculatePeakPosition(hashtagId: string): Promise<number> {
   try {
     // Get historical usage data for the last 30 days
     const thirtyDaysAgo = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000);
-    
+
     const { data, error } = await supabase
       .from('hashtag_usage')
       .select('created_at')
@@ -958,7 +997,7 @@ async function _calculateCurrentPosition(hashtagId: string): Promise<number> {
   try {
     // Get current usage data for the last 24 hours
     const twentyFourHoursAgo = new Date(Date.now() - 24 * 60 * 60 * 1000);
-    
+
     const { data, error } = await supabase
       .from('hashtag_usage')
       .select('id')
@@ -991,7 +1030,7 @@ async function getPreviousPeriodUsage(hashtagId: string, startDate: string, endD
     const start = new Date(startDate);
     const end = new Date(endDate);
     const periodLength = end.getTime() - start.getTime();
-    
+
     // Calculate previous period dates
     const previousEnd = new Date(start.getTime() - 1);
     const previousStart = new Date(previousEnd.getTime() - periodLength);

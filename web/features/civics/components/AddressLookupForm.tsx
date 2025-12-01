@@ -13,7 +13,7 @@
 
 'use client';
 
-import React, { useCallback, useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useRef, useState } from 'react';
 
 import { VoterRegistrationCTA } from '@/features/civics/components/VoterRegistrationCTA';
 import { getStateCodeFromDivisions } from '@/features/civics/utils/divisions';
@@ -54,8 +54,11 @@ type AddressLookupFormProps = {
  * @returns JSX element or null if feature is disabled
  */
 export function AddressLookupForm({ onLookup, className = '' }: AddressLookupFormProps) {
+  const isEnabled = isFeatureEnabled('CIVICS_ADDRESS_LOOKUP');
   const [address, setAddress] = useState('');
   const [error, setError] = useState<string | null>(null);
+  const formRef = useRef<HTMLFormElement | null>(null);
+  const { t } = useI18n();
   const { handleAddressUpdate } = useUserActions();
   const addressLoading = useUserAddressLoading();
   const repLoading = useRepresentativeGlobalLoading();
@@ -79,7 +82,7 @@ export function AddressLookupForm({ onLookup, className = '' }: AddressLookupFor
 
     const trimmedAddress = address.trim();
     if (!trimmedAddress) {
-      setError('Please enter an address');
+      setError(t('civics.addressLookup.errors.addressRequired'));
       return;
     }
 
@@ -92,7 +95,7 @@ export function AddressLookupForm({ onLookup, className = '' }: AddressLookupFor
         (async () => {
           const response = await findByLocation({ address: trimmedAddress });
           if (!response?.success) {
-            throw new Error(response?.error ?? 'Unable to find representatives for that address');
+            throw new Error(response?.error ?? t('civics.addressLookup.errors.noRepresentatives'));
           }
         })()
       ]);
@@ -106,11 +109,30 @@ export function AddressLookupForm({ onLookup, className = '' }: AddressLookupFor
       setAddress('');
     } catch (lookupError) {
       const message =
-        lookupError instanceof Error ? lookupError.message : 'Failed to lookup address';
+        lookupError instanceof Error && lookupError.message
+          ? lookupError.message
+          : t('civics.addressLookup.errors.lookupFailed');
       setError(message);
       logger.error('Address lookup failed', lookupError);
     }
-  }, [address, clearRepresentativeError, findByLocation, handleAddressUpdate, onLookup]);
+  }, [address, clearRepresentativeError, findByLocation, handleAddressUpdate, onLookup, t]);
+
+  const handleDifferentAddress = useCallback(() => {
+    const differentAddress = window.prompt(
+      t('civics.addressLookup.prompts.differentAddress')
+    );
+
+    const trimmed = differentAddress?.trim();
+    if (!trimmed) {
+      return;
+    }
+
+    setAddress(trimmed);
+    // Allow state to update before submitting
+    setTimeout(() => {
+      formRef.current?.requestSubmit();
+    }, 0);
+  }, [setAddress, t]);
 
   useEffect(() => {
     if (userDivisionIds.length === 0) return;
@@ -140,10 +162,10 @@ export function AddressLookupForm({ onLookup, className = '' }: AddressLookupFor
 
   return (
     <div className={`civics-address-lookup ${className}`}>
-      <form onSubmit={handleSubmit} className="space-y-4">
+      <form ref={formRef} onSubmit={handleSubmit} className="space-y-4">
         <div>
           <label htmlFor="address" className="block text-sm font-medium text-gray-700 mb-2">
-            Enter your address to find your representatives
+            {t('civics.addressLookup.form.label')}
           </label>
           <input
             type="text"
@@ -151,7 +173,7 @@ export function AddressLookupForm({ onLookup, className = '' }: AddressLookupFor
             data-testid="address-input"
             value={address}
             onChange={(e) => setAddress(e.target.value)}
-            placeholder="123 Main St, City, State 12345"
+            placeholder={t('civics.addressLookup.form.placeholder')}
             className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
             disabled={isLoading}
             maxLength={500}
@@ -159,8 +181,8 @@ export function AddressLookupForm({ onLookup, className = '' }: AddressLookupFor
 
           {/* Privacy messaging */}
           <p className="mt-2 text-xs text-gray-500">
-            <strong>Privacy first:</strong> We don&apos;t store your address. We keep a one-way fingerprint
-            and a rough map square so we can draw anonymous stats. No one can turn that back into your home.
+            <strong>{t('civics.addressLookup.privacy.heading')}</strong>{' '}
+            {t('civics.addressLookup.privacy.copy')}
           </p>
         </div>
 
@@ -168,25 +190,15 @@ export function AddressLookupForm({ onLookup, className = '' }: AddressLookupFor
         <div className="text-sm text-blue-600">
           <button
             type="button"
+            data-testid="address-lookup-different-address"
             className="underline hover:no-underline"
-            onClick={() => {
-              // Implement different address flow - show modal or redirect to different address form
-              const differentAddress = prompt('Enter your voting address (this will be used for representative lookup only):');
-              if (differentAddress?.trim()) {
-                setAddress(differentAddress.trim());
-                // Auto-submit the form with the different address
-                setTimeout(() => {
-                  const form = document.querySelector('form');
-                  if (form) {
-                    form.requestSubmit();
-                  }
-                }, 100);
-              }
-            }}
+            onClick={handleDifferentAddress}
           >
-            Voting from a different address?
+            {t('civics.addressLookup.actions.differentAddressButton')}
           </button>
-          <span className="ml-1">Use &quot;different address&quot; for this search. Same privacy rules—nothing is stored.</span>
+          <span className="ml-1">
+            {t('civics.addressLookup.actions.differentAddressHelper')}
+          </span>
         </div>
 
         {(error ?? representativeError) && (
@@ -201,7 +213,9 @@ export function AddressLookupForm({ onLookup, className = '' }: AddressLookupFor
           disabled={isLoading || !address.trim()}
           className="w-full bg-blue-600 text-white py-2 px-4 rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed"
         >
-          {isLoading ? 'Looking up...' : 'Find My Representatives'}
+          {isLoading
+            ? t('civics.addressLookup.actions.submit.loading')
+            : t('civics.addressLookup.actions.submit.default')}
         </button>
       </form>
 
@@ -209,7 +223,7 @@ export function AddressLookupForm({ onLookup, className = '' }: AddressLookupFor
       <div className="mt-4 flex justify-center">
         <div className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800">
           <div className="w-2 h-2 rounded-full bg-green-500 mr-1" />
-          Privacy Protected
+          {t('civics.addressLookup.status.privacyProtected')}
         </div>
       </div>
 

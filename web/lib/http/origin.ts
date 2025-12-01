@@ -23,6 +23,8 @@ const DEFAULT_ORIGIN_CONFIG: OriginConfig = {
     'https://choices-platform.vercel.app',
     'https://choices.app',
     'https://www.choices.app',
+    'https://choices-app.com',
+    'https://www.choices-app.com',
   ],
   allowLocalhost: process.env.NODE_ENV === 'development',
   allowVercelPreview: true,

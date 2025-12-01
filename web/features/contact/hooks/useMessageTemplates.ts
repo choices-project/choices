@@ -9,17 +9,18 @@
 
 import { useState, useCallback, useMemo } from 'react';
 
+import { useI18n } from '@/hooks/useI18n';
 import {
-MESSAGE_TEMPLATES,
+  MESSAGE_TEMPLATES,
   type MessageTemplate,
   getTemplateById,
   fillTemplate,
-  validateTemplateValues,
 } from '@/lib/contact/message-templates';
 // withOptional removed
 import logger from '@/lib/utils/logger';
 
 export function useMessageTemplates() {
+  const { t } = useI18n();
   const [selectedTemplate, setSelectedTemplate] = useState<MessageTemplate | null>(null);
   const [templateValues, setTemplateValues] = useState<Record<string, string>>({});
   const [userInfo, setUserInfo] = useState<{
@@ -28,13 +29,14 @@ export function useMessageTemplates() {
     address?: string;
   }>({});
 
-  // Get all templates
-  const allTemplates = useMemo(() => MESSAGE_TEMPLATES, []);
+  // Get all templates (localized)
+  const allTemplates = useMemo(() => localizeTemplates(MESSAGE_TEMPLATES, t), [t]);
 
-  // Get templates by category
+  // Get templates by category (localized)
   const templatesByCategory = useMemo(() => {
-    const categories: Record<string, MessageTemplate[]> = {};
-    MESSAGE_TEMPLATES.forEach(template => {
+    const categories: Record<string, LocalizedTemplate[]> = {};
+    const localized = localizeTemplates(MESSAGE_TEMPLATES, t);
+    localized.forEach(template => {
       const category = template.category;
       if (category) {
         if (!categories[category]) {
@@ -44,7 +46,7 @@ export function useMessageTemplates() {
       }
     });
     return categories;
-  }, []);
+  }, [t]);
 
   // Select a template
   const selectTemplate = useCallback((templateId: string | null) => {
@@ -66,6 +68,12 @@ export function useMessageTemplates() {
     }
   }, []);
 
+  // Get localized selected template
+  const localizedSelectedTemplate = useMemo(() => {
+    if (!selectedTemplate) return null;
+    return localizeTemplate(selectedTemplate, t);
+  }, [selectedTemplate, t]);
+
   // Update a template value
   const updateTemplateValue = useCallback((key: string, value: string) => {
     setTemplateValues(prev => ({ ...prev, [key]: value }));
@@ -83,11 +91,21 @@ export function useMessageTemplates() {
     }
   }, [selectedTemplate, templateValues, userInfo]);
 
-  // Validate template values
+  // Validate template values (using localized template for error messages)
   const validation = useMemo(() => {
-    if (!selectedTemplate) return { valid: true, missing: [] };
-    return validateTemplateValues(selectedTemplate, templateValues);
-  }, [selectedTemplate, templateValues]);
+    if (!localizedSelectedTemplate) return { valid: true, missing: [] };
+    // Use localized template for validation so error messages are translated
+    const missing: string[] = [];
+    localizedSelectedTemplate.placeholders.forEach(placeholder => {
+      if (placeholder.required && !templateValues[placeholder.key]) {
+        missing.push(placeholder.label);
+      }
+    });
+    return {
+      valid: missing.length === 0,
+      missing,
+    };
+  }, [localizedSelectedTemplate, templateValues]);
 
   // Reset template selection
   const resetTemplate = useCallback(() => {
@@ -96,10 +114,10 @@ export function useMessageTemplates() {
   }, []);
 
   return {
-    // Templates
+    // Templates (localized)
     allTemplates,
     templatesByCategory,
-    selectedTemplate,
+    selectedTemplate: localizedSelectedTemplate,
     
     // Template management
     selectTemplate,

@@ -12,7 +12,7 @@ export const DELETE = withErrorHandling(async (
 ) => {
   const { id } = await params;
   const credentialId = id;
-  
+
   if (!credentialId) {
     return validationError({ credentialId: 'Credential ID is required' });
   }
@@ -27,6 +27,10 @@ export const DELETE = withErrorHandling(async (
     return authError('Authentication required');
   }
 
+  // Extract security context for logging
+  const ipAddress = request.headers.get('x-forwarded-for')?.split(',')[0] ?? request.headers.get('x-real-ip') ?? 'unknown';
+  const userAgent = request.headers.get('user-agent') ?? 'unknown';
+
     // Delete the credential
     const { error: deleteError } = await supabase
       .from('webauthn_credentials')
@@ -39,9 +43,11 @@ export const DELETE = withErrorHandling(async (
     return errorResponse('Failed to delete credential', 500, undefined, 'WEBAUTHN_CREDENTIAL_DELETE_FAILED');
   }
 
-  logger.info('WebAuthn credential deleted successfully', { 
-    userId: user.id, 
-    credentialId 
+  logger.info('WebAuthn credential deleted successfully', {
+    userId: user.id,
+    credentialId,
+    ipAddress,
+    userAgent,
   });
 
   return successResponse({
@@ -55,7 +61,7 @@ export const PATCH = withErrorHandling(async (
 ) => {
     const { id } = await params;
     const credentialId = id;
-    
+
     if (!credentialId) {
       return validationError({ credentialId: 'Credential ID is required' });
     }
@@ -86,10 +92,10 @@ export const PATCH = withErrorHandling(async (
       return errorResponse('Failed to update credential', 500, undefined, 'WEBAUTHN_CREDENTIAL_UPDATE_FAILED');
     }
 
-    logger.info('WebAuthn credential updated successfully', { 
-      userId: user.id, 
+    logger.info('WebAuthn credential updated successfully', {
+      userId: user.id,
       credentialId,
-      device_label 
+      device_label
     });
 
     return successResponse({

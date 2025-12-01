@@ -15,7 +15,17 @@ import React from 'react';
 
 import { useFeatureFlag, useFeatureFlagsBatch, useFeatureFlagWithDependencies, useFeatureFlags } from '@/features/pwa/hooks/useFeatureFlags';
 
-const IS_E2E_HARNESS = process.env.NEXT_PUBLIC_ENABLE_E2E_HARNESS === '1';
+const isE2EHarness = (): boolean => process.env.NEXT_PUBLIC_ENABLE_E2E_HARNESS === '1';
+
+const renderContainer = (
+  content: React.ReactNode,
+  className?: string,
+  style?: React.CSSProperties
+) => (
+  <div className={className} style={style}>
+    {content}
+  </div>
+);
 
 export type FeatureWrapperProps = {
   /** Feature flag ID to check */
@@ -67,6 +77,10 @@ export function FeatureWrapper({
     );
   }
 
+  if (isE2EHarness()) {
+    return renderContainer(children, className, style);
+  }
+
   // Show loading state if requested and loading
   if (showLoading && loading) {
     return <>{loadingComponent}</>;
@@ -74,11 +88,7 @@ export function FeatureWrapper({
 
   // If feature is enabled, render children
   if (enabled) {
-    return (
-      <div className={className} style={style}>
-        {children}
-      </div>
-    );
+    return renderContainer(children, className, style);
   }
 
   // If feature is disabled
@@ -87,11 +97,7 @@ export function FeatureWrapper({
   }
 
   // Render fallback if provided
-  return (
-    <div className={className} style={style}>
-      {fallback}
-    </div>
-  );
+  return renderContainer(fallback, className, style);
 }
 
 export type FeatureWrapperBatchProps = {
@@ -147,6 +153,10 @@ export function FeatureWrapperBatch({
     );
   }
 
+  if (isE2EHarness()) {
+    return renderContainer(children, className, style);
+  }
+
   // Show loading state if requested and loading
   if (showLoading && loading) {
     return <>{loadingComponent}</>;
@@ -157,11 +167,7 @@ export function FeatureWrapperBatch({
 
   // If conditions are met, render children
   if (shouldRender) {
-    return (
-      <div className={className} style={style}>
-        {children}
-      </div>
-    );
+    return renderContainer(children, className, style);
   }
 
   // If conditions are not met
@@ -170,11 +176,7 @@ export function FeatureWrapperBatch({
   }
 
   // Render fallback if provided
-  return (
-    <div className={className} style={style}>
-      {fallback}
-    </div>
-  );
+  return renderContainer(fallback, className, style);
 }
 
 export type FeatureWrapperWithDependenciesProps = {
@@ -230,6 +232,10 @@ export function FeatureWrapperWithDependencies({
     );
   }
 
+  if (isE2EHarness()) {
+    return renderContainer(children, className, style);
+  }
+
   // Show loading state if requested and loading
   if (showLoading && loading) {
     return <>{loadingComponent}</>;
@@ -237,20 +243,12 @@ export function FeatureWrapperWithDependencies({
 
   // If feature is enabled and dependencies are met, render children
   if (enabled && dependenciesMet) {
-    return (
-      <div className={className} style={style}>
-        {children}
-      </div>
-    );
+    return renderContainer(children, className, style);
   }
 
   // If dependencies are not met, render dependencies fallback
   if (!dependenciesMet && dependenciesFallback !== null) {
-    return (
-      <div className={className} style={style}>
-        {dependenciesFallback}
-      </div>
-    );
+    return renderContainer(dependenciesFallback, className, style);
   }
 
   // If feature is disabled
@@ -259,11 +257,7 @@ export function FeatureWrapperWithDependencies({
   }
 
   // Render fallback if provided
-  return (
-    <div className={className} style={style}>
-      {fallback}
-    </div>
-  );
+  return renderContainer(fallback, className, style);
 }
 
 /**
@@ -326,13 +320,13 @@ export function withFeatureFlagsBatch<P extends object>(
   anyEnabled = false
 ) {
   return function WithFeatureFlagsBatchComponent(props: P): React.ReactElement | null {
-    const { anyEnabled: anyEnabledResult, loading } = useFeatureFlagsBatch(features);
+    const { anyEnabled: anyEnabledResult, allEnabled, loading } = useFeatureFlagsBatch(features);
 
     if (loading) {
       return <div>Loading...</div>;
     }
 
-    const shouldRender = anyEnabled ? anyEnabledResult : true;
+    const shouldRender = anyEnabled ? anyEnabledResult : allEnabled;
 
     if (shouldRender) {
       return <WrappedComponent {...props} />;

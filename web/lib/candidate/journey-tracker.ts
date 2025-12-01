@@ -7,6 +7,8 @@
  * @created 2025-01-30
  */
 
+import { logger } from '@/lib/utils/logger';
+
 export type JourneyStage = 
   | 'declared'           // Just declared candidacy
   | 'preparing'          // Gathering documents, understanding requirements
@@ -316,7 +318,21 @@ export function shouldSendReminder(progress: JourneyProgress): {
 export function calculateProgress(progress: JourneyProgress, checklist: JourneyChecklistItem[]): number {
   const completed = checklist.filter(item => item.completed).length
   const total = checklist.length
-  return total > 0 ? Math.round((completed / total) * 100) : 0
+  const calculatedPercentage = total > 0 ? Math.round((completed / total) * 100) : 0
+  
+  // Log progress calculation for analytics (using progress parameter for context)
+  if (process.env.NODE_ENV === 'development') {
+    logger.debug('Journey progress calculated', {
+      userId: progress.userId,
+      platformId: progress.platformId,
+      currentStage: progress.currentStage,
+      calculatedPercentage,
+      completed,
+      total
+    })
+  }
+  
+  return calculatedPercentage
 }
 
 /**

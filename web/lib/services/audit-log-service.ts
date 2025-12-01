@@ -193,6 +193,7 @@ export class AuditLogService {
     const metadata = mergeDefined(options.metadata ?? {}, {
       method,
       success,
+      userId: userId ?? 'anonymous', // Include userId in metadata for audit trail
     });
 
     const mergedOptions = mergeDefined(options as Record<string, unknown>, {

@@ -3,6 +3,57 @@
     "language": "Idioma"
   },
   "feeds": {
+    "core": {
+      "error": {
+        "title": "Error al cargar el feed",
+        "retry": "Intentar de nuevo"
+      },
+      "pullToRefresh": {
+        "pull": "↓ Desliza para actualizar",
+        "release": "↓ Suelta para actualizar"
+      },
+      "header": {
+        "title": "Feed unificado",
+        "refresh": "Actualizar",
+        "refreshing": "Actualizando..."
+      },
+      "themeToggle": {
+        "light": "Cambiar a modo claro",
+        "dark": "Cambiar a modo oscuro"
+      },
+      "filters": {
+        "title": "Filtros de contenido",
+        "districtLabel": "Tu distrito: {district}",
+        "districtToggleOn": "✓ Filtrado",
+        "districtToggleOff": "Filtrar por distrito",
+        "districtDisable": "Desactivar filtro por distrito",
+        "districtEnable": "Activar filtro por distrito",
+        "districtHelper": "Mostrando contenido para {district} y elementos de toda la plataforma",
+        "hashtagPlaceholder": "Añade hashtags para filtrar (p. ej., climate)",
+        "hashtagAria": "Filtrar por hashtag",
+        "trendingHeading": "Hashtags en tendencia",
+        "selectedRemoveAria": "Quitar filtro {tag}"
+      },
+      "tabs": {
+        "feed": "Feed",
+        "polls": "Encuestas",
+        "analytics": "Analítica"
+      },
+      "empty": {
+        "filters": "Ningún contenido coincide con tus filtros",
+        "default": "No hay feeds disponibles",
+        "polls": "La vista de encuestas estará disponible pronto",
+        "analytics": "La analítica no está disponible"
+      },
+      "actions": {
+        "bookmark": "Guardar",
+        "share": "Compartir"
+      },
+      "status": {
+        "online": "En línea",
+        "items": "{count, plural, one {{count} elemento} other {{count} elementos}}"
+      }
+    },
     "infiniteScroll": {
       "loadingMore": "Cargando más...",
       "end": {
@@ -435,7 +486,35 @@
     }
   },
   "common": {
-    "skipToContent": "Saltar al contenido principal"
+    "skipToContent": "Saltar al contenido principal",
+    "actions": {
+      "cancel": "Cancelar",
+      "retry": "Reintentar"
+    },
+    "progressiveDisclosure": {
+      "expand": "Expandir contenido",
+      "collapse": "Contraer contenido"
+    },
+    "placeholders": {
+      "emDash": "—"
+    },
+    "theme": {
+      "label": "Tema",
+      "select": "Seleccionar tema",
+      "options": "Opciones de tema",
+      "changed": "Tema cambiado a {theme}"
+    },
+    "devices": {
+      "title": "Tus Dispositivos",
+      "listLabel": "Lista de dispositivos",
+      "loading": "Cargando dispositivos...",
+      "loadFailed": "No se pudieron cargar los dispositivos",
+      "empty": "No se encontraron dispositivos",
+      "add": "Agregar Dispositivo"
+    },
+    "messages": {
+      "dismiss": "Descartar mensaje"
+    }
   },
   "navigation": {
     "home": "Inicio",
@@ -1092,6 +1171,472 @@
         "skip": "Omitir por ahora",
         "continue": "Continuar",
         "reminder": "Siempre podrás agregar esta información más adelante"
+      }
+    },
+    "profile": {
+      "test": {
+        "title": "Configuración de Perfil",
+        "subtitle": "Configura la información de tu perfil"
+      },
+      "overview": {
+        "title": "Configura Tu Perfil",
+        "subtitle": "Ayúdanos a personalizar tu experiencia mientras mantienes el control. **Todo es opcional** - puedes omitir cualquier paso o cambiar la configuración más tarde.",
+        "whyWeAsk": "**Por qué lo pedimos:** Tu perfil nos ayuda a mostrarte candidatos y temas relevantes, pero nunca compartimos tu información personal. Tu privacidad está protegida con cifrado de extremo a extremo.",
+        "cards": {
+          "profile": {
+            "title": "Perfil",
+            "description": "Establece tu nombre para mostrar y la visibilidad de tu perfil",
+            "features": {
+              "chooseName": "Elegir nombre para mostrar",
+              "setVisibility": "Establecer nivel de visibilidad",
+              "controlPrivacy": "Controlar la privacidad"
+            }
+          },
+          "visibility": {
+            "title": "Visibilidad",
+            "description": "Controla quién puede ver tu perfil y actividad",
+            "features": {
+              "public": "Perfiles públicos",
+              "private": "Opciones privadas",
+              "anonymous": "Votación anónima"
+            }
+          },
+          "notifications": {
+            "title": "Notificaciones",
+            "description": "Elige cómo quieres ser notificado",
+            "features": {
+              "email": "Notificaciones por correo",
+              "push": "Notificaciones push",
+              "custom": "Preferencias personalizadas"
+            }
+          }
+        }
+      },
+      "profile": {
+        "title": "Tu Perfil",
+        "subtitle": "Configura la información básica de tu perfil",
+        "cardTitle": "Información del Perfil",
+        "cardDescription": "Esta información será visible para otros usuarios según tu configuración de privacidad"
+      },
+      "fields": {
+        "displayName": {
+          "label": "Nombre para Mostrar (Opcional)",
+          "placeholder": "Ingresa tu nombre para mostrar o déjalo en blanco",
+          "error": "El nombre para mostrar es obligatorio",
+          "howWeUse": "**Cómo lo usamos:** Muestra tu nombre cuando haces preguntas a candidatos o comentas sobre temas. Puedes usar tu nombre real, un seudónimo o dejarlo en blanco para permanecer anónimo."
+        },
+        "visibility": {
+          "label": "Visibilidad del Perfil",
+          "howWeUse": "**Cómo lo usamos:** Controla quién puede ver tu perfil y actividad. Elige lo que te resulte cómodo - siempre puedes cambiar esto más tarde."
+        }
+      },
+      "visibility": {
+        "public": {
+          "label": "Público",
+          "description": "Cualquiera puede ver tu perfil y actividad",
+          "badge": "Más Social"
+        },
+        "friendsOnly": {
+          "label": "Solo Amigos",
+          "description": "Solo las personas con las que te conectas pueden ver tu perfil",
+          "badge": "Equilibrado"
+        },
+        "private": {
+          "label": "Privado",
+          "description": "Solo tú puedes ver los detalles de tu perfil",
+          "badge": "Privado"
+        },
+        "anonymous": {
+          "label": "Anónimo",
+          "description": "Vota y participa sin revelar tu identidad",
+          "badge": "Más Privado"
+        }
+      },
+      "preferences": {
+        "title": "Preferencias de Notificaciones",
+        "subtitle": "Elige cómo quieres mantenerte actualizado",
+        "cardTitle": "Configuración de Notificaciones",
+        "cardDescription": "Controla cómo y cuándo recibes notificaciones",
+        "whyWeOffer": "**Por qué ofrecemos notificaciones:** Mantente actualizado sobre desarrollos políticos importantes, respuestas de candidatos a tus preguntas y nuevas funciones que te ayudan a participar en la democracia.",
+        "email": {
+          "label": "Notificaciones por Correo (Opcional)",
+          "description": "Recibe actualizaciones sobre respuestas de candidatos, noticias electorales y actualizaciones de la plataforma"
+        },
+        "push": {
+          "label": "Notificaciones del Navegador (Opcional)",
+          "description": "Recibe alertas en tiempo real cuando los candidatos respondan a tus preguntas"
+        },
+        "whatYoullReceive": {
+          "title": "Lo que recibirás:",
+          "candidateResponses": "Respuestas de candidatos a tus preguntas",
+          "campaignFinance": "Actualizaciones sobre transparencia en financiamiento de campañas",
+          "newCandidates": "Nuevos candidatos en tu área",
+          "electionDeadlines": "Fechas límite y eventos electorales importantes",
+          "platformUpdates": "Actualizaciones de la plataforma y nuevas funciones"
+        }
+      },
+      "complete": {
+        "title": "Resumen del Perfil",
+        "subtitle": "Revisa tu perfil y configuración de notificaciones",
+        "cardTitle": "Tu Configuración",
+        "displayName": "Nombre para Mostrar",
+        "notSet": "No establecido",
+        "visibility": "Visibilidad del Perfil",
+        "emailNotifications": "Notificaciones por Correo",
+        "pushNotifications": "Notificaciones Push",
+        "enabled": "Habilitado",
+        "disabled": "Deshabilitado"
+      },
+      "actions": {
+        "startSetup": "Comenzar Configuración",
+        "skip": "Omitir por ahora - Lo configuraré más tarde",
+        "back": "Volver",
+        "nextNotifications": "Siguiente: Notificaciones",
+        "reviewSettings": "Revisar Configuración",
+        "completeSetup": "Completar Configuración",
+        "continue": "Continuar"
+      }
+    },
+    "auth": {
+      "test": {
+        "title": "Configuración de Autenticación",
+        "subtitle": "Elige tu método de autenticación"
+      },
+      "overview": {
+        "title": "Protege Tu Cuenta",
+        "subtitle": "Elige cómo te gustaría autenticarte. Siempre puedes cambiar esto más tarde.",
+        "continueWith": "Continuar con {method}"
+      },
+      "setup": {
+        "title": "Configurar Autenticación",
+        "subtitle": "Completa la configuración de autenticación"
+      },
+      "options": {
+        "ariaLabel": "Seleccionar método de autenticación {method}",
+        "email": {
+          "title": "Correo",
+          "description": "Inicio de sesión seguro con verificación por correo",
+          "bullets": {
+            "noPassword": "No se necesita contraseña",
+            "magicLink": "Inicio de sesión con enlace mágico",
+            "secure": "Verificación segura"
+          }
+        },
+        "social": {
+          "title": "Inicio de Sesión Social",
+          "description": "Inicia sesión con Google o GitHub",
+          "bullets": {
+            "oneClick": "Inicio de sesión con un clic",
+            "trusted": "Proveedores confiables",
+            "enhanced": "Seguridad mejorada"
+          }
+        },
+        "webauthn": {
+          "title": "Clave de Acceso",
+          "description": "Autenticación biométrica segura",
+          "bullets": {
+            "biometric": "Huella dactilar/Reconocimiento facial",
+            "noPassword": "Sin contraseñas",
+            "maximum": "Máxima seguridad"
+          }
+        },
+        "anonymous": {
+          "title": "Anónimo",
+          "description": "Vota sin crear una cuenta",
+          "bullets": {
+            "noPersonal": "Sin información personal",
+            "maximum": "Máxima privacidad",
+            "limited": "Funciones limitadas"
+          }
+        },
+        "skip": {
+          "title": "Omitir por Ahora",
+          "description": "Configurar autenticación más tarde",
+          "bullets": {
+            "continue": "Continuar incorporación",
+            "setupLater": "Configurar más tarde",
+            "limited": "Acceso limitado"
+          }
+        }
+      },
+      "email": {
+        "cardTitle": "Autenticación por Correo",
+        "cardDescription": "Te enviaremos un enlace de inicio de sesión seguro",
+        "fields": {
+          "email": {
+            "label": "Dirección de Correo",
+            "placeholder": "tu@correo.com"
+          }
+        },
+        "validation": {
+          "required": "Por favor ingresa tu dirección de correo"
+        },
+        "errors": {
+          "sendFailed": "No se pudo enviar el correo de verificación"
+        },
+        "success": {
+          "checkEmail": "¡Revisa tu correo para el enlace de inicio de sesión!",
+          "sent": "Hemos enviado un enlace de inicio de sesión seguro a tu dirección de correo."
+        },
+        "actions": {
+          "sending": "Enviando...",
+          "sendLink": "Enviar Enlace de Inicio de Sesión"
+        }
+      },
+      "social": {
+        "google": "Google",
+        "github": "GitHub",
+        "cardTitle": "Autenticación Social",
+        "cardDescription": "Elige tu proveedor de inicio de sesión social preferido",
+        "actions": {
+          "continueWithGoogle": "Continuar con Google",
+          "continueWithGitHub": "Continuar con GitHub"
+        },
+        "errors": {
+          "signInFailed": "No se pudo iniciar sesión con {provider}"
+        }
+      },
+      "webauthn": {
+        "cardTitle": "Autenticación con Clave de Acceso",
+        "cardDescription": "Configura autenticación biométrica segura",
+        "benefits": {
+          "title": "Seguro y Conveniente",
+          "biometric": "Usa tu huella dactilar o reconocimiento facial",
+          "noPassword": "No hay contraseñas que recordar",
+          "crossDevice": "Funciona en todos tus dispositivos",
+          "maximum": "Máxima seguridad con privacidad"
+        },
+        "actions": {
+          "create": "Crear Clave de Acceso"
+        },
+        "success": {
+          "registered": "¡Clave de acceso registrada exitosamente!",
+          "canUse": "Ahora puedes usar tu autenticación biométrica para iniciar sesión."
+        }
+      },
+      "anonymous": {
+        "cardTitle": "Acceso Anónimo",
+        "cardDescription": "Puedes votar de forma anónima sin crear una cuenta",
+        "limitations": {
+          "title": "Funciones Limitadas",
+          "noPolls": "No se pueden crear encuestas",
+          "noPreferences": "No se pueden guardar preferencias",
+          "limitedAnalytics": "Acceso limitado a análisis",
+          "noResearch": "No se puede participar en investigaciones"
+        },
+        "actions": {
+          "continue": "Continuar de Forma Anónima"
+        }
+      },
+      "errors": {
+        "unexpected": "Ocurrió un error inesperado. Por favor intenta de nuevo.",
+        "serviceUnavailable": "Servicio de autenticación no disponible",
+        "dismiss": "Descartar"
+      },
+      "actions": {
+        "continue": "Continuar",
+        "back": "Volver"
+      }
+    },
+    "values": {
+      "title": "¿Qué te importa?",
+      "subtitle": "Selecciona hasta 5 temas que sean más importantes para ti. Esto nos ayuda a mostrarte encuestas relevantes y conectarte con personas afines.",
+      "concerns": {
+        "title": "Preocupaciones Principales ({count}/{max})"
+      },
+      "categories": {
+        "economic": {
+          "title": "Justicia Económica",
+          "concerns": {
+            "fairWages": "salarios justos",
+            "affordableHousing": "vivienda asequible",
+            "healthcareAccess": "acceso a la salud",
+            "educationFunding": "financiamiento educativo",
+            "smallBusinessSupport": "apoyo a pequeñas empresas",
+            "workerRights": "derechos laborales"
+          }
+        },
+        "environmental": {
+          "title": "Protección Ambiental",
+          "concerns": {
+            "climateAction": "acción climática",
+            "cleanEnergy": "energía limpia",
+            "conservation": "conservación",
+            "sustainableLiving": "vida sostenible",
+            "pollutionReduction": "reducción de contaminación"
+          }
+        },
+        "community": {
+          "title": "Bienestar Comunitario",
+          "concerns": {
+            "communitySafety": "seguridad comunitaria",
+            "mentalHealth": "salud mental",
+            "elderlyCare": "cuidado de ancianos",
+            "youthPrograms": "programas juveniles",
+            "disabilityRights": "derechos de discapacidad",
+            "immigrationReform": "reforma migratoria"
+          }
+        },
+        "systemic": {
+          "title": "Cambio Sistémico",
+          "concerns": {
+            "corporateAccountability": "responsabilidad corporativa",
+            "governmentTransparency": "transparencia gubernamental",
+            "campaignFinanceReform": "reforma de financiamiento de campañas",
+            "votingRights": "derechos de voto",
+            "mediaIntegrity": "integridad mediática"
+          }
+        }
+      },
+      "community": {
+        "title": "¿Dónde quieres tener un impacto?",
+        "local": {
+          "label": "Mi comunidad local",
+          "description": "Problemas de ciudad y vecindario"
+        },
+        "regional": {
+          "label": "Mi región/estado",
+          "description": "Preocupaciones estatales y regionales"
+        },
+        "national": {
+          "label": "Problemas nacionales",
+          "description": "Desafíos a nivel país"
+        },
+        "global": {
+          "label": "Desafíos globales",
+          "description": "Cooperación internacional"
+        }
+      },
+      "participation": {
+        "title": "¿Cómo te gustaría participar?",
+        "observer": {
+          "label": "Observador",
+          "description": "Prefiero observar y aprender de otros"
+        },
+        "contributor": {
+          "label": "Contribuidor",
+          "description": "Quiero contribuir ideas y sugerencias"
+        },
+        "leader": {
+          "label": "Líder",
+          "description": "Quiero ayudar a liderar discusiones e iniciativas"
+        }
+      },
+      "actions": {
+        "back": "Volver",
+        "continue": "Continuar"
+      },
+      "progress": "Paso {current} de {total}"
+    },
+    "interests": {
+      "title": "Tus Intereses",
+      "subtitle": "Selecciona los temas sobre los que quieres ver encuestas. Puedes cambiarlos en cualquier momento.",
+      "actions": {
+        "save": "Guardar",
+        "reset": "Restablecer"
+      },
+      "summary": {
+        "count": "{selected} de {total} seleccionados",
+        "allSelected": "Todos los intereses seleccionados",
+        "customSelection": "Selección personalizada",
+        "noneSelected": "Selecciona al menos un interés para mejores recomendaciones"
+      },
+      "options": {
+        "climateChange": "Cambio Climático",
+        "healthcare": "Salud",
+        "education": "Educación",
+        "economy": "Economía",
+        "immigration": "Migración",
+        "criminalJustice": "Justicia Penal",
+        "votingRights": "Derechos de Voto",
+        "technology": "Tecnología",
+        "foreignPolicy": "Política Exterior",
+        "socialSecurity": "Seguridad Social",
+        "gunControl": "Control de Armas",
+        "abortionRights": "Derechos Reproductivos",
+        "lgbtqRights": "Derechos LGBTQ+",
+        "racialJustice": "Justicia Racial",
+        "infrastructure": "Infraestructura"
+      },
+      "benefits": {
+        "title": "Cómo te ayuda:",
+        "items": {
+          "seePolls": "Mira encuestas sobre temas que te importan",
+          "personalizedContent": "Recibe recomendaciones personalizadas",
+          "findRepresentatives": "Encuentra representantes que compartan tus intereses",
+          "trackProgress": "Sigue el progreso de los temas que te importan"
+        }
+      }
+    },
+    "complete": {
+      "success": {
+        "title": "¡Bienvenido a Choices!",
+        "subtitle": "Ya estás listo para hacer oír tu voz.",
+        "celebration": "🎉 ¡Incorporación completada! +50 puntos obtenidos"
+      },
+      "summary": {
+        "title": "Resumen de Tu Perfil",
+        "userFallback": "Usuario",
+        "ready": "Listo para participar",
+        "valuesTitle": "Lo que te importa",
+        "communityTitle": "Enfoque comunitario",
+        "participationTitle": "Tu estilo de participación",
+        "privacy": {
+          "title": "Configuración de privacidad",
+          "shareProfile": "Compartir perfil públicamente",
+          "shareDemographics": "Compartir datos demográficos",
+          "allowAnalytics": "Permitir analíticas"
+        }
+      },
+      "participation": {
+        "observer": "Observador",
+        "contributor": "Contribuidor",
+        "leader": "Líder",
+        "default": "Participante"
+      },
+      "next": {
+        "title": "¿Qué sigue?",
+        "steps": {
+          "findCandidates": "Encuentra a tus candidatos locales y descubre quién realmente te representa",
+          "askQuestions": "Haz preguntas directamente a los candidatos y sigue sus respuestas",
+          "followMoney": "Ve quién financia a quién y detecta políticos \"comprados\"",
+          "connectVoters": "Conecta con otros votantes que se preocupan por la democracia"
+        }
+      },
+      "contribute": {
+        "title": "Ayuda a Construir la Revolución Democrática",
+        "subtitle": "Este es un proyecto de código abierto que lucha por la democracia. ¡Cada contribución ayuda a equilibrar el terreno!",
+        "code": {
+          "title": "Contribuciones de Código",
+          "description": "Ayúdanos a crear funciones, corregir errores y mejorar la plataforma",
+          "details": {
+            "frontend": "Frontend: React, TypeScript, Tailwind",
+            "backend": "Backend: Node.js, Supabase, PostgreSQL",
+            "apis": "APIs: Integración de datos gubernamentales",
+            "privacy": "Privacidad: Arquitectura de conocimiento cero"
+          },
+          "action": "Ver en GitHub"
+        },
+        "community": {
+          "title": "Otras Formas de Ayudar",
+          "description": "¿No eres desarrollador? ¡Hay otras maneras de contribuir!",
+          "details": {
+            "reportBugs": "Reporta errores y sugiere funciones",
+            "documentation": "Ayuda con la documentación",
+            "share": "Comparte con amigos y familia",
+            "test": "Prueba nuevas funciones"
+          },
+          "action": "Únete a la Comunidad"
+        },
+        "note": {
+          "label": "Nota:",
+          "message": "Estamos explorando formas éticas de aceptar contribuciones financieras. Por ahora nos enfocamos en contribuciones de código y comunidad para mantener la plataforma verdaderamente independiente."
+        }
+      },
+      "actions": {
+        "back": "Volver",
+        "complete": "Completar Configuración",
+        "saving": "Guardando tu perfil..."
       }
     }
   },

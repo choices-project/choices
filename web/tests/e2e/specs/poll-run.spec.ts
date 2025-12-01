@@ -83,7 +83,10 @@ test.describe('@axe Poll viewer harness', () => {
     await page.waitForFunction(() => Boolean(globalThis.__playwrightAnalytics));
     await runAxeAudit(page, 'poll run initial state');
 
-    await page.getByRole('button', { name: /Share/i }).click();
+    const shareButton = page.getByRole('button', { name: /Share/i });
+    await expect(shareButton).toBeVisible({ timeout: 10_000 });
+    await shareButton.click();
+    await page.waitForTimeout(500); // Wait for dialog to open
     await runAxeAudit(page, 'poll share dialog');
     await expect.poll(() => getEventCount(page, 'detail_copy_link')).toBeGreaterThan(0);
 

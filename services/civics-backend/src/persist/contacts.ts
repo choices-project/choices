@@ -3,6 +3,91 @@ import type { CanonicalRepresentative } from '../ingest/openstates/people.js';
 
 const CONTACT_SOURCE = 'openstates_yaml';
 
+// ============================================================================
+// VALIDATION UTILITIES
+// ============================================================================
+
+/**
+ * Basic email validation
+ */
+function isValidEmail(email: string): boolean {
+  if (!email || typeof email !== 'string') return false;
+  const trimmed = email.trim();
+  if (trimmed.length === 0) return false;
+  // Basic email regex - matches most valid email formats
+  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+  return emailRegex.test(trimmed);
+}
+
+/**
+ * Basic phone validation
+ * Accepts various formats: (123) 456-7890, 123-456-7890, 123.456.7890, +1 123 456 7890, etc.
+ */
+function isValidPhone(phone: string): boolean {
+  if (!phone || typeof phone !== 'string') return false;
+  const trimmed = phone.trim();
+  if (trimmed.length === 0) return false;
+  // Remove common phone formatting characters
+  const digitsOnly = trimmed.replace(/[\s\-\(\)\.\+]/g, '');
+  // Must have 10-15 digits (allowing international formats)
+  return /^\d{10,15}$/.test(digitsOnly);
+}
+
+/**
+ * Basic address validation
+ * Ensures address is not empty and has reasonable length
+ */
+function isValidAddress(address: string): boolean {
+  if (!address || typeof address !== 'string') return false;
+  const trimmed = address.trim();
+  if (trimmed.length < 5) return false; // Minimum reasonable address length
+  if (trimmed.length > 500) return false; // Maximum reasonable address length
+  return true;
+}
+
+/**
+ * Validate and normalize contact value based on type
+ */
+function validateAndNormalizeContact(
+  contactType: string,
+  value: string
+): { isValid: boolean; normalized?: string; error?: string } {
+  if (!value || typeof value !== 'string') {
+    return { isValid: false, error: 'Contact value is required' };
+  }
+
+  const trimmed = value.trim();
+  if (trimmed.length === 0) {
+    return { isValid: false, error: 'Contact value cannot be empty' };
+  }
+
+  switch (contactType) {
+    case 'email':
+      if (!isValidEmail(trimmed)) {
+        return { isValid: false, error: 'Invalid email format' };
+      }
+      return { isValid: true, normalized: trimmed.toLowerCase() };
+    
+    case 'phone':
+    case 'fax':
+      if (!isValidPhone(trimmed)) {
+        return { isValid: false, error: 'Invalid phone/fax format' };
+      }
+      // Normalize phone: remove formatting, keep digits and +
+      const normalized = trimmed.replace(/[\s\-\(\)\.]/g, '').replace(/^\+?1/, '');
+      return { isValid: true, normalized };
+    
+    case 'address':
+      if (!isValidAddress(trimmed)) {
+        return { isValid: false, error: 'Invalid address format' };
+      }
+      return { isValid: true, normalized: trimmed };
+    
+    default:
+      return { isValid: true, normalized: trimmed };
+  }
+}
+
 interface ContactInsertRow {
   representative_id: number;
   contact_type: string;
@@ -25,54 +110,105 @@ function dedupe(values: (string | null | undefined)[]): string[] {
 }
 
 function buildEmailRows(representativeId: number, emails: string[]): ContactInsertRow[] {
-  return emails.map((value, index) => ({
-    representative_id: representativeId,
-    contact_type: 'email',
-    value,
-    is_primary: index === 0,
-    is_verified: false,
-    source: CONTACT_SOURCE,
-    updated_at: new Date().toISOString(),
-  }));
+  const validRows: ContactInsertRow[] = [];
+  for (let index = 0; index < emails.length; index++) {
+    const value = emails[index];
+    if (!value) continue;
+    
+    const validation = validateAndNormalizeContact('email', value);
+    if (!validation.isValid || !validation.normalized) {
+      console.warn(`Skipping invalid email for representative ${representativeId}: ${value} (${validation.error})`);
+      continue;
+    }
+    
+    validRows.push({
+      representative_id: representativeId,
+      contact_type: 'email',
+      value: validation.normalized,
+      is_primary: index === 0 && validRows.length === 0,
+      is_verified: false,
+      source: CONTACT_SOURCE,
+      updated_at: new Date().toISOString(),
+    });
+  }
+  return validRows;
 }
 
 function buildPhoneRows(representativeId: number, phones: string[]): ContactInsertRow[] {
-  return phones.map((value, index) => ({
-    representative_id: representativeId,
-    contact_type: 'phone',
-    value,
-    is_primary: index === 0,
-    is_verified: false,
-    source: CONTACT_SOURCE,
-    updated_at: new Date().toISOString(),
-  }));
+  const validRows: ContactInsertRow[] = [];
+  for (let index = 0; index < phones.length; index++) {
+    const value = phones[index];
+    if (!value) continue;
+    
+    const validation = validateAndNormalizeContact('phone', value);
+    if (!validation.isValid || !validation.normalized) {
+      console.warn(`Skipping invalid phone for representative ${representativeId}: ${value} (${validation.error})`);
+      continue;
+    }
+    
+    validRows.push({
+      representative_id: representativeId,
+      contact_type: 'phone',
+      value: validation.normalized,
+      is_primary: index === 0 && validRows.length === 0,
+      is_verified: false,
+      source: CONTACT_SOURCE,
+      updated_at: new Date().toISOString(),
+    });
+  }
+  return validRows;
 }
 
 function buildFaxRows(representativeId: number, faxes: string[]): ContactInsertRow[] {
-  return faxes.map((value, index) => ({
-    representative_id: representativeId,
-    contact_type: 'fax',
-    value,
-    is_primary: index === 0,
-    is_verified: false,
-    source: CONTACT_SOURCE,
-    updated_at: new Date().toISOString(),
-  }));
+  const validRows: ContactInsertRow[] = [];
+  for (let index = 0; index < faxes.length; index++) {
+    const value = faxes[index];
+    if (!value) continue;
+    
+    const validation = validateAndNormalizeContact('fax', value);
+    if (!validation.isValid || !validation.normalized) {
+      console.warn(`Skipping invalid fax for representative ${representativeId}: ${value} (${validation.error})`);
+      continue;
+    }
+    
+    validRows.push({
+      representative_id: representativeId,
+      contact_type: 'fax',
+      value: validation.normalized,
+      is_primary: index === 0 && validRows.length === 0,
+      is_verified: false,
+      source: CONTACT_SOURCE,
+      updated_at: new Date().toISOString(),
+    });
+  }
+  return validRows;
 }
 
 function buildAddressRows(
   representativeId: number,
   addresses: Array<{ value: string; isPrimary: boolean }>,
 ): ContactInsertRow[] {
-  return addresses.map((entry) => ({
-    representative_id: representativeId,
-    contact_type: 'address',
-    value: entry.value,
-    is_primary: entry.isPrimary,
-    is_verified: false,
-    source: CONTACT_SOURCE,
-    updated_at: new Date().toISOString(),
-  }));
+  const validRows: ContactInsertRow[] = [];
+  for (const entry of addresses) {
+    if (!entry.value) continue;
+    
+    const validation = validateAndNormalizeContact('address', entry.value);
+    if (!validation.isValid || !validation.normalized) {
+      console.warn(`Skipping invalid address for representative ${representativeId}: ${entry.value} (${validation.error})`);
+      continue;
+    }
+    
+    validRows.push({
+      representative_id: representativeId,
+      contact_type: 'address',
+      value: validation.normalized,
+      is_primary: entry.isPrimary,
+      is_verified: false,
+      source: CONTACT_SOURCE,
+      updated_at: new Date().toISOString(),
+    });
+  }
+  return validRows;
 }
 
 function extractAddresses(rep: CanonicalRepresentative): Array<{ value: string; isPrimary: boolean }> {
@@ -133,14 +269,32 @@ function buildContactPayload(representativeId: number, rep: CanonicalRepresentat
   return uniqueRows;
 }
 
-export async function syncRepresentativeContacts(rep: CanonicalRepresentative): Promise<void> {
+export interface SyncContactResult {
+  success: boolean;
+  representativeId: number;
+  contactsAdded: number;
+  contactsSkipped: number;
+  errors: string[];
+  warnings: string[];
+}
+
+export async function syncRepresentativeContacts(rep: CanonicalRepresentative): Promise<SyncContactResult> {
   const representativeId = rep.supabaseRepresentativeId;
+  const result: SyncContactResult = {
+    success: false,
+    representativeId: representativeId ?? 0,
+    contactsAdded: 0,
+    contactsSkipped: 0,
+    errors: [],
+    warnings: [],
+  };
+
   if (!representativeId) {
-    return;
+    result.errors.push('Representative ID is required');
+    return result;
   }
 
-  const rows = buildContactPayload(representativeId, rep).filter((row) => Boolean(row.value));
-  const client = getSupabaseClient();
+  result.representativeId = representativeId;
 
   const { data: existingContacts, error: existingError } = await client
     .from('representative_contacts')
@@ -199,9 +353,10 @@ export async function syncRepresentativeContacts(rep: CanonicalRepresentative): 
     .eq('representative_id', representativeId)
     .eq('source', CONTACT_SOURCE);
 
-  if (deleteError) {
-    throw new Error(`Failed to prune prior contacts for representative ${representativeId}: ${deleteError.message}`);
-  }
+    const { data: existingContacts, error: existingError } = await client
+      .from('representative_contacts')
+      .select('contact_type, value, source, is_primary')
+      .eq('representative_id', representativeId);
 
   if (filteredRows.length > 0) {
     for (const row of filteredRows) {

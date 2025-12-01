@@ -45,8 +45,8 @@ async function getRedirectDestination(supabase: any, user: any, requestedRedirec
 export async function GET(request: Request) {
   const { searchParams, origin } = new URL(request.url)
   const code = searchParams.get('code')
-  const _next = searchParams.get('next') ?? '/dashboard'
-  const redirectTo = searchParams.get('redirectTo') ?? '/dashboard'
+  const nextParam = searchParams.get('next') ?? '/dashboard'
+  const redirectTo = searchParams.get('redirectTo') ?? nextParam
   const error = searchParams.get('error')
   const errorDescription = searchParams.get('error_description')
 

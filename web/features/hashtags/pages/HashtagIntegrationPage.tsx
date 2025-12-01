@@ -46,10 +46,11 @@ export default function HashtagIntegrationPage() {
     // You can implement navigation or other actions here
   };
 
-  const _handleFollowHashtag = async (hashtagId: string) => {
+  const handleFollowHashtag = async (hashtagId: string) => {
     const success = await followHashtagAction(hashtagId);
     if (success) {
       logger.info('Successfully followed hashtag');
+      refresh(); // Refresh the list after following
     }
   };
 
@@ -211,6 +212,7 @@ export default function HashtagIntegrationPage() {
                       hashtags={results.hashtags}
                       showStats={true}
                       onHashtagClick={handleHashtagClick}
+                      onFollow={async (hashtag) => await handleFollowHashtag(hashtag.id)}
                     />
                   </div>
                 )}

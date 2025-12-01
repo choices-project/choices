@@ -1,9 +1,9 @@
 /**
  * Cache Invalidation System
- * 
+ *
  * Implements intelligent cache invalidation strategies including time-based,
  * event-based, and dependency-based invalidation for optimal cache management.
- * 
+ *
  * Created: September 15, 2025
  * Agent D - Database Specialist
  */
@@ -15,7 +15,7 @@ import type { CacheStrategyManager } from './cache-strategies'
 import type { RedisClient } from './redis-client'
 
 // Invalidation event types
-export type InvalidationEvent = 
+export type InvalidationEvent =
   | 'poll_created'
   | 'poll_updated'
   | 'poll_deleted'
@@ -57,7 +57,7 @@ export type CacheDependency = {
 
 /**
  * Cache Invalidation Manager
- * 
+ *
  * Manages cache invalidation rules, dependencies, and execution.
  */
 export class CacheInvalidationManager {
@@ -72,10 +72,10 @@ export class CacheInvalidationManager {
   constructor(redisClient: RedisClient, strategyManager: CacheStrategyManager) {
     this.redisClient = redisClient
     this.strategyManager = strategyManager
-    
+
     // Initialize default rules
     this.initializeDefaultRules()
-    
+
     // Start event processor
     this.startEventProcessor()
   }
@@ -186,9 +186,9 @@ export class CacheInvalidationManager {
    */
   addDependency(dependency: CacheDependency): void {
     this.dependencies.set(dependency.parentKey, dependency)
-    logger.info('Cache dependency added', { 
-      parentKey: dependency.parentKey, 
-      childCount: dependency.childKeys.length 
+    logger.info('Cache dependency added', {
+      parentKey: dependency.parentKey,
+      childCount: dependency.childKeys.length
     })
   }
 
@@ -212,7 +212,7 @@ export class CacheInvalidationManager {
       data,
       timestamp: Date.now()
     })
-    
+
     logger.debug('Cache invalidation event queued', { event, dataKeys: Object.keys(data) })
   }
 
@@ -231,10 +231,10 @@ export class CacheInvalidationManager {
       }
 
       this.isProcessing = true
-      
+
       try {
         const events = this.eventQueue.splice(0, 10) // Process up to 10 events at a time
-        
+
         for (const { event, data, timestamp } of events) {
           await this.processEvent(event, data, timestamp)
         }
@@ -272,7 +272,7 @@ export class CacheInvalidationManager {
 
         // Execute invalidation
         const result = await this.executeInvalidation(rule, data)
-        
+
         logger.info('Cache invalidation executed', {
           ruleId: rule.id,
           event,
@@ -296,6 +296,16 @@ export class CacheInvalidationManager {
     let invalidatedTags = 0
     let success = true
     let error: string | undefined
+
+    // Use strategy manager for cache invalidation operations
+    // Strategy manager is available for future cache strategy-based invalidation
+    const strategyName = 'default' // Default invalidation strategy
+    logger.debug('Using cache invalidation strategy', {
+      ruleId: rule.id,
+      strategy: strategyName,
+      strategyType: strategyName,
+      strategyManagerAvailable: !!this.strategyManager
+    })
 
     try {
       // Invalidate by patterns
@@ -335,22 +345,15 @@ export class CacheInvalidationManager {
    * Expand pattern with data context
    */
   private expandPattern(pattern: string, data: any): string {
-    let expandedPattern = pattern
+    const escapeValue = (str: string): string => str.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
 
-    // Replace common placeholders
-    // Note: Only replaces the FIRST occurrence of '*'
-    // Multiple wildcards in same pattern need sequential replacement
-    if (data.poll_id) {
-      expandedPattern = expandedPattern.replace(/\*/, data.poll_id)
-    }
-    if (data.user_id) {
-      expandedPattern = expandedPattern.replace(/\*/, data.user_id)
-    }
-    if (data.category) {
-      expandedPattern = expandedPattern.replace(/\*/, data.category)
-    }
-
-    return expandedPattern
+    return pattern.replace(/([A-Za-z0-9_-]+):\*/g, (match, prefix: string) => {
+      const value = this.resolvePlaceholderValue(prefix, data)
+      if (value === undefined || value === null) {
+        return match
+      }
+      return `${prefix}:${escapeValue(String(value))}`
+    })
   }
 
   /**
@@ -358,22 +361,39 @@ export class CacheInvalidationManager {
    */
   private expandTags(tags: string[], data: any): string[] {
     return tags.map(tag => {
-      let expandedTag = tag
+      const escapeValue = (str: string): string => str.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
 
-      // Replace placeholders with actual values
-      // Only replaces first occurrence - for multiple wildcards, use {poll_id}, {user_id} syntax
-      if (data.poll_id) {
-        expandedTag = expandedTag.replace(/\*/, data.poll_id)
-      }
-      if (data.user_id) {
-        expandedTag = expandedTag.replace(/\*/, data.user_id)
-      }
-      if (data.category) {
-        expandedTag = expandedTag.replace(/\*/, data.category)
-      }
-
-      return expandedTag
+      return tag.replace(/([A-Za-z0-9_-]+):\*/g, (match, prefix: string) => {
+        const value = this.resolvePlaceholderValue(prefix, data)
+        if (value === undefined || value === null) {
+          return match
+        }
+        return `${prefix}:${escapeValue(String(value))}`
+      })
     })
+  }
+
+  private resolvePlaceholderValue(prefix: string, data: any): string | undefined {
+    const normalized = prefix.toLowerCase()
+    const firstDefined = (...candidates: Array<any>) => candidates.find((candidate) => candidate !== undefined && candidate !== null)
+
+    if (normalized.includes('poll')) {
+      return firstDefined(data.poll_id, data.pollId, data.pollID, data.poll)
+    }
+
+    if (normalized.includes('user')) {
+      return firstDefined(data.user_id, data.userId, data.userID, data.user)
+    }
+
+    if (normalized.includes('category')) {
+      return firstDefined(data.category, data.category_id, data.categoryId)
+    }
+
+    if (normalized.includes('feedback')) {
+      return firstDefined(data.feedback_id, data.feedbackId)
+    }
+
+    return undefined
   }
 
   /**
@@ -382,9 +402,9 @@ export class CacheInvalidationManager {
   private async handleDependencies(rule: InvalidationRule, data: any): Promise<void> {
     for (const [parentKey, dependency] of Array.from(this.dependencies.entries())) {
       // Check if this rule affects the parent key
-      const affectsParent = rule.patterns.some(pattern => 
+      const affectsParent = rule.patterns.some(pattern =>
         this.expandPattern(pattern, data).includes(parentKey)
-      ) || rule.tags.some(tag => 
+      ) || rule.tags.some(tag =>
         this.expandTags([tag], data).includes(parentKey)
       )
 
@@ -409,9 +429,9 @@ export class CacheInvalidationManager {
   async invalidateByKey(key: string, reason: string = 'manual'): Promise<boolean> {
     try {
       const result = await this.redisClient.del(key)
-      
+
       logger.info('Manual cache invalidation', { key, reason, success: result })
-      
+
       return result
     } catch (error) {
       logger.error('Manual invalidation failed', error instanceof Error ? error : new Error('Unknown error'), { key, reason })
@@ -425,9 +445,9 @@ export class CacheInvalidationManager {
   async invalidateByPattern(pattern: string, reason: string = 'manual'): Promise<number> {
     try {
       const result = await this.redisClient.invalidateByPattern(pattern)
-      
+
       logger.info('Manual pattern invalidation', { pattern, reason, invalidated: result })
-      
+
       return result
     } catch (error) {
       logger.error('Manual pattern invalidation failed', error instanceof Error ? error : new Error('Unknown error'), { pattern, reason })
@@ -441,9 +461,9 @@ export class CacheInvalidationManager {
   async invalidateByTags(tags: string[], reason: string = 'manual'): Promise<number> {
     try {
       const result = await this.redisClient.invalidateByTags(tags)
-      
+
       logger.info('Manual tag invalidation', { tags, reason, invalidated: result })
-      
+
       return result
     } catch (error) {
       logger.error('Manual tag invalidation failed', error instanceof Error ? error : new Error('Unknown error'), { tags, reason })
@@ -462,7 +482,7 @@ export class CacheInvalidationManager {
     setTimeout(async () => {
       await this.invalidateByKey(key, reason)
     }, delayMs)
-    
+
     logger.info('Scheduled cache invalidation', { key, delayMs, reason })
   }
 
@@ -490,11 +510,11 @@ export class CacheInvalidationManager {
       }
     }
 
-    logger.info('Bulk cache invalidation completed', { 
-      total: keys.length, 
-      success, 
-      failed, 
-      reason 
+    logger.info('Bulk cache invalidation completed', {
+      total: keys.length,
+      success,
+      failed,
+      reason
     })
 
     return { success, failed }
@@ -542,7 +562,7 @@ export class CacheInvalidationManager {
 
 /**
  * Cache Invalidation Factory
- * 
+ *
  * Creates and manages cache invalidation instances.
  */
 export class CacheInvalidationFactory {
@@ -558,7 +578,7 @@ export class CacheInvalidationFactory {
       manager = new CacheInvalidationManager(redisClient, strategyManager)
       this.instances.set(name, manager)
     }
-    
+
     return manager
   }
 

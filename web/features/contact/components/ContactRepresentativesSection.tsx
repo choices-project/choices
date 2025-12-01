@@ -66,6 +66,7 @@ export default function ContactRepresentativesSection({
   representatives,
   className = ''
 }: ContactRepresentativesSectionProps) {
+  const { t, currentLanguage } = useI18n();
   const [showContactModal, setShowContactModal] = useState(false);
   const [selectedRepresentative, setSelectedRepresentative] = useState<Representative | null>(null);
 
@@ -117,6 +118,27 @@ export default function ContactRepresentativesSection({
   }, [resetContactState, user]);
 
   const recentThreads = useMemo(() => threads.slice(0, 3), [threads]);
+  const numberFormatter = useMemo(
+    () => new Intl.NumberFormat(currentLanguage ?? undefined),
+    [currentLanguage],
+  );
+  const lastMessageFormatter = useMemo(
+    () =>
+      new Intl.DateTimeFormat(currentLanguage ?? undefined, {
+        year: 'numeric',
+        month: 'short',
+        day: 'numeric',
+      }),
+    [currentLanguage],
+  );
+  const representativeCountLabel = useMemo(
+    () =>
+      t('contact.representatives.header.count', {
+        count: representatives.length,
+        formattedCount: numberFormatter.format(representatives.length),
+      }),
+    [numberFormatter, representatives.length, t],
+  );
 
   const handleContactRepresentative = (representative: Representative) => {
     const divisions = getRepresentativeDivisionIds(representative);
@@ -146,7 +168,7 @@ export default function ContactRepresentativesSection({
           <ExclamationTriangleIcon className="h-8 w-8 text-yellow-600" />
         </div>
         <p className="text-yellow-800 text-center">
-          Contact system is currently disabled. This feature will be available soon.
+          {t('contact.representatives.featureDisabled')}
         </p>
       </div>
     );
@@ -159,7 +181,7 @@ export default function ContactRepresentativesSection({
           <UserIcon className="h-8 w-8 text-gray-400" />
         </div>
         <p className="text-gray-600 text-center">
-          Please log in to contact your representatives.
+          {t('contact.representatives.authRequired')}
         </p>
       </div>
     );
@@ -172,14 +194,14 @@ export default function ContactRepresentativesSection({
         <div>
           <h2 className="text-xl font-semibold text-gray-900 flex items-center">
             <ChatBubbleLeftRightIcon className="h-6 w-6 mr-2 text-blue-600" />
-            Contact Your Representatives
+            {t('contact.representatives.header.title')}
           </h2>
           <p className="text-sm text-gray-600 mt-1">
-            Send messages directly to your elected officials
+            {t('contact.representatives.header.subtitle')}
           </p>
         </div>
         <div className="text-sm text-gray-500">
-          {representatives.length} representative{representatives.length !== 1 ? 's' : ''}
+          {representativeCountLabel}
         </div>
       </div>
 
@@ -189,35 +211,42 @@ export default function ContactRepresentativesSection({
           <ClockIcon className="h-5 w-5 flex-shrink-0 mt-0.5" />
           <div>
             <p className="font-medium">
-              Upcoming elections for your districts
+              {t('contact.representatives.elections.title')}
             </p>
-            {electionLoading && <p>Loading election calendar…</p>}
+            {electionLoading && <p>{t('contact.representatives.elections.loading')}</p>}
             {electionError && !electionLoading && (
-              <p className="text-red-600">Unable to load elections right now.</p>
+              <p className="text-red-600">{t('contact.representatives.elections.error')}</p>
             )}
             {!electionLoading && !electionError && upcomingElections.length > 0 && (
               <ul className="mt-1 space-y-1">
                 {upcomingElections.slice(0, 3).map((election) => (
                   <li key={election.election_id} className="flex items-center space-x-2">
                     <CheckCircleIcon className="h-4 w-4 text-blue-500" />
-                    <span>
+                    <span className="flex flex-wrap gap-1">
                       <span className="font-medium">{election.name}</span>
                       <span className="ml-1 text-blue-700">
-                        ({formatElectionDate(election.election_day)})
+                        {t('contact.representatives.elections.date', {
+                          date: formatElectionDate(election.election_day, currentLanguage),
+                        })}
                       </span>
                     </span>
                   </li>
                 ))}
                 {upcomingElections.length > 3 && (
                   <li className="text-blue-700">
-                    +{upcomingElections.length - 3} more elections on file
+                    {t('contact.representatives.elections.more', {
+                      count: numberFormatter.format(upcomingElections.length - 3),
+                    })}
                   </li>
                 )}
                 {daysUntilNextElection != null && (
                   <li className="text-blue-700 text-xs">
-                    Next election {daysUntilNextElection === 0
-                      ? 'is today!'
-                      : `in ${daysUntilNextElection} day${daysUntilNextElection === 1 ? '' : 's'}`}
+                    {daysUntilNextElection === 0
+                      ? t('contact.representatives.elections.countdown.today')
+                      : t('contact.representatives.elections.countdown.inDays', {
+                          count: daysUntilNextElection,
+                          formattedCount: numberFormatter.format(daysUntilNextElection),
+                        })}
                   </li>
                 )}
               </ul>
@@ -280,7 +309,7 @@ export default function ContactRepresentativesSection({
                   className="flex items-center space-x-1 px-3 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors text-sm"
                 >
                   <EnvelopeIcon className="h-4 w-4" />
-                  <span>Message</span>
+                  <span>{t('contact.representatives.actions.message')}</span>
                 </button>
               </div>
             </div>
@@ -291,14 +320,14 @@ export default function ContactRepresentativesSection({
       {/* Recent Messages */}
       {threadsLoading && recentThreads.length === 0 && (
         <div className="bg-white border border-gray-200 rounded-lg p-4 text-sm text-gray-500">
-          Loading recent conversations...
+          {t('contact.representatives.threads.loading')}
         </div>
       )}
       {recentThreads.length > 0 && (
         <div className="bg-white border border-gray-200 rounded-lg p-4">
           <h3 className="font-medium text-gray-900 mb-3 flex items-center">
             <ClockIcon className="h-5 w-5 mr-2 text-gray-400" />
-            Recent Messages
+            {t('contact.representatives.threads.title')}
           </h3>
           <div className="space-y-2">
             {recentThreads.map((thread) => (
@@ -308,15 +337,18 @@ export default function ContactRepresentativesSection({
                     {thread.subject}
                   </p>
                   <p className="text-xs text-gray-500">
-                    {thread.messageCount} message{thread.messageCount !== 1 ? 's' : ''}
+                    {t('contact.representatives.threads.count', {
+                      count: thread.messageCount,
+                      formattedCount: numberFormatter.format(thread.messageCount),
+                    })}
                   </p>
                 </div>
                 <div className="flex items-center space-x-2 text-xs text-gray-500">
                   <CheckCircleIcon className="h-4 w-4 text-green-500" />
                   <span>
                     {thread.lastMessageAt
-                      ? new Date(thread.lastMessageAt).toLocaleDateString()
-                      : 'No messages yet'
+                      ? lastMessageFormatter.format(new Date(thread.lastMessageAt))
+                      : t('contact.representatives.threads.noMessages')
                     }
                   </span>
                 </div>

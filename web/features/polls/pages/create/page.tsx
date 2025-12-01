@@ -38,18 +38,7 @@ import {
 import { usePollCreateController } from "./hooks"
 
 
-const PRIVACY_LABELS: Record<string, string> = {
-  public: "Public – anyone can discover and vote",
-  private: "Private – only people with the link can participate",
-  unlisted: "Unlisted – hidden from search but open to anyone with the link",
-}
-
-const VOTING_METHOD_LABELS: Record<string, string> = {
-  single: "Single choice",
-  multiple: "Multiple selection",
-  approval: "Approval voting",
-  ranked: "Ranked choice",
-}
+// Privacy and voting method labels will be localized using useI18n hook
 
 type ShareModalState = {
   pollId: string
@@ -60,6 +49,7 @@ type ShareModalState = {
 }
 
 export default function CreatePollPage() {
+  const { t } = useI18n();
   const router = useRouter()
   const {
     data,
@@ -76,6 +66,19 @@ export default function CreatePollPage() {
     goToPreviousStep,
     submit,
   } = usePollCreateController()
+
+  const PRIVACY_LABELS: Record<string, string> = useMemo(() => ({
+    public: t('polls.create.privacy.public'),
+    private: t('polls.create.privacy.private'),
+    unlisted: t('polls.create.privacy.unlisted'),
+  }), [t]);
+
+  const VOTING_METHOD_LABELS: Record<string, string> = useMemo(() => ({
+    single: t('polls.create.votingMethod.single'),
+    multiple: t('polls.create.votingMethod.multiple'),
+    approval: t('polls.create.votingMethod.approval'),
+    ranked: t('polls.create.votingMethod.ranked'),
+  }), [t]);
 
   const [newTag, setNewTag] = useState("")
   const [shareInfo, setShareInfo] = useState<ShareModalState | null>(null)
@@ -185,8 +188,8 @@ export default function CreatePollPage() {
     initialFocusRef: shareCopyButtonRef,
     onClose: handleCloseShareDialog,
     liveMessage: shareInfo
-      ? `Share dialog opened for ${shareInfo.title}.`
-      : 'Share dialog opened.',
+      ? t('polls.create.share.dialog.liveOpen', { title: shareInfo.title })
+      : t('polls.create.share.dialog.liveOpenFallback'),
     ariaLabelId: 'share-dialog-title',
   })
 
@@ -238,15 +241,15 @@ export default function CreatePollPage() {
       });
       addNotification({
         type: 'success',
-        title: 'Link copied',
-        message: 'Share the link with your audience to start collecting votes.',
+        title: t('polls.create.share.notifications.linkCopied.title'),
+        message: t('polls.create.share.notifications.linkCopied.message'),
         duration: 3000,
       })
     } catch (error) {
       addNotification({
         type: 'error',
-        title: 'Unable to copy link',
-        message: error instanceof Error ? error.message : 'Please copy the link manually.',
+        title: t('polls.create.share.notifications.copyFailed.title'),
+        message: error instanceof Error ? error.message : t('polls.create.share.notifications.copyFailed.message'),
         duration: 4000,
       })
     }
@@ -320,8 +323,8 @@ export default function CreatePollPage() {
     if (data.tags.length >= MAX_TAGS) {
       addNotification({
         type: "warning",
-        title: "Too many tags",
-        message: `You can add up to ${MAX_TAGS} tags.`,
+        title: t('polls.create.notifications.tooManyTags.title'),
+        message: t('polls.create.notifications.tooManyTags.message', { max: MAX_TAGS }),
         duration: 4000,
       })
       return
@@ -358,8 +361,8 @@ export default function CreatePollPage() {
       if (result.status === 401) {
         addNotification({
           type: 'warning',
-          title: 'Sign in required',
-          message: 'Please sign in to publish your poll.',
+          title: t('polls.create.notifications.signInRequired.title'),
+          message: t('polls.create.notifications.signInRequired.message'),
           duration: 6000,
         });
         router.push(`/auth?redirect=${encodeURIComponent('/polls/create')}`);
@@ -369,8 +372,8 @@ export default function CreatePollPage() {
       if (result.status === 403) {
         addNotification({
           type: 'error',
-          title: 'Access denied',
-          message: 'You do not have permission to create polls on this account.',
+          title: t('polls.create.notifications.accessDenied.title'),
+          message: t('polls.create.notifications.accessDenied.message'),
           duration: 6000,
         });
         return;
@@ -379,8 +382,8 @@ export default function CreatePollPage() {
       if (result.status === 429) {
         addNotification({
           type: 'warning',
-          title: 'Slow down',
-          message: 'You are creating polls too quickly. Please wait a moment and try again.',
+          title: t('polls.create.notifications.rateLimit.title'),
+          message: t('polls.create.notifications.rateLimit.message'),
           duration: 6000,
         });
         return;
@@ -398,8 +401,8 @@ export default function CreatePollPage() {
 
       addNotification({
         type: result.fieldErrors ? 'warning' : 'error',
-        title: result.fieldErrors ? 'Check the highlighted fields' : 'Unable to create poll',
-        message: result.message ?? 'Please try again in a moment.',
+        title: result.fieldErrors ? t('polls.create.notifications.validationErrors.title') : t('polls.create.notifications.creationFailed.title'),
+        message: result.message ?? t('polls.create.notifications.creationFailed.message'),
         duration: 6000,
       });
       return;
@@ -415,8 +418,8 @@ export default function CreatePollPage() {
 
     addNotification({
       type: 'success',
-      title: 'Poll created',
-      message: result.message ?? 'Share your poll to start collecting votes.',
+      title: t('polls.create.notifications.pollCreated.title'),
+      message: result.message ?? t('polls.create.notifications.pollCreated.message'),
       duration: 4000,
     });
 
@@ -491,19 +494,19 @@ export default function CreatePollPage() {
             </fieldset>
 
             <fieldset>
-              <Label htmlFor="description">Description</Label>
+              <Label htmlFor="description">{t('polls.create.wizard.details.description.label')}</Label>
               <Textarea
                  id="description"
                  value={data.description}
                 onChange={(event) => handleDataUpdate({ description: event.target.value })}
-                placeholder="Explain the context, stakes, or background so voters can make an informed decision."
+                placeholder={t('polls.create.wizard.details.description.placeholder')}
                 rows={5}
                 maxLength={DESCRIPTION_CHAR_LIMIT}
                 aria-invalid={Boolean(errors.description)}
                 aria-describedby="description-hint description-count"
               />
               <div id="description-hint" className="mt-2 text-xs text-muted-foreground">
-                Help voters understand why this poll matters. Include relevant context and goals.
+                {t('polls.create.wizard.details.description.hint')}
               </div>
               <div
                 id="description-count"
@@ -529,9 +532,9 @@ export default function CreatePollPage() {
         return (
           <div className="space-y-6">
             <fieldset>
-              <Label>Poll options</Label>
+              <Label>{t('polls.create.wizard.options.label')}</Label>
               <p className="mt-1 text-xs text-muted-foreground">
-                Provide at least two clear, distinct choices so voters can differentiate at a glance.
+                {t('polls.create.wizard.options.hint')}
               </p>
               {errors.options && (
                 <p className="mt-2 text-sm text-destructive" id="error-options">
@@ -545,8 +548,8 @@ export default function CreatePollPage() {
                     <Input
                       value={option}
                       onChange={(event) => handleOptionChange(index, event.target.value)}
-                      placeholder={`Option ${index + 1}`}
-                      aria-label={`Option ${index + 1}`}
+                      placeholder={t('polls.create.wizard.options.optionPlaceholder', { number: index + 1 })}
+                      aria-label={t('polls.create.wizard.options.optionAria', { number: index + 1 })}
                       aria-invalid={Boolean(errors[`option-${index}`])}
                     />
                     {data.options.length > 2 && (
@@ -556,7 +559,7 @@ export default function CreatePollPage() {
                         variant="ghost"
                         className="mt-1 text-muted-foreground hover:text-destructive"
                         onClick={() => handleRemoveOption(index)}
-                        aria-label={`Remove option ${index + 1}`}
+                        aria-label={t('polls.create.wizard.options.removeAria', { number: index + 1 })}
                       >
                         <X className="h-4 w-4" />
                       </Button>
@@ -566,7 +569,7 @@ export default function CreatePollPage() {
               </div>
 
               <div className="mt-4 flex items-center justify-between text-xs text-muted-foreground">
-                <span>{`You can add up to ${MAX_OPTIONS} options.`}</span>
+                <span>{t('polls.create.wizard.options.maxHint', { max: MAX_OPTIONS })}</span>
                 <span>
                   {data.options.length}/{MAX_OPTIONS}
                 </span>
@@ -580,7 +583,7 @@ export default function CreatePollPage() {
                 disabled={data.options.length >= MAX_OPTIONS}
                 >
                 <Plus className="mr-2 h-4 w-4" />
-                Add option
+                {t('polls.create.wizard.options.add')}
                 </Button>
             </fieldset>
           </div>
@@ -590,8 +593,8 @@ export default function CreatePollPage() {
         return (
           <div className="space-y-8">
             <fieldset>
-              <Label>Category</Label>
-              <p className="mt-1 text-xs text-muted-foreground">Categorize your poll so the right people can discover it.</p>
+              <Label>{t('polls.create.wizard.audience.category.label')}</Label>
+              <p className="mt-1 text-xs text-muted-foreground">{t('polls.create.wizard.audience.category.hint')}</p>
               {errors.category && (
                 <p className="mt-2 text-sm text-destructive" id="error-category">
                   {errors.category}
@@ -624,8 +627,8 @@ export default function CreatePollPage() {
             </fieldset>
 
             <fieldset>
-              <Label htmlFor="tags">Tags</Label>
-              <p className="mt-1 text-xs text-muted-foreground">Add keywords so your poll shows up in relevant searches.</p>
+              <Label htmlFor="tags">{t('polls.create.wizard.audience.tags.label')}</Label>
+              <p className="mt-1 text-xs text-muted-foreground">{t('polls.create.wizard.audience.tags.hint')}</p>
               {errors.tags && (
                 <p className="mt-2 text-sm text-destructive" id="error-tags">
                   {errors.tags}
@@ -640,7 +643,7 @@ export default function CreatePollPage() {
                       type="button"
                       onClick={() => handleRemoveTag(tag)}
                       className="text-muted-foreground hover:text-destructive"
-                      aria-label={`Remove tag ${tag}`}
+                      aria-label={t('polls.create.wizard.audience.tags.removeAria', { tag })}
                     >
                       <X className="h-3 w-3" />
                     </button>
@@ -660,53 +663,53 @@ export default function CreatePollPage() {
                         handleAddTag();
                       }
                     }}
-                    placeholder="Add a tag"
+                    placeholder={t('polls.create.wizard.audience.tags.placeholder')}
                     aria-describedby="tags-hint"
                   />
                   <Button type="button" variant="outline" onClick={handleAddTag}>
-                    Add
+                    {t('polls.create.wizard.audience.tags.add')}
                   </Button>
                 </div>
               )}
               <div id="tags-hint" className="mt-2 text-xs text-muted-foreground">
-                {`You can add up to ${MAX_TAGS} tags.`}
+                {t('polls.create.wizard.audience.tags.maxHint', { max: MAX_TAGS })}
             </div>
             </fieldset>
 
             <fieldset className="space-y-4">
-              <legend className="text-sm font-medium">Participation & privacy</legend>
+              <legend className="text-sm font-medium">{t('polls.create.wizard.audience.settings.legend')}</legend>
               <SettingToggle
                 id="allow-multiple-votes"
-                label="Allow multiple votes"
-                description="Enable if voters should be able to support more than one option."
+                label={t('polls.create.wizard.audience.settings.allowMultipleVotes.label')}
+                description={t('polls.create.wizard.audience.settings.allowMultipleVotes.description')}
                       checked={data.settings.allowMultipleVotes}
                 onCheckedChange={(checked) => actions.updateSettings({ allowMultipleVotes: checked })}
               />
               <SettingToggle
                 id="allow-anonymous-votes"
-                label="Allow anonymous votes"
-                description="Disable this if you need to know exactly who participated."
+                label={t('polls.create.wizard.audience.settings.allowAnonymousVotes.label')}
+                description={t('polls.create.wizard.audience.settings.allowAnonymousVotes.description')}
                       checked={data.settings.allowAnonymousVotes}
                 onCheckedChange={(checked) => actions.updateSettings({ allowAnonymousVotes: checked })}
               />
               <SettingToggle
                 id="require-authentication"
-                label="Require sign-in to vote"
-                description="Ensure voters are authenticated before submitting a response."
+                label={t('polls.create.wizard.audience.settings.requireAuthentication.label')}
+                description={t('polls.create.wizard.audience.settings.requireAuthentication.description')}
                 checked={data.settings.requireAuthentication}
                 onCheckedChange={(checked) => actions.updateSettings({ requireAuthentication: checked })}
               />
               <SettingToggle
                 id="show-results"
-                label="Show results in real time"
-                description="Disable to hide results until the poll closes."
+                label={t('polls.create.wizard.audience.settings.showResults.label')}
+                description={t('polls.create.wizard.audience.settings.showResults.description')}
                       checked={data.settings.showResults}
                 onCheckedChange={(checked) => actions.updateSettings({ showResults: checked })}
               />
               <SettingToggle
                 id="allow-comments"
-                label="Allow comments"
-                description="Collect qualitative feedback alongside quantitative votes."
+                label={t('polls.create.wizard.audience.settings.allowComments.label')}
+                description={t('polls.create.wizard.audience.settings.allowComments.description')}
                       checked={data.settings.allowComments}
                 onCheckedChange={(checked) => actions.updateSettings({ allowComments: checked })}
               />
@@ -714,7 +717,7 @@ export default function CreatePollPage() {
 
             <fieldset className="grid gap-6 md:grid-cols-2">
                   <div>
-                <Label htmlFor="privacy-level">Privacy level</Label>
+                <Label htmlFor="privacy-level">{t('polls.create.wizard.audience.privacy.label')}</Label>
                     <select
                   id="privacy-level"
                   className="mt-2 w-full rounded-md border px-3 py-2 text-sm"
@@ -729,12 +732,12 @@ export default function CreatePollPage() {
                   ))}
                     </select>
                 <p id="privacy-help" className="mt-2 text-xs text-muted-foreground">
-                  Change who can discover and participate in this poll.
+                  {t('polls.create.wizard.audience.privacy.hint')}
                 </p>
                   </div>
 
                   <div>
-                <Label htmlFor="voting-method">Voting method</Label>
+                <Label htmlFor="voting-method">{t('polls.create.wizard.audience.votingMethod.label')}</Label>
                     <select
                   id="voting-method"
                   className="mt-2 w-full rounded-md border px-3 py-2 text-sm"
@@ -751,7 +754,7 @@ export default function CreatePollPage() {
                   ))}
                     </select>
                 <p id="voting-method-help" className="mt-2 text-xs text-muted-foreground">
-                  Choose the mechanics that best fit how you want to evaluate responses.
+                  {t('polls.create.wizard.audience.votingMethod.hint')}
                 </p>
                   </div>
             </fieldset>
@@ -764,21 +767,21 @@ export default function CreatePollPage() {
           <div className="space-y-6">
             <Card>
               <CardHeader>
-                <CardTitle className="text-lg">Preview your poll</CardTitle>
-                <CardDescription>Review everything voters will see before you publish.</CardDescription>
+                <CardTitle className="text-lg">{t('polls.create.wizard.review.title')}</CardTitle>
+                <CardDescription>{t('polls.create.wizard.review.description')}</CardDescription>
               </CardHeader>
               <CardContent className="space-y-5">
                 <section>
-                  <h3 className="text-lg font-semibold">{data.title || 'Untitled poll'}</h3>
+                  <h3 className="text-lg font-semibold">{data.title || t('polls.create.wizard.review.untitled')}</h3>
                   <p className="mt-1 text-sm text-muted-foreground">
-                    {data.description || 'Add a description to help voters understand the context.'}
+                    {data.description || t('polls.create.wizard.review.noDescription')}
                   </p>
                 </section>
 
                   <Separator />
 
                 <section>
-                  <h4 className="text-sm font-semibold">Options</h4>
+                  <h4 className="text-sm font-semibold">{t('polls.create.wizard.review.optionsHeading')}</h4>
                   <ul className="mt-2 space-y-2">
                     {data.options
                       .filter((option) => option.trim().length > 0)
@@ -804,22 +807,22 @@ export default function CreatePollPage() {
 
                 <section className="grid gap-2 text-sm text-muted-foreground md:grid-cols-2">
                   <p>
-                    <span className="font-medium text-foreground">Privacy:</span> {PRIVACY_LABELS[data.settings.privacyLevel]}
+                    <span className="font-medium text-foreground">{t('polls.create.wizard.review.privacy')}:</span> {PRIVACY_LABELS[data.settings.privacyLevel]}
                   </p>
                   <p>
-                    <span className="font-medium text-foreground">Voting method:</span> {VOTING_METHOD_LABELS[data.settings.votingMethod]}
+                    <span className="font-medium text-foreground">{t('polls.create.wizard.review.votingMethod')}:</span> {VOTING_METHOD_LABELS[data.settings.votingMethod]}
                   </p>
                   <p>
-                    <span className="font-medium text-foreground">Multiple votes:</span> {data.settings.allowMultipleVotes ? 'Enabled' : 'Disabled'}
+                    <span className="font-medium text-foreground">{t('polls.create.wizard.review.multipleVotes')}:</span> {data.settings.allowMultipleVotes ? t('polls.create.wizard.review.enabled') : t('polls.create.wizard.review.disabled')}
                   </p>
                   <p>
-                    <span className="font-medium text-foreground">Anonymous votes:</span> {data.settings.allowAnonymousVotes ? 'Allowed' : 'Disabled'}
+                    <span className="font-medium text-foreground">{t('polls.create.wizard.review.anonymousVotes')}:</span> {data.settings.allowAnonymousVotes ? t('polls.create.wizard.review.allowed') : t('polls.create.wizard.review.disabled')}
                   </p>
                   <p>
-                    <span className="font-medium text-foreground">Require sign-in:</span> {data.settings.requireAuthentication ? 'Yes' : 'No'}
+                    <span className="font-medium text-foreground">{t('polls.create.wizard.review.requireSignIn')}:</span> {data.settings.requireAuthentication ? t('polls.create.wizard.review.yes') : t('polls.create.wizard.review.no')}
                   </p>
                   <p>
-                    <span className="font-medium text-foreground">Comments:</span> {data.settings.allowComments ? 'Enabled' : 'Disabled'}
+                    <span className="font-medium text-foreground">{t('polls.create.wizard.review.comments')}:</span> {data.settings.allowComments ? t('polls.create.wizard.review.enabled') : t('polls.create.wizard.review.disabled')}
                   </p>
                 </section>
               </CardContent>
@@ -833,10 +836,9 @@ export default function CreatePollPage() {
     <div className="min-h-screen bg-muted/30 py-10">
       <div className="mx-auto max-w-4xl px-4 sm:px-6 lg:px-8">
         <header className="mb-10 space-y-2">
-          <h1 className="text-3xl font-bold tracking-tight text-foreground">Create a new poll</h1>
+          <h1 className="text-3xl font-bold tracking-tight text-foreground">{t('polls.create.page.title')}</h1>
           <p className="max-w-2xl text-sm text-muted-foreground">
-            Guide your audience through a clear decision. Fill out each step to describe the poll, add options, and set
-            participation rules.
+            {t('polls.create.page.subtitle')}
           </p>
         </header>
 
@@ -861,13 +863,13 @@ export default function CreatePollPage() {
             ref={errorSummaryRef}
             tabIndex={-1}
             variant="destructive"
-            className="mb-6"
+            className="mb-6 border-red-300 bg-red-50 dark:border-red-800 dark:bg-red-950"
             aria-live="assertive"
             aria-atomic="true"
           >
             <AlertCircle className="h-4 w-4" />
-            <AlertTitle>Resolve these items before continuing</AlertTitle>
-            <AlertDescription>
+            <AlertTitle className="text-red-900 dark:text-red-100">{t('polls.create.page.errorSummary.title')}</AlertTitle>
+            <AlertDescription className="text-red-800 dark:text-red-200">
               <ul className="mt-2 list-disc space-y-1 pl-5 text-sm">
                 {errorMessages.map(({ id, message }) => (
                   <li key={id}>{message}</li>
@@ -890,17 +892,17 @@ export default function CreatePollPage() {
             className="w-full sm:w-auto"
           >
             <ArrowLeft className="mr-2 h-4 w-4" />
-            Previous
+            {t('polls.create.page.buttons.previous')}
           </Button>
 
           <div className="flex w-full flex-col gap-3 sm:w-auto sm:flex-row">
             {currentStep === POLL_CREATION_STEPS.length - 1 ? (
               <Button type="button" className="w-full" onClick={handleSubmit} disabled={!canProceed || isLoading}>
-                {isLoading ? 'Creating…' : 'Publish poll'}
+                {isLoading ? t('polls.create.page.buttons.creating') : t('polls.create.page.buttons.publish')}
               </Button>
             ) : (
               <Button type="button" className="w-full" onClick={goToNextStep} disabled={!canProceed || isLoading}>
-                Next
+                {t('polls.create.page.buttons.next')}
                 <ArrowRight className="ml-2 h-4 w-4" />
               </Button>
             )}
@@ -916,9 +918,9 @@ export default function CreatePollPage() {
           aria-describedby="share-dialog-description share-dialog-link"
         >
           <DialogHeader>
-            <DialogTitle id="share-dialog-title">Share your poll</DialogTitle>
+            <DialogTitle id="share-dialog-title">{t('polls.create.share.dialog.title')}</DialogTitle>
             <DialogDescription id="share-dialog-description">
-              Help voters discover “{shareInfo?.title ?? 'your poll'}” by sharing the link below.
+              {t('polls.create.share.dialog.description', { title: shareInfo?.title ?? t('polls.create.share.dialog.yourPoll') })}
             </DialogDescription>
           </DialogHeader>
 
@@ -927,26 +929,26 @@ export default function CreatePollPage() {
               <div className="rounded-lg border border-dashed border-border/70 bg-muted/40 p-4">
                 <div className="space-y-3 text-sm">
                   <div>
-                    <p className="text-xs font-medium uppercase text-muted-foreground">Poll title</p>
+                    <p className="text-xs font-medium uppercase text-muted-foreground">{t('polls.create.share.dialog.pollTitle')}</p>
                     <p className="text-base font-semibold text-foreground">{shareInfo.title}</p>
                   </div>
                   <div className="grid grid-cols-1 gap-3 text-sm sm:grid-cols-2">
                     <div>
-                      <p className="text-xs font-medium uppercase text-muted-foreground">Privacy</p>
+                      <p className="text-xs font-medium uppercase text-muted-foreground">{t('polls.create.share.dialog.privacy')}</p>
                       <p>{PRIVACY_LABELS[shareInfo.privacyLevel]}</p>
                     </div>
                     <div>
-                      <p className="text-xs font-medium uppercase text-muted-foreground">Voting method</p>
+                      <p className="text-xs font-medium uppercase text-muted-foreground">{t('polls.create.share.dialog.votingMethod')}</p>
                       <p>{VOTING_METHOD_LABELS[shareInfo.votingMethod]}</p>
                     </div>
                     <div>
-                      <p className="text-xs font-medium uppercase text-muted-foreground">Category</p>
+                      <p className="text-xs font-medium uppercase text-muted-foreground">{t('polls.create.share.dialog.category')}</p>
                       <p className="capitalize">{shareInfo.category}</p>
                     </div>
                     {nextMilestone && (
                       <div>
-                        <p className="text-xs font-medium uppercase text-muted-foreground">Next milestone</p>
-                        <p>{nextMilestone.toLocaleString()} votes</p>
+                        <p className="text-xs font-medium uppercase text-muted-foreground">{t('polls.create.share.dialog.nextMilestone')}</p>
+                        <p>{t('polls.create.share.dialog.milestoneVotes', { count: nextMilestone })}</p>
                       </div>
                     )}
                   </div>
@@ -955,7 +957,7 @@ export default function CreatePollPage() {
             )}
 
             <div>
-              <Label htmlFor="share-link">Poll link</Label>
+              <Label htmlFor="share-link">{t('polls.create.share.dialog.pollLink')}</Label>
               <div className="mt-2 flex items-center gap-2">
                 <Input
                   id="share-link"
@@ -970,28 +972,28 @@ export default function CreatePollPage() {
                   onClick={handleCopyShareLink}
                   ref={shareCopyButtonRef}
                 >
-                  {hasCopiedShareLink ? 'Copied' : 'Copy link'}
+                  {hasCopiedShareLink ? t('polls.create.share.dialog.copied') : t('polls.create.share.dialog.copyLink')}
                 </Button>
               </div>
               <div id="share-dialog-link" className="sr-only">
                 {hasCopiedShareLink
-                  ? 'Share link copied to clipboard.'
-                  : 'Press copy to place the share link on your clipboard.'}
+                  ? t('polls.create.share.dialog.linkCopiedAria')
+                  : t('polls.create.share.dialog.linkCopyHintAria')}
               </div>
             </div>
 
             <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
               <Button type="button" variant="secondary" onClick={handleViewPoll}>
-                View poll
+                {t('polls.create.share.dialog.buttons.viewPoll')}
               </Button>
               <Button type="button" variant="outline" onClick={handleViewAnalytics}>
-                View analytics
+                {t('polls.create.share.dialog.buttons.viewAnalytics')}
               </Button>
               <Button
                 type="button"
                 variant="outline"
                 onClick={() => {
-                  window.open(`mailto:?subject=${encodeURIComponent('Check out this poll')}&body=${encodeURIComponent(shareUrl)}`);
+                  window.open(`mailto:?subject=${encodeURIComponent(t('polls.create.share.dialog.email.subject'))}&body=${encodeURIComponent(shareUrl)}`);
                   recordPollEvent('email_link', {
                     value: 1,
                     metadata: {
@@ -1002,13 +1004,13 @@ export default function CreatePollPage() {
                   });
                 }}
               >
-                Email link
+                {t('polls.create.share.dialog.buttons.emailLink')}
               </Button>
               <Button
                 type="button"
                 variant="outline"
                 onClick={() => {
-                  window.open(`https://twitter.com/intent/tweet?text=${encodeURIComponent(`Vote now: ${shareInfo?.title ?? 'this poll'} ${shareUrl}`)}`, '_blank');
+                  window.open(`https://twitter.com/intent/tweet?text=${encodeURIComponent(t('polls.create.share.dialog.x.tweet', { title: shareInfo?.title ?? t('polls.create.share.dialog.yourPoll'), url: shareUrl }))}`, '_blank');
                   recordPollEvent('share_x', {
                     value: 1,
                     metadata: {
@@ -1019,20 +1021,20 @@ export default function CreatePollPage() {
                   });
                 }}
               >
-                Share on X
+                {t('polls.create.share.dialog.buttons.shareOnX')}
               </Button>
             </div>
 
             <div className="space-y-4">
               <div className="flex items-center justify-between">
                 <div>
-                  <h3 className="text-sm font-semibold text-foreground">Milestone alerts</h3>
+                  <h3 className="text-sm font-semibold text-foreground">{t('polls.create.share.dialog.milestones.title')}</h3>
                   <p className="text-xs text-muted-foreground">
-                    Receive in-app alerts when your poll reaches key vote counts.
+                    {t('polls.create.share.dialog.milestones.description')}
                   </p>
                 </div>
                 <span className="text-xs text-muted-foreground">
-                  {enabledMilestones.length}/{milestones.length} enabled
+                  {t('polls.create.share.dialog.milestones.enabled', { current: enabledMilestones.length, total: milestones.length })}
                 </span>
               </div>
 
@@ -1044,11 +1046,10 @@ export default function CreatePollPage() {
                   >
                     <div>
                       <Label htmlFor={`milestone-${milestone}`} className="text-sm font-medium">
-                        Notify me at {milestone.toLocaleString()} votes
+                        {t('polls.create.share.dialog.milestones.notifyAt', { count: milestone })}
                       </Label>
                       <p id={`milestone-${milestone}-description`} className="text-xs text-muted-foreground">
-                        Sends an alert when the poll crosses {milestone.toLocaleString()} votes so you can celebrate or
-                        share again.
+                        {t('polls.create.share.dialog.milestones.itemDescription', { count: milestone })}
                       </p>
                     </div>
                     <Switch
@@ -1065,10 +1066,10 @@ export default function CreatePollPage() {
 
           <DialogFooter className="pt-4">
             <Button type="button" variant="ghost" onClick={handleCreateAnotherPoll}>
-              Create another poll
+              {t('polls.create.share.dialog.buttons.createAnother')}
             </Button>
             <Button type="button" onClick={handleViewPoll}>
-              Done
+              {t('polls.create.share.dialog.buttons.done')}
             </Button>
           </DialogFooter>
         </DialogContent>
@@ -1089,8 +1090,9 @@ type WizardProgressProps = {
 };
 
 const WizardProgress = ({ steps }: WizardProgressProps) => {
+  const { t } = useI18n();
   return (
-    <nav aria-label="Poll creation progress" className="mb-8">
+    <nav aria-label={t('polls.create.wizard.progress.ariaLabel')} className="mb-8">
       <ol className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         {steps.map((step, index) => (
           <li key={step.title} className="flex flex-1 items-center gap-2">

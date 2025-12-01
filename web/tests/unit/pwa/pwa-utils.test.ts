@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-empty-function */
 /** @jest-environment jsdom */
 
 import { jest } from '@jest/globals';
@@ -164,3 +165,5 @@ describe('PWA client utilities', () => {
     });
   });
 });
+
+/* eslint-enable @typescript-eslint/no-empty-function */

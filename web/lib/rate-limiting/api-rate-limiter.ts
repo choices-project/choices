@@ -68,11 +68,16 @@ class ApiRateLimiter {
         if (options.userAgent) {
           violationData.userAgent = options.userAgent;
         }
-        void upstashRateLimiter
-          .recordViolationExternal(violationData)
-          .catch(error => {
+        const violationPromise = upstashRateLimiter.recordViolationExternal(violationData);
+        // Guard against undefined promise (e.g., in test environments)
+        if (violationPromise && typeof (violationPromise as any).catch === 'function') {
+          // Explicitly await the promise to handle errors properly
+          violationPromise.catch(error => {
             logger.error('Failed to record rate limit violation:', error);
+          }).catch(() => {
+            // Ignore errors in error handling
           });
+        }
       }
 
       return result;

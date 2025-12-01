@@ -2,8 +2,8 @@
 
 import React, { useState, useEffect } from 'react';
 
-
 import { getPrivacyStatus } from '@/features/auth/lib/webauthn/client';
+import { logger } from '@/lib/utils/logger';
 
 type PrivacyStatus = {
   status: 'active' | 'partial' | 'inactive';
@@ -20,7 +20,13 @@ export function WebAuthnPrivacyBadge() {
   useEffect(() => {
     getPrivacyStatus()
       .then(setStatus)
-      .catch(console.error)
+      .catch((error) => {
+        logger.error(
+          'WebAuthn privacy status fetch failed',
+          error instanceof Error ? error : new Error(String(error)),
+        );
+        setStatus(null);
+      })
       .finally(() => setLoading(false));
   }, []);
 

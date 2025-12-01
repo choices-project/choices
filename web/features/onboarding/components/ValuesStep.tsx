@@ -1,7 +1,9 @@
 'use client';
 
 import { Heart, Users, Globe, TrendingUp } from 'lucide-react';
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
+
+import { useI18n } from '@/hooks/useI18n';
 
 import type {
   ValueCategory,
@@ -30,6 +32,7 @@ import type {
  * @returns {JSX.Element} Values selection interface
  */
 export default function ValuesStep({ data, onUpdate, onNext, onBack }: ValuesStepProps) {
+  const { t } = useI18n();
   const [selectedConcerns, setSelectedConcerns] = useState<string[]>(data.primaryConcerns ?? []);
   const [communityFocus, setCommunityFocus] = useState<CommunityFocus[]>(data.communityFocus ?? []);
   const [participationStyle, setParticipationStyle] = useState<ParticipationStyle>(data.participationStyle ?? 'observer');
@@ -74,103 +77,103 @@ export default function ValuesStep({ data, onUpdate, onNext, onBack }: ValuesSte
 
   const canContinue = selectedConcerns.length > 0 && communityFocus.length > 0
 
-  const valueCategories = [
+  const valueCategories = useMemo(() => [
     {
-      title: 'Economic Justice',
+      title: t('onboarding.values.categories.economic.title'),
       icon: <TrendingUp className="w-5 h-5" />,
       color: 'bg-green-100 text-green-700',
       concerns: [
-        'fair wages',
-        'affordable housing',
-        'healthcare access',
-        'education funding',
-        'small business support',
-        'worker rights'
+        t('onboarding.values.categories.economic.concerns.fairWages'),
+        t('onboarding.values.categories.economic.concerns.affordableHousing'),
+        t('onboarding.values.categories.economic.concerns.healthcareAccess'),
+        t('onboarding.values.categories.economic.concerns.educationFunding'),
+        t('onboarding.values.categories.economic.concerns.smallBusinessSupport'),
+        t('onboarding.values.categories.economic.concerns.workerRights')
       ]
     },
     {
-      title: 'Environmental Protection',
+      title: t('onboarding.values.categories.environmental.title'),
       icon: <Globe className="w-5 h-5" />,
       color: 'bg-blue-100 text-blue-700',
       concerns: [
-        'climate action',
-        'clean energy',
-        'conservation',
-        'sustainable living',
-        'pollution reduction'
+        t('onboarding.values.categories.environmental.concerns.climateAction'),
+        t('onboarding.values.categories.environmental.concerns.cleanEnergy'),
+        t('onboarding.values.categories.environmental.concerns.conservation'),
+        t('onboarding.values.categories.environmental.concerns.sustainableLiving'),
+        t('onboarding.values.categories.environmental.concerns.pollutionReduction')
       ]
     },
     {
-      title: 'Community Wellbeing',
+      title: t('onboarding.values.categories.community.title'),
       icon: <Heart className="w-5 h-5" />,
       color: 'bg-purple-100 text-purple-700',
       concerns: [
-        'community safety',
-        'mental health',
-        'elderly care',
-        'youth programs',
-        'disability rights',
-        'immigration reform'
+        t('onboarding.values.categories.community.concerns.communitySafety'),
+        t('onboarding.values.categories.community.concerns.mentalHealth'),
+        t('onboarding.values.categories.community.concerns.elderlyCare'),
+        t('onboarding.values.categories.community.concerns.youthPrograms'),
+        t('onboarding.values.categories.community.concerns.disabilityRights'),
+        t('onboarding.values.categories.community.concerns.immigrationReform')
       ]
     },
     {
-      title: 'Systemic Change',
+      title: t('onboarding.values.categories.systemic.title'),
       icon: <Users className="w-5 h-5" />,
       color: 'bg-orange-100 text-orange-700',
       concerns: [
-        'corporate accountability',
-        'government transparency',
-        'campaign finance reform',
-        'voting rights',
-        'media integrity'
+        t('onboarding.values.categories.systemic.concerns.corporateAccountability'),
+        t('onboarding.values.categories.systemic.concerns.governmentTransparency'),
+        t('onboarding.values.categories.systemic.concerns.campaignFinanceReform'),
+        t('onboarding.values.categories.systemic.concerns.votingRights'),
+        t('onboarding.values.categories.systemic.concerns.mediaIntegrity')
       ]
     }
-  ]
+  ], [t])
 
-  const communityOptions: CommunityOption[] = [
-    { value: 'local', label: 'My local community', description: 'City and neighborhood issues' },
-    { value: 'regional', label: 'My region/state', description: 'State and regional concerns' },
-    { value: 'national', label: 'National issues', description: 'Country-wide challenges' },
-    { value: 'global', label: 'Global challenges', description: 'International cooperation' }
-  ]
+  const communityOptions: CommunityOption[] = useMemo(() => [
+    { value: 'local', label: t('onboarding.values.community.local.label'), description: t('onboarding.values.community.local.description') },
+    { value: 'regional', label: t('onboarding.values.community.regional.label'), description: t('onboarding.values.community.regional.description') },
+    { value: 'national', label: t('onboarding.values.community.national.label'), description: t('onboarding.values.community.national.description') },
+    { value: 'global', label: t('onboarding.values.community.global.label'), description: t('onboarding.values.community.global.description') }
+  ], [t])
 
-  const participationOptions: ParticipationOption[] = [
+  const participationOptions: ParticipationOption[] = useMemo(() => [
     {
       value: 'observer',
-      label: 'Observer',
-      description: 'I prefer to observe and learn from others',
+      label: t('onboarding.values.participation.observer.label'),
+      description: t('onboarding.values.participation.observer.description'),
       icon: '👁️'
     },
     {
       value: 'contributor',
-      label: 'Contributor',
-      description: 'I want to contribute ideas and suggestions',
+      label: t('onboarding.values.participation.contributor.label'),
+      description: t('onboarding.values.participation.contributor.description'),
       icon: '💡'
     },
     {
       value: 'leader',
-      label: 'Leader',
-      description: 'I want to help lead discussions and initiatives',
+      label: t('onboarding.values.participation.leader.label'),
+      description: t('onboarding.values.participation.leader.description'),
       icon: '🚀'
     }
-  ]
+  ], [t])
 
   return (
     <div className="space-y-8">
       {/* Header */}
       <div className="text-center space-y-4">
         <h2 className="text-3xl font-bold text-gray-900">
-          What matters to you?
+          {t('onboarding.values.title')}
         </h2>
         <p className="text-gray-600">
-          Select up to 5 issues that are most important to you. This helps us show you relevant polls and connect you with like-minded people.
+          {t('onboarding.values.subtitle')}
         </p>
       </div>
 
       {/* Primary concerns */}
       <div className="space-y-6">
         <h3 className="text-xl font-semibold text-gray-900">
-          Primary Concerns ({selectedConcerns.length}/5)
+          {t('onboarding.values.concerns.title', { count: selectedConcerns.length, max: 5 })}
         </h3>
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -205,7 +208,7 @@ export default function ValuesStep({ data, onUpdate, onNext, onBack }: ValuesSte
       {/* Community focus */}
       <div className="space-y-4">
         <h3 className="text-xl font-semibold text-gray-900">
-          Where do you want to make an impact?
+          {t('onboarding.values.community.title')}
         </h3>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
           {communityOptions.map((option: CommunityOption) => (
@@ -230,7 +233,7 @@ export default function ValuesStep({ data, onUpdate, onNext, onBack }: ValuesSte
       {/* Participation style */}
       <div className="space-y-4">
         <h3 className="text-xl font-semibold text-gray-900">
-          How would you like to participate?
+          {t('onboarding.values.participation.title')}
         </h3>
         <div className="space-y-3">
           {participationOptions.map((option: ParticipationOption) => (
@@ -261,7 +264,7 @@ export default function ValuesStep({ data, onUpdate, onNext, onBack }: ValuesSte
           onClick={onBack}
           className="px-6 py-3 text-gray-600 hover:text-gray-800 transition-colors"
         >
-          ← Back
+          ← {t('onboarding.values.actions.back')}
         </button>
         <button
           onClick={onNext}
@@ -274,12 +277,12 @@ export default function ValuesStep({ data, onUpdate, onNext, onBack }: ValuesSte
             }
           `}
         >
-          Continue
+          {t('onboarding.values.actions.continue')}
         </button>
       </div>
 
       <div className="text-center text-sm text-gray-500">
-        Step 3 of 6
+        {t('onboarding.values.progress', { current: 3, total: 6 })}
       </div>
     </div>
   )

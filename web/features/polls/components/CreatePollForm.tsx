@@ -38,6 +38,7 @@ const storeToSelectorPrivacy = (level: PollPrivacyLevel): PrivacyLevel => {
 };
 
 export const CreatePollForm: React.FC<CreatePollFormProps> = ({ onSubmit, onCancel }) => {
+  const { t } = useI18n();
   const {
     data,
     errors,
@@ -235,9 +236,13 @@ export const CreatePollForm: React.FC<CreatePollFormProps> = ({ onSubmit, onCanc
   return (
     <div className="bg-white rounded-lg shadow-lg p-6 max-w-2xl mx-auto">
       <div className="flex items-center justify-between mb-6">
-        <h2 className="text-2xl font-bold text-gray-900">Create New Poll</h2>
+        <h2 className="text-2xl font-bold text-gray-900">{t('polls.create.form.title')}</h2>
         {onCancel && (
-          <button onClick={handleCancel} className="text-gray-400 hover:text-gray-600">
+          <button
+            onClick={handleCancel}
+            className="text-gray-400 hover:text-gray-600"
+            aria-label={t('polls.create.form.closeAria')}
+          >
             <X className="h-6 w-6" />
           </button>
         )}
@@ -248,7 +253,7 @@ export const CreatePollForm: React.FC<CreatePollFormProps> = ({ onSubmit, onCanc
       <form ref={formRef} onSubmit={handleSubmit} className="space-y-6" noValidate>
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-2" htmlFor="create-poll-title">
-            Poll Title <span className="text-red-500">*</span>
+            {t('polls.create.form.fields.title.label')} <span className="text-red-500">*</span>
           </label>
           <input
             id="create-poll-title"
@@ -259,7 +264,7 @@ export const CreatePollForm: React.FC<CreatePollFormProps> = ({ onSubmit, onCanc
             className={`w-full px-3 py-2 border rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent ${
               errors.title ? 'border-red-300' : 'border-gray-300'
             }`}
-            placeholder="Enter your poll question..."
+            placeholder={t('polls.create.form.fields.title.placeholder')}
             maxLength={200}
             aria-invalid={Boolean(errors.title)}
             aria-describedby="create-poll-title-count create-poll-title-error"
@@ -275,13 +280,13 @@ export const CreatePollForm: React.FC<CreatePollFormProps> = ({ onSubmit, onCanc
             </p>
           )}
           <p id="create-poll-title-count" className="mt-1 text-sm text-gray-500">
-            {data.title.length}/200 characters
+            {t('polls.create.form.fields.title.counter', { current: data.title.length, max: 200 })}
           </p>
         </div>
 
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-2" htmlFor="create-poll-description">
-            Description
+            {t('polls.create.form.fields.description.label')}
           </label>
           <textarea
             id="create-poll-description"
@@ -291,7 +296,7 @@ export const CreatePollForm: React.FC<CreatePollFormProps> = ({ onSubmit, onCanc
             className={`w-full px-3 py-2 border rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent ${
               errors.description ? 'border-red-300' : 'border-gray-300'
             }`}
-            placeholder="Add more context to your poll..."
+            placeholder={t('polls.create.form.fields.description.placeholder')}
             rows={3}
             maxLength={1000}
             aria-invalid={Boolean(errors.description)}
@@ -308,13 +313,13 @@ export const CreatePollForm: React.FC<CreatePollFormProps> = ({ onSubmit, onCanc
             </p>
           )}
           <p id="create-poll-description-count" className="mt-1 text-sm text-gray-500">
-            {data.description.length}/1000 characters
+            {t('polls.create.form.fields.description.counter', { current: data.description.length, max: 1000 })}
           </p>
         </div>
 
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-2" htmlFor="create-poll-category">
-            Category
+            {t('polls.create.form.fields.category.label')}
           </label>
           <input
             id="create-poll-category"
@@ -325,7 +330,7 @@ export const CreatePollForm: React.FC<CreatePollFormProps> = ({ onSubmit, onCanc
             className={`w-full px-3 py-2 border rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent ${
               errors.category ? 'border-red-300' : 'border-gray-300'
             }`}
-            placeholder="e.g., Politics, Technology, Entertainment..."
+            placeholder={t('polls.create.form.fields.category.placeholder')}
             maxLength={50}
             aria-invalid={Boolean(errors.category)}
             aria-describedby={errors.category ? 'create-poll-category-error' : undefined}
@@ -344,14 +349,14 @@ export const CreatePollForm: React.FC<CreatePollFormProps> = ({ onSubmit, onCanc
 
         <div>
           <div className="flex items-center justify-between mb-2">
-            <label className="block text-sm font-medium text-gray-700">Privacy Level</label>
+            <label className="block text-sm font-medium text-gray-700">{t('polls.create.form.fields.privacy.label')}</label>
             <button
               type="button"
               onClick={handlePrivacyRecommendation}
               className="text-sm text-blue-600 hover:text-blue-700 flex items-center gap-1"
             >
               <Shield className="h-4 w-4" />
-              Get Recommendation
+              {t('polls.create.form.fields.privacy.getRecommendation')}
             </button>
           </div>
           <div ref={privacySelectorRef} aria-live="polite">
@@ -375,7 +380,7 @@ export const CreatePollForm: React.FC<CreatePollFormProps> = ({ onSubmit, onCanc
 
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-2" htmlFor="create-poll-option-0">
-            Poll Options <span className="text-red-500">*</span>
+            {t('polls.create.form.fields.options.label')} <span className="text-red-500">*</span>
           </label>
           <div className="space-y-2">
             {data.options.map((option, index) => (
@@ -391,7 +396,7 @@ export const CreatePollForm: React.FC<CreatePollFormProps> = ({ onSubmit, onCanc
                   className={`flex-1 px-3 py-2 border rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent ${
                     errors[`option-${index}`] ? 'border-red-300' : 'border-gray-300'
                   }`}
-                  placeholder={`Option ${index + 1}`}
+                  placeholder={t('polls.create.form.fields.options.optionPlaceholder', { number: index + 1 })}
                   maxLength={100}
                   aria-invalid={Boolean(errors[`option-${index}`])}
                   aria-describedby={`create-poll-option-${index}-meta${
@@ -411,7 +416,7 @@ export const CreatePollForm: React.FC<CreatePollFormProps> = ({ onSubmit, onCanc
             ))}
           </div>
           <div className="mt-1 text-xs text-gray-500" id="create-poll-options-meta">
-            {data.options.length}/10 options
+            {t('polls.create.form.fields.options.counter', { current: data.options.length, max: 10 })}
           </div>
           {data.options.map((option, index) => (
             <div
@@ -419,8 +424,8 @@ export const CreatePollForm: React.FC<CreatePollFormProps> = ({ onSubmit, onCanc
               id={`create-poll-option-${index}-meta`}
               className="flex justify-between text-xs text-gray-500"
             >
-              <span>{option.length}/100 characters</span>
-              {option.length > 80 && <span className="text-orange-500">Approaching limit</span>}
+              <span>{t('polls.create.form.fields.options.optionCounter', { current: option.length, max: 100 })}</span>
+              {option.length > 80 && <span className="text-orange-500">{t('polls.create.form.fields.options.approachingLimit')}</span>}
             </div>
           ))}
           {errors.options && (
@@ -451,14 +456,14 @@ export const CreatePollForm: React.FC<CreatePollFormProps> = ({ onSubmit, onCanc
               aria-describedby="create-poll-options-meta"
             >
               <Plus className="h-4 w-4" />
-              Add Option
+              {t('polls.create.form.fields.options.add')}
             </button>
           )}
         </div>
 
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-2" htmlFor="create-poll-tag-input">
-            Tags
+            {t('polls.create.form.fields.tags.label')}
           </label>
           <div className="flex items-center gap-2 mb-2">
             <input
@@ -468,7 +473,7 @@ export const CreatePollForm: React.FC<CreatePollFormProps> = ({ onSubmit, onCanc
               onChange={(event) => setNewTag(event.target.value)}
               ref={tagInputRef}
               className="flex-1 px-3 py-2 border rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-              placeholder="Add a tag..."
+              placeholder={t('polls.create.form.fields.tags.placeholder')}
               maxLength={20}
               aria-describedby={`create-poll-tags-limit${
                 errors.tags ? ' create-poll-tags-error' : ''
@@ -486,7 +491,7 @@ export const CreatePollForm: React.FC<CreatePollFormProps> = ({ onSubmit, onCanc
               disabled={!newTag.trim() || data.tags.length >= 5}
               className="px-3 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed"
             >
-              Add
+              {t('polls.create.form.fields.tags.add')}
             </button>
           </div>
           {errors.tags && (
@@ -519,7 +524,7 @@ export const CreatePollForm: React.FC<CreatePollFormProps> = ({ onSubmit, onCanc
             </div>
           )}
           <p id="create-poll-tags-limit" className="text-xs text-gray-500">
-            {data.tags.length}/5 selected
+            {t('polls.create.form.fields.tags.counter', { current: data.tags.length, max: 5 })}
           </p>
         </div>
 
@@ -537,7 +542,7 @@ export const CreatePollForm: React.FC<CreatePollFormProps> = ({ onSubmit, onCanc
               onClick={handleCancel}
               className="px-4 py-2 border border-gray-300 rounded-md text-gray-700 hover:bg-gray-50"
             >
-              Cancel
+              {t('common.actions.cancel')}
             </button>
           )}
           <button
@@ -546,7 +551,7 @@ export const CreatePollForm: React.FC<CreatePollFormProps> = ({ onSubmit, onCanc
             className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
           >
             <Save className="h-4 w-4" />
-            {isLoading ? 'Creating...' : 'Create Poll'}
+            {isLoading ? t('polls.create.form.buttons.creating') : t('polls.create.form.buttons.create')}
           </button>
         </div>
       </form>
