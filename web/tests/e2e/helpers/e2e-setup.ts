@@ -9,6 +9,7 @@ import {
 import {
   POLL_FIXTURES,
   type MockPollRecord,
+  type MockPollOption,
   createPollRecord,
 } from '../../fixtures/api/polls';
 import { profileRecord } from '../../fixtures/api/profile';
