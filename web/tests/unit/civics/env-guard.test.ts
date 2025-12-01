@@ -25,6 +25,7 @@ describe('assertPepperConfig', () => {
       delete process.env.PRIVACY_PEPPER_DEV;
       
       jest.resetModules();
+      // eslint-disable-next-line @typescript-eslint/no-var-requires
       const { assertPepperConfig } = require('@/lib/civics/env-guard');
       
       // In test mode, should require PRIVACY_PEPPER_DEV
@@ -34,6 +35,7 @@ describe('assertPepperConfig', () => {
     } else {
       // If PRIVACY_PEPPER_DEV is set, verify it doesn't throw
       jest.resetModules();
+      // eslint-disable-next-line @typescript-eslint/no-var-requires
       const { assertPepperConfig } = require('@/lib/civics/env-guard');
       expect(() => assertPepperConfig()).not.toThrow();
     }

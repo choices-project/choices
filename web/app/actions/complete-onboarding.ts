@@ -9,8 +9,8 @@ import {
   getAuthenticatedUser,
   type ServerActionContext
 } from '@/lib/core/auth/server-actions'
-import { logger } from '@/lib/utils/logger'
 import { sanitizeFormData } from '@/lib/utils/log-sanitizer'
+import { logger } from '@/lib/utils/logger'
 import { getSupabaseServerClient } from '@/utils/supabase/server'
 
 // Validation schema

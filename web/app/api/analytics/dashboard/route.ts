@@ -67,7 +67,6 @@ async function getUserGrowth(supabase: any, days: number = 7): Promise<UserGrowt
     }
 
     // Group by date and count
-    const dateMap = new Map<string, number>();
     let cumulative = 0;
 
     // Get initial user count before start date

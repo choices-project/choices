@@ -3,8 +3,8 @@
 import { cookies } from 'next/headers'
 import { redirect } from 'next/navigation'
 
-import { logger } from '@/lib/utils/logger'
 import { sanitizeFormData } from '@/lib/utils/log-sanitizer'
+import { logger } from '@/lib/utils/logger'
 import { getSupabaseServerClient } from '@/utils/supabase/server'
 
 /**

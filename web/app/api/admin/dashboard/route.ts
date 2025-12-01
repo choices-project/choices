@@ -382,7 +382,6 @@ async function loadAdminAnalytics(supabase: any) {
     }
 
     const categoryMap = new Map<string, { poll_count: number; vote_count: number }>();
-    const pollIds = new Set(polls?.map((p: any) => p.id) || []);
 
     categoryData?.forEach((poll: any) => {
       const category = poll.category || 'Uncategorized';

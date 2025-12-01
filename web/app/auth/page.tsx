@@ -1,6 +1,6 @@
 'use client';
 
-import { Eye, EyeOff, Lock, Mail, UserPlus, CheckCircle2, AlertCircle } from 'lucide-react';
+import { Eye, EyeOff, Lock, Mail, CheckCircle2, AlertCircle } from 'lucide-react';
 import dynamicImport from 'next/dynamic';
 import { useRouter } from 'next/navigation';
 import React, { useState, useEffect } from 'react';
@@ -13,7 +13,6 @@ import {
   useUserStore,
 } from '@/features/auth/lib/store';
 import { useI18n } from '@/hooks/useI18n';
-import type { ServerActionContext } from '@/lib/core/auth/server-actions';
 import { logger } from '@/lib/utils/logger';
 import { getSupabaseBrowserClient } from '@/utils/supabase/client';
 

@@ -152,7 +152,7 @@ export function isSensitiveKey(key: string): boolean {
 /**
  * Mask sensitive value (returns '***' for any input)
  */
-export function maskSensitive(value: unknown): string {
+export function maskSensitive(_value: unknown): string {
   return '***';
 }
 

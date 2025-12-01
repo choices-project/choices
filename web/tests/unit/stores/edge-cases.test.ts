@@ -11,8 +11,8 @@ import { describe, it, expect, beforeEach } from '@jest/globals';
 import { act } from '@testing-library/react';
 
 import { useAppStore } from '@/lib/stores/appStore';
-import { usePollsStore } from '@/lib/stores/pollsStore';
 import { useNotificationStore } from '@/lib/stores/notificationStore';
+import { usePollsStore } from '@/lib/stores/pollsStore';
 
 describe('Store Edge Cases', () => {
   beforeEach(() => {

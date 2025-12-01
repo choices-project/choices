@@ -11,8 +11,8 @@ import { describe, it, expect, beforeEach } from '@jest/globals';
 import { act } from '@testing-library/react';
 
 import { useAppStore } from '@/lib/stores/appStore';
-import { usePollsStore } from '@/lib/stores/pollsStore';
 import { useNotificationStore } from '@/lib/stores/notificationStore';
+import { usePollsStore } from '@/lib/stores/pollsStore';
 import { useUserStore } from '@/lib/stores/userStore';
 
 describe('Critical User Flows', () => {
@@ -35,7 +35,7 @@ describe('Critical User Flows', () => {
       ];
 
       // Each step should validate input
-      registrationSteps.forEach(({ step, value }) => {
+      registrationSteps.forEach(({ value }) => {
         expect(value).toBeTruthy();
         expect(typeof value).toBe('string');
         expect(value.length).toBeGreaterThan(0);

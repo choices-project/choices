@@ -10,9 +10,9 @@
 import { describe, it, expect, beforeEach } from '@jest/globals';
 import { act } from '@testing-library/react';
 
-import { usePollsStore } from '@/lib/stores/pollsStore';
-import { useNotificationStore } from '@/lib/stores/notificationStore';
 import { useAppStore } from '@/lib/stores/appStore';
+import { useNotificationStore } from '@/lib/stores/notificationStore';
+import { usePollsStore } from '@/lib/stores/pollsStore';
 
 describe('Store Performance', () => {
   beforeEach(() => {

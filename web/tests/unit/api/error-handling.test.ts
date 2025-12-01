@@ -200,7 +200,7 @@ describe('Store Error Handling', () => {
       try {
         Object.assign(initialState, partialUpdate);
         throw new Error('Update failed');
-      } catch (error) {
+      } catch {
         // State should be recoverable
         expect(initialState.data).toBe('initial');
         // Partial update may or may not be applied depending on implementation

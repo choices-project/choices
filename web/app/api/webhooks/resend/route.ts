@@ -1,5 +1,6 @@
-import type { NextRequest } from 'next/server';
 import { createHmac, timingSafeEqual } from 'crypto';
+
+import type { NextRequest } from 'next/server';
 
 import { withErrorHandling, successResponse, methodNotAllowed, forbiddenError, errorResponse } from '@/lib/api';
 import { logger } from '@/lib/utils/logger';
