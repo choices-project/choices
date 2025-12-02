@@ -52,13 +52,6 @@ test.describe('Civics UI Tests', () => {
         }),
       });
     });
-    
-    // Ensure the page waits for API calls to complete
-    await page.route('**/api/v1/civics/by-state*', async (route) => {
-      await route.continue();
-    });
-
-    // Mock address lookup endpoint
     await page.route('**/api/v1/civics/address-lookup', async (route) => {
       await route.fulfill({
         status: 200,
