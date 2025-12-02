@@ -71,7 +71,35 @@ test.describe('Civics UI Tests', () => {
   });
 
   test('civics page loads and displays representatives', async ({ page }) => {
+    // Listen for console errors
+    const consoleErrors: string[] = [];
+    page.on('console', (msg) => {
+      if (msg.type() === 'error') {
+        consoleErrors.push(msg.text());
+      }
+    });
+
+    // Listen for page errors
+    page.on('pageerror', (error) => {
+      consoleErrors.push(`Page error: ${error.message}`);
+    });
+
     await page.goto('/civics', { waitUntil: 'networkidle', timeout: 60_000 });
+    
+    // Check what URL we're actually on
+    const currentUrl = page.url();
+    console.log(`Current URL: ${currentUrl}`);
+    
+    // Check page content
+    const pageContent = await page.content();
+    console.log(`Page content length: ${pageContent.length}`);
+    console.log(`Page title: ${await page.title()}`);
+    
+    // Log any console errors
+    if (consoleErrors.length > 0) {
+      console.log(`Console errors: ${consoleErrors.join(', ')}`);
+    }
+
     await waitForPageReady(page, 60_000);
 
     // Wait for the page to be fully loaded (client component needs JS to render)
@@ -90,7 +118,11 @@ test.describe('Civics UI Tests', () => {
     ).catch(() => {});
 
     // Wait a bit more for React to hydrate and render
-    await page.waitForTimeout(1000);
+    await page.waitForTimeout(2000);
+
+    // Debug: Check if body has any content
+    const bodyText = await page.locator('body').textContent();
+    console.log(`Body text preview: ${bodyText?.substring(0, 200)}`);
 
     // Check page title/header - try without exact match first
     await expect(page.getByText('Civics')).toBeVisible({ timeout: 30_000 });
