@@ -3,6 +3,25 @@ import { render, screen } from '@testing-library/react';
 import { ElectionCountdownCard } from '@/features/civics/components/countdown/ElectionCountdownCard';
 import type { CivicElection } from '@/types/civic';
 
+// Mock useI18n
+jest.mock('@/hooks/useI18n', () => ({
+  useI18n: () => ({
+    t: (key: string) => {
+      if (key === 'civics.countdown.card.loading') {
+        return 'Fetching the latest election calendar';
+      }
+      if (key === 'civics.countdown.card.error') {
+        return 'Error loading elections';
+      }
+      if (key === 'civics.countdown.card.empty') {
+        return 'No upcoming elections';
+      }
+      return key;
+    },
+    currentLanguage: 'en',
+  }),
+}));
+
 const buildElection = (overrides: Partial<CivicElection> = {}): CivicElection => ({
   election_id: overrides.election_id ?? `election-${Math.random()}`,
   name: overrides.name ?? 'General Election',
