@@ -1,8 +1,8 @@
 import { defineConfig, devices } from '@playwright/test'
 
 export default defineConfig({
-  testDir: './tests/e2e',
-  testIgnore: ['**/archive/**', '**/setup/**'],
+  testDir: './tests',
+  testIgnore: ['**/archive/**', '**/setup/**', '**/unit/**', '**/integration/**', '**/contracts/**', '**/api/**'],
   fullyParallel: false, // Disabled for E2E stability
   forbidOnly: !!process.env.CI,
   retries: process.env.CI ? 1 : 0, // Reduced retries

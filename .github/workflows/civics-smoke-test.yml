@@ -134,7 +134,9 @@ jobs:
       - name: Run Playwright UI Tests (with mocked APIs)
         run: |
           cd web
-          npx playwright test tests/civics.ui.spec.ts
+          # Run the test with explicit path - the root config has testDir: './tests/e2e'
+          # but we can override it by specifying the file directly
+          npx playwright test tests/civics.ui.spec.ts --config playwright.config.ts --project=chromium
         env:
           BASE_URL: http://localhost:3001
 
