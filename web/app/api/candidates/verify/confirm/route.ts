@@ -11,7 +11,7 @@ export const dynamic = 'force-dynamic';
 // Validation schema for verification code
 const verifyCodeSchema = z.object({
   code: z
-    .string({ required_error: 'Code is required', invalid_type_error: 'Code is required' })
+    .string()
     .min(1, 'Code is required')
     .regex(/^\d{6}$/, 'Code must be 6 digits'),
 });
@@ -79,8 +79,8 @@ export const POST = withErrorHandling(async (request: NextRequest) => {
     // Extract Zod error message for details.code
     let errorMessage = 'Validation failed';
     
-    if (result.error && Array.isArray(result.error.errors) && result.error.errors.length > 0) {
-      const firstError = result.error.errors[0];
+    if (result.error && Array.isArray(result.error.issues) && result.error.issues.length > 0) {
+      const firstError = result.error.issues[0];
       // Map Zod errors to expected test messages
       if (firstError && Array.isArray(firstError.path) && firstError.path.length > 0 && firstError.path[0] === 'code') {
         // Check for empty/whitespace strings
