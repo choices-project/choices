@@ -88,10 +88,15 @@ export default function AdminStoreHarnessPage() {
     };
 
     window.__adminStoreHarness = harness;
+    if (typeof document !== 'undefined') {
+      document.documentElement.dataset.adminStoreHarness = 'ready';
+    }
     return () => {
       if (window.__adminStoreHarness === harness) {
-         
         delete (window as any).__adminStoreHarness;
+      }
+      if (typeof document !== 'undefined') {
+        delete document.documentElement.dataset.adminStoreHarness;
       }
     };
   }, [
