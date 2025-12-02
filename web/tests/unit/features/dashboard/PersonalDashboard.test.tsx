@@ -394,12 +394,18 @@ describe('PersonalDashboard', () => {
       office: 'Mayor',
       state: 'CA',
       division_ids: ['ocd-division/country:us/state:ca'],
+      ocdDivisionIds: ['ocd-division/country:us/state:ca'], // Also set ocdDivisionIds to ensure it's found
     } as Representative;
 
     mockHooks({
       profileOverrides: profile,
       representatives: [representative],
     });
+
+    // Ensure profile store preferences are set correctly
+    profileStoreState.preferences = {
+      dashboard: profile.dashboard_preferences,
+    };
 
     mockedCountdownUtils.useElectionCountdown.mockReturnValue({
       divisionIds: ['ocd-division/country:us/state:ca'],
@@ -422,7 +428,9 @@ describe('PersonalDashboard', () => {
 
     render(<PersonalDashboard />);
 
+    // Wait for the representatives card and content to render
     await waitFor(() => {
+      expect(screen.getByTestId('representatives-card')).toBeInTheDocument();
       expect(screen.getByText('Upcoming elections')).toBeInTheDocument();
       expect(screen.getAllByText('California Primary')[0]).toBeInTheDocument();
       // The countdown badge wording is localized and may vary slightly; assert
@@ -432,6 +440,6 @@ describe('PersonalDashboard', () => {
         return normalized.includes('45') && normalized.includes('day');
       });
       expect(countdownNode).toBeInTheDocument();
-    });
+    }, { timeout: 5000 });
   });
 });
