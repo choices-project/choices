@@ -250,12 +250,24 @@ test.describe('Civics UI Tests', () => {
     await page.goto('/civics', { waitUntil: 'domcontentloaded', timeout: 60_000 });
     await waitForPageReady(page, 60_000);
 
-    // Wait for system date info
+    // Wait for API call and loading to complete
+    await page.waitForResponse(response => 
+      response.url().includes('/api/v1/civics/by-state') && response.status() === 200,
+      { timeout: 30_000 }
+    ).catch(() => {});
+    await page.waitForFunction(
+      () => !document.querySelector('.animate-spin'),
+      { timeout: 30_000 }
+    ).catch(() => {});
+
+    // Wait for system date info (inside representative-feed)
+    await expect(page.getByTestId('representative-feed')).toBeVisible({ timeout: 30_000 });
     const systemDateInfo = page.getByTestId('system-date-info');
     await expect(systemDateInfo).toBeVisible({ timeout: 10_000 });
 
-    // Check that current electorate count is displayed
-    await expect(page.getByTestId('current-electorate-count')).toBeVisible();
+    // Check that system date is displayed
+    await expect(systemDateInfo.getByText(/System Date Verification/i)).toBeVisible({ timeout: 10_000 });
+    await expect(systemDateInfo.getByTestId('current-electorate-count')).toBeVisible({ timeout: 10_000 });
   });
 });
 
