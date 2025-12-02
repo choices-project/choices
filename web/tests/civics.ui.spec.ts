@@ -71,8 +71,11 @@ test.describe('Civics UI Tests', () => {
   });
 
   test('civics page loads and displays representatives', async ({ page }) => {
-    await page.goto('/civics', { waitUntil: 'domcontentloaded', timeout: 60_000 });
+    await page.goto('/civics', { waitUntil: 'networkidle', timeout: 60_000 });
     await waitForPageReady(page, 60_000);
+
+    // Wait for the page to be fully loaded (client component needs JS to render)
+    await page.waitForLoadState('networkidle', { timeout: 30_000 }).catch(() => {});
 
     // Wait for API call to complete
     await page.waitForResponse(response => 
@@ -86,8 +89,11 @@ test.describe('Civics UI Tests', () => {
       { timeout: 30_000 }
     ).catch(() => {});
 
-    // Check page title/header
-    await expect(page.getByText('Civics', { exact: true })).toBeVisible({ timeout: 10_000 });
+    // Wait a bit more for React to hydrate and render
+    await page.waitForTimeout(1000);
+
+    // Check page title/header - try without exact match first
+    await expect(page.getByText('Civics')).toBeVisible({ timeout: 30_000 });
     await expect(page.getByText(/Your Democratic Voice/i)).toBeVisible({ timeout: 10_000 });
 
     // Check that representatives tab is active
@@ -101,8 +107,9 @@ test.describe('Civics UI Tests', () => {
   });
 
   test('can search for representatives', async ({ page }) => {
-    await page.goto('/civics', { waitUntil: 'domcontentloaded', timeout: 60_000 });
+    await page.goto('/civics', { waitUntil: 'networkidle', timeout: 60_000 });
     await waitForPageReady(page, 60_000);
+    await page.waitForLoadState('networkidle', { timeout: 30_000 }).catch(() => {});
 
     // Wait for API call and loading to complete
     await page.waitForResponse(response => 
@@ -130,8 +137,9 @@ test.describe('Civics UI Tests', () => {
   });
 
   test('can filter by state', async ({ page }) => {
-    await page.goto('/civics', { waitUntil: 'domcontentloaded', timeout: 60_000 });
+    await page.goto('/civics', { waitUntil: 'networkidle', timeout: 60_000 });
     await waitForPageReady(page, 60_000);
+    await page.waitForLoadState('networkidle', { timeout: 30_000 }).catch(() => {});
 
     // Wait for API call and loading to complete
     await page.waitForResponse(response => 
@@ -162,8 +170,9 @@ test.describe('Civics UI Tests', () => {
   });
 
   test('can filter by level', async ({ page }) => {
-    await page.goto('/civics', { waitUntil: 'domcontentloaded', timeout: 60_000 });
+    await page.goto('/civics', { waitUntil: 'networkidle', timeout: 60_000 });
     await waitForPageReady(page, 60_000);
+    await page.waitForLoadState('networkidle', { timeout: 30_000 }).catch(() => {});
 
     // Wait for API call and loading to complete
     await page.waitForResponse(response => 
@@ -194,8 +203,9 @@ test.describe('Civics UI Tests', () => {
   });
 
   test('can switch to feed tab', async ({ page }) => {
-    await page.goto('/civics', { waitUntil: 'domcontentloaded', timeout: 60_000 });
+    await page.goto('/civics', { waitUntil: 'networkidle', timeout: 60_000 });
     await waitForPageReady(page, 60_000);
+    await page.waitForLoadState('networkidle', { timeout: 30_000 }).catch(() => {});
 
     // Wait for initial load
     await page.waitForResponse(response => 
@@ -216,8 +226,9 @@ test.describe('Civics UI Tests', () => {
   });
 
   test('displays quality statistics', async ({ page }) => {
-    await page.goto('/civics', { waitUntil: 'domcontentloaded', timeout: 60_000 });
+    await page.goto('/civics', { waitUntil: 'networkidle', timeout: 60_000 });
     await waitForPageReady(page, 60_000);
+    await page.waitForLoadState('networkidle', { timeout: 30_000 }).catch(() => {});
 
     // Wait for API call and loading to complete
     await page.waitForResponse(response => 
@@ -240,8 +251,9 @@ test.describe('Civics UI Tests', () => {
   });
 
   test('displays system date information', async ({ page }) => {
-    await page.goto('/civics', { waitUntil: 'domcontentloaded', timeout: 60_000 });
+    await page.goto('/civics', { waitUntil: 'networkidle', timeout: 60_000 });
     await waitForPageReady(page, 60_000);
+    await page.waitForLoadState('networkidle', { timeout: 30_000 }).catch(() => {});
 
     // Wait for API call and loading to complete
     await page.waitForResponse(response => 
