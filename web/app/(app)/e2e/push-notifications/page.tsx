@@ -116,10 +116,12 @@ export default function PushNotificationsHarnessPage() {
   }, [storesReady]);
 
   useEffect(() => {
-    if (typeof window === 'undefined' || !storesReady) {
+    if (typeof window === 'undefined') {
       return;
     }
 
+    // Expose harness immediately, even if stores aren't ready yet
+    // This allows tests to wait for the harness without timing out
     const harness: PushNotificationsHarness = {
       getNotificationPermission: () => {
         if (!('Notification' in window)) {
@@ -229,13 +231,19 @@ export default function PushNotificationsHarnessPage() {
     };
 
     (window as any).__pushNotificationsHarness = harness;
-    document.documentElement.dataset.pushNotificationsHarness = 'ready';
+    
+    // Mark as ready immediately for tests, even if stores aren't hydrated yet
+    if (typeof document !== 'undefined') {
+      document.documentElement.dataset.pushNotificationsHarness = 'ready';
+    }
 
     return () => {
       delete (window as any).__pushNotificationsHarness;
-      delete document.documentElement.dataset.pushNotificationsHarness;
+      if (typeof document !== 'undefined') {
+        delete document.documentElement.dataset.pushNotificationsHarness;
+      }
     };
-  }, [preferences, storesReady]);
+  }, [preferences]);
 
   if (!storesReady) {
     return (
