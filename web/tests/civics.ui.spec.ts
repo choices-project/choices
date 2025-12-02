@@ -88,16 +88,21 @@ test.describe('Civics UI Tests', () => {
     
     // Check what URL we're actually on
     const currentUrl = page.url();
-    console.log(`Current URL: ${currentUrl}`);
+    // eslint-disable-next-line no-console
+    console.log(`[DEBUG] Current URL: ${currentUrl}`);
     
     // Check page content
     const pageContent = await page.content();
-    console.log(`Page content length: ${pageContent.length}`);
-    console.log(`Page title: ${await page.title()}`);
+    // eslint-disable-next-line no-console
+    console.log(`[DEBUG] Page content length: ${pageContent.length}`);
+    const pageTitle = await page.title();
+    // eslint-disable-next-line no-console
+    console.log(`[DEBUG] Page title: ${pageTitle}`);
     
     // Log any console errors
     if (consoleErrors.length > 0) {
-      console.log(`Console errors: ${consoleErrors.join(', ')}`);
+      // eslint-disable-next-line no-console
+      console.log(`[DEBUG] Console errors: ${consoleErrors.join(', ')}`);
     }
 
     await waitForPageReady(page, 60_000);
@@ -122,7 +127,19 @@ test.describe('Civics UI Tests', () => {
 
     // Debug: Check if body has any content
     const bodyText = await page.locator('body').textContent();
-    console.log(`Body text preview: ${bodyText?.substring(0, 200)}`);
+    // eslint-disable-next-line no-console
+    console.log(`[DEBUG] Body text preview: ${bodyText?.substring(0, 200)}`);
+    
+    // Debug: Check if h1 exists
+    const h1Text = await page.locator('h1').textContent().catch(() => null);
+    // eslint-disable-next-line no-console
+    console.log(`[DEBUG] H1 text: ${h1Text}`);
+    
+    // Debug: Check for any text containing "Civics"
+    const allText = await page.locator('body').textContent();
+    const hasCivics = allText?.includes('Civics');
+    // eslint-disable-next-line no-console
+    console.log(`[DEBUG] Page contains "Civics" text: ${hasCivics}`);
 
     // Check page title/header - try without exact match first
     await expect(page.getByText('Civics')).toBeVisible({ timeout: 30_000 });
