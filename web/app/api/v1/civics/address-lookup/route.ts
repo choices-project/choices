@@ -81,7 +81,9 @@ type Jurisdiction = {
 // In-memory rate limiting + response cache (best-effort, per-runtime)
 // -----------------------------------------------------------------------------
 const RATE_LIMIT_WINDOW_MS = 60_000; // 1 minute
-const RATE_LIMIT_MAX_REQUESTS = 30; // per IP per window
+// In CI, allow higher rate limits for smoke tests (10 VUs * 30s = 300 requests)
+// In production, use stricter limits
+const RATE_LIMIT_MAX_REQUESTS = process.env.CI ? 500 : 30; // per IP per window
 const CACHE_TTL_MS = 5 * 60_000; // 5 minutes
 const CACHE_MAX_ENTRIES = 1000;
 
