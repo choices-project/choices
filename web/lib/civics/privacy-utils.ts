@@ -8,6 +8,7 @@ import crypto from 'crypto';
 import { cookies } from 'next/headers';
 
 import { isFeatureEnabled } from '@/lib/core/feature-flags';
+import { logger } from '@/lib/utils/logger';
 
 import { assertPepperConfig } from './env-guard';
 
