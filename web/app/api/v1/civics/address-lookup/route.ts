@@ -339,20 +339,44 @@ export const POST = withErrorHandling(async (request: NextRequest) => {
       // ignore analytics errors
     }
 
+    // Return 200 even for fallback responses (they're still valid data)
+    // The fallback flag indicates the data source
     return successResponse(
       {
         jurisdiction
       },
       {
         fallback: jurisdiction.fallback ?? false,
-        integration: 'google-civic'
+        integration: jurisdiction.fallback ? 'fallback' : 'google-civic'
       }
     );
   } catch (error) {
     logger.error('Address lookup error', error instanceof Error ? error : new Error(String(error)));
-    return errorResponse('Failed to resolve address jurisdiction', 502, {
-      reason: error instanceof Error ? error.message : 'Unknown error'
-    });
+    
+    // If external API fails, return fallback jurisdiction instead of error
+    // This ensures the endpoint is always functional even when external services are down
+    const fallbackJurisdiction: Jurisdiction = {
+      state: extractStateFromAddress(address),
+      district: null,
+      county: null,
+      ocd_division_id: null,
+      fallback: true
+    };
+    
+    // Cache the fallback so we don't keep hitting the external API
+    setCache(address, fallbackJurisdiction);
+    
+    // Return 200 with fallback data - this is still a valid response
+    return successResponse(
+      {
+        jurisdiction: fallbackJurisdiction
+      },
+      {
+        fallback: true,
+        integration: 'fallback',
+        warning: 'External API unavailable, using fallback jurisdiction data'
+      }
+    );
   }
 });
 
