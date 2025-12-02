@@ -124,7 +124,9 @@ describe('POST /api/v1/civics/address-lookup', () => {
   it('returns fallback jurisdiction when external API fails', async () => {
     fetchMock.mockRejectedValue(new Error('network failure'));
 
-    const response = await POST(createPostRequest({ address: '456 Elm St, Austin, Texas' }));
+    // Use a unique address to avoid cache interference from other tests
+    const uniqueAddress = `456 Elm St, Austin, Texas ${Date.now()}`;
+    const response = await POST(createPostRequest({ address: uniqueAddress }));
     const payload = await response.json();
 
     const status = (response as any)?.status;
