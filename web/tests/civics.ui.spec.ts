@@ -1,10 +1,13 @@
 import { expect, test } from '@playwright/test';
 
-import { waitForPageReady } from './e2e/helpers/e2e-setup';
+import { setupExternalAPIMocks, waitForPageReady } from './e2e/helpers/e2e-setup';
 
 test.describe('Civics UI Tests', () => {
   test.beforeEach(async ({ page }) => {
-    // Mock the civics API endpoints
+    // Setup external API mocks
+    await setupExternalAPIMocks(page, { civics: true, api: true });
+    
+    // Mock the civics API endpoints (additional mocks for specific test needs)
     await page.route('**/api/v1/civics/by-state*', async (route) => {
       const url = new URL(route.request().url());
       const state = url.searchParams.get('state') || 'CA';

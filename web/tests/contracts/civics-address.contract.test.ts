@@ -94,7 +94,7 @@ describe('Civics address lookup contract', () => {
     expect(body.code).toBe('VALIDATION_ERROR');
   });
 
-  it('returns 502 when API key missing', async () => {
+  it('returns 200 with fallback when API key missing', async () => {
     process.env.GOOGLE_CIVIC_API_KEY = '';
 
     const { POST } = loadRoute();
@@ -102,14 +102,18 @@ describe('Civics address lookup contract', () => {
       createNextRequest('http://localhost/api/v1/civics/address-lookup', {
         method: 'POST',
         headers: { 'content-type': 'application/json' },
-        body: JSON.stringify({ address: '123 Main' }),
+        body: JSON.stringify({ address: '123 Main St, Sacramento, CA' }),
       }),
     );
 
     const body = await response.json();
-    expect(response.status).toBe(502);
-    expect(body.success).toBe(false);
-    expect(body.error).toBe('Failed to resolve address jurisdiction');
+    // Endpoint now returns 200 with fallback data instead of 502
+    expect(response.status).toBe(200);
+    expect(body.success).toBe(true);
+    expect(body.data.jurisdiction).toBeDefined();
+    expect(body.data.jurisdiction.fallback).toBe(true);
+    expect(body.metadata?.fallback).toBe(true);
+    expect(body.metadata?.integration).toBe('fallback');
   });
 
   it('falls back to state extraction when external API fails', async () => {
