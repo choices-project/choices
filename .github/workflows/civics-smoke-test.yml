@@ -118,11 +118,7 @@ jobs:
       - name: Run Playwright UI Tests (with mocked APIs)
         run: |
           cd web
-          if [ -f "tests/civics.ui.spec.ts" ]; then
-            npx playwright test tests/civics.ui.spec.ts
-          else
-            echo "tests/civics.ui.spec.ts not found, skipping UI tests"
-          fi
+          npx playwright test tests/civics.ui.spec.ts
         env:
           BASE_URL: http://localhost:3001
 
