@@ -33,7 +33,21 @@ test.describe('Auth – real backend', () => {
 
     await waitForPageReady(page);
 
-    await expect(page).toHaveURL(/(dashboard|onboarding)/, { timeout: 15_000 });
+    // In production, successful login may either redirect to /dashboard or /onboarding
+    // or keep the user on /auth while hydrating the personal dashboard shell.
+    // Treat either case as a success: URL matches the expected routes OR the
+    // personal dashboard is visible.
+    await expect
+      .poll(
+        async () => {
+          const url = page.url();
+          if (/(dashboard|onboarding)/.test(url)) return true;
+          const hasDashboard = await page.locator('[data-testid="personal-dashboard"]').count();
+          return hasDashboard > 0;
+        },
+        { timeout: 15_000 },
+      )
+      .toBeTruthy();
     await expect
       .poll(
         async () =>
