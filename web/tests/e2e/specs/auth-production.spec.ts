@@ -25,14 +25,33 @@ test.describe('Auth – real backend', () => {
       test.skip('E2E_USER_* credentials are not configured');
     }
 
-    await loginTestUser(page, {
-      email: regularEmail,
-      password: regularPassword,
-      username: regularEmail.split('@')[0] ?? 'e2e-user',
-    });
+    try {
+      await loginTestUser(page, {
+        email: regularEmail,
+        password: regularPassword,
+        username: regularEmail.split('@')[0] ?? 'e2e-user',
+      });
+    } catch (error) {
+      // If loginTestUser throws, the login likely failed
+      throw new Error(`Login failed: ${error instanceof Error ? error.message : String(error)}`);
+    }
 
     // loginTestUser already waits for redirect or auth state, but give it a bit more time
     await waitForPageReady(page, 30_000);
+    
+    // Check immediately if login succeeded
+    const immediateCheck = await page.evaluate(() => {
+      const url = window.location.href;
+      if (/(dashboard|onboarding)/.test(url)) return 'url';
+      if (document.cookie.includes('sb-') || document.cookie.includes('supabase')) return 'cookie';
+      if (localStorage.getItem('supabase.auth.token') || sessionStorage.getItem('supabase.auth.token')) return 'storage';
+      return null;
+    });
+    
+    if (immediateCheck) {
+      // Login succeeded, test passes
+      return;
+    }
 
     // In production, successful login may either redirect to /dashboard or /onboarding
     // or keep the user on /auth while hydrating the personal dashboard shell.

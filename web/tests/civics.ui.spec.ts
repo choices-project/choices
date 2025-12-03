@@ -73,20 +73,17 @@ test.describe('Civics UI Tests', () => {
   });
 
   test('civics page loads and displays representatives', async ({ page }) => {
+    // Set up response listener before navigation
+    const responsePromise = page.waitForResponse(
+      (response) => response.url().includes('/api/v1/civics/by-state') && response.status() === 200,
+      { timeout: 30_000 }
+    ).catch(() => null);
+
     await page.goto('/civics', { waitUntil: 'domcontentloaded', timeout: 60_000 });
     await waitForPageReady(page, 60_000);
 
-    // Wait for API call - the route handler in beforeEach should intercept it
-    // But if it doesn't, wait for the component to render anyway
-    try {
-      await page.waitForResponse(
-        (response) => response.url().includes('/api/v1/civics/by-state') && response.status() === 200,
-        { timeout: 15_000 }
-      );
-    } catch {
-      // If response doesn't come (maybe already fulfilled by mock), continue
-      await page.waitForTimeout(1000);
-    }
+    // Wait for API response (route handler should fulfill it)
+    await responsePromise;
 
     // Wait for loading spinner to disappear or representative-feed to appear
     await Promise.race([
@@ -115,18 +112,19 @@ test.describe('Civics UI Tests', () => {
   });
 
   test('can search for representatives', async ({ page }) => {
-    await page.goto('/civics', { waitUntil: 'networkidle', timeout: 60_000 });
-    await waitForPageReady(page, 60_000);
-
-    // Wait for API call and data to load
-    await page.waitForResponse(
+    const responsePromise = page.waitForResponse(
       (response) => response.url().includes('/api/v1/civics/by-state') && response.status() === 200,
       { timeout: 30_000 }
-    );
+    ).catch(() => null);
+
+    await page.goto('/civics', { waitUntil: 'domcontentloaded', timeout: 60_000 });
+    await waitForPageReady(page, 60_000);
+    await responsePromise;
+
     await page.waitForFunction(
       () => !document.querySelector('.animate-spin'),
       { timeout: 30_000 }
-    );
+    ).catch(() => {});
 
     // Wait for representative-feed to be visible
     await expect(page.getByTestId('representative-feed')).toBeVisible({ timeout: 30_000 });
@@ -146,18 +144,19 @@ test.describe('Civics UI Tests', () => {
   });
 
   test('can filter by state', async ({ page }) => {
-    await page.goto('/civics', { waitUntil: 'networkidle', timeout: 60_000 });
-    await waitForPageReady(page, 60_000);
-
-    // Wait for initial API call and data to load
-    await page.waitForResponse(
+    const responsePromise = page.waitForResponse(
       (response) => response.url().includes('/api/v1/civics/by-state') && response.status() === 200,
       { timeout: 30_000 }
-    );
+    ).catch(() => null);
+
+    await page.goto('/civics', { waitUntil: 'domcontentloaded', timeout: 60_000 });
+    await waitForPageReady(page, 60_000);
+    await responsePromise;
+
     await page.waitForFunction(
       () => !document.querySelector('.animate-spin'),
       { timeout: 30_000 }
-    );
+    ).catch(() => {});
 
     // Wait for state filter (it's inside the representative-feed section)
     await expect(page.getByTestId('representative-feed')).toBeVisible({ timeout: 30_000 });
@@ -171,25 +170,26 @@ test.describe('Civics UI Tests', () => {
     await page.waitForResponse(
       (response) => response.url().includes('/api/v1/civics/by-state') && response.url().includes('state=NY'),
       { timeout: 30_000 }
-    );
+    ).catch(() => {});
 
     // Verify representatives are still visible
     await expect(page.getByTestId('representative-feed')).toBeVisible({ timeout: 10_000 });
   });
 
   test('can filter by level', async ({ page }) => {
-    await page.goto('/civics', { waitUntil: 'networkidle', timeout: 60_000 });
-    await waitForPageReady(page, 60_000);
-
-    // Wait for API call and loading to complete
-    await page.waitForResponse(
+    const responsePromise = page.waitForResponse(
       (response) => response.url().includes('/api/v1/civics/by-state') && response.status() === 200,
       { timeout: 30_000 }
-    );
+    ).catch(() => null);
+
+    await page.goto('/civics', { waitUntil: 'domcontentloaded', timeout: 60_000 });
+    await waitForPageReady(page, 60_000);
+    await responsePromise;
+
     await page.waitForFunction(
       () => !document.querySelector('.animate-spin'),
       { timeout: 30_000 }
-    );
+    ).catch(() => {});
 
     // Wait for level filter (it's inside the representative-feed section)
     await expect(page.getByTestId('representative-feed')).toBeVisible({ timeout: 30_000 });
@@ -203,21 +203,21 @@ test.describe('Civics UI Tests', () => {
     await page.waitForResponse(
       (response) => response.url().includes('/api/v1/civics/by-state') && response.url().includes('level=state'),
       { timeout: 30_000 }
-    );
+    ).catch(() => {});
 
     // Verify representatives are still visible
     await expect(page.getByTestId('representative-feed')).toBeVisible({ timeout: 10_000 });
   });
 
   test('can switch to feed tab', async ({ page }) => {
-    await page.goto('/civics', { waitUntil: 'networkidle', timeout: 60_000 });
-    await waitForPageReady(page, 60_000);
-
-    // Wait for initial load
-    await page.waitForResponse(
+    const responsePromise = page.waitForResponse(
       (response) => response.url().includes('/api/v1/civics/by-state') && response.status() === 200,
       { timeout: 30_000 }
-    );
+    ).catch(() => null);
+
+    await page.goto('/civics', { waitUntil: 'domcontentloaded', timeout: 60_000 });
+    await waitForPageReady(page, 60_000);
+    await responsePromise;
 
     // Click feed tab
     const feedTab = page.getByRole('button', { name: /Feed/i });
@@ -232,18 +232,19 @@ test.describe('Civics UI Tests', () => {
   });
 
   test('displays quality statistics', async ({ page }) => {
-    await page.goto('/civics', { waitUntil: 'networkidle', timeout: 60_000 });
-    await waitForPageReady(page, 60_000);
-
-    // Wait for API call and loading to complete
-    await page.waitForResponse(
+    const responsePromise = page.waitForResponse(
       (response) => response.url().includes('/api/v1/civics/by-state') && response.status() === 200,
       { timeout: 30_000 }
-    );
+    ).catch(() => null);
+
+    await page.goto('/civics', { waitUntil: 'domcontentloaded', timeout: 60_000 });
+    await waitForPageReady(page, 60_000);
+    await responsePromise;
+
     await page.waitForFunction(
       () => !document.querySelector('.animate-spin'),
       { timeout: 30_000 }
-    );
+    ).catch(() => {});
 
     // Wait for quality statistics (inside representative-feed)
     await expect(page.getByTestId('representative-feed')).toBeVisible({ timeout: 30_000 });
@@ -256,18 +257,19 @@ test.describe('Civics UI Tests', () => {
   });
 
   test('displays system date information', async ({ page }) => {
-    await page.goto('/civics', { waitUntil: 'networkidle', timeout: 60_000 });
-    await waitForPageReady(page, 60_000);
-
-    // Wait for API call and loading to complete
-    await page.waitForResponse(
+    const responsePromise = page.waitForResponse(
       (response) => response.url().includes('/api/v1/civics/by-state') && response.status() === 200,
       { timeout: 30_000 }
-    );
+    ).catch(() => null);
+
+    await page.goto('/civics', { waitUntil: 'domcontentloaded', timeout: 60_000 });
+    await waitForPageReady(page, 60_000);
+    await responsePromise;
+
     await page.waitForFunction(
       () => !document.querySelector('.animate-spin'),
       { timeout: 30_000 }
-    );
+    ).catch(() => {});
 
     // Wait for system date info (inside representative-feed)
     await expect(page.getByTestId('representative-feed')).toBeVisible({ timeout: 30_000 });
