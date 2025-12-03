@@ -100,7 +100,9 @@ export default function Civics2Page() {
 
   // Initialize client-side state
   useEffect(() => {
-    // Mobile detection
+    // Mobile detection - only run on client
+    if (typeof window === 'undefined') return;
+    
     const checkMobile = () => {
       // Device detection is handled by appStore
     };
