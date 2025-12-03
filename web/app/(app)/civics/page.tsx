@@ -51,8 +51,24 @@ export default function Civics2Page() {
 
   // Data state (local for now due to type mismatch)
   const [representatives, setRepresentatives] = useState<SuperiorRepresentativeData[]>([]);
-  const isMobile = useIsMobile();
-  const { setCurrentRoute, setSidebarActiveSection, setBreadcrumbs } = useAppActions();
+  
+  // Safely get store hooks - wrap in try-catch to prevent SSR errors
+  let isMobile = false;
+  let setCurrentRoute: ((route: string) => void) | null = null;
+  let setSidebarActiveSection: ((section: string | null) => void) | null = null;
+  let setBreadcrumbs: ((breadcrumbs: Array<{ label: string; href: string }>) => void) | null = null;
+  
+  try {
+    isMobile = useIsMobile();
+    const actions = useAppActions();
+    setCurrentRoute = actions.setCurrentRoute;
+    setSidebarActiveSection = actions.setSidebarActiveSection;
+    setBreadcrumbs = actions.setBreadcrumbs;
+  } catch (error) {
+    // Fallback if store is not available (e.g., during SSR)
+    logger.warn('Failed to initialize app store hooks', { error });
+  }
+  
   const [isLoading, setIsLoading] = useState(true);
 
   const loadRepresentatives = useCallback(async () => {
@@ -85,17 +101,19 @@ export default function Civics2Page() {
   }, [loadRepresentatives]);
 
   useEffect(() => {
-    setCurrentRoute('/civics');
-    setSidebarActiveSection('civics');
-    setBreadcrumbs([
-      { label: 'Home', href: '/' },
-      { label: 'Civics', href: '/civics' },
-    ]);
+    if (setCurrentRoute && setSidebarActiveSection && setBreadcrumbs) {
+      setCurrentRoute('/civics');
+      setSidebarActiveSection('civics');
+      setBreadcrumbs([
+        { label: 'Home', href: '/' },
+        { label: 'Civics', href: '/civics' },
+      ]);
 
-    return () => {
-      setSidebarActiveSection(null);
-      setBreadcrumbs([]);
-    };
+      return () => {
+        setSidebarActiveSection(null);
+        setBreadcrumbs([]);
+      };
+    }
   }, [setBreadcrumbs, setCurrentRoute, setSidebarActiveSection]);
 
   // Initialize client-side state
