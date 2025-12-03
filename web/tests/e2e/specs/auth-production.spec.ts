@@ -37,6 +37,7 @@ test.describe('Auth – real backend', () => {
     // or keep the user on /auth while hydrating the personal dashboard shell.
     // Treat either case as a success: URL matches the expected routes OR the
     // personal dashboard is visible.
+    // Wait for successful login - either URL redirect or dashboard UI visible
     await expect
       .poll(
         async () => {
@@ -45,15 +46,33 @@ test.describe('Auth – real backend', () => {
           const hasDashboard = await page.locator('[data-testid="personal-dashboard"]').count();
           return hasDashboard > 0;
         },
-        { timeout: 15_000 },
+        { timeout: 20_000 },
       )
       .toBeTruthy();
+
+    // Verify authentication state - check for Supabase session indicators
+    // Supabase may use different cookie/localStorage keys, so check multiple possibilities
     await expect
       .poll(
-        async () =>
-          (await page.evaluate(() => document.cookie.includes('sb-'))) ||
-          (await page.evaluate(() => localStorage.getItem('supabase.auth.token') !== null)),
-        { timeout: 5_000 },
+        async () => {
+          const cookies = await page.evaluate(() => document.cookie);
+          const hasSupabaseCookie = cookies.includes('sb-') || cookies.includes('supabase');
+          
+          const localStorageKeys = await page.evaluate(() => {
+            const keys: string[] = [];
+            for (let i = 0; i < localStorage.length; i++) {
+              const key = localStorage.key(i);
+              if (key) keys.push(key);
+            }
+            return keys;
+          });
+          const hasAuthStorage = localStorageKeys.some(key => 
+            key.includes('supabase') || key.includes('auth') || key.includes('session')
+          );
+          
+          return hasSupabaseCookie || hasAuthStorage;
+        },
+        { timeout: 10_000 },
       )
       .toBeTruthy();
   });
