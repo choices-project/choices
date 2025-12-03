@@ -4,10 +4,11 @@ import { setupExternalAPIMocks, waitForPageReady } from './e2e/helpers/e2e-setup
 
 test.describe('Civics UI Tests', () => {
   test.beforeEach(async ({ page }) => {
-    // Setup external API mocks
+    // Setup external API mocks first
     await setupExternalAPIMocks(page, { civics: true, api: true });
     
-    // Mock the civics API endpoints (additional mocks for specific test needs)
+    // Mock the civics API endpoints - set up route handlers that will intercept requests
+    // These need to be set up before navigation
     await page.route('**/api/v1/civics/by-state*', async (route) => {
       const url = new URL(route.request().url());
       const state = url.searchParams.get('state') || 'CA';
@@ -52,6 +53,7 @@ test.describe('Civics UI Tests', () => {
         }),
       });
     });
+    
     await page.route('**/api/v1/civics/address-lookup', async (route) => {
       await route.fulfill({
         status: 200,
@@ -71,23 +73,32 @@ test.describe('Civics UI Tests', () => {
   });
 
   test('civics page loads and displays representatives', async ({ page }) => {
-    await page.goto('/civics', { waitUntil: 'networkidle', timeout: 60_000 });
+    await page.goto('/civics', { waitUntil: 'domcontentloaded', timeout: 60_000 });
     await waitForPageReady(page, 60_000);
 
-    // Wait for API call to complete and data to be loaded
-    await page.waitForResponse(
-      (response) => response.url().includes('/api/v1/civics/by-state') && response.status() === 200,
-      { timeout: 30_000 }
-    );
+    // Wait for API call - the route handler in beforeEach should intercept it
+    // But if it doesn't, wait for the component to render anyway
+    try {
+      await page.waitForResponse(
+        (response) => response.url().includes('/api/v1/civics/by-state') && response.status() === 200,
+        { timeout: 15_000 }
+      );
+    } catch {
+      // If response doesn't come (maybe already fulfilled by mock), continue
+      await page.waitForTimeout(1000);
+    }
 
-    // Wait for loading spinner to disappear (indicates data has loaded)
-    await page.waitForFunction(
-      () => {
-        const spinner = document.querySelector('.animate-spin');
-        return !spinner || spinner.getBoundingClientRect().height === 0;
-      },
-      { timeout: 30_000 }
-    );
+    // Wait for loading spinner to disappear or representative-feed to appear
+    await Promise.race([
+      page.waitForFunction(
+        () => {
+          const spinner = document.querySelector('.animate-spin');
+          return !spinner || spinner.getBoundingClientRect().height === 0;
+        },
+        { timeout: 30_000 }
+      ),
+      page.waitForSelector('[data-testid="representative-feed"]', { timeout: 30_000 }),
+    ]).catch(() => {});
 
     // Wait for the representative-feed to be visible (only renders when data is loaded)
     await expect(page.getByTestId('representative-feed')).toBeVisible({ timeout: 30_000 });

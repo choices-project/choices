@@ -52,15 +52,26 @@ describe('pepper rotation verify', () => {
   });
 
   test('production environment requires PRIVACY_PEPPER_CURRENT', async () => {
-    Object.defineProperty(process.env, 'NODE_ENV', { value: 'production', writable: true });
-    delete process.env.PRIVACY_PEPPER_CURRENT;
+    // Unset CI to ensure fallback doesn't prevent error
+    const originalCI = process.env.CI;
+    delete process.env.CI;
     
-    await expect(async () => {
-      // This will throw when a function is called due to lazy loading
-      jest.resetModules();
-      const utils = await import('@/lib/civics/privacy-utils');
-      utils.hmac256('test', 'addr');
-    }).rejects.toThrow('PRIVACY_PEPPER_CURRENT required');
+    try {
+      Object.defineProperty(process.env, 'NODE_ENV', { value: 'production', writable: true });
+      delete process.env.PRIVACY_PEPPER_CURRENT;
+      
+      await expect(async () => {
+        // This will throw when a function is called due to lazy loading
+        jest.resetModules();
+        const utils = await import('@/lib/civics/privacy-utils');
+        utils.hmac256('test', 'addr');
+      }).rejects.toThrow('PRIVACY_PEPPER_CURRENT required');
+    } finally {
+      // Restore CI env var
+      if (originalCI !== undefined) {
+        process.env.CI = originalCI;
+      }
+    }
   });
 
   test('production forbids PRIVACY_PEPPER_DEV', async () => {
@@ -68,8 +79,11 @@ describe('pepper rotation verify', () => {
     const originalNodeEnv = process.env.NODE_ENV;
     const originalDevPepper = process.env.PRIVACY_PEPPER_DEV;
     const originalCurrentPepper = process.env.PRIVACY_PEPPER_CURRENT;
+    const originalCI = process.env.CI;
     
     try {
+      // Unset CI to ensure fallback doesn't prevent error
+      delete process.env.CI;
       (process.env as any).NODE_ENV = 'production';
       process.env.PRIVACY_PEPPER_DEV = 'dev-pepper';
       process.env.PRIVACY_PEPPER_CURRENT = 'hex:' + 'ab'.repeat(32);
@@ -93,6 +107,9 @@ describe('pepper rotation verify', () => {
         process.env.PRIVACY_PEPPER_CURRENT = originalCurrentPepper;
       } else {
         delete process.env.PRIVACY_PEPPER_CURRENT;
+      }
+      if (originalCI !== undefined) {
+        process.env.CI = originalCI;
       }
     }
   });
