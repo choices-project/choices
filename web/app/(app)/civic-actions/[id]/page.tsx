@@ -1,9 +1,9 @@
 'use client';
 
 import { useEffect, useState } from 'react';
+import { ArrowLeft, Calendar, Flag, Heart, Users, AlertCircle } from 'lucide-react';
 import Link from 'next/link';
 import { useParams } from 'next/navigation';
-import { ArrowLeft, Calendar, Flag, Heart, Users, AlertCircle } from 'lucide-react';
 
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Badge } from '@/components/ui/badge';
