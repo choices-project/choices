@@ -3,29 +3,6 @@ import { expect, test } from '@playwright/test';
 import { setupExternalAPIMocks, waitForPageReady } from './e2e/helpers/e2e-setup';
 
 test.describe('Civics UI Tests', () => {
-  test.beforeEach(async ({ page }) => {
-    // Setup external API mocks
-    await setupExternalAPIMocks(page, { civics: true, api: true });
-    
-    // Mock address-lookup endpoint (setupExternalAPIMocks only handles POST, but we want to ensure it's mocked)
-    await page.route('**/api/v1/civics/address-lookup', async (route) => {
-      await route.fulfill({
-        status: 200,
-        contentType: 'application/json',
-        body: JSON.stringify({
-          success: true,
-          data: {
-            jurisdiction: {
-              state: 'CA',
-              district: '12',
-              fallback: false,
-            },
-          },
-        }),
-      });
-    });
-  });
-  
   // Helper function to set up by-state route handler
   const setupByStateRoute = async (page: import('@playwright/test').Page) => {
     await page.route('**/api/v1/civics/by-state*', async (route) => {
@@ -90,9 +67,34 @@ test.describe('Civics UI Tests', () => {
     });
   };
 
-  test('civics page loads and displays representatives', async ({ page }) => {
-    // Set up route handler BEFORE navigation (critical for intercepting requests)
+  test.beforeEach(async ({ page }) => {
+    // Setup external API mocks FIRST (they handle POST requests)
+    await setupExternalAPIMocks(page, { civics: true, api: true });
+    
+    // Mock address-lookup endpoint (setupExternalAPIMocks only handles POST, but we want to ensure it's mocked)
+    await page.route('**/api/v1/civics/address-lookup', async (route) => {
+      await route.fulfill({
+        status: 200,
+        contentType: 'application/json',
+        body: JSON.stringify({
+          success: true,
+          data: {
+            jurisdiction: {
+              state: 'CA',
+              district: '12',
+              fallback: false,
+            },
+          },
+        }),
+      });
+    });
+
+    // Set up by-state route handler for GET requests (MUST be after setupExternalAPIMocks)
+    // This ensures it takes precedence for GET requests
     await setupByStateRoute(page);
+  });
+
+  test('civics page loads and displays representatives', async ({ page }) => {
 
     // Set up console error tracking
     const consoleErrors: string[] = [];
@@ -176,8 +178,7 @@ test.describe('Civics UI Tests', () => {
   });
 
   test('can search for representatives', async ({ page }) => {
-    await setupByStateRoute(page);
-    
+    // Route handler already set up in beforeEach
     const responsePromise = page.waitForResponse(
       (response) => response.url().includes('/api/v1/civics/by-state') && response.status() === 200,
       { timeout: 30_000 }
@@ -212,8 +213,7 @@ test.describe('Civics UI Tests', () => {
   });
 
   test('can filter by state', async ({ page }) => {
-    await setupByStateRoute(page);
-    
+    // Route handler already set up in beforeEach
     const responsePromise = page.waitForResponse(
       (response) => response.url().includes('/api/v1/civics/by-state') && response.status() === 200,
       { timeout: 30_000 }
@@ -251,8 +251,7 @@ test.describe('Civics UI Tests', () => {
   });
 
   test('can filter by level', async ({ page }) => {
-    await setupByStateRoute(page);
-    
+    // Route handler already set up in beforeEach
     const responsePromise = page.waitForResponse(
       (response) => response.url().includes('/api/v1/civics/by-state') && response.status() === 200,
       { timeout: 30_000 }
@@ -290,8 +289,7 @@ test.describe('Civics UI Tests', () => {
   });
 
   test('can switch to feed tab', async ({ page }) => {
-    await setupByStateRoute(page);
-    
+    // Route handler already set up in beforeEach
     const responsePromise = page.waitForResponse(
       (response) => response.url().includes('/api/v1/civics/by-state') && response.status() === 200,
       { timeout: 30_000 }
@@ -314,8 +312,7 @@ test.describe('Civics UI Tests', () => {
   });
 
   test('displays quality statistics', async ({ page }) => {
-    await setupByStateRoute(page);
-    
+    // Route handler already set up in beforeEach
     const responsePromise = page.waitForResponse(
       (response) => response.url().includes('/api/v1/civics/by-state') && response.status() === 200,
       { timeout: 30_000 }
@@ -343,8 +340,7 @@ test.describe('Civics UI Tests', () => {
   });
 
   test('displays system date information', async ({ page }) => {
-    await setupByStateRoute(page);
-    
+    // Route handler already set up in beforeEach
     const responsePromise = page.waitForResponse(
       (response) => response.url().includes('/api/v1/civics/by-state') && response.status() === 200,
       { timeout: 30_000 }
