@@ -91,66 +91,8 @@ test.describe('Civics UI Tests', () => {
   };
 
   test('civics page loads and displays representatives', async ({ page }) => {
-    // Track if route handler was called
-    let routeHandlerCalled = false;
-    
-    // Set up route handler for by-state endpoint with tracking
-    await page.route('**/api/v1/civics/by-state*', async (route) => {
-      if (route.request().method() !== 'GET') {
-        await route.continue();
-        return;
-      }
-      
-      routeHandlerCalled = true;
-      const url = new URL(route.request().url());
-      const state = url.searchParams.get('state') || 'CA';
-      const level = url.searchParams.get('level') || 'federal';
-      
-      await route.fulfill({
-        status: 200,
-        contentType: 'application/json',
-        body: JSON.stringify({
-          success: true,
-          data: {
-            state: state,
-            level: level,
-            representatives: [
-              {
-                id: '1',
-                name: 'Test Representative',
-                party: 'Democratic',
-                office: 'U.S. House of Representatives',
-                level: level === 'all' ? 'federal' : level,
-                state: state,
-                district: '12',
-                dataQualityScore: 95,
-                verificationStatus: 'verified',
-                dataSource: ['OpenStates', 'FEC'],
-                lastVerified: new Date().toISOString(),
-                enhancedContacts: [
-                  { type: 'email', value: 'test@example.com' },
-                  { type: 'phone', value: '555-0100' },
-                ],
-              },
-              {
-                id: '2',
-                name: 'Another Representative',
-                party: 'Republican',
-                office: 'U.S. Senate',
-                level: level === 'all' ? 'federal' : level,
-                state: state,
-                dataQualityScore: 92,
-                verificationStatus: 'verified',
-                dataSource: ['OpenStates'],
-                lastVerified: new Date().toISOString(),
-              },
-            ],
-            count: 2,
-            attribution: {},
-          },
-        }),
-      });
-    });
+    // Set up route handler BEFORE navigation (critical for intercepting requests)
+    await setupByStateRoute(page);
 
     // Set up console error tracking
     const consoleErrors: string[] = [];
@@ -171,11 +113,6 @@ test.describe('Civics UI Tests', () => {
 
     // Wait for API response (route handler should fulfill it)
     const response = await responsePromise;
-    
-    // Debug: Check if route handler was called
-    if (!routeHandlerCalled) {
-      console.warn('Route handler was not called - API request may have been handled differently');
-    }
     
     // Debug: Check for console errors
     if (consoleErrors.length > 0) {
