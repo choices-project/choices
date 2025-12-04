@@ -69,8 +69,10 @@ export default function Civics2Page() {
 
       const data = await response.json();
       logger.info('✅ API Response:', data);
-      logger.info('📊 Setting representatives:', data.data?.length ?? 0);
-      setRepresentatives(data.data ?? []);
+      // API returns { success: true, data: { representatives: [...], state, level, ... } }
+      const representatives = data.data?.representatives ?? data.data ?? [];
+      logger.info('📊 Setting representatives:', Array.isArray(representatives) ? representatives.length : 0);
+      setRepresentatives(Array.isArray(representatives) ? representatives : []);
       logger.info('🎯 Representatives state updated');
     } catch (error) {
       logger.error('❌ Error loading representatives:', error);
