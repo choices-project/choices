@@ -4,12 +4,15 @@ import { setupExternalAPIMocks, waitForPageReady } from './e2e/helpers/e2e-setup
 
 test.describe('Civics UI Tests', () => {
   test.beforeEach(async ({ page }) => {
-    // Setup external API mocks first
-    await setupExternalAPIMocks(page, { civics: true, api: true });
-    
-    // Mock the civics API endpoints - set up route handlers that will intercept requests
-    // These need to be set up before navigation
+    // Set up route handlers FIRST, before setupExternalAPIMocks, to ensure they take precedence
+    // Mock the civics API endpoints - these need to be set up before navigation
     await page.route('**/api/v1/civics/by-state*', async (route) => {
+      // Only handle GET requests (the page makes GET requests)
+      if (route.request().method() !== 'GET') {
+        await route.continue();
+        return;
+      }
+      
       const url = new URL(route.request().url());
       const state = url.searchParams.get('state') || 'CA';
       const level = url.searchParams.get('level') || 'federal';
@@ -70,6 +73,9 @@ test.describe('Civics UI Tests', () => {
         }),
       });
     });
+    
+    // Setup external API mocks after our specific route handlers
+    await setupExternalAPIMocks(page, { civics: true, api: true });
   });
 
   test('civics page loads and displays representatives', async ({ page }) => {
