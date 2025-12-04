@@ -66,7 +66,7 @@ export const GET = withErrorHandling(async (request: NextRequest) => {
 
   // Log coverage dashboard request for audit trail
   logger.info('Coverage dashboard requested', { userAgent: request.headers.get('user-agent') ?? 'unknown' });
-    
+
     // Get coverage by source
     // Type assertion needed because civics tables may not be in generated Database type
     const { data: coverageData, error: coverageError } = await (supabase as any)
@@ -92,27 +92,27 @@ export const GET = withErrorHandling(async (request: NextRequest) => {
     const now = new Date();
     const freshnessByLevel = (coverageData as RepresentativeData[] ?? []).reduce((acc: Record<string, FreshnessData>, rep: RepresentativeData) => {
       if (!rep.level) return acc; // Skip if level is undefined
-      
+
       if (!acc[rep.level]) {
         acc[rep.level] = { total: 0, fresh: 0, stale: 0 };
       }
       const levelStats = acc[rep.level];
       if (!levelStats) return acc;
       levelStats.total++;
-      
+
       const lastUpdated = new Date(rep.last_updated);
       const daysSinceUpdate = (now.getTime() - lastUpdated.getTime()) / (1000 * 60 * 60 * 24);
-      
+
       // Freshness thresholds
       const thresholds = { federal: 7, state: 14, local: 30 };
       const threshold = thresholds[rep.level as keyof typeof thresholds] ?? 30;
-      
+
       if (daysSinceUpdate <= threshold) {
         levelStats.fresh++;
       } else {
         levelStats.stale++;
       }
-      
+
       return acc;
     }, {});
 
@@ -125,7 +125,7 @@ export const GET = withErrorHandling(async (request: NextRequest) => {
       return errorResponse('Failed to load FEC mapping stats', 502, { reason: fecError.message });
     }
 
-    const { error: federalError, count: federalCount } = await supabase
+    const { error: federalError, count: federalCount } = await (supabase as any)
       .from('civics_representatives')
       .select('id', { count: 'exact', head: true })
       .eq('level', 'federal')
@@ -182,7 +182,7 @@ export const GET = withErrorHandling(async (request: NextRequest) => {
         contact_enrichment_threshold: 90
       },
       alerts: {
-        freshness_breach: Object.values(freshnessByLevel).some((data: FreshnessData) => 
+        freshness_breach: Object.values(freshnessByLevel).some((data: FreshnessData) =>
           data.stale > 0
         ),
         fec_mapping_low: fecMappingRate < 90,
@@ -193,6 +193,6 @@ export const GET = withErrorHandling(async (request: NextRequest) => {
   const response = successResponse(dashboard);
   response.headers.set('ETag', `"dashboard-${Date.now()}"`);
   response.headers.set('Cache-Control', 'public, max-age=300, stale-while-revalidate=3600');
-  
+
   return response;
 });
