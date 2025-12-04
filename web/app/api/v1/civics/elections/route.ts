@@ -53,13 +53,10 @@ export const GET = withErrorHandling(async (request: NextRequest) => {
         .filter((entry) => entry.length > 0)
     : [];
 
-  // RPC function expects string[] (not null or undefined)
-  const rpcParams: { divisions?: string[] } = {};
-  if (divisions.length > 0) {
-    rpcParams.divisions = divisions;
-  }
-
-  const { data, error } = await supabase.rpc('get_upcoming_elections', rpcParams);
+  // RPC function requires divisions parameter (always pass array, even if empty)
+  const { data, error } = await supabase.rpc('get_upcoming_elections', {
+    divisions
+  });
 
   if (error) {
     return errorResponse('Failed to load upcoming elections', 502, { reason: error.message });
