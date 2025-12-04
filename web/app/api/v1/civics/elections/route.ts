@@ -51,11 +51,15 @@ export const GET = withErrorHandling(async (request: NextRequest) => {
         .split(',')
         .map((entry) => entry.trim())
         .filter((entry) => entry.length > 0)
-    : null;
+    : [];
 
-  const { data, error } = await supabase.rpc('get_upcoming_elections', {
-    divisions: divisions ?? undefined
-  });
+  // RPC function expects string[] (not null or undefined)
+  const rpcParams: { divisions?: string[] } = {};
+  if (divisions.length > 0) {
+    rpcParams.divisions = divisions;
+  }
+
+  const { data, error } = await supabase.rpc('get_upcoming_elections', rpcParams);
 
   if (error) {
     return errorResponse('Failed to load upcoming elections', 502, { reason: error.message });
@@ -70,7 +74,7 @@ export const GET = withErrorHandling(async (request: NextRequest) => {
     },
     {
       source: 'supabase',
-      filters: divisions ? { divisions } : undefined
+      filters: divisions.length > 0 ? { divisions } : undefined
     }
   );
 });
