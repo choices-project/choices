@@ -2,7 +2,7 @@ import type { NextRequest } from 'next/server';
 import { NextResponse } from 'next/server';
 import { z } from 'zod';
 
-import { withErrorHandling, successResponse, errorResponse, validationError, rateLimitError, parseBody } from '@/lib/api';
+import { withErrorHandling, successResponse, errorResponse } from '@/lib/api';
 import { apiRateLimiter } from '@/lib/rate-limiting/api-rate-limiter';
 import { getSupabaseServerClient } from '@/utils/supabase/server';
 
@@ -51,7 +51,6 @@ export const POST = withErrorHandling(async (request: NextRequest) => {
   if (!user || !user.email) return errorResponse('Authentication required', 401);
 
   // Validate request body with Zod schema
-  let code: string;
   let body: any;
   try {
     body = await request.json();
@@ -59,7 +58,7 @@ export const POST = withErrorHandling(async (request: NextRequest) => {
     if (body && typeof body.code === 'string') {
       body.code = body.code.trim();
     }
-  } catch (error: unknown) {
+  } catch {
     // Handle JSON parsing errors
     return NextResponse.json(
       {
@@ -119,7 +118,7 @@ export const POST = withErrorHandling(async (request: NextRequest) => {
     );
   }
   
-  code = result.data.code;
+  const code = result.data.code;
 
   const { data: challenge } = await (supabase as any)
     .from('candidate_email_challenges')

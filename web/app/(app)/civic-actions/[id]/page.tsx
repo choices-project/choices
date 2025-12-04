@@ -1,19 +1,19 @@
 'use client';
 
-import { useParams, useRouter } from 'next/navigation';
-import { useEffect, useState } from 'react';
 import Link from 'next/link';
+import { useParams } from 'next/navigation';
+import { useEffect, useState } from 'react';
 import { ArrowLeft, Calendar, Flag, Heart, Users, AlertCircle } from 'lucide-react';
 
+import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Skeleton } from '@/components/ui/skeleton';
-import { isFeatureEnabled } from '@/lib/core/feature-flags';
-import { logger } from '@/lib/utils/logger';
-import { useAppActions } from '@/lib/stores/appStore';
 import type { CivicAction } from '@/features/civics/components/civic-actions/CivicActionCard';
+import { isFeatureEnabled } from '@/lib/core/feature-flags';
+import { useAppActions } from '@/lib/stores/appStore';
+import { logger } from '@/lib/utils/logger';
 
 const URGENCY_COLORS = {
   low: 'bg-gray-100 text-gray-800',
@@ -24,7 +24,6 @@ const URGENCY_COLORS = {
 
 export default function CivicActionDetailPage() {
   const params = useParams();
-  const router = useRouter();
   const { setCurrentRoute, setBreadcrumbs } = useAppActions();
   const [action, setAction] = useState<CivicAction | null>(null);
   const [loading, setLoading] = useState(true);
