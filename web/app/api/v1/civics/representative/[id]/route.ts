@@ -255,9 +255,9 @@ export const GET = withErrorHandling(async (
         .order('vote_date', { ascending: false })
         .limit(5);
 
-      if (!votesError && votesData) {
-        // Calculate party alignment
-        const partyVotes = votesData.filter(vote => vote.party_position === vote.vote_position);
+              if (!votesError && votesData) {
+                // Calculate party alignment
+                const partyVotes = votesData.filter((vote: CivicsVotesMinimalRow) => vote.party_position === vote.vote_position);
         const partyAlignment = votesData.length > 0 ? partyVotes.length / votesData.length : 0;
 
         response.votes = {
