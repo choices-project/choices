@@ -41,18 +41,17 @@ test.describe('Civics UI Tests', () => {
       
       // The API route returns: successResponse({ representatives: [...], state, level, count, attribution })
       // Which becomes: { success: true, data: { representatives: [...], state, level, ... } }
-      // But the page code does: setRepresentatives(data.data ?? [])
-      // This suggests the page expects: { success: true, data: [...] } (array directly)
-      // This is likely a bug in the page code, but for the test to work, we need to match what it expects
-      // OR the page code should be: setRepresentatives(data.data?.representatives ?? [])
-      // Let's match what the page currently expects (even if it's wrong) so the test passes
+      // The page now correctly accesses data.data.representatives
       
       await route.fulfill({
         status: 200,
         contentType: 'application/json',
         body: JSON.stringify({
           success: true,
-          data: [
+          data: {
+            state: state,
+            level: level,
+            representatives: [
             {
               id: '1',
               name: 'Test Representative',
@@ -83,14 +82,83 @@ test.describe('Civics UI Tests', () => {
               lastVerified: new Date().toISOString(),
             },
           ],
+            count: 2,
+            attribution: {},
+          },
         }),
       });
     });
   };
 
   test('civics page loads and displays representatives', async ({ page }) => {
-    // Set up route handler for by-state endpoint
-    await setupByStateRoute(page);
+    // Track if route handler was called
+    let routeHandlerCalled = false;
+    
+    // Set up route handler for by-state endpoint with tracking
+    await page.route('**/api/v1/civics/by-state*', async (route) => {
+      if (route.request().method() !== 'GET') {
+        await route.continue();
+        return;
+      }
+      
+      routeHandlerCalled = true;
+      const url = new URL(route.request().url());
+      const state = url.searchParams.get('state') || 'CA';
+      const level = url.searchParams.get('level') || 'federal';
+      
+      await route.fulfill({
+        status: 200,
+        contentType: 'application/json',
+        body: JSON.stringify({
+          success: true,
+          data: {
+            state: state,
+            level: level,
+            representatives: [
+              {
+                id: '1',
+                name: 'Test Representative',
+                party: 'Democratic',
+                office: 'U.S. House of Representatives',
+                level: level === 'all' ? 'federal' : level,
+                state: state,
+                district: '12',
+                dataQualityScore: 95,
+                verificationStatus: 'verified',
+                dataSource: ['OpenStates', 'FEC'],
+                lastVerified: new Date().toISOString(),
+                enhancedContacts: [
+                  { type: 'email', value: 'test@example.com' },
+                  { type: 'phone', value: '555-0100' },
+                ],
+              },
+              {
+                id: '2',
+                name: 'Another Representative',
+                party: 'Republican',
+                office: 'U.S. Senate',
+                level: level === 'all' ? 'federal' : level,
+                state: state,
+                dataQualityScore: 92,
+                verificationStatus: 'verified',
+                dataSource: ['OpenStates'],
+                lastVerified: new Date().toISOString(),
+              },
+            ],
+            count: 2,
+            attribution: {},
+          },
+        }),
+      });
+    });
+
+    // Set up console error tracking
+    const consoleErrors: string[] = [];
+    page.on('console', (msg) => {
+      if (msg.type() === 'error') {
+        consoleErrors.push(msg.text());
+      }
+    });
 
     // Set up response listener before navigation
     const responsePromise = page.waitForResponse(
@@ -102,19 +170,58 @@ test.describe('Civics UI Tests', () => {
     await waitForPageReady(page, 60_000);
 
     // Wait for API response (route handler should fulfill it)
-    await responsePromise;
+    const response = await responsePromise;
+    
+    // Debug: Check if route handler was called
+    if (!routeHandlerCalled) {
+      console.warn('Route handler was not called - API request may have been handled differently');
+    }
+    
+    // Debug: Check for console errors
+    if (consoleErrors.length > 0) {
+      console.warn('Console errors detected:', consoleErrors);
+    }
 
-    // Wait for loading spinner to disappear or representative-feed to appear
-    await Promise.race([
-      page.waitForFunction(
-        () => {
-          const spinner = document.querySelector('.animate-spin');
-          return !spinner || spinner.getBoundingClientRect().height === 0;
-        },
-        { timeout: 30_000 }
-      ),
-      page.waitForSelector('[data-testid="representative-feed"]', { timeout: 30_000 }),
-    ]).catch(() => {});
+    // Wait for loading to complete - check if isLoading state is false
+    await page.waitForFunction(
+      () => {
+        const spinner = document.querySelector('.animate-spin');
+        return !spinner || spinner.getBoundingClientRect().height === 0;
+      },
+      { timeout: 30_000 }
+    );
+
+    // Wait for representatives to be loaded - check if the state has data
+    await page.waitForFunction(
+      () => {
+        // Check if representative-feed exists OR if there's an error message
+        const feed = document.querySelector('[data-testid="representative-feed"]');
+        const noResults = document.querySelector('text=/No representatives found/i');
+        return feed || noResults;
+      },
+      { timeout: 30_000 }
+    );
+
+    // Check if we have representatives or if there's an error
+    const hasRepresentatives = await page.evaluate(() => {
+      const feed = document.querySelector('[data-testid="representative-feed"]');
+      return feed !== null;
+    });
+
+    if (!hasRepresentatives) {
+      // Debug: Check what's actually on the page
+      const pageContent = await page.content();
+      const bodyText = await page.locator('body').textContent();
+      console.warn('representative-feed not found. Page content length:', pageContent.length);
+      console.warn('Body text preview:', bodyText?.substring(0, 500));
+      
+      // Check if there's an error message
+      const errorVisible = await page.locator('text=/Error|Failed|No representatives/i').isVisible().catch(() => false);
+      if (errorVisible) {
+        const errorText = await page.locator('text=/Error|Failed|No representatives/i').first().textContent();
+        throw new Error(`Page shows error: ${errorText}`);
+      }
+    }
 
     // Wait for the representative-feed to be visible (only renders when data is loaded)
     await expect(page.getByTestId('representative-feed')).toBeVisible({ timeout: 30_000 });
