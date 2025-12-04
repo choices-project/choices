@@ -10,7 +10,16 @@ import { getSupabaseServerClient } from '@/utils/supabase/server';
 import type { Database } from '@/types/supabase';
 
 // Type assertions for civics tables not in generated Database types
-type CivicsVotesMinimalRow = Database['public']['Tables']['civics_votes_minimal']['Row'];
+// Define manually since these tables are not in the generated types
+type CivicsVotesMinimalRow = {
+  vote_id: string;
+  bill_title: string | null;
+  vote_date: string;
+  vote_position: string | null;
+  party_position: string | null;
+  last_updated: string;
+  person_id: string | null;
+};
 
 type RepresentativeResponse = {
   id: string;
