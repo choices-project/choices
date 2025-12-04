@@ -117,7 +117,8 @@ export const GET = withErrorHandling(async (request: NextRequest) => {
     }, {});
 
     // Calculate FEC mapping rate
-    const { error: fecError, count: fecCount } = await supabase
+    // Type assertion needed because civics tables may not be in generated Database type
+    const { error: fecError, count: fecCount } = await (supabase as any)
       .from('civics_fec_minimal')
       .select('person_id', { count: 'exact', head: true });
     if (fecError) {
