@@ -9,8 +9,23 @@ const mockSupabaseClient: Record<string, any> = {
   from: jest.fn(),
 };
 
+const mockRedisClient = {
+  get: jest.fn(),
+  set: jest.fn(),
+};
+
 jest.mock('@supabase/supabase-js', () => ({
   createClient: jest.fn(() => mockSupabaseClient),
+}));
+
+jest.mock('@/lib/cache/redis-client', () => ({
+  getRedisClient: jest.fn(async () => mockRedisClient),
+}));
+
+jest.mock('@/lib/rate-limiting/api-rate-limiter', () => ({
+  apiRateLimiter: {
+    checkLimit: jest.fn(async () => ({ allowed: true, retryAfter: null })),
+  },
 }));
 
 describe('Civics by-state API contract', () => {
@@ -25,6 +40,10 @@ describe('Civics by-state API contract', () => {
   beforeEach(() => {
     jest.clearAllMocks();
     mockSupabaseClient.from.mockReset();
+    mockRedisClient.get.mockReset();
+    mockRedisClient.set.mockReset();
+    // Mock Redis to return null (cache miss) by default
+    mockRedisClient.get.mockResolvedValue(null);
     process.env.NEXT_PUBLIC_SUPABASE_URL = 'https://example.supabase.co';
     process.env.SUPABASE_SERVICE_ROLE_KEY = 'service-role-key';
   });

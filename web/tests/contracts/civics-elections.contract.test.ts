@@ -12,6 +12,12 @@ jest.mock('@supabase/supabase-js', () => ({
   })),
 }));
 
+jest.mock('@/lib/rate-limiting/api-rate-limiter', () => ({
+  apiRateLimiter: {
+    checkLimit: jest.fn(async () => ({ allowed: true, retryAfter: null })),
+  },
+}));
+
 describe('Civics elections contract', () => {
   const loadRoute = () => {
     let routeModule: any;
