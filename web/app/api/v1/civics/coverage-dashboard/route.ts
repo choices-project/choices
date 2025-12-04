@@ -139,7 +139,7 @@ export const GET = withErrorHandling(async (request: NextRequest) => {
       : 0;
 
     // Calculate contact enrichment rate
-    const { error: contactError, count: contactCount } = await supabase
+    const { error: contactError, count: contactCount } = await (supabase as any)
       .from('civics_representatives')
       .select('id', { count: 'exact', head: true })
       .eq('level', 'federal')
