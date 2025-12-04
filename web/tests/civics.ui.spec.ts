@@ -4,9 +4,31 @@ import { setupExternalAPIMocks, waitForPageReady } from './e2e/helpers/e2e-setup
 
 test.describe('Civics UI Tests', () => {
   test.beforeEach(async ({ page }) => {
-    // Set up route handlers FIRST, before setupExternalAPIMocks, to ensure they take precedence
-    // Mock the civics API endpoints - these need to be set up before navigation
-    await page.route('**/api/v1/civics/by-state*', async (route) => {
+    // Setup external API mocks
+    await setupExternalAPIMocks(page, { civics: true, api: true });
+    
+    // Mock address-lookup endpoint (setupExternalAPIMocks only handles POST, but we want to ensure it's mocked)
+    await page.route('**/api/v1/civics/address-lookup', async (route) => {
+      await route.fulfill({
+        status: 200,
+        contentType: 'application/json',
+        body: JSON.stringify({
+          success: true,
+          data: {
+            jurisdiction: {
+              state: 'CA',
+              district: '12',
+              fallback: false,
+            },
+          },
+        }),
+      });
+    });
+  });
+  
+  // Helper function to set up by-state route handler
+  const setupByStateRoute = async (page: any) => {
+    await page.route('**/api/v1/civics/by-state*', async (route: any) => {
       // Only handle GET requests (the page makes GET requests)
       if (route.request().method() !== 'GET') {
         await route.continue();
@@ -56,29 +78,12 @@ test.describe('Civics UI Tests', () => {
         }),
       });
     });
-    
-    await page.route('**/api/v1/civics/address-lookup', async (route) => {
-      await route.fulfill({
-        status: 200,
-        contentType: 'application/json',
-        body: JSON.stringify({
-          success: true,
-          data: {
-            jurisdiction: {
-              state: 'CA',
-              district: '12',
-              fallback: false,
-            },
-          },
-        }),
-      });
-    });
-    
-    // Setup external API mocks after our specific route handlers
-    await setupExternalAPIMocks(page, { civics: true, api: true });
-  });
+  };
 
   test('civics page loads and displays representatives', async ({ page }) => {
+    // Set up route handler for by-state endpoint
+    await setupByStateRoute(page);
+
     // Set up response listener before navigation
     const responsePromise = page.waitForResponse(
       (response) => response.url().includes('/api/v1/civics/by-state') && response.status() === 200,
@@ -118,6 +123,8 @@ test.describe('Civics UI Tests', () => {
   });
 
   test('can search for representatives', async ({ page }) => {
+    await setupByStateRoute(page);
+    
     const responsePromise = page.waitForResponse(
       (response) => response.url().includes('/api/v1/civics/by-state') && response.status() === 200,
       { timeout: 30_000 }
@@ -150,6 +157,8 @@ test.describe('Civics UI Tests', () => {
   });
 
   test('can filter by state', async ({ page }) => {
+    await setupByStateRoute(page);
+    
     const responsePromise = page.waitForResponse(
       (response) => response.url().includes('/api/v1/civics/by-state') && response.status() === 200,
       { timeout: 30_000 }
@@ -183,6 +192,8 @@ test.describe('Civics UI Tests', () => {
   });
 
   test('can filter by level', async ({ page }) => {
+    await setupByStateRoute(page);
+    
     const responsePromise = page.waitForResponse(
       (response) => response.url().includes('/api/v1/civics/by-state') && response.status() === 200,
       { timeout: 30_000 }
@@ -216,6 +227,8 @@ test.describe('Civics UI Tests', () => {
   });
 
   test('can switch to feed tab', async ({ page }) => {
+    await setupByStateRoute(page);
+    
     const responsePromise = page.waitForResponse(
       (response) => response.url().includes('/api/v1/civics/by-state') && response.status() === 200,
       { timeout: 30_000 }
@@ -238,6 +251,8 @@ test.describe('Civics UI Tests', () => {
   });
 
   test('displays quality statistics', async ({ page }) => {
+    await setupByStateRoute(page);
+    
     const responsePromise = page.waitForResponse(
       (response) => response.url().includes('/api/v1/civics/by-state') && response.status() === 200,
       { timeout: 30_000 }
@@ -263,6 +278,8 @@ test.describe('Civics UI Tests', () => {
   });
 
   test('displays system date information', async ({ page }) => {
+    await setupByStateRoute(page);
+    
     const responsePromise = page.waitForResponse(
       (response) => response.url().includes('/api/v1/civics/by-state') && response.status() === 200,
       { timeout: 30_000 }
