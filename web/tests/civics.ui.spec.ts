@@ -69,9 +69,10 @@ test.describe('Civics UI Tests', () => {
 
   test.beforeEach(async ({ page }) => {
     // Setup external API mocks FIRST (they handle POST requests)
-    await setupExternalAPIMocks(page, { civics: true, api: true });
+    // We set civics: false to avoid the default handler, then set up our own
+    await setupExternalAPIMocks(page, { civics: false, api: true });
     
-    // Mock address-lookup endpoint (setupExternalAPIMocks only handles POST, but we want to ensure it's mocked)
+    // Mock address-lookup endpoint
     await page.route('**/api/v1/civics/address-lookup', async (route) => {
       await route.fulfill({
         status: 200,
@@ -89,8 +90,8 @@ test.describe('Civics UI Tests', () => {
       });
     });
 
-    // Set up by-state route handler for GET requests (MUST be after setupExternalAPIMocks)
-    // This ensures it takes precedence for GET requests
+    // Set up by-state route handler for GET requests
+    // This is our custom handler that returns the exact structure the page expects
     await setupByStateRoute(page);
   });
 
