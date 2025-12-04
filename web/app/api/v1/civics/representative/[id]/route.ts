@@ -7,7 +7,6 @@ import { getRedisClient } from '@/lib/cache/redis-client';
 import { apiRateLimiter } from '@/lib/rate-limiting/api-rate-limiter';
 import { logger } from '@/lib/utils/logger';
 import { getSupabaseServerClient } from '@/utils/supabase/server';
-import type { Database } from '@/types/supabase';
 
 // Type assertions for civics tables not in generated Database types
 // Define manually since these tables are not in the generated types
@@ -120,10 +119,10 @@ export const GET = withErrorHandling(async (
     const cache = await getRedisClient();
     try {
       const cachedData = await cache.get<{ representative: RepresentativeResponse }>(cacheKey);
-      
+
       if (cachedData) {
         logger.info('Civics representative cache hit', { id: representativeId, cacheKey });
-        
+
         // Filter fields if requested
         if (fields.length > 0) {
           const filteredResponse: Record<string, unknown> = {};

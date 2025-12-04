@@ -196,7 +196,8 @@ test.describe('Civics UI Tests', () => {
       () => {
         // Check if representative-feed exists OR if there's an error message
         const feed = document.querySelector('[data-testid="representative-feed"]');
-        const noResults = document.querySelector('text=/No representatives found/i');
+        const bodyText = document.body.textContent || '';
+        const noResults = bodyText.includes('No representatives found');
         return feed || noResults;
       },
       { timeout: 30_000 }
