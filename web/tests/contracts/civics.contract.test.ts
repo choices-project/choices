@@ -14,8 +14,8 @@ const mockRedisClient = {
   set: jest.fn(),
 };
 
-jest.mock('@supabase/supabase-js', () => ({
-  createClient: jest.fn(() => mockSupabaseClient),
+jest.mock('@/utils/supabase/server', () => ({
+  getSupabaseServerClient: jest.fn(async () => mockSupabaseClient),
 }));
 
 jest.mock('@/lib/cache/redis-client', () => ({

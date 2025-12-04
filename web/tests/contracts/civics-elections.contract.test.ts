@@ -6,10 +6,12 @@ import { createNextRequest } from '@/tests/contracts/helpers/request';
 
 const mockRpc = jest.fn();
 
-jest.mock('@supabase/supabase-js', () => ({
-  createClient: jest.fn(() => ({
-    rpc: mockRpc,
-  })),
+const mockSupabaseClient = {
+  rpc: mockRpc,
+};
+
+jest.mock('@/utils/supabase/server', () => ({
+  getSupabaseServerClient: jest.fn(async () => mockSupabaseClient),
 }));
 
 jest.mock('@/lib/rate-limiting/api-rate-limiter', () => ({
