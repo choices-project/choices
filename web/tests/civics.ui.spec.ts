@@ -253,7 +253,9 @@ test.describe('Civics UI Tests', () => {
     await page.waitForFunction(
       () => !document.querySelector('.animate-spin'),
       { timeout: 30_000 }
-    ).catch(() => {});
+    ).catch(() => {
+      // Ignore timeout - spinner may already be gone
+    });
 
     // Wait for representative-feed to be visible
     await expect(page.getByTestId('representative-feed')).toBeVisible({ timeout: 30_000 });
@@ -287,7 +289,9 @@ test.describe('Civics UI Tests', () => {
     await page.waitForFunction(
       () => !document.querySelector('.animate-spin'),
       { timeout: 30_000 }
-    ).catch(() => {});
+    ).catch(() => {
+      // Ignore timeout - spinner may already be gone
+    });
 
     // Wait for state filter (it's inside the representative-feed section)
     await expect(page.getByTestId('representative-feed')).toBeVisible({ timeout: 30_000 });
@@ -301,7 +305,9 @@ test.describe('Civics UI Tests', () => {
     await page.waitForResponse(
       (response) => response.url().includes('/api/v1/civics/by-state') && response.url().includes('state=NY'),
       { timeout: 30_000 }
-    ).catch(() => {});
+    ).catch(() => {
+      // Ignore timeout - spinner may already be gone
+    });
 
     // Verify representatives are still visible
     await expect(page.getByTestId('representative-feed')).toBeVisible({ timeout: 10_000 });
@@ -322,7 +328,9 @@ test.describe('Civics UI Tests', () => {
     await page.waitForFunction(
       () => !document.querySelector('.animate-spin'),
       { timeout: 30_000 }
-    ).catch(() => {});
+    ).catch(() => {
+      // Ignore timeout - spinner may already be gone
+    });
 
     // Wait for level filter (it's inside the representative-feed section)
     await expect(page.getByTestId('representative-feed')).toBeVisible({ timeout: 30_000 });
@@ -336,7 +344,9 @@ test.describe('Civics UI Tests', () => {
     await page.waitForResponse(
       (response) => response.url().includes('/api/v1/civics/by-state') && response.url().includes('level=state'),
       { timeout: 30_000 }
-    ).catch(() => {});
+    ).catch(() => {
+      // Ignore timeout - spinner may already be gone
+    });
 
     // Verify representatives are still visible
     await expect(page.getByTestId('representative-feed')).toBeVisible({ timeout: 10_000 });
@@ -381,7 +391,9 @@ test.describe('Civics UI Tests', () => {
     await page.waitForFunction(
       () => !document.querySelector('.animate-spin'),
       { timeout: 30_000 }
-    ).catch(() => {});
+    ).catch(() => {
+      // Ignore timeout - spinner may already be gone
+    });
 
     // Wait for quality statistics (inside representative-feed)
     await expect(page.getByTestId('representative-feed')).toBeVisible({ timeout: 30_000 });
@@ -408,7 +420,9 @@ test.describe('Civics UI Tests', () => {
     await page.waitForFunction(
       () => !document.querySelector('.animate-spin'),
       { timeout: 30_000 }
-    ).catch(() => {});
+    ).catch(() => {
+      // Ignore timeout - spinner may already be gone
+    });
 
     // Wait for system date info (inside representative-feed)
     await expect(page.getByTestId('representative-feed')).toBeVisible({ timeout: 30_000 });
