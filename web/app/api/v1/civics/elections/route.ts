@@ -54,7 +54,7 @@ export const GET = withErrorHandling(async (request: NextRequest) => {
     : null;
 
   const { data, error } = await supabase.rpc('get_upcoming_elections', {
-    divisions
+    divisions: divisions ?? undefined
   });
 
   if (error) {
