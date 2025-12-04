@@ -2,22 +2,37 @@ import { createClient } from '@supabase/supabase-js';
 import type { NextRequest } from 'next/server';
 
 import { withErrorHandling, successResponse, validationError, errorResponse } from '@/lib/api';
+import { logger } from '@/lib/utils/logger';
 
 export const dynamic = 'force-dynamic';
 
-export const GET = withErrorHandling(async (request: NextRequest) => {
+/**
+ * Creates a Supabase client with service role key for admin operations.
+ * This route needs service role access to query civics_representatives without user authentication.
+ */
+function createServiceRoleClient() {
   const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
   const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
 
   if (!supabaseUrl || !supabaseKey) {
-    return errorResponse('Supabase configuration missing', 500);
+    throw new Error('Supabase configuration missing: NEXT_PUBLIC_SUPABASE_URL and SUPABASE_SERVICE_ROLE_KEY are required');
   }
 
-  const supabase = createClient(
+  return createClient(
     supabaseUrl,
     supabaseKey,
     { auth: { persistSession: false } }
   );
+}
+
+export const GET = withErrorHandling(async (request: NextRequest) => {
+  let supabase;
+  try {
+    supabase = createServiceRoleClient();
+  } catch (error) {
+    logger.error('Failed to create Supabase client', { error: error instanceof Error ? error.message : String(error) });
+    return errorResponse('Supabase configuration missing', 500);
+  }
     const { searchParams } = new URL(request.url);
     const state = searchParams.get('state');
     const level = searchParams.get('level');
