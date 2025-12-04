@@ -7,6 +7,10 @@ import { getRedisClient } from '@/lib/cache/redis-client';
 import { apiRateLimiter } from '@/lib/rate-limiting/api-rate-limiter';
 import { logger } from '@/lib/utils/logger';
 import { getSupabaseServerClient } from '@/utils/supabase/server';
+import type { Database } from '@/types/supabase';
+
+// Type assertions for civics tables not in generated Database types
+type CivicsVotesMinimalRow = Database['public']['Tables']['civics_votes_minimal']['Row'];
 
 type RepresentativeResponse = {
   id: string;
