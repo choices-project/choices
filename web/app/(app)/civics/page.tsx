@@ -51,12 +51,14 @@ export default function Civics2Page() {
 
   // Data state (local for now due to type mismatch)
   const [representatives, setRepresentatives] = useState<SuperiorRepresentativeData[]>([]);
+  const [error, setError] = useState<string | null>(null);
   const isMobile = useIsMobile();
   const { setCurrentRoute, setSidebarActiveSection, setBreadcrumbs } = useAppActions();
   const [isLoading, setIsLoading] = useState(true);
 
   const loadRepresentatives = useCallback(async () => {
     setIsLoading(true);
+    setError(null); // Clear any previous errors
     logger.info('🔄 Loading representatives...', { state: selectedState, level: selectedLevel });
 
     try {
@@ -64,18 +66,34 @@ export default function Civics2Page() {
       logger.info('📡 Response status', { status: response.status });
 
       if (!response.ok) {
-        throw new Error(`Failed to load representatives: ${response.status}`);
+        const errorData = await response.json().catch(() => ({ error: `HTTP ${response.status}` }));
+        throw new Error(errorData.error || `Failed to load representatives: ${response.status}`);
       }
 
       const data = await response.json();
       logger.info('✅ API Response:', data);
+      
+      // Handle API error responses
+      if (!data.success) {
+        throw new Error(data.error || 'Failed to load representatives');
+      }
+      
       // API returns { success: true, data: { representatives: [...], state, level, ... } }
       const representatives = data.data?.representatives ?? data.data ?? [];
       logger.info('📊 Setting representatives:', Array.isArray(representatives) ? representatives.length : 0);
-      setRepresentatives(Array.isArray(representatives) ? representatives : []);
+      
+      if (!Array.isArray(representatives)) {
+        logger.warn('⚠️ Representatives data is not an array:', representatives);
+        setRepresentatives([]);
+      } else {
+        setRepresentatives(representatives);
+      }
       logger.info('🎯 Representatives state updated');
     } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : 'An unexpected error occurred while loading representatives';
       logger.error('❌ Error loading representatives:', error);
+      setError(errorMessage);
+      setRepresentatives([]); // Clear representatives on error
     } finally {
       setIsLoading(false);
     }
@@ -291,6 +309,24 @@ export default function Civics2Page() {
                   <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500 mx-auto mb-4" />
                   <p className="text-lg text-gray-600 font-medium">Loading your representatives...</p>
                   <p className="text-sm text-gray-500 mt-2">Gathering the most current information</p>
+                </div>
+              </div>
+            ) : error ? (
+              <div className="flex items-center justify-center py-16">
+                <div className="text-center max-w-md">
+                  <div className="w-24 h-24 bg-gradient-to-br from-red-100 to-orange-100 rounded-full flex items-center justify-center mx-auto mb-6">
+                    <svg className="w-12 h-12 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                    </svg>
+                  </div>
+                  <h3 className="text-xl font-semibold text-gray-900 mb-3">Unable to load representatives</h3>
+                  <p className="text-gray-600 mb-6">{error}</p>
+                  <button
+                    onClick={() => loadRepresentatives()}
+                    className="bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700 transition-colors"
+                  >
+                    Try Again
+                  </button>
                 </div>
               </div>
             ) : filteredRepresentatives.length === 0 ? (
