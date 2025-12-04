@@ -1,48 +1,94 @@
-import { createClient } from '@supabase/supabase-js';
 import type { NextRequest } from 'next/server';
 
-import { withErrorHandling, successResponse, validationError, errorResponse } from '@/lib/api';
+import { withErrorHandling, successResponse, validationError, errorResponse, rateLimitError } from '@/lib/api';
+import { getRedisClient } from '@/lib/cache/redis-client';
+import { apiRateLimiter } from '@/lib/rate-limiting/api-rate-limiter';
 import { logger } from '@/lib/utils/logger';
+import { getSupabaseServerClient } from '@/utils/supabase/server';
 
 export const dynamic = 'force-dynamic';
 
 /**
- * Creates a Supabase client with service role key for admin operations.
- * This route needs service role access to query civics_representatives without user authentication.
+ * Get client IP address from request headers
  */
-function createServiceRoleClient() {
-  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
-  const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
-
-  if (!supabaseUrl || !supabaseKey) {
-    throw new Error('Supabase configuration missing: NEXT_PUBLIC_SUPABASE_URL and SUPABASE_SERVICE_ROLE_KEY are required');
+function getClientIP(request: NextRequest): string {
+  const forwarded = request.headers.get('x-forwarded-for');
+  if (forwarded) {
+    const firstIP = forwarded.split(',')[0];
+    if (firstIP) {
+      return firstIP.trim();
+    }
   }
+  const realIP = request.headers.get('x-real-ip');
+  if (realIP) {
+    return realIP;
+  }
+  return request.ip ?? 'unknown';
+}
 
-  return createClient(
-    supabaseUrl,
-    supabaseKey,
-    { auth: { persistSession: false } }
-  );
+/**
+ * Generate cache key for by-state endpoint
+ */
+function generateCacheKey(state: string, level: string | null, limit: number, include: string[]): string {
+  const includeStr = include.sort().join(',');
+  return `civics:by-state:${state}:${level ?? 'all'}:${limit}:${includeStr}`;
 }
 
 export const GET = withErrorHandling(async (request: NextRequest) => {
-  let supabase;
-  try {
-    supabase = createServiceRoleClient();
-  } catch (error) {
-    logger.error('Failed to create Supabase client', { error: error instanceof Error ? error.message : String(error) });
-    return errorResponse('Supabase configuration missing', 500);
+  // Rate limiting: 200 requests per 15 minutes per IP
+  const clientIP = getClientIP(request);
+  const rateLimitResult = await apiRateLimiter.checkLimit(clientIP, '/api/v1/civics/by-state', {
+    maxRequests: 200,
+    windowMs: 15 * 60 * 1000, // 15 minutes
+  });
+
+  if (!rateLimitResult.allowed) {
+    logger.warn('Rate limit exceeded for civics by-state', { ip: clientIP });
+    return rateLimitError('Rate limit exceeded', rateLimitResult.retryAfter);
   }
-    const { searchParams } = new URL(request.url);
-    const state = searchParams.get('state');
-    const level = searchParams.get('level');
-    const fields = searchParams.get('fields')?.split(',') ?? [];
-    const include = searchParams.get('include')?.split(',') ?? [];
-    const includeDivisions = include.includes('divisions');
-    const limit = parseInt(searchParams.get('limit') ?? '50');
+
+  // Get Supabase client (uses anon key, RLS allows anonymous reads)
+  const supabase = await getSupabaseServerClient();
+  if (!supabase) {
+    return errorResponse('Database connection not available', 500);
+  }
+  const { searchParams } = new URL(request.url);
+  const state = searchParams.get('state');
+  const level = searchParams.get('level');
+  const fields = searchParams.get('fields')?.split(',') ?? [];
+  const include = searchParams.get('include')?.split(',') ?? [];
+  const includeDivisions = include.includes('divisions');
+  const limit = parseInt(searchParams.get('limit') ?? '50');
 
   if (!state) {
     return validationError({ state: 'State parameter is required' });
+  }
+
+  // Check Redis cache first
+  const cacheKey = generateCacheKey(state, level, limit, include);
+  const cache = await getRedisClient();
+  try {
+    const cachedData = await cache.get<{
+      state: string;
+      level?: string;
+      representatives: unknown[];
+      count: number;
+      attribution: Record<string, string | undefined>;
+    }>(cacheKey);
+
+    if (cachedData) {
+      logger.info('Civics by-state cache hit', { state, level, cacheKey });
+      const response = successResponse(cachedData, {
+        include: include.length > 0 ? include : undefined,
+        fields: fields.length > 0 ? fields : undefined,
+        cached: true,
+      });
+      response.headers.set('Cache-Control', 'public, max-age=300, stale-while-revalidate=86400');
+      response.headers.set('X-Cache', 'HIT');
+      return response;
+    }
+  } catch (cacheError) {
+    logger.warn('Cache read error (continuing without cache)', { error: cacheError });
   }
 
     type RepresentativeDivisionRow = {
@@ -80,7 +126,8 @@ export const GET = withErrorHandling(async (request: NextRequest) => {
       selectFields.push('representative_divisions:representative_divisions(division_id)');
     }
 
-    let query = supabase
+    // Type assertion needed because civics tables may not be in generated Database type
+    let query = (supabase as any)
       .from('civics_representatives')
       .select(selectFields.join(','))
       .eq('valid_to', 'infinity')
@@ -139,7 +186,7 @@ export const GET = withErrorHandling(async (request: NextRequest) => {
 
         // Include FEC data if requested
         if (include.includes('fec') && rep.person_id) {
-          const { data: fecData } = await supabase
+          const { data: fecData } = await (supabase as any)
             .from('civics_fec_minimal')
             .select('total_receipts, cash_on_hand, election_cycle, last_updated')
             .eq('person_id', rep.person_id)
@@ -159,7 +206,7 @@ export const GET = withErrorHandling(async (request: NextRequest) => {
 
         // Include voting data if requested
         if (include.includes('votes') && rep.person_id) {
-          const { data: votesData } = await supabase
+          const { data: votesData } = await (supabase as any)
             .from('civics_votes_minimal')
             .select('vote_id, bill_title, vote_date, vote_position, party_position, last_updated')
             .eq('person_id', rep.person_id)
@@ -167,7 +214,7 @@ export const GET = withErrorHandling(async (request: NextRequest) => {
             .limit(5);
 
           if (votesData && votesData.length > 0) {
-            const partyVotes = votesData.filter(vote => vote.party_position === vote.vote_position);
+            const partyVotes = votesData.filter((vote: any) => vote.party_position === vote.vote_position);
             const partyAlignment = partyVotes.length / votesData.length;
 
             response.votes = {
@@ -215,26 +262,35 @@ export const GET = withErrorHandling(async (request: NextRequest) => {
       });
     }
 
-  const response = successResponse(
-    {
-      state: state ?? 'US',
-      level: level ?? undefined,
-      representatives: finalResponse,
-      count: finalResponse.length,
-      attribution: {
-        fec: include.includes('fec') ? 'Federal Election Commission' : undefined,
-        votes: include.includes('votes') ? 'GovTrack.us' : undefined,
-        contact: include.includes('contact') ? 'ProPublica Congress API' : undefined
-      }
-    },
-    {
-      include: include.length > 0 ? include : undefined,
-      fields: fields.length > 0 ? fields : undefined
+  const responseData = {
+    state: state ?? 'US',
+    level: level ?? undefined,
+    representatives: finalResponse,
+    count: finalResponse.length,
+    attribution: {
+      fec: include.includes('fec') ? 'Federal Election Commission' : undefined,
+      votes: include.includes('votes') ? 'GovTrack.us' : undefined,
+      contact: include.includes('contact') ? 'ProPublica Congress API' : undefined
     }
-  );
+  };
+
+  // Cache the response for 5 minutes
+  try {
+    await cache.set(cacheKey, responseData, 300); // 5 minutes TTL
+    logger.info('Civics by-state cached', { state, level, cacheKey });
+  } catch (cacheError) {
+    logger.warn('Cache write error (continuing without cache)', { error: cacheError });
+  }
+
+  const response = successResponse(responseData, {
+    include: include.length > 0 ? include : undefined,
+    fields: fields.length > 0 ? fields : undefined,
+    cached: false,
+  });
 
   response.headers.set('ETag', `"${state}-${level}-${Date.now()}"`);
   response.headers.set('Cache-Control', 'public, max-age=300, stale-while-revalidate=86400');
+  response.headers.set('X-Cache', 'MISS');
 
   return response;
 });

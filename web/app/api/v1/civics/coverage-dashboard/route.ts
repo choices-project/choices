@@ -1,10 +1,29 @@
-import { createClient } from '@supabase/supabase-js';
 import type { NextRequest } from 'next/server';
 
-import { withErrorHandling, successResponse, errorResponse } from '@/lib/api';
+import { withErrorHandling, successResponse, errorResponse, rateLimitError } from '@/lib/api';
+import { apiRateLimiter } from '@/lib/rate-limiting/api-rate-limiter';
 import { logger } from '@/lib/utils/logger';
+import { getSupabaseServerClient } from '@/utils/supabase/server';
 
 export const dynamic = 'force-dynamic';
+
+/**
+ * Get client IP address from request headers
+ */
+function getClientIP(request: NextRequest): string {
+  const forwarded = request.headers.get('x-forwarded-for');
+  if (forwarded) {
+    const firstIP = forwarded.split(',')[0];
+    if (firstIP) {
+      return firstIP.trim();
+    }
+  }
+  const realIP = request.headers.get('x-real-ip');
+  if (realIP) {
+    return realIP;
+  }
+  return request.ip ?? 'unknown';
+}
 
 type RepresentativeData = {
   level: string;
@@ -27,23 +46,30 @@ type FreshnessData = {
 };
 
 export const GET = withErrorHandling(async (request: NextRequest) => {
-  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
-  const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
-  
-  if (!supabaseUrl || !supabaseKey) {
-    return errorResponse('Supabase configuration missing', 500);
+  // Rate limiting: 30 requests per 5 minutes per IP (admin-like endpoint)
+  const clientIP = getClientIP(request);
+  const rateLimitResult = await apiRateLimiter.checkLimit(clientIP, '/api/v1/civics/coverage-dashboard', {
+    maxRequests: 30,
+    windowMs: 5 * 60 * 1000, // 5 minutes
+  });
+
+  if (!rateLimitResult.allowed) {
+    logger.warn('Rate limit exceeded for civics coverage-dashboard', { ip: clientIP });
+    return rateLimitError('Rate limit exceeded', rateLimitResult.retryAfter);
   }
-  
-  const supabase = createClient(
-    supabaseUrl,
-    supabaseKey,
-    { auth: { persistSession: false } }
-  );
-    // Log coverage dashboard request for audit trail
-    logger.info('Coverage dashboard requested', { userAgent: request.headers.get('user-agent') ?? 'unknown' });
+
+  // Get Supabase client (uses anon key, RLS allows anonymous reads)
+  const supabase = await getSupabaseServerClient();
+  if (!supabase) {
+    return errorResponse('Database connection not available', 500);
+  }
+
+  // Log coverage dashboard request for audit trail
+  logger.info('Coverage dashboard requested', { userAgent: request.headers.get('user-agent') ?? 'unknown' });
     
     // Get coverage by source
-    const { data: coverageData, error: coverageError } = await supabase
+    // Type assertion needed because civics tables may not be in generated Database type
+    const { data: coverageData, error: coverageError } = await (supabase as any)
       .from('civics_representatives')
       .select('level, source, jurisdiction, last_updated')
       .eq('valid_to', 'infinity');
