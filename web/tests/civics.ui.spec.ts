@@ -5,20 +5,16 @@ import { setupExternalAPIMocks, waitForPageReady } from './e2e/helpers/e2e-setup
 test.describe('Civics UI Tests', () => {
   // Helper function to set up by-state route handler
   const setupByStateRoute = async (page: import('@playwright/test').Page) => {
-    // Use a function-based route matcher - check the request URL directly
-    await page.route((url) => {
-      const urlString = typeof url === 'string' ? url : url.href;
-      const matches = urlString.includes('/api/v1/civics/by-state');
-      if (matches) {
-        console.log(`[Route Handler] Matched URL: ${urlString}`);
-      }
-      return matches;
-    }, async (route) => {
+    // Use a simple string pattern that should match any URL with this path
+    // The ** pattern matches any characters including query parameters
+    await page.route('**/api/v1/civics/by-state*', async (route) => {
       const requestUrl = route.request().url();
-      console.log(`[Route Handler] Intercepted request: ${route.request().method()} ${requestUrl}`);
+      const method = route.request().method();
+      console.log(`[Route Handler] Intercepted ${method} ${requestUrl}`);
+      
       // Only handle GET requests (the page makes GET requests)
-      if (route.request().method() !== 'GET') {
-        console.log(`[Route Handler] Skipping non-GET request: ${route.request().method()}`);
+      if (method !== 'GET') {
+        console.log(`[Route Handler] Continuing non-GET request: ${method}`);
         await route.continue();
         return;
       }
@@ -85,12 +81,9 @@ test.describe('Civics UI Tests', () => {
     await setupExternalAPIMocks(page, { civics: false, api: true });
     
     // Unroute the default by-state handler that setupExternalAPIMocks set up
-    // Try both string pattern and function-based unroute
+    // Try multiple patterns to ensure we remove any existing handlers
     await page.unroute('**/api/v1/civics/by-state**');
-    await page.unroute((url) => {
-      const urlString = typeof url === 'string' ? url : url.href;
-      return urlString.includes('/api/v1/civics/by-state');
-    });
+    await page.unroute('**/api/v1/civics/by-state*');
     
     // Set up our custom by-state route handler AFTER unrouting the default one
     // This ensures our handler takes precedence
