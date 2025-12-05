@@ -69,8 +69,12 @@ test.describe('Civics UI Tests', () => {
   };
 
   test.beforeEach(async ({ page }) => {
-    // Setup external API mocks FIRST (they handle POST requests)
-    // We set civics: false to avoid the default handler, then set up our own
+    // Set up by-state route handler FIRST - this must be before any navigation
+    // Use a more specific pattern to ensure it matches
+    await setupByStateRoute(page);
+    
+    // Setup external API mocks (they handle POST requests)
+    // We set civics: false to avoid the default handler conflicting with our custom one
     await setupExternalAPIMocks(page, { civics: false, api: true });
     
     // Mock address-lookup endpoint
@@ -91,9 +95,22 @@ test.describe('Civics UI Tests', () => {
       });
     });
 
-    // Set up by-state route handler for GET requests
-    // This is our custom handler that returns the exact structure the page expects
-    await setupByStateRoute(page);
+    // Add network request logging to debug route interception
+    page.on('request', (request) => {
+      if (request.url().includes('/api/v1/civics/by-state')) {
+        console.log(`[Route Handler Debug] Request intercepted: ${request.method()} ${request.url()}`);
+      }
+    });
+
+    page.on('response', async (response) => {
+      if (response.url().includes('/api/v1/civics/by-state')) {
+        console.log(`[Route Handler Debug] Response: ${response.status()} ${response.url()}`);
+        if (response.status() >= 400) {
+          const text = await response.text().catch(() => 'Unable to read response');
+          console.log(`[Route Handler Debug] Error response body: ${text.substring(0, 200)}`);
+        }
+      }
+    });
   });
 
   test('civics page loads and displays representatives', async ({ page }) => {
