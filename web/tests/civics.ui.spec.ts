@@ -5,7 +5,8 @@ import { setupExternalAPIMocks, waitForPageReady } from './e2e/helpers/e2e-setup
 test.describe('Civics UI Tests', () => {
   // Helper function to set up by-state route handler
   const setupByStateRoute = async (page: import('@playwright/test').Page) => {
-    await page.route('**/api/v1/civics/by-state*', async (route) => {
+    // Use a more specific pattern to ensure it matches
+    await page.route('**/api/v1/civics/by-state**', async (route) => {
       // Only handle GET requests (the page makes GET requests)
       if (route.request().method() !== 'GET') {
         await route.continue();
