@@ -70,13 +70,18 @@ test.describe('Civics UI Tests', () => {
   };
 
   test.beforeEach(async ({ page }) => {
-    // Set up by-state route handler FIRST - this must be before any navigation
-    // Use a more specific pattern to ensure it matches
-    await setupByStateRoute(page);
+    // Unroute any existing handlers for by-state to ensure our custom handler takes precedence
+    await page.unroute('**/api/v1/civics/by-state**');
+    await page.unroute('**/api/v1/civics/by-state*');
     
     // Setup external API mocks (they handle POST requests)
-    // We set civics: false to avoid the default handler conflicting with our custom one
-    await setupExternalAPIMocks(page, { civics: false, api: true });
+    // We set civics: false and api: false to avoid default handlers for civics routes
+    // The api: true option sets up a handler for /by-state that conflicts with ours
+    await setupExternalAPIMocks(page, { civics: false, api: false });
+    
+    // Set up by-state route handler AFTER external mocks to ensure it takes precedence
+    // Use a more specific pattern to ensure it matches
+    await setupByStateRoute(page);
     
     // Mock address-lookup endpoint
     await page.route('**/api/v1/civics/address-lookup', async (route) => {
