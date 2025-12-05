@@ -5,8 +5,9 @@ import { setupExternalAPIMocks, waitForPageReady } from './e2e/helpers/e2e-setup
 test.describe('Civics UI Tests', () => {
   // Helper function to set up by-state route handler
   const setupByStateRoute = async (page: import('@playwright/test').Page) => {
-    // Use pattern that matches the actual URL: /api/v1/civics/by-state?state=CA&level=federal&limit=20
-    await page.route('**/api/v1/civics/by-state*', async (route) => {
+    // Use the same pattern as the default handler: **/api/v1/civics/by-state**
+    // This pattern matches the URL with query parameters
+    await page.route('**/api/v1/civics/by-state**', async (route) => {
       console.log(`[Route Handler] Intercepted request: ${route.request().method()} ${route.request().url()}`);
       // Only handle GET requests (the page makes GET requests)
       if (route.request().method() !== 'GET') {
@@ -70,17 +71,16 @@ test.describe('Civics UI Tests', () => {
   };
 
   test.beforeEach(async ({ page }) => {
-    // Unroute any existing handlers for by-state to ensure our custom handler takes precedence
+    // Setup external API mocks first (they handle POST requests and other routes)
+    // We set civics: false to avoid the address-lookup handler
+    // We set api: true to get other API mocks, but we'll override the by-state handler
+    await setupExternalAPIMocks(page, { civics: false, api: true });
+    
+    // Unroute the default by-state handler that setupExternalAPIMocks set up
     await page.unroute('**/api/v1/civics/by-state**');
-    await page.unroute('**/api/v1/civics/by-state*');
     
-    // Setup external API mocks (they handle POST requests)
-    // We set civics: false and api: false to avoid default handlers for civics routes
-    // The api: true option sets up a handler for /by-state that conflicts with ours
-    await setupExternalAPIMocks(page, { civics: false, api: false });
-    
-    // Set up by-state route handler AFTER external mocks to ensure it takes precedence
-    // Use a more specific pattern to ensure it matches
+    // Set up our custom by-state route handler AFTER unrouting the default one
+    // This ensures our handler takes precedence
     await setupByStateRoute(page);
     
     // Mock address-lookup endpoint
