@@ -5,8 +5,9 @@ import { setupExternalAPIMocks, waitForPageReady } from './e2e/helpers/e2e-setup
 test.describe('Civics UI Tests', () => {
   // Helper function to set up by-state route handler
   const setupByStateRoute = async (page: import('@playwright/test').Page) => {
-    // Use a more specific pattern to ensure it matches
-    await page.route('**/api/v1/civics/by-state**', async (route) => {
+    // Use pattern that matches the actual URL: /api/v1/civics/by-state?state=CA&level=federal&limit=20
+    await page.route('**/api/v1/civics/by-state*', async (route) => {
+      console.log(`[Route Handler] Intercepted request: ${route.request().method()} ${route.request().url()}`);
       // Only handle GET requests (the page makes GET requests)
       if (route.request().method() !== 'GET') {
         await route.continue();
