@@ -5,13 +5,20 @@ import { setupExternalAPIMocks, waitForPageReady } from './e2e/helpers/e2e-setup
 test.describe('Civics UI Tests', () => {
   // Helper function to set up by-state route handler
   const setupByStateRoute = async (page: import('@playwright/test').Page) => {
-    // Use a function-based route matcher for more reliable matching
+    // Use a function-based route matcher - check the request URL directly
     await page.route((url) => {
-      return url.href.includes('/api/v1/civics/by-state');
+      const urlString = typeof url === 'string' ? url : url.href;
+      const matches = urlString.includes('/api/v1/civics/by-state');
+      if (matches) {
+        console.log(`[Route Handler] Matched URL: ${urlString}`);
+      }
+      return matches;
     }, async (route) => {
-      console.log(`[Route Handler] Intercepted request: ${route.request().method()} ${route.request().url()}`);
+      const requestUrl = route.request().url();
+      console.log(`[Route Handler] Intercepted request: ${route.request().method()} ${requestUrl}`);
       // Only handle GET requests (the page makes GET requests)
       if (route.request().method() !== 'GET') {
+        console.log(`[Route Handler] Skipping non-GET request: ${route.request().method()}`);
         await route.continue();
         return;
       }
@@ -78,8 +85,12 @@ test.describe('Civics UI Tests', () => {
     await setupExternalAPIMocks(page, { civics: false, api: true });
     
     // Unroute the default by-state handler that setupExternalAPIMocks set up
-    // Use function-based unroute to match any handler for this URL
-    await page.unroute((url) => url.href.includes('/api/v1/civics/by-state'));
+    // Try both string pattern and function-based unroute
+    await page.unroute('**/api/v1/civics/by-state**');
+    await page.unroute((url) => {
+      const urlString = typeof url === 'string' ? url : url.href;
+      return urlString.includes('/api/v1/civics/by-state');
+    });
     
     // Set up our custom by-state route handler AFTER unrouting the default one
     // This ensures our handler takes precedence
