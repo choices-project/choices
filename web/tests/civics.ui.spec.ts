@@ -5,9 +5,10 @@ import { setupExternalAPIMocks, waitForPageReady } from './e2e/helpers/e2e-setup
 test.describe('Civics UI Tests', () => {
   // Helper function to set up by-state route handler
   const setupByStateRoute = async (page: import('@playwright/test').Page) => {
-    // Use the same pattern as the default handler: **/api/v1/civics/by-state**
-    // This pattern matches the URL with query parameters
-    await page.route('**/api/v1/civics/by-state**', async (route) => {
+    // Use a function-based route matcher for more reliable matching
+    await page.route((url) => {
+      return url.href.includes('/api/v1/civics/by-state');
+    }, async (route) => {
       console.log(`[Route Handler] Intercepted request: ${route.request().method()} ${route.request().url()}`);
       // Only handle GET requests (the page makes GET requests)
       if (route.request().method() !== 'GET') {
@@ -77,7 +78,8 @@ test.describe('Civics UI Tests', () => {
     await setupExternalAPIMocks(page, { civics: false, api: true });
     
     // Unroute the default by-state handler that setupExternalAPIMocks set up
-    await page.unroute('**/api/v1/civics/by-state**');
+    // Use function-based unroute to match any handler for this URL
+    await page.unroute((url) => url.href.includes('/api/v1/civics/by-state'));
     
     // Set up our custom by-state route handler AFTER unrouting the default one
     // This ensures our handler takes precedence
