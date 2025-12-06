@@ -7,10 +7,11 @@ test.describe('Civics UI Tests', () => {
   const setupByStateRoute = async (page: import('@playwright/test').Page) => {
     // Use a simple string pattern that should match any URL with this path
     // The ** pattern matches any characters including query parameters
+    console.log('[setupByStateRoute] Registering route handler for **/api/v1/civics/by-state*');
     await page.route('**/api/v1/civics/by-state*', async (route) => {
       const requestUrl = route.request().url();
       const method = route.request().method();
-      console.log(`[Route Handler] Intercepted ${method} ${requestUrl}`);
+      console.log(`[Route Handler] ✅ INTERCEPTED ${method} ${requestUrl}`);
 
       // Only handle GET requests (the page makes GET requests)
       if (method !== 'GET') {
@@ -108,27 +109,35 @@ test.describe('Civics UI Tests', () => {
     });
 
     // Add network request logging to debug route interception
+    // Log ALL requests to see what's happening
     page.on('request', (request) => {
-      if (request.url().includes('/api/v1/civics/by-state')) {
-        console.log(`[Route Handler Debug] Request intercepted: ${request.method()} ${request.url()}`);
+      const url = request.url();
+      if (url.includes('/api/v1/civics/by-state')) {
+        console.log(`[Request Listener] ${request.method()} ${url}`);
       }
     });
 
     page.on('response', async (response) => {
-      if (response.url().includes('/api/v1/civics/by-state')) {
-        console.log(`[Route Handler Debug] Response: ${response.status()} ${response.url()}`);
+      const url = response.url();
+      if (url.includes('/api/v1/civics/by-state')) {
+        console.log(`[Response Listener] ${response.status()} ${url}`);
         if (response.status() >= 400) {
           const text = await response.text().catch(() => 'Unable to read response');
-          console.log(`[Route Handler Debug] Error response body: ${text.substring(0, 200)}`);
+          console.log(`[Response Listener] Error body: ${text.substring(0, 200)}`);
         }
       }
     });
+
+    // Also log when route handler is set up
+    console.log('[beforeEach] Route handler setup complete');
   });
 
   test('civics page loads and displays representatives', async ({ page }) => {
     // Ensure route handler is set up before navigation
     // Set it up again in the test to be absolutely sure it's active
+    console.log('[Test] Setting up route handler before navigation');
     await setupByStateRoute(page);
+    console.log('[Test] Route handler setup complete, about to navigate');
 
     // Set up console error tracking
     const consoleErrors: string[] = [];
