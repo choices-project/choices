@@ -11,22 +11,22 @@ test.describe('Civics UI Tests', () => {
       const requestUrl = route.request().url();
       const method = route.request().method();
       console.log(`[Route Handler] Intercepted ${method} ${requestUrl}`);
-      
+
       // Only handle GET requests (the page makes GET requests)
       if (method !== 'GET') {
         console.log(`[Route Handler] Continuing non-GET request: ${method}`);
         await route.continue();
         return;
       }
-      
+
       const url = new URL(route.request().url());
       const state = url.searchParams.get('state') || 'CA';
       const level = url.searchParams.get('level') || 'federal';
-      
+
       // The API route returns: successResponse({ representatives: [...], state, level, count, attribution })
       // Which becomes: { success: true, data: { representatives: [...], state, level, ... } }
       // The page now correctly accesses data.data.representatives
-      
+
       await route.fulfill({
         status: 200,
         contentType: 'application/json',
@@ -79,16 +79,16 @@ test.describe('Civics UI Tests', () => {
     // We set civics: false to avoid the address-lookup handler
     // We set api: true to get other API mocks, but we'll override the by-state handler
     await setupExternalAPIMocks(page, { civics: false, api: true });
-    
+
     // Unroute the default by-state handler that setupExternalAPIMocks set up
     // Try multiple patterns to ensure we remove any existing handlers
     await page.unroute('**/api/v1/civics/by-state**');
     await page.unroute('**/api/v1/civics/by-state*');
-    
+
     // Set up our custom by-state route handler AFTER unrouting the default one
     // This ensures our handler takes precedence
     await setupByStateRoute(page);
-    
+
     // Mock address-lookup endpoint
     await page.route('**/api/v1/civics/address-lookup', async (route) => {
       await route.fulfill({
@@ -126,6 +126,9 @@ test.describe('Civics UI Tests', () => {
   });
 
   test('civics page loads and displays representatives', async ({ page }) => {
+    // Ensure route handler is set up before navigation
+    // Set it up again in the test to be absolutely sure it's active
+    await setupByStateRoute(page);
 
     // Set up console error tracking
     const consoleErrors: string[] = [];
@@ -146,7 +149,7 @@ test.describe('Civics UI Tests', () => {
 
     // Wait for API response (route handler should fulfill it)
     const response = await responsePromise;
-    
+
     // Debug: Check for console errors
     if (consoleErrors.length > 0) {
       console.warn('Console errors detected:', consoleErrors);
@@ -185,7 +188,7 @@ test.describe('Civics UI Tests', () => {
       const bodyText = await page.locator('body').textContent();
       console.warn('representative-feed not found. Page content length:', pageContent.length);
       console.warn('Body text preview:', bodyText?.substring(0, 500));
-      
+
       // Check if there's an error message
       const errorVisible = await page.locator('text=/Error|Failed|No representatives/i').isVisible().catch(() => false);
       if (errorVisible) {
