@@ -146,7 +146,19 @@ test.describe('Civics UI Tests', () => {
     // Set it up again in the test to be absolutely sure it's active
     console.log('[Test] Setting up route handler before navigation');
     await setupByStateRoute(page);
-    console.log('[Test] Route handler setup complete, about to navigate');
+    console.log('[Test] Route handler setup complete');
+    
+    // Verify route handler is active by checking if we can intercept a test request
+    // This helps us debug if the route handler is working at all
+    let routeHandlerActive = false;
+    page.on('request', (request) => {
+      if (request.url().includes('/api/v1/civics/by-state')) {
+        console.log(`[Test Request Listener] Request detected: ${request.method()} ${request.url()}`);
+        routeHandlerActive = true;
+      }
+    });
+    
+    console.log('[Test] About to navigate to /civics');
 
     // Set up console error tracking
     const consoleErrors: string[] = [];
@@ -158,7 +170,14 @@ test.describe('Civics UI Tests', () => {
 
     // Set up response listener before navigation
     const responsePromise = page.waitForResponse(
-      (response) => response.url().includes('/api/v1/civics/by-state') && response.status() === 200,
+      (response) => {
+        const url = response.url();
+        const matches = url.includes('/api/v1/civics/by-state');
+        if (matches) {
+          console.log(`[Test Response Listener] Response detected: ${response.status()} ${url}`);
+        }
+        return matches && response.status() === 200;
+      },
       { timeout: 30_000 }
     ).catch(() => null);
 
