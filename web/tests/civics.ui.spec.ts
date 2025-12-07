@@ -6,12 +6,20 @@ test.describe('Civics UI Tests', () => {
   // Helper function to set up by-state route handler
   const setupByStateRoute = async (page: import('@playwright/test').Page) => {
     // Use a function-based matcher to ensure we catch all variations of the URL
+    // Also try string pattern as fallback
     console.log('[setupByStateRoute] Registering route handler with function matcher');
+    
+    // First, try function-based matcher
     await page.route((url) => {
       const urlString = url.toString();
       const matches = urlString.includes('/api/v1/civics/by-state');
       if (matches) {
         console.log(`[Route Matcher] ✅ MATCHED URL: ${urlString}`);
+      } else {
+        // Log all URLs to see what we're getting
+        if (urlString.includes('/api/v1/civics') || urlString.includes('civics')) {
+          console.log(`[Route Matcher] ⚠️ URL contains civics but not by-state: ${urlString}`);
+        }
       }
       return matches;
     }, async (route) => {
@@ -147,7 +155,7 @@ test.describe('Civics UI Tests', () => {
     console.log('[Test] Setting up route handler before navigation');
     await setupByStateRoute(page);
     console.log('[Test] Route handler setup complete');
-    
+
     // Verify route handler is active by checking if we can intercept a test request
     // This helps us debug if the route handler is working at all
     let routeHandlerActive = false;
@@ -157,7 +165,7 @@ test.describe('Civics UI Tests', () => {
         routeHandlerActive = true;
       }
     });
-    
+
     console.log('[Test] About to navigate to /civics');
 
     // Set up console error tracking
