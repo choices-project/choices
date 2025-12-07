@@ -59,7 +59,9 @@ jobs:
       - name: Start application
         run: |
           cd web
-          npm run start:ci &
+          npm run start:ci > /tmp/nextjs-server.log 2>&1 &
+          SERVER_PID=$!
+          echo "Server PID: $SERVER_PID"
           # Wait for server to actually start
           for i in {1..30}; do
             if curl -f "http://localhost:3001/api/health" > /dev/null 2>&1; then
@@ -69,6 +71,11 @@ jobs:
             echo "Waiting for server to start... ($i/30)"
             sleep 2
           done
+          # Log server output if health check fails
+          if ! curl -f "http://localhost:3001/api/health" > /dev/null 2>&1; then
+            echo "=== Server logs (health check failed) ==="
+            tail -100 /tmp/nextjs-server.log || true
+          fi
         env:
           NODE_ENV: production
           PORT: 3001
