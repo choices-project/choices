@@ -105,6 +105,8 @@ export default function Civics2Page() {
   }, [loadRepresentatives]);
 
   useEffect(() => {
+    // Only run on client side to avoid SSR issues
+    if (typeof window === 'undefined') return;
     if (setCurrentRoute && setSidebarActiveSection && setBreadcrumbs) {
       setCurrentRoute('/civics');
       setSidebarActiveSection('civics');
