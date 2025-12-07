@@ -59,7 +59,9 @@ jobs:
       - name: Start application
         run: |
           cd web
-          npm run start:ci > /tmp/nextjs-server.log 2>&1 &
+          # Use regular next start instead of standalone mode for CI
+          # Standalone mode has path resolution issues in CI environments
+          next start > /tmp/nextjs-server.log 2>&1 &
           SERVER_PID=$!
           echo "Server PID: $SERVER_PID"
           # Wait for server to actually start
