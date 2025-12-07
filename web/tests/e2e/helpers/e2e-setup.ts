@@ -817,7 +817,10 @@ export async function setupExternalAPIMocks(page: Page, overrides: Partial<Exter
     await page.route('**/api/polls/*/results', pollResultsHandler);
     await page.route('**/api/polls/*', pollDetailHandler);
     await page.route('**/api/dashboard', dashboardHandler);
-    await page.route('**/api/v1/civics/by-state**', civicsStateHandler);
+    // Only set up civicsStateHandler if civics option is enabled
+    if (options.civics) {
+      await page.route('**/api/v1/civics/by-state**', civicsStateHandler);
+    }
     await page.route('**/api/pwa/notifications/subscribe', pwaSubscribeHandler);
     await page.route('**/api/pwa/notifications/send', pwaNotificationHandler);
     await page.route('**/api/pwa/offline/process', offlineHandler);
@@ -831,7 +834,10 @@ export async function setupExternalAPIMocks(page: Page, overrides: Partial<Exter
     routes.push({ url: '**/api/polls/*/results', handler: pollResultsHandler });
     routes.push({ url: '**/api/polls/*', handler: pollDetailHandler });
     routes.push({ url: '**/api/dashboard', handler: dashboardHandler });
-    routes.push({ url: '**/api/v1/civics/by-state**', handler: civicsStateHandler });
+    // Only track civicsStateHandler route if civics option is enabled
+    if (options.civics) {
+      routes.push({ url: '**/api/v1/civics/by-state**', handler: civicsStateHandler });
+    }
     routes.push({ url: '**/api/pwa/notifications/subscribe', handler: pwaSubscribeHandler });
     routes.push({ url: '**/api/pwa/notifications/send', handler: pwaNotificationHandler });
     routes.push({ url: '**/api/pwa/offline/process', handler: offlineHandler });
