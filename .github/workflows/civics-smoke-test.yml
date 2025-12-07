@@ -143,7 +143,13 @@ jobs:
           cd web
           # Run the test with explicit path - the root config has testDir: './tests/e2e'
           # but we can override it by specifying the file directly
-          npx playwright test tests/civics.ui.spec.ts --config playwright.config.ts --project=chromium
+          npx playwright test tests/civics.ui.spec.ts --config playwright.config.ts --project=chromium || TEST_FAILED=$?
+          # If tests fail, show server logs to help debug
+          if [ -n "$TEST_FAILED" ]; then
+            echo "=== Server logs (tests failed) ==="
+            tail -200 /tmp/nextjs-server.log 2>/dev/null || echo "No server logs available"
+          fi
+          exit ${TEST_FAILED:-0}
         env:
           BASE_URL: http://localhost:3001
 
