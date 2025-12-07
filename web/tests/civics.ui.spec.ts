@@ -5,13 +5,19 @@ import { setupExternalAPIMocks, waitForPageReady } from './e2e/helpers/e2e-setup
 test.describe('Civics UI Tests', () => {
   // Helper function to set up by-state route handler
   const setupByStateRoute = async (page: import('@playwright/test').Page) => {
-    // Use a regex pattern to match the exact path with any query parameters
-    // This should be more reliable than string patterns
-    console.log('[setupByStateRoute] Registering route handler with regex pattern');
-    await page.route(/\/api\/v1\/civics\/by-state/, async (route) => {
+    // Use a function-based matcher to ensure we catch all variations of the URL
+    console.log('[setupByStateRoute] Registering route handler with function matcher');
+    await page.route((url) => {
+      const urlString = url.toString();
+      const matches = urlString.includes('/api/v1/civics/by-state');
+      if (matches) {
+        console.log(`[Route Matcher] ✅ MATCHED URL: ${urlString}`);
+      }
+      return matches;
+    }, async (route) => {
       const requestUrl = route.request().url();
       const method = route.request().method();
-      console.log(`[Route Handler] ✅ INTERCEPTED ${method} ${requestUrl}`);
+      console.log(`[Route Handler] ✅✅✅ INTERCEPTED ${method} ${requestUrl}`);
 
       // Only handle GET requests (the page makes GET requests)
       if (method !== 'GET') {
@@ -80,14 +86,14 @@ test.describe('Civics UI Tests', () => {
     // This ensures it's registered before any other handlers
     console.log('[beforeEach] Setting up custom route handler first');
     await setupByStateRoute(page);
-    
+
     // Setup external API mocks (they handle POST requests and other routes)
     // We set civics: false to avoid the address-lookup handler and by-state handler
     // We set api: true to get other API mocks
     // Since we set up our handler first, it should take precedence
     console.log('[beforeEach] Setting up external API mocks');
     await setupExternalAPIMocks(page, { civics: false, api: true });
-    
+
     // Ensure our handler is still active by setting it up again after external mocks
     // This guarantees our handler is the last one registered and will intercept
     console.log('[beforeEach] Re-registering custom route handler to ensure it takes precedence');
