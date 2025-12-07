@@ -8,7 +8,7 @@ test.describe('Civics UI Tests', () => {
     // Use a function-based matcher to ensure we catch all variations of the URL
     // Also try string pattern as fallback
     console.log('[setupByStateRoute] Registering route handler with function matcher');
-    
+
     // First, try function-based matcher
     await page.route((url) => {
       const urlString = url.toString();
@@ -90,18 +90,33 @@ test.describe('Civics UI Tests', () => {
   };
 
   test.beforeEach(async ({ page }) => {
+    // Add a catch-all request logger to see ALL requests being made
+    page.on('request', (request) => {
+      const url = request.url();
+      if (url.includes('api') || url.includes('civics')) {
+        console.log(`[ALL REQUESTS] ${request.method()} ${url}`);
+      }
+    });
+    
+    page.on('response', async (response) => {
+      const url = response.url();
+      if (url.includes('api') || url.includes('civics')) {
+        console.log(`[ALL RESPONSES] ${response.status()} ${url}`);
+      }
+    });
+    
     // Set up our custom by-state route handler FIRST
     // This ensures it's registered before any other handlers
     console.log('[beforeEach] Setting up custom route handler first');
     await setupByStateRoute(page);
-
+    
     // Setup external API mocks (they handle POST requests and other routes)
     // We set civics: false to avoid the address-lookup handler and by-state handler
     // We set api: true to get other API mocks
     // Since we set up our handler first, it should take precedence
     console.log('[beforeEach] Setting up external API mocks');
     await setupExternalAPIMocks(page, { civics: false, api: true });
-
+    
     // Ensure our handler is still active by setting it up again after external mocks
     // This guarantees our handler is the last one registered and will intercept
     console.log('[beforeEach] Re-registering custom route handler to ensure it takes precedence');
