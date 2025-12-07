@@ -46,6 +46,18 @@ jobs:
         run: |
           cd web
           npm run build
+          # Verify the civics page was built
+          echo "Checking if civics page was built..."
+          if [ -f ".next/server/app/(app)/civics/page.js" ]; then
+            echo "✅ Civics page file exists"
+            ls -la ".next/server/app/(app)/civics/" || true
+          else
+            echo "❌ Civics page file NOT found"
+            echo "Listing .next/server/app/(app)/ directory:"
+            ls -la ".next/server/app/(app)/" || true
+            echo "Listing .next/server/app/ directory:"
+            ls -la ".next/server/app/" || true
+          fi
         env:
           NODE_ENV: production
           # Safe fallbacks so forked PRs (no secrets) still compile without calling real services
