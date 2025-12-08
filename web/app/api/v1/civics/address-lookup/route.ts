@@ -313,8 +313,17 @@ export const POST = withErrorHandling(async (request: NextRequest) => {
     return validationError({ address: validation.error ?? 'Invalid address' });
   }
 
-  const addrH = generateAddressHMAC(address);
-  void addrH;
+  // Generate HMAC for address (best-effort, don't fail if pepper not configured)
+  try {
+    const addrH = generateAddressHMAC(address);
+    void addrH;
+  } catch (error) {
+    // In CI, HMAC generation might fail if pepper not configured
+    // Log warning but continue - this is non-critical for address lookup
+    logger.warn('Failed to generate address HMAC (non-critical)', {
+      error: error instanceof Error ? error.message : String(error)
+    });
+  }
 
   // Rate limit by IP
   const clientIp = request.headers.get('x-forwarded-for')?.split(',')[0]?.trim()
