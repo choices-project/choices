@@ -92,12 +92,20 @@ jobs:
       - name: Start application
         run: |
           cd web
-          # Use regular next start instead of standalone mode for CI
-          # Standalone mode has path resolution issues in CI environments
-          # Use npx to ensure next command is found
-          npx next start > /tmp/nextjs-server.log 2>&1 &
+          # Verify we're in the right directory and the build output exists
+          echo "=== Current directory ==="
+          pwd
+          echo "=== Verifying build output exists ==="
+          ls -la .next/server/app/\(app\)/civics/ || echo "Civics directory not found"
+          test -f .next/server/app/\(app\)/civics/page.js && echo "✅ page.js exists" || echo "❌ page.js NOT found"
+          
+          # Use npm run start to ensure proper working directory and environment
+          # This uses the 'start' script from package.json which runs 'next start'
+          # Standalone mode is disabled in CI via next.config.js
+          npm run start > /tmp/nextjs-server.log 2>&1 &
           SERVER_PID=$!
           echo "Server PID: $SERVER_PID"
+          echo "Server working directory: $(pwd)"
           # Wait for server to actually start
           for i in {1..30}; do
             if curl -f "http://localhost:3001/api/health" > /dev/null 2>&1; then
