@@ -61,7 +61,7 @@ jobs:
         run: git diff --exit-code package-lock.json
 
       - name: Type check (strict)
-        run: npm run type-check:strict
+        run: npm run types:strict
 
       - name: Lint (strict mode)
         run: npm run lint:strict
