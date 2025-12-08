@@ -68,6 +68,27 @@ jobs:
           PRIVACY_PEPPER_CURRENT: ${{ secrets.PRIVACY_PEPPER_CURRENT || 'base64:fake-pepper-for-ci-only-this-is-a-very-long-fake-pepper-value-that-meets-the-32-byte-minimum-requirement-for-testing-purposes-only' }}
           PRIVACY_PEPPER_DEV: ${{ secrets.PRIVACY_PEPPER_DEV || 'base64:fake-pepper-dev-for-ci-only-this-is-a-very-long-fake-pepper-value-that-meets-the-32-byte-minimum-requirement-for-testing-purposes-only' }}
 
+      - name: Verify build output before server start
+        run: |
+          cd web
+          echo "=== Verifying civics page file exists before server start ==="
+          if [ -f ".next/server/app/(app)/civics/page.js" ]; then
+            echo "✅ Civics page file exists"
+            ls -la ".next/server/app/(app)/civics/page.js"
+            file ".next/server/app/(app)/civics/page.js"
+            head -20 ".next/server/app/(app)/civics/page.js"
+          else
+            echo "❌ Civics page file NOT found"
+            echo "Listing .next/server/app/(app)/ directory:"
+            ls -la ".next/server/app/(app)/" || true
+            echo "Listing .next/server/app/ directory:"
+            ls -la ".next/server/app/" || true
+          fi
+          echo "=== Current working directory ==="
+          pwd
+          echo "=== Next.js build info ==="
+          cat .next/BUILD_ID 2>/dev/null || echo "No BUILD_ID found"
+
       - name: Start application
         run: |
           cd web

@@ -561,7 +561,8 @@ const nextConfig = {
   },
 
   // Output configuration - enable standalone only for non-Vercel (e.g. Docker) deployments
-  ...(isVercel ? {} : { output: 'standalone' }),
+  // Disable standalone in CI to avoid path resolution issues with npx next start
+  ...(isVercel || process.env.CI ? {} : { output: 'standalone' }),
 
   // Trailing slash
   trailingSlash: false,
