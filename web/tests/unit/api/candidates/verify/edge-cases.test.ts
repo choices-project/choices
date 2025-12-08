@@ -32,11 +32,26 @@ jest.mock('@/lib/core/security/rate-limit', () => {
 
 const { mockRateLimitCheck } = jest.requireMock('@/lib/core/security/rate-limit');
 
+// Mock the actual rate limiter used by the route
+jest.mock('@/lib/rate-limiting/api-rate-limiter', () => ({
+  apiRateLimiter: {
+    checkLimit: jest.fn(),
+  },
+}));
+
+// Get the mock function after the mock is set up
+const mockApiRateLimiterModule = jest.requireMock('@/lib/rate-limiting/api-rate-limiter') as {
+  apiRateLimiter: { checkLimit: jest.Mock };
+};
+const mockApiRateLimiterCheckLimit = mockApiRateLimiterModule.apiRateLimiter.checkLimit;
+
 jest.mock('@/lib/api', () => {
   const createResponse = (status: number, payload: unknown) => ({
     status,
     json: async () => payload,
   });
+  const validationError = (details: unknown) => createResponse(400, { success: false, details });
+  const errorResponse = (message: string, status = 500) => createResponse(status, { success: false, error: message });
   return {
     __esModule: true,
     withErrorHandling:
@@ -44,8 +59,25 @@ jest.mock('@/lib/api', () => {
       (...args: any[]) =>
         handler(...args),
     successResponse: (data: unknown) => createResponse(200, { success: true, data }),
-    validationError: (details: unknown) => createResponse(400, { success: false, details }),
-    errorResponse: (message: string, status = 500) => createResponse(status, { success: false, error: message }),
+    validationError,
+    errorResponse,
+    parseBody: async (request: any, schema?: any) => {
+      const body = await request.json();
+      if (schema) {
+        try {
+          const validated = schema.parse(body);
+          return { success: true as const, data: validated };
+        } catch (error: any) {
+          return {
+            success: false as const,
+            error: validationError(
+              error instanceof Error ? { _error: error.message } : { _error: 'Validation failed' }
+            ),
+          };
+        }
+      }
+      return { success: true as const, data: body };
+    },
   };
 });
 
@@ -68,6 +100,11 @@ describe('Candidate Verification Edge Cases', () => {
     jest.clearAllMocks();
     mockRateLimitCheck.mockResolvedValue({
       success: true,
+      allowed: true,
+      remaining: 9,
+      resetTime: new Date(Date.now() + 15 * 60 * 1000),
+    });
+    mockApiRateLimiterCheckLimit.mockResolvedValue({
       allowed: true,
       remaining: 9,
       resetTime: new Date(Date.now() + 15 * 60 * 1000),
@@ -339,11 +376,13 @@ describe('Candidate Verification Edge Cases', () => {
       // Code is not empty, so it will try to validate and fail
       expect(payload1.details).toBeDefined();
 
-      // Code too long (7 digits) - should validate but fail on mismatch
+      // Code too long (7 digits) - should fail validation (not wrong code error)
       const res2 = (await POST(buildRequest({ code: '1234567' }))) as Response;
       expect(res2.status).toBe(400);
       const payload2 = await res2.json();
-      expect(payload2.details.invalid).toBe(true);
+      // Wrong-length codes fail validation, not wrong-code handling
+      expect(payload2.details).toBeDefined();
+      expect(payload2.details.code).toBeDefined();
     });
   });
 
@@ -405,8 +444,7 @@ describe('Candidate Verification Edge Cases', () => {
     });
 
     it('should handle rate limit exceeded', async () => {
-      mockRateLimitCheck.mockResolvedValue({
-        success: true,
+      mockApiRateLimiterCheckLimit.mockResolvedValue({
         allowed: false,
         remaining: 0,
         resetTime: new Date(Date.now() + 15 * 60 * 1000),

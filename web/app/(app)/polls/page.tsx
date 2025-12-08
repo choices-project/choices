@@ -100,16 +100,16 @@ export default function PollsPage() {
     setCurrentRoute('/polls');
     setSidebarActiveSection('polls');
     setBreadcrumbs([
-      { label: t('polls.page.breadcrumbs.home'), href: '/' },
-      { label: t('polls.page.breadcrumbs.dashboard'), href: '/dashboard' },
-      { label: t('polls.page.breadcrumbs.polls'), href: '/polls' },
+      { label: 'Home', href: '/' },
+      { label: 'Dashboard', href: '/dashboard' },
+      { label: 'Polls', href: '/polls' },
     ]);
 
     return () => {
       setSidebarActiveSection(null);
       setBreadcrumbs([]);
     };
-  }, [setBreadcrumbs, setCurrentRoute, setSidebarActiveSection, t]);
+  }, [setBreadcrumbs, setCurrentRoute, setSidebarActiveSection]);
 
   useEffect(() => {
     if (initializedRef.current) {
@@ -134,7 +134,7 @@ export default function PollsPage() {
     }
     return 'all';
   }, [filters.status, filters.trendingOnly]);
- 
+
 
   const handlePageChange = useCallback(
     (page: number) => {

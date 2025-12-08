@@ -941,11 +941,13 @@ export class UnifiedDataOrchestrator {
   }
 
   async getCandidateCorporateConnections(candidateId: string): Promise<unknown[]> {
-    return this.throwNotImplemented('getCandidateCorporateConnections', { candidateId });
+    logger.warn('getCandidateCorporateConnections not wired; returning empty result', { candidateId });
+    return [];
   }
 
   async getCandidatePolicyPositions(candidateId: string): Promise<unknown[]> {
-    return this.throwNotImplemented('getCandidatePolicyPositions', { candidateId });
+    logger.warn('getCandidatePolicyPositions not wired; returning empty result', { candidateId });
+    return [];
   }
 
   private buildLookupAddress(location: UserLocation): string | null {

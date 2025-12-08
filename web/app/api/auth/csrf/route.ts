@@ -20,13 +20,14 @@ export const GET = withErrorHandling(async () => {
 
   // Get or create CSRF token
   const csrfToken = await getOrSetCsrfCookie();
-  logger.info('CSRF token retrieved', { tokenLength: csrfToken.length });
-
+  
   // Create response with token nested under data.token
   const response = successResponse({
     csrfToken,
     message: 'CSRF token retrieved successfully'
   });
+
+  logger.info('CSRF token issued');
 
   // Set CSRF cookie in response
   const isProduction = process.env.NODE_ENV === "production";

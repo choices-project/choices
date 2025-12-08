@@ -255,22 +255,29 @@ export default function TrendsChart({
     );
   }, [data]);
 
-  // Calculate trend direction (memoized to satisfy exhaustive-deps)
-  const getTrend = useCallback((metric: 'votes' | 'participation' | 'velocity'): number => {
-    if (data.length < 2) return 0;
-    const first = data[0]?.[metric];
-    const last = data[data.length - 1]?.[metric];
-    if (first === undefined || last === undefined || first === 0) return 0;
-    return ((last - first) / first) * 100;
-  }, [data]);
+  // Axis stats computation removed - not used in rendering
+  // If needed for future features, can be restored
+
+  useEffect(() => {
+    void fetchTrends(defaultRange, {
+      fallback: (r) => generateMockData(r as DateRange),
+    });
+  }, [defaultRange, fetchTrends]);
 
   const chartSummaryText = useMemo(() => {
     if (!data.length || !peakVotesPoint || !peakParticipationPoint) {
       return '';
     }
-    const voteTrend = getTrend('votes');
-    const trendDirectionKey =
-      voteTrend > 2 ? 'increasing' : voteTrend < -2 ? 'decreasing' : 'steady';
+    // Use a simple, inline trend calculation here to avoid referencing
+    // getTrend before its declaration in this function scope.
+    const firstVotes = data[0]?.votes;
+    const lastVotes = data[data.length - 1]?.votes;
+    let trendDirectionKey: 'increasing' | 'decreasing' | 'steady' = 'steady';
+    if (typeof firstVotes === 'number' && typeof lastVotes === 'number' && firstVotes !== 0) {
+      const voteTrend = ((lastVotes - firstVotes) / firstVotes) * 100;
+      trendDirectionKey =
+        voteTrend > 2 ? 'increasing' : voteTrend < -2 ? 'decreasing' : 'steady';
+    }
 
     return t('analytics.trends.chart.summary', {
       peakVotesDate: formatDate(peakVotesPoint.date),
@@ -281,27 +288,15 @@ export default function TrendsChart({
       range: currentRangeLabel,
     });
   }, [
-    data.length,
+    data,
     formatDate,
     formatNumber,
     formatPercent,
     peakParticipationPoint,
     peakVotesPoint,
     currentRangeLabel,
-    getTrend,
     t,
   ]);
- 
-
-  // Removed unused chartAxesDescription to satisfy unused variables lint
-
-  useEffect(() => {
-    void fetchTrends(defaultRange, {
-      fallback: (r) => generateMockData(r as DateRange),
-    });
-  }, [defaultRange, fetchTrends]);
-
-  
 
   const handleExport = useCallback(() => {
     if (data.length === 0) return;
@@ -342,6 +337,24 @@ export default function TrendsChart({
   const avgVelocity = data.length > 0
     ? data.reduce((sum, d) => sum + d.velocity, 0) / data.length
     : 0;
+
+  const getTrend = useCallback(
+    (metric: 'votes' | 'participation' | 'velocity') => {
+      if (data.length < 2) {
+        return 0;
+      }
+
+      const first = data[0]?.[metric];
+      const last = data[data.length - 1]?.[metric];
+
+      if (typeof first !== 'number' || typeof last !== 'number' || first === 0) {
+        return 0;
+      }
+
+      return ((last - first) / first) * 100;
+    },
+    [data],
+  );
 
   const formatTrendValue = useCallback(
     (value: number) => percentFormatter.format(Math.abs(value)),

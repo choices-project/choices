@@ -10,7 +10,7 @@ import { useState, useEffect, useCallback } from 'react';
 import { featureFlagManager } from '@/lib/core/feature-flags';
 import { useAppActions, useAppFeatureFlags } from '@/lib/stores/appStore';
 
-const IS_E2E_HARNESS = process.env.NEXT_PUBLIC_ENABLE_E2E_HARNESS === '1';
+const _IS_E2E_HARNESS = process.env.NEXT_PUBLIC_ENABLE_E2E_HARNESS === '1';
 
 export function useFeatureFlags() {
   const features = useAppFeatureFlags();
@@ -53,34 +53,8 @@ export function useFeatureFlags() {
 
   // Auto-fetch flags on mount
   useEffect(() => {
-    if (IS_E2E_HARNESS) {
-      // Skip network work in harness mode
-      return;
-    }
     void fetchFlags();
   }, [fetchFlags]);
-
-  if (IS_E2E_HARNESS) {
-    return {
-      flags: features,
-      isLoading: false,
-      error: null,
-      fetchFlags: async () => { return; },
-      setFeatureFlag,
-      toggleFeatureFlag,
-      setFeatureFlags,
-      clearError: () => setError(null),
-      isEnabled: (flagId: string) => featureFlagManager.isEnabled(flagId),
-      getAllFlags: () => featureFlagManager.getAllFlags(),
-      getEnabledFlags: () => featureFlagManager.getEnabledFlags(),
-      getDisabledFlags: () => featureFlagManager.getDisabledFlags(),
-      getFlagsByCategory: (category: string) => featureFlagManager.getFlagsByCategory(category),
-      getSystemInfo: () => featureFlagManager.getSystemInfo(),
-      systemInfo: featureFlagManager.getSystemInfo(),
-      areDependenciesEnabled: (flagId: string) => featureFlagManager.areDependenciesEnabled(flagId),
-      subscribe: () => ({ unsubscribe: () => { return; } })
-    };
-  }
 
   return {
     // State

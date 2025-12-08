@@ -1,6 +1,6 @@
 # Testing Guide
 
-**Last Updated**: November 7, 2025
+**Last Updated**: November 30, 2025
 
 ---
 
@@ -77,9 +77,16 @@ npm run test:e2e     # Playwright suite (configured in package.json)
 ```
 web/tests/
 ├── e2e/              ← Active Playwright specs (canonical suite lives in specs/)
+│   ├── specs/        ← Active E2E test files
+│   ├── README.md     ← E2E testing guide
+│   └── QUICK_START.md ← Quick start guide
 ├── unit/             ← Jest unit coverage (polls/, vote/, privacy/, etc.)
 ├── api/              ← API surface tests executed via Jest
-└── archive/          ← Legacy suites kept for reference only
+├── contracts/        ← Contract tests
+└── archive/          ← Archived tests and docs
+    ├── e2e-legacy/   ← Legacy E2E tests
+    ├── production-monitoring/ ← Production monitoring tests (choices-app-*.spec.ts)
+    └── outdated-docs/ ← Historical documentation
 ```
 
 ---

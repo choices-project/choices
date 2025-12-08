@@ -111,11 +111,11 @@ export const POST = withErrorHandling(async (request: NextRequest) => {
 
     // Validate and sanitize inputs
     if (!representativeId || !subject || !content) {
-      const missing: Record<string, string> = {};
-      if (!representativeId) missing.representativeId = 'Representative ID is required';
-      if (!subject) missing.subject = 'Subject is required';
-      if (!content) missing.content = 'Content is required';
-      return validationError(missing, 'Representative ID, subject, and content are required');
+      const missing: Record<string, string> = {}
+      if (!representativeId) missing.representativeId = 'Representative ID is required'
+      if (!subject) missing.subject = 'Subject is required'
+      if (!content) missing.content = 'Content is required'
+      return validationError(missing, 'Representative ID, subject, and content are required')
     }
 
     // Validate representative ID
@@ -168,15 +168,15 @@ export const POST = withErrorHandling(async (request: NextRequest) => {
     // Use sanitized values
     const sanitizedSubject = subjectValidation.sanitized;
     const sanitizedContent = contentValidation.sanitized;
-    if (!repIdValidation.parsedId) {
-      return validationError({ representativeId: 'Invalid representative ID' }, 'Invalid representative ID');
+    
+    if (!repIdValidation.parsedId || !priorityValidation.parsedPriority || !messageTypeValidation.parsedType) {
+      return validationError({
+        representativeId: !repIdValidation.parsedId ? 'Invalid representative ID' : '',
+        priority: !priorityValidation.parsedPriority ? 'Invalid priority' : '',
+        messageType: !messageTypeValidation.parsedType ? 'Invalid message type' : '',
+      });
     }
-    if (!priorityValidation.parsedPriority) {
-      return validationError({ priority: 'Invalid priority' }, 'Invalid priority');
-    }
-    if (!messageTypeValidation.parsedType) {
-      return validationError({ messageType: 'Invalid message type' }, 'Invalid message type');
-    }
+    
     const validatedRepId = repIdValidation.parsedId;
     const validatedPriority = priorityValidation.parsedPriority;
     const validatedMessageType = messageTypeValidation.parsedType;

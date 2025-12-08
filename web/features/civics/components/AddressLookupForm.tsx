@@ -154,9 +154,9 @@ export function AddressLookupForm({ onLookup, className = '' }: AddressLookupFor
     if (!normalizedState) return;
     setRegistrationStateCode((previous) => (previous === normalizedState ? previous : normalizedState));
     void fetchVoterRegistration(normalizedState);
-  }, [userDivisionIds, userCurrentState, fetchVoterRegistration]);
+  }, [userDivisionIds.length, userCurrentState, fetchVoterRegistration]);
 
-  // Render guard after all hooks to preserve hook ordering
+  // Feature flag check - don't render if disabled
   if (!isEnabled) {
     return null;
   }

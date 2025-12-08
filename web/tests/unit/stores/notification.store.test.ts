@@ -1,8 +1,6 @@
 import { act } from '@testing-library/react';
 import { create } from 'zustand';
 import { immer } from 'zustand/middleware/immer';
-
-/* eslint-disable @typescript-eslint/no-empty-function */
 import {
   defaultNotificationSettings,
   notificationStoreCreator,
@@ -28,8 +26,9 @@ describe('notificationStore', () => {
   beforeEach(() => {
     jest.useFakeTimers();
 
-    warnSpy = jest.spyOn(console, 'warn').mockImplementation(() => {});
-    infoSpy = jest.spyOn(logger, 'info').mockImplementation(() => {});
+    // Logging is observed via spies; implementations are intentionally no-ops
+    warnSpy = jest.spyOn(console, 'warn').mockImplementation(() => undefined);
+    infoSpy = jest.spyOn(logger, 'info').mockImplementation(() => undefined);
 
     notificationStore = createTestNotificationStore();
 
@@ -215,4 +214,4 @@ describe('notificationStore', () => {
   });
 });
 
-/* eslint-enable @typescript-eslint/no-empty-function */
+

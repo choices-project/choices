@@ -353,7 +353,7 @@ export class FinalizePollManager {
         for (const [candidate, votes] of Object.entries(round.votes)) {
           percentages[candidate] = totalVotes > 0 ? (votes / totalVotes) * 100 : 0;
         }
-
+        
         const out: {
           round: number;
           votes: Record<string, number>;
@@ -809,10 +809,11 @@ export async function createPollSnapshot(pollId: string): Promise<string> {
   if (!result.success) {
     throw new Error(`Failed to create snapshot: ${result.error}`);
   }
-
+  
   if (!result.snapshotId) {
-    throw new Error('Snapshot ID missing from successful finalization result');
+    throw new Error('Snapshot created but no snapshotId returned');
   }
+  
   return result.snapshotId;
 }
 

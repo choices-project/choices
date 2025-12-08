@@ -53,14 +53,6 @@ import {
   type AnalyticsSummaryRow,
 } from './AnalyticsSummaryTable';
 
-const fallbackLabel = (value: string, fallback: string): string => {
-  if (!value) return fallback;
-  if (value.startsWith('analytics.')) {
-    return fallback;
-  }
-  return value;
-};
-
 type TrustTierData = {
   tier: string;
   count: number;
@@ -118,7 +110,6 @@ export default function DemographicsChart({
   const cardDescriptionId = useId();
   const privacyHeadingId = useId();
   const trustSummaryId = useId();
-  const ageSummaryId = useId();
   const districtSummaryId = useId();
   const educationSummaryId = useId();
   const isMobile = useIsMobile();
@@ -204,16 +195,6 @@ export default function DemographicsChart({
   const formatPercent = useCallback(
     (value: number) => `${percentFormatter.format(value)}%`,
     [percentFormatter],
-  );
-
-  const axisLabels = useMemo(
-    () => ({
-      userCount: fallbackLabel(t('analytics.demographics.axes.userCount'), 'User count'),
-      ageGroups: fallbackLabel(t('analytics.demographics.axes.ageGroups'), 'Age group'),
-      districts: fallbackLabel(t('analytics.demographics.axes.districts'), 'District'),
-      education: fallbackLabel(t('analytics.demographics.axes.educationLevels'), 'Education level'),
-    }),
-    [t],
   );
 
   const trustColumns = useMemo<AnalyticsSummaryColumn[]>(
@@ -330,6 +311,47 @@ export default function DemographicsChart({
     [data, formatNumber, optedInCount, t],
   );
 
+  const axisLabels = useMemo(
+    () => ({
+      districts: 'District',
+      userCount: 'User count',
+    }),
+    [],
+  );
+
+  const trustSummaryText = useMemo(() => {
+    if (!data || !data.trustTiers.length) return '';
+    const topTier = data.trustTiers[0];
+    if (!topTier) {
+      return '';
+    }
+    return `Trust tier ${topTier.tier} has the largest group with ${topTier.count.toLocaleString()} users, representing ${topTier.percentage.toFixed(
+      1,
+    )}% of opted-in users.`;
+  }, [data]);
+
+  const districtSummaryText = useMemo(() => {
+    if (!data || !data.districts.length) return '';
+    const topDistrict = data.districts[0];
+    if (!topDistrict) {
+      return '';
+    }
+    return `District ${topDistrict.district} has the highest participation with ${topDistrict.count.toLocaleString()} users, or ${topDistrict.percentage.toFixed(
+      1,
+    )}% of the visible sample.`;
+  }, [data]);
+
+  const educationSummaryText = useMemo(() => {
+    if (!data || !data.education.length) return '';
+    const topEducation = data.education[0];
+    if (!topEducation) {
+      return '';
+    }
+    return `${topEducation.level} is the most common education level, with ${topEducation.count.toLocaleString()} users (${topEducation.percentage.toFixed(
+      1,
+    )}%).`;
+  }, [data]);
+
   useEffect(() => {
     void refreshDemographics();
   }, [refreshDemographics]);
@@ -391,46 +413,6 @@ export default function DemographicsChart({
     },
     [data, optedInCount, t, formatNumber],
   );
-
-  const trustSummaryText = useMemo(() => {
-    if (!data || data.trustTiers.length === 0) {
-      return '';
-    }
-    const topTier = data.trustTiers.reduce((best, tier) =>
-      tier.count > best.count ? tier : best,
-    );
-    return `${topTier.tier} leads participation with ${formatNumber(topTier.count)} users (${formatPercent(topTier.percentage)} of opted-in voters).`;
-  }, [data, formatNumber, formatPercent]);
-
-  const ageSummaryText = useMemo(() => {
-    if (!data || data.ageGroups.length === 0) {
-      return '';
-    }
-    const topGroup = data.ageGroups.reduce((best, group) =>
-      group.count > best.count ? group : best,
-    );
-    return `${topGroup.ageGroup} is the largest age band with ${formatNumber(topGroup.count)} users (${formatPercent(topGroup.percentage)} of opted-in voters).`;
-  }, [data, formatNumber, formatPercent]);
-
-  const districtSummaryText = useMemo(() => {
-    if (!data || data.districts.length === 0) {
-      return '';
-    }
-    const topDistrict = data.districts.reduce((best, district) =>
-      district.count > best.count ? district : best,
-    );
-    return `${topDistrict.district} has the most verified participants with ${formatNumber(topDistrict.count)} users (${formatPercent(topDistrict.percentage)} of visible districts).`;
-  }, [data, formatNumber, formatPercent]);
-
-  const educationSummaryText = useMemo(() => {
-    if (!data || data.education.length === 0) {
-      return '';
-    }
-    const topEducation = data.education.reduce((best, edu) =>
-      edu.count > best.count ? edu : best,
-    );
-    return `${topEducation.level} is the most common education level with ${formatNumber(topEducation.count)} users (${topEducation.percentage}% of opted-in voters).`;
-  }, [data, formatNumber]);
 
   useEffect(() => {
     if (!error) {
@@ -730,69 +712,43 @@ export default function DemographicsChart({
             <p id={`${summarySectionId}-age-heading`} className="sr-only">
               {tabLabels.age}
             </p>
-            <div
-              role="group"
-              aria-labelledby={`${summarySectionId}-age-heading`}
-              aria-describedby={ageSummaryText ? ageSummaryId : undefined}
-            >
-              <ResponsiveContainer width="100%" height={isMobile ? 300 : 350}>
-                <BarChart data={data.ageGroups} margin={isMobile ? { top: 10, right: 10, left: 0, bottom: 20 } : { top: 20, right: 30, left: 20, bottom: 20 }}>
-                  <CartesianGrid strokeDasharray="3 3" />
-                  <XAxis 
-                    dataKey="ageGroup" 
-                    tick={{ fontSize: isMobile ? 10 : 12 }}
-                    label={{
-                      value: axisLabels.ageGroups,
-                      position: 'insideBottom',
-                      offset: -5,
-                      style: { fontSize: isMobile ? 10 : 12 },
-                    }}
-                  />
-                  <YAxis 
-                    label={{
-                      value: axisLabels.userCount,
-                      angle: -90,
-                      position: 'insideLeft',
-                      style: { fontSize: isMobile ? 10 : 12 },
-                    }}
-                    tick={{ fontSize: isMobile ? 10 : 12 }}
-                  />
-                  <Tooltip 
-                    content={({ active, payload }) => {
-                      if (!active || !payload || payload.length === 0) return null;
-                      const data = payload[0]?.payload;
-                      if (!data) return null;
-                      return (
-                        <div className="bg-white p-3 border border-gray-200 rounded-lg shadow-lg">
-                          <p className="font-semibold text-gray-900">{data.ageGroup}</p>
-                          <p className="text-sm text-gray-600">
-                            Count: <span className="font-medium">{data.count.toLocaleString()}</span>
-                          </p>
-                          <p className="text-sm text-gray-600">
-                            Percentage: <span className="font-medium">{data.percentage}%</span>
-                          </p>
-                        </div>
-                      );
-                    }}
-                  />
-                  <Legend />
-                  <Bar dataKey="count" name={axisLabels.userCount}>
-                    {data.ageGroups.map((_entry, index) => (
-                      <Cell key={`cell-${index}`} fill={COLORS.age[index % COLORS.age.length]} />
-                    ))}
-                  </Bar>
-                </BarChart>
-              </ResponsiveContainer>
-              {ageSummaryText ? (
-                <p
-                  id={ageSummaryId}
-                  className="mt-2 text-sm text-muted-foreground"
-                  aria-live="polite"
-                >
-                  {ageSummaryText}
-                </p>
-              ) : null}
-            </div>
+            <ResponsiveContainer width="100%" height={isMobile ? 300 : 350}>
+              <BarChart data={data.ageGroups} margin={isMobile ? { top: 10, right: 10, left: 0, bottom: 20 } : { top: 20, right: 30, left: 20, bottom: 20 }}>
+                <CartesianGrid strokeDasharray="3 3" />
+                <XAxis 
+                  dataKey="ageGroup" 
+                  tick={{ fontSize: isMobile ? 10 : 12 }}
+                />
+                <YAxis 
+                  {...(isMobile ? {} : { label: { value: 'User Count', angle: -90, position: 'insideLeft' } })}
+                  tick={{ fontSize: isMobile ? 10 : 12 }}
+                />
+                <Tooltip 
+                  content={({ active, payload }) => {
+                    if (!active || !payload || payload.length === 0) return null;
+                    const data = payload[0]?.payload;
+                    if (!data) return null;
+                    return (
+                      <div className="bg-white p-3 border border-gray-200 rounded-lg shadow-lg">
+                        <p className="font-semibold text-gray-900">{data.ageGroup}</p>
+                        <p className="text-sm text-gray-600">
+                          Count: <span className="font-medium">{data.count.toLocaleString()}</span>
+                        </p>
+                        <p className="text-sm text-gray-600">
+                          Percentage: <span className="font-medium">{data.percentage}%</span>
+                        </p>
+                      </div>
+                    );
+                  }}
+                />
+                <Legend />
+                <Bar dataKey="count" name="User Count">
+                  {data.ageGroups.map((entry, index) => (
+                    <Cell key={`cell-${index}`} fill={COLORS.age[index % COLORS.age.length]} />
+                  ))}
+                </Bar>
+              </BarChart>
+            </ResponsiveContainer>
           </TabsContent>
 
           {/* Districts Tab */}

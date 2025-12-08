@@ -1,5 +1,3 @@
-// Server route handler
-
 /**
  * Admin: Verify Civics Database Connectivity and Shape
  *

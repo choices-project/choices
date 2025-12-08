@@ -419,7 +419,7 @@ export class CommunicationComplianceManager {
     details: any
   ): Promise<string> {
     const requestId = this.generateRequestId();
-
+    
     const request: DataSubjectRequest = {
       id: requestId,
       type,

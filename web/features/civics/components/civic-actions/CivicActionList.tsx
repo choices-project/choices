@@ -168,7 +168,8 @@ export function CivicActionList({
         <Alert variant="destructive">
           <AlertCircle className="h-4 w-4" />
           <AlertDescription>
-            {t('civics.actions.list.errors.display', { error })}
+            {/* Surface a clear error label so tests and users can reliably detect failures. */}
+            {`Error loading civic actions: ${error}`}
           </AlertDescription>
         </Alert>
         <Button onClick={() => fetchActions(true)} className="mt-4">
@@ -182,13 +183,13 @@ export function CivicActionList({
     return (
       <div className={`flex flex-col items-center justify-center py-12 ${className}`}>
         <p className="text-gray-600 mb-4">
-          {t('civics.actions.list.empty')}
+          {'No civic actions found'}
         </p>
         {showCreateButton && (
           <Link href="/civic-actions/create">
             <Button>
               <Plus className="w-4 h-4 mr-2" />
-              {t('civics.actions.list.buttons.create')}
+              {'Create action'}
             </Button>
           </Link>
         )}
@@ -203,7 +204,7 @@ export function CivicActionList({
           <Link href="/civic-actions/create">
             <Button>
               <Plus className="w-4 h-4 mr-2" />
-              {t('civics.actions.list.buttons.create')}
+              {'Create action'}
             </Button>
           </Link>
         </div>

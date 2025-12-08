@@ -417,7 +417,7 @@ export class DifferentialPrivacyManager {
     }
     const budget = this.budgets.get(pollId);
     if (!budget) {
-      throw new Error('Failed to initialize epsilon budget');
+      throw new Error(`Epsilon budget not initialized for poll ${pollId}`);
     }
     return budget;
   }

@@ -1,8 +1,8 @@
 
-import type { Metadata } from 'next';
-import { cookies, headers } from 'next/headers';
+import type { Metadata } from 'next'
+import { cookies, headers } from 'next/headers'
 import type { AbstractIntlMessages } from 'next-intl';
-import React from 'react';
+import React from 'react'
 
 import { SkipNavLink, SkipNavTarget } from '@/components/accessibility/SkipNavLink';
 import SiteFooter from '@/components/layout/SiteFooter';

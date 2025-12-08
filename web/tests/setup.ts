@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-var-requires */
 /**
  * Jest Test Setup
  *
@@ -11,8 +12,7 @@ import '@testing-library/jest-dom';
 import { webcrypto } from 'crypto';
 import { TextDecoder, TextEncoder } from 'util';
 
-// Set test environment variables before any imports that might use them
-process.env.JWT_SECRET = process.env.JWT_SECRET ?? 'test-jwt-secret-for-unit-tests';
+import * as React from 'react';
 
 // Note: Avoid importing the React type name directly to prevent self-referential typeof issues below.
 
@@ -59,12 +59,12 @@ afterEach(() => {
 });
 
 jest.mock('lucide-react', () => {
-  const ReactActual = jest.requireActual<typeof import('react')>('react');
+  const ActualReact = jest.requireActual('react') as typeof React;
   const icons: Record<string, unknown> = {};
 
   const createIcon = (name: string) =>
-    ReactActual.forwardRef<SVGSVGElement, React.SVGProps<SVGSVGElement>>((props, ref) =>
-      ReactActual.createElement('svg', { ref, 'data-icon': name, ...props }),
+    ActualReact.forwardRef<SVGSVGElement, React.SVGProps<SVGSVGElement>>((props, ref) =>
+      ActualReact.createElement('svg', { ref, 'data-icon': name, ...props }),
     );
 
   return new Proxy(
@@ -274,6 +274,11 @@ if (typeof window !== 'undefined' && window.HTMLMediaElement) {
   window.HTMLMediaElement.prototype.play = async () => undefined;
 }
 
+// Silence unimplemented audio playback warnings in jsdom
+if (typeof window !== 'undefined' && window.HTMLMediaElement) {
+  window.HTMLMediaElement.prototype.play = async () => undefined;
+}
+
 beforeAll(() => {
   console.error = (...args: unknown[]) => {
     if (typeof args[0] === 'string' && args[0].includes('Warning: ReactDOM.render is deprecated')) {
@@ -314,7 +319,7 @@ const createAuthAnalyticsMock = (modulePath: string) => {
   // @ts-expect-error - Overriding private method for testing purposes
   class MockAuthAnalytics extends actual.AuthAnalytics {
     // Override network-bound method so tests remain deterministic
-    async sendToExternalService(): Promise<void> {
+    override async sendToExternalService(): Promise<void> {
       return Promise.resolve();
     }
   }
@@ -469,10 +474,11 @@ const createSupabaseResponse = (
           error: null
         };
       }
+      const count = Array.isArray(list) ? list.length : undefined;
       return {
         data: list,
         error: null,
-        count: Array.isArray(list) ? list.length : undefined
+        ...(count !== undefined ? { count } : {})
       };
     }
     case 'error': {
@@ -649,4 +655,7 @@ export const getMS = () => {
     }
   };
 };
+
+/* eslint-enable @typescript-eslint/no-var-requires */
+
 

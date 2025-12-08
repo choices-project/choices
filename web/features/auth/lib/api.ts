@@ -4,8 +4,6 @@
  * Shared client helpers for authentication actions to keep components/tests consistent.
  */
 
-// Use API routes instead of importing server actions to satisfy boundaries rules
-
 import {
   beginRegister,
   beginAuthenticate,

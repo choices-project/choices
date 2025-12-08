@@ -40,7 +40,9 @@ export async function register(
   context: ServerActionContext
 ): Promise<{ ok: true; userId?: string } | { ok: false; error: string; fieldErrors?: Record<string, string> }> {
   try {
-    logger.info('Register function called with formData', { entries: Array.from(formData.entries()) });
+    // Sanitize FormData before logging
+    const { sanitizeFormData } = await import('@/lib/utils/log-sanitizer');
+    logger.info('Register function called with formData', { entries: sanitizeFormData(formData) });
     logger.info('Register function called with context', { context });
 
     // Always use real Supabase for registration
@@ -71,15 +73,11 @@ export async function register(
       username: String(formData.get('username') ?? ''),
       password: String(formData.get('password') ?? ''),
     };
-
-    // Debug logging with security context
-    logger.info('Register payload received', {
-      payload,
-      ipAddress,
-      userAgent,
-    });
-    logger.info('FormData entries', { entries: Array.from(formData.entries()) });
-
+    
+    // Debug logging (payload already sanitized - no password in object)
+    logger.info('Register payload received', { payload: { ...payload, password: '***' } });
+    logger.info('FormData entries', { entries: sanitizeFormData(formData) });
+    
     const data = RegisterForm.parse(payload);
 
     // ---- idempotent user creation ----

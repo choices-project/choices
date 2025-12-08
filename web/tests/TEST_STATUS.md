@@ -3,7 +3,7 @@
 > Canonical testing strategies live under [`docs/testing/`](../../docs/testing).  
 > Use this file for a quick snapshot; update the docs for detailed procedures.
 
-**Date**: November 7, 2025  
+**Date**: November 30, 2025  
 **Last Run**: Pending automated CI sweep
 
 ---
@@ -67,4 +67,12 @@ npx playwright test web/tests/e2e/specs/feedback-widget.spec.ts --config=web/tes
 **Overall**: ✅ Infrastructure healthy & docs current  
 **Coverage**: ⚠️ Integration backlog  
 **Focus**: Migrate remaining archive flows with modern helpers
+
+## Recent Changes (November 30, 2025)
+
+- ✅ Archived duplicate `AuthSetupStep.test.tsx` (kept version in `unit/features/onboarding/`)
+- ✅ Archived 21 production monitoring test files (`choices-app-*.spec.ts`) to `archive/production-monitoring/`
+- ✅ Archived outdated E2E documentation reports to `archive/outdated-docs/`
+- ✅ Updated test directory structure documentation
+- ✅ Created `TEST_AUDIT_REPORT.md` documenting the audit
 

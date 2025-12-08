@@ -9,6 +9,7 @@ import {
   getAuthenticatedUser,
   type ServerActionContext
 } from '@/lib/core/auth/server-actions'
+import { sanitizeFormData } from '@/lib/utils/log-sanitizer'
 import { logger } from '@/lib/utils/logger'
 import { getSupabaseServerClient } from '@/utils/supabase/server'
 
@@ -22,7 +23,8 @@ const OnboardingSchema = z.object({
 // Simple server action for E2E testing
 export function completeOnboardingAction(formData: FormData) {
   logger.info('=== COMPLETE ONBOARDING ACTION CALLED ===');
-  logger.info('FormData entries', { entries: Object.fromEntries(formData.entries()) });
+  // Sanitize FormData before logging
+  logger.info('FormData entries', { entries: sanitizeFormData(formData) });
   logger.info('E2E environment', { e2e: process.env.E2E });
 
   // Always use real authentication - no E2E bypasses
@@ -35,10 +37,11 @@ export function completeOnboardingAction(formData: FormData) {
 export const completeOnboarding = createSecureServerAction(
   async (formData: FormData, context: ServerActionContext) => {
     logger.info('=== COMPLETE ONBOARDING SERVER ACTION CALLED ===');
-    logger.info('FormData entries', { entries: Object.fromEntries(formData.entries()) });
+    // Sanitize FormData before logging
+    logger.info('FormData entries', { entries: sanitizeFormData(formData) });
     logger.info('E2E environment', { e2e: process.env.E2E });
+    // Keys and values already sanitized via sanitizeFormData above
     logger.info('FormData keys', { keys: Array.from(formData.keys()) });
-    logger.info('FormData values', { values: Array.from(formData.values()) });
 
     // Always use real authentication - no E2E bypasses
 

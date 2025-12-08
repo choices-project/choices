@@ -1,8 +1,9 @@
+/* eslint-disable @typescript-eslint/no-var-requires */
 /**
  * Cache Invalidation Strategy Manager Tests
- * 
+ *
  * Tests for cache invalidation using strategy manager
- * 
+ *
  * Created: 2025-01-16
  */
 
@@ -109,7 +110,7 @@ describe('CacheInvalidationManager with Strategy Manager', () => {
 
     // Wait for async processing
     await new Promise(resolve => setTimeout(resolve, 200));
-    
+
     managerWithoutStrategy.destroy();
   });
 
@@ -121,4 +122,7 @@ describe('CacheInvalidationManager with Strategy Manager', () => {
     }
   });
 });
+
+/* eslint-enable @typescript-eslint/no-var-requires */
+
 

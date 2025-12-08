@@ -3,7 +3,6 @@
 import type { ReactNode } from 'react';
 import { useEffect } from 'react';
 
-import { useSystemThemeSync } from '@/hooks/useSystemThemeSync';
 import {
   appStoreUtils,
   useAppTheme,
@@ -11,7 +10,6 @@ import {
   useSidebarPinned,
   useSidebarWidth,
 } from '@/lib/stores/appStore';
-import { useDeviceActions } from '@/lib/stores/deviceStore';
 
 type AppShellProps = {
   navigation: ReactNode;
@@ -30,23 +28,10 @@ export function AppShell({ navigation, siteMessages, feedback, children }: AppSh
   const sidebarCollapsed = useSidebarCollapsed();
   const sidebarWidth = useSidebarWidth();
   const sidebarPinned = useSidebarPinned();
-  const { initialize: initializeDevice } = useDeviceActions();
 
-  // Initialize app store
   useEffect(() => {
     appStoreUtils.initialize();
   }, []);
-
-  // Initialize device store (for system theme detection)
-  useEffect(() => {
-    initializeDevice();
-    return () => {
-      // Cleanup handled by deviceStore teardown
-    };
-  }, [initializeDevice]);
-
-  // Sync system theme preference
-  useSystemThemeSync();
 
   useEffect(() => {
     if (typeof document === 'undefined') {

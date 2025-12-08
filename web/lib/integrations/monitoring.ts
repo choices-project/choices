@@ -210,7 +210,8 @@ export class IntegrationMonitor {
           responseTime,
           errorRate,
           isHealthy
-        }
+        },
+        ...(lastError ? { lastError } : {})
       };
 
       this.healthChecks.set(apiName, healthCheck);

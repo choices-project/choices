@@ -1,4 +1,5 @@
 import type { NextRequest } from 'next/server';
+import { z } from 'zod';
 
 import { requireAdminOr401 } from '@/lib/admin-auth';
 import {
@@ -7,11 +8,22 @@ import {
   successResponse,
   validationError,
   withErrorHandling,
+  parseBody,
 } from '@/lib/api';
 import { logger } from '@/lib/utils/logger';
 import { getSupabaseServerClient } from '@/utils/supabase/server';
 
 export const dynamic = 'force-dynamic'
+
+// Validation schema for user updates
+const updateUserSchema = z.object({
+  userId: z.string().min(1, 'User ID is required'),
+  updates: z.object({
+    username: z.string().optional(),
+    email: z.string().email().optional(),
+    is_admin: z.boolean().optional(),
+  }),
+});
 
 export const GET = withErrorHandling(async (request: NextRequest) => {
   // Single admin gate - returns 401 if not admin
@@ -99,30 +111,21 @@ export const PUT = withErrorHandling(async (request: NextRequest) => {
     return errorResponse('Database connection not available', 500);
   }
 
-  const body = await request.json().catch(() => null)
-  const { userId, updates } = body ?? {}
-
-  if (typeof userId !== 'string' || !updates || typeof updates !== 'object') {
-    return validationError({
-      userId: 'userId (string) is required',
-      updates: 'updates (object) is required',
-    });
+  // Validate request body with Zod schema
+  const parsed = await parseBody<z.infer<typeof updateUserSchema>>(request, updateUserSchema);
+  if (!parsed.success) {
+    return parsed.error;
   }
 
-  // Validate updates
-  const allowedFields = ['is_admin', 'username']
-  const validUpdates: Record<string, unknown> = {}
+  const { userId, updates } = parsed.data;
+  const validUpdates: Record<string, unknown> = {};
   
-  for (const [key, value] of Object.entries(updates as Record<string, unknown>)) {
-    if (allowedFields.includes(key)) {
-      validUpdates[key] = value
-    }
+  // Build update object from validated schema
+  if (updates.is_admin !== undefined) {
+    validUpdates.is_admin = updates.is_admin;
   }
-
-  if (Object.keys(validUpdates).length === 0) {
-    return validationError({
-      updates: 'No valid fields to update. Allowed: is_admin, username',
-    });
+  if (updates.username !== undefined) {
+    validUpdates.username = updates.username;
   }
 
   // Update user profile

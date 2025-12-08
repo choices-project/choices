@@ -39,12 +39,7 @@ export const DELETE = withErrorHandling(async (
       .eq('user_id', user.id); // Ensure user can only delete their own credentials
 
   if (deleteError) {
-    logger.error('Failed to delete WebAuthn credential:', deleteError, {
-      userId: user.id,
-      credentialId,
-      ipAddress,
-      userAgent,
-    });
+    logger.error('Failed to delete WebAuthn credential:', deleteError);
     return errorResponse('Failed to delete credential', 500, undefined, 'WEBAUTHN_CREDENTIAL_DELETE_FAILED');
   }
 

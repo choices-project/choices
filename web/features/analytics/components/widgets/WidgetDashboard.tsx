@@ -120,12 +120,10 @@ const WidgetDashboardInner: React.FC<WidgetDashboardInnerProps> = ({
   const setSelectedWidgetIfChanged = useCallback(
     (widgetId: string | null) => {
       if (storeApi.getState().selectedWidgetId !== widgetId) {
-        if (process.env.NODE_ENV !== 'production') {
-          logger.debug('[WidgetDashboard] setSelectedWidgetIfChanged', {
-            from: storeApi.getState().selectedWidgetId,
-            to: widgetId,
-          });
-        }
+        logger.debug('[WidgetDashboard] setSelectedWidgetIfChanged', {
+          from: storeApi.getState().selectedWidgetId,
+          to: widgetId,
+        });
         setSelectedWidget(widgetId);
       }
     },
@@ -135,12 +133,10 @@ const WidgetDashboardInner: React.FC<WidgetDashboardInnerProps> = ({
   const setKeyboardModeIfChanged = useCallback(
     (mode: WidgetState['keyboardMode']) => {
       if (storeApi.getState().keyboardMode !== mode) {
-        if (process.env.NODE_ENV !== 'production') {
-          logger.debug('[WidgetDashboard] setKeyboardModeIfChanged', {
-            from: storeApi.getState().keyboardMode,
-            to: mode,
-          });
-        }
+        logger.debug('[WidgetDashboard] setKeyboardModeIfChanged', {
+          from: storeApi.getState().keyboardMode,
+          to: mode,
+        });
         setKeyboardMode(mode);
       }
     },
@@ -150,12 +146,10 @@ const WidgetDashboardInner: React.FC<WidgetDashboardInnerProps> = ({
   const setEditingIfChanged = useCallback(
     (value: boolean) => {
       if (storeApi.getState().isEditing !== value) {
-        if (process.env.NODE_ENV !== 'production') {
-          logger.debug('[WidgetDashboard] setEditingIfChanged', {
-            from: storeApi.getState().isEditing,
-            to: value,
-          });
-        }
+        logger.debug('[WidgetDashboard] setEditingIfChanged', {
+          from: storeApi.getState().isEditing,
+          to: value,
+        });
         setEditing(value);
       }
     },
@@ -179,13 +173,11 @@ const WidgetDashboardInner: React.FC<WidgetDashboardInnerProps> = ({
   // ============================================================================
 
   useEffect(() => {
-    if (process.env.NODE_ENV !== 'production') {
-      logger.debug('[WidgetDashboard] bootstrap effect start', {
-        hasBootstrapped: hasBootstrappedRef.current,
-        currentLayoutChecksum: storeApi.getState().currentLayoutChecksum,
-        widgetsSize: storeApi.getState().widgets.size,
-      });
-    }
+    logger.debug('[WidgetDashboard] bootstrap effect start', {
+      hasBootstrapped: hasBootstrappedRef.current,
+      currentLayoutChecksum: storeApi.getState().currentLayoutChecksum,
+      widgetsSize: storeApi.getState().widgets.size,
+    });
 
     if (hasBootstrappedRef.current) {
       return;
@@ -207,12 +199,10 @@ const WidgetDashboardInner: React.FC<WidgetDashboardInnerProps> = ({
       const defaultWidgetId =
         initialSelectedWidgetId ?? existingLayout.widgets[0]?.id ?? null;
       schedule(() => {
-        if (process.env.NODE_ENV !== 'production') {
-          logger.debug('[WidgetDashboard] bootstrap using existing layout', {
-            layoutId: existingLayout.id,
-            selectedWidgetId: defaultWidgetId,
-          });
-        }
+        logger.debug('[WidgetDashboard] bootstrap using existing layout', {
+          layoutId: existingLayout.id,
+          selectedWidgetId: defaultWidgetId,
+        });
         setSelectedWidgetIfChanged(defaultWidgetId);
         setKeyboardModeIfChanged(initialKeyboardMode ?? 'idle');
         if (startInEditMode) {
@@ -227,11 +217,9 @@ const WidgetDashboardInner: React.FC<WidgetDashboardInnerProps> = ({
     if (initialLayout) {
       const clonedLayout = cloneLayout(initialLayout);
       schedule(() => {
-        if (process.env.NODE_ENV !== 'production') {
-          logger.debug('[WidgetDashboard] bootstrap applying initialLayout prop', {
-            layoutId: clonedLayout.id,
-          });
-        }
+        logger.debug('[WidgetDashboard] bootstrap applying initialLayout prop', {
+          layoutId: clonedLayout.id,
+        });
         initializeLayout(clonedLayout, {
           selectedWidgetId: initialSelectedWidgetId ?? clonedLayout.widgets[0]?.id ?? null,
           startInEditMode,
@@ -248,11 +236,9 @@ const WidgetDashboardInner: React.FC<WidgetDashboardInnerProps> = ({
         if (response.ok) {
           const layout = await response.json();
           schedule(() => {
-            if (process.env.NODE_ENV !== 'production') {
-              logger.debug('[WidgetDashboard] bootstrap fetched user layout', {
-                layoutId: layout.id,
-              });
-            }
+            logger.debug('[WidgetDashboard] bootstrap fetched user layout', {
+              layoutId: layout.id,
+            });
             initializeLayout(layout, {
               selectedWidgetId: initialSelectedWidgetId ?? layout.widgets?.[0]?.id ?? null,
               startInEditMode,
@@ -273,11 +259,9 @@ const WidgetDashboardInner: React.FC<WidgetDashboardInnerProps> = ({
               updatedAt: new Date(),
             };
           schedule(() => {
-            if (process.env.NODE_ENV !== 'production') {
-              logger.debug('[WidgetDashboard] bootstrap applying default preset layout', {
-                layoutId: layout.id,
-              });
-            }
+            logger.debug('[WidgetDashboard] bootstrap applying default preset layout', {
+              layoutId: layout.id,
+            });
             initializeLayout(layout, {
               selectedWidgetId: layout.widgets?.[0]?.id ?? null,
               startInEditMode,
@@ -287,9 +271,7 @@ const WidgetDashboardInner: React.FC<WidgetDashboardInnerProps> = ({
             logger.info('Default preset loaded', { userId });
         } else {
           schedule(() => {
-            if (process.env.NODE_ENV !== 'production') {
-              logger.debug('[WidgetDashboard] bootstrap falling back to empty layout');
-          }
+            logger.debug('[WidgetDashboard] bootstrap falling back to empty layout');
             initializeLayout(null, {
               startInEditMode,
               keyboardMode: initialKeyboardMode ?? 'idle',
@@ -308,11 +290,9 @@ const WidgetDashboardInner: React.FC<WidgetDashboardInnerProps> = ({
             updatedAt: new Date(),
           };
           schedule(() => {
-            if (process.env.NODE_ENV !== 'production') {
-              logger.debug('[WidgetDashboard] bootstrap applying preset after error', {
-                layoutId: layout.id,
-              });
-            }
+            logger.debug('[WidgetDashboard] bootstrap applying preset after error', {
+              layoutId: layout.id,
+            });
             initializeLayout(layout, {
               selectedWidgetId: layout.widgets?.[0]?.id ?? null,
               startInEditMode,
@@ -321,9 +301,7 @@ const WidgetDashboardInner: React.FC<WidgetDashboardInnerProps> = ({
           });
         } else {
           schedule(() => {
-            if (process.env.NODE_ENV !== 'production') {
-              logger.debug('[WidgetDashboard] bootstrap clearing layout after error');
-            }
+            logger.debug('[WidgetDashboard] bootstrap clearing layout after error');
             initializeLayout(null, {
               startInEditMode,
               keyboardMode: initialKeyboardMode ?? 'idle',
@@ -337,9 +315,7 @@ const WidgetDashboardInner: React.FC<WidgetDashboardInnerProps> = ({
 
     return () => {
       isActive = false;
-      if (process.env.NODE_ENV !== 'production') {
-        logger.debug('[WidgetDashboard] bootstrap cleanup');
-      }
+      logger.debug('[WidgetDashboard] bootstrap cleanup');
     };
   }, [
     initialKeyboardMode,
@@ -348,10 +324,10 @@ const WidgetDashboardInner: React.FC<WidgetDashboardInnerProps> = ({
     initializeLayout,
     startInEditMode,
     userId,
-    storeApi,
     setSelectedWidgetIfChanged,
     setKeyboardModeIfChanged,
     setEditingIfChanged,
+    storeApi,
   ]);
 
   // ============================================================================

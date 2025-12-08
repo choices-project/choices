@@ -64,6 +64,8 @@ export const GET = withErrorHandling(async (request: NextRequest) => {
       environment,
       maintenance: process.env.NEXT_PUBLIC_MAINTENANCE === '1',
       version: appVersion
+    }, {
+      timestamp,
     });
   }
 
@@ -204,8 +206,6 @@ export const GET = withErrorHandling(async (request: NextRequest) => {
       const issues: string[] = [];
       let status: HealthStatus = 'healthy';
       const featureEnabled = isCivicsEnabled();
-      const isCI = process.env.CI === 'true';
-      const isTestEnv = environment === 'test' || environment === 'development' || isCI;
 
       if (!featureEnabled) {
         return successResponse({
@@ -224,8 +224,7 @@ export const GET = withErrorHandling(async (request: NextRequest) => {
         }
       } else if (!process.env.PRIVACY_PEPPER_CURRENT) {
         issues.push('PRIVACY_PEPPER_CURRENT is not set');
-        // In CI/test, treat missing pepper as warning, not error
-        status = isTestEnv ? 'warning' : 'error';
+        status = 'error';
       }
 
       if (!process.env.GOOGLE_CIVIC_API_KEY) {
@@ -240,31 +239,22 @@ export const GET = withErrorHandling(async (request: NextRequest) => {
         const supabase = await getSupabaseServerClient();
         const { error } = await supabase.from('representatives_core').select('id').limit(1);
         if (error) {
-          // In CI/test with fake credentials, database errors are expected
-          databaseStatus = isTestEnv ? 'warning' : 'error';
-          databaseDetails = { error: error.message, note: isTestEnv ? 'Expected in CI/test with mock credentials' : undefined };
+          databaseStatus = 'error';
+          databaseDetails = { error: error.message };
         } else {
           databaseStatus = 'healthy';
           databaseDetails = { connected: true };
         }
       } catch (error) {
-        // In CI/test, connection failures are expected with mock credentials
-        databaseStatus = isTestEnv ? 'warning' : 'error';
-        databaseDetails = { 
-          error: error instanceof Error ? error.message : 'Unknown error',
-          note: isTestEnv ? 'Expected in CI/test with mock credentials' : undefined
-        };
+        databaseStatus = 'error';
+        databaseDetails = { error: error instanceof Error ? error.message : 'Unknown error' };
       }
 
       let privacyStatus: HealthStatus = 'healthy';
       let privacyDetails: Record<string, any> = {};
       if (environment === 'production' && !process.env.PRIVACY_PEPPER_CURRENT) {
-        // In CI, production mode with missing pepper should be warning, not error
-        privacyStatus = isCI ? 'warning' : 'error';
-        privacyDetails = { 
-          error: 'PRIVACY_PEPPER_CURRENT not set in production',
-          note: isCI ? 'Expected in CI with test credentials' : undefined
-        };
+        privacyStatus = 'error';
+        privacyDetails = { error: 'PRIVACY_PEPPER_CURRENT not set in production' };
       }
 
       let externalApisStatus: HealthStatus = 'healthy';
@@ -316,10 +306,7 @@ export const GET = withErrorHandling(async (request: NextRequest) => {
         }
       };
 
-      // In CI/test environments, always return 200 so smoke tests can verify endpoint accessibility
-      // The actual status is still reported in the payload
-      const httpStatus = isTestEnv ? 200 : (status === 'error' ? 500 : 200);
-      return successResponse(payload, undefined, httpStatus);
+      return successResponse(payload, undefined, status === 'error' ? 500 : 200);
     } catch (error) {
       logger.error('Civics health check error', { error });
       return errorResponse('Health check failed', 500, {

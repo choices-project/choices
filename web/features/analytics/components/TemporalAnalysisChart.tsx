@@ -51,14 +51,6 @@ import {
   type AnalyticsSummaryRow,
 } from './AnalyticsSummaryTable';
 
-const ensureLabel = (value: string, fallback: string): string => {
-  if (!value) return fallback;
-  if (value.startsWith('analytics.')) {
-    return fallback;
-  }
-  return value;
-};
-
 type HourlyData = {
   hour: number;
   activity: number;
@@ -147,6 +139,14 @@ export default function TemporalAnalysisChart({
   const refreshLabel = t('analytics.buttons.refresh');
   const exportLabel = t('analytics.buttons.export');
 
+  const axisText = useMemo(
+    () => ({
+      hourOfDay: t('analytics.temporal.axes.hourOfDay'),
+      timestamp: t('analytics.temporal.axes.timestamp'),
+    }),
+    [t],
+  );
+
   const loadTemporal = useCallback(async (range?: DateRange) => {
     const targetRange = range ?? dateRange ?? defaultDateRange;
     await fetchTemporal(targetRange, {
@@ -168,15 +168,6 @@ export default function TemporalAnalysisChart({
       hourly: t('analytics.temporal.tabsLabels.hourly'),
       daily: t('analytics.temporal.tabsLabels.daily'),
       velocity: t('analytics.temporal.tabsLabels.velocity'),
-    }),
-    [t],
-  );
-
-  const axisText = useMemo(
-    () => ({
-      hourOfDay: ensureLabel(t('analytics.temporal.axes.hourOfDay'), 'Hour of day'),
-      dayOfWeek: ensureLabel(t('analytics.temporal.axes.dayOfWeek'), 'Day of week'),
-      timestamp: ensureLabel(t('analytics.temporal.axes.timestamp'), 'Timestamp'),
     }),
     [t],
   );
@@ -740,15 +731,7 @@ export default function TemporalAnalysisChart({
               <ResponsiveContainer width="100%" height="100%">
                 <BarChart data={data.daily} margin={{ top: 20, right: 30, left: 20, bottom: 20 }}>
                   <CartesianGrid strokeDasharray="3 3" />
-                  <XAxis
-                    dataKey="day"
-                    label={{
-                      value: axisText.dayOfWeek,
-                      position: 'insideBottom',
-                      offset: -5,
-                      style: { fontSize: 12 },
-                    }}
-                  />
+                  <XAxis dataKey="day" />
                   <YAxis label={{ value: t('analytics.temporal.axes.activityCount'), angle: -90, position: 'insideLeft' }} />
                   <Tooltip
                     content={({ active, payload }) => {
@@ -986,11 +969,11 @@ function generateMockData(_range: string): TemporalData {
   }));
 
   // Calculate peak values
-  const peakHourData: HourlyData = hourly.length > 0
-    ? hourly.reduce((max, h) => (h.activity > max.activity ? h : max), { hour: 0, activity: 0, label: '12 AM' })
+  const peakHourData: HourlyData = hourly.length > 0 && hourly[0]
+    ? hourly.reduce((max, h) => (h.activity > max.activity ? h : max), hourly[0])
     : { hour: 0, activity: 0, label: '12 AM' };
-  const peakDayData: DailyData = daily.length > 0
-    ? daily.reduce((max, d) => (d.activity > max.activity ? d : max), { day: 'Monday', activity: 0, dayIndex: 0 })
+  const peakDayData: DailyData = daily.length > 0 && daily[0]
+    ? daily.reduce((max, d) => (d.activity > max.activity ? d : max), daily[0])
     : { day: 'Monday', activity: 0, dayIndex: 0 };
   const avgActivity = hourly.length > 0 ? hourly.reduce((sum, h) => sum + h.activity, 0) / hourly.length : 0;
 

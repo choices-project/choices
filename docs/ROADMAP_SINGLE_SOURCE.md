@@ -28,10 +28,25 @@ Legend: [P0]=blocking, [P1]=launch‑critical, [P2]=post‑launch
 Source: `docs/ROADMAP/PRODUCTION_READINESS.md`
 
 - [P0] Infra & Domain: verify Vercel env, secrets, region; document key rotation runbook
+  - ✅ **COMPLETE (November 2025)**: Infrastructure verification document created (`docs/INFRASTRUCTURE_VERIFICATION.md`); references existing key rotation runbook in `docs/archive/runbooks/operations/secrets-management-rotation.md`
 - [P0] Email deliverability: DMARC policy + webhook signing verification in code
+  - ✅ **COMPLETE (November 2025)**: Webhook signature verification implemented (HMAC-SHA256), bounce/complaint handlers added, environment variable documented
+  - **Files:** `web/app/api/webhooks/resend/route.ts`, `docs/ENVIRONMENT_VARIABLES.md`, `docs/EMAIL_DELIVERABILITY_STATUS.md`
+  - **Remaining**: DMARC DNS configuration (requires domain setup, not code change)
 - [P0] Candidate verification edge cases: expired/wrong code flows; resend throttle tests
+  - ✅ **COMPLETE (November 2025)**: Enhanced error messages for expired/wrong codes; resend throttle tests implemented; see `scratch/final_work_TODO/ROADMAP.md` for details
 - [P0] Admin observability: stats endpoint sanity; audit list/diff; field‑level revert verification
+  - ✅ **PARTIAL (November 2025)**: 
+    - Audit endpoints exist (`/api/admin/audit/candidates`, `/api/admin/audit/representatives`) with rate limiting
+    - Revert endpoint exists (`/api/admin/audit/revert`) with field-level revert support
+    - Admin UI component exists but uses mock data (needs integration with real endpoints)
+  - **Remaining**: Update admin UI to use real audit endpoints; add diff visualization; enhance field-level revert verification UI
 - [P0] Security baseline: rate limits confirmed in prod; input validation coverage; sensitive log checks
+  - ✅ **MOSTLY COMPLETE (November 2025)**: 
+    - Rate limiting: Added to `/api/candidates/verify/confirm`, `/api/admin/audit/revert`, `/api/admin/candidates/stats`, `/api/feedback`; audit document created (`docs/RATE_LIMITING_AUDIT.md`)
+    - Input validation: Zod schemas added to `/api/admin/users`, `/api/candidate/verify-fec`, `/api/candidates/verify/confirm`, `/api/admin/audit/revert`; audit document created (`docs/INPUT_VALIDATION_AUDIT.md`)
+    - Sensitive log checks: Created `log-sanitizer.ts` utility; updated login, register, and complete-onboarding actions; audit document created (`docs/SENSITIVE_LOG_AUDIT.md`)
+  - **Remaining**: Add rate limiting to `/api/admin/users` (PUT); add Zod validation to a few more routes
 - [P0] Testing & CI: ensure lint, `tsc --noEmit`, unit/contract, and key E2E smoke run green in CI
 - [P1] Moderation & reporting: user→admin report endpoint + triage workflow
 - [P1] Performance & caching: ETag on candidate pages; short TTL caching on representative reads; TTFB monitoring
@@ -63,6 +78,12 @@ Source: `docs/FEATURE_STATUS.md`
 Source: `scratch/store-modernization-roadmap.md` and `scratch/gpt5-codex/store-roadmaps/*`
 
 Outstanding per‑store highlights (implement standards, align consumers, add tests/harnesses):
+  - ✅ **PROGRESS (November 2025)**: 
+    - Store modernization status tracked in `docs/STORE_MODERNIZATION_STATUS.md`
+    - RTL integration tests added for `appStore`, `adminStore`, `pollsStore`
+    - Playwright configuration improved (timeouts, wait strategies)
+    - Testing improvements plan created (`docs/TESTING_IMPROVEMENTS_PLAN.md`)
+  - **Remaining**: Add RTL integration tests for remaining stores, stabilize flaky Playwright harnesses
 - `adminStore.ts`: finish RTL + integration for users/settings/jobs; align analytics widgets; ensure async return usage across pages
 - `analyticsStore.ts`: extract async service helpers; consent guard tests; wire event helpers for civics notifications
 - `appStore.ts`: broaden RTL coverage (theme/sidebar persistence); verify selectors adopted everywhere
@@ -96,8 +117,13 @@ Immediate P0/P1 from code/TODO reconciliation:
 ## D) Analytics, Admin, Accessibility & I18N [mixed]
 Sources: `docs/ROADMAP.md`, `docs/qa/i18n-accessibility-playbook.md`, `scratch/gpt5-codex/roadmaps/2025-11-17-outstanding-backlog-roadmap.md`, inclusive archive
 
-- [P1] Analytics real data: ✅ COMPLETE (Jan 2026) — `/api/analytics/**` + unified routes now source Supabase data with `PrivacyAwareQueryBuilder`, Redis cache helpers, and documented pipeline (`docs/ANALYTICS_PIPELINE.md`)
-- [P1] Analytics features backlog (funnels, KPIs, admin flag coverage): ✅ COMPLETE (Jan 2026) — see `docs/ANALYTICS_FEATURES_PLAN.md` for the shipped summary + references
+- [P1] Analytics real data: replace mocks with Supabase queries; privacy filters; document pipeline
+  - ✅ **COMPLETE (November 2025)**: 
+    - Share analytics using real Supabase queries (`/api/share`)
+    - Analytics store has real data methods (with fallbacks)
+    - AnalyticsPanel component now uses real data (`/api/analytics/dashboard`)
+    - Admin dashboard analytics now uses real data
+    - Status document created (`docs/ANALYTICS_REAL_DATA_STATUS.md`)
 - [P1] Admin feature flags + audit logging: expand Playwright coverage for toggles and logging once modernized
 - [P1] Accessibility – Analytics dashboards: textual summaries; axis labels; re‑run NVDA; enable axe gating in CI
 - [P1] Notification alignment: ensure all surfaces use `useNotificationActions`; finalize Playwright specs
@@ -121,7 +147,16 @@ Source: `services/civics-backend/ROADMAP.md`
 Sources: multiple
 
 - [P0] CI gates: `tsc --noEmit`, eslint, unit, contracts, critical Playwright smoke
+  - ✅ **COMPLETE (November 2025)**: Lint gate now blocking (using `lint:strict`), contract test gate added, smoke test gate added
+  - **Files:** `.github/workflows/ci.yml`
+  - **Status:** All CI gates now blocking for deployments
 - [P1] Stabilize Playwright store harnesses; reduce flake; expand admin/app/specs
+  - ✅ **IN PROGRESS (November 2025)**: 
+    - Playwright configuration improved (timeouts increased, wait strategies)
+    - RTL integration tests added for `appStore`, `adminStore`, `pollsStore`
+    - Testing improvements plan created (`docs/TESTING_IMPROVEMENTS_PLAN.md`)
+    - Store modernization status documented (`docs/STORE_MODERNIZATION_STATUS.md`)
+  - **Remaining**: Add RTL integration tests for remaining stores, fix flaky tests, expand coverage
 - [P1] Contract tests remain green for candidate/civics/admin routes; keep fixtures shared across MSW/Playwright
 - [P1] i18n enforcement: automate `npm run i18n:extract`; promote locale lint to error post soak
 
@@ -132,7 +167,9 @@ Sources: multiple
 - Promote this file in `docs/ROADMAP.md` header; archive/annotate superseded roadmaps under `docs/archive`
 - Keep `docs/FEATURE_STATUS.md` in sync with shipped features; delete dormant flags quarterly
 - Update `docs/STATE_MANAGEMENT.md` with latest selector/action bundle guidance and store creators
+  - ✅ **COMPLETE (November 2025)**: Updated with security enhancements, testing improvements, and latest patterns
 - Extend `docs/TESTING.md` with harness patterns and targeted examples
+  - ✅ **COMPLETE (November 2025)**: Updated with CI gates, testing best practices, and security testing patterns
 
 ---
 

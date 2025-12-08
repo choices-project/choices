@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-var-requires */
 /**
  * Polls Store Dashboard Widget Regression Tests
  * 
@@ -172,4 +173,8 @@ describe('Polls Store Dashboard Widget Regression', () => {
     });
   });
 });
+
+/* eslint-enable @typescript-eslint/no-var-requires */
+
+
 

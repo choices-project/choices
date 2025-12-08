@@ -8,8 +8,8 @@
 import type { SupabaseClient } from '@supabase/supabase-js';
 import type { NextRequest } from 'next/server';
 
-// eslint-disable-next-line no-restricted-imports -- canonical path required by security policy
-import { validateOrigin } from "@/lib/http/origin";
+// eslint-disable-next-line no-restricted-imports
+import { validateOrigin } from '@/lib/http/origin';
 import { devLog } from '@/lib/utils/logger';
 import { getSupabaseServerClient } from '@/utils/supabase/server';
 
@@ -315,7 +315,7 @@ export async function getCurrentUser(): Promise<User | null> {
     const isAdmin = (adminProfile as any)?.is_admin === true;
 
     const userProfile = profile && !('error' in profile) ? profile as UserProfile : null;
-
+    
     return {
       id: user.id,
       email: user.email ?? '',

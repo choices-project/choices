@@ -5,9 +5,11 @@ import type { AppStoreHarness } from '@/app/(app)/e2e/app-store/page';
 import { waitForPageReady } from '../helpers/e2e-setup';
 
 declare global {
+   
   interface Window {
     __appStoreHarness?: AppStoreHarness;
   }
+   
 }
 
 const gotoHarness = async (page: Page) => {

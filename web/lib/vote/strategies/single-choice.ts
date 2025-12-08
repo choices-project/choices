@@ -124,8 +124,8 @@ export class SingleChoiceStrategy implements VotingStrategy {
         responseTime: 0, // Will be set by the engine
         metadata: {
           votingMethod: 'single',
-          selectedChoice: voteData.choice,
-          optionText: poll.options[voteData.choice ?? 0]
+          choice: voteData.choice,
+          optionText: poll.options[voteData.choice ?? 0],
         },
         ...(privacyLevel !== undefined ? { privacyLevel } : {}),
       };

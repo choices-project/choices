@@ -49,6 +49,10 @@ beforeAll(() => {
 
 beforeEach(() => {
   jest.clearAllMocks();
+  // Reset validation mock between tests so per-test mockReturnValueOnce calls
+  // do not leak across test cases.
+  validateAddressInput.mockReset();
+  validateAddressInput.mockReturnValue({ valid: true });
   fetchMock = jest.fn() as jest.MockedFunction<typeof fetch>;
   global.fetch = fetchMock;
 });
@@ -122,9 +126,13 @@ describe('POST /api/v1/civics/address-lookup', () => {
   });
 
   it('returns fallback jurisdiction when external API fails', async () => {
+    // Ensure validation passes for this test, regardless of previous mocks
+    validateAddressInput.mockReturnValueOnce({ valid: true });
     fetchMock.mockRejectedValue(new Error('network failure'));
 
-    const response = await POST(createPostRequest({ address: '456 Elm St, Austin, Texas' }));
+    // Use a unique address to avoid cache interference from other tests
+    const uniqueAddress = `456 Elm St, Austin, Texas ${Date.now()}`;
+    const response = await POST(createPostRequest({ address: uniqueAddress }));
     const payload = await response.json();
 
     const status = (response as any)?.status;

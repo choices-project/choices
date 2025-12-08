@@ -310,7 +310,6 @@ export type Database = {
           created_at: string
           email: string
           expires_at: string
-          failed_attempts: number
           id: string
           used_at: string | null
           user_id: string
@@ -321,7 +320,6 @@ export type Database = {
           created_at?: string
           email: string
           expires_at: string
-          failed_attempts?: number
           id?: string
           used_at?: string | null
           user_id: string
@@ -332,7 +330,6 @@ export type Database = {
           created_at?: string
           email?: string
           expires_at?: string
-          failed_attempts?: number
           id?: string
           used_at?: string | null
           user_id?: string

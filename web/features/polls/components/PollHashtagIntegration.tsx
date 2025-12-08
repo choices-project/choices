@@ -88,7 +88,7 @@ const createIntegrationWithHashtags = (
   };
 };
 
-export default function PollHashtagIntegration({
+export default function PollHashtagIntegrationComponent({
   poll,
   onUpdate,
   isEditing = false,
@@ -153,10 +153,6 @@ export default function PollHashtagIntegration({
       }
     })();
   }, [getTrendingHashtags, poll.id, trackHashtagEngagement]);
-
-  // Track hashtag engagement in real-time
-  // Track hashtag engagement in real-time
-  const _trackHashtagEngagement = trackHashtagEngagement;
 
   // Handle hashtag updates with enhanced analytics
   const handleHashtagUpdate = (newHashtags: string[]) => {
@@ -350,7 +346,7 @@ export default function PollHashtagIntegration({
                       showCount={true}
                       showCategory={true}
                       clickable={true}
-                      onHashtagClick={() => _trackHashtagEngagement('click')}
+                      onHashtagClick={() => trackHashtagEngagement('click')}
                     />
                   )}
                 </div>

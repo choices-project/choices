@@ -134,7 +134,8 @@ export default function SingleChoiceVoting({
       <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6" data-testid="voting-form">
         <div className="space-y-3">
           {options.map((option: PollOption, index: number) => (
-            <div
+            <button
+              type="button"
               key={String(option.id ?? index)}
               onClick={() => handleOptionSelect(index)}
               className={`
@@ -192,7 +193,7 @@ export default function SingleChoiceVoting({
                   </div>
                 )}
               </div>
-            </div>
+            </button>
           ))}
         </div>
 

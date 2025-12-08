@@ -35,14 +35,10 @@ jest.mock('@/lib/services/email/candidate-journey-emails', () => ({
   ),
 }));
 
-jest.mock('@/lib/core/security/rate-limit', () => {
-  const rateLimitMiddleware = jest.fn(async () => mockRateLimitResult);
-
-  return {
-    createRateLimiter: jest.fn(() => ({})),
-    rateLimitMiddleware,
-  };
-});
+jest.mock('@/lib/core/security/rate-limit', () => ({
+  createRateLimiter: jest.fn(() => ({})),
+  rateLimitMiddleware: jest.fn(),
+}));
 
 const loadRoute = () => {
   let routeModule: any;

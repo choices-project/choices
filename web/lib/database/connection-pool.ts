@@ -217,7 +217,7 @@ export class ConnectionPoolManager {
       // Mark connection as active
       const wrapper = this.connections.get(connectionId)
       if (!wrapper) {
-        throw new Error('Connection wrapper not found after acquisition')
+        throw new Error('Connection wrapper not found')
       }
       wrapper.isActive = true
       wrapper.isIdle = false
@@ -264,13 +264,13 @@ export class ConnectionPoolManager {
         logger.warn('Attempted to release unknown connection')
         return
       }
-
+      
       const wrapper = this.connections.get(connectionId)
       if (!wrapper) {
-        logger.warn('Connection wrapper missing on release', { connectionId })
+        logger.warn('Attempted to release connection with missing wrapper', { connectionId })
         return
       }
-
+      
       // Validate connection before returning to pool
       const isValid = await this.validateConnection(wrapper)
 
@@ -453,10 +453,9 @@ export class ConnectionPoolManager {
     for (const connectionId of Array.from(this.idleConnections)) {
       const wrapper = this.connections.get(connectionId)
       if (!wrapper) {
-        // Skip if wrapper disappeared
         continue
       }
-
+      
       // Check if connection is too old
       if (now - wrapper.createdAt > this.config.maxLifetimeMillis) {
         connectionsToDestroy.push(connectionId)
@@ -516,7 +515,7 @@ export class ConnectionPoolManager {
       if (!wrapper) {
         continue
       }
-
+      
       if (now - wrapper.lastUsed > this.config.leakDetectionThreshold) {
         this.stats.totalLeaked++
         logger.warn('Connection leak detected', {

@@ -71,15 +71,7 @@ test.describe('Dashboard Journey', () => {
       await expect(page.getByTestId('dashboard-title')).toContainText('Welcome back');
       await expect(page.getByTestId('personal-analytics')).toBeVisible();
       await expect(page.getByTestId('dashboard-settings')).toBeVisible();
-      
-      // Wait for feeds-live-message to be attached before asserting text
-      // This element may not be present if FeedDataProvider isn't used on the dashboard
-      const feedsLiveMessage = page.getByTestId('feeds-live-message');
-      const elementCount = await feedsLiveMessage.count();
-      if (elementCount > 0) {
-        await feedsLiveMessage.waitFor({ state: 'attached', timeout: 15_000 });
-        await expect(feedsLiveMessage).not.toHaveText('', { timeout: 10_000 });
-      }
+      await expect(page.getByTestId('feeds-live-message')).not.toHaveText('', { timeout: 10_000 });
 
       const representativesCard = page.locator('[data-testid="representatives-card"]');
       await expect(representativesCard).toHaveCount(1);

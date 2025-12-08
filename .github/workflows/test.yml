@@ -271,13 +271,11 @@ jobs:
       E2E_ADMIN_PASSWORD: ${{ secrets.E2E_ADMIN_PASSWORD }}
       E2E_USER_EMAIL: ${{ secrets.E2E_USER_EMAIL }}
       E2E_USER_PASSWORD: ${{ secrets.E2E_USER_PASSWORD }}
-    defaults:
-      run:
-        working-directory: web
 
     steps:
       - name: Check production credentials
         id: prod_creds
+        continue-on-error: true
         run: |
           missing=()
           [ -z "${NEXT_PUBLIC_SUPABASE_URL}" ] && missing+=("NEXT_PUBLIC_SUPABASE_URL")
@@ -297,7 +295,11 @@ jobs:
 
       - name: Skip auth-production e2e (missing secrets)
         if: steps.prod_creds.outputs.run != 'true'
-        run: echo "Skipping auth-production-e2e job because required secrets are not configured."
+        run: |
+          echo "Skipping auth-production-e2e job because required secrets are not configured."
+          echo "This is expected for PRs from forks or when production credentials are not available."
+          echo "Required secrets: NEXT_PUBLIC_SUPABASE_URL, NEXT_PUBLIC_SUPABASE_ANON_KEY, SUPABASE_SERVICE_ROLE_KEY, E2E_ADMIN_EMAIL, E2E_ADMIN_PASSWORD, E2E_USER_EMAIL, E2E_USER_PASSWORD"
+          exit 0
 
       - name: Checkout code
         if: steps.prod_creds.outputs.run == 'true'
@@ -313,10 +315,12 @@ jobs:
 
       - name: Use repo's npm version
         if: steps.prod_creds.outputs.run == 'true'
+        working-directory: web
         run: npm i -g npm@${{ env.NPM_VERSION }}
 
       - name: Setup gtimeout compatibility (Linux uses 'timeout')
         if: steps.prod_creds.outputs.run == 'true'
+        working-directory: web
         run: |
           if ! command -v gtimeout &> /dev/null; then
             sudo ln -sf $(which timeout) /usr/local/bin/gtimeout
@@ -326,22 +330,27 @@ jobs:
 
       - name: Clean workspace
         if: steps.prod_creds.outputs.run == 'true'
+        working-directory: web
         run: rm -rf node_modules
 
       - name: Install dependencies
         if: steps.prod_creds.outputs.run == 'true'
+        working-directory: web
         run: npm run ci:install
 
       - name: Install Playwright browsers
         if: steps.prod_creds.outputs.run == 'true'
+        working-directory: web
         run: npx playwright install --with-deps chromium
 
       - name: Build application
         if: steps.prod_creds.outputs.run == 'true'
+        working-directory: web
         run: npm run build
 
       - name: Run auth-production spec
         if: steps.prod_creds.outputs.run == 'true'
+        working-directory: web
         run: |
           PLAYWRIGHT_USE_MOCKS=0 \
           npx playwright test tests/e2e/specs/auth-production.spec.ts \

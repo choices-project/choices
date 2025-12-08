@@ -1,9 +1,10 @@
-/* eslint-disable boundaries/element-types */
 /**
  * @jest-environment jsdom
  */
 import { render } from '@testing-library/react';
 
+// This test intentionally exercises the real feed page component end-to-end
+// eslint-disable-next-line boundaries/element-types
 import FeedPage from '@/app/(app)/feed/page';
 
 jest.mock('@/features/feeds', () => ({
@@ -72,5 +73,3 @@ describe('FeedPage', () => {
     });
   });
 });
-
-/* eslint-enable boundaries/element-types */

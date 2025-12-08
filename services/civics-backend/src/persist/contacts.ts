@@ -296,116 +296,90 @@ export async function syncRepresentativeContacts(rep: CanonicalRepresentative): 
 
   result.representativeId = representativeId;
 
-  try {
-    const rows = buildContactPayload(representativeId, rep).filter((row) => Boolean(row.value));
-    const client = getSupabaseClient();
+  const { data: existingContacts, error: existingError } = await client
+    .from('representative_contacts')
+    .select('contact_type, value, source, is_primary')
+    .eq('representative_id', representativeId);
+
+  if (existingError) {
+    throw new Error(`Failed to load existing contacts for representative ${representativeId}: ${existingError.message}`);
+  }
+
+  const existingKeys = new Set<string>();
+  for (const existing of existingContacts ?? []) {
+    if (!existing?.contact_type || !existing?.value) continue;
+    if (existing.source === CONTACT_SOURCE) continue;
+    const normalizedValue = existing.value.trim().toLowerCase();
+    if (!normalizedValue) continue;
+    existingKeys.add(`${existing.contact_type}:${normalizedValue}`);
+  }
+
+  const filteredRows = rows.filter((row) => {
+    const normalizedValue = row.value.trim().toLowerCase();
+    if (!normalizedValue) return false;
+    const key = `${row.contact_type}:${normalizedValue}`;
+    return !existingKeys.has(key);
+  });
+
+  const primaryPhoneRow =
+    filteredRows.find((row) => row.contact_type === 'phone' && row.is_primary) ??
+    filteredRows.find((row) => row.contact_type === 'phone');
+
+  let primaryPhoneValue = primaryPhoneRow?.value ?? null;
+
+  if (!primaryPhoneValue) {
+    const existingPrimary = (existingContacts ?? []).find(
+      (contact) =>
+        contact?.contact_type === 'phone' &&
+        contact?.value &&
+        (contact?.source !== CONTACT_SOURCE ? contact?.is_primary === true : false),
+    );
+    if (existingPrimary?.value) {
+      primaryPhoneValue = existingPrimary.value;
+    } else {
+      const existingAnyPhone = (existingContacts ?? []).find(
+        (contact) => contact?.contact_type === 'phone' && contact?.value && contact?.source !== CONTACT_SOURCE,
+      );
+      if (existingAnyPhone?.value) {
+        primaryPhoneValue = existingAnyPhone.value;
+      }
+    }
+  }
+
+  // Clear previously ingested rows from this source to avoid duplication.
+  const { error: deleteError } = await client
+    .from('representative_contacts')
+    .delete()
+    .eq('representative_id', representativeId)
+    .eq('source', CONTACT_SOURCE);
 
     const { data: existingContacts, error: existingError } = await client
       .from('representative_contacts')
       .select('contact_type, value, source, is_primary')
       .eq('representative_id', representativeId);
 
-    if (existingError) {
-      result.errors.push(`Failed to load existing contacts: ${existingError.message}`);
-      return result;
-    }
-
-    const existingKeys = new Set<string>();
-    for (const existing of existingContacts ?? []) {
-      if (!existing?.contact_type || !existing?.value) continue;
-      if (existing.source === CONTACT_SOURCE) continue;
-      const normalizedValue = existing.value.trim().toLowerCase();
-      if (!normalizedValue) continue;
-      existingKeys.add(`${existing.contact_type}:${normalizedValue}`);
-    }
-
-    const filteredRows = rows.filter((row) => {
-      const normalizedValue = row.value.trim().toLowerCase();
-      if (!normalizedValue) return false;
-      const key = `${row.contact_type}:${normalizedValue}`;
-      return !existingKeys.has(key);
-    });
-
-    const primaryPhoneRow =
-      filteredRows.find((row) => row.contact_type === 'phone' && row.is_primary) ??
-      filteredRows.find((row) => row.contact_type === 'phone');
-
-    let primaryPhoneValue = primaryPhoneRow?.value ?? null;
-
-    if (!primaryPhoneValue) {
-      const existingPrimary = (existingContacts ?? []).find(
-        (contact) =>
-          contact?.contact_type === 'phone' &&
-          contact?.value &&
-          (contact?.source !== CONTACT_SOURCE ? contact?.is_primary === true : false),
-      );
-      if (existingPrimary?.value) {
-        primaryPhoneValue = existingPrimary.value;
-      } else {
-        const existingAnyPhone = (existingContacts ?? []).find(
-          (contact) => contact?.contact_type === 'phone' && contact?.value && contact?.source !== CONTACT_SOURCE,
-        );
-        if (existingAnyPhone?.value) {
-          primaryPhoneValue = existingAnyPhone.value;
+  if (filteredRows.length > 0) {
+    for (const row of filteredRows) {
+      const { error: insertError } = await client.from('representative_contacts').insert(row);
+      if (insertError) {
+        const message = insertError.message ?? '';
+        const code = (insertError as { code?: string }).code ?? '';
+        const isDuplicate = code === '23505' || message.includes('duplicate key value');
+        if (isDuplicate) {
+          continue;
         }
+        throw new Error(`Failed to upsert contacts for representative ${representativeId}: ${message || 'unknown error'}`);
       }
     }
+  }
 
-    // Clear previously ingested rows from this source to avoid duplication.
-    const { error: deleteError } = await client
-      .from('representative_contacts')
-      .delete()
-      .eq('representative_id', representativeId)
-      .eq('source', CONTACT_SOURCE);
+  const { error: updateError } = await client
+    .from('representatives_core')
+    .update({ primary_phone: primaryPhoneValue, updated_at: new Date().toISOString() })
+    .eq('id', representativeId);
 
-    if (deleteError) {
-      result.errors.push(`Failed to prune prior contacts: ${deleteError.message}`);
-      return result;
-    }
-
-    if (filteredRows.length > 0) {
-      for (const row of filteredRows) {
-        try {
-          const { error: insertError } = await client.from('representative_contacts').insert(row);
-          if (insertError) {
-            const message = insertError.message ?? '';
-            const code = (insertError as { code?: string }).code ?? '';
-            const isDuplicate = code === '23505' || message.includes('duplicate key value');
-            if (isDuplicate) {
-              result.contactsSkipped += 1;
-              continue;
-            }
-            result.errors.push(`Failed to insert ${row.contact_type} contact: ${message || 'unknown error'}`);
-            result.contactsSkipped += 1;
-            continue;
-          }
-          result.contactsAdded += 1;
-        } catch (error) {
-          const errorMessage = error instanceof Error ? error.message : String(error);
-          result.errors.push(`Unexpected error inserting contact: ${errorMessage}`);
-          result.contactsSkipped += 1;
-        }
-      }
-    }
-
-    // Update primary phone in representatives_core
-    if (primaryPhoneValue) {
-      const { error: updateError } = await client
-        .from('representatives_core')
-        .update({ primary_phone: primaryPhoneValue, updated_at: new Date().toISOString() })
-        .eq('id', representativeId);
-
-      if (updateError) {
-        result.warnings.push(`Failed to update primary phone: ${updateError.message}`);
-      }
-    }
-
-    result.success = result.errors.length === 0;
-    return result;
-  } catch (error) {
-    const errorMessage = error instanceof Error ? error.message : String(error);
-    result.errors.push(`Unexpected error during contact sync: ${errorMessage}`);
-    return result;
+  if (updateError) {
+    throw new Error(`Failed to update primary phone for representative ${representativeId}: ${updateError.message}`);
   }
 }
 

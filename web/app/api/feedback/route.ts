@@ -8,6 +8,7 @@ import {
   rateLimitError,
   parseBody,
 } from '@/lib/api';
+import { apiRateLimiter } from '@/lib/rate-limiting/api-rate-limiter';
 import { stripUndefinedDeep } from '@/lib/util/clean';
 import { devLog, logger } from '@/lib/utils/logger';
 import type { Json } from '@/types/supabase';
@@ -22,7 +23,6 @@ const FEEDBACK_TYPES = [
   'performance',
   'accessibility',
   'security',
-  'correction',
   'csp-violation',
 ] as const;
 
@@ -95,6 +95,35 @@ export const POST = withErrorHandling(async (request: NextRequest) => {
     return parsedBody.error;
   }
 
+  // If Supabase isn't configured, immediately fall back to a mock success response.
+  // This path is primarily used in local/test environments and should not be rate limited
+  // so that diagnostics and CI fallbacks behave predictably.
+  const supabasePromise = getSupabaseServerClient();
+  if (!supabasePromise) {
+    devLog('Supabase not configured - using mock response (no rate limiting)');
+    return successResponse(
+      buildFeedbackResponse(`mock-${Date.now()}`, parsedBody.data.userJourney),
+      { source: 'mock', mode: 'degraded' }
+    );
+  }
+
+  // Rate limiting: 10 feedback submissions per 15 minutes per IP
+  const ip = request.headers.get('x-forwarded-for') ?? request.headers.get('x-real-ip') ?? 'unknown';
+  const userAgent = request.headers.get('user-agent') ?? undefined;
+  const rateLimitResult = await apiRateLimiter.checkLimit(
+    ip,
+    '/api/feedback',
+    {
+      maxRequests: 10,
+      windowMs: 15 * 60 * 1000, // 15 minutes
+      ...(userAgent ? { userAgent } : {})
+    }
+  );
+
+  if (!rateLimitResult.allowed) {
+    return rateLimitError('Too many feedback submissions. Please try again later.', rateLimitResult.retryAfter);
+  }
+
   const {
     type,
     title,
@@ -135,14 +164,7 @@ export const POST = withErrorHandling(async (request: NextRequest) => {
     });
   }
 
-  const supabaseClient = await getSupabaseServerClient();
-  if (!supabaseClient) {
-    devLog('Supabase not configured - using mock response');
-    return successResponse(
-      buildFeedbackResponse(`mock-${Date.now()}`, userJourney),
-      { source: 'mock', mode: 'degraded' }
-    );
-  }
+  const supabaseClient = await supabasePromise;
 
   const {
     data: { user },
@@ -243,13 +265,6 @@ export const POST = withErrorHandling(async (request: NextRequest) => {
     },
   };
 
-  const priority =
-    type === 'security'
-      ? 'urgent'
-      : type === 'bug' || type === 'correction'
-        ? 'high'
-        : 'medium';
-
   const feedbackData = {
     user_id: user?.id ?? null,
     feedback_type: type,
@@ -259,7 +274,7 @@ export const POST = withErrorHandling(async (request: NextRequest) => {
     screenshot: screenshot ?? null,
     user_journey: (userJourney ?? {}) as Json,
     status: 'open',
-    priority,
+    priority: type === 'bug' ? 'high' : type === 'security' ? 'urgent' : 'medium',
     tags: generateTags(type, title, description, sentiment),
     ai_analysis: (feedbackContext?.aiAnalysis ?? {}) as Json,
     metadata: metadataPayload,
@@ -343,8 +358,8 @@ export const GET = withErrorHandling(async (request: NextRequest) => {
     return validationError({ offset: 'Offset must be zero or greater' });
   }
 
-  const supabaseClient = await getSupabaseServerClient();
-  if (!supabaseClient) {
+  const supabasePromise = getSupabaseServerClient();
+  if (!supabasePromise) {
     devLog('Supabase not configured - using mock response');
     return successResponse(
       {
@@ -355,6 +370,8 @@ export const GET = withErrorHandling(async (request: NextRequest) => {
       { source: 'mock', mode: 'degraded' }
     );
   }
+
+  const supabaseClient = await supabasePromise;
 
   let query = supabaseClient
     .from('feedback')

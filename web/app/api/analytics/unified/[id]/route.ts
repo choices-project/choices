@@ -374,12 +374,12 @@ export const GET = withErrorHandling(async (
       totalTime,
       aiProvider
     });
-
+    
     return successResponse(response);
-
+    
   } catch (error) {
     logger.error('Unified analytics API error:', error instanceof Error ? error : new Error(String(error)));
-
+    
     return errorResponse('Internal server error', 500, {
       metadata: {
         platform: 'choices',

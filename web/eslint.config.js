@@ -460,7 +460,6 @@ export default [
       '@typescript-eslint/no-non-null-assertion': 'off',
       '@typescript-eslint/consistent-type-definitions': 'off',
       '@typescript-eslint/consistent-type-imports': 'off',
-      '@typescript-eslint/no-var-requires': 'off',
       'import/no-extraneous-dependencies': 'off',
       'import/order': 'off',
       'import/newline-after-import': 'off',

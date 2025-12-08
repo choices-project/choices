@@ -113,23 +113,19 @@ function NotificationItem({ notification, onRemove, onMarkAsRead }: Notification
       className={`relative rounded-lg border p-4 shadow-sm transition-all duration-300 hover:shadow-md ${getBackgroundColor()} ${
         notification.read ? 'opacity-75' : ''
       }`}
-      onClick={handleClick}
-      role="button"
-      tabIndex={0}
-      onKeyDown={(e) => {
-        if (e.key === 'Enter' || e.key === ' ') {
-          e.preventDefault();
-          handleClick();
-        }
-      }}
+      role={priority === 'assertive' ? 'alert' : 'status'}
       aria-live={priority}
       aria-atomic="true"
     >
       <div className="flex items-start">
-        <div className="flex-shrink-0">
-          {getIcon()}
-        </div>
-        <div className="ml-3 flex-1">
+        <button
+          type="button"
+          onClick={handleClick}
+          className="ml-3 flex-1 text-left"
+        >
+          <div className="flex-shrink-0 mb-2">
+            {getIcon()}
+          </div>
           <h3 className="text-sm font-medium text-gray-900">
             {notification.title}
           </h3>
@@ -146,9 +142,10 @@ function NotificationItem({ notification, onRemove, onMarkAsRead }: Notification
               </a>
             </div>
           )}
-        </div>
+        </button>
         <div className="ml-4 flex-shrink-0">
           <button
+            type="button"
             onClick={(event) => {
               event.stopPropagation();
               handleDismiss();

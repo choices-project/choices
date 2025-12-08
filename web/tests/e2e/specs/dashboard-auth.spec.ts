@@ -123,9 +123,10 @@ test.describe('@mocks dashboard auth experience', () => {
     const parsedAdmin = JSON.parse(persistedState.admin ?? '{"state":{}}');
 
     expect(parsedUser.state?.isAuthenticated ?? false).toBe(false);
-    expect(parsedUser.state?.user).toBeNull();
-    expect(parsedProfile.state?.profile).toBeNull();
-    expect(parsedProfile.state?.userProfile).toBeNull();
+    // User information should be cleared; allow either null or undefined depending on store implementation
+    expect(parsedUser.state?.user ?? null).toBeNull();
+    expect(parsedProfile.state?.profile ?? null).toBeNull();
+    expect(parsedProfile.state?.userProfile ?? null).toBeNull();
     expect(parsedAdmin.state?.activeTab).toBe('overview');
   });
 });

@@ -45,7 +45,7 @@ export function PasskeyManagement() {
     } finally {
       setLoading(false);
     }
-  }, [setBiometricCredentials, setBiometricError]);
+  }, [setBiometricCredentials, setBiometricError, setError]);
 
   React.useEffect(() => {
     void loadPasskeys();
@@ -69,7 +69,7 @@ export function PasskeyManagement() {
       setError(message);
       setBiometricError(message);
     }
-  }, [loadPasskeys, setBiometricError]);
+  }, [loadPasskeys, setBiometricError, setError]);
 
   const handleRenamePasskey = React.useCallback(async (id: string, newLabel: string) => {
     try {
@@ -79,7 +79,7 @@ export function PasskeyManagement() {
       setError(message);
       setBiometricError(message);
     }
-  }, [setBiometricError]);
+  }, [setBiometricError, setError]);
 
   const handleRevokePasskey = React.useCallback(async (id: string) => {
     try {
@@ -90,7 +90,7 @@ export function PasskeyManagement() {
       setError(message);
       setBiometricError(message);
     }
-  }, [loadPasskeys, setBiometricError]);
+  }, [loadPasskeys, setBiometricError, setError]);
 
   if (loading) {
     return (

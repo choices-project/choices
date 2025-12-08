@@ -4,6 +4,7 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import React, { Suspense, useState } from 'react';
 
 import EnhancedFeedbackWidget from '@/components/EnhancedFeedbackWidget';
+import { UserNotificationContainer } from '@/components/notifications/UserNotificationContainer';
 import { AppShell } from '@/components/shared/AppShell';
 import FontProvider from '@/components/shared/FontProvider';
 import GlobalNavigation from '@/components/shared/GlobalNavigation';
@@ -60,6 +61,7 @@ export default function AppLayout({
                 }
               >
                 {children}
+                <UserNotificationContainer />
               </Suspense>
             </UserStoreProvider>
           </AuthProvider>
@@ -80,6 +82,7 @@ export default function AppLayout({
                 feedback={!DISABLE_FEEDBACK_WIDGET ? <EnhancedFeedbackWidget /> : null}
               >
                 {children}
+                <UserNotificationContainer />
               </AppShell>
             </ServiceWorkerProvider>
           </UserStoreProvider>

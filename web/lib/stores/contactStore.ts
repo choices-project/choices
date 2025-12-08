@@ -685,14 +685,12 @@ const createContactActions = (
           thread.messageCount = Math.max(0, thread.messageCount - 1);
         }
 
-        if (draft.messagesMetaByThreadId[input.threadId]) {
-          const prev = draft.messagesMetaByThreadId[input.threadId];
+        const meta = draft.messagesMetaByThreadId[input.threadId];
+        if (meta) {
           draft.messagesMetaByThreadId[input.threadId] = {
-            total: Math.max(0, ((prev?.total ?? 1) - 1)),
+            ...meta,
+            total: Math.max(0, (meta.total ?? 1) - 1),
             lastFetchedAt: Date.now(),
-            limit: prev?.limit ?? 50,
-            offset: prev?.offset ?? 0,
-            hasMore: prev?.hasMore ?? false,
           };
         }
       });

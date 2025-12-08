@@ -35,8 +35,10 @@ export function usePWAUtils() {
         ])
         
         // Import PWA utilities
-        const pwaUtilsModule = await import('../lib/pwa-utils')
-        const bridgeModule = await import('../lib/service-worker-bridge')
+        const [pwaUtilsModule, bridgeModule] = await Promise.all([
+          import('../lib/pwa-utils'),
+          import('../lib/service-worker-bridge'),
+        ]);
         
         setUtils({
           pwaAuth: pwaAuthModule.pwaAuth,

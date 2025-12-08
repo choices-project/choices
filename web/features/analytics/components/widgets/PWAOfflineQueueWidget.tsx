@@ -94,7 +94,7 @@ const toneStyles: Record<'success' | 'warn' | 'danger' | 'info', string> = {
 const metricLabelStyles = 'text-xs uppercase tracking-wide text-slate-500';
 const metricValueStyles = 'text-2xl font-semibold text-slate-900';
 
-export default function PWAOfflineQueueWidget(_: WidgetProps) {
+export default function PWAOfflineQueueWidget(_props: WidgetProps) {
   const stats = usePWAStats();
   const { processOfflineActions } = usePWAActions();
   const [isProcessing, setIsProcessing] = useState(false);

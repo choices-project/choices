@@ -437,8 +437,7 @@ export const createOnboardingActions = (
         try {
           await get().saveProgress();
         } catch {
-          // Intentionally ignore persistence errors in background save
-          return;
+          // Ignore save errors in background task
         }
       });
       return next as OnboardingStore;

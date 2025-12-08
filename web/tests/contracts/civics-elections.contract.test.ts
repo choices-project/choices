@@ -6,10 +6,18 @@ import { createNextRequest } from '@/tests/contracts/helpers/request';
 
 const mockRpc = jest.fn();
 
-jest.mock('@supabase/supabase-js', () => ({
-  createClient: jest.fn(() => ({
-    rpc: mockRpc,
-  })),
+const mockSupabaseClient = {
+  rpc: mockRpc,
+};
+
+jest.mock('@/utils/supabase/server', () => ({
+  getSupabaseServerClient: jest.fn(async () => mockSupabaseClient),
+}));
+
+jest.mock('@/lib/rate-limiting/api-rate-limiter', () => ({
+  apiRateLimiter: {
+    checkLimit: jest.fn(async () => ({ allowed: true, retryAfter: null })),
+  },
 }));
 
 describe('Civics elections contract', () => {
@@ -52,7 +60,9 @@ describe('Civics elections contract', () => {
   });
 
   it('returns 500 when supabase config missing', async () => {
-    delete process.env.NEXT_PUBLIC_SUPABASE_URL;
+    // Mock getSupabaseServerClient to return null when config is missing
+    const { getSupabaseServerClient } = require('@/utils/supabase/server');
+    (getSupabaseServerClient as jest.Mock).mockResolvedValueOnce(null);
 
     const { GET } = loadRoute();
     const response = await GET(createNextRequest('http://localhost/api/v1/civics/elections'));
@@ -60,7 +70,7 @@ describe('Civics elections contract', () => {
 
     expect(response.status).toBe(500);
     expect(body.success).toBe(false);
-    expect(body.error).toBe('Supabase configuration missing');
+    expect(body.error).toBe('Database connection not available');
   });
 
   it('returns 502 when RPC fails', async () => {

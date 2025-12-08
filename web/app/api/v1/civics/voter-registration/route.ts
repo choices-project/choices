@@ -1,9 +1,29 @@
-import { createClient } from '@supabase/supabase-js';
 import type { NextRequest } from 'next/server';
 
-import { withErrorHandling, successResponse, validationError, errorResponse } from '@/lib/api';
+import { withErrorHandling, successResponse, validationError, errorResponse, rateLimitError } from '@/lib/api';
+import { apiRateLimiter } from '@/lib/rate-limiting/api-rate-limiter';
+import { logger } from '@/lib/utils/logger';
+import { getSupabaseServerClient } from '@/utils/supabase/server';
 
 export const dynamic = 'force-dynamic';
+
+/**
+ * Get client IP address from request headers
+ */
+function getClientIP(request: NextRequest): string {
+  const forwarded = request.headers.get('x-forwarded-for');
+  if (forwarded) {
+    const firstIP = forwarded.split(',')[0];
+    if (firstIP) {
+      return firstIP.trim();
+    }
+  }
+  const realIP = request.headers.get('x-real-ip');
+  if (realIP) {
+    return realIP;
+  }
+  return request.ip ?? 'unknown';
+}
 
 const STATE_CODE_REGEX = /^[A-Za-z]{2}$/;
 
@@ -15,11 +35,22 @@ function extractStateFromDivision(division: string | null): string | null {
 }
 
 export const GET = withErrorHandling(async (request: NextRequest) => {
-  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
-  const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+  // Rate limiting: 30 requests per 5 minutes per IP (admin-like endpoint)
+  const clientIP = getClientIP(request);
+  const rateLimitResult = await apiRateLimiter.checkLimit(clientIP, '/api/v1/civics/voter-registration', {
+    maxRequests: 30,
+    windowMs: 5 * 60 * 1000, // 5 minutes
+  });
 
-  if (!supabaseUrl || !supabaseKey) {
-    return errorResponse('Supabase configuration missing', 500);
+  if (!rateLimitResult.allowed) {
+    logger.warn('Rate limit exceeded for civics voter-registration', { ip: clientIP });
+    return rateLimitError('Rate limit exceeded', rateLimitResult.retryAfter);
+  }
+
+  // Get Supabase client (uses anon key, RLS allows anonymous reads)
+  const supabase = await getSupabaseServerClient();
+  if (!supabase) {
+    return errorResponse('Database connection not available', 500);
   }
 
   const { searchParams } = new URL(request.url);
@@ -38,12 +69,6 @@ export const GET = withErrorHandling(async (request: NextRequest) => {
   if (!STATE_CODE_REGEX.test(stateCode)) {
     return validationError({ state: 'Invalid state code.' });
   }
-
-  const supabase = createClient(
-    supabaseUrl,
-    supabaseKey,
-    { auth: { persistSession: false } },
-  );
 
   const { data, error } = await supabase
     .from('voter_registration_resources_view')

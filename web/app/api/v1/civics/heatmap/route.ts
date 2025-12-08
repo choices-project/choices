@@ -29,6 +29,19 @@ export const dynamic = 'force-dynamic';
 export const runtime = 'nodejs';
 export const revalidate = 0;
 
+type HeatmapResult = {
+  heatmap: Array<{
+    district_id: string;
+    district_name: string;
+    state: string;
+    level: string;
+    engagement_count: number;
+    representative_count: number;
+  }>;
+  k_anonymity: number;
+  generated_at: string;
+};
+
 export const GET = withErrorHandling(async (request: NextRequest) => {
   const supabase = await getSupabaseServerClient();
   const { data: { user } } = await supabase.auth.getUser();
@@ -57,18 +70,6 @@ export const GET = withErrorHandling(async (request: NextRequest) => {
       cacheKey,
       CACHE_TTL.DISTRICT_HEATMAP,
       async () => {
-        type HeatmapResult = {
-          heatmap: Array<{
-            district_id: string;
-            district_name: string;
-            state: string;
-            level: string;
-            engagement_count: number;
-            representative_count: number;
-          }>;
-          k_anonymity: number;
-          generated_at: string;
-        };
         // Initialize privacy-aware query builder
         const queryBuilder = new PrivacyAwareQueryBuilder(supabase);
 
@@ -99,9 +100,9 @@ export const GET = withErrorHandling(async (request: NextRequest) => {
       if (!districtGroups.has(districtKey)) {
         districtGroups.set(districtKey, []);
       }
-      const group = districtGroups.get(districtKey);
-      if (group) {
-        group.push(u);
+      const districtGroup = districtGroups.get(districtKey);
+      if (districtGroup) {
+        districtGroup.push(u);
       }
     });
 
@@ -176,24 +177,13 @@ export const GET = withErrorHandling(async (request: NextRequest) => {
       }
     );
 
-    type HeatmapResponse = {
-      heatmap: Array<{
-        district_id: string;
-        district_name: string;
-        state: string;
-        level: string;
-        engagement_count: number;
-        representative_count: number;
-      }>;
-      k_anonymity: number;
-      generated_at: string;
-    };
-    const responseData = result as HeatmapResponse | null;
+    const typedResult = result as HeatmapResult | null;
+
     return successResponse(
       {
-        heatmap: responseData?.heatmap ?? [],
-        kAnonymity: responseData?.k_anonymity ?? minCount,
-        generatedAt: responseData?.generated_at ?? new Date().toISOString()
+        heatmap: typedResult?.heatmap ?? [],
+        kAnonymity: typedResult?.k_anonymity ?? minCount,
+        generatedAt: typedResult?.generated_at ?? new Date().toISOString()
       },
       {
         cache: {

@@ -70,8 +70,11 @@ export function FilingChecklist({
                 }`}
               >
                 <button
+                  type="button"
                   onClick={() => toggleItem(item.id)}
                   className="mt-0.5 mr-3"
+                  aria-pressed={isChecked}
+                  aria-label={isChecked ? `Mark "${item.label}" as not completed` : `Mark "${item.label}" as completed`}
                 >
                   {isChecked ? (
                     <CheckCircle2 className="w-5 h-5 text-green-600" />
@@ -80,13 +83,14 @@ export function FilingChecklist({
                   )}
                 </button>
                 <div className="flex-1">
-                  <span
-                    className={`text-sm ${
+                  <button
+                    type="button"
+                    className={`text-left text-sm cursor-pointer ${
                       isChecked ? 'text-green-800 line-through' : 'text-gray-900'
                     }`}
                   >
                     {item.label}
-                  </span>
+                  </button>
                   {item.action && (
                     <div className="mt-2">
                       {item.action.type === 'link' && item.action.url && (

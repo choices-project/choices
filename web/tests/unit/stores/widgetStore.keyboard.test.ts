@@ -65,13 +65,6 @@ function createWidget(overrides: Partial<WidgetConfig> = {}): WidgetConfig {
   return cloned;
 }
 
-function requireWidgetSize(size: WidgetSize | undefined, context: string): WidgetSize {
-  if (!size) {
-    throw new Error(`Expected ${context} to be defined for keyboard store tests`);
-  }
-  return size;
-}
-
 function createLayout(widget: WidgetConfig): DashboardLayout {
   const now = new Date();
   return {
@@ -198,11 +191,10 @@ describe('widgetStore keyboard helpers', () => {
       result = nudgeWidgetSize(widget.id, -10, -10);
     });
 
-    const minimumSize = requireWidgetSize(widget.minSize, 'widget.minSize');
-    expect(result).toEqual({ w: minimumSize.w, h: minimumSize.h });
+    expect(result).toEqual({ w: widget.minSize!.w, h: widget.minSize!.h });
     expect(getWidget(widget.id)?.size).toEqual({
-      w: minimumSize.w,
-      h: minimumSize.h,
+      w: widget.minSize!.w,
+      h: widget.minSize!.h,
     });
 
     // Attempt to exceed maximum width.
@@ -210,12 +202,11 @@ describe('widgetStore keyboard helpers', () => {
       result = nudgeWidgetSize(widget.id, 50, 0);
     });
 
-    const maxSize = requireWidgetSize(widget.maxSize, 'widget.maxSize');
-    const expectedWidth = maxSize.w;
-    expect(result).toEqual({ w: expectedWidth, h: minimumSize.h });
+    const expectedWidth = widget.maxSize!.w!;
+    expect(result).toEqual({ w: expectedWidth, h: widget.minSize!.h });
     expect(getWidget(widget.id)?.size).toEqual({
       w: expectedWidth,
-      h: minimumSize.h,
+      h: widget.minSize!.h,
     });
   });
 });

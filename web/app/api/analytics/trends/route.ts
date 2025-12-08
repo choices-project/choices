@@ -102,12 +102,14 @@ export const GET = withErrorHandling(async (request: NextRequest) => {
           const date = voteDate.toISOString().split('T')[0];
           if (!date) return; // Skip if date string is invalid
 
-          let dayData = trendsByDate.get(date);
-          if (!dayData) {
-            dayData = { votes: 0, voters: new Set() };
-            trendsByDate.set(date, dayData);
+          if (!trendsByDate.has(date)) {
+            trendsByDate.set(date, { votes: 0, voters: new Set() });
           }
-          dayData.votes += 1;
+
+          const dayData = trendsByDate.get(date);
+          if (dayData) {
+            dayData.votes += 1;
+          }
         });
 
         // Convert to array and calculate metrics

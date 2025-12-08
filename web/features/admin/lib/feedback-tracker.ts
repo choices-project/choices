@@ -313,8 +313,8 @@ class FeedbackTracker {
     const trackedFetch: typeof window.fetch = async (...args) => {
       const startTime = Date.now();
       try {
-        const fetchImpl = this.originalFetch ?? window.fetch;
-        const response = await fetchImpl(...args);
+        const originalFetch = this.originalFetch ?? window.fetch;
+        const response = await originalFetch(...args);
         const duration = Date.now() - startTime;
         this.recordNetworkRequest(this.buildNetworkRequest(args, response.status, duration));
         return response;

@@ -66,9 +66,7 @@ export default function PWAFeatures({ className = '', showDetails = false }: PWA
         window.removeEventListener('offline', handleOffline);
       }
     }
-    
-    return undefined;
-  }, [handleOnline, handleOffline, pwa]) // Stable dependencies
+  }, [handleOnline, handleOffline, pwa]); // Stable dependencies
 
   // Handle undefined store hooks gracefully - provide defaults for testing
   const safeInstallation = installation || { canInstall: true, isInstalled: false }
@@ -268,12 +266,20 @@ export default function PWAFeatures({ className = '', showDetails = false }: PWA
       </div>
 
       {/* Focusable Elements */}
-      <div data-testid="pwa-first-focusable" className="focus:outline-none focus:ring-2 focus:ring-blue-500 p-2 border border-gray-300 rounded">
+      <button
+        type="button"
+        data-testid="pwa-first-focusable"
+        className="focus:outline-none focus:ring-2 focus:ring-blue-500 p-2 border border-gray-300 rounded"
+      >
         First Focusable Element
-      </div>
-      <div data-testid="pwa-second-focusable" className="focus:outline-none focus:ring-2 focus:ring-blue-500 p-2 border border-gray-300 rounded">
+      </button>
+      <button
+        type="button"
+        data-testid="pwa-second-focusable"
+        className="focus:outline-none focus:ring-2 focus:ring-blue-500 p-2 border border-gray-300 rounded"
+      >
         Second Focusable Element
-      </div>
+      </button>
 
       {/* Error States */}
       <div data-testid="pwa-sync-error" className="text-red-600 hidden">

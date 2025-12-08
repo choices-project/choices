@@ -443,7 +443,7 @@ export const POST = withErrorHandling(async (request: NextRequest, { params }: {
   );
 });
 
-export const HEAD = withErrorHandling(async (_request: NextRequest, { params }: { params: { id: string } }) => {
+export const HEAD = withErrorHandling(async (request: NextRequest, { params }: { params: { id: string } }) => {
   const pollId = params.id;
 
   if (!pollId) {

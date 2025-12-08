@@ -115,17 +115,11 @@ module.exports = {
         '!**/scripts.disabled/**',
         '!**/archive/**'
       ],
-    }
-    ,
+    },
     {
       displayName: 'contracts',
       testEnvironment: 'node',
       testTimeout: 20000,
-      // Use separate Babel config for Jest (allows Next.js to use SWC)
-      // babel-jest will automatically find .babelrc.cjs in the root
-      transform: {
-        '^.+\\.(js|jsx|ts|tsx)$': 'babel-jest'
-      },
       setupFiles: ['<rootDir>/jest.setup.js'],
       testMatch: [
         '<rootDir>/tests/contracts/**/*.test.{ts,tsx,js,jsx}',
@@ -140,12 +134,24 @@ module.exports = {
         '/build/',
         '/dist/',
       ],
-    }
+    },
   ],
   // Coverage configuration (metrics only; thresholds are tracked via dashboards, not hard-gated in Jest)
   coverageDirectory: '<rootDir>/coverage',
   coverageReporters: ['text', 'lcov', 'html', 'json-summary'],
-  collectCoverage: false, // Enable only when running test:coverage / test:coverage:ci
+  coverageThreshold: {
+    // NOTE: These thresholds are intentionally set just below current coverage
+    // to act as a guardrail rather than an aspirational target. As we land
+    // more tests per TESTING_IMPROVEMENTS_PLAN.md we can ratchet these up.
+    global: {
+      lines: 40,
+      functions: 35,
+      branches: 30,
+      statements: 40,
+    },
+  },
+  // Additional coverage settings
+  collectCoverage: false, // Enable only when running test:coverage
   coveragePathIgnorePatterns: [
     '/node_modules/',
     '/.next/',

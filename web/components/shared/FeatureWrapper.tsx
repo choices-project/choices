@@ -1,9 +1,9 @@
 /**
  * @fileoverview Feature Wrapper Component
- * 
+ *
  * React component that conditionally renders content based on feature flags.
  * Provides a clean way to wrap components or sections that depend on specific features.
- * 
+ *
  * @author Choices Platform Team
  * @created 2025-10-24
  * @version 2.0.0
@@ -48,10 +48,10 @@ export type FeatureWrapperProps = {
 
 /**
  * Wrapper component for a single feature flag
- * 
+ *
  * @param {FeatureWrapperProps} props - Component props
  * @returns {React.ReactElement | null} Rendered component or null
- * 
+ *
  * @example
  * <FeatureWrapper feature="new-feature">
  *   <NewFeatureComponent />
@@ -67,7 +67,6 @@ export function FeatureWrapper({
   className,
   style
 }: FeatureWrapperProps): React.ReactElement | null {
-  // Always call hooks unconditionally
   const { enabled, disabled: _disabled, loading } = useFeatureFlag(feature);
 
   if (isE2EHarness()) {
@@ -116,10 +115,10 @@ export type FeatureWrapperBatchProps = {
 
 /**
  * Wrapper component for multiple feature flags
- * 
+ *
  * @param {FeatureWrapperBatchProps} props - Component props
  * @returns {React.ReactElement | null} Rendered component or null
- * 
+ *
  * @example
  * <FeatureWrapperBatch features={["feature1", "feature2"]}>
  *   <MultipleFeatureComponent />
@@ -136,7 +135,6 @@ export function FeatureWrapperBatch({
   className,
   style
 }: FeatureWrapperBatchProps): React.ReactElement | null {
-  // Always call hooks unconditionally
   const { allEnabled, anyEnabled: anyEnabledResult, loading } = useFeatureFlagsBatch(features);
 
   if (isE2EHarness()) {
@@ -188,10 +186,10 @@ export type FeatureWrapperWithDependenciesProps = {
 
 /**
  * Wrapper component for feature flags with dependencies
- * 
+ *
  * @param {FeatureWrapperWithDependenciesProps} props - Component props
  * @returns {React.ReactElement | null} Rendered component or null
- * 
+ *
  * @example
  * <FeatureWrapperWithDependencies feature="main-feature">
  *   <MainFeatureComponent />
@@ -208,7 +206,6 @@ export function FeatureWrapperWithDependencies({
   className,
   style
 }: FeatureWrapperWithDependenciesProps): React.ReactElement | null {
-  // Always call hooks unconditionally
   const { enabled, disabled: _disabled, dependenciesMet, loading } = useFeatureFlagWithDependencies(feature);
 
   if (isE2EHarness()) {
@@ -241,12 +238,12 @@ export function FeatureWrapperWithDependencies({
 
 /**
  * Higher-order component for wrapping components with a single feature flag
- * 
+ *
  * @param {React.ComponentType<P>} WrappedComponent - Component to wrap
  * @param {string} feature - Feature flag to check
  * @param {React.ComponentType<P>} [fallback] - Fallback component when feature is disabled
  * @returns {React.ComponentType<P>} Wrapped component
- * 
+ *
  * @example
  * const MyComponent = withFeatureFlag(MyComponent, 'new-feature');
  */
@@ -256,6 +253,7 @@ export function withFeatureFlag<P extends object>(
   fallback?: React.ComponentType<P>
 ) {
   return function WithFeatureFlagComponent(props: P): React.ReactElement | null {
+    // Hooks must always run, even in harness mode
     const { enabled, disabled: _disabled, loading } = useFeatureFlag(feature);
 
     if (loading) {
@@ -277,13 +275,13 @@ export function withFeatureFlag<P extends object>(
 
 /**
  * Higher-order component for wrapping components with multiple feature flags
- * 
+ *
  * @param {React.ComponentType<P>} WrappedComponent - Component to wrap
  * @param {string[]} features - Feature flags to check
  * @param {React.ComponentType<P>} [fallback] - Fallback component when features are disabled
  * @param {boolean} [anyEnabled] - Whether any feature needs to be enabled (default: false)
  * @returns {React.ComponentType<P>} Wrapped component
- * 
+ *
  * @example
  * const MyComponent = withFeatureFlagsBatch(MyComponent, ['feature1', 'feature2']);
  */
@@ -317,15 +315,15 @@ export function withFeatureFlagsBatch<P extends object>(
 
 /**
  * Utility component for debugging feature flags
- * 
+ *
  * @returns {React.ReactElement} Debug component showing feature flag status
- * 
+ *
  * @example
  * <FeatureFlagDebugger />
  */
 export function FeatureFlagDebugger(): React.ReactElement {
   const { getAllFlags, systemInfo, isLoading } = useFeatureFlags();
-  
+
   if (isLoading) {
     return <div>Loading feature flags...</div>;
   }

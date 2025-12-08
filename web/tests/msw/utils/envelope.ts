@@ -58,17 +58,26 @@ export const normalizeMockPayload = (payload: unknown): MockEnvelope => {
 
     const errorMessage =
       'error' in envelope ? (envelope as MockErrorEnvelope).error ?? 'Request failed' : 'Request failed';
-    const opts: { code?: string; details?: unknown; metadata?: Partial<ApiMetadata> } = {};
+
+    const errorOptions: {
+      code?: string;
+      details?: unknown;
+      metadata?: Partial<ApiMetadata>;
+    } = {};
+
     if ('code' in envelope && typeof envelope.code === 'string') {
-      opts.code = envelope.code;
+      errorOptions.code = envelope.code;
     }
-    if ('details' in envelope && envelope.details !== undefined) {
-      opts.details = envelope.details;
+
+    if ('details' in envelope) {
+      errorOptions.details = envelope.details;
     }
+
     if (envelope.metadata) {
-      opts.metadata = envelope.metadata;
+      errorOptions.metadata = envelope.metadata;
     }
-    return mockError(errorMessage, opts);
+
+    return mockError(errorMessage, errorOptions);
   }
 
   return mockSuccess(payload);

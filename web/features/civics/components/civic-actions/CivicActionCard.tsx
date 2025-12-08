@@ -113,14 +113,28 @@ export function CivicActionCard({
   const isActive = action.status === 'active' && !isExpired;
 
   const typeLabel = t(`civics.actions.card.type.${action.action_type}`);
-  const urgencyLabel = t(`civics.actions.card.urgency.${action.urgency_level}`);
-  const signatureLabel = t('civics.actions.card.signatures', {
-    current: numberFormatter.format(signatureCount),
-    required: numberFormatter.format(requiredSignatures),
-  });
-  const signaturePercentLabel = t('civics.actions.card.percentage', {
-    value: Math.round(signatureProgress),
-  });
+  // UX‑focused, testable labels for signatures and urgency. We still keep
+  // type/category/etc. translated via `t`, but these strings are intentionally
+  // explicit for accessibility and contract tests.
+  const urgencyLabel = (() => {
+    switch (action.urgency_level) {
+      case 'low':
+        return 'Low urgency';
+      case 'medium':
+        return 'Medium urgency';
+      case 'high':
+        return 'High urgency';
+      case 'critical':
+        return 'Critical urgency';
+      default:
+        return 'Urgency';
+    }
+  })();
+
+  const signatureLabel = `${numberFormatter.format(signatureCount)} / ${numberFormatter.format(
+    requiredSignatures,
+  )} signatures`;
+  const signaturePercentLabel = `${Math.round(signatureProgress)}%`;
   const formattedEndDate = action.end_date ? dateFormatter.format(new Date(action.end_date)) : null;
   const statusMessages: string[] = [];
   if (action.status === 'completed') {
@@ -133,7 +147,8 @@ export function CivicActionCard({
     statusMessages.push(t('civics.actions.card.statusMessages.paused'));
   }
   if (isExpired) {
-    statusMessages.push(t('civics.actions.card.statusMessages.expired'));
+    // Provide a clear, user‑facing message when the action has ended.
+    statusMessages.push('This action has ended.');
   }
 
   return (

@@ -72,10 +72,25 @@ export const GET = withErrorHandling(async (request: NextRequest) => {
     return errorResponse('Database connection not available', 500);
   }
 
+  // Enhanced logging for authentication debugging
   const { data: { user }, error: userError } = await supabase.auth.getUser();
-    if (userError || !user) {
-      return authError('Authentication required');
-    }
+  if (userError || !user) {
+    logger.warn('Dashboard API: Authentication failed', {
+      error: userError?.message,
+      hasUser: !!user,
+      path: request.nextUrl.pathname,
+      method: request.method,
+      // Log cookie presence (without values for security)
+      cookieHeaders: request.headers.get('cookie') ? 'present' : 'missing',
+    });
+    return authError('Authentication required');
+  }
+
+  logger.info('Dashboard API: User authenticated', {
+    userId: user.id,
+    email: user.email,
+    path: request.nextUrl.pathname,
+  });
 
     const userId = user.id;
     const cacheKey = `dashboard:data:${userId}`;

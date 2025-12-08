@@ -27,14 +27,14 @@ import {
   Flame
 } from 'lucide-react';
 import React, { useEffect, useCallback, useMemo, useId, useRef } from 'react';
-import {
-  BarChart,
-  Bar,
-  XAxis,
-  YAxis,
-  CartesianGrid,
-  Tooltip,
-  Legend,
+import { 
+  BarChart, 
+  Bar, 
+  XAxis, 
+  YAxis, 
+  CartesianGrid, 
+  Tooltip, 
+  Legend, 
   ResponsiveContainer,
   Cell
 } from 'recharts';
@@ -304,8 +304,15 @@ export default function PollHeatmap({
     return t('analytics.heatmap.summaryFallback', summaryTotals);
   }, [activePolls, data.length, formatDecimal, formatNumber, t, topPoll, totalVotes]);
 
-  const chartSummaryText = useMemo(() => summaryIntro, [summaryIntro]);
+  const chartSummaryText = useMemo(() => {
+    if (data.length === 0) {
+      return 'No poll engagement data available for the current filters.';
+    }
 
+    return `Showing ${formatNumber(data.length)} polls with a total of ${formatNumber(
+      totalVotes,
+    )} votes. Highest engagement score is ${formatDecimal(maxEngagement)}.`;
+  }, [data.length, formatDecimal, formatNumber, maxEngagement, totalVotes]);
 
   useEffect(() => {
     if (isLoading || !summaryIntro) {

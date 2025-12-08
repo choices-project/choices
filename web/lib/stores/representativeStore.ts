@@ -33,8 +33,6 @@ import type { BaseStore } from './types';
 
 const DETAIL_CACHE_TTL = REPRESENTATIVE_CONSTANTS.CACHE_DURATION;
 
- 
-
 export type RepresentativeFollowRecord = {
   id: string;
   user_id: string;

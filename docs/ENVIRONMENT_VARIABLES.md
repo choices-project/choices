@@ -1,7 +1,9 @@
 # Environment Variables Documentation
 
-**Last Updated:** December 2024  
-**Status:** ✅ **ALL CRITICAL VARIABLES CONFIGURED** (Production Ready)
+**Last Updated:** November 30, 2025  
+**Status:** ✅ Current (verified against codebase)
+
+> **Note:** The file `scratch/final_work_TODO/MISSING_ENV_VARS.md` is outdated and has been superseded by this document. This is the canonical source for environment variable documentation.
 
 This document lists all environment variables required for the Choices application.
 
@@ -77,20 +79,20 @@ This document lists all environment variables required for the Choices applicati
   - Production: Should use verified domain (e.g., `candidates@yourdomain.com`)
   - Used by: Candidate journey emails
 
-- `RESEND_WEBHOOK_SECRET` (required for production webhook security)
-  - Webhook signing secret for Resend webhook verification
+- `RESEND_WEBHOOK_SECRET` (optional, recommended for production)
+  - Secret key for verifying Resend webhook signatures
   - Used by: `/api/webhooks/resend` endpoint for signature verification
-  - Security: ⚠️ Server-only, never expose
-  - Get from: Resend Dashboard → Webhooks → Webhook Settings
-  - Purpose: Verifies webhook requests are from Resend (prevents spoofing)
-  - See: `docs/archive/runbooks/operations/email-deliverability-setup.md`
+  - Security: ⚠️ Server-only, prevents unauthorized webhook calls
+  - Get from: Resend dashboard → Webhooks → Signing Secret
+  - Format: Base64-encoded secret (Resend uses Svix for webhooks)
+  - Note: If not set, webhook signature verification is disabled (not recommended for production)
 
 ### Google Civic Information API
 - `GOOGLE_CIVIC_API_KEY` (required for address lookup)
   - Google Civic Information API key for district resolution
   - Used by: `/api/v1/civics/address-lookup` endpoint (server proxy)
   - Client modules call the proxy; the key is never exposed to the browser
-  - Endpoint includes per-IP rate limiting and a short-term response cache (see `docs/CIVICS_ADDRESS_LOOKUP.md`)
+  - Endpoint includes per-IP rate limiting and a short-term response cache
   - Security: ⚠️ Server-only, never expose to client
   - Purpose: Convert address → district (no full addresses stored)
   - Get from: https://console.cloud.google.com/apis/credentials

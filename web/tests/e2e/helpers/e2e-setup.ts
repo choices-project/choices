@@ -9,9 +9,15 @@ import {
 import {
   POLL_FIXTURES,
   type MockPollRecord,
+  type MockPollOption,
   createPollRecord,
 } from '../../fixtures/api/polls';
 import { profileRecord } from '../../fixtures/api/profile';
+import {
+  PWA_NOTIFICATION_FIXTURE,
+  PWA_OFFLINE_FIXTURE,
+  PWA_SUBSCRIPTION_FIXTURE,
+} from '../../fixtures/api/pwa';
 import { buildShareAnalytics } from '../../fixtures/api/share';
 import {
   buildFeedCategoriesResponse,
@@ -585,16 +591,18 @@ export async function setupExternalAPIMocks(page: Page, overrides: Partial<Exter
         rawOptions?: string[];
       },
     ): MockPollRecord => {
+      const pollId = payload.id ?? `poll-${polls.length + 1}`;
+      const options: MockPollOption[] =
+        payload.options ??
+        payload.rawOptions?.map((text, index) => ({
+          id: `${pollId}-option-${index + 1}`,
+          text,
+        })) ??
+        [];
       const poll = createPollRecord({
-        id: payload.id ?? `poll-${polls.length + 1}`,
+        id: pollId,
         ...payload,
-        options:
-          payload.options ??
-          payload.rawOptions?.map((text, index) => ({
-            id: `${payload.id ?? `poll-${polls.length + 1}`}-option-${index + 1}`,
-            text,
-          })) ??
-          [],
+        options,
       });
       polls.push({
         ...poll,
@@ -809,7 +817,10 @@ export async function setupExternalAPIMocks(page: Page, overrides: Partial<Exter
     await page.route('**/api/polls/*/results', pollResultsHandler);
     await page.route('**/api/polls/*', pollDetailHandler);
     await page.route('**/api/dashboard', dashboardHandler);
-    await page.route('**/api/v1/civics/by-state**', civicsStateHandler);
+    // Only set up civicsStateHandler if civics option is enabled
+    if (options.civics) {
+      await page.route('**/api/v1/civics/by-state**', civicsStateHandler);
+    }
     await page.route('**/api/pwa/notifications/subscribe', pwaSubscribeHandler);
     await page.route('**/api/pwa/notifications/send', pwaNotificationHandler);
     await page.route('**/api/pwa/offline/process', offlineHandler);
@@ -823,7 +834,10 @@ export async function setupExternalAPIMocks(page: Page, overrides: Partial<Exter
     routes.push({ url: '**/api/polls/*/results', handler: pollResultsHandler });
     routes.push({ url: '**/api/polls/*', handler: pollDetailHandler });
     routes.push({ url: '**/api/dashboard', handler: dashboardHandler });
-    routes.push({ url: '**/api/v1/civics/by-state**', handler: civicsStateHandler });
+    // Only track civicsStateHandler route if civics option is enabled
+    if (options.civics) {
+      routes.push({ url: '**/api/v1/civics/by-state**', handler: civicsStateHandler });
+    }
     routes.push({ url: '**/api/pwa/notifications/subscribe', handler: pwaSubscribeHandler });
     routes.push({ url: '**/api/pwa/notifications/send', handler: pwaNotificationHandler });
     routes.push({ url: '**/api/pwa/offline/process', handler: offlineHandler });

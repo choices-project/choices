@@ -5,17 +5,22 @@ import type { UserStoreHarness } from '@/app/(app)/e2e/user-store/page';
 import { waitForPageReady } from '../helpers/e2e-setup';
 
 declare global {
+   
   interface Window {
     __userStoreHarness?: UserStoreHarness;
   }
 }
 
+const HARNESS_TIMEOUT = 90_000;
+
 const gotoHarness = async (page: Page) => {
-  await page.goto('/e2e/user-store', { waitUntil: 'domcontentloaded' });
+  await page.goto('/e2e/user-store', { waitUntil: 'domcontentloaded', timeout: HARNESS_TIMEOUT });
   await waitForPageReady(page);
   await page.waitForFunction(() => Boolean(window.__userStoreHarness));
   await page.waitForFunction(
-    () => document.documentElement.dataset.userStoreHarness === 'ready'
+    () => document.documentElement.dataset.userStoreHarness === 'ready',
+    undefined,
+    { timeout: HARNESS_TIMEOUT }
   );
 };
 

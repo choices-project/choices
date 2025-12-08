@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-empty-function */
 /**
  * @jest-environment jsdom
  */
@@ -41,7 +40,8 @@ describe('SiteMessages', () => {
 
     window.localStorage.clear();
 
-    announceSpy = jest.spyOn(ScreenReaderSupport, 'announce').mockImplementation(() => {});
+    // Announcements are captured via spy in tests; implementation is intentionally a no-op
+    announceSpy = jest.spyOn(ScreenReaderSupport, 'announce').mockImplementation(() => undefined);
   });
 
   afterEach(() => {
@@ -72,4 +72,4 @@ describe('SiteMessages', () => {
   });
 });
 
-/* eslint-enable @typescript-eslint/no-empty-function */
+

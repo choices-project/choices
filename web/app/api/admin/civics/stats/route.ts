@@ -1,5 +1,3 @@
-// Server route handler
-
 /**
  * Admin: Civics Stats Summary
  * GET /api/admin/civics/stats

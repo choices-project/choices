@@ -40,28 +40,28 @@ export default function ProfilePage() {
   
   const [showExportConfirm, setShowExportConfirm] = useState(false);
 
-  const profilePreferences = useMemo(() => {
-    const p = profile as unknown as UserProfile | undefined;
-    const prefs = p && typeof p === 'object' ? (p as Record<string, unknown>).preferences : undefined;
-    if (prefs && typeof prefs === 'object') {
-      return prefs as Record<string, unknown>;
-    }
-    return {};
-  }, [profile]);
-  const profilePrivacySettings = useMemo(() => {
-    const p = profile as unknown as UserProfile | undefined;
-    const settings = p && typeof p === 'object' ? (p as Record<string, unknown>).privacy_settings : undefined;
-    if (settings && typeof settings === 'object') {
-      return settings as Record<string, unknown>;
-    }
-    return {};
-  }, [profile]);
-
   // Handle export data
   const handleExportData = () => {
     void exportMutation.exportProfile({ includeActivity: true, includeVotes: true, includeComments: true, format: 'json' });
     setShowExportConfirm(false);
   };
+
+  const profileData = (profile ?? null) as UserProfile | null;
+  const profilePreferences = useMemo(() => {
+    if (!profileData) return {};
+    if (typeof profileData !== 'object' || !('preferences' in profileData)) return {};
+    const prefs = (profileData as Record<string, unknown>).preferences;
+    return prefs && typeof prefs === 'object' ? (prefs as Record<string, unknown>) : {};
+  }, [profileData]);
+
+  const profilePrivacySettings = useMemo(() => {
+    if (!profileData) return {};
+    if (typeof profileData !== 'object' || !('privacy_settings' in profileData)) return {};
+    const settings = (profileData as Record<string, unknown>).privacy_settings;
+    return settings && typeof settings === 'object'
+      ? (settings as Record<string, unknown>)
+      : {};
+  }, [profileData]);
 
   if (isLoading) {
     return (
@@ -74,20 +74,18 @@ export default function ProfilePage() {
     );
   }
 
-  if (error || !profile) {
+  if (error || !profileData) {
     return (
       <div className="max-w-2xl mx-auto p-6">
         <Alert variant="destructive">
           <AlertTriangle className="h-4 w-4" />
-      <AlertDescription>
-        {profileError ?? 'Failed to load profile. Please try again.'}
+          <AlertDescription>
+            {profileError ?? 'Failed to load profile. Please try again.'}
           </AlertDescription>
         </Alert>
       </div>
     );
   }
-
-  const profileData = profile as UserProfile;
 
   return (
     <div className="max-w-4xl mx-auto p-6 space-y-6">

@@ -59,10 +59,14 @@ export const GET = withErrorHandling(async (request: NextRequest) => {
   const offset = Number.isFinite(offsetParam) && offsetParam > 0 ? offsetParam : 0;
 
   const startDateParam = searchParams.get('startDate');
-  const startDate = startDateParam ? new Date(startDateParam) : undefined;
+  const startDate = startDateParam
+    ? new Date(startDateParam)
+    : undefined;
   
   const endDateParam = searchParams.get('endDate');
-  const endDate = endDateParam ? new Date(endDateParam) : undefined;
+  const endDate = endDateParam
+    ? new Date(endDateParam)
+    : undefined;
 
   // Create audit log service
   const auditLog = createAuditLogService(supabase);

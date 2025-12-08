@@ -15,7 +15,7 @@ import type { NextRequest } from 'next/server';
 import { withErrorHandling, successResponse, forbiddenError, validationError, errorResponse } from '@/lib/api';
 import { isFeatureEnabled } from '@/lib/core/feature-flags';
 import { devLog } from '@/lib/utils/logger';
-import type { Json, TablesInsert } from '@/types/supabase';
+import type { TablesInsert } from '@/types/supabase';
 import { getSupabaseServerClient } from '@/utils/supabase/server';
 
 export const POST = withErrorHandling(async (request: NextRequest) => {
@@ -61,8 +61,7 @@ export const POST = withErrorHandling(async (request: NextRequest) => {
       return successResponse({ recorded: false, reason: 'bot' });
     }
 
-    // Persist analytics event according to typed schema
-    // event_data is Json type which accepts Record<string, unknown>
+    // Persist analytics event according to typed schema (best-effort)
     const payload: TablesInsert<'analytics_events'> = {
       event_type: 'share',
       event_data: {
@@ -70,13 +69,13 @@ export const POST = withErrorHandling(async (request: NextRequest) => {
         poll_id,
         placement: placement ?? 'unknown',
         content_type: content_type ?? 'poll'
-      } as Json,
+      } as unknown as any,
       user_agent: userAgent,
       referrer: request.headers.get('referer'),
       // ip_address is unknown-typed; omit to avoid type issues across environments
       created_at: new Date().toISOString()
     };
-    const { error } = await supabase
+    const { error } = await (supabase as any)
       .from('analytics_events')
       .insert(payload);
     if (error) {
@@ -133,10 +132,9 @@ export const GET = withErrorHandling(async (request: NextRequest) => {
     const platformBreakdown: Record<string, number> = {};
     const pollShares: Record<string, number> = {};
 
-    shareEvents?.forEach((event) => {
-      const eventData = event.event_data as Record<string, unknown> | null;
-      const eventPlatform = (eventData?.platform as string) || 'unknown';
-      const eventPollId = eventData?.poll_id as string | undefined;
+    shareEvents?.forEach((event: any) => {
+      const eventPlatform = event.event_data?.platform || 'unknown';
+      const eventPollId = event.event_data?.poll_id;
 
       platformBreakdown[eventPlatform] = (platformBreakdown[eventPlatform] || 0) + 1;
 

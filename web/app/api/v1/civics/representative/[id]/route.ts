@@ -1,10 +1,24 @@
 // app/api/v1/civics/representative/[id]/route.ts
 // Versioned API endpoint for single representative with FEC and voting data
-import { createClient } from '@supabase/supabase-js';
 import type { NextRequest } from 'next/server';
 
-import { withErrorHandling, successResponse, validationError, notFoundError, errorResponse } from '@/lib/api';
+import { withErrorHandling, successResponse, validationError, notFoundError, errorResponse, rateLimitError } from '@/lib/api';
+import { getRedisClient } from '@/lib/cache/redis-client';
+import { apiRateLimiter } from '@/lib/rate-limiting/api-rate-limiter';
 import { logger } from '@/lib/utils/logger';
+import { getSupabaseServerClient } from '@/utils/supabase/server';
+
+// Type assertions for civics tables not in generated Database types
+// Define manually since these tables are not in the generated types
+type CivicsVotesMinimalRow = {
+  vote_id: string;
+  bill_title: string | null;
+  vote_date: string;
+  vote_position: string | null;
+  party_position: string | null;
+  last_updated: string;
+  person_id: string | null;
+};
 
 type RepresentativeResponse = {
   id: string;
@@ -40,23 +54,53 @@ type RepresentativeResponse = {
   last_updated: string;
 }
 
+/**
+ * Get client IP address from request headers
+ */
+function getClientIP(request: NextRequest): string {
+  const forwarded = request.headers.get('x-forwarded-for');
+  if (forwarded) {
+    const firstIP = forwarded.split(',')[0];
+    if (firstIP) {
+      return firstIP.trim();
+    }
+  }
+  const realIP = request.headers.get('x-real-ip');
+  if (realIP) {
+    return realIP;
+  }
+  return request.ip ?? 'unknown';
+}
+
+/**
+ * Generate cache key for representative endpoint
+ */
+function generateCacheKey(id: string, include: string[]): string {
+  const includeStr = include.sort().join(',');
+  return `civics:representative:${id}:${includeStr}`;
+}
+
 export const GET = withErrorHandling(async (
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) => {
-  // Create Supabase client at request time (not module level) to avoid build-time errors
-  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
-  const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+  // Rate limiting: 100 requests per 15 minutes per IP
+  const clientIP = getClientIP(request);
+  const rateLimitResult = await apiRateLimiter.checkLimit(clientIP, '/api/v1/civics/representative/[id]', {
+    maxRequests: 100,
+    windowMs: 15 * 60 * 1000, // 15 minutes
+  });
 
-  if (!supabaseUrl || !supabaseKey) {
-    return errorResponse('Supabase configuration missing', 500);
+  if (!rateLimitResult.allowed) {
+    logger.warn('Rate limit exceeded for civics representative', { ip: clientIP });
+    return rateLimitError('Rate limit exceeded', rateLimitResult.retryAfter);
   }
 
-  const supabase = createClient(
-    supabaseUrl,
-    supabaseKey,
-    { auth: { persistSession: false } }
-  );
+  // Get Supabase client (uses anon key, RLS allows anonymous reads)
+  const supabase = await getSupabaseServerClient();
+  if (!supabase) {
+    return errorResponse('Database connection not available', 500);
+  }
 
   try {
     const { searchParams } = new URL(request.url);
@@ -64,9 +108,52 @@ export const GET = withErrorHandling(async (
     const include = searchParams.get('include')?.split(',') ?? [];
     const includeDivisions = include.includes('divisions');
 
-    const representativeId = params.id?.trim();
+    const { id } = await params;
+    const representativeId = id?.trim();
     if (!representativeId) {
       return validationError({ id: 'Representative ID is required' });
+    }
+
+    // Check Redis cache first
+    const cacheKey = generateCacheKey(representativeId, include);
+    const cache = await getRedisClient();
+    try {
+      const cachedData = await cache.get<{ representative: RepresentativeResponse }>(cacheKey);
+
+      if (cachedData) {
+        logger.info('Civics representative cache hit', { id: representativeId, cacheKey });
+
+        // Filter fields if requested
+        if (fields.length > 0) {
+          const filteredResponse: Record<string, unknown> = {};
+          fields.forEach((field) => {
+            if (field in cachedData.representative) {
+              filteredResponse[field] = cachedData.representative[field as keyof RepresentativeResponse];
+            }
+          });
+          const responsePayload = successResponse(
+            { representative: filteredResponse },
+            {
+              include: include.length > 0 ? include : undefined,
+              fields: fields.length > 0 ? fields : undefined,
+              cached: true,
+            }
+          );
+          responsePayload.headers.set('Cache-Control', 'public, max-age=300, stale-while-revalidate=86400');
+          responsePayload.headers.set('X-Cache', 'HIT');
+          return responsePayload;
+        }
+
+        const response = successResponse(cachedData, {
+          include: include.length > 0 ? include : undefined,
+          cached: true,
+        });
+        response.headers.set('Cache-Control', 'public, max-age=300, stale-while-revalidate=86400');
+        response.headers.set('X-Cache', 'HIT');
+        return response;
+      }
+    } catch (cacheError) {
+      logger.warn('Cache read error (continuing without cache)', { error: cacheError });
     }
 
     // Get base representative data
@@ -105,7 +192,8 @@ export const GET = withErrorHandling(async (
       selectFields.push('representative_divisions:representative_divisions(division_id)');
     }
 
-    const { data: rep, error: repError } = await supabase
+    // Type assertion needed because civics tables may not be in generated Database type
+    const { data: rep, error: repError } = await (supabase as any)
       .from('civics_representatives')
       .select(selectFields.join(','))
       .eq('id', representativeId)
@@ -151,7 +239,7 @@ export const GET = withErrorHandling(async (
 
     // Include FEC data if requested
     if (include.includes('fec') && representativeRow.person_id) {
-      const { data: fecData, error: fecError } = await supabase
+      const { data: fecData, error: fecError } = await (supabase as any)
         .from('civics_fec_minimal')
         .select('total_receipts, cash_on_hand, election_cycle, last_updated')
         .eq('person_id', representativeRow.person_id)
@@ -172,16 +260,16 @@ export const GET = withErrorHandling(async (
 
     // Include voting data if requested
     if (include.includes('votes') && representativeRow.person_id) {
-      const { data: votesData, error: votesError } = await supabase
+      const { data: votesData, error: votesError } = await (supabase as any)
         .from('civics_votes_minimal')
         .select('vote_id, bill_title, vote_date, vote_position, party_position, last_updated')
         .eq('person_id', representativeRow.person_id)
         .order('vote_date', { ascending: false })
         .limit(5);
 
-      if (!votesError && votesData) {
-        // Calculate party alignment
-        const partyVotes = votesData.filter(vote => vote.party_position === vote.vote_position);
+              if (!votesError && votesData) {
+                // Calculate party alignment
+                const partyVotes = votesData.filter((vote: CivicsVotesMinimalRow) => vote.party_position === vote.vote_position);
         const partyAlignment = votesData.length > 0 ? partyVotes.length / votesData.length : 0;
 
         response.votes = {
@@ -218,6 +306,14 @@ export const GET = withErrorHandling(async (
       }
     }
 
+    // Cache the response for 5 minutes
+    try {
+      await cache.set(cacheKey, { representative: response }, 300); // 5 minutes TTL
+      logger.info('Civics representative cached', { id: representativeId, cacheKey });
+    } catch (cacheError) {
+      logger.warn('Cache write error (continuing without cache)', { error: cacheError });
+    }
+
     // Filter fields if requested
     if (fields.length > 0) {
       const filteredResponse: Record<string, unknown> = {};
@@ -230,12 +326,14 @@ export const GET = withErrorHandling(async (
         { representative: filteredResponse },
         {
           include: include.length > 0 ? include : undefined,
-          fields: fields.length > 0 ? fields : undefined
+          fields: fields.length > 0 ? fields : undefined,
+          cached: false,
         }
       );
 
       responsePayload.headers.set('ETag', `"${representativeRow.id}-${representativeRow.last_updated}"`);
       responsePayload.headers.set('Cache-Control', 'public, max-age=300, stale-while-revalidate=86400');
+      responsePayload.headers.set('X-Cache', 'MISS');
 
       return responsePayload;
     }
@@ -243,12 +341,14 @@ export const GET = withErrorHandling(async (
     const apiResponse = successResponse(
       { representative: response },
       {
-        include: include.length > 0 ? include : undefined
+        include: include.length > 0 ? include : undefined,
+        cached: false,
       }
     );
 
     apiResponse.headers.set('ETag', `"${representativeRow.id}-${representativeRow.last_updated}"`);
     apiResponse.headers.set('Cache-Control', 'public, max-age=300, stale-while-revalidate=86400');
+    apiResponse.headers.set('X-Cache', 'MISS');
 
     return apiResponse;
 

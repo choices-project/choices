@@ -175,13 +175,11 @@ export const WidgetRenderer: React.FC<WidgetRendererProps> = ({
       priority: 'polite' | 'assertive' = 'polite',
     ) => {
       const message = t(key as never, params as never);
-      if (process.env.NODE_ENV !== 'production') {
-        logger.debug('[WidgetRenderer][announce]', {
-          key,
-          message,
-          priority,
-        });
-      }
+      logger.debug('[WidgetRenderer][announce]', {
+        key,
+        message,
+        priority,
+      });
       ScreenReaderSupport.announce(message, priority);
     },
     [t],

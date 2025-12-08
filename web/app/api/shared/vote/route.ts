@@ -17,13 +17,12 @@ export const POST = withErrorHandling(async (request: NextRequest) => {
 
     const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
     const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+    
     if (!supabaseUrl || !supabaseKey) {
-      throw new Error('Supabase environment variables are not configured');
+      throw new Error('Supabase configuration missing');
     }
-    const supabase = createClient(
-      supabaseUrl,
-      supabaseKey
-    );
+    
+    const supabase = createClient(supabaseUrl, supabaseKey);
 
     // Check if poll exists and is shareable
     const { data: poll, error: pollError } = await supabase

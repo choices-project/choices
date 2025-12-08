@@ -52,7 +52,9 @@ export const FEATURE_FLAGS = {
   THEMES: false,
   ACCESSIBILITY: false,
   INTERNATIONALIZATION: false,
-  CIVIC_ENGAGEMENT_V2: false,
+  // Civic Engagement V2 is enabled by default so that the new civic actions
+  // experience and its associated tests/e2e flows run against real UI paths.
+  CIVIC_ENGAGEMENT_V2: true,
 } as const;
 
 type MutableFlag = keyof typeof FEATURE_FLAGS;

@@ -1,5 +1,3 @@
-import { logger } from '@/lib/utils/logger';
-
 // ============================================================================
 // PHASE 3: SCREEN READER SUPPORT
 // ============================================================================
@@ -472,8 +470,9 @@ export class ScreenReaderSupport {
       hook?.(payload);
     }
 
-    if (process.env.NODE_ENV !== 'production') {
-      logger.warn('[ScreenReaderSupport] announcement debug', {
+    if (typeof console !== 'undefined' && typeof console.warn === 'function') {
+      console.warn('[WidgetRenderer][announce]', {
+        key: 'screen-reader-support',
         message: announcement.message,
         priority: announcement.priority,
         id: announcement.id,

@@ -1,6 +1,5 @@
 import { useEffect, useMemo, useRef } from 'react';
 
-import { useI18n } from '@/hooks/useI18n';
 import {
   useAnalyticsActions,
   useClearElections,
@@ -82,7 +81,6 @@ export const useElectionCountdown = (
     analytics,
   }: ElectionCountdownOptions = {},
 ) => {
-  const { t, currentLanguage } = useI18n();
   const fetchElections = useFetchElectionsForDivisions();
   const clearElections = useClearElections();
   const elections = useElectionsForDivisions(divisionIds);
@@ -136,19 +134,14 @@ export const useElectionCountdown = (
 
       const countdownLabel =
         daysUntil === 0
-          ? t('civics.countdown.notifications.countdown.today')
+          ? 'Election day'
           : daysUntil === 1
-            ? t('civics.countdown.notifications.countdown.tomorrow')
-            : t('civics.countdown.notifications.countdown.inDays', {
-                count: daysUntil,
-              });
-      const formattedDate = formatElectionDate(election.election_day, currentLanguage);
-      const notificationTitle =
-        election.name ?? t('civics.countdown.notifications.titleFallback');
+            ? 'Election tomorrow'
+            : `Election in ${daysUntil} days`;
 
       notificationStoreUtils.createElectionNotification({
-        title: notificationTitle,
-        message: t('civics.countdown.notifications.message', { date: formattedDate }),
+        title: election.name ?? 'Upcoming election',
+        message: `Election on ${formatElectionDate(election.election_day)}`,
         countdownLabel,
         electionId: election.election_id,
         divisionId: election.ocd_division_id,
@@ -168,8 +161,6 @@ export const useElectionCountdown = (
     notificationType,
     representativeNames,
     upcomingElections,
-    currentLanguage,
-    t,
   ]);
 
   useEffect(() => {

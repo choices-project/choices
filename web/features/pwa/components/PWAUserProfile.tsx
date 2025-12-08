@@ -166,24 +166,26 @@ export function PWAUserProfile({ user, onUpdate: _onUpdate }: PWAUserProfileProp
     }
   }
 
-  if (!user) {
-    return (
-      <div className="bg-white rounded-lg border border-gray-200 p-6" data-testid="pwa-user-profile-empty">
-        <div className="text-center">
-          <User className="w-12 h-12 text-gray-400 mx-auto mb-4" />
-          <h3 className="text-lg font-medium text-gray-900 mb-2">No Profile Found</h3>
-          <p className="text-gray-600">Please create a profile to get started.</p>
-        </div>
-      </div>
-    )
-  }
-
   const VisibilityIcon = visibilityInfo.icon
 
   return (
     <div className="space-y-6" data-testid="pwa-user-profile">
-      {/* Profile Header */}
-      <div className="bg-white rounded-lg border border-gray-200 p-6" data-testid="pwa-user-profile-status">
+      {!user && (
+        <div
+          className="bg-white rounded-lg border border-gray-200 p-6"
+          data-testid="pwa-user-profile-empty"
+        >
+          <div className="text-center">
+            <User className="w-12 h-12 text-gray-400 mx-auto mb-4" />
+            <h3 className="text-lg font-medium text-gray-900 mb-2">No Profile Found</h3>
+            <p className="text-gray-600">Please create a profile to get started.</p>
+          </div>
+        </div>
+      )}
+
+      {user && (
+        <>
+        <div className="bg-white rounded-lg border border-gray-200 p-6" data-testid="pwa-user-profile-status">
         <div className="flex items-center justify-between mb-4">
           <div className="flex items-center space-x-3">
             <div className="bg-gradient-to-br from-blue-600 to-purple-600 p-3 rounded-xl">
@@ -191,9 +193,15 @@ export function PWAUserProfile({ user, onUpdate: _onUpdate }: PWAUserProfileProp
             </div>
             <div>
               <h2 className="text-xl font-bold text-gray-900">
-                {user.pseudonym ?? `User ${user.stableId.slice(0, 8)}`}
+                {user
+                  ? user.pseudonym ?? `User ${user.stableId.slice(0, 8)}`
+                  : 'User'}
               </h2>
-              <p className="text-sm text-gray-600">Member since {new Date(user.createdAt).toLocaleDateString()}</p>
+              {user && (
+                <p className="text-sm text-gray-600">
+                  Member since {new Date(user.createdAt).toLocaleDateString()}
+                </p>
+              )}
             </div>
           </div>
           <button
@@ -215,10 +223,10 @@ export function PWAUserProfile({ user, onUpdate: _onUpdate }: PWAUserProfileProp
               <div className="flex-1 bg-gray-200 rounded-full h-2">
                 <div
                   className="bg-blue-600 h-2 rounded-full transition-all duration-300"
-                  style={{ width: `${user.verificationScore}%` }}
+                  style={{ width: `${user?.verificationScore ?? 0}%` }}
                 />
               </div>
-              <span className="text-sm text-gray-600">{user.verificationScore}%</span>
+              <span className="text-sm text-gray-600">{user?.verificationScore ?? 0}%</span>
             </div>
           </div>
 
@@ -228,9 +236,9 @@ export function PWAUserProfile({ user, onUpdate: _onUpdate }: PWAUserProfileProp
               <span className={`font-medium ${visibilityInfo.color}`}>{visibilityInfo.name}</span>
             </div>
             <p className="text-sm text-gray-600">
-              {user.dataSharingLevel === 'minimal' && 'Minimal data sharing'}
-              {user.dataSharingLevel === 'demographic' && 'Demographic data shared'}
-              {user.dataSharingLevel === 'full' && 'Full data sharing'}
+              {user?.dataSharingLevel === 'minimal' && 'Minimal data sharing'}
+              {user?.dataSharingLevel === 'demographic' && 'Demographic data shared'}
+              {user?.dataSharingLevel === 'full' && 'Full data sharing'}
             </p>
           </div>
         </div>
@@ -262,32 +270,32 @@ export function PWAUserProfile({ user, onUpdate: _onUpdate }: PWAUserProfileProp
       </div>
 
       {/* Demographics (if shared) */}
-      {user.demographics && user.dataSharingLevel !== 'minimal' && (
+      {user?.demographics && user?.dataSharingLevel !== 'minimal' && (
         <div className="bg-white rounded-lg border border-gray-200 p-6" data-testid="pwa-user-demographics">
           <h3 className="text-lg font-semibold text-gray-900 mb-4">Demographics</h3>
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-            {user.demographics.ageRange && (
+            {user.demographics?.ageRange && (
               <div>
                 <label className="text-sm font-medium text-gray-700">Age Range</label>
-                <p className="text-sm text-gray-900">{user.demographics.ageRange}</p>
+                <p className="text-sm text-gray-900">{user.demographics?.ageRange}</p>
               </div>
             )}
-            {user.demographics.educationLevel && (
+            {user.demographics?.educationLevel && (
               <div>
                 <label className="text-sm font-medium text-gray-700">Education</label>
-                <p className="text-sm text-gray-900">{user.demographics.educationLevel}</p>
+                <p className="text-sm text-gray-900">{user.demographics?.educationLevel}</p>
               </div>
             )}
-            {user.demographics.incomeBracket && (
+            {user.demographics?.incomeBracket && (
               <div>
                 <label className="text-sm font-medium text-gray-700">Income</label>
-                <p className="text-sm text-gray-900">{user.demographics.incomeBracket}</p>
+                <p className="text-sm text-gray-900">{user.demographics?.incomeBracket}</p>
               </div>
             )}
-            {user.demographics.regionCode && (
+            {user.demographics?.regionCode && (
               <div>
                 <label className="text-sm font-medium text-gray-700">Region</label>
-                <p className="text-sm text-gray-900">{user.demographics.regionCode}</p>
+                <p className="text-sm text-gray-900">{user.demographics?.regionCode}</p>
               </div>
             )}
           </div>
@@ -418,6 +426,8 @@ export function PWAUserProfile({ user, onUpdate: _onUpdate }: PWAUserProfileProp
           )}
         </AnimatePresence>
       </div>
+      </>
+      )}
 
       {/* Device Information */}
       {deviceFingerprint && (

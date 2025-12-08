@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-var-requires */
 /**
  * Poll Wizard Store Consumer Alignment Tests
  * 
@@ -124,6 +125,10 @@ describe('Poll Wizard Store Consumer Alignment', () => {
     expect(createPollRequest).toHaveBeenCalled();
   });
 });
+
+/* eslint-enable @typescript-eslint/no-var-requires */
+
+
 
 /**
  * Consumer Alignment Guidelines:

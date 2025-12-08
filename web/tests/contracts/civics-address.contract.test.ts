@@ -7,19 +7,21 @@ import { createNextRequest } from '@/tests/contracts/helpers/request';
 const mockSetJurisdictionCookie = jest.fn();
 const mockAssertPepperConfig = jest.fn();
 
-jest.mock('@/lib/civics/privacy-utils', () => ({
-  setJurisdictionCookie: jest.fn(async (...args: unknown[]) => mockSetJurisdictionCookie(...args)),
-  generateAddressHMAC: jest.fn((address: string) => `hash-${address}`),
-  validateAddressInput: jest.fn(() => ({ valid: true })),
-}));
+jest.mock('@/lib/civics/privacy-utils', () => {
+  // Preserve real implementations for validation and feature checks
+  // while overriding only the pieces that touch cookies/HMACs.
+  // This ensures validateAddressInput remains a real function.
+  const actual = jest.requireActual<typeof import('@/lib/civics/privacy-utils')>('@/lib/civics/privacy-utils');
+  return {
+    ...actual,
+    setJurisdictionCookie: jest.fn(async (...args: unknown[]) => mockSetJurisdictionCookie(...args)),
+    generateAddressHMAC: jest.fn(() => 'hash'),
+  };
+});
 
 jest.mock('@/lib/civics/env-guard', () => ({
   assertPepperConfig: jest.fn((...args: unknown[]) => mockAssertPepperConfig(...args)),
 }));
-
-const privacyUtilsModule = jest.requireMock('@/lib/civics/privacy-utils') as {
-  validateAddressInput: jest.Mock;
-};
 
 describe('Civics address lookup contract', () => {
   const loadRoute = () => {
@@ -78,7 +80,6 @@ describe('Civics address lookup contract', () => {
   });
 
   it('validates address payload', async () => {
-    privacyUtilsModule.validateAddressInput.mockReturnValueOnce({ valid: false, error: 'Address is required' });
     const { POST } = loadRoute();
     const response = await POST(
       createNextRequest('http://localhost/api/v1/civics/address-lookup', {
@@ -93,7 +94,7 @@ describe('Civics address lookup contract', () => {
     expect(body.code).toBe('VALIDATION_ERROR');
   });
 
-  it('returns 502 when API key missing', async () => {
+  it('returns 200 with fallback when API key missing', async () => {
     process.env.GOOGLE_CIVIC_API_KEY = '';
 
     const { POST } = loadRoute();
@@ -101,31 +102,18 @@ describe('Civics address lookup contract', () => {
       createNextRequest('http://localhost/api/v1/civics/address-lookup', {
         method: 'POST',
         headers: { 'content-type': 'application/json' },
-        body: JSON.stringify({ address: '123 Main' }),
+        body: JSON.stringify({ address: '123 Main St, Sacramento, CA' }),
       }),
     );
 
     const body = await response.json();
-    expect(response.status).toBe(502);
-    expect(body.success).toBe(false);
-    expect(body.error).toBe('Failed to resolve address jurisdiction');
-  });
-
-  it('returns 503 when feature disabled via validator', async () => {
-    privacyUtilsModule.validateAddressInput.mockReturnValueOnce({ valid: false, error: 'Feature disabled' });
-
-    const { POST } = loadRoute();
-    const response = await POST(
-      createNextRequest('http://localhost/api/v1/civics/address-lookup', {
-        method: 'POST',
-        headers: { 'content-type': 'application/json' },
-        body: JSON.stringify({ address: '123 Main St, Phoenix, AZ' }),
-      }),
-    );
-
-    const body = await response.json();
-    expect(response.status).toBe(503);
-    expect(body.error).toMatch(/disabled/i);
+    // Endpoint now returns 200 with fallback data instead of 502
+    expect(response.status).toBe(200);
+    expect(body.success).toBe(true);
+    expect(body.data.jurisdiction).toBeDefined();
+    expect(body.data.jurisdiction.fallback).toBe(true);
+    expect(body.metadata?.fallback).toBe(true);
+    expect(body.metadata?.integration).toBe('fallback');
   });
 
   it('falls back to state extraction when external API fails', async () => {

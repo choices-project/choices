@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-empty-function */
 /**
  * @jest-environment node
  */
@@ -30,22 +29,28 @@ jest.mock('@/features/analytics/lib/privacyFilters', () => ({
 jest.mock('@/lib/auth/adminGuard', () => ({
   canAccessAnalytics: jest.fn(() => true),
   logAnalyticsAccess: jest.fn(),
-  logAnalyticsAccessToDatabase: jest.fn(async () => {}),
+  logAnalyticsAccessToDatabase: jest.fn(async () => {
+    // In tests we just ensure this hook is invoked; no-op persistence
+    return Promise.resolve();
+  }),
 }));
 
 jest.mock('@/lib/cache/analytics-cache', () => {
   const actual = jest.requireActual('@/lib/cache/analytics-cache');
   return {
     ...actual,
-    getCached: jest.fn(async (_key: string, _ttl: number, fetcher: () => Promise<any>) => ({
-      data: await fetcher(),
-      fromCache: false,
-    })),
+    getCached: jest.fn(
+      async (_key: string, _ttl: number, fetcher: () => Promise<any>) => {
+        const data = await fetcher();
+        return {
+          data,
+          fromCache: false,
+        };
+      },
+    ),
     generateCacheKey: jest.fn(() => 'cache-key'),
   };
 });
-
-/* eslint-enable @typescript-eslint/no-empty-function */
 
 const mockSupabaseClient: Record<string, any> = {
   auth: {
@@ -64,6 +69,7 @@ const mockPrivacyBuilder = {
   getDemographics: jest.fn(),
 };
 
+// Dynamic require is intentional here to isolate route modules per test
 const isolateRoute = (path: string) => () => {
   let routeModule: any;
   jest.isolateModules(() => {

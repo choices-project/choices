@@ -16,9 +16,22 @@ import {
   getTemplateById,
   fillTemplate,
 } from '@/lib/contact/message-templates';
-import { localizeTemplate, localizeTemplates, type LocalizedTemplate } from '@/lib/contact/template-localization';
 // withOptional removed
 import logger from '@/lib/utils/logger';
+
+type TranslationParamValue = string | number | boolean | null | undefined;
+type TranslationParams = Record<string, TranslationParamValue>;
+type LocalizedTemplate = MessageTemplate;
+
+function localizeTemplate(template: MessageTemplate, _t: (key: string, params?: TranslationParams) => string): LocalizedTemplate {
+  // For now, use the template's built-in strings. This keeps behavior stable
+  // while still allowing future i18n-specific enhancements.
+  return template;
+}
+
+function localizeTemplates(templates: MessageTemplate[], t: (key: string, params?: TranslationParams) => string): LocalizedTemplate[] {
+  return templates.map((template) => localizeTemplate(template, t));
+}
 
 export function useMessageTemplates() {
   const { t } = useI18n();

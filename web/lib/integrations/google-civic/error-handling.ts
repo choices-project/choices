@@ -221,18 +221,29 @@ export class GoogleCivicErrorHandler {
           this.retryConfig.maxDelay
         );
 
-        logger.warn('Google Civic API operation failed, retrying', {
-          attempt,
-          delay,
-          error: lastError.message,
-          context
-        });
+        if (lastError) {
+          logger.warn('Google Civic API operation failed, retrying', {
+            attempt,
+            delay,
+            error: lastError.message,
+            context
+          });
+        } else {
+          logger.warn('Google Civic API operation failed with unknown error, retrying', {
+            attempt,
+            delay,
+            context
+          });
+        }
 
         await this.sleep(delay);
       }
     }
 
-    throw lastError ?? new GoogleCivicApiError('Unknown error after retries', 500, { context });
+    if (lastError) {
+      throw lastError;
+    }
+    throw new Error('Google Civic API request failed with unknown error');
   }
 
   /**

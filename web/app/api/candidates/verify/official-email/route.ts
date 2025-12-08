@@ -1,5 +1,3 @@
-// Server route handler
-
 import type { NextRequest } from 'next/server';
 
 import { withErrorHandling, successResponse, errorResponse, validationError, methodNotAllowed } from '@/lib/api';

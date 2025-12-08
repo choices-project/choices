@@ -1,4 +1,7 @@
-import { test, type Page } from '@playwright/test';
+import { promises as fs } from 'node:fs';
+import path from 'node:path';
+
+import { expect, test, type Page } from '@playwright/test';
 
 import { runAxeAudit } from '../helpers/accessibility';
 
@@ -25,6 +28,14 @@ const gotoAnalyticsHarness = async (page: Page) => {
   );
 };
 
+const getBaselinePath = (dateStamp: string) => {
+  const repoRelativeDir = path.resolve(process.cwd(), '../scratch/gpt5-codex/archive/inclusive-platform/axe-baselines');
+  return {
+    dir: repoRelativeDir,
+    file: path.join(repoRelativeDir, `analytics-axe-violations-${dateStamp}.json`),
+  };
+};
+
 test.describe('Analytics accessibility axe baseline', () => {
   test('captures current axe violations for analytics harness', async ({ page }, testInfo) => {
     await gotoAnalyticsHarness(page);
@@ -36,6 +47,7 @@ test.describe('Analytics accessibility axe baseline', () => {
 
     const capturedAt = new Date();
     const dateStamp = capturedAt.toISOString().slice(0, 10);
+    const { dir, file } = getBaselinePath(dateStamp);
 
     const baselinePayload = {
       capturedAt: capturedAt.toISOString(),
@@ -51,9 +63,11 @@ test.describe('Analytics accessibility axe baseline', () => {
       violations: axeResults.violations,
     };
 
-    // Attach directly to test artifacts instead of writing outside workspace
-    await testInfo.attach(`analytics-axe-violations-${dateStamp}.json`, {
-      body: JSON.stringify(baselinePayload, null, 2),
+    await fs.mkdir(dir, { recursive: true });
+    await fs.writeFile(file, `${JSON.stringify(baselinePayload, null, 2)}\n`, 'utf8');
+
+    await testInfo.attach(`analytics-axe-violations-${dateStamp}`, {
+      path: file,
       contentType: 'application/json',
     });
   });

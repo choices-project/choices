@@ -19,6 +19,9 @@ export * from './response-utils';
 // Response builders
 export * from './response-builders';
 
+// Error sanitization
+export * from './error-sanitizer';
+
 // Client utilities (client-side)
 export {
   apiClient,

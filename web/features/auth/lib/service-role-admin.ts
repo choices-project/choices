@@ -22,13 +22,16 @@ export async function serviceRoleAdminAuth(request: NextRequest) {
     // Create service role client using dynamic import
     const { createClient } = await import('@supabase/supabase-js');
     const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
-    const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
-    if (!supabaseUrl || !serviceKey) {
-      return { success: false, error: 'Supabase environment not configured' };
+    const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+
+    if (!supabaseUrl || !serviceRoleKey) {
+      devLog('Service role auth error: Supabase environment not configured');
+      return { success: false, error: 'Service role authentication failed' };
     }
+
     const supabase = createClient(
       supabaseUrl,
-      serviceKey
+      serviceRoleKey
     );
 
     // Service role key provides full admin access

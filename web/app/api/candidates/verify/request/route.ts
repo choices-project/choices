@@ -1,5 +1,3 @@
-// Server route handler
-
 import type { NextRequest } from 'next/server';
 
 import { withErrorHandling, successResponse, errorResponse, validationError } from '@/lib/api';
@@ -23,8 +21,7 @@ export const POST = withErrorHandling(async (_request: NextRequest) => {
   });
   const rate = await rateLimitMiddleware(_request, limiter);
   if (!rate.allowed) {
-    const message = 'Too many requests. Please try later.';
-    return validationError({ rate: message }, message);
+    return validationError({ rate: 'Too many requests. Please try later.' }, 'Too many requests. Please try later.');
   }
   const supabase = await getSupabaseServerClient();
   if (!supabase) return errorResponse('Auth/DB not available', 500);

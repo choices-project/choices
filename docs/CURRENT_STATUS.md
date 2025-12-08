@@ -61,6 +61,19 @@ References:
 
 ---
 
+## Civics Ingest Status (OpenStates)
+
+- Phase 2 — Validation harness: In progress. Staging fixtures and CLI smoke-test template to be added (see `services/civics-backend/ROADMAP.md`).
+- Phase 3 — Crosswalk + dedupe automation: Planned. API call optimization matrix pending implementation.
+- Phase 4 — Types: Next schema change will trigger Supabase types regeneration (run `cd web && npm run types:generate`).
+- Phase 5 — Documentation: High-level ingest summary will be maintained here; detailed runbooks under `services/supabase-operations-guide.md`.
+
+References:
+- Single-source roadmap entries: `docs/ROADMAP_SINGLE_SOURCE.md` (Section E)
+- Backend plan: `services/civics-backend/ROADMAP.md`
+
+---
+
 ## Known Gaps & Risks
 
 - **TypeScript debt**: `TS2589` recursion remains in several feeds/store modules; strict optional property errors are now limited to legacy feeds/contact routes (analytics/profile surfaces compile under `npm run types:strict-optional`).

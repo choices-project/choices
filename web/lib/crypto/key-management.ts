@@ -484,7 +484,7 @@ export class SecureKeyManager {
   getKeyInfo(keyId: string): Omit<SecureKey, 'key'> | null {
     const key = this.keys.get(keyId);
     if (!key) return null;
-
+    
     return {
       id: key.id,
       algorithm: key.algorithm,

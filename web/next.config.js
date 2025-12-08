@@ -21,7 +21,9 @@ const allowedDevWsOrigins = allowedDevOrigins.map((origin) => {
   return origin;
 });
 
-/** @type {import('next').NextConfig} */
+const isVercel = Boolean(process.env.VERCEL);
+
+/** @type {import('next').NextConfig & { allowedDevOrigins?: string[] }} */
 const nextConfig = {
   // Enable SWC minification for better performance
   swcMinify: true,
@@ -390,8 +392,6 @@ const nextConfig = {
           'ws://localhost:*',
           'http://127.0.0.1:*',
           'ws://127.0.0.1:*',
-          'https://fonts.googleapis.com', // Google Fonts
-          'https://fonts.gstatic.com', // Google Fonts
           ...allowedDevOrigins,
           ...allowedDevWsOrigins,
           'wss://*.supabase.co',
@@ -560,8 +560,9 @@ const nextConfig = {
     ignoreDuringBuilds: false
   },
 
-  // Output configuration - enable for Docker deployments
-  output: 'standalone',
+  // Output configuration - enable standalone only for non-Vercel (e.g. Docker) deployments
+  // Disable standalone in CI to avoid path resolution issues with npx next start
+  ...(isVercel || process.env.CI ? {} : { output: 'standalone' }),
 
   // Trailing slash
   trailingSlash: false,

@@ -1,5 +1,3 @@
-// Server route handler
-
 /**
  * Admin: Civics Data QA
  * GET /api/admin/civics/qa

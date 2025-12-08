@@ -234,14 +234,15 @@ export const POST = withErrorHandling(async (request: NextRequest) => {
     }
 
     // Use validated/sanitized values
-    if (!repIdValidation.parsedId) {
-      return validationError({ representativeId: 'Invalid representative ID' }, 'Invalid representative ID');
+    if (!repIdValidation.parsedId || !priorityValidation.parsedPriority) {
+      return validationError({
+        representativeId: !repIdValidation.parsedId ? 'Invalid representative ID' : '',
+        priority: !priorityValidation.parsedPriority ? 'Invalid priority' : '',
+      });
     }
+    
     const validatedRepId = repIdValidation.parsedId;
     const sanitizedSubject = subjectValidation.sanitized;
-    if (!priorityValidation.parsedPriority) {
-      return validationError({ priority: 'Invalid priority' }, 'Invalid priority');
-    }
     const validatedPriority = priorityValidation.parsedPriority;
 
     // Check if representative exists (representativeId is database primary key)

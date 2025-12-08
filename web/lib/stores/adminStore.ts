@@ -95,14 +95,21 @@ export type AdminReimportStateResult = {
 };
 
 export type AdminReimportProgress = {
-    totalStates: number;
-    processedStates: number;
-    successfulStates: number;
-    failedStates: number;
-    totalRepresentatives: number;
-    federalRepresentatives: number;
-    stateRepresentatives: number;
-    errors: string[];
+  // High‑level progress snapshot for UI / harness
+  isRunning: boolean;
+  current: number;
+  total: number;
+  status: string;
+
+  // Detailed metrics for analytics / admin reporting
+  totalStates: number;
+  processedStates: number;
+  successfulStates: number;
+  failedStates: number;
+  totalRepresentatives: number;
+  federalRepresentatives: number;
+  stateRepresentatives: number;
+  errors: string[];
   stateResults: AdminReimportStateResult[];
 };
 
@@ -217,6 +224,10 @@ const createDefaultUserFilters = (): AdminUserFilters => ({
 });
 
 const createDefaultReimportProgress = (): AdminReimportProgress => ({
+  isRunning: false,
+  current: 0,
+  total: 0,
+  status: 'idle',
   totalStates: 0,
   processedStates: 0,
   successfulStates: 0,
@@ -1377,6 +1388,21 @@ export const createAdminActions = (
       setState((state) => {
         const target = state.reimportProgress;
 
+        // High‑level fields used by the E2E harness and UI
+        if (progress.isRunning !== undefined) {
+          target.isRunning = progress.isRunning;
+        }
+        if (progress.current !== undefined) {
+          target.current = progress.current;
+        }
+        if (progress.total !== undefined) {
+          target.total = progress.total;
+        }
+        if (progress.status !== undefined) {
+          target.status = progress.status;
+        }
+
+        // Detailed metrics
         if (progress.totalStates !== undefined) {
           target.totalStates = progress.totalStates;
         }

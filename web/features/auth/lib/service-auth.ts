@@ -28,6 +28,7 @@ export async function requireServiceKey(): Promise<NextResponse | null> {
     if (!supabaseUrl) {
       return NextResponse.json({ error: 'Supabase URL not configured' }, { status: 500 });
     }
+
     const supabase = createClient(
       supabaseUrl,
       serviceKey,
@@ -58,6 +59,7 @@ export async function isServiceKeyValid(): Promise<boolean> {
 
     const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
     if (!supabaseUrl) return false;
+
     const supabase = createClient(
       supabaseUrl,
       serviceKey,

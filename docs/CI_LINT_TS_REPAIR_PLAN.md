@@ -2,12 +2,6 @@
 
 Last baseline: `npm run check` after eslint --fix. This file groups remaining errors by category, provides context pointers, and splits work into phases suitable for multiple parallel agents. Each task lists representative files; agents should search for similar patterns across the codebase.
 
-**Status (November 16, 2025):**  
-- All phases 1–6 have been completed for the web workspace.  
-- Supabase server utils and hashtag analytics have been updated to be CI/build-safe while still enforcing real env configuration at runtime.  
-- The `types` GitHub Actions workflow has been aligned with the `web` workspace (`cd web && npm ci`, `npm run lint:strict`, `npm run types:ci`).  
-- Contract tests, Jest setup, and Playwright config have been cleaned up to satisfy strict lint + type gates in CI.
-
 ---
 
 ## Phase 1 — Quick wins (autofix-unfriendly but trivial edits)
@@ -98,7 +92,6 @@ Status:
 
 - exactOptionalPropertyTypes, undefined handling already improved in civics & responses.
   - Continue: ensure required fields are non-undefined; convert optional params to explicit `undefined ??` defaults where necessary.
-  - Scope expansion: `tsconfig.strict-optional.json` now compiles profile stores plus the analytics surface (`web/app/api/analytics/**`, `web/features/analytics/**`, `web/lib/cache/analytics-cache.ts`, `web/lib/utils/{civic-actions-integration,sophisticated-civic-engagement}.ts`). Run `npm --prefix web run types:strict-optional` to verify.
 
 Status:
 - Non-null assertions removed and guards added:
@@ -109,14 +102,11 @@ Status:
   - `web/lib/integrations/open-states/error-handling.ts` — removed `lastError!`; safe throw with default
   - `web/lib/civics/env-guard.ts` and `web/features/civics/lib/civics/env-guard.ts` — removed `cur!` assertion
   - `web/lib/electoral/geographic-feed.ts` — removed `f!.sources` assertion
-- Strict optional enforcement:
-  - Profile stores and analytics APIs/widgets now pass `npm run types:strict-optional`; Supabase row helpers and civic-action utilities have typed fallbacks instead of `any`.
-  - Remaining scope: feeds/admin routes and legacy civics helpers still rely on disabled `exactOptionalPropertyTypes`; migrate them before flipping the root `tsconfig`.
 - Lint enforcement:
   - Elevated `@typescript-eslint/no-non-null-assertion` to `error` for TS files (tests remain exempt)
 - Next:
   - Adopt `stripUndefinedDeep`/`undefinedToNull` in any remaining DB write paths in routes/services
-  - Audit remaining API routes (contact/user/feeds) for strict optional handling and remove any residual `!`
+  - Audit remaining API routes for strict optional handling and remove any residual `!`
 
 ---
 

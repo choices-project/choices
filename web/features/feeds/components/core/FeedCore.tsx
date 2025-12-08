@@ -211,7 +211,7 @@ export default function FeedCore({
     }
   }, [isDarkMode]);
 
- 
+  // Scroll-to-top functionality is handled by InfiniteScroll component
 
   const handleHashtagSubmit = useCallback((e: React.FormEvent) => {
     e.preventDefault();

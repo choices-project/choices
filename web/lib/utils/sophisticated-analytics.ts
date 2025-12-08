@@ -498,7 +498,7 @@ function calculateSessionDuration(events: SophisticatedAnalyticsEvent[]): number
 }
 
 function calculateBounceRate(events: SophisticatedAnalyticsEvent[]): number {
-  const singleEventSessions = events.filter((event, _index, arr) =>
+  const singleEventSessions = events.filter((event, index, arr) =>
     arr.filter(e => e.session_id === event.session_id).length === 1
   ).length;
 

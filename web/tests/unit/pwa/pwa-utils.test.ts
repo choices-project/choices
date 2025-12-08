@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-empty-function */
 /** @jest-environment jsdom */
 
 import { jest } from '@jest/globals';
@@ -42,14 +41,17 @@ describe('PWA client utilities', () => {
   });
 
   describe('queueAction', () => {
-    const registerSpy = jest.fn(async (_tag: string) => {});
+    // The registration spy is intentionally a no-op; we only assert invocation
+    const registerSpy = jest.fn(async (_tag: string) => undefined);
     let originalServiceWorkerRegistration: unknown;
 
     beforeEach(() => {
       registerSpy.mockClear();
       originalServiceWorkerRegistration = (globalThis as unknown as { ServiceWorkerRegistration?: unknown }).ServiceWorkerRegistration;
 
-      const MockServiceWorkerRegistration: any = function MockServiceWorkerRegistration() {};
+      const MockServiceWorkerRegistration: any = function MockServiceWorkerRegistration() {
+        // Intentionally empty constructor for test double
+      };
       MockServiceWorkerRegistration.prototype.sync = {};
 
       Object.defineProperty(globalThis, 'ServiceWorkerRegistration', {
@@ -162,4 +164,4 @@ describe('PWA client utilities', () => {
   });
 });
 
-/* eslint-enable @typescript-eslint/no-empty-function */
+

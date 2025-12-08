@@ -84,7 +84,7 @@ export const GET = withErrorHandling(async (request: NextRequest) => {
     // Return statistics if requested
     if (wantsStats) {
       const startDateParam = searchParams.get('startDate');
-      const startDate = startDateParam
+      const startDate = startDateParam 
         ? new Date(startDateParam)
         : new Date(Date.now() - 7 * 24 * 60 * 60 * 1000); // Last 7 days
       

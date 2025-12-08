@@ -75,7 +75,7 @@ export default function AnalyticsPanel({
     } finally {
       setLoading(false);
     }
-  }, [clearError, setDashboard, setError, setLoading, setPerformanceMetrics, updateUserBehavior]);
+  }, [setDashboard, setPerformanceMetrics, updateUserBehavior, setLoading, setError, clearError]);
 
   useEffect(() => {
     void fetchData();

@@ -109,9 +109,15 @@ export default function AppStoreHarnessPage() {
     };
 
     window.__appStoreHarness = harness;
+    if (typeof document !== 'undefined') {
+      document.documentElement.dataset.appStoreHarness = 'ready';
+    }
     return () => {
       if (window.__appStoreHarness === harness) {
         delete window.__appStoreHarness;
+      }
+      if (typeof document !== 'undefined') {
+        delete document.documentElement.dataset.appStoreHarness;
       }
     };
   }, [

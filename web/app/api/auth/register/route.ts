@@ -66,6 +66,14 @@ export const POST = withErrorHandling(async (request: NextRequest) => {
       return validationError(missingFields, 'Email, password, and username are required')
     }
 
+    if (!email || !password || !username) {
+      return validationError({
+        email: !email ? 'Email is required' : '',
+        password: !password ? 'Password is required' : '',
+        username: !username ? 'Username is required' : '',
+      });
+    }
+    
     const ensuredEmail = email as string;
     const ensuredPassword = password as string;
     const ensuredUsername = username as string;

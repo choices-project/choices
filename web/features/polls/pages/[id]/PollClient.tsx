@@ -82,20 +82,6 @@ export default function PollClient({ poll }: PollClientProps) {
   const router = useRouter();
   const { addNotification } = useNotificationActions();
   const { setCurrentRoute, setSidebarActiveSection, setBreadcrumbs } = useAppActions();
-
-  const PRIVACY_LABELS: Record<string, string> = useMemo(() => ({
-    public: t('polls.view.privacy.public'),
-    private: t('polls.view.privacy.private'),
-    unlisted: t('polls.view.privacy.unlisted'),
-  }), [t]);
-
-  const VOTING_LABELS: Record<string, string> = useMemo(() => ({
-    single: t('polls.view.votingMethod.single'),
-    multiple: t('polls.view.votingMethod.multiple'),
-    approval: t('polls.view.votingMethod.approval'),
-    ranked: t('polls.view.votingMethod.ranked'),
-    quadratic: t('polls.view.votingMethod.quadratic'),
-  }), [t]);
   const {
     setBallots,
     setSelectedBallot,
@@ -135,17 +121,17 @@ export default function PollClient({ poll }: PollClientProps) {
     setCurrentRoute(pollPath);
     setSidebarActiveSection('polls');
     setBreadcrumbs([
-      { label: t('polls.view.breadcrumbs.home'), href: '/' },
-      { label: t('polls.view.breadcrumbs.dashboard'), href: '/dashboard' },
-      { label: t('polls.view.breadcrumbs.polls'), href: '/polls' },
-      { label: poll.title ?? t('polls.view.breadcrumbs.pollDetail'), href: pollPath },
+      { label: 'Home', href: '/' },
+      { label: 'Dashboard', href: '/dashboard' },
+      { label: 'Polls', href: '/polls' },
+      { label: poll.title ?? 'Poll Detail', href: pollPath },
     ]);
 
     return () => {
       setSidebarActiveSection(null);
       setBreadcrumbs([]);
     };
-  }, [poll.id, poll.title, setBreadcrumbs, setCurrentRoute, setSidebarActiveSection, t]);
+  }, [poll.id, poll.title, setBreadcrumbs, setCurrentRoute, setSidebarActiveSection]);
 
   const pollDetailsForBallot = useMemo(() => {
     const totalVotes =
@@ -345,8 +331,26 @@ export default function PollClient({ poll }: PollClientProps) {
   const pollStatus = poll.status ?? 'active';
   const canVote = poll.canVote ?? false;
   const participationCount = typeof poll.participation === 'number' ? poll.participation : 0;
-  const privacyLabel = PRIVACY_LABELS[poll.privacyLevel ?? 'public'] ?? (poll.privacyLevel ?? 'Public');
-  const votingLabel = VOTING_LABELS[poll.votingMethod ?? 'single'] ?? (poll.votingMethod ?? 'Single choice');
+  const privacyLabel = useMemo(() => {
+    const labels: Record<string, string> = {
+      public: t('polls.create.privacy.public'),
+      private: t('polls.create.privacy.private'),
+      unlisted: t('polls.create.privacy.unlisted'),
+    };
+    const key = poll.privacyLevel ?? 'public';
+    return labels[key] ?? (poll.privacyLevel ?? 'Public');
+  }, [poll.privacyLevel, t]);
+
+  const votingLabel = useMemo(() => {
+    const labels: Record<string, string> = {
+      single: t('polls.create.votingMethod.single'),
+      multiple: t('polls.create.votingMethod.multiple'),
+      approval: t('polls.create.votingMethod.approval'),
+      ranked: t('polls.create.votingMethod.ranked'),
+    };
+    const key = poll.votingMethod ?? 'single';
+    return labels[key] ?? (poll.votingMethod ?? 'Single choice');
+  }, [poll.votingMethod, t]);
 
   const votingStatusMessage: VotingStatusMessage | null = useMemo(() => {
     if (pollStatus !== 'active') {

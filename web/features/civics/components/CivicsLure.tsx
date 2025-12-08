@@ -435,7 +435,7 @@ export default function CivicsLure({ userLocation, onEngage }: CivicsLureProps) 
             </span>
           </div>
           <div className="text-2xl font-bold text-green-600">
-            {isLoading ? dashPlaceholder : numberFormatter.format(totalActivities)}
+            {isLoading ? '—' : numberFormatter.format(totalActivities)}
           </div>
           <div className="text-sm text-gray-500">
             {t('civics.lure.stats.activities.caption')}

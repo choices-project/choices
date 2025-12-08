@@ -1,4 +1,3 @@
-// Server route handler
 
 /**
  * Cron: Backfill Poll Demographic Insights

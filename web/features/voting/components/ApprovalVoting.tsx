@@ -160,7 +160,8 @@ export default function ApprovalVoting({
           {options.map((option: PollOption) => {
             const optionId = String(option.id)
             return (
-              <div
+              <button
+                type="button"
                 key={optionId}
                 onClick={() => handleOptionToggle(optionId)}
                 data-testid={`option-${parseInt(optionId) + 1}-checkbox`}
@@ -207,7 +208,7 @@ export default function ApprovalVoting({
                     </div>
                   )}
                 </div>
-              </div>
+              </button>
             )
           })}
         </div>

@@ -343,16 +343,19 @@ export async function getRepresentativesByLocation(
 ): Promise<RepresentativeData[]> {
   assertCivicEngagementEnabled('getRepresentativesByLocation');
   try {
-    const supabase = await getSupabaseServerClient();
-    if (!supabase) {
-      logger.error('Failed to get Supabase client for fetching representatives');
-      return [];
-    }
+    // In a real implementation, this would query the representatives_core table
+    // with sophisticated filtering based on trust scores, contact frequency, etc.
 
     logger.info('Fetching representatives by location', {
       location,
-      filters
+      filters,
     });
+
+    const supabase = await getSupabaseServerClient();
+    if (!supabase) {
+      logger.error('Failed to get Supabase client for representatives lookup');
+      return [];
+    }
 
     // Build query for representatives_core table
     let query = supabase

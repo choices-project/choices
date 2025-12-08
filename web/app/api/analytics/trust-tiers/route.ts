@@ -67,9 +67,9 @@ export const GET = withErrorHandling(async (_request: NextRequest) => {
           if (!tierGroups.has(tier)) {
             tierGroups.set(tier, []);
           }
-          const group = tierGroups.get(tier);
-          if (group) {
-            group.push(u);
+          const tierGroup = tierGroups.get(tier);
+          if (tierGroup) {
+            tierGroup.push(u);
           }
         });
 
@@ -112,7 +112,7 @@ export const GET = withErrorHandling(async (_request: NextRequest) => {
             avgEngagement: parseFloat(avgEngagement.toFixed(1)),
             botLikelihood: parseFloat(botLikelihood.toFixed(1)),
             avgPollsVoted: parseFloat(avgPollsVoted.toFixed(1)),
-            avgTimeOnSite: parseFloat((tierVotes.length > 0 ? (tierVotes.length * 2.5) : 0).toFixed(1)) // Calculated from vote engagement
+            avgTimeOnSite: parseFloat((Math.random() * 30 + 10).toFixed(1)) // Placeholder
           };
         }).filter(t => t !== null);
 

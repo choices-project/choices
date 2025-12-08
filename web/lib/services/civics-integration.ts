@@ -178,10 +178,11 @@ export class CivicsIntegrationService {
         };
         if (committee.start_date) committeeData.start_date = committee.start_date;
         if (committee.end_date) committeeData.end_date = committee.end_date;
-        const existing = committeeMap.get(repId);
-        if (existing) {
-          existing.push(committeeData);
-          committeeMap.set(repId, existing);
+        const committeesForRep = committeeMap.get(repId);
+        if (!committeesForRep) {
+          committeeMap.set(repId, [committeeData]);
+        } else {
+          committeesForRep.push(committeeData);
         }
       }
 
@@ -241,10 +242,11 @@ export class CivicsIntegrationService {
           crosswalkMap.set(repId, []);
         }
 
-        const existing = crosswalkMap.get(repId);
-        if (existing) {
-          existing.push(item);
-          crosswalkMap.set(repId, existing);
+        const entries = crosswalkMap.get(repId);
+        if (!entries) {
+          crosswalkMap.set(repId, [item]);
+        } else {
+          entries.push(item);
         }
       }
 

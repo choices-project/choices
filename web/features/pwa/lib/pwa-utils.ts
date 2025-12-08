@@ -160,8 +160,7 @@ export class PWAManager {
       
       // Use existing push notification subscription flow
       try {
-        const vapidKey = process.env.NEXT_PUBLIC_WEB_PUSH_VAPID_PUBLIC_KEY ?? 
-                         process.env.WEB_PUSH_VAPID_PUBLIC_KEY ?? '';
+        const vapidKey = process.env.NEXT_PUBLIC_WEB_PUSH_VAPID_PUBLIC_KEY ?? '';
         if (!vapidKey) {
           logger.warn('PWA: VAPID public key not configured');
           return;

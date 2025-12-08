@@ -16,6 +16,7 @@ import { EnhancedAnalyticsService, toJsonValue } from '../lib/enhanced-analytics
 const IS_E2E_HARNESS = process.env.NEXT_PUBLIC_ENABLE_E2E_HARNESS === '1';
 
 
+
 // Supabase client type is inferred from createClient usage
 
 type PlatformMetricRow = Database['public']['Tables']['platform_analytics']['Row'];
@@ -488,18 +489,19 @@ export function useEnhancedAnalytics(options: UseEnhancedAnalyticsOptions = {}) 
   const [error, setError] = useState<string | null>(null);
   const [lastUpdated, setLastUpdated] = useState<Date | null>(null);
 
-  // Initialize Supabase client and enhanced analytics service with stable references
+  // Initialize Supabase client and enhanced analytics service
   const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
   const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
-  if (!supabaseUrl || !supabaseAnonKey) {
-    logger.error('Supabase environment variables are not configured');
-  }
-  const supabase = useMemo(() => createClient<Database>(
-    (supabaseUrl as string),
-    (supabaseAnonKey as string)
-  ), [supabaseAnonKey, supabaseUrl]);
 
-  const enhancedAnalytics = useMemo(() => new EnhancedAnalyticsService(supabase), [supabase]);
+  const supabase =
+    supabaseUrl && supabaseAnonKey
+      ? createClient<Database>(supabaseUrl, supabaseAnonKey)
+      : null;
+
+  const enhancedAnalytics = useMemo(
+    () => (supabase ? new EnhancedAnalyticsService(supabase) : null),
+    [supabase],
+  );
 
   const {
     setDashboard: setAnalyticsDashboard,
@@ -530,8 +532,10 @@ export function useEnhancedAnalytics(options: UseEnhancedAnalyticsOptions = {}) 
           throw new Error(result.error ?? 'Failed to fetch analytics');
         }
 
-        // Enhance with new schema capabilities if enabled
-        if (enableNewSchema) {
+        const canEnhance = enableNewSchema && !!enhancedAnalytics;
+
+        // Enhance with new schema capabilities if enabled and service available
+        if (canEnhance && enhancedAnalytics) {
           rawAnalytics = await enhancedAnalytics.enhanceUnifiedAnalytics(pollId, result.analytics);
         } else {
           rawAnalytics = result.analytics;
@@ -543,8 +547,10 @@ export function useEnhancedAnalytics(options: UseEnhancedAnalyticsOptions = {}) 
 
       analyticsData = normalizeAnalyticsData(rawAnalytics);
 
+      const canEnhance = enableNewSchema && !!enhancedAnalytics;
+
       // Enhance with session data if sessionId provided
-      if (!IS_E2E_HARNESS && sessionId && enableNewSchema) {
+      if (!IS_E2E_HARNESS && sessionId && canEnhance && enhancedAnalytics) {
         const sessionEnhanced = await enhancedAnalytics.enhanceAnalyticsStore(
           analyticsData as unknown as Record<string, unknown>,
           sessionId
@@ -553,7 +559,7 @@ export function useEnhancedAnalytics(options: UseEnhancedAnalyticsOptions = {}) 
       }
 
       // Enhance with user data if userId provided
-      if (!IS_E2E_HARNESS && userId && enableNewSchema) {
+      if (!IS_E2E_HARNESS && userId && canEnhance && enhancedAnalytics) {
         const userEnhanced = await enhancedAnalytics.enhanceAnalyticsHook(
           analyticsData as unknown as Record<string, unknown>,
           userId
@@ -628,13 +634,10 @@ export function useEnhancedAnalytics(options: UseEnhancedAnalyticsOptions = {}) 
     sessionId,
     enableNewSchema,
     enhancedAnalytics,
-    setLoading,
-    setError,
-    setAnalyticsLoading,
-    setAnalyticsError,
     setAnalyticsDashboard,
     updateUserBehavior,
-    setLastUpdated,
+    setAnalyticsLoading,
+    setAnalyticsError,
   ]);
 
   // Track feature usage
@@ -658,6 +661,7 @@ export function useEnhancedAnalytics(options: UseEnhancedAnalyticsOptions = {}) 
       }
 
       const contextPayload: FeatureUsageContext = buildFeatureUsageContext(extras);
+      if (!enhancedAnalytics) return;
       await enhancedAnalytics.trackFeatureUsage(userId ?? null, featureName, contextPayload);
     } catch (err) {
       logger.error('Feature usage tracking error:', err);
@@ -668,9 +672,9 @@ export function useEnhancedAnalytics(options: UseEnhancedAnalyticsOptions = {}) 
   const trackSessionActivity = useCallback(
     async (action: string, page: string, metadata: SessionMetadata = {}) => {
       try {
-      if (IS_E2E_HARNESS) {
-        return;
-      }
+        if (IS_E2E_HARNESS || !enhancedAnalytics) {
+          return;
+        }
         if (!sessionId) return;
 
         const payload: Parameters<EnhancedAnalyticsService['trackUserSession']>[0] = {
@@ -705,11 +709,11 @@ export function useEnhancedAnalytics(options: UseEnhancedAnalyticsOptions = {}) 
   const trackAuthEvent = useCallback(
     async (authEvent: AuthEventPayload) => {
       try {
-      if (IS_E2E_HARNESS) {
-        return;
-      }
+        if (IS_E2E_HARNESS || !enhancedAnalytics) {
+          return;
+        }
         if (!sessionId) return;
-
+      
         await enhancedAnalytics.enhanceAuthAnalytics(authEvent, sessionId);
       } catch (err) {
         logger.error('Auth event tracking error:', err);
@@ -740,6 +744,10 @@ export function useEnhancedAnalytics(options: UseEnhancedAnalyticsOptions = {}) 
       if (IS_E2E_HARNESS) {
         return HARNESS_SYSTEM_HEALTH.map((entry) => ({ ...entry }));
       }
+      if (!supabase) {
+        logger.error('System health fetch error: Supabase not configured');
+        return [];
+      }
       const { data: healthData, error } = await supabase
         .from('system_health')
         .select('*')
@@ -759,6 +767,10 @@ export function useEnhancedAnalytics(options: UseEnhancedAnalyticsOptions = {}) 
     try {
       if (IS_E2E_HARNESS) {
         return HARNESS_SITE_MESSAGES.map((entry) => ({ ...entry }));
+      }
+      if (!supabase) {
+        logger.error('Site messages fetch error: Supabase not configured');
+        return [];
       }
       const { data: messages, error } = await supabase
         .from('site_messages')

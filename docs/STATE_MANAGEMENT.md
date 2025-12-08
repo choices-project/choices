@@ -1,6 +1,6 @@
 # State Management Guide
 
-_Last updated: January 2026_
+_Last updated: November 30, 2025_
 
 This document summarizes the agreed-on patterns for Zustand stores in the Choices web app. It replaces the scattered checklists under `scratch/gpt5-codex/store-roadmaps/` (see consolidation notes below).
 
@@ -226,170 +226,29 @@ Current harness coverage: `admin-store`, `analytics-store`, `app-store`, `auth-a
 5. **Docs & checklist** — mark progress in `docs/STATE_MANAGEMENT.md` (this guide) and `docs/ROADMAP_SINGLE_SOURCE.md` instead of `scratch/*`. Add or update examples here if new patterns emerge.
 6. **Election alerts** — civics features that surface countdowns should call `useElectionCountdown` with `notify`, `notificationSource`, and threshold metadata so the hook can dedupe per election/division and dispatch through `notificationStoreUtils.createElectionNotification`.
 
-## Migration Guide: Legacy Stores → Modernized Pattern
-
-This guide helps migrate stores from legacy patterns to the modernized creator pattern.
-
-### Step 1: Extract Initial State
-
-**Before:**
-```ts
-export const useMyStore = create<MyStore>()(
-  devtools(
-    persist(
-      (set, get) => ({
-        count: 0,
-        name: '',
-        isLoading: false,
-        // ... all state inline
-      }),
-      { name: 'my-store' }
-    )
-  )
-);
-```
-
-**After:**
-```ts
-export const createInitialMyState = (): MyState => ({
-  count: 0,
-  name: '',
-  isLoading: false,
-  error: null,
-});
-
-export const initialMyState: MyState = createInitialMyState();
-```
-
-### Step 2: Extract Actions
-
-**Before:**
-```ts
-export const useMyStore = create<MyStore>()(
-  devtools(
-    persist(
-      (set, get) => ({
-        ...initialState,
-        increment: () => set((state) => ({ count: state.count + 1 })),
-        setName: (name: string) => set({ name }),
-      }),
-      { name: 'my-store' }
-    )
-  )
-);
-```
-
-**After:**
-```ts
-export const createMyActions = (
-  set: StoreApi<MyStore>['setState'],
-  get: StoreApi<MyStore>['getState']
-): MyActions => ({
-  increment: () => set((state) => ({ count: state.count + 1 })),
-  setName: (name: string) => set({ name }),
-  ...createBaseStoreActions(set), // Use shared helpers
-});
-
-type MyStoreCreator = StateCreator<
-  MyStore,
-  [['zustand/devtools', never], ['zustand/persist', unknown], ['zustand/immer', never]]
->;
-```
-
-### Step 3: Create Store Creator
-
-**After:**
-```ts
-export const myStoreCreator: MyStoreCreator = (set, get) =>
-  Object.assign(createInitialMyState(), createMyActions(set, get));
-
-export const useMyStore = create<MyStore>()(
-  devtools(
-    persist(
-      immer(myStoreCreator),
-      { name: 'my-store', storage: createSafeStorage() }
-    ),
-    { name: 'MyStore' }
-  )
-);
-```
-
-### Step 4: Add Selectors and Action Hooks
-
-**After:**
-```ts
-export const mySelectors = {
-  count: (state: MyStore) => state.count,
-  name: (state: MyStore) => state.name,
-  isLoading: (state: MyStore) => state.isLoading,
-} as const;
-
-export const useMyCount = () => useMyStore(mySelectors.count);
-export const useMyName = () => useMyStore(mySelectors.name);
-export const useMyActions = () => {
-  const increment = useMyStore((state) => state.increment);
-  const setName = useMyStore((state) => state.setName);
-  
-  return useMemo(
-    () => ({ increment, setName }),
-    [increment, setName]
-  );
-};
-```
-
-For grouped selections, wrap `useShallow`:
-
-```ts
-export const useMyCounts = () =>
-  useMyStore(
-    useShallow((state) => ({
-      count: state.count,
-      pending: state.pending,
-    }))
-  );
-```
-
-### Step 5: Update Consumers
-
-**Before:**
-```tsx
-function MyComponent() {
-  const { count, increment } = useMyStore();
-  // or
-  const count = useMyStore((state) => state.count);
-  const increment = useMyStore((state) => state.increment);
-}
-```
-
-**After:**
-```tsx
-function MyComponent() {
-  const count = useMyCount();
-  const { increment } = useMyActions();
-  // or for multiple values:
-  const { count, name } = useMyStore(
-    useShallow((state) => ({ count: state.count, name: state.name }))
-  );
-}
-```
-
-### Common Pitfalls
-
-1. **Don't call `create()` inside the module** — use the creator pattern instead
-2. **Don't use `getState()` in React components** — use selectors or action hooks
-3. **Don't forget `useMemo` in action hooks** — prevents unnecessary re-renders
-4. **Don't persist everything** — use `partialize` to exclude transient state
-5. **Don't skip tests** — add unit, integration, and E2E tests for modernized stores
-
 ---
+
+## Recent Updates (November 2025)
+
+### Security Enhancements
+
+- **Log Sanitization**: All stores should use `sanitizeForLogging()` from `@/lib/utils/log-sanitizer` when logging state that may contain sensitive data (passwords, tokens, PII).
+- **Input Validation**: API routes now use Zod schemas for type-safe validation. Store actions that call APIs should validate inputs before sending.
+- **Rate Limiting**: Admin and sensitive endpoints now have rate limiting. Store actions that make API calls should handle rate limit errors gracefully.
+
+### Testing Improvements
+
+- **CI Gates**: All tests (unit, contract, smoke) are now blocking gates in CI. Ensure new store tests are reliable and don't flake.
+- **Contract Tests**: API routes have contract tests that verify request/response schemas. Store actions should match these contracts.
 
 ## References
 
 - Notification store modernization PRs — see `web/lib/stores/notificationStore.ts`, `web/features/civics/utils/civicsCountdownUtils.ts` (election notification hook), and tests covering analytics + countdown notifications (`web/tests/unit/stores/notification.integration.test.tsx`, `web/tests/unit/features/civics/useElectionCountdown.test.ts`).
 - Voter registration store example — see `web/lib/stores/voterRegistrationStore.ts` and `tests/unit/stores/voter-registration.store.test.ts` for a fetch-centric pattern that still fits the shared helpers.
 - Development setup & testing commands — `docs/DEVELOPMENT.md`, `docs/TESTING.md`.
-- Technical backlog — `docs/ROADMAP.md`.  
+- Technical backlog — `docs/ROADMAP_SINGLE_SOURCE.md` (canonical roadmap).  
 - Canonical utilities — `docs/UTILS_GUIDE.md`.
+- Security patterns — `docs/RATE_LIMITING_AUDIT.md`, `docs/INPUT_VALIDATION_AUDIT.md`, `docs/SENSITIVE_LOG_AUDIT.md`.
 
 ---
 

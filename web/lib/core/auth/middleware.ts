@@ -11,8 +11,8 @@
 import type { SupabaseClient, User } from '@supabase/supabase-js';
 import { type NextRequest, NextResponse } from 'next/server';
 
-// eslint-disable-next-line no-restricted-imports -- canonical path required by security policy
-import { requireTrustedOrigin } from "@/lib/http/origin";
+// eslint-disable-next-line no-restricted-imports
+import { requireTrustedOrigin } from '@/lib/http/origin';
 import { apiRateLimiter } from '@/lib/rate-limiting/api-rate-limiter';
 import { requireTurnstileVerification } from '@/lib/security/turnstile';
 import { devLog } from '@/lib/utils/logger';

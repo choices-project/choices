@@ -1,4 +1,3 @@
-// Server route handler
 
 import type { NextRequest } from 'next/server';
 

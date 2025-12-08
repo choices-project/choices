@@ -111,9 +111,9 @@ export function createRouteCodeSplitting() {
       const { preload: _preload = false, preloadDelay: _preloadDelay = 0 } = options;
       
       // Check cache first
-      if (routeCache.has(route)) {
-        const cached = routeCache.get(route);
-        if (cached) return cached;
+      const cached = routeCache.get(route);
+      if (cached) {
+        return cached;
       }
       
       const loadPromise = (async () => {
@@ -191,9 +191,9 @@ export function createFeatureCodeSplitting() {
      * Load feature component
      */
     loadFeature: (feature: string, importFn: () => Promise<Record<string, unknown>>) => {
-      if (featureCache.has(feature)) {
-        const cached = featureCache.get(feature);
-        if (cached) return cached;
+      const cached = featureCache.get(feature);
+      if (cached) {
+        return cached;
       }
       
       const loadPromise = (async () => {
@@ -259,9 +259,9 @@ export function createVendorCodeSplitting() {
      * Load vendor library
      */
     loadVendor: (vendor: string, importFn: () => Promise<Record<string, unknown>>) => {
-      if (vendorCache.has(vendor)) {
-        const cached = vendorCache.get(vendor);
-        if (cached) return cached;
+      const cached = vendorCache.get(vendor);
+      if (cached) {
+        return cached;
       }
       
       const loadPromise = (async () => {
@@ -366,9 +366,8 @@ export async function createDynamicImport<T>(
     onError?.(lastError);
     throw lastError;
   }
-  const unknownError = new Error('Unknown dynamic import error');
-  onError?.(unknownError);
-  throw unknownError;
+  
+  throw new Error('All retry attempts failed without error');
 }
 
 /**
