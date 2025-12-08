@@ -45,18 +45,33 @@ jobs:
       - name: Build application
         run: |
           cd web
+          # Clear Next.js cache to ensure clean build
+          rm -rf .next
+          # Build the application
           npm run build
+          # Verify the build completed successfully
+          if [ ! -d ".next" ]; then
+            echo "❌ Build failed - .next directory not created"
+            exit 1
+          fi
           # Verify the civics page was built
           echo "Checking if civics page was built..."
           if [ -f ".next/server/app/(app)/civics/page.js" ]; then
             echo "✅ Civics page file exists"
             ls -la ".next/server/app/(app)/civics/" || true
+            # Verify the file is readable
+            test -r ".next/server/app/(app)/civics/page.js" && echo "✅ File is readable" || echo "❌ File is NOT readable"
+            # Check file size
+            ls -lh ".next/server/app/(app)/civics/page.js" || true
           else
             echo "❌ Civics page file NOT found"
             echo "Listing .next/server/app/(app)/ directory:"
             ls -la ".next/server/app/(app)/" || true
             echo "Listing .next/server/app/ directory:"
             ls -la ".next/server/app/" || true
+            echo "Full .next/server structure:"
+            find .next/server -name "*.js" -type f | head -20 || true
+            exit 1
           fi
         env:
           NODE_ENV: production
