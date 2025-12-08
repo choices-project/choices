@@ -56,17 +56,15 @@ jobs:
           fi
           # Verify the civics page was built
           echo "Checking if civics page was built..."
-          if [ -f ".next/server/app/(app)/civics/page.js" ]; then
+          if [ -f ".next/server/app/civics/page.js" ]; then
             echo "✅ Civics page file exists"
-            ls -la ".next/server/app/(app)/civics/" || true
+            ls -la ".next/server/app/civics/" || true
             # Verify the file is readable
-            test -r ".next/server/app/(app)/civics/page.js" && echo "✅ File is readable" || echo "❌ File is NOT readable"
+            test -r ".next/server/app/civics/page.js" && echo "✅ File is readable" || echo "❌ File is NOT readable"
             # Check file size
-            ls -lh ".next/server/app/(app)/civics/page.js" || true
+            ls -lh ".next/server/app/civics/page.js" || true
           else
             echo "❌ Civics page file NOT found"
-            echo "Listing .next/server/app/(app)/ directory:"
-            ls -la ".next/server/app/(app)/" || true
             echo "Listing .next/server/app/ directory:"
             ls -la ".next/server/app/" || true
             echo "Full .next/server structure:"
@@ -87,15 +85,13 @@ jobs:
         run: |
           cd web
           echo "=== Verifying civics page file exists before server start ==="
-          if [ -f ".next/server/app/(app)/civics/page.js" ]; then
+          if [ -f ".next/server/app/civics/page.js" ]; then
             echo "✅ Civics page file exists"
-            ls -la ".next/server/app/(app)/civics/page.js"
-            file ".next/server/app/(app)/civics/page.js"
-            head -20 ".next/server/app/(app)/civics/page.js"
+            ls -la ".next/server/app/civics/page.js"
+            file ".next/server/app/civics/page.js"
+            head -20 ".next/server/app/civics/page.js"
           else
             echo "❌ Civics page file NOT found"
-            echo "Listing .next/server/app/(app)/ directory:"
-            ls -la ".next/server/app/(app)/" || true
             echo "Listing .next/server/app/ directory:"
             ls -la ".next/server/app/" || true
           fi
@@ -111,16 +107,16 @@ jobs:
           echo "=== Current directory ==="
           pwd
           echo "=== Verifying build output exists ==="
-          ls -la .next/server/app/\(app\)/civics/ || echo "Civics directory not found"
-          test -f .next/server/app/\(app\)/civics/page.js && echo "✅ page.js exists" || echo "❌ page.js NOT found"
+          ls -la .next/server/app/civics/ || echo "Civics directory not found"
+          test -f .next/server/app/civics/page.js && echo "✅ page.js exists" || echo "❌ page.js NOT found"
           
           # Test if Node.js can require the file directly
           echo "=== Testing Node.js require() ==="
-          node -e "try { require('./.next/server/app/(app)/civics/page.js'); console.log('✅ Node.js can require the file'); } catch(e) { console.log('❌ Node.js require failed:', e.message); process.exit(1); }" || echo "Node.js require test failed (this is expected if dependencies are missing)"
+          node -e "try { require('./.next/server/app/civics/page.js'); console.log('✅ Node.js can require the file'); } catch(e) { console.log('❌ Node.js require failed:', e.message); process.exit(1); }" || echo "Node.js require test failed (this is expected if dependencies are missing)"
           
           # Check the actual absolute path
           echo "=== Absolute path check ==="
-          REALPATH=$(realpath .next/server/app/\(app\)/civics/page.js 2>/dev/null || readlink -f .next/server/app/\(app\)/civics/page.js 2>/dev/null || echo "Could not resolve absolute path")
+          REALPATH=$(realpath .next/server/app/civics/page.js 2>/dev/null || readlink -f .next/server/app/civics/page.js 2>/dev/null || echo "Could not resolve absolute path")
           echo "Absolute path: $REALPATH"
           test -f "$REALPATH" && echo "✅ File exists at absolute path" || echo "❌ File does NOT exist at absolute path"
           
@@ -219,15 +215,15 @@ jobs:
         run: |
           cd web
           echo "=== Verifying civics page file exists before running tests ==="
-          if [ -f ".next/server/app/(app)/civics/page.js" ]; then
+          if [ -f ".next/server/app/civics/page.js" ]; then
             echo "✅ Civics page file exists"
-            ls -la ".next/server/app/(app)/civics/page.js"
+            ls -la ".next/server/app/civics/page.js"
             # Verify file is still readable
-            test -r ".next/server/app/(app)/civics/page.js" && echo "✅ File is readable" || echo "❌ File is NOT readable"
+            test -r ".next/server/app/civics/page.js" && echo "✅ File is readable" || echo "❌ File is NOT readable"
           else
             echo "❌ Civics page file NOT found before tests"
-            echo "Listing .next/server/app/(app)/ directory:"
-            ls -la ".next/server/app/(app)/" || true
+            echo "Listing .next/server/app/ directory:"
+            ls -la ".next/server/app/" || true
             exit 1
           fi
 
@@ -243,7 +239,7 @@ jobs:
             tail -200 /tmp/nextjs-server.log 2>/dev/null || echo "No server logs available"
             echo "=== Verifying file still exists after test failure ==="
             # Use absolute path to avoid any working directory issues
-            CIVICS_FILE="$(pwd)/.next/server/app/(app)/civics/page.js"
+            CIVICS_FILE="$(pwd)/.next/server/app/civics/page.js"
             if [ -f "$CIVICS_FILE" ]; then
               echo "✅ Civics page file still exists after test failure"
               ls -la "$CIVICS_FILE"
@@ -254,8 +250,8 @@ jobs:
               echo "❌ Civics page file was deleted or moved during test"
               echo "Current working directory: $(pwd)"
               echo "Looking for file at: $CIVICS_FILE"
-              echo "Listing .next/server/app/(app)/ directory:"
-              ls -la ".next/server/app/(app)/" || true
+              echo "Listing .next/server/app/ directory:"
+              ls -la ".next/server/app/" || true
               echo "Searching for civics directory:"
               find .next/server -name "civics" -type d 2>/dev/null || true
             fi
