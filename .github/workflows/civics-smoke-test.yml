@@ -133,8 +133,9 @@ jobs:
           echo "NODE_PATH set to: $NODE_PATH"
           echo "Current working directory: $(pwd)"
           echo "Starting Next.js server with explicit directory: $(pwd)"
-          # Use npx next start with explicit directory argument to ensure correct path resolution
-          NODE_OPTIONS="--trace-warnings" npx next start "$(pwd)" > /tmp/nextjs-server.log 2>&1 &
+          # Use npm run start (which runs next start) without directory argument
+          # We're already in the web directory, so next start should work from here
+          NODE_OPTIONS="--trace-warnings" npm run start > /tmp/nextjs-server.log 2>&1 &
           SERVER_PID=$!
           echo "Server PID: $SERVER_PID"
           echo "Server working directory: $(pwd)"
