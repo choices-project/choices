@@ -238,11 +238,22 @@ jobs:
             echo "=== Server logs (tests failed) ==="
             tail -200 /tmp/nextjs-server.log 2>/dev/null || echo "No server logs available"
             echo "=== Verifying file still exists after test failure ==="
-            if [ -f ".next/server/app/(app)/civics/page.js" ]; then
+            # Use absolute path to avoid any working directory issues
+            CIVICS_FILE="$(pwd)/.next/server/app/(app)/civics/page.js"
+            if [ -f "$CIVICS_FILE" ]; then
               echo "✅ Civics page file still exists after test failure"
-              ls -la ".next/server/app/(app)/civics/page.js"
+              ls -la "$CIVICS_FILE"
+              # Try to require it again to see if Node.js can still access it
+              echo "=== Testing if Node.js can still require the file ==="
+              node -e "try { require('$CIVICS_FILE'); console.log('✅ Node.js can still require the file'); } catch(e) { console.log('❌ Node.js require failed:', e.message); }" || true
             else
               echo "❌ Civics page file was deleted or moved during test"
+              echo "Current working directory: $(pwd)"
+              echo "Looking for file at: $CIVICS_FILE"
+              echo "Listing .next/server/app/(app)/ directory:"
+              ls -la ".next/server/app/(app)/" || true
+              echo "Searching for civics directory:"
+              find .next/server -name "civics" -type d 2>/dev/null || true
             fi
           fi
           exit ${TEST_FAILED:-0}
