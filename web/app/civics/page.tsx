@@ -8,7 +8,7 @@
  * MODULE_NOT_FOUND errors in CI environments.
  */
 
-import dynamic from 'next/dynamic';
+import nextDynamic from 'next/dynamic';
 import React, { Suspense } from 'react';
 
 // Disable SSR to work around Next.js 14.2.32 MODULE_NOT_FOUND bug
@@ -16,7 +16,7 @@ import React, { Suspense } from 'react';
 export const dynamic = 'force-dynamic';
 
 // Dynamically import the page content with SSR disabled
-const CivicsPageContent = dynamic(() => import('./CivicsPageContent'), {
+const CivicsPageContent = nextDynamic(() => import('./CivicsPageContent'), {
   loading: () => (
     <div className="flex items-center justify-center min-h-screen">
       <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-blue-600" />
