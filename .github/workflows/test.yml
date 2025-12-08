@@ -321,7 +321,7 @@ jobs:
           BASE_URL: http://127.0.0.1:3000
 
       - name: Upload auth-production results
-        if: steps.prod_creds.outputs.run == 'true'
+        if: always()
         uses: actions/upload-artifact@v4
         with:
           name: playwright-report-auth-production
@@ -329,7 +329,7 @@ jobs:
           retention-days: 7
 
       - name: Upload auth-production junit
-        if: steps.prod_creds.outputs.run == 'true'
+        if: always()
         uses: actions/upload-artifact@v4
         with:
           name: playwright-results-auth-production
