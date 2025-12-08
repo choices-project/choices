@@ -263,7 +263,7 @@ jobs:
           cd web
           npm run test:performance -- --config=playwright.monitoring.config.ts
         env:
-          BASE_URL: ${{ needs.deploy-production.result == 'success' && 'https://choices-platform.vercel.app' || 'https://choices-platform-staging.vercel.app' }}
+          BASE_URL: ${{ needs.deploy-production.result == 'success' && 'https://www.choices-app.com' || 'https://choices-platform-staging.vercel.app' }}
 
       - name: Check error rates
         run: |
@@ -327,7 +327,7 @@ jobs:
           echo "" >> deployment-summary.md
           echo "## Environment URLs" >> deployment-summary.md
           echo "- Staging: https://choices-platform-staging.vercel.app" >> deployment-summary.md
-          echo "- Production: https://choices-platform.vercel.app" >> deployment-summary.md
+          echo "- Production: https://www.choices-app.com" >> deployment-summary.md
 
       - name: Upload deployment summary
         uses: actions/upload-artifact@v4
