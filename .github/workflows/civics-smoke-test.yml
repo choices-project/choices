@@ -114,10 +114,21 @@ jobs:
           ls -la .next/server/app/\(app\)/civics/ || echo "Civics directory not found"
           test -f .next/server/app/\(app\)/civics/page.js && echo "✅ page.js exists" || echo "❌ page.js NOT found"
           
+          # Test if Node.js can require the file directly
+          echo "=== Testing Node.js require() ==="
+          node -e "try { require('./.next/server/app/(app)/civics/page.js'); console.log('✅ Node.js can require the file'); } catch(e) { console.log('❌ Node.js require failed:', e.message); process.exit(1); }" || echo "Node.js require test failed (this is expected if dependencies are missing)"
+          
+          # Check the actual absolute path
+          echo "=== Absolute path check ==="
+          REALPATH=$(realpath .next/server/app/\(app\)/civics/page.js 2>/dev/null || readlink -f .next/server/app/\(app\)/civics/page.js 2>/dev/null || echo "Could not resolve absolute path")
+          echo "Absolute path: $REALPATH"
+          test -f "$REALPATH" && echo "✅ File exists at absolute path" || echo "❌ File does NOT exist at absolute path"
+          
           # Use npm run start to ensure proper working directory and environment
           # This uses the 'start' script from package.json which runs 'next start'
           # Standalone mode is disabled in CI via next.config.js
-          npm run start > /tmp/nextjs-server.log 2>&1 &
+          # Set NODE_OPTIONS to help with debugging if needed
+          NODE_OPTIONS="--trace-warnings" npm run start > /tmp/nextjs-server.log 2>&1 &
           SERVER_PID=$!
           echo "Server PID: $SERVER_PID"
           echo "Server working directory: $(pwd)"
