@@ -124,14 +124,17 @@ jobs:
           echo "Absolute path: $REALPATH"
           test -f "$REALPATH" && echo "✅ File exists at absolute path" || echo "❌ File does NOT exist at absolute path"
           
-          # Use npm run start to ensure proper working directory and environment
-          # This uses the 'start' script from package.json which runs 'next start'
+          # Use next start with explicit directory to ensure correct project root
+          # This ensures Next.js resolves paths relative to the correct directory
           # Standalone mode is disabled in CI via next.config.js
           # Set NODE_PATH to help Next.js resolve modules with route groups (parentheses)
           # Set NODE_OPTIONS to help with debugging if needed
           export NODE_PATH="$(pwd)/.next/server:$(pwd)/.next/server/app:$(pwd)/.next/server/pages:${NODE_PATH:-}"
           echo "NODE_PATH set to: $NODE_PATH"
-          NODE_OPTIONS="--trace-warnings" npm run start > /tmp/nextjs-server.log 2>&1 &
+          echo "Current working directory: $(pwd)"
+          echo "Starting Next.js server with explicit directory: $(pwd)"
+          # Use npx next start with explicit directory argument to ensure correct path resolution
+          NODE_OPTIONS="--trace-warnings" npx next start "$(pwd)" > /tmp/nextjs-server.log 2>&1 &
           SERVER_PID=$!
           echo "Server PID: $SERVER_PID"
           echo "Server working directory: $(pwd)"
