@@ -10,8 +10,9 @@
  * - FREE APIs integration
  */
 
-// Disable SSR to work around Next.js 14.2.32 MODULE_NOT_FOUND bug with route groups
-// This prevents Next.js from trying to load the server-side module at runtime
+// Disable SSR to work around Next.js 14.2.32 MODULE_NOT_FOUND bug
+// Using runtime = 'edge' to prevent server-side module loading
+export const runtime = 'edge';
 export const dynamic = 'force-dynamic';
 
 import {
