@@ -211,6 +211,22 @@ jobs:
         env:
           BASE_URL: http://localhost:3001
 
+      - name: Verify file still exists before tests
+        run: |
+          cd web
+          echo "=== Verifying civics page file exists before running tests ==="
+          if [ -f ".next/server/app/(app)/civics/page.js" ]; then
+            echo "✅ Civics page file exists"
+            ls -la ".next/server/app/(app)/civics/page.js"
+            # Verify file is still readable
+            test -r ".next/server/app/(app)/civics/page.js" && echo "✅ File is readable" || echo "❌ File is NOT readable"
+          else
+            echo "❌ Civics page file NOT found before tests"
+            echo "Listing .next/server/app/(app)/ directory:"
+            ls -la ".next/server/app/(app)/" || true
+            exit 1
+          fi
+
       - name: Run Playwright UI Tests (with mocked APIs)
         run: |
           cd web
@@ -221,6 +237,13 @@ jobs:
           if [ -n "$TEST_FAILED" ]; then
             echo "=== Server logs (tests failed) ==="
             tail -200 /tmp/nextjs-server.log 2>/dev/null || echo "No server logs available"
+            echo "=== Verifying file still exists after test failure ==="
+            if [ -f ".next/server/app/(app)/civics/page.js" ]; then
+              echo "✅ Civics page file still exists after test failure"
+              ls -la ".next/server/app/(app)/civics/page.js"
+            else
+              echo "❌ Civics page file was deleted or moved during test"
+            fi
           fi
           exit ${TEST_FAILED:-0}
         env:
