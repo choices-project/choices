@@ -19,7 +19,7 @@ import {
   UserGroupIcon,
   HeartIcon
 } from '@heroicons/react/24/outline';
-import dynamic from 'next/dynamic';
+import nextDynamic from 'next/dynamic';
 import React, { useState, useEffect, useCallback } from 'react';
 
 import type { SuperiorRepresentativeData } from '@/features/civics/lib/types/superior-types';
@@ -28,18 +28,18 @@ import { logger } from '@/lib/utils/logger';
 import type { Representative } from '@/types/representative';
 
 // Lazy load heavy components to reduce initial bundle size
-const RepresentativeCard = dynamic(
+const RepresentativeCard = nextDynamic(
   () =>
     import('@/features/civics/components/representative/RepresentativeCard').then((mod) => ({
       default: mod.RepresentativeCard,
     })),
   {
-  loading: () => <div className="animate-pulse bg-gray-200 h-32 rounded-lg" />,
-  ssr: false
+    loading: () => <div className="animate-pulse bg-gray-200 h-32 rounded-lg" />,
+    ssr: false
   }
 );
 
-const UnifiedFeed = dynamic(() => import('@/features/feeds').then(mod => ({ default: mod.UnifiedFeedRefactored })), {
+const UnifiedFeed = nextDynamic(() => import('@/features/feeds').then(mod => ({ default: mod.UnifiedFeedRefactored })), {
   loading: () => <div className="animate-pulse bg-gray-200 h-64 rounded-lg" />,
   ssr: false
 });
