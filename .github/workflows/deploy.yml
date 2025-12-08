@@ -191,7 +191,7 @@ jobs:
     if: github.ref == 'refs/heads/main' && github.event.inputs.environment == 'production'
     environment:
       name: production
-      url: https://choices-platform.vercel.app
+      url: https://www.choices-app.com
     
     steps:
       - name: Checkout code
@@ -218,11 +218,11 @@ jobs:
           cd web
           npm run test:e2e -- --config=playwright.production.config.ts
         env:
-          BASE_URL: https://choices-platform.vercel.app
+          BASE_URL: https://www.choices-app.com
 
       - name: Health check
         run: |
-          curl -f https://choices-platform.vercel.app/api/health || exit 1
+          curl -f https://www.choices-app.com/api/health || exit 1
 
       - name: Notify deployment success
         uses: 8398a7/action-slack@v3

@@ -13,7 +13,7 @@ export default defineConfig({
     expect: { timeout: 10_000 },
 
   use: {
-    baseURL: 'https://choices-platform.vercel.app',
+    baseURL: 'https://www.choices-app.com',
     trace: 'on-first-retry',
     screenshot: 'only-on-failure',
     video: 'retain-on-failure',
