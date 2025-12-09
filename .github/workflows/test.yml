@@ -390,7 +390,7 @@ jobs:
       - name: Run performance tests
         run: |
           # Check if any performance test files exist first (avoids starting webServer unnecessarily)
-          if [ ! -f tests/e2e/specs/*performance*.spec.ts ] && [ -z "$(find tests/e2e/specs -name '*performance*.spec.ts' 2>/dev/null)" ]; then
+          if [ -z "$(find tests/e2e/specs -name '*performance*.spec.ts' 2>/dev/null)" ]; then
             echo "No performance test files found; skipping."
             exit 0
           fi
