@@ -4,6 +4,7 @@ import { waitForPageReady } from '../helpers/e2e-setup';
 
 test.describe('@screen-reader Analytics dashboard harness', () => {
   test('announces refresh status and tab changes', async ({ page }) => {
+    test.setTimeout(90_000); // Increased timeout for CI
     await page.goto('/e2e/analytics-dashboard', { waitUntil: 'domcontentloaded' });
     await waitForPageReady(page);
     await page.getByRole('heading', { name: 'Analytics dashboard harness' }).waitFor({

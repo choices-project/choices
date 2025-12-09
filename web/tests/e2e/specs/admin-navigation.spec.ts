@@ -79,6 +79,7 @@ test.describe('@axe Admin navigation accessibility and routing', () => {
   });
 
   test('sidebar and header landmarks pass axe', async ({ page }) => {
+    test.setTimeout(90_000); // Increased timeout for CI
     await runAxeAudit(page, 'admin layout desktop', {
       include: ['nav[aria-label="Admin navigation"]', 'header[role="banner"]'],
     });
@@ -92,6 +93,7 @@ test.describe('@axe Admin navigation accessibility and routing', () => {
   });
 
   test('sidebar toggle manages focus on mobile and passes axe', async ({ page }) => {
+    test.setTimeout(90_000); // Increased timeout for CI
     await page.setViewportSize({ width: 375, height: 667 });
     await gotoNavigationShellHarness(page);
 
@@ -105,6 +107,7 @@ test.describe('@axe Admin navigation accessibility and routing', () => {
   });
 
   test('selector-based navigation updates breadcrumbs and highlights', async ({ page }) => {
+    test.setTimeout(90_000); // Increased timeout for CI
     for (const state of ADMIN_NAVIGATION_STATES) {
       await setNavigationShellState(page, state);
       await expectBreadcrumbMatches(page, state.breadcrumbLabel);

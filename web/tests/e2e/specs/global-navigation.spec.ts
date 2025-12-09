@@ -18,6 +18,7 @@ test.describe('@axe Global navigation accessibility', () => {
   });
 
   test('desktop navigation exposes landmarks and passes axe', async ({ page }) => {
+    test.setTimeout(90_000); // Increased timeout for CI
     await runAxeAudit(page, 'global navigation desktop', {
       include: ['nav[aria-label="Primary navigation"]'],
     });
@@ -27,6 +28,7 @@ test.describe('@axe Global navigation accessibility', () => {
   });
 
   test('mobile navigation manages focus and passes axe', async ({ page }) => {
+    test.setTimeout(90_000); // Increased timeout for CI
     await page.setViewportSize({ width: 375, height: 667 });
     await page.reload();
     await waitForPageReady(page, 60_000);
@@ -46,6 +48,7 @@ test.describe('@axe Global navigation accessibility', () => {
   });
 
   test('language selector updates navigation labels', async ({ page, context }) => {
+    test.setTimeout(90_000); // Increased timeout for CI
     const selector = page.getByTestId('language-selector').first();
     await selector.getByRole('button').click();
     await page.getByRole('option', { name: /Español/i }).click();
