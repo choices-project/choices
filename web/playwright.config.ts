@@ -63,6 +63,8 @@ export default defineConfig({
       NEXT_PUBLIC_ENABLE_E2E_HARNESS:
         process.env.NEXT_PUBLIC_ENABLE_E2E_HARNESS ?? '1',
       NEXT_DISABLE_STRICT_MODE: '1',
+      // Ensure PLAYWRIGHT_USE_MOCKS is available to the dev server
+      PLAYWRIGHT_USE_MOCKS: process.env.PLAYWRIGHT_USE_MOCKS ?? '1',
     },
   },
 })

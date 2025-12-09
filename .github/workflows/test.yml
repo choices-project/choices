@@ -166,6 +166,7 @@ jobs:
           CI: true
           BASE_URL: http://127.0.0.1:3000
           NEXT_PUBLIC_ENABLE_E2E_HARNESS: '1'
+          PLAYWRIGHT_USE_MOCKS: '1'
 
       - name: Upload E2E test results
         uses: actions/upload-artifact@v4
