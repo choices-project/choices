@@ -389,15 +389,14 @@ jobs:
 
       - name: Run performance tests
         run: |
-          # Run performance tests; exit code 1 means "no tests found" which is success for us
-          set +e
-          npx playwright test --project=chromium --grep="performance" --reporter=html,junit
-          exit_code=$?
-          if [ $exit_code -eq 1 ]; then
-            echo "No performance tests found (exit code 1); treating as success."
+          # Check if any performance test files exist first (avoids starting webServer unnecessarily)
+          if [ ! -f tests/e2e/specs/*performance*.spec.ts ] && [ -z "$(find tests/e2e/specs -name '*performance*.spec.ts' 2>/dev/null)" ]; then
+            echo "No performance test files found; skipping."
             exit 0
           fi
-          exit $exit_code
+          
+          # Run performance tests if files exist
+          npx playwright test --project=chromium --grep="performance" --reporter=html,junit
         env:
           CI: true
           BASE_URL: http://127.0.0.1:3000
@@ -525,15 +524,27 @@ jobs:
 
       - name: Run load tests
         run: |
-          # Run load tests; exit code 1 means "no tests found" which is success for us
-          set +e
-          npx playwright test --project=chromium --grep="load" --reporter=html,junit
-          exit_code=$?
-          if [ $exit_code -eq 1 ]; then
-            echo "No load tests found (exit code 1); treating as success."
-            exit 0
+          # Check if any load test files exist first (avoids starting webServer unnecessarily)
+          # Also check for tests tagged with @load (more specific than just "load" in test name)
+          load_test_files=$(find tests/e2e/specs -name "*load*.spec.ts" 2>/dev/null | wc -l)
+          
+          if [ "$load_test_files" -eq 0 ]; then
+            # Check if there are any tests tagged with @load (more specific pattern)
+            set +e
+            load_tagged_tests=$(npx playwright test --list --grep="@load" 2>&1 | grep -c "\.spec\.ts" || echo "0")
+            if [ "$load_tagged_tests" -eq 0 ]; then
+              echo "No load test files or @load tagged tests found; skipping."
+              exit 0
+            fi
           fi
-          exit $exit_code
+          
+          # Run load tests - use @load tag to avoid matching regular tests with "load" in name
+          # If no @load tagged tests, run files with "load" in filename
+          if [ "$load_test_files" -gt 0 ]; then
+            npx playwright test --project=chromium $(find tests/e2e/specs -name "*load*.spec.ts") --reporter=html,junit
+          else
+            npx playwright test --project=chromium --grep="@load" --reporter=html,junit
+          fi
         env:
           CI: true
           BASE_URL: http://127.0.0.1:3000
