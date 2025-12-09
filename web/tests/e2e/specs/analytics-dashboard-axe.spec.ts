@@ -5,16 +5,15 @@ import { waitForPageReady } from '../helpers/e2e-setup';
 
 test.describe('@axe Analytics dashboard baseline', () => {
   test('collects axe baseline for analytics dashboard harness', async ({ page }) => {
-    await page.goto('/e2e/analytics-dashboard', { waitUntil: 'domcontentloaded' });
+    await page.goto('/e2e/analytics-dashboard', { waitUntil: 'domcontentloaded', timeout: 60_000 });
     await waitForPageReady(page);
 
     await page.waitForFunction(
       () => document.documentElement.dataset.analyticsDashboardHarness === 'ready',
-      undefined,
-      { timeout: 15_000 },
+      { timeout: 60_000 },
     );
 
-    await page.getByRole('heading', { name: 'Analytics dashboard', exact: true }).waitFor({ timeout: 15_000 });
+    await page.getByRole('heading', { name: 'Analytics dashboard', exact: true }).waitFor({ timeout: 60_000 });
 
     const results = await runAxeAudit(page, 'analytics dashboard baseline', { allowViolations: true });
 

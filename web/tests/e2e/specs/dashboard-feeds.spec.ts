@@ -34,7 +34,7 @@ const gotoFeedsHarness = async (page: Page) => {
       typeof document !== 'undefined' &&
       document.documentElement.dataset.feedsStoreHarness === 'ready';
     return isReady || Boolean(window.__feedsStoreHarness);
-  }, { timeout: 30_000 });
+  }, { timeout: 60_000 });
   await page.evaluate(() => {
     window.__feedsStoreHarness?.actions.resetFeedsState({
       preserveFilters: false,

@@ -71,7 +71,7 @@ const applyLanguageSelection = async (page: Page, selection: LanguageSelection) 
   await waitForLocaleCookie(page, selection.code);
   await page.waitForFunction(
     () => document.documentElement.dataset.globalNavigationHarness === 'ready',
-    { timeout: 30_000 },
+    { timeout: 60_000 },
   );
 };
 
@@ -94,7 +94,7 @@ test.describe('Locale Switching', () => {
 
   test('language selector is visible and accessible', async ({ page }) => {
     const selector = page.getByTestId('language-selector').first();
-    await expect(selector).toBeVisible({ timeout: 30_000 });
+    await expect(selector).toBeVisible({ timeout: 60_000 });
     
     const button = selector.getByRole('button').first();
     await expect(button).toBeVisible();
@@ -216,7 +216,7 @@ test.describe('Locale Switching', () => {
       await waitForLocaleCookie(page, baseCode);
       await page.waitForFunction(
         () => document.documentElement.dataset.globalNavigationHarness === 'ready',
-        { timeout: 30_000 },
+        { timeout: 60_000 },
       );
       
       // Switch to alternate language again

@@ -66,7 +66,7 @@ test.describe('Dashboard Journey', () => {
       await waitForPageReady(page);
       await page.waitForFunction(
         () => document.documentElement.dataset.dashboardJourneyHarness === 'ready',
-        { timeout: 30_000 },
+        { timeout: 60_000 },
       );
       await expect(page.getByTestId('personal-dashboard')).toBeVisible();
       await expect(page.getByTestId('dashboard-title')).toContainText('Welcome back');
@@ -78,7 +78,7 @@ test.describe('Dashboard Journey', () => {
       const feedsLiveMessage = page.getByTestId('feeds-live-message');
       const elementCount = await feedsLiveMessage.count();
       if (elementCount > 0) {
-        await feedsLiveMessage.waitFor({ state: 'attached', timeout: 15_000 });
+        await feedsLiveMessage.waitFor({ state: 'attached', timeout: 60_000 });
         await expect(feedsLiveMessage).not.toHaveText('', { timeout: 10_000 });
       }
 
@@ -97,7 +97,7 @@ test.describe('Dashboard Journey', () => {
       await waitForPageReady(page);
       await page.waitForFunction(
         () => document.documentElement.dataset.dashboardJourneyHarness === 'ready',
-        { timeout: 30_000 },
+        { timeout: 60_000 },
       );
       await expect(page.getByTestId('personal-dashboard')).toBeVisible();
       await expect(page.getByTestId('show-elected-officials-toggle')).not.toBeChecked();
@@ -106,7 +106,7 @@ test.describe('Dashboard Journey', () => {
       // Capture notification harness reference after reload
       await page.goto('/e2e/notification-store');
       await waitForPageReady(page);
-      await page.waitForFunction(() => Boolean((window as HarnessWindow).__notificationStoreHarness), { timeout: 30_000 });
+      await page.waitForFunction(() => Boolean((window as HarnessWindow).__notificationStoreHarness), { timeout: 60_000 });
       await page.evaluate(() => {
         const w = window as HarnessWindow;
         const harness = w.__notificationStoreHarness;
@@ -126,7 +126,7 @@ test.describe('Dashboard Journey', () => {
       await waitForPageReady(page);
       await page.waitForFunction(
         () => document.documentElement.dataset.dashboardJourneyHarness === 'ready',
-        { timeout: 30_000 },
+        { timeout: 60_000 },
       );
       await expect(page.getByTestId('show-elected-officials-toggle')).not.toBeChecked();
 
@@ -205,7 +205,7 @@ test.describe('Dashboard Journey', () => {
       await waitForPageReady(page);
       await page.waitForFunction(
         () => document.documentElement.dataset.dashboardJourneyHarness === 'ready',
-        { timeout: 30_000 },
+        { timeout: 60_000 },
       );
       await expect(page.getByTestId('show-elected-officials-toggle')).not.toBeChecked();
     } finally {

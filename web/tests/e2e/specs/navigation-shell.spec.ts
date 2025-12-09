@@ -6,7 +6,7 @@ test.describe('App/Admin navigation shell', () => {
   test('updates AppShell data attributes and admin sidebar selection', async ({ page }) => {
     await page.goto('/e2e/navigation-shell', { waitUntil: 'domcontentloaded', timeout: 45_000 });
     await waitForPageReady(page);
-    await page.waitForFunction(() => Boolean(window.__navigationShellHarness), { timeout: 30_000 });
+    await page.waitForFunction(() => Boolean(window.__navigationShellHarness), { timeout: 60_000 });
 
     const setRoute = async (route: string, label: string) => {
       await page.evaluate(

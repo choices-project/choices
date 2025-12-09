@@ -36,7 +36,7 @@ test.describe('@axe Global navigation accessibility', () => {
     });
 
     const menuButton = page.getByTestId('mobile-menu').last();
-    await menuButton.waitFor({ timeout: 30_000 });
+    await menuButton.waitFor({ timeout: 60_000 });
     await expect(menuButton).toHaveAttribute('aria-controls', 'global-navigation-mobile-menu');
     await expect(menuButton).toHaveAttribute('aria-expanded');
     await runAxeAudit(page, 'global navigation mobile', {

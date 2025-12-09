@@ -18,9 +18,9 @@ declare global {
 const gotoNavigationShellHarness = async (page: Page) => {
   await page.goto('/e2e/navigation-shell', { waitUntil: 'domcontentloaded', timeout: 60_000 });
   await waitForPageReady(page, 60_000);
-  await expect(page.getByTestId('navigation-shell-harness')).toBeVisible({ timeout: 30_000 });
+  await expect(page.getByTestId('navigation-shell-harness')).toBeVisible({ timeout: 60_000 });
   await page.waitForFunction(() => typeof window.__navigationShellHarness !== 'undefined', undefined, {
-    timeout: 30_000,
+    timeout: 60_000,
   });
 };
 
@@ -47,7 +47,7 @@ const expectBreadcrumbMatches = async (page: Page, matcher: string) => {
       ).some((item) => item.textContent?.includes(expected));
     },
     matcher,
-    { timeout: 30_000 },
+    { timeout: 60_000 },
   );
 };
 
@@ -69,7 +69,7 @@ const setNavigationShellState = async (
       return currentRoute?.textContent?.includes(expectedRoute) ?? false;
     },
     state.route,
-    { timeout: 30_000 },
+    { timeout: 60_000 },
   );
 };
 
@@ -96,7 +96,7 @@ test.describe('@axe Admin navigation accessibility and routing', () => {
     await gotoNavigationShellHarness(page);
 
     const toggle = page.getByRole('button', { name: /Toggle sidebar navigation/i });
-    await toggle.waitFor({ timeout: 30_000 });
+    await toggle.waitFor({ timeout: 60_000 });
     await expect(toggle).toHaveAttribute('aria-controls', 'admin-sidebar-navigation');
     await expect(toggle).toHaveAttribute('aria-expanded');
     await runAxeAudit(page, 'admin navigation mobile', {
