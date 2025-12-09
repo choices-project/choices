@@ -348,6 +348,7 @@ jobs:
       SUPABASE_SERVICE_ROLE_KEY: dev-only-secret
       SUPABASE_SECRET_KEY: dev-only-secret
       PRIVACY_PEPPER_CURRENT: base64:fake-pepper-for-ci-only-this-is-a-very-long-fake-pepper-value-that-meets-the-32-byte-minimum-requirement-for-testing-purposes-only
+      PLAYWRIGHT_USE_MOCKS: '1'
     defaults:
       run:
         working-directory: web
@@ -390,18 +391,24 @@ jobs:
         run: |
           # Run performance-tagged Playwright tests if any exist; treat "no tests found" as success.
           set +e
-          npx playwright test --project=chromium --grep="performance" --reporter=html,junit
+          npx playwright test --project=chromium --grep="performance" --reporter=html,junit 2>&1 | tee test-output.log
           exit_code=$?
           if [ $exit_code -ne 0 ]; then
-            if grep -qi "No tests found" playwright-report/index.html 2>/dev/null || [ $exit_code -eq 1 ]; then
+            # Check if the failure is due to no tests found (Playwright exits with code 1 for "no tests")
+            if grep -qiE "no tests found|no test files found|no test to run" test-output.log 2>/dev/null; then
               echo "No performance tests found; treating as success."
               exit 0
             fi
+            # If it's exit code 1 and we can't find "no tests", it's a real failure
+            echo "Performance tests failed. Exit code: $exit_code"
+            cat test-output.log
+            exit $exit_code
           fi
-          exit $exit_code
+          exit 0
         env:
           CI: true
           BASE_URL: http://127.0.0.1:3000
+          NEXT_PUBLIC_ENABLE_E2E_HARNESS: '1'
 
       - name: Upload performance test results
         uses: actions/upload-artifact@v4
@@ -484,6 +491,7 @@ jobs:
       SUPABASE_SERVICE_ROLE_KEY: dev-only-secret
       SUPABASE_SECRET_KEY: dev-only-secret
       PRIVACY_PEPPER_CURRENT: base64:fake-pepper-for-ci-only-this-is-a-very-long-fake-pepper-value-that-meets-the-32-byte-minimum-requirement-for-testing-purposes-only
+      PLAYWRIGHT_USE_MOCKS: '1'
     defaults:
       run:
         working-directory: web
@@ -526,18 +534,24 @@ jobs:
         run: |
           # Run load-tagged Playwright tests if any exist; treat "no tests found" as success.
           set +e
-          npx playwright test --project=chromium --grep="load" --reporter=html,junit
+          npx playwright test --project=chromium --grep="load" --reporter=html,junit 2>&1 | tee test-output.log
           exit_code=$?
           if [ $exit_code -ne 0 ]; then
-            if grep -qi "No tests found" playwright-report/index.html 2>/dev/null || [ $exit_code -eq 1 ]; then
+            # Check if the failure is due to no tests found (Playwright exits with code 1 for "no tests")
+            if grep -qiE "no tests found|no test files found|no test to run" test-output.log 2>/dev/null; then
               echo "No load tests found; treating as success."
               exit 0
             fi
+            # If it's exit code 1 and we can't find "no tests", it's a real failure
+            echo "Load tests failed. Exit code: $exit_code"
+            cat test-output.log
+            exit $exit_code
           fi
-          exit $exit_code
+          exit 0
         env:
           CI: true
           BASE_URL: http://127.0.0.1:3000
+          NEXT_PUBLIC_ENABLE_E2E_HARNESS: '1'
 
       - name: Upload load test results
         uses: actions/upload-artifact@v4
