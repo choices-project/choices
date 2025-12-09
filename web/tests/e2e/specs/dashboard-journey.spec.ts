@@ -163,11 +163,14 @@ test.describe('Dashboard Journey', () => {
 
       // Wait for screen reader announcement with increased timeout
       // The announcement may take time to be logged after the notification appears
-      await waitForAnnouncement(page, {
-        priority: 'assertive',
-        textFragment: 'Failed to refresh feeds',
-        timeout: 30_000, // Increased timeout for CI reliability
-      }).catch(async (error) => {
+      // If announcement doesn't appear, we still verify the notification is visible below
+      try {
+        await waitForAnnouncement(page, {
+          priority: 'assertive',
+          textFragment: 'Failed to refresh feeds',
+          timeout: 30_000, // Increased timeout for CI reliability
+        });
+      } catch (error) {
         // If announcement doesn't appear, verify the notification is still visible
         // This ensures the error handling works even if screen reader logging is delayed
         const notificationVisible = await page
@@ -176,11 +179,12 @@ test.describe('Dashboard Journey', () => {
           .isVisible()
           .catch(() => false);
         if (!notificationVisible) {
-          throw error; // Re-throw if notification also isn't visible
+          // Only throw if notification also isn't visible - announcement is secondary
+          throw error;
         }
         // Log that announcement wasn't captured but notification is visible
         console.warn('Screen reader announcement not captured, but notification is visible');
-      });
+      }
 
       const toastAlert = page
         .getByRole('alert')
