@@ -66,6 +66,7 @@ test.describe('Dashboard Journey', () => {
       await waitForPageReady(page);
       await page.waitForFunction(
         () => document.documentElement.dataset.dashboardJourneyHarness === 'ready',
+        { timeout: 30_000 },
       );
       await expect(page.getByTestId('personal-dashboard')).toBeVisible();
       await expect(page.getByTestId('dashboard-title')).toContainText('Welcome back');

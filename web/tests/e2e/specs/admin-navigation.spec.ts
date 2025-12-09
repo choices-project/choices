@@ -47,6 +47,7 @@ const expectBreadcrumbMatches = async (page: Page, matcher: string) => {
       ).some((item) => item.textContent?.includes(expected));
     },
     matcher,
+    { timeout: 30_000 },
   );
 };
 
@@ -68,6 +69,7 @@ const setNavigationShellState = async (
       return currentRoute?.textContent?.includes(expectedRoute) ?? false;
     },
     state.route,
+    { timeout: 30_000 },
   );
 };
 

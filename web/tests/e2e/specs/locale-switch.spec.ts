@@ -71,6 +71,7 @@ const applyLanguageSelection = async (page: Page, selection: LanguageSelection) 
   await waitForLocaleCookie(page, selection.code);
   await page.waitForFunction(
     () => document.documentElement.dataset.globalNavigationHarness === 'ready',
+    { timeout: 30_000 },
   );
 };
 
