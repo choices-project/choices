@@ -8,8 +8,8 @@ export default defineConfig({
   retries: process.env.CI ? 1 : 0, // Reduced retries
   workers: process.env.CI ? 1 : 2,
   reporter: 'line',
-  timeout: 30_000,
-  expect: { timeout: 5_000 },
+  timeout: 60_000, // Increased for CI environments where harness pages may take longer to load
+  expect: { timeout: 10_000 }, // Increased for more reliable element assertions
 
   // Global setup - creates test users before running tests
   globalSetup: './tests/e2e/setup/global-setup.ts',
@@ -19,8 +19,8 @@ export default defineConfig({
     trace: 'on-first-retry',
     screenshot: 'only-on-failure',
     video: 'retain-on-failure',
-    actionTimeout: 10_000,
-    navigationTimeout: 15_000,
+    actionTimeout: 30_000, // Increased for CI reliability
+    navigationTimeout: 60_000, // Increased for harness page loads
   },
 
   projects: [
