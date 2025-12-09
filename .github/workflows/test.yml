@@ -375,21 +375,10 @@ jobs:
           fi
           which gtimeout || which timeout
 
-      - name: Clean workspace
-        run: rm -rf node_modules
-
-      - name: Install dependencies
-        run: npm run ci:install
-
-      - name: Build application
-        run: npm run build
-
-      - name: Install Playwright browsers
-        run: npx playwright install --with-deps chromium
-
       - name: Run performance tests
         run: |
           # Since no performance test files exist, always skip this job
+          # No need to install dependencies or build since we're not running tests
           echo "No performance test files exist; skipping performance tests."
           exit 0
         env:
@@ -505,21 +494,10 @@ jobs:
           fi
           which gtimeout || which timeout
 
-      - name: Clean workspace
-        run: rm -rf node_modules
-
-      - name: Install dependencies
-        run: npm run ci:install
-
-      - name: Build application
-        run: npm run build
-
-      - name: Install Playwright browsers
-        run: npx playwright install --with-deps chromium
-
       - name: Run load tests
         run: |
           # Since no load test files exist, always skip this job
+          # No need to install dependencies or build since we're not running tests
           # Note: --grep="load" would match regular tests like "loads feeds", which is not what we want
           echo "No load test files exist; skipping load tests."
           exit 0
