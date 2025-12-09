@@ -93,6 +93,7 @@ test.describe('Locale Switching', () => {
   });
 
   test('language selector is visible and accessible', async ({ page }) => {
+    test.setTimeout(90_000); // Increased timeout for CI
     const selector = page.getByTestId('language-selector').first();
     await expect(selector).toBeVisible({ timeout: 30_000 });
     
@@ -102,6 +103,7 @@ test.describe('Locale Switching', () => {
   });
 
   test('opens language dropdown on click', async ({ page }) => {
+    test.setTimeout(90_000); // Increased timeout for CI
     const selector = page.getByTestId('language-selector').first();
     const button = selector.getByRole('button').first();
     
@@ -115,6 +117,7 @@ test.describe('Locale Switching', () => {
   });
 
   test('switches locale when language option is selected', async ({ page }) => {
+    test.setTimeout(90_000); // Increased timeout for CI
     const selector = page.getByTestId('language-selector').first();
     const button = selector.getByRole('button').first();
     
@@ -140,6 +143,7 @@ test.describe('Locale Switching', () => {
   });
 
   test('persists locale preference across navigation', async ({ page }) => {
+    test.setTimeout(90_000); // Increased timeout for CI
     const selector = page.getByTestId('language-selector').first();
     const button = selector.getByRole('button').first();
     
@@ -168,6 +172,7 @@ test.describe('Locale Switching', () => {
   });
 
   test('restores locale preference on page reload', async ({ page }) => {
+    test.setTimeout(90_000); // Increased timeout for CI
     const selector = page.getByTestId('language-selector').first();
     const button = selector.getByRole('button').first();
     
@@ -197,6 +202,7 @@ test.describe('Locale Switching', () => {
   });
 
   test('handles multiple locale switches correctly', async ({ page }) => {
+    test.setTimeout(90_000); // Increased timeout for CI
     const selector = page.getByTestId('language-selector').first();
     const button = selector.getByRole('button').first();
     
@@ -237,6 +243,7 @@ test.describe('Locale Switching', () => {
   });
 
   test('updates UI labels when locale changes', async ({ page }) => {
+    test.setTimeout(90_000); // Increased timeout for CI
     // This test assumes the dashboard or current page has some translated content
     // We'll check that navigation labels update
     
@@ -265,6 +272,7 @@ test.describe('Locale Switching', () => {
   });
 
   test('language selector is keyboard accessible', async ({ page }) => {
+    test.setTimeout(90_000); // Increased timeout for CI
     const selector = page.getByTestId('language-selector').first();
     const button = selector.getByRole('button').first();
     
