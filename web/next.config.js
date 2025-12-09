@@ -564,9 +564,8 @@ const nextConfig = {
   // Disable standalone mode on Vercel/CI to avoid route group build issues
   // Vercel uses its own serverless deployment system and doesn't need standalone
   // Also disable in CI environments to prevent build errors
-  ...(process.env.VERCEL || process.env.CI || process.env.VERCEL_ENV
-    ? {}
-    : { output: 'standalone' }),
+  // Always disable standalone mode to prevent client reference manifest errors
+  // output: 'standalone' is disabled to avoid route group build issues
 
   // Trailing slash
   trailingSlash: false,

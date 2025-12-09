@@ -64,7 +64,6 @@ test.describe('Dashboard feeds harness', () => {
   test.skip(!SHOULD_USE_MOCKS, 'Feed mocks disabled for this run');
 
   test('loads feeds, filters by tags, and toggles bookmarks', async ({ page }) => {
-    test.setTimeout(90_000); // Increased timeout for CI
     const cleanupMocks = await setupExternalAPIMocks(page, { feeds: true });
 
     try {
@@ -119,7 +118,6 @@ test.describe('Dashboard feeds harness', () => {
   });
 
   test('refreshes feeds without leaving stale state', async ({ page }) => {
-    test.setTimeout(90_000); // Increased timeout for CI
     const cleanupMocks = await setupExternalAPIMocks(page, { feeds: true });
 
     try {

@@ -5,7 +5,6 @@ import { waitForPageReady } from '../helpers/e2e-setup';
 
 test.describe('@axe Analytics dashboard baseline', () => {
   test('collects axe baseline for analytics dashboard harness', async ({ page }) => {
-    test.setTimeout(90_000); // Increased timeout for CI
     await page.goto('/e2e/analytics-dashboard', { waitUntil: 'domcontentloaded' });
     await waitForPageReady(page);
 
