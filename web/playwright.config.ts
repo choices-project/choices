@@ -16,7 +16,7 @@ export default defineConfig({
 
   use: {
     baseURL: process.env.BASE_URL ?? 'http://localhost:3000',
-    trace: 'on-failure', // Changed from 'on-first-retry' since retries are disabled
+    trace: 'retain-on-failure', // Changed from 'on-first-retry' since retries are disabled
     screenshot: 'only-on-failure',
     video: 'retain-on-failure',
     actionTimeout: 30_000, // Increased for CI reliability
