@@ -10,7 +10,7 @@ const sleep = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms))
 
 const buildUrl = (baseUrl: string, path: string) => new URL(path, baseUrl).toString()
 
-async function waitForServer(baseUrl: string, timeoutMs = 120_000): Promise<void> {
+async function waitForServer(baseUrl: string, timeoutMs = 180_000): Promise<void> {
   const deadline = Date.now() + timeoutMs
   const healthUrl = buildUrl(baseUrl, '/api/health')
   let lastError: unknown
