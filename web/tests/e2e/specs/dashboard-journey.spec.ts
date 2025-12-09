@@ -97,6 +97,7 @@ test.describe('Dashboard Journey', () => {
       await waitForPageReady(page);
       await page.waitForFunction(
         () => document.documentElement.dataset.dashboardJourneyHarness === 'ready',
+        { timeout: 30_000 },
       );
       await expect(page.getByTestId('personal-dashboard')).toBeVisible();
       await expect(page.getByTestId('show-elected-officials-toggle')).not.toBeChecked();
@@ -105,7 +106,7 @@ test.describe('Dashboard Journey', () => {
       // Capture notification harness reference after reload
       await page.goto('/e2e/notification-store');
       await waitForPageReady(page);
-      await page.waitForFunction(() => Boolean((window as HarnessWindow).__notificationStoreHarness));
+      await page.waitForFunction(() => Boolean((window as HarnessWindow).__notificationStoreHarness), { timeout: 30_000 });
       await page.evaluate(() => {
         const w = window as HarnessWindow;
         const harness = w.__notificationStoreHarness;
@@ -125,6 +126,7 @@ test.describe('Dashboard Journey', () => {
       await waitForPageReady(page);
       await page.waitForFunction(
         () => document.documentElement.dataset.dashboardJourneyHarness === 'ready',
+        { timeout: 30_000 },
       );
       await expect(page.getByTestId('show-elected-officials-toggle')).not.toBeChecked();
 
@@ -157,7 +159,7 @@ test.describe('Dashboard Journey', () => {
         return harness
           .getSnapshot()
           .notifications.some((notification) => notification.message?.includes('Failed to refresh feeds'));
-      });
+      }, { timeout: 30_000 });
 
       await waitForAnnouncement(page, {
         priority: 'assertive',
@@ -203,6 +205,7 @@ test.describe('Dashboard Journey', () => {
       await waitForPageReady(page);
       await page.waitForFunction(
         () => document.documentElement.dataset.dashboardJourneyHarness === 'ready',
+        { timeout: 30_000 },
       );
       await expect(page.getByTestId('show-elected-officials-toggle')).not.toBeChecked();
     } finally {

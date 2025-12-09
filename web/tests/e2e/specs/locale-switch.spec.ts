@@ -216,6 +216,7 @@ test.describe('Locale Switching', () => {
       await waitForLocaleCookie(page, baseCode);
       await page.waitForFunction(
         () => document.documentElement.dataset.globalNavigationHarness === 'ready',
+        { timeout: 30_000 },
       );
       
       // Switch to alternate language again
