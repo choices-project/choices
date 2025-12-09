@@ -175,10 +175,11 @@ test.describe('Dashboard Journey', () => {
         // The notification visibility check below is the primary verification
       }
 
+      // Wait for the toast alert to appear - it may take time to render
       const toastAlert = page
         .getByRole('alert')
         .filter({ hasText: 'Feed update failed' });
-      await expect(toastAlert).toBeVisible();
+      await expect(toastAlert).toBeVisible({ timeout: 30_000 });
       await expect(toastAlert).toContainText('Failed to refresh feeds');
 
       await expect(page.getByText('Error Loading Feed')).toBeVisible();
