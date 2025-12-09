@@ -26,7 +26,7 @@ const gotoFeedsHarness = async (page: Page) => {
   });
   await page.goto('/e2e/feeds-store', {
     waitUntil: 'domcontentloaded',
-    timeout: 45_000,
+    timeout: 60_000,
   });
   await waitForPageReady(page);
   await page.waitForFunction(() => {

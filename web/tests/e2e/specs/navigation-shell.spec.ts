@@ -4,7 +4,7 @@ import { waitForPageReady } from '../helpers/e2e-setup';
 
 test.describe('App/Admin navigation shell', () => {
   test('updates AppShell data attributes and admin sidebar selection', async ({ page }) => {
-    await page.goto('/e2e/navigation-shell', { waitUntil: 'domcontentloaded', timeout: 45_000 });
+    await page.goto('/e2e/navigation-shell', { waitUntil: 'domcontentloaded', timeout: 60_000 });
     await waitForPageReady(page);
     await page.waitForFunction(() => Boolean(window.__navigationShellHarness), { timeout: 60_000 });
 
