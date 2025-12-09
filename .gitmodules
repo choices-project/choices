@@ -1,0 +1,4 @@
+[submodule "services/civics-backend/data/openstates-people"]
+	path = services/civics-backend/data/openstates-people
+	url = https://github.com/openstates/people.git
+
