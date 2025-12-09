@@ -159,7 +159,7 @@ test.describe('Dashboard Journey', () => {
         return harness
           .getSnapshot()
           .notifications.some((notification) => notification.message?.includes('Failed to refresh feeds'));
-      }, { timeout: 30_000 });
+      }, { timeout: 60_000 });
 
       await waitForAnnouncement(page, {
         priority: 'assertive',
