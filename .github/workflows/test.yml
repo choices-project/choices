@@ -154,6 +154,7 @@ jobs:
           npx playwright test
           --project=${{ matrix.browser }}
           --reporter=html,junit
+          --max-failures=1
           tests/e2e/specs/dashboard-feeds.spec.ts
           tests/e2e/specs/dashboard-journey.spec.ts
           tests/e2e/specs/navigation-shell.spec.ts
