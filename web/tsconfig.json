@@ -22,7 +22,7 @@
     "baseUrl": ".",
     "paths": {
       "@/*": ["./*"],
-      "@choices/civics-shared": ["../services/civics-shared/index"],
+      "@choices/civics-shared": ["../services/civics-shared"],
       "@choices/civics-shared/*": ["../services/civics-shared/*"],
       "swr": ["./shims/swr"]
     }
