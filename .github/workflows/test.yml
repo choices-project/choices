@@ -390,7 +390,7 @@ jobs:
       - name: Run performance tests
         run: |
           # Check if any performance test files exist first (avoids starting webServer unnecessarily)
-          if [ -z "$(find tests/e2e/specs -name '*performance*.spec.ts' 2>/dev/null)" ]; then
+          if ! find tests/e2e/specs -name '*performance*.spec.ts' 2>/dev/null | grep -q .; then
             echo "No performance test files found; skipping."
             exit 0
           fi
@@ -526,9 +526,7 @@ jobs:
         run: |
           # Check if any load test files exist first (avoids starting webServer unnecessarily)
           # Also check for tests tagged with @load (more specific than just "load" in test name)
-          load_test_files=$(find tests/e2e/specs -name "*load*.spec.ts" 2>/dev/null | wc -l)
-          
-          if [ "$load_test_files" -eq 0 ]; then
+          if ! find tests/e2e/specs -name "*load*.spec.ts" 2>/dev/null | grep -q .; then
             # Check if there are any tests tagged with @load (more specific pattern)
             set +e
             load_tagged_tests=$(npx playwright test --list --grep="@load" 2>&1 | grep -c "\.spec\.ts" || echo "0")
@@ -536,14 +534,11 @@ jobs:
               echo "No load test files or @load tagged tests found; skipping."
               exit 0
             fi
-          fi
-          
-          # Run load tests - use @load tag to avoid matching regular tests with "load" in name
-          # If no @load tagged tests, run files with "load" in filename
-          if [ "$load_test_files" -gt 0 ]; then
-            npx playwright test --project=chromium $(find tests/e2e/specs -name "*load*.spec.ts") --reporter=html,junit
-          else
+            # Run @load tagged tests
             npx playwright test --project=chromium --grep="@load" --reporter=html,junit
+          else
+            # Run files with "load" in filename
+            npx playwright test --project=chromium $(find tests/e2e/specs -name "*load*.spec.ts") --reporter=html,junit
           fi
         env:
           CI: true
