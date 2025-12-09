@@ -1,8 +1,8 @@
 {
-  "buildCommand": "npm run build",
-  "installCommand": "npm install",
+  "buildCommand": "cd web && npm run build",
+  "installCommand": "cd web && npm ci",
   "framework": "nextjs",
-  "outputDirectory": ".next",
+  "outputDirectory": "web/.next",
   "crons": [
     {
       "path": "/api/cron/candidate-reminders",
