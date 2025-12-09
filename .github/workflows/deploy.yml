@@ -163,7 +163,6 @@ jobs:
           vercel-token: ${{ secrets.VERCEL_TOKEN }}
           vercel-org-id: ${{ secrets.VERCEL_ORG_ID }}
           vercel-project-id: ${{ secrets.VERCEL_PROJECT_ID }}
-          working-directory: web
           vercel-args: '--confirm'   # no --prod on staging, let Vercel build
           scope: ${{ secrets.VERCEL_ORG_ID }}
 
@@ -188,7 +187,7 @@ jobs:
     environment:
       name: production
       url: https://www.choices-app.com
-    
+
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -199,7 +198,6 @@ jobs:
           vercel-token: ${{ secrets.VERCEL_TOKEN }}
           vercel-org-id: ${{ secrets.VERCEL_ORG_ID }}
           vercel-project-id: ${{ secrets.VERCEL_PROJECT_ID }}
-          working-directory: web
           vercel-args: '--prod --confirm'  # Let Vercel build from source
           scope: ${{ secrets.VERCEL_ORG_ID }}
 
