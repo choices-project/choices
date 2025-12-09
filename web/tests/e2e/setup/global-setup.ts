@@ -51,10 +51,19 @@ export default async function globalSetup(_: FullConfig) {
   const baseUrl = process.env.BASE_URL ?? 'http://127.0.0.1:3000'
   ensureEnv('PLAYWRIGHT_BASE_URL', baseUrl)
 
+  console.log('[globalSetup] Starting global setup...')
+  console.log('[globalSetup] BASE_URL:', baseUrl)
+  console.log('[globalSetup] NEXT_PUBLIC_ENABLE_E2E_HARNESS:', process.env.NEXT_PUBLIC_ENABLE_E2E_HARNESS)
+  console.log('[globalSetup] PLAYWRIGHT_USE_MOCKS:', process.env.PLAYWRIGHT_USE_MOCKS)
+
   try {
+    console.log('[globalSetup] Waiting for server to be ready...')
     await waitForServer(baseUrl)
+    console.log('[globalSetup] Server is ready!')
     await warmHarnessRoutes(baseUrl)
+    console.log('[globalSetup] Global setup complete!')
   } catch (error) {
+    console.error('[globalSetup] Global setup failed:', error)
     console.warn('[globalSetup] Continuing despite warmup failure:', error)
   }
 }
