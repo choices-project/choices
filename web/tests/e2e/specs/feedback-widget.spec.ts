@@ -3,7 +3,7 @@ import { expect, test, type Page } from '@playwright/test';
 import { waitForPageReady } from '../helpers/e2e-setup';
 
 const ensureAnalyticsBridge = async (page: Page) => {
-  await page.waitForFunction(() => Boolean(globalThis.__playwrightAnalytics));
+  await page.waitForFunction(() => Boolean(globalThis.__playwrightAnalytics), { timeout: 60_000 });
 };
 
 const enableAnalytics = async (page: Page) => {

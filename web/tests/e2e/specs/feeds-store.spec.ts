@@ -11,11 +11,12 @@ declare global {
 }
 
 const gotoHarness = async (page: Page) => {
-  await page.goto('/e2e/feeds-store', { waitUntil: 'domcontentloaded' });
+  await page.goto('/e2e/feeds-store', { waitUntil: 'domcontentloaded', timeout: 60_000 });
   await waitForPageReady(page);
-  await page.waitForFunction(() => Boolean(window.__feedsStoreHarness));
+  await page.waitForFunction(() => Boolean(window.__feedsStoreHarness), { timeout: 60_000 });
   await page.waitForFunction(
-    () => document.documentElement.dataset.feedsStoreHarness === 'ready'
+    () => document.documentElement.dataset.feedsStoreHarness === 'ready',
+    { timeout: 60_000 },
   );
 };
 

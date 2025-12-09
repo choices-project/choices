@@ -13,9 +13,9 @@ declare global {
 }
 
 const gotoHarness = async (page: Page) => {
-  await page.goto('/e2e/notification-store', { waitUntil: 'domcontentloaded' });
+  await page.goto('/e2e/notification-store', { waitUntil: 'domcontentloaded', timeout: 60_000 });
   await waitForPageReady(page);
-  await page.waitForFunction(() => Boolean(window.__notificationStoreHarness));
+  await page.waitForFunction(() => Boolean(window.__notificationStoreHarness), { timeout: 60_000 });
   await page.evaluate(() => {
     window.__notificationStoreHarness?.clearAll();
     window.__notificationStoreHarness?.clearAllAdmin();

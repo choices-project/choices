@@ -13,11 +13,12 @@ declare global {
 }
 
 const gotoHarness = async (page: Page) => {
-  await page.goto('/e2e/poll-wizard', { waitUntil: 'domcontentloaded' });
+  await page.goto('/e2e/poll-wizard', { waitUntil: 'domcontentloaded', timeout: 60_000 });
   await waitForPageReady(page);
-  await page.waitForFunction(() => Boolean(window.__pollWizardHarness));
+  await page.waitForFunction(() => Boolean(window.__pollWizardHarness), { timeout: 60_000 });
   await page.waitForFunction(
-    () => document.documentElement.dataset.pollWizardHarness === 'ready'
+    () => document.documentElement.dataset.pollWizardHarness === 'ready',
+    { timeout: 60_000 },
   );
   await page.evaluate(() => {
     window.__pollWizardHarness?.actions.resetWizard();

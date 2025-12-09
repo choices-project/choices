@@ -13,11 +13,12 @@ declare global {
 }
 
 const gotoHarness = async (page: Page) => {
-  await page.goto('/e2e/polls-store', { waitUntil: 'domcontentloaded' });
+  await page.goto('/e2e/polls-store', { waitUntil: 'domcontentloaded', timeout: 60_000 });
   await waitForPageReady(page);
-  await page.waitForFunction(() => Boolean(window.__pollsStoreHarness));
+  await page.waitForFunction(() => Boolean(window.__pollsStoreHarness), { timeout: 60_000 });
   await page.waitForFunction(
-    () => document.documentElement.dataset.pollsStoreHarness === 'ready'
+    () => document.documentElement.dataset.pollsStoreHarness === 'ready',
+    { timeout: 60_000 },
   );
   await page.evaluate(() => {
     window.__pollsStoreHarness?.actions.resetPollsState();

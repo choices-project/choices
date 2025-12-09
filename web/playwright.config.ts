@@ -5,7 +5,7 @@ export default defineConfig({
   testIgnore: ['**/archive/**', '**/setup/**'],
   fullyParallel: false, // Disabled for E2E stability
   forbidOnly: !!process.env.CI,
-  retries: process.env.CI ? 1 : 0, // Reduced retries
+  retries: process.env.CI ? 0 : 0, // Disable retries in CI to prevent infinite loops on timeout failures
   workers: process.env.CI ? 1 : 2,
   reporter: 'line',
   timeout: 60_000, // Increased for CI environments where harness pages may take longer to load

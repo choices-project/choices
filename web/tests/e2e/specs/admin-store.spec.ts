@@ -11,11 +11,12 @@ declare global {
 }
 
 const gotoHarness = async (page: Page) => {
-  await page.goto('/e2e/admin-store', { waitUntil: 'domcontentloaded' });
+  await page.goto('/e2e/admin-store', { waitUntil: 'domcontentloaded', timeout: 60_000 });
   await waitForPageReady(page);
-  await page.waitForFunction(() => Boolean(window.__adminStoreHarness));
+  await page.waitForFunction(() => Boolean(window.__adminStoreHarness), { timeout: 60_000 });
   await page.waitForFunction(
-    () => document.documentElement.dataset.adminStoreHarness === 'ready'
+    () => document.documentElement.dataset.adminStoreHarness === 'ready',
+    { timeout: 60_000 },
   );
 };
 

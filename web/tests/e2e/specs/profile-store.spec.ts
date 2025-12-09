@@ -13,9 +13,9 @@ declare global {
 }
 
 const gotoHarness = async (page: Page) => {
-  await page.goto('/e2e/profile-store', { waitUntil: 'domcontentloaded' });
+  await page.goto('/e2e/profile-store', { waitUntil: 'domcontentloaded', timeout: 60_000 });
   await waitForPageReady(page);
-  await page.waitForFunction(() => Boolean(window.__profileStoreHarness));
+  await page.waitForFunction(() => Boolean(window.__profileStoreHarness), { timeout: 60_000 });
 };
 
 test.describe('Profile store harness', () => {

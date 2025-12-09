@@ -4,9 +4,9 @@ import type { Page } from '@playwright/test';
 const MUTABLE_FLAG = 'SOCIAL_SHARING';
 
 const gotoAdminHarness = async (page: Page) => {
-  await page.goto('/e2e/admin-store', { waitUntil: 'domcontentloaded' });
-  await page.waitForSelector('[data-testid="admin-store-harness"]');
-  await page.waitForFunction(() => Boolean((window as any).__adminStoreHarness));
+  await page.goto('/e2e/admin-store', { waitUntil: 'domcontentloaded', timeout: 60_000 });
+  await page.waitForSelector('[data-testid="admin-store-harness"]', { timeout: 60_000 });
+  await page.waitForFunction(() => Boolean((window as any).__adminStoreHarness), { timeout: 60_000 });
 };
 
 const ALWAYS_ON_FLAGS = [

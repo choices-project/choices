@@ -20,11 +20,12 @@ declare global {
 }
 
 const gotoHarness = async (page: Page) => {
-  await page.goto('/e2e/voting-store', { waitUntil: 'domcontentloaded' });
+  await page.goto('/e2e/voting-store', { waitUntil: 'domcontentloaded', timeout: 60_000 });
   await waitForPageReady(page);
-  await page.waitForFunction(() => Boolean(window.__votingStoreHarness));
+  await page.waitForFunction(() => Boolean(window.__votingStoreHarness), { timeout: 60_000 });
   await page.waitForFunction(
-    () => document.documentElement.dataset.votingStoreHarness === 'ready'
+    () => document.documentElement.dataset.votingStoreHarness === 'ready',
+    { timeout: 60_000 },
   );
 };
 

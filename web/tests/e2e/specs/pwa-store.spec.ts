@@ -13,11 +13,12 @@ declare global {
 }
 
 const gotoHarness = async (page: Page) => {
-  await page.goto('/e2e/pwa-store', { waitUntil: 'domcontentloaded' });
+  await page.goto('/e2e/pwa-store', { waitUntil: 'domcontentloaded', timeout: 60_000 });
   await waitForPageReady(page);
-  await page.waitForFunction(() => Boolean(window.__pwaStoreHarness));
+  await page.waitForFunction(() => Boolean(window.__pwaStoreHarness), { timeout: 60_000 });
   await page.waitForFunction(
-    () => document.documentElement.dataset.pwaStoreHarness === 'ready'
+    () => document.documentElement.dataset.pwaStoreHarness === 'ready',
+    { timeout: 60_000 },
   );
 };
 

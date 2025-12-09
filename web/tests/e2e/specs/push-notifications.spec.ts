@@ -11,11 +11,12 @@ declare global {
 }
 
 const gotoHarness = async (page: Page) => {
-  await page.goto('/e2e/push-notifications', { waitUntil: 'domcontentloaded' });
+  await page.goto('/e2e/push-notifications', { waitUntil: 'domcontentloaded', timeout: 60_000 });
   await waitForPageReady(page);
-  await page.waitForFunction(() => Boolean(window.__pushNotificationsHarness));
+  await page.waitForFunction(() => Boolean(window.__pushNotificationsHarness), { timeout: 60_000 });
   await page.waitForFunction(
-    () => document.documentElement.dataset.pushNotificationsHarness === 'ready'
+    () => document.documentElement.dataset.pushNotificationsHarness === 'ready',
+    { timeout: 60_000 },
   );
 };
 

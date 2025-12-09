@@ -15,9 +15,9 @@ declare global {
 }
 
 const gotoHarness = async (page: Page) => {
-  await page.goto('/e2e/analytics-store', { waitUntil: 'domcontentloaded' });
+  await page.goto('/e2e/analytics-store', { waitUntil: 'domcontentloaded', timeout: 60_000 });
   await waitForPageReady(page);
-  await page.waitForFunction(() => Boolean(window.__analyticsStoreHarness));
+  await page.waitForFunction(() => Boolean(window.__analyticsStoreHarness), { timeout: 60_000 });
 };
 
 test.describe('Analytics store harness', () => {
@@ -57,7 +57,7 @@ test.describe('Analytics store harness', () => {
     await expect(eventCount).toHaveText('1');
     await expect(latestType).toHaveText('page_view');
 
-    await page.waitForFunction(() => (window.__playwrightAnalytics?.events.length ?? 0) === 1);
+    await page.waitForFunction(() => (window.__playwrightAnalytics?.events.length ?? 0) === 1, { timeout: 60_000 });
 
     await page.evaluate(() => {
       window.__analyticsStoreHarness?.setDashboard({
