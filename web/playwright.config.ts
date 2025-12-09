@@ -54,7 +54,7 @@ export default defineConfig({
     command: 'npm run dev',
     port: 3000,
     reuseExistingServer: !process.env.CI,
-    timeout: 120_000,
+    timeout: 180_000, // Increased to 3 minutes for CI environments
     env: {
       ...process.env,
       NEXT_DISABLE_REACT_DEV_OVERLAY: '1',

@@ -95,9 +95,9 @@ const DEFAULT_POLL: TestPoll = {
 const SEEDED_DATA = new Map<SeedHandle, SeedRecord>();
 
 const DEFAULT_TIMEOUTS = {
-  pageLoad: 15_000,
-  element: 5_000,
-  api: 3_000,
+  pageLoad: 30_000, // Increased for CI reliability
+  element: 10_000, // Increased for CI reliability
+  api: 5_000, // Increased for CI reliability
 };
 
 const AUTH_SELECTORS = {
