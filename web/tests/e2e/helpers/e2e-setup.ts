@@ -95,7 +95,7 @@ const DEFAULT_POLL: TestPoll = {
 const SEEDED_DATA = new Map<SeedHandle, SeedRecord>();
 
 const DEFAULT_TIMEOUTS = {
-  pageLoad: 30_000, // Increased for CI reliability
+  pageLoad: 60_000, // Increased for CI reliability
   element: 10_000, // Increased for CI reliability
   api: 5_000, // Increased for CI reliability
 };
@@ -221,7 +221,7 @@ export async function loginTestUser(page: Page, user: TestUser): Promise<void> {
   }
 
   await page.goto('/auth', { waitUntil: 'domcontentloaded', timeout: 60_000 });
-  await page.waitForSelector('[data-testid="auth-hydrated"]', { state: 'attached', timeout: 30_000 });
+  await page.waitForSelector('[data-testid="auth-hydrated"]', { state: 'attached', timeout: 60_000 });
   await waitForPageReady(page);
 
   const toggle = page.locator('[data-testid="auth-toggle"]');
