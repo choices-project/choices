@@ -21,6 +21,7 @@ test.describe('Auth – real backend', () => {
   });
 
   test('existing test user can sign in via /auth', async ({ page }) => {
+    test.setTimeout(120_000); // Increase test timeout for production server
     if (!regularEmail || !regularPassword) {
       test.skip('E2E_USER_* credentials are not configured');
     }
@@ -33,18 +34,27 @@ test.describe('Auth – real backend', () => {
 
     await waitForPageReady(page);
 
-    await expect(page).toHaveURL(/(dashboard|onboarding)/, { timeout: 15_000 });
+    // Wait for redirect with longer timeout for production server
+    await expect(page).toHaveURL(/(dashboard|onboarding)/, { timeout: 30_000 });
+    
+    // Wait for authentication to complete with longer timeout
     await expect
       .poll(
-        async () =>
-          (await page.evaluate(() => document.cookie.includes('sb-'))) ||
-          (await page.evaluate(() => localStorage.getItem('supabase.auth.token') !== null)),
-        { timeout: 5_000 },
+        async () => {
+          const hasCookie = await page.evaluate(() => document.cookie.includes('sb-'));
+          const hasToken = await page.evaluate(() => {
+            const token = localStorage.getItem('supabase.auth.token');
+            return token !== null && token !== 'null';
+          });
+          return hasCookie || hasToken;
+        },
+        { timeout: 15_000, intervals: [1_000] }, // Check every second
       )
       .toBeTruthy();
   });
 
   test('admin credentials unlock admin routes', async ({ page }) => {
+    test.setTimeout(120_000); // Increase test timeout for production server
     if (!adminEmail || !adminPassword) {
       test.skip('E2E_ADMIN_* credentials are not configured');
     }
@@ -57,11 +67,11 @@ test.describe('Auth – real backend', () => {
 
     await waitForPageReady(page);
 
-    await page.goto('/admin', { waitUntil: 'domcontentloaded' });
+    await page.goto('/admin', { waitUntil: 'domcontentloaded', timeout: 60_000 });
     await waitForPageReady(page);
 
-    await expect(page).toHaveURL(/\/admin/, { timeout: 10_000 });
-    await expect(page.locator('h1, [data-testid="admin-dashboard"]')).toBeVisible();
+    await expect(page).toHaveURL(/\/admin/, { timeout: 30_000 });
+    await expect(page.locator('h1, [data-testid="admin-dashboard"]')).toBeVisible({ timeout: 30_000 });
   });
 });
 
