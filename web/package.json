@@ -76,7 +76,7 @@
     "secrets:check": "tsx scripts/operations/check-secret-rotation.ts"
   },
   "dependencies": {
-    "@choices/civics-shared": "file:../services/civics-shared",
+    "@choices/civics-shared": "file:./services-civics-shared",
     "@emotion/is-prop-valid": "~1.4.0",
     "@heroicons/react": "~2.2.0",
     "@radix-ui/react-checkbox": "~1.3.3",
