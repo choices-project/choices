@@ -22,8 +22,8 @@
     "baseUrl": ".",
     "paths": {
       "@/*": ["./*"],
-      "@choices/civics-shared": ["./node_modules/@choices/civics-shared"],
-      "@choices/civics-shared/*": ["./node_modules/@choices/civics-shared/*"],
+      "@choices/civics-shared": ["./node_modules/@choices/civics-shared", "./services-civics-shared"],
+      "@choices/civics-shared/*": ["./node_modules/@choices/civics-shared/*", "./services-civics-shared/*"],
       "swr": ["./shims/swr"]
     }
   },
