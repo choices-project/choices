@@ -17,7 +17,7 @@ const targetBaseUrl = process.env.PLAYWRIGHT_BASE_URL ?? 'http://localhost:3000'
 const maybeWebServer = shouldStartServer
   ? {
       command: webServerCommand,
-      url: targetBaseUrl,
+      url: `${targetBaseUrl}/api/health`,
       reuseExistingServer: !process.env.CI,
       stdout: 'pipe' as const,
       stderr: 'pipe' as const,
