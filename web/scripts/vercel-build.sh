@@ -81,8 +81,17 @@ MANIFEST_FILE="$MANIFEST_DIR/page_client-reference-manifest.js"
 if [ ! -f "$MANIFEST_FILE" ]; then
   echo "Creating missing client reference manifest file..."
   mkdir -p "$MANIFEST_DIR"
-  # Create an empty manifest file - Next.js will handle the actual client references
-  echo "module.exports = {};" > "$MANIFEST_FILE"
+  # Create a proper client reference manifest structure
+  # This matches the format Next.js uses for client reference manifests
+  cat > "$MANIFEST_FILE" << 'EOF'
+module.exports = {
+  clientModules: [],
+  rsc: {
+    moduleId: "",
+    chunks: []
+  }
+};
+EOF
   echo "✓ Created $MANIFEST_FILE"
 else
   echo "✓ $MANIFEST_FILE already exists"
