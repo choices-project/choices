@@ -323,7 +323,9 @@ jobs:
           NEXT_PUBLIC_ENABLE_E2E_HARNESS: '1'
           PLAYWRIGHT_SERVE: 'npx next start'
           PORT: '3000'
+          NODE_ENV: 'production'
           PRIVACY_PEPPER_CURRENT: ${{ secrets.PRIVACY_PEPPER_CURRENT }}
+          SUPABASE_SECRET_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
 
       - name: Upload auth-production results
         if: always()
