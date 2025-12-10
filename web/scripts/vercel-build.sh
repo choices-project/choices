@@ -73,3 +73,18 @@ fi
 echo "Running npm run build..."
 npm run build
 
+# Workaround for Vercel route group client reference manifest issue
+# Vercel expects this file even though Next.js doesn't generate it for server components in route groups
+echo "Creating workaround for route group client reference manifest..."
+MANIFEST_DIR=".next/server/app/(app)"
+MANIFEST_FILE="$MANIFEST_DIR/page_client-reference-manifest.js"
+if [ ! -f "$MANIFEST_FILE" ]; then
+  echo "Creating missing client reference manifest file..."
+  mkdir -p "$MANIFEST_DIR"
+  # Create an empty manifest file - Next.js will handle the actual client references
+  echo "module.exports = {};" > "$MANIFEST_FILE"
+  echo "✓ Created $MANIFEST_FILE"
+else
+  echo "✓ $MANIFEST_FILE already exists"
+fi
+
