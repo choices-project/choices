@@ -1,6 +1,6 @@
 {
   "buildCommand": "npm ci && npm run build",
-  "installCommand": "if [ -d ../services/civics-shared ] && [ ! -d ./services-civics-shared ]; then cp -r ../services/civics-shared ./services-civics-shared && npm pkg set dependencies.@choices/civics-shared=file:./services-civics-shared && npm install --package-lock-only; fi && npm ci",
+  "installCommand": "./scripts/vercel-install.sh",
   "framework": "nextjs",
   "crons": [
     {
