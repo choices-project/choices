@@ -52,9 +52,9 @@ export default defineConfig({
 
   webServer: {
     command: 'npm run dev',
-    port: 3000,
+    url: `${process.env.BASE_URL ?? 'http://localhost:3000'}/api/health`, // Use health endpoint for more reliable readiness check
     reuseExistingServer: !process.env.CI,
-    timeout: 180_000, // Increased to 3 minutes for CI environments
+    timeout: 300_000, // Increased to 5 minutes for CI environments
     env: {
       ...process.env,
       NEXT_DISABLE_REACT_DEV_OVERLAY: '1',
