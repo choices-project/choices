@@ -22,9 +22,6 @@ test.describe('Auth – real backend', () => {
 
   test('existing test user can sign in via /auth', async ({ page }) => {
     test.setTimeout(120_000); // Increase test timeout for production server
-    if (!regularEmail || !regularPassword) {
-      test.skip('E2E_USER_* credentials are not configured');
-    }
 
     await loginTestUser(page, {
       email: regularEmail!,
@@ -55,9 +52,6 @@ test.describe('Auth – real backend', () => {
 
   test('admin credentials unlock admin routes', async ({ page }) => {
     test.setTimeout(120_000); // Increase test timeout for production server
-    if (!adminEmail || !adminPassword) {
-      test.skip('E2E_ADMIN_* credentials are not configured');
-    }
 
     await loginAsAdmin(page, {
       email: adminEmail!,
