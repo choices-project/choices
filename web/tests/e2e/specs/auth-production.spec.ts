@@ -31,10 +31,7 @@ test.describe('Auth – real backend', () => {
 
     await waitForPageReady(page);
 
-    // Wait for redirect with longer timeout for production server
-    await expect(page).toHaveURL(/(dashboard|onboarding)/, { timeout: 30_000 });
-    
-    // Wait for authentication to complete with longer timeout
+    // Wait for authentication to complete first (cookies/tokens)
     await expect
       .poll(
         async () => {
@@ -45,9 +42,13 @@ test.describe('Auth – real backend', () => {
           });
           return hasCookie || hasToken;
         },
-        { timeout: 15_000, intervals: [1_000] }, // Check every second
+        { timeout: 30_000, intervals: [1_000] }, // Check every second, longer timeout
       )
       .toBeTruthy();
+
+    // Wait for redirect with longer timeout for production server
+    // The client-side redirect happens after a setTimeout(1000) in the auth page
+    await expect(page).toHaveURL(/(dashboard|onboarding)/, { timeout: 60_000 });
   });
 
   test('admin credentials unlock admin routes', async ({ page }) => {
@@ -61,11 +62,52 @@ test.describe('Auth – real backend', () => {
 
     await waitForPageReady(page);
 
+    // Wait for authentication to complete first
+    await expect
+      .poll(
+        async () => {
+          const hasCookie = await page.evaluate(() => document.cookie.includes('sb-'));
+          const hasToken = await page.evaluate(() => {
+            const token = localStorage.getItem('supabase.auth.token');
+            return token !== null && token !== 'null';
+          });
+          return hasCookie || hasToken;
+        },
+        { timeout: 30_000, intervals: [1_000] },
+      )
+      .toBeTruthy();
+
     await page.goto('/admin', { waitUntil: 'domcontentloaded', timeout: 60_000 });
     await waitForPageReady(page);
 
     await expect(page).toHaveURL(/\/admin/, { timeout: 30_000 });
-    await expect(page.locator('h1, [data-testid="admin-dashboard"]')).toBeVisible({ timeout: 30_000 });
+    
+    // Wait for admin status check to complete
+    // The page shows a loading state initially, then either shows access denied or admin dashboard
+    // Wait for either the admin dashboard tab (which only appears when admin) or access denied message
+    await page.waitForFunction(
+      () => {
+        // Check if admin dashboard tab is visible (indicates admin access granted)
+        const adminTab = document.querySelector('[data-testid="admin-dashboard-tab"]');
+        if (adminTab) return true;
+        
+        // Check if access denied is visible (indicates admin access denied)
+        const accessDenied = document.querySelector('[data-testid="admin-access-denied"]');
+        if (accessDenied) return true;
+        
+        return false; // Still loading
+      },
+      { timeout: 60_000 }
+    );
+    
+    // Verify the admin dashboard is visible (not access denied)
+    // The admin dashboard tab should be visible if admin access is granted
+    const adminTab = page.locator('[data-testid="admin-dashboard-tab"]');
+    await expect(adminTab).toBeVisible({ timeout: 30_000 });
+    
+    // Verify access denied is NOT visible
+    const accessDenied = page.locator('[data-testid="admin-access-denied"]');
+    await expect(accessDenied).toHaveCount(0, { timeout: 5_000 });
   });
 });
 

@@ -158,13 +158,36 @@ jobs:
         uses: actions/checkout@v4
 
       - name: Deploy to Vercel (Staging)
+        id: vercel-deploy
         uses: amondnet/vercel-action@v25
+        continue-on-error: false
         with:
           vercel-token: ${{ secrets.VERCEL_TOKEN }}
           vercel-org-id: ${{ secrets.VERCEL_ORG_ID }}
           vercel-project-id: ${{ secrets.VERCEL_PROJECT_ID }}
-          vercel-args: '--confirm'   # no --prod on staging, let Vercel build
+          vercel-args: '--confirm --debug'   # no --prod on staging, let Vercel build, add debug output
           scope: ${{ secrets.VERCEL_ORG_ID }}
+          github-comment: true
+          vercel-version: latest
+
+      - name: Check deployment status
+        if: steps.vercel-deploy.outcome == 'failure'
+        run: |
+          echo "::error::Vercel deployment failed. This may be a transient error."
+          echo "Please check the Vercel dashboard for more details:"
+          echo "https://vercel.com/michaeltempestas-projects/choices-platform"
+          echo ""
+          echo "Common causes:"
+          echo "- Build timeout (check Vercel project settings)"
+          echo "- Memory limits exceeded"
+          echo "- Missing environment variables"
+          echo "- Build command failures"
+          echo ""
+          echo "To debug:"
+          echo "1. Check Vercel dashboard build logs"
+          echo "2. Verify all required environment variables are set"
+          echo "3. Check if build succeeds locally: cd web && npm run build"
+          exit 1
 
       - name: Run E2E tests against staging
         run: |
@@ -193,13 +216,36 @@ jobs:
         uses: actions/checkout@v4
 
       - name: Deploy to Vercel (Production)
+        id: vercel-deploy-prod
         uses: amondnet/vercel-action@v25
+        continue-on-error: false
         with:
           vercel-token: ${{ secrets.VERCEL_TOKEN }}
           vercel-org-id: ${{ secrets.VERCEL_ORG_ID }}
           vercel-project-id: ${{ secrets.VERCEL_PROJECT_ID }}
-          vercel-args: '--prod --confirm'  # Let Vercel build from source
+          vercel-args: '--prod --confirm --debug'  # Let Vercel build from source, add debug output
           scope: ${{ secrets.VERCEL_ORG_ID }}
+          github-comment: true
+          vercel-version: latest
+
+      - name: Check deployment status
+        if: steps.vercel-deploy-prod.outcome == 'failure'
+        run: |
+          echo "::error::Vercel production deployment failed. This may be a transient error."
+          echo "Please check the Vercel dashboard for more details:"
+          echo "https://vercel.com/michaeltempestas-projects/choices-platform"
+          echo ""
+          echo "Common causes:"
+          echo "- Build timeout (check Vercel project settings)"
+          echo "- Memory limits exceeded"
+          echo "- Missing environment variables"
+          echo "- Build command failures"
+          echo ""
+          echo "To debug:"
+          echo "1. Check Vercel dashboard build logs"
+          echo "2. Verify all required environment variables are set"
+          echo "3. Check if build succeeds locally: cd web && npm run build"
+          exit 1
 
       - name: Run smoke tests against production
         run: |
