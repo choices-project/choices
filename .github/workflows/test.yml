@@ -318,6 +318,7 @@ jobs:
         env:
           CI: true
           BASE_URL: http://127.0.0.1:3000
+          PLAYWRIGHT_BASE_URL: http://127.0.0.1:3000
           PLAYWRIGHT_USE_MOCKS: '0'
           NEXT_PUBLIC_ENABLE_E2E_HARNESS: '1'
           PLAYWRIGHT_SERVE: 'npx next start'
