@@ -43,19 +43,37 @@ fi
 
 # Run npm ci to install dependencies
 echo "Running npm ci..."
-if ! npm ci; then
+if ! npm ci 2>&1 | tee /tmp/npm-ci-output.log; then
   echo "npm ci failed. Checking if package-lock.json needs to be regenerated..."
-  # If npm ci fails due to lockfile mismatch, try regenerating it
-  if [ -d ./services-civics-shared ] && [ -f ./package.json ]; then
-    echo "Regenerating package-lock.json with npm install..."
-    npm install --package-lock-only --no-save
-    echo "Retrying npm ci..."
-    npm ci || {
-      echo "Error: npm ci failed even after regenerating lockfile"
+  # Check if the error is due to lockfile mismatch
+  if grep -q "package-lock.json\|lock file\|Missing.*from lock file" /tmp/npm-ci-output.log; then
+    echo "Lockfile mismatch detected. Regenerating package-lock.json..."
+    # Ensure services-civics-shared exists before regenerating
+    if [ -d ./services-civics-shared ]; then
+      # Update package.json if needed
+      CURRENT_DEP=$(node -p "require('./package.json').dependencies['@choices/civics-shared']" 2>/dev/null || echo "")
+      if [ "$CURRENT_DEP" != "file:./services-civics-shared" ]; then
+        echo "Updating package.json to reference local services-civics-shared..."
+        npm pkg set dependencies.@choices/civics-shared=file:./services-civics-shared
+      fi
+      echo "Regenerating package-lock.json with npm install..."
+      npm install --package-lock-only --no-save
+      echo "Retrying npm ci..."
+      npm ci || {
+        echo "Error: npm ci failed even after regenerating lockfile"
+        echo "Trying npm install as fallback..."
+        npm install --no-save || {
+          echo "Error: Both npm ci and npm install failed"
+          exit 1
+        }
+      }
+    else
+      echo "Error: services-civics-shared not found, cannot regenerate lockfile"
       exit 1
-    }
+    fi
   else
-    echo "Error: npm ci failed and cannot regenerate lockfile"
+    echo "Error: npm ci failed for a different reason (not lockfile mismatch)"
+    cat /tmp/npm-ci-output.log
     exit 1
   fi
 fi
