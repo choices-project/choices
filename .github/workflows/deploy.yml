@@ -258,9 +258,18 @@ jobs:
         run: |
           curl -f https://www.choices-app.com/api/health || exit 1
 
+      - name: Check for Slack webhook
+        id: check-slack-prod
+        run: |
+          if [ -n "${{ secrets.SLACK_WEBHOOK_URL }}" ]; then
+            echo "has_webhook=true" >> $GITHUB_OUTPUT
+          else
+            echo "has_webhook=false" >> $GITHUB_OUTPUT
+          fi
+
       - name: Notify deployment success
         uses: 8398a7/action-slack@v3
-        if: success()
+        if: success() && steps.check-slack-prod.outputs.has_webhook == 'true'
         with:
           status: success
           channel: '#deployments'
@@ -331,8 +340,18 @@ jobs:
           # This would implement your rollback strategy
           echo "Rollback completed"
 
+      - name: Check for Slack webhook
+        id: check-slack
+        run: |
+          if [ -n "${{ secrets.SLACK_WEBHOOK_URL }}" ]; then
+            echo "has_webhook=true" >> $GITHUB_OUTPUT
+          else
+            echo "has_webhook=false" >> $GITHUB_OUTPUT
+          fi
+
       - name: Notify rollback
         uses: 8398a7/action-slack@v3
+        if: steps.check-slack.outputs.has_webhook == 'true'
         with:
           status: failure
           channel: '#deployments'
