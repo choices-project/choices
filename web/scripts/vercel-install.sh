@@ -1,29 +1,56 @@
 #!/bin/bash
 set -e
 
-# Copy civics-shared into web/ directory if it exists and hasn't been copied yet
-# Check multiple possible locations for the source directory
-CIVICS_SOURCE=""
-if [ -d ../services/civics-shared ]; then
-  CIVICS_SOURCE="../services/civics-shared"
-elif [ -d ../../services/civics-shared ]; then
-  CIVICS_SOURCE="../../services/civics-shared"
-elif [ -d ./services/civics-shared ]; then
-  CIVICS_SOURCE="./services/civics-shared"
+# Check if services-civics-shared already exists locally
+if [ -d ./services-civics-shared ]; then
+  echo "✓ services-civics-shared directory already exists locally"
+else
+  # Try to copy civics-shared from parent directory if it exists
+  # Check multiple possible locations for the source directory
+  CIVICS_SOURCE=""
+  if [ -d ../services/civics-shared ]; then
+    CIVICS_SOURCE="../services/civics-shared"
+  elif [ -d ../../services/civics-shared ]; then
+    CIVICS_SOURCE="../../services/civics-shared"
+  elif [ -d ./services/civics-shared ]; then
+    CIVICS_SOURCE="./services/civics-shared"
+  fi
+
+  if [ -n "$CIVICS_SOURCE" ]; then
+    echo "Copying civics-shared from $CIVICS_SOURCE..."
+    cp -r "$CIVICS_SOURCE" ./services-civics-shared
+  else
+    echo "Warning: Could not find civics-shared source directory"
+    echo "This is expected in Vercel builds with rootDirectory set"
+  fi
 fi
 
-if [ -n "$CIVICS_SOURCE" ] && [ ! -d ./services-civics-shared ]; then
-  echo "Copying civics-shared from $CIVICS_SOURCE..."
-  cp -r "$CIVICS_SOURCE" ./services-civics-shared
-  echo "Updating package.json..."
-  npm pkg set dependencies.@choices/civics-shared=file:./services-civics-shared
-  echo "Updating package-lock.json..."
-  npm install --package-lock-only
+# Check package.json dependency path and update if needed
+CURRENT_DEP=$(node -p "require('./package.json').dependencies['@choices/civics-shared']" 2>/dev/null || echo "")
+if [ -d ./services-civics-shared ]; then
+  # If local copy exists, ensure package.json references it
+  if [ "$CURRENT_DEP" != "file:./services-civics-shared" ]; then
+    echo "Updating package.json to reference local services-civics-shared..."
+    npm pkg set dependencies.@choices/civics-shared=file:./services-civics-shared
+    echo "Updating package-lock.json..."
+    npm install --package-lock-only
+  fi
+elif [ "$CURRENT_DEP" = "file:../services/civics-shared" ]; then
+  # If package.json references parent directory but it doesn't exist, this will fail
+  echo "Warning: package.json references ../services/civics-shared but source not found"
+  echo "This may cause npm ci to fail if the directory doesn't exist"
 fi
 
 # Run npm ci to install dependencies
 echo "Running npm ci..."
-npm ci
+npm ci || {
+  echo "npm ci failed. Checking if civics-shared is the issue..."
+  if [ ! -d ./services-civics-shared ] && [ ! -d ../services/civics-shared ]; then
+    echo "Error: civics-shared directory not found and npm ci failed"
+    exit 1
+  fi
+  exit 1
+}
 
 # Verify civics-shared is installed - create symlink if needed
 if [ ! -e ./node_modules/@choices/civics-shared ]; then
