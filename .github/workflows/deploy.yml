@@ -157,6 +157,19 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
 
+      - name: Prepare civics-shared for Vercel
+        run: |
+          if [ -d services/civics-shared ] && [ ! -d web/services-civics-shared ]; then
+            echo "Copying services/civics-shared to web/services-civics-shared..."
+            cp -r services/civics-shared web/services-civics-shared
+            echo "Updating web/package.json to reference local copy..."
+            cd web
+            npm pkg set dependencies.@choices/civics-shared=file:./services-civics-shared
+            cd ..
+          else
+            echo "services-civics-shared already exists or source not found"
+          fi
+
       - name: Deploy to Vercel (Staging)
         id: vercel-deploy
         uses: amondnet/vercel-action@v25
@@ -214,6 +227,19 @@ jobs:
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
+
+      - name: Prepare civics-shared for Vercel
+        run: |
+          if [ -d services/civics-shared ] && [ ! -d web/services-civics-shared ]; then
+            echo "Copying services/civics-shared to web/services-civics-shared..."
+            cp -r services/civics-shared web/services-civics-shared
+            echo "Updating web/package.json to reference local copy..."
+            cd web
+            npm pkg set dependencies.@choices/civics-shared=file:./services-civics-shared
+            cd ..
+          else
+            echo "services-civics-shared already exists or source not found"
+          fi
 
       - name: Deploy to Vercel (Production)
         id: vercel-deploy-prod
