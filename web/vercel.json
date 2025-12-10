@@ -1,6 +1,6 @@
 {
   "buildCommand": "npm ci && npm run build",
-  "installCommand": "if [ ! -d ../services/civics-shared ]; then echo 'Error: civics-shared directory not found' && exit 1; fi && npm ci",
+  "installCommand": "if [ -d ../services/civics-shared ] && [ ! -d ./services-civics-shared ]; then cp -r ../services/civics-shared ./services-civics-shared; fi && npm ci && if [ -d ./services-civics-shared ] && [ ! -e ./node_modules/@choices/civics-shared ]; then mkdir -p ./node_modules/@choices && ln -sf ../../services-civics-shared ./node_modules/@choices/civics-shared; fi",
   "framework": "nextjs",
   "crons": [
     {
