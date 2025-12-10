@@ -791,6 +791,14 @@ export async function setupExternalAPIMocks(page: Page, overrides: Partial<Exter
       });
     };
 
+    const siteMessagesHandler: RouteHandler = async (route) => {
+      await respondJson(route, {
+        success: true,
+        data: [],
+        metadata: { timestamp: new Date().toISOString() },
+      });
+    };
+
     const sharedVoteHandler: RouteHandler = async (route) => {
       const payload = parseJsonBody(route);
       await respondJson(route, {
@@ -817,6 +825,7 @@ export async function setupExternalAPIMocks(page: Page, overrides: Partial<Exter
     await page.route('**/api/share*', shareHandler);
     await page.route('**/api/shared/poll/*', sharedPollHandler);
     await page.route('**/api/shared/vote', sharedVoteHandler);
+    await page.route('**/api/site-messages', siteMessagesHandler);
 
     routes.push({ url: '**/api/polls', handler: pollsHandler });
     routes.push({ url: '**/api/polls/*/vote', handler: pollVoteHandler });
@@ -831,6 +840,7 @@ export async function setupExternalAPIMocks(page: Page, overrides: Partial<Exter
     routes.push({ url: '**/api/share*', handler: shareHandler });
     routes.push({ url: '**/api/shared/poll/*', handler: sharedPollHandler });
     routes.push({ url: '**/api/shared/vote', handler: sharedVoteHandler });
+    routes.push({ url: '**/api/site-messages', handler: siteMessagesHandler });
   }
 
   if (options.feeds) {

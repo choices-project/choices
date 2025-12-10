@@ -1,6 +1,6 @@
 import { expect, test, type Locator, type Page } from '@playwright/test';
 
-import { waitForPageReady } from '../helpers/e2e-setup';
+import { setupExternalAPIMocks, waitForPageReady } from '../helpers/e2e-setup';
 
 const HARNESS_ROUTE = '/e2e/global-navigation';
 
@@ -88,8 +88,15 @@ const applyLanguageSelection = async (page: Page, selection: LanguageSelection) 
 
 test.describe('Locale Switching', () => {
   test.beforeEach(async ({ page }) => {
+    // Mock site-messages API to prevent Supabase errors from blocking tests
+    await setupExternalAPIMocks(page, { api: true });
     await page.context().clearCookies();
     await gotoHarness(page);
+  });
+
+  test.beforeEach(async ({ page }) => {
+    // Mock site-messages API to prevent Supabase errors from blocking tests
+    await setupExternalAPIMocks(page, { api: true });
   });
 
   test('language selector is visible and accessible', async ({ page }) => {
