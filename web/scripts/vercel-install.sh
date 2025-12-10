@@ -32,8 +32,8 @@ if [ -d ./services-civics-shared ]; then
   if [ "$CURRENT_DEP" != "file:./services-civics-shared" ]; then
     echo "Updating package.json to reference local services-civics-shared..."
     npm pkg set dependencies.@choices/civics-shared=file:./services-civics-shared
-    echo "Updating package-lock.json..."
-    npm install --package-lock-only
+    echo "Regenerating package-lock.json to match updated package.json..."
+    npm install --package-lock-only --no-save
   fi
 elif [ "$CURRENT_DEP" = "file:../services/civics-shared" ]; then
   # If package.json references parent directory but it doesn't exist, this will fail
@@ -43,14 +43,22 @@ fi
 
 # Run npm ci to install dependencies
 echo "Running npm ci..."
-npm ci || {
-  echo "npm ci failed. Checking if civics-shared is the issue..."
-  if [ ! -d ./services-civics-shared ] && [ ! -d ../services/civics-shared ]; then
-    echo "Error: civics-shared directory not found and npm ci failed"
+if ! npm ci; then
+  echo "npm ci failed. Checking if package-lock.json needs to be regenerated..."
+  # If npm ci fails due to lockfile mismatch, try regenerating it
+  if [ -d ./services-civics-shared ] && [ -f ./package.json ]; then
+    echo "Regenerating package-lock.json with npm install..."
+    npm install --package-lock-only --no-save
+    echo "Retrying npm ci..."
+    npm ci || {
+      echo "Error: npm ci failed even after regenerating lockfile"
+      exit 1
+    }
+  else
+    echo "Error: npm ci failed and cannot regenerate lockfile"
     exit 1
   fi
-  exit 1
-}
+fi
 
 # Verify civics-shared is installed - create symlink if needed
 if [ ! -e ./node_modules/@choices/civics-shared ]; then
