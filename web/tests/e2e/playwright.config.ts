@@ -24,11 +24,13 @@ const maybeWebServer = shouldStartServer
       timeout: 300_000,
       env: {
         ...process.env,
+        NODE_ENV: 'production',
         NEXT_DISABLE_REACT_DEV_OVERLAY: '1',
         NEXT_PUBLIC_DISABLE_FEEDBACK_WIDGET:
           process.env.NEXT_PUBLIC_DISABLE_FEEDBACK_WIDGET ?? '0',
         NEXT_PUBLIC_ENABLE_E2E_HARNESS:
           process.env.NEXT_PUBLIC_ENABLE_E2E_HARNESS ?? '1',
+        PORT: process.env.PORT ?? '3000',
       },
     }
   : undefined;
