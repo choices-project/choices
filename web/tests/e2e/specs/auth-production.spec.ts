@@ -26,8 +26,8 @@ test.describe('Auth – real backend', () => {
     }
 
     await loginTestUser(page, {
-      email: regularEmail,
-      password: regularPassword,
+      email: regularEmail!,
+      password: regularPassword!,
       username: regularEmail.split('@')[0] ?? 'e2e-user',
     });
 
@@ -50,8 +50,8 @@ test.describe('Auth – real backend', () => {
     }
 
     await loginAsAdmin(page, {
-      email: adminEmail,
-      password: adminPassword,
+      email: adminEmail!,
+      password: adminPassword!,
       username: adminEmail.split('@')[0] ?? 'e2e-admin',
     });
 

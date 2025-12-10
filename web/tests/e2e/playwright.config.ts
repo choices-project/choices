@@ -24,7 +24,7 @@ const maybeWebServer = shouldStartServer
       timeout: 300_000,
       env: {
         ...process.env,
-        NODE_ENV: 'production',
+        NODE_ENV: process.env.NODE_ENV ?? 'production', // Allow NODE_ENV to be overridden
         NEXT_DISABLE_REACT_DEV_OVERLAY: '1',
         NEXT_PUBLIC_DISABLE_FEEDBACK_WIDGET:
           process.env.NEXT_PUBLIC_DISABLE_FEEDBACK_WIDGET ?? '0',
@@ -39,11 +39,11 @@ export default defineConfig({
   testDir: './specs',
   fullyParallel: false,
   forbidOnly: !!process.env.CI,
-  retries: process.env.CI ? 1 : 0,
+  retries: process.env.CI ? 0 : 0, // Disable retries in CI for faster feedback
   reporter: [['list']],
   use: {
     baseURL: targetBaseUrl,
-    trace: 'on-first-retry',
+    trace: 'retain-on-failure', // Changed from 'on-first-retry' since retries are disabled
     screenshot: 'only-on-failure',
     video: 'retain-on-failure',
   },
