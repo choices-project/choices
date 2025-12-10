@@ -1,6 +1,6 @@
 {
   "buildCommand": "npm ci && npm run build",
-  "installCommand": "if [ -d ../services/civics-shared ] && [ ! -d ./services-civics-shared ]; then cp -r ../services/civics-shared ./services-civics-shared; fi && npm ci && if [ -d ./services-civics-shared ] && [ ! -e ./node_modules/@choices/civics-shared ]; then mkdir -p ./node_modules/@choices && ln -sf ../../services-civics-shared ./node_modules/@choices/civics-shared; fi",
+  "installCommand": "if [ -d ../services/civics-shared ] && [ ! -d ./services-civics-shared ]; then cp -r ../services/civics-shared ./services-civics-shared && npm pkg set dependencies.@choices/civics-shared=file:./services-civics-shared && npm install --package-lock-only; fi && npm ci",
   "framework": "nextjs",
   "crons": [
     {
