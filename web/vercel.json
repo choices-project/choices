@@ -1,6 +1,5 @@
 {
-  "buildCommand": "npm run build",
-  "installCommand": "./scripts/vercel-install.sh",
+  "buildCommand": "./scripts/vercel-build.sh",
   "framework": "nextjs",
   "crons": [
     {
