@@ -1,6 +1,17 @@
 #!/bin/bash
 set -e
 
+# Debug: Show current directory and contents
+echo "Current directory: $(pwd)"
+echo "Directory contents:"
+ls -la | head -20
+echo "Checking for package.json..."
+[ -f ./package.json ] && echo "✓ package.json exists" || echo "✗ package.json missing"
+if [ -f ./package.json ]; then
+  echo "Checking for Next.js in package.json..."
+  grep -q '"next"' ./package.json && echo "✓ Next.js found in package.json" || echo "✗ Next.js not found in package.json"
+fi
+
 # Check if services-civics-shared already exists locally
 if [ -d ./services-civics-shared ]; then
   echo "✓ services-civics-shared directory already exists locally"

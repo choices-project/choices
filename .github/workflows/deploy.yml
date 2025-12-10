@@ -172,6 +172,17 @@ jobs:
             echo "services-civics-shared already exists or source not found"
           fi
 
+      - name: Verify files before deployment
+        run: |
+          echo "Checking web directory structure..."
+          ls -la web/ | head -20
+          echo "Checking for package.json..."
+          [ -f web/package.json ] && echo "✓ package.json exists" || echo "✗ package.json missing"
+          echo "Checking for Next.js in package.json..."
+          grep -q '"next"' web/package.json && echo "✓ Next.js found in package.json" || echo "✗ Next.js not found in package.json"
+          echo "Checking for services-civics-shared..."
+          [ -d web/services-civics-shared ] && echo "✓ services-civics-shared exists" || echo "✗ services-civics-shared missing"
+
       - name: Deploy to Vercel (Staging)
         id: vercel-deploy
         uses: amondnet/vercel-action@v25

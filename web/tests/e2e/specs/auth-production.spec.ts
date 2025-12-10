@@ -14,6 +14,9 @@ const adminEmail = process.env.E2E_ADMIN_EMAIL;
 const adminPassword = process.env.E2E_ADMIN_PASSWORD;
 
 test.describe('Auth – real backend', () => {
+  // Skip if mocks are enabled
+  // Note: This test requires a working production deployment. If deployment is failing,
+  // these tests will also fail. Focus on fixing deployment first.
   test.skip(SHOULD_USE_MOCKS, 'Set PLAYWRIGHT_USE_MOCKS=0 to exercise the real backend');
 
   test.beforeEach(async ({ page }) => {
