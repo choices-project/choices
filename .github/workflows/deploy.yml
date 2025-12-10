@@ -191,7 +191,7 @@ jobs:
           vercel-token: ${{ secrets.VERCEL_TOKEN }}
           vercel-org-id: ${{ secrets.VERCEL_ORG_ID }}
           vercel-project-id: ${{ secrets.VERCEL_PROJECT_ID }}
-          vercel-args: '--confirm --debug'   # no --prod on staging, let Vercel build, add debug output
+          vercel-args: '--confirm --debug --cwd web'   # Explicitly set working directory to web
           scope: ${{ secrets.VERCEL_ORG_ID }}
           github-comment: true
           vercel-version: latest
@@ -264,7 +264,7 @@ jobs:
           vercel-token: ${{ secrets.VERCEL_TOKEN }}
           vercel-org-id: ${{ secrets.VERCEL_ORG_ID }}
           vercel-project-id: ${{ secrets.VERCEL_PROJECT_ID }}
-          vercel-args: '--prod --confirm --debug'  # Let Vercel build from source, add debug output
+          vercel-args: '--prod --confirm --debug --cwd web'  # Explicitly set working directory to web
           scope: ${{ secrets.VERCEL_ORG_ID }}
           github-comment: true
           vercel-version: latest
