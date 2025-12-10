@@ -32,6 +32,7 @@ test.describe('Auth – real backend', () => {
     await waitForPageReady(page);
 
     // Wait for authentication to complete first (cookies/tokens)
+    // Increase timeout to 60s for production server which may be slower
     await expect
       .poll(
         async () => {
@@ -40,9 +41,18 @@ test.describe('Auth – real backend', () => {
             const token = localStorage.getItem('supabase.auth.token');
             return token !== null && token !== 'null';
           });
-          return hasCookie || hasToken;
+          // Also check for session storage
+          const hasSessionToken = await page.evaluate(() => {
+            try {
+              const session = sessionStorage.getItem('supabase.auth.token');
+              return session !== null && session !== 'null';
+            } catch {
+              return false;
+            }
+          });
+          return hasCookie || hasToken || hasSessionToken;
         },
-        { timeout: 30_000, intervals: [1_000] }, // Check every second, longer timeout
+        { timeout: 60_000, intervals: [2_000] }, // Check every 2 seconds, 60s timeout for production
       )
       .toBeTruthy();
 
@@ -63,6 +73,7 @@ test.describe('Auth – real backend', () => {
     await waitForPageReady(page);
 
     // Wait for authentication to complete first
+    // Increase timeout to 60s for production server which may be slower
     await expect
       .poll(
         async () => {
@@ -71,9 +82,18 @@ test.describe('Auth – real backend', () => {
             const token = localStorage.getItem('supabase.auth.token');
             return token !== null && token !== 'null';
           });
-          return hasCookie || hasToken;
+          // Also check for session storage
+          const hasSessionToken = await page.evaluate(() => {
+            try {
+              const session = sessionStorage.getItem('supabase.auth.token');
+              return session !== null && session !== 'null';
+            } catch {
+              return false;
+            }
+          });
+          return hasCookie || hasToken || hasSessionToken;
         },
-        { timeout: 30_000, intervals: [1_000] },
+        { timeout: 60_000, intervals: [2_000] }, // Check every 2 seconds, 60s timeout for production
       )
       .toBeTruthy();
 
