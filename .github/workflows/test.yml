@@ -320,6 +320,7 @@ jobs:
           BASE_URL: http://127.0.0.1:3000
           PLAYWRIGHT_USE_MOCKS: '0'
           NEXT_PUBLIC_ENABLE_E2E_HARNESS: '1'
+          PLAYWRIGHT_SERVE: 'node tests/e2e/scripts/start-standalone-server.cjs'
 
       - name: Upload auth-production results
         if: always()
