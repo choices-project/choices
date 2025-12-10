@@ -1,16 +1,3 @@
 {
-  "buildCommand": "npm ci && npm run build",
-  "installCommand": "npm ci",
-  "framework": "nextjs",
-  "rootDirectory": "web",
-  "crons": [
-    {
-      "path": "/api/cron/candidate-reminders",
-      "schedule": "0 9 * * *"
-    },
-    {
-      "path": "/api/cron/hashtag-trending-notifications",
-      "schedule": "0 18 * * *"
-    }
-  ]
+  "rootDirectory": "web"
 }
