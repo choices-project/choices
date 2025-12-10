@@ -236,6 +236,8 @@ jobs:
             echo "Updating web/package.json to reference local copy..."
             cd web
             npm pkg set dependencies.@choices/civics-shared=file:./services-civics-shared
+            echo "Regenerating package-lock.json to match updated package.json..."
+            npm install --package-lock-only --no-save
             cd ..
           else
             echo "services-civics-shared already exists or source not found"
