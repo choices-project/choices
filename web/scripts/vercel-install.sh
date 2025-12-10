@@ -2,15 +2,30 @@
 set -e
 
 # Debug: Show current directory and contents
+echo "=== VERCEL INSTALL SCRIPT DEBUG ==="
 echo "Current directory: $(pwd)"
 echo "Directory contents:"
 ls -la | head -20
+echo ""
 echo "Checking for package.json..."
-[ -f ./package.json ] && echo "✓ package.json exists" || echo "✗ package.json missing"
 if [ -f ./package.json ]; then
+  echo "✓ package.json exists"
   echo "Checking for Next.js in package.json..."
-  grep -q '"next"' ./package.json && echo "✓ Next.js found in package.json" || echo "✗ Next.js not found in package.json"
+  if grep -q '"next"' ./package.json; then
+    echo "✓ Next.js found in package.json"
+    echo "Next.js version: $(grep '"next"' ./package.json | head -1)"
+  else
+    echo "✗ Next.js not found in package.json"
+    echo "package.json dependencies section:"
+    grep -A 50 '"dependencies"' ./package.json | head -30
+  fi
+else
+  echo "✗ package.json missing"
+  echo "Available files:"
+  ls -la
 fi
+echo "=== END DEBUG ==="
+echo ""
 
 # Check if services-civics-shared already exists locally
 if [ -d ./services-civics-shared ]; then
