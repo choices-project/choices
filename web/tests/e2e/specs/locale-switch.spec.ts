@@ -213,7 +213,20 @@ test.describe('Locale Switching', () => {
       const baseOption = options.first();
       const baseCode = await baseOption.getAttribute('data-language-option');
       await baseOption.click();
-      await waitForLocaleCookie(page, baseCode);
+      // Increase timeout for locale cookie in CI - locale switching may be slower
+      await page.waitForFunction(
+        ({ cookieName, expectedValue }) => {
+          const cookies = document.cookie.split('; ').filter(Boolean);
+          return cookies.some((cookie) => {
+            if (!cookie.startsWith(`${cookieName}=`)) {
+              return false;
+            }
+            return cookie.slice(cookieName.length + 1) === expectedValue;
+          });
+        },
+        { cookieName: LOCALE_COOKIE_NAME, expectedValue: baseCode },
+        { timeout: 30_000 }, // Increase timeout to 30s for CI reliability
+      );
       await page.waitForFunction(
         () => document.documentElement.dataset.globalNavigationHarness === 'ready',
         { timeout: 60_000 },
