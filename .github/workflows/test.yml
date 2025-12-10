@@ -311,7 +311,6 @@ jobs:
 
       - name: Run auth-production spec
         run: |
-          PLAYWRIGHT_USE_MOCKS=0 \
           npx playwright test tests/e2e/specs/auth-production.spec.ts \
             --config tests/e2e/playwright.config.ts \
             --project=chromium \
@@ -319,6 +318,8 @@ jobs:
         env:
           CI: true
           BASE_URL: http://127.0.0.1:3000
+          PLAYWRIGHT_USE_MOCKS: '0'
+          NEXT_PUBLIC_ENABLE_E2E_HARNESS: '1'
 
       - name: Upload auth-production results
         if: always()
