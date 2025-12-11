@@ -268,19 +268,26 @@ export async function loginTestUser(page: Page, user: TestUser): Promise<void> {
   await submitButton.click();
   
   // Wait for the login API response and capture it
+  // Increase timeout for production server which may be slower
+  const isCI = process.env.CI === 'true' || process.env.CI === '1';
+  const isProductionServer = process.env.BASE_URL?.includes('127.0.0.1') || process.env.BASE_URL?.includes('localhost');
+  const apiTimeout = (isCI || isProductionServer) ? 60_000 : 30_000; // 60s for CI/production server, 30s for local
+  
   let loginResponse: LoginResponse | null = null;
+  let apiError: string | null = null;
   try {
     const response = await page.waitForResponse(
       (res) => res.url().includes('/api/auth/login') && res.request().method() === 'POST',
-      { timeout: 30_000 }
+      { timeout: apiTimeout }
     );
     const body = await response.json().catch(() => ({}));
     loginResponse = {
       status: response.status(),
       body,
     };
-  } catch {
-    // Response timeout or error - loginResponse remains null
+  } catch (error) {
+    // Response timeout or error - capture the error message
+    apiError = error instanceof Error ? error.message : String(error);
     loginResponse = null;
   }
 
@@ -292,9 +299,18 @@ export async function loginTestUser(page: Page, user: TestUser): Promise<void> {
       const errorMessage = response.body?.message || `Login API returned status ${response.status}`;
       throw new Error(`Login API error: ${errorMessage}`);
     }
+  } else if (apiError) {
+    // API call timed out or failed - check for UI errors to get more context
+    const authError = page.getByTestId('auth-error');
+    const errorCount = await authError.count();
+    if (errorCount > 0) {
+      const errorText = await authError.first().textContent().catch(() => 'Unknown error');
+      throw new Error(`Login API timeout/error: ${apiError}. UI error: ${errorText}`);
+    }
+    throw new Error(`Login API timeout/error: ${apiError}`);
   }
 
-  // Check for UI errors (auth-error element)
+  // Check for UI errors (auth-error element) - only if API succeeded
   const authError = page.getByTestId('auth-error');
   const errorCount = await authError.count();
   if (errorCount > 0) {
@@ -305,8 +321,7 @@ export async function loginTestUser(page: Page, user: TestUser): Promise<void> {
   // Wait for authentication to complete - increase timeout for production server
   // Wait for either redirect or auth tokens/cookies
   // Use longer timeout in CI or when BASE_URL is localhost (production server mode)
-  const isCI = process.env.CI === 'true' || process.env.CI === '1';
-  const isProductionServer = process.env.BASE_URL?.includes('127.0.0.1') || process.env.BASE_URL?.includes('localhost');
+  // Reuse isCI and isProductionServer from above
   const authTimeout = (isCI || isProductionServer) ? 90_000 : 15_000; // 90s for CI/production server, 15s for local
   
   try {
@@ -344,12 +359,18 @@ export async function loginTestUser(page: Page, user: TestUser): Promise<void> {
     const pageText = await page.textContent('body').catch(() => '') ?? '';
     const hasError = pageText.includes('error') || pageText.includes('Error') || pageText.includes('failed');
     
+    const apiResponseInfo = loginResponse 
+      ? `status: ${loginResponse.status}, body: ${JSON.stringify(loginResponse.body).substring(0, 200)}`
+      : apiError 
+        ? `timeout/error: ${apiError}`
+        : 'none (timeout waiting for response)';
+    
     throw new Error(
       `Authentication timeout after ${authTimeout}ms. ` +
       `Current URL: ${currentUrl}, ` +
       `Has cookie: ${hasCookie}, ` +
       `Has token: ${hasToken}, ` +
-      `API response: ${loginResponse ? JSON.stringify(loginResponse) : 'none'}, ` +
+      `API response: ${apiResponseInfo}, ` +
       `Page has error: ${hasError}, ` +
       `Original error: ${error instanceof Error ? error.message : String(error)}`
     );
