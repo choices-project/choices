@@ -257,16 +257,22 @@ export async function loginTestUser(page: Page, user: TestUser): Promise<void> {
   await submitButton.waitFor({ state: 'visible', timeout: 5_000 });
   await submitButton.click();
 
+  // Wait for authentication to complete - increase timeout for production server
+  // Wait for either redirect or auth tokens/cookies
+  const authTimeout = process.env.CI ? 60_000 : 15_000; // Longer timeout in CI
   await Promise.race([
-    page.waitForURL(/\/(dashboard|admin|onboarding)/, { timeout: 15_000 }).catch(() => undefined),
+    page.waitForURL(/\/(dashboard|admin|onboarding)/, { timeout: authTimeout }).catch(() => undefined),
     page.waitForFunction(
       () =>
         document.cookie.includes('sb-') ||
         window.localStorage.getItem('supabase.auth.token') !== null ||
         window.sessionStorage.getItem('supabase.auth.token') !== null,
-      { timeout: 15_000 },
+      { timeout: authTimeout },
     ),
   ]);
+  
+  // Give a moment for any post-auth processing
+  await page.waitForTimeout(1_000);
 }
 
 export async function loginAsAdmin(page: Page, overrides: Partial<TestUser> = {}): Promise<void> {
