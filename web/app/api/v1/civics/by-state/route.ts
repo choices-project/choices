@@ -61,7 +61,7 @@ export const GET = withErrorHandling(async (request: NextRequest) => {
     }
 
     let query = supabase
-      .from('civics_representatives')
+      .from('civics_representatives' as any)
       .select(selectFields.join(','))
       .eq('valid_to', 'infinity')
       .limit(limit);
@@ -119,41 +119,55 @@ export const GET = withErrorHandling(async (request: NextRequest) => {
 
         // Include FEC data if requested
         if (include.includes('fec') && rep.person_id) {
-          const { data: fecData } = await supabase
-            .from('civics_fec_minimal')
+          const { data: fecData, error: fecError } = await supabase
+            .from('civics_fec_minimal' as any)
             .select('total_receipts, cash_on_hand, election_cycle, last_updated')
             .eq('person_id', rep.person_id)
             .order('election_cycle', { ascending: false })
             .limit(1)
             .single();
 
-          if (fecData) {
+          if (!fecError && fecData) {
+            const typedFecData = fecData as unknown as {
+              total_receipts: number;
+              cash_on_hand: number;
+              election_cycle: number;
+              last_updated: string;
+            };
             response.fec = {
-              total_receipts: fecData.total_receipts,
-              cash_on_hand: fecData.cash_on_hand,
-              cycle: fecData.election_cycle,
-              last_updated: fecData.last_updated
+              total_receipts: typedFecData.total_receipts,
+              cash_on_hand: typedFecData.cash_on_hand,
+              cycle: typedFecData.election_cycle,
+              last_updated: typedFecData.last_updated
             };
           }
         }
 
         // Include voting data if requested
         if (include.includes('votes') && rep.person_id) {
-          const { data: votesData } = await supabase
-            .from('civics_votes_minimal')
+          const { data: votesData, error: votesError } = await supabase
+            .from('civics_votes_minimal' as any)
             .select('vote_id, bill_title, vote_date, vote_position, party_position, last_updated')
             .eq('person_id', rep.person_id)
             .order('vote_date', { ascending: false })
             .limit(5);
 
-          if (votesData && votesData.length > 0) {
-            const partyVotes = votesData.filter(vote => vote.party_position === vote.vote_position);
-            const partyAlignment = partyVotes.length / votesData.length;
+          if (!votesError && votesData && Array.isArray(votesData) && votesData.length > 0) {
+            const typedVotesData = votesData as unknown as Array<{
+              vote_id: string;
+              bill_title: string;
+              vote_date: string;
+              vote_position: string;
+              party_position: string;
+              last_updated: string;
+            }>;
+            const partyVotes = typedVotesData.filter(vote => vote.party_position === vote.vote_position);
+            const partyAlignment = partyVotes.length / typedVotesData.length;
 
             response.votes = {
-              last_5: votesData,
+              last_5: typedVotesData,
               party_alignment: Math.round(partyAlignment * 100) / 100,
-              last_updated: votesData[0]?.last_updated || new Date().toISOString()
+              last_updated: typedVotesData[0]?.last_updated || new Date().toISOString()
             };
           }
         }
