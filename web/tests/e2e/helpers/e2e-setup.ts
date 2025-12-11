@@ -285,11 +285,10 @@ export async function loginTestUser(page: Page, user: TestUser): Promise<void> {
   await responsePromise;
 
   // Check for API errors
-  const hasLoginResponse = loginResponse !== null;
-  if (hasLoginResponse) {
-    const response = loginResponse as LoginResponse; // Type assertion after null check
-    if (response.status !== 200) {
-      const errorMessage = response.body?.message || `Login API returned status ${response.status}`;
+  if (loginResponse !== null) {
+    // TypeScript now knows loginResponse is not null
+    if (loginResponse.status !== 200) {
+      const errorMessage = loginResponse.body?.message || `Login API returned status ${loginResponse.status}`;
       throw new Error(`Login API error: ${errorMessage}`);
     }
   }
