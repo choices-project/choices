@@ -341,7 +341,7 @@ export async function loginTestUser(page: Page, user: TestUser): Promise<void> {
     }).catch(() => false);
     
     // Check for any error messages on the page
-    const pageText = await page.textContent('body').catch(() => '');
+    const pageText = await page.textContent('body').catch(() => '') ?? '';
     const hasError = pageText.includes('error') || pageText.includes('Error') || pageText.includes('failed');
     
     throw new Error(
