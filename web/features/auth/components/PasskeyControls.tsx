@@ -163,28 +163,45 @@ export function PasskeyControls() {
 
   return (
     <div className="space-y-4">
-      <div className="space-x-2">
-        <button data-testid="webauthn-register" className="btn" onClick={handleRegister}>
-          Register a passkey
-        </button>
-        <button data-testid="webauthn-login" className="btn" onClick={handleLogin}>
-          Sign in with passkey
-        </button>
-        <button
-          data-testid="register-additional-passkey-button"
-          className="btn"
+      <div className="flex flex-col sm:flex-row gap-2">
+        <button 
+          data-testid="webauthn-register" 
+          className="flex-1 px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition-colors" 
           onClick={handleRegister}
         >
-          Register additional passkey
+          Register a passkey
         </button>
-        <button
-          data-testid="view-credentials-button"
-          className="btn"
-          onClick={handleViewCredentials}
+        <button 
+          data-testid="webauthn-login" 
+          className="flex-1 px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition-colors" 
+          onClick={handleLogin}
         >
-          View credentials
+          Sign in with passkey
         </button>
       </div>
+      
+      {/* Advanced options - collapsible */}
+      <details className="text-sm">
+        <summary className="cursor-pointer text-gray-600 hover:text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 rounded px-2 py-1">
+          Advanced options
+        </summary>
+        <div className="mt-2 space-y-2 pl-4">
+          <button
+            data-testid="register-additional-passkey-button"
+            className="block w-full text-left px-3 py-2 text-sm text-gray-700 hover:bg-gray-50 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
+            onClick={handleRegister}
+          >
+            Register additional passkey
+          </button>
+          <button
+            data-testid="view-credentials-button"
+            className="block w-full text-left px-3 py-2 text-sm text-gray-700 hover:bg-gray-50 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
+            onClick={handleViewCredentials}
+          >
+            View credentials
+          </button>
+        </div>
+      </details>
 
       {mode === 'register' && (
         <div
@@ -429,17 +446,20 @@ export function PasskeyControls() {
         </div>
       )}
 
-      <div className="mt-4 space-x-2">
-        <button className="btn btn-sm" onClick={handleNetworkError}>
-          Simulate Network Error
-        </button>
-        <button className="btn btn-sm" onClick={handleServerError}>
-          Simulate Server Error
-        </button>
-        <button className="btn btn-sm" onClick={() => updateError('operation-timeout')}>
-          Simulate Timeout
-        </button>
-      </div>
+      {/* Simulation buttons - only show in development */}
+      {(process.env.NODE_ENV === 'development' || process.env.NEXT_PUBLIC_ENABLE_E2E_HARNESS === '1') && (
+        <div className="mt-4 space-x-2">
+          <button className="btn btn-sm" onClick={handleNetworkError}>
+            Simulate Network Error
+          </button>
+          <button className="btn btn-sm" onClick={handleServerError}>
+            Simulate Server Error
+          </button>
+          <button className="btn btn-sm" onClick={() => updateError('operation-timeout')}>
+            Simulate Timeout
+          </button>
+        </div>
+      )}
     </div>
   );
 }

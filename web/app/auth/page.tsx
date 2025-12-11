@@ -180,32 +180,30 @@ export default function AuthPage() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50 flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8">
-      <div className="max-w-md w-full space-y-8">
+      <div className="max-w-md w-full space-y-6">
         {/* Hydration sentinel for E2E tests */}
         <div data-testid="auth-hydrated" hidden>{'1'}</div>
 
-        <div>
-          <h1 className="mt-6 text-center text-4xl font-extrabold text-gray-900">
+        <div className="text-center">
+          <h1 className="text-3xl font-bold text-gray-900">
             {isSignUp ? t('auth.heading.signUp') : t('auth.heading.signIn')}
           </h1>
-          <p className="mt-2 text-center text-sm text-gray-600">
+          <p className="mt-2 text-sm text-gray-600">
             {isSignUp ? t('auth.subheading.signUp') : t('auth.subheading.signIn')}
           </p>
         </div>
 
-        {/* Toggle between Sign In and Sign Up - outside form for better functionality */}
-        <div className="text-center mb-4">
+        {/* Toggle between Sign In and Sign Up */}
+        <div className="text-center">
           <button
             type="button"
             ref={(button) => {
               if (button) {
-                // Remove existing listeners to avoid duplicates
                 button.removeEventListener('click', handleToggle);
-                // Add native DOM event listener as workaround for Playwright
                 button.addEventListener('click', handleToggle);
               }
             }}
-            className="text-blue-600 hover:underline text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 rounded px-2 py-1"
+            className="text-blue-600 hover:text-blue-700 text-sm font-medium focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 rounded px-2 py-1"
             data-testid="auth-toggle"
             tabIndex={0}
           >
@@ -213,7 +211,7 @@ export default function AuthPage() {
           </button>
         </div>
 
-          <form onSubmit={handleSubmit} className="mt-8 space-y-6 transition-all duration-300 ease-in-out" data-testid="login-form">
+          <form onSubmit={handleSubmit} className="mt-6 space-y-5 transition-all duration-300 ease-in-out" data-testid="login-form">
           {/* CSRF Token */}
           <input type="hidden" name="csrf-token" value="test-csrf-token" data-testid="csrf-token" />
               {userError && (
@@ -281,9 +279,11 @@ export default function AuthPage() {
                       />
                       <UserPlus className="absolute left-3 top-2.5 h-5 w-5 text-gray-400" />
                     </div>
-                    <div data-testid="display-name-validation" className="mt-1 text-xs text-green-600">
-                      {t('auth.form.displayNameValidation')}
-                    </div>
+                    {formData.displayName && (
+                      <div data-testid="display-name-validation" className="mt-1 text-xs text-green-600">
+                        {t('auth.form.displayNameValidation')}
+                      </div>
+                    )}
                     <div data-testid="display-name-error" className="mt-1 text-xs text-red-600 hidden">
                       {t('auth.form.displayNameError')}
                     </div>
@@ -310,9 +310,11 @@ export default function AuthPage() {
                 />
                 <Mail className="absolute left-3 top-2.5 h-5 w-5 text-gray-400" />
               </div>
-              <div data-testid="email-validation" className="mt-1 text-xs text-green-600">
-                {t('auth.form.emailValidation')}
-              </div>
+              {formData.email && (
+                <div data-testid="email-validation" className="mt-1 text-xs text-green-600">
+                  {t('auth.form.emailValidation')}
+                </div>
+              )}
               <div data-testid="email-error" className="mt-1 text-xs text-red-600 hidden">
                 {t('auth.form.emailError')}
               </div>
@@ -349,12 +351,16 @@ export default function AuthPage() {
                       {showPassword ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
                     </button>
               </div>
-              <div data-testid="password-strength" className="mt-1 text-xs text-green-600">
-                {t('auth.form.passwordStrength')}
-              </div>
-              <div data-testid="password-security" className="mt-1 text-xs text-green-600">
-                {t('auth.form.passwordSecurity')}
-              </div>
+              {formData.password && (
+                <>
+                  <div data-testid="password-strength" className="mt-1 text-xs text-green-600">
+                    {t('auth.form.passwordStrength')}
+                  </div>
+                  <div data-testid="password-security" className="mt-1 text-xs text-green-600">
+                    {t('auth.form.passwordSecurity')}
+                  </div>
+                </>
+              )}
               <div data-testid="password-error" className="mt-1 text-xs text-red-600 hidden">
                 {t('auth.errors.passwordRequired')}
               </div>
@@ -392,9 +398,11 @@ export default function AuthPage() {
                         {showConfirmPassword ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
                       </button>
                 </div>
-                <div data-testid="password-match" className="mt-1 text-xs text-green-600">
-                  {t('auth.form.passwordsMatch')}
-                </div>
+                {formData.confirmPassword && formData.password === formData.confirmPassword && (
+                  <div data-testid="password-match" className="mt-1 text-xs text-green-600">
+                    {t('auth.form.passwordsMatch')}
+                  </div>
+                )}
               </div>
             )}
           </div>
@@ -413,13 +421,13 @@ export default function AuthPage() {
         </form>
 
         {/* Passkey Authentication */}
-        <div className="border-t pt-6">
-          <div className="relative">
+        <div className="border-t border-gray-200 pt-6 mt-6">
+          <div className="relative mb-4">
             <div className="absolute inset-0 flex items-center">
-              <div className="w-full border-t border-gray-300" />
+              <div className="w-full border-t border-gray-200" />
             </div>
             <div className="relative flex justify-center text-sm">
-              <span className="px-2 bg-gradient-to-br from-blue-50 via-white to-purple-50 text-gray-500">
+              <span className="px-3 bg-gradient-to-br from-blue-50 via-white to-purple-50 text-gray-500">
                 {t('auth.form.altSignInDivider')}
               </span>
             </div>
