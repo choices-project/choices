@@ -263,32 +263,33 @@ export async function loginTestUser(page: Page, user: TestUser): Promise<void> {
   
   // Set up network request interception to wait for the login API call
   type LoginResponse = { status: number; body: any };
+  
+  // Click submit and wait for API response
+  await submitButton.click();
+  
+  // Wait for the login API response and capture it
   let loginResponse: LoginResponse | null = null;
-  const responsePromise = page.waitForResponse(
-    (response) => response.url().includes('/api/auth/login') && response.request().method() === 'POST',
-    { timeout: 30_000 }
-  ).then(async (response) => {
+  try {
+    const response = await page.waitForResponse(
+      (res) => res.url().includes('/api/auth/login') && res.request().method() === 'POST',
+      { timeout: 30_000 }
+    );
     const body = await response.json().catch(() => ({}));
-    const responseData: LoginResponse = {
+    loginResponse = {
       status: response.status(),
       body,
     };
-    loginResponse = responseData;
-    return response;
-  }).catch(() => {
+  } catch {
+    // Response timeout or error - loginResponse remains null
     loginResponse = null;
-    return null;
-  });
-
-  // Click submit and wait for API response
-  await submitButton.click();
-  await responsePromise;
+  }
 
   // Check for API errors
   if (loginResponse !== null) {
-    // TypeScript now knows loginResponse is not null
-    if (loginResponse.status !== 200) {
-      const errorMessage = loginResponse.body?.message || `Login API returned status ${loginResponse.status}`;
+    // Use a const to help TypeScript narrow the type
+    const response: LoginResponse = loginResponse;
+    if (response.status !== 200) {
+      const errorMessage = response.body?.message || `Login API returned status ${response.status}`;
       throw new Error(`Login API error: ${errorMessage}`);
     }
   }
