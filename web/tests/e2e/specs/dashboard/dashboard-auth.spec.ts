@@ -1,8 +1,8 @@
 import { expect, test } from '@playwright/test';
 
-import { createInitialAdminState } from '../../../lib/stores/adminStore';
-import { createInitialProfileState } from '../../../lib/stores/profileStore';
-import { createInitialUserState } from '../../../lib/stores/userStore';
+import { createInitialAdminState } from '@/lib/stores/adminStore';
+import { createInitialProfileState } from '@/lib/stores/profileStore';
+import { createInitialUserState } from '@/lib/stores/userStore';
 import {
   ensureLoggedOut,
   setupExternalAPIMocks,
