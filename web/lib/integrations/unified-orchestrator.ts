@@ -8,7 +8,6 @@
  * @date 2025-01-15
  */
 
-import type { GoogleCivicElectionInfo } from '@/types/external/google-civic';
 import {
   estimateDeadline,
   deriveKeyIssuesFromBills,
@@ -23,6 +22,7 @@ import {
   type ActiveCampaignData,
   type RaceContext,
 } from '@choices/civics-shared';
+
 import { NotImplementedError } from '@/lib/errors';
 import type {
   UserLocation,
@@ -31,6 +31,7 @@ import type {
   CampaignFinance,
 } from '@/lib/types/electoral-unified';
 import { logger } from '@/lib/utils/logger';
+import type { GoogleCivicElectionInfo } from '@/types/external/google-civic';
 
 import { createCongressGovClient } from './congress-gov/client';
 import { createFECClient } from './fec/client';
