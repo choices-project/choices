@@ -63,7 +63,7 @@ jobs:
 
       - name: Run production smoke tests
         run: |
-          npx playwright test production-smoke.spec.ts \
+          npx playwright test production-smoke.spec.ts production-expanded.spec.ts \
             --config tests/e2e/playwright.config.ts \
             --project=chromium \
             --reporter=html,junit,github
