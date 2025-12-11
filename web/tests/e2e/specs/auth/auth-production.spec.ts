@@ -21,6 +21,10 @@ test.describe('Auth – real backend', () => {
   // these tests will also fail. Focus on fixing deployment first.
   test.skip(SHOULD_USE_MOCKS, 'Set PLAYWRIGHT_USE_MOCKS=0 to exercise the real backend');
 
+  // Skip if credentials are not provided
+  const hasCredentials = Boolean(regularEmail && regularPassword && adminEmail && adminPassword);
+  test.skip(!hasCredentials, 'E2E credentials (E2E_USER_EMAIL, E2E_USER_PASSWORD, E2E_ADMIN_EMAIL, E2E_ADMIN_PASSWORD) are required');
+
   test.beforeEach(async ({ page }) => {
     await ensureLoggedOut(page);
   });
@@ -28,12 +32,17 @@ test.describe('Auth – real backend', () => {
   test('existing test user can sign in via /auth', async ({ page }) => {
     test.setTimeout(120_000); // Increase test timeout for production server
 
+    if (!regularEmail || !regularPassword) {
+      test.skip(true, 'E2E_USER_EMAIL and E2E_USER_PASSWORD are required');
+      return;
+    }
+
     // Navigate to auth page on the correct base URL
     await page.goto(`${BASE_URL}/auth`, { waitUntil: 'domcontentloaded', timeout: 30_000 });
 
     await loginTestUser(page, {
-      email: regularEmail!,
-      password: regularPassword!,
+      email: regularEmail,
+      password: regularPassword,
       username: regularEmail.split('@')[0] ?? 'e2e-user',
     });
 
