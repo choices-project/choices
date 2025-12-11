@@ -51,7 +51,6 @@ export const GET = withErrorHandling(async (
       return errorResponse('Supabase client not available', 503);
     }
 
-  try {
     const { searchParams } = new URL(request.url);
     const fields = searchParams.get('fields')?.split(',') ?? [];
     const include = searchParams.get('include')?.split(',') ?? [];
