@@ -1,6 +1,6 @@
 import { expect, test, type Page } from '@playwright/test';
 
-import { setupExternalAPIMocks, waitForPageReady } from '../helpers/e2e-setup';
+import { setupExternalAPIMocks, waitForPageReady } from '../../helpers/e2e-setup';
 
 async function stubWebAuthn(page: Page) {
   await page.addInitScript(() => {

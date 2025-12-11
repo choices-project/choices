@@ -3,11 +3,11 @@ import { expect, test } from '@playwright/test';
 import {
   setupExternalAPIMocks,
   waitForPageReady,
-} from '../helpers/e2e-setup';
+} from '../../helpers/e2e-setup';
 import {
   installScreenReaderCapture,
   waitForAnnouncement,
-} from '../helpers/screen-reader';
+} from '../../helpers/screen-reader';
 
 type HarnessWindow = Window & {
   __notificationHarnessRef?: {

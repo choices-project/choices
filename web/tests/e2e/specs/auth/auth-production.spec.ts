@@ -6,7 +6,7 @@ import {
   loginTestUser,
   SHOULD_USE_MOCKS,
   waitForPageReady,
-} from '../helpers/e2e-setup';
+} from '../../helpers/e2e-setup';
 
 const PRODUCTION_URL = process.env.PRODUCTION_URL || 'https://choices-app.com';
 const BASE_URL = process.env.BASE_URL || 'http://127.0.0.1:3000';

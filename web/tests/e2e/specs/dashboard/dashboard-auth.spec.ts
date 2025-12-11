@@ -7,7 +7,7 @@ import {
   ensureLoggedOut,
   setupExternalAPIMocks,
   waitForPageReady,
-} from '../helpers/e2e-setup';
+} from '../../helpers/e2e-setup';
 
 const AUTHSPEC_TIMEOUT = 90_000;
 

@@ -15,8 +15,8 @@ on:
     branches: [main]
     paths:
       - '.github/workflows/production-tests.yml'
-      - 'web/tests/e2e/specs/production-smoke.spec.ts'
-      - 'web/tests/e2e/specs/production-*.spec.ts'
+      - 'web/tests/e2e/specs/production/**/*.spec.ts'
+      - 'web/tests/e2e/specs/auth/**/*.spec.ts'
 
 permissions:
   contents: read
@@ -63,7 +63,7 @@ jobs:
 
       - name: Run production smoke tests
         run: |
-          npx playwright test production-smoke.spec.ts production-expanded.spec.ts \
+          npx playwright test tests/e2e/specs/production/production-smoke.spec.ts tests/e2e/specs/production/production-expanded.spec.ts \
             --config tests/e2e/playwright.config.ts \
             --project=chromium \
             --reporter=html,junit,github
@@ -154,9 +154,9 @@ jobs:
       - name: Run production E2E tests
         run: |
           npx playwright test \
-            auth-production.spec.ts \
-            poll-production.spec.ts \
-            production-critical-journeys.spec.ts \
+            tests/e2e/specs/auth/auth-production.spec.ts \
+            tests/e2e/specs/poll-production.spec.ts \
+            tests/e2e/specs/production/production-critical-journeys.spec.ts \
             --config tests/e2e/playwright.config.ts \
             --project=chromium \
             --reporter=html,junit,github
@@ -207,7 +207,7 @@ jobs:
 
       - name: Test API endpoints
         run: |
-          npx playwright test production-smoke.spec.ts \
+          npx playwright test tests/e2e/specs/production/production-smoke.spec.ts \
             --grep "API Endpoints" \
             --config tests/e2e/playwright.config.ts \
             --project=chromium \

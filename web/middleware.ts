@@ -13,6 +13,7 @@ import {
   resolveLocale
 } from '@/lib/i18n/config'
 import logger from '@/lib/utils/logger'
+import { checkAuthInMiddleware } from '@/utils/supabase/middleware'
 
 /**
  * Security Middleware
@@ -155,7 +156,7 @@ function validateRequest(request: NextRequest): { valid: boolean; reason?: strin
   return { valid: true }
 }
 
-export function middleware(request: NextRequest) {
+export async function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl
 
   // MAINTENANCE MODE CHECK - This must be first!
@@ -174,14 +175,55 @@ export function middleware(request: NextRequest) {
     );
   }
 
-  // Redirect root path to /feed (after maintenance check)
-  // Use 308 (permanent) for better caching, but 307 works too
+  // Handle root path redirect based on authentication status
   if (pathname === '/') {
-    const redirectUrl = new URL('/feed', request.url);
-    const response = NextResponse.redirect(redirectUrl, 307);
+    // Create a temporary response for auth check (cookie adapter needs a response object)
+    // We'll create the actual redirect response after checking auth
+    const tempResponse = NextResponse.next();
+    
+    // Check authentication status
+    const { isAuthenticated } = await checkAuthInMiddleware(request, tempResponse);
+    
+    // Determine redirect destination
+    const redirectPath = isAuthenticated ? '/feed' : '/auth';
+    const redirectUrl = new URL(redirectPath, request.url);
+    
+    // Create redirect response
+    const redirectResponse = NextResponse.redirect(redirectUrl, 307);
+    
+    // Copy cookies from tempResponse to redirectResponse (in case auth check set any)
+    // Note: Supabase SSR cookie adapter will have already written cookies to tempResponse
+    // We need to copy them to the redirect response
+    tempResponse.cookies.getAll().forEach((cookie) => {
+      const cookieOptions: {
+        path?: string;
+        domain?: string;
+        maxAge?: number;
+        expires?: Date;
+        httpOnly?: boolean;
+        secure?: boolean;
+        sameSite?: 'strict' | 'lax' | 'none';
+      } = {};
+      
+      if (cookie.path) cookieOptions.path = cookie.path;
+      if (cookie.domain) cookieOptions.domain = cookie.domain;
+      if (cookie.maxAge !== undefined) cookieOptions.maxAge = cookie.maxAge;
+      if (cookie.httpOnly !== undefined) cookieOptions.httpOnly = cookie.httpOnly;
+      if (cookie.secure !== undefined) cookieOptions.secure = cookie.secure;
+      if (cookie.sameSite) cookieOptions.sameSite = cookie.sameSite as 'strict' | 'lax' | 'none';
+      
+      // Only set expires if it exists and is a valid number
+      if (cookie.expires && typeof cookie.expires === 'number') {
+        cookieOptions.expires = new Date(cookie.expires * 1000);
+      }
+      
+      redirectResponse.cookies.set(cookie.name, cookie.value, cookieOptions);
+    });
+    
     // Add cache headers to help with redirect performance
-    response.headers.set('Cache-Control', 'public, max-age=3600, stale-while-revalidate=86400');
-    return response;
+    redirectResponse.headers.set('Cache-Control', 'public, max-age=3600, stale-while-revalidate=86400');
+    
+    return redirectResponse;
   }
 
   // Skip middleware for static files and API routes that don't need security headers

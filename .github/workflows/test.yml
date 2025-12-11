@@ -155,8 +155,8 @@ jobs:
           --project=${{ matrix.browser }}
           --reporter=html,junit
           --max-failures=1
-          tests/e2e/specs/dashboard-feeds.spec.ts
-          tests/e2e/specs/dashboard-journey.spec.ts
+          tests/e2e/specs/dashboard/dashboard-feeds.spec.ts
+          tests/e2e/specs/dashboard/dashboard-journey.spec.ts
           tests/e2e/specs/navigation-shell.spec.ts
           tests/e2e/specs/global-navigation.spec.ts
           tests/e2e/specs/admin-navigation.spec.ts
@@ -338,7 +338,7 @@ jobs:
 
       - name: Run auth-production spec
         run: |
-          npx playwright test auth-production.spec.ts \
+          npx playwright test tests/e2e/specs/auth/auth-production.spec.ts \
             --config tests/e2e/playwright.config.ts \
             --project=chromium \
             --reporter=html,junit

@@ -6,7 +6,7 @@ import {
   setupExternalAPIMocks,
   SHOULD_USE_MOCKS,
   waitForPageReady,
-} from '../helpers/e2e-setup';
+} from '../../helpers/e2e-setup';
 
 declare global {
    
