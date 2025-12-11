@@ -3,14 +3,17 @@
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import React, { Suspense, useState } from 'react';
 
+import { AuthProvider } from '@/contexts/AuthContext';
+
+import { usePollCreatedListener } from '@/features/polls/hooks/usePollCreatedListener';
+import { ServiceWorkerProvider } from '@/features/pwa/components/ServiceWorkerProvider';
+
 import EnhancedFeedbackWidget from '@/components/EnhancedFeedbackWidget';
 import { AppShell } from '@/components/shared/AppShell';
 import FontProvider from '@/components/shared/FontProvider';
 import GlobalNavigation from '@/components/shared/GlobalNavigation';
 import SiteMessages from '@/components/SiteMessages';
-import { AuthProvider } from '@/contexts/AuthContext';
-import { usePollCreatedListener } from '@/features/polls/hooks/usePollCreatedListener';
-import { ServiceWorkerProvider } from '@/features/pwa/components/ServiceWorkerProvider';
+
 import { UserStoreProvider } from '@/lib/providers/UserStoreProvider';
 
 const DISABLE_FEEDBACK_WIDGET = process.env.NEXT_PUBLIC_DISABLE_FEEDBACK_WIDGET === '1';

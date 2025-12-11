@@ -11,6 +11,8 @@ import {
 import { useRouter } from 'next/navigation';
 import React, { useState } from 'react';
 
+import { getSupabaseBrowserClient } from '@/utils/supabase/client';
+
 import {
   useUser,
   useUserActions,
@@ -21,7 +23,6 @@ import {
   useNotificationAdminUnreadCount,
 } from '@/lib/stores';
 import { logger } from '@/lib/utils/logger';
-import { getSupabaseBrowserClient } from '@/utils/supabase/client';
 
 export const Header: React.FC = () => {
   const router = useRouter();

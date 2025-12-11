@@ -4,6 +4,8 @@ import React from 'react';
 import { useAdminActions, useNotificationActions } from '@/lib/stores';
 import { logger, devLog } from '@/lib/utils/logger';
 
+import { realTimeService } from './real-time-service';
+
 import type {
   TrendingTopic,
   GeneratedPoll,
@@ -16,7 +18,6 @@ import type {
   ActivityItem,
 } from '../types';
 
-import { realTimeService } from './real-time-service';
 
 /**
  * Fallback values returned when admin APIs are unavailable.

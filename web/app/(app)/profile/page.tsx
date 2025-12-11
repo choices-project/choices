@@ -4,12 +4,14 @@ import { User, Shield, Download, Edit, Settings, CheckCircle, AlertTriangle, Map
 import { useRouter } from 'next/navigation';
 import React, { useEffect, useState, useCallback } from 'react';
 
+import { AddressLookup } from '@/features/profile/components/AddressLookup';
+import { useProfileData, useProfileExport } from '@/features/profile/hooks/use-profile';
+
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/components/ui/card';
-import { AddressLookup } from '@/features/profile/components/AddressLookup';
-import { useProfileData, useProfileExport } from '@/features/profile/hooks/use-profile';
+
 import { useUser, useIsAuthenticated, useUserLoading } from '@/lib/stores';
 import { useAppActions } from '@/lib/stores/appStore';
 import { logger } from '@/lib/utils/logger';

@@ -14,7 +14,7 @@
  * Status: Production-ready
  */
 
-import type { NextRequest } from 'next/server';
+import { getSupabaseServerClient } from '@/utils/supabase/server';
 
 import {
   withErrorHandling,
@@ -23,7 +23,10 @@ import {
   paginatedResponse,
 } from '@/lib/api';
 import { createAuditLogService } from '@/lib/services/audit-log-service';
-import { getSupabaseServerClient } from '@/utils/supabase/server';
+
+import type { NextRequest } from 'next/server';
+
+
 
 export const dynamic = 'force-dynamic';
 

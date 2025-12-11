@@ -3,8 +3,10 @@
 import { useEffect, useState } from 'react';
 
 import ProfilePage from '@/features/profile/components/ProfilePage';
+
 import { useProfileStore } from '@/lib/stores/profileStore';
 import { useUserStore } from '@/lib/stores/userStore';
+
 import type { ProfileExportData, ProfilePreferences, PrivacySettings, UserProfile } from '@/types/profile';
 
 const HARNESS_PRIVACY: PrivacySettings = {

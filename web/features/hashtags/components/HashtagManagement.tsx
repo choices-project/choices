@@ -7,6 +7,7 @@ import React, { useState, useEffect, useCallback } from 'react';
 import logger from '@/lib/utils/logger';
 
 import { searchHashtags, createHashtag, deleteHashtag } from '../lib/hashtag-service';
+
 import type { Hashtag, HashtagCategory } from '../types';
 
 type HashtagManagementProps = {

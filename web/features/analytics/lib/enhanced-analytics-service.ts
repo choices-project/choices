@@ -4,10 +4,11 @@
  * Created: 2025-10-27
  */
 
-import type { createClient } from '@supabase/supabase-js';
 
 import { logger } from '@/lib/utils/logger';
+
 import type { Database, Json } from '@/types/database';
+import type { createClient } from '@supabase/supabase-js';
 
 type SupabaseClient = ReturnType<typeof createClient<Database>>;
 

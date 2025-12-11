@@ -8,7 +8,6 @@
  * Updated: September 15, 2025
  */
 
-import type { SupabaseClient } from '@supabase/supabase-js';
 
 import { devLog } from '@/lib/utils/logger';
 
@@ -20,6 +19,7 @@ import type {
   VoteProcessor as IVoteProcessor,
   VoteSubmissionResult
 } from './types';
+import type { SupabaseClient } from '@supabase/supabase-js';
 
 type ClientFactory = () => SupabaseClient | Promise<SupabaseClient>;
 

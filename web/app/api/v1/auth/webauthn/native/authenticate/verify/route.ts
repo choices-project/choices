@@ -8,13 +8,16 @@
  * Status: ✅ Production-ready (Native implementation)
  */
 
-import type { NextRequest } from 'next/server';
+import { getSupabaseServerClient } from '@/utils/supabase/server';
 
 import { getRPIDAndOrigins } from '@/features/auth/lib/webauthn/config';
 import { verifyAuthenticationResponse } from '@/features/auth/lib/webauthn/native/server';
+
 import { withErrorHandling, authError, forbiddenError, errorResponse, validationError, successResponse } from '@/lib/api';
 import { logger } from '@/lib/utils/logger';
-import { getSupabaseServerClient } from '@/utils/supabase/server';
+
+import type { NextRequest } from 'next/server';
+
 
 export const dynamic = 'force-dynamic';
 

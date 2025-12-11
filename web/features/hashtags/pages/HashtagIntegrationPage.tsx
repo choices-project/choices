@@ -9,6 +9,7 @@ import { HashtagAnalytics } from '../components/HashtagAnalytics';
 import { HashtagDisplay, TrendingHashtagDisplay } from '../components/HashtagDisplay';
 import { HashtagInput } from '../components/HashtagInput';
 import { useHashtags, useHashtagSearch } from '../hooks/useHashtags';
+
 import type { Hashtag } from '../types';
 
 export default function HashtagIntegrationPage() {

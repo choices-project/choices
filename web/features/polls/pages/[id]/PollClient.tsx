@@ -4,11 +4,6 @@ import { AlertCircle, BarChart3, Printer, Share2, Shield, Trophy } from 'lucide-
 import { useRouter } from 'next/navigation';
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 
-import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
-import { Badge } from '@/components/ui/badge';
-import { Button } from '@/components/ui/button';
-import { Separator } from '@/components/ui/separator';
-import { Switch } from '@/components/ui/switch';
 import { useRecordPollEvent } from '@/features/polls/hooks/usePollAnalytics';
 import { usePollMilestoneNotifications, POLL_MILESTONES, type PollMilestone } from '@/features/polls/hooks/usePollMilestones';
 import {
@@ -17,12 +12,21 @@ import {
   type PollBallotContext,
 } from '@/features/voting/lib/pollAdapters';
 import { useVotingActions, useVotingError, useVotingIsVoting } from '@/features/voting/lib/store';
-import { useAuth } from '@/hooks/useAuth';
-import { useI18n } from '@/hooks/useI18n';
+
+import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
+import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
+import { Separator } from '@/components/ui/separator';
+import { Switch } from '@/components/ui/switch';
+
+
 import { useNotificationActions } from '@/lib/stores';
 import { useAppActions } from '@/lib/stores/appStore';
 import { cn } from '@/lib/utils';
 import { logger } from '@/lib/utils/logger';
+
+import { useAuth } from '@/hooks/useAuth';
+import { useI18n } from '@/hooks/useI18n';
 
 type VotingStatusMessage = {
   title: string;

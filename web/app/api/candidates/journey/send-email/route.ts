@@ -1,4 +1,4 @@
-import type { NextRequest } from 'next/server'
+import { getSupabaseServerClient } from '@/utils/supabase/server'
 
 import { withErrorHandling, successResponse, authError, errorResponse, validationError, forbiddenError, notFoundError, rateLimitError } from '@/lib/api';
 import { createRateLimiter, rateLimitMiddleware } from '@/lib/core/security/rate-limit'
@@ -6,7 +6,9 @@ import {
   sendCandidateJourneyEmail,
   type EmailType
 } from '@/lib/services/email/candidate-journey-emails'
-import { getSupabaseServerClient } from '@/utils/supabase/server'
+
+import type { NextRequest } from 'next/server'
+
 
 const journeyEmailLimiter = createRateLimiter({
   interval: 60 * 1000, // 1 minute window

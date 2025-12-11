@@ -15,9 +15,11 @@ import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
-import { useI18n } from '@/hooks/useI18n';
+
 import { isFeatureEnabled } from '@/lib/core/feature-flags';
 import { logger } from '@/lib/utils/logger';
+
+import { useI18n } from '@/hooks/useI18n';
 
 import { CivicActionCard, type CivicAction } from './CivicActionCard';
 

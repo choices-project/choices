@@ -2,8 +2,9 @@
 
 import { redirect } from 'next/navigation'
 
-import { logger } from '@/lib/utils/logger'
 import { getSupabaseServerClient } from '@/utils/supabase/server'
+
+import { logger } from '@/lib/utils/logger'
 
 /**
  * @fileoverview Modern Supabase Authentication Login Action

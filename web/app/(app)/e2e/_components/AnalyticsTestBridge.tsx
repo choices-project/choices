@@ -7,6 +7,7 @@ import {
   useAnalyticsActions,
   useAnalyticsEvents,
 } from '@/lib/stores/analyticsStore';
+
 import type { PlaywrightAnalyticsBridge } from '@/types/playwright-analytics';
 
 export function AnalyticsTestBridge() {

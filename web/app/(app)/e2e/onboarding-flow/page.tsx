@@ -3,6 +3,7 @@
 import { useEffect, useMemo } from 'react';
 
 import type { CommunityFocus, ProfileVisibility } from '@/features/onboarding/types';
+
 import type { OnboardingStore } from '@/lib/stores/onboardingStore';
 import { useOnboardingStore } from '@/lib/stores/onboardingStore';
 

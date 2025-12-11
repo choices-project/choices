@@ -1,7 +1,8 @@
-import type { NextRequest} from 'next/server';
 import { NextResponse } from 'next/server';
 
 import { devLog } from '@/lib/utils/logger';
+
+import type { NextRequest} from 'next/server';
 
 /**
  * Service Role Admin Middleware

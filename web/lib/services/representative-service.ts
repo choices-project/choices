@@ -11,6 +11,7 @@
 
 import { CACHE_DURATIONS } from '@/lib/config/constants';
 import { logger } from '@/lib/utils/logger';
+
 import type {
   Representative,
   RepresentativeSearchQuery,

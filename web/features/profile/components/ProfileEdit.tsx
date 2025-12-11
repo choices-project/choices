@@ -22,8 +22,9 @@ import {
   AlertTriangle,
   CheckCircle
 } from 'lucide-react';
-import type { ChangeEvent, FormEvent } from 'react';
 import { useEffect, useMemo, useRef, useState } from 'react';
+
+import { PROFILE_DEFAULTS } from '@/types/profile';
 
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
@@ -34,6 +35,7 @@ import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Switch } from '@/components/ui/switch';
 import { Textarea } from '@/components/ui/textarea';
+
 import { useUserAvatarFile, useUserAvatarPreview } from '@/lib/stores';
 import { profileSelectors, useProfileStore } from '@/lib/stores/profileStore';
 import { useUserStore } from '@/lib/stores/userStore';
@@ -43,12 +45,7 @@ import type {
   PrivacySettingKey,
   PrivacySettingValue,
 } from '@/lib/stores/userStore';
-import { PROFILE_DEFAULTS } from '@/types/profile';
-import type {
-  ProfileUpdateData,
-  ProfileDemographics,
-  PrivacySettings,
-} from '@/types/profile';
+
 
 import {
   useProfileUpdate,
@@ -57,7 +54,14 @@ import {
   useProfileDraft,
   useProfileDraftActions,
 } from '../hooks/use-profile';
+
 import type { ProfileEditProps } from '../index';
+import type {
+  ProfileUpdateData,
+  ProfileDemographics,
+  PrivacySettings,
+} from '@/types/profile';
+import type { ChangeEvent, FormEvent } from 'react';
 
 // Constants for form options
 const COMMUNITY_FOCUS_OPTIONS = [

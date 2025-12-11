@@ -1,6 +1,6 @@
+import type { OnboardingJurisdiction } from '../types';
 import type { Representative } from '@/types/representative';
 
-import type { OnboardingJurisdiction } from '../types';
 
 type RepresentativeRecord = Record<string, unknown>;
 

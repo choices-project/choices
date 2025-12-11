@@ -5,13 +5,16 @@
  * Provides consistent user authentication with proper error handling.
  */
 
+import { getSupabaseServerClient } from '@/utils/supabase/server';
+
+import { validateOrigin } from "@/lib/http/origin";
+import { devLog } from '@/lib/utils/logger';
+
 import type { SupabaseClient } from '@supabase/supabase-js';
 import type { NextRequest } from 'next/server';
 
-// eslint-disable-next-line no-restricted-imports -- canonical path required by security policy
-import { validateOrigin } from "@/lib/http/origin";
-import { devLog } from '@/lib/utils/logger';
-import { getSupabaseServerClient } from '@/utils/supabase/server';
+ 
+
 
 export type User = {
   id: string;

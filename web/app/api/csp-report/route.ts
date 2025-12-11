@@ -11,12 +11,14 @@
  * Updated: November 5, 2025 - Production implementation
  */
 
-import type { NextRequest} from 'next/server';
+import { getSupabaseServerClient } from '@/utils/supabase/server';
 
 import { withErrorHandling, successResponse, validationError, corsPreflightResponse } from '@/lib/api';
 import { stripUndefinedDeep } from '@/lib/util/clean';
 import { logger } from '@/lib/utils/logger';
-import { getSupabaseServerClient } from '@/utils/supabase/server';
+
+import type { NextRequest} from 'next/server';
+
 
 type CSPViolation = {
   'document-uri': string;

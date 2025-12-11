@@ -7,9 +7,11 @@
 
 import * as React from 'react';
 import { lazy } from 'react';
-import type { ComponentType } from 'react';
 
 import { performanceMetrics } from '../lib/performance/performance-metrics';
+
+import type { ComponentType } from 'react';
+
 
 type CodeSplittingOptions = {
   retryCount?: number;

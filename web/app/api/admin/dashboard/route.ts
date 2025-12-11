@@ -1,4 +1,4 @@
-import type { NextRequest } from 'next/server';
+import { getSupabaseServerClient } from '@/utils/supabase/server';
 
 import {
   authError,
@@ -11,7 +11,9 @@ import { logAnalyticsAccessToDatabase } from '@/lib/auth/adminGuard';
 import { getRedisClient } from '@/lib/cache/redis-client';
 import { createAuditLogService } from '@/lib/services/audit-log-service';
 import { logger } from '@/lib/utils/logger';
-import { getSupabaseServerClient } from '@/utils/supabase/server';
+
+import type { NextRequest } from 'next/server';
+
 
 export const dynamic = 'force-dynamic';
 

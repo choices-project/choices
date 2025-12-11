@@ -19,6 +19,8 @@ import {
 } from 'lucide-react';
 import React, { useEffect, useMemo, useState } from 'react';
 
+import { TrendingHashtagDisplay } from '@/features/hashtags/components/HashtagDisplay';
+
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -30,7 +32,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Skeleton } from '@/components/ui/skeleton';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Textarea } from '@/components/ui/textarea';
-import { TrendingHashtagDisplay } from '@/features/hashtags/components/HashtagDisplay';
+
 import {
   useAdminActions,
   useAdminDashboardStats,

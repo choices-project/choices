@@ -7,7 +7,7 @@
  * Polls for device authorization completion. Returns session when user completes authorization.
  */
 
-import type { NextRequest } from 'next/server';
+import { getSupabaseServerClient } from '@/utils/supabase/server';
 
 import {
   withErrorHandling,
@@ -19,7 +19,9 @@ import {
 } from '@/lib/api';
 import { apiRateLimiter } from '@/lib/rate-limiting/api-rate-limiter';
 import { logger } from '@/lib/utils/logger';
-import { getSupabaseServerClient } from '@/utils/supabase/server';
+
+import type { NextRequest } from 'next/server';
+
 
 // Constants reserved for future polling implementation
 // const POLLING_INTERVAL_SECONDS = 5;

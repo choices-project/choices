@@ -5,10 +5,11 @@
  * Provides a clean way to wrap components or sections that depend on specific features.
  */
 
-import type { ReactNode } from 'react';
 import React from 'react';
 
 import { useFeatureFlag, useFeatureFlagsBatch, useFeatureFlagWithDependencies, useFeatureFlags } from '../hooks/useFeatureFlags';
+
+import type { ReactNode } from 'react';
 
 const IS_E2E_HARNESS = process.env.NEXT_PUBLIC_ENABLE_E2E_HARNESS === '1';
 

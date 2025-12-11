@@ -1,10 +1,13 @@
-import type { SupabaseClient } from '@supabase/supabase-js';
-import type { NextRequest} from 'next/server';
+import { getSupabaseServerClient } from '@/utils/supabase/server';
 
 import { withErrorHandling, successResponse, authError } from '@/lib/api';
 import { TypeGuardError, assertIsRecord } from '@/lib/core/types/guards';
 import { logger } from '@/lib/utils/logger';
-import { getSupabaseServerClient } from '@/utils/supabase/server';
+
+import type { SupabaseClient } from '@supabase/supabase-js';
+import type { NextRequest} from 'next/server';
+
+
 
 export const dynamic = 'force-dynamic';
 export const runtime = 'nodejs';

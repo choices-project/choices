@@ -15,9 +15,11 @@ import React, { useMemo, useState } from 'react';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
-import { useI18n } from '@/hooks/useI18n';
+
 import { isFeatureEnabled } from '@/lib/core/feature-flags';
 import { logger } from '@/lib/utils/logger';
+
+import { useI18n } from '@/hooks/useI18n';
 
 export type CivicAction = {
   id: string;

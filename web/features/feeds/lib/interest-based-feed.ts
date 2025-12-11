@@ -2,15 +2,17 @@
 // Enhanced feed system with hashtag management and personalization
 // Created: October 2, 2025
 
-import type { NextRequest } from 'next/server';
 import { NextResponse } from 'next/server';
 
 
-import { logger } from '@/lib/utils/logger';
-// Database types are used directly when needed
 import { getSupabaseServerClient } from '@/utils/supabase/server';
 
+import { logger } from '@/lib/utils/logger';
+// Database types are used directly when needed
+
 import { hashtagPollsIntegrationService } from './hashtag-polls-integration';
+
+import type { NextRequest } from 'next/server';
 
 // Force dynamic rendering
 export const dynamic = 'force-dynamic';

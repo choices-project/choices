@@ -1,8 +1,9 @@
 import React, { useEffect, useMemo, useState } from 'react';
 
-import { useI18n } from '@/hooks/useI18n';
 import { isFeatureEnabled } from '@/lib/core/feature-flags';
 import logger from '@/lib/utils/logger';
+
+import { useI18n } from '@/hooks/useI18n';
 
 /**
  * Privacy Status Badge Component

@@ -13,6 +13,7 @@ import {
 } from '@/lib/stores';
 
 import { CATEGORIES, POLL_CREATION_STEPS, STEP_TIPS } from './constants';
+
 import type { PollWizardSubmissionResult } from './schema';
 
 type StepValidationSnapshot = {

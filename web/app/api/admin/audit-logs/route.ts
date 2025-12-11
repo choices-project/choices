@@ -15,12 +15,14 @@
  * Status: Production-ready
  */
 
-import type { NextRequest } from 'next/server';
+import { getSupabaseServerClient } from '@/utils/supabase/server';
 
 import { withErrorHandling, authError, errorResponse, forbiddenError, successResponse } from '@/lib/api';
 import { logAnalyticsAccessToDatabase } from '@/lib/auth/adminGuard';
 import { createAuditLogService, type AuditEventType, type AuditSeverity } from '@/lib/services/audit-log-service';
-import { getSupabaseServerClient } from '@/utils/supabase/server';
+
+import type { NextRequest } from 'next/server';
+
 
 export const dynamic = 'force-dynamic';
 

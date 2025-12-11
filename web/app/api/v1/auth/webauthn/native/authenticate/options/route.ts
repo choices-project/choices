@@ -5,17 +5,20 @@
  * Replaces @simplewebauthn/server with native implementation
  */
 
-import type { NextRequest } from 'next/server';
+import { getSupabaseServerClient } from '@/utils/supabase/server';
 
 import { getRPIDAndOrigins, CHALLENGE_TTL_MS } from '@/features/auth/lib/webauthn/config';
 import { 
   generateAuthenticationOptions,
   arrayBufferToBase64URL
 } from '@/features/auth/lib/webauthn/native/server';
+
 import { withErrorHandling, successResponse, authError, forbiddenError, errorResponse } from '@/lib/api';
 import { stripUndefinedDeep } from '@/lib/util/clean';
 import { logger } from '@/lib/utils/logger';
-import { getSupabaseServerClient } from '@/utils/supabase/server';
+
+import type { NextRequest } from 'next/server';
+
 
 export const dynamic = 'force-dynamic';
 

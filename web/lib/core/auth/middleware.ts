@@ -8,15 +8,17 @@
  * - Comprehensive error handling
  */
 
-import type { SupabaseClient, User } from '@supabase/supabase-js';
 import { type NextRequest, NextResponse } from 'next/server';
 
-// eslint-disable-next-line no-restricted-imports -- canonical path required by security policy
+ 
+import { getSupabaseServerClient } from '@/utils/supabase/server';
+
 import { requireTrustedOrigin } from "@/lib/http/origin";
 import { apiRateLimiter } from '@/lib/rate-limiting/api-rate-limiter';
 import { requireTurnstileVerification } from '@/lib/security/turnstile';
 import { devLog } from '@/lib/utils/logger';
-import { getSupabaseServerClient } from '@/utils/supabase/server';
+
+import type { SupabaseClient, User } from '@supabase/supabase-js';
 
 export type TrustTier = 'T1' | 'T2' | 'T3';
 

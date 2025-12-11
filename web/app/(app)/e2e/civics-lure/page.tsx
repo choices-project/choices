@@ -3,8 +3,10 @@
 import { useEffect } from 'react';
 
 import CivicsLure from '@/features/civics/components/CivicsLure';
+
 import { useRepresentativeStore } from '@/lib/stores/representativeStore';
 import { useUserStore } from '@/lib/stores/userStore';
+
 import type { Representative } from '@/types/representative';
 
 const MOCK_REPRESENTATIVES: Representative[] = [

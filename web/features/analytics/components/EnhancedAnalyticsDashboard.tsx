@@ -43,22 +43,26 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { useI18n } from '@/hooks/useI18n';
+
 import ScreenReaderSupport from '@/lib/accessibility/screen-reader';
 import { canAccessAnalytics, logAnalyticsAccess, UnauthorizedAccess } from '@/lib/auth/adminGuard';
 import { useIsMobile, useIsTablet } from '@/lib/hooks/useMediaQuery';
 import { useUser } from '@/lib/stores';
 import { logger } from '@/lib/utils/logger';
-import type { Database } from '@/types/database';
 
-import DistrictHeatmap from '../../admin/components/DistrictHeatmap';
-import { useEnhancedAnalytics } from '../hooks/useEnhancedAnalytics';
+import { useI18n } from '@/hooks/useI18n';
+
+
 
 import DemographicsChart from './DemographicsChart';
 import PollHeatmap from './PollHeatmap';
 import TemporalAnalysisChart from './TemporalAnalysisChart';
 import TrendsChart from './TrendsChart';
 import TrustTierComparisonChart from './TrustTierComparisonChart';
+import DistrictHeatmap from '../../admin/components/DistrictHeatmap';
+import { useEnhancedAnalytics } from '../hooks/useEnhancedAnalytics';
+
+import type { Database } from '@/types/database';
 
 type SystemHealthRow = Database['public']['Tables']['system_health']['Row'];
 type SiteMessageRow = Database['public']['Tables']['site_messages']['Row'];

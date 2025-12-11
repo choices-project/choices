@@ -9,11 +9,12 @@
  * Status: ✅ ACTIVE
  */
 
-import type { NextRequest } from 'next/server';
 
 import { withErrorHandling, successResponse, validationError, errorResponse } from '@/lib/api';
 import { featureFlagManager } from '@/lib/core/feature-flags';
 import { logger } from '@/lib/utils/logger';
+
+import type { NextRequest } from 'next/server';
 
 export const GET = withErrorHandling(async (_request: NextRequest) => {
   // Get all feature flags

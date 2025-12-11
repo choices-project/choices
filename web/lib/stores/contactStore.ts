@@ -13,12 +13,13 @@
 
 import { useMemo } from 'react';
 import { create } from 'zustand';
-import type { StateCreator } from 'zustand';
 import { devtools } from 'zustand/middleware';
 import { immer } from 'zustand/middleware/immer';
 
 import { createBaseStoreActions } from './baseStoreActions';
+
 import type { BaseStore } from './types';
+import type { StateCreator } from 'zustand';
 
 type ThreadStatus = 'active' | 'closed' | 'archived' | 'spam';
 type ThreadPriority = 'low' | 'normal' | 'high' | 'urgent';

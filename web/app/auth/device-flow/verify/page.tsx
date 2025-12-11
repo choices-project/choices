@@ -10,8 +10,9 @@ import { CheckCircle2, AlertCircle, ArrowRight } from 'lucide-react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import React, { useEffect, useState } from 'react';
 
-import { logger } from '@/lib/utils/logger';
 import { getSupabaseBrowserClient } from '@/utils/supabase/client';
+
+import { logger } from '@/lib/utils/logger';
 
 export default function DeviceFlowVerifyPage() {
   const router = useRouter();

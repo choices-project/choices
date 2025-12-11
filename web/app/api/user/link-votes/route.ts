@@ -1,5 +1,5 @@
 import { createClient } from '@supabase/supabase-js';
-import type { NextRequest } from 'next/server';
+
 
 import {
   withErrorHandling,
@@ -8,6 +8,8 @@ import {
   errorResponse,
 } from '@/lib/api';
 import { logger } from '@/lib/utils/logger';
+
+import type { NextRequest } from 'next/server';
 
 export const POST = withErrorHandling(async (request: NextRequest) => {
   const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;

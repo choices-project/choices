@@ -28,13 +28,11 @@ import {
   Info,
 } from 'lucide-react';
 import React, { useState, useEffect, useCallback, useRef, useId, useMemo } from 'react';
-import type { Layout as GridLayout } from 'react-grid-layout';
-import type { StoreApi } from 'zustand';
 import { shallow } from 'zustand/shallow';
 
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Button } from '@/components/ui/button';
-import { useI18n } from '@/hooks/useI18n';
+
 import ScreenReaderSupport from '@/lib/accessibility/screen-reader';
 import type { WidgetStore } from '@/lib/stores/widgetStore';
 import {
@@ -48,14 +46,19 @@ import {
 } from '@/lib/stores/widgetStore';
 import { logger } from '@/lib/utils/logger';
 
-import { useWidgetKeyboardShortcuts } from '../../hooks/useWidgetKeyboardShortcuts';
-import { getPreset, getAllPresets } from '../../lib/widgetPresets';
-import { getWidget } from '../../lib/widgetRegistry';
-import type { DashboardLayout, WidgetConfig, WidgetState } from '../../types/widget';
+import { useI18n } from '@/hooks/useI18n';
+
 
 import { WidgetGrid } from './WidgetGrid';
 import { WidgetRenderer } from './WidgetRenderer';
 import { WidgetSelector } from './WidgetSelector';
+import { useWidgetKeyboardShortcuts } from '../../hooks/useWidgetKeyboardShortcuts';
+import { getPreset, getAllPresets } from '../../lib/widgetPresets';
+import { getWidget } from '../../lib/widgetRegistry';
+
+import type { DashboardLayout, WidgetConfig, WidgetState } from '../../types/widget';
+import type { Layout as GridLayout } from 'react-grid-layout';
+import type { StoreApi } from 'zustand';
 // ============================================================================
 // WIDGET DASHBOARD PROPS
 // ============================================================================

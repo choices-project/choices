@@ -27,9 +27,6 @@ import {
 } from '@/lib/stores';
 import logger from '@/lib/utils/logger'
 
-import type {
-  HashtagCategory
-} from '../types';
 import {
   formatUsageCount,
   formatGrowthRate,
@@ -37,6 +34,10 @@ import {
   getHashtagCategoryColor,
   getHashtagCategoryIcon
 } from '../utils/hashtag-utils';
+
+import type {
+  HashtagCategory
+} from '../types';
 
 type HashtagTrendingProps = {
   category?: HashtagCategory;

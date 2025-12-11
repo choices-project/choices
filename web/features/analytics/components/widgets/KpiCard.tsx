@@ -6,8 +6,10 @@ import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
-import { useI18n } from '@/hooks/useI18n';
+
 import { cn } from '@/lib/utils';
+
+import { useI18n } from '@/hooks/useI18n';
 
 import type { WidgetProps } from '../../types/widget';
 

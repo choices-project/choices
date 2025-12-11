@@ -1,7 +1,9 @@
 import { createClient } from '@supabase/supabase-js';
-import type { NextRequest } from 'next/server';
 
 import { withErrorHandling, successResponse, errorResponse } from '@/lib/api';
+
+import type { NextRequest } from 'next/server';
+
 
 export const dynamic = 'force-dynamic';
 

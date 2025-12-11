@@ -16,7 +16,7 @@
  * Status: ✅ Production-ready with privacy-first design
  */
 
-import type { NextRequest } from 'next/server';
+import { getSupabaseServerClient } from '@/utils/supabase/server';
 
 import {
   PrivacyAwareQueryBuilder,
@@ -24,11 +24,15 @@ import {
   K_ANONYMITY_THRESHOLD,
   privacyAwareAggregate
 } from '@/features/analytics/lib/privacyFilters';
+
+
 import { withErrorHandling, forbiddenError, successResponse, errorResponse } from '@/lib/api';
 import { canAccessAnalytics, logAnalyticsAccess } from '@/lib/auth/adminGuard';
 import { getCached, CACHE_TTL, CACHE_PREFIX, generateCacheKey } from '@/lib/cache/analytics-cache';
 import { logger } from '@/lib/utils/logger';
-import { getSupabaseServerClient } from '@/utils/supabase/server';
+
+import type { NextRequest } from 'next/server';
+
 
 export const dynamic = 'force-dynamic';
 export const runtime = 'nodejs';

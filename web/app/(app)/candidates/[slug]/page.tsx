@@ -3,6 +3,8 @@
 import Link from 'next/link';
 import { useMemo, useState } from 'react';
 
+import useSWR from '@/shims/swr';
+
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import {
   Dialog,
@@ -12,8 +14,8 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog';
+
 import { useI18n } from '@/hooks/useI18n';
-import useSWR from '@/shims/swr';
 
 type FlashTone = 'info' | 'success' | 'warning' | 'error';
 

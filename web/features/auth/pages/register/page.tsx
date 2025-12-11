@@ -5,10 +5,12 @@ import { useRouter } from 'next/navigation'
 import * as React from 'react'
 
 import { register as serverRegister } from '@/app/actions/register'
+import { getSupabaseBrowserClient } from '@/utils/supabase/client'
+
 import { PasskeyButton } from '@/features/auth/components/PasskeyButton'
 import { useUserStore } from '@/features/auth/lib/store'
+
 import { logger } from '@/lib/utils/logger'
-import { getSupabaseBrowserClient } from '@/utils/supabase/client'
 
 
 export default function RegisterPage() {

@@ -1,4 +1,4 @@
-import type { NextRequest } from 'next/server';
+import { getSupabaseServerClient } from '@/utils/supabase/server';
 
 import {
   withErrorHandling,
@@ -10,8 +10,10 @@ import {
 import { anonymizeIP, getSecurityConfig } from '@/lib/core/security/config';
 import { apiRateLimiter } from '@/lib/rate-limiting/api-rate-limiter';
 import logger from '@/lib/utils/logger';
+
 import type { Json, TablesInsert } from '@/types/supabase';
-import { getSupabaseServerClient } from '@/utils/supabase/server';
+import type { NextRequest } from 'next/server';
+
 
 export const dynamic = 'force-dynamic';
 

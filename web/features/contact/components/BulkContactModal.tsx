@@ -23,13 +23,17 @@ import React, { useState, useEffect, useMemo, useCallback, useRef } from 'react'
 import { trackCivicsRepresentativeEvent } from '@/features/civics/analytics/civicsAnalyticsEvents';
 import { useElectionCountdown, formatElectionDate } from '@/features/civics/utils/civicsCountdownUtils';
 import { useFeatureFlag } from '@/features/pwa/hooks/useFeatureFlags';
-import { useI18n } from '@/hooks/useI18n';
+
 import { useAccessibleDialog } from '@/lib/accessibility/useAccessibleDialog';
 import { useAnalyticsActions, useContactActions } from '@/lib/stores';
-import type { Representative } from '@/types/representative';
+
+import { useI18n } from '@/hooks/useI18n';
+
 
 import { useContactThreads } from '../hooks/useContactMessages';
 import { useMessageTemplates } from '../hooks/useMessageTemplates';
+
+import type { Representative } from '@/types/representative';
 
 
 type BulkContactModalProps = {

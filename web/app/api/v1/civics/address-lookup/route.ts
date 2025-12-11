@@ -56,7 +56,6 @@
  * Feature Flag: CIVICS_ADDRESS_LOOKUP (disabled by default)
  */
 
-import type { NextRequest } from 'next/server';
 
 import {
   withErrorHandling,
@@ -72,6 +71,8 @@ import {
   validateAddressInput,
 } from '@/lib/civics/privacy-utils';
 import { logger } from '@/lib/utils/logger';
+
+import type { NextRequest } from 'next/server';
 
 export const dynamic = 'force-dynamic';
 

@@ -14,7 +14,6 @@
 import { MoonIcon, SunIcon, ComputerDesktopIcon, ChevronDownIcon } from '@heroicons/react/24/outline';
 import React, { useCallback, useEffect, useId, useRef, useState } from 'react';
 
-import { useI18n } from '@/hooks/useI18n';
 import { ScreenReaderSupport } from '@/lib/accessibility/screen-reader';
 import {
   useAppActions,
@@ -23,6 +22,8 @@ import {
   type ThemePreference,
 } from '@/lib/stores/appStore';
 import logger from '@/lib/utils/logger';
+
+import { useI18n } from '@/hooks/useI18n';
 
 type ThemeSelectorProps = {
   className?: string;

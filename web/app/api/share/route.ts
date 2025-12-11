@@ -10,13 +10,15 @@
  * Status: ✅ ACTIVE
  */
 
-import type { NextRequest } from 'next/server';
+import { getSupabaseServerClient } from '@/utils/supabase/server';
 
 import { withErrorHandling, successResponse, forbiddenError, validationError, errorResponse } from '@/lib/api';
 import { isFeatureEnabled } from '@/lib/core/feature-flags';
 import { devLog } from '@/lib/utils/logger';
+
 import type { Json, TablesInsert } from '@/types/supabase';
-import { getSupabaseServerClient } from '@/utils/supabase/server';
+import type { NextRequest } from 'next/server';
+
 
 export const POST = withErrorHandling(async (request: NextRequest) => {
   // Check if social sharing is enabled

@@ -4,10 +4,12 @@ import { Users, BarChart3, Eye, Clock, Calendar, User } from 'lucide-react';
 import Link from 'next/link';
 import React from 'react';
 
+import type { PollRow } from '@/features/polls/types';
+
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import type { PollRow } from '@/features/polls/types';
+
 import { useI18n } from '@/hooks/useI18n';
 
 type PollCardProps = {

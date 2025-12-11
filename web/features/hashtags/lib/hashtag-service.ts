@@ -10,12 +10,13 @@
  */
 
 import { logger } from '@/lib/utils/logger';
-import type { Database, Json } from '@/types/supabase';
+
 
 import { getSupabaseBrowserClient } from '../../../utils/supabase/client';
 import {
   HASHTAG_CATEGORIES,
 } from '../types';
+
 import type {
   Hashtag,
   HashtagSuggestion,
@@ -41,6 +42,7 @@ import type {
   HashtagValidation,
   FeedHashtagAnalytics,
 } from '../types';
+import type { Database, Json } from '@/types/supabase';
 
 type HashtagRow = Database['public']['Tables']['hashtags']['Row'];
 type UserHashtagRow = Database['public']['Tables']['user_hashtags']['Row'];

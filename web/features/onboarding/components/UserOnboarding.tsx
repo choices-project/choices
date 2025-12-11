@@ -16,6 +16,7 @@ import { profileSelectors, useProfileStore } from '@/lib/stores/profileStore';
 import logger from '@/lib/utils/logger';
 
 import { extractRepresentatives, normalizeJurisdiction } from '../lib/representatives';
+
 import type { OnboardingJurisdiction, UserOnboardingProps, UserOnboardingResult } from '../types';
 
 type LoadRepresentativesOptions = {

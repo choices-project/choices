@@ -38,14 +38,17 @@ import {
 } from 'lucide-react';
 import React, { useCallback, useState } from 'react';
 
+import { useProfileDelete, useProfileExport } from '@/features/profile/hooks/use-profile';
+
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Switch } from '@/components/ui/switch';
-import { useProfileDelete, useProfileExport } from '@/features/profile/hooks/use-profile';
+
 import { useUserActions } from '@/lib/stores';
 import { profileSelectors, useProfileStore } from '@/lib/stores/profileStore';
 import { logger } from '@/lib/utils/logger';
+
 import type { PrivacySettings } from '@/types/profile';
 
 type DataCategory = {

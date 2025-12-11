@@ -19,14 +19,14 @@
 
 import { createHash } from 'crypto';
 
-import type { SupabaseClient as RealSupabaseClient } from '@supabase/supabase-js';
 
-import { logger } from '@/lib/utils/logger';
 import { getSupabaseServerClient } from '@/utils/supabase/server';
 
-import { type MerkleTree, BallotVerificationManager, snapshotChecksum } from '../audit/merkle-tree';
+import { logger } from '@/lib/utils/logger';
 
 import { IRVCalculator } from './irv-calculator';
+import { type MerkleTree, BallotVerificationManager, snapshotChecksum } from '../audit/merkle-tree';
+
 import type { UserRanking } from './irv-calculator';
 import type {
   Poll,
@@ -35,6 +35,7 @@ import type {
   FinalizeResult,
   FinalizeOptions
 } from './types';
+import type { SupabaseClient as RealSupabaseClient } from '@supabase/supabase-js';
 
 // ============================================================================
 // TYPES AND INTERFACES - Imported from ./types.ts

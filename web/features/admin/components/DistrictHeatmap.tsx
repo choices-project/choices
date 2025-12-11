@@ -42,13 +42,17 @@ import {
   Cell
 } from 'recharts';
 
+import { AnalyticsSummaryTable, type AnalyticsSummaryColumn, type AnalyticsSummaryRow } from '@/features/analytics/components/AnalyticsSummaryTable';
+
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { AnalyticsSummaryTable, type AnalyticsSummaryColumn, type AnalyticsSummaryRow } from '@/features/analytics/components/AnalyticsSummaryTable';
-import { useI18n } from '@/hooks/useI18n';
+
+
 import ScreenReaderSupport from '@/lib/accessibility/screen-reader';
 import logger from '@/lib/utils/logger';
+
+import { useI18n } from '@/hooks/useI18n';
 
 type HeatmapEntry = {
   district_id: string;

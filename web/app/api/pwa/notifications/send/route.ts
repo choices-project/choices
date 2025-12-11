@@ -5,9 +5,9 @@
  * This is typically used by admin users or automated systems.
  */
 
-import type { SupabaseClient } from '@supabase/supabase-js';
-import type { NextRequest } from 'next/server';
 import webPush from 'web-push';
+
+import { getSupabaseServerClient } from '@/utils/supabase/server';
 
 import {
   withErrorHandling,
@@ -20,8 +20,11 @@ import {
 import { isFeatureEnabled } from '@/lib/core/feature-flags';
 import { stripUndefinedDeep } from '@/lib/util/clean';
 import { logger } from '@/lib/utils/logger';
+
 import type { Database, Json } from '@/types/supabase';
-import { getSupabaseServerClient } from '@/utils/supabase/server';
+import type { SupabaseClient } from '@supabase/supabase-js';
+import type { NextRequest } from 'next/server';
+
 
 export const dynamic = 'force-dynamic';
 

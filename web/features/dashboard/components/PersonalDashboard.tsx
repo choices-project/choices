@@ -30,6 +30,13 @@ import {
 import { useRouter } from 'next/navigation';
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
+import { ElectionCountdownCard } from '@/features/civics/components/countdown/ElectionCountdownCard';
+import { RepresentativeCard } from '@/features/civics/components/representative/RepresentativeCard';
+import { useElectionCountdown } from '@/features/civics/utils/civicsCountdownUtils';
+import { TrendingHashtagDisplay } from '@/features/hashtags/components/HashtagDisplay';
+import type { Poll } from '@/features/polls/types';
+import { useProfile, useProfileErrorStates, useProfileLoadingStates } from '@/features/profile/hooks/use-profile';
+
 import { FeatureWrapper } from '@/components/shared/FeatureWrapper';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -37,13 +44,8 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Progress } from '@/components/ui/progress';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { ElectionCountdownCard } from '@/features/civics/components/countdown/ElectionCountdownCard';
-import { RepresentativeCard } from '@/features/civics/components/representative/RepresentativeCard';
-import { useElectionCountdown } from '@/features/civics/utils/civicsCountdownUtils';
-import { TrendingHashtagDisplay } from '@/features/hashtags/components/HashtagDisplay';
-import type { Poll } from '@/features/polls/types';
-import { useProfile, useProfileErrorStates, useProfileLoadingStates } from '@/features/profile/hooks/use-profile';
-import { useI18n } from '@/hooks/useI18n';
+
+
 import {
   useAnalyticsBehavior,
   useAnalyticsError,
@@ -70,6 +72,9 @@ import {
   useUserRepresentativeEntries,
 } from '@/lib/stores/representativeStore';
 import { logger } from '@/lib/utils/logger';
+
+import { useI18n } from '@/hooks/useI18n';
+
 import type { PersonalAnalytics } from '@/types/features/dashboard';
 import type { DashboardPreferences, ProfilePreferences } from '@/types/profile';
 

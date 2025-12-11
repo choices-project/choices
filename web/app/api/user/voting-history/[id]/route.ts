@@ -1,8 +1,10 @@
 import { createClient } from '@supabase/supabase-js';
-import type { NextRequest } from 'next/server';
+
 
 import { withErrorHandling, successResponse, errorResponse } from '@/lib/api';
 import { logger } from '@/lib/utils/logger';
+
+import type { NextRequest } from 'next/server';
 
 export const GET = withErrorHandling(async (
   _request: NextRequest,

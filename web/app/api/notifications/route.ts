@@ -11,8 +11,9 @@
  * @since 1.0.0
  */
 
-import type { NextRequest } from 'next/server';
 import { z } from 'zod';
+
+import { getSupabaseServerClient } from '@/utils/supabase/server';
 
 import {
   withErrorHandling,
@@ -23,7 +24,8 @@ import {
   parseBody
 } from '@/lib/api';
 import { logger } from '@/lib/utils/logger';
-import { getSupabaseServerClient } from '@/utils/supabase/server';
+
+import type { NextRequest } from 'next/server';
 
 
 

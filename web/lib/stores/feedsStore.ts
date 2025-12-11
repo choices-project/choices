@@ -12,18 +12,18 @@
 
 import { useMemo } from 'react';
 import { create } from 'zustand';
-import type { StateCreator } from 'zustand';
 import { devtools, persist } from 'zustand/middleware';
 import { immer } from 'zustand/middleware/immer';
 import { shallow } from 'zustand/shallow';
 
 import { logger } from '@/lib/utils/logger';
 import { PrivacyDataType, hasPrivacyConsent } from '@/lib/utils/privacy-guard';
-import type { PrivacySettings } from '@/types/profile';
+
 
 import { createBaseStoreActions } from './baseStoreActions';
 import { fetchFeedsFromApi, parseFeedSearchPayload } from './services/feedsService';
 import { createSafeStorage } from './storage';
+
 import type {
   FeedCategory,
   FeedFilters,
@@ -39,6 +39,8 @@ import type {
   ResetFeedsStateOptions,
   FeedUpdateInput,
 } from './types/feeds';
+import type { PrivacySettings } from '@/types/profile';
+import type { StateCreator } from 'zustand';
 
 const mapSortPreferenceToParam = (sortBy: FeedPreferences['sortBy']): string => {
   switch (sortBy) {

@@ -9,13 +9,22 @@
  */
 
 import { create } from 'zustand';
-import type { StateCreator } from 'zustand';
 import { devtools, persist } from 'zustand/middleware';
 import { immer } from 'zustand/middleware/immer';
 
+import { REPRESENTATIVE_CONSTANTS } from '@/types/representative';
+
 import { getRepresentativeDivisionIds } from '@/features/civics/utils/divisions';
+
 import { representativeService } from '@/lib/services/representative-service';
 import logger from '@/lib/utils/logger';
+
+
+
+import { createBaseStoreActions } from './baseStoreActions';
+import { createSafeStorage } from './storage';
+
+import type { BaseStore } from './types';
 import type {
   Representative,
   RepresentativeLocationQuery,
@@ -24,12 +33,7 @@ import type {
   RepresentativeSubscription,
   UserRepresentative
 } from '@/types/representative';
-import { REPRESENTATIVE_CONSTANTS } from '@/types/representative';
-
-
-import { createBaseStoreActions } from './baseStoreActions';
-import { createSafeStorage } from './storage';
-import type { BaseStore } from './types';
+import type { StateCreator } from 'zustand';
 
 const DETAIL_CACHE_TTL = REPRESENTATIVE_CONSTANTS.CACHE_DURATION;
 

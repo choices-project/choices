@@ -1,8 +1,11 @@
-import type { NextRequest } from 'next/server'
+import { getSupabaseServerClient } from '@/utils/supabase/server'
 
 import { withErrorHandling, successResponse, authError, errorResponse, validationError, forbiddenError } from '@/lib/api';
 import { logger } from '@/lib/utils/logger'
-import { getSupabaseServerClient } from '@/utils/supabase/server'
+
+import type { NextRequest } from 'next/server'
+
+
 
 export const POST = withErrorHandling(async (request: NextRequest) => {
   const supabase = await getSupabaseServerClient()

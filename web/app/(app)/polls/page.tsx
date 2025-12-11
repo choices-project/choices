@@ -6,7 +6,7 @@ import React, { useEffect, useCallback, useMemo, useRef } from 'react';
 
 import { PollFiltersPanel } from '@/features/polls/components/PollFiltersPanel';
 import { getPollCategoryColor, getPollCategoryIcon } from '@/features/polls/constants/categories';
-import { useI18n } from '@/hooks/useI18n';
+
 import { useAppActions } from '@/lib/stores/appStore';
 import {
   useFilteredPollCards,
@@ -17,6 +17,8 @@ import {
   usePollsError,
   usePollsLoading,
 } from '@/lib/stores/pollsStore';
+
+import { useI18n } from '@/hooks/useI18n';
 
 export default function PollsPage() {
   const { t, currentLanguage } = useI18n();

@@ -1,12 +1,13 @@
 'use server'
 
+import { getSupabaseServerClient } from '@/utils/supabase/server'
+
 import { 
   createSecureServerAction,
   getAuthenticatedUser,
   logSecurityEvent,
   type ServerActionContext
 } from '@/lib/core/auth/server-actions'
-import { getSupabaseServerClient } from '@/utils/supabase/server'
 
 // Enhanced logout action with security features
 export const logout = createSecureServerAction(

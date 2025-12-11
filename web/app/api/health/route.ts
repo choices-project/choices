@@ -15,14 +15,18 @@
  * GET /api/health?type=all - All health checks
  */
 
-import type { NextRequest } from 'next/server';
+import { getSupabaseServerClient } from '@/utils/supabase/server';
 
 import { isCivicsEnabled } from '@/features/civics/lib/civics/privacy-utils';
+
+
 import { withErrorHandling, rateLimitError, successResponse, errorResponse, validationError, methodNotAllowed } from '@/lib/api';
 import { getQueryOptimizer } from '@/lib/core/database/optimizer';
 import { apiRateLimiter } from '@/lib/rate-limiting/api-rate-limiter';
 import { logger } from '@/lib/utils/logger';
-import { getSupabaseServerClient } from '@/utils/supabase/server';
+
+import type { NextRequest } from 'next/server';
+
 
 
 // Define health check result types

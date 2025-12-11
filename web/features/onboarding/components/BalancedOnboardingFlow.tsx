@@ -16,7 +16,6 @@
 import { useRouter } from 'next/navigation';
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 
-import { FeatureWrapper } from '@/components/shared/FeatureWrapper';
 import { PasskeyRegister } from '@/features/auth/components/PasskeyRegister';
 import type {
   UserDemographics,
@@ -25,7 +24,10 @@ import type {
 } from '@/features/onboarding/types';
 import { AddressLookup } from '@/features/profile/components/AddressLookup';
 import { useProfile, useProfileUpdate } from '@/features/profile/hooks/use-profile';
-import { useI18n } from '@/hooks/useI18n';
+
+import { FeatureWrapper } from '@/components/shared/FeatureWrapper';
+
+
 import ScreenReaderSupport from '@/lib/accessibility/screen-reader';
 import {
   useUser,
@@ -39,6 +41,9 @@ import {
 } from '@/lib/stores';
 // withOptional removed in favor of explicit merges
 import logger from '@/lib/utils/logger';
+
+import { useI18n } from '@/hooks/useI18n';
+
 import type { ProfileDemographics } from '@/types/profile';
 
 const DEFAULT_PRIVACY: PrivacyPreferences = {

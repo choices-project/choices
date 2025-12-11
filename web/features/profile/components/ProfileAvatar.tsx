@@ -6,10 +6,12 @@ import { useRef, useState } from 'react';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
+
 import { cn } from '@/lib/utils';
 import logger from '@/lib/utils/logger';
 
 import { useProfileAvatar } from '../hooks/use-profile';
+
 import type { ProfileAvatarProps } from '../index';
 
 /**

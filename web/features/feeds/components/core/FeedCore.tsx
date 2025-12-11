@@ -27,8 +27,10 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { useI18n } from '@/hooks/useI18n';
+
 import { cn } from '@/lib/utils';
+
+import { useI18n } from '@/hooks/useI18n';
 
 type FeedItem = {
   id: string;

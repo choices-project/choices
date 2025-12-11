@@ -9,6 +9,7 @@
  */
 
 import logger from '@/lib/utils/logger';
+
 import type { Representative } from '@/types/representative';
 
 export type LocationQuery = {

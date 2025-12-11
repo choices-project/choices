@@ -1,4 +1,3 @@
-import type { NextRequest } from 'next/server'
 
 import { withErrorHandling, successResponse, validationError } from '@/lib/api';
 import { 
@@ -7,6 +6,8 @@ import {
   getFilingChecklist,
   type OfficeType
 } from '@/lib/filing/filing-requirements'
+
+import type { NextRequest } from 'next/server'
 
 function isOfficeType(value: string | null): value is OfficeType {
   return value === 'federal' || value === 'state' || value === 'local'

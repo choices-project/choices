@@ -19,7 +19,9 @@ import { MapPin, Search, AlertCircle, CheckCircle, Info } from 'lucide-react';
 import React, { useCallback, useState } from 'react';
 
 import { useProfileUpdate } from '@/features/profile/hooks/use-profile';
+
 import { logger } from '@/lib/utils/logger';
+
 import type { ProfileDemographics } from '@/types/profile';
 
 type District = {

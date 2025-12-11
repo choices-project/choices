@@ -8,9 +8,9 @@
  * Status: In Progress
  */
 
+import { upstashRateLimiter } from './upstash-rate-limiter';
 import { logger } from '../utils/logger';
 
-import { upstashRateLimiter } from './upstash-rate-limiter';
 
 export type RateLimitOptions = {
   maxRequests?: number;

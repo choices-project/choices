@@ -5,6 +5,8 @@ import dynamicImport from 'next/dynamic';
 import { useRouter } from 'next/navigation';
 import React, { useState } from 'react';
 
+import { getSupabaseBrowserClient } from '@/utils/supabase/client';
+
 import { loginWithPassword, registerUser } from '@/features/auth/lib/api';
 import {
   useUserError,
@@ -12,9 +14,10 @@ import {
   useUserActions,
   useUserStore,
 } from '@/features/auth/lib/store';
-import { useI18n } from '@/hooks/useI18n';
+
 import { logger } from '@/lib/utils/logger';
-import { getSupabaseBrowserClient } from '@/utils/supabase/client';
+
+import { useI18n } from '@/hooks/useI18n';
 
 // Prevent static generation for auth page
 export const dynamic = 'force-dynamic';

@@ -5,7 +5,7 @@
  * This enables users to receive notifications for new polls, results, etc.
  */
 
-import type { NextRequest } from 'next/server';
+import { getSupabaseServerClient } from '@/utils/supabase/server';
 
 import {
   withErrorHandling,
@@ -17,8 +17,10 @@ import {
 } from '@/lib/api';
 import { isFeatureEnabled } from '@/lib/core/feature-flags';
 import { logger } from '@/lib/utils/logger';
+
 import type { Json } from '@/types/supabase';
-import { getSupabaseServerClient } from '@/utils/supabase/server';
+import type { NextRequest } from 'next/server';
+
 
 type SubscriptionPreferences = {
   newPolls: boolean;

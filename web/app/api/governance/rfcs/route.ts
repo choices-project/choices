@@ -1,7 +1,8 @@
-import type { NextRequest } from 'next/server';
 
 import { withErrorHandling, successResponse, validationError } from '@/lib/api';
 import { RFCManager } from '@/lib/governance/rfcs';
+
+import type { NextRequest } from 'next/server';
 
 export const GET = withErrorHandling(async (request: NextRequest) => {
   const { searchParams } = new URL(request.url);

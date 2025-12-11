@@ -7,9 +7,10 @@
  * @created September 9, 2025
  */
 
+import logger from '@/lib/utils/logger';
+
 import type { SupabaseClient } from '@supabase/supabase-js';
 
-import logger from '@/lib/utils/logger';
 
 export type ConsentType = 
   | 'analytics'           // Basic usage analytics

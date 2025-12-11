@@ -22,12 +22,14 @@ import React, { useMemo, useState } from 'react';
 
 
 
+import { useProfile, useProfileLoadingStates, useProfileErrorStates, useProfileExport } from '@/features/profile/hooks/use-profile';
+
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { useProfile, useProfileLoadingStates, useProfileErrorStates, useProfileExport } from '@/features/profile/hooks/use-profile';
+
 import type { UserProfile } from '@/types/profile';
 
 'use client';

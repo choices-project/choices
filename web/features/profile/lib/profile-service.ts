@@ -9,7 +9,11 @@
  */
 
 import logger from '@/lib/utils/logger';
-import type { Json } from '@/types/database';
+
+import {
+  PROFILE_CONSTANTS,
+  PROFILE_DEFAULTS,
+} from '../../../types/profile';
 
 import type {
   ProfileUser,
@@ -23,10 +27,8 @@ import type {
   PrivacySettings,
   ProfileDemographics,
 } from '../../../types/profile';
-import {
-  PROFILE_CONSTANTS,
-  PROFILE_DEFAULTS,
-} from '../../../types/profile';
+import type { Json } from '@/types/database';
+
 
 type ProfileApiEnvelope = {
   success?: unknown;

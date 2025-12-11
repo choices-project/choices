@@ -10,16 +10,18 @@
  */
 
 import { create } from 'zustand';
-import type { StateCreator } from 'zustand';
 import { devtools, persist } from 'zustand/middleware';
 import { immer } from 'zustand/middleware/immer';
 
 import { logger } from '@/lib/utils/logger';
-import type { BeforeInstallPromptEvent, OfflineVotePayload, PWAQueuedAction as SharedQueuedAction } from '@/types/pwa';
+
 
 import { createBaseStoreActions } from './baseStoreActions';
 import { createSafeStorage } from './storage';
+
 import type { BaseStore } from './types';
+import type { BeforeInstallPromptEvent, OfflineVotePayload, PWAQueuedAction as SharedQueuedAction } from '@/types/pwa';
+import type { StateCreator } from 'zustand';
 
 export type PWAQueuedActionData = Record<string, unknown>;
 

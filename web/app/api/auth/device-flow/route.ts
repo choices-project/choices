@@ -9,7 +9,7 @@
 
 import { randomBytes } from 'crypto';
 
-import type { NextRequest } from 'next/server';
+import { getSupabaseServerClient } from '@/utils/supabase/server';
 
 import {
   withErrorHandling,
@@ -21,7 +21,9 @@ import {
 import type { DeviceFlowRequest, DeviceFlowResponse } from '@/lib/core/auth/types';
 import { apiRateLimiter } from '@/lib/rate-limiting/api-rate-limiter';
 import { logger } from '@/lib/utils/logger';
-import { getSupabaseServerClient } from '@/utils/supabase/server';
+
+import type { NextRequest } from 'next/server';
+
 
 // OAuth 2.0 Device Flow constants (RFC 8628)
 const DEVICE_CODE_LENGTH = 40; // bytes, will be base64url encoded

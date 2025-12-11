@@ -7,7 +7,6 @@
 
 import { useMemo } from 'react';
 import { create } from 'zustand';
-import type { StateCreator } from 'zustand';
 import { devtools, persist } from 'zustand/middleware';
 import { immer } from 'zustand/middleware/immer';
 import { useShallow } from 'zustand/react/shallow';
@@ -33,6 +32,8 @@ import { logger } from '@/lib/utils/logger';
 
 import { createBaseStoreActions } from './baseStoreActions';
 import { createSafeStorage } from './storage';
+
+import type { StateCreator } from 'zustand';
 
 export type { PollWizardData, PollWizardSettings } from '@/lib/polls/types';
 

@@ -3,11 +3,15 @@
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { useEffect } from 'react';
 
+import { AuthProvider } from '@/contexts/AuthContext';
+
 import FontProvider from '@/components/shared/FontProvider';
 import GlobalNavigation from '@/components/shared/GlobalNavigation';
-import { AuthProvider } from '@/contexts/AuthContext';
-import { useI18n } from '@/hooks/useI18n';
+
 import { UserStoreProvider } from '@/lib/providers/UserStoreProvider';
+
+import { useI18n } from '@/hooks/useI18n';
+
 
 const queryClient = new QueryClient();
 

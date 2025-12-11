@@ -12,9 +12,11 @@
  * @since 1.0.0
  */
 
-import type { NextRequest } from 'next/server';
+import { getSupabaseAdminClient, getSupabaseServerClient } from '@/utils/supabase/server';
 
 import { AnalyticsService } from '@/features/analytics/lib/analytics-service';
+
+
 import {
   withErrorHandling,
   successResponse,
@@ -24,7 +26,9 @@ import {
   errorResponse,
 } from '@/lib/api';
 import { logger } from '@/lib/utils/logger';
-import { getSupabaseAdminClient, getSupabaseServerClient } from '@/utils/supabase/server';
+
+import type { NextRequest } from 'next/server';
+
 
 export const dynamic = 'force-dynamic';
 

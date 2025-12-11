@@ -1,11 +1,14 @@
 'use client';
 
-import type { User } from '@supabase/supabase-js';
 import { useCallback, useEffect, useRef } from 'react';
 
 import { AnalyticsTestBridge } from '@/app/(app)/e2e/_components/AnalyticsTestBridge';
+
 import { EnhancedAnalyticsDashboard } from '@/features/analytics/components/EnhancedAnalyticsDashboard';
+
 import { useUserStore } from '@/lib/stores/userStore';
+
+import type { User } from '@supabase/supabase-js';
 
 const HARNESS_ADMIN_USER: User = {
   id: 'analytics-harness-admin',

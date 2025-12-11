@@ -5,6 +5,7 @@
  */
 
 import { logger } from '@/lib/utils/logger';
+
 import type {
   BeforeInstallPromptEvent,
   DeviceFingerprint,

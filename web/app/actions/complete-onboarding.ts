@@ -3,6 +3,8 @@
 import { redirect } from 'next/navigation'
 import { z } from 'zod'
 
+import { getSupabaseServerClient } from '@/utils/supabase/server'
+
 import {
   createSecureServerAction,
   validateFormData,
@@ -10,7 +12,6 @@ import {
   type ServerActionContext
 } from '@/lib/core/auth/server-actions'
 import { logger } from '@/lib/utils/logger'
-import { getSupabaseServerClient } from '@/utils/supabase/server'
 
 // Validation schema
 const OnboardingSchema = z.object({

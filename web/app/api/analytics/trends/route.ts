@@ -14,15 +14,19 @@
  * Status: ✅ Production-ready
  */
 
-import type { NextRequest } from 'next/server';
+import { getSupabaseServerClient } from '@/utils/supabase/server';
 
 import { PrivacyAwareQueryBuilder } from '@/features/analytics/lib/privacyFilters';
+
+
 import { applyAnalyticsCacheHeaders } from '@/lib/analytics/cache-headers';
 import { withErrorHandling, forbiddenError, successResponse, errorResponse } from '@/lib/api';
 import { canAccessAnalytics, logAnalyticsAccessToDatabase } from '@/lib/auth/adminGuard';
 import { getCached, CACHE_TTL, CACHE_PREFIX, generateCacheKey } from '@/lib/cache/analytics-cache';
 import { logger } from '@/lib/utils/logger';
-import { getSupabaseServerClient } from '@/utils/supabase/server';
+
+import type { NextRequest } from 'next/server';
+
 
 export const dynamic = 'force-dynamic';
 export const runtime = 'nodejs';

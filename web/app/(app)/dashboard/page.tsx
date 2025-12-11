@@ -4,8 +4,10 @@ import dynamic from 'next/dynamic';
 import { useRouter } from 'next/navigation';
 import React, { Suspense, useEffect, useMemo } from 'react';
 
-import DashboardNavigation, { MobileDashboardNav } from '@/components/shared/DashboardNavigation';
 import { useProfile } from '@/features/profile/hooks/use-profile';
+
+import DashboardNavigation, { MobileDashboardNav } from '@/components/shared/DashboardNavigation';
+
 import { useAppActions } from '@/lib/stores/appStore';
 import { logger } from '@/lib/utils/logger';
 

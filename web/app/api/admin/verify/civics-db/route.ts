@@ -11,10 +11,12 @@
  * to validate database wiring and recently regenerated types.
  */
 
-import type { NextRequest } from 'next/server';
+import { getSupabaseServerClient } from '@/utils/supabase/server';
 
 import { withErrorHandling, successResponse, errorResponse, forbiddenError, methodNotAllowed } from '@/lib/api';
-import { getSupabaseServerClient } from '@/utils/supabase/server';
+
+import type { NextRequest } from 'next/server';
+
 
 export const dynamic = 'force-dynamic';
 

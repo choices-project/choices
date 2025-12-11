@@ -16,12 +16,11 @@
  * Status: ✅ Architectural refactor
  */
 
-import type React from 'react';
 import { useEffect, useState, useCallback, useRef } from 'react';
 
 import { useFeedAnalytics } from '@/features/feeds/hooks/useFeedAnalytics';
 import FeedShareDialog from '@/features/share/components/FeedShareDialog';
-import { useI18n } from '@/hooks/useI18n';
+
 import ScreenReaderSupport from '@/lib/accessibility/screen-reader';
 import {
   useUser,
@@ -38,6 +37,10 @@ import { useFeedsStore } from '@/lib/stores/feedsStore';
 import type { FeedItem } from '@/lib/stores/types/feeds';
 // withOptional removed
 import logger from '@/lib/utils/logger';
+
+import { useI18n } from '@/hooks/useI18n';
+
+import type React from 'react';
 
 const IS_E2E_HARNESS = process.env.NEXT_PUBLIC_ENABLE_E2E_HARNESS === '1';
 

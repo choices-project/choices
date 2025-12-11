@@ -4,13 +4,6 @@ import { ArrowLeft, Share2, CheckCircle, AlertCircle } from 'lucide-react';
 import { useParams, useRouter } from 'next/navigation';
 import React, { useState, useEffect, useCallback, useRef, useMemo } from 'react';
 
-import { AccessibleResultsChart } from '@/components/accessible/AccessibleResultsChart';
-import ModeSwitch from '@/components/shared/ModeSwitch';
-import type { ResultsMode } from '@/components/shared/ModeSwitch';
-import { Alert, AlertDescription } from '@/components/ui/alert';
-import { Badge } from '@/components/ui/badge';
-import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { PollShare } from '@/features/polls';
 import PostCloseBanner from '@/features/polls/components/PostCloseBanner';
 import { useRecordPollEvent } from '@/features/polls/hooks/usePollAnalytics';
@@ -20,6 +13,15 @@ import {
 } from '@/features/voting/lib/pollAdapters';
 import type { PollBallotContext } from '@/features/voting/lib/pollAdapters';
 import { useVotingActions, useVotingError, useVotingIsVoting } from '@/features/voting/lib/store';
+
+import { AccessibleResultsChart } from '@/components/accessible/AccessibleResultsChart';
+import ModeSwitch from '@/components/shared/ModeSwitch';
+import type { ResultsMode } from '@/components/shared/ModeSwitch';
+import { Alert, AlertDescription } from '@/components/ui/alert';
+import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+
 import ScreenReaderSupport from '@/lib/accessibility/screen-reader';
 import { useNotificationActions, useNotificationSettings } from '@/lib/stores/notificationStore';
 import logger from '@/lib/utils/logger';

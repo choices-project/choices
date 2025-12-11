@@ -1,10 +1,12 @@
-import type { NextRequest } from 'next/server';
+import { getSupabaseAdminClient } from '@/utils/supabase/server';
 
 import { withErrorHandling, successResponse, notFoundError, errorResponse, validationError } from '@/lib/api';
 import { logger } from '@/lib/utils/logger';
 import { voteEngine } from '@/lib/vote/engine';
 import type { PollData, VoteData } from '@/lib/vote/types';
-import { getSupabaseAdminClient } from '@/utils/supabase/server';
+
+import type { NextRequest } from 'next/server';
+
 
 const normalizeOptions = (options: Array<{ id: string; text?: string | null; option_text?: string | null; order_index?: number | null }>) =>
   [...options]

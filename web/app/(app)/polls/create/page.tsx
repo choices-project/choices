@@ -3,8 +3,10 @@
 import { useEffect } from 'react';
 
 import { AccessiblePollWizard } from '@/features/polls/components/AccessiblePollWizard';
-import { useI18n } from '@/hooks/useI18n';
+
 import { useAppActions } from '@/lib/stores/appStore';
+
+import { useI18n } from '@/hooks/useI18n';
 
 export default function CreatePollPage() {
   const { t } = useI18n();

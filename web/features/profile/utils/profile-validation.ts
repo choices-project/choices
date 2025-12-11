@@ -10,6 +10,13 @@
 
 import { isValidEmail } from '@/lib/utils/format-utils';
 
+import { 
+  PROFILE_LIMITS,
+  PARTICIPATION_STYLES,
+  PRIVACY_LEVELS,
+  AVATAR_RESTRICTIONS
+} from './profile-constants';
+
 import type {
   ProfileUpdateData,
   ProfileValidationResult,
@@ -17,12 +24,6 @@ import type {
   ProfileUser,
 } from '../index';
 
-import { 
-  PROFILE_LIMITS,
-  PARTICIPATION_STYLES,
-  PRIVACY_LEVELS,
-  AVATAR_RESTRICTIONS
-} from './profile-constants';
 
 
 // ============================================================================

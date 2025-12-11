@@ -4,11 +4,13 @@ import { ArrowLeft, Trash2, Download, AlertTriangle, Shield, User, Vote, FileTex
 import { useRouter } from 'next/navigation';
 import React, { useState, useCallback, useEffect } from 'react';
 
+import { useProfileDelete, useProfileExport } from '@/features/profile/hooks/use-profile';
+
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { useProfileDelete, useProfileExport } from '@/features/profile/hooks/use-profile';
+
 import { useAppActions } from '@/lib/stores/appStore';
 import { useUser, useUserLoading, useUserActions } from '@/lib/stores/userStore';
 import { devLog } from '@/lib/utils/logger';

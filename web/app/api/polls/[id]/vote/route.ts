@@ -1,5 +1,6 @@
-import type { NextRequest } from 'next/server';
 import { NextResponse } from 'next/server';
+
+import { getSupabaseServerClient } from '@/utils/supabase/server';
 
 import {
   withErrorHandling,
@@ -12,7 +13,8 @@ import {
 import { getUser } from '@/lib/core/auth/middleware';
 import { AnalyticsService } from '@/lib/services/analytics';
 import { logger } from '@/lib/utils/logger';
-import { getSupabaseServerClient } from '@/utils/supabase/server';
+
+import type { NextRequest } from 'next/server';
 
 export const dynamic = 'force-dynamic';
 

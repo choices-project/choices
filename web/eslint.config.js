@@ -13,6 +13,58 @@ import globals from 'globals';
 
 const hasLegacyCopy = false;
 
+// Single source of truth for import ordering to keep CI/local in sync
+const importOrderRule = [
+  'error',
+  {
+    groups: [
+      'builtin',
+      'external',
+      'internal',
+      ['parent', 'sibling', 'index'],
+      'object',
+      'type',
+    ],
+    pathGroups: [
+      {
+        pattern: '@choices/**',
+        group: 'internal',
+        position: 'before',
+      },
+      {
+        pattern: '@/app/**',
+        group: 'internal',
+      },
+      {
+        pattern: '@/features/**',
+        group: 'internal',
+        position: 'after',
+      },
+      {
+        pattern: '@/components/**',
+        group: 'internal',
+        position: 'after',
+      },
+      {
+        pattern: '@/lib/**',
+        group: 'internal',
+        position: 'after',
+      },
+      {
+        pattern: '@/hooks/**',
+        group: 'internal',
+        position: 'after',
+      },
+    ],
+    pathGroupsExcludedImportTypes: ['builtin'],
+    alphabetize: {
+      order: 'asc',
+      caseInsensitive: true,
+    },
+    'newlines-between': 'always',
+  },
+];
+
 export default [
   // Global environment
   {
@@ -122,51 +174,7 @@ export default [
         { prefer: 'type-imports', fixStyle: 'inline-type-imports' }
       ],
       '@typescript-eslint/no-import-type-side-effects': 'error',
-      'import/order': [
-        'error',
-        {
-          groups: [
-            'builtin',
-            'external',
-            'internal',
-            ['parent', 'sibling', 'index'],
-            'object',
-            'type',
-          ],
-          pathGroups: [
-            {
-              pattern: '@/app/**',
-              group: 'internal',
-            },
-            {
-              pattern: '@/features/**',
-              group: 'internal',
-              position: 'after',
-            },
-            {
-              pattern: '@/components/**',
-              group: 'internal',
-              position: 'after',
-            },
-            {
-              pattern: '@/lib/**',
-              group: 'internal',
-              position: 'after',
-            },
-            {
-              pattern: '@/hooks/**',
-              group: 'internal',
-              position: 'after',
-            },
-          ],
-          pathGroupsExcludedImportTypes: ['builtin'],
-          alphabetize: {
-            order: 'asc',
-            caseInsensitive: true,
-          },
-          'newlines-between': 'always',
-        },
-      ],
+      'import/order': importOrderRule,
       'formatjs/no-literal-string-in-jsx': 'off',
 
       // Console logging - enforce use of logger
@@ -195,7 +203,8 @@ export default [
           { group: ['@/components/admin/layout/*'], message: "Use '@/app/(app)/admin/layout/*' (canonical)." },
           { group: ['@/lib/util/objects', '@/lib/util/objects.*'], message: 'withOptional is deprecated. Use explicit builders/conditional spreads.' },
           // Prevent reintroduction of removed/legacy HTTP/CORS/CSRF utilities
-          { group: ['@/lib/utils/http', '@/lib/utils/http.*', '@/lib/http', '@/lib/http.*'], message: 'Use "@/lib/http/origin" (canonical).' },
+          // Note: @/lib/http/origin is the canonical path and should NOT be restricted
+          { group: ['@/lib/utils/http', '@/lib/utils/http.*'], message: 'Use "@/lib/http/origin" (canonical).' },
           { group: ['@/lib/utils/cors', '@/lib/utils/cors.*'], message: 'Use CORS helpers in "@/lib/api/response-utils".' },
           { group: ['@/lib/utils/csrf', '@/lib/utils/csrf.*', '@/lib/utils/csrf-fetch', '@/lib/utils/csrf-fetch.*'], message: 'CSRF utilities were removed; use standard Next.js patterns and auth middleware.' },
           // Prevent using duplicate trending implementation
@@ -370,22 +379,7 @@ export default [
         },
       ],
       'import/order': [
-        'error',
-        {
-          groups: [
-            'builtin',
-            'external',
-            'internal',
-            'parent',
-            'sibling',
-            'index',
-          ],
-          'newlines-between': 'always',
-          alphabetize: {
-            order: 'asc',
-            caseInsensitive: true,
-          },
-        },
+        ...importOrderRule,
       ],
       'import/newline-after-import': 'error',
       'import/prefer-default-export': 'off',

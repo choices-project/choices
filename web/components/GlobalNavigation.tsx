@@ -15,10 +15,12 @@ import Link from 'next/link'
 import { usePathname, useRouter } from 'next/navigation'
 import React, { useState } from 'react';
 
+import { getSupabaseBrowserClient } from '@/utils/supabase/client'
+
 import { Button } from '@/components/ui/button'
+
 import { useIsAuthenticated, useUser, useUserActions } from '@/lib/stores'
 import logger from '@/lib/utils/logger'
-import { getSupabaseBrowserClient } from '@/utils/supabase/client'
 
 export default function GlobalNavigation() {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)

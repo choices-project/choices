@@ -2,10 +2,11 @@
 
 
 import * as Tooltip from '@radix-ui/react-tooltip'
-import type { Variants } from 'framer-motion';
 import { motion } from 'framer-motion'
 import { TrendingUp, TrendingDown, Minus, Activity } from 'lucide-react'
 import React, { useState, useEffect, useCallback, createContext, useContext } from 'react';
+
+import type { Variants } from 'framer-motion';
 
 type ChartData = {
   name: string

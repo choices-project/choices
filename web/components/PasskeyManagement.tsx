@@ -3,6 +3,7 @@
 import React, { useState, useEffect } from 'react';
 
 import { beginRegister } from '@/features/auth/lib/webauthn/client';
+
 import { logger } from '@/lib/utils/logger';
 
 import { WebAuthnPrivacyBadge } from './WebAuthnPrivacyBadge';

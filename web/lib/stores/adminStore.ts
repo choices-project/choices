@@ -7,9 +7,10 @@
 
 import { useMemo } from 'react';
 import { create } from 'zustand';
-import type { StateCreator } from 'zustand';
 import { devtools, persist } from 'zustand/middleware';
 import { immer } from 'zustand/middleware/immer';
+
+import { getSupabaseBrowserClient } from '@/utils/supabase/client';
 
 import type {
   ActivityItem,
@@ -25,12 +26,14 @@ import type {
   SystemMetrics,
   TrendingTopic,
 } from '@/features/admin/types';
+
 import { FEATURE_FLAGS, featureFlagManager } from '@/lib/core/feature-flags';
 import { logger } from '@/lib/utils/logger';
-import { getSupabaseBrowserClient } from '@/utils/supabase/client';
 
 import { createSafeStorage } from './storage';
+
 import type { BaseStore } from './types';
+import type { StateCreator } from 'zustand';
 
 export type AdminActiveTab = 'overview' | 'users' | 'analytics' | 'settings' | 'audit';
 export type AdminSettingsTab = 'general' | 'performance' | 'security' | 'notifications';

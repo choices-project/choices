@@ -13,14 +13,15 @@ import { createClient } from '@supabase/supabase-js';
 
 import { logger } from '@/lib/utils/logger';
 
+import {
+  extractHashtagsFromText
+} from '../utils/hashtag-utils';
+
 import type {
   HashtagSuggestion,
   HashtagCategory,
   Hashtag
 } from '../types';
-import {
-  extractHashtagsFromText
-} from '../utils/hashtag-utils';
 
 const suggestionsSupabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
 const suggestionsSupabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;

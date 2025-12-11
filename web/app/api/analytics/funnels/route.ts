@@ -6,7 +6,7 @@
  * cache layer and restricted to admins (or future T3 users).
  */
 
-import type { NextRequest } from 'next/server';
+import { getSupabaseServerClient } from '@/utils/supabase/server';
 
 import {
   authError,
@@ -23,8 +23,10 @@ import {
   getCached,
 } from '@/lib/cache/analytics-cache';
 import { logger } from '@/lib/utils/logger';
+
 import type { CivicAction, Database, Poll } from '@/types/database';
-import { getSupabaseServerClient } from '@/utils/supabase/server';
+import type { NextRequest } from 'next/server';
+
 
 export const dynamic = 'force-dynamic';
 

@@ -1,11 +1,10 @@
 
-import type { Metadata } from 'next';
 import { cookies, headers } from 'next/headers';
-import type { AbstractIntlMessages } from 'next-intl';
 import React from 'react';
 
 import { SkipNavLink, SkipNavTarget } from '@/components/accessibility/SkipNavLink';
 import SiteFooter from '@/components/layout/SiteFooter';
+
 import {
   DEFAULT_LOCALE,
   LOCALE_COOKIE_NAME,
@@ -14,6 +13,9 @@ import {
 } from '@/lib/i18n/config';
 
 import { Providers } from './providers';
+
+import type { Metadata } from 'next';
+import type { AbstractIntlMessages } from 'next-intl';
 import './globals.css';
 
 export const metadata: Metadata = {

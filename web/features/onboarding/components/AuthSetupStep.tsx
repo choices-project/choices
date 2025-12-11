@@ -12,15 +12,21 @@ import {
 } from 'lucide-react';
 import React, { useEffect, useMemo, useState } from 'react';
 
+import { getSupabaseBrowserClient } from '@/utils/supabase/client'
+
+import { PasskeyButton } from '@/features/auth/components/PasskeyButton'
+
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
-import { PasskeyButton } from '@/features/auth/components/PasskeyButton'
-import { useI18n } from '@/hooks/useI18n'
+
+
 import { useUserActions, useUserError, useUserLoading, useUserStore } from '@/lib/stores';
 import { logger } from '@/lib/utils/logger';
-import { getSupabaseBrowserClient } from '@/utils/supabase/client'
+
+import { useI18n } from '@/hooks/useI18n'
+
 
 import type { AuthSetupStepProps, AuthMethod } from '../types';
 

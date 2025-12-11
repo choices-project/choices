@@ -12,6 +12,9 @@ import {
 import { useRouter } from "next/navigation"
 import { useCallback, useEffect, useMemo, useRef, useState } from "react"
 
+import { useRecordPollEvent, type PollEventOptions } from '@/features/polls/hooks/usePollAnalytics';
+import { usePollMilestoneNotifications, type PollMilestone } from '@/features/polls/hooks/usePollMilestones';
+
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
@@ -22,12 +25,12 @@ import { Label } from "@/components/ui/label"
 import { Separator } from "@/components/ui/separator"
 import { Switch } from "@/components/ui/switch"
 import { Textarea } from "@/components/ui/textarea"
-import { useRecordPollEvent, type PollEventOptions } from '@/features/polls/hooks/usePollAnalytics';
-import { usePollMilestoneNotifications, type PollMilestone } from '@/features/polls/hooks/usePollMilestones';
-import { useI18n } from '@/hooks/useI18n';
+
 import { useAccessibleDialog } from '@/lib/accessibility/useAccessibleDialog';
 import { useNotificationActions } from "@/lib/stores"
 import { cn } from "@/lib/utils"
+
+import { useI18n } from '@/hooks/useI18n';
 
 import {
   DESCRIPTION_CHAR_LIMIT,

@@ -14,9 +14,10 @@
  * Status: Production-ready
  */
 
+import { logger } from '@/lib/utils/logger';
+
 import type { SupabaseClient } from '@supabase/supabase-js';
 
-import { logger } from '@/lib/utils/logger';
 
 // ============================================================================
 // Types

@@ -12,15 +12,16 @@ import {
   verifyRegistrationResponse,
   verifyAuthenticationResponse
 } from './native/server';
+import { 
+  arrayBufferToBase64url,
+  base64urlToArrayBuffer
+} from './type-converters';
+
 import type { 
   RegistrationResponse,
   AuthenticationResponse,
   WebAuthnCredential
 , AuthenticatorTransport } from './native/types';
-import { 
-  arrayBufferToBase64url,
-  base64urlToArrayBuffer
-} from './type-converters';
 
 /**
  * WebAuthn credential data from database

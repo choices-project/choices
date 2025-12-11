@@ -10,10 +10,11 @@
  * @since 1.0.0
  */
 
-import type { ReactNode } from 'react';
 import React from 'react';
 
 import { useFeatureFlag, useFeatureFlagsBatch, useFeatureFlagWithDependencies, useFeatureFlags } from '@/features/pwa/hooks/useFeatureFlags';
+
+import type { ReactNode } from 'react';
 
 const isE2EHarness = (): boolean => process.env.NEXT_PUBLIC_ENABLE_E2E_HARNESS === '1';
 

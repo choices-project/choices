@@ -8,9 +8,10 @@
  * Status: PRODUCTION
  */
 
+import { generateWidgetId } from './widgetRegistry';
+
 import type { LayoutPreset, WidgetConfig } from '../types/widget';
 
-import { generateWidgetId } from './widgetRegistry';
 
 // ============================================================================
 // HELPER FUNCTIONS

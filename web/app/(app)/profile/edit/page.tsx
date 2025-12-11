@@ -4,10 +4,12 @@ import { Loader2 } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { useEffect } from 'react';
 
-import { Alert, AlertDescription } from '@/components/ui/alert';
-import { Button } from '@/components/ui/button';
 import { ProfileEdit, useProfileLoadingStates } from '@/features/profile';
 import { useProfile } from '@/features/profile/hooks/use-profile';
+
+import { Alert, AlertDescription } from '@/components/ui/alert';
+import { Button } from '@/components/ui/button';
+
 import { useUser } from '@/lib/stores';
 import { useAppActions } from '@/lib/stores/appStore';
 

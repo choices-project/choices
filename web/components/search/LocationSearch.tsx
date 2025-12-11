@@ -15,6 +15,7 @@ import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
+
 import { locationService, type LocationQuery, type RepresentativesByLocation } from '@/lib/services/location-service';
 import logger from '@/lib/utils/logger';
 

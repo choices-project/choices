@@ -1,3 +1,5 @@
+import { getSupabaseServerClient } from '@/utils/supabase/server';
+
 import {
   withErrorHandling,
   successResponse,
@@ -6,7 +8,6 @@ import {
   errorResponse
 } from '@/lib/api';
 import { logger } from '@/lib/utils/logger';
-import { getSupabaseServerClient } from '@/utils/supabase/server';
 
 export const dynamic = 'force-dynamic'
 

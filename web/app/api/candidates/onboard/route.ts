@@ -1,12 +1,14 @@
 // Server route handler
 
-import type { NextRequest } from 'next/server';
+import { getSupabaseServerClient } from '@/utils/supabase/server';
 
 import { withErrorHandling, successResponse, validationError, errorResponse, methodNotAllowed } from '@/lib/api';
 import { sendTransactionalEmail } from '@/lib/integrations/email/resend';
 import { welcomeCandidateTemplate } from '@/lib/integrations/email/templates';
 import { logger } from '@/lib/utils/logger';
-import { getSupabaseServerClient } from '@/utils/supabase/server';
+
+import type { NextRequest } from 'next/server';
+
 
 export const dynamic = 'force-dynamic';
 

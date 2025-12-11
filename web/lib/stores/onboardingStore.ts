@@ -11,7 +11,6 @@
 
 import { useMemo } from 'react';
 import { create } from 'zustand';
-import type { StateCreator, StoreApi } from 'zustand';
 import { devtools, persist } from 'zustand/middleware';
 
 import type {
@@ -20,9 +19,12 @@ import type {
   ValuesData as FeatureValuesData,
   PrivacyPreferences,
 } from '@/features/onboarding/types';
+
 import { logger } from '@/lib/utils/logger';
 
 import { createSafeStorage } from './storage';
+
+import type { StateCreator, StoreApi } from 'zustand';
 
 // Onboarding data types
 type AuthData = {

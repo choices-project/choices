@@ -1,12 +1,14 @@
 'use client';
 
 import { NextIntlClientProvider } from 'next-intl';
-import type { AbstractIntlMessages } from 'next-intl';
-import type { ReactNode } from 'react';
+
 
 import type { SupportedLocale } from '@/lib/i18n/config';
 import { DEFAULT_TIME_ZONE } from '@/lib/i18n/config';
 import { logger } from '@/lib/utils/logger';
+
+import type { AbstractIntlMessages } from 'next-intl';
+import type { ReactNode } from 'react';
 
 type ProvidersProps = {
   children: ReactNode;

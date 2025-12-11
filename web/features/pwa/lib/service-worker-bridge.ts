@@ -6,8 +6,9 @@
  * infrastructure.
  */
 
-import { getPWAActions } from '@/lib/stores/pwaStore';
 import { isPWAServiceWorkerMessage, PWA_SERVICE_WORKER_MESSAGE_TYPES } from '@/types/pwa';
+
+import { getPWAActions } from '@/lib/stores/pwaStore';
 
 let bridgeInitialized = false;
 

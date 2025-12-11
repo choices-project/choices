@@ -20,18 +20,21 @@
 
 import React, { useCallback, useEffect, useMemo } from 'react';
 
-import DashboardNavigation, { MobileDashboardNav } from '@/components/shared/DashboardNavigation';
 import MyDataDashboard from '@/features/profile/components/MyDataDashboard';
 import {
   useProfileData,
   useProfileDraft,
   useProfileDraftActions,
 } from '@/features/profile/hooks/use-profile';
+
+import DashboardNavigation, { MobileDashboardNav } from '@/components/shared/DashboardNavigation';
+
 import { useUser } from '@/lib/stores';
 import { useAppActions } from '@/lib/stores/appStore';
 import { useProfileStore } from '@/lib/stores/profileStore';
 import { logger } from '@/lib/utils/logger';
 import { getDefaultPrivacySettings } from '@/lib/utils/privacy-guard';
+
 import type { PrivacySettings } from '@/types/profile';
 
 export default function PrivacyPage() {

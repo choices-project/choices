@@ -1,8 +1,9 @@
-import type { NextRequest} from 'next/server';
 
 import { applyAnalyticsCacheHeaders } from '@/lib/analytics/cache-headers';
 import { withErrorHandling, successResponse, validationError, errorResponse } from '@/lib/api';
 import { AnalyticsService } from '@/lib/core/services/analytics'
+
+import type { NextRequest} from 'next/server';
 
 export const dynamic = 'force-dynamic'
 

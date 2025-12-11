@@ -1,6 +1,7 @@
+import { getSupabaseServerClient } from '@/utils/supabase/server';
+
 import { withErrorHandling, successResponse, authError, errorResponse } from '@/lib/api';
 import { logger } from '@/lib/utils/logger';
-import { getSupabaseServerClient } from '@/utils/supabase/server';
 
 export const POST = withErrorHandling(async () => {
   const supabase = await getSupabaseServerClient();

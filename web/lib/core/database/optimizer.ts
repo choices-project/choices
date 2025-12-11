@@ -5,7 +5,7 @@
  * This includes query optimization, connection management, and performance monitoring.
  */
 
-import type { SupabaseClient } from '@supabase/supabase-js'
+import { getSupabaseServerClient } from '@/utils/supabase/server'
 
 import { isFeatureEnabled } from '@/lib/core/feature-flags'
 import { smartCache } from '@/lib/database/smart-cache'
@@ -24,12 +24,14 @@ import {
   safeParse,
   validateDatabaseResponse
 } from '@/lib/validation/validator'
+
 import type {
   UserProfile,
   Vote,
   VoteInsert
 } from '@/types/database'
-import { getSupabaseServerClient } from '@/utils/supabase/server'
+import type { SupabaseClient } from '@supabase/supabase-js'
+
 
 
 type PollWithVotes = PollsResponse['polls'][number]

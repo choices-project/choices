@@ -9,9 +9,11 @@ import { useState, useEffect, useCallback, useMemo } from 'react';
 
 import { useAnalyticsActions } from '@/lib/stores/analyticsStore';
 import { logger } from '@/lib/utils/logger';
-import type { Database, Json } from '@/types/database';
 
 import { EnhancedAnalyticsService, toJsonValue } from '../lib/enhanced-analytics-service';
+
+import type { Database, Json } from '@/types/database';
+
 
 const IS_E2E_HARNESS = process.env.NEXT_PUBLIC_ENABLE_E2E_HARNESS === '1';
 

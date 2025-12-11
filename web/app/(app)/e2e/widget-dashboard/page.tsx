@@ -10,6 +10,7 @@ import type {
   WidgetSize,
   WidgetState,
 } from '@/features/analytics/types/widget';
+
 import { createWidgetStore } from '@/lib/stores/widgetStore';
 
 type WidgetSnapshot = {

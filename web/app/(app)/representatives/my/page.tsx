@@ -13,18 +13,23 @@ import { Heart, Users, Loader2, AlertCircle, Mail, Send } from 'lucide-react';
 import Link from 'next/link';
 import { useCallback, useEffect, useMemo, useState } from 'react';
 
-import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { RepresentativeCard } from '@/features/civics/components/representative/RepresentativeCard';
 import BulkContactModal from '@/features/contact/components/BulkContactModal';
 import ContactModal from '@/features/contact/components/ContactModal';
-import { useAuth } from '@/hooks/useAuth';
+
+import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+
 import {
   useUserRepresentativeEntries,
   useGetUserRepresentatives,
   useRepresentativeGlobalLoading,
   useRepresentativeError
 } from '@/lib/stores/representativeStore';
+
+import { useAuth } from '@/hooks/useAuth';
+
+
 import type { Representative } from '@/types/representative';
 
 // Prevent static generation since this requires authentication

@@ -1,4 +1,4 @@
-import type { NextRequest } from 'next/server';
+import { getSupabaseServerClient } from '@/utils/supabase/server';
 
 import {
   successResponse,
@@ -8,7 +8,9 @@ import {
 } from '@/lib/api';
 import { isFeatureEnabled } from '@/lib/core/feature-flags';
 import { formatISODateOnly, nowISO } from '@/lib/utils/format-utils';
-import { getSupabaseServerClient } from '@/utils/supabase/server';
+
+import type { NextRequest } from 'next/server';
+
 
 export const dynamic = 'force-dynamic';
 

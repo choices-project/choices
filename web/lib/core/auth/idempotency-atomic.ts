@@ -15,10 +15,12 @@
  * Created: November 6, 2025
  */
 
-import type { SupabaseClient } from '@supabase/supabase-js'
+import { getSupabaseServerClient } from '@/utils/supabase/server'
 
 import { logger } from '@/lib/utils/logger'
-import { getSupabaseServerClient } from '@/utils/supabase/server'
+
+import type { SupabaseClient } from '@supabase/supabase-js'
+
 
 export type IdempotencyResult<T> = {
   success: boolean

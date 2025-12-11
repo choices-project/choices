@@ -8,11 +8,14 @@
  * Updated: September 15, 2025
  */
 
-import type { NextRequest } from 'next/server';
+import { getSupabaseServerClient } from '@/utils/supabase/server';
 
 import { withErrorHandling, successResponse, authError, errorResponse, validationError, notFoundError, forbiddenError } from '@/lib/api';
 import { devLog } from '@/lib/utils/logger';
-import { getSupabaseServerClient } from '@/utils/supabase/server';
+
+import type { NextRequest } from 'next/server';
+
+
 
 export const dynamic = 'force-dynamic';
 

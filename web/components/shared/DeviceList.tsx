@@ -4,8 +4,9 @@ import { Smartphone, Monitor, Tablet, Laptop, Trash2, Plus, QrCode } from 'lucid
 import QRCode from 'qrcode'
 import React, { useState, useCallback, useMemo, useEffect } from 'react'
 
-import { useI18n } from '@/hooks/useI18n'
 import logger from '@/lib/utils/logger'
+
+import { useI18n } from '@/hooks/useI18n'
 
 type Device = {
   id: string

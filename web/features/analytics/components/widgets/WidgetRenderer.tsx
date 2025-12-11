@@ -28,11 +28,13 @@ import React, { Suspense, useCallback, useEffect, useMemo, useRef, useState } fr
 
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { useI18n } from '@/hooks/useI18n';
+
 import ScreenReaderSupport from '@/lib/accessibility/screen-reader';
 import { useWidgetStoreScoped, selectKeyboardMode } from '@/lib/stores/widgetStore';
 import { cn } from '@/lib/utils';
 import { logger } from '@/lib/utils/logger';
+
+import { useI18n } from '@/hooks/useI18n';
 
 import type { WidgetConfig } from '../../types/widget';
 

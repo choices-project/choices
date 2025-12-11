@@ -14,12 +14,14 @@ import { MapPin, Users, Search } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import React, { useEffect } from 'react';
 
+import { RepresentativeList  } from '@/features/civics/components/representative/RepresentativeList';
+import { RepresentativeSearch } from '@/features/civics/components/representative/RepresentativeSearch';
+
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { RepresentativeList  } from '@/features/civics/components/representative/RepresentativeList';
-import { RepresentativeSearch } from '@/features/civics/components/representative/RepresentativeSearch';
+
 import {
   useRepresentativeSearchResults,
   useRepresentativeLoading,
@@ -30,6 +32,7 @@ import {
   useRepresentativeGlobalLoading
 } from '@/lib/stores/representativeStore';
 import { logger } from '@/lib/utils/logger';
+
 import type { RepresentativeSearchQuery } from '@/types/representative';
 
 export default function RepresentativesPage() {

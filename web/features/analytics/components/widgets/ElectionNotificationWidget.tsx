@@ -4,6 +4,7 @@ import { RefreshCw, TrendingUp, Activity, AlertTriangle } from 'lucide-react';
 import { useCallback, useEffect, useMemo, useState } from 'react';
 
 import { Button } from '@/components/ui/button';
+
 import { cn } from '@/lib/utils';
 
 import type { WidgetProps } from '../../types/widget';

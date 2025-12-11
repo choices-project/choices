@@ -16,6 +16,7 @@ import React from 'react';
 import { useTrendingTopics, useGeneratedPolls, useSystemMetrics, useRealTimeSubscriptions } from '@/features/admin/lib/hooks';
 import { mockChartData } from '@/features/admin/lib/mock-data';
 import type { ActivityItem } from '@/features/admin/types';
+
 import { useActivityFeed } from '@/lib/stores';
 import { devLog } from '@/lib/utils/logger';
 

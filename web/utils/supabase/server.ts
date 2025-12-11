@@ -1,7 +1,8 @@
-import type { SupabaseClient } from '@supabase/supabase-js'
 
 import { logger } from '@/lib/utils/logger'
+
 import type { Database } from '@/types/supabase'
+import type { SupabaseClient } from '@supabase/supabase-js'
 
 // Runtime guard to prevent client-side usage
 const assertRunningOnServer = (fnName: string) => {

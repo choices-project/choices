@@ -1,4 +1,4 @@
-import type { NextRequest } from 'next/server';
+import { getSupabaseServerClient } from '@/utils/supabase/server';
 
 import { requireAdminOr401 } from '@/lib/admin-auth';
 import {
@@ -8,7 +8,9 @@ import {
   withErrorHandling,
 } from '@/lib/api';
 import { logger } from '@/lib/utils/logger';
-import { getSupabaseServerClient } from '@/utils/supabase/server';
+
+import type { NextRequest } from 'next/server';
+
 
 export const dynamic = 'force-dynamic';
 

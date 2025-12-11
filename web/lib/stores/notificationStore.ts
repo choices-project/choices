@@ -11,16 +11,18 @@
 
 import { useMemo } from 'react';
 import { create } from 'zustand';
-import type { StateCreator } from 'zustand';
 import { devtools, persist } from 'zustand/middleware';
 import { immer } from 'zustand/middleware/immer';
 
 import type { AdminNotification, NewAdminNotification } from '@/features/admin/types';
+
 import { logger } from '@/lib/utils/logger';
 
 import { useAnalyticsStore } from './analyticsStore';
 import { createSafeStorage } from './storage';
+
 import type { BaseStore, Notification, ElectionNotificationContext } from './types';
+import type { StateCreator } from 'zustand';
 
 export type NotificationSettings = {
   position: 'top-right' | 'top-left' | 'bottom-right' | 'bottom-left';

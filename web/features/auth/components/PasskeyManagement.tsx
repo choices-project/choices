@@ -4,9 +4,9 @@ import React from 'react';
 
 import { logger } from '@/lib/utils/logger';
 
+import { WebAuthnPrivacyBadge } from './WebAuthnPrivacyBadge';
 import { useInitializeBiometricState, useUserActions } from '../lib/store';
 
-import { WebAuthnPrivacyBadge } from './WebAuthnPrivacyBadge';
 
 type Passkey = {
   id: string;

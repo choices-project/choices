@@ -8,14 +8,16 @@
  * Status: ✅ PRODUCTION
  */
 
+import { getSupabaseServerClient } from '@/utils/supabase/server';
+
 import logger from '@/lib/utils/logger'
+
 import type {
 Representative,
   RepresentativeSearchQuery,
   RepresentativeSearchResult,
   RepresentativeCommittee
 } from '@/types/representative';
-import { getSupabaseServerClient } from '@/utils/supabase/server';
 
 // Note: This service only queries Supabase - it does NOT call external APIs.
 // All external API calls are handled by the backend service at /services/civics-backend.

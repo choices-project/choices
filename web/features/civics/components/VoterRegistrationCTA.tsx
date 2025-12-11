@@ -4,8 +4,10 @@ import { Download, ExternalLink, Loader2 } from 'lucide-react';
 import React from 'react';
 
 import { Button } from '@/components/ui/button';
-import { useI18n } from '@/hooks/useI18n';
+
 import type { VoterRegistrationResource } from '@/lib/stores/voterRegistrationStore';
+
+import { useI18n } from '@/hooks/useI18n';
 
 type VoterRegistrationCTAProps = {
   stateCode?: string;

@@ -18,13 +18,17 @@
 import { Layout, Grid } from 'lucide-react';
 import React, { useState, useEffect } from 'react';
 
-import { Button } from '@/components/ui/button';
+import { getSupabaseBrowserClient } from '@/utils/supabase/client';
+
 import { EnhancedAnalyticsDashboard } from '@/features/analytics';
 import { WidgetDashboard } from '@/features/analytics/components/widgets/WidgetDashboard';
+
+import { Button } from '@/components/ui/button';
+
 import { useUser, useUserLoading } from '@/lib/stores';
 import { useAppActions } from '@/lib/stores/appStore';
 import { logger } from '@/lib/utils/logger';
-import { getSupabaseBrowserClient } from '@/utils/supabase/client';
+
 
 type DashboardMode = 'classic' | 'widget';
 

@@ -10,12 +10,13 @@ import {
 } from 'lucide-react';
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 
-import { useI18n } from '@/hooks/useI18n';
 import {
   usePolls,
   usePollsActions,
   usePollsAnalytics,
 } from '@/lib/stores';
+
+import { useI18n } from '@/hooks/useI18n';
 
 type PollSuggestion = {
   id: string;

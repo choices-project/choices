@@ -1,12 +1,13 @@
 import { cookies } from 'next/headers';
 
+import { getSupabaseServerClient } from '@/utils/supabase/server';
+
 import {
   withErrorHandling,
   successResponse,
   authError,
   errorResponse,
 } from '@/lib/api';
-import { getSupabaseServerClient } from '@/utils/supabase/server';
 
 export const dynamic = 'force-dynamic';
 

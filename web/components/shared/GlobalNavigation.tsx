@@ -24,9 +24,11 @@ import React, { useCallback, useEffect, useRef, useState } from 'react';
 import LanguageSelector from '@/components/shared/LanguageSelector';
 import ThemeSelector from '@/components/shared/ThemeSelector';
 import { Button } from '@/components/ui/button';
+
+import logger from '@/lib/utils/logger';
+
 import { useAuth } from '@/hooks/useAuth';
 import { useI18n } from '@/hooks/useI18n';
-import logger from '@/lib/utils/logger';
 
 /**
  * Global Navigation Component

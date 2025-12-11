@@ -20,10 +20,12 @@ import {
 import { usePathname } from 'next/navigation'
 import React, { useEffect, useId, useMemo, useRef, useState } from 'react'
 
-import { motion, AnimatePresence } from '@/components/motion/Motion'
 import { getFeedbackTracker, resetFeedbackTracker } from '@/features/admin/lib/feedback-tracker'
 import type { FeedbackTrackerOptions } from '@/features/admin/lib/feedback-tracker'
 import type { FeedbackContext, UserJourney } from '@/features/admin/types'
+
+import { motion, AnimatePresence } from '@/components/motion/Motion'
+
 import { isFeatureEnabled } from '@/lib/core/feature-flags'
 import {
   useAnalyticsActions,

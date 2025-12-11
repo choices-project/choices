@@ -6,6 +6,9 @@
  */
 
 import { devLog } from '@/lib/utils/logger';
+
+import { isFeatureEnabled } from './feature-flags';
+
 import type {
   DeviceFingerprint,
   OfflineVoteRecord,
@@ -14,7 +17,6 @@ import type {
   PWAUserProfile,
 } from '@/types/pwa';
 
-import { isFeatureEnabled } from './feature-flags';
 
 const OFFLINE_VOTES_STORAGE_KEY = 'offline_votes';
 const PWA_USER_STORAGE_KEY = 'pwa_user';

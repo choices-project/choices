@@ -1,13 +1,14 @@
 import { create } from 'zustand';
-import type { StateCreator } from 'zustand';
 import { devtools, persist } from 'zustand/middleware';
 import { immer } from 'zustand/middleware/immer';
 
-import type { Database } from '@/types/supabase';
 
 import { createBaseStoreActions } from './baseStoreActions';
 import { createSafeStorage } from './storage';
+
 import type { BaseStore } from './types';
+import type { Database } from '@/types/supabase';
+import type { StateCreator } from 'zustand';
 
 type VoterRegistrationRow =
   Database['public']['Views']['voter_registration_resources_view']['Row'];

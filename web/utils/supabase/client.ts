@@ -1,8 +1,8 @@
 'use client'
+import type { Database } from '@/types/supabase'
 import type { SupabaseClient } from '@supabase/supabase-js'
 
 // Import the complete, up-to-date Database types from the central source
-import type { Database } from '@/types/supabase'
 
 let client: SupabaseClient<Database> | undefined
 

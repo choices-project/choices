@@ -13,7 +13,6 @@
 
 import { useMemo } from 'react';
 import { create } from 'zustand';
-import type { StateCreator } from 'zustand';
 import { devtools, persist } from 'zustand/middleware';
 import { immer } from 'zustand/middleware/immer';
 
@@ -21,7 +20,9 @@ import { detectBrowser as detectBrowserInfo } from '@/lib/utils/browser-utils';
 
 import { createBaseStoreActions } from './baseStoreActions';
 import { createSafeStorage } from './storage';
+
 import type { BaseStore } from './types';
+import type { StateCreator } from 'zustand';
 
 export type DeviceType = 'mobile' | 'tablet' | 'desktop';
 export type Orientation = 'portrait' | 'landscape';

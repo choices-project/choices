@@ -2,6 +2,8 @@
 
 import { z } from 'zod'
 
+import { getSupabaseServerClient } from '@/utils/supabase/server'
+
 import { 
   createSecureServerAction,
   getAuthenticatedUser,
@@ -10,7 +12,6 @@ import {
   validateFormData,
   type ServerActionContext
 } from '@/lib/core/auth/server-actions'
-import { getSupabaseServerClient } from '@/utils/supabase/server'
 
 /**
  * @fileoverview Poll Creation Server Action

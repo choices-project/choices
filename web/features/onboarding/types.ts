@@ -1,6 +1,6 @@
+import type { Representative } from '@/types/representative';
 import type React from 'react';
 
-import type { Representative } from '@/types/representative';
 /**
  * Onboarding Feature - Centralized Type Definitions
  *

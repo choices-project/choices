@@ -17,10 +17,12 @@
 import { X, Download, Smartphone, Monitor, Sparkles, Zap, Shield, Clock } from 'lucide-react';
 import React, { useState, useEffect } from 'react';
 
+import { analyticsEngine } from '@/features/analytics/lib/AnalyticsEngine';
+
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
-import { analyticsEngine } from '@/features/analytics/lib/AnalyticsEngine';
+
 import { usePWAInstallation, usePWAActions } from '@/lib/stores/pwaStore';
 import { logger } from '@/lib/utils/logger';
 

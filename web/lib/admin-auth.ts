@@ -5,11 +5,14 @@
  * Only the service role (you) can grant admin access.
  */
 
-import type { NextResponse } from 'next/server';
+import { getSupabaseServerClient } from '@/utils/supabase/server';
 
 import { authError } from '@/lib/api';
 import logger from '@/lib/utils/logger';
-import { getSupabaseServerClient } from '@/utils/supabase/server';
+
+import type { NextResponse } from 'next/server';
+
+
 
 export async function isAdmin(): Promise<boolean> {
   try {

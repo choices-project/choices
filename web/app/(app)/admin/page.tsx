@@ -19,12 +19,14 @@ import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import React, { useEffect, useState, useCallback } from 'react'
 
+import { getSupabaseBrowserClient } from '@/utils/supabase/client'
+
 import { NotificationContainer } from '@/features/admin/components/NotificationSystem'
+
 import { useIsAuthenticated, useUser, useUserActions, useUserLoading } from '@/lib/stores'
 import { useAppActions } from '@/lib/stores/appStore';
 import { T } from '@/lib/testing/testIds'
 import { logger } from '@/lib/utils/logger';
-import { getSupabaseBrowserClient } from '@/utils/supabase/client'
 
 
 type AdminStats = {

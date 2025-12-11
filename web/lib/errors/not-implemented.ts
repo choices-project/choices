@@ -7,6 +7,7 @@
  */
 
 import { ApplicationError } from './base';
+
 import type { ErrorDetails } from './types';
 
 export class NotImplementedError extends ApplicationError {

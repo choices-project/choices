@@ -3,6 +3,7 @@
 import React, { useState, useEffect } from 'react';
 
 import { getPrivacyStatus } from '@/features/auth/lib/webauthn/client';
+
 import { logger } from '@/lib/utils/logger';
 
 type PrivacyStatus = {

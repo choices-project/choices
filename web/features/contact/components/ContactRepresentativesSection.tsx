@@ -32,17 +32,20 @@ import {
 import { useElectionCountdown, formatElectionDate } from '@/features/civics/utils/civicsCountdownUtils';
 import { getRepresentativeDivisionIds } from '@/features/civics/utils/divisions';
 import { useFeatureFlag } from '@/features/pwa/hooks/useFeatureFlags';
-import { useI18n } from '@/hooks/useI18n';
+
 import {
   useAnalyticsActions,
   useContactActions,
   useUser
 } from '@/lib/stores';
-import type { Representative } from '@/types/representative';
 
-import { useContactThreads } from '../hooks/useContactMessages';
+import { useI18n } from '@/hooks/useI18n';
 
 import ContactModal from './ContactModal';
+import { useContactThreads } from '../hooks/useContactMessages';
+
+import type { Representative } from '@/types/representative';
+
 
 
 const getRepresentativePhotoUrl = (rep: Representative): string | undefined => {

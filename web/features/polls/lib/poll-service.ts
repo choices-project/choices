@@ -7,9 +7,10 @@
  * Updated: October 11, 2025
  */
 
+import { getSupabaseServerClient } from '@/utils/supabase/server';
+
 import { logger } from '@/lib/utils/logger';
 // Database types are used directly when needed
-import { getSupabaseServerClient } from '@/utils/supabase/server';
 
 // Database row types are used directly when needed
 

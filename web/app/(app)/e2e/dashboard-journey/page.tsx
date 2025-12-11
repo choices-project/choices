@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react';
 
 import { PersonalDashboard } from '@/features/dashboard';
+
 import { useHashtagStore } from '@/lib/stores/hashtagStore';
 import type { NotificationStore } from '@/lib/stores/notificationStore';
 import { useNotificationActions, useNotificationStore } from '@/lib/stores/notificationStore';
@@ -10,6 +11,7 @@ import { usePollsStore } from '@/lib/stores/pollsStore';
 import { useProfileStore } from '@/lib/stores/profileStore';
 import { useRepresentativeStore, type UserRepresentativeEntry } from '@/lib/stores/representativeStore';
 import { useUserStore } from '@/lib/stores/userStore';
+
 import type { ProfileUser } from '@/types/profile';
 
 type NotificationHarnessRef = {

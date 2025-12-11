@@ -14,6 +14,7 @@ import { WifiOff, CheckCircle, AlertCircle } from 'lucide-react'
 import { useEffect, useMemo, useState } from 'react';
 
 import { isOfflineVoteAction, usePWAOffline } from '@/lib/stores/pwaStore'
+
 import type { OfflineVoteRecord } from '@/types/pwa';
 
 type OfflineVotingProps = {

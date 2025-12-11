@@ -1,7 +1,8 @@
-import type { NextRequest } from 'next/server';
 
 import { successResponse, withErrorHandling, forbiddenError } from '@/lib/api';
 import { isFeatureEnabled } from '@/lib/core/feature-flags';
+
+import type { NextRequest } from 'next/server';
 
 export const dynamic = 'force-dynamic';
 

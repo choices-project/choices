@@ -30,11 +30,13 @@ import {
 import { useParams, useRouter } from 'next/navigation';
 import { useCallback, useEffect, useMemo } from 'react';
 
-import { Badge } from '@/components/ui/badge';
 import {
   trackCivicsRepresentativeEvent,
   type CivicsRepresentativeEventBase
 } from '@/features/civics/analytics/civicsAnalyticsEvents';
+
+import { Badge } from '@/components/ui/badge';
+
 import {
   useElectionsForDivisions,
   useFetchElectionsForDivisions,

@@ -1,4 +1,5 @@
-import type { NextRequest} from 'next/server';
+
+import { getSupabaseServerClient } from '@/utils/supabase/server'
 
 import {
   withErrorHandling,
@@ -11,8 +12,9 @@ import {
 } from '@/lib/api';
 import { apiRateLimiter } from '@/lib/rate-limiting/api-rate-limiter'
 import { logger } from '@/lib/utils/logger'
-import { getSupabaseServerClient } from '@/utils/supabase/server'
+
 import type { Database } from '@/utils/supabase/types'
+import type { NextRequest} from 'next/server';
 
 // Use generated types from Supabase - automatically stays in sync with your database schema
 type UserProfile = Database['public']['Tables']['user_profiles']['Row']

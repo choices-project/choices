@@ -7,14 +7,15 @@
  * @created September 9, 2025
  */
 
-import type { SupabaseClient } from '@supabase/supabase-js';
 
 import logger from '@/lib/utils/logger';
 
-import { getSupabaseBrowserClient } from '../supabase/client';
 
 import { ConsentManager } from './consent';
 import { UserEncryption, EncryptionUtils } from './encryption';
+import { getSupabaseBrowserClient } from '../supabase/client';
+
+import type { SupabaseClient } from '@supabase/supabase-js';
 
 // Type definitions for user data
 export type UserProfile = {

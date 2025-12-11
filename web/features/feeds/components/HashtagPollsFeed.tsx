@@ -22,7 +22,7 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { useI18n } from '@/hooks/useI18n';
+
 import {
   useFilteredFeeds,
   useFeedsLoading,
@@ -35,6 +35,8 @@ import {
 import type { FeedItem } from '@/lib/stores/feedsStore';
 import { cn } from '@/lib/utils';
 import logger from '@/lib/utils/logger';
+
+import { useI18n } from '@/hooks/useI18n';
  
 type HashtagPollsFeedProps = {
   userId: string;

@@ -5,11 +5,12 @@
  * user preferences, and system health.
  */
 
-import type { NextRequest } from 'next/server';
 
 import { withErrorHandling, successResponse, forbiddenError, validationError } from '@/lib/api';
 import { isFeatureEnabled } from '@/lib/core/feature-flags';
 import { logger } from '@/lib/utils/logger';
+
+import type { NextRequest } from 'next/server';
 
 export const dynamic = 'force-dynamic';
 

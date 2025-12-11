@@ -5,10 +5,11 @@
  * images, and other resources to improve initial page load performance.
  */
 
-import type { ComponentType } from 'react';
 import React, { lazy, Suspense } from 'react';
 
 import { performanceMetrics } from './performance-metrics';
+
+import type { ComponentType } from 'react';
 
 // Export React for the hooks
 

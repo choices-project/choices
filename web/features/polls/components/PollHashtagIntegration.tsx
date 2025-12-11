@@ -13,13 +13,15 @@
 import { Hash, TrendingUp, Eye, Share2, Users } from 'lucide-react';
 import React, { useState, useEffect } from 'react';
 
+import { HashtagInput, HashtagDisplay } from '@/features/hashtags';
+import type { Hashtag, PollHashtagIntegration as PollHashtagIntegrationType } from '@/features/hashtags/types';
+
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Separator } from '@/components/ui/separator';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { HashtagInput, HashtagDisplay } from '@/features/hashtags';
-import type { Hashtag, PollHashtagIntegration as PollHashtagIntegrationType } from '@/features/hashtags/types';
+
 import {
   useHashtagActions,
   useHashtagStats,

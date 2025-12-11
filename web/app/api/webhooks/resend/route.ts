@@ -11,7 +11,7 @@
 
 import { createHmac } from 'node:crypto';
 
-import type { NextRequest } from 'next/server';
+import { getSupabaseServerClient } from '@/utils/supabase/server';
 
 import {
   withErrorHandling,
@@ -21,7 +21,10 @@ import {
   forbiddenError,
 } from '@/lib/api';
 import { logger } from '@/lib/utils/logger';
-import { getSupabaseServerClient } from '@/utils/supabase/server';
+
+import type { NextRequest } from 'next/server';
+
+
 
 export const dynamic = 'force-dynamic';
 

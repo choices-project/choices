@@ -5,12 +5,14 @@ import { Search, Star, Clock, Users, Plus, Eye, BookOpen } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import React, { useEffect, useState } from 'react';
 
+import type { PollTemplate, PollCategory, TemplateCategory } from '@/features/polls/types';
+
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Separator } from '@/components/ui/separator';
-import type { PollTemplate, PollCategory, TemplateCategory } from '@/features/polls/types';
+
 import { useAppActions } from '@/lib/stores/appStore';
 import { devLog } from '@/lib/utils/logger';
 

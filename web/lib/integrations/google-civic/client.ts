@@ -6,9 +6,11 @@
  */
 
 import type { AddressLookupResult, CivicsRepresentative } from '@/features/civics/lib/types/contracts';
+
 import { logger } from '@/lib/utils/logger';
 
 import { ApplicationError } from '../../errors/base';
+
 import type { GoogleCivicElectionInfo, GoogleCivicVoterInfo } from '../../types/google-civic';
 
 export type GoogleCivicConfig = {

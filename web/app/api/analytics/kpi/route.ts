@@ -6,7 +6,7 @@
  * and leverages Redis caching for fast responses.
  */
 
-import type { NextRequest } from 'next/server';
+import { getSupabaseServerClient } from '@/utils/supabase/server';
 
 import {
   authError,
@@ -23,8 +23,10 @@ import {
   getCached,
 } from '@/lib/cache/analytics-cache';
 import { logger } from '@/lib/utils/logger';
+
 import type { Database } from '@/types/database';
-import { getSupabaseServerClient } from '@/utils/supabase/server';
+import type { NextRequest } from 'next/server';
+
 
 export const dynamic = 'force-dynamic';
 

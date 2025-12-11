@@ -17,8 +17,9 @@ import {
 import Image from 'next/image';
 import React, { useMemo, useState } from 'react';
 
-import { useI18n } from '@/hooks/useI18n';
 import { logger } from '@/lib/utils/logger';
+
+import { useI18n } from '@/hooks/useI18n';
 
 type BurgerMenuProps = {
   isOpen: boolean;

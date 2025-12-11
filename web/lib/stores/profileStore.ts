@@ -9,11 +9,16 @@
  */
 
 import { create } from 'zustand';
-import type { StateCreator } from 'zustand';
 import { devtools, persist } from 'zustand/middleware';
 import { immer } from 'zustand/middleware/immer';
 
 import { logger } from '@/lib/utils/logger';
+
+
+import { createBaseStoreActions } from './baseStoreActions';
+import { createSafeStorage } from './storage';
+
+import type { BaseStore } from './types';
 import type {
   AvatarUploadResult,
   ExportOptions,
@@ -28,10 +33,7 @@ import type {
   ProfileValidationResult,
   UserProfile
 } from '@/types/profile';
-
-import { createBaseStoreActions } from './baseStoreActions';
-import { createSafeStorage } from './storage';
-import type { BaseStore } from './types';
+import type { StateCreator } from 'zustand';
 
 export type ProfileCompleteness = {
   isComplete: boolean;

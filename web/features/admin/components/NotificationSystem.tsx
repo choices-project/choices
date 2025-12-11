@@ -13,6 +13,7 @@
 import React, { useEffect, useRef } from 'react';
 
 import type { AdminNotification } from '@/features/admin/types';
+
 import ScreenReaderSupport from '@/lib/accessibility/screen-reader';
 import {
   useNotificationAdminNotifications,

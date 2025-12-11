@@ -13,11 +13,15 @@ import React from 'react';
 
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Skeleton } from '@/components/ui/skeleton';
-import { useI18n } from '@/hooks/useI18n';
+
 import logger from '@/lib/utils/logger';
-import type { Representative, RepresentativeListProps } from '@/types/representative';
+
+import { useI18n } from '@/hooks/useI18n';
 
 import { RepresentativeCard } from './RepresentativeCard';
+
+import type { Representative, RepresentativeListProps } from '@/types/representative';
+
 
 export function RepresentativeList({
   representatives,

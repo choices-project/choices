@@ -13,13 +13,15 @@
  * POST /api/trending?type=hashtags - Track hashtags
  */
 
-import type { NextRequest } from 'next/server';
+import { getSupabaseServerClient } from '@/utils/supabase/server';
 
 import { withErrorHandling, validationError, successResponse, errorResponse } from '@/lib/api';
 import { trendingHashtagsTracker } from '@/lib/trending/TrendingHashtags';
 import { nowISO } from '@/lib/utils/format-utils';
 import { logger, devLog } from '@/lib/utils/logger';
-import { getSupabaseServerClient } from '@/utils/supabase/server';
+
+import type { NextRequest } from 'next/server';
+
 
 export const dynamic = 'force-dynamic';
 

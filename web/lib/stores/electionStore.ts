@@ -1,12 +1,13 @@
 import { create } from 'zustand';
-import type { StateCreator } from 'zustand';
 import { devtools } from 'zustand/middleware';
 import { immer } from 'zustand/middleware/immer';
 
-import type { CivicElection } from '@/types/civic';
 
 import { createBaseStoreActions } from './baseStoreActions';
+
 import type { BaseStore } from './types';
+import type { CivicElection } from '@/types/civic';
+import type { StateCreator } from 'zustand';
 
 
 type ElectionState = {

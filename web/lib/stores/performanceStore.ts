@@ -10,7 +10,6 @@
 
 import { useMemo } from 'react';
 import { create } from 'zustand';
-import type { StateCreator } from 'zustand';
 import { devtools, persist } from 'zustand/middleware';
 import { immer } from 'zustand/middleware/immer';
 
@@ -20,7 +19,9 @@ import logger from '@/lib/utils/logger';
 
 import { createBaseStoreActions } from './baseStoreActions';
 import { createSafeStorage } from './storage';
+
 import type { BaseStore } from './types';
+import type { StateCreator } from 'zustand';
 // ============================================================================
 // TYPES
 // ============================================================================

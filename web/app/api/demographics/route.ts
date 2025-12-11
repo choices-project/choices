@@ -1,6 +1,7 @@
+import { getSupabaseServerClient } from '@/utils/supabase/server';
+
 import { withErrorHandling, successResponse, errorResponse } from '@/lib/api';
 import { getMockDemographicsResponse } from '@/lib/mock-data';
-import { getSupabaseServerClient } from '@/utils/supabase/server';
 
 export const dynamic = 'force-dynamic';
 

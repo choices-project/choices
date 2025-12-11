@@ -1,7 +1,7 @@
 import { useCallback, useMemo } from 'react';
 
 import { useAnalyticsActions, useRepresentativeDivisions } from '@/lib/stores';
-import type { Representative } from '@/types/representative';
+
 
 import {
   CIVICS_REPRESENTATIVE_SINGLE_EVENT_SET,
@@ -13,6 +13,8 @@ import {
 } from '../analytics/civicsAnalyticsEvents';
 import { useElectionCountdown } from '../utils/civicsCountdownUtils';
 import { getRepresentativeDivisionIds } from '../utils/divisions';
+
+import type { Representative } from '@/types/representative';
 
 type RepresentativeCtaAnalyticsOptions = {
   source?: string;

@@ -1,9 +1,11 @@
-import type { NextRequest } from 'next/server';
 
 import { performanceMonitor } from '@/features/admin/lib/performance-monitor';
 import { requireAdminOr401 } from '@/features/auth/lib/admin-auth';
+
 import { withErrorHandling, successResponse, notFoundError } from '@/lib/api';
 import { logger } from '@/lib/utils/logger';
+
+import type { NextRequest } from 'next/server';
 
 export const POST = withErrorHandling(async (
   _request: NextRequest,

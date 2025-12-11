@@ -7,12 +7,15 @@
  * @author Choices Platform Team
  */
 
-import { getPWAActions } from '@/lib/stores/pwaStore';
-import { logger } from '@/lib/utils/logger';
-import type { PWAHttpMethod, PWAQueuedRequest, PWAQueuedRequestType } from '@/types/pwa';
 import { PWA_QUEUED_REQUEST_TYPES } from '@/types/pwa';
 
+import { getPWAActions } from '@/lib/stores/pwaStore';
+import { logger } from '@/lib/utils/logger';
+
 import { BACKGROUND_SYNC_CONFIG, OFFLINE_QUEUE_CONFIG } from './sw-config';
+
+import type { PWAHttpMethod, PWAQueuedRequest, PWAQueuedRequestType } from '@/types/pwa';
+
 
 const QUEUE_DB_NAME = 'choices-pwa-offline-queue';
 const QUEUE_DB_VERSION = 1;

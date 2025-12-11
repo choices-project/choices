@@ -1,9 +1,9 @@
 import { create } from 'zustand';
-import type { StateCreator } from 'zustand';
 import { devtools, persist } from 'zustand/middleware';
 import { immer } from 'zustand/middleware/immer';
 
 import type { PollRow, PollUpdate } from '@/features/polls/types';
+
 import {
   createPollRequest,
   type PollCreatePayload,
@@ -31,7 +31,9 @@ import { logger } from '@/lib/utils/logger';
 import { createBaseStoreActions } from './baseStoreActions';
 import { notificationStoreUtils } from './notificationStore';
 import { createSafeStorage } from './storage';
+
 import type { BaseStore } from './types';
+import type { StateCreator } from 'zustand';
 
 export type { PollFilters, PollPreferences } from '@/lib/polls/types';
 export type { PollCardView } from '@/lib/polls/transformers';

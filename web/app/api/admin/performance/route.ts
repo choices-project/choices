@@ -1,9 +1,11 @@
-import type { NextRequest } from 'next/server';
 
 import { performanceMonitor } from '@/features/admin/lib/performance-monitor';
 import { requireAdminOr401 } from '@/features/auth/lib/admin-auth';
+
 import { withErrorHandling, successResponse, validationError } from '@/lib/api';
 import { logger } from '@/lib/utils/logger';
+
+import type { NextRequest } from 'next/server';
 
 export const GET = withErrorHandling(async (request: NextRequest) => {
   const authGate = await requireAdminOr401();

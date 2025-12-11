@@ -5,8 +5,9 @@
  * Used to fix E2E test authentication state issues
  */
 
-import { logger } from '@/lib/utils/logger';
 import { getSupabaseBrowserClient } from '@/utils/supabase/client';
+
+import { logger } from '@/lib/utils/logger';
 
 /**
  * Force authentication state synchronization

@@ -22,13 +22,15 @@
  * @since 1.0.0
  */
 
-import type { SupabaseClient } from '@supabase/supabase-js';
+import { getSupabaseServerClient } from '@/utils/supabase/server';
 
 import { isFeatureEnabled } from '@/lib/core/feature-flags';
 import { logger } from '@/lib/utils/logger';
+
 import type { CivicAction } from '@/types/database';
 import type { TrustTier } from '@/types/features/analytics';
-import { getSupabaseServerClient } from '@/utils/supabase/server';
+import type { SupabaseClient } from '@supabase/supabase-js';
+
 
 
 const CIVIC_ENGAGEMENT_FLAG = 'CIVIC_ENGAGEMENT_V2' as const;

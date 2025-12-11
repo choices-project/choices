@@ -4,8 +4,10 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { useEffect } from 'react';
 
 import { AdminLayout } from '@/app/(app)/admin/layout/AdminLayout';
-import FontProvider from '@/components/shared/FontProvider';
 import { AuthProvider } from '@/contexts/AuthContext';
+
+import FontProvider from '@/components/shared/FontProvider';
+
 import { UserStoreProvider } from '@/lib/providers/UserStoreProvider';
 
 const queryClient = new QueryClient();

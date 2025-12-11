@@ -9,10 +9,12 @@ import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } f
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Separator } from '@/components/ui/separator';
-import { useI18n } from '@/hooks/useI18n';
-import { useSocialSharing } from '@/hooks/useSocialSharing';
+
 import ScreenReaderSupport from '@/lib/accessibility/screen-reader';
 import type { FeedItem } from '@/lib/stores/types/feeds';
+
+import { useI18n } from '@/hooks/useI18n';
+import { useSocialSharing } from '@/hooks/useSocialSharing';
 
 type FeedShareDialogProps = {
   item: FeedItem | null;

@@ -16,9 +16,11 @@ import {
 } from 'lucide-react';
 import React, { Suspense, useEffect, useState } from 'react';
 
+import { TrendingHashtagDisplay } from '@/features/hashtags/components/HashtagDisplay';
+
 import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
-import { TrendingHashtagDisplay } from '@/features/hashtags/components/HashtagDisplay';
+
 import { createLazyComponent } from '@/lib/performance/lazy-loading';
 import { performanceMetrics } from '@/lib/performance/performance-metrics';
 import {

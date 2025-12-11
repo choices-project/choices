@@ -3,6 +3,7 @@
 import React, { useEffect } from 'react';
 
 import PWAInstaller from '@/features/pwa/components/PWAInstaller';
+
 import { usePWAInstallation, usePWAOffline, usePWAPreferences } from '@/lib/stores/pwaStore';
 import { logger } from '@/lib/utils/logger';
 

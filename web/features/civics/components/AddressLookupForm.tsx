@@ -17,7 +17,7 @@ import React, { useCallback, useEffect, useRef, useState } from 'react';
 
 import { VoterRegistrationCTA } from '@/features/civics/components/VoterRegistrationCTA';
 import { getStateCodeFromDivisions } from '@/features/civics/utils/divisions';
-import { useI18n } from '@/hooks/useI18n';
+
 import { isFeatureEnabled } from '@/lib/core/feature-flags';
 import {
   useUserActions,
@@ -37,6 +37,8 @@ import {
   useClearError
 } from '@/lib/stores/representativeStore';
 import logger from '@/lib/utils/logger';
+
+import { useI18n } from '@/hooks/useI18n';
 
 /**
  * Props for the AddressLookupForm component

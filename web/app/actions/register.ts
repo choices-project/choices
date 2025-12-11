@@ -9,8 +9,9 @@ import { z } from 'zod';
 import { TypeGuardError } from '@/lib/core/types/guards';
 import { logger } from '@/lib/utils/logger';
 
-import type { ServerActionContext } from '../../lib/core/auth/server-actions';
 import { getSupabaseServerClient, getSupabaseAdminClient } from '../../utils/supabase/server';
+
+import type { ServerActionContext } from '../../lib/core/auth/server-actions';
 
 /**
  * @fileoverview User Registration Server Action

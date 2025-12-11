@@ -1,4 +1,3 @@
-import type { Metadata } from 'next';
 import { cookies, headers } from 'next/headers';
 import React from 'react';
 
@@ -12,6 +11,8 @@ import logger from '@/lib/utils/logger';
  */
 
 import PollClient from './PollClient';
+
+import type { Metadata } from 'next';
 
 /**
  * Generate metadata for poll pages with Open Graph tags

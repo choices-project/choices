@@ -6,13 +6,15 @@ import {
 } from 'lucide-react';
 import React, { useMemo } from 'react';
 
-import { useI18n } from '@/hooks/useI18n';
 import { cn } from '@/lib/utils';
-import type { CivicElection } from '@/types/civic';
 
-import { formatElectionDate } from '../../utils/civicsCountdownUtils';
+import { useI18n } from '@/hooks/useI18n';
 
 import { ElectionCountdownBadge } from './ElectionCountdownBadge';
+import { formatElectionDate } from '../../utils/civicsCountdownUtils';
+
+import type { CivicElection } from '@/types/civic';
+
 
 export type ElectionCountdownCardProps = {
   className?: string;

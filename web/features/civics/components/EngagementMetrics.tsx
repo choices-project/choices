@@ -28,8 +28,9 @@ import {
 } from '@heroicons/react/24/solid';
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 
-import { useI18n } from '@/hooks/useI18n';
 import { useAnalyticsActions, useFeedsActions, useFeedById } from '@/lib/stores';
+
+import { useI18n } from '@/hooks/useI18n';
  
 
 import type { EngagementData } from '../lib/types/civics-types';

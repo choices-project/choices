@@ -8,10 +8,11 @@
  * Status: ✅ PRODUCTION
  */
 
-import type { NextRequest } from 'next/server';
 
 import { withErrorHandling, successResponse } from '@/lib/api';
 import { civicsIntegration } from '@/lib/services/civics-integration';
+
+import type { NextRequest } from 'next/server';
 
 export const dynamic = 'force-dynamic';
 

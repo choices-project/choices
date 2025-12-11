@@ -12,18 +12,19 @@
 import { createClient } from '@supabase/supabase-js';
 
 import { logger } from '../../../lib/utils/logger';
-import type {
-  Hashtag,
-  HashtagAnalytics,
-  TrendingHashtag,
-  HashtagCategory
-} from '../types';
 import {
   calculateEngagementRate,
   calculateGrowthRate,
   calculateTrendingScore,
   getHashtagPerformanceLevel
 } from '../utils/hashtag-utils';
+
+import type {
+  Hashtag,
+  HashtagAnalytics,
+  TrendingHashtag,
+  HashtagCategory
+} from '../types';
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
 const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;

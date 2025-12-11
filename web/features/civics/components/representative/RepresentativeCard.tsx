@@ -23,13 +23,16 @@ import {
 import Image from 'next/image';
 import React from 'react';
 
+import { ElectionCountdownBadge } from '@/features/civics/components/countdown/ElectionCountdownBadge';
+import { useRepresentativeCtaAnalytics } from '@/features/civics/hooks/useRepresentativeCtaAnalytics';
+
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader } from '@/components/ui/card';
-import { ElectionCountdownBadge } from '@/features/civics/components/countdown/ElectionCountdownBadge';
-import { useRepresentativeCtaAnalytics } from '@/features/civics/hooks/useRepresentativeCtaAnalytics';
+
 import { useFollowRepresentative } from '@/hooks/useFollowRepresentative';
 import { useI18n } from '@/hooks/useI18n';
+
 import type { RepresentativeCardProps } from '@/types/representative';
 
 export function RepresentativeCard({

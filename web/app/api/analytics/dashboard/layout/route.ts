@@ -9,12 +9,14 @@
  * Status: PRODUCTION
  */
 
-import type { NextRequest } from 'next/server';
+import { getSupabaseServerClient } from '@/utils/supabase/server';
 
 import { applyAnalyticsCacheHeaders } from '@/lib/analytics/cache-headers';
 import { withErrorHandling, successResponse, validationError, notFoundError, errorResponse } from '@/lib/api';
 import { logger } from '@/lib/utils/logger';
-import { getSupabaseServerClient } from '@/utils/supabase/server';
+
+import type { NextRequest } from 'next/server';
+
 
 export const GET = withErrorHandling(async (request: NextRequest) => {
   const { searchParams } = new URL(request.url);

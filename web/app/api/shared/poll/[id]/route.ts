@@ -1,7 +1,9 @@
 import { createClient } from '@supabase/supabase-js';
-import type { NextRequest } from 'next/server';
 
 import { withErrorHandling, successResponse, notFoundError, toCamelCase } from '@/lib/api';
+
+import type { NextRequest } from 'next/server';
+
 
 export const GET = withErrorHandling(async (
   _request: NextRequest,

@@ -9,10 +9,8 @@
  */
 
 import { enableMapSet } from 'immer';
-import type { ReactNode } from 'react';
 import { createElement, createContext, useContext, useMemo } from 'react';
 import { create } from 'zustand';
-import type { StateCreator, StoreApi } from 'zustand';
 import { persist } from 'zustand/middleware';
 import { immer } from 'zustand/middleware/immer';
 import { useStoreWithEqualityFn } from 'zustand/traditional';
@@ -24,9 +22,13 @@ import type {
   WidgetSize,
   WidgetState,
 } from '@/features/analytics/types/widget';
+
 import { logger } from '@/lib/utils/logger';
 
 import { createSafeStorage } from './storage';
+
+import type { ReactNode } from 'react';
+import type { StateCreator, StoreApi } from 'zustand';
 
 enableMapSet();
 

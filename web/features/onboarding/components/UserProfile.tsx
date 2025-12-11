@@ -21,10 +21,12 @@ import {
 } from '@/lib/stores';
 import { profileSelectors, useProfileStore } from '@/lib/stores/profileStore';
 import logger from '@/lib/utils/logger';
-import type { Representative } from '@/types/representative';
+
 
 import { extractRepresentatives, normalizeJurisdiction } from '../lib/representatives';
+
 import type { UserProfileProps } from '../types';
+import type { Representative } from '@/types/representative';
 
 /**
  * User Profile Component

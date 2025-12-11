@@ -10,6 +10,7 @@
 'use client';
 
 import { profileSelectors, useProfileStore } from '@/lib/stores/profileStore';
+
 import type { ProfileLocation } from '@/types/profile';
 
 export type UserDistrict = {

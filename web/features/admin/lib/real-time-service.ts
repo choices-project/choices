@@ -5,15 +5,10 @@
  * live admin notifications, activity events, and feedback updates.
  */
 
-import type {
-  RealtimeChannel,
-  RealtimePostgresChangesPayload,
-  SupabaseClient,
-} from '@supabase/supabase-js';
+
+import { getSupabaseBrowserClient } from '@/utils/supabase/client';
 
 import { logger } from '@/lib/utils/logger';
-import { getSupabaseBrowserClient } from '@/utils/supabase/client';
-import type { Database } from '@/utils/supabase/client';
 
 import type {
   ActivityItem,
@@ -29,6 +24,12 @@ import type {
   TrackedNetworkRequest,
   UserJourney,
 } from '../types';
+import type { Database } from '@/utils/supabase/client';
+import type {
+  RealtimeChannel,
+  RealtimePostgresChangesPayload,
+  SupabaseClient,
+} from '@supabase/supabase-js';
 
 type FeedbackRow = Database['public']['Tables']['feedback']['Row'];
 type AdminActivityRow = Database['public']['Tables']['admin_activity_log']['Row'];

@@ -6,9 +6,10 @@ import Image from 'next/image'
 import QRCode from 'qrcode'
 import React, { useState, useEffect } from 'react';
 
-import { useI18n } from '@/hooks/useI18n';
 import { isFeatureEnabled } from '@/lib/core/feature-flags'
 import { devLog } from '@/lib/utils/logger';
+
+import { useI18n } from '@/hooks/useI18n';
 
 type PollShareProps = {
   pollId: string

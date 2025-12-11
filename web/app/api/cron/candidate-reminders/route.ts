@@ -1,4 +1,4 @@
-import type { NextRequest } from 'next/server'
+import { getSupabaseServerClient } from '@/utils/supabase/server'
 
 import { withErrorHandling, successResponse, authError, errorResponse } from '@/lib/api';
 import {
@@ -8,7 +8,9 @@ import {
 } from '@/lib/candidate/journey-tracker'
 import { sendCandidateJourneyEmail } from '@/lib/services/email/candidate-journey-emails'
 import { logger } from '@/lib/utils/logger'
-import { getSupabaseServerClient } from '@/utils/supabase/server'
+
+import type { NextRequest } from 'next/server'
+
 
 export const dynamic = 'force-dynamic';
 export const runtime = 'nodejs';

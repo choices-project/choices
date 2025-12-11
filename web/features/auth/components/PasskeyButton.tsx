@@ -2,9 +2,11 @@
 
 import React from 'react';
 
-import { logger } from '@/lib/utils/logger';
 import { T } from '@/tests/registry/testIds';
 
+import { logger } from '@/lib/utils/logger';
+
+import WebAuthnPrompt from './WebAuthnPrompt';
 import {
   useBiometricError,
   useBiometricRegistering,
@@ -13,7 +15,6 @@ import {
   useUserActions,
 } from '../lib/store';
 
-import WebAuthnPrompt from './WebAuthnPrompt';
 
 type PasskeyButtonProps = {
   mode: 'register' | 'authenticate';

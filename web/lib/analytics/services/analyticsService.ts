@@ -6,6 +6,7 @@ import type {
   TrendDataPoint,
   TrustTierComparisonData,
 } from '@/features/analytics/types/analytics';
+
 import type { AnalyticsDashboard, AnalyticsEvent } from '@/lib/stores/analyticsStore';
 
 type ServiceSuccess<T> = { success: true; data: T };

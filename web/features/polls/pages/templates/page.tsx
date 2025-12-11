@@ -10,9 +10,11 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Separator } from '@/components/ui/separator';
-import { useI18n } from '@/hooks/useI18n';
+
 import type { PollTemplate, PollCategory, TemplateCategory } from '@/lib/types/poll-templates';
 import { devLog } from '@/lib/utils/logger';
+
+import { useI18n } from '@/hooks/useI18n';
 
 const TEMPLATECATEGORIES: TemplateCategory[] = [
   { id: 'general', name: 'General', description: 'General purpose polls', icon: '📊', color: 'blue', templateCount: 12 },

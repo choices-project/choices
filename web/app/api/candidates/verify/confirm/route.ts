@@ -2,6 +2,8 @@
 
 import { NextResponse, type NextRequest } from 'next/server';
 
+import { getSupabaseServerClient } from '@/utils/supabase/server';
+
 import {
   withErrorHandling,
   successResponse,
@@ -10,7 +12,6 @@ import {
 } from '@/lib/api';
 import { createRateLimiter, rateLimitMiddleware } from '@/lib/core/security/rate-limit';
 import { logger } from '@/lib/utils/logger';
-import { getSupabaseServerClient } from '@/utils/supabase/server';
 
 export const dynamic = 'force-dynamic';
 

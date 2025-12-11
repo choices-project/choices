@@ -6,10 +6,12 @@
  * Feature Flag: CIVIC_ENGAGEMENT_V2
  */
 
+import { getSupabaseServerClient } from '@/utils/supabase/server';
+
 import { isFeatureEnabled } from '@/lib/core/feature-flags';
 import { logger } from '@/lib/utils/logger';
+
 import type { CivicAction } from '@/types/database';
-import { getSupabaseServerClient } from '@/utils/supabase/server';
 
 type CivicActionRecord = CivicAction & {
   is_public?: boolean | null;

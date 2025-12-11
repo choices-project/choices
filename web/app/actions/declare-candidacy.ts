@@ -2,6 +2,8 @@
 
 import { z } from 'zod'
 
+import { getSupabaseServerClient } from '@/utils/supabase/server'
+
 import { 
   createSecureServerAction,
   getAuthenticatedUser,
@@ -12,7 +14,6 @@ import {
 import { sendCandidateJourneyEmail } from '@/lib/services/email/candidate-journey-emails'
 import { stripUndefinedDeep } from '@/lib/util/clean'
 import logger from '@/lib/utils/logger'
-import { getSupabaseServerClient } from '@/utils/supabase/server'
 
 /**
  * @fileoverview Candidate Declaration Server Action

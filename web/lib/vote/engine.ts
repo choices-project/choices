@@ -16,6 +16,7 @@ import { QuadraticStrategy } from './strategies/quadratic';
 import { RangeStrategy } from './strategies/range';
 import { RankedStrategy } from './strategies/ranked';
 import { SingleChoiceStrategy } from './strategies/single-choice';
+
 import type { 
   VoteRequest, 
   VoteResponse, 

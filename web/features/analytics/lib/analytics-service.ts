@@ -1,5 +1,8 @@
+import { getSupabaseServerClient } from '@/utils/supabase/server'
+
 import { normalizeTrustTier } from '@/lib/trust/trust-tiers'
 import { devLog } from '@/lib/utils/logger'
+
 // Database types are used directly when needed
 import type {
   TrustTier,
@@ -10,7 +13,6 @@ import type {
   TrustTierHistoryEntry,
   UserAnalytics
 } from '@/types/features/analytics'
-import { getSupabaseServerClient } from '@/utils/supabase/server'
 
 
 // Use database types for actual schema

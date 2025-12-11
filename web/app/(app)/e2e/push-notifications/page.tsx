@@ -4,6 +4,7 @@ import { notFound } from 'next/navigation';
 import { useEffect, useState } from 'react';
 
 import NotificationPreferences from '@/features/pwa/components/NotificationPreferences';
+
 import { usePWAStore } from '@/lib/stores/pwaStore';
 import { useUserStore } from '@/lib/stores/userStore';
 import { logger } from '@/lib/utils/logger';

@@ -13,9 +13,9 @@
  */
 
 // withOptional removed
-import { logger } from '@/lib/utils/logger';
-import type { Database } from '@/types/supabase';
 import { getSupabaseBrowserClient } from '@/utils/supabase/client';
+
+import { logger } from '@/lib/utils/logger';
 
 import type {
   HashtagModeration,
@@ -24,6 +24,8 @@ import type {
   Hashtag,
   HashtagCategory
 } from '../types';
+import type { Database } from '@/types/supabase';
+
 
 // Database types
 type HashtagFlagRow = Database['public']['Tables']['hashtag_flags']['Row'];

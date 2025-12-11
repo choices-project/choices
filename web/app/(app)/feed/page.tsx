@@ -21,6 +21,7 @@ import React, { useEffect, useState, Suspense, Component, type ReactNode } from 
 
 import { UnifiedFeedRefactored } from '@/features/feeds';
 import { useFormattedDistrict } from '@/features/profile/hooks/useUserDistrict';
+
 import { useUser } from '@/lib/stores';
 import { useAppActions } from '@/lib/stores/appStore';
 import logger from '@/lib/utils/logger';

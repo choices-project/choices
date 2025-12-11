@@ -11,14 +11,16 @@
  * @since 1.0.0
  */
 
-import type { NextRequest } from 'next/server';
 import { z } from 'zod';
+
+import { getSupabaseServerClient } from '@/utils/supabase/server';
 
 import { authError, errorResponse, successResponse, validationError, withErrorHandling, parseBody } from '@/lib/api';
 import { createProfilePayload } from '@/lib/api/response-builders';
 import { undefinedToNull } from '@/lib/util/clean';
 import { logger } from '@/lib/utils/logger';
-import { getSupabaseServerClient } from '@/utils/supabase/server';
+
+import type { NextRequest } from 'next/server';
 
 
 

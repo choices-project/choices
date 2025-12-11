@@ -2,12 +2,14 @@
 
 import React, { useState, useEffect, useCallback, useMemo, useId, useRef } from 'react';
 
-import { useI18n } from '@/hooks/useI18n';
 import ScreenReaderSupport from '@/lib/accessibility/screen-reader';
 import { logger } from '@/lib/utils/logger';
 
-import type { OptimizedPollResult } from '../lib/poll-service';
+import { useI18n } from '@/hooks/useI18n';
+
 import { optimizedPollService } from '../lib/poll-service';
+
+import type { OptimizedPollResult } from '../lib/poll-service';
 
 
 type OptimizedPollResultsProps = {

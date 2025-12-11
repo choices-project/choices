@@ -1,6 +1,5 @@
 import { useEffect, useMemo, useRef } from 'react';
 
-import { useI18n } from '@/hooks/useI18n';
 import {
   useAnalyticsActions,
   useClearElections,
@@ -11,6 +10,9 @@ import {
 } from '@/lib/stores';
 import { notificationStoreUtils } from '@/lib/stores/notificationStore';
 import type { ElectionNotificationContext , Notification as NotificationModel } from '@/lib/stores/types';
+
+import { useI18n } from '@/hooks/useI18n';
+
 import type { CivicElection } from '@/types/civic';
 
 export const getElectionCountdown = (isoDate: string | undefined): number | null => {

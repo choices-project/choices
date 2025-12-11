@@ -1,7 +1,6 @@
 'use client';
 
 
-import type { User, Session } from '@supabase/supabase-js'
 import React, {
   createContext,
   useCallback,
@@ -10,9 +9,12 @@ import React, {
   useState,
 } from 'react'
 
+import { getSupabaseBrowserClient } from '@/utils/supabase/client'
+
 import { useUserStore } from '@/lib/stores/userStore'
 import logger from '@/lib/utils/logger'
-import { getSupabaseBrowserClient } from '@/utils/supabase/client'
+
+import type { User, Session } from '@supabase/supabase-js'
 
 type AuthContextType = {
   user: User | null

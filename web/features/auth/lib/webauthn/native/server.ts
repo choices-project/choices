@@ -7,6 +7,8 @@
 
 import logger from '@/lib/utils/logger'
 
+import { WEBAUTHN_ALGORITHMS } from './types';
+
 import type { 
 PublicKeyCredentialCreationOptions,
   PublicKeyCredentialRequestOptions,
@@ -16,7 +18,6 @@ PublicKeyCredentialCreationOptions,
   AuthenticationVerificationResult,
   WebAuthnCredential
 } from './types';
-import { WEBAUTHN_ALGORITHMS } from './types';
 
 /**
  * Generate secure challenge for WebAuthn operations

@@ -13,7 +13,9 @@
  */
 
 import type { AnalyticsEngine } from '@/features/analytics/lib/AnalyticsEngine';
+
 import { logger } from '@/lib/utils/logger';
+
 import type { Database, Json } from '@/types/supabase';
 
 const cleanObject = (input: Record<string, unknown>): Record<string, unknown> => {

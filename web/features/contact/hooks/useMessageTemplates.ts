@@ -9,7 +9,6 @@
 
 import { useState, useCallback, useMemo } from 'react';
 
-import { useI18n } from '@/hooks/useI18n';
 import {
   MESSAGE_TEMPLATES,
   type MessageTemplate,
@@ -19,6 +18,8 @@ import {
 import { localizeTemplate, localizeTemplates, type LocalizedTemplate } from '@/lib/contact/template-localization';
 // withOptional removed
 import logger from '@/lib/utils/logger';
+
+import { useI18n } from '@/hooks/useI18n';
 
 export function useMessageTemplates() {
   const { t } = useI18n();

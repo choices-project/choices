@@ -1,4 +1,4 @@
-import type { NextRequest } from 'next/server'
+import { getSupabaseServerClient } from '@/utils/supabase/server'
 
 import { withErrorHandling, successResponse, authError, errorResponse, validationError, notFoundError, forbiddenError } from '@/lib/api';
 import type { 
@@ -11,7 +11,9 @@ import {
   shouldSendReminder,
   calculateProgress
 } from '@/lib/candidate/journey-tracker'
-import { getSupabaseServerClient } from '@/utils/supabase/server'
+
+import type { NextRequest } from 'next/server'
+
 
 export const GET = withErrorHandling(async (request: NextRequest) => {
   const supabase = await getSupabaseServerClient()

@@ -8,12 +8,13 @@
  * Status: In Progress
  */
 
-import type { NextRequest } from 'next/server';
 
 import { authError, successResponse, withErrorHandling } from '@/lib/api';
 import { getSecurityConfig } from '@/lib/core/security/config';
 import { upstashRateLimiter } from '@/lib/rate-limiting/upstash-rate-limiter';
 import { logger } from '@/lib/utils/logger';
+
+import type { NextRequest } from 'next/server';
 
 export const dynamic = 'force-dynamic';
 export const runtime = 'nodejs';

@@ -8,12 +8,15 @@
  * @date 2025-01-15
  */
 
+import { getSupabaseServerClient } from '@/utils/supabase/server';
+
 import { NotImplementedError } from '@/lib/errors';
 import { formatISODateOnly, nowISO } from '@/lib/utils/format-utils';
 import { logger } from '@/lib/utils/logger';
-import { getSupabaseServerClient } from '@/utils/supabase/server';
 
 import { createUnifiedDataOrchestrator } from '../integrations/unified-orchestrator';
+
+import type { ElectoralRace as SchemaElectoralRace } from './schemas';
 import type {
   UserLocation,
   ElectoralRace as UnifiedElectoralRace,
@@ -24,7 +27,6 @@ import type {
 } from '../types/electoral-unified';
 // withOptional removed - using explicit builders
 
-import type { ElectoralRace as SchemaElectoralRace } from './schemas';
 
 type ElectoralRace = UnifiedElectoralRace;
 

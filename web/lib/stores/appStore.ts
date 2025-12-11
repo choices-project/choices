@@ -8,14 +8,15 @@
 
 import { useMemo } from 'react';
 import { create } from 'zustand';
-import type { StateCreator } from 'zustand';
 import { devtools, persist } from 'zustand/middleware';
 import { immer } from 'zustand/middleware/immer';
 
 import { logger } from '@/lib/utils/logger';
 
 import { createSafeStorage } from './storage';
+
 import type { BaseStore, FeatureFlag } from './types';
+import type { StateCreator } from 'zustand';
 
 export type ThemePreference = 'light' | 'dark' | 'system';
 export type SystemTheme = 'light' | 'dark';

@@ -3,6 +3,7 @@
 import React, { useState, useEffect } from 'react';
 
 import { beginRegister, beginAuthenticate, isWebAuthnSupported } from '@/features/auth/lib/webauthn/client';
+
 import { T } from '@/lib/testing/testIds';
 import { logger } from '@/lib/utils/logger';
 

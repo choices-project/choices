@@ -8,13 +8,19 @@
  * Status: ✅ ACTIVE
  */
 
-import type { User, Session } from '@supabase/supabase-js';
 import { create } from 'zustand';
-import type { StateCreator } from 'zustand';
 import { devtools, persist } from 'zustand/middleware';
 import { immer } from 'zustand/middleware/immer';
 
 import { logger } from '@/lib/utils/logger';
+
+
+import { useAdminStore } from './adminStore';
+import { createBaseStoreActions } from './baseStoreActions';
+import { useProfileStore } from './profileStore';
+import { createSafeStorage } from './storage';
+
+import type { BaseStore } from './types';
 import type {
   UserProfile,
   ProfileUpdateData as ProfileUpdateDataType,
@@ -22,12 +28,8 @@ import type {
 } from '@/types/profile';
 import type { Representative } from '@/types/representative';
 import type { Database } from '@/types/supabase';
-
-import { useAdminStore } from './adminStore';
-import { createBaseStoreActions } from './baseStoreActions';
-import { useProfileStore } from './profileStore';
-import { createSafeStorage } from './storage';
-import type { BaseStore } from './types';
+import type { User, Session } from '@supabase/supabase-js';
+import type { StateCreator } from 'zustand';
 
 // Re-export types for convenience
 export type ProfileUpdateData = ProfileUpdateDataType;

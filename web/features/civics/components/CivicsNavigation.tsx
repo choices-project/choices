@@ -9,7 +9,6 @@ import {
 } from '@heroicons/react/24/outline';
 import React, { useCallback, useEffect, useId, useRef, useState } from 'react';
 
-import { useI18n } from '@/hooks/useI18n';
 import {
   useUserActions,
   useUserCurrentAddress,
@@ -22,6 +21,8 @@ import {
   useRepresentativeGlobalLoading
 } from '@/lib/stores/representativeStore';
 import logger from '@/lib/utils/logger';
+
+import { useI18n } from '@/hooks/useI18n';
 
 type CivicsNavigationProps = {
   onRepresentativesClick: () => void;

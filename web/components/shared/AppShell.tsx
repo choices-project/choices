@@ -1,9 +1,7 @@
 'use client';
 
-import type { ReactNode } from 'react';
 import { useEffect } from 'react';
 
-import { useSystemThemeSync } from '@/hooks/useSystemThemeSync';
 import {
   appStoreUtils,
   useAppTheme,
@@ -12,6 +10,10 @@ import {
   useSidebarWidth,
 } from '@/lib/stores/appStore';
 import { useDeviceActions } from '@/lib/stores/deviceStore';
+
+import { useSystemThemeSync } from '@/hooks/useSystemThemeSync';
+
+import type { ReactNode } from 'react';
 
 type AppShellProps = {
   navigation: ReactNode;

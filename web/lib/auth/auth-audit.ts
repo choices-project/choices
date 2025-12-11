@@ -16,9 +16,10 @@
  * Status: Production-ready
  */
 
+import { createAuditLogService } from '@/lib/services/audit-log-service';
+
 import type { SupabaseClient } from '@supabase/supabase-js';
 
-import { createAuditLogService } from '@/lib/services/audit-log-service';
 
 /**
  * Log login attempt

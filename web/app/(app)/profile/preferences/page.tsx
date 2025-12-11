@@ -3,9 +3,11 @@
 import { Settings, Heart, Shield, Save, Loader2 } from 'lucide-react';
 import React, { useEffect, useMemo, useState } from 'react';
 
-import DataUsageExplanation from '@/components/shared/DataUsageExplanation';
 import InterestSelection from '@/features/onboarding/components/InterestSelection';
 import { useProfile, useProfileUpdate } from '@/features/profile/hooks/use-profile';
+
+import DataUsageExplanation from '@/components/shared/DataUsageExplanation';
+
 import { useUser } from '@/lib/stores';
 import { useAppActions } from '@/lib/stores/appStore';
 import logger from '@/lib/utils/logger';

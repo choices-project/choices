@@ -12,11 +12,14 @@
  * Status: ✅ PRODUCTION
  */
 
-import type { NextRequest } from 'next/server';
+import { getSupabaseServerClient } from '@/utils/supabase/server';
 
 import { withErrorHandling, successResponse } from '@/lib/api';
 import { upstashRateLimiter } from '@/lib/rate-limiting/upstash-rate-limiter';
-import { getSupabaseServerClient } from '@/utils/supabase/server';
+
+import type { NextRequest } from 'next/server';
+
+
 
 export const dynamic = 'force-dynamic';
 

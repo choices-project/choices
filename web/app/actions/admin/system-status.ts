@@ -2,6 +2,8 @@
 
 import { z } from 'zod'
 
+import { getSupabaseServerClient } from '@/utils/supabase/server'
+
 import { 
   createSecureServerAction,
   requireAdmin,
@@ -10,7 +12,6 @@ import {
   validateFormData,
   type ServerActionContext
 } from '@/lib/core/auth/server-actions'
-import { getSupabaseServerClient } from '@/utils/supabase/server'
 
 // Validation schema for system status updates
 const SystemStatusSchema = z.object({

@@ -9,9 +9,11 @@
  * Status: ✅ REFACTORED - Eliminates duplication via base class
  */
 
-import type { FeedHashtagAnalytics } from '@/features/hashtags/types';
-import { logger } from '@/lib/utils/logger';
 import { getSupabaseBrowserClient } from '@/utils/supabase/client';
+
+import type { FeedHashtagAnalytics } from '@/features/hashtags/types';
+
+import { logger } from '@/lib/utils/logger';
 
 import {
   BaseHashtagPollsIntegrationService,

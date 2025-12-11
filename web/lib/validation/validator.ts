@@ -4,9 +4,10 @@
  * Safe parsing utilities with comprehensive error handling for runtime validation
  */
 
+import { logger } from '@/lib/utils/logger';
+
 import type { ZodError, ZodSchema } from 'zod';
 
-import { logger } from '@/lib/utils/logger';
 
 function mergeDefined<T extends object, U extends object>(base: T, extras?: U): T & Partial<U> {
   const out: Record<string, unknown> = { ...(base as Record<string, unknown>) };

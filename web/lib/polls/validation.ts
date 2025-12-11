@@ -1,4 +1,5 @@
 import { POLL_WIZARD_TOTAL_STEPS, createDefaultPollFilters } from './defaults';
+
 import type { PollFilters, PollWizardData } from './types';
 
 export type PollWizardValidationErrors = Record<string, string>;

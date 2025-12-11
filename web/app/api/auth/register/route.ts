@@ -1,4 +1,5 @@
-import type { NextRequest } from 'next/server';
+
+import { getSupabaseServerClient } from '@/utils/supabase/server'
 
 import {
   withErrorHandling,
@@ -10,12 +11,13 @@ import {
 } from '@/lib/api';
 import { apiRateLimiter } from '@/lib/rate-limiting/api-rate-limiter'
 import { logger } from '@/lib/utils/logger'
-import { getSupabaseServerClient } from '@/utils/supabase/server'
 
 import {
   validateCsrfProtection,
   createCsrfErrorResponse
 } from '../_shared'
+
+import type { NextRequest } from 'next/server';
 
 type RegisterRequestBody = {
   email?: string;
