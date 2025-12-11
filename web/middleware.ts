@@ -174,6 +174,11 @@ export function middleware(request: NextRequest) {
     );
   }
 
+  // Redirect root path to /feed (after maintenance check)
+  if (pathname === '/') {
+    return NextResponse.redirect(new URL('/feed', request.url), 307);
+  }
+
   // Skip middleware for static files and API routes that don't need security headers
   if (
     pathname.startsWith('/_next/') ||

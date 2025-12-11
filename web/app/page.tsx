@@ -1,10 +1,14 @@
-import { redirect } from 'next/navigation';
-
 /**
  * Root Landing Page
- * Server-side redirect to feed page
- * This avoids client-side rendering issues and provides a simple entry point
+ * Redirect is handled in middleware to avoid layout rendering issues
+ * This page should never be reached, but exists as a fallback
  */
 export default function RootPage() {
-  redirect('/feed');
+  // This should never render - middleware handles the redirect
+  // But if it does, redirect client-side as fallback
+  if (typeof window !== 'undefined') {
+    window.location.href = '/feed';
+    return null;
+  }
+  return null;
 }
