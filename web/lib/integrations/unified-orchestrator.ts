@@ -41,7 +41,6 @@ import { createGovTrackClient } from './govtrack/client';
 import { createOpenStatesClient } from './open-states/client';
 import { createOpenSecretsClient } from './opensecrets/client';
 
-
 // Unified data types
 export type UnifiedRepresentative = {
   // Primary Identifiers

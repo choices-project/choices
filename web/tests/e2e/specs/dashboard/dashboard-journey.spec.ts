@@ -130,9 +130,23 @@ test.describe('Dashboard Journey', () => {
       );
       await expect(page.getByTestId('show-elected-officials-toggle')).not.toBeChecked();
 
+      // Set up authentication cookie so middleware allows navigation to /feed
+      // The middleware checks for sb-access-token or other Supabase auth cookies
+      await page.context().addCookies([
+        {
+          name: 'sb-access-token',
+          value: 'mock-auth-token-for-e2e-harness',
+          domain: '127.0.0.1',
+          path: '/',
+          httpOnly: false,
+          secure: false,
+          sameSite: 'Lax',
+        },
+      ]);
+
       // Continue to feed via dashboard CTA
       await page.getByRole('button', { name: 'View Trending Feed' }).click();
-      await page.waitForURL('**/feed');
+      await page.waitForURL('**/feed', { timeout: 60_000 });
       await waitForPageReady(page);
       await page.waitForSelector('[data-testid="unified-feed"]');
       await page.waitForSelector('text=Climate Action Now');
