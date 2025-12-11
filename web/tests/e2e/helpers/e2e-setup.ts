@@ -264,17 +264,39 @@ export async function loginTestUser(page: Page, user: TestUser): Promise<void> {
 
   // Wait for authentication to complete - increase timeout for production server
   // Wait for either redirect or auth tokens/cookies
-  const authTimeout = process.env.CI ? 60_000 : 15_000; // Longer timeout in CI
-  await Promise.race([
-    page.waitForURL(/\/(dashboard|admin|onboarding)/, { timeout: authTimeout }).catch(() => undefined),
-    page.waitForFunction(
-      () =>
-        document.cookie.includes('sb-') ||
-        window.localStorage.getItem('supabase.auth.token') !== null ||
-        window.sessionStorage.getItem('supabase.auth.token') !== null,
-      { timeout: authTimeout },
-    ),
-  ]);
+  // Use longer timeout in CI or when BASE_URL is localhost (production server mode)
+  const isCI = process.env.CI === 'true' || process.env.CI === '1';
+  const isProductionServer = process.env.BASE_URL?.includes('127.0.0.1') || process.env.BASE_URL?.includes('localhost');
+  const authTimeout = (isCI || isProductionServer) ? 90_000 : 15_000; // 90s for CI/production server, 15s for local
+  
+  try {
+    await Promise.race([
+      page.waitForURL(/\/(dashboard|admin|onboarding)/, { timeout: authTimeout }),
+      page.waitForFunction(
+        () =>
+          document.cookie.includes('sb-') ||
+          window.localStorage.getItem('supabase.auth.token') !== null ||
+          window.sessionStorage.getItem('supabase.auth.token') !== null,
+        { timeout: authTimeout },
+      ),
+    ]);
+  } catch (error) {
+    // If both time out, log the current state for debugging
+    const currentUrl = page.url();
+    const hasCookie = await page.evaluate(() => document.cookie.includes('sb-')).catch(() => false);
+    const hasToken = await page.evaluate(() => {
+      const token = localStorage.getItem('supabase.auth.token');
+      return token !== null && token !== 'null';
+    }).catch(() => false);
+    
+    throw new Error(
+      `Authentication timeout after ${authTimeout}ms. ` +
+      `Current URL: ${currentUrl}, ` +
+      `Has cookie: ${hasCookie}, ` +
+      `Has token: ${hasToken}. ` +
+      `Original error: ${error instanceof Error ? error.message : String(error)}`
+    );
+  }
   
   // Give a moment for any post-auth processing
   await page.waitForTimeout(1_000);
