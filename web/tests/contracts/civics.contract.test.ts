@@ -9,8 +9,8 @@ const mockSupabaseClient: Record<string, any> = {
   from: jest.fn(),
 };
 
-jest.mock('@supabase/supabase-js', () => ({
-  createClient: jest.fn(() => mockSupabaseClient),
+jest.mock('@/utils/supabase/server', () => ({
+  getSupabaseServerClient: jest.fn(async () => mockSupabaseClient),
 }));
 
 describe('Civics by-state API contract', () => {
