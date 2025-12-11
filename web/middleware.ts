@@ -175,6 +175,11 @@ export async function middleware(request: NextRequest) {
     );
   }
 
+  // Define protected routes that require authentication
+  const protectedRoutes = ['/feed', '/dashboard', '/profile', '/settings', '/onboarding'];
+  const isProtectedRoute = protectedRoutes.some(route => pathname.startsWith(route));
+  const isAuthRoute = pathname.startsWith('/auth') || pathname.startsWith('/login') || pathname.startsWith('/register');
+  
   // Handle root path redirect based on authentication status
   if (pathname === '/') {
     // Check authentication status (Edge Runtime compatible - no Supabase client import)
@@ -191,6 +196,29 @@ export async function middleware(request: NextRequest) {
     redirectResponse.headers.set('Cache-Control', 'public, max-age=3600, stale-while-revalidate=86400');
     
     return redirectResponse;
+  }
+  
+  // Protect routes that require authentication
+  if (isProtectedRoute) {
+    const { isAuthenticated } = checkAuthInMiddleware(request);
+    
+    if (!isAuthenticated) {
+      // Redirect unauthenticated users to auth page
+      const authUrl = new URL('/auth', request.url);
+      // Preserve the original destination for redirect after login
+      authUrl.searchParams.set('redirect', pathname);
+      return NextResponse.redirect(authUrl, 307);
+    }
+  }
+  
+  // Redirect authenticated users away from auth pages (except during login flow)
+  if (isAuthRoute && pathname !== '/auth') {
+    const { isAuthenticated } = checkAuthInMiddleware(request);
+    
+    if (isAuthenticated) {
+      // Authenticated users trying to access login/register should go to feed
+      return NextResponse.redirect(new URL('/feed', request.url), 307);
+    }
   }
 
   // Skip middleware for static files and API routes that don't need security headers
