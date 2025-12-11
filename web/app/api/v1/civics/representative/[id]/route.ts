@@ -245,9 +245,8 @@ export const GET = withErrorHandling(async (
     return apiResponse;
 
   } catch (error) {
-    logger.error('Error fetching representative:', error instanceof Error ? error : new Error(String(error)));
     const errorMessage = error instanceof Error ? error.message : 'Unknown error';
-    logger.error('Error fetching representative:', error);
+    logger.error('Error fetching representative:', error instanceof Error ? error : new Error(String(error)));
     return errorResponse('Failed to fetch representative', 500, { reason: errorMessage });
   }
 });
