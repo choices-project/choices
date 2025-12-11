@@ -409,19 +409,36 @@ function StandardFeedDataProvider({
     clearErrorAction();
 
     void (async () => {
-      try {
-        await loadFeeds();
-        surfaceStoreError((error) =>
-          t('feeds.provider.errors.loadFeeds.withReason', { error }),
-        );
-      } catch (err) {
-        if (!active) return;
-        logger.error('Failed to load feeds:', err);
-        const shortMessage = t('feeds.provider.errors.loadFeeds.short');
-        setErrorAction(shortMessage);
-        notifyFeedError(shortMessage);
-      } finally {
-        initialLoadRef.current = true;
+      const maxRetries = 3;
+      let retryCount = 0;
+      
+      while (retryCount < maxRetries && active) {
+        try {
+          await loadFeeds();
+          surfaceStoreError((error) =>
+            t('feeds.provider.errors.loadFeeds.withReason', { error }),
+          );
+          break; // Success, exit retry loop
+        } catch (err) {
+          if (!active) return;
+          retryCount++;
+          
+          if (retryCount >= maxRetries) {
+            logger.error('Failed to load feeds after retries:', err);
+            const shortMessage = t('feeds.provider.errors.loadFeeds.short');
+            setErrorAction(shortMessage);
+            notifyFeedError(shortMessage);
+          } else {
+            // Wait before retry with exponential backoff
+            const delay = Math.min(1000 * Math.pow(2, retryCount - 1), 5000);
+            logger.warn(`Feed load failed, retrying in ${delay}ms (attempt ${retryCount}/${maxRetries})`);
+            await new Promise(resolve => setTimeout(resolve, delay));
+          }
+        } finally {
+          if (retryCount >= maxRetries || !active) {
+            initialLoadRef.current = true;
+          }
+        }
       }
     })();
 
