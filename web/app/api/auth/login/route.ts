@@ -28,16 +28,39 @@ export const POST = withErrorHandling(async (request: NextRequest) => {
     // For now, we'll skip CSRF validation in test environment
 
     // Rate limiting: 10 login attempts per 15 minutes per IP
-    const ip = request.headers.get('x-forwarded-for') ?? request.headers.get('x-real-ip') ?? 'unknown';
-    const userAgent = request.headers.get('user-agent') ?? undefined;
-    const rateLimitResult = await apiRateLimiter.checkLimit(
-      ip,
-      '/api/auth/login',
-      { ...(userAgent ? { userAgent } : {}) }
-    );
-    
-    if (!rateLimitResult.allowed) {
-      return rateLimitError('Too many login attempts. Please try again later.');
+    // Skip rate limiting in E2E test environments to avoid Redis connection issues
+    const isE2E = process.env.NEXT_PUBLIC_ENABLE_E2E_HARNESS === '1' || process.env.PLAYWRIGHT_USE_MOCKS === '0';
+    if (!isE2E) {
+      const ip = request.headers.get('x-forwarded-for') ?? request.headers.get('x-real-ip') ?? 'unknown';
+      const userAgent = request.headers.get('user-agent') ?? undefined;
+      try {
+        // Add timeout to rate limiting check to prevent hanging
+        const rateLimitPromise = apiRateLimiter.checkLimit(
+          ip,
+          '/api/auth/login',
+          { ...(userAgent ? { userAgent } : {}) }
+        );
+        const timeoutPromise = new Promise<{ allowed: boolean; remaining: number; resetTime: number; totalHits: number }>((resolve) => {
+          setTimeout(() => {
+            // Allow request if rate limiting check times out
+            resolve({
+              allowed: true,
+              remaining: 10,
+              resetTime: Date.now() + 15 * 60 * 1000,
+              totalHits: 1
+            });
+          }, 2000); // 2 second timeout
+        });
+        
+        const rateLimitResult = await Promise.race([rateLimitPromise, timeoutPromise]);
+        
+        if (!rateLimitResult.allowed) {
+          return rateLimitError('Too many login attempts. Please try again later.');
+        }
+      } catch (error) {
+        // If rate limiting fails, log but allow the request to proceed
+        logger.warn('Rate limiting check failed, allowing request:', error);
+      }
     }
 
     // Validate request
