@@ -40,16 +40,23 @@ test.describe('Auth – real backend', () => {
     // Navigate to auth page on the correct base URL
     await page.goto(`${BASE_URL}/auth`, { waitUntil: 'domcontentloaded', timeout: 30_000 });
 
+    // loginTestUser will handle navigation and waiting for auth
+    // It uses relative paths, so ensure we're on the right base URL first
     await loginTestUser(page, {
       email: regularEmail,
       password: regularPassword,
       username: regularEmail.split('@')[0] ?? 'e2e-user',
     });
 
-    // loginTestUser already waits for redirect or auth tokens, so we can proceed
-    // Wait for redirect with longer timeout for production server
-    // The client-side redirect happens after a setTimeout(1000) in the auth page
-    await expect(page).toHaveURL(/(dashboard|onboarding)/, { timeout: 60_000 });
+    // loginTestUser already waits for redirect or auth tokens
+    // Verify we're on the expected page after login
+    const currentUrl = page.url();
+    const isOnDashboard = /(dashboard|onboarding)/.test(currentUrl);
+    
+    if (!isOnDashboard) {
+      // If not redirected yet, wait for it with longer timeout
+      await expect(page).toHaveURL(/(dashboard|onboarding)/, { timeout: 60_000 });
+    }
     
     await waitForPageReady(page);
 

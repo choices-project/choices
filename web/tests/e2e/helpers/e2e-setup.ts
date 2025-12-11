@@ -220,7 +220,12 @@ export async function loginTestUser(page: Page, user: TestUser): Promise<void> {
     throw new Error('loginTestUser requires both email and password');
   }
 
-  await page.goto('/auth', { waitUntil: 'domcontentloaded', timeout: 60_000 });
+  // Only navigate if we're not already on the auth page
+  const currentUrl = page.url();
+  if (!currentUrl.includes('/auth')) {
+    await page.goto('/auth', { waitUntil: 'domcontentloaded', timeout: 60_000 });
+  }
+  
   await page.waitForSelector('[data-testid="auth-hydrated"]', { state: 'attached', timeout: 60_000 });
   await waitForPageReady(page);
 
