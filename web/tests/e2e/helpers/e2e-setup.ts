@@ -1,4 +1,4 @@
-import type { Page } from '@playwright/test';
+import { expect, type Page } from '@playwright/test';
 
 import { CIVICS_ADDRESS_LOOKUP, CIVICS_STATE_FIXTURE } from '../../fixtures/api/civics';
 import { buildDashboardData } from '../../fixtures/api/dashboard';
@@ -261,20 +261,44 @@ export async function loginTestUser(page: Page, user: TestUser): Promise<void> {
   const submitButton = page.getByTestId('login-submit');
   await submitButton.waitFor({ state: 'visible', timeout: 5_000 });
   
-  // Set up network request interception to wait for the login API call
+  // Ensure button is not disabled before clicking
+  await expect(submitButton).toBeEnabled({ timeout: 5_000 });
+  
+  // Set up network request interception BEFORE clicking
   type LoginResponse = { status: number; body: any };
   
-  // Click submit and wait for API response
-  await submitButton.click();
-  
-  // Wait for the login API response and capture it
   // Increase timeout for production server which may be slower
   const isCI = process.env.CI === 'true' || process.env.CI === '1';
   const isProductionServer = process.env.BASE_URL?.includes('127.0.0.1') || process.env.BASE_URL?.includes('localhost');
   const apiTimeout = (isCI || isProductionServer) ? 60_000 : 30_000; // 60s for CI/production server, 30s for local
   
+  // Set up request promise to verify the request is actually being made
+  const requestPromise = page.waitForRequest(
+    (req) => req.url().includes('/api/auth/login') && req.method() === 'POST',
+    { timeout: 10_000 } // Shorter timeout for request - should happen quickly after click
+  ).catch(() => null);
+  
+  // Set up response promise BEFORE clicking
   let loginResponse: LoginResponse | null = null;
   let apiError: string | null = null;
+  
+  // Click submit
+  await submitButton.click();
+  
+  // Wait for request to be made (this verifies the form submission is working)
+  const requestMade = await requestPromise;
+  if (!requestMade) {
+    // Request wasn't made - check for validation errors or other issues
+    const authError = page.getByTestId('auth-error');
+    const errorCount = await authError.count();
+    if (errorCount > 0) {
+      const errorText = await authError.first().textContent().catch(() => 'Unknown error');
+      throw new Error(`Login form validation error: ${errorText}. API request was not made.`);
+    }
+    throw new Error('Login form submission failed - API request was not made. Check if form is properly configured.');
+  }
+  
+  // Now wait for the response
   try {
     const response = await page.waitForResponse(
       (res) => res.url().includes('/api/auth/login') && res.request().method() === 'POST',
