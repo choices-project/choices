@@ -260,7 +260,37 @@ export async function loginTestUser(page: Page, user: TestUser): Promise<void> {
 
   const submitButton = page.getByTestId('login-submit');
   await submitButton.waitFor({ state: 'visible', timeout: 5_000 });
+  
+  // Set up network request interception to wait for the login API call
+  let loginResponse: { status: number; body: any } | null = null;
+  const responsePromise = page.waitForResponse(
+    (response) => response.url().includes('/api/auth/login') && response.request().method() === 'POST',
+    { timeout: 30_000 }
+  ).then(async (response) => {
+    loginResponse = {
+      status: response.status(),
+      body: await response.json().catch(() => ({})),
+    };
+    return response;
+  }).catch(() => null);
+
+  // Click submit and wait for API response
   await submitButton.click();
+  await responsePromise;
+
+  // Check for API errors
+  if (loginResponse && loginResponse.status !== 200) {
+    const errorMessage = loginResponse.body?.message || `Login API returned status ${loginResponse.status}`;
+    throw new Error(`Login API error: ${errorMessage}`);
+  }
+
+  // Check for UI errors (auth-error element)
+  const authError = page.getByTestId('auth-error');
+  const errorCount = await authError.count();
+  if (errorCount > 0) {
+    const errorText = await authError.first().textContent().catch(() => 'Unknown error');
+    throw new Error(`Login UI error: ${errorText}`);
+  }
 
   // Wait for authentication to complete - increase timeout for production server
   // Wait for either redirect or auth tokens/cookies
@@ -270,30 +300,47 @@ export async function loginTestUser(page: Page, user: TestUser): Promise<void> {
   const authTimeout = (isCI || isProductionServer) ? 90_000 : 15_000; // 90s for CI/production server, 15s for local
   
   try {
+    // Wait for navigation or cookies/tokens
     await Promise.race([
-      page.waitForURL(/\/(dashboard|admin|onboarding)/, { timeout: authTimeout }),
+      page.waitForURL(/\/(dashboard|admin|onboarding|feed)/, { timeout: authTimeout }),
       page.waitForFunction(
-        () =>
-          document.cookie.includes('sb-') ||
-          window.localStorage.getItem('supabase.auth.token') !== null ||
-          window.sessionStorage.getItem('supabase.auth.token') !== null,
+        () => {
+          // Check for Supabase cookies
+          const cookies = document.cookie;
+          if (cookies.includes('sb-access-token') || cookies.includes('sb-refresh-token')) {
+            return true;
+          }
+          // Check for tokens in storage
+          const localStorageToken = localStorage.getItem('supabase.auth.token');
+          const sessionStorageToken = sessionStorage.getItem('supabase.auth.token');
+          if (localStorageToken && localStorageToken !== 'null') return true;
+          if (sessionStorageToken && sessionStorageToken !== 'null') return true;
+          return false;
+        },
         { timeout: authTimeout },
       ),
     ]);
   } catch (error) {
     // If both time out, log the current state for debugging
     const currentUrl = page.url();
-    const hasCookie = await page.evaluate(() => document.cookie.includes('sb-')).catch(() => false);
+    const cookies = await page.evaluate(() => document.cookie).catch(() => '');
+    const hasCookie = cookies.includes('sb-access-token') || cookies.includes('sb-refresh-token');
     const hasToken = await page.evaluate(() => {
       const token = localStorage.getItem('supabase.auth.token');
       return token !== null && token !== 'null';
     }).catch(() => false);
     
+    // Check for any error messages on the page
+    const pageText = await page.textContent('body').catch(() => '');
+    const hasError = pageText.includes('error') || pageText.includes('Error') || pageText.includes('failed');
+    
     throw new Error(
       `Authentication timeout after ${authTimeout}ms. ` +
       `Current URL: ${currentUrl}, ` +
       `Has cookie: ${hasCookie}, ` +
-      `Has token: ${hasToken}. ` +
+      `Has token: ${hasToken}, ` +
+      `API response: ${loginResponse ? JSON.stringify(loginResponse) : 'none'}, ` +
+      `Page has error: ${hasError}, ` +
       `Original error: ${error instanceof Error ? error.message : String(error)}`
     );
   }
