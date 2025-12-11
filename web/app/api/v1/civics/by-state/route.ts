@@ -1,23 +1,18 @@
-import { createClient } from '@supabase/supabase-js';
 import type { NextRequest } from 'next/server';
 
 import { withErrorHandling, successResponse, validationError, errorResponse } from '@/lib/api';
+import { getSupabaseServerClient } from '@/utils/supabase/server';
 
 export const dynamic = 'force-dynamic';
 
 export const GET = withErrorHandling(async (request: NextRequest) => {
-  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
-  const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
-
-  if (!supabaseUrl || !supabaseKey) {
-    return errorResponse('Supabase configuration missing', 500);
-  }
-
-  const supabase = createClient(
-    supabaseUrl,
-    supabaseKey,
-    { auth: { persistSession: false } }
-  );
+  try {
+    const supabase = await getSupabaseServerClient();
+    
+    if (!supabase) {
+      return errorResponse('Supabase client not available', 503);
+    }
+    
     const { searchParams } = new URL(request.url);
     const state = searchParams.get('state');
     const level = searchParams.get('level');
@@ -218,8 +213,12 @@ export const GET = withErrorHandling(async (request: NextRequest) => {
     }
   );
 
-  response.headers.set('ETag', `"${state}-${level}-${Date.now()}"`);
-  response.headers.set('Cache-Control', 'public, max-age=300, stale-while-revalidate=86400');
+    response.headers.set('ETag', `"${state}-${level}-${Date.now()}"`);
+    response.headers.set('Cache-Control', 'public, max-age=300, stale-while-revalidate=86400');
 
-  return response;
+    return response;
+  } catch (error) {
+    const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+    return errorResponse('Failed to process request', 500, { reason: errorMessage });
+  }
 });

@@ -1,10 +1,10 @@
 // app/api/v1/civics/representative/[id]/route.ts
 // Versioned API endpoint for single representative with FEC and voting data
-import { createClient } from '@supabase/supabase-js';
 import type { NextRequest } from 'next/server';
 
 import { withErrorHandling, successResponse, validationError, notFoundError, errorResponse } from '@/lib/api';
 import { logger } from '@/lib/utils/logger';
+import { getSupabaseServerClient } from '@/utils/supabase/server';
 
 type RepresentativeResponse = {
   id: string;
@@ -44,19 +44,12 @@ export const GET = withErrorHandling(async (
   request: NextRequest,
   { params }: { params: { id: string } }
 ) => {
-  // Create Supabase client at request time (not module level) to avoid build-time errors
-  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
-  const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
-
-  if (!supabaseUrl || !supabaseKey) {
-    return errorResponse('Supabase configuration missing', 500);
-  }
-
-  const supabase = createClient(
-    supabaseUrl,
-    supabaseKey,
-    { auth: { persistSession: false } }
-  );
+  try {
+    const supabase = await getSupabaseServerClient();
+    
+    if (!supabase) {
+      return errorResponse('Supabase client not available', 503);
+    }
 
   try {
     const { searchParams } = new URL(request.url);
@@ -254,6 +247,8 @@ export const GET = withErrorHandling(async (
 
   } catch (error) {
     logger.error('Error fetching representative:', error instanceof Error ? error : new Error(String(error)));
-    return errorResponse('Failed to fetch representative', 500);
+    const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+    logger.error('Error fetching representative:', error);
+    return errorResponse('Failed to fetch representative', 500, { reason: errorMessage });
   }
 });

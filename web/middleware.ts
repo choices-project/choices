@@ -175,8 +175,13 @@ export function middleware(request: NextRequest) {
   }
 
   // Redirect root path to /feed (after maintenance check)
+  // Use 308 (permanent) for better caching, but 307 works too
   if (pathname === '/') {
-    return NextResponse.redirect(new URL('/feed', request.url), 307);
+    const redirectUrl = new URL('/feed', request.url);
+    const response = NextResponse.redirect(redirectUrl, 307);
+    // Add cache headers to help with redirect performance
+    response.headers.set('Cache-Control', 'public, max-age=3600, stale-while-revalidate=86400');
+    return response;
   }
 
   // Skip middleware for static files and API routes that don't need security headers
