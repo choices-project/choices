@@ -262,24 +262,30 @@ export async function loginTestUser(page: Page, user: TestUser): Promise<void> {
   await submitButton.waitFor({ state: 'visible', timeout: 5_000 });
   
   // Set up network request interception to wait for the login API call
-  let loginResponse: { status: number; body: any } | null = null;
+  type LoginResponse = { status: number; body: any };
+  let loginResponse: LoginResponse | null = null;
   const responsePromise = page.waitForResponse(
     (response) => response.url().includes('/api/auth/login') && response.request().method() === 'POST',
     { timeout: 30_000 }
   ).then(async (response) => {
-    loginResponse = {
+    const body = await response.json().catch(() => ({}));
+    const responseData: LoginResponse = {
       status: response.status(),
-      body: await response.json().catch(() => ({})),
+      body,
     };
+    loginResponse = responseData;
     return response;
-  }).catch(() => null);
+  }).catch(() => {
+    loginResponse = null;
+    return null;
+  });
 
   // Click submit and wait for API response
   await submitButton.click();
   await responsePromise;
 
   // Check for API errors
-  if (loginResponse && loginResponse.status !== 200) {
+  if (loginResponse !== null && loginResponse.status !== 200) {
     const errorMessage = loginResponse.body?.message || `Login API returned status ${loginResponse.status}`;
     throw new Error(`Login API error: ${errorMessage}`);
   }
