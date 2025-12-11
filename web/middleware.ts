@@ -177,12 +177,8 @@ export async function middleware(request: NextRequest) {
 
   // Handle root path redirect based on authentication status
   if (pathname === '/') {
-    // Create a temporary response for auth check (cookie adapter needs a response object)
-    // We'll create the actual redirect response after checking auth
-    const tempResponse = NextResponse.next();
-    
-    // Check authentication status
-    const { isAuthenticated } = await checkAuthInMiddleware(request, tempResponse);
+    // Check authentication status (Edge Runtime compatible - no Supabase client import)
+    const { isAuthenticated } = checkAuthInMiddleware(request);
     
     // Determine redirect destination
     const redirectPath = isAuthenticated ? '/feed' : '/auth';
@@ -190,35 +186,6 @@ export async function middleware(request: NextRequest) {
     
     // Create redirect response
     const redirectResponse = NextResponse.redirect(redirectUrl, 307);
-    
-    // Copy cookies from tempResponse to redirectResponse (in case auth check set any)
-    // Note: Supabase SSR cookie adapter will have already written cookies to tempResponse
-    // We need to copy them to the redirect response
-    tempResponse.cookies.getAll().forEach((cookie) => {
-      const cookieOptions: {
-        path?: string;
-        domain?: string;
-        maxAge?: number;
-        expires?: Date;
-        httpOnly?: boolean;
-        secure?: boolean;
-        sameSite?: 'strict' | 'lax' | 'none';
-      } = {};
-      
-      if (cookie.path) cookieOptions.path = cookie.path;
-      if (cookie.domain) cookieOptions.domain = cookie.domain;
-      if (cookie.maxAge !== undefined) cookieOptions.maxAge = cookie.maxAge;
-      if (cookie.httpOnly !== undefined) cookieOptions.httpOnly = cookie.httpOnly;
-      if (cookie.secure !== undefined) cookieOptions.secure = cookie.secure;
-      if (cookie.sameSite) cookieOptions.sameSite = cookie.sameSite as 'strict' | 'lax' | 'none';
-      
-      // Only set expires if it exists and is a valid number
-      if (cookie.expires && typeof cookie.expires === 'number') {
-        cookieOptions.expires = new Date(cookie.expires * 1000);
-      }
-      
-      redirectResponse.cookies.set(cookie.name, cookie.value, cookieOptions);
-    });
     
     // Add cache headers to help with redirect performance
     redirectResponse.headers.set('Cache-Control', 'public, max-age=3600, stale-while-revalidate=86400');

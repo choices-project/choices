@@ -1,129 +1,69 @@
-import type { NextRequest, NextResponse } from 'next/server'
-import type { SupabaseClient } from '@supabase/supabase-js'
-
-import { logger } from '@/lib/utils/logger'
-import type { Database } from '@/types/supabase'
+import type { NextRequest } from 'next/server'
 
 /**
- * Get Supabase client for use in Next.js middleware
+ * Check if a user is authenticated in middleware context (Edge Runtime compatible)
  * 
- * This function creates a Supabase client that works in the middleware context
- * by using a cookie adapter that reads from NextRequest and writes to NextResponse.
+ * This function works in Edge Runtime by checking for Supabase auth cookies directly
+ * without importing @supabase/ssr or @supabase/supabase-js, which are not supported in Edge.
+ * 
+ * Supabase stores auth tokens in cookies with the pattern:
+ * - sb-<project-ref>-auth-token (main auth cookie)
+ * - sb-access-token (custom cookie set by our login route)
  * 
  * @param request - The Next.js request object
- * @param response - The Next.js response object (will be modified with cookie headers)
- * @returns Supabase client configured for middleware use
+ * @returns Object with isAuthenticated boolean
  * 
  * @example
  * ```typescript
  * export function middleware(request: NextRequest) {
- *   const response = NextResponse.next()
- *   const supabase = getSupabaseMiddlewareClient(request, response)
- *   const { data: { user } } = await supabase.auth.getUser()
- *   // ... use user to determine redirect
- *   return response
+ *   const { isAuthenticated } = checkAuthInMiddleware(request)
+ *   const redirectPath = isAuthenticated ? '/feed' : '/auth'
+ *   return NextResponse.redirect(new URL(redirectPath, request.url))
  * }
  * ```
  */
-export async function getSupabaseMiddlewareClient(
-  request: NextRequest,
-  response: NextResponse
-): Promise<SupabaseClient<Database>> {
-  const url = process.env.NEXT_PUBLIC_SUPABASE_URL
-  const key = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
-
-  if (!url || !key) {
-    // In CI/test environments, use fallbacks
-    if (process.env.CI === 'true' || process.env.NODE_ENV === 'test') {
-      logger.warn('Supabase environment variables missing in middleware; using test fallbacks', {
-        hasUrl: !!url,
-        hasKey: !!key,
-      })
-      // Return a mock client that will always return no user
-      // This allows tests to work without real Supabase credentials
-      const { createClient } = await import('@supabase/supabase-js')
-      return createClient<Database>(
-        url ?? 'https://example.supabase.co',
-        key ?? 'fake-dev-key-for-ci-only',
-      )
-    }
-    throw new Error('Missing required Supabase environment variables for middleware')
+export function checkAuthInMiddleware(
+  request: NextRequest
+): { isAuthenticated: boolean } {
+  // Check for Supabase auth cookies
+  // Supabase uses cookies with pattern: sb-<project-ref>-auth-token
+  // We also set sb-access-token in our login route
+  
+  const cookies = request.cookies
+  
+  // Check for our custom access token cookie
+  const accessToken = cookies.get('sb-access-token')
+  if (accessToken?.value) {
+    return { isAuthenticated: true }
   }
-
-  // Dynamically import @supabase/ssr to avoid build-time errors
-  const { createServerClient } = await import('@supabase/ssr')
-
-  // Cookie adapter for middleware context
-  // Reads from request.cookies and writes to response.cookies
-  const cookieAdapter = {
-    get: (name: string) => {
-      return request.cookies.get(name)?.value
-    },
-    set: (name: string, value: string, options: Record<string, unknown>) => {
-      // Write cookie to response headers
-      response.cookies.set({
-        name,
-        value,
-        ...(options as {
-          path?: string
-          domain?: string
-          maxAge?: number
-          httpOnly?: boolean
-          secure?: boolean
-          sameSite?: 'strict' | 'lax' | 'none'
-        }),
-      })
-    },
-    remove: (name: string, options: Record<string, unknown>) => {
-      // Delete cookie from response
-      response.cookies.delete({
-        name,
-        ...(options as {
-          path?: string
-          domain?: string
-        }),
-      })
-    },
-  }
-
-  return createServerClient<Database>(url, key, {
-    cookies: cookieAdapter,
-  })
-}
-
-/**
- * Check if a user is authenticated in middleware context
- * 
- * @param request - The Next.js request object
- * @param response - The Next.js response object
- * @returns Object with isAuthenticated boolean and user if authenticated
- */
-export async function checkAuthInMiddleware(
-  request: NextRequest,
-  response: NextResponse
-): Promise<{ isAuthenticated: boolean; user: { id: string; email?: string | undefined } | null }> {
-  try {
-    const supabase = await getSupabaseMiddlewareClient(request, response)
-    const { data: { user }, error } = await supabase.auth.getUser()
-
-    if (error || !user) {
-      return { isAuthenticated: false, user: null }
+  
+  // Check for Supabase's standard auth token cookie
+  // Supabase project ref is derived from NEXT_PUBLIC_SUPABASE_URL
+  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
+  if (supabaseUrl) {
+    try {
+      // Extract project ref from Supabase URL (e.g., https://xyzabc.supabase.co -> xyzabc)
+      const urlMatch = supabaseUrl.match(/https?:\/\/([^.]+)\.supabase\.(co|io)/)
+      if (urlMatch && urlMatch[1]) {
+        const projectRef = urlMatch[1]
+        const authTokenCookie = cookies.get(`sb-${projectRef}-auth-token`)
+        if (authTokenCookie?.value) {
+          return { isAuthenticated: true }
+        }
+      }
+    } catch {
+      // If URL parsing fails, continue to check other patterns
     }
-
-    return {
-      isAuthenticated: true,
-      user: {
-        id: user.id,
-        ...(user.email ? { email: user.email } : {}),
-      },
-    }
-  } catch (error) {
-    // Log error but fail secure (assume unauthenticated)
-    logger.error('Error checking authentication in middleware', {
-      error: error instanceof Error ? error.message : String(error),
-      path: request.nextUrl.pathname,
-    })
-    return { isAuthenticated: false, user: null }
   }
+  
+  // Check for any cookie starting with 'sb-' and containing 'auth'
+  // This catches various Supabase cookie naming patterns
+  for (const cookie of cookies.getAll()) {
+    if (cookie.name.startsWith('sb-') && cookie.name.includes('auth') && cookie.value) {
+      return { isAuthenticated: true }
+    }
+  }
+  
+  return { isAuthenticated: false }
 }
 
