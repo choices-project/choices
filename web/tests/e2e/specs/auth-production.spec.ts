@@ -8,6 +8,8 @@ import {
   waitForPageReady,
 } from '../helpers/e2e-setup';
 
+const PRODUCTION_URL = process.env.PRODUCTION_URL || 'https://choices-app.com';
+const BASE_URL = process.env.BASE_URL || 'http://127.0.0.1:3000';
 const regularEmail = process.env.E2E_USER_EMAIL;
 const regularPassword = process.env.E2E_USER_PASSWORD;
 const adminEmail = process.env.E2E_ADMIN_EMAIL;
@@ -25,6 +27,9 @@ test.describe('Auth – real backend', () => {
 
   test('existing test user can sign in via /auth', async ({ page }) => {
     test.setTimeout(120_000); // Increase test timeout for production server
+
+    // Navigate to auth page on the correct base URL
+    await page.goto(`${BASE_URL}/auth`, { waitUntil: 'domcontentloaded', timeout: 30_000 });
 
     await loginTestUser(page, {
       email: regularEmail!,
@@ -66,6 +71,9 @@ test.describe('Auth – real backend', () => {
 
   test('admin credentials unlock admin routes', async ({ page }) => {
     test.setTimeout(120_000); // Increase test timeout for production server
+
+    // Navigate to auth page on the correct base URL
+    await page.goto(`${BASE_URL}/auth`, { waitUntil: 'domcontentloaded', timeout: 30_000 });
 
     await loginAsAdmin(page, {
       email: adminEmail!,

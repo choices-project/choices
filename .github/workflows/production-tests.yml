@@ -1,0 +1,284 @@
+name: Production Testing
+
+on:
+  workflow_dispatch:
+    inputs:
+      run_full_suite:
+        description: 'Run full production test suite'
+        required: false
+        default: 'true'
+        type: boolean
+  schedule:
+    # Run production tests every 6 hours
+    - cron: '0 */6 * * *'
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/production-tests.yml'
+      - 'web/tests/e2e/specs/production-smoke.spec.ts'
+      - 'web/tests/e2e/specs/production-*.spec.ts'
+
+permissions:
+  contents: read
+  checks: write
+  pull-requests: write
+
+concurrency:
+  group: production-tests
+  cancel-in-progress: false
+
+env:
+  NODE_VERSION: '24.x'
+  NPM_VERSION: '11.6.1'
+  PRODUCTION_URL: 'https://choices-app.com'
+
+jobs:
+  production-smoke-tests:
+    name: Production Smoke Tests
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    defaults:
+      run:
+        working-directory: web
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: npm
+          cache-dependency-path: web/package-lock.json
+
+      - name: Use repo's npm version
+        run: npm i -g npm@${{ env.NPM_VERSION }}
+
+      - name: Install dependencies
+        run: npm run ci:install
+
+      - name: Install Playwright browsers
+        run: npx playwright install --with-deps chromium
+
+      - name: Run production smoke tests
+        run: |
+          npx playwright test production-smoke.spec.ts \
+            --config tests/e2e/playwright.config.ts \
+            --project=chromium \
+            --reporter=html,junit,github
+        env:
+          CI: true
+          BASE_URL: ${{ env.PRODUCTION_URL }}
+          PRODUCTION_URL: ${{ env.PRODUCTION_URL }}
+
+      - name: Upload test results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: production-smoke-results
+          path: |
+            web/playwright-report/
+            web/test-results/
+          retention-days: 30
+
+      - name: Comment on PR
+        if: github.event_name == 'pull_request' && always()
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const fs = require('fs');
+            const path = require('path');
+            
+            let comment = '## Production Smoke Tests\n\n';
+            
+            try {
+              const resultsPath = path.join('web', 'test-results');
+              if (fs.existsSync(resultsPath)) {
+                comment += '✅ Production smoke tests completed\n\n';
+                comment += 'Check the workflow artifacts for detailed test reports.\n';
+              } else {
+                comment += '⚠️ Test results not found\n';
+              }
+            } catch (error) {
+              comment += `❌ Error generating summary: ${error.message}\n`;
+            }
+            
+            github.rest.issues.createComment({
+              issue_number: context.issue.number,
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              body: comment
+            });
+
+  production-e2e-tests:
+    name: Production E2E Tests
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    needs: production-smoke-tests
+    if: github.event.inputs.run_full_suite != 'false'
+    defaults:
+      run:
+        working-directory: web
+
+    env:
+      BASE_URL: ${{ env.PRODUCTION_URL }}
+      PRODUCTION_URL: ${{ env.PRODUCTION_URL }}
+      E2E_USER_EMAIL: ${{ secrets.E2E_USER_EMAIL }}
+      E2E_USER_PASSWORD: ${{ secrets.E2E_USER_PASSWORD }}
+      E2E_ADMIN_EMAIL: ${{ secrets.E2E_ADMIN_EMAIL }}
+      E2E_ADMIN_PASSWORD: ${{ secrets.E2E_ADMIN_PASSWORD }}
+      NEXT_PUBLIC_SUPABASE_URL: ${{ secrets.NEXT_PUBLIC_SUPABASE_URL }}
+      NEXT_PUBLIC_SUPABASE_ANON_KEY: ${{ secrets.NEXT_PUBLIC_SUPABASE_ANON_KEY }}
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: npm
+          cache-dependency-path: web/package-lock.json
+
+      - name: Use repo's npm version
+        run: npm i -g npm@${{ env.NPM_VERSION }}
+
+      - name: Install dependencies
+        run: npm run ci:install
+
+      - name: Install Playwright browsers
+        run: npx playwright install --with-deps chromium
+
+      - name: Run production E2E tests
+        run: |
+          npx playwright test \
+            auth-production.spec.ts \
+            poll-production.spec.ts \
+            production-critical-journeys.spec.ts \
+            --config tests/e2e/playwright.config.ts \
+            --project=chromium \
+            --reporter=html,junit,github
+        env:
+          CI: true
+          PLAYWRIGHT_USE_MOCKS: '0'
+          BASE_URL: ${{ env.PRODUCTION_URL }}
+          PRODUCTION_URL: ${{ env.PRODUCTION_URL }}
+
+      - name: Upload test results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: production-e2e-results
+          path: |
+            web/playwright-report/
+            web/test-results/
+          retention-days: 30
+
+  production-api-tests:
+    name: Production API Tests
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    needs: production-smoke-tests
+    defaults:
+      run:
+        working-directory: web
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: npm
+          cache-dependency-path: web/package-lock.json
+
+      - name: Use repo's npm version
+        run: npm i -g npm@${{ env.NPM_VERSION }}
+
+      - name: Install dependencies
+        run: npm run ci:install
+
+      - name: Install Playwright browsers
+        run: npx playwright install --with-deps chromium
+
+      - name: Test API endpoints
+        run: |
+          npx playwright test production-smoke.spec.ts \
+            --grep "API Endpoints" \
+            --config tests/e2e/playwright.config.ts \
+            --project=chromium \
+            --reporter=html,junit,github
+        env:
+          CI: true
+          BASE_URL: ${{ env.PRODUCTION_URL }}
+          PRODUCTION_URL: ${{ env.PRODUCTION_URL }}
+
+      - name: Upload API test results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: production-api-results
+          path: |
+            web/playwright-report/
+            web/test-results/
+          retention-days: 30
+
+  production-test-summary:
+    name: Production Test Summary
+    runs-on: ubuntu-latest
+    needs: [production-smoke-tests, production-e2e-tests, production-api-tests]
+    if: always()
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Download all artifacts
+        uses: actions/download-artifact@v4
+        with:
+          path: ./artifacts
+
+      - name: Generate summary
+        run: |
+          echo "# Production Test Results" > summary.md
+          echo "" >> summary.md
+          echo "## Test Status" >> summary.md
+          echo "- Smoke Tests: ${{ needs.production-smoke-tests.result }}" >> summary.md
+          echo "- E2E Tests: ${{ needs.production-e2e-tests.result }}" >> summary.md
+          echo "- API Tests: ${{ needs.production-api-tests.result }}" >> summary.md
+          echo "" >> summary.md
+          echo "## Production URL" >> summary.md
+          echo "Tested against: ${{ env.PRODUCTION_URL }}" >> summary.md
+          echo "" >> summary.md
+          echo "## Test Reports" >> summary.md
+          echo "Detailed reports available in workflow artifacts." >> summary.md
+
+      - name: Upload summary
+        uses: actions/upload-artifact@v4
+        with:
+          name: production-test-summary
+          path: summary.md
+          retention-days: 30
+
+      - name: Create status check
+        if: github.event_name == 'push'
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const allPassed = '${{ needs.production-smoke-tests.result }}' === 'success' &&
+                             ('${{ needs.production-e2e-tests.result }}' === 'success' || '${{ needs.production-e2e-tests.result }}' === 'skipped') &&
+                             '${{ needs.production-api-tests.result }}' === 'success';
+            
+            github.rest.repos.createCommitStatus({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              sha: context.sha,
+              state: allPassed ? 'success' : 'failure',
+              description: allPassed ? 'All production tests passed' : 'Some production tests failed',
+              context: 'production-tests'
+            });
+
