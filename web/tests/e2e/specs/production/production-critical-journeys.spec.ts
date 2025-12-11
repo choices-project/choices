@@ -1,4 +1,5 @@
 import { expect, test } from '@playwright/test';
+import { ensureLoggedOut, loginTestUser, waitForPageReady } from '../../helpers/e2e-setup';
 
 /**
  * Production Critical User Journeys
@@ -11,12 +12,14 @@ import { expect, test } from '@playwright/test';
 const PRODUCTION_URL = process.env.PRODUCTION_URL || 'https://choices-app.com';
 const BASE_URL = process.env.BASE_URL || PRODUCTION_URL;
 
+const regularEmail = process.env.E2E_USER_EMAIL;
+const regularPassword = process.env.E2E_USER_PASSWORD;
+
 test.describe('Production Critical Journeys', () => {
   test('unauthenticated user redirected to /auth from root', async ({ page }) => {
     test.setTimeout(60_000);
     
-    // Clear any existing authentication
-    await page.context().clearCookies();
+    await ensureLoggedOut(page);
     
     // Navigate to root
     await page.goto(BASE_URL, { waitUntil: 'networkidle', timeout: 30_000 });
@@ -33,30 +36,24 @@ test.describe('Production Critical Journeys', () => {
   });
 
   test('authenticated user redirected to /feed from root', async ({ page }) => {
-    test.setTimeout(60_000);
+    test.setTimeout(120_000);
     
-    // This test requires authentication credentials
-    const email = process.env.E2E_USER_EMAIL;
-    const password = process.env.E2E_USER_PASSWORD;
-    
-    if (!email || !password) {
+    if (!regularEmail || !regularPassword) {
       test.skip();
       return;
     }
 
-    // Clear cookies first
-    await page.context().clearCookies();
+    await ensureLoggedOut(page);
     
     // Navigate to auth page and log in
     await page.goto(`${BASE_URL}/auth`, { waitUntil: 'domcontentloaded', timeout: 30_000 });
+    await loginTestUser(page, {
+      email: regularEmail,
+      password: regularPassword,
+      username: regularEmail.split('@')[0] ?? 'e2e-user',
+    });
     
-    // Fill in login form
-    await page.fill('input[type="email"]', email);
-    await page.fill('input[type="password"]', password);
-    await page.click('button[type="submit"]');
-    
-    // Wait for authentication to complete
-    await page.waitForTimeout(3_000);
+    await waitForPageReady(page);
     
     // Now visit root - should redirect to /feed
     await page.goto(BASE_URL, { waitUntil: 'networkidle', timeout: 30_000 });
@@ -79,8 +76,7 @@ test.describe('Production Critical Journeys', () => {
   test('feed page requires authentication', async ({ page }) => {
     test.setTimeout(60_000);
     
-    // Clear any existing authentication
-    await page.context().clearCookies();
+    await ensureLoggedOut(page);
     
     await page.goto(`${BASE_URL}/feed`, { waitUntil: 'domcontentloaded', timeout: 30_000 });
     
@@ -115,8 +111,7 @@ test.describe('Production Critical Journeys', () => {
   test('navigation works between auth and other pages', async ({ page }) => {
     test.setTimeout(60_000);
     
-    // Clear any existing authentication
-    await page.context().clearCookies();
+    await ensureLoggedOut(page);
     
     // Start at auth page (unauthenticated users should be redirected here)
     await page.goto(`${BASE_URL}/auth`, { waitUntil: 'domcontentloaded', timeout: 30_000 });
@@ -161,8 +156,7 @@ test.describe('Production Critical Journeys', () => {
   test('middleware redirect works correctly for unauthenticated users', async ({ page }) => {
     test.setTimeout(30_000);
     
-    // Clear any existing authentication
-    await page.context().clearCookies();
+    await ensureLoggedOut(page);
     
     // Test root redirect for unauthenticated user
     const response = await page.goto(BASE_URL, { waitUntil: 'networkidle', timeout: 30_000 });

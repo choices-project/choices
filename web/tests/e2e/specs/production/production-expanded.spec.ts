@@ -1,4 +1,5 @@
 import { expect, test } from '@playwright/test';
+import { ensureLoggedOut } from '../../helpers/e2e-setup';
 
 /**
  * Expanded Production Tests
@@ -62,8 +63,7 @@ test.describe('Production Expanded Tests', () => {
 
   test.describe('Page Navigation', () => {
     test('unauthenticated user redirected from feed to auth', async ({ page }) => {
-      // Clear any existing authentication
-      await page.context().clearCookies();
+      await ensureLoggedOut(page);
       
       await page.goto(`${BASE_URL}/feed`, { waitUntil: 'domcontentloaded', timeout: 30_000 });
       await page.waitForTimeout(2_000);
@@ -76,8 +76,7 @@ test.describe('Production Expanded Tests', () => {
     });
 
     test('unauthenticated user can navigate to auth page', async ({ page }) => {
-      // Clear any existing authentication
-      await page.context().clearCookies();
+      await ensureLoggedOut(page);
       
       await page.goto(`${BASE_URL}/auth`, { waitUntil: 'domcontentloaded', timeout: 30_000 });
       await page.waitForTimeout(1_000);
@@ -90,8 +89,7 @@ test.describe('Production Expanded Tests', () => {
     });
 
     test('root redirect works consistently for unauthenticated users', async ({ page }) => {
-      // Clear any existing authentication
-      await page.context().clearCookies();
+      await ensureLoggedOut(page);
       
       // Test redirect multiple times to ensure consistency
       for (let i = 0; i < 3; i++) {
@@ -105,8 +103,7 @@ test.describe('Production Expanded Tests', () => {
 
   test.describe('Performance Metrics', () => {
     test('root page redirect to auth is fast', async ({ page }) => {
-      // Clear any existing authentication
-      await page.context().clearCookies();
+      await ensureLoggedOut(page);
       
       const startTime = Date.now();
       await page.goto(BASE_URL, { waitUntil: 'networkidle', timeout: 30_000 });
@@ -120,8 +117,7 @@ test.describe('Production Expanded Tests', () => {
     });
 
     test('feed page redirect to auth is fast', async ({ page }) => {
-      // Clear any existing authentication
-      await page.context().clearCookies();
+      await ensureLoggedOut(page);
       
       const startTime = Date.now();
       await page.goto(`${BASE_URL}/feed`, { waitUntil: 'domcontentloaded', timeout: 30_000 });

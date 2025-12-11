@@ -1,4 +1,5 @@
 import { expect, test, type Page } from '@playwright/test';
+import { ensureLoggedOut, loginTestUser, waitForPageReady } from '../../helpers/e2e-setup';
 
 /**
  * Production Smoke Tests
@@ -14,11 +15,13 @@ const PRODUCTION_URL = process.env.PRODUCTION_URL || 'https://choices-app.com';
 const BASE_URL = process.env.BASE_URL || PRODUCTION_URL;
 const IS_PRODUCTION = BASE_URL.includes('choices-app.com');
 
-  test.describe('Production Smoke Tests', () => {
+const regularEmail = process.env.E2E_USER_EMAIL;
+const regularPassword = process.env.E2E_USER_PASSWORD;
+
+test.describe('Production Smoke Tests', () => {
   test.describe('Critical Pages', () => {
     test('root page redirects unauthenticated users to /auth', async ({ page }) => {
-      // Clear any existing authentication
-      await page.context().clearCookies();
+      await ensureLoggedOut(page);
       await page.goto(BASE_URL, { waitUntil: 'networkidle', timeout: 30_000 });
       
       // Unauthenticated users should be redirected to /auth for login/signup
@@ -26,29 +29,24 @@ const IS_PRODUCTION = BASE_URL.includes('choices-app.com');
     });
 
     test('root page redirects authenticated users to /feed', async ({ page }) => {
-      // This test requires authentication credentials
-      // Skip if credentials are not available (e.g., in CI without secrets)
-      const email = process.env.E2E_USER_EMAIL;
-      const password = process.env.E2E_USER_PASSWORD;
+      test.setTimeout(120_000);
       
-      if (!email || !password) {
+      if (!regularEmail || !regularPassword) {
         test.skip();
         return;
       }
 
-      // Clear cookies first
-      await page.context().clearCookies();
+      await ensureLoggedOut(page);
       
       // Navigate to auth page and log in
       await page.goto(`${BASE_URL}/auth`, { waitUntil: 'domcontentloaded', timeout: 30_000 });
+      await loginTestUser(page, {
+        email: regularEmail,
+        password: regularPassword,
+        username: regularEmail.split('@')[0] ?? 'e2e-user',
+      });
       
-      // Fill in login form
-      await page.fill('input[type="email"]', email);
-      await page.fill('input[type="password"]', password);
-      await page.click('button[type="submit"]');
-      
-      // Wait for authentication to complete
-      await page.waitForTimeout(3_000);
+      await waitForPageReady(page);
       
       // Now visit root - should redirect to /feed
       await page.goto(BASE_URL, { waitUntil: 'networkidle', timeout: 30_000 });
@@ -58,8 +56,7 @@ const IS_PRODUCTION = BASE_URL.includes('choices-app.com');
     });
 
     test('feed page requires authentication or redirects to /auth', async ({ page }) => {
-      // Clear any existing authentication
-      await page.context().clearCookies();
+      await ensureLoggedOut(page);
       
       await page.goto(`${BASE_URL}/feed`, { waitUntil: 'domcontentloaded', timeout: 30_000 });
       
