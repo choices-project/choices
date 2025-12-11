@@ -81,12 +81,17 @@ test.describe('Auth – real backend', () => {
   test('admin credentials unlock admin routes', async ({ page }) => {
     test.setTimeout(120_000); // Increase test timeout for production server
 
+    if (!adminEmail || !adminPassword) {
+      test.skip(true, 'E2E_ADMIN_EMAIL and E2E_ADMIN_PASSWORD are required');
+      return;
+    }
+
     // Navigate to auth page on the correct base URL
     await page.goto(`${BASE_URL}/auth`, { waitUntil: 'domcontentloaded', timeout: 30_000 });
 
     await loginAsAdmin(page, {
-      email: adminEmail!,
-      password: adminPassword!,
+      email: adminEmail,
+      password: adminPassword,
       username: adminEmail.split('@')[0] ?? 'e2e-admin',
     });
 
