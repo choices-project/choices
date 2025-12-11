@@ -215,6 +215,23 @@ jobs:
           echo "3. Check if build succeeds locally: cd web && npm run build"
           exit 1
 
+      - name: Setup Node.js for E2E tests
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: npm
+          cache-dependency-path: web/package-lock.json
+
+      - name: Install dependencies for E2E tests
+        run: |
+          cd web
+          npm ci
+
+      - name: Install Playwright browsers
+        run: |
+          cd web
+          npx playwright install --with-deps chromium
+
       - name: Run E2E tests against staging
         run: |
           cd web
