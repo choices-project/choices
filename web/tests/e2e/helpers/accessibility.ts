@@ -15,7 +15,9 @@ export type AxeResults = Awaited<ReturnType<AxeBuilder['analyze']>>;
 export async function runAxeAudit(page: Page, context: string, options: AxeOptions = {}): Promise<AxeResults> {
   const { allowViolations = false, include, exclude } = options;
 
-  const builder = new AxeBuilder({ page }).withTags(['wcag2a', 'wcag2aa']);
+  // Type assertion to work around version mismatch between @playwright/test and @axe-core/playwright
+  // @axe-core/playwright may use a slightly different version of playwright-core types
+  const builder = new AxeBuilder({ page: page as any }).withTags(['wcag2a', 'wcag2aa']);
 
   if (include?.length) {
     for (const selector of include) {
