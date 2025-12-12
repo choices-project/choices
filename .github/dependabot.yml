@@ -1,21 +1,16 @@
 version: 2
 updates:
-  - package-ecosystem: npm
-    directory: /web
-    schedule: { interval: weekly }
-    open-pull-requests-limit: 10
-    groups:
-      nextjs:
-        patterns: ["next", "@next/*"]
-      linting:
-        patterns: ["eslint*", "@typescript-eslint/*", "typescript"]
-      testing:
-        patterns: ["jest*", "@jest/*", "@testing-library/*", "@playwright/*"]
-      supabase:
-        patterns: ["@supabase/*"]
-      misc:
-        patterns: ["*"]
+  # Disabled: Only update dependencies for critical security vulnerabilities manually
+  # Dependabot PRs are disabled to maintain stability with verified, tried-and-true versions
+  # Security alerts will still be available via GitHub's security tab
+  # - package-ecosystem: npm
+  #   directory: /web
+  #   schedule: { interval: weekly }
+  #   open-pull-requests-limit: 0
 
+  # GitHub Actions: Only update for critical security issues
   - package-ecosystem: github-actions
     directory: /
-    schedule: { interval: weekly }
+    schedule: { interval: monthly }
+    open-pull-requests-limit: 2
+    # Only create PRs for security updates - manual review required
