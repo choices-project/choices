@@ -245,9 +245,12 @@ export default function PushNotificationsHarnessPage() {
       delete (window as any).__pushNotificationsHarness;
       delete document.documentElement.dataset.pushNotificationsHarness;
     };
-  }, [preferences, storesReady]);
+  }, [preferences, storesReady, isE2E]); // Include isE2E in dependencies
 
-  if (!storesReady) {
+  // In E2E mode, render immediately even if stores aren't ready (they're skipped anyway)
+  const isE2E = process.env.NEXT_PUBLIC_ENABLE_E2E_HARNESS === '1' || process.env.PLAYWRIGHT_USE_MOCKS === '1';
+  
+  if (!storesReady && !isE2E) {
     return (
       <div
         className="flex min-h-screen items-center justify-center bg-gray-50 text-gray-600"

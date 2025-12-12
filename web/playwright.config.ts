@@ -21,6 +21,10 @@ export default defineConfig({
     video: 'retain-on-failure',
     actionTimeout: 30_000, // Increased for CI reliability
     navigationTimeout: 60_000, // Increased for harness page loads
+    // Add E2E bypass header for middleware to recognize E2E tests
+    extraHTTPHeaders: process.env.PLAYWRIGHT_USE_MOCKS === '1' || process.env.NEXT_PUBLIC_ENABLE_E2E_HARNESS === '1'
+      ? { 'x-e2e-bypass': '1' }
+      : {},
   },
 
   projects: [
