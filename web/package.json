@@ -196,6 +196,7 @@
     "debug": "4.4.1",
     "color-convert": "2.0.1",
     "color-string": "1.9.1",
-    "glob": "^11.0.4"
+    "glob": "^11.0.4",
+    "playwright-core": "1.56.1"
   }
 }
