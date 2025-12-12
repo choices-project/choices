@@ -123,7 +123,7 @@ export default function PushNotificationsHarnessPage() {
     };
 
     checkSubscription();
-  }, [storesReady]);
+  }, [storesReady, isE2E]); // Include isE2E for completeness (it's constant but React wants it)
 
   useEffect(() => {
     // In E2E mode, set up harness even if stores aren't ready (they're skipped)
@@ -246,7 +246,7 @@ export default function PushNotificationsHarnessPage() {
       delete (window as any).__pushNotificationsHarness;
       delete document.documentElement.dataset.pushNotificationsHarness;
     };
-  }, [preferences, storesReady]); // isE2E is constant, doesn't need to be in dependencies
+  }, [preferences, storesReady, isE2E]); // Include isE2E for completeness (it's constant but React wants it)
 
   // In E2E mode, render immediately even if stores aren't ready (they're skipped anyway)
   if (!storesReady && !isE2E) {
