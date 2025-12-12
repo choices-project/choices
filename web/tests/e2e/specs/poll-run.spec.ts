@@ -76,17 +76,18 @@ test.describe('@axe Poll viewer harness', () => {
 
   test('emits analytics for viewing, sharing, and voting', async ({ page }) => {
     await page.goto(`/e2e/poll-run/${POLL_ID}`, {
-      waitUntil: 'domcontentloaded',
+      waitUntil: 'networkidle',
       timeout: HARNESS_NAV_TIMEOUT,
     });
     await waitForPageReady(page);
     await page.waitForFunction(() => Boolean(globalThis.__playwrightAnalytics), { timeout: 60_000 });
     
-    // Wait for title to be set (metadata should be set by Next.js)
-    await page.waitForFunction(() => document.title && document.title !== '', { timeout: 10_000 });
-    
-    // Ensure lang attribute is present on html element
-    await page.waitForFunction(() => document.documentElement.lang && document.documentElement.lang !== '', { timeout: 10_000 });
+    // Wait for React to hydrate and set title/lang (root layout provides them, but React needs to hydrate)
+    await page.waitForFunction(() => {
+      const hasTitle = document.title && document.title.trim() !== '';
+      const hasLang = document.documentElement.lang && document.documentElement.lang.trim() !== '';
+      return hasTitle && hasLang;
+    }, { timeout: 15_000 });
     
     await runAxeAudit(page, 'poll run initial state');
 
