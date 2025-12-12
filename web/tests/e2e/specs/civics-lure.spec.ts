@@ -5,31 +5,29 @@ import { waitForPageReady } from '../helpers/e2e-setup';
 
 test.describe('@axe Civics lure', () => {
   test('renders election countdown and surfaces live announcements', async ({ page }) => {
-    await page.goto('/e2e/civics-lure', { waitUntil: 'domcontentloaded', timeout: 60_000 });
+    await page.goto('/e2e/civics-lure', { waitUntil: 'networkidle', timeout: 60_000 });
+    await waitForPageReady(page, 60_000);
     
-    // First, wait for the HTML to be fully loaded with lang attribute
-    // The root layout sets lang on the <html> element, so wait for that
-    await page.waitForFunction(() => {
-      const htmlElement = document.documentElement;
-      const lang = htmlElement.getAttribute('lang');
-      return lang !== null && lang.trim() !== '';
-    }, { timeout: 10_000 });
+    // Wait for React to fully hydrate and set both title and lang
+    // The root layout provides lang in initial HTML, and the component's useEffect sets title
+    // Wait for both to be present and non-empty
+    await page.waitForFunction(
+      () => {
+        const title = document.title?.trim();
+        const lang = document.documentElement.getAttribute('lang')?.trim();
+        // Root layout provides default title, component may override it
+        // Both should be present
+        return title && title !== '' && lang && lang !== '';
+      },
+      { timeout: 30_000 }
+    );
     
-    // Wait for React to hydrate and set document.title
-    // The component's useEffect sets document.title, and the root layout provides default title
-    await page.waitForFunction(() => {
-      const title = document.title?.trim();
-      return title && title !== '';
-    }, { timeout: 30_000 });
-    
-    // Double-check that both are present
+    // Verify both are present before running Axe
     const title = await page.title();
     const lang = await page.evaluate(() => document.documentElement.getAttribute('lang'));
     if (!title || !lang) {
-      throw new Error(`Title or lang missing: title="${title}", lang="${lang}"`);
+      throw new Error(`Title or lang missing after wait: title="${title}", lang="${lang}"`);
     }
-    
-    await waitForPageReady(page, 60_000);
 
     await runAxeAudit(page, 'civics lure page', {
       exclude: ['nextjs-portal', 'div[data-nextjs-toast-wrapper="true"]'],
