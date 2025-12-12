@@ -51,7 +51,11 @@ export default defineConfig({
   ],
 
   webServer: {
-    command: 'npm run dev',
+    // Use dev server for faster startup and hot reload during development
+    // In CI, dev server is still used but with production-like optimizations disabled
+    command: process.env.CI
+      ? 'bash -c "NEXT_PUBLIC_ENABLE_E2E_HARNESS=1 PLAYWRIGHT_USE_MOCKS=1 npm run dev"'
+      : 'npm run dev',
     url: `${process.env.BASE_URL ?? 'http://localhost:3000'}/api/health`, // Use health endpoint for more reliable readiness check
     reuseExistingServer: !process.env.CI,
     timeout: 300_000, // Increased to 5 minutes for CI environments
@@ -60,6 +64,7 @@ export default defineConfig({
       NEXT_DISABLE_REACT_DEV_OVERLAY: '1',
       NEXT_PUBLIC_DISABLE_FEEDBACK_WIDGET:
         process.env.NEXT_PUBLIC_DISABLE_FEEDBACK_WIDGET ?? '0',
+      // CRITICAL: NEXT_PUBLIC_ vars must be set at process start for Next.js to include them in build
       NEXT_PUBLIC_ENABLE_E2E_HARNESS:
         process.env.NEXT_PUBLIC_ENABLE_E2E_HARNESS ?? '1',
       NEXT_DISABLE_STRICT_MODE: '1',
@@ -67,7 +72,7 @@ export default defineConfig({
       PLAYWRIGHT_USE_MOCKS: process.env.PLAYWRIGHT_USE_MOCKS ?? '1',
       // Ensure E2E harness is enabled
       ALLOWED_DEV_ORIGINS: process.env.ALLOWED_DEV_ORIGINS ?? 'http://localhost:3000',
-      // Ensure NODE_ENV is development for dev server
+      // Ensure NODE_ENV is development for dev server (faster startup than production build)
       NODE_ENV: 'development',
     },
   },

@@ -887,6 +887,8 @@ export const usePWAStore = create<PWAStore>()(
       {
         name: 'pwa-store',
         storage: createSafeStorage(),
+        // Skip hydration delay in E2E/test environments for faster test execution
+        skipHydration: process.env.NEXT_PUBLIC_ENABLE_E2E_HARNESS === '1' || process.env.PLAYWRIGHT_USE_MOCKS === '1',
         partialize: (state) => ({
           installation: state.installation,
           offline: state.offline,
