@@ -292,14 +292,16 @@ export default function PollShare({ pollId, poll }: PollShareProps) {
         
         <div className="space-y-3">
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
+            <label htmlFor="embed-code-textarea" className="block text-sm font-medium text-gray-700 mb-2">
               {t('polls.share.embed.codeLabel')}
             </label>
             <textarea
+              id="embed-code-textarea"
               readOnly
               value={`<iframe src="${pollUrl}/embed" width="100%" height="600" frameborder="0"></iframe>`}
               className="w-full px-3 py-2 border border-gray-300 rounded-lg bg-gray-50 text-gray-900 text-sm font-mono"
               rows={3}
+              aria-label={t('polls.share.embed.codeLabel')}
             />
           </div>
           
