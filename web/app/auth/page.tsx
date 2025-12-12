@@ -157,15 +157,9 @@ export default function AuthPage() {
             password: formData.password,
           });
           await syncSupabaseSession();
-          // If we reach here, loginAction did not throw an error,
-          // but it also handles redirection internally.
-          // We might not see this message if redirection happens immediately.
-          setMessage(t('auth.success.login'));
-          // The router.push might not be necessary if loginAction handles redirect
-          // but keeping it as a fallback or for clarity if loginAction doesn't always redirect.
-          setTimeout(() => {
-            router.push('/dashboard');
-          }, 1000);
+          // Redirect to feed (default for authenticated users per middleware)
+          // Use router.replace to avoid adding to history
+          router.replace('/feed');
         } catch (loginError: unknown) {
           // loginAction might throw an error if authentication fails
           const errorMessage = loginError instanceof Error ? loginError.message : translateError('loginFailed');
