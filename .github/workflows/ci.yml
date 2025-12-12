@@ -237,14 +237,9 @@ jobs:
         npx playwright install --with-deps chromium
 
     - name: Run smoke suite
-      env:
-        PLAYWRIGHT_USE_MOCKS: '1'
-        NEXT_PUBLIC_ENABLE_E2E_HARNESS: '1'
-        ALLOWED_DEV_ORIGINS: 'http://localhost:3000'
-        BASE_URL: 'http://localhost:3000'
       run: |
         cd web
-        npm run test:e2e:smoke
+        npx playwright test --project=chromium --grep @smoke --reporter=line
 
   accessibility-axe:
     name: Playwright Axe A11y
@@ -304,14 +299,9 @@ jobs:
         npx playwright install --with-deps chromium
 
     - name: Run axe-tagged specs
-      env:
-        PLAYWRIGHT_USE_MOCKS: '1'
-        NEXT_PUBLIC_ENABLE_E2E_HARNESS: '1'
-        ALLOWED_DEV_ORIGINS: 'http://localhost:3000'
-        BASE_URL: 'http://localhost:3000'
       run: |
         cd web
-        npm run test:e2e:axe
+        npx playwright test --grep @axe --project=chromium --reporter=line
 
     - name: Upload axe report
       uses: actions/upload-artifact@v4
