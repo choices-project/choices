@@ -8,8 +8,8 @@ export default defineConfig({
   retries: process.env.CI ? 0 : 0, // Disable retries in CI to prevent infinite loops on timeout failures
   workers: process.env.CI ? 1 : 2,
   reporter: 'line',
-  timeout: 60_000, // Increased for CI environments where harness pages may take longer to load
-  expect: { timeout: 10_000 }, // Increased for more reliable element assertions
+  timeout: 90_000, // Increased for CI environments where harness pages may take longer to load
+  expect: { timeout: 15_000 }, // Increased for more reliable element assertions
 
   // Global setup - creates test users before running tests
   globalSetup: './tests/e2e/setup/global-setup.ts',

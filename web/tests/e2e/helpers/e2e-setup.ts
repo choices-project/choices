@@ -1048,7 +1048,19 @@ export async function setupExternalAPIMocks(page: Page, overrides: Partial<Exter
   }
 
   return async () => {
-    await Promise.all(routes.map(({ url, handler }) => page.unroute(url, handler)));
+    try {
+      // Check if page/context is still open before attempting to unroute
+      if (page.isClosed()) {
+        return;
+      }
+      await Promise.all(routes.map(({ url, handler }) => page.unroute(url, handler)));
+    } catch (error) {
+      // Ignore errors if page/context is closed (test timeout scenario)
+      if (error instanceof Error && error.message.includes('closed')) {
+        return;
+      }
+      throw error;
+    }
   };
 }
 

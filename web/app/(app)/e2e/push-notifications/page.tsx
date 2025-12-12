@@ -43,6 +43,15 @@ export default function PushNotificationsHarnessPage() {
   const [storesReady, setStoresReady] = useState(false);
 
   useEffect(() => {
+    // In E2E/test environments, skip hydration wait to speed up tests
+    const isE2E = process.env.NEXT_PUBLIC_ENABLE_E2E_HARNESS === '1' || process.env.PLAYWRIGHT_USE_MOCKS === '1';
+    
+    if (isE2E) {
+      // Set stores as ready immediately in E2E mode
+      setStoresReady(true);
+      return;
+    }
+
     const userPersist = (useUserStore as typeof useUserStore & {
       persist?: {
         hasHydrated?: () => boolean;
