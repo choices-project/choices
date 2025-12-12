@@ -81,6 +81,13 @@ test.describe('@axe Poll viewer harness', () => {
     });
     await waitForPageReady(page);
     await page.waitForFunction(() => Boolean(globalThis.__playwrightAnalytics), { timeout: 60_000 });
+    
+    // Wait for title to be set (metadata should be set by Next.js)
+    await page.waitForFunction(() => document.title && document.title !== '', { timeout: 10_000 });
+    
+    // Ensure lang attribute is present on html element
+    await page.waitForFunction(() => document.documentElement.lang && document.documentElement.lang !== '', { timeout: 10_000 });
+    
     await runAxeAudit(page, 'poll run initial state');
 
     const shareButton = page.getByRole('button', { name: /Share/i });
