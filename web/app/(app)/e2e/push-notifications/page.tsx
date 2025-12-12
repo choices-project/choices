@@ -100,7 +100,7 @@ export default function PushNotificationsHarnessPage() {
         }
       });
     };
-  }, []);
+  }, [isE2E]); // Include isE2E for completeness (it's constant but React wants it)
 
   useEffect(() => {
     if (typeof window === 'undefined' || !('Notification' in window) || !storesReady) {
