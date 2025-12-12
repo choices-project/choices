@@ -350,6 +350,7 @@ export async function loginTestUser(page: Page, user: TestUser): Promise<void> {
   
   try {
     // Wait for navigation or cookies/tokens
+    // Accept dashboard, onboarding, feed, or admin routes (feed is the new default for authenticated users)
     await Promise.race([
       page.waitForURL(/\/(dashboard|admin|onboarding|feed)/, { timeout: authTimeout }),
       page.waitForFunction(

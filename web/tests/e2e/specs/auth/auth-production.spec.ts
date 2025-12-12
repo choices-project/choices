@@ -50,12 +50,13 @@ test.describe('Auth – real backend', () => {
 
     // loginTestUser already waits for redirect or auth tokens
     // Verify we're on the expected page after login
+    // Accept dashboard, onboarding, or feed (feed is the new default for authenticated users)
     const currentUrl = page.url();
-    const isOnDashboard = /(dashboard|onboarding)/.test(currentUrl);
+    const isOnExpectedPage = /(dashboard|onboarding|feed)/.test(currentUrl);
     
-    if (!isOnDashboard) {
+    if (!isOnExpectedPage) {
       // If not redirected yet, wait for it with longer timeout
-      await expect(page).toHaveURL(/(dashboard|onboarding)/, { timeout: 60_000 });
+      await expect(page).toHaveURL(/(dashboard|onboarding|feed)/, { timeout: 60_000 });
     }
     
     await waitForPageReady(page);
