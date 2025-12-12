@@ -235,6 +235,7 @@ jobs:
       env:
         PLAYWRIGHT_USE_MOCKS: '1'
         NEXT_PUBLIC_ENABLE_E2E_HARNESS: '1'
+        ALLOWED_DEV_ORIGINS: 'http://localhost:3000'
         BASE_URL: 'http://localhost:3000'
       run: |
         cd web
@@ -296,6 +297,7 @@ jobs:
       env:
         PLAYWRIGHT_USE_MOCKS: '1'
         NEXT_PUBLIC_ENABLE_E2E_HARNESS: '1'
+        ALLOWED_DEV_ORIGINS: 'http://localhost:3000'
         BASE_URL: 'http://localhost:3000'
       run: |
         cd web
