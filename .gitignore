@@ -50,6 +50,7 @@ pids
 
 # Coverage directory used by tools like istanbul
 coverage/
+coverage-report/
 *.lcov
 
 # nyc test coverage
