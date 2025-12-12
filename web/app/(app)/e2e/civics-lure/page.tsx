@@ -50,6 +50,9 @@ export default function CivicsLureHarnessPage() {
   const handleEngage = () => undefined;
 
   useEffect(() => {
+    // Set page title for accessibility
+    document.title = 'Civics Lure E2E Harness - Choices';
+    
     useRepresentativeStore.setState((state) => {
       state.locationRepresentatives = MOCK_REPRESENTATIVES;
       state.userDivisionIds = ['ocd-division/country:us/state:ca/place:san_francisco'];
