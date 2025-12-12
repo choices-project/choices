@@ -190,6 +190,11 @@ jobs:
       SUPABASE_SERVICE_ROLE_KEY: dev-only-secret
       SUPABASE_SECRET_KEY: dev-only-secret
       PRIVACY_PEPPER_CURRENT: base64:fake-pepper-for-ci-only-this-is-a-very-long-fake-pepper-value-that-meets-the-32-byte-minimum-requirement-for-testing-purposes-only
+      # Required for Playwright webServer and global setup
+      NEXT_PUBLIC_ENABLE_E2E_HARNESS: '1'
+      ALLOWED_DEV_ORIGINS: 'http://localhost:3000'
+      BASE_URL: 'http://localhost:3000'
+      PLAYWRIGHT_USE_MOCKS: '1'
 
     steps:
     - name: Checkout code
@@ -252,6 +257,11 @@ jobs:
       SUPABASE_SERVICE_ROLE_KEY: dev-only-secret
       SUPABASE_SECRET_KEY: dev-only-secret
       PRIVACY_PEPPER_CURRENT: base64:fake-pepper-for-ci-only-this-is-a-very-long-fake-pepper-value-that-meets-the-32-byte-minimum-requirement-for-testing-purposes-only
+      # Required for Playwright webServer and global setup
+      NEXT_PUBLIC_ENABLE_E2E_HARNESS: '1'
+      ALLOWED_DEV_ORIGINS: 'http://localhost:3000'
+      BASE_URL: 'http://localhost:3000'
+      PLAYWRIGHT_USE_MOCKS: '1'
 
     steps:
     - name: Checkout code
