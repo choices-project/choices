@@ -32,7 +32,9 @@ export default function PushNotificationsHarnessPage() {
   }
 
   // In E2E/test environments, skip hydration wait to speed up tests
-  const isE2E = process.env.NEXT_PUBLIC_ENABLE_E2E_HARNESS === '1' || process.env.PLAYWRIGHT_USE_MOCKS === '1';
+  // Check E2E mode - NEXT_PUBLIC_ vars are available at build/runtime
+  const isE2E = process.env.NEXT_PUBLIC_ENABLE_E2E_HARNESS === '1' || 
+                process.env.PLAYWRIGHT_USE_MOCKS === '1';
   
   const [permission, setPermission] = useState<NotificationPermission | 'unsupported'>('unsupported');
   const [isSubscribed, setIsSubscribed] = useState(false);
@@ -128,8 +130,13 @@ export default function PushNotificationsHarnessPage() {
   }, [storesReady, isE2E]); // Include isE2E for completeness (it's constant but React wants it)
 
   useEffect(() => {
-    // In E2E mode, set up harness even if stores aren't ready (they're skipped)
-    if (typeof window === 'undefined' || (!storesReady && !isE2E)) {
+    // In E2E mode, always set up harness (stores are skipped)
+    if (typeof window === 'undefined') {
+      return;
+    }
+    
+    // In non-E2E mode, wait for stores to be ready
+    if (!isE2E && !storesReady) {
       return;
     }
 

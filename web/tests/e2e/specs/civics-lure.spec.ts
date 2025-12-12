@@ -8,12 +8,21 @@ test.describe('@axe Civics lure', () => {
     await page.goto('/e2e/civics-lure', { waitUntil: 'networkidle', timeout: 60_000 });
     await waitForPageReady(page, 60_000);
     
-    // Wait for React to hydrate and set title/lang (root layout provides them, but React needs to hydrate)
+    // Wait for React to hydrate - root layout provides title/lang in HTML, but we need to wait for hydration
+    // Also wait for the component's useEffect to set document.title
     await page.waitForFunction(() => {
-      const hasTitle = document.title && document.title.trim() !== '';
-      const hasLang = document.documentElement.lang && document.documentElement.lang.trim() !== '';
-      return hasTitle && hasLang;
-    }, { timeout: 15_000 });
+      const title = document.title?.trim();
+      const lang = document.documentElement.lang?.trim();
+      // Root layout should provide both, but wait for them to be set
+      return title && title !== '' && lang && lang !== '';
+    }, { timeout: 20_000 }).catch(async () => {
+      // Fallback: if waitForFunction times out, check if title/lang are in initial HTML
+      const title = await page.title();
+      const lang = await page.evaluate(() => document.documentElement.lang);
+      if (!title || !lang) {
+        throw new Error(`Title or lang missing: title="${title}", lang="${lang}"`);
+      }
+    });
 
     await runAxeAudit(page, 'civics lure page', {
       exclude: ['nextjs-portal', 'div[data-nextjs-toast-wrapper="true"]'],
