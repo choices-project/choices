@@ -126,7 +126,8 @@ export default function PushNotificationsHarnessPage() {
   }, [storesReady]);
 
   useEffect(() => {
-    if (typeof window === 'undefined' || !storesReady) {
+    // In E2E mode, set up harness even if stores aren't ready (they're skipped)
+    if (typeof window === 'undefined' || (!storesReady && !isE2E)) {
       return;
     }
 
