@@ -185,16 +185,21 @@ test.describe('@smoke Critical user journeys', () => {
       path: '/e2e/push-notifications',
       datasetKey: 'pushNotificationsHarness',
       readySelector: '[data-testid="push-notifications-harness"]',
-      readyTimeout: 40_000, // Increase for this harness
+      readyTimeout: 60_000, // Increase for this harness - it may take longer in CI
     });
     
-    // Wait for stores to hydrate if needed
+    // Additional wait to ensure harness is fully rendered (not just the loading state)
     await page.waitForFunction(
       () => {
         const element = document.querySelector('[data-testid="push-notifications-harness"]');
-        return element !== null && !element.textContent?.includes('Preparing');
+        if (!element) return false;
+        // Ensure it's not the loading state
+        const hasContent = element.textContent && 
+          !element.textContent.includes('Preparing') &&
+          element.textContent.includes('Push Notifications E2E Harness');
+        return hasContent;
       },
-      { timeout: 40_000 }
+      { timeout: 60_000 }
     );
     
     await expect(page.getByTestId('notification-preferences')).toBeVisible({ timeout: 10_000 });

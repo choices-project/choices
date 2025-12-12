@@ -5,49 +5,31 @@ import { waitForPageReady } from '../helpers/e2e-setup';
 
 test.describe('@axe Civics lure', () => {
   test('renders election countdown and surfaces live announcements', async ({ page }) => {
-    await page.goto('/e2e/civics-lure', { waitUntil: 'networkidle', timeout: 60_000 });
-    await waitForPageReady(page, 60_000);
+    await page.goto('/e2e/civics-lure', { waitUntil: 'domcontentloaded', timeout: 60_000 });
     
-    // Wait for React to hydrate and ensure title/lang are present
-    // Root layout provides title/lang in HTML, but we need to wait for React hydration
-    // The component's useEffect also sets document.title, so wait for that too
-    // Use a more robust check that handles both initial HTML and React hydration
-    try {
-      await page.waitForFunction(() => {
-        const title = document.title?.trim();
-        const lang = document.documentElement.getAttribute('lang')?.trim();
-        // Root layout should provide both in initial HTML, but ensure they're present
-        return title && title !== '' && lang && lang !== '';
-      }, { timeout: 30_000 });
-    } catch (error) {
-      // If waitForFunction times out, check what's actually in the DOM
-      const title = await page.title();
-      const lang = await page.evaluate(() => document.documentElement.getAttribute('lang'));
-      const htmlContent = await page.content();
-      const hasTitleInHTML = htmlContent.includes('<title>');
-      const hasLangInHTML = htmlContent.includes('lang=');
-      
-      // Log diagnostic info
-      console.error('Title/lang check failed:', {
-        title,
-        lang,
-        hasTitleInHTML,
-        hasLangInHTML,
-        htmlSnippet: htmlContent.substring(0, 500)
-      });
-      
-      // If title/lang are in HTML but not detected, wait a bit more for React hydration
-      if (hasTitleInHTML && hasLangInHTML) {
-        await page.waitForTimeout(2000); // Give React more time to hydrate
-        const finalTitle = await page.title();
-        const finalLang = await page.evaluate(() => document.documentElement.getAttribute('lang'));
-        if (!finalTitle || !finalLang) {
-          throw new Error(`Title or lang missing after additional wait: title="${finalTitle}", lang="${finalLang}"`);
-        }
-      } else {
-        throw new Error(`Title or lang missing in HTML: title="${title}", lang="${lang}", hasTitleInHTML=${hasTitleInHTML}, hasLangInHTML=${hasLangInHTML}`);
-      }
+    // First, wait for the HTML to be fully loaded with lang attribute
+    // The root layout sets lang on the <html> element, so wait for that
+    await page.waitForFunction(() => {
+      const htmlElement = document.documentElement;
+      const lang = htmlElement.getAttribute('lang');
+      return lang !== null && lang.trim() !== '';
+    }, { timeout: 10_000 });
+    
+    // Wait for React to hydrate and set document.title
+    // The component's useEffect sets document.title, and the root layout provides default title
+    await page.waitForFunction(() => {
+      const title = document.title?.trim();
+      return title && title !== '';
+    }, { timeout: 30_000 });
+    
+    // Double-check that both are present
+    const title = await page.title();
+    const lang = await page.evaluate(() => document.documentElement.getAttribute('lang'));
+    if (!title || !lang) {
+      throw new Error(`Title or lang missing: title="${title}", lang="${lang}"`);
     }
+    
+    await waitForPageReady(page, 60_000);
 
     await runAxeAudit(page, 'civics lure page', {
       exclude: ['nextjs-portal', 'div[data-nextjs-toast-wrapper="true"]'],

@@ -91,7 +91,8 @@ test.describe('@axe Poll viewer harness', () => {
     
     await runAxeAudit(page, 'poll run initial state');
 
-    const shareButton = page.getByRole('button', { name: /Share/i });
+    // Use .first() to handle multiple Share buttons (main Share button, copy buttons, etc.)
+    const shareButton = page.getByRole('button', { name: /Share/i }).first();
     await expect(shareButton).toBeVisible({ timeout: 10_000 });
     await shareButton.click();
     await page.waitForTimeout(500); // Wait for dialog to open
