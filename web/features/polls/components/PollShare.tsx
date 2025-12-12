@@ -159,15 +159,17 @@ export default function PollShare({ pollId, poll }: PollShareProps) {
         
         {/* Direct Link */}
         <div className="mb-6">
-          <label className="block text-sm font-medium text-gray-700 mb-2">
+          <label htmlFor="poll-share-url-input" className="block text-sm font-medium text-gray-700 mb-2">
             {t('polls.share.directLink.label')}
           </label>
           <div className="flex">
             <input
+              id="poll-share-url-input"
               type="text"
               value={pollUrl}
               readOnly
               className="flex-1 px-3 py-2 border border-gray-300 rounded-l-lg bg-gray-50 text-gray-900"
+              aria-label={t('polls.share.directLink.label')}
             />
             <button
               onClick={() => void handleCopyLink()}

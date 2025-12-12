@@ -265,7 +265,10 @@ export default function PushNotificationsHarnessPage() {
 
   // In E2E mode, always render harness immediately (stores are skipped)
   // In non-E2E mode, wait for stores to hydrate
-  if (!isE2E && !storesReady) {
+  // Ensure harness always renders in E2E mode - check isE2E directly to avoid hydration issues
+  const shouldShowLoading = !isE2E && !storesReady;
+  
+  if (shouldShowLoading) {
     return (
       <div
         className="flex min-h-screen items-center justify-center bg-gray-50 text-gray-600"
@@ -276,6 +279,7 @@ export default function PushNotificationsHarnessPage() {
     );
   }
 
+  // Always render harness in E2E mode, or when stores are ready
   return (
     <div className="min-h-screen bg-gray-50 p-8" data-testid="push-notifications-harness">
       <div className="max-w-4xl mx-auto">
