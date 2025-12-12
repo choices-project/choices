@@ -107,7 +107,13 @@ export default function PushNotificationsHarnessPage() {
   }, [isE2E]); // Include isE2E for completeness (it's constant but React wants it)
 
   useEffect(() => {
-    if (typeof window === 'undefined' || !('Notification' in window) || !storesReady) {
+    // In E2E mode, skip notification check (not needed for harness)
+    if (typeof window === 'undefined' || !('Notification' in window)) {
+      return;
+    }
+    
+    // In non-E2E mode, wait for stores to be ready
+    if (!isE2E && !storesReady) {
       return;
     }
 
