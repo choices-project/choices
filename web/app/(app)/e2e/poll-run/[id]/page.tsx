@@ -1,7 +1,8 @@
 import { notFound } from 'next/navigation';
-import type { Metadata } from 'next';
 
 import PollRunHarnessClient from './PollRunHarnessClient';
+
+import type { Metadata } from 'next';
 
 const isProduction = process.env.NODE_ENV === 'production';
 const allowHarness = process.env.NEXT_PUBLIC_ENABLE_E2E_HARNESS === '1';

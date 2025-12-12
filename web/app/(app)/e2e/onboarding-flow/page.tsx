@@ -66,15 +66,33 @@ type ScrollableJsonProps = {
 const ScrollableJson = ({ label, dataTestId, value }: ScrollableJsonProps) => (
   <article className='rounded-lg border border-slate-200 bg-white p-4 shadow-sm'>
     <h3 className='text-sm font-semibold uppercase tracking-wide text-slate-500'>{label}</h3>
-    <pre
-      data-testid={dataTestId}
-      className='mt-2 max-h-48 overflow-auto rounded bg-slate-50 p-2 text-xs focus:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500 focus-visible:ring-offset-2 focus-visible:ring-offset-white'
-      tabIndex={0}
+    {/* eslint-disable jsx-a11y/no-noninteractive-tabindex, jsx-a11y/no-noninteractive-element-interactions */}
+    {/* Required for WCAG accessibility: scrollable regions must be keyboard accessible */}
+    <div
       role='region'
       aria-label={`${label} JSON output`}
+      className='mt-2 max-h-48 overflow-auto rounded bg-slate-50 p-2 text-xs focus:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500 focus-visible:ring-offset-2 focus-visible:ring-offset-white'
+      tabIndex={0}
+      onKeyDown={(e) => {
+        // Allow keyboard navigation within scrollable region for accessibility
+        if (e.key === 'ArrowUp' || e.key === 'ArrowDown' || e.key === 'PageUp' || e.key === 'PageDown') {
+          e.preventDefault();
+          const target = e.currentTarget;
+          if (e.key === 'ArrowUp') target.scrollBy({ top: -20, behavior: 'smooth' });
+          if (e.key === 'ArrowDown') target.scrollBy({ top: 20, behavior: 'smooth' });
+          if (e.key === 'PageUp') target.scrollBy({ top: -target.clientHeight, behavior: 'smooth' });
+          if (e.key === 'PageDown') target.scrollBy({ top: target.clientHeight, behavior: 'smooth' });
+        }
+      }}
     >
-      {value}
-    </pre>
+      <pre
+        data-testid={dataTestId}
+        className='text-xs'
+      >
+        {value}
+      </pre>
+    </div>
+    {/* eslint-enable jsx-a11y/no-noninteractive-tabindex, jsx-a11y/no-noninteractive-element-interactions */}
   </article>
 );
 
