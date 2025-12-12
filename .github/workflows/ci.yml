@@ -234,6 +234,8 @@ jobs:
     - name: Run smoke suite
       env:
         PLAYWRIGHT_USE_MOCKS: '1'
+        NEXT_PUBLIC_ENABLE_E2E_HARNESS: '1'
+        BASE_URL: 'http://localhost:3000'
       run: |
         cd web
         npm run test:e2e:smoke
@@ -293,6 +295,8 @@ jobs:
     - name: Run axe-tagged specs
       env:
         PLAYWRIGHT_USE_MOCKS: '1'
+        NEXT_PUBLIC_ENABLE_E2E_HARNESS: '1'
+        BASE_URL: 'http://localhost:3000'
       run: |
         cd web
         npm run test:e2e:axe
