@@ -128,7 +128,7 @@ jobs:
         run: npm run build
 
       - name: Upload build artifacts
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v5
         with:
           name: build-artifacts
           path: web/.next/
@@ -458,7 +458,7 @@ jobs:
           echo "- Production: https://www.choices-app.com" >> deployment-summary.md
 
       - name: Upload deployment summary
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v5
         with:
           name: deployment-summary
           path: deployment-summary.md
