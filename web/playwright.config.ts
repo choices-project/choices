@@ -51,7 +51,9 @@ export default defineConfig({
   ],
 
   webServer: {
-    command: 'npm run dev',
+    command: process.env.CI 
+      ? 'bash -c "npm run build && npm run start"'
+      : 'npm run dev',
     url: `${process.env.BASE_URL ?? 'http://localhost:3000'}/api/health`, // Use health endpoint for more reliable readiness check
     reuseExistingServer: !process.env.CI,
     timeout: 300_000, // Increased to 5 minutes for CI environments
