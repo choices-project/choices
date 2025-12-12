@@ -52,7 +52,7 @@ export default defineConfig({
 
   webServer: {
     command: process.env.CI 
-      ? 'bash -c "npm run build && npm run start"'
+      ? 'bash -c "NEXT_PUBLIC_ENABLE_E2E_HARNESS=1 npm run build && npm run start"'
       : 'npm run dev',
     url: `${process.env.BASE_URL ?? 'http://localhost:3000'}/api/health`, // Use health endpoint for more reliable readiness check
     reuseExistingServer: !process.env.CI,
@@ -67,6 +67,8 @@ export default defineConfig({
       NEXT_DISABLE_STRICT_MODE: '1',
       // Ensure PLAYWRIGHT_USE_MOCKS is available to the dev server
       PLAYWRIGHT_USE_MOCKS: process.env.PLAYWRIGHT_USE_MOCKS ?? '1',
+      // Ensure E2E harness is enabled during build
+      ALLOWED_DEV_ORIGINS: process.env.ALLOWED_DEV_ORIGINS ?? 'http://localhost:3000',
     },
   },
 })
