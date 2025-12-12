@@ -74,7 +74,7 @@ jobs:
 
       - name: Upload test results
         if: always()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v5
         with:
           name: production-smoke-results
           path: |
@@ -168,7 +168,7 @@ jobs:
 
       - name: Upload test results
         if: always()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v5
         with:
           name: production-e2e-results
           path: |
@@ -219,7 +219,7 @@ jobs:
 
       - name: Upload API test results
         if: always()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v5
         with:
           name: production-api-results
           path: |
@@ -258,7 +258,7 @@ jobs:
           echo "Detailed reports available in workflow artifacts." >> summary.md
 
       - name: Upload summary
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v5
         with:
           name: production-test-summary
           path: summary.md

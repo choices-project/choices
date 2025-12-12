@@ -117,7 +117,7 @@ jobs:
         fail_ci_if_error: false
 
     - name: Upload coverage report
-      uses: actions/upload-artifact@v4
+      uses: actions/upload-artifact@v5
       if: always()
       with:
         name: coverage-report
@@ -125,7 +125,7 @@ jobs:
         retention-days: 30
 
     - name: Upload test results
-      uses: actions/upload-artifact@v4
+      uses: actions/upload-artifact@v5
       if: always()
       with:
         name: test-results
@@ -304,7 +304,7 @@ jobs:
         npx playwright test --grep @axe --project=chromium --reporter=line
 
     - name: Upload axe report
-      uses: actions/upload-artifact@v4
+      uses: actions/upload-artifact@v5
       if: always()
       with:
         name: playwright-axe-report
@@ -394,7 +394,7 @@ jobs:
         npm run test:e2e
 
     - name: Upload Playwright report
-      uses: actions/upload-artifact@v4
+      uses: actions/upload-artifact@v5
       if: always()
       with:
         name: playwright-report
@@ -402,7 +402,7 @@ jobs:
         retention-days: 30
 
     - name: Upload Playwright screenshots
-      uses: actions/upload-artifact@v4
+      uses: actions/upload-artifact@v5
       if: failure()
       with:
         name: playwright-screenshots
