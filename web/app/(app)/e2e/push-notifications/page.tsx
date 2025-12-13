@@ -32,9 +32,9 @@ export default function PushNotificationsHarnessPage() {
   }
 
   // In E2E/test environments, skip hydration wait to speed up tests
-  // NEXT_PUBLIC_ vars are replaced at build time, so they're available everywhere
-  // Check E2E mode directly - this is evaluated at build time
-  const isE2E = process.env.NEXT_PUBLIC_ENABLE_E2E_HARNESS === '1';
+  // Use the module-level allowHarness which is evaluated at build time
+  // This ensures consistency with the notFound() check above
+  const isE2E = allowHarness;
   const [permission, setPermission] = useState<NotificationPermission | 'unsupported'>('unsupported');
   const [isSubscribed, setIsSubscribed] = useState(false);
   const [subscriptionEndpoint, setSubscriptionEndpoint] = useState<string | null>(null);

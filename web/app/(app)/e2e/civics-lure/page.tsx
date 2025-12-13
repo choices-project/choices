@@ -52,8 +52,13 @@ const MOCK_REPRESENTATIVES: Representative[] = [
 export default function CivicsLureHarnessPage() {
   const handleEngage = () => undefined;
 
+  // Set title synchronously if we're on the client (for immediate accessibility)
+  if (typeof window !== 'undefined' && document.title === 'Choices - Democratic Polling Platform') {
+    document.title = 'Civics Lure E2E Harness - Choices';
+  }
+
   useEffect(() => {
-    // Set page title for accessibility - must be in useEffect for Next.js client components
+    // Ensure page title is set for accessibility
     document.title = 'Civics Lure E2E Harness - Choices';
     
     useRepresentativeStore.setState((state) => {
