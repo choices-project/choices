@@ -88,9 +88,13 @@ test.describe('Admin Store E2E', () => {
     expect(notifications?.[0]?.read).toBe(false); // Initially unread
 
     // Mark the notification as read using the actual id
-    await page.evaluate((id) => {
-      window.__adminStoreHarness?.markNotificationRead(id);
-    }, notificationId);
+    if (notificationId) {
+      await page.evaluate((id) => {
+        window.__adminStoreHarness?.markNotificationRead(id);
+      }, notificationId);
+    } else {
+      throw new Error('Notification ID is undefined');
+    }
 
     const updatedNotifications = await page.evaluate(() => {
       const harness = window.__adminStoreHarness;
