@@ -32,18 +32,9 @@ export default function PushNotificationsHarnessPage() {
   }
 
   // In E2E/test environments, skip hydration wait to speed up tests
-  // Check E2E mode - only use NEXT_PUBLIC_ vars (available in browser)
-  // Use a function to check E2E mode that works in both SSR and client
-  const checkIsE2E = () => {
-    if (typeof window !== 'undefined') {
-      // Client-side: check environment variable
-      return process.env.NEXT_PUBLIC_ENABLE_E2E_HARNESS === '1';
-    }
-    // Server-side: also check environment variable (available during build)
-    return process.env.NEXT_PUBLIC_ENABLE_E2E_HARNESS === '1';
-  };
-  
-  const [isE2E] = useState(() => checkIsE2E());
+  // NEXT_PUBLIC_ vars are replaced at build time, so they're available everywhere
+  // Check E2E mode directly - this is evaluated at build time
+  const isE2E = process.env.NEXT_PUBLIC_ENABLE_E2E_HARNESS === '1';
   const [permission, setPermission] = useState<NotificationPermission | 'unsupported'>('unsupported');
   const [isSubscribed, setIsSubscribed] = useState(false);
   const [subscriptionEndpoint, setSubscriptionEndpoint] = useState<string | null>(null);
@@ -274,9 +265,64 @@ export default function PushNotificationsHarnessPage() {
   // In E2E mode, always render harness immediately (stores are skipped)
   // In non-E2E mode, wait for stores to hydrate
   // Ensure harness always renders in E2E mode - check isE2E directly to avoid hydration issues
-  const shouldShowLoading = !isE2E && !storesReady;
+  // If E2E mode is enabled, always render the harness (don't wait for stores)
+  if (isE2E) {
+    // Always render harness in E2E mode - stores are skipped
+    return (
+      <div className="min-h-screen bg-gray-50 p-8" data-testid="push-notifications-harness">
+        <div className="max-w-4xl mx-auto">
+          <h1 className="text-3xl font-bold text-gray-900 mb-2">Push Notifications E2E Harness</h1>
+          <p className="text-gray-600 mb-8">
+            Test harness for push notification functionality
+          </p>
+
+          {/* Status Panel */}
+          <div className="bg-white shadow-sm rounded-lg p-6 mb-6" data-testid="push-notifications-status">
+            <h2 className="text-xl font-semibold text-gray-900 mb-4">Status</h2>
+            <div className="space-y-2">
+              <div>
+                <span className="font-medium text-gray-700">Permission:</span>{' '}
+                <span data-testid="push-notification-permission" className="text-gray-900">
+                  {permission}
+                </span>
+              </div>
+              <div>
+                <span className="font-medium text-gray-700">Subscribed:</span>{' '}
+                <span data-testid="push-notification-subscribed" className="text-gray-900">
+                  {isSubscribed ? 'Yes' : 'No'}
+                </span>
+              </div>
+              {subscriptionEndpoint && (
+                <div>
+                  <span className="font-medium text-gray-700">Endpoint:</span>{' '}
+                  <span data-testid="push-notification-endpoint" className="text-xs text-gray-500 break-all">
+                    {subscriptionEndpoint}
+                  </span>
+                </div>
+              )}
+              <div>
+                <span className="font-medium text-gray-700">Preferences:</span>
+                <div className="mt-2 space-y-1" data-testid="push-notification-preferences">
+                  <div>New Polls: <span data-testid="pref-new-polls">{preferences.newPolls ? 'Enabled' : 'Disabled'}</span></div>
+                  <div>Poll Results: <span data-testid="pref-poll-results">{preferences.pollResults ? 'Enabled' : 'Disabled'}</span></div>
+                  <div>System Updates: <span data-testid="pref-system-updates">{preferences.systemUpdates ? 'Enabled' : 'Disabled'}</span></div>
+                  <div>Weekly Digest: <span data-testid="pref-weekly-digest">{preferences.weeklyDigest ? 'Enabled' : 'Disabled'}</span></div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Notification Preferences Component */}
+          <div data-testid="notification-preferences-container">
+            <NotificationPreferences />
+          </div>
+        </div>
+      </div>
+    );
+  }
   
-  if (shouldShowLoading) {
+  // Non-E2E mode: wait for stores to hydrate
+  if (!storesReady) {
     return (
       <div
         className="flex min-h-screen items-center justify-center bg-gray-50 text-gray-600"
