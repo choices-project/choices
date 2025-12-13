@@ -33,9 +33,17 @@ export default function PushNotificationsHarnessPage() {
 
   // In E2E/test environments, skip hydration wait to speed up tests
   // Check E2E mode - only use NEXT_PUBLIC_ vars (available in browser)
-  // PLAYWRIGHT_USE_MOCKS is server-only, not available in browser
-  const isE2E = process.env.NEXT_PUBLIC_ENABLE_E2E_HARNESS === '1';
+  // Use a function to check E2E mode that works in both SSR and client
+  const checkIsE2E = () => {
+    if (typeof window !== 'undefined') {
+      // Client-side: check environment variable
+      return process.env.NEXT_PUBLIC_ENABLE_E2E_HARNESS === '1';
+    }
+    // Server-side: also check environment variable (available during build)
+    return process.env.NEXT_PUBLIC_ENABLE_E2E_HARNESS === '1';
+  };
   
+  const [isE2E] = useState(() => checkIsE2E());
   const [permission, setPermission] = useState<NotificationPermission | 'unsupported'>('unsupported');
   const [isSubscribed, setIsSubscribed] = useState(false);
   const [subscriptionEndpoint, setSubscriptionEndpoint] = useState<string | null>(null);
