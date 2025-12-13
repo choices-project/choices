@@ -108,7 +108,6 @@ export default function AdminStoreHarnessPage() {
         });
       },
       addNotification: (notification: NewAdminNotification) => {
-        const state = useAdminStore.getState();
         const newNotification = buildAdminNotification(notification);
         useAdminStore.setState((draft) => {
           draft.notifications.unshift(newNotification);
