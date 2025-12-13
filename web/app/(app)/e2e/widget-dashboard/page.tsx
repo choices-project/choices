@@ -39,10 +39,7 @@ const DEFAULT_LAYOUT_ID = 'widget-dashboard-layout';
 const HARNESS_USER_ID = '00000000-0000-0000-0000-000000000042';
 
 declare global {
-  // eslint-disable-next-line @typescript-eslint/consistent-type-definitions
-  interface Window {
-    __widgetDashboardHarness?: WidgetDashboardHarness;
-  }
+  var __widgetDashboardHarness: WidgetDashboardHarness | undefined;
 }
 
 const createDefaultWidget = (): WidgetConfig => {

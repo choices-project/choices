@@ -188,20 +188,19 @@ test.describe('@smoke Critical user journeys', () => {
       readyTimeout: 60_000, // Increase for this harness - it may take longer in CI
     });
     
-    // Additional wait to ensure harness is fully rendered (not just the loading state)
+    // Wait for harness object to be available on window (ensures initialization completed)
     await page.waitForFunction(
       () => {
-        const element = document.querySelector('[data-testid="push-notifications-harness"]');
-        if (!element) return false;
-        // Ensure it's not the loading state
-        const hasContent = element.textContent && 
-          !element.textContent.includes('Preparing') &&
-          element.textContent.includes('Push Notifications E2E Harness');
-        return hasContent;
+        return typeof window.__pushNotificationsHarness !== 'undefined' &&
+               window.__pushNotificationsHarness !== null;
       },
       { timeout: 60_000 }
     );
     
+    // Wait for harness element to be visible (element is always rendered, just need to wait for visibility)
+    await expect(page.getByTestId('push-notifications-harness')).toBeVisible({ timeout: 60_000 });
+    
+    // Wait for notification preferences to be visible
     await expect(page.getByTestId('notification-preferences')).toBeVisible({ timeout: 10_000 });
 
     await page.evaluate(async () => {

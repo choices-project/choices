@@ -4,6 +4,22 @@ import type { Page } from '@playwright/test';
 import { runAxeAudit } from '../helpers/accessibility';
 import { setupExternalAPIMocks, waitForPageReady } from '../helpers/e2e-setup';
 
+// Type declaration for onboarding flow harness
+declare global {
+  interface Window {
+    __onboardingFlowHarness?: {
+      reset: () => void;
+      startOnboarding: (data?: any) => void;
+      completeAuthStep: (data?: any) => void;
+      fillProfileStep: (data?: any) => void;
+      setValuesStep: (data?: any) => void;
+      completePrivacyStep: (data?: any) => void;
+      finish: () => void;
+      snapshot: () => any;
+    };
+  }
+}
+
 const gotoHarness = async (page: Page) => {
   await page.goto('/e2e/onboarding-flow', { waitUntil: 'domcontentloaded', timeout: 45_000 });
   await waitForPageReady(page);

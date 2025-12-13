@@ -65,7 +65,7 @@ test.describe('Feeds Store E2E', () => {
     });
 
     await page.evaluate(() => {
-      window.__feedsStoreHarness?.actions.loadFeeds({});
+      void window.__feedsStoreHarness?.actions.loadFeeds('all');
     });
 
     await page.waitForTimeout(1000);
@@ -99,7 +99,7 @@ test.describe('Feeds Store E2E', () => {
     // Set up initial feed
     await page.evaluate(() => {
       const harness = window.__feedsStoreHarness;
-      harness?.actions.loadFeeds({});
+      void harness?.actions.loadFeeds('all');
     });
 
     await page.waitForTimeout(500);
@@ -146,7 +146,7 @@ test.describe('Feeds Store E2E', () => {
     });
 
     await page.evaluate(() => {
-      window.__feedsStoreHarness?.actions.loadFeeds({});
+      void window.__feedsStoreHarness?.actions.loadFeeds('all');
     });
 
     await page.waitForTimeout(1000);

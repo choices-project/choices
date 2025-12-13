@@ -12,20 +12,16 @@ import { expect, test } from '@playwright/test';
 
 import {
   cleanupE2ETestData,
-  getSeededData,
   setupE2ETestData,
   waitForPageReady,
   type SeedHandle,
-  type TestUser,
 } from './helpers/e2e-setup';
 
 test.describe('Civic Engagement V2 - E2E Tests', () => {
   let seedHandle: SeedHandle | null = null;
-  let testUser: TestUser | null = null;
 
-  test.beforeAll(async ({ browser }) => {
-    seedHandle = await setupE2ETestData(browser);
-    testUser = await getSeededData(seedHandle, 'user');
+  test.beforeAll(async () => {
+    seedHandle = await setupE2ETestData({});
   });
 
   test.afterAll(async () => {
@@ -235,7 +231,7 @@ test.describe('Civic Engagement V2 - E2E Tests', () => {
   });
 
   test.describe('Update and Delete Actions', () => {
-    test('should update own action', async ({ page }) => {
+    test('should update own action', async () => {
       // This would require creating an action first
       // Then navigating to edit page
       // Then updating and saving
@@ -244,7 +240,7 @@ test.describe('Civic Engagement V2 - E2E Tests', () => {
       test.skip(); // Skip until edit UI is implemented
     });
 
-    test('should delete own action', async ({ page }) => {
+    test('should delete own action', async () => {
       // This would require creating an action first
       // Then deleting it
       
@@ -281,7 +277,7 @@ test.describe('Civic Engagement V2 - E2E Tests', () => {
   });
 
   test.describe('Integration with Representatives', () => {
-    test('should show actions for representative', async ({ page }) => {
+    test('should show actions for representative', async () => {
       // Navigate to representative page
       // Verify civic actions section shows related actions
       
@@ -290,7 +286,7 @@ test.describe('Civic Engagement V2 - E2E Tests', () => {
   });
 
   test.describe('Integration with Feeds', () => {
-    test('should show civic actions in feed', async ({ page }) => {
+    test('should show civic actions in feed', async () => {
       // Navigate to feed page
       // Verify civic action items appear
       

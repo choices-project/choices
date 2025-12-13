@@ -89,7 +89,7 @@ test.describe('Production poll journey', () => {
       title: pollTitle,
       tags: expect.arrayContaining(['production']),
     });
-    expect(recordedPayload?.options).toEqual(
+    expect((recordedPayload as { options?: Array<{ text: string }> } | null)?.options).toEqual(
       expect.arrayContaining([
         expect.objectContaining({ text: pollOptions[0] }),
         expect.objectContaining({ text: pollOptions[1] }),

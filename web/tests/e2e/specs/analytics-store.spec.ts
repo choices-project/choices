@@ -1,18 +1,8 @@
 import { expect, test, type Page } from '@playwright/test';
 
-import type { AnalyticsStoreHarness } from '@/app/(app)/e2e/analytics-store/page';
-import type { PlaywrightAnalyticsBridge } from '@/types/playwright-analytics';
-
 import { waitForPageReady } from '../helpers/e2e-setup';
 
-declare global {
-   
-  interface Window {
-    __analyticsStoreHarness?: AnalyticsStoreHarness;
-    __playwrightAnalytics?: PlaywrightAnalyticsBridge;
-  }
-   
-}
+// Window types are declared in global type definitions, no need to redeclare here
 
 const gotoHarness = async (page: Page) => {
   await page.goto('/e2e/analytics-store', { waitUntil: 'domcontentloaded', timeout: 60_000 });

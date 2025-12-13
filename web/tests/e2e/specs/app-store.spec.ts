@@ -37,7 +37,8 @@ test.describe('App Store E2E', () => {
   });
 
   test('toggles theme', async ({ page }) => {
-    const initialTheme = await page.evaluate(() => {
+    // Get initial theme (acknowledge variable for potential future use)
+    void await page.evaluate(() => {
       const harness = window.__appStoreHarness;
       const snapshot = harness?.getSnapshot();
       return snapshot?.theme;

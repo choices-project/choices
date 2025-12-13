@@ -20,10 +20,7 @@ type NavigationShellHarness = {
 };
 
 declare global {
-  // eslint-disable-next-line @typescript-eslint/consistent-type-definitions
-  interface Window {
-    __navigationShellHarness?: NavigationShellHarness;
-  }
+  var __navigationShellHarness: NavigationShellHarness | undefined;
 }
 
 export default function NavigationShellHarnessPage() {

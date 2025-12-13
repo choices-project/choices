@@ -1,4 +1,4 @@
-import { expect, test, type Page } from '@playwright/test';
+import { expect, test } from '@playwright/test';
 import { ensureLoggedOut, loginTestUser, waitForPageReady } from '../../helpers/e2e-setup';
 
 /**
@@ -282,7 +282,9 @@ test.describe('Production Smoke Tests', () => {
       
       // Check for main content area
       const main = page.locator('main, [role="main"]');
-      const hasMain = await main.count() > 0;
+      await expect(main.first()).toBeVisible({ timeout: 5000 }).catch(() => {
+        // Main element is optional, continue if not found
+      });
       
       // At minimum, body should be visible
       const body = page.locator('body');

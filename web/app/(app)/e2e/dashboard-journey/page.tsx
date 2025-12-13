@@ -21,10 +21,7 @@ type NotificationHarnessRef = {
 };
 
 declare global {
-  // eslint-disable-next-line @typescript-eslint/consistent-type-definitions
-  interface Window {
-    __notificationHarnessRef?: NotificationHarnessRef;
-  }
+  var __notificationHarnessRef: NotificationHarnessRef | undefined;
 }
 
 export default function DashboardJourneyHarnessPage() {

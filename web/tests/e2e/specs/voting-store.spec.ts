@@ -107,7 +107,9 @@ test.describe('Voting Store E2E', () => {
     });
 
     await page.evaluate(() => {
-      window.__votingStoreHarness?.castVote('ballot-1', 'contest-1', ['candidate-1']);
+      if (window.__votingStoreHarness?.castVote) {
+        window.__votingStoreHarness.castVote('ballot-1', 'contest-1', ['candidate-1']);
+      }
     });
 
     await page.waitForTimeout(500);
@@ -116,11 +118,12 @@ test.describe('Voting Store E2E', () => {
       const harness = window.__votingStoreHarness;
       const snapshot = harness?.getSnapshot();
       return snapshot?.votingRecords;
-    });
+    }) as Array<{ id: string; confirmed?: boolean }> | undefined;
 
     expect(records).toHaveLength(1);
+    expect(records?.[0]?.id).toBeDefined();
 
-    const recordId = records[0].id;
+    const recordId = records![0].id;
 
     await page.evaluate((id) => {
       if (window.__votingStoreHarness?.confirmVote) {
@@ -134,9 +137,9 @@ test.describe('Voting Store E2E', () => {
       const harness = window.__votingStoreHarness;
       const snapshot = harness?.getSnapshot();
       return snapshot?.votingRecords;
-    });
+    }) as Array<{ id: string; confirmed?: boolean }> | undefined;
 
-    const confirmedRecord = records.find((r: any) => r.id === recordId);
+    const confirmedRecord = records?.find((r) => r.id === recordId);
     expect(confirmedRecord?.confirmed).toBe(true);
   });
 
@@ -178,7 +181,9 @@ test.describe('Voting Store E2E', () => {
     });
 
     await page.evaluate(() => {
-      window.__votingStoreHarness?.castVote('ballot-1', 'contest-1', ['candidate-1']);
+      if (window.__votingStoreHarness?.castVote) {
+        window.__votingStoreHarness.castVote('ballot-1', 'contest-1', ['candidate-1']);
+      }
     });
 
     await page.waitForTimeout(500);
@@ -187,10 +192,11 @@ test.describe('Voting Store E2E', () => {
       const harness = window.__votingStoreHarness;
       const snapshot = harness?.getSnapshot();
       return snapshot?.votingRecords;
-    });
+    }) as Array<{ id: string }> | undefined;
 
     expect(records).toHaveLength(1);
-    const recordId = records[0].id;
+    expect(records?.[0]?.id).toBeDefined();
+    const recordId = records![0].id;
 
     await page.evaluate((id) => {
       if (window.__votingStoreHarness?.undoVote) {
@@ -204,9 +210,9 @@ test.describe('Voting Store E2E', () => {
       const harness = window.__votingStoreHarness;
       const snapshot = harness?.getSnapshot();
       return snapshot?.votingRecords;
-    });
+    }) as Array<{ id: string }> | undefined;
 
-    expect(records.find((r: any) => r.id === recordId)).toBeUndefined();
+    expect(records?.find((r) => r.id === recordId)).toBeUndefined();
   });
 
   test('handles confirmation error gracefully (if harness API supports it)', async ({ page }) => {
@@ -232,13 +238,15 @@ test.describe('Voting Store E2E', () => {
     // Create a vote record first
     await page.evaluate(() => {
       const harness = window.__votingStoreHarness;
-      harness?.setVotingRecords([{
-        id: 'record-1',
-        ballotId: 'ballot-1',
-        contestId: 'contest-1',
-        selections: ['candidate-1'],
-        submittedAt: new Date().toISOString(),
-      }]);
+      if (harness?.setVotingRecords) {
+        harness.setVotingRecords([{
+          id: 'record-1',
+          ballotId: 'ballot-1',
+          contestId: 'contest-1',
+          selections: ['candidate-1'],
+          submittedAt: new Date().toISOString(),
+        }] as any);
+      }
     });
 
     await page.evaluate(() => {
@@ -280,13 +288,15 @@ test.describe('Voting Store E2E', () => {
 
     await page.evaluate(() => {
       const harness = window.__votingStoreHarness;
-      harness?.setVotingRecords([{
-        id: 'record-1',
-        ballotId: 'ballot-1',
-        contestId: 'contest-1',
-        selections: ['candidate-1'],
-        submittedAt: new Date().toISOString(),
-      }]);
+      if (harness?.setVotingRecords) {
+        harness.setVotingRecords([{
+          id: 'record-1',
+          ballotId: 'ballot-1',
+          contestId: 'contest-1',
+          selections: ['candidate-1'],
+          submittedAt: new Date().toISOString(),
+        }] as any);
+      }
     });
 
     await page.evaluate(() => {

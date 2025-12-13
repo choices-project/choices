@@ -49,9 +49,16 @@ test.describe('User Store E2E', () => {
       expires_at: Date.now() / 1000 + 3600,
     };
 
-    await page.evaluate((user, session) => {
-      window.__userStoreHarness?.setUserAndAuth(user, session);
-    }, mockUser, mockSession);
+    await page.evaluate(
+      (data: { user: any; session: any }) => {
+        const harness = window.__userStoreHarness;
+        if (harness && harness.initializeAuth) {
+          // Use initializeAuth which accepts both user and session
+          (harness.initializeAuth as (user: any, session: any, authenticated: boolean) => void)(data.user, data.session, true);
+        }
+      },
+      { user: mockUser, session: mockSession }
+    );
 
     const snapshot = await page.evaluate(() => {
       const harness = window.__userStoreHarness;
@@ -68,7 +75,7 @@ test.describe('User Store E2E', () => {
       user_id: 'user-123',
       display_name: 'Test User',
       bio: 'Test bio',
-    };
+    } as any; // Partial profile for testing
 
     await page.evaluate((profile) => {
       window.__userStoreHarness?.setProfile(profile);
@@ -85,10 +92,9 @@ test.describe('User Store E2E', () => {
   test('signs out user', async ({ page }) => {
     // Set user first
     await page.evaluate(() => {
-      window.__userStoreHarness?.setUserAndAuth(
-        { id: 'user-123', email: 'test@example.com', created_at: new Date().toISOString() },
-        { access_token: 'token', refresh_token: 'refresh', expires_in: 3600, expires_at: Date.now() / 1000 + 3600 }
-      );
+      const mockUser = { id: 'user-123', email: 'test@example.com', created_at: new Date().toISOString() } as any;
+      const mockSession = { access_token: 'token', refresh_token: 'refresh', expires_in: 3600, expires_at: Date.now() / 1000 + 3600 } as any;
+      window.__userStoreHarness?.initializeAuth(mockUser, mockSession, true);
     });
 
     await page.evaluate(() => {
@@ -140,8 +146,8 @@ test.describe('User Store E2E', () => {
       return harness?.getSnapshot();
     });
 
-    expect(snapshot?.biometricSupported).toBe(true);
-    expect(snapshot?.biometricAvailable).toBe(true);
+    expect(snapshot?.biometric?.isSupported).toBe(true);
+    expect(snapshot?.biometric?.isAvailable).toBe(true);
 
     await page.evaluate(() => {
       window.__userStoreHarness?.resetBiometric();
@@ -152,22 +158,21 @@ test.describe('User Store E2E', () => {
       return harness?.getSnapshot();
     });
 
-    expect(resetSnapshot?.biometricSupported).toBe(false);
-    expect(resetSnapshot?.biometricAvailable).toBe(false);
+    expect(resetSnapshot?.biometric?.isSupported).toBe(false);
+    expect(resetSnapshot?.biometric?.isAvailable).toBe(false);
   });
 
   test('clears user state', async ({ page }) => {
     // Set user and profile first
     await page.evaluate(() => {
-      window.__userStoreHarness?.setUserAndAuth(
-        { id: 'user-123', email: 'test@example.com', created_at: new Date().toISOString() },
-        { access_token: 'token', refresh_token: 'refresh', expires_in: 3600, expires_at: Date.now() / 1000 + 3600 }
-      );
+      const mockUser = { id: 'user-123', email: 'test@example.com', created_at: new Date().toISOString() } as any;
+      const mockSession = { access_token: 'token', refresh_token: 'refresh', expires_in: 3600, expires_at: Date.now() / 1000 + 3600 } as any;
+      window.__userStoreHarness?.initializeAuth(mockUser, mockSession, true);
       window.__userStoreHarness?.setProfile({
         id: 'profile-123',
         user_id: 'user-123',
         display_name: 'Test User',
-      });
+      } as any);
     });
 
     await page.evaluate(() => {

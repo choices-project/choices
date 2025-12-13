@@ -89,16 +89,16 @@ test.describe('@mocks dashboard auth experience', () => {
     };
 
     await page.evaluate(
-      ({ user, profile, admin }) => {
-        localStorage.setItem('user-store', JSON.stringify({ state: user, version: 0 }));
-        localStorage.setItem('profile-store', JSON.stringify({ state: profile, version: 0 }));
-        localStorage.setItem('admin-store', JSON.stringify({ state: admin, version: 0 }));
+      (data: { user: any; profile: any; admin: any }) => {
+        localStorage.setItem('user-store', JSON.stringify({ state: data.user, version: 0 }));
+        localStorage.setItem('profile-store', JSON.stringify({ state: data.profile, version: 0 }));
+        localStorage.setItem('admin-store', JSON.stringify({ state: data.admin, version: 0 }));
       },
       {
         user: authedUserState,
         profile: authedProfileState,
         admin: authedAdminState,
-      },
+      } as { user: any; profile: any; admin: any }
     );
 
     await page.goto('/dashboard', { waitUntil: 'domcontentloaded', timeout: AUTHSPEC_TIMEOUT });

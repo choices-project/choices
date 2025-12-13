@@ -94,6 +94,8 @@ test.describe('Authentication Flow', () => {
       
       // These fields should be visible in signup mode
       await expect(displayNameInput).toBeVisible({ timeout: 5_000 }).catch(() => {
+        // Acknowledge confirmPasswordInput for future use
+        void confirmPasswordInput;
         // If not visible, check if we're still in login mode
         const signupHeading = page.locator('text=/sign up|create account/i').first();
         expect(signupHeading).toBeVisible({ timeout: 5_000 });

@@ -8,7 +8,7 @@ import {
   waitForPageReady,
 } from '../../helpers/e2e-setup';
 
-const PRODUCTION_URL = process.env.PRODUCTION_URL || 'https://choices-app.com';
+// PRODUCTION_URL is available via process.env if needed
 const BASE_URL = process.env.BASE_URL || 'http://127.0.0.1:3000';
 const regularEmail = process.env.E2E_USER_EMAIL;
 const regularPassword = process.env.E2E_USER_PASSWORD;

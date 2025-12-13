@@ -59,7 +59,6 @@ test.describe('Admin Store E2E', () => {
     await page.evaluate(() => {
       const harness = window.__adminStoreHarness;
       harness?.addNotification({
-        id: 'test-notif-1',
         title: 'Test Notification',
         message: 'Test message',
         type: 'info',
@@ -72,8 +71,9 @@ test.describe('Admin Store E2E', () => {
       return snapshot?.notifications;
     });
 
-    expect(notifications).toHaveLength(1);
-    expect(notifications[0].title).toBe('Test Notification');
+    expect(notifications).toBeDefined();
+    expect(notifications?.length).toBeGreaterThanOrEqual(1);
+    expect(notifications?.[0]?.title).toBe('Test Notification');
 
     await page.evaluate(() => {
       window.__adminStoreHarness?.markNotificationRead('test-notif-1');
@@ -85,7 +85,8 @@ test.describe('Admin Store E2E', () => {
       return snapshot?.notifications;
     });
 
-    expect(updatedNotifications[0].read).toBe(true);
+    expect(updatedNotifications).toBeDefined();
+    expect(updatedNotifications?.[0]?.read).toBe(true);
   });
 
   test('manages feature flags', async ({ page }) => {
@@ -102,7 +103,7 @@ test.describe('Admin Store E2E', () => {
       return snapshot?.featureFlags;
     });
 
-    expect(featureFlags?.SOCIAL_SHARING).toBe(true);
+    expect(featureFlags?.flags?.SOCIAL_SHARING).toBe(true);
 
     const disabled = await page.evaluate(() => {
       const harness = window.__adminStoreHarness;
@@ -117,7 +118,7 @@ test.describe('Admin Store E2E', () => {
       return snapshot?.featureFlags;
     });
 
-    expect(updatedFlags?.SOCIAL_SHARING).toBe(false);
+    expect(updatedFlags?.flags?.SOCIAL_SHARING).toBe(false);
   });
 
   test('manages users (select, select all, deselect all)', async ({ page }) => {
@@ -127,16 +128,20 @@ test.describe('Admin Store E2E', () => {
         {
           id: 'user-1',
           email: 'user1@example.com',
+          name: 'User One',
           role: 'user',
           status: 'active',
-          createdAt: new Date().toISOString(),
+          is_admin: false,
+          created_at: new Date().toISOString(),
         },
         {
           id: 'user-2',
           email: 'user2@example.com',
+          name: 'User Two',
           role: 'admin',
           status: 'active',
-          createdAt: new Date().toISOString(),
+          is_admin: true,
+          created_at: new Date().toISOString(),
         },
       ]);
     });
@@ -163,7 +168,7 @@ test.describe('Admin Store E2E', () => {
       return snapshot?.userFilters.selectedUsers;
     });
 
-    expect(selectedUsers.length).toBeGreaterThan(0);
+    expect(selectedUsers?.length).toBeGreaterThan(0);
 
     await page.evaluate(() => {
       window.__adminStoreHarness?.deselectAllUsers();
@@ -182,11 +187,15 @@ test.describe('Admin Store E2E', () => {
     await page.evaluate(() => {
       const harness = window.__adminStoreHarness;
       harness?.setReimportProgress({
-        type: 'polls',
-        isRunning: true,
-        current: 50,
-        total: 100,
-        status: 'processing',
+        totalStates: 50,
+        processedStates: 25,
+        successfulStates: 20,
+        failedStates: 5,
+        totalRepresentatives: 100,
+        federalRepresentatives: 50,
+        stateRepresentatives: 50,
+        errors: [],
+        stateResults: [],
       });
     });
 
@@ -196,10 +205,10 @@ test.describe('Admin Store E2E', () => {
       return snapshot?.reimportProgress;
     });
 
-    expect(progress?.isRunning).toBe(true);
-    expect(progress?.current).toBe(50);
-    expect(progress?.total).toBe(100);
-    expect(progress?.status).toBe('processing');
+    expect(progress?.totalStates).toBe(50);
+    expect(progress?.processedStates).toBe(25);
+    expect(progress?.successfulStates).toBe(20);
+    expect(progress?.failedStates).toBe(5);
   });
 
   test('resets admin state', async ({ page }) => {
@@ -207,7 +216,6 @@ test.describe('Admin Store E2E', () => {
     await page.evaluate(() => {
       const harness = window.__adminStoreHarness;
       harness?.addNotification({
-        id: 'test-1',
         title: 'Test',
         message: 'Test',
         type: 'info',

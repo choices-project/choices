@@ -3,15 +3,15 @@
  * Tests the complete user journey from requesting a code to confirming it
  */
 
-import { expect, test } from '@playwright/test';
+import { test } from '@playwright/test';
 
 test.describe('Candidate Verification Flow', () => {
-  test.beforeEach(async ({ page }) => {
+  test.beforeEach(async () => {
     // Navigate to candidate page (assuming auth is handled)
     // This is a template - actual implementation depends on your auth setup
   });
 
-  test('should display verification code input after requesting code', async ({ page }) => {
+  test.skip('should display verification code input after requesting code', async () => {
     // This test assumes you have a candidate profile page set up
     // and the user is authenticated as a candidate
     
@@ -31,11 +31,9 @@ test.describe('Candidate Verification Flow', () => {
     // Verify submit button is disabled until 6 digits entered
     // const submitButton = page.locator('button:has-text("Submit Code")');
     // await expect(submitButton).toBeDisabled();
-    
-    test.skip('Requires actual candidate profile setup');
   });
 
-  test('should show error message for expired code', async ({ page }) => {
+  test.skip('should show error message for expired code', async () => {
     // Request code
     // await page.goto('/candidates/test-slug');
     // await page.click('button:has-text("Verify Official Email")');
@@ -49,11 +47,9 @@ test.describe('Candidate Verification Flow', () => {
     // Verify expired error message
     // await expect(page.locator('text=/expired.*minute/i')).toBeVisible();
     // await expect(page.locator('.text-red-700')).toBeVisible();
-    
-    test.skip('Requires actual candidate profile setup');
   });
 
-  test('should show attempts remaining for wrong code', async ({ page }) => {
+  test.skip('should show attempts remaining for wrong code', async () => {
     // Request code
     // await page.goto('/candidates/test-slug');
     // await page.click('button:has-text("Verify Official Email")');
@@ -68,11 +64,9 @@ test.describe('Candidate Verification Flow', () => {
     
     // Verify helper text shows attempts
     // await expect(page.locator('text=/5 attempts per code/i')).toBeVisible();
-    
-    test.skip('Requires actual candidate profile setup');
   });
 
-  test('should lock code after 5 failed attempts', async ({ page }) => {
+  test.skip('should lock code after 5 failed attempts', async () => {
     // Request code
     // await page.goto('/candidates/test-slug');
     // await page.click('button:has-text("Verify Official Email")');
@@ -89,11 +83,9 @@ test.describe('Candidate Verification Flow', () => {
     // await page.click('button:has-text("Submit Code")');
     // await expect(page.locator('text=/locked/i')).toBeVisible();
     // await expect(page.locator('.text-red-700')).toBeVisible();
-    
-    test.skip('Requires actual candidate profile setup');
   });
 
-  test('should successfully verify with correct code', async ({ page }) => {
+  test.skip('should successfully verify with correct code', async () => {
     // Request code
     // await page.goto('/candidates/test-slug');
     // await page.click('button:has-text("Verify Official Email")');
@@ -112,11 +104,9 @@ test.describe('Candidate Verification Flow', () => {
     
     // Verify code input is hidden after success
     // await expect(page.locator('input[placeholder*="6-digit"]')).not.toBeVisible();
-    
-    test.skip('Requires actual candidate profile setup');
   });
 
-  test('should handle rate limiting on request endpoint', async ({ page }) => {
+  test.skip('should handle rate limiting on request endpoint', async () => {
     // Request code 5 times rapidly
     // for (let i = 0; i < 5; i++) {
     //   await page.goto('/candidates/test-slug');
@@ -127,17 +117,13 @@ test.describe('Candidate Verification Flow', () => {
     // 6th request should show rate limit error
     // await page.click('button:has-text("Verify Official Email")');
     // await expect(page.locator('text=/Too many requests/i')).toBeVisible();
-    
-    test.skip('Requires actual candidate profile setup');
   });
 
-  test('should show appropriate message colors for different error types', async ({ page }) => {
+  test.skip('should show appropriate message colors for different error types', async () => {
     // Test expired code (red)
     // Test wrong code (yellow)
     // Test locked code (red)
     // Test success (blue)
-    
-    test.skip('Requires actual candidate profile setup');
   });
 });
 
