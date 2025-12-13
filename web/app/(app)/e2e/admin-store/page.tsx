@@ -6,17 +6,13 @@ import type { AdminNotification, AdminUser, NewAdminNotification } from '@/featu
 
 import {
   useAdminStore,
-  useAdminActions,
   useAdminFeatureFlags,
-  useAdminFeatureFlagActions,
   useAdminNotifications,
   useAdminSidebarCollapsed,
   type AdminStore,
   type AdminReimportProgress,
-  useAdminReimportActions,
   useAdminSelectedUsers,
   useAdminShowBulkActions,
-  useAdminUserActions,
 } from '@/lib/stores';
 
 // Import buildAdminNotification from adminStore (it's not exported, so we'll define it locally)
@@ -130,8 +126,8 @@ export default function AdminStoreHarnessPage() {
         });
       },
       enableFeatureFlag: (flagId: string) => {
-        const state = useAdminStore.getState();
-        const currentFlags = state.featureFlags.flags;
+        const currentState = useAdminStore.getState();
+        const currentFlags = currentState.featureFlags.flags;
         if (currentFlags[flagId] === true) {
           return true;
         }
@@ -145,8 +141,8 @@ export default function AdminStoreHarnessPage() {
         return true;
       },
       disableFeatureFlag: (flagId: string) => {
-        const state = useAdminStore.getState();
-        const currentFlags = state.featureFlags.flags;
+        const currentState = useAdminStore.getState();
+        const currentFlags = currentState.featureFlags.flags;
         if (currentFlags[flagId] === false) {
           return true;
         }

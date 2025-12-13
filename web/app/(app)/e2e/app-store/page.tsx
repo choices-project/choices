@@ -4,7 +4,6 @@ import { useEffect, useMemo } from 'react';
 
 import {
   useAppStore,
-  useAppActions,
   useTheme,
   useResolvedTheme,
   useSidebarCollapsed,
