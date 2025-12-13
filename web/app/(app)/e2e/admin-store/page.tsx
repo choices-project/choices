@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo } from 'react';
 
-import type { AdminUser, NewAdminNotification } from '@/features/admin/types';
+import type { AdminNotification, AdminUser, NewAdminNotification } from '@/features/admin/types';
 
 import {
   useAdminStore,
@@ -18,6 +18,39 @@ import {
   useAdminShowBulkActions,
   useAdminUserActions,
 } from '@/lib/stores';
+
+// Import buildAdminNotification from adminStore (it's not exported, so we'll define it locally)
+const buildAdminNotification = (input: NewAdminNotification): AdminNotification => {
+  const issuedAt = input.timestamp ?? new Date().toISOString();
+  const createdAt = input.created_at ?? issuedAt;
+
+  const id =
+    typeof crypto !== 'undefined' && typeof crypto.randomUUID === 'function'
+      ? crypto.randomUUID()
+      : Math.random().toString(36).slice(2);
+
+  const base: AdminNotification = {
+    id,
+    timestamp: issuedAt,
+    type: input.type,
+    title: input.title,
+    message: input.message,
+    read: input.read ?? false,
+    created_at: createdAt,
+  };
+
+  const overrides: Partial<AdminNotification> = {};
+
+  if (input.action) {
+    overrides.action = input.action;
+  }
+
+  if (input.metadata) {
+    overrides.metadata = { ...(input.metadata as Record<string, unknown>) };
+  }
+
+  return { ...base, ...overrides };
+};
 
 export type AdminStoreHarness = {
   toggleSidebar: () => void;
@@ -56,39 +89,126 @@ export default function AdminStoreHarnessPage() {
   const isReimportRunning = useAdminStore((state) => state.isReimportRunning);
   const reimportLogs = useAdminStore((state) => state.reimportLogs);
 
-  const { toggleSidebar, addNotification, markNotificationRead, resetAdminState } = useAdminActions();
-  const { setReimportProgress, setIsReimportRunning } = useAdminReimportActions();
-  const { enableFeatureFlag, disableFeatureFlag } = useAdminFeatureFlagActions();
-  const { selectUser, deselectUser, selectAllUsers, deselectAllUsers } = useAdminUserActions();
+  // Actions are accessed directly from store in useEffect, no need to destructure here
 
   const unreadCount = useMemo(
     () => notifications.filter((notification) => !notification.read).length,
     [notifications]
   );
 
+  // Set up harness with empty deps to ensure it's set immediately and doesn't re-run
+  // Access actions from store state directly to avoid dependency issues
   useEffect(() => {
     if (typeof window === 'undefined') {
       return;
     }
 
     const harness: AdminStoreHarness = {
-      toggleSidebar,
-      addNotification,
-      markNotificationRead,
-      enableFeatureFlag,
-      disableFeatureFlag,
-      setReimportProgress,
-      setIsReimportRunning,
+      toggleSidebar: () => {
+        const currentState = useAdminStore.getState();
+        const next = !currentState.sidebarCollapsed;
+        useAdminStore.setState((draft) => {
+          draft.sidebarCollapsed = next;
+        });
+      },
+      addNotification: (notification: NewAdminNotification) => {
+        const state = useAdminStore.getState();
+        const newNotification = buildAdminNotification(notification);
+        useAdminStore.setState((draft) => {
+          draft.notifications.unshift(newNotification);
+          if (draft.notifications.length > 10) {
+            draft.notifications.length = 10;
+          }
+        });
+      },
+      markNotificationRead: (id: string) => {
+        useAdminStore.setState((draft) => {
+          const notification = draft.notifications.find((n) => n.id === id);
+          if (notification) {
+            notification.read = true;
+          }
+        });
+      },
+      enableFeatureFlag: (flagId: string) => {
+        const state = useAdminStore.getState();
+        const currentFlags = state.featureFlags.flags;
+        if (currentFlags[flagId] === true) {
+          return true;
+        }
+        useAdminStore.setState((draft) => {
+          draft.featureFlags.flags[flagId] = true;
+          if (!draft.featureFlags.enabledFlags.includes(flagId)) {
+            draft.featureFlags.enabledFlags.push(flagId);
+          }
+          draft.featureFlags.disabledFlags = draft.featureFlags.disabledFlags.filter((f) => f !== flagId);
+        });
+        return true;
+      },
+      disableFeatureFlag: (flagId: string) => {
+        const state = useAdminStore.getState();
+        const currentFlags = state.featureFlags.flags;
+        if (currentFlags[flagId] === false) {
+          return true;
+        }
+        useAdminStore.setState((draft) => {
+          draft.featureFlags.flags[flagId] = false;
+          draft.featureFlags.enabledFlags = draft.featureFlags.enabledFlags.filter((f) => f !== flagId);
+          if (!draft.featureFlags.disabledFlags.includes(flagId)) {
+            draft.featureFlags.disabledFlags.push(flagId);
+          }
+        });
+        return true;
+      },
+      setReimportProgress: (progress: Partial<AdminReimportProgress>) => {
+        useAdminStore.setState((draft) => {
+          Object.assign(draft.reimportProgress, progress);
+        });
+      },
+      setIsReimportRunning: (running: boolean) => {
+        useAdminStore.setState((draft) => {
+          draft.isReimportRunning = running;
+        });
+      },
       seedUsers: (seed: AdminUser[]) => {
         useAdminStore.setState((draft) => {
           draft.users = seed;
         });
       },
-      selectUser,
-      deselectUser,
-      selectAllUsers,
-      deselectAllUsers,
-      resetAdminState,
+      selectUser: (userId: string) => {
+        useAdminStore.setState((draft) => {
+          if (!draft.userFilters.selectedUsers.includes(userId)) {
+            draft.userFilters.selectedUsers.push(userId);
+          }
+        });
+      },
+      deselectUser: (userId: string) => {
+        useAdminStore.setState((draft) => {
+          draft.userFilters.selectedUsers = draft.userFilters.selectedUsers.filter((id) => id !== userId);
+        });
+      },
+      selectAllUsers: () => {
+        const state = useAdminStore.getState();
+        useAdminStore.setState((draft) => {
+          draft.userFilters.selectedUsers = state.users.map((u) => u.id);
+        });
+      },
+      deselectAllUsers: () => {
+        useAdminStore.setState((draft) => {
+          draft.userFilters.selectedUsers = [];
+        });
+      },
+      resetAdminState: () => {
+        useAdminStore.setState((draft) => {
+          draft.notifications = [];
+          draft.userFilters.selectedUsers = [];
+          draft.featureFlags = {
+            flags: {},
+            enabledFlags: [],
+            disabledFlags: [],
+            lockedFlags: [],
+          };
+        });
+      },
       getSnapshot: () => useAdminStore.getState(),
     };
 
@@ -107,20 +227,7 @@ export default function AdminStoreHarnessPage() {
         delete document.documentElement.dataset.adminStoreHarness;
       }
     };
-  }, [
-    toggleSidebar,
-    addNotification,
-    markNotificationRead,
-    enableFeatureFlag,
-    disableFeatureFlag,
-    setReimportProgress,
-    setIsReimportRunning,
-    selectUser,
-    deselectUser,
-    selectAllUsers,
-    deselectAllUsers,
-    resetAdminState,
-  ]);
+  }, []); // Empty deps - set up once, access store directly
 
   return (
     <main data-testid="admin-store-harness" className="mx-auto flex max-w-4xl flex-col gap-6 p-6">

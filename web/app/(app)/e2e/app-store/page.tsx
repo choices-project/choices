@@ -67,48 +67,105 @@ export default function AppStoreHarnessPage() {
   const language = useAppLanguage();
   const timezone = useAppTimezone();
 
-  const {
-    toggleTheme,
-    setTheme,
-    updateSystemTheme,
-    toggleSidebar,
-    setSidebarCollapsed,
-    setFeatureFlags,
-    updateSettings,
-    openModal,
-    closeModal,
-    pushModal,
-    popModal,
-    setCurrentRoute,
-    setBreadcrumbs,
-    resetAppState,
-  } = useAppActions();
+  // Actions are accessed directly from store in useEffect, no need to destructure here
 
   const enabledFeatures = useMemo(
     () => Object.entries(featureFlags).filter(([, enabled]) => enabled).map(([flag]) => flag),
     [featureFlags]
   );
 
+  // Set up harness with empty deps to ensure it's set immediately and doesn't re-run
+  // Access actions from store state directly to avoid dependency issues
   useEffect(() => {
     if (typeof window === 'undefined') {
       return;
     }
 
     const harness: AppStoreHarness = {
-      toggleTheme,
-      setTheme,
-      updateSystemTheme,
-      toggleSidebar,
-      setSidebarCollapsed,
-      setFeatureFlags,
-      updateSettings,
-      openModal,
-      closeModal,
-      pushModal,
-      popModal,
-      setCurrentRoute,
-      setBreadcrumbs,
-      resetAppState,
+      toggleTheme: () => {
+        const state = useAppStore.getState();
+        const currentTheme = state.theme;
+        const nextTheme = currentTheme === 'light' ? 'dark' : currentTheme === 'dark' ? 'system' : 'light';
+        useAppStore.setState((draft) => {
+          draft.theme = nextTheme;
+        });
+      },
+      setTheme: (theme: 'light' | 'dark' | 'system') => {
+        useAppStore.setState((draft) => {
+          draft.theme = theme;
+        });
+      },
+      updateSystemTheme: (theme: 'light' | 'dark') => {
+        useAppStore.setState((draft) => {
+          draft.systemTheme = theme;
+        });
+      },
+      toggleSidebar: () => {
+        const state = useAppStore.getState();
+        const next = !state.sidebarCollapsed;
+        useAppStore.setState((draft) => {
+          draft.sidebarCollapsed = next;
+        });
+      },
+      setSidebarCollapsed: (collapsed: boolean) => {
+        useAppStore.setState((draft) => {
+          draft.sidebarCollapsed = collapsed;
+        });
+      },
+      setFeatureFlags: (flags: Record<string, boolean>) => {
+        useAppStore.setState((draft) => {
+          draft.features = { ...draft.features, ...flags };
+        });
+      },
+      updateSettings: (settings: Partial<AppPreferences>) => {
+        useAppStore.setState((draft) => {
+          draft.settings = { ...draft.settings, ...settings };
+        });
+      },
+      openModal: (id: string, data?: Record<string, unknown>) => {
+        useAppStore.setState((draft) => {
+          draft.activeModal = id;
+          draft.modalStack = [{ id, data: data ?? {} }];
+        });
+      },
+      closeModal: () => {
+        useAppStore.setState((draft) => {
+          draft.activeModal = null;
+          draft.modalStack = [];
+        });
+      },
+      pushModal: (id: string, data?: Record<string, unknown>) => {
+        useAppStore.setState((draft) => {
+          draft.activeModal = id;
+          draft.modalStack.push({ id, data: data ?? {} });
+        });
+      },
+      popModal: () => {
+        useAppStore.setState((draft) => {
+          draft.modalStack.pop();
+          draft.activeModal = draft.modalStack.length > 0 ? draft.modalStack[draft.modalStack.length - 1].id : null;
+        });
+      },
+      setCurrentRoute: (route: string) => {
+        useAppStore.setState((draft) => {
+          draft.currentRoute = route;
+        });
+      },
+      setBreadcrumbs: (breadcrumbs: AppStore['breadcrumbs']) => {
+        useAppStore.setState((draft) => {
+          draft.breadcrumbs = breadcrumbs;
+        });
+      },
+      resetAppState: () => {
+        useAppStore.setState((draft) => {
+          draft.theme = 'system';
+          draft.sidebarCollapsed = false;
+          draft.activeModal = null;
+          draft.modalStack = [];
+          draft.currentRoute = '/';
+          draft.breadcrumbs = [];
+        });
+      },
       getSnapshot: () => useAppStore.getState(),
     };
 
@@ -127,22 +184,7 @@ export default function AppStoreHarnessPage() {
         delete document.documentElement.dataset.appStoreHarness;
       }
     };
-  }, [
-    toggleTheme,
-    setTheme,
-    updateSystemTheme,
-    toggleSidebar,
-    setSidebarCollapsed,
-    setFeatureFlags,
-    updateSettings,
-    openModal,
-    closeModal,
-    pushModal,
-    popModal,
-    setCurrentRoute,
-    setBreadcrumbs,
-    resetAppState,
-  ]);
+  }, []); // Empty deps - set up once, access store directly
 
   return (
     <main data-testid="app-store-harness" className="mx-auto flex max-w-4xl flex-col gap-6 p-6">
