@@ -25,17 +25,17 @@ export const GET = withErrorHandling(async (request: NextRequest) => {
 
 async function getActiveSiteMessages(includeExpired: boolean = false) {
   try {
-    const { createClient } = await import('@supabase/supabase-js');
-
-    // Create Supabase client properly
+    // In CI/test/E2E environments, if Supabase is not configured or using fake credentials, return empty messages
+    // This allows the app to build and run tests without real Supabase credentials
     const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
     const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+    const isE2E = process.env.NEXT_PUBLIC_ENABLE_E2E_HARNESS === '1' || process.env.PLAYWRIGHT_USE_MOCKS === '1';
+    const isCI = process.env.CI === 'true' || process.env.NODE_ENV === 'test';
+    const isFakeCredentials = supabaseUrl?.includes('example.supabase.co') || supabaseKey === 'dev-only-secret';
 
-    // In CI/test environments, if Supabase is not configured, return empty messages
-    // This allows the app to build and run tests without real Supabase credentials
-    if (!supabaseUrl || !supabaseKey) {
-      if (process.env.CI === 'true' || process.env.NODE_ENV === 'test') {
-        logger.warn('Supabase not configured in CI/test; returning empty site messages');
+    if (!supabaseUrl || !supabaseKey || isFakeCredentials || isE2E || isCI) {
+      if (isE2E || isCI || isFakeCredentials) {
+        // Silently return empty messages in E2E/CI/test environments
         return {
           messages: [],
           count: 0,
@@ -44,6 +44,8 @@ async function getActiveSiteMessages(includeExpired: boolean = false) {
       }
       throw new Error('Supabase environment variables are not configured');
     }
+
+    const { createClient } = await import('@supabase/supabase-js');
     const supabase = createClient(
       supabaseUrl,
       supabaseKey

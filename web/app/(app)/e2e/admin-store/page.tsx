@@ -67,6 +67,10 @@ export default function AdminStoreHarnessPage() {
   );
 
   useEffect(() => {
+    if (typeof window === 'undefined') {
+      return;
+    }
+
     const harness: AdminStoreHarness = {
       toggleSidebar,
       addNotification,
@@ -89,10 +93,18 @@ export default function AdminStoreHarnessPage() {
     };
 
     window.__adminStoreHarness = harness;
+
+    // Set dataset attribute to signal readiness (similar to other harness pages)
+    if (typeof document !== 'undefined') {
+      document.documentElement.dataset.adminStoreHarness = 'ready';
+    }
+
     return () => {
       if (window.__adminStoreHarness === harness) {
-         
         delete (window as any).__adminStoreHarness;
+      }
+      if (typeof document !== 'undefined') {
+        delete document.documentElement.dataset.adminStoreHarness;
       }
     };
   }, [
