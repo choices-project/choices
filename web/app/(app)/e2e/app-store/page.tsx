@@ -90,6 +90,10 @@ export default function AppStoreHarnessPage() {
   );
 
   useEffect(() => {
+    if (typeof window === 'undefined') {
+      return;
+    }
+
     const harness: AppStoreHarness = {
       toggleTheme,
       setTheme,
@@ -109,9 +113,18 @@ export default function AppStoreHarnessPage() {
     };
 
     window.__appStoreHarness = harness;
+
+    // Set dataset attribute to signal readiness (similar to other harness pages)
+    if (typeof document !== 'undefined') {
+      document.documentElement.dataset.appStoreHarness = 'ready';
+    }
+
     return () => {
       if (window.__appStoreHarness === harness) {
-        delete window.__appStoreHarness;
+        delete (window as any).__appStoreHarness;
+      }
+      if (typeof document !== 'undefined') {
+        delete document.documentElement.dataset.appStoreHarness;
       }
     };
   }, [

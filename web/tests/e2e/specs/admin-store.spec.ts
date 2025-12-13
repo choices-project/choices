@@ -56,6 +56,7 @@ test.describe('Admin Store E2E', () => {
   });
 
   test('adds and marks notification as read', async ({ page }) => {
+    // Add notification (id is auto-generated)
     await page.evaluate(() => {
       const harness = window.__adminStoreHarness;
       harness?.addNotification({
@@ -64,6 +65,16 @@ test.describe('Admin Store E2E', () => {
         type: 'info',
       });
     });
+
+    // Get the notification id from the created notification
+    const notificationId = await page.evaluate(() => {
+      const harness = window.__adminStoreHarness;
+      const snapshot = harness?.getSnapshot();
+      const notification = snapshot?.notifications?.[0];
+      return notification?.id;
+    });
+
+    expect(notificationId).toBeDefined();
 
     const notifications = await page.evaluate(() => {
       const harness = window.__adminStoreHarness;
@@ -74,10 +85,12 @@ test.describe('Admin Store E2E', () => {
     expect(notifications).toBeDefined();
     expect(notifications?.length).toBeGreaterThanOrEqual(1);
     expect(notifications?.[0]?.title).toBe('Test Notification');
+    expect(notifications?.[0]?.read).toBe(false); // Initially unread
 
-    await page.evaluate(() => {
-      window.__adminStoreHarness?.markNotificationRead('test-notif-1');
-    });
+    // Mark the notification as read using the actual id
+    await page.evaluate((id) => {
+      window.__adminStoreHarness?.markNotificationRead(id);
+    }, notificationId);
 
     const updatedNotifications = await page.evaluate(() => {
       const harness = window.__adminStoreHarness;
@@ -86,7 +99,9 @@ test.describe('Admin Store E2E', () => {
     });
 
     expect(updatedNotifications).toBeDefined();
-    expect(updatedNotifications?.[0]?.read).toBe(true);
+    // Find the notification by id to ensure we're checking the right one
+    const updatedNotification = updatedNotifications?.find((n) => n.id === notificationId);
+    expect(updatedNotification?.read).toBe(true);
   });
 
   test('manages feature flags', async ({ page }) => {
