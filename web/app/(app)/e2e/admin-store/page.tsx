@@ -196,12 +196,12 @@ export default function AdminStoreHarnessPage() {
         useAdminStore.setState((draft) => {
           draft.notifications = [];
           draft.userFilters.selectedUsers = [];
-          draft.featureFlags = {
-            flags: {},
-            enabledFlags: [],
-            disabledFlags: [],
-            lockedFlags: [],
-          };
+          // Reset feature flags but preserve categories, isLoading, and error
+          draft.featureFlags.flags = {};
+          draft.featureFlags.enabledFlags = [];
+          draft.featureFlags.disabledFlags = [];
+          draft.featureFlags.lockedFlags = [];
+          // Keep categories, isLoading, and error as they are
         });
       },
       getSnapshot: () => useAdminStore.getState(),
