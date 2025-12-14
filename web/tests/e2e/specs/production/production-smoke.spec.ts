@@ -121,12 +121,20 @@ test.describe('Production Smoke Tests', () => {
     });
 
     test('dashboard page requires authentication', async ({ page }) => {
-      await page.goto(`${BASE_URL}/dashboard`, { waitUntil: 'domcontentloaded', timeout: 30_000 });
+      // Skip in E2E harness mode as middleware bypasses auth
+      if (process.env.NEXT_PUBLIC_ENABLE_E2E_HARNESS === '1') {
+        test.skip();
+      }
+      
+      await page.goto(`${BASE_URL}/dashboard`, { waitUntil: 'networkidle', timeout: 30_000 });
       
       // Wait a bit for redirect to complete
-      await page.waitForTimeout(2_000);
+      await page.waitForTimeout(3_000);
       
       // Should redirect to auth or show login prompt
+      const currentUrl = page.url();
+      const isAuthPage = currentUrl.includes('/auth') || currentUrl.includes('/login');
+      expect(isAuthPage).toBe(true);
       const currentUrl = page.url();
       const isAuthPage = currentUrl.includes('/auth') || currentUrl.includes('/login');
       

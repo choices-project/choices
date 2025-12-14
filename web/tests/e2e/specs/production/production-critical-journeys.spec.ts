@@ -111,10 +111,15 @@ test.describe('Production Critical Journeys', () => {
   test('navigation works between auth and other pages', async ({ page }) => {
     test.setTimeout(60_000);
     
+    // Skip in E2E harness mode as middleware bypasses auth
+    if (process.env.NEXT_PUBLIC_ENABLE_E2E_HARNESS === '1') {
+      test.skip();
+    }
+    
     await ensureLoggedOut(page);
     
     // Start at auth page (unauthenticated users should be redirected here)
-    await page.goto(`${BASE_URL}/auth`, { waitUntil: 'domcontentloaded', timeout: 30_000 });
+    await page.goto(`${BASE_URL}/auth`, { waitUntil: 'networkidle', timeout: 30_000 });
     
     const authContent = page.locator('text=/log in|sign up|create account/i').first();
     await expect(authContent).toBeVisible({ timeout: 10_000 });
