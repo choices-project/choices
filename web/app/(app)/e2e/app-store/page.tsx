@@ -54,7 +54,7 @@ const formatList = (values: string[]) => (values.length ? values.join(', ') : 'n
  * `window.__appStoreHarness` and renders current state for visual validation.
  */
 export default function AppStoreHarnessPage() {
-  const [ready, setReady] = useState(false);
+  const [_ready, setReady] = useState(false);
   const theme = useTheme();
   const resolvedTheme = useResolvedTheme();
   const sidebarCollapsed = useSidebarCollapsed();

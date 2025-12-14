@@ -72,7 +72,7 @@ declare global {
 const formatList = (values: string[]) => (values.length ? values.join(', ') : 'none');
 
 export default function AdminStoreHarnessPage() {
-  const [ready, setReady] = useState(false);
+  const [_ready, setReady] = useState(false);
   const sidebarCollapsed = useAdminSidebarCollapsed();
   const notifications = useAdminNotifications();
   const featureFlags = useAdminFeatureFlags();
