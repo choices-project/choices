@@ -132,11 +132,9 @@ test.describe('Production Smoke Tests', () => {
       await page.waitForTimeout(3_000);
       
       // Should redirect to auth or show login prompt
-      const currentUrl = page.url();
-      const isAuthPage = currentUrl.includes('/auth') || currentUrl.includes('/login');
+      const finalUrl = page.url();
+      const isAuthPage = finalUrl.includes('/auth') || finalUrl.includes('/login');
       expect(isAuthPage).toBe(true);
-      const currentUrl = page.url();
-      const isAuthPage = currentUrl.includes('/auth') || currentUrl.includes('/login');
       
       // Check for login-related content
       const hasLoginButton = await page.locator('button:has-text("Log in"), button:has-text("Sign in"), a:has-text("Log in"), a:has-text("Sign in")').first().isVisible().catch(() => false);
