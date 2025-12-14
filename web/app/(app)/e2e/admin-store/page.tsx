@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useMemo } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 
 import type { AdminNotification, AdminUser, NewAdminNotification } from '@/features/admin/types';
 
@@ -72,6 +72,7 @@ declare global {
 const formatList = (values: string[]) => (values.length ? values.join(', ') : 'none');
 
 export default function AdminStoreHarnessPage() {
+  const [ready, setReady] = useState(false);
   const sidebarCollapsed = useAdminSidebarCollapsed();
   const notifications = useAdminNotifications();
   const featureFlags = useAdminFeatureFlags();
@@ -213,6 +214,9 @@ export default function AdminStoreHarnessPage() {
     if (typeof document !== 'undefined') {
       document.documentElement.dataset.adminStoreHarness = 'ready';
     }
+
+    // Mark as ready
+    setReady(true);
 
     return () => {
       if (window.__adminStoreHarness === harness) {

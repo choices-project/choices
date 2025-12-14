@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useMemo } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 
 import {
   useAppStore,
@@ -54,6 +54,7 @@ const formatList = (values: string[]) => (values.length ? values.join(', ') : 'n
  * `window.__appStoreHarness` and renders current state for visual validation.
  */
 export default function AppStoreHarnessPage() {
+  const [ready, setReady] = useState(false);
   const theme = useTheme();
   const resolvedTheme = useResolvedTheme();
   const sidebarCollapsed = useSidebarCollapsed();
@@ -92,11 +93,17 @@ export default function AppStoreHarnessPage() {
       setTheme: (theme: 'light' | 'dark' | 'system') => {
         useAppStore.setState((draft) => {
           draft.theme = theme;
+          // Update resolvedTheme: if theme is 'system', use systemTheme; otherwise use theme
+          draft.resolvedTheme = theme === 'system' ? draft.systemTheme : theme;
         });
       },
       updateSystemTheme: (theme: 'light' | 'dark') => {
         useAppStore.setState((draft) => {
           draft.systemTheme = theme;
+          // Update resolvedTheme if current theme is 'system'
+          if (draft.theme === 'system') {
+            draft.resolvedTheme = theme;
+          }
         });
       },
       toggleSidebar: () => {
@@ -174,6 +181,9 @@ export default function AppStoreHarnessPage() {
     if (typeof document !== 'undefined') {
       document.documentElement.dataset.appStoreHarness = 'ready';
     }
+
+    // Mark as ready
+    setReady(true);
 
     return () => {
       if (window.__appStoreHarness === harness) {
