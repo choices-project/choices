@@ -1,6 +1,6 @@
 'use client';
 
-import { useLayoutEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 
 import type { AdminNotification, AdminUser, NewAdminNotification } from '@/features/admin/types';
 
@@ -93,16 +93,17 @@ export default function AdminStoreHarnessPage() {
     [notifications]
   );
 
-  // Set up harness with useLayoutEffect to ensure it's set synchronously before paint
+  // Set up harness with useEffect - runs after mount, ensures window is available
   // Access actions from store state directly to avoid dependency issues
-  useLayoutEffect(() => {
+  useEffect(() => {
     if (typeof window === 'undefined') {
       return;
     }
 
-    try {
+    let harness: AdminStoreHarness | null = null;
 
-    const harness: AdminStoreHarness = {
+    try {
+      harness = {
       toggleSidebar: () => {
         const currentState = useAdminStore.getState();
         const next = !currentState.sidebarCollapsed;
@@ -207,24 +208,26 @@ export default function AdminStoreHarnessPage() {
           // Keep categories, isLoading, and error as they are
         });
       },
-      getSnapshot: () => useAdminStore.getState(),
-    };
+        getSnapshot: () => useAdminStore.getState(),
+      };
 
-      window.__adminStoreHarness = harness;
+      if (harness) {
+        window.__adminStoreHarness = harness;
 
-      // Set dataset attribute to signal readiness (similar to other harness pages)
-      if (typeof document !== 'undefined') {
-        document.documentElement.dataset.adminStoreHarness = 'ready';
+        // Set dataset attribute to signal readiness (similar to other harness pages)
+        if (typeof document !== 'undefined') {
+          document.documentElement.dataset.adminStoreHarness = 'ready';
+        }
+
+        // Mark as ready
+        setReady(true);
       }
-
-      // Mark as ready
-      setReady(true);
     } catch (error) {
       console.error('Failed to set up admin store harness:', error);
     }
 
     return () => {
-      if (window.__adminStoreHarness === harness) {
+      if (harness && window.__adminStoreHarness === harness) {
         delete (window as any).__adminStoreHarness;
       }
       if (typeof document !== 'undefined') {

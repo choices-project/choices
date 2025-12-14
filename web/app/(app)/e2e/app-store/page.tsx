@@ -1,6 +1,6 @@
 'use client';
 
-import { useLayoutEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 
 import {
   useAppStore,
@@ -74,14 +74,17 @@ export default function AppStoreHarnessPage() {
     [featureFlags]
   );
 
-  // Set up harness with useLayoutEffect to ensure it's set synchronously before paint
+  // Set up harness with useEffect - runs after mount, ensures window is available
   // Access actions from store state directly to avoid dependency issues
-  useLayoutEffect(() => {
+  useEffect(() => {
     if (typeof window === 'undefined') {
       return;
     }
 
+    let harness: AppStoreHarness | null = null;
+
     try {
+      harness = {
 
     const harness: AppStoreHarness = {
       toggleTheme: () => {
@@ -174,24 +177,26 @@ export default function AppStoreHarnessPage() {
           draft.breadcrumbs = [];
         });
       },
-      getSnapshot: () => useAppStore.getState(),
-    };
+        getSnapshot: () => useAppStore.getState(),
+      };
 
-    window.__appStoreHarness = harness;
+      if (harness) {
+        window.__appStoreHarness = harness;
 
-    // Set dataset attribute to signal readiness (similar to other harness pages)
-    if (typeof document !== 'undefined') {
-      document.documentElement.dataset.appStoreHarness = 'ready';
-    }
+        // Set dataset attribute to signal readiness (similar to other harness pages)
+        if (typeof document !== 'undefined') {
+          document.documentElement.dataset.appStoreHarness = 'ready';
+        }
 
-      // Mark as ready
-      setReady(true);
+        // Mark as ready
+        setReady(true);
+      }
     } catch (error) {
       console.error('Failed to set up app store harness:', error);
     }
 
     return () => {
-      if (window.__appStoreHarness === harness) {
+      if (harness && window.__appStoreHarness === harness) {
         delete (window as any).__appStoreHarness;
       }
       if (typeof document !== 'undefined') {
