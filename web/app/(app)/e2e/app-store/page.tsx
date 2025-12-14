@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useLayoutEffect, useMemo, useState } from 'react';
 
 import {
   useAppStore,
@@ -74,9 +74,9 @@ export default function AppStoreHarnessPage() {
     [featureFlags]
   );
 
-  // Set up harness with empty deps to ensure it's set immediately and doesn't re-run
+  // Set up harness with useLayoutEffect to ensure it's set synchronously before paint
   // Access actions from store state directly to avoid dependency issues
-  useEffect(() => {
+  useLayoutEffect(() => {
     if (typeof window === 'undefined') {
       return;
     }
