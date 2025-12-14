@@ -113,6 +113,10 @@ export class AuditLogService {
     options: AuditLogOptions = {}
   ): Promise<string | null> {
     try {
+      // In E2E test environments, gracefully handle failures
+      const isE2E = process.env.NEXT_PUBLIC_ENABLE_E2E_HARNESS === '1' || 
+                    process.env.PLAYWRIGHT_USE_MOCKS === '1';
+      
       const { data, error } = await this.supabase.rpc('create_audit_log', {
         p_event_type: eventType,
         p_event_name: eventName,
@@ -127,13 +131,34 @@ export class AuditLogService {
       });
 
       if (error) {
+        // In E2E mode, log but don't throw - audit logs are non-critical for tests
+        if (isE2E) {
+          logger.warn('Audit log creation failed in E2E mode (non-critical)', {
+            eventType,
+            eventName,
+            error: error.message,
+          });
+          return null;
+        }
         logger.error('Failed to create audit log', { error, eventType, eventName });
         return null;
       }
 
       return data as string;
     } catch (error) {
-      logger.error('Error creating audit log', { error, eventType, eventName });
+      // In E2E mode, gracefully handle errors - audit logs are non-critical for tests
+      const isE2E = process.env.NEXT_PUBLIC_ENABLE_E2E_HARNESS === '1' || 
+                    process.env.PLAYWRIGHT_USE_MOCKS === '1';
+      
+      if (isE2E) {
+        logger.warn('Audit log creation error in E2E mode (non-critical)', {
+          eventType,
+          eventName,
+          error: error instanceof Error ? error.message : String(error),
+        });
+      } else {
+        logger.error('Error creating audit log', { error, eventType, eventName });
+      }
       return null;
     }
   }

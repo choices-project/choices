@@ -54,7 +54,19 @@ export default function CivicsLureHarnessPage() {
 
   useEffect(() => {
     // Set page title for accessibility - must be in useEffect to avoid infinite loops
+    // Ensure title element exists and is set
+    let titleElement = document.querySelector('head title');
+    if (!titleElement) {
+      titleElement = document.createElement('title');
+      document.head.appendChild(titleElement);
+    }
+    titleElement.textContent = 'Civics Lure E2E Harness - Choices';
     document.title = 'Civics Lure E2E Harness - Choices';
+    
+    // Ensure lang attribute is set on html element
+    if (!document.documentElement.getAttribute('lang')) {
+      document.documentElement.setAttribute('lang', 'en');
+    }
     
     useRepresentativeStore.setState((state) => {
       state.locationRepresentatives = MOCK_REPRESENTATIVES;
