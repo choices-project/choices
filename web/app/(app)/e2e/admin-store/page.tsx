@@ -209,19 +209,31 @@ export default function AdminStoreHarnessPage() {
     } catch (error) {
       console.error('Failed to create admin store harness:', error);
       // Set a minimal harness even on error so tests can detect the page loaded
+      // eslint-disable-next-line @typescript-eslint/no-empty-function
       window.__adminStoreHarness = {
+        // eslint-disable-next-line @typescript-eslint/no-empty-function
         toggleSidebar: () => {},
+        // eslint-disable-next-line @typescript-eslint/no-empty-function
         addNotification: () => {},
+        // eslint-disable-next-line @typescript-eslint/no-empty-function
         markNotificationRead: () => {},
         enableFeatureFlag: () => false,
         disableFeatureFlag: () => false,
+        // eslint-disable-next-line @typescript-eslint/no-empty-function
         setReimportProgress: () => {},
+        // eslint-disable-next-line @typescript-eslint/no-empty-function
         setIsReimportRunning: () => {},
+        // eslint-disable-next-line @typescript-eslint/no-empty-function
         seedUsers: () => {},
+        // eslint-disable-next-line @typescript-eslint/no-empty-function
         selectUser: () => {},
+        // eslint-disable-next-line @typescript-eslint/no-empty-function
         deselectUser: () => {},
+        // eslint-disable-next-line @typescript-eslint/no-empty-function
         selectAllUsers: () => {},
+        // eslint-disable-next-line @typescript-eslint/no-empty-function
         deselectAllUsers: () => {},
+        // eslint-disable-next-line @typescript-eslint/no-empty-function
         resetAdminState: () => {},
         getSnapshot: () => useAdminStore.getState(),
       } as AdminStoreHarness;
