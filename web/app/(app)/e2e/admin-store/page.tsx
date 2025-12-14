@@ -208,8 +208,8 @@ export default function AdminStoreHarnessPage() {
           // Keep categories, isLoading, and error as they are
         });
       },
-        getSnapshot: () => useAdminStore.getState(),
-      };
+      getSnapshot: () => useAdminStore.getState(),
+    };
 
       if (harness) {
         window.__adminStoreHarness = harness;
