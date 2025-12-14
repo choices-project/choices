@@ -153,7 +153,16 @@ class UpstashRateLimiter {
       };
 
     } catch (redisError) {
-      logger.error('Redis rate limit check failed:', redisError);
+      // In E2E mode, gracefully handle Redis failures - rate limiting is non-critical for tests
+      const isE2E = process.env.NEXT_PUBLIC_ENABLE_E2E_HARNESS === '1' || 
+                    process.env.PLAYWRIGHT_USE_MOCKS === '1';
+      
+      if (isE2E) {
+        logger.warn('Redis rate limit check failed in E2E mode (non-critical):', redisError instanceof Error ? redisError.message : String(redisError));
+      } else {
+        logger.error('Redis rate limit check failed:', redisError);
+      }
+      
       return {
         allowed: true,
         remaining: maxRequests - 1,
