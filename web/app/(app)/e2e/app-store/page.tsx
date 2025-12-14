@@ -176,7 +176,6 @@ export default function AppStoreHarnessPage() {
     } catch (error) {
       console.error('Failed to create app store harness:', error);
       // Set a minimal harness even on error so tests can detect the page loaded
-      // eslint-disable-next-line @typescript-eslint/no-empty-function
       window.__appStoreHarness = {
         // eslint-disable-next-line @typescript-eslint/no-empty-function
         toggleTheme: () => {},

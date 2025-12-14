@@ -209,7 +209,6 @@ export default function AdminStoreHarnessPage() {
     } catch (error) {
       console.error('Failed to create admin store harness:', error);
       // Set a minimal harness even on error so tests can detect the page loaded
-      // eslint-disable-next-line @typescript-eslint/no-empty-function
       window.__adminStoreHarness = {
         // eslint-disable-next-line @typescript-eslint/no-empty-function
         toggleSidebar: () => {},
