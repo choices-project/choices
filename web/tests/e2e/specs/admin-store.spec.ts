@@ -26,13 +26,35 @@ test.describe('Admin Store E2E', () => {
   });
 
   test('harness exposes admin store API', async ({ page }) => {
-    const harness = await page.evaluate(() => window.__adminStoreHarness);
-    expect(harness).toBeDefined();
-    expect(harness?.toggleSidebar).toBeDefined();
-    expect(harness?.addNotification).toBeDefined();
-    expect(harness?.enableFeatureFlag).toBeDefined();
-    expect(harness?.seedUsers).toBeDefined();
-    expect(harness?.resetAdminState).toBeDefined();
+    // Check harness exists
+    const harnessExists = await page.evaluate(() => Boolean(window.__adminStoreHarness));
+    expect(harnessExists).toBe(true);
+
+    // Check methods exist in page context (functions can't be serialized through evaluate)
+    const hasToggleSidebar = await page.evaluate(() => 
+      typeof window.__adminStoreHarness?.toggleSidebar === 'function'
+    );
+    expect(hasToggleSidebar).toBe(true);
+
+    const hasAddNotification = await page.evaluate(() => 
+      typeof window.__adminStoreHarness?.addNotification === 'function'
+    );
+    expect(hasAddNotification).toBe(true);
+
+    const hasEnableFeatureFlag = await page.evaluate(() => 
+      typeof window.__adminStoreHarness?.enableFeatureFlag === 'function'
+    );
+    expect(hasEnableFeatureFlag).toBe(true);
+
+    const hasSeedUsers = await page.evaluate(() => 
+      typeof window.__adminStoreHarness?.seedUsers === 'function'
+    );
+    expect(hasSeedUsers).toBe(true);
+
+    const hasResetAdminState = await page.evaluate(() => 
+      typeof window.__adminStoreHarness?.resetAdminState === 'function'
+    );
+    expect(hasResetAdminState).toBe(true);
   });
 
   test('toggles sidebar', async ({ page }) => {
