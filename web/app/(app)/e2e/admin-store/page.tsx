@@ -93,17 +93,10 @@ export default function AdminStoreHarnessPage() {
     [notifications]
   );
 
-  // Set up harness with useEffect - runs after mount, ensures window is available
+  // Set up harness with useEffect - runs after mount
   // Access actions from store state directly to avoid dependency issues
   useEffect(() => {
-    if (typeof window === 'undefined') {
-      return;
-    }
-
-    let harness: AdminStoreHarness | null = null;
-
-    try {
-      harness = {
+    const harness: AdminStoreHarness = {
       toggleSidebar: () => {
         const currentState = useAdminStore.getState();
         const next = !currentState.sidebarCollapsed;
@@ -211,30 +204,54 @@ export default function AdminStoreHarnessPage() {
       getSnapshot: () => useAdminStore.getState(),
     };
 
-      if (harness) {
-        window.__adminStoreHarness = harness;
-
-        // Set dataset attribute to signal readiness (similar to other harness pages)
-        if (typeof document !== 'undefined') {
-          document.documentElement.dataset.adminStoreHarness = 'ready';
-        }
-
-        // Mark as ready
-        setReady(true);
-      }
-    } catch (error) {
-      console.error('Failed to set up admin store harness:', error);
-    }
-
+    window.__adminStoreHarness = harness;
     return () => {
-      if (harness && window.__adminStoreHarness === harness) {
+      if (window.__adminStoreHarness === harness) {
         delete (window as any).__adminStoreHarness;
-      }
-      if (typeof document !== 'undefined') {
-        delete document.documentElement.dataset.adminStoreHarness;
       }
     };
   }, []); // Empty deps - set up once, access store directly
+
+  // Set dataset attribute in separate useEffect (handles hydration like poll-wizard)
+  useEffect(() => {
+    let ready = false;
+    const markReady = () => {
+      if (ready) return;
+      ready = true;
+      if (typeof document !== 'undefined') {
+        document.documentElement.dataset.adminStoreHarness = 'ready';
+      }
+      setReady(true);
+    };
+
+    const persist = (useAdminStore as typeof useAdminStore & {
+      persist?: {
+        hasHydrated?: () => boolean;
+        onFinishHydration?: (callback: () => void) => (() => void) | void;
+      };
+    }).persist;
+
+    let unsubscribeHydration: (() => void) | void;
+
+    if (persist?.hasHydrated?.()) {
+      markReady();
+    } else if (persist?.onFinishHydration) {
+      unsubscribeHydration = persist.onFinishHydration(() => {
+        markReady();
+      });
+    } else {
+      markReady();
+    }
+
+    return () => {
+      if (typeof unsubscribeHydration === 'function') {
+        unsubscribeHydration();
+      }
+      if (ready && typeof document !== 'undefined') {
+        delete document.documentElement.dataset.adminStoreHarness;
+      }
+    };
+  }, []);
 
   return (
     <main data-testid="admin-store-harness" className="mx-auto flex max-w-4xl flex-col gap-6 p-6">

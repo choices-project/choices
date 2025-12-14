@@ -74,17 +74,10 @@ export default function AppStoreHarnessPage() {
     [featureFlags]
   );
 
-  // Set up harness with useEffect - runs after mount, ensures window is available
+  // Set up harness with useEffect - runs after mount
   // Access actions from store state directly to avoid dependency issues
   useEffect(() => {
-    if (typeof window === 'undefined') {
-      return;
-    }
-
-    let harness: AppStoreHarness | null = null;
-
-    try {
-      harness = {
+    const harness: AppStoreHarness = {
       toggleTheme: () => {
         const state = useAppStore.getState();
         const currentTheme = state.theme;
@@ -175,33 +168,57 @@ export default function AppStoreHarnessPage() {
           draft.breadcrumbs = [];
         });
       },
-        getSnapshot: () => useAppStore.getState(),
-      };
+      getSnapshot: () => useAppStore.getState(),
+    };
 
-      if (harness) {
-        window.__appStoreHarness = harness;
-
-        // Set dataset attribute to signal readiness (similar to other harness pages)
-        if (typeof document !== 'undefined') {
-          document.documentElement.dataset.appStoreHarness = 'ready';
-        }
-
-        // Mark as ready
-        setReady(true);
-      }
-    } catch (error) {
-      console.error('Failed to set up app store harness:', error);
-    }
-
+    window.__appStoreHarness = harness;
     return () => {
-      if (harness && window.__appStoreHarness === harness) {
+      if (window.__appStoreHarness === harness) {
         delete (window as any).__appStoreHarness;
-      }
-      if (typeof document !== 'undefined') {
-        delete document.documentElement.dataset.appStoreHarness;
       }
     };
   }, []); // Empty deps - set up once, access store directly
+
+  // Set dataset attribute in separate useEffect (handles hydration like poll-wizard)
+  useEffect(() => {
+    let ready = false;
+    const markReady = () => {
+      if (ready) return;
+      ready = true;
+      if (typeof document !== 'undefined') {
+        document.documentElement.dataset.appStoreHarness = 'ready';
+      }
+      setReady(true);
+    };
+
+    const persist = (useAppStore as typeof useAppStore & {
+      persist?: {
+        hasHydrated?: () => boolean;
+        onFinishHydration?: (callback: () => void) => (() => void) | void;
+      };
+    }).persist;
+
+    let unsubscribeHydration: (() => void) | void;
+
+    if (persist?.hasHydrated?.()) {
+      markReady();
+    } else if (persist?.onFinishHydration) {
+      unsubscribeHydration = persist.onFinishHydration(() => {
+        markReady();
+      });
+    } else {
+      markReady();
+    }
+
+    return () => {
+      if (typeof unsubscribeHydration === 'function') {
+        unsubscribeHydration();
+      }
+      if (ready && typeof document !== 'undefined') {
+        delete document.documentElement.dataset.appStoreHarness;
+      }
+    };
+  }, []);
 
   return (
     <main data-testid="app-store-harness" className="mx-auto flex max-w-4xl flex-col gap-6 p-6">
