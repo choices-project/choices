@@ -85,8 +85,6 @@ export default function AppStoreHarnessPage() {
 
     try {
       harness = {
-
-    const harness: AppStoreHarness = {
       toggleTheme: () => {
         const state = useAppStore.getState();
         const currentTheme = state.theme;
