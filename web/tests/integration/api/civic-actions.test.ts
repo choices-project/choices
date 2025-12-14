@@ -8,12 +8,13 @@
  * Created: January 2025
  */
 
-import { describe, it, expect, beforeAll, beforeEach, afterEach, jest } from '@jest/globals';
+import { describe, it, expect, beforeEach, jest } from '@jest/globals';
 import type { NextRequest } from 'next/server';
 
 import { GET, POST } from '@/app/api/civic-actions/route';
 import { GET as GET_ID, PATCH, DELETE } from '@/app/api/civic-actions/[id]/route';
 import { POST as POST_SIGN } from '@/app/api/civic-actions/[id]/sign/route';
+import { createNextRequest } from '@/tests/contracts/helpers/request';
 
 // Mock dependencies
 jest.mock('@/lib/core/feature-flags', () => ({
@@ -44,7 +45,7 @@ const mockSupabase = jest.requireMock('@/utils/supabase/server') as {
 };
 
 const createMockSupabaseClient = () => {
-  const mockClient = {
+  const mockClient: any = {
     from: jest.fn(() => mockClient),
     select: jest.fn(() => mockClient),
     insert: jest.fn(() => mockClient),
@@ -68,14 +69,14 @@ const createRequest = (
   body?: unknown,
   headers: Record<string, string> = {}
 ): NextRequest => {
-  return new NextRequest(url, {
+  return createNextRequest(url, {
     method,
     headers: {
       'Content-Type': 'application/json',
       ...headers,
     },
     body: body ? JSON.stringify(body) : undefined,
-  } as any);
+  });
 };
 
 describe('Civic Actions API', () => {
@@ -101,15 +102,15 @@ describe('Civic Actions API', () => {
         },
       ];
 
-      mockSupabaseClient.select.mockReturnValue(mockSupabaseClient);
-      mockSupabaseClient.eq.mockReturnValue(mockSupabaseClient);
-      mockSupabaseClient.order.mockReturnValue(mockSupabaseClient);
-      mockSupabaseClient.range.mockResolvedValue({
+      (mockSupabaseClient.select as jest.Mock).mockReturnValue(mockSupabaseClient);
+      (mockSupabaseClient.eq as jest.Mock).mockReturnValue(mockSupabaseClient);
+      (mockSupabaseClient.order as jest.Mock).mockReturnValue(mockSupabaseClient);
+      (mockSupabaseClient.range as jest.Mock).mockResolvedValue({
         data: mockActions,
         error: null,
         count: 1,
       });
-      mockSupabaseClient.auth.getUser.mockResolvedValue({
+      (mockSupabaseClient.auth.getUser as jest.Mock).mockResolvedValue({
         data: { user: null },
         error: null,
       });
@@ -146,8 +147,10 @@ describe('Civic Actions API', () => {
     });
 
     it('should return 403 when feature flag is disabled', async () => {
-      const { isFeatureEnabled } = jest.requireMock('@/lib/core/feature-flags');
-      isFeatureEnabled.mockReturnValue(false);
+      const featureFlagsMock = jest.requireMock('@/lib/core/feature-flags') as {
+        isFeatureEnabled: jest.Mock;
+      };
+      (featureFlagsMock.isFeatureEnabled as jest.Mock).mockReturnValue(false);
 
       const request = createRequest('GET', 'http://localhost:3000/api/civic-actions');
       const response = await GET(request);

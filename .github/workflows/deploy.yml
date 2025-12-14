@@ -336,11 +336,13 @@ jobs:
       - name: Check for Slack webhook
         id: check-slack-prod
         run: |
-          if [ -n "${{ secrets.SLACK_WEBHOOK_URL }}" ]; then
+          if [ -n "${SLACK_WEBHOOK_URL:-}" ]; then
             echo "has_webhook=true" >> $GITHUB_OUTPUT
           else
             echo "has_webhook=false" >> $GITHUB_OUTPUT
           fi
+        env:
+          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL || '' }}
 
       - name: Notify deployment success
         uses: 8398a7/action-slack@v3
@@ -350,7 +352,7 @@ jobs:
           channel: '#deployments'
           text: '🚀 Production deployment successful!'
         env:
-          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
+          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL || '' }}
 
   # Post-deployment monitoring
   post-deployment:
@@ -418,11 +420,13 @@ jobs:
       - name: Check for Slack webhook
         id: check-slack
         run: |
-          if [ -n "${{ secrets.SLACK_WEBHOOK_URL }}" ]; then
+          if [ -n "${SLACK_WEBHOOK_URL:-}" ]; then
             echo "has_webhook=true" >> $GITHUB_OUTPUT
           else
             echo "has_webhook=false" >> $GITHUB_OUTPUT
           fi
+        env:
+          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL || '' }}
 
       - name: Notify rollback
         uses: 8398a7/action-slack@v3
@@ -432,7 +436,7 @@ jobs:
           channel: '#deployments'
           text: '🚨 Deployment failed and rollback initiated!'
         env:
-          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
+          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL || '' }}
 
   # Deployment summary
   deployment-summary:

@@ -11,10 +11,10 @@ import { POST as requestPOST } from '@/app/api/candidates/verify/request/route';
 // Mock Supabase
 const mockGetUser = jest.fn();
 const mockFrom = jest.fn();
-const mockSelect = jest.fn();
-const mockEq = jest.fn();
-const mockOrder = jest.fn();
-const mockLimit = jest.fn();
+const _mockSelect = jest.fn();
+const _mockEq = jest.fn();
+const _mockOrder = jest.fn();
+const _mockLimit = jest.fn();
 const mockMaybeSingle = jest.fn();
 const mockInsert = jest.fn();
 const mockUpdate = jest.fn();

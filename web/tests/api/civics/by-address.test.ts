@@ -9,6 +9,7 @@
 import { describe, it, expect, beforeAll, beforeEach, afterEach, jest } from '@jest/globals';
 
 import { POST, GET } from '@/app/api/v1/civics/address-lookup/route';
+import { createNextRequest } from '@/tests/contracts/helpers/request';
 
 jest.mock('@/lib/civics/env-guard', () => ({
   assertPepperConfig: jest.fn(),
@@ -58,7 +59,7 @@ afterEach(() => {
 });
 
 const createPostRequest = (body: unknown) =>
-  new Request('http://localhost:3000/api/v1/civics/address-lookup', {
+  createNextRequest('http://localhost:3000/api/v1/civics/address-lookup', {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
