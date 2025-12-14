@@ -26,14 +26,40 @@ test.describe('App Store E2E', () => {
   });
 
   test('harness exposes app store API', async ({ page }) => {
-    const harness = await page.evaluate(() => window.__appStoreHarness);
-    expect(harness).toBeDefined();
-    expect(harness?.toggleTheme).toBeDefined();
-    expect(harness?.setTheme).toBeDefined();
-    expect(harness?.toggleSidebar).toBeDefined();
-    expect(harness?.updateSettings).toBeDefined();
-    expect(harness?.resetAppState).toBeDefined();
-    expect(harness?.getSnapshot).toBeDefined();
+    // Check harness exists
+    const harnessExists = await page.evaluate(() => Boolean(window.__appStoreHarness));
+    expect(harnessExists).toBe(true);
+
+    // Check methods exist in page context (functions can't be serialized through evaluate)
+    const hasToggleTheme = await page.evaluate(() => 
+      typeof window.__appStoreHarness?.toggleTheme === 'function'
+    );
+    expect(hasToggleTheme).toBe(true);
+
+    const hasSetTheme = await page.evaluate(() => 
+      typeof window.__appStoreHarness?.setTheme === 'function'
+    );
+    expect(hasSetTheme).toBe(true);
+
+    const hasToggleSidebar = await page.evaluate(() => 
+      typeof window.__appStoreHarness?.toggleSidebar === 'function'
+    );
+    expect(hasToggleSidebar).toBe(true);
+
+    const hasUpdateSettings = await page.evaluate(() => 
+      typeof window.__appStoreHarness?.updateSettings === 'function'
+    );
+    expect(hasUpdateSettings).toBe(true);
+
+    const hasResetAppState = await page.evaluate(() => 
+      typeof window.__appStoreHarness?.resetAppState === 'function'
+    );
+    expect(hasResetAppState).toBe(true);
+
+    const hasGetSnapshot = await page.evaluate(() => 
+      typeof window.__appStoreHarness?.getSnapshot === 'function'
+    );
+    expect(hasGetSnapshot).toBe(true);
   });
 
   test('toggles theme', async ({ page }) => {

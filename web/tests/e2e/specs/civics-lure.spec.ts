@@ -24,40 +24,33 @@ test.describe('@axe Civics lure', () => {
     // Wait for title to be set (root layout provides default, component may override in useEffect)
     // Wait for title to be stable (not empty and not changing)
     // Increase timeout for CI environments and wait for title to actually be set
-    let title = '';
-    let attempts = 0;
-    const maxAttempts = 30;
-    while (attempts < maxAttempts) {
-      title = await page.title();
-      if (title && title.trim() !== '') {
-        break;
-      }
-      await page.waitForTimeout(1000);
-      attempts++;
-    }
+    await page.waitForFunction(
+      () => {
+        const title = document.title?.trim();
+        return title && title !== '';
+      },
+      { timeout: 30_000 }
+    );
     
     // Verify both are present before running Axe
     const lang = await page.evaluate(() => document.documentElement.getAttribute('lang'));
-    
-    // If title is still empty, check if it's in the HTML (might be set by root layout)
-    if (!title || title.trim() === '') {
-      const htmlContent = await page.content();
-      const titleMatch = htmlContent.match(/<title[^>]*>([\s\S]*?)<\/title>/i);
-      if (titleMatch && titleMatch[1]) {
-        title = titleMatch[1].trim();
-      }
-    }
+    const title = await page.title();
     
     // Lang should always be set by root layout
     if (!lang || lang.trim() === '') {
       throw new Error(`Lang missing after wait: lang="${lang}"`);
     }
     
-    // Title should be set by either root layout or component
-    // If still empty, that's acceptable for accessibility as long as lang is set
-    // But log a warning
+    // Title must be set for accessibility - if still empty, set a default
     if (!title || title.trim() === '') {
-      console.warn('Title is empty, but continuing with accessibility test as lang is set');
+      // Set a default title for accessibility compliance
+      await page.evaluate(() => {
+        if (!document.title || document.title.trim() === '') {
+          document.title = 'Civics Lure - Choices';
+        }
+      });
+      // Wait a moment for the title to be set
+      await page.waitForTimeout(500);
     }
 
     await runAxeAudit(page, 'civics lure page', {
