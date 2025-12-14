@@ -77,7 +77,8 @@ export default function AppStoreHarnessPage() {
   // Set up harness with useEffect - runs after mount
   // Access actions from store state directly to avoid dependency issues
   useEffect(() => {
-    const harness: AppStoreHarness = {
+    try {
+      const harness: AppStoreHarness = {
       toggleTheme: () => {
         const state = useAppStore.getState();
         const currentTheme = state.theme;
