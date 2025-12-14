@@ -100,6 +100,8 @@ export default function AdminStoreHarnessPage() {
       return;
     }
 
+    try {
+
     const harness: AdminStoreHarness = {
       toggleSidebar: () => {
         const currentState = useAdminStore.getState();
@@ -208,15 +210,18 @@ export default function AdminStoreHarnessPage() {
       getSnapshot: () => useAdminStore.getState(),
     };
 
-    window.__adminStoreHarness = harness;
+      window.__adminStoreHarness = harness;
 
-    // Set dataset attribute to signal readiness (similar to other harness pages)
-    if (typeof document !== 'undefined') {
-      document.documentElement.dataset.adminStoreHarness = 'ready';
+      // Set dataset attribute to signal readiness (similar to other harness pages)
+      if (typeof document !== 'undefined') {
+        document.documentElement.dataset.adminStoreHarness = 'ready';
+      }
+
+      // Mark as ready
+      setReady(true);
+    } catch (error) {
+      console.error('Failed to set up admin store harness:', error);
     }
-
-    // Mark as ready
-    setReady(true);
 
     return () => {
       if (window.__adminStoreHarness === harness) {

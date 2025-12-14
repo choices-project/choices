@@ -81,6 +81,8 @@ export default function AppStoreHarnessPage() {
       return;
     }
 
+    try {
+
     const harness: AppStoreHarness = {
       toggleTheme: () => {
         const state = useAppStore.getState();
@@ -182,8 +184,11 @@ export default function AppStoreHarnessPage() {
       document.documentElement.dataset.appStoreHarness = 'ready';
     }
 
-    // Mark as ready
-    setReady(true);
+      // Mark as ready
+      setReady(true);
+    } catch (error) {
+      console.error('Failed to set up app store harness:', error);
+    }
 
     return () => {
       if (window.__appStoreHarness === harness) {
