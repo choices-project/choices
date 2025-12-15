@@ -342,7 +342,8 @@ jobs:
             echo "has_webhook=false" >> $GITHUB_OUTPUT
           fi
         env:
-          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL || '' }}
+          # Use empty string if secret is not set (safe for optional notifications)
+          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL != '' && secrets.SLACK_WEBHOOK_URL || '' }}
 
       - name: Notify deployment success
         uses: 8398a7/action-slack@v3
@@ -352,7 +353,8 @@ jobs:
           channel: '#deployments'
           text: '🚀 Production deployment successful!'
         env:
-          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL || '' }}
+          # Use empty string if secret is not set (safe for optional notifications)
+          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL != '' && secrets.SLACK_WEBHOOK_URL || '' }}
 
   # Post-deployment monitoring
   post-deployment:
@@ -426,7 +428,8 @@ jobs:
             echo "has_webhook=false" >> $GITHUB_OUTPUT
           fi
         env:
-          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL || '' }}
+          # Use empty string if secret is not set (safe for optional notifications)
+          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL != '' && secrets.SLACK_WEBHOOK_URL || '' }}
 
       - name: Notify rollback
         uses: 8398a7/action-slack@v3
@@ -436,7 +439,8 @@ jobs:
           channel: '#deployments'
           text: '🚨 Deployment failed and rollback initiated!'
         env:
-          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL || '' }}
+          # Use empty string if secret is not set (safe for optional notifications)
+          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL != '' && secrets.SLACK_WEBHOOK_URL || '' }}
 
   # Deployment summary
   deployment-summary:

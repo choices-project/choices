@@ -333,7 +333,8 @@ jobs:
         image: postgres:15
         env:
           POSTGRES_USER: postgres
-          POSTGRES_PASSWORD: ${{ secrets.POSTGRES_TEST_PASSWORD || 'test_password' }}
+          # Use fallback for CI environments where secret might not be set
+          POSTGRES_PASSWORD: ${{ secrets.POSTGRES_TEST_PASSWORD != '' && secrets.POSTGRES_TEST_PASSWORD || 'test_password' }}
           POSTGRES_DB: choices_test
         options: >-
           --health-cmd "pg_isready -U postgres"
