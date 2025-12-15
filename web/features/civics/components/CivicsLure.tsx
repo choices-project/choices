@@ -550,7 +550,7 @@ export default function CivicsLure({ userLocation, onEngage }: CivicsLureProps) 
                 <div className="flex items-center space-x-2 mb-1">
                   <h4 className="font-semibold text-gray-900">{candidate.name}</h4>
                   {!candidate.isIncumbent && (
-                    <span className="px-2 py-1 bg-blue-100 text-blue-700 text-xs rounded-full">
+                    <span className="px-2 py-1 bg-blue-100 text-blue-800 text-xs rounded-full">
                       {t('civics.lure.candidates.challengerBadge')}
                     </span>
                   )}
@@ -583,7 +583,7 @@ export default function CivicsLure({ userLocation, onEngage }: CivicsLureProps) 
                 <div className="flex flex-wrap gap-1">
                   {candidate.keyIssues.length > 0 ? (
                     candidate.keyIssues.map((issue) => (
-                      <span key={issue} className="px-2 py-1 bg-blue-100 text-blue-700 text-xs rounded">
+                      <span key={issue} className="px-2 py-1 bg-blue-100 text-blue-800 text-xs rounded">
                         {issue}
                       </span>
                     ))
