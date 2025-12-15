@@ -93,13 +93,16 @@ export default function CivicsLureHarnessPage() {
     });
 
     // Set up mock elections data to prevent network requests
+    // The key is built from sorted division IDs joined by '|'
     useElectionStore.setState((state) => {
       const divisionId = 'ocd-division/country:us/state:ca/place:san_francisco';
-      if (!state.electionsByDivision) {
-        state.electionsByDivision = new Map();
-      }
-      state.electionsByDivision.set(divisionId, MOCK_ELECTIONS);
-      state.loading = false;
+      // buildKey sorts and joins divisions with '|', for single division it's just the trimmed lowercase ID
+      const key = divisionId.trim().toLowerCase();
+      state.electionsByKey = {
+        ...state.electionsByKey,
+        [key]: MOCK_ELECTIONS,
+      };
+      state.isLoading = false;
       state.error = null;
     });
   }, []);
