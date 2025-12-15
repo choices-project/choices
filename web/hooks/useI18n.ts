@@ -44,12 +44,24 @@ export const useI18n = () => {
             )
           : undefined;
 
-        return rawTranslate(key, safeParams);
+        const result = rawTranslate(key, safeParams);
+        
+        // If translation returns the key itself (missing translation), use fallback
+        if (result === key && process.env.NODE_ENV === 'production') {
+          logger.warn(`[i18n] Missing translation for key "${key}"`);
+          return fallbackTranslate(key, params);
+        }
+        
+        return result;
       } catch (error) {
+        // Always log in development, but be more careful in production
         if (process.env.NODE_ENV !== 'production') {
-          logger.warn(`[i18n] Missing translation for key "${key}"`, error);
+          logger.warn(`[i18n] Translation error for key "${key}"`, error);
         } else {
-          logger.error(`[i18n] Missing translation for key "${key}"`, error instanceof Error ? error : undefined);
+          // In production, only log if it's a critical key (not just a missing translation)
+          if (error instanceof Error && !error.message.includes('Missing')) {
+            logger.error(`[i18n] Translation error for key "${key}"`, error);
+          }
         }
         return fallbackTranslate(key, params);
       }

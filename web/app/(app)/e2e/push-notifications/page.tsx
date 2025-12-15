@@ -11,26 +11,44 @@ import { logger } from '@/lib/utils/logger';
 // Error boundary for NotificationPreferences to prevent render errors from blocking the page
 class NotificationPreferencesErrorBoundary extends Component<
   { children: React.ReactNode },
-  { hasError: boolean }
+  { hasError: boolean; error: Error | null }
 > {
   constructor(props: { children: React.ReactNode }) {
     super(props);
-    this.state = { hasError: false };
+    this.state = { hasError: false, error: null };
   }
 
-  static getDerivedStateFromError() {
-    return { hasError: true };
+  static getDerivedStateFromError(error: Error) {
+    return { hasError: true, error };
   }
 
-  componentDidCatch(error: Error) {
-    logger.error('NotificationPreferences render error', error);
+  componentDidCatch(error: Error, errorInfo: React.ErrorInfo) {
+    // Log full error details for debugging
+    logger.error('NotificationPreferences render error', {
+      error: error.message,
+      stack: error.stack,
+      componentStack: errorInfo.componentStack,
+    });
   }
 
   render() {
     if (this.state.hasError) {
+      // In development, show the actual error for debugging
+      // In production, show a user-friendly message
+      const isDevelopment = process.env.NODE_ENV === 'development';
+      const errorMessage = isDevelopment && this.state.error
+        ? `Error: ${this.state.error.message}`
+        : 'Notification preferences temporarily unavailable';
+      
       return (
         <div data-testid="notification-preferences" className="p-4 bg-yellow-50 border border-yellow-200 rounded">
-          <p className="text-yellow-800">Notification preferences temporarily unavailable</p>
+          <p className="text-yellow-800">{errorMessage}</p>
+          {isDevelopment && this.state.error && (
+            <details className="mt-2 text-xs text-yellow-700">
+              <summary>Error details</summary>
+              <pre className="mt-2 whitespace-pre-wrap">{this.state.error.stack}</pre>
+            </details>
+          )}
         </div>
       );
     }

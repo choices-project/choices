@@ -624,19 +624,19 @@ export default function CivicsLure({ userLocation, onEngage }: CivicsLureProps) 
         </div>
       </div>
 
-      {/* Call to Action */}
+      {/* Call to Action - Always render with fallback text */}
       <div className="text-center mt-6">
         <button
           onClick={handleEngage}
           className="px-8 py-3 bg-blue-600 text-white rounded-lg font-medium hover:bg-blue-700 transition-colors flex items-center mx-auto"
           type="button"
-          aria-label={t('civics.lure.cta.button')}
+          aria-label={t('civics.lure.cta.button') || 'See All My Local Candidates'}
         >
-          <span>{t('civics.lure.cta.button')}</span>
+          <span>{t('civics.lure.cta.button') || 'See All My Local Candidates'}</span>
           <ArrowRight className="w-5 h-5 ml-2" />
         </button>
         <p className="text-sm text-gray-500 mt-2">
-          {t('civics.lure.cta.caption')}
+          {t('civics.lure.cta.caption') || 'Discover and engage with your local representatives'}
         </p>
       </div>
 

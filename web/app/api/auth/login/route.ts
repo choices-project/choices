@@ -140,25 +140,48 @@ export const POST = withErrorHandling(async (request: NextRequest) => {
     })
 
     // Set Supabase session cookies for middleware authentication
+    // These cookies are critical for session persistence in production
     if (authData.session) {
+      const isProduction = process.env.NODE_ENV === 'production'
       const maxAge = 60 * 60 * 24 * 7 // 7 days
       
-      // Set access token cookie
+      // Set access token cookie with proper security settings
       response.cookies.set('sb-access-token', authData.session.access_token, {
         httpOnly: true,
-        secure: process.env.NODE_ENV === 'production',
-        sameSite: 'lax',
+        secure: isProduction, // HTTPS only in production
+        sameSite: 'lax', // Allow cross-site requests for OAuth flows
         path: '/',
         maxAge: maxAge
       })
       
-      // Set refresh token cookie
+      // Set refresh token cookie with proper security settings
       response.cookies.set('sb-refresh-token', authData.session.refresh_token, {
         httpOnly: true,
-        secure: process.env.NODE_ENV === 'production',
-        sameSite: 'lax',
+        secure: isProduction, // HTTPS only in production
+        sameSite: 'lax', // Allow cross-site requests for OAuth flows
         path: '/',
         maxAge: maxAge
+      })
+      
+      // Also set the session expiry time for client-side checks
+      if (authData.session.expires_at) {
+        response.cookies.set('sb-session-expires', authData.session.expires_at.toString(), {
+          httpOnly: false, // Client needs to read this for session checks
+          secure: isProduction,
+          sameSite: 'lax',
+          path: '/',
+          maxAge: maxAge
+        })
+      }
+      
+      logger.info('Session cookies set successfully', {
+        userId: authData.user.id,
+        expiresAt: authData.session.expires_at,
+        isProduction
+      })
+    } else {
+      logger.warn('No session returned from Supabase auth - cookies not set', {
+        userId: authData.user.id
       })
     }
 
