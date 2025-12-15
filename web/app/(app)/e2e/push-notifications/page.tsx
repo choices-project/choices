@@ -83,11 +83,13 @@ export default function PushNotificationsHarnessPage() {
     systemUpdates: false,
     weeklyDigest: true,
   });
-  // Use ref to access current preferences in harness (since useEffect has empty deps)
+  // Use refs to access current state in harness (since useEffect has empty deps)
   const preferencesRef = useRef(preferences);
+  const isSubscribedRef = useRef(isSubscribed);
   useEffect(() => {
     preferencesRef.current = preferences;
-  }, [preferences]);
+    isSubscribedRef.current = isSubscribed;
+  }, [preferences, isSubscribed]);
 
   // Set up harness object (first useEffect - similar to dashboard-journey pattern)
   useEffect(() => {
@@ -107,7 +109,7 @@ export default function PushNotificationsHarnessPage() {
         getSubscriptionStatus: async () => {
           // In E2E harness mode, use local state instead of checking service worker
           if (process.env.NEXT_PUBLIC_ENABLE_E2E_HARNESS === '1' || process.env.PLAYWRIGHT_USE_MOCKS === '1') {
-            return isSubscribed;
+            return isSubscribedRef.current;
           }
           
           if (!('serviceWorker' in navigator) || !('PushManager' in window)) {
@@ -206,6 +208,13 @@ export default function PushNotificationsHarnessPage() {
         },
 
         unsubscribe: async () => {
+          // In E2E harness mode, just update local state
+          if (process.env.NEXT_PUBLIC_ENABLE_E2E_HARNESS === '1' || process.env.PLAYWRIGHT_USE_MOCKS === '1') {
+            setIsSubscribed(false);
+            setSubscriptionEndpoint(null);
+            return true;
+          }
+
           if (!('serviceWorker' in navigator) || !('PushManager' in window)) {
             return false;
           }

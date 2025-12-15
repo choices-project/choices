@@ -326,9 +326,13 @@ test.describe('Feeds Store E2E', () => {
     expect(state?.filters.categories).toContain('politics');
     expect(state?.selectedCategory).toBe('politics');
 
-    // Reset state
+    // Reset state - explicitly reset filters and selectedCategory
     await page.evaluate(() => {
-      window.__feedsStoreHarness?.actions.resetFeedsState();
+      window.__feedsStoreHarness?.actions.resetFeedsState({
+        preserveFilters: false,
+        preservePreferences: true,
+        preserveRecentSearches: true,
+      });
     });
 
     await page.waitForTimeout(500);
