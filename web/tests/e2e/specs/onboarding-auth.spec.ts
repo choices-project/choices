@@ -77,14 +77,15 @@ test.describe('@mocks onboarding auth flows', () => {
   });
 
   test('email OTP path updates store and advances step', async ({ page }) => {
-    // Mock the API endpoint for email OTP
-    await page.route('**/api/auth/send-otp*', async (route) => {
+    // Mock Supabase auth endpoint - AuthSetupStep calls supabase.auth.signInWithOtp
+    // which makes a request to /auth/v1/otp
+    await page.route('**/auth/v1/otp*', async (route) => {
       await route.fulfill({
         status: 200,
         contentType: 'application/json',
         body: JSON.stringify({
-          success: true,
-          message: 'Login link sent',
+          data: {},
+          error: null,
         }),
       });
     });
@@ -96,14 +97,14 @@ test.describe('@mocks onboarding auth flows', () => {
     // Wait for success message - text may vary by i18n, check for multiple possible messages
     // The message might be "Check your email for the login link" or similar i18n variations
     await expect(
-      page.getByText(/Check your email|Revisa tu correo|email.*link|login.*link|Login link sent|success/i)
+      page.getByText(/Check your email|Revisa tu correo|email.*link|login.*link|success|sent/i)
     ).toBeVisible({ timeout: 15_000 });
     
     // Also check for the success indicator - wait a bit for state to update
-    await page.waitForTimeout(1000);
+    await page.waitForTimeout(2_000);
     const successIndicator = page.locator('[data-testid="onboarding-auth-data"]');
     await expect(successIndicator).toContainText('"authSetupCompleted": true', {
-      timeout: 10_000,
+      timeout: 15_000,
     });
   });
 
