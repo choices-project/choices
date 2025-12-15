@@ -51,7 +51,8 @@ files = [
 # Add commit SHAs here only when you have investigated and accepted the history
 commits = [
   "1fdd844db820d2f1b6914aec6de29e4f92285fab",  # Security hardening documentation with example configs
-  "7bf92007b8b699616a6f663afa25a3c3c7c77bb4"   # Gitleaks configuration fix
+  "7bf92007b8b699616a6f663afa25a3c3c7c77bb4",  # Gitleaks configuration fix
+  "b77b23356c88c09521334520b2dbff8edca5b338"   # Security hardening documentation - example configs only (not real secrets)
 ]
 
 # --- Custom rules (in addition to defaults) ---
