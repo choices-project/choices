@@ -65,7 +65,7 @@ export const PATCH = withErrorHandling(async (request: NextRequest) => {
   // Convert Map to object for JSON serialization
   const allFlagsMap = featureFlagManager.getAllFlags();
   const flagsObject = Object.fromEntries(allFlagsMap);
-  
+
   return successResponse({
     flagId,
     enabled,

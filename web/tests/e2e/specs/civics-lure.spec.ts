@@ -8,10 +8,10 @@ test.describe('@axe Civics lure', () => {
     // Use 'load' instead of 'networkidle' - networkidle can timeout if there are
     // ongoing requests (like election countdown polling or analytics)
     await page.goto('/e2e/civics-lure', { waitUntil: 'load', timeout: 60_000 });
-
+    
     // Wait for page to be ready (React hydration)
     await waitForPageReady(page, 60_000);
-
+    
     // Wait for lang attribute (set by root layout in initial HTML)
     await page.waitForFunction(
       () => {
@@ -20,7 +20,7 @@ test.describe('@axe Civics lure', () => {
       },
       { timeout: 30_000 }
     );
-
+    
     // Wait for title to be set and ensure it's in the HTML
     await page.waitForFunction(
       () => {
@@ -30,15 +30,15 @@ test.describe('@axe Civics lure', () => {
       },
       { timeout: 30_000 }
     );
-
+    
     // Additional wait to ensure DOM is fully settled
     await page.waitForTimeout(2000);
-
+    
     // Verify both are present in HTML before running Axe
     const htmlContent = await page.content();
     const hasTitleInHtml = /<title[^>]*>[\s\S]*?<\/title>/i.test(htmlContent);
     const hasLangInHtml = /<html[^>]*\s+lang\s*=/i.test(htmlContent);
-
+    
     if (!hasTitleInHtml || !hasLangInHtml) {
       // Force set them if missing
       await page.evaluate(() => {

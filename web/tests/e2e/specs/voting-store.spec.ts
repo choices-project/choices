@@ -26,10 +26,10 @@ const gotoHarness = async (page: Page) => {
   // Voting store harness doesn't set ready attribute - that's okay, harness is still available
   // This can happen if persistence hasn't hydrated yet or the attribute isn't needed
   try {
-    await page.waitForFunction(
-      () => document.documentElement.dataset.votingStoreHarness === 'ready',
+  await page.waitForFunction(
+    () => document.documentElement.dataset.votingStoreHarness === 'ready',
       { timeout: 30_000 },
-    );
+  );
   } catch {
     // If dataset attribute isn't set, that's okay - harness is still available
     console.warn('Voting store harness ready attribute not set, but harness is available');

@@ -16,15 +16,15 @@ const gotoHarness = async (page: Page) => {
   await page.waitForFunction(() => Boolean(window.__pushNotificationsHarness), { timeout: 60_000 });
   // Wait for harness ready attribute, but don't fail if it's not set (persistence might not hydrate in test env)
   try {
-    await page.waitForFunction(
-      () => document.documentElement.dataset.pushNotificationsHarness === 'ready',
+  await page.waitForFunction(
+    () => document.documentElement.dataset.pushNotificationsHarness === 'ready',
       { timeout: 30_000 },
-    );
+  );
   } catch {
     // If dataset attribute isn't set, that's okay - harness is still available
     console.warn('Push notifications harness ready attribute not set, but harness is available');
   }
-  
+
   // Wait for user to be set up in the store (harness page sets this up)
   await page.waitForTimeout(2_000);
 };
@@ -94,7 +94,7 @@ test.describe('Push Notifications E2E', () => {
       '[data-testid="notification-preferences-unsupported"]',
       '[data-testid="notification-preferences-container"]',
     ];
-    
+
     // Use locator so toBeVisible works (waitForSelector returns ElementHandle)
     const component = page.locator(selectors.join(',')).first();
     await component.waitFor({ state: 'attached', timeout: 20_000 });
@@ -110,7 +110,7 @@ test.describe('Push Notifications E2E', () => {
     // Get text content and verify it's not the initialization message
     const text = await component.textContent();
     const isInitializing = text?.includes('Initializing notification preferences');
-    
+
     if (isInitializing) {
       // Wait a bit more for actual component to render
       await page.waitForTimeout(2_000);
@@ -128,7 +128,7 @@ test.describe('Push Notifications E2E', () => {
       finalText?.toLowerCase().includes('login') ||
       finalText?.toLowerCase().includes('not supported') ||
       finalText?.includes('Please log in');
-    
+
     // If showing error, that's acceptable for E2E harness (user might not be logged in)
     // But we should still verify the component is visible
     expect(hasNormalText || hasErrorText).toBe(true);
@@ -139,7 +139,7 @@ test.describe('Push Notifications E2E', () => {
 
     const permission = page.getByTestId('push-notification-permission');
     await expect(permission).toBeVisible();
-    
+
     // Permission should be 'granted' since we granted it in beforeEach
     const permissionText = await permission.textContent();
     expect(permissionText).toBeTruthy();
@@ -172,7 +172,7 @@ test.describe('Push Notifications E2E', () => {
 
     // Verify subscription status updated
     await expect(page.getByTestId('push-notification-subscribed')).toHaveText('Yes');
-    
+
     // Verify endpoint is set
     const endpoint = page.getByTestId('push-notification-endpoint');
     await expect(endpoint).toBeVisible();
@@ -251,14 +251,14 @@ test.describe('Push Notifications E2E', () => {
 
     // Look for permission request button
     const requestButton = page.getByTestId('request-notification-permission');
-    
+
     // Button should be visible if permission is default
     if (await requestButton.isVisible().catch(() => false)) {
       await requestButton.click();
-      
+
       // Wait for permission dialog (Playwright handles this automatically)
       await page.waitForTimeout(1000);
-      
+
       // Verify permission status updated
       const permission = page.getByTestId('push-notification-permission');
       await expect(permission).toBeVisible();
@@ -270,22 +270,22 @@ test.describe('Push Notifications E2E', () => {
 
     // Check if subscribe button exists and click it
     const subscribeButton = page.getByTestId('subscribe-notifications');
-    
+
     if (await subscribeButton.isVisible().catch(() => false)) {
       await subscribeButton.click();
-      
+
       // Wait for subscription to complete
       await page.waitForTimeout(2000);
-      
+
       // Verify subscribed
       await expect(page.getByTestId('push-notification-subscribed')).toHaveText('Yes');
-      
+
       // Now test unsubscribe
       const unsubscribeButton = page.getByTestId('unsubscribe-notifications');
       if (await unsubscribeButton.isVisible().catch(() => false)) {
         await unsubscribeButton.click();
         await page.waitForTimeout(1000);
-        
+
         // Verify unsubscribed
         await expect(page.getByTestId('push-notification-subscribed')).toHaveText('No');
       }
@@ -304,16 +304,16 @@ test.describe('Push Notifications E2E', () => {
 
     // Test toggling preferences
     const newPollsToggle = page.getByTestId('new-polls-toggle');
-    
+
     if (await newPollsToggle.isVisible().catch(() => false)) {
       // Get initial state
       const initialText = await page.getByTestId('pref-new-polls').textContent();
       expect(initialText).toBeTruthy();
-      
+
       // Toggle
       await newPollsToggle.click();
       await page.waitForTimeout(500);
-      
+
       // Verify preference updated (should be different from initial)
       const updatedText = await page.getByTestId('pref-new-polls').textContent();
       expect(updatedText).toBeTruthy();
@@ -345,7 +345,7 @@ test.describe('Push Notifications E2E', () => {
 
     // Should show unsupported message
     const unsupported = page.getByTestId('notification-preferences-unsupported');
-    
+
     // Note: This might not show if component checks happen before our script
     // This test verifies the component handles the unsupported state
     if (await unsupported.isVisible().catch(() => false)) {
@@ -374,7 +374,7 @@ test.describe('Push Notifications E2E', () => {
     await expect(page.getByTestId('notification-error')).toBeVisible({ timeout: 5000 }).catch(() => {
       // Error message may not always be visible, continue test
     });
-    
+
     // Error might be shown in component
     // This verifies the error handling flow exists
     await page.waitForTimeout(1000);

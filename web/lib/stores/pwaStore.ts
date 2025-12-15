@@ -685,11 +685,11 @@ export const createPWAActions = (
         if (errorMessage.includes('timeout') || errorMessage.includes('404') || errorMessage.includes('Failed to fetch')) {
           logger.warn('Service worker registration skipped:', errorMessage);
         } else {
-          setError(errorMessage);
-          logger.error(
-            'Service worker registration failed:',
-            error instanceof Error ? error : new Error(errorMessage),
-          );
+        setError(errorMessage);
+        logger.error(
+          'Service worker registration failed:',
+          error instanceof Error ? error : new Error(errorMessage),
+        );
         }
       } finally {
         setLoading(false);

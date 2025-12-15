@@ -210,7 +210,7 @@ export async function register(config: ServiceWorkerConfig = {}): Promise<Servic
     if (errorMessage.includes('timeout') || errorMessage.includes('404') || errorMessage.includes('Failed to fetch')) {
       logger.warn('[SW] Registration skipped:', errorMessage);
     } else {
-      logger.error('[SW] Registration failed:', error);
+    logger.error('[SW] Registration failed:', error);
     }
     
     config.onError?.(error as Error);

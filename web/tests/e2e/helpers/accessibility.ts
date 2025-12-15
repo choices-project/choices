@@ -42,7 +42,7 @@ export async function runAxeAudit(page: Page, context: string, options: AxeOptio
     
     if (filteredViolations.length > 0) {
       console.error(`[axe] ${context} violations detected:`, filteredViolations);
-      if (!allowViolations) {
+    if (!allowViolations) {
         expect(filteredViolations, `${context} accessibility violations`).toEqual([]);
       }
     } else {

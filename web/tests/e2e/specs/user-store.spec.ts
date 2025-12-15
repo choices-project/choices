@@ -16,10 +16,10 @@ const gotoHarness = async (page: Page) => {
   await page.waitForFunction(() => Boolean(window.__userStoreHarness), { timeout: 60_000 });
   // Wait for harness ready attribute, but don't fail if it's not set (persistence might not hydrate in test env)
   try {
-    await page.waitForFunction(
-      () => document.documentElement.dataset.userStoreHarness === 'ready',
+  await page.waitForFunction(
+    () => document.documentElement.dataset.userStoreHarness === 'ready',
       { timeout: 30_000 },
-    );
+  );
   } catch {
     // If dataset attribute isn't set, that's okay - harness is still available
     console.warn('User store harness ready attribute not set, but harness is available');

@@ -18,10 +18,10 @@ const gotoHarness = async (page: Page) => {
   await page.waitForFunction(() => Boolean(window.__pwaStoreHarness), { timeout: 60_000 });
   // Wait for harness ready attribute, but don't fail if it's not set (persistence might not hydrate in test env)
   try {
-    await page.waitForFunction(
-      () => document.documentElement.dataset.pwaStoreHarness === 'ready',
+  await page.waitForFunction(
+    () => document.documentElement.dataset.pwaStoreHarness === 'ready',
       { timeout: 30_000 },
-    );
+  );
   } catch {
     // If dataset attribute isn't set, that's okay - harness is still available
     // This can happen if persistence hasn't hydrated yet

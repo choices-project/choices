@@ -157,7 +157,7 @@ export class AuditLogService {
           error: error instanceof Error ? error.message : String(error),
         });
       } else {
-        logger.error('Error creating audit log', { error, eventType, eventName });
+      logger.error('Error creating audit log', { error, eventType, eventName });
       }
       return null;
     }

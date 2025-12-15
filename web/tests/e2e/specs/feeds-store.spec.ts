@@ -16,10 +16,10 @@ const gotoHarness = async (page: Page) => {
   await page.waitForFunction(() => Boolean(window.__feedsStoreHarness), { timeout: 60_000 });
   // Wait for harness ready attribute, but don't fail if it's not set (persistence might not hydrate in test env)
   try {
-    await page.waitForFunction(
-      () => document.documentElement.dataset.feedsStoreHarness === 'ready',
+  await page.waitForFunction(
+    () => document.documentElement.dataset.feedsStoreHarness === 'ready',
       { timeout: 30_000 },
-    );
+  );
   } catch {
     // If dataset attribute isn't set, that's okay - harness is still available
     // This can happen if persistence hasn't hydrated yet
@@ -123,7 +123,7 @@ test.describe('Feeds Store E2E', () => {
             },
             metadata: {
               timestamp: new Date().toISOString(),
-            },
+              },
           }),
         });
       } else {
@@ -148,9 +148,9 @@ test.describe('Feeds Store E2E', () => {
     for (let i = 0; i < 15; i++) {
       await page.waitForTimeout(500);
       state = await page.evaluate(() => {
-        const harness = window.__feedsStoreHarness;
-        return harness?.selectors.getState();
-      });
+      const harness = window.__feedsStoreHarness;
+      return harness?.selectors.getState();
+    });
       if (state?.feeds && state.feeds.length > 0) {
         break;
       }
@@ -232,7 +232,7 @@ test.describe('Feeds Store E2E', () => {
     // Wait for feeds to load
     let state: any = null;
     for (let i = 0; i < 15; i++) {
-      await page.waitForTimeout(500);
+    await page.waitForTimeout(500);
       state = await page.evaluate(() => {
         const harness = window.__feedsStoreHarness;
         return harness?.selectors.getState();
