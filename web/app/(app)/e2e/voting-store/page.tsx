@@ -56,10 +56,19 @@ export default function VotingStoreHarnessPage() {
     // Type cast needed due to strict function types mismatch between
     // harness type (specific types) and test global type (unknown[])
     (window as any).__votingStoreHarness = harness;
+    
+    // Set ready attribute to signal harness is available
+    if (typeof document !== 'undefined') {
+      document.documentElement.dataset.votingStoreHarness = 'ready';
+    }
+    
     return () => {
       if ((window as any).__votingStoreHarness === harness) {
         // Prefer delete over assigning undefined to satisfy lint rules
         delete (window as any).__votingStoreHarness;
+      }
+      if (typeof document !== 'undefined') {
+        delete document.documentElement.dataset.votingStoreHarness;
       }
     };
   }, [clearAllTimers, clearTimer, registerTimer, reset, setBallots, setElections, setVotingRecords]);

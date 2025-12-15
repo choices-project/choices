@@ -36,7 +36,8 @@ type NotificationPreferencesProps = {
  */
 export default function NotificationPreferences({ className = '' }: NotificationPreferencesProps) {
   // PWA preferences are loaded for consistency, but individual notification types are managed separately
-  usePWAPreferences();
+  // Hooks must be called unconditionally - stores should handle initialization gracefully
+  const preferences = usePWAPreferences();
   const { updatePreferences } = usePWAActions();
   const user = useUser();
   const [isLoading, setIsLoading] = useState(false);
@@ -44,7 +45,7 @@ export default function NotificationPreferences({ className = '' }: Notification
   const [success, setSuccess] = useState<string | null>(null);
   const [notificationPermission, setNotificationPermission] = useState<NotificationPermission>('default');
   const [isSubscribed, setIsSubscribed] = useState(false);
-  const [preferences, setPreferences] = useState({
+  const [localPreferences, setLocalPreferences] = useState({
     newPolls: true,
     pollResults: true,
     systemUpdates: false,
@@ -257,12 +258,12 @@ export default function NotificationPreferences({ className = '' }: Notification
     }
   };
 
-  const handlePreferenceChange = async (key: keyof typeof preferences) => {
+  const handlePreferenceChange = async (key: keyof typeof localPreferences) => {
     const newPreferences = {
-      ...preferences,
-      [key]: !preferences[key],
+      ...localPreferences,
+      [key]: !localPreferences[key],
     };
-    setPreferences(newPreferences);
+    setLocalPreferences(newPreferences);
 
     // If subscribed, update preferences on server
     if (isSubscribed && user?.id) {
@@ -279,14 +280,14 @@ export default function NotificationPreferences({ className = '' }: Notification
         if (!response.ok) {
           logger.warn('Failed to update notification preferences on server');
           // Revert local change
-          setPreferences(preferences);
+          setLocalPreferences(localPreferences);
           setError('Failed to update notification preferences. Please try again.');
           return;
         }
       } catch (err) {
         logger.error('Error updating notification preferences:', err);
         // Revert local change
-        setPreferences(preferences);
+        setLocalPreferences(localPreferences);
         setError('Failed to update notification preferences. Please try again.');
       }
     }
@@ -419,13 +420,13 @@ export default function NotificationPreferences({ className = '' }: Notification
                 onClick={() => handlePreferenceChange('newPolls')}
                 disabled={isLoading}
                 className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors disabled:opacity-50 ${
-                  preferences.newPolls ? 'bg-blue-600' : 'bg-gray-200'
+                  localPreferences.newPolls ? 'bg-blue-600' : 'bg-gray-200'
                 }`}
                 data-testid="new-polls-toggle"
               >
                 <span
                   className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
-                    preferences.newPolls ? 'translate-x-6' : 'translate-x-1'
+                    localPreferences.newPolls ? 'translate-x-6' : 'translate-x-1'
                   }`}
                 />
               </button>
@@ -443,13 +444,13 @@ export default function NotificationPreferences({ className = '' }: Notification
                 onClick={() => handlePreferenceChange('pollResults')}
                 disabled={isLoading}
                 className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors disabled:opacity-50 ${
-                  preferences.pollResults ? 'bg-green-600' : 'bg-gray-200'
+                  localPreferences.pollResults ? 'bg-green-600' : 'bg-gray-200'
                 }`}
                 data-testid="poll-results-toggle"
               >
                 <span
                   className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
-                    preferences.pollResults ? 'translate-x-6' : 'translate-x-1'
+                    localPreferences.pollResults ? 'translate-x-6' : 'translate-x-1'
                   }`}
                 />
               </button>
@@ -467,13 +468,13 @@ export default function NotificationPreferences({ className = '' }: Notification
                 onClick={() => handlePreferenceChange('systemUpdates')}
                 disabled={isLoading}
                 className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors disabled:opacity-50 ${
-                  preferences.systemUpdates ? 'bg-purple-600' : 'bg-gray-200'
+                  localPreferences.systemUpdates ? 'bg-purple-600' : 'bg-gray-200'
                 }`}
                 data-testid="system-updates-toggle"
               >
                 <span
                   className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
-                    preferences.systemUpdates ? 'translate-x-6' : 'translate-x-1'
+                    localPreferences.systemUpdates ? 'translate-x-6' : 'translate-x-1'
                   }`}
                 />
               </button>
@@ -491,13 +492,13 @@ export default function NotificationPreferences({ className = '' }: Notification
                 onClick={() => handlePreferenceChange('weeklyDigest')}
                 disabled={isLoading}
                 className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors disabled:opacity-50 ${
-                  preferences.weeklyDigest ? 'bg-orange-600' : 'bg-gray-200'
+                  localPreferences.weeklyDigest ? 'bg-orange-600' : 'bg-gray-200'
                 }`}
                 data-testid="weekly-digest-toggle"
               >
                 <span
                   className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
-                    preferences.weeklyDigest ? 'translate-x-6' : 'translate-x-1'
+                    localPreferences.weeklyDigest ? 'translate-x-6' : 'translate-x-1'
                   }`}
                 />
               </button>
