@@ -103,15 +103,63 @@ export const POST = withErrorHandling(async (request: NextRequest) => {
     }
 
     // Get user profile for additional data
-    const { data: profile, error: profileError } = await supabaseClient
+    let { data: profile, error: profileError } = await supabaseClient
       .from('user_profiles')
       .select('username, trust_tier, display_name, avatar_url, bio, is_active')
       .eq('user_id', authData.user.id)
       .single() as { data: UserProfile | null; error: any }
 
     if (profileError || !profile) {
-      logger.warn('User profile not found after login', { userId: authData.user.id })
-      return notFoundError('User profile not found');
+      // For legacy or partially-onboarded accounts, automatically create a minimal profile
+      // instead of blocking an otherwise successful login.
+      logger.warn('User profile not found after login; attempting auto-provision', {
+        userId: authData.user.id,
+        error: profileError?.message ?? profileError,
+      })
+
+      const { data: createdProfile, error: createError } = await supabaseClient
+        .from('user_profiles')
+        .insert({
+          user_id: authData.user.id,
+          email: authData.user.email,
+          username: authData.user.email?.split('@')[0] ?? null,
+          display_name: authData.user.user_metadata?.full_name
+            ?? authData.user.email
+            ?? 'User',
+          bio: null,
+          is_active: true,
+        } as Partial<UserProfile>)
+        .select('username, trust_tier, display_name, avatar_url, bio, is_active, user_id, created_at, updated_at')
+        .single()
+
+      if (createError || !createdProfile) {
+        // If profile creation fails, log the error but still allow login to succeed
+        // with a minimal synthetic profile in memory so the UI can render.
+        logger.error('Failed to auto-provision user profile after login', {
+          userId: authData.user.id,
+          error: createError?.message ?? createError,
+        })
+
+        profile = {
+          // Required fields with safe fallbacks
+          user_id: authData.user.id,
+          username: authData.user.email?.split('@')[0] ?? null,
+          display_name: authData.user.user_metadata?.full_name
+            ?? authData.user.email
+            ?? 'User',
+          bio: null,
+          is_active: true,
+          // Preserve any existing fields from the type, using null where appropriate
+          trust_tier: null,
+          avatar_url: null,
+          created_at: new Date().toISOString() as any,
+          updated_at: new Date().toISOString() as any,
+          // Spread in any extra fields so the type stays aligned with the table
+          ...(profile as UserProfile | null ?? {} as UserProfile),
+        } as UserProfile
+      } else {
+        profile = createdProfile as UserProfile
+      }
     }
 
     // User profile loaded successfully

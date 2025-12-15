@@ -466,9 +466,22 @@ jobs:
         SUPABASE_SECRET_KEY: dev-only-secret
         PRIVACY_PEPPER_CURRENT: base64:fake-pepper-for-ci-only-this-is-a-very-long-fake-pepper-value-that-meets-the-32-byte-minimum-requirement-for-testing-purposes-only
 
-    - name: Test Docker image
+    - name: Test Docker image (smoke test)
       run: |
-        docker run --rm choices-platform:latest npm run test:coverage:ci
+        # Start the container, wait for it to boot, then hit the health endpoint.
+        # This verifies that the built image can start successfully without requiring dev-only scripts.
+        container_id=$(docker run -d -p 3000:3000 choices-platform:latest)
+        # Give the server a few seconds to start
+        sleep 15
+        # Probe the root URL; fail the job if it is not reachable
+        if ! curl -f http://localhost:3000 >/dev/null 2>&1; then
+          echo "Docker image failed to respond on /"
+          docker logs "$container_id" || true
+          docker stop "$container_id" >/dev/null 2>&1 || true
+          exit 1
+        fi
+        # Clean up container
+        docker stop "$container_id" >/dev/null 2>&1 || true
 
   # Deploy to Staging
   deploy-staging:
