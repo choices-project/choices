@@ -131,15 +131,44 @@ export async function register(config: ServiceWorkerConfig = {}): Promise<Servic
     
     // Wait for page to load before registering
     if (document.readyState === 'loading') {
-      await new Promise(resolve => {
-        window.addEventListener('load', resolve);
+      await new Promise<void>((resolve) => {
+        const timeout = setTimeout(() => {
+          logger.warn('[SW] Page load timeout, proceeding with registration');
+          resolve();
+        }, 5000); // 5 second timeout
+        
+        window.addEventListener('load', () => {
+          clearTimeout(timeout);
+          resolve();
+        }, { once: true });
       });
     }
     
-    // Register service worker
-    const registration = await navigator.serviceWorker.register('/service-worker.js', {
+    // Check if service worker file exists before registering
+    // This prevents registration errors in development or when file is missing
+    try {
+      const response = await fetch('/service-worker.js', { method: 'HEAD' });
+      if (!response.ok && response.status !== 404) {
+        // If file doesn't exist, skip registration gracefully
+        if (config.debug) logger.info('[SW] Service worker file not found, skipping registration');
+        return null;
+      }
+    } catch (fetchError) {
+      // If fetch fails (e.g., network error), still try to register
+      // The browser will handle the error appropriately
+      if (config.debug) logger.warn('[SW] Could not check service worker file existence', fetchError);
+    }
+    
+    // Register service worker with timeout
+    const registrationPromise = navigator.serviceWorker.register('/service-worker.js', {
       scope: '/',
     });
+    
+    const timeoutPromise = new Promise<never>((_, reject) => {
+      setTimeout(() => reject(new Error('Service worker registration timeout')), 10000); // 10 second timeout
+    });
+    
+    const registration = await Promise.race([registrationPromise, timeoutPromise]);
     
     state.registration = registration;
     state.isRegistered = true;
@@ -175,7 +204,15 @@ export async function register(config: ServiceWorkerConfig = {}): Promise<Servic
     return registration;
     
   } catch (error) {
-    logger.error('[SW] Registration failed:', error);
+    const errorMessage = error instanceof Error ? error.message : String(error);
+    
+    // Don't log as error if it's a missing file or timeout - these are expected in some scenarios
+    if (errorMessage.includes('timeout') || errorMessage.includes('404') || errorMessage.includes('Failed to fetch')) {
+      logger.warn('[SW] Registration skipped:', errorMessage);
+    } else {
+      logger.error('[SW] Registration failed:', error);
+    }
+    
     config.onError?.(error as Error);
     return null;
   }

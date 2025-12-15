@@ -669,15 +669,28 @@ export const createPWAActions = (
         setLoading(true);
         setError(null);
 
-        const registration = await serviceWorker.register('/service-worker.js');
+        // Add timeout to prevent hanging
+        const registrationPromise = serviceWorker.register('/service-worker.js');
+        const timeoutPromise = new Promise<never>((_, reject) => {
+          setTimeout(() => reject(new Error('Service worker registration timeout')), 10000);
+        });
+
+        const registration = await Promise.race([registrationPromise, timeoutPromise]);
         logger.info('Service worker registered', { scope: registration.scope });
       } catch (error) {
         const errorMessage = error instanceof Error ? error.message : 'Failed to register service worker';
-        setError(errorMessage);
-        logger.error(
-          'Service worker registration failed:',
-          error instanceof Error ? error : new Error(errorMessage),
-        );
+        
+        // Don't set error state for expected failures (missing file, timeout)
+        // These are non-critical and shouldn't block the app
+        if (errorMessage.includes('timeout') || errorMessage.includes('404') || errorMessage.includes('Failed to fetch')) {
+          logger.warn('Service worker registration skipped:', errorMessage);
+        } else {
+          setError(errorMessage);
+          logger.error(
+            'Service worker registration failed:',
+            error instanceof Error ? error : new Error(errorMessage),
+          );
+        }
       } finally {
         setLoading(false);
       }
