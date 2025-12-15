@@ -84,6 +84,7 @@ The Choices platform implements a comprehensive, multi-layered security model de
 - **Email Verification**: Required for new account activation
 - **Password Reset**: Secure token-based password recovery
 - **Session Management**: Automatic refresh and secure storage
+- **Profile Auto‑Provisioning**: On first successful Supabase login, if no `user_profiles` row exists, the API automatically creates a minimal profile (user_id, email/username, display_name) so legacy or partially‑onboarded accounts can still sign in without hitting a hard error. Any failure to create this row is logged and surfaced via sanitized API errors only.
 
 ### **Multi-Factor Authentication**
 - **Primary**: WebAuthn passkeys or email/password
@@ -136,6 +137,13 @@ const rateLimits = {
   admin: { requests: 1000, window: 60 }
 };
 ```
+
+#### **Authentication Rate Limiting**
+- **Login Endpoint**: `/api/auth/login` supports optional per‑IP rate limiting (10 attempts / 15 minutes) behind the `AUTH_RATE_LIMIT_ENABLED=1` flag.
+- **Fail‑Safe Behaviour**:
+  - If the Redis‑backed limiter is unreachable or times out, the handler logs a warning and **allows** the login attempt instead of blocking it.
+  - In E2E harness and CI test environments, login rate limiting is **always disabled** to keep automated runs deterministic.
+- **UX Consideration**: While the flag is disabled (default), users will never see “Too many login attempts”; enable it only after auth UX and observability are stable.
 
 ### **Security Headers**
 ```typescript

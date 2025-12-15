@@ -51,5 +51,15 @@
 
 - The suite uses `loginTestUser` / `loginAsAdmin` to exercise `/auth` against production code paths and assert dashboard/admin access without MSW overrides.
 
+### 7.1 Login Rate Limiting in Tests vs Production
+
+- The password login route (`/api/auth/login`) now supports **optional** rate limiting controlled by the `AUTH_RATE_LIMIT_ENABLED` env var.
+- In CI/E2E harness mode (`NEXT_PUBLIC_ENABLE_E2E_HARNESS=1` or `PLAYWRIGHT_USE_MOCKS=1`) rate limiting is **always bypassed** so tests remain stable.
+- For local or production‑like runs:
+  - When `AUTH_RATE_LIMIT_ENABLED=1`, repeated failed attempts from the same IP will return:
+    > `Too many login attempts. Please try again later.`
+  - When the variable is unset/`0`, rate limiting is disabled and tests should never see this message.
+- If a test unexpectedly hits this error against a shared environment, add a short **cool‑down** (or set `AUTH_RATE_LIMIT_ENABLED=0` in that environment) before re‑running to avoid flakiness.
+
 Keep this document updated as additional scenarios (e.g., logout flows, onboarding redirects) gain automated coverage.
 

@@ -198,6 +198,11 @@ web-push generate-vapid-keys
 ### Authentication
 - **Supabase Auth**: `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_ANON_KEY`
 - **Session Management**: Automatically handled by Supabase client
+ - `AUTH_RATE_LIMIT_ENABLED` (optional)
+   - Controls whether the **login API** (`/api/auth/login`) enforces per‑IP rate limiting.
+   - When set to `1`, email/password logins are limited to **10 attempts per 15 minutes per IP**.
+   - When unset or `0`, login rate limiting is **disabled** (recommended while iterating on UX or debugging auth issues).
+   - Always **disabled automatically** in E2E harness mode (`NEXT_PUBLIC_ENABLE_E2E_HARNESS=1`) to keep tests deterministic.
 
 ### Monitoring & Admin
 
