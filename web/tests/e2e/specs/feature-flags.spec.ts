@@ -67,7 +67,12 @@ test.describe('Feature flag guarantees', () => {
     expect(enableResponse.ok()).toBeTruthy();
     const enablePayload = await enableResponse.json();
     expect(enablePayload.success).toBeTruthy();
-    expect(enablePayload.flags[MUTABLE_FLAG]).toBe(true);
+    // Flags are nested in data.flags (Map serialized to object), each flag is an object with 'enabled' property
+    const flags = enablePayload.data?.flags ?? enablePayload.flags ?? {};
+    // Map serializes to object, so access by key
+    const flag = flags[MUTABLE_FLAG];
+    expect(flag).toBeDefined();
+    expect(flag?.enabled).toBe(true);
 
     const disableResponse = await request.patch('/api/feature-flags', {
       data: { flagId: MUTABLE_FLAG, enabled: false },
@@ -75,7 +80,10 @@ test.describe('Feature flag guarantees', () => {
     expect(disableResponse.ok()).toBeTruthy();
     const disablePayload = await disableResponse.json();
     expect(disablePayload.success).toBeTruthy();
-    expect(disablePayload.flags[MUTABLE_FLAG]).toBe(false);
+    const disabledFlags = disablePayload.data?.flags ?? disablePayload.flags ?? {};
+    const disabledFlag = disabledFlags[MUTABLE_FLAG];
+    expect(disabledFlag).toBeDefined();
+    expect(disabledFlag?.enabled).toBe(false);
   });
 });
 

@@ -60,43 +60,56 @@ test.describe('Feeds Store E2E', () => {
   });
 
   test('loads feeds via harness', async ({ page }) => {
-    // Mock API endpoint
-    await page.route('**/api/feeds', async (route) => {
-      if (route.request().method() === 'POST') {
+    // Mock API endpoint - feeds API uses GET, not POST
+    await page.route('**/api/feeds*', async (route) => {
+      if (route.request().method() === 'GET') {
         await route.fulfill({
           status: 200,
           contentType: 'application/json',
           body: JSON.stringify({
-            feeds: [
-              {
-                id: 'feed-1',
-                title: 'Test Feed 1',
-                category: 'politics',
-                publishedAt: new Date().toISOString(),
-              },
-              {
-                id: 'feed-2',
-                title: 'Test Feed 2',
-                category: 'technology',
-                publishedAt: new Date().toISOString(),
-              },
-            ],
-            total: 2,
+            success: true,
+            data: {
+              feeds: [
+                {
+                  id: 'feed-1',
+                  title: 'Test Feed 1',
+                  category: 'politics',
+                  publishedAt: new Date().toISOString(),
+                },
+                {
+                  id: 'feed-2',
+                  title: 'Test Feed 2',
+                  category: 'technology',
+                  publishedAt: new Date().toISOString(),
+                },
+              ],
+              total: 2,
+              count: 2,
+            },
           }),
         });
+      } else {
+        await route.continue();
       }
     });
 
-    await page.evaluate(() => {
-      void window.__feedsStoreHarness?.actions.loadFeeds('all');
+    // Wait for loadFeeds to complete
+    await page.evaluate(async () => {
+      await window.__feedsStoreHarness?.actions.loadFeeds('all');
     });
 
-    await page.waitForTimeout(1000);
-
-    const state = await page.evaluate(() => {
-      const harness = window.__feedsStoreHarness;
-      return harness?.selectors.getState();
-    });
+    // Wait for state to update - check multiple times with increasing timeout
+    let state: any = null;
+    for (let i = 0; i < 10; i++) {
+      await page.waitForTimeout(500);
+      state = await page.evaluate(() => {
+        const harness = window.__feedsStoreHarness;
+        return harness?.selectors.getState();
+      });
+      if (state?.feeds && state.feeds.length > 0) {
+        break;
+      }
+    }
 
     expect(state?.feeds.length).toBeGreaterThan(0);
   });

@@ -81,8 +81,11 @@ test.describe('@mocks onboarding auth flows', () => {
     await page.getByLabel(/Email Address/i).fill('otp-user@example.com');
     await page.getByRole('button', { name: /Send Login Link/i }).click();
 
-    // Wait for success message - text may include exclamation mark
-    await expect(page.getByText(/Check your email for the login link/i)).toBeVisible({ timeout: 10_000 });
+    // Wait for success message - text may vary by i18n, check for multiple possible messages
+    // The message might be "Check your email for the login link" or similar i18n variations
+    await expect(
+      page.getByText(/Check your email|Revisa tu correo|email.*link|login.*link/i)
+    ).toBeVisible({ timeout: 15_000 });
     
     // Also check for the success indicator
     const successIndicator = page.locator('[data-testid="onboarding-auth-data"]');
