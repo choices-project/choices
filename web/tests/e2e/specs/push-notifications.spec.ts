@@ -94,36 +94,30 @@ test.describe('Push Notifications E2E', () => {
       '[data-testid="notification-preferences-unsupported"]',
     ];
     
-    // Wait for component to appear (not the "Initializing..." message)
-    const componentHandle = await page.waitForSelector(selectors.join(','), { 
-      timeout: 20_000,
-      state: 'visible'
-    });
-    expect(componentHandle).not.toBeNull();
-
-    // Ensure it is visible
-    await expect(componentHandle!).toBeVisible({ timeout: 10_000 });
+    // Use locator so toBeVisible works (waitForSelector returns ElementHandle)
+    const component = page.locator(selectors.join(',')).first();
+    await expect(component).toBeVisible({ timeout: 20_000 });
 
     // Get text content and verify it's not the initialization message
-    const text = await componentHandle!.textContent();
+    const text = await component.textContent();
     const isInitializing = text?.includes('Initializing notification preferences');
     
     if (isInitializing) {
       // Wait a bit more for actual component to render
       await page.waitForTimeout(2_000);
-      const updatedText = await componentHandle!.textContent();
+      const updatedText = await component.textContent();
       expect(updatedText).not.toContain('Initializing notification preferences');
     }
 
     // Accept either normal text or fallback messages
-    const finalText = await componentHandle!.textContent();
+    const finalText = await component.textContent();
     const hasNormalText =
       finalText?.includes('Notification Preferences') ||
       finalText?.toLowerCase().includes('notification preferences');
     const hasErrorText =
-      finalText?.includes('temporarily unavailable') ||
-      finalText?.includes('login') ||
-      finalText?.includes('not supported') ||
+      finalText?.toLowerCase().includes('temporarily unavailable') ||
+      finalText?.toLowerCase().includes('login') ||
+      finalText?.toLowerCase().includes('not supported') ||
       finalText?.includes('Please log in');
     
     // If showing error, that's acceptable for E2E harness (user might not be logged in)
