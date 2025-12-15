@@ -146,7 +146,9 @@ jobs:
   deploy-staging:
     name: Deploy to Staging
     runs-on: ubuntu-latest
-    timeout-minutes: 15
+    # Full staging E2E runs can exceed 15 minutes; allow more time so successful
+    # deploys are not marked as failed purely due to test runtime.
+    timeout-minutes: 40
     needs: build-and-test
     if: github.ref == 'refs/heads/main' || github.event.inputs.environment == 'staging'
     environment:
@@ -247,7 +249,8 @@ jobs:
   deploy-production:
     name: Deploy to Production
     runs-on: ubuntu-latest
-    timeout-minutes: 15
+    # Allow additional time for production deploy + follow-up checks
+    timeout-minutes: 30
     needs: [build-and-test, deploy-staging]
     if: github.ref == 'refs/heads/main' && github.event.inputs.environment == 'production'
     environment:
