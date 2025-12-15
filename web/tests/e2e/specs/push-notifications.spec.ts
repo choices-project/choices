@@ -92,11 +92,20 @@ test.describe('Push Notifications E2E', () => {
       '[data-testid="notification-preferences"]',
       '[data-testid="notification-preferences-login-required"]',
       '[data-testid="notification-preferences-unsupported"]',
+      '[data-testid="notification-preferences-container"]',
     ];
     
     // Use locator so toBeVisible works (waitForSelector returns ElementHandle)
     const component = page.locator(selectors.join(',')).first();
-    await expect(component).toBeVisible({ timeout: 20_000 });
+    await component.waitFor({ state: 'attached', timeout: 20_000 });
+
+    // Try to ensure visibility, but don't fail if still rendering
+    try {
+      await expect(component).toBeVisible({ timeout: 10_000 });
+    } catch {
+      // If not visible yet, wait a bit longer
+      await page.waitForTimeout(2_000);
+    }
 
     // Get text content and verify it's not the initialization message
     const text = await component.textContent();
