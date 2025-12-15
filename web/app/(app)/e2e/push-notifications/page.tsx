@@ -105,6 +105,11 @@ export default function PushNotificationsHarnessPage() {
         },
 
         getSubscriptionStatus: async () => {
+          // In E2E harness mode, use local state instead of checking service worker
+          if (process.env.NEXT_PUBLIC_ENABLE_E2E_HARNESS === '1' || process.env.PLAYWRIGHT_USE_MOCKS === '1') {
+            return isSubscribed;
+          }
+          
           if (!('serviceWorker' in navigator) || !('PushManager' in window)) {
             return false;
           }

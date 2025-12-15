@@ -173,6 +173,12 @@ test.describe('Production Smoke Tests', () => {
 
   test.describe('API Endpoints', () => {
     test('feeds API endpoint responds', async ({ request }) => {
+      // Skip in E2E harness mode - these tests are for production endpoints
+      if (process.env.NEXT_PUBLIC_ENABLE_E2E_HARNESS === '1') {
+        test.skip();
+        return;
+      }
+
       const response = await request.get(`${BASE_URL}/api/feeds`, { timeout: 10_000 });
       
       // Should return 200 (if authenticated) or 401/403 (if not)

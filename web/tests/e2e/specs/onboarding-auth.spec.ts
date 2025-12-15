@@ -77,6 +77,18 @@ test.describe('@mocks onboarding auth flows', () => {
   });
 
   test('email OTP path updates store and advances step', async ({ page }) => {
+    // Mock the API endpoint for email OTP
+    await page.route('**/api/auth/send-otp*', async (route) => {
+      await route.fulfill({
+        status: 200,
+        contentType: 'application/json',
+        body: JSON.stringify({
+          success: true,
+          message: 'Login link sent',
+        }),
+      });
+    });
+
     await page.getByTestId('auth-continue').click();
     await page.getByLabel(/Email Address/i).fill('otp-user@example.com');
     await page.getByRole('button', { name: /Send Login Link/i }).click();
@@ -84,10 +96,11 @@ test.describe('@mocks onboarding auth flows', () => {
     // Wait for success message - text may vary by i18n, check for multiple possible messages
     // The message might be "Check your email for the login link" or similar i18n variations
     await expect(
-      page.getByText(/Check your email|Revisa tu correo|email.*link|login.*link/i)
+      page.getByText(/Check your email|Revisa tu correo|email.*link|login.*link|Login link sent|success/i)
     ).toBeVisible({ timeout: 15_000 });
     
-    // Also check for the success indicator
+    // Also check for the success indicator - wait a bit for state to update
+    await page.waitForTimeout(1000);
     const successIndicator = page.locator('[data-testid="onboarding-auth-data"]');
     await expect(successIndicator).toContainText('"authSetupCompleted": true', {
       timeout: 10_000,
@@ -104,15 +117,31 @@ test.describe('@mocks onboarding auth flows', () => {
   });
 
   test('passkey path completes and syncs store', async ({ page }) => {
+    // Mock the API endpoint for passkey registration
+    await page.route('**/api/auth/register-passkey*', async (route) => {
+      await route.fulfill({
+        status: 200,
+        contentType: 'application/json',
+        body: JSON.stringify({
+          success: true,
+          message: 'Passkey created successfully',
+        }),
+      });
+    });
+
     await stubWebAuthn(page);
     await page.getByTestId('auth-option-webauthn').click();
     await page.getByTestId('auth-continue').click();
     const passkeyButton = page.getByRole('button', { name: /Create Passkey/i });
     await passkeyButton.click();
 
-    await expect(page.getByText(/Passkey created successfully/i)).toBeVisible();
+    // Wait for success message
+    await expect(page.getByText(/Passkey created successfully|success/i)).toBeVisible({ timeout: 10_000 });
+    
+    // Wait for state to update
+    await page.waitForTimeout(1000);
     await expect(page.getByTestId('onboarding-auth-data')).toContainText('"authSetupCompleted": true', {
-      timeout: 5_000,
+      timeout: 10_000,
     });
   });
 

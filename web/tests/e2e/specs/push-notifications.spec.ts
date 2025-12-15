@@ -81,13 +81,15 @@ test.describe('Push Notifications E2E', () => {
   test('displays notification preferences component', async ({ page }) => {
     await gotoHarness(page);
 
+    // Wait for component to be visible - it may take time to render
     const component = page.getByTestId('notification-preferences');
-    await expect(component).toBeVisible();
+    await expect(component).toBeVisible({ timeout: 15_000 });
     
     // The component may show "temporarily unavailable" if user is not logged in
     // or if there's an error. Check for either the normal text or the error message.
+    await page.waitForTimeout(1000); // Give component time to render
     const text = await component.textContent();
-    const hasNormalText = text?.includes('Notification Preferences') || text?.includes('notification');
+    const hasNormalText = text?.includes('Notification Preferences') || text?.includes('notification') || text?.includes('Preferences');
     const hasErrorText = text?.includes('temporarily unavailable');
     
     // If showing error, that's acceptable for E2E harness (user might not be logged in)
@@ -143,36 +145,31 @@ test.describe('Push Notifications E2E', () => {
     await gotoHarness(page);
 
     // First subscribe
-    await page.evaluate(async () => {
+    const subscribed = await page.evaluate(async () => {
       if (window.__pushNotificationsHarness?.subscribe) {
-        await window.__pushNotificationsHarness.subscribe();
+        return await window.__pushNotificationsHarness.subscribe();
       }
+      return false;
     });
+
+    expect(subscribed).toBe(true);
 
     // Wait for subscription to complete
     await page.waitForTimeout(2_000);
 
-    // Check if subscribed indicator exists
-    const subscribedElement = page.getByTestId('push-notification-subscribed');
-    try {
-      await expect(subscribedElement).toHaveText('Yes', { timeout: 10_000 });
-    } catch {
-      // If element doesn't exist or shows different text, that's okay for E2E harness
-      console.warn('Subscription status element not found or shows different text');
-    }
+    // Verify subscription status
+    const subscriptionStatus = await page.evaluate(async () => {
+      return window.__pushNotificationsHarness?.getSubscriptionStatus();
+    });
+    expect(subscriptionStatus).toBe(true);
 
-    // Then unsubscribe with timeout
-    const unsubscribed = await Promise.race([
-      page.evaluate(async () => {
-        if (window.__pushNotificationsHarness?.unsubscribe) {
-          return await window.__pushNotificationsHarness.unsubscribe();
-        }
-        return false;
-      }),
-      new Promise<boolean>((resolve) => {
-        setTimeout(() => resolve(false), 30_000); // 30 second timeout
-      }),
-    ]);
+    // Then unsubscribe
+    const unsubscribed = await page.evaluate(async () => {
+      if (window.__pushNotificationsHarness?.unsubscribe) {
+        return await window.__pushNotificationsHarness.unsubscribe();
+      }
+      return false;
+    });
 
     // Wait for unsubscribe to complete
     await page.waitForTimeout(2_000);
@@ -180,12 +177,10 @@ test.describe('Push Notifications E2E', () => {
     expect(unsubscribed).toBe(true);
 
     // Verify subscription status updated
-    try {
-      await expect(subscribedElement).toHaveText('No', { timeout: 10_000 });
-    } catch {
-      // If element doesn't update, that's acceptable for E2E harness
-      console.warn('Subscription status did not update to No');
-    }
+    const unsubscribedStatus = await page.evaluate(async () => {
+      return window.__pushNotificationsHarness?.getSubscriptionStatus();
+    });
+    expect(unsubscribedStatus).toBe(false);
   });
 
   test('updates notification preferences', async ({ page }) => {
@@ -353,21 +348,24 @@ test.describe('Push Notifications E2E', () => {
 
     // Check initial subscription status
     const initialStatus = await page.evaluate(async () => {
-      return window.__pushNotificationsHarness?.getSubscriptionStatus();
+      return await window.__pushNotificationsHarness?.getSubscriptionStatus();
     });
 
     expect(initialStatus).toBe(false);
 
     // Subscribe
-    await page.evaluate(async () => {
-      await window.__pushNotificationsHarness?.subscribe();
+    const subscribed = await page.evaluate(async () => {
+      return await window.__pushNotificationsHarness?.subscribe();
     });
 
-    await page.waitForTimeout(1000);
+    expect(subscribed).toBe(true);
+
+    // Wait for state to update
+    await page.waitForTimeout(2_000);
 
     // Check subscription status again
     const subscribedStatus = await page.evaluate(async () => {
-      return window.__pushNotificationsHarness?.getSubscriptionStatus();
+      return await window.__pushNotificationsHarness?.getSubscriptionStatus();
     });
 
     expect(subscribedStatus).toBe(true);

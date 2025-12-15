@@ -25,9 +25,12 @@ export const GET = withErrorHandling(async (_request: NextRequest) => {
   // Get system info
   const systemInfo = featureFlagManager.getSystemInfo();
   
+  // Convert Map to object for JSON serialization
+  const flagsObject = Object.fromEntries(allFlags);
+  
   return successResponse(
     {
-      flags: allFlags,
+      flags: flagsObject,
       enabledFlags,
       disabledFlags,
       systemInfo
@@ -59,9 +62,13 @@ export const PATCH = withErrorHandling(async (request: NextRequest) => {
     return errorResponse(`Failed to update feature flag: ${flagId}`, 400);
   }
 
+  // Convert Map to object for JSON serialization
+  const allFlagsMap = featureFlagManager.getAllFlags();
+  const flagsObject = Object.fromEntries(allFlagsMap);
+  
   return successResponse({
     flagId,
     enabled,
-    flags: featureFlagManager.getAllFlags()
+    flags: flagsObject
   });
 });

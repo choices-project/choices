@@ -14,10 +14,17 @@ import { ensureLoggedOut } from '../../helpers/e2e-setup';
 
 const PRODUCTION_URL = process.env.PRODUCTION_URL || 'https://choices-app.com';
 const BASE_URL = process.env.BASE_URL || PRODUCTION_URL;
+const IS_E2E_HARNESS = process.env.NEXT_PUBLIC_ENABLE_E2E_HARNESS === '1';
 
 test.describe('Production Expanded Tests', () => {
   test.describe('API Endpoints', () => {
     test('polls API endpoint responds', async ({ request }) => {
+      // Skip in E2E harness mode - these tests are for production endpoints
+      if (IS_E2E_HARNESS) {
+        test.skip();
+        return;
+      }
+
       const response = await request.get(`${BASE_URL}/api/polls`, { timeout: 10_000 });
       
       // Should return 200 (if authenticated) or 401/403 (if not)
@@ -327,6 +334,12 @@ test.describe('Production Expanded Tests', () => {
 
   test.describe('Error Handling', () => {
     test('handles malformed API requests gracefully', async ({ request }) => {
+      // Skip in E2E harness mode - these tests are for production endpoints
+      if (IS_E2E_HARNESS) {
+        test.skip();
+        return;
+      }
+
       const response = await request.get(`${BASE_URL}/api/feeds?invalid=param&malformed`, { timeout: 10_000 });
       
       // Should return appropriate error code, not 500

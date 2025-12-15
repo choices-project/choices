@@ -145,10 +145,15 @@ test.describe('User Store E2E', () => {
   });
 
   test('manages biometric state', async ({ page }) => {
+    await gotoHarness(page);
+
+    // Set biometric state
     await page.evaluate(() => {
       window.__userStoreHarness?.setBiometricSupported(true);
       window.__userStoreHarness?.setBiometricAvailable(true);
     });
+
+    await page.waitForTimeout(500);
 
     const snapshot = await page.evaluate(() => {
       const harness = window.__userStoreHarness;
@@ -158,9 +163,12 @@ test.describe('User Store E2E', () => {
     expect(snapshot?.biometric?.isSupported).toBe(true);
     expect(snapshot?.biometric?.isAvailable).toBe(true);
 
+    // Reset biometric state
     await page.evaluate(() => {
       window.__userStoreHarness?.resetBiometric();
     });
+
+    await page.waitForTimeout(500);
 
     const resetSnapshot = await page.evaluate(() => {
       const harness = window.__userStoreHarness;
