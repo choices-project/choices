@@ -153,7 +153,13 @@ test.describe('User Store E2E', () => {
       window.__userStoreHarness?.setBiometricAvailable(true);
     });
 
-    await page.waitForTimeout(500);
+    await page.waitForFunction(
+      () => {
+        const snap = window.__userStoreHarness?.getSnapshot();
+        return snap?.biometric?.isSupported === true && snap?.biometric?.isAvailable === true;
+      },
+      { timeout: 5_000 },
+    );
 
     const snapshot = await page.evaluate(() => {
       const harness = window.__userStoreHarness;
@@ -168,7 +174,13 @@ test.describe('User Store E2E', () => {
       window.__userStoreHarness?.resetBiometric();
     });
 
-    await page.waitForTimeout(500);
+    await page.waitForFunction(
+      () => {
+        const snap = window.__userStoreHarness?.getSnapshot();
+        return snap?.biometric?.isSupported === false && snap?.biometric?.isAvailable === false;
+      },
+      { timeout: 5_000 },
+    );
 
     const resetSnapshot = await page.evaluate(() => {
       const harness = window.__userStoreHarness;

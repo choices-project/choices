@@ -27,6 +27,8 @@ const nextConfig = {
   swcMinify: true,
   reactStrictMode: process.env.NEXT_DISABLE_STRICT_MODE === '1' ? false : true,
   transpilePackages: ['@choices/civics-shared'],
+  // Ensure standalone output so Docker copy of .next/standalone exists
+  output: 'standalone',
 
   experimental: {
     // Next 14 way to opt packages out of RSC bundling (Node will require them at runtime)

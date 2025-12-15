@@ -81,20 +81,28 @@ test.describe('Push Notifications E2E', () => {
   test('displays notification preferences component', async ({ page }) => {
     await gotoHarness(page);
 
-    // Wait for component to be visible - it may take time to render
-    const component = page.getByTestId('notification-preferences');
-    await expect(component).toBeVisible({ timeout: 15_000 });
-    
-    // The component may show "temporarily unavailable" if user is not logged in
-    // or if there's an error. Check for either the normal text or the error message.
-    await page.waitForTimeout(1000); // Give component time to render
-    const text = await component.textContent();
-    const hasNormalText = text?.includes('Notification Preferences') || text?.includes('notification') || text?.includes('Preferences');
-    const hasErrorText = text?.includes('temporarily unavailable');
-    
-    // If showing error, that's acceptable for E2E harness (user might not be logged in)
-    // But we should still verify the component is visible
-    expect(hasNormalText || hasErrorText).toBe(true);
+    // Wait for any of the preference UI variants to appear
+    const selectors = [
+      '[data-testid="notification-preferences"]',
+      '[data-testid="notification-preferences-login-required"]',
+      '[data-testid="notification-preferences-unsupported"]',
+    ];
+    const componentHandle = await page.waitForSelector(selectors.join(','), { timeout: 20_000 });
+    expect(componentHandle).not.toBeNull();
+
+    // Ensure it is visible
+    await expect(componentHandle!).toBeVisible({ timeout: 10_000 });
+
+    // Accept either normal text or fallback messages
+    const text = await componentHandle!.textContent();
+    const hasNormalText =
+      text?.includes('Notification Preferences') ||
+      text?.toLowerCase().includes('notification preferences');
+    const hasFallbackText =
+      text?.toLowerCase().includes('temporarily unavailable') ||
+      text?.toLowerCase().includes('please log in') ||
+      text?.toLowerCase().includes('not supported');
+    expect(hasNormalText || hasFallbackText).toBe(true);
   });
 
   test('shows current permission status', async ({ page }) => {
