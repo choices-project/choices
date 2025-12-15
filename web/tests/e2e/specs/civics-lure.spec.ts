@@ -5,7 +5,9 @@ import { waitForPageReady } from '../helpers/e2e-setup';
 
 test.describe('@axe Civics lure', () => {
   test('renders election countdown and surfaces live announcements', async ({ page }) => {
-    await page.goto('/e2e/civics-lure', { waitUntil: 'networkidle', timeout: 60_000 });
+    // Use 'load' instead of 'networkidle' - networkidle can timeout if there are
+    // ongoing requests (like election countdown polling or analytics)
+    await page.goto('/e2e/civics-lure', { waitUntil: 'load', timeout: 60_000 });
 
     // Wait for page to be ready (React hydration)
     await waitForPageReady(page, 60_000);

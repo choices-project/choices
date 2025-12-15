@@ -6,8 +6,10 @@ import CivicsLure from '@/features/civics/components/CivicsLure';
 
 import { useRepresentativeStore } from '@/lib/stores/representativeStore';
 import { useUserStore } from '@/lib/stores/userStore';
+import { useElectionStore } from '@/lib/stores/electionStore';
 
 import type { Representative } from '@/types/representative';
+import type { CivicElection } from '@/types/civic';
 
 // Note: Client components cannot export metadata, but we set document.title in useEffect
 // The root layout provides the default title and lang attribute in the HTML
@@ -49,6 +51,16 @@ const MOCK_REPRESENTATIVES: Representative[] = [
   },
 ];
 
+const MOCK_ELECTIONS: CivicElection[] = [
+  {
+    election_id: 'mock-election-1',
+    name: 'General Election 2025',
+    election_day: new Date(Date.now() + 90 * 24 * 60 * 60 * 1000).toISOString().split('T')[0], // 90 days from now
+    ocd_division_id: 'ocd-division/country:us/state:ca/place:san_francisco',
+    fetched_at: new Date().toISOString(),
+  },
+];
+
 export default function CivicsLureHarnessPage() {
   const handleEngage = () => undefined;
 
@@ -78,6 +90,17 @@ export default function CivicsLureHarnessPage() {
     useUserStore.setState((state) => {
       state.currentAddress = 'San Francisco, CA';
       state.representatives = MOCK_REPRESENTATIVES;
+    });
+
+    // Set up mock elections data to prevent network requests
+    useElectionStore.setState((state) => {
+      const divisionId = 'ocd-division/country:us/state:ca/place:san_francisco';
+      if (!state.electionsByDivision) {
+        state.electionsByDivision = new Map();
+      }
+      state.electionsByDivision.set(divisionId, MOCK_ELECTIONS);
+      state.loading = false;
+      state.error = null;
     });
   }, []);
 

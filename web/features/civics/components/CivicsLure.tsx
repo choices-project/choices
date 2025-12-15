@@ -142,6 +142,11 @@ export default function CivicsLure({ userLocation, onEngage }: CivicsLureProps) 
   const previousErrorRef = useRef<string | null>(null);
 
   useEffect(() => {
+    // Skip network requests in E2E harness mode - data is already set up
+    if (process.env.NEXT_PUBLIC_ENABLE_E2E_HARNESS === '1') {
+      return;
+    }
+    
     if (!locationLabel || locationRepresentatives.length > 0) {
       return;
     }
