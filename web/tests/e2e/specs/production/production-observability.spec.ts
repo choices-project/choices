@@ -19,6 +19,10 @@ import { ensureLoggedOut, loginTestUser, waitForPageReady } from '../../helpers/
 
 const PRODUCTION_URL = process.env.PRODUCTION_URL || 'https://choices-app.com';
 const BASE_URL = process.env.BASE_URL || PRODUCTION_URL;
+const IS_PRODUCTION_TARGET =
+  BASE_URL.startsWith('https://') &&
+  process.env.NEXT_PUBLIC_ENABLE_E2E_HARNESS !== '1' &&
+  process.env.PLAYWRIGHT_USE_MOCKS !== '1';
 
 const regularEmail = process.env.E2E_USER_EMAIL;
 const regularPassword = process.env.E2E_USER_PASSWORD;
@@ -51,6 +55,10 @@ async function attachObservability(page: Page, label: string, baseUrl: string) {
 
 test.describe('Production Observability', () => {
   test('feed page API + console diagnostics', async ({ page }) => {
+    if (!IS_PRODUCTION_TARGET) {
+      test.skip('Production observability tests run only against real production targets');
+    }
+
     test.setTimeout(120_000);
 
     await attachObservability(page, 'feed', BASE_URL);
@@ -90,6 +98,9 @@ test.describe('Production Observability', () => {
   });
 
   test('privacy page API + console diagnostics', async ({ page }) => {
+    if (!IS_PRODUCTION_TARGET) {
+      test.skip('Production observability tests run only against real production targets');
+    }
     test.setTimeout(120_000);
 
     await attachObservability(page, 'privacy', BASE_URL);
@@ -124,6 +135,9 @@ test.describe('Production Observability', () => {
   });
 
   test('dashboard navigation + auth diagnostics', async ({ page }) => {
+    if (!IS_PRODUCTION_TARGET) {
+      test.skip('Production observability tests run only against real production targets');
+    }
     test.setTimeout(120_000);
 
     await attachObservability(page, 'dashboard', BASE_URL);
