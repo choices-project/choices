@@ -4,12 +4,12 @@ import { useEffect } from 'react';
 
 import CivicsLure from '@/features/civics/components/CivicsLure';
 
+import { useElectionStore } from '@/lib/stores/electionStore';
 import { useRepresentativeStore } from '@/lib/stores/representativeStore';
 import { useUserStore } from '@/lib/stores/userStore';
-import { useElectionStore } from '@/lib/stores/electionStore';
 
-import type { Representative } from '@/types/representative';
 import type { CivicElection } from '@/types/civic';
+import type { Representative } from '@/types/representative';
 
 // Note: Client components cannot export metadata, but we set document.title in useEffect
 // The root layout provides the default title and lang attribute in the HTML
