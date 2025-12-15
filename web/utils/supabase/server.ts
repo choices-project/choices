@@ -77,6 +77,9 @@ export async function getSupabaseServerClient(): Promise<SupabaseClient<Database
     throw new Error('Missing required Supabase environment variables');
   }
 
+  // Read our custom access token cookie if present (set by /api/auth/login)
+  const accessTokenCookie = cookieStore?.get('sb-access-token');
+
   const cookieAdapter = {
     get: (name: string) => cookieStore?.get(name)?.value,
     set: (name: string, value: string, options: Record<string, unknown>) => {
@@ -95,13 +98,17 @@ export async function getSupabaseServerClient(): Promise<SupabaseClient<Database
     },
   }
 
-  return createServerClient<Database>(
-    url,
-    key,
-    {
-      cookies: cookieAdapter,
-    },
-  )
+  // If we have a user access token cookie, forward it as an Authorization header
+  // so server-side Supabase queries run as the authenticated user.
+  const globalHeaders: Record<string, string> = {};
+  if (accessTokenCookie?.value) {
+    globalHeaders['Authorization'] = `Bearer ${accessTokenCookie.value}`;
+  }
+
+  return createServerClient<Database>(url, key, {
+    cookies: cookieAdapter,
+    ...(Object.keys(globalHeaders).length > 0 ? { global: { headers: globalHeaders } } : {}),
+  })
 }
 
 /**
