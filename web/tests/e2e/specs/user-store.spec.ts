@@ -169,7 +169,7 @@ test.describe('User Store E2E', () => {
     expect(snapshot?.biometric?.isSupported).toBe(true);
     expect(snapshot?.biometric?.isAvailable).toBe(true);
 
-    // Reset biometric state
+    // Reset biometric state - resetBiometric sets values to null, not false
     await page.evaluate(() => {
       window.__userStoreHarness?.resetBiometric();
     });
@@ -177,7 +177,7 @@ test.describe('User Store E2E', () => {
     await page.waitForFunction(
       () => {
         const snap = window.__userStoreHarness?.getSnapshot();
-        return snap?.biometric?.isSupported === false && snap?.biometric?.isAvailable === false;
+        return snap?.biometric?.isSupported === null && snap?.biometric?.isAvailable === null;
       },
       { timeout: 5_000 },
     );
@@ -187,8 +187,8 @@ test.describe('User Store E2E', () => {
       return harness?.getSnapshot();
     });
 
-    expect(resetSnapshot?.biometric?.isSupported).toBe(false);
-    expect(resetSnapshot?.biometric?.isAvailable).toBe(false);
+    expect(resetSnapshot?.biometric?.isSupported).toBeNull();
+    expect(resetSnapshot?.biometric?.isAvailable).toBeNull();
   });
 
   test('clears user state', async ({ page }) => {
