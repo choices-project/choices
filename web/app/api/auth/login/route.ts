@@ -6,7 +6,6 @@ import {
   successResponse,
   rateLimitError,
   validationError,
-  notFoundError,
   authError,
   parseBody,
 } from '@/lib/api';
@@ -128,7 +127,7 @@ export const POST = withErrorHandling(async (request: NextRequest) => {
             ?? 'User',
           bio: null,
           is_active: true,
-        } as Partial<UserProfile>)
+        } as any)
         .select('username, trust_tier, display_name, avatar_url, bio, is_active, user_id, created_at, updated_at')
         .single()
 
@@ -141,21 +140,18 @@ export const POST = withErrorHandling(async (request: NextRequest) => {
         })
 
         profile = {
-          // Required fields with safe fallbacks
           user_id: authData.user.id,
           username: authData.user.email?.split('@')[0] ?? null,
-          display_name: authData.user.user_metadata?.full_name
-            ?? authData.user.email
-            ?? 'User',
+          display_name:
+            authData.user.user_metadata?.full_name ??
+            authData.user.email ??
+            'User',
           bio: null,
           is_active: true,
-          // Preserve any existing fields from the type, using null where appropriate
           trust_tier: null,
           avatar_url: null,
           created_at: new Date().toISOString() as any,
           updated_at: new Date().toISOString() as any,
-          // Spread in any extra fields so the type stays aligned with the table
-          ...(profile as UserProfile | null ?? {} as UserProfile),
         } as UserProfile
       } else {
         profile = createdProfile as UserProfile
