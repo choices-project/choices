@@ -102,11 +102,13 @@ export const POST = withErrorHandling(async (request: NextRequest) => {
     }
 
     // Get user profile for additional data
-    let { data: profile, error: profileError } = await supabaseClient
+    const { data: initialProfile, error: profileError } = await supabaseClient
       .from('user_profiles')
       .select('username, trust_tier, display_name, avatar_url, bio, is_active')
       .eq('user_id', authData.user.id)
       .single() as { data: UserProfile | null; error: any }
+
+    let profile = initialProfile;
 
     if (profileError || !profile) {
       // For legacy or partially-onboarded accounts, automatically create a minimal profile
