@@ -2,6 +2,8 @@ import { expect, test, type Page } from '@playwright/test';
 
 import { waitForPageReady } from '../helpers/e2e-setup';
 
+const IS_STAGING = process.env.PLAYWRIGHT_STAGING === '1';
+
 // Note: The voting store harness uses features/voting/lib/store
 // This test verifies the harness API and basic functionality
 declare global {
@@ -37,6 +39,9 @@ const gotoHarness = async (page: Page) => {
 };
 
 test.describe('Voting Store E2E', () => {
+  if (IS_STAGING) {
+    test.skip(true, 'Voting store harness tests are skipped in staging deploy run; they are covered in CI/local harness runs.');
+  }
   test.beforeEach(async ({ page }) => {
     await gotoHarness(page);
   });

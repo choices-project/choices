@@ -11,6 +11,8 @@ import {
   waitForAnnouncement,
 } from '../helpers/screen-reader';
 
+const IS_STAGING = process.env.PLAYWRIGHT_STAGING === '1';
+
 const HARNESS_USER_ID = '00000000-0000-0000-0000-000000000042';
 const DEFAULT_WIDGET_ID = 'widget-dashboard-default';
 
@@ -146,6 +148,9 @@ const gotoWidgetHarness = async (page: Page, testInfo: TestInfo) => {
 };
 
 test.describe('@keyboard Widget dashboard keyboard controls', () => {
+  if (IS_STAGING) {
+    test.skip(true, 'Widget dashboard harness tests are skipped in staging deploy run; they are covered in CI/local harness runs.');
+  }
   test.beforeEach(async ({ page }, testInfo) => {
     await gotoWidgetHarness(page, testInfo);
     const logCaptureReady = await hasAnnouncementCapture(page);

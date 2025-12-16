@@ -242,6 +242,7 @@ jobs:
           npm run test:e2e -- --config=playwright.staging.config.ts
         env:
           BASE_URL: https://choices-platform-staging.vercel.app
+          PLAYWRIGHT_STAGING: '1'
 
       - name: Health check
         run: |
