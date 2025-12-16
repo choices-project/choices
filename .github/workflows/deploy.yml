@@ -252,7 +252,9 @@ jobs:
     # Allow additional time for production deploy + follow-up checks
     timeout-minutes: 30
     needs: [build-and-test, deploy-staging]
-    if: github.ref == 'refs/heads/main' && github.event.inputs.environment == 'production'
+    # Only deploy to production via explicit workflow_dispatch with environment=production
+    # Push events should NOT trigger production deployments automatically
+    if: github.event_name == 'workflow_dispatch' && github.event.inputs.environment == 'production'
     environment:
       name: production
       url: https://www.choices-app.com
