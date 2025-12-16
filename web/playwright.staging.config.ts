@@ -4,7 +4,8 @@ export default defineConfig({
     testDir: './tests/e2e',
     fullyParallel: true,
     forbidOnly: !!process.env.CI,
-    retries: process.env.CI ? 2 : 0,
+    // Reduced retries in staging to speed up CI - failures will still be visible
+    retries: process.env.CI ? 1 : 0,
     reporter: [
       ['html', { outputFolder: 'playwright-report-staging', open: 'never' }],
       ['junit', { outputFile: 'test-results-staging/results.xml' }]
@@ -23,11 +24,11 @@ export default defineConfig({
   },
 
   projects: [
+    // Only run chromium in staging for faster CI - firefox/webkit tested in local dev
     { name: 'chromium', use: { ...devices['Desktop Chrome'] } },
-    { name: 'firefox', use: { ...devices['Desktop Firefox'] } },
-    { name: 'webkit', use: { ...devices['Desktop Safari'] } },
   ],
 
   // No webServer needed for staging - it's already deployed
-  ...(process.env.CI ? { workers: 1 } : {}),
+  // Use 2 workers in CI to parallelize tests while avoiding resource contention
+  ...(process.env.CI ? { workers: 2 } : {}),
 });
