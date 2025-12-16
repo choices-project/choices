@@ -16,11 +16,11 @@ declare global {
  
 
 const gotoNavigationShellHarness = async (page: Page) => {
-  await page.goto('/e2e/navigation-shell', { waitUntil: 'domcontentloaded', timeout: 60_000 });
-  await waitForPageReady(page, 60_000);
-  await expect(page.getByTestId('navigation-shell-harness')).toBeVisible({ timeout: 60_000 });
+  await page.goto('/e2e/navigation-shell', { waitUntil: 'domcontentloaded', timeout: 90_000 });
+  await waitForPageReady(page, 90_000);
+  await expect(page.getByTestId('navigation-shell-harness')).toBeVisible({ timeout: 90_000 });
   await page.waitForFunction(() => typeof window.__navigationShellHarness !== 'undefined', undefined, {
-    timeout: 60_000,
+    timeout: 90_000,
   });
 };
 

@@ -12,6 +12,7 @@ import {
   useAppActions,
   useBreadcrumbs,
   useCurrentRoute,
+  useAppStore,
 } from '@/lib/stores/appStore';
 
 type NavigationShellHarness = {
@@ -29,16 +30,20 @@ export default function NavigationShellHarnessPage() {
   const { setCurrentRoute, setBreadcrumbs, setSidebarActiveSection } = useAppActions();
 
   useEffect(() => {
+    // Initialize harness immediately - access store directly to avoid dependency issues
     const harness: NavigationShellHarness = {
       setRoute: (route, label) => {
-        setCurrentRoute(route);
-        setBreadcrumbs([
+        // Access store actions directly to avoid re-initialization delays
+        const store = useAppStore.getState();
+        store.setCurrentRoute(route);
+        store.setBreadcrumbs([
           { label: 'Home', href: '/' },
           { label, href: route },
         ]);
       },
       setAdminSection: (section) => {
-        setSidebarActiveSection(section);
+        const store = useAppStore.getState();
+        store.setSidebarActiveSection(section);
       },
     };
     window.__navigationShellHarness = harness;
@@ -47,7 +52,7 @@ export default function NavigationShellHarnessPage() {
         delete window.__navigationShellHarness;
       }
     };
-  }, [setBreadcrumbs, setCurrentRoute, setSidebarActiveSection]);
+  }, []); // Empty deps - access store directly to avoid re-initialization delays
 
   return (
     <AppShell

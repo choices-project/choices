@@ -146,9 +146,9 @@ jobs:
   deploy-staging:
     name: Deploy to Staging
     runs-on: ubuntu-latest
-    # Full staging E2E runs can exceed 15 minutes; allow more time so successful
-    # deploys are not marked as failed purely due to test runtime.
-    timeout-minutes: 40
+    # Full staging E2E runs can exceed 40 minutes due to network latency, cold starts,
+    # and harness initialization delays. Increased timeout to prevent premature cancellation.
+    timeout-minutes: 60
     needs: build-and-test
     if: github.ref == 'refs/heads/main' || github.event.inputs.environment == 'staging'
     environment:

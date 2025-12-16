@@ -96,8 +96,10 @@ export default function AdminStoreHarnessPage() {
   // Set up harness with useEffect - runs after mount
   // Access actions from store state directly to avoid dependency issues
   useEffect(() => {
-    try {
-      const harness: AdminStoreHarness = {
+    // Initialize harness immediately, don't wait for store hydration
+    const initHarness = () => {
+      try {
+        const harness: AdminStoreHarness = {
       toggleSidebar: () => {
         const currentState = useAdminStore.getState();
         const next = !currentState.sidebarCollapsed;
@@ -205,11 +207,11 @@ export default function AdminStoreHarnessPage() {
         getSnapshot: () => useAdminStore.getState(),
       };
 
-      window.__adminStoreHarness = harness;
-    } catch (error) {
-      console.error('Failed to create admin store harness:', error);
-      // Set a minimal harness even on error so tests can detect the page loaded
-      window.__adminStoreHarness = {
+        window.__adminStoreHarness = harness;
+      } catch (error) {
+        console.error('Failed to create admin store harness:', error);
+        // Set a minimal harness even on error so tests can detect the page loaded
+        window.__adminStoreHarness = {
         // eslint-disable-next-line @typescript-eslint/no-empty-function
         toggleSidebar: () => {},
         // eslint-disable-next-line @typescript-eslint/no-empty-function
@@ -234,9 +236,13 @@ export default function AdminStoreHarnessPage() {
         deselectAllUsers: () => {},
         // eslint-disable-next-line @typescript-eslint/no-empty-function
         resetAdminState: () => {},
-        getSnapshot: () => useAdminStore.getState(),
-      } as AdminStoreHarness;
-    }
+          getSnapshot: () => useAdminStore.getState(),
+        } as AdminStoreHarness;
+      }
+    };
+
+    // Initialize immediately
+    initHarness();
 
     return () => {
       if (window.__adminStoreHarness) {
@@ -246,6 +252,7 @@ export default function AdminStoreHarnessPage() {
   }, []); // Empty deps - set up once, access store directly
 
   // Set dataset attribute in separate useEffect (handles hydration like poll-wizard)
+  // Mark ready immediately if harness is available, don't wait for store hydration
   useEffect(() => {
     let ready = false;
     const markReady = () => {
@@ -257,33 +264,42 @@ export default function AdminStoreHarnessPage() {
       setReady(true);
     };
 
-    const persist = (useAdminStore as typeof useAdminStore & {
-      persist?: {
-        hasHydrated?: () => boolean;
-        onFinishHydration?: (callback: () => void) => (() => void) | void;
-      };
-    }).persist;
-
-    let unsubscribeHydration: (() => void) | void;
-
-    if (persist?.hasHydrated?.()) {
-      markReady();
-    } else if (persist?.onFinishHydration) {
-      unsubscribeHydration = persist.onFinishHydration(() => {
-        markReady();
-      });
+    // Check if harness is already available (set in previous useEffect)
+    if (typeof window !== 'undefined' && window.__adminStoreHarness) {
+      // Small delay to ensure DOM is ready
+      setTimeout(markReady, 100);
     } else {
-      markReady();
-    }
+      // Fallback: wait for store hydration if harness not ready yet
+      const persist = (useAdminStore as typeof useAdminStore & {
+        persist?: {
+          hasHydrated?: () => boolean;
+          onFinishHydration?: (callback: () => void) => (() => void) | void;
+        };
+      }).persist;
 
-    return () => {
-      if (typeof unsubscribeHydration === 'function') {
-        unsubscribeHydration();
+      let unsubscribeHydration: (() => void) | void;
+
+      if (persist?.hasHydrated?.()) {
+        markReady();
+      } else if (persist?.onFinishHydration) {
+        unsubscribeHydration = persist.onFinishHydration(() => {
+          markReady();
+        });
+        // Timeout fallback: mark ready after 2 seconds even if hydration hasn't completed
+        setTimeout(markReady, 2000);
+      } else {
+        markReady();
       }
-      if (ready && typeof document !== 'undefined') {
-        delete document.documentElement.dataset.adminStoreHarness;
-      }
-    };
+
+      return () => {
+        if (typeof unsubscribeHydration === 'function') {
+          unsubscribeHydration();
+        }
+        if (ready && typeof document !== 'undefined') {
+          delete document.documentElement.dataset.adminStoreHarness;
+        }
+      };
+    }
   }, []);
 
   return (

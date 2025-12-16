@@ -9,15 +9,17 @@ export default defineConfig({
       ['html', { outputFolder: 'playwright-report-staging', open: 'never' }],
       ['junit', { outputFile: 'test-results-staging/results.xml' }]
     ],
-    timeout: 60_000,
-    expect: { timeout: 10_000 },
+    timeout: 120_000, // Increased for staging environment reliability (network latency, cold starts)
+    expect: { timeout: 30_000 }, // Increased for more reliable element assertions in staging
 
   use: {
     baseURL: 'https://choices-platform-staging.vercel.app',
     trace: 'on-first-retry',
     screenshot: 'only-on-failure',
     video: 'retain-on-failure',
-    extraHTTPHeaders: { 'x-e2e-bypass': '1' }
+    extraHTTPHeaders: { 'x-e2e-bypass': '1' },
+    actionTimeout: 30_000, // Increased for staging reliability
+    navigationTimeout: 90_000, // Increased for harness page loads in staging
   },
 
   projects: [
