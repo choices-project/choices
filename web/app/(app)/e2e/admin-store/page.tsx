@@ -255,6 +255,8 @@ export default function AdminStoreHarnessPage() {
   // Mark ready immediately if harness is available, don't wait for store hydration
   useEffect(() => {
     let ready = false;
+    let unsubscribeHydration: (() => void) | void;
+
     const markReady = () => {
       if (ready) return;
       ready = true;
@@ -277,8 +279,6 @@ export default function AdminStoreHarnessPage() {
         };
       }).persist;
 
-      let unsubscribeHydration: (() => void) | void;
-
       if (persist?.hasHydrated?.()) {
         markReady();
       } else if (persist?.onFinishHydration) {
@@ -290,16 +290,17 @@ export default function AdminStoreHarnessPage() {
       } else {
         markReady();
       }
-
-      return () => {
-        if (typeof unsubscribeHydration === 'function') {
-          unsubscribeHydration();
-        }
-        if (ready && typeof document !== 'undefined') {
-          delete document.documentElement.dataset.adminStoreHarness;
-        }
-      };
     }
+
+    // Always return a cleanup function so all code paths are covered
+    return () => {
+      if (typeof unsubscribeHydration === 'function') {
+        unsubscribeHydration();
+      }
+      if (ready && typeof document !== 'undefined') {
+        delete document.documentElement.dataset.adminStoreHarness;
+      }
+    };
   }, []);
 
   return (
