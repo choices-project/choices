@@ -8,12 +8,7 @@ import { AppShell } from '@/components/shared/AppShell';
 import GlobalNavigation from '@/components/shared/GlobalNavigation';
 import SiteMessages from '@/components/SiteMessages';
 
-import {
-  useAppActions,
-  useBreadcrumbs,
-  useCurrentRoute,
-  useAppStore,
-} from '@/lib/stores/appStore';
+import { useBreadcrumbs, useCurrentRoute, useAppStore } from '@/lib/stores/appStore';
 
 type NavigationShellHarness = {
   setRoute: (route: string, label: string) => void;
@@ -27,7 +22,6 @@ declare global {
 export default function NavigationShellHarnessPage() {
   const currentRoute = useCurrentRoute();
   const breadcrumbs = useBreadcrumbs();
-  const { setCurrentRoute, setBreadcrumbs, setSidebarActiveSection } = useAppActions();
 
   useEffect(() => {
     // Initialize harness immediately - access store directly to avoid dependency issues
