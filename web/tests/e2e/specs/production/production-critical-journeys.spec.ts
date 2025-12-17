@@ -16,7 +16,7 @@ const regularEmail = process.env.E2E_USER_EMAIL;
 const regularPassword = process.env.E2E_USER_PASSWORD;
 
 test.describe('Production Critical Journeys', () => {
-  test('unauthenticated user redirected to /auth from root', async ({ page }) => {
+  test('unauthenticated user sees landing page at root', async ({ page }) => {
     test.setTimeout(60_000);
     
     await ensureLoggedOut(page);
@@ -24,15 +24,22 @@ test.describe('Production Critical Journeys', () => {
     // Navigate to root
     await page.goto(BASE_URL, { waitUntil: 'networkidle', timeout: 30_000 });
     
-    // Unauthenticated users should be redirected to /auth
-    await expect(page).toHaveURL(new RegExp(`${BASE_URL.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}/auth`), { timeout: 10_000 });
+    // Unauthenticated users should see the landing page (not be redirected)
+    await expect(page).toHaveURL(BASE_URL, { timeout: 10_000 });
     
-    // Auth page should load
+    // Landing page should load
     await page.waitForLoadState('domcontentloaded', { timeout: 10_000 });
     
-    // Should see auth page content
-    const authContent = page.locator('text=/log in|sign up|create account/i').first();
-    await expect(authContent).toBeVisible({ timeout: 10_000 });
+    // Should see landing page hero content
+    const heroHeading = page.locator('h1:has-text("Democracy That Works")').first();
+    await expect(heroHeading).toBeVisible({ timeout: 10_000 });
+    
+    // Should see CTA buttons to sign up or log in
+    const signupButton = page.locator('text=/Get Started|Join the Movement/i').first();
+    await expect(signupButton).toBeVisible({ timeout: 10_000 });
+    
+    const loginButton = page.locator('text=/Log In|Sign In/i').first();
+    await expect(loginButton).toBeVisible({ timeout: 10_000 });
   });
 
   test('authenticated user redirected to /feed from root', async ({ page }) => {
@@ -199,21 +206,25 @@ test.describe('Production Critical Journeys', () => {
     expect(civicsHealthBody.data).toHaveProperty('status');
   });
 
-  test('middleware redirect works correctly for unauthenticated users', async ({ page }) => {
+  test('middleware shows landing page for unauthenticated users', async ({ page }) => {
     test.setTimeout(30_000);
     
     await ensureLoggedOut(page);
     
-    // Test root redirect for unauthenticated user
+    // Test root page for unauthenticated user
     const response = await page.goto(BASE_URL, { waitUntil: 'networkidle', timeout: 30_000 });
     
-    // Should redirect to /auth (not /feed)
-    expect(page.url()).toMatch(/\/auth$/);
+    // Should stay on root (show landing page, not redirect to /auth or /feed)
+    expect(page.url()).toBe(`${BASE_URL}/`);
     
     // Response should be successful (not 500)
     if (response) {
       expect(response.status()).toBeLessThan(400);
     }
+    
+    // Should see landing page content
+    const heroContent = page.locator('h1:has-text("Democracy That Works")');
+    await expect(heroContent).toBeVisible({ timeout: 10_000 });
   });
 
   test('page handles errors gracefully', async ({ page }) => {
