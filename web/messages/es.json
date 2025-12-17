@@ -3508,6 +3508,67 @@
       "title": "Entorno de Navegación Global",
       "description": "Este entorno representa la navegación principal de forma aislada para que las pruebas automatizadas de accesibilidad puedan verificar enlaces de salto, menús móviles y el selector de idioma sin requerir el enrutamiento completo de la aplicación."
     }
+  },
+  "landing": {
+    "nav": {
+      "logoAlt": "Logo de Choices - Icono de escudo que representa la protección democrática",
+      "login": "Iniciar Sesión",
+      "signup": "Comenzar"
+    },
+    "hero": {
+      "title": "Democracia Que Funciona",
+      "titleHighlight": "Para Todos",
+      "subtitle": "Una plataforma que prioriza la privacidad, nivela el campo de juego para todos los candidatos, expone la influencia financiera y empodera a los ciudadanos para participar directamente en la democracia.",
+      "ctaPrimary": "Únete al Movimiento",
+      "ctaSecondary": "Iniciar Sesión"
+    },
+    "mission": {
+      "quote": "Citizens United rompió la democracia.",
+      "quoteHighlight": "Nosotros la estamos arreglando."
+    },
+    "features": {
+      "heading": "Construida para la Igualdad Democrática",
+      "subheading": "Herramientas reales para un cambio real, diseñadas con privacidad y equidad en el núcleo.",
+      "levelPlayingField": {
+        "title": "Campo de Juego Nivelado",
+        "description": "Acceso igualitario para todos los candidatos independientemente de su financiamiento. Las voces independientes y de terceros obtienen el mismo alcance que los candidatos del establishment."
+      },
+      "followMoney": {
+        "title": "Sigue el Dinero",
+        "description": "Datos en tiempo real de financiamiento de campañas de FEC y OpenSecrets. Ve quién está financiando a quién e identifica a políticos \"comprados\"."
+      },
+      "directEngagement": {
+        "title": "Participación Directa de Constituyentes",
+        "description": "Conéctate directamente con representantes, rastrea sus registros de votación y hazlos responsables de sus promesas de campaña."
+      },
+      "privacyFirst": {
+        "title": "Arquitectura que Prioriza la Privacidad",
+        "description": "Compatible con GDPR/CCPA con principios de conocimiento cero. Tus datos se cifran del lado del cliente y tú los controlas completamente."
+      },
+      "polling": {
+        "title": "Encuestas Democráticas",
+        "description": "Participa en encuestas imparciales con derechos de voto equitativos. Múltiples métodos de votación aseguran una representación justa de las voces de la comunidad."
+      },
+      "location": {
+        "title": "Tu Panorama Electoral",
+        "description": "Ve todos los candidatos y funcionarios en tu distrito. Los datos de ubicación se cifran y se procesan con hash para proteger tu privacidad."
+      }
+    },
+    "cta": {
+      "heading": "¿Listo para Recuperar la Democracia?",
+      "subheading": "Únete al movimiento por una participación democrática transparente, responsable e igualitaria.",
+      "button": "Comenzar Ahora"
+    },
+    "footer": {
+      "platformName": "Plataforma Choices",
+      "terms": "Términos de Servicio",
+      "privacy": "Política de Privacidad",
+      "copyright": "© 2025 Choices. Todos los derechos reservados."
+    },
+    "metadata": {
+      "title": "Choices - Democracia Que Funciona Para Todos",
+      "description": "Una plataforma que prioriza la privacidad, nivela el campo de juego para todos los candidatos, expone la influencia financiera y empodera a los ciudadanos para participar directamente en la democracia."
+    }
   }
 }
 

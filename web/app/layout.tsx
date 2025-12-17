@@ -19,10 +19,26 @@ import type { AbstractIntlMessages } from 'next-intl';
 import './globals.css';
 
 export const metadata: Metadata = {
-  title: 'Choices - Democratic Polling Platform',
-  description: 'A privacy-first, unbiased polling platform for democratic participation',
-  metadataBase: new URL(process.env.NEXT_PUBLIC_SITE_URL ?? 'https://choices.vote'),
+  title: {
+    default: 'Choices - Democracy That Works For Everyone',
+    template: '%s | Choices',
+  },
+  description: 'A privacy-first platform that levels the playing field for all candidates, exposes financial influence, and empowers citizens to engage directly with democracy.',
+  metadataBase: new URL(process.env.NEXT_PUBLIC_SITE_URL ?? 'https://choices-app.com'),
   manifest: '/manifest.json',
+  keywords: [
+    'democracy',
+    'civic engagement',
+    'campaign finance',
+    'political transparency',
+    'voting',
+    'privacy-first',
+    'equal representation',
+    'participatory democracy',
+  ],
+  authors: [{ name: 'Choices Platform' }],
+  creator: 'Choices Platform',
+  publisher: 'Choices Platform',
   appleWebApp: {
     capable: true,
     statusBarStyle: 'default',
@@ -32,16 +48,17 @@ export const metadata: Metadata = {
     telephone: false,
   },
   openGraph: {
-    title: 'Choices - Democratic Polling Platform',
-    description: 'Join a privacy-first civic network for unbiased polling and community action.',
-    url: process.env.NEXT_PUBLIC_SITE_URL ?? 'https://choices.vote',
+    title: 'Choices - Democracy That Works For Everyone',
+    description: 'Level the playing field for all candidates. Expose financial influence. Engage directly with democracy.',
+    url: process.env.NEXT_PUBLIC_SITE_URL ?? 'https://choices-app.com',
     siteName: 'Choices',
+    locale: 'en_US',
     images: [
       {
         url: '/og/choices-og.png',
         width: 1200,
         height: 630,
-        alt: 'Choices logo with civic engagement charts',
+        alt: 'Choices - Democracy That Works For Everyone',
       },
     ],
     type: 'website',
@@ -50,9 +67,27 @@ export const metadata: Metadata = {
     card: 'summary_large_image',
     site: '@choices_vote',
     creator: '@choices_vote',
-    title: 'Choices - Privacy-First Civic Platform',
-    description: 'Vote on issues, manage civic actions, and track impact with real-time analytics.',
+    title: 'Choices - Democracy That Works For Everyone',
+    description: 'Level the playing field. Expose influence. Engage with democracy.',
     images: ['/og/choices-og.png'],
+  },
+  alternates: {
+    canonical: process.env.NEXT_PUBLIC_SITE_URL ?? 'https://choices-app.com',
+    languages: {
+      'en-US': '/',
+      'es-ES': '/?lang=es',
+    },
+  },
+  robots: {
+    index: true,
+    follow: true,
+    googleBot: {
+      index: true,
+      follow: true,
+      'max-video-preview': -1,
+      'max-image-preview': 'large',
+      'max-snippet': -1,
+    },
   },
 };
 

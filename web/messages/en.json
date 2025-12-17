@@ -3454,6 +3454,67 @@
       "title": "Global Navigation Harness",
       "description": "This harness renders the primary navigation component in isolation so automated accessibility tests can verify skip links, mobile toggles, and language selector behaviour without requiring full app routing."
     }
+  },
+  "landing": {
+    "nav": {
+      "logoAlt": "Choices logo - Shield icon representing democratic protection",
+      "login": "Log In",
+      "signup": "Get Started"
+    },
+    "hero": {
+      "title": "Democracy That Works",
+      "titleHighlight": "For Everyone",
+      "subtitle": "A privacy-first platform that levels the playing field for all candidates, exposes financial influence, and empowers citizens to engage directly with democracy.",
+      "ctaPrimary": "Join the Movement",
+      "ctaSecondary": "Sign In"
+    },
+    "mission": {
+      "quote": "Citizens United broke democracy.",
+      "quoteHighlight": "We're fixing it."
+    },
+    "features": {
+      "heading": "Built for Democratic Equality",
+      "subheading": "Real tools for real change, designed with privacy and fairness at the core.",
+      "levelPlayingField": {
+        "title": "Level Playing Field",
+        "description": "Equal access for all candidates regardless of funding. Independent and third-party voices get the same reach as establishment candidates."
+      },
+      "followMoney": {
+        "title": "Follow the Money",
+        "description": "Real-time campaign finance data from FEC and OpenSecrets. See who's funding whom and identify \"bought off\" politicians."
+      },
+      "directEngagement": {
+        "title": "Direct Constituent Engagement",
+        "description": "Connect directly with representatives, track their voting records, and hold them accountable to campaign promises."
+      },
+      "privacyFirst": {
+        "title": "Privacy-First Architecture",
+        "description": "GDPR/CCPA compliant with zero-knowledge principles. Your data is encrypted client-side and you control it completely."
+      },
+      "polling": {
+        "title": "Democratic Polling",
+        "description": "Participate in unbiased polls with equal voting rights. Multiple voting methods ensure fair representation of community voices."
+      },
+      "location": {
+        "title": "Your Electoral Landscape",
+        "description": "See all candidates and officials in your district. Location data is encrypted and hashed to protect your privacy."
+      }
+    },
+    "cta": {
+      "heading": "Ready to Take Back Democracy?",
+      "subheading": "Join the movement for transparent, accountable, and equal democratic participation.",
+      "button": "Get Started Now"
+    },
+    "footer": {
+      "platformName": "Choices Platform",
+      "terms": "Terms of Service",
+      "privacy": "Privacy Policy",
+      "copyright": "© 2025 Choices. All rights reserved."
+    },
+    "metadata": {
+      "title": "Choices - Democracy That Works For Everyone",
+      "description": "A privacy-first platform that levels the playing field for all candidates, exposes financial influence, and empowers citizens to engage directly with democracy."
+    }
   }
 }
 
