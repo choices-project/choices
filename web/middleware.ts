@@ -182,7 +182,6 @@ export async function middleware(request: NextRequest) {
   const protectedRoutes = ['/feed', '/dashboard', '/profile', '/settings', '/onboarding'];
   const isProtectedRoute = protectedRoutes.some(route => pathname.startsWith(route));
   const isAuthRoute = pathname.startsWith('/auth') || pathname.startsWith('/login') || pathname.startsWith('/register');
-  const isLandingRoute = pathname.startsWith('/landing');
 
   // Handle root path redirect based on authentication status
   if (pathname === '/') {
