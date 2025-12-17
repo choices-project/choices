@@ -544,6 +544,18 @@ const nextConfig = {
   // Redirects for performance
   async redirects() {
     return [
+      // Canonical domain redirect - redirect non-www to www
+      {
+        source: '/:path*',
+        has: [
+          {
+            type: 'host',
+            value: 'choices-app.com',
+          },
+        ],
+        destination: 'https://www.choices-app.com/:path*',
+        permanent: true, // 308 redirect
+      },
       {
         source: '/home',
         destination: '/',
