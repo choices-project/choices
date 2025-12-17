@@ -9,7 +9,7 @@
  */
 
 import { getSupabaseServerClient, getSupabaseAdminClient } from '@/utils/supabase/server';
-import { withErrorHandling, successResponse, errorResponse } from '@/lib/api';
+import { withErrorHandling, successResponse } from '@/lib/api';
 import { logger } from '@/lib/utils/logger';
 
 import type { NextRequest } from 'next/server';

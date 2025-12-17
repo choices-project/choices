@@ -98,8 +98,8 @@ export default function AdminStoreHarnessPage() {
   useEffect(() => {
     // Initialize harness immediately, don't wait for store hydration
     const initHarness = () => {
-      try {
-        const harness: AdminStoreHarness = {
+    try {
+      const harness: AdminStoreHarness = {
       toggleSidebar: () => {
         const currentState = useAdminStore.getState();
         const next = !currentState.sidebarCollapsed;
@@ -207,11 +207,11 @@ export default function AdminStoreHarnessPage() {
         getSnapshot: () => useAdminStore.getState(),
       };
 
-        window.__adminStoreHarness = harness;
-      } catch (error) {
-        console.error('Failed to create admin store harness:', error);
-        // Set a minimal harness even on error so tests can detect the page loaded
-        window.__adminStoreHarness = {
+      window.__adminStoreHarness = harness;
+    } catch (error) {
+      console.error('Failed to create admin store harness:', error);
+      // Set a minimal harness even on error so tests can detect the page loaded
+      window.__adminStoreHarness = {
         // eslint-disable-next-line @typescript-eslint/no-empty-function
         toggleSidebar: () => {},
         // eslint-disable-next-line @typescript-eslint/no-empty-function
@@ -236,9 +236,9 @@ export default function AdminStoreHarnessPage() {
         deselectAllUsers: () => {},
         // eslint-disable-next-line @typescript-eslint/no-empty-function
         resetAdminState: () => {},
-          getSnapshot: () => useAdminStore.getState(),
-        } as AdminStoreHarness;
-      }
+        getSnapshot: () => useAdminStore.getState(),
+      } as AdminStoreHarness;
+    }
     };
 
     // Initialize immediately
@@ -272,23 +272,23 @@ export default function AdminStoreHarnessPage() {
       setTimeout(markReady, 100);
     } else {
       // Fallback: wait for store hydration if harness not ready yet
-      const persist = (useAdminStore as typeof useAdminStore & {
-        persist?: {
-          hasHydrated?: () => boolean;
-          onFinishHydration?: (callback: () => void) => (() => void) | void;
-        };
-      }).persist;
+    const persist = (useAdminStore as typeof useAdminStore & {
+      persist?: {
+        hasHydrated?: () => boolean;
+        onFinishHydration?: (callback: () => void) => (() => void) | void;
+      };
+    }).persist;
 
-      if (persist?.hasHydrated?.()) {
+    if (persist?.hasHydrated?.()) {
+      markReady();
+    } else if (persist?.onFinishHydration) {
+      unsubscribeHydration = persist.onFinishHydration(() => {
         markReady();
-      } else if (persist?.onFinishHydration) {
-        unsubscribeHydration = persist.onFinishHydration(() => {
-          markReady();
-        });
+      });
         // Timeout fallback: mark ready after 2 seconds even if hydration hasn't completed
         setTimeout(markReady, 2000);
-      } else {
-        markReady();
+    } else {
+      markReady();
       }
     }
 

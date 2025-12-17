@@ -17,10 +17,10 @@ const gotoHarness = async (page: Page) => {
   await page.waitForFunction(() => Boolean(window.__adminStoreHarness), { timeout: 90_000 });
   // Dataset attribute is optional - don't fail if it's not set immediately
   try {
-    await page.waitForFunction(
-      () => document.documentElement.dataset.adminStoreHarness === 'ready',
+  await page.waitForFunction(
+    () => document.documentElement.dataset.adminStoreHarness === 'ready',
       { timeout: 10_000 },
-    );
+  );
   } catch {
     // Dataset attribute might not be set in staging, but harness is available
     // This is acceptable as long as the harness itself is ready
