@@ -1,7 +1,7 @@
 'use client';
 
-import Link from 'next/link';
 import { ArrowRight, Shield, Users, Scale, Lock, Vote, TrendingUp } from 'lucide-react';
+import Link from 'next/link';
 
 import { useI18n } from '@/hooks/useI18n';
 
