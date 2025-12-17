@@ -196,13 +196,18 @@ export const POST = withErrorHandling(async (request: NextRequest) => {
       const isProduction = process.env.NODE_ENV === 'production'
       const maxAge = 60 * 60 * 24 * 7 // 7 days
       
+      // Set domain to work across www and non-www subdomains in production
+      // Leading dot makes cookie valid for all subdomains (www, api, etc.)
+      const cookieDomain = isProduction ? '.choices-app.com' : undefined
+      
       // Set access token cookie with proper security settings
       response.cookies.set('sb-access-token', authData.session.access_token, {
         httpOnly: true,
         secure: isProduction, // HTTPS only in production
         sameSite: 'lax', // Allow cross-site requests for OAuth flows
         path: '/',
-        maxAge: maxAge
+        maxAge: maxAge,
+        domain: cookieDomain // Share cookies across www and non-www
       })
       
       // Set refresh token cookie with proper security settings
@@ -211,7 +216,8 @@ export const POST = withErrorHandling(async (request: NextRequest) => {
         secure: isProduction, // HTTPS only in production
         sameSite: 'lax', // Allow cross-site requests for OAuth flows
         path: '/',
-        maxAge: maxAge
+        maxAge: maxAge,
+        domain: cookieDomain // Share cookies across www and non-www
       })
       
       // Also set the session expiry time for client-side checks
@@ -221,7 +227,8 @@ export const POST = withErrorHandling(async (request: NextRequest) => {
           secure: isProduction,
           sameSite: 'lax',
           path: '/',
-          maxAge: maxAge
+          maxAge: maxAge,
+          domain: cookieDomain // Share cookies across www and non-www
         })
       }
       

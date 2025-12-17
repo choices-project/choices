@@ -84,7 +84,13 @@ export async function getSupabaseServerClient(): Promise<SupabaseClient<Database
     get: (name: string) => cookieStore?.get(name)?.value,
     set: (name: string, value: string, options: Record<string, unknown>) => {
       try {
-        cookieStore?.set(name, value, options)
+        // Add domain attribute for production to work across www and non-www
+        const isProduction = process.env.NODE_ENV === 'production'
+        const enhancedOptions = {
+          ...options,
+          ...(isProduction && { domain: '.choices-app.com' })
+        }
+        cookieStore?.set(name, value, enhancedOptions)
       } catch {
         // Ignore errors when cookies are unavailable (e.g., build time)
       }

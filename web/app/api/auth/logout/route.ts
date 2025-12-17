@@ -23,20 +23,34 @@ export const POST = withErrorHandling(async () => {
   })
 
   // Clear Supabase session cookies
+  const isProduction = process.env.NODE_ENV === 'production'
+  const cookieDomain = isProduction ? '.choices-app.com' : undefined
+
   response.cookies.set('sb-access-token', '', {
     httpOnly: true,
-    secure: process.env.NODE_ENV === 'production',
+    secure: isProduction,
     sameSite: 'lax',
     path: '/',
-    maxAge: 0
+    maxAge: 0,
+    domain: cookieDomain // Clear cookies across www and non-www
   })
 
   response.cookies.set('sb-refresh-token', '', {
     httpOnly: true,
-    secure: process.env.NODE_ENV === 'production',
+    secure: isProduction,
     sameSite: 'lax',
     path: '/',
-    maxAge: 0
+    maxAge: 0,
+    domain: cookieDomain // Clear cookies across www and non-www
+  })
+
+  response.cookies.set('sb-session-expires', '', {
+    httpOnly: false,
+    secure: isProduction,
+    sameSite: 'lax',
+    path: '/',
+    maxAge: 0,
+    domain: cookieDomain // Clear cookies across www and non-www
   })
 
   return response
