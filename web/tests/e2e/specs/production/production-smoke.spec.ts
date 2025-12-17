@@ -20,12 +20,12 @@ const regularPassword = process.env.E2E_USER_PASSWORD;
 
 test.describe('Production Smoke Tests', () => {
   test.describe('Critical Pages', () => {
-    test('root page shows landing page for unauthenticated users', async ({ page }) => {
+    test('root page redirects unauthenticated users to landing', async ({ page }) => {
       await ensureLoggedOut(page);
       await page.goto(BASE_URL, { waitUntil: 'networkidle', timeout: 30_000 });
       
-      // Unauthenticated users should see the landing page (not be redirected)
-      await expect(page).toHaveURL(BASE_URL, { timeout: 10_000 });
+      // Unauthenticated users should be redirected to /landing
+      await expect(page).toHaveURL(new RegExp(`${BASE_URL.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}/landing`), { timeout: 10_000 });
       
       // Should see landing page hero content
       const heroHeading = page.locator('h1:has-text("Democracy That Works")').first();

@@ -16,7 +16,7 @@ const regularEmail = process.env.E2E_USER_EMAIL;
 const regularPassword = process.env.E2E_USER_PASSWORD;
 
 test.describe('Production Critical Journeys', () => {
-  test('unauthenticated user sees landing page at root', async ({ page }) => {
+  test('unauthenticated user redirected to landing page from root', async ({ page }) => {
     test.setTimeout(60_000);
     
     await ensureLoggedOut(page);
@@ -24,8 +24,8 @@ test.describe('Production Critical Journeys', () => {
     // Navigate to root
     await page.goto(BASE_URL, { waitUntil: 'networkidle', timeout: 30_000 });
     
-    // Unauthenticated users should see the landing page (not be redirected)
-    await expect(page).toHaveURL(BASE_URL, { timeout: 10_000 });
+    // Unauthenticated users should be redirected to /landing
+    await expect(page).toHaveURL(new RegExp(`${BASE_URL.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}/landing`), { timeout: 10_000 });
     
     // Landing page should load
     await page.waitForLoadState('domcontentloaded', { timeout: 10_000 });
@@ -206,7 +206,7 @@ test.describe('Production Critical Journeys', () => {
     expect(civicsHealthBody.data).toHaveProperty('status');
   });
 
-  test('middleware shows landing page for unauthenticated users', async ({ page }) => {
+  test('middleware redirects unauthenticated users to landing page', async ({ page }) => {
     test.setTimeout(30_000);
     
     await ensureLoggedOut(page);
@@ -214,8 +214,8 @@ test.describe('Production Critical Journeys', () => {
     // Test root page for unauthenticated user
     const response = await page.goto(BASE_URL, { waitUntil: 'networkidle', timeout: 30_000 });
     
-    // Should stay on root (show landing page, not redirect to /auth or /feed)
-    expect(page.url()).toBe(`${BASE_URL}/`);
+    // Should redirect to /landing
+    expect(page.url()).toMatch(/\/landing$/);
     
     // Response should be successful (not 500)
     if (response) {

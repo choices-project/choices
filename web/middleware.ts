@@ -182,27 +182,22 @@ export async function middleware(request: NextRequest) {
   const protectedRoutes = ['/feed', '/dashboard', '/profile', '/settings', '/onboarding'];
   const isProtectedRoute = protectedRoutes.some(route => pathname.startsWith(route));
   const isAuthRoute = pathname.startsWith('/auth') || pathname.startsWith('/login') || pathname.startsWith('/register');
+  const isLandingRoute = pathname.startsWith('/landing');
 
-  // Handle root path redirect for authenticated users only
-  // Unauthenticated users see the landing page at /
+  // Handle root path redirect based on authentication status
   if (pathname === '/') {
     // Check authentication status (Edge Runtime compatible - no Supabase client import)
     const { isAuthenticated } = checkAuthInMiddleware(request);
 
-    // Only redirect authenticated users to /feed
-    // Unauthenticated users see the landing/hero page
-    if (isAuthenticated) {
-      const redirectUrl = new URL('/feed', request.url);
-      const redirectResponse = NextResponse.redirect(redirectUrl, 307);
-      
-      // Add cache headers to help with redirect performance
-      redirectResponse.headers.set('Cache-Control', 'public, max-age=3600, stale-while-revalidate=86400');
-      
-      return redirectResponse;
-    }
+    // Redirect based on authentication status
+    const redirectPath = isAuthenticated ? '/feed' : '/landing';
+    const redirectUrl = new URL(redirectPath, request.url);
+    const redirectResponse = NextResponse.redirect(redirectUrl, 307);
     
-    // Let unauthenticated users see the landing page
-    // Continue to NextResponse.next() below
+    // Add cache headers to help with redirect performance
+    redirectResponse.headers.set('Cache-Control', 'public, max-age=3600, stale-while-revalidate=86400');
+    
+    return redirectResponse;
   }
 
   // Protect routes that require authentication

@@ -104,14 +104,14 @@ test.describe('Production Expanded Tests', () => {
       await expect(authContent).toBeVisible({ timeout: 10_000 });
     });
 
-    test('root shows landing page consistently for unauthenticated users', async ({ page }) => {
+    test('root redirects to landing page consistently for unauthenticated users', async ({ page }) => {
       await ensureLoggedOut(page);
       
-      // Test landing page multiple times to ensure consistency
+      // Test landing redirect multiple times to ensure consistency
       for (let i = 0; i < 3; i++) {
         await page.goto(BASE_URL, { waitUntil: 'networkidle', timeout: 30_000 });
-        // Unauthenticated users should see landing page (not be redirected)
-        await expect(page).toHaveURL(BASE_URL, { timeout: 10_000 });
+        // Unauthenticated users should be redirected to /landing
+        await expect(page).toHaveURL(new RegExp(`${BASE_URL.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}/landing`), { timeout: 10_000 });
         
         // Should see hero content
         const heroHeading = page.locator('h1:has-text("Democracy That Works")').first();
@@ -123,18 +123,18 @@ test.describe('Production Expanded Tests', () => {
   });
 
   test.describe('Performance Metrics', () => {
-    test('root page landing page loads fast', async ({ page }) => {
+    test('root page redirect to landing is fast', async ({ page }) => {
       await ensureLoggedOut(page);
       
       const startTime = Date.now();
       await page.goto(BASE_URL, { waitUntil: 'networkidle', timeout: 30_000 });
-      const loadTime = Date.now() - startTime;
+      const redirectTime = Date.now() - startTime;
       
-      // Landing page should load within 5 seconds (allowing for network latency)
-      expect(loadTime).toBeLessThan(5_000);
+      // Redirect + landing page should load within 5 seconds (allowing for network latency)
+      expect(redirectTime).toBeLessThan(5_000);
       
-      // Should stay on root (landing page)
-      await expect(page).toHaveURL(BASE_URL, { timeout: 5_000 });
+      // Should redirect to /landing
+      await expect(page).toHaveURL(new RegExp(`${BASE_URL.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}/landing`), { timeout: 5_000 });
       
       // Should see hero content
       const heroHeading = page.locator('h1:has-text("Democracy That Works")').first();
