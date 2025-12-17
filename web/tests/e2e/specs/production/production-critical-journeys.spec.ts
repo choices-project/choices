@@ -89,10 +89,11 @@ test.describe('Production Critical Journeys', () => {
     const finalUrl = page.url();
     const redirectedToFeed = finalUrl.includes('/feed');
     const redirectedToAuth = finalUrl.includes('/auth') || finalUrl.includes('/login');
+    const redirectedToLanding = finalUrl.includes('/landing');
     
-    // In production, if we're redirected to auth, it means authentication didn't persist
+    // In production, if we're redirected to auth or landing, it means authentication didn't persist
     // This can happen if production auth is not working or credentials are invalid
-    if (redirectedToAuth) {
+    if (redirectedToAuth || redirectedToLanding) {
       // Authentication didn't persist - this is a known issue in production tests
       // Skip the test rather than failing, as this indicates an environment issue
       console.warn('Authentication did not persist in production test - likely environment issue');
@@ -179,12 +180,12 @@ test.describe('Production Critical Journeys', () => {
     // Should redirect back to auth since we're not authenticated
     await expect(page).toHaveURL(new RegExp(`${BASE_URL.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}/auth`), { timeout: 5_000 });
     
-    // Navigate back to root (should also redirect to auth)
+    // Navigate back to root (should redirect to landing page for unauthenticated users)
     await page.goto(BASE_URL, { waitUntil: 'domcontentloaded', timeout: 30_000 });
     await page.waitForTimeout(2_000);
     
-    // Should redirect to auth
-    await expect(page).toHaveURL(new RegExp(`${BASE_URL.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}/auth`), { timeout: 5_000 });
+    // Should redirect to landing page (new behavior with hero page)
+    await expect(page).toHaveURL(new RegExp(`${BASE_URL.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}/landing`), { timeout: 5_000 });
   });
 
   test('API health checks work', async ({ request }) => {
