@@ -12,13 +12,14 @@ import type { Metadata } from 'next';
  */
 
 // Dynamically import the client component to avoid standalone build issues
+// SSR disabled due to client-side dependencies (i18n hooks, browser APIs) in standalone builds
 const LandingPageClient = dynamic(() => import('@/components/landing/LandingPageClient'), {
   loading: () => (
     <div className="flex min-h-screen items-center justify-center bg-white">
       <div className="animate-pulse text-slate-400">Loading...</div>
     </div>
   ),
-  ssr: true, // Enable SSR for better SEO and initial load
+  ssr: false, // Disable SSR due to client-side dependencies in standalone Docker builds
 });
 
 export const metadata: Metadata = {
