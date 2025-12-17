@@ -85,10 +85,15 @@ export async function getSupabaseServerClient(): Promise<SupabaseClient<Database
     set: (name: string, value: string, options: Record<string, unknown>) => {
       try {
         // Add domain attribute for production to work across www and non-www
+        // Only set domain if on actual production domain (not localhost/127.0.0.1)
         const isProduction = process.env.NODE_ENV === 'production'
+        // Extract domain from cookie options or check environment
+        const shouldSetDomain = isProduction && 
+          (typeof options.domain === 'string' || 
+           process.env.VERCEL_URL?.includes('choices-app.com'))
         const enhancedOptions = {
           ...options,
-          ...(isProduction && { domain: '.choices-app.com' })
+          ...(shouldSetDomain && { domain: '.choices-app.com' })
         }
         cookieStore?.set(name, value, enhancedOptions)
       } catch {

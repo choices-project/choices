@@ -197,8 +197,11 @@ export const POST = withErrorHandling(async (request: NextRequest) => {
       const maxAge = 60 * 60 * 24 * 7 // 7 days
       
       // Set domain to work across www and non-www subdomains in production
+      // Only set domain if request is from actual production domain (not localhost/127.0.0.1)
       // Leading dot makes cookie valid for all subdomains (www, api, etc.)
-      const cookieDomain = isProduction ? '.choices-app.com' : undefined
+      const hostname = request.headers.get('host') || ''
+      const isProductionDomain = hostname.includes('choices-app.com')
+      const cookieDomain = isProduction && isProductionDomain ? '.choices-app.com' : undefined
       
       // Set access token cookie with proper security settings
       response.cookies.set('sb-access-token', authData.session.access_token, {

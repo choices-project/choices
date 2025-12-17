@@ -3,7 +3,9 @@ import { getSupabaseServerClient } from '@/utils/supabase/server'
 import { withErrorHandling, successResponse, errorResponse } from '@/lib/api';
 import { logger } from '@/lib/utils/logger'
 
-export const POST = withErrorHandling(async () => {
+import type { NextRequest } from 'next/server';
+
+export const POST = withErrorHandling(async (request: NextRequest) => {
   const supabase = getSupabaseServerClient()
   const supabaseClient = await supabase
 
@@ -24,7 +26,10 @@ export const POST = withErrorHandling(async () => {
 
   // Clear Supabase session cookies
   const isProduction = process.env.NODE_ENV === 'production'
-  const cookieDomain = isProduction ? '.choices-app.com' : undefined
+  // Only set domain if clearing cookies for actual production domain (not localhost/127.0.0.1)
+  const hostname = request.headers.get('host') || ''
+  const isProductionDomain = hostname.includes('choices-app.com')
+  const cookieDomain = isProduction && isProductionDomain ? '.choices-app.com' : undefined
 
   response.cookies.set('sb-access-token', '', {
     httpOnly: true,
