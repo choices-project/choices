@@ -190,13 +190,22 @@ export const GET = withErrorHandling(async (request: NextRequest) => {
         likes: 0,
         shares: 0,
         comments: 0,
-        views: poll.total_votes || 0
+        views: poll.total_votes || 0,
+        bookmarks: 0
       },
       userInteraction: {
         liked: false,
         shared: false,
         bookmarked: false,
         read: false
+      },
+      metadata: {
+        language: 'en',
+        externalUrl: undefined,
+        image: undefined,
+        videoUrl: undefined,
+        audioUrl: undefined,
+        location: undefined
       },
       pollData: {
         id: poll.id,
@@ -238,13 +247,22 @@ export const GET = withErrorHandling(async (request: NextRequest) => {
         likes: 0,
         shares: 0,
         comments: 0,
-        views: action.current_signatures || 0
+        views: action.current_signatures || 0,
+        bookmarks: 0
       },
       userInteraction: {
         liked: false,
         shared: false,
         bookmarked: false,
         read: false
+      },
+      metadata: {
+        language: 'en',
+        externalUrl: undefined,
+        image: undefined,
+        videoUrl: undefined,
+        audioUrl: undefined,
+        location: action.target_district || undefined
       },
       civicActionData: {
         id: action.id,
