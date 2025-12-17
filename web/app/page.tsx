@@ -118,9 +118,9 @@ export default function LandingPage() {
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
           <blockquote className="text-center">
             <p className="text-2xl font-medium text-white sm:text-3xl">
-              "{t('landing.mission.quote')}
+              &ldquo;{t('landing.mission.quote')}
               <br />
-              <span className="text-blue-400">{t('landing.mission.quoteHighlight')}"</span>
+              <span className="text-blue-400">{t('landing.mission.quoteHighlight')}&rdquo;</span>
             </p>
           </blockquote>
         </div>
