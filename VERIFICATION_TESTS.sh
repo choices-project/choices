@@ -9,7 +9,7 @@ echo ""
 
 # Test 1: Diagnostics Endpoint
 echo "1️⃣  Testing Diagnostics Endpoint..."
-DIAG_RESULT=$(curl -s https://choices-app.com/api/diagnostics)
+DIAG_RESULT=$(curl -s https://www.choices-app.com/api/diagnostics)
 OVERALL_STATUS=$(echo "$DIAG_RESULT" | jq -r '.data.overallStatus')
 FEEDBACK_STATUS=$(echo "$DIAG_RESULT" | jq -r '.data.checks.feedbackTable.status')
 ADMIN_STATUS=$(echo "$DIAG_RESULT" | jq -r '.data.checks.supabaseAdminClient.status')
@@ -29,7 +29,7 @@ echo ""
 
 # Test 2: Feed API Structure
 echo "2️⃣  Testing Feed API Structure..."
-FEED_RESULT=$(curl -s 'https://choices-app.com/api/feeds?limit=1')
+FEED_RESULT=$(curl -s 'https://www.choices-app.com/api/feeds?limit=1')
 FEED_SUCCESS=$(echo "$FEED_RESULT" | jq -r '.success')
 HAS_METADATA=$(echo "$FEED_RESULT" | jq -r '.data.feeds[0].metadata != null')
 HAS_BOOKMARKS=$(echo "$FEED_RESULT" | jq -r '.data.feeds[0].engagement.bookmarks != null')
@@ -49,7 +49,7 @@ echo ""
 
 # Test 3: Feedback Submission
 echo "3️⃣  Testing Feedback Submission..."
-FEEDBACK_RESULT=$(curl -s -X POST https://choices-app.com/api/feedback \
+FEEDBACK_RESULT=$(curl -s -X POST https://www.choices-app.com/api/feedback \
   -H "Content-Type: application/json" \
   -d '{
     "type": "general",
