@@ -276,22 +276,33 @@ test.describe('Feeds Store E2E', () => {
   });
 
   test('handles feed loading errors gracefully', async ({ page }) => {
-    // Mock error response
-    await page.route('**/api/feeds', async (route) => {
-      if (route.request().method() === 'POST') {
-        await route.fulfill({
-          status: 500,
-          contentType: 'application/json',
-          body: JSON.stringify({ error: 'Internal server error' }),
-        });
-      }
+    // Navigate to harness page first
+    await page.goto('/e2e/feeds-store', { waitUntil: 'domcontentloaded', timeout: 60_000 });
+    await page.waitForSelector('[data-testid="feeds-store-harness"]', { timeout: 30_000 });
+    await page.waitForFunction(() => Boolean(window.__feedsStoreHarness), { timeout: 30_000 });
+
+    // Mock error response for both GET and POST
+    await page.route('**/api/feeds**', async (route) => {
+      await route.fulfill({
+        status: 500,
+        contentType: 'application/json',
+        body: JSON.stringify({ error: 'Internal server error' }),
+      });
     });
 
     await page.evaluate(() => {
       void window.__feedsStoreHarness?.actions.loadFeeds('all');
     });
 
-    await page.waitForTimeout(1000);
+    // Wait for error state to be set
+    await page.waitForFunction(
+      () => {
+        const harness = window.__feedsStoreHarness;
+        const state = harness?.selectors.getState();
+        return state?.error != null;
+      },
+      { timeout: 10_000 }
+    );
 
     const state = await page.evaluate(() => {
       const harness = window.__feedsStoreHarness;
