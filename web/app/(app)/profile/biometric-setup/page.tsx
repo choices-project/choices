@@ -3,7 +3,7 @@
 
 import { AlertCircle, CheckCircle2, Fingerprint, Loader2 } from 'lucide-react';
 import { useRouter } from 'next/navigation';
-import React, { useCallback, useEffect } from 'react';
+import React, { useCallback, useEffect, useRef } from 'react';
 
 import PasskeyRegister from '@/features/auth/components/PasskeyRegister';
 import {
@@ -21,6 +21,8 @@ import { useProfileData } from '@/features/profile/hooks/use-profile';
 
 export default function BiometricSetupPage() {
   const router = useRouter();
+  const routerRef = useRef(router);
+  useEffect(() => { routerRef.current = router; }, [router]);
   const isAuthenticated = useIsAuthenticated();
   const isUserLoading = useUserLoading();
   const { isLoading: profileLoading } = useProfileData();
@@ -36,19 +38,19 @@ export default function BiometricSetupPage() {
 
   useEffect(() => {
     if (!isUserLoading && !isAuthenticated) {
-      router.replace('/auth?redirectTo=/profile/biometric-setup');
+      routerRef.current.replace('/auth?redirectTo=/profile/biometric-setup');
     }
-  }, [isAuthenticated, isUserLoading, router]);
+  }, [isAuthenticated, isUserLoading]); // Removed router
 
   useEffect(() => {
     if (biometricSuccess) {
       const timeout = window.setTimeout(() => {
-        router.push('/profile');
+        routerRef.current.push('/profile');
       }, 2000);
       return () => window.clearTimeout(timeout);
     }
     return undefined;
-  }, [biometricSuccess, router]);
+  }, [biometricSuccess]); // Removed router
 
   const handleSuccess = useCallback(() => {
     // Success state handled by store; effect above triggers redirect.

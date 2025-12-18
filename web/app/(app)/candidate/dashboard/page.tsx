@@ -2,7 +2,7 @@
 
 import { Edit, Building2, FileText, Globe, Phone, Mail, CheckCircle, AlertCircle, FileCheck, Clock } from 'lucide-react'
 import { useRouter } from 'next/navigation'
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 
 import { JourneyProgress } from '@/components/candidate/JourneyProgress'
 import { Badge } from '@/components/ui/badge'
@@ -16,6 +16,8 @@ import type { CandidatePlatformRow } from '@/types/candidate'
 
 export default function CandidateDashboardPage() {
   const router = useRouter()
+  const routerRef = useRef(router)
+  useEffect(() => { routerRef.current = router }, [router])
   const isAuthenticated = useIsAuthenticated()
   const [platforms, setPlatforms] = useState<CandidatePlatformRow[]>([])
   const [loading, setLoading] = useState(true)
@@ -23,7 +25,7 @@ export default function CandidateDashboardPage() {
 
   useEffect(() => {
     if (!isAuthenticated) {
-      router.push('/auth')
+      routerRef.current.push('/auth')
       return
     }
 
@@ -41,7 +43,7 @@ export default function CandidateDashboardPage() {
         )
       })
       .finally(() => setLoading(false))
-  }, [isAuthenticated, router])
+  }, [isAuthenticated]) // Removed router
 
   const handleVerifyFEC = async (platformId: string, fecId: string) => {
     if (!fecId) {

@@ -2,7 +2,7 @@
 
 import { Loader2 } from 'lucide-react';
 import { useRouter } from 'next/navigation';
-import { useEffect } from 'react';
+import { useEffect, useRef } from 'react';
 
 import { ProfileEdit, useProfileLoadingStates } from '@/features/profile';
 import { useProfile } from '@/features/profile/hooks/use-profile';
@@ -15,6 +15,8 @@ import { useAppActions } from '@/lib/stores/appStore';
 
 export default function EditProfilePage() {
   const router = useRouter();
+  const routerRef = useRef(router);
+  useEffect(() => { routerRef.current = router; }, [router]);
   const user = useUser();
   const { profile, isLoading, error, refetch } = useProfile();
   const { isUpdating } = useProfileLoadingStates();
@@ -38,9 +40,9 @@ export default function EditProfilePage() {
 
   useEffect(() => {
     if (!isLoading && !user) {
-      router.replace('/login?redirectTo=/profile/edit');
+      routerRef.current.replace('/login?redirectTo=/profile/edit');
     }
-  }, [isLoading, user, router]);
+  }, [isLoading, user]); // Removed router
 
   if (isLoading) {
     return (

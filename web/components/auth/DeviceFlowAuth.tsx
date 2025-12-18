@@ -9,7 +9,7 @@
 
 import { CheckCircle2, Clock, AlertCircle, Copy } from 'lucide-react';
 import { useRouter } from 'next/navigation';
-import React, { useEffect, useState, useCallback } from 'react';
+import React, { useEffect, useState, useCallback, useRef } from 'react';
 
 import type { DeviceFlowResponse } from '@/lib/core/auth/types';
 import { logger } from '@/lib/utils/logger';
@@ -37,6 +37,12 @@ export function DeviceFlowAuth({
   onError,
 }: DeviceFlowAuthProps) {
   const router = useRouter();
+  const routerRef = useRef(router);
+  useEffect(() => { routerRef.current = router; }, [router]);
+  const onCompleteRef = useRef(onComplete);
+  useEffect(() => { onCompleteRef.current = onComplete; }, [onComplete]);
+  const onErrorRef = useRef(onError);
+  useEffect(() => { onErrorRef.current = onError; }, [onError]);
   const [deviceFlow, setDeviceFlow] = useState<DeviceFlowResponse | null>(null);
   const [pollStatus, setPollStatus] = useState<PollStatus | null>(null);
   const [isLoading, setIsLoading] = useState(true);
@@ -122,18 +128,18 @@ export function DeviceFlowAuth({
 
         if (status.status === 'completed') {
           // Success! Session is managed by Supabase Auth cookies
-          onComplete?.(status.userId || '');
+          onCompleteRef.current?.(status.userId || '');
           if (redirectTo) {
-            router.push(redirectTo);
+            routerRef.current.push(redirectTo);
           } else {
-            router.push('/dashboard');
+            routerRef.current.push('/dashboard');
           }
           return;
         }
 
         if (status.status === 'expired' || status.status === 'error') {
           setError(status.errorDescription || status.error || 'Authorization failed');
-          onError?.(status.errorDescription || status.error || 'Authorization failed');
+          onErrorRef.current?.(status.errorDescription || status.error || 'Authorization failed');
           return;
         }
       }
@@ -141,7 +147,7 @@ export function DeviceFlowAuth({
       logger.error('Device flow polling error', { error: err });
       // Don't set error on polling failures - just continue polling
     }
-  }, [deviceFlow, onComplete, onError, redirectTo, router]);
+  }, [deviceFlow, redirectTo]); // Removed router, onComplete, onError - use refs
 
   // Start polling when device flow is initialized
   useEffect(() => {

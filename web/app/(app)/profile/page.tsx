@@ -2,7 +2,7 @@
 
 import { User, Shield, Download, Edit, Settings, CheckCircle, AlertTriangle, MapPin } from 'lucide-react';
 import { useRouter } from 'next/navigation';
-import React, { useEffect, useState, useCallback } from 'react';
+import React, { useEffect, useState, useCallback, useRef } from 'react';
 
 import { AddressLookup } from '@/features/profile/components/AddressLookup';
 import { useProfileData, useProfileExport } from '@/features/profile/hooks/use-profile';
@@ -18,6 +18,8 @@ import { logger } from '@/lib/utils/logger';
 
 export default function ProfilePage() {
   const router = useRouter();
+  const routerRef = useRef(router);
+  useEffect(() => { routerRef.current = router; }, [router]);
   const user = useUser();
   const isAuthenticated = useIsAuthenticated();
   const isUserLoading = useUserLoading();
@@ -44,9 +46,9 @@ export default function ProfilePage() {
   useEffect(() => {
     if (!isUserLoading && !isAuthenticated) {
       logger.debug('🚨 SECURITY: Unauthenticated user attempting to access profile - redirecting to login');
-      router.replace('/auth?redirectTo=/profile');
+      routerRef.current.replace('/auth?redirectTo=/profile');
     }
-  }, [isAuthenticated, isUserLoading, router]);
+  }, [isAuthenticated, isUserLoading]); // Removed router
 
   const handleExportData = useCallback(async () => {
     setExportStatus(null);
