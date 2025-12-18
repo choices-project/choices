@@ -16,7 +16,7 @@
  * Status: ✅ Architectural refactor
  */
 
-import { useEffect, useState, useCallback, useRef } from 'react';
+import { useEffect, useState, useCallback, useRef, useMemo } from 'react';
 
 import { useFeedAnalytics } from '@/features/feeds/hooks/useFeedAnalytics';
 import FeedShareDialog from '@/features/share/components/FeedShareDialog';
@@ -66,16 +66,21 @@ function HarnessFeedDataProvider({
   const error = useFeedsStore((state) => state.error);
   const hasMore = useFeedsStore((state) => state.hasMoreFeeds);
   const totalAvailable = useFeedsStore((state) => state.totalAvailableFeeds);
-  const trendingHashtags = useTrendingHashtags()
-    .map((h) => {
-      if (typeof h === 'string') return h;
-      return (
-        (h as { hashtag_name?: string }).hashtag_name ??
-        (h as { name?: string }).name ??
-        ''
-      );
-    })
-    .filter((name) => name.length > 0);
+  const rawTrendingHashtags = useTrendingHashtags();
+  // Memoize to prevent new array reference on every render
+  const trendingHashtags = useMemo(() => 
+    rawTrendingHashtags
+      .map((h) => {
+        if (typeof h === 'string') return h;
+        return (
+          (h as { hashtag_name?: string }).hashtag_name ??
+          (h as { name?: string }).name ??
+          ''
+        );
+      })
+      .filter((name) => name.length > 0),
+    [rawTrendingHashtags]
+  );
 
   const [selectedHashtags, setSelectedHashtags] = useState<string[]>([]);
   const [districtFilterEnabled, setDistrictFilterEnabled] = useState(false);
@@ -352,16 +357,21 @@ function StandardFeedDataProvider({
   const isLoading = useFeedsLoading();
   const storeError = useFeedsError();
   const { totalAvailable, hasMore: storeHasMore, loadMoreFeeds } = useFeedsPagination();
-  const trendingHashtags = useTrendingHashtags()
-    .map((h) => {
-      if (typeof h === 'string') return h;
-      return (
-        (h as { hashtag_name?: string }).hashtag_name ??
-        (h as { name?: string }).name ??
-        ''
-      );
-    })
-    .filter((name) => name.length > 0);
+  const rawTrendingHashtags = useTrendingHashtags();
+  // Memoize to prevent new array reference on every render
+  const trendingHashtags = useMemo(() => 
+    rawTrendingHashtags
+      .map((h) => {
+        if (typeof h === 'string') return h;
+        return (
+          (h as { hashtag_name?: string }).hashtag_name ??
+          (h as { name?: string }).name ??
+          ''
+        );
+      })
+      .filter((name) => name.length > 0),
+    [rawTrendingHashtags]
+  );
   const { getTrendingHashtags } = useHashtagActions();
   const {
     loadFeeds,

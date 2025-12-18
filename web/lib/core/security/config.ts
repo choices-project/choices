@@ -1,14 +1,14 @@
 /**
  * Security Configuration
  * Centralized security settings and policies
- * 
+ *
  * Features:
  * - CSP (Content Security Policy) configuration
  * - Security headers configuration
  * - Rate limiting settings
  * - Request validation rules
  * - Privacy and data protection settings
- * 
+ *
  * Created: 2025-08-27
  * Status: Critical security enhancement
  */
@@ -116,7 +116,7 @@ export const PRODUCTION_SECURITY_CONFIG: SecurityConfig = {
     'frame-ancestors': ["'none'"],
     'upgrade-insecure-requests': [],
   },
-  
+
   headers: {
     'X-Frame-Options': 'DENY',
     'X-Content-Type-Options': 'nosniff',
@@ -127,7 +127,7 @@ export const PRODUCTION_SECURITY_CONFIG: SecurityConfig = {
     'Cross-Origin-Opener-Policy': 'same-origin',
     'Cross-Origin-Resource-Policy': 'same-origin',
   },
-  
+
   rateLimit: {
     enabled: !IS_E2E, // Disabled in E2E tests
     windowMs: 15 * 60 * 1000, // 15 minutes
@@ -140,7 +140,7 @@ export const PRODUCTION_SECURITY_CONFIG: SecurityConfig = {
     },
     e2eBypassHeader: 'x-e2e-bypass'
   },
-  
+
   validation: {
     maxContentLength: 1024 * 1024, // 1MB
     allowedContentTypes: [
@@ -163,7 +163,7 @@ export const PRODUCTION_SECURITY_CONFIG: SecurityConfig = {
       'crawler',
     ],
   },
-  
+
   privacy: {
     dataRetentionDays: 90,
     anonymizeIPs: true,
@@ -197,8 +197,8 @@ export const DEVELOPMENT_SECURITY_CONFIG: SecurityConfig = Object.assign({}, PRO
  * Get security configuration based on environment
  */
 export function getSecurityConfig(): SecurityConfig {
-  return process.env.NODE_ENV === 'production' 
-    ? PRODUCTION_SECURITY_CONFIG 
+  return process.env.NODE_ENV === 'production'
+    ? PRODUCTION_SECURITY_CONFIG
     : DEVELOPMENT_SECURITY_CONFIG
 }
 
@@ -217,7 +217,7 @@ export function buildCSPHeader(config: CSPConfig): string {
     })
     .filter(Boolean)
     .join('; ')
-  
+
   return directives
 }
 
@@ -225,21 +225,21 @@ export function buildCSPHeader(config: CSPConfig): string {
  * Validate content against security patterns
  */
 export function validateContent(
-  content: string, 
+  content: string,
   config: ValidationConfig
 ): { valid: boolean; reason?: string } {
   // Check content length
   if (content.length > config.maxContentLength) {
     return { valid: false, reason: 'Content too long' }
   }
-  
+
   // Check for suspicious patterns
   for (const pattern of config.suspiciousPatterns) {
     if (pattern.test(content)) {
       return { valid: false, reason: 'Suspicious content detected' }
     }
   }
-  
+
   return { valid: true }
 }
 
@@ -247,11 +247,11 @@ export function validateContent(
  * Check if user agent is blocked
  */
 export function isBlockedUserAgent(
-  userAgent: string, 
+  userAgent: string,
   config: ValidationConfig
 ): boolean {
   const lowerUA = userAgent.toLowerCase()
-  return config.blockedUserAgents.some(blocked => 
+  return config.blockedUserAgents.some(blocked =>
     lowerUA.includes(blocked.toLowerCase())
   )
 }
@@ -261,7 +261,7 @@ export function isBlockedUserAgent(
  */
 export function anonymizeIP(ip: string): string {
   if (!ip || ip === 'unknown') return 'unknown'
-  
+
   // IPv4: 192.168.1.1 -> 192.168.1.0
   if (ip.includes('.')) {
     const parts = ip.split('.')
@@ -269,7 +269,7 @@ export function anonymizeIP(ip: string): string {
       return `${parts[0]}.${parts[1]}.${parts[2]}.0`
     }
   }
-  
+
   // IPv6: 2001:db8::1 -> 2001:db8::
   if (ip.includes(':')) {
     const parts = ip.split(':')
@@ -277,6 +277,6 @@ export function anonymizeIP(ip: string): string {
       return `${parts[0]}:${parts[1]}:${parts[2]}::`
     }
   }
-  
+
   return ip
 }
