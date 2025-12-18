@@ -135,5 +135,10 @@ export async function getSupabaseAdminClient(): Promise<SupabaseClient<Database>
     throw new Error('Missing Supabase admin environment variables')
   }
   const { createClient } = await import('@supabase/supabase-js')
-  return createClient<Database>(env.url, env.serviceKey)
+  return createClient<Database>(env.url, env.serviceKey, {
+    auth: {
+      autoRefreshToken: false,
+      persistSession: false,
+    },
+  })
 }
