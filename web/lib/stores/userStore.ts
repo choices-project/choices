@@ -11,7 +11,7 @@
 import { create } from 'zustand';
 import { devtools, persist } from 'zustand/middleware';
 import { immer } from 'zustand/middleware/immer';
-import { shallow } from 'zustand/shallow';
+import { useShallow } from 'zustand/react/shallow';
 
 import { logger } from '@/lib/utils/logger';
 
@@ -742,8 +742,9 @@ const selectUserActions = (state: UserStore) => ({
   setSessionAndDerived: state.setSessionAndDerived,
 });
 
-export const useUserActions = () =>
-  useUserStore(selectUserActions, shallow);
+export function useUserActions() {
+  return useUserStore(useShallow(selectUserActions));
+}
 
 // Computed selectors
 export const useUserDisplayName = () => useUserStore(state => {
