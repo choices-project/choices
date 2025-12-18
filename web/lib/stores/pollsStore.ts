@@ -1076,7 +1076,7 @@ const selectPollsActions = (state: PollsStore) => ({
   setItemsPerPage: state.setItemsPerPage,
 });
 
-export const usePollsActions = () => usePollsStore(selectPollsActions, useShallow);
+export const usePollsActions = () => usePollsStore(useShallow(selectPollsActions));
 
 export const usePollsStats = () =>
   usePollsStore((state) => {
