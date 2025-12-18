@@ -269,6 +269,9 @@ The following files were audited and fixed for infinite re-render issues:
 - `app/(app)/e2e/dashboard-journey/page.tsx` - Notification action refs
 - `app/(app)/e2e/auth-access/page.tsx` - Biometric action refs
 
+### Store Hooks
+- `lib/stores/feedsStore.ts` - `useFeedsPagination` memoized return value
+
 ---
 
 *Last updated: December 18, 2025*
