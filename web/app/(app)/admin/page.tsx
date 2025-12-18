@@ -23,6 +23,7 @@ import { getSupabaseBrowserClient } from '@/utils/supabase/client'
 
 import { NotificationContainer } from '@/features/admin/components/NotificationSystem'
 
+import { useDemographics } from '@/hooks/useDemographics';
 import { useIsAuthenticated, useUser, useUserActions, useUserLoading } from '@/lib/stores'
 import { useAppActions } from '@/lib/stores/appStore';
 import { T } from '@/lib/testing/testIds'
@@ -48,6 +49,7 @@ export default function AdminDashboard() {
   const [loading, setLoading] = useState(true)
   const [isAdmin, setIsAdmin] = useState<boolean | null>(null)
   const { setCurrentRoute, setSidebarActiveSection, setBreadcrumbs } = useAppActions();
+  const { data: demographicData, loading: demographicsLoading } = useDemographics();
 
   const loadAdminStats = useCallback(async () => {
     try {
@@ -344,6 +346,57 @@ export default function AdminDashboard() {
                 </div>
                 <Activity className="h-8 w-8 text-green-600" />
               </div>
+            </div>
+          </div>
+        )}
+
+        {/* Demographics Overview */}
+        {demographicData && !demographicsLoading && (
+          <div className="mb-8">
+            <h2 className="text-lg font-semibold text-gray-900 mb-4 flex items-center gap-2">
+              <BarChart3 className="h-5 w-5 text-purple-600" />
+              User Demographics
+            </h2>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              {demographicData.demographics.ageGroups.length > 0 && (
+                <div className="bg-white rounded-lg border border-gray-200 p-4">
+                  <h3 className="text-sm font-medium text-gray-600 mb-3">Age Distribution</h3>
+                  <div className="space-y-2">
+                    {demographicData.demographics.ageGroups.slice(0, 4).map((group) => (
+                      <div key={group.name} className="flex items-center justify-between">
+                        <span className="text-sm text-gray-700">{group.name}</span>
+                        <span className="text-sm font-medium text-gray-900">{group.value}%</span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+              {demographicData.demographics.locations.length > 0 && (
+                <div className="bg-white rounded-lg border border-gray-200 p-4">
+                  <h3 className="text-sm font-medium text-gray-600 mb-3">Top Locations</h3>
+                  <div className="space-y-2">
+                    {demographicData.demographics.locations.slice(0, 4).map((loc) => (
+                      <div key={loc.name} className="flex items-center justify-between">
+                        <span className="text-sm text-gray-700">{loc.name}</span>
+                        <span className="text-sm font-medium text-gray-900">{loc.value}%</span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+              {demographicData.demographics.interests.length > 0 && (
+                <div className="bg-white rounded-lg border border-gray-200 p-4">
+                  <h3 className="text-sm font-medium text-gray-600 mb-3">Top Interests</h3>
+                  <div className="space-y-2">
+                    {demographicData.demographics.interests.slice(0, 4).map((interest) => (
+                      <div key={interest.name} className="flex items-center justify-between">
+                        <span className="text-sm text-gray-700">{interest.name}</span>
+                        <span className="text-sm font-medium text-gray-900">{interest.value}%</span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
             </div>
           </div>
         )}

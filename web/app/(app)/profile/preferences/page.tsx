@@ -1,6 +1,6 @@
 'use client';
 
-import { Settings, Heart, Shield, Save, Loader2 } from 'lucide-react';
+import { Settings, Heart, Shield, Save, Loader2, Sparkles, Target } from 'lucide-react';
 import React, { useEffect, useMemo, useState } from 'react';
 
 import InterestSelection from '@/features/onboarding/components/InterestSelection';
@@ -8,6 +8,7 @@ import { useProfile, useProfileUpdate } from '@/features/profile/hooks/use-profi
 
 import DataUsageExplanation from '@/components/shared/DataUsageExplanation';
 
+import { useUserType } from '@/hooks/useUserType';
 import { useUser } from '@/lib/stores';
 import { useAppActions } from '@/lib/stores/appStore';
 import logger from '@/lib/utils/logger';
@@ -33,6 +34,7 @@ export default function ProfilePreferencesPage() {
   const { profile, isLoading: profileLoading, error: profileError } = useProfile();
   const { updateProfile, isUpdating, error: updateError } = useProfileUpdate();
   const { setCurrentRoute, setBreadcrumbs, setSidebarActiveSection } = useAppActions();
+  const { userType, recommendations, nextMilestone, isLoading: userTypeLoading } = useUserType(user?.id);
 
   const initialInterests = useMemo<string[]>(() => {
     return profile?.primary_concerns ?? [];
@@ -186,6 +188,37 @@ export default function ProfilePreferencesPage() {
               </p>
             )}
           </div>
+
+          {/* Personalized Recommendations */}
+          {!userTypeLoading && recommendations.length > 0 && (
+            <div>
+              <div className="flex items-center space-x-2 mb-4">
+                <Sparkles className="h-5 w-5 text-amber-500" />
+                <h2 className="text-xl font-semibold text-gray-900">Personalized Tips</h2>
+                <span className="text-xs px-2 py-1 bg-amber-100 text-amber-700 rounded-full capitalize">
+                  {userType}
+                </span>
+              </div>
+              <div className="bg-gradient-to-br from-amber-50 to-orange-50 rounded-xl p-6 border border-amber-100">
+                <ul className="space-y-3">
+                  {recommendations.map((rec, index) => (
+                    <li key={index} className="flex items-start space-x-3">
+                      <div className="flex-shrink-0 w-6 h-6 bg-amber-200 text-amber-700 rounded-full flex items-center justify-center text-sm font-medium">
+                        {index + 1}
+                      </div>
+                      <span className="text-gray-700">{rec}</span>
+                    </li>
+                  ))}
+                </ul>
+                {nextMilestone && (
+                  <div className="mt-4 pt-4 border-t border-amber-200 flex items-center space-x-2">
+                    <Target className="h-4 w-4 text-amber-600" />
+                    <span className="text-sm text-amber-700 font-medium">Next goal: {nextMilestone}</span>
+                  </div>
+                )}
+              </div>
+            </div>
+          )}
 
           {/* Data Usage Explanation */}
           <div>

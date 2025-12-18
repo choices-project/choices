@@ -13,6 +13,7 @@ import {
 } from 'lucide-react';
 import React, { useState, useEffect } from 'react';
 
+import { useFeatureFlags } from '@/hooks/useFeatureFlags';
 import { 
   useAnalyticsDashboard,
   useAnalyticsLoading,
@@ -90,9 +91,10 @@ export default function AnalyticsPage() {
   const { trackEvent, sendAnalytics, exportAnalytics } = analyticsActions;
   const { setCurrentRoute, setSidebarActiveSection, setBreadcrumbs } = useAppActions();
   
-  // Feature flags - these would come from app store in a real implementation
-  const analyticsEnabled = true;
-  const aiFeaturesEnabled = true;
+  // Feature flags from hook
+  const { isEnabled } = useFeatureFlags();
+  const analyticsEnabled = isEnabled('analytics');
+  const aiFeaturesEnabled = isEnabled('aiFeatures');
 
   const [selectedView, setSelectedView] = useState<string>('overview');
 
