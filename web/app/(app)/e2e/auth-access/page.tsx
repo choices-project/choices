@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect } from 'react';
+import { useEffect, useRef } from 'react';
 
 import PasskeyLogin from '@/features/auth/components/PasskeyLogin';
 import PasskeyRegister from '@/features/auth/components/PasskeyRegister';
@@ -24,21 +24,34 @@ export default function AuthAccessHarnessPage() {
     resetBiometric,
   } = useUserActions();
 
+  // Use refs for stable setup
+  const setBiometricSupportedRef = useRef(setBiometricSupported);
+  const setBiometricAvailableRef = useRef(setBiometricAvailable);
+  const setBiometricCredentialsRef = useRef(setBiometricCredentials);
+  const resetBiometricRef = useRef(resetBiometric);
+
   useEffect(() => {
-    setBiometricSupported(true);
-    setBiometricAvailable(true);
-    setBiometricCredentials(false);
+    setBiometricSupportedRef.current = setBiometricSupported;
+    setBiometricAvailableRef.current = setBiometricAvailable;
+    setBiometricCredentialsRef.current = setBiometricCredentials;
+    resetBiometricRef.current = resetBiometric;
+  }, [setBiometricSupported, setBiometricAvailable, setBiometricCredentials, resetBiometric]);
+
+  useEffect(() => {
+    setBiometricSupportedRef.current(true);
+    setBiometricAvailableRef.current(true);
+    setBiometricCredentialsRef.current(false);
     if (typeof document !== 'undefined') {
       document.documentElement.dataset.authAccessHarness = 'ready';
     }
 
     return () => {
-      resetBiometric();
+      resetBiometricRef.current();
       if (typeof document !== 'undefined') {
         delete document.documentElement.dataset.authAccessHarness;
       }
     };
-  }, [resetBiometric, setBiometricAvailable, setBiometricCredentials, setBiometricSupported]);
+  }, []); // Empty deps - setup runs once
 
   return (
     <main
