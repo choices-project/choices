@@ -12,9 +12,8 @@
 
 import { useEffect, useRef } from 'react';
 
-import { useAppActions, useTheme } from '@/lib/stores/appStore';
+import { useAppStore } from '@/lib/stores/appStore';
 import { useDarkMode } from '@/lib/stores/deviceStore';
-import logger from '@/lib/utils/logger';
 
 /**
  * Hook that syncs system dark mode preference to app store.
@@ -23,15 +22,16 @@ import logger from '@/lib/utils/logger';
  */
 export function useSystemThemeSync() {
   const systemPrefersDark = useDarkMode();
-  const currentTheme = useTheme();
-  const { updateSystemTheme } = useAppActions();
+  // Get updateSystemTheme directly from store for stable reference
+  const updateSystemTheme = useAppStore((state) => state.updateSystemTheme);
   const hasInitialized = useRef(false);
 
-  // Initial system theme detection (fallback if deviceStore hasn't initialized)
+  // Initial system theme detection and sync - run once
   useEffect(() => {
     if (hasInitialized.current) {
       return;
     }
+    hasInitialized.current = true;
 
     if (typeof window !== 'undefined' && typeof window.matchMedia === 'function') {
       try {
@@ -39,31 +39,23 @@ export function useSystemThemeSync() {
         const initialSystemPrefersDark = darkModeQuery.matches;
         const systemTheme = initialSystemPrefersDark ? 'dark' : 'light';
         updateSystemTheme(systemTheme);
-        hasInitialized.current = true;
-        logger.debug('Initial system theme detected', { systemTheme, initialSystemPrefersDark });
-      } catch (error) {
-        logger.warn('Failed to detect initial system theme', error);
+      } catch {
+        // Ignore theme detection errors
       }
     }
-  }, [updateSystemTheme]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []); // Run once on mount
 
   // Sync when deviceStore's darkMode capability changes
+  const prevDarkModeRef = useRef(systemPrefersDark);
   useEffect(() => {
-    if (typeof systemPrefersDark === 'boolean') {
+    // Only update if value actually changed
+    if (typeof systemPrefersDark === 'boolean' && systemPrefersDark !== prevDarkModeRef.current) {
+      prevDarkModeRef.current = systemPrefersDark;
       const systemTheme = systemPrefersDark ? 'dark' : 'light';
       updateSystemTheme(systemTheme);
-      hasInitialized.current = true;
-      logger.debug('System theme synced from deviceStore', { systemPrefersDark, systemTheme });
     }
-  }, [systemPrefersDark, updateSystemTheme]);
-
-  // Log when system preference changes
-  useEffect(() => {
-    if (currentTheme === 'system') {
-      logger.debug('Theme is set to system, following system preference', {
-        systemPrefersDark,
-      });
-    }
-  }, [currentTheme, systemPrefersDark]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [systemPrefersDark]); // Only depend on the value, not the function
 }
 
