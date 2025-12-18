@@ -152,10 +152,21 @@ export default function AuthPage() {
       } else {
         // Create FormData for login
         try {
-          await loginWithPassword({
+          const loginResult = await loginWithPassword({
             email: formData.email,
             password: formData.password,
           });
+          
+          // Set the session in the browser's Supabase client
+          // This is needed because our httpOnly cookies can't be read by JS
+          if (loginResult?.data?.session) {
+            const supabase = await getSupabaseBrowserClient();
+            await supabase.auth.setSession({
+              access_token: loginResult.data.session.access_token,
+              refresh_token: loginResult.data.session.refresh_token,
+            });
+          }
+          
           await syncSupabaseSession();
           // Redirect to feed (default for authenticated users per middleware)
           // Use router.replace to avoid adding to history
