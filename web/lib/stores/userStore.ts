@@ -11,6 +11,7 @@
 import { create } from 'zustand';
 import { devtools, persist } from 'zustand/middleware';
 import { immer } from 'zustand/middleware/immer';
+import { shallow } from 'zustand/shallow';
 
 import { logger } from '@/lib/utils/logger';
 
@@ -690,105 +691,59 @@ export const useBiometricRegistering = () => useUserStore(state => state.biometr
 export const useBiometricError = () => useUserStore(state => state.biometric.error);
 export const useBiometricSuccess = () => useUserStore(state => state.biometric.success);
 
-// Action selectors - FIXED: Use individual selectors to prevent infinite re-renders
-export const useUserActions = () => {
-  const setLoading = useUserStore(state => state.setLoading);
-  const setError = useUserStore(state => state.setError);
-  const clearError = useUserStore(state => state.clearError);
-  const setUser = useUserStore(state => state.setUser);
-  const setSession = useUserStore(state => state.setSession);
-  const setAuthenticated = useUserStore(state => state.setAuthenticated);
-  const signOut = useUserStore(state => state.signOut);
-  const clearUser = useUserStore(state => state.clearUser);
-  const setProfile = useUserStore(state => state.setProfile);
-  const updateProfile = useUserStore(state => state.updateProfile);
-  const setProfileLoading = useUserStore(state => state.setProfileLoading);
-  const setUpdating = useUserStore(state => state.setUpdating);
-  const setUserError = useUserStore(state => state.setUserError);
-  const clearUserError = useUserStore(state => state.clearUserError);
-  const setBiometricSupported = useUserStore(state => state.setBiometricSupported);
-  const setBiometricAvailable = useUserStore(state => state.setBiometricAvailable);
-  const setBiometricCredentials = useUserStore(state => state.setBiometricCredentials);
-  const setBiometricRegistering = useUserStore(state => state.setBiometricRegistering);
-  const setBiometricError = useUserStore(state => state.setBiometricError);
-  const setBiometricSuccess = useUserStore(state => state.setBiometricSuccess);
-  const resetBiometric = useUserStore(state => state.resetBiometric);
-  // Profile editing actions
-  const setProfileEditData = useUserStore(state => state.setProfileEditData);
-  const updateProfileEditData = useUserStore(state => state.updateProfileEditData);
-  const updateProfileField = useUserStore(state => state.updateProfileField);
-  const updateArrayField = useUserStore(state => state.updateArrayField);
-  const updatePrivacySetting = useUserStore(state => state.updatePrivacySetting);
-  const setProfileEditing = useUserStore(state => state.setProfileEditing);
-  const setProfileEditError = useUserStore(state => state.setProfileEditError);
-  const clearProfileEditError = useUserStore(state => state.clearProfileEditError);
-  const clearAllProfileEditErrors = useUserStore(state => state.clearAllProfileEditErrors);
-  // Address and representatives actions
-  const setCurrentAddress = useUserStore(state => state.setCurrentAddress);
-  const setCurrentState = useUserStore(state => state.setCurrentState);
-  const setRepresentatives = useUserStore(state => state.setRepresentatives);
-  const addRepresentative = useUserStore(state => state.addRepresentative);
-  const removeRepresentative = useUserStore(state => state.removeRepresentative);
-  const setShowAddressForm = useUserStore(state => state.setShowAddressForm);
-  const setNewAddress = useUserStore(state => state.setNewAddress);
-  const setAddressLoading = useUserStore(state => state.setAddressLoading);
-  const setSavedSuccessfully = useUserStore(state => state.setSavedSuccessfully);
-  const lookupAddress = useUserStore(state => state.lookupAddress);
-  const handleAddressUpdate = useUserStore(state => state.handleAddressUpdate);
-  // Avatar actions
-  const setAvatarFile = useUserStore(state => state.setAvatarFile);
-  const setAvatarPreview = useUserStore(state => state.setAvatarPreview);
-  const setUploadingAvatar = useUserStore(state => state.setUploadingAvatar);
-  const clearAvatar = useUserStore(state => state.clearAvatar);
+// Action selector - uses shallow comparison to prevent infinite re-renders
+const selectUserActions = (state: UserStore) => ({
+  setLoading: state.setLoading,
+  setError: state.setError,
+  clearError: state.clearError,
+  setUser: state.setUser,
+  setSession: state.setSession,
+  setAuthenticated: state.setAuthenticated,
+  signOut: state.signOut,
+  clearUser: state.clearUser,
+  setProfile: state.setProfile,
+  updateProfile: state.updateProfile,
+  setProfileLoading: state.setProfileLoading,
+  setUpdating: state.setUpdating,
+  setUserError: state.setUserError,
+  clearUserError: state.clearUserError,
+  setBiometricSupported: state.setBiometricSupported,
+  setBiometricAvailable: state.setBiometricAvailable,
+  setBiometricCredentials: state.setBiometricCredentials,
+  setBiometricRegistering: state.setBiometricRegistering,
+  setBiometricError: state.setBiometricError,
+  setBiometricSuccess: state.setBiometricSuccess,
+  resetBiometric: state.resetBiometric,
+  setProfileEditData: state.setProfileEditData,
+  updateProfileEditData: state.updateProfileEditData,
+  updateProfileField: state.updateProfileField,
+  updateArrayField: state.updateArrayField,
+  updatePrivacySetting: state.updatePrivacySetting,
+  setProfileEditing: state.setProfileEditing,
+  setProfileEditError: state.setProfileEditError,
+  clearProfileEditError: state.clearProfileEditError,
+  clearAllProfileEditErrors: state.clearAllProfileEditErrors,
+  setCurrentAddress: state.setCurrentAddress,
+  setCurrentState: state.setCurrentState,
+  setRepresentatives: state.setRepresentatives,
+  addRepresentative: state.addRepresentative,
+  removeRepresentative: state.removeRepresentative,
+  setShowAddressForm: state.setShowAddressForm,
+  setNewAddress: state.setNewAddress,
+  setAddressLoading: state.setAddressLoading,
+  setSavedSuccessfully: state.setSavedSuccessfully,
+  lookupAddress: state.lookupAddress,
+  handleAddressUpdate: state.handleAddressUpdate,
+  setAvatarFile: state.setAvatarFile,
+  setAvatarPreview: state.setAvatarPreview,
+  setUploadingAvatar: state.setUploadingAvatar,
+  clearAvatar: state.clearAvatar,
+  initializeAuth: state.initializeAuth,
+  setSessionAndDerived: state.setSessionAndDerived,
+});
 
-  return {
-    setLoading,
-    setError,
-    clearError,
-    setUser,
-    setSession,
-    setAuthenticated,
-    signOut,
-    clearUser,
-    setProfile,
-    updateProfile,
-    setProfileLoading,
-    setUpdating,
-    setUserError,
-    clearUserError,
-    setBiometricSupported,
-    setBiometricAvailable,
-    setBiometricCredentials,
-    setBiometricRegistering,
-    setBiometricError,
-    setBiometricSuccess,
-    resetBiometric,
-    setProfileEditData,
-    updateProfileEditData,
-    updateProfileField,
-    updateArrayField,
-    updatePrivacySetting,
-    setProfileEditing,
-    setProfileEditError,
-    clearProfileEditError,
-    clearAllProfileEditErrors,
-    setCurrentAddress,
-    setCurrentState,
-    setRepresentatives,
-    addRepresentative,
-    removeRepresentative,
-    setShowAddressForm,
-    setNewAddress,
-    setAddressLoading,
-    setSavedSuccessfully,
-    lookupAddress,
-    handleAddressUpdate,
-    setAvatarFile,
-    setAvatarPreview,
-    setUploadingAvatar,
-    clearAvatar,
-  };
-};
+export const useUserActions = () =>
+  useUserStore(selectUserActions, shallow);
 
 // Computed selectors
 export const useUserDisplayName = () => useUserStore(state => {

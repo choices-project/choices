@@ -14,7 +14,7 @@ import { useMemo } from 'react';
 import { create } from 'zustand';
 import { devtools, persist } from 'zustand/middleware';
 import { immer } from 'zustand/middleware/immer';
-import { shallow } from 'zustand/shallow';
+import { useShallow } from 'zustand/react/shallow';
 
 import { logger } from '@/lib/utils/logger';
 import { PrivacyDataType, hasPrivacyConsent } from '@/lib/utils/privacy-guard';
@@ -1123,11 +1123,10 @@ const selectFeedsActions = (state: FeedsStore) => ({
   resetFeedsState: state.resetFeedsState,
 });
 
-export const useFeedsActions = () =>
-  (useFeedsStore as unknown as (
-    selector: typeof selectFeedsActions,
-    equalityFn: typeof shallow,
-  ) => ReturnType<typeof selectFeedsActions>)(selectFeedsActions, shallow);
+// Use useShallow to prevent infinite loops from selector object creation
+export function useFeedsActions() {
+  return useFeedsStore(useShallow(selectFeedsActions));
+}
 
 export const selectFeedById =
   (id: string) =>

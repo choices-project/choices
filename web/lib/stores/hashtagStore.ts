@@ -8,10 +8,10 @@
  * Status: ✅ MODERNIZED
  */
 
-import { useMemo } from 'react';
 import { create } from 'zustand';
 import { devtools, persist } from 'zustand/middleware';
 import { immer } from 'zustand/middleware/immer';
+import { useShallow } from 'zustand/react/shallow';
 
 import type {
   FeedHashtagIntegration,
@@ -1108,69 +1108,31 @@ export const useHashtagError = () => {
   );
 };
 
-export const useHashtagActions = () => {
-  const searchHashtags = useHashtagStore((state) => state.searchHashtags);
-  const getTrendingHashtags = useHashtagStore((state) => state.getTrendingHashtags);
-  const getSuggestions = useHashtagStore((state) => state.getSuggestions);
-  const followHashtag = useHashtagStore((state) => state.followHashtag);
-  const unfollowHashtag = useHashtagStore((state) => state.unfollowHashtag);
-  const createHashtag = useHashtagStore((state) => state.createHashtag);
-  const getUserHashtags = useHashtagStore((state) => state.getUserHashtags);
-  const getHashtagAnalytics = useHashtagStore((state) => state.getHashtagAnalytics);
-  const getHashtagStats = useHashtagStore((state) => state.getHashtagStats);
-  const validateHashtagName = useHashtagStore((state) => state.validateHashtagName);
-  const clearSearch = useHashtagStore((state) => state.clearSearch);
-  const clearErrors = useHashtagStore((state) => state.clearErrors);
-  const setFilter = useHashtagStore((state) => state.setFilter);
-  const resetFilters = useHashtagStore((state) => state.resetFilters);
-  const setCategory = useHashtagStore((state) => state.setCategory);
-  const setSortBy = useHashtagStore((state) => state.setSortBy);
-  const setTimeRange = useHashtagStore((state) => state.setTimeRange);
-  const setSearchQuery = useHashtagStore((state) => state.setSearchQuery);
+// Selector for hashtag actions - stable reference
+const selectHashtagActions = (state: HashtagStore) => ({
+  searchHashtags: state.searchHashtags,
+  getTrendingHashtags: state.getTrendingHashtags,
+  getSuggestions: state.getSuggestions,
+  followHashtag: state.followHashtag,
+  unfollowHashtag: state.unfollowHashtag,
+  createHashtag: state.createHashtag,
+  getUserHashtags: state.getUserHashtags,
+  getHashtagAnalytics: state.getHashtagAnalytics,
+  getHashtagStats: state.getHashtagStats,
+  validateHashtagName: state.validateHashtagName,
+  clearSearch: state.clearSearch,
+  clearErrors: state.clearErrors,
+  setFilter: state.setFilter,
+  resetFilters: state.resetFilters,
+  setCategory: state.setCategory,
+  setSortBy: state.setSortBy,
+  setTimeRange: state.setTimeRange,
+  setSearchQuery: state.setSearchQuery,
+});
 
-  return useMemo(
-    () => ({
-      searchHashtags,
-      getTrendingHashtags,
-      getSuggestions,
-      followHashtag,
-      unfollowHashtag,
-      createHashtag,
-      getUserHashtags,
-      getHashtagAnalytics,
-      getHashtagStats,
-      validateHashtagName,
-      clearSearch,
-      clearErrors,
-      setFilter,
-      resetFilters,
-      setCategory,
-      setSortBy,
-      setTimeRange,
-      setSearchQuery,
-    }),
-    [
-      searchHashtags,
-      getTrendingHashtags,
-      getSuggestions,
-      followHashtag,
-      unfollowHashtag,
-      createHashtag,
-      getUserHashtags,
-      getHashtagAnalytics,
-      getHashtagStats,
-      validateHashtagName,
-      clearSearch,
-      clearErrors,
-      setFilter,
-      resetFilters,
-      setCategory,
-      setSortBy,
-      setTimeRange,
-      setSearchQuery,
-    ],
-  );
-};
+export function useHashtagActions() {
+  return useHashtagStore(useShallow(selectHashtagActions));
+}
 
 export const useHashtagFilters = () => useHashtagStore((state) => state.filters);
 export const useHashtagCategory = () =>

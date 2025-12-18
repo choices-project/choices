@@ -27,7 +27,6 @@ import {
   useFeedsLoading,
   useFeedsError,
   useFeedsPagination,
-  useFeedsActions,
   useHashtagActions,
   useTrendingHashtags,
   useNotificationActions,
@@ -83,7 +82,12 @@ function HarnessFeedDataProvider({
 
   const [selectedHashtags, setSelectedHashtags] = useState<string[]>([]);
   const [districtFilterEnabled, setDistrictFilterEnabled] = useState(false);
-  const { trackItemShare } = useFeedAnalytics({ feedId: 'harness-feed', userId: user?.id ?? (userId ?? '') });
+  const harnessEffectiveUserId = user?.id ?? userId ?? '';
+  const harnessAnalyticsConfig = useMemo(
+    () => ({ feedId: 'harness-feed', userId: harnessEffectiveUserId }),
+    [harnessEffectiveUserId]
+  );
+  const { trackItemShare } = useFeedAnalytics(harnessAnalyticsConfig);
   const trackItemShareRef = useRef(trackItemShare);
   useEffect(() => {
     trackItemShareRef.current = trackItemShare;
@@ -378,18 +382,22 @@ function StandardFeedDataProvider({
     [rawTrendingHashtags]
   );
   const { getTrendingHashtags } = useHashtagActions();
-  const {
-    loadFeeds,
-    refreshFeeds,
-    likeFeed: likeFeedAction,
-    bookmarkFeed: bookmarkFeedAction,
-    setFilters: setFiltersAction,
-    setError: setErrorAction,
-    clearError: clearErrorAction,
-  } = useFeedsActions();
+  // Select individual actions to avoid object recreation issues
+  const loadFeeds = useFeedsStore((state) => state.loadFeeds);
+  const refreshFeeds = useFeedsStore((state) => state.refreshFeeds);
+  const likeFeedAction = useFeedsStore((state) => state.likeFeed);
+  const bookmarkFeedAction = useFeedsStore((state) => state.bookmarkFeed);
+  const setFiltersAction = useFeedsStore((state) => state.setFilters);
+  const setErrorAction = useFeedsStore((state) => state.setError);
+  const clearErrorAction = useFeedsStore((state) => state.clearError);
   const user = useUser();
   const { addNotification } = useNotificationActions();
-  const { trackItemShare } = useFeedAnalytics({ feedId: 'primary-feed', userId: user?.id ?? (userId ?? '') });
+  const effectiveUserId = user?.id ?? userId ?? '';
+  const analyticsConfig = useMemo(
+    () => ({ feedId: 'primary-feed', userId: effectiveUserId }),
+    [effectiveUserId]
+  );
+  const { trackItemShare } = useFeedAnalytics(analyticsConfig);
   const trackItemShareRef = useRef(trackItemShare);
   useEffect(() => {
     trackItemShareRef.current = trackItemShare;

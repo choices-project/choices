@@ -13,9 +13,9 @@ export function useAuth() {
 
   return useMemo(
     () => ({
-      user: context.user,
-      isLoading: context.loading,
-      logout: context.signOut
+    user: context.user,
+    isLoading: context.loading,
+    logout: context.signOut
     }),
     [context.user, context.loading, context.signOut]
   )

@@ -9,10 +9,10 @@
  * Updated: November 9, 2025
  */
 
-import { useMemo } from 'react';
 import { create } from 'zustand';
 import { devtools, persist } from 'zustand/middleware';
 import { immer } from 'zustand/middleware/immer';
+import { useShallow } from 'zustand/react/shallow';
 
 import type { AdminNotification, NewAdminNotification } from '@/features/admin/types';
 
@@ -635,72 +635,32 @@ export const useAdminNotifications = () =>
 export const useAdminUnreadCount = () =>
   useNotificationStore(notificationSelectors.adminUnreadCount);
 
-export const useNotificationActions = () => {
-  const addNotification = useNotificationStore((state) => state.addNotification);
-  const removeNotification = useNotificationStore((state) => state.removeNotification);
-  const markAsRead = useNotificationStore((state) => state.markAsRead);
-  const markAllAsRead = useNotificationStore((state) => state.markAllAsRead);
-  const clearAll = useNotificationStore((state) => state.clearAll);
-  const clearByType = useNotificationStore((state) => state.clearByType);
-  const addAdminNotification = useNotificationStore((state) => state.addAdminNotification);
-  const removeAdminNotification = useNotificationStore((state) => state.removeAdminNotification);
-  const markAdminNotificationAsRead = useNotificationStore((state) => state.markAdminNotificationAsRead);
-  const markAllAdminNotificationsAsRead = useNotificationStore((state) => state.markAllAdminNotificationsAsRead);
-  const clearAllAdminNotifications = useNotificationStore((state) => state.clearAllAdminNotifications);
-  const clearAdminNotificationsByType = useNotificationStore((state) => state.clearAdminNotificationsByType);
-  const updateSettings = useNotificationStore((state) => state.updateSettings);
-  const resetSettings = useNotificationStore((state) => state.resetSettings);
-  const setAdding = useNotificationStore((state) => state.setAdding);
-  const setRemoving = useNotificationStore((state) => state.setRemoving);
-  const getNotification = useNotificationStore((state) => state.getNotification);
-  const getNotificationsByType = useNotificationStore((state) => state.getNotificationsByType);
-  const getUnreadNotifications = useNotificationStore((state) => state.getUnreadNotifications);
+// Selector for notification actions - stable reference
+const selectNotificationActions = (state: NotificationStore) => ({
+  addNotification: state.addNotification,
+  removeNotification: state.removeNotification,
+  markAsRead: state.markAsRead,
+  markAllAsRead: state.markAllAsRead,
+  clearAll: state.clearAll,
+  clearByType: state.clearByType,
+  addAdminNotification: state.addAdminNotification,
+  removeAdminNotification: state.removeAdminNotification,
+  markAdminNotificationAsRead: state.markAdminNotificationAsRead,
+  markAllAdminNotificationsAsRead: state.markAllAdminNotificationsAsRead,
+  clearAllAdminNotifications: state.clearAllAdminNotifications,
+  clearAdminNotificationsByType: state.clearAdminNotificationsByType,
+  updateSettings: state.updateSettings,
+  resetSettings: state.resetSettings,
+  setAdding: state.setAdding,
+  setRemoving: state.setRemoving,
+  getNotification: state.getNotification,
+  getNotificationsByType: state.getNotificationsByType,
+  getUnreadNotifications: state.getUnreadNotifications,
+});
 
-  return useMemo(
-    () => ({
-      addNotification,
-      removeNotification,
-      markAsRead,
-      markAllAsRead,
-      clearAll,
-      clearByType,
-      addAdminNotification,
-      removeAdminNotification,
-      markAdminNotificationAsRead,
-      markAllAdminNotificationsAsRead,
-      clearAllAdminNotifications,
-      clearAdminNotificationsByType,
-      updateSettings,
-      resetSettings,
-      setAdding,
-      setRemoving,
-      getNotification,
-      getNotificationsByType,
-      getUnreadNotifications
-    }),
-    [
-      addNotification,
-      removeNotification,
-      markAsRead,
-      markAllAsRead,
-      clearAll,
-      clearByType,
-      addAdminNotification,
-      removeAdminNotification,
-      markAdminNotificationAsRead,
-      markAllAdminNotificationsAsRead,
-      clearAllAdminNotifications,
-      clearAdminNotificationsByType,
-      updateSettings,
-      resetSettings,
-      setAdding,
-      setRemoving,
-      getNotification,
-      getNotificationsByType,
-      getUnreadNotifications
-    ]
-  );
-};
+export function useNotificationActions() {
+  return useNotificationStore(useShallow(selectNotificationActions));
+}
 
 export const useNotificationsByType = (type: Notification['type']) =>
   useNotificationStore((state) => state.getNotificationsByType(type));
