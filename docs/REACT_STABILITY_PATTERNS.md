@@ -272,6 +272,10 @@ The following files were audited and fixed for infinite re-render issues:
 ### Store Hooks
 - `lib/stores/feedsStore.ts` - `useFeedsPagination` memoized return value
 
+### General Hooks
+- `hooks/useAuth.ts` - Memoized return value
+- `hooks/useSocialSharing.ts` - Memoized return value
+
 ---
 
 *Last updated: December 18, 2025*
