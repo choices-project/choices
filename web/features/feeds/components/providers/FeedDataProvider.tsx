@@ -68,7 +68,7 @@ function HarnessFeedDataProvider({
   const totalAvailable = useFeedsStore((state) => state.totalAvailableFeeds);
   const rawTrendingHashtags = useTrendingHashtags();
   // Memoize to prevent new array reference on every render
-  const trendingHashtags = useMemo(() => 
+  const trendingHashtags = useMemo(() =>
     rawTrendingHashtags
       .map((h) => {
         if (typeof h === 'string') return h;
@@ -116,34 +116,28 @@ function HarnessFeedDataProvider({
     [notifyFeedError],
   );
 
+  // Load feeds once on mount - use minimal dependencies to prevent re-runs
   useEffect(() => {
     if (!userId && !user?.id) return;
     if (initialLoadRef.current) return;
+    initialLoadRef.current = true;
 
     let active = true;
-    clearErrorAction();
 
     void (async () => {
       try {
         await loadFeeds();
-        surfaceStoreError((error) =>
-          t('feeds.provider.errors.loadFeeds.withReason', { error }),
-        );
       } catch (err) {
         if (!active) return;
         logger.error('[HarnessFeedDataProvider] Failed to load feeds:', err);
-        const shortMessage = t('feeds.provider.errors.loadFeeds.short');
-        setErrorAction(shortMessage);
-        notifyFeedError(shortMessage);
-      } finally {
-        initialLoadRef.current = true;
       }
     })();
 
     return () => {
       active = false;
     };
-  }, [userId, user?.id, loadFeeds, clearErrorAction, setErrorAction, notifyFeedError, surfaceStoreError, t]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [userId, user?.id]); // Only depend on user identity, not callbacks
 
   // Load trending hashtags once - use ref to prevent re-runs
   // Intentionally empty deps - we use a ref to ensure one-time execution
@@ -152,7 +146,7 @@ function HarnessFeedDataProvider({
   useEffect(() => {
     if (hashtagLoadAttemptedRef.current) return;
     hashtagLoadAttemptedRef.current = true;
-    
+
     void (async () => {
       try {
         await getTrendingHashtags();
@@ -359,7 +353,7 @@ function StandardFeedDataProvider({
   const { totalAvailable, hasMore: storeHasMore, loadMoreFeeds } = useFeedsPagination();
   const rawTrendingHashtags = useTrendingHashtags();
   // Memoize to prevent new array reference on every render
-  const trendingHashtags = useMemo(() => 
+  const trendingHashtags = useMemo(() =>
     rawTrendingHashtags
       .map((h) => {
         if (typeof h === 'string') return h;
@@ -421,53 +415,28 @@ function StandardFeedDataProvider({
 
   const initialLoadRef = useRef(false);
 
-  // Load feeds on mount - ONCE
+  // Load feeds on mount - ONCE with minimal dependencies to prevent re-runs
   useEffect(() => {
     if (!userId && !user?.id) return;
-    if (initialLoadRef.current && !userId) return;
+    if (initialLoadRef.current) return;
+    initialLoadRef.current = true;
 
     let active = true;
 
-    clearErrorAction();
-
     void (async () => {
-      const maxRetries = 3;
-      let retryCount = 0;
-      
-      while (retryCount < maxRetries && active) {
-        try {
-          await loadFeeds();
-          surfaceStoreError((error) =>
-            t('feeds.provider.errors.loadFeeds.withReason', { error }),
-          );
-          break; // Success, exit retry loop
-        } catch (err) {
-          if (!active) return;
-          retryCount++;
-          
-          if (retryCount >= maxRetries) {
-            logger.error('Failed to load feeds after retries:', err);
-            const shortMessage = t('feeds.provider.errors.loadFeeds.short');
-            setErrorAction(shortMessage);
-            notifyFeedError(shortMessage);
-          } else {
-            // Wait before retry with exponential backoff
-            const delay = Math.min(1000 * Math.pow(2, retryCount - 1), 5000);
-            logger.warn(`Feed load failed, retrying in ${delay}ms (attempt ${retryCount}/${maxRetries})`);
-            await new Promise(resolve => setTimeout(resolve, delay));
-          }
-        } finally {
-          if (retryCount >= maxRetries || !active) {
-            initialLoadRef.current = true;
-          }
-        }
+      try {
+        await loadFeeds();
+      } catch (err) {
+        if (!active) return;
+        logger.error('Failed to load feeds:', err);
       }
     })();
 
     return () => {
       active = false;
     };
-  }, [userId, user?.id, loadFeeds, clearErrorAction, setErrorAction, notifyFeedError, surfaceStoreError, t]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [userId, user?.id]); // Only depend on user identity, not callbacks
 
   // Load trending hashtags on mount - ONCE
   // Use a ref to track if we've already attempted to load
@@ -477,7 +446,7 @@ function StandardFeedDataProvider({
   useEffect(() => {
     if (hashtagLoadAttemptedRef.current) return;
     hashtagLoadAttemptedRef.current = true;
-    
+
     void (async () => {
       try {
         await getTrendingHashtags();
