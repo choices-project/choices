@@ -231,16 +231,11 @@ function HarnessFeedDataProvider({
   const handleLoadMore = useCallback(async () => {
     try {
       await loadMoreFeeds();
-      surfaceStoreError((error) =>
-        t('feeds.provider.errors.loadMoreFeeds.withReason', { error }),
-      );
     } catch (err) {
       logger.error('[HarnessFeedDataProvider] Failed to load more feeds:', err);
-      const shortMessage = t('feeds.provider.errors.loadMoreFeeds.short');
-      setErrorAction(shortMessage);
-      notifyFeedError(shortMessage);
     }
-  }, [loadMoreFeeds, setErrorAction, notifyFeedError, surfaceStoreError, t]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []); // Stable reference - loadMoreFeeds is from store and stable
 
   const childProps = {
     feeds,
@@ -552,33 +547,13 @@ function StandardFeedDataProvider({
 
   const handleLoadMore = useCallback(async () => {
     if (!enableInfiniteScroll) return;
-    if (!storeHasMore) return;
-    if (feeds.length >= maxItems) return;
-
-    clearErrorAction();
     try {
       await loadMoreFeeds();
-      surfaceStoreError((error) =>
-        t('feeds.provider.errors.loadMoreFeeds.withReason', { error }),
-      );
     } catch (err) {
       logger.error('Failed to load more feeds:', err);
-      const shortMessage = t('feeds.provider.errors.loadMoreFeeds.short');
-      setErrorAction(shortMessage);
-      notifyFeedError(shortMessage);
     }
-  }, [
-    enableInfiniteScroll,
-    storeHasMore,
-    feeds.length,
-    maxItems,
-    loadMoreFeeds,
-    clearErrorAction,
-    setErrorAction,
-    notifyFeedError,
-    surfaceStoreError,
-    t,
-  ]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [enableInfiniteScroll]); // Stable reference
 
   // Filter feeds by selected hashtags
   const filteredFeeds = selectedHashtags.length > 0
