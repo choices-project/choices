@@ -275,6 +275,8 @@ The following files were audited and fixed for infinite re-render issues:
 ### General Hooks
 - `hooks/useAuth.ts` - Memoized return value
 - `hooks/useSocialSharing.ts` - Memoized return value
+- `hooks/useI18n.ts` - Memoized return value (used in 72+ places!)
+- `hooks/useFollowRepresentative.ts` - Memoized return value
 
 ---
 
