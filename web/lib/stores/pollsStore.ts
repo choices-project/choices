@@ -1,6 +1,7 @@
 import { create } from 'zustand';
 import { devtools, persist } from 'zustand/middleware';
 import { immer } from 'zustand/middleware/immer';
+import { useShallow } from 'zustand/react/shallow';
 
 import type { PollRow, PollUpdate } from '@/features/polls/types';
 
@@ -1047,34 +1048,35 @@ export const useSelectedPoll = () => {
 };
 export const usePollSearch = () => usePollsStore((state) => state.search);
 
-export const usePollsActions = () =>
-  usePollsStore((state) => ({
-    loadPolls: state.loadPolls,
-    loadPoll: state.loadPoll,
-    createPoll: state.createPoll,
-    updatePoll: state.updatePoll,
-    removePoll: state.removePoll,
-    publishPoll: state.publishPoll,
-    closePoll: state.closePoll,
-    archivePoll: state.archivePoll,
-    voteOnPoll: state.voteOnPoll,
-    undoVote: state.undoVote,
-    selectPoll: state.selectPoll,
-    setVoting: state.setVoting,
-    setSearching: state.setSearching,
-    setFilters: state.setFilters,
-    clearFilters: state.clearFilters,
-    searchPolls: state.searchPolls,
-    clearSearch: state.clearSearch,
-    updatePreferences: state.updatePreferences,
-    resetPreferences: state.resetPreferences,
-    resetPollsState: state.resetPollsState,
-    setSearchQuery: state.setSearchQuery,
-    setTrendingOnly: state.setTrendingOnly,
-    setCurrentPage: state.setCurrentPage,
-    setSortBy: state.setSortBy,
-    setItemsPerPage: state.setItemsPerPage,
-  }));
+const selectPollsActions = (state: PollsStore) => ({
+  loadPolls: state.loadPolls,
+  loadPoll: state.loadPoll,
+  createPoll: state.createPoll,
+  updatePoll: state.updatePoll,
+  removePoll: state.removePoll,
+  publishPoll: state.publishPoll,
+  closePoll: state.closePoll,
+  archivePoll: state.archivePoll,
+  voteOnPoll: state.voteOnPoll,
+  undoVote: state.undoVote,
+  selectPoll: state.selectPoll,
+  setVoting: state.setVoting,
+  setSearching: state.setSearching,
+  setFilters: state.setFilters,
+  clearFilters: state.clearFilters,
+  searchPolls: state.searchPolls,
+  clearSearch: state.clearSearch,
+  updatePreferences: state.updatePreferences,
+  resetPreferences: state.resetPreferences,
+  resetPollsState: state.resetPollsState,
+  setSearchQuery: state.setSearchQuery,
+  setTrendingOnly: state.setTrendingOnly,
+  setCurrentPage: state.setCurrentPage,
+  setSortBy: state.setSortBy,
+  setItemsPerPage: state.setItemsPerPage,
+});
+
+export const usePollsActions = () => usePollsStore(selectPollsActions, useShallow);
 
 export const usePollsStats = () =>
   usePollsStore((state) => {
