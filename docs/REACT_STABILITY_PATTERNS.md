@@ -237,8 +237,36 @@ useEffect(() => {
 }, [profile]); // router removed from deps
 ```
 
+## Files Fixed for Stability (December 18, 2025)
+
+The following files were audited and fixed for infinite re-render issues:
+
+### Core Infrastructure
+- `contexts/AuthContext.tsx` - Stabilized all store action selectors with refs
+- `lib/providers/UserStoreProvider.tsx` - Removed unstable context value
+- `hooks/useI18n.ts` - Stabilized `t` function with ref
+- `hooks/useSystemThemeSync.ts` - Stabilized `updateSystemTheme` with ref
+
+### Feed Components
+- `features/feeds/components/providers/FeedDataProvider.tsx` - Both Harness and Standard providers
+- `features/feeds/hooks/useFeedAnalytics.ts` - Stabilized all tracking callbacks
+
+### Dashboard & Profile
+- `app/(app)/dashboard/page.tsx` - Router ref
+- `features/dashboard/components/PersonalDashboard.tsx` - Router and action refs
+- `app/(app)/profile/page.tsx` - Router ref
+- `app/(app)/profile/edit/page.tsx` - Router ref  
+- `app/(app)/profile/biometric-setup/page.tsx` - Router ref
+- `features/profile/hooks/useUserDistrict.ts` - Memoized return object
+
+### Other Components
+- `app/(app)/candidate/dashboard/page.tsx` - Router ref
+- `components/auth/DeviceFlowAuth.tsx` - Router and callback refs
+- `components/shared/AppShell.tsx` - Device initialization ref
+- `features/polls/hooks/usePollCreatedListener.ts` - Notification and router refs
+
 ---
 
 *Last updated: December 18, 2025*
-*Related commits: cf6a358f, da2ee76d, 02f7276c, 5c73afba*
+*Related commits: cf6a358f, da2ee76d, 02f7276c, 5c73afba, 0c48f7df, c48f0e67*
 
