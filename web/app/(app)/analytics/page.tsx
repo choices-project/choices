@@ -1,10 +1,10 @@
 'use client';
 
-import { 
-  BarChart3, 
-  TrendingUp, 
-  Users, 
-  Activity, 
+import {
+  BarChart3,
+  TrendingUp,
+  Users,
+  Activity,
   RefreshCw,
   Bell,
   Zap,
@@ -13,14 +13,15 @@ import {
 } from 'lucide-react';
 import React, { useState, useEffect } from 'react';
 
-import { useFeatureFlags } from '@/hooks/useFeatureFlags';
-import { 
+import {
   useAnalyticsDashboard,
   useAnalyticsLoading,
   useAnalyticsError,
   useAnalyticsActions
 } from '@/lib/stores';
 import { useAppActions } from '@/lib/stores/appStore';
+
+import { useFeatureFlags } from '@/hooks/useFeatureFlags';
 
 type AnalyticsView = {
   id: string;
@@ -90,7 +91,7 @@ export default function AnalyticsPage() {
   const analyticsActions = useAnalyticsActions();
   const { trackEvent, sendAnalytics, exportAnalytics } = analyticsActions;
   const { setCurrentRoute, setSidebarActiveSection, setBreadcrumbs } = useAppActions();
-  
+
   // Feature flags from hook
   const { isEnabled } = useFeatureFlags();
   const analyticsEnabled = isEnabled('analytics');
@@ -262,9 +263,9 @@ export default function AnalyticsPage() {
                 </span>
               </div>
               <button
-                onClick={() => trackEvent({ 
-                  event_type: 'user_action', 
-                  type: 'user_action', 
+                onClick={() => trackEvent({
+                  event_type: 'user_action',
+                  type: 'user_action',
                   category: 'analytics',
                   action: 'toggle_auto_refresh',
                   session_id: '', // Will be filled by trackEvent
@@ -318,27 +319,27 @@ export default function AnalyticsPage() {
           {selectedView === 'overview' && (
             <OverviewView data={analyticsData} />
           )}
-          
+
           {selectedView === 'trends' && (
             <TrendsView data={analyticsData} />
           )}
-          
+
           {selectedView === 'demographics' && (
             <DemographicsView data={analyticsData} />
           )}
-          
+
           {selectedView === 'performance' && (
             <PerformanceView data={analyticsData} />
           )}
-          
+
           {selectedView === 'privacy' && (
             <PrivacyView data={analyticsData} />
           )}
-          
+
           {selectedView === 'engagement' && (
             <EngagementView data={analyticsData} />
           )}
-          
+
           {selectedView === 'advanced' && (
             <AdvancedView data={analyticsData} />
           )}

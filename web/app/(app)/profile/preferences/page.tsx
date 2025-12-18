@@ -8,10 +8,11 @@ import { useProfile, useProfileUpdate } from '@/features/profile/hooks/use-profi
 
 import DataUsageExplanation from '@/components/shared/DataUsageExplanation';
 
-import { useUserType } from '@/hooks/useUserType';
 import { useUser } from '@/lib/stores';
 import { useAppActions } from '@/lib/stores/appStore';
 import logger from '@/lib/utils/logger';
+
+import { useUserType } from '@/hooks/useUserType';
 
 type StatusMessage = {
   type: 'success' | 'error';

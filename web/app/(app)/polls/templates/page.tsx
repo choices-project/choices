@@ -8,7 +8,6 @@ import React, { useEffect, useState } from 'react';
 import type { PollTemplate, PollCategory, TemplateCategory } from '@/features/polls/types';
 
 import { Badge } from '@/components/ui/badge';
-import { useDebounce } from '@/hooks/useDebounce';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -16,6 +15,8 @@ import { Separator } from '@/components/ui/separator';
 
 import { useAppActions } from '@/lib/stores/appStore';
 import { devLog } from '@/lib/utils/logger';
+
+import { useDebounce } from '@/hooks/useDebounce';
 
 const TEMPLATECATEGORIES: TemplateCategory[] = [
   { id: 'general', name: 'General', description: 'General purpose polls', icon: '📊', color: 'blue', templateCount: 12 },

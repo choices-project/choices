@@ -20,9 +20,10 @@ import React, { useState, useEffect, useCallback } from 'react';
 
 import type { SuperiorRepresentativeData } from '@/features/civics/lib/types/superior-types';
 
-import { useDebounce } from '@/hooks/useDebounce';
 import { useIsMobile, useAppActions } from '@/lib/stores/appStore';
 import { logger } from '@/lib/utils/logger';
+
+import { useDebounce } from '@/hooks/useDebounce';
 
 import type { Representative } from '@/types/representative';
 

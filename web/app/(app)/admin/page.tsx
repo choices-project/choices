@@ -23,11 +23,12 @@ import { getSupabaseBrowserClient } from '@/utils/supabase/client'
 
 import { NotificationContainer } from '@/features/admin/components/NotificationSystem'
 
-import { useDemographics } from '@/hooks/useDemographics';
 import { useIsAuthenticated, useUser, useUserActions, useUserLoading } from '@/lib/stores'
 import { useAppActions } from '@/lib/stores/appStore';
 import { T } from '@/lib/testing/testIds'
 import { logger } from '@/lib/utils/logger';
+
+import { useDemographics } from '@/hooks/useDemographics';
 
 
 type AdminStats = {

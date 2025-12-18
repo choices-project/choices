@@ -19,7 +19,6 @@ TrendingUp,
 } from 'lucide-react';
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
 
-import { useDebounce } from '@/hooks/useDebounce';
 import {
   useHashtagActions,
   useHashtagError,
@@ -27,6 +26,8 @@ import {
   useTrendingHashtags,
 } from '@/lib/stores';
 import logger from '@/lib/utils/logger'
+
+import { useDebounce } from '@/hooks/useDebounce';
 
 import {
   formatUsageCount,
