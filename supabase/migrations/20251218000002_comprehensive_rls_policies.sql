@@ -42,19 +42,19 @@ BEGIN
   IF p_command = 'INSERT' THEN
     -- INSERT policies use WITH CHECK
     IF p_role IS NULL OR p_role = '' THEN
-      policy_sql := format('CREATE POLICY %I ON public.%I FOR INSERT WITH CHECK (%s)', 
+      policy_sql := format('CREATE POLICY %I ON public.%I FOR INSERT WITH CHECK (%s)',
                            p_policy_name, p_table_name, COALESCE(p_check_expr, p_using_expr, 'true'));
     ELSE
-      policy_sql := format('CREATE POLICY %I ON public.%I FOR INSERT TO %s WITH CHECK (%s)', 
+      policy_sql := format('CREATE POLICY %I ON public.%I FOR INSERT TO %s WITH CHECK (%s)',
                            p_policy_name, p_table_name, p_role, COALESCE(p_check_expr, p_using_expr, 'true'));
     END IF;
   ELSE
     -- SELECT/UPDATE/DELETE/ALL use USING
     IF p_role IS NULL OR p_role = '' THEN
-      policy_sql := format('CREATE POLICY %I ON public.%I FOR %s USING (%s)', 
+      policy_sql := format('CREATE POLICY %I ON public.%I FOR %s USING (%s)',
                            p_policy_name, p_table_name, p_command, p_using_expr);
     ELSE
-      policy_sql := format('CREATE POLICY %I ON public.%I FOR %s TO %s USING (%s)', 
+      policy_sql := format('CREATE POLICY %I ON public.%I FOR %s TO %s USING (%s)',
                            p_policy_name, p_table_name, p_command, p_role, p_using_expr);
     END IF;
   END IF;

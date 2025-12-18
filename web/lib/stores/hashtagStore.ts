@@ -367,8 +367,8 @@ const createHashtagActions = (
       }
     },
     getTrendingHashtags: async (category, limit) => {
-      baseActions.clearError();
-      baseActions.setLoading(true);
+      // Don't set loading state for hashtags - they're optional enhancement
+      // and setting loading/error states can trigger unnecessary re-renders
 
       try {
         const { getTrendingHashtags: getTrendingService } = await import(
@@ -381,17 +381,14 @@ const createHashtagActions = (
             state.trendingHashtags = result.data ?? [];
           });
         } else {
-          baseActions.setError(
-            result.error ?? 'Failed to fetch trending hashtags'
-          );
+          // Silently fail - hashtags are optional, don't set error state
+          logger.warn('Failed to fetch trending hashtags:', result.error);
         }
       } catch (error) {
-        const errorMessage =
-          error instanceof Error ? error.message : 'Failed to fetch trending hashtags';
-        baseActions.setError(errorMessage);
-      } finally {
-        baseActions.setLoading(false);
+        // Silently fail - hashtags are optional, don't set error state
+        logger.warn('Failed to fetch trending hashtags:', error);
       }
+      // No finally block needed - we're not managing loading state for hashtags
     },
     getSuggestions: async (input, context) => {
       try {

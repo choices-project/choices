@@ -1331,6 +1331,7 @@
       "title": "Polls",
       "subtitle": "Discover and participate in community polls",
       "breadcrumbs": {
+        "home": "Home",
         "polls": "Polls",
         "dashboard": "Dashboard"
       },
