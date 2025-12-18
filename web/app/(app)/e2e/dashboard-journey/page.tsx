@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 
 import { PersonalDashboard } from '@/features/dashboard';
 
@@ -28,19 +28,25 @@ export default function DashboardJourneyHarnessPage() {
   const [ready, setReady] = useState(false);
   const { clearAll, updateSettings } = useNotificationActions();
 
+  // Use refs for stable harness setup
+  const clearAllRef = useRef(clearAll);
+  useEffect(() => { clearAllRef.current = clearAll; }, [clearAll]);
+  const updateSettingsRef = useRef(updateSettings);
+  useEffect(() => { updateSettingsRef.current = updateSettings; }, [updateSettings]);
+
   useEffect(() => {
     if (typeof window === 'undefined') {
       return;
     }
 
     const harness: NotificationHarnessRef = {
-      clearAll,
-      updateSettings,
+      clearAll: (...args) => clearAllRef.current(...args),
+      updateSettings: (...args) => updateSettingsRef.current(...args),
       getSnapshot: () => useNotificationStore.getState(),
     };
 
     window.__notificationHarnessRef = harness;
-  }, [clearAll, updateSettings]);
+  }, []); // Empty deps - harness setup runs once
 
   useEffect(() => {
     const userId = 'dashboard-harness-user';
