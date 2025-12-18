@@ -21,7 +21,6 @@ import { useEffect, useState, useCallback, useRef, useMemo } from 'react';
 import { useFeedAnalytics } from '@/features/feeds/hooks/useFeedAnalytics';
 import FeedShareDialog from '@/features/share/components/FeedShareDialog';
 
-import ScreenReaderSupport from '@/lib/accessibility/screen-reader';
 import {
   useUser,
   useFilteredFeeds,
@@ -258,35 +257,31 @@ function HarnessFeedDataProvider({
     showLoadMore ? { ...childProps, onLoadMore: handleLoadMore } : childProps,
   );
 
+  // Announce feed changes for screen readers - stable deps only
+  const feedsLengthRef = useRef(feeds.length);
   useEffect(() => {
     if (feeds.length === 0) {
       previousFeedIdsRef.current = new Set();
+      feedsLengthRef.current = 0;
       return;
     }
+
+    // Only run if feeds length actually changed
+    if (feeds.length === feedsLengthRef.current) {
+      return;
+    }
+    feedsLengthRef.current = feeds.length;
 
     const currentIds = new Set(feeds.map((feed) => feed.id));
 
     if (!hasAnnouncedInitialRef.current) {
-      const message = t('feeds.live.initialLoad', { count: feeds.length });
-      setLiveMessage(message);
-      ScreenReaderSupport.announce(message, 'polite');
+      setLiveMessage(`Loaded ${feeds.length} feed items`);
       hasAnnouncedInitialRef.current = true;
-    } else {
-      let newCount = 0;
-      feeds.forEach((feed) => {
-        if (!previousFeedIdsRef.current.has(feed.id)) {
-          newCount += 1;
-        }
-      });
-      if (newCount > 0) {
-        const message = t('feeds.live.newItems', { count: newCount });
-        setLiveMessage(message);
-        ScreenReaderSupport.announce(message, 'polite');
-      }
     }
 
     previousFeedIdsRef.current = currentIds;
-  }, [feeds, t]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [feeds.length]); // Only depend on length
 
   const LiveRegion = () => (
     <div aria-live="polite" role="status" className="sr-only" data-testid="feeds-live-message">
@@ -565,35 +560,31 @@ function StandardFeedDataProvider({
   const effectiveLimit = totalAvailable > 0 ? Math.min(maxItems, totalAvailable) : maxItems;
   const hasMore = enableInfiniteScroll && storeHasMore && feeds.length < effectiveLimit;
 
+  // Announce feed changes for screen readers - stable deps only
+  const feedsCountRef = useRef(feeds.length);
   useEffect(() => {
     if (feeds.length === 0) {
       previousFeedIdsRef.current = new Set();
+      feedsCountRef.current = 0;
       return;
     }
+
+    // Only run if feeds count changed
+    if (feeds.length === feedsCountRef.current) {
+      return;
+    }
+    feedsCountRef.current = feeds.length;
 
     const currentIds = new Set(feeds.map((feed) => feed.id));
 
     if (!hasAnnouncedInitialRef.current) {
-      const message = t('feeds.live.initialLoad', { count: feeds.length });
-      setLiveMessage(message);
-      ScreenReaderSupport.announce(message, 'polite');
+      setLiveMessage(`Loaded ${feeds.length} feed items`);
       hasAnnouncedInitialRef.current = true;
-    } else {
-      let newCount = 0;
-      feeds.forEach((feed) => {
-        if (!previousFeedIdsRef.current.has(feed.id)) {
-          newCount += 1;
-        }
-      });
-      if (newCount > 0) {
-        const message = t('feeds.live.newItems', { count: newCount });
-        setLiveMessage(message);
-        ScreenReaderSupport.announce(message, 'polite');
-      }
     }
 
     previousFeedIdsRef.current = currentIds;
-  }, [feeds, t]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [feeds.length]); // Only depend on length
 
   const childNode = children({
     feeds: filteredFeeds,
