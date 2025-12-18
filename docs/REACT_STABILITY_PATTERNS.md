@@ -152,12 +152,33 @@ This is acceptable when:
 - `web/hooks/useI18n.ts` - Stabilized `t` function
 - `web/hooks/useSystemThemeSync.ts` - Stabilized theme update callbacks
 - `web/features/feeds/hooks/useFeedAnalytics.ts` - Stabilized all tracking callbacks
-- `web/features/feeds/components/providers/FeedDataProvider.tsx` - Stabilized all handlers
+- `web/features/feeds/components/providers/FeedDataProvider.tsx` - Stabilized all handlers in **BOTH** providers (HarnessFeedDataProvider AND StandardFeedDataProvider)
 - `web/features/polls/hooks/usePollCreatedListener.ts` - Stabilized event handler
 - `web/features/profile/hooks/useUserDistrict.ts` - Memoized return object
 - `web/components/shared/AppShell.tsx` - Stabilized device initialization
 - `web/lib/stores/hashtagStore.ts` - Made hashtag loading non-blocking (no error state)
 - `web/app/providers.tsx` - Added i18n fallback to prevent crashes on missing translations
+
+## Critical Gotcha: Multiple Code Paths
+
+**IMPORTANT**: Some components have multiple implementations or providers for different environments:
+
+```typescript
+// FeedDataProvider.tsx has TWO providers!
+const IS_E2E_HARNESS = process.env.NEXT_PUBLIC_ENABLE_E2E_HARNESS === '1';
+
+function HarnessFeedDataProvider(...) { /* E2E testing */ }
+function StandardFeedDataProvider(...) { /* Production */ }
+
+export default function FeedDataProvider(props) {
+  if (IS_E2E_HARNESS) {
+    return <HarnessFeedDataProvider {...props} />;
+  }
+  return <StandardFeedDataProvider {...props} />;
+}
+```
+
+When fixing stability issues, **check ALL code paths** - not just the one you think is being used.
 
 ## Related Issues
 
