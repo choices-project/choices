@@ -8,7 +8,7 @@
  * Status: ✅ PRODUCTION
  */
 
-import { useCallback, useState, useEffect } from 'react';
+import { useCallback, useState, useEffect, useMemo } from 'react';
 
 import { logger } from '@/lib/utils/logger';
 
@@ -179,11 +179,14 @@ export function useFollowRepresentative(representativeId: number | null) {
     }
   }, [status.following, follow, unfollow]);
 
-  return {
-    ...status,
-    follow,
-    unfollow,
-    toggle
-  };
+  return useMemo(
+    () => ({
+      ...status,
+      follow,
+      unfollow,
+      toggle
+    }),
+    [status, follow, unfollow, toggle]
+  );
 }
 

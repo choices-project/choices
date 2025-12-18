@@ -2,7 +2,7 @@
 
 import { useRouter } from 'next/navigation';
 import { useTranslations, useLocale } from 'next-intl';
-import { useCallback, useRef } from 'react';
+import { useCallback, useMemo, useRef } from 'react';
 
 import { setLocaleCookie } from '@/lib/i18n/client';
 import { isSupportedLocale, type SupportedLocale } from '@/lib/i18n/config';
@@ -88,10 +88,13 @@ export const useI18n = () => {
     [locale, router],
   );
 
-  return {
-    t,
-    changeLanguage,
-    currentLanguage: locale,
-    isReady: true,
-  };
+  return useMemo(
+    () => ({
+      t,
+      changeLanguage,
+      currentLanguage: locale,
+      isReady: true,
+    }),
+    [t, changeLanguage, locale]
+  );
 };
