@@ -44,10 +44,25 @@ export function useFeedAnalytics(config: FeedAnalyticsConfig = {}) {
   const maxScrollDepthRef = useRef<number>(0);
   const { trackEvent } = useAnalyticsActions();
   const trackEventRef = useRef(trackEvent);
+  const feedIdRef = useRef(feedId);
+  const userIdRef = useRef(userId);
+  const enableEngagementTrackingRef = useRef(enableEngagementTracking);
 
   useEffect(() => {
     trackEventRef.current = trackEvent;
   }, [trackEvent]);
+
+  useEffect(() => {
+    feedIdRef.current = feedId;
+  }, [feedId]);
+
+  useEffect(() => {
+    userIdRef.current = userId;
+  }, [userId]);
+
+  useEffect(() => {
+    enableEngagementTrackingRef.current = enableEngagementTracking;
+  }, [enableEngagementTracking]);
 
   // Track feed view on mount
   useEffect(() => {
@@ -169,9 +184,9 @@ export function useFeedAnalytics(config: FeedAnalyticsConfig = {}) {
     };
   }, [enableTimeTracking, feedId, userId]);
 
-  // Tracking functions
+  // Tracking functions - use refs for stable callbacks
   const trackItemView = useCallback((itemId: string, itemType: string = 'post') => {
-    if (!enableEngagementTracking) return;
+    if (!enableEngagementTrackingRef.current) return;
     
     trackEventRef.current({
       event_type: 'feed_item_view',
@@ -180,13 +195,13 @@ export function useFeedAnalytics(config: FeedAnalyticsConfig = {}) {
       action: 'item_view',
       label: itemId,
       session_id: '',
-      event_data: { feedId, itemId, itemType, userId },
+      event_data: { feedId: feedIdRef.current, itemId, itemType, userId: userIdRef.current },
       created_at: new Date().toISOString()
     });
-  }, [feedId, userId, enableEngagementTracking]);
+  }, []);
 
   const trackItemLike = useCallback((itemId: string) => {
-    if (!enableEngagementTracking) return;
+    if (!enableEngagementTrackingRef.current) return;
     
     trackEventRef.current({
       event_type: 'feed_item_like',
@@ -196,13 +211,13 @@ export function useFeedAnalytics(config: FeedAnalyticsConfig = {}) {
       label: itemId,
       value: 1,
       session_id: '',
-      event_data: { feedId, itemId, userId },
+      event_data: { feedId: feedIdRef.current, itemId, userId: userIdRef.current },
       created_at: new Date().toISOString()
     });
-  }, [feedId, userId, enableEngagementTracking]);
+  }, []);
 
   const trackItemBookmark = useCallback((itemId: string) => {
-    if (!enableEngagementTracking) return;
+    if (!enableEngagementTrackingRef.current) return;
     
     trackEventRef.current({
       event_type: 'feed_item_bookmark',
@@ -212,13 +227,13 @@ export function useFeedAnalytics(config: FeedAnalyticsConfig = {}) {
       label: itemId,
       value: 1,
       session_id: '',
-      event_data: { feedId, itemId, userId },
+      event_data: { feedId: feedIdRef.current, itemId, userId: userIdRef.current },
       created_at: new Date().toISOString()
     });
-  }, [feedId, userId, enableEngagementTracking]);
+  }, []);
 
   const trackItemShare = useCallback((itemId: string, platform?: string) => {
-    if (!enableEngagementTracking) return;
+    if (!enableEngagementTrackingRef.current) return;
     
     trackEventRef.current({
       event_type: 'feed_item_share',
@@ -228,13 +243,13 @@ export function useFeedAnalytics(config: FeedAnalyticsConfig = {}) {
       label: itemId,
       value: 1,
       session_id: '',
-      event_data: { feedId, itemId, userId, platform },
+      event_data: { feedId: feedIdRef.current, itemId, userId: userIdRef.current, platform },
       created_at: new Date().toISOString()
     });
-  }, [feedId, userId, enableEngagementTracking]);
+  }, []);
 
   const trackHashtagClick = useCallback((hashtag: string) => {
-    if (!enableEngagementTracking) return;
+    if (!enableEngagementTrackingRef.current) return;
     
     trackEventRef.current({
       event_type: 'feed_hashtag_click',
@@ -244,13 +259,13 @@ export function useFeedAnalytics(config: FeedAnalyticsConfig = {}) {
       label: hashtag,
       value: 1,
       session_id: '',
-      event_data: { feedId, hashtag, userId },
+      event_data: { feedId: feedIdRef.current, hashtag, userId: userIdRef.current },
       created_at: new Date().toISOString()
     });
-  }, [feedId, userId, enableEngagementTracking]);
+  }, []);
 
-  const trackFilterChange = useCallback((filterType: string, filterValue: any) => {
-    if (!enableEngagementTracking) return;
+  const trackFilterChange = useCallback((filterType: string, filterValue: unknown) => {
+    if (!enableEngagementTrackingRef.current) return;
     
     trackEventRef.current({
       event_type: 'feed_filter_change',
@@ -259,10 +274,10 @@ export function useFeedAnalytics(config: FeedAnalyticsConfig = {}) {
       action: 'filter_change',
       label: filterType,
       session_id: '',
-      event_data: { feedId, filterType, filterValue, userId },
+      event_data: { feedId: feedIdRef.current, filterType, filterValue, userId: userIdRef.current },
       created_at: new Date().toISOString()
     });
-  }, [feedId, userId, enableEngagementTracking]);
+  }, []);
 
   return {
     trackItemView,
