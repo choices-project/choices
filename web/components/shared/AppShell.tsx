@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect } from 'react';
+import { useEffect, useRef } from 'react';
 
 import {
   appStoreUtils,
@@ -9,7 +9,7 @@ import {
   useSidebarPinned,
   useSidebarWidth,
 } from '@/lib/stores/appStore';
-import { useDeviceActions } from '@/lib/stores/deviceStore';
+import { useDeviceStore } from '@/lib/stores/deviceStore';
 
 import { useSystemThemeSync } from '@/hooks/useSystemThemeSync';
 
@@ -32,20 +32,22 @@ export function AppShell({ navigation, siteMessages, feedback, children }: AppSh
   const sidebarCollapsed = useSidebarCollapsed();
   const sidebarWidth = useSidebarWidth();
   const sidebarPinned = useSidebarPinned();
-  const { initialize: initializeDevice } = useDeviceActions();
+  // Get initialize directly from store for stable reference
+  const initializeDevice = useDeviceStore((state) => state.initialize);
+  const initRef = useRef(false);
 
   // Initialize app store
   useEffect(() => {
     appStoreUtils.initialize();
   }, []);
 
-  // Initialize device store (for system theme detection)
+  // Initialize device store once
   useEffect(() => {
+    if (initRef.current) return;
+    initRef.current = true;
     initializeDevice();
-    return () => {
-      // Cleanup handled by deviceStore teardown
-    };
-  }, [initializeDevice]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []); // Empty deps - run once
 
   // Sync system theme preference
   useSystemThemeSync();
