@@ -128,6 +128,9 @@ test.describe('Auth – real backend', () => {
       )
       .toBeTruthy();
 
+    // Wait a moment for cookies to be fully set before server-side navigation
+    await page.waitForTimeout(2_000);
+    
     await page.goto('/admin', { waitUntil: 'domcontentloaded', timeout: 60_000 });
     await waitForPageReady(page);
 
