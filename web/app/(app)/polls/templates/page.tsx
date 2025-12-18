@@ -8,6 +8,7 @@ import React, { useEffect, useState } from 'react';
 import type { PollTemplate, PollCategory, TemplateCategory } from '@/features/polls/types';
 
 import { Badge } from '@/components/ui/badge';
+import { useDebounce } from '@/hooks/useDebounce';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -249,6 +250,7 @@ const SAMPLETEMPLATES: PollTemplate[] = [
 export default function PollTemplatesPage() {
   const router = useRouter();
   const [searchQuery, setSearchQuery] = useState('');
+  const debouncedSearchQuery = useDebounce(searchQuery, 300);
   const [selectedCategory, setSelectedCategory] = useState<PollCategory | 'all'>('all');
   const [sortBy, setSortBy] = useState<'popular' | 'recent' | 'rating' | 'name'>('popular');
   const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('desc');
@@ -272,9 +274,9 @@ export default function PollTemplatesPage() {
   }, [setBreadcrumbs, setCurrentRoute, setSidebarActiveSection]);
 
   const filteredTemplates = templates.filter(template => {
-    const matchesSearch = template.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-                         template.description.toLowerCase().includes(searchQuery.toLowerCase()) ||
-                         template.tags.some((tag: string) => tag.toLowerCase().includes(searchQuery.toLowerCase()));
+    const matchesSearch = template.name.toLowerCase().includes(debouncedSearchQuery.toLowerCase()) ||
+                         template.description.toLowerCase().includes(debouncedSearchQuery.toLowerCase()) ||
+                         template.tags.some((tag: string) => tag.toLowerCase().includes(debouncedSearchQuery.toLowerCase()));
     
     const matchesCategory = selectedCategory === 'all' || 
       (typeof selectedCategory === 'object' ? template.category === selectedCategory.id : template.category === selectedCategory);

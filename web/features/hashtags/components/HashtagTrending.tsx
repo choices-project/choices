@@ -17,8 +17,9 @@ TrendingUp,
   ArrowDown,
   Minus
 } from 'lucide-react';
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useMemo } from 'react';
 
+import { useDebounce } from '@/hooks/useDebounce';
 import {
   useHashtagActions,
   useHashtagError,
@@ -65,6 +66,7 @@ export default function HashtagTrending({
     sortBy: 'trending',
     timeRange: '24h'
   });
+  const debouncedSearchQuery = useDebounce(filters.searchQuery, 300);
 
 // Zustand store integration
 const trendingHashtags = useTrendingHashtags();
@@ -99,14 +101,14 @@ const errorMessage = error ?? searchError ?? null;
     return undefined;
   }, [loadTrendingHashtags, autoRefresh, refreshInterval]);
 
-  const getSortedHashtags = () => {
+  const sortedHashtags = useMemo(() => {
     let sorted = [...trendingHashtags];
 
-    // Apply search filter
-    if (filters.searchQuery) {
+    // Apply search filter using debounced value for better UX
+    if (debouncedSearchQuery) {
       sorted = sorted.filter(hashtag =>
-        hashtag.hashtag.name.toLowerCase().includes(filters.searchQuery.toLowerCase()) ||
-        hashtag.hashtag.description?.toLowerCase().includes(filters.searchQuery.toLowerCase())
+        hashtag.hashtag.name.toLowerCase().includes(debouncedSearchQuery.toLowerCase()) ||
+        hashtag.hashtag.description?.toLowerCase().includes(debouncedSearchQuery.toLowerCase())
       );
     }
 
@@ -127,7 +129,7 @@ const errorMessage = error ?? searchError ?? null;
     }
 
     return sorted.slice(0, limit);
-  };
+  }, [trendingHashtags, debouncedSearchQuery, filters.sortBy, limit]);
 
   const getTrendIcon = (position: number, previousPosition?: number) => {
     if (previousPosition === undefined) return <Minus className="h-4 w-4 text-gray-400" />;
@@ -147,8 +149,6 @@ const errorMessage = error ?? searchError ?? null;
     if (growthRate < -20) return 'text-red-600';
     return 'text-gray-600';
   };
-
-  const sortedHashtags = getSortedHashtags();
 
   return (
     <div className={`space-y-6 ${className}`}>

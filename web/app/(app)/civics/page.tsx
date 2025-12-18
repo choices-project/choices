@@ -20,6 +20,7 @@ import React, { useState, useEffect, useCallback } from 'react';
 
 import type { SuperiorRepresentativeData } from '@/features/civics/lib/types/superior-types';
 
+import { useDebounce } from '@/hooks/useDebounce';
 import { useIsMobile, useAppActions } from '@/lib/stores/appStore';
 import { logger } from '@/lib/utils/logger';
 
@@ -46,6 +47,7 @@ export default function Civics2Page() {
   // UI state (local)
   const [activeTab, setActiveTab] = useState<'representatives' | 'feed'>('representatives');
   const [searchQuery, setSearchQuery] = useState('');
+  const debouncedSearchQuery = useDebounce(searchQuery, 300);
   const [selectedState, setSelectedState] = useState<string>('CA');
   const [selectedLevel, setSelectedLevel] = useState<'all' | 'federal' | 'state' | 'local'>('federal');
   const [_followedRepresentatives, setFollowedRepresentatives] = useState<Set<string>>(new Set());
@@ -131,10 +133,10 @@ export default function Civics2Page() {
   };
 
   const filteredRepresentatives = representatives.filter(rep => {
-    if (!searchQuery) return true;
-    return rep.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-           (rep.office ?? '').toLowerCase().includes(searchQuery.toLowerCase()) ||
-           (rep.party ?? '').toLowerCase().includes(searchQuery.toLowerCase());
+    if (!debouncedSearchQuery) return true;
+    return rep.name.toLowerCase().includes(debouncedSearchQuery.toLowerCase()) ||
+           (rep.office ?? '').toLowerCase().includes(debouncedSearchQuery.toLowerCase()) ||
+           (rep.party ?? '').toLowerCase().includes(debouncedSearchQuery.toLowerCase());
   });
 
 
