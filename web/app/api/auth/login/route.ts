@@ -202,11 +202,13 @@ export const POST = withErrorHandling(async (request: NextRequest) => {
       const hostname = request.headers.get('host') || ''
       const isProductionDomain = hostname.includes('choices-app.com')
       const cookieDomain = isProduction && isProductionDomain ? '.choices-app.com' : undefined
+      // Only require HTTPS (secure) when actually on production domain, not localhost
+      const requireSecure = isProduction && isProductionDomain
       
       // Set access token cookie with proper security settings
       response.cookies.set('sb-access-token', authData.session.access_token, {
         httpOnly: true,
-        secure: isProduction, // HTTPS only in production
+        secure: requireSecure, // HTTPS only on actual production domain
         sameSite: 'lax', // Allow cross-site requests for OAuth flows
         path: '/',
         maxAge: maxAge,
@@ -216,7 +218,7 @@ export const POST = withErrorHandling(async (request: NextRequest) => {
       // Set refresh token cookie with proper security settings
       response.cookies.set('sb-refresh-token', authData.session.refresh_token, {
         httpOnly: true,
-        secure: isProduction, // HTTPS only in production
+        secure: requireSecure, // HTTPS only on actual production domain
         sameSite: 'lax', // Allow cross-site requests for OAuth flows
         path: '/',
         maxAge: maxAge,
@@ -227,7 +229,7 @@ export const POST = withErrorHandling(async (request: NextRequest) => {
       if (authData.session.expires_at) {
         response.cookies.set('sb-session-expires', authData.session.expires_at.toString(), {
           httpOnly: false, // Client needs to read this for session checks
-          secure: isProduction,
+          secure: requireSecure,
           sameSite: 'lax',
           path: '/',
           maxAge: maxAge,

@@ -131,10 +131,6 @@ test.describe('Auth – real backend', () => {
     // Wait a moment for cookies to be fully set before server-side navigation
     await page.waitForTimeout(2_000);
     
-    // Debug: log cookies before navigating to admin
-    const allCookies = await page.context().cookies();
-    console.log('Cookies before /admin navigation:', JSON.stringify(allCookies.map(c => ({ name: c.name, domain: c.domain })), null, 2));
-    
     await page.goto('/admin', { waitUntil: 'domcontentloaded', timeout: 60_000 });
     await waitForPageReady(page);
 
