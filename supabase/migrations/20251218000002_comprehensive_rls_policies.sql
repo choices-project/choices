@@ -1,7 +1,7 @@
 -- Comprehensive RLS Policies for Client-Side Access
 -- These policies ensure proper access control while allowing the app to function
 -- Created: December 18, 2025
--- 
+--
 -- This migration safely checks if each table exists before applying policies
 
 -- Helper function to safely create policies
@@ -18,37 +18,47 @@ DECLARE
 BEGIN
   -- Check if table exists
   IF NOT EXISTS (
-    SELECT 1 FROM information_schema.tables 
+    SELECT 1 FROM information_schema.tables
     WHERE table_schema = 'public' AND table_name = p_table_name
   ) THEN
     RAISE NOTICE 'Table % does not exist, skipping policy %', p_table_name, p_policy_name;
     RETURN;
   END IF;
-  
+
   -- Enable RLS on table
   EXECUTE format('ALTER TABLE public.%I ENABLE ROW LEVEL SECURITY', p_table_name);
-  
+
   -- Check if policy already exists
   IF EXISTS (
-    SELECT 1 FROM pg_policies 
+    SELECT 1 FROM pg_policies
     WHERE tablename = p_table_name AND policyname = p_policy_name
   ) THEN
     RAISE NOTICE 'Policy % on % already exists, skipping', p_policy_name, p_table_name;
     RETURN;
   END IF;
-  
+
   -- Build policy SQL
-  IF p_role IS NULL OR p_role = '' THEN
-    policy_sql := format('CREATE POLICY %I ON public.%I FOR %s USING (%s)', 
-                         p_policy_name, p_table_name, p_command, p_using_expr);
-  ELSIF p_check_expr IS NOT NULL THEN
-    policy_sql := format('CREATE POLICY %I ON public.%I FOR %s TO %s WITH CHECK (%s)', 
-                         p_policy_name, p_table_name, p_command, p_role, p_check_expr);
+  -- For INSERT, use WITH CHECK; for SELECT/UPDATE/DELETE/ALL, use USING
+  IF p_command = 'INSERT' THEN
+    -- INSERT policies use WITH CHECK
+    IF p_role IS NULL OR p_role = '' THEN
+      policy_sql := format('CREATE POLICY %I ON public.%I FOR INSERT WITH CHECK (%s)', 
+                           p_policy_name, p_table_name, COALESCE(p_check_expr, p_using_expr, 'true'));
+    ELSE
+      policy_sql := format('CREATE POLICY %I ON public.%I FOR INSERT TO %s WITH CHECK (%s)', 
+                           p_policy_name, p_table_name, p_role, COALESCE(p_check_expr, p_using_expr, 'true'));
+    END IF;
   ELSE
-    policy_sql := format('CREATE POLICY %I ON public.%I FOR %s TO %s USING (%s)', 
-                         p_policy_name, p_table_name, p_command, p_role, p_using_expr);
+    -- SELECT/UPDATE/DELETE/ALL use USING
+    IF p_role IS NULL OR p_role = '' THEN
+      policy_sql := format('CREATE POLICY %I ON public.%I FOR %s USING (%s)', 
+                           p_policy_name, p_table_name, p_command, p_using_expr);
+    ELSE
+      policy_sql := format('CREATE POLICY %I ON public.%I FOR %s TO %s USING (%s)', 
+                           p_policy_name, p_table_name, p_command, p_role, p_using_expr);
+    END IF;
   END IF;
-  
+
   EXECUTE policy_sql;
   RAISE NOTICE 'Created policy % on %', p_policy_name, p_table_name;
 END;
@@ -123,10 +133,10 @@ DROP FUNCTION IF EXISTS create_policy_if_not_exists(text, text, text, text, text
 -- ============================================================================
 -- SUMMARY
 -- ============================================================================
--- Public read: polls, feed_items, feeds, representatives_core, elections, 
+-- Public read: polls, feed_items, feeds, representatives_core, elections,
 --              candidates, site_messages, geographic tables, hashtag tables,
 --              user_profiles
--- Authenticated read: poll_votes, votes, poll_demographic_insights, 
+-- Authenticated read: poll_votes, votes, poll_demographic_insights,
 --                     hashtag_engagement, hashtag_usage
 -- Owner-only: user_sessions, user_hashtags, hashtag_user_preferences,
 --             webauthn_credentials, feed_interactions
