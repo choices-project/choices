@@ -2,14 +2,14 @@
 
 /**
  * useFeedAnalytics Hook
- * 
+ *
  * Provides analytics tracking for feed interactions:
  * - View events
  * - Engagement events (like, bookmark, share)
  * - Hashtag click tracking
  * - Scroll depth tracking
  * - Time on feed tracking
- * 
+ *
  * Created: November 5, 2025
  * Status: ✅ Analytics integration
  */
@@ -67,7 +67,7 @@ export function useFeedAnalytics(config: FeedAnalyticsConfig = {}) {
   // Track feed view on mount
   useEffect(() => {
     startTimeRef.current = Date.now();
-    
+
     trackEventRef.current({
       event_type: 'feed_view',
       type: 'feed_view',
@@ -93,10 +93,10 @@ export function useFeedAnalytics(config: FeedAnalyticsConfig = {}) {
       const scrollPercent = Math.round(
         (window.scrollY / (document.documentElement.scrollHeight - window.innerHeight)) * 100
       );
-      
+
       if (scrollPercent > maxScrollDepthRef.current) {
         maxScrollDepthRef.current = scrollPercent;
-        
+
         // Track milestones (25%, 50%, 75%, 100%)
         if (scrollPercent >= 25 && scrollPercent < 30) {
           trackEventRef.current({
@@ -159,7 +159,7 @@ export function useFeedAnalytics(config: FeedAnalyticsConfig = {}) {
     return () => {
       if (enableTimeTracking && startTimeRef.current > 0) {
         const timeSpent = Math.round((Date.now() - startTimeRef.current) / 1000); // seconds
-        
+
         trackEventRef.current({
           event_type: 'feed_time_spent',
           type: 'engagement',
@@ -187,7 +187,7 @@ export function useFeedAnalytics(config: FeedAnalyticsConfig = {}) {
   // Tracking functions - use refs for stable callbacks
   const trackItemView = useCallback((itemId: string, itemType: string = 'post') => {
     if (!enableEngagementTrackingRef.current) return;
-    
+
     trackEventRef.current({
       event_type: 'feed_item_view',
       type: 'view',
@@ -202,7 +202,7 @@ export function useFeedAnalytics(config: FeedAnalyticsConfig = {}) {
 
   const trackItemLike = useCallback((itemId: string) => {
     if (!enableEngagementTrackingRef.current) return;
-    
+
     trackEventRef.current({
       event_type: 'feed_item_like',
       type: 'engagement',
@@ -218,7 +218,7 @@ export function useFeedAnalytics(config: FeedAnalyticsConfig = {}) {
 
   const trackItemBookmark = useCallback((itemId: string) => {
     if (!enableEngagementTrackingRef.current) return;
-    
+
     trackEventRef.current({
       event_type: 'feed_item_bookmark',
       type: 'engagement',
@@ -234,7 +234,7 @@ export function useFeedAnalytics(config: FeedAnalyticsConfig = {}) {
 
   const trackItemShare = useCallback((itemId: string, platform?: string) => {
     if (!enableEngagementTrackingRef.current) return;
-    
+
     trackEventRef.current({
       event_type: 'feed_item_share',
       type: 'engagement',
@@ -250,7 +250,7 @@ export function useFeedAnalytics(config: FeedAnalyticsConfig = {}) {
 
   const trackHashtagClick = useCallback((hashtag: string) => {
     if (!enableEngagementTrackingRef.current) return;
-    
+
     trackEventRef.current({
       event_type: 'feed_hashtag_click',
       type: 'interaction',
@@ -266,7 +266,7 @@ export function useFeedAnalytics(config: FeedAnalyticsConfig = {}) {
 
   const trackFilterChange = useCallback((filterType: string, filterValue: unknown) => {
     if (!enableEngagementTrackingRef.current) return;
-    
+
     trackEventRef.current({
       event_type: 'feed_filter_change',
       type: 'interaction',

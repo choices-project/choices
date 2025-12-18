@@ -382,15 +382,21 @@ function StandardFeedDataProvider({
   const previousFeedIdsRef = useRef<Set<string>>(new Set());
   const hasAnnouncedInitialRef = useRef(false);
 
+  // Use refs for stable callbacks
+  const addNotificationRef = useRef(addNotification);
+  useEffect(() => { addNotificationRef.current = addNotification; }, [addNotification]);
+  const tRef = useRef(t);
+  useEffect(() => { tRef.current = t; }, [t]);
+
   const notifyFeedError = useCallback(
     (message: string) => {
-      addNotification({
+      addNotificationRef.current({
         type: 'error',
-        title: t('feeds.provider.notifications.error.title'),
+        title: tRef.current('feeds.provider.notifications.error.title'),
         message,
       });
     },
-    [addNotification, t],
+    [],
   );
 
   const surfaceStoreError = useCallback(
@@ -448,107 +454,129 @@ function StandardFeedDataProvider({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []); // Intentionally empty - one-time load with ref guard
 
+  // Refs for store actions to stabilize handlers
+  const likeFeedActionRef = useRef(likeFeedAction);
+  useEffect(() => { likeFeedActionRef.current = likeFeedAction; }, [likeFeedAction]);
+  const bookmarkFeedActionRef = useRef(bookmarkFeedAction);
+  useEffect(() => { bookmarkFeedActionRef.current = bookmarkFeedAction; }, [bookmarkFeedAction]);
+  const clearErrorActionRef = useRef(clearErrorAction);
+  useEffect(() => { clearErrorActionRef.current = clearErrorAction; }, [clearErrorAction]);
+  const setErrorActionRef = useRef(setErrorAction);
+  useEffect(() => { setErrorActionRef.current = setErrorAction; }, [setErrorAction]);
+  const loadFeedsRef = useRef(loadFeeds);
+  useEffect(() => { loadFeedsRef.current = loadFeeds; }, [loadFeeds]);
+  const loadMoreFeedsRef = useRef(loadMoreFeeds);
+  useEffect(() => { loadMoreFeedsRef.current = loadMoreFeeds; }, [loadMoreFeeds]);
+
   // Interaction handlers - use refs to avoid re-renders
   const handleLike = useCallback(async (itemId: string) => {
-    clearErrorAction();
+    clearErrorActionRef.current();
     try {
-      await likeFeedAction(itemId);
+      await likeFeedActionRef.current(itemId);
     } catch (err) {
       logger.error('Failed to like feed:', err);
-      const shortMessage = t('feeds.provider.errors.likeFeed.short');
-      setErrorAction(shortMessage);
-      notifyFeedError(t('feeds.provider.errors.likeFeed.message'));
+      const shortMessage = tRef.current('feeds.provider.errors.likeFeed.short');
+      setErrorActionRef.current(shortMessage);
+      notifyFeedError(tRef.current('feeds.provider.errors.likeFeed.message'));
     }
-  }, [likeFeedAction, clearErrorAction, setErrorAction, notifyFeedError, t]);
+  }, [notifyFeedError]);
+
+  // More refs for stable handlers
+  const refreshFeedsRef = useRef(refreshFeeds);
+  useEffect(() => { refreshFeedsRef.current = refreshFeeds; }, [refreshFeeds]);
+  const setFiltersActionRef = useRef(setFiltersAction);
+  useEffect(() => { setFiltersActionRef.current = setFiltersAction; }, [setFiltersAction]);
+  const feedsRef = useRef(feeds);
+  useEffect(() => { feedsRef.current = feeds; }, [feeds]);
 
   const handleBookmark = useCallback(async (itemId: string) => {
-    clearErrorAction();
+    clearErrorActionRef.current();
     try {
-      await bookmarkFeedAction(itemId);
+      await bookmarkFeedActionRef.current(itemId);
     } catch (err) {
       logger.error('Failed to bookmark feed:', err);
-      const shortMessage = t('feeds.provider.errors.bookmarkFeed.short');
-      setErrorAction(shortMessage);
-      notifyFeedError(t('feeds.provider.errors.bookmarkFeed.message'));
+      const shortMessage = tRef.current('feeds.provider.errors.bookmarkFeed.short');
+      setErrorActionRef.current(shortMessage);
+      notifyFeedError(tRef.current('feeds.provider.errors.bookmarkFeed.message'));
     }
-  }, [bookmarkFeedAction, clearErrorAction, setErrorAction, notifyFeedError, t]);
+  }, [notifyFeedError]);
 
   const handleShare = useCallback((itemId: string) => {
     trackItemShareRef.current(itemId);
-    const nextItem = feeds.find((feed) => feed.id === itemId) ?? null;
+    const nextItem = feedsRef.current.find((feed) => feed.id === itemId) ?? null;
     if (!nextItem) {
       logger.warn('[FeedDataProvider] Unable to locate feed item for sharing', { itemId });
       return;
     }
     setShareItem(nextItem);
-  }, [feeds]);
+  }, []);
 
   const handleCloseShareDialog = useCallback(() => {
     setShareItem(null);
   }, []);
 
   const handleRefresh = useCallback(async () => {
-    clearErrorAction();
+    clearErrorActionRef.current();
     try {
-      await refreshFeeds();
+      await refreshFeedsRef.current();
       surfaceStoreError((error) =>
-        t('feeds.provider.errors.refreshFeeds.withReason', { error }),
+        tRef.current('feeds.provider.errors.refreshFeeds.withReason', { error }),
       );
     } catch (err) {
       logger.error('Failed to refresh feeds:', err);
-      const shortMessage = t('feeds.provider.errors.refreshFeeds.short');
-      setErrorAction(shortMessage);
+      const shortMessage = tRef.current('feeds.provider.errors.refreshFeeds.short');
+      setErrorActionRef.current(shortMessage);
       notifyFeedError(shortMessage);
     }
-  }, [refreshFeeds, clearErrorAction, setErrorAction, notifyFeedError, surfaceStoreError, t]);
+  }, [notifyFeedError, surfaceStoreError]);
 
   const handleHashtagAdd = useCallback((tag: string) => {
-    if (selectedHashtags.length < 5 && !selectedHashtags.includes(tag)) {
-      setSelectedHashtags(prev => [...prev, tag]);
-    }
-  }, [selectedHashtags]);
-
-  const handleHashtagRemove = useCallback((tag: string) => {
-    setSelectedHashtags(prev => prev.filter(t => t !== tag));
+    setSelectedHashtags(prev => {
+      if (prev.length < 5 && !prev.includes(tag)) {
+        return [...prev, tag];
+      }
+      return prev;
+    });
   }, []);
 
+  const handleHashtagRemove = useCallback((tag: string) => {
+    setSelectedHashtags(prev => prev.filter(h => h !== tag));
+  }, []);
+
+  // Refs for district toggle
+  const districtFilterEnabledRef = useRef(districtFilterEnabled);
+  useEffect(() => { districtFilterEnabledRef.current = districtFilterEnabled; }, [districtFilterEnabled]);
+  const userDistrictRef = useRef(userDistrict);
+  useEffect(() => { userDistrictRef.current = userDistrict; }, [userDistrict]);
+
   const handleDistrictFilterToggle = useCallback(() => {
-    const newValue = !districtFilterEnabled;
+    const newValue = !districtFilterEnabledRef.current;
     setDistrictFilterEnabled(newValue);
 
     // Apply district filter to feeds store
-    if (newValue && userDistrict) {
-      setFiltersAction({ district: userDistrict });
+    if (newValue && userDistrictRef.current) {
+      setFiltersActionRef.current({ district: userDistrictRef.current });
     } else {
-      setFiltersAction({ district: null });
+      setFiltersActionRef.current({ district: null });
     }
 
     // Refresh feeds with new filter
-    refreshFeeds().catch((err) => {
+    refreshFeedsRef.current().catch((err) => {
       logger.error('Failed to refresh feeds with district filter:', err);
-      const shortMessage = t('feeds.provider.errors.refreshFeeds.short');
-      setErrorAction(shortMessage);
+      const shortMessage = tRef.current('feeds.provider.errors.refreshFeeds.short');
+      setErrorActionRef.current(shortMessage);
       notifyFeedError(shortMessage);
     });
-  }, [
-    districtFilterEnabled,
-    userDistrict,
-    setFiltersAction,
-    refreshFeeds,
-    setErrorAction,
-    notifyFeedError,
-    t,
-  ]);
+  }, [notifyFeedError]);
 
   const handleLoadMore = useCallback(async () => {
     if (!enableInfiniteScroll) return;
     try {
-      await loadMoreFeeds();
+      await loadMoreFeedsRef.current();
     } catch (err) {
       logger.error('Failed to load more feeds:', err);
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [enableInfiniteScroll]); // Stable reference
+  }, [enableInfiniteScroll]);
 
   // Filter feeds by selected hashtags
   const filteredFeeds = selectedHashtags.length > 0
