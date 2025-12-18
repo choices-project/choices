@@ -1330,6 +1330,10 @@
     "page": {
       "title": "Polls",
       "subtitle": "Discover and participate in community polls",
+      "breadcrumbs": {
+        "polls": "Polls",
+        "dashboard": "Dashboard"
+      },
       "descriptionFallback": "No description provided",
       "trendingBadge": "Trending #{position}",
       "metadata": {
