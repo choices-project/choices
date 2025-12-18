@@ -216,8 +216,29 @@ const user = useUserStore(state => state.user)
 const setUser = useUserStore(state => state.setUser)
 ```
 
+## Next.js Router Instability
+
+The `useRouter()` hook from `next/navigation` can return a new object reference on re-renders, causing useEffect dependencies to trigger unnecessarily.
+
+```typescript
+// ❌ BAD: router in deps can cause re-runs
+const router = useRouter();
+useEffect(() => {
+  if (!profile) router.replace('/auth');
+}, [profile, router]);
+
+// ✅ GOOD: Use ref for router
+const router = useRouter();
+const routerRef = useRef(router);
+useEffect(() => { routerRef.current = router; }, [router]);
+
+useEffect(() => {
+  if (!profile) routerRef.current.replace('/auth');
+}, [profile]); // router removed from deps
+```
+
 ---
 
 *Last updated: December 18, 2025*
-*Related commits: cf6a358f, da2ee76d, 02f7276c*
+*Related commits: cf6a358f, da2ee76d, 02f7276c, 5c73afba*
 

@@ -459,6 +459,8 @@ export default function PersonalDashboard(props: PersonalDashboardProps) {
 
 function StandardPersonalDashboard({ userId: fallbackUserId, className = '' }: PersonalDashboardProps) {
   const router = useRouter();
+  const routerRef = useRef(router);
+  useEffect(() => { routerRef.current = router; }, [router]);
   const { t, currentLanguage } = useI18n();
   const numberFormatter = useMemo(
     () => new Intl.NumberFormat(currentLanguage ?? undefined),
@@ -564,13 +566,21 @@ function StandardPersonalDashboard({ userId: fallbackUserId, className = '' }: P
 
   const { showQuickActions, showElectedOfficials, showRecentActivity, showEngagementScore } = preferences;
 
+  // Refs for stable action callbacks
+  const getTrendingHashtagsRef = useRef(getTrendingHashtags);
+  useEffect(() => { getTrendingHashtagsRef.current = getTrendingHashtags; }, [getTrendingHashtags]);
+  const getUserRepresentativesRef = useRef(getUserRepresentatives);
+  useEffect(() => { getUserRepresentativesRef.current = getUserRepresentatives; }, [getUserRepresentatives]);
+  const loadPollsRef = useRef(loadPolls);
+  useEffect(() => { loadPollsRef.current = loadPolls; }, [loadPolls]);
+
   useEffect(() => {
     if (!effectiveIsAuthenticated || hasRequestedTrending.current) {
       return;
     }
     hasRequestedTrending.current = true;
-    void getTrendingHashtags(undefined, 6);
-  }, [effectiveIsAuthenticated, getTrendingHashtags]);
+    void getTrendingHashtagsRef.current(undefined, 6);
+  }, [effectiveIsAuthenticated]); // Removed getTrendingHashtags
 
   useEffect(() => {
     if (!effectiveIsAuthenticated || isUserLoading) {
@@ -580,18 +590,22 @@ function StandardPersonalDashboard({ userId: fallbackUserId, className = '' }: P
       return;
     }
     hasRequestedRepresentatives.current = true;
-    void getUserRepresentatives();
-  }, [effectiveIsAuthenticated, getUserRepresentatives, isUserLoading]);
+    void getUserRepresentativesRef.current();
+  }, [effectiveIsAuthenticated, isUserLoading]); // Removed getUserRepresentatives
+
+  // Refs for stable callbacks in auth redirect effect
+  const resetUserStateRef = useRef(resetUserState);
+  useEffect(() => { resetUserStateRef.current = resetUserState; }, [resetUserState]);
 
   useEffect(() => {
     if (shouldBypassAuth) {
       return;
     }
     if (!isUserLoading && !isAuthenticated) {
-      resetUserState();
-      router.replace('/auth?redirectTo=/dashboard');
+      resetUserStateRef.current();
+      routerRef.current.replace('/auth?redirectTo=/dashboard');
     }
-  }, [isAuthenticated, isUserLoading, resetUserState, router, shouldBypassAuth]);
+  }, [isAuthenticated, isUserLoading, shouldBypassAuth]); // Removed resetUserState, router
 
   useEffect(() => {
     if (!effectiveIsAuthenticated) {
@@ -604,10 +618,10 @@ function StandardPersonalDashboard({ userId: fallbackUserId, className = '' }: P
     if (!effectiveIsAuthenticated || lastPollsFetchedAt) {
       return;
     }
-    loadPolls().catch((error) => {
+    loadPollsRef.current().catch((error) => {
       logger.error('Failed to load polls for dashboard', error as Error);
     });
-  }, [effectiveIsAuthenticated, lastPollsFetchedAt, loadPolls]);
+  }, [effectiveIsAuthenticated, lastPollsFetchedAt]); // Removed loadPolls
 
   const profileRecord = profile as Record<string, unknown> | null;
   const userProfileId =

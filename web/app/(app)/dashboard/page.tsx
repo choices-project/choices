@@ -2,7 +2,7 @@
 
 import dynamic from 'next/dynamic';
 import { useRouter } from 'next/navigation';
-import React, { Suspense, useEffect, useMemo } from 'react';
+import React, { Suspense, useEffect, useMemo, useRef } from 'react';
 
 import { useProfile } from '@/features/profile/hooks/use-profile';
 
@@ -23,6 +23,8 @@ const PersonalDashboard = dynamic(() => import('@/features/dashboard').then(mod 
 
 export default function DashboardPage() {
   const router = useRouter();
+  const routerRef = useRef(router);
+  useEffect(() => { routerRef.current = router; }, [router]);
   const { profile, isLoading, error } = useProfile();
   const { setCurrentRoute, setBreadcrumbs, setSidebarActiveSection } = useAppActions();
   const shouldBypassAuth = useMemo(
@@ -53,9 +55,9 @@ export default function DashboardPage() {
     }
     if (!isLoading && !profile) {
       logger.debug('🚨 Dashboard: No profile found - redirecting to login');
-      router.replace('/auth');
+      routerRef.current.replace('/auth');
     }
-  }, [isLoading, profile, router, shouldBypassAuth]);
+  }, [isLoading, profile, shouldBypassAuth]); // Removed router - use ref
 
   if (isLoading) {
     return (
