@@ -185,6 +185,37 @@ When fixing stability issues, **check ALL code paths** - not just the one you th
 - Missing i18n keys can cause crashes → Added `getMessageFallback` to `NextIntlClientProvider`
 - Store errors triggering re-renders → Made some store operations silent (log warnings instead)
 
+## Critical Anti-Pattern: Passing Entire Store Through Context
+
+**NEVER** do this:
+
+```typescript
+// ❌ BAD: This causes infinite re-renders!
+export function UserStoreProvider({ children }) {
+  const userStore = useUserStore() // Returns entire state - changes on every update!
+  
+  return (
+    <UserStoreContext.Provider value={userStore}>
+      {children}
+    </UserStoreContext.Provider>
+  )
+}
+```
+
+This is catastrophic because:
+1. `useUserStore()` without a selector returns the entire state object
+2. The state object reference changes on EVERY store update
+3. Context value change triggers ALL consumers to re-render
+4. Re-renders can trigger more state updates → infinite loop
+
+**Solution**: Use Zustand stores directly with selectors, not through React context:
+
+```typescript
+// ✅ GOOD: Use selectors directly in components
+const user = useUserStore(state => state.user)
+const setUser = useUserStore(state => state.setUser)
+```
+
 ---
 
 *Last updated: December 18, 2025*
