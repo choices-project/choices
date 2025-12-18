@@ -94,15 +94,33 @@ function HarnessFeedDataProvider({
   const hasAnnouncedInitialRef = useRef(false);
   const initialLoadRef = useRef(false);
 
+  // Refs for stable callbacks
+  const addNotificationRef = useRef(addNotification);
+  useEffect(() => { addNotificationRef.current = addNotification; }, [addNotification]);
+  const tRef = useRef(t);
+  useEffect(() => { tRef.current = t; }, [t]);
+  const likeFeedActionRef = useRef(likeFeedAction);
+  useEffect(() => { likeFeedActionRef.current = likeFeedAction; }, [likeFeedAction]);
+  const bookmarkFeedActionRef = useRef(bookmarkFeedAction);
+  useEffect(() => { bookmarkFeedActionRef.current = bookmarkFeedAction; }, [bookmarkFeedAction]);
+  const clearErrorActionRef = useRef(clearErrorAction);
+  useEffect(() => { clearErrorActionRef.current = clearErrorAction; }, [clearErrorAction]);
+  const setErrorActionRef = useRef(setErrorAction);
+  useEffect(() => { setErrorActionRef.current = setErrorAction; }, [setErrorAction]);
+  const refreshFeedsRef = useRef(refreshFeeds);
+  useEffect(() => { refreshFeedsRef.current = refreshFeeds; }, [refreshFeeds]);
+  const feedsRef = useRef(feeds);
+  useEffect(() => { feedsRef.current = feeds; }, [feeds]);
+
   const notifyFeedError = useCallback(
     (message: string) => {
-      addNotification({
+      addNotificationRef.current({
         type: 'error',
-        title: t('feeds.provider.notifications.error.title'),
+        title: tRef.current('feeds.provider.notifications.error.title'),
         message,
       });
     },
-    [addNotification, t],
+    [],
   );
 
   const surfaceStoreError = useCallback(
@@ -158,63 +176,66 @@ function HarnessFeedDataProvider({
   }, []); // Intentionally empty - one-time load with ref guard
 
   const handleLike = useCallback(async (itemId: string) => {
-    clearErrorAction();
+    clearErrorActionRef.current();
     try {
-      await likeFeedAction(itemId);
+      await likeFeedActionRef.current(itemId);
     } catch (err) {
       logger.error('[HarnessFeedDataProvider] Failed to like feed:', err);
-      const shortMessage = t('feeds.provider.errors.likeFeed.short');
-      setErrorAction(shortMessage);
-      notifyFeedError(t('feeds.provider.errors.likeFeed.message'));
+      const shortMessage = tRef.current('feeds.provider.errors.likeFeed.short');
+      setErrorActionRef.current(shortMessage);
+      notifyFeedError(tRef.current('feeds.provider.errors.likeFeed.message'));
     }
-  }, [likeFeedAction, clearErrorAction, setErrorAction, notifyFeedError, t]);
+  }, [notifyFeedError]);
 
   const handleBookmark = useCallback(async (itemId: string) => {
-    clearErrorAction();
+    clearErrorActionRef.current();
     try {
-      await bookmarkFeedAction(itemId);
+      await bookmarkFeedActionRef.current(itemId);
     } catch (err) {
       logger.error('[HarnessFeedDataProvider] Failed to bookmark feed:', err);
-      const shortMessage = t('feeds.provider.errors.bookmarkFeed.short');
-      setErrorAction(shortMessage);
-      notifyFeedError(t('feeds.provider.errors.bookmarkFeed.message'));
+      const shortMessage = tRef.current('feeds.provider.errors.bookmarkFeed.short');
+      setErrorActionRef.current(shortMessage);
+      notifyFeedError(tRef.current('feeds.provider.errors.bookmarkFeed.message'));
     }
-  }, [bookmarkFeedAction, clearErrorAction, setErrorAction, notifyFeedError, t]);
+  }, [notifyFeedError]);
 
   const handleShare = useCallback((itemId: string) => {
     trackItemShareRef.current(itemId);
-    const nextItem = feeds.find((feed) => feed.id === itemId) ?? null;
+    const nextItem = feedsRef.current.find((feed) => feed.id === itemId) ?? null;
     if (!nextItem) {
       logger.warn('[HarnessFeedDataProvider] Unable to locate feed item for sharing', { itemId });
       return;
     }
     setShareItem(nextItem);
-  }, [feeds]);
+  }, []);
 
   const handleCloseShareDialog = useCallback(() => {
     setShareItem(null);
   }, []);
 
   const handleRefresh = useCallback(async () => {
-    clearErrorAction();
+    clearErrorActionRef.current();
     try {
-      await refreshFeeds();
+      await refreshFeedsRef.current();
       surfaceStoreError((error) =>
-        t('feeds.provider.errors.refreshFeeds.withReason', { error }),
+        tRef.current('feeds.provider.errors.refreshFeeds.withReason', { error }),
       );
     } catch (err) {
       logger.error('[HarnessFeedDataProvider] Failed to refresh feeds:', err);
-      const shortMessage = t('feeds.provider.errors.refreshFeeds.short');
-      setErrorAction(shortMessage);
+      const shortMessage = tRef.current('feeds.provider.errors.refreshFeeds.short');
+      setErrorActionRef.current(shortMessage);
       notifyFeedError(shortMessage);
     }
-  }, [refreshFeeds, clearErrorAction, setErrorAction, notifyFeedError, surfaceStoreError, t]);
+  }, [notifyFeedError, surfaceStoreError]);
 
   const handleHashtagAdd = useCallback((tag: string) => {
-    if (selectedHashtags.length < 5 && !selectedHashtags.includes(tag)) {
-      setSelectedHashtags((prev) => [...prev, tag]);
-    }
-  }, [selectedHashtags]);
+    setSelectedHashtags((prev) => {
+      if (prev.length < 5 && !prev.includes(tag)) {
+        return [...prev, tag];
+      }
+      return prev;
+    });
+  }, []);
 
   const handleHashtagRemove = useCallback((tag: string) => {
     setSelectedHashtags((prev) => prev.filter((current) => current !== tag));
