@@ -273,8 +273,8 @@ export const GET = withErrorHandling(async (request: NextRequest) => {
     const { data: polls, error, count } = await query;
 
     if (error) {
-      logger.error('Error fetching polls:', error);
-      return errorResponse('Failed to fetch polls', 500);
+      logger.error('Error fetching polls:', { message: error.message, code: error.code, details: error.details });
+      return errorResponse(`Failed to fetch polls: ${error.message}`, 500);
     }
 
     // Fetch user profiles for polls that have created_by
