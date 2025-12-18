@@ -141,6 +141,8 @@ function HarnessFeedDataProvider({
   }, [userId, user?.id, loadFeeds, clearErrorAction, setErrorAction, notifyFeedError, surfaceStoreError, t]);
 
   // Load trending hashtags once - use ref to prevent re-runs
+  // Intentionally empty deps - we use a ref to ensure one-time execution
+  // and don't want getTrendingHashtags changes to re-trigger
   const hashtagLoadAttemptedRef = useRef(false);
   useEffect(() => {
     if (hashtagLoadAttemptedRef.current) return;
@@ -154,7 +156,8 @@ function HarnessFeedDataProvider({
         logger.warn('[HarnessFeedDataProvider] Failed to load trending hashtags (non-blocking):', err);
       }
     })();
-  }, []); // Empty deps - only on mount
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []); // Intentionally empty - one-time load with ref guard
 
   const handleLike = useCallback(async (itemId: string) => {
     clearErrorAction();
@@ -459,8 +462,9 @@ function StandardFeedDataProvider({
   // Load trending hashtags on mount - ONCE
   // Use a ref to track if we've already attempted to load
   const hashtagLoadAttemptedRef = useRef(false);
+  // Intentionally empty deps - we use a ref to ensure one-time execution
+  // and don't want getTrendingHashtags changes to re-trigger
   useEffect(() => {
-    // Only run once, don't re-run on getTrendingHashtags changes
     if (hashtagLoadAttemptedRef.current) return;
     hashtagLoadAttemptedRef.current = true;
     
@@ -472,7 +476,8 @@ function StandardFeedDataProvider({
         logger.warn('Failed to load trending hashtags (non-blocking):', err);
       }
     })();
-  }, []); // Empty deps - only on mount, use ref for one-time
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []); // Intentionally empty - one-time load with ref guard
 
   // Interaction handlers - use refs to avoid re-renders
   const handleLike = useCallback(async (itemId: string) => {
