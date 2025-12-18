@@ -6,6 +6,7 @@ import React, {
   useCallback,
   useContext,
   useEffect,
+  useRef,
   useState,
 } from 'react'
 
@@ -43,9 +44,27 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const clearUserError = useUserStore((state) => state.clearUserError)
   const storeSignOut = useUserStore((state) => state.signOut)
 
+  // Use refs to ensure stable callbacks and prevent infinite loops
+  const initializeAuthRef = useRef(initializeAuth)
+  const setSessionAndDerivedRef = useRef(setSessionAndDerived)
+  const setProfileRef = useRef(setProfile)
+  const setProfileLoadingRef = useRef(setProfileLoading)
+  const setUserErrorRef = useRef(setUserError)
+  const clearUserErrorRef = useRef(clearUserError)
+  const storeSignOutRef = useRef(storeSignOut)
+
+  // Keep refs in sync (these should be stable, but just in case)
+  useEffect(() => { initializeAuthRef.current = initializeAuth }, [initializeAuth])
+  useEffect(() => { setSessionAndDerivedRef.current = setSessionAndDerived }, [setSessionAndDerived])
+  useEffect(() => { setProfileRef.current = setProfile }, [setProfile])
+  useEffect(() => { setProfileLoadingRef.current = setProfileLoading }, [setProfileLoading])
+  useEffect(() => { setUserErrorRef.current = setUserError }, [setUserError])
+  useEffect(() => { clearUserErrorRef.current = clearUserError }, [clearUserError])
+  useEffect(() => { storeSignOutRef.current = storeSignOut }, [storeSignOut])
+
   const hydrateProfile = useCallback(
     async (client: Awaited<ReturnType<typeof getSupabaseBrowserClient>>, userId: string) => {
-      setProfileLoading(true)
+      setProfileLoadingRef.current(true)
       try {
         const { data, error } = await client
           .from('user_profiles')
@@ -55,20 +74,20 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
         if (error) {
           logger.error('Failed to fetch user profile from Supabase', error)
-          setUserError('Unable to load profile information. Please try again.')
+          setUserErrorRef.current('Unable to load profile information. Please try again.')
           return
         }
 
-        setProfile(data ?? null)
-        clearUserError()
+        setProfileRef.current(data ?? null)
+        clearUserErrorRef.current()
       } catch (error) {
         logger.error('Unexpected error while hydrating user profile', error)
-        setUserError('Unexpected error while loading profile.')
+        setUserErrorRef.current('Unexpected error while loading profile.')
       } finally {
-        setProfileLoading(false)
+        setProfileLoadingRef.current(false)
       }
     },
-    [clearUserError, setProfile, setProfileLoading, setUserError],
+    [], // Empty deps - uses refs
   )
 
   const applySession = useCallback(
@@ -77,20 +96,25 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       nextSession: Session | null,
     ) => {
       if (nextSession?.user) {
-        initializeAuth(nextSession.user, nextSession, true)
-        setSessionAndDerived(nextSession)
+        initializeAuthRef.current(nextSession.user, nextSession, true)
+        setSessionAndDerivedRef.current(nextSession)
         await hydrateProfile(supabaseClient, nextSession.user.id)
       } else {
-        initializeAuth(null, null, false)
-        storeSignOut()
+        initializeAuthRef.current(null, null, false)
+        storeSignOutRef.current()
       }
     },
-    [hydrateProfile, initializeAuth, setSessionAndDerived, storeSignOut],
+    [hydrateProfile], // Only depends on hydrateProfile which is now stable
   )
 
+  // Auth initialization - runs once on mount
+  const hasInitializedRef = useRef(false)
   useEffect(() => {
+    if (hasInitializedRef.current) return
+    hasInitializedRef.current = true
+
     if (IS_E2E_HARNESS) {
-      initializeAuth(null, null, false)
+      initializeAuthRef.current(null, null, false)
       setLoading(false)
       return
     }
@@ -144,7 +168,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       mounted = false
       cleanup.then(cleanupFn => cleanupFn?.())
     }
-  }, [applySession, initializeAuth])
+  }, [applySession]) // applySession is now stable
 
   const signOut = async () => {
     if (IS_E2E_HARNESS) {
