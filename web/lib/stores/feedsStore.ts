@@ -1070,13 +1070,16 @@ export const useFeedsPagination = () => {
   const hasMore = useFeedsStore(feedsSelectors.hasMoreFeeds);
   const loadMoreFeeds = useFeedsStore((state) => state.loadMoreFeeds);
 
-  return {
-    totalAvailable,
-    loaded,
-    remaining: Math.max(0, totalAvailable - loaded),
-    hasMore,
-    loadMoreFeeds,
-  };
+  return useMemo(
+    () => ({
+      totalAvailable,
+      loaded,
+      remaining: Math.max(0, totalAvailable - loaded),
+      hasMore,
+      loadMoreFeeds,
+    }),
+    [totalAvailable, loaded, hasMore, loadMoreFeeds]
+  );
 };
 
 const selectFeedsActions = (state: FeedsStore) => ({
