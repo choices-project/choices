@@ -8,10 +8,23 @@ import { AppShell } from '@/components/shared/AppShell';
 import { useAppStore } from '@/lib/stores/appStore';
 import { useDeviceStore } from '@/lib/stores/deviceStore';
 
+const mockInitializeDevice = jest.fn();
+const mockTeardownDevice = jest.fn();
+
 jest.mock('@/lib/stores/deviceStore', () => ({
-  useDeviceStore: jest.fn(),
-  useDeviceActions: jest.fn(),
-  useDarkMode: jest.fn(),
+  useDeviceStore: jest.fn((selector) => {
+    // Return the appropriate function based on what selector requests
+    const state = {
+      initialize: mockInitializeDevice,
+      teardown: mockTeardownDevice,
+    };
+    return selector ? selector(state) : state;
+  }),
+  useDeviceActions: jest.fn(() => ({
+    initialize: mockInitializeDevice,
+    teardown: mockTeardownDevice,
+  })),
+  useDarkMode: jest.fn(() => false),
 }));
 
 const mockedDeviceStore = jest.requireMock('@/lib/stores/deviceStore') as {
@@ -21,9 +34,6 @@ const mockedDeviceStore = jest.requireMock('@/lib/stores/deviceStore') as {
 };
 
 describe('AppShell', () => {
-  const initializeDevice = jest.fn();
-  const teardownDevice = jest.fn();
-
   beforeEach(() => {
     jest.clearAllMocks();
 
@@ -36,13 +46,6 @@ describe('AppShell', () => {
 
     document.documentElement.classList.remove('dark');
     document.documentElement.removeAttribute('data-theme');
-
-    mockedDeviceStore.useDeviceActions.mockReturnValue({
-      initialize: initializeDevice,
-      teardown: teardownDevice,
-    });
-
-    mockedDeviceStore.useDarkMode.mockReturnValue(false);
   });
 
   it('applies persisted theme attributes from the app store', () => {
@@ -120,7 +123,7 @@ describe('AppShell', () => {
       </AppShell>,
     );
 
-    expect(initializeDevice).toHaveBeenCalled();
+    expect(mockInitializeDevice).toHaveBeenCalled();
   });
 
   it('updates document theme when theme changes', async () => {
