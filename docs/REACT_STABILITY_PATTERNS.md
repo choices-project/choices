@@ -265,6 +265,10 @@ The following files were audited and fixed for infinite re-render issues:
 - `components/shared/AppShell.tsx` - Device initialization ref
 - `features/polls/hooks/usePollCreatedListener.ts` - Notification and router refs
 
+### E2E Harnesses
+- `app/(app)/e2e/dashboard-journey/page.tsx` - Notification action refs
+- `app/(app)/e2e/auth-access/page.tsx` - Biometric action refs
+
 ---
 
 *Last updated: December 18, 2025*
