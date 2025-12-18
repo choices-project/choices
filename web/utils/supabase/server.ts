@@ -111,9 +111,19 @@ export async function getSupabaseServerClient(): Promise<SupabaseClient<Database
 
   // If we have a user access token cookie, forward it as an Authorization header
   // so server-side Supabase queries run as the authenticated user.
+  // But first check if the token is expired to avoid JWT expired errors
   const globalHeaders: Record<string, string> = {};
   if (accessTokenCookie?.value) {
-    globalHeaders['Authorization'] = `Bearer ${accessTokenCookie.value}`;
+    // Check if token is expired by reading the session expiry cookie
+    const expiryValue = cookieStore?.get('sb-session-expires')?.value;
+    const isExpired = expiryValue ? (parseInt(expiryValue, 10) * 1000) < Date.now() : false;
+    
+    if (!isExpired) {
+      globalHeaders['Authorization'] = `Bearer ${accessTokenCookie.value}`;
+    } else {
+      // Token is expired - don't send it, let Supabase use anon key
+      logger.warn('Server client: skipping expired access token');
+    }
   }
 
   return createServerClient<Database>(url, key, {
