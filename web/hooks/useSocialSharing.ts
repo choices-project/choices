@@ -8,7 +8,7 @@
  * Status: ✅ IMPLEMENTED
  */
 
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 
 import logger from '@/lib/utils/logger';
 
@@ -159,14 +159,18 @@ export const useSocialSharing = () => {
     return result;
   };
 
-  return {
-    share,
-    shareToTwitter,
-    shareToFacebook,
-    shareToLinkedIn,
-    shareToReddit,
-    copyToClipboard,
-    shareToClipboard,
-    isSharing,
-  };
+  return useMemo(
+    () => ({
+      share,
+      shareToTwitter,
+      shareToFacebook,
+      shareToLinkedIn,
+      shareToReddit,
+      copyToClipboard,
+      shareToClipboard,
+      isSharing,
+    }),
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [isSharing] // Functions defined in hook body are stable, only isSharing changes
+  );
 };

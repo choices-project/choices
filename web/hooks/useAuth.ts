@@ -1,6 +1,6 @@
 'use client'
 
-import { useContext } from 'react'
+import { useContext, useMemo } from 'react'
 
 import { AuthContext } from '@/contexts/AuthContext'
 
@@ -11,9 +11,12 @@ export function useAuth() {
     throw new Error('useAuth must be used within an AuthProvider')
   }
 
-  return {
-    user: context.user,
-    isLoading: context.loading,
-    logout: context.signOut
-  }
+  return useMemo(
+    () => ({
+      user: context.user,
+      isLoading: context.loading,
+      logout: context.signOut
+    }),
+    [context.user, context.loading, context.signOut]
+  )
 }
