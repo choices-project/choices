@@ -1,7 +1,7 @@
 import { useRouter } from 'next/navigation';
-import { useCallback, useEffect } from 'react';
+import { useEffect, useRef } from 'react';
 
-import { useNotificationActions } from '@/lib/stores';
+import { useNotificationStore } from '@/lib/stores/notificationStore';
 
 type PollCreatedDetail = {
   id?: string;
@@ -15,10 +15,23 @@ const isPollCreatedEvent = (event: Event): event is CustomEvent<PollCreatedDetai
 
 export const usePollCreatedListener = () => {
   const router = useRouter();
-  const { addNotification } = useNotificationActions();
+  // Get stable reference to addNotification directly from store
+  const addNotification = useNotificationStore((state) => state.addNotification);
+  
+  // Use refs to avoid dependency issues
+  const routerRef = useRef(router);
+  const addNotificationRef = useRef(addNotification);
+  
+  // Keep refs updated
+  routerRef.current = router;
+  addNotificationRef.current = addNotification;
 
-  const handlePollCreated = useCallback(
-    (event: Event) => {
+  useEffect(() => {
+    if (typeof window === 'undefined') {
+      return;
+    }
+
+    const handlePollCreated = (event: Event) => {
       if (!isPollCreatedEvent(event)) {
         return;
       }
@@ -29,7 +42,7 @@ export const usePollCreatedListener = () => {
         return;
       }
 
-      addNotification({
+      addNotificationRef.current({
         type: 'success',
         title: 'Poll published',
         message: `${detail.title ?? 'Your poll'} is live. Share it or review analytics right away.`,
@@ -37,26 +50,19 @@ export const usePollCreatedListener = () => {
         actions: [
           {
             label: 'View poll',
-            action: () => router.push(`/polls/${resolvedId}`),
+            action: () => routerRef.current.push(`/polls/${resolvedId}`),
           },
           {
             label: 'View analytics',
-            action: () => router.push(`/polls/analytics?pollId=${resolvedId}`),
+            action: () => routerRef.current.push(`/polls/analytics?pollId=${resolvedId}`),
           },
         ],
       });
-    },
-    [addNotification, router],
-  );
-
-  useEffect(() => {
-    if (typeof window === 'undefined') {
-      return;
-    }
+    };
 
     window.addEventListener('choices:poll-created', handlePollCreated as EventListener);
     return () => {
       window.removeEventListener('choices:poll-created', handlePollCreated as EventListener);
     };
-  }, [handlePollCreated]);
+  }, []); // Empty deps - stable effect
 };
