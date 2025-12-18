@@ -37,7 +37,17 @@ export async function isAdmin(): Promise<boolean> {
 /** Non-throwing: great for APIs and guards */
 export async function getAdminUser(): Promise<{ id: string; email?: string } | null> {
   const supabase = await getSupabaseServerClient();
-  const { data: { user } } = await supabase.auth.getUser();
+  const { data: { user }, error: authError } = await supabase.auth.getUser();
+  
+  // Debug logging for CI troubleshooting
+  if (process.env.CI === 'true') {
+    logger.info('[getAdminUser] Auth check:', { 
+      hasUser: !!user, 
+      userId: user?.id?.substring(0, 8),
+      authError: authError?.message 
+    });
+  }
+  
   if (!user) return null;
 
   const { data: profile, error } = await supabase
@@ -45,6 +55,15 @@ export async function getAdminUser(): Promise<{ id: string; email?: string } | n
     .select('is_admin')
     .eq('user_id', user.id)
     .single();
+  
+  // Debug logging for CI troubleshooting
+  if (process.env.CI === 'true') {
+    logger.info('[getAdminUser] Profile check:', { 
+      hasProfile: !!profile, 
+      isAdmin: profile?.is_admin,
+      profileError: error?.message 
+    });
+  }
   
   if (error || !profile) return null;
   return profile.is_admin ? user : null;
