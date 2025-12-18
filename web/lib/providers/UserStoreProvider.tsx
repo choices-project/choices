@@ -1,28 +1,28 @@
 'use client'
 
-import React, { createContext, useContext, type ReactNode } from 'react'
+import React, { type ReactNode } from 'react'
 
-import { useUserStore } from '@/lib/stores/userStore'
-
-// Create context for user store
-const UserStoreContext = createContext<ReturnType<typeof useUserStore> | null>(null)
-
-// Provider component
+/**
+ * UserStoreProvider
+ * 
+ * This provider exists for organizational purposes and potential future
+ * store initialization logic. The actual store (useUserStore) is a Zustand
+ * store that can be used directly anywhere with selectors.
+ * 
+ * IMPORTANT: Do NOT pass the entire store state through context, as this
+ * would cause all consumers to re-render on any state change.
+ * Instead, use useUserStore with selectors directly in components.
+ */
 export function UserStoreProvider({ children }: { children: ReactNode }) {
-  const userStore = useUserStore()
-  
-  return (
-    <UserStoreContext.Provider value={userStore}>
-      {children}
-    </UserStoreContext.Provider>
-  )
+  // Simply render children - the Zustand store is available globally
+  // Consumers should use useUserStore with selectors for performance
+  return <>{children}</>
 }
 
-// Hook to use the user store context
+// Deprecated - use useUserStore directly with selectors
 export function useUserStoreContext() {
-  const context = useContext(UserStoreContext)
-  if (!context) {
-    throw new Error('useUserStoreContext must be used within a UserStoreProvider')
-  }
-  return context
+  throw new Error(
+    'useUserStoreContext is deprecated. Use useUserStore with selectors directly: ' +
+    'const user = useUserStore(state => state.user)'
+  )
 }
