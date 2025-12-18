@@ -27,6 +27,11 @@ jest.mock('@/lib/stores/deviceStore', () => ({
   useDarkMode: jest.fn(() => false),
 }));
 
+// Mock useSystemThemeSync to prevent it from overriding theme in tests
+jest.mock('@/hooks/useSystemThemeSync', () => ({
+  useSystemThemeSync: jest.fn(),
+}));
+
 const mockedDeviceStore = jest.requireMock('@/lib/stores/deviceStore') as {
   useDeviceStore: jest.Mock;
   useDeviceActions: jest.Mock;

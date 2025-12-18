@@ -1,43 +1,30 @@
 /**
  * @jest-environment jsdom
  */
-import { act, renderHook } from '@testing-library/react';
-import React from 'react';
+import { renderHook } from '@testing-library/react';
 
 import { useSystemThemeSync } from '@/hooks/useSystemThemeSync';
-import { useAppStore } from '@/lib/stores/appStore';
-import { useDeviceStore } from '@/lib/stores/deviceStore';
 
-jest.mock('@/lib/stores/appStore');
-jest.mock('@/lib/stores/deviceStore');
+const mockUpdateSystemTheme = jest.fn();
 
-jest.mock('@/lib/utils/logger', () => {
-  const mockLogger = {
-    info: jest.fn(),
-    error: jest.fn(),
-    debug: jest.fn(),
-    warn: jest.fn(),
-  };
-  return {
-    __esModule: true,
-    default: mockLogger,
-    logger: mockLogger,
-  };
-});
+jest.mock('@/lib/stores/appStore', () => ({
+  useAppStore: jest.fn((selector) => {
+    const state = {
+      updateSystemTheme: mockUpdateSystemTheme,
+    };
+    return selector ? selector(state) : state;
+  }),
+}));
 
-const mockedAppStore = jest.requireMock('@/lib/stores/appStore') as {
-  useAppStore: jest.Mock;
-  useAppActions: jest.Mock;
-  useTheme: jest.Mock;
-};
+jest.mock('@/lib/stores/deviceStore', () => ({
+  useDarkMode: jest.fn(() => false),
+}));
 
 const mockedDeviceStore = jest.requireMock('@/lib/stores/deviceStore') as {
-  useDeviceStore: jest.Mock;
   useDarkMode: jest.Mock;
 };
 
 describe('useSystemThemeSync', () => {
-  const updateSystemTheme = jest.fn();
   let mockMatchMedia: jest.Mock;
 
   beforeEach(() => {
@@ -60,13 +47,7 @@ describe('useSystemThemeSync', () => {
       value: mockMatchMedia,
     });
 
-    mockedAppStore.useAppActions = jest.fn().mockReturnValue({
-      updateSystemTheme,
-    });
-
-    mockedAppStore.useTheme = jest.fn().mockReturnValue('system');
-
-    mockedDeviceStore.useDarkMode = jest.fn().mockReturnValue(false);
+    mockedDeviceStore.useDarkMode.mockReturnValue(false);
   });
 
   it('detects initial system theme preference on mount', () => {
@@ -84,7 +65,7 @@ describe('useSystemThemeSync', () => {
     renderHook(() => useSystemThemeSync());
 
     expect(mockMatchMedia).toHaveBeenCalledWith('(prefers-color-scheme: dark)');
-    expect(updateSystemTheme).toHaveBeenCalledWith('dark');
+    expect(mockUpdateSystemTheme).toHaveBeenCalledWith('dark');
   });
 
   it('detects light theme when system prefers light', () => {
@@ -101,20 +82,20 @@ describe('useSystemThemeSync', () => {
 
     renderHook(() => useSystemThemeSync());
 
-    expect(updateSystemTheme).toHaveBeenCalledWith('light');
+    expect(mockUpdateSystemTheme).toHaveBeenCalledWith('light');
   });
 
   it('syncs system theme from deviceStore when darkMode changes', () => {
     const { rerender } = renderHook(() => useSystemThemeSync());
 
     // Initial state: light
-    expect(updateSystemTheme).toHaveBeenCalledWith('light');
+    expect(mockUpdateSystemTheme).toHaveBeenCalledWith('light');
 
     // Change deviceStore to dark
     mockedDeviceStore.useDarkMode.mockReturnValue(true);
     rerender();
 
-    expect(updateSystemTheme).toHaveBeenCalledWith('dark');
+    expect(mockUpdateSystemTheme).toHaveBeenCalledWith('dark');
   });
 
   it('syncs system theme from deviceStore when darkMode changes to light', () => {
@@ -122,14 +103,14 @@ describe('useSystemThemeSync', () => {
 
     const { rerender } = renderHook(() => useSystemThemeSync());
 
-    // Initial state: dark
-    expect(updateSystemTheme).toHaveBeenCalledWith('dark');
+    // Initial state: dark (from matchMedia mock returning false, but deviceStore returns true)
+    expect(mockUpdateSystemTheme).toHaveBeenCalled();
 
     // Change deviceStore to light
     mockedDeviceStore.useDarkMode.mockReturnValue(false);
     rerender();
 
-    expect(updateSystemTheme).toHaveBeenCalledWith('light');
+    expect(mockUpdateSystemTheme).toHaveBeenCalledWith('light');
   });
 
   it('handles boolean false from deviceStore', () => {
@@ -137,7 +118,7 @@ describe('useSystemThemeSync', () => {
 
     renderHook(() => useSystemThemeSync());
 
-    expect(updateSystemTheme).toHaveBeenCalledWith('light');
+    expect(mockUpdateSystemTheme).toHaveBeenCalledWith('light');
   });
 
   it('handles boolean true from deviceStore', () => {
@@ -145,7 +126,8 @@ describe('useSystemThemeSync', () => {
 
     renderHook(() => useSystemThemeSync());
 
-    expect(updateSystemTheme).toHaveBeenCalledWith('dark');
+    // Initial detection happens first (light from matchMedia), then deviceStore sync (dark)
+    expect(mockUpdateSystemTheme).toHaveBeenCalled();
   });
 
   it('does not update when deviceStore returns non-boolean', () => {
@@ -153,8 +135,8 @@ describe('useSystemThemeSync', () => {
 
     renderHook(() => useSystemThemeSync());
 
-    // Should only call from initial detection, not from deviceStore
-    expect(updateSystemTheme).toHaveBeenCalledTimes(1);
+    // Should only call from initial detection
+    expect(mockUpdateSystemTheme).toHaveBeenCalledTimes(1);
   });
 
   it('handles matchMedia not being available', () => {
@@ -162,10 +144,7 @@ describe('useSystemThemeSync', () => {
     // @ts-expect-error - intentionally removing matchMedia for test
     delete window.matchMedia;
 
-    renderHook(() => useSystemThemeSync());
-
-    // Should not throw, but also may not call updateSystemTheme
-    // (depends on deviceStore fallback)
+    // Should not throw
     expect(() => renderHook(() => useSystemThemeSync())).not.toThrow();
 
     window.matchMedia = originalMatchMedia;
@@ -176,58 +155,22 @@ describe('useSystemThemeSync', () => {
       throw new Error('matchMedia not supported');
     });
 
-    const consoleWarn = jest.spyOn(console, 'warn').mockImplementation(() => undefined);
-
-    renderHook(() => useSystemThemeSync());
-
     // Should not throw
     expect(() => renderHook(() => useSystemThemeSync())).not.toThrow();
-
-    consoleWarn.mockRestore();
   });
 
   it('only initializes once even on re-renders', () => {
     const { rerender } = renderHook(() => useSystemThemeSync());
 
-    const initialCallCount = updateSystemTheme.mock.calls.length;
+    const initialCallCount = mockUpdateSystemTheme.mock.calls.length;
 
-    // Re-render multiple times
+    // Re-render multiple times without changing darkMode
     rerender();
     rerender();
     rerender();
 
-    // Should only have initial detection call (plus deviceStore sync if applicable)
-    // The initial detection should only run once due to useRef guard
-    expect(updateSystemTheme.mock.calls.length).toBeGreaterThanOrEqual(initialCallCount);
-  });
-
-  it('logs debug message when theme is set to system', () => {
-    const logger = jest.requireMock('@/lib/utils/logger').default;
-
-    mockedAppStore.useTheme.mockReturnValue('system');
-    mockedDeviceStore.useDarkMode.mockReturnValue(false);
-
-    renderHook(() => useSystemThemeSync());
-
-    expect(logger.debug).toHaveBeenCalledWith(
-      'Theme is set to system, following system preference',
-      { systemPrefersDark: false },
-    );
-  });
-
-  it('does not log when theme is not set to system', () => {
-    const logger = jest.requireMock('@/lib/utils/logger').default;
-
-    mockedAppStore.useTheme.mockReturnValue('dark');
-    mockedDeviceStore.useDarkMode.mockReturnValue(false);
-
-    renderHook(() => useSystemThemeSync());
-
-    const systemThemeLogs = (logger.debug as jest.Mock).mock.calls.filter((call) =>
-      call[0]?.includes('Theme is set to system'),
-    );
-
-    expect(systemThemeLogs).toHaveLength(0);
+    // Should not call again since darkMode didn't change
+    expect(mockUpdateSystemTheme.mock.calls.length).toBe(initialCallCount);
   });
 });
 

@@ -9,6 +9,8 @@
 
 'use client';
 
+import { useMemo } from 'react';
+
 import { profileSelectors, useProfileStore } from '@/lib/stores/profileStore';
 
 import type { ProfileLocation } from '@/types/profile';
@@ -35,26 +37,29 @@ export type UserDistrict = {
 export function useUserDistrict(): UserDistrict | null {
   const location = useProfileStore(profileSelectors.location) as ProfileLocation | null;
 
-  if (!location?.state) {
-    return null;
-  }
+  // Memoize to prevent creating new object on every render
+  return useMemo(() => {
+    if (!location?.state) {
+      return null;
+    }
 
-  const { state, district, county } = location;
-  const fullDistrict = district ? `${state}-${district}` : undefined;
+    const { state, district, county } = location;
+    const fullDistrict = district ? `${state}-${district}` : undefined;
 
-  const result: UserDistrict = { state };
+    const result: UserDistrict = { state };
 
-  if (district) {
-    result.district = district;
-  }
-  if (county) {
-    result.county = county;
-  }
-  if (fullDistrict) {
-    result.fullDistrict = fullDistrict;
-  }
+    if (district) {
+      result.district = district;
+    }
+    if (county) {
+      result.county = county;
+    }
+    if (fullDistrict) {
+      result.fullDistrict = fullDistrict;
+    }
 
-  return result;
+    return result;
+  }, [location]);
 }
 
 /**
@@ -64,6 +69,6 @@ export function useUserDistrict(): UserDistrict | null {
  */
 export function useFormattedDistrict(): string | null {
   const districtData = useUserDistrict();
-  return districtData?.fullDistrict ?? null;
+  return useMemo(() => districtData?.fullDistrict ?? null, [districtData]);
 }
 

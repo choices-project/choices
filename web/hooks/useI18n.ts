@@ -2,7 +2,7 @@
 
 import { useRouter } from 'next/navigation';
 import { useTranslations, useLocale } from 'next-intl';
-import { useCallback } from 'react';
+import { useCallback, useRef } from 'react';
 
 import { setLocaleCookie } from '@/lib/i18n/client';
 import { isSupportedLocale, type SupportedLocale } from '@/lib/i18n/config';
@@ -34,7 +34,13 @@ export const useI18n = () => {
   const locale = useLocale();
   const rawTranslate = useTranslations();
   const router = useRouter();
+  
+  // Keep rawTranslate in a ref to avoid dependency changes
+  const translateRef = useRef(rawTranslate);
+  translateRef.current = rawTranslate;
 
+  // Stable t function - uses ref to always get latest translate function
+  // without causing dependency changes
   const t = useCallback(
     (key: string, params?: TranslationParams): string => {
       try {
@@ -44,7 +50,7 @@ export const useI18n = () => {
             )
           : undefined;
 
-        const result = rawTranslate(key, safeParams);
+        const result = translateRef.current(key, safeParams);
         
         // If translation returns the key itself (missing translation), use fallback
         if (result === key && process.env.NODE_ENV === 'production') {
@@ -66,7 +72,7 @@ export const useI18n = () => {
         return fallbackTranslate(key, params);
       }
     },
-    [rawTranslate],
+    [], // Empty deps - t is now stable
   );
 
   const changeLanguage = useCallback(
