@@ -11,7 +11,7 @@ import { ensureLoggedOut, loginTestUser, waitForPageReady } from '../../helpers/
  * Set BASE_URL=http://127.0.0.1:3000 to run against local server
  */
 
-const PRODUCTION_URL = process.env.PRODUCTION_URL || 'https://choices-app.com';
+const PRODUCTION_URL = process.env.PRODUCTION_URL || 'https://www.choices-app.com';
 const BASE_URL = process.env.BASE_URL || PRODUCTION_URL;
 const IS_PRODUCTION = BASE_URL.includes('choices-app.com');
 

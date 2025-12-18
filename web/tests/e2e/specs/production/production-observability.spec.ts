@@ -17,7 +17,7 @@ import { ensureLoggedOut, loginTestUser, waitForPageReady } from '../../helpers/
  * diagnose real production issues from CI logs.
  */
 
-const PRODUCTION_URL = process.env.PRODUCTION_URL || 'https://choices-app.com';
+const PRODUCTION_URL = process.env.PRODUCTION_URL || 'https://www.choices-app.com';
 const BASE_URL = process.env.BASE_URL || PRODUCTION_URL;
 const IS_PRODUCTION_TARGET =
   BASE_URL.startsWith('https://') &&

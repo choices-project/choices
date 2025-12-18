@@ -12,7 +12,7 @@ import { ensureLoggedOut } from '../../helpers/e2e-setup';
  * - Accessibility checks
  */
 
-const PRODUCTION_URL = process.env.PRODUCTION_URL || 'https://choices-app.com';
+const PRODUCTION_URL = process.env.PRODUCTION_URL || 'https://www.choices-app.com';
 const BASE_URL = process.env.BASE_URL || PRODUCTION_URL;
 const IS_E2E_HARNESS = process.env.NEXT_PUBLIC_ENABLE_E2E_HARNESS === '1';
 

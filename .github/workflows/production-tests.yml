@@ -30,7 +30,7 @@ concurrency:
 env:
   NODE_VERSION: '24.x'
   NPM_VERSION: '11.6.1'
-  PRODUCTION_URL: 'https://choices-app.com'
+  PRODUCTION_URL: 'https://www.choices-app.com'
 
 jobs:
   production-smoke-tests:

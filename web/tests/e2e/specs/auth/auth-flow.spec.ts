@@ -19,7 +19,7 @@ import {
  * These tests verify the authentication-first redirect behavior implemented in middleware.
  */
 
-const PRODUCTION_URL = process.env.PRODUCTION_URL || 'https://choices-app.com';
+const PRODUCTION_URL = process.env.PRODUCTION_URL || 'https://www.choices-app.com';
 const BASE_URL = process.env.BASE_URL || PRODUCTION_URL;
 const regularEmail = process.env.E2E_USER_EMAIL;
 const regularPassword = process.env.E2E_USER_PASSWORD;
