@@ -84,6 +84,7 @@ export const PRODUCTION_SECURITY_CONFIG: SecurityConfig = {
     'script-src': [
       "'self'",
       "'unsafe-inline'", // Required for Next.js
+      "'unsafe-eval'", // Required for Next.js and some dependencies
       'https://cdn.jsdelivr.net',
     ],
     'style-src': [

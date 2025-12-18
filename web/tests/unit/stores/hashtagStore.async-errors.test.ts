@@ -1,6 +1,6 @@
 /**
  * Hashtag Store Async Error Coverage Tests
- * 
+ *
  * Tests for async operations error handling in hashtagStore:
  * - searchHashtags error handling
  * - followHashtag error handling
@@ -12,7 +12,7 @@
  * - getUserHashtags error handling
  * - getHashtagAnalytics error handling
  * - validateHashtagName error handling
- * 
+ *
  * Created: January 2025
  */
 
@@ -209,7 +209,7 @@ describe('Hashtag Store Async Error Coverage', () => {
     // Note: getTrendingHashtags silently fails without setting error state
     // because trending hashtags are an optional enhancement, not critical functionality.
     // This prevents error states from triggering unnecessary re-renders.
-    
+
     it('silently handles network errors during trending fetch', async () => {
       const networkError = new Error('Network request failed');
       mockHashtagService.getTrendingHashtags.mockRejectedValue(networkError);
