@@ -140,15 +140,21 @@ function HarnessFeedDataProvider({
     };
   }, [userId, user?.id, loadFeeds, clearErrorAction, setErrorAction, notifyFeedError, surfaceStoreError, t]);
 
+  // Load trending hashtags once - use ref to prevent re-runs
+  const hashtagLoadAttemptedRef = useRef(false);
   useEffect(() => {
+    if (hashtagLoadAttemptedRef.current) return;
+    hashtagLoadAttemptedRef.current = true;
+    
     void (async () => {
       try {
         await getTrendingHashtags();
       } catch (err) {
-        logger.warn('[HarnessFeedDataProvider] Failed to load trending hashtags:', err);
+        // Silently fail - hashtags are optional enhancement
+        logger.warn('[HarnessFeedDataProvider] Failed to load trending hashtags (non-blocking):', err);
       }
     })();
-  }, [getTrendingHashtags, t]);
+  }, []); // Empty deps - only on mount
 
   const handleLike = useCallback(async (itemId: string) => {
     clearErrorAction();
@@ -451,15 +457,22 @@ function StandardFeedDataProvider({
   }, [userId, user?.id, loadFeeds, clearErrorAction, setErrorAction, notifyFeedError, surfaceStoreError, t]);
 
   // Load trending hashtags on mount - ONCE
+  // Use a ref to track if we've already attempted to load
+  const hashtagLoadAttemptedRef = useRef(false);
   useEffect(() => {
+    // Only run once, don't re-run on getTrendingHashtags changes
+    if (hashtagLoadAttemptedRef.current) return;
+    hashtagLoadAttemptedRef.current = true;
+    
     void (async () => {
       try {
         await getTrendingHashtags();
       } catch (err) {
-        logger.error('Failed to load trending hashtags:', err);
+        // Silently fail - hashtags are optional enhancement
+        logger.warn('Failed to load trending hashtags (non-blocking):', err);
       }
     })();
-  }, [getTrendingHashtags, t]); // Only on mount
+  }, []); // Empty deps - only on mount, use ref for one-time
 
   // Interaction handlers - use refs to avoid re-renders
   const handleLike = useCallback(async (itemId: string) => {
