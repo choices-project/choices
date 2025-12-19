@@ -163,6 +163,7 @@ jobs:
           tests/e2e/specs/analytics-dashboard-screen-reader.spec.ts
           tests/e2e/specs/analytics-dashboard-axe.spec.ts
           tests/e2e/specs/locale-switch.spec.ts
+          tests/e2e/specs/production/production-comprehensive-journeys.spec.ts
         env:
           CI: true
           BASE_URL: http://127.0.0.1:3000

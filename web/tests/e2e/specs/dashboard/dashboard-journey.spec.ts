@@ -192,7 +192,8 @@ test.describe('Dashboard Journey', () => {
       // Verify the error is displayed in the UI
       // The notification exists in the harness (verified above), but the toast may not render in E2E harness
       // Instead, verify the error state is displayed in the feed component
-      await expect(page.getByText('Unable to load feed')).toBeVisible({ timeout: 30_000 });
+      // The error title "Unable to load feed" should be visible
+      await expect(page.getByText('Unable to load feed', { exact: false })).toBeVisible({ timeout: 30_000 });
       
       // Optionally check for toast alert if it exists (may not render in E2E harness)
       const toastAlert = page
@@ -205,7 +206,8 @@ test.describe('Dashboard Journey', () => {
       }
 
       // Recover to confirm feed resumes after the error
-      await page.getByRole('button', { name: 'Try Again' }).click();
+      // The button text is "Try again" (lowercase 'a') but Playwright matches case-insensitively
+      await page.getByRole('button', { name: /Try Again/i }).click();
       await page.waitForSelector('text=Climate Action Now');
 
       const notificationMessages = await page.evaluate(() => {
