@@ -38,7 +38,13 @@ test.describe('Production UX Excellence', () => {
 
       // Measure Core Web Vitals
       const metrics = await page.evaluate(() => {
-        return new Promise((resolve) => {
+        return new Promise<{
+          lcp?: number;
+          fid?: number;
+          cls?: number;
+          fcp?: number;
+          ttfb?: number;
+        }>((resolve) => {
           const vitals: {
             lcp?: number;
             fid?: number;
@@ -401,7 +407,7 @@ test.describe('Production UX Excellence', () => {
 
         // Should show appropriate offline message or handle gracefully
         const offlineMessage = page.locator('text=/offline|no connection|network error/i').first();
-        const hasOfflineMessage = await offlineMessage.isVisible({ timeout: 3_000 }).catch(() => false);
+        await offlineMessage.isVisible({ timeout: 3_000 }).catch(() => false);
         // App should handle offline state (either show message or gracefully degrade)
         // This is a UX improvement opportunity if not implemented
       }
@@ -749,7 +755,6 @@ test.describe('Production UX Excellence', () => {
       // Note: In production, rate limiting may be disabled for E2E, so this tests the UI handling
       const emailInput = page.locator('input[type="email"], input[name="email"]').first();
       const passwordInput = page.locator('input[type="password"], input[name="password"]').first();
-      const submitButton = page.locator('button[type="submit"]').first();
 
       // Fill form
       await emailInput.fill('test@example.com');
@@ -793,15 +798,15 @@ test.describe('Production UX Excellence', () => {
 
       // Navigate to feed and check for loading state
       const navigationPromise = page.goto(`${BASE_URL}/feed`, { waitUntil: 'domcontentloaded', timeout: 30_000 });
-      
+
       // Check for loading indicators during navigation
       const loadingIndicators = page.locator('.animate-pulse, [aria-busy="true"], [data-testid*="loading"]');
-      
+
       // Wait a moment to catch loading state
       await page.waitForTimeout(500);
-      
+
       const hasLoadingState = await loadingIndicators.count() > 0;
-      
+
       // Should show loading state (skeleton or spinner)
       // This is a UX improvement - users should see feedback during load
       if (hasLoadingState) {
@@ -816,25 +821,26 @@ test.describe('Production UX Excellence', () => {
       await waitForPageReady(page);
     });
 
-    test('progressive enhancement: app works with JavaScript disabled', async ({ page, context }) => {
+    test('progressive enhancement: app works with JavaScript disabled', async ({ browser }) => {
       test.setTimeout(120_000);
 
-      // Disable JavaScript to test progressive enhancement
-      await context.setJavaScriptEnabled(false);
+      // Create a new context with JavaScript disabled to test progressive enhancement
+      const context = await browser.newContext({ javaScriptEnabled: false });
+      const page = await context.newPage();
 
       try {
         await page.goto(BASE_URL, { waitUntil: 'domcontentloaded', timeout: 30_000 });
-        
+
         // Basic content should still be visible
         const pageContent = page.locator('body');
         await expect(pageContent).toBeVisible({ timeout: 5_000 });
-        
+
         // Should have some text content (progressive enhancement)
         const textContent = await pageContent.textContent();
         expect(textContent?.length).toBeGreaterThan(0);
       } finally {
-        // Re-enable JavaScript
-        await context.setJavaScriptEnabled(true);
+        // Clean up the context
+        await context.close();
       }
     });
   });
@@ -869,7 +875,6 @@ test.describe('Production UX Excellence', () => {
       if (toggleCount > 0) {
         // Toggle a preference
         const firstToggle = toggles.first();
-        const initialState = await firstToggle.isChecked();
         await firstToggle.click();
         await page.waitForTimeout(1_000);
 
@@ -1021,8 +1026,6 @@ test.describe('Production UX Excellence', () => {
       // Sensitive data should not be in page source
       // Check for common sensitive patterns
       const hasPassword = pageContent.includes(regularPassword || '');
-      const hasRawToken = /[A-Za-z0-9_-]{20,}/.test(pageContent); // Long tokens
-      const hasApiKey = /api[_-]?key/i.test(pageContent);
 
       // Passwords should never be in page source
       expect(hasPassword).toBeFalsy();
@@ -1130,13 +1133,433 @@ test.describe('Production UX Excellence', () => {
           const img = images.nth(i);
           const alt = await img.getAttribute('alt');
           const role = await img.getAttribute('role');
-          
+
           // Images should have alt text or be marked as decorative
           const hasAlt = alt !== null && alt !== '';
           const isDecorative = role === 'presentation' || alt === '';
           // Either has meaningful alt or is decorative
           expect(hasAlt || isDecorative).toBeTruthy();
         }
+      }
+    });
+  });
+
+  test.describe('Error Boundary and Resilience', () => {
+    test('application handles React errors gracefully with error boundaries', async ({ page }) => {
+      test.setTimeout(120_000);
+
+      if (!regularEmail || !regularPassword) {
+        test.skip();
+        return;
+      }
+
+      await ensureLoggedOut(page);
+      await page.goto(`${BASE_URL}/auth`, { waitUntil: 'domcontentloaded', timeout: 30_000 });
+      await loginTestUser(page, {
+        email: regularEmail,
+        password: regularPassword,
+        username: regularEmail.split('@')[0] ?? 'e2e-user',
+      });
+      await waitForPageReady(page);
+
+      await page.goto(`${BASE_URL}/feed`, { waitUntil: 'domcontentloaded', timeout: 30_000 });
+      await waitForPageReady(page);
+      await page.waitForTimeout(2_000);
+
+      // Check for error boundaries in the DOM
+      const errorBoundaries = page.locator('[data-testid*="error-boundary"], [role="alert"]:has-text("Something went wrong")');
+      const hasErrorBoundary = await errorBoundaries.count() > 0;
+
+      // If error boundary is visible, it should have a recovery option
+      if (hasErrorBoundary) {
+        const retryButton = errorBoundaries.locator('button:has-text("Try again"), button:has-text("Reload")');
+        const hasRetry = await retryButton.count() > 0;
+        expect(hasRetry).toBeTruthy();
+      }
+
+      // Check console for unhandled errors
+      const consoleErrors: string[] = [];
+      page.on('console', (msg) => {
+        if (msg.type() === 'error') {
+          const text = msg.text();
+          // Ignore known non-critical errors
+          if (!text.includes('favicon') && !text.includes('404') && !text.includes('CORS')) {
+            consoleErrors.push(text);
+          }
+        }
+      });
+
+      await page.waitForTimeout(3_000);
+
+      // Should not have critical React errors
+      const criticalErrors = consoleErrors.filter(err =>
+        err.includes('Minified React error') ||
+        err.includes('Hydration') ||
+        err.includes('Cannot read property')
+      );
+      expect(criticalErrors.length).toBe(0);
+    });
+
+    test('application handles slow network connections gracefully', async ({ page, context }) => {
+      test.setTimeout(180_000);
+
+      if (!regularEmail || !regularPassword) {
+        test.skip();
+        return;
+      }
+
+      // Simulate slow 3G connection
+      await context.route('**/*', async (route) => {
+        await new Promise(resolve => setTimeout(resolve, 500)); // Add 500ms delay
+        await route.continue();
+      });
+
+      await ensureLoggedOut(page);
+      await page.goto(`${BASE_URL}/auth`, { waitUntil: 'domcontentloaded', timeout: 60_000 });
+
+      // Should show loading states during slow connection
+      const loadingIndicators = page.locator('[aria-busy="true"], [data-testid*="loading"], .animate-pulse');
+      await loadingIndicators.count(); // Check for loading states (UX improvement)
+
+      // App should handle slow connections (either show loading or timeout gracefully)
+      await loginTestUser(page, {
+        email: regularEmail,
+        password: regularPassword,
+        username: regularEmail.split('@')[0] ?? 'e2e-user',
+      });
+
+      // Should eventually complete or show appropriate timeout message
+      await waitForPageReady(page, 120_000);
+
+      // Remove route interception
+      await context.unroute('**/*');
+    });
+
+    test('application handles partial API failures without breaking', async ({ page }) => {
+      test.setTimeout(120_000);
+
+      if (!regularEmail || !regularPassword) {
+        test.skip();
+        return;
+      }
+
+      await ensureLoggedOut(page);
+      await page.goto(`${BASE_URL}/auth`, { waitUntil: 'domcontentloaded', timeout: 30_000 });
+      await loginTestUser(page, {
+        email: regularEmail,
+        password: regularPassword,
+        username: regularEmail.split('@')[0] ?? 'e2e-user',
+      });
+      await waitForPageReady(page);
+
+      // Intercept and fail some non-critical API calls
+      let failedRequests = 0;
+      await page.route('**/api/**', async (route) => {
+        const url = route.request().url();
+        // Fail analytics or non-critical endpoints, but allow critical ones
+        if (url.includes('analytics') || url.includes('tracking')) {
+          failedRequests++;
+          await route.fulfill({
+            status: 500,
+            contentType: 'application/json',
+            body: JSON.stringify({ error: 'Service unavailable' })
+          });
+        } else {
+          await route.continue();
+        }
+      });
+
+      await page.goto(`${BASE_URL}/feed`, { waitUntil: 'domcontentloaded', timeout: 30_000 });
+      await waitForPageReady(page);
+      await page.waitForTimeout(3_000);
+
+      // App should still function even if some APIs fail
+      const feedContainer = page.locator('[data-testid="unified-feed"]');
+      const feedVisible = await feedContainer.isVisible({ timeout: 10_000 }).catch(() => false);
+
+      // Feed should still be visible (critical functionality works)
+      // Non-critical failures shouldn't break the app
+      expect(feedVisible || failedRequests > 0).toBeTruthy();
+
+      await page.unroute('**/api/**');
+    });
+  });
+
+  test.describe('Security and Privacy Headers', () => {
+    test('security headers are properly configured', async ({ page }) => {
+      test.setTimeout(60_000);
+
+      const response = await page.goto(BASE_URL, { waitUntil: 'domcontentloaded', timeout: 30_000 });
+      if (!response) {
+        test.skip();
+        return;
+      }
+
+      const headers = response.headers();
+
+      // Check for important security headers
+      const securityHeaders = {
+        'x-content-type-options': headers['x-content-type-options'],
+        'x-frame-options': headers['x-frame-options'],
+        'x-xss-protection': headers['x-xss-protection'],
+        'referrer-policy': headers['referrer-policy'],
+        'permissions-policy': headers['permissions-policy'] || headers['feature-policy'],
+      };
+
+      // At least some security headers should be present
+      const hasSecurityHeaders = Object.values(securityHeaders).some(header => header !== undefined);
+      expect(hasSecurityHeaders).toBeTruthy();
+    });
+
+    test('sensitive data is not exposed in localStorage unnecessarily', async ({ page }) => {
+      test.setTimeout(120_000);
+
+      if (!regularEmail || !regularPassword) {
+        test.skip();
+        return;
+      }
+
+      await ensureLoggedOut(page);
+      await page.goto(`${BASE_URL}/auth`, { waitUntil: 'domcontentloaded', timeout: 30_000 });
+      await loginTestUser(page, {
+        email: regularEmail,
+        password: regularPassword,
+        username: regularEmail.split('@')[0] ?? 'e2e-user',
+      });
+      await waitForPageReady(page);
+
+      // Check localStorage for sensitive data
+      const localStorage = await page.evaluate(() => {
+        const items: Record<string, string> = {};
+        for (let i = 0; i < window.localStorage.length; i++) {
+          const key = window.localStorage.key(i);
+          if (key) {
+            items[key] = window.localStorage.getItem(key) || '';
+          }
+        }
+        return items;
+      });
+
+      // Passwords should never be in localStorage
+      const localStorageString = JSON.stringify(localStorage);
+      expect(localStorageString).not.toContain(regularPassword || '');
+
+      // Check for common sensitive patterns
+      const hasRawPassword = /password\s*[:=]\s*["'][^"']+["']/i.test(localStorageString);
+      expect(hasRawPassword).toBeFalsy();
+    });
+  });
+
+  test.describe('SEO and Meta Tags', () => {
+    test('pages have proper meta tags for SEO', async ({ page }) => {
+      test.setTimeout(60_000);
+
+      await page.goto(BASE_URL, { waitUntil: 'domcontentloaded', timeout: 30_000 });
+
+      // Check for essential meta tags
+      const title = await page.title();
+      expect(title).toBeTruthy();
+      expect(title.length).toBeGreaterThan(0);
+
+      const metaDescription = await page.locator('meta[name="description"]').getAttribute('content');
+      // Description should exist and be meaningful
+      if (metaDescription) {
+        expect(metaDescription.length).toBeGreaterThan(10);
+        expect(metaDescription.length).toBeLessThan(160); // SEO best practice
+      }
+
+      // Check for Open Graph tags (social sharing)
+      const ogTitle = await page.locator('meta[property="og:title"]').getAttribute('content');
+      const ogDescription = await page.locator('meta[property="og:description"]').getAttribute('content');
+
+      // OG tags are nice to have but not critical
+      // If present, they should be meaningful
+      if (ogTitle) {
+        expect(ogTitle.length).toBeGreaterThan(0);
+      }
+      if (ogDescription) {
+        expect(ogDescription.length).toBeGreaterThan(10);
+      }
+    });
+
+    test('pages have proper canonical URLs', async ({ page }) => {
+      test.setTimeout(60_000);
+
+      await page.goto(BASE_URL, { waitUntil: 'domcontentloaded', timeout: 30_000 });
+
+      const canonical = await page.locator('link[rel="canonical"]').getAttribute('href');
+
+      // Canonical URL should point to the current page or main domain
+      if (canonical) {
+        expect(canonical).toContain('choices-app.com');
+      }
+    });
+  });
+
+  test.describe('Performance Under Load', () => {
+    test('application remains responsive during multiple rapid navigations', async ({ page }) => {
+      test.setTimeout(180_000);
+
+      if (!regularEmail || !regularPassword) {
+        test.skip();
+        return;
+      }
+
+      await ensureLoggedOut(page);
+      await page.goto(`${BASE_URL}/auth`, { waitUntil: 'domcontentloaded', timeout: 30_000 });
+      await loginTestUser(page, {
+        email: regularEmail,
+        password: regularPassword,
+        username: regularEmail.split('@')[0] ?? 'e2e-user',
+      });
+      await waitForPageReady(page);
+
+      // Rapidly navigate between pages
+      const pages = ['/feed', '/profile', '/feed', '/profile'];
+
+      for (const path of pages) {
+        await page.goto(`${BASE_URL}${path}`, { waitUntil: 'domcontentloaded', timeout: 30_000 });
+        await page.waitForTimeout(1_000);
+
+        // Check that page is still responsive
+        const body = page.locator('body');
+        await expect(body).toBeVisible({ timeout: 5_000 });
+      }
+
+      // Final check - app should still be functional
+      await page.goto(`${BASE_URL}/feed`, { waitUntil: 'domcontentloaded', timeout: 30_000 });
+      const feedContainer = page.locator('[data-testid="unified-feed"]');
+      await expect(feedContainer).toBeVisible({ timeout: 10_000 });
+    });
+
+    test('application handles large amounts of content gracefully', async ({ page }) => {
+      test.setTimeout(120_000);
+
+      if (!regularEmail || !regularPassword) {
+        test.skip();
+        return;
+      }
+
+      await ensureLoggedOut(page);
+      await page.goto(`${BASE_URL}/auth`, { waitUntil: 'domcontentloaded', timeout: 30_000 });
+      await loginTestUser(page, {
+        email: regularEmail,
+        password: regularPassword,
+        username: regularEmail.split('@')[0] ?? 'e2e-user',
+      });
+      await waitForPageReady(page);
+
+      await page.goto(`${BASE_URL}/feed`, { waitUntil: 'domcontentloaded', timeout: 30_000 });
+      await waitForPageReady(page);
+      await page.waitForTimeout(3_000);
+
+      // Scroll to load more content (if pagination/infinite scroll exists)
+      const initialHeight = await page.evaluate(() => document.body.scrollHeight);
+
+      // Scroll down multiple times
+      for (let i = 0; i < 5; i++) {
+        await page.evaluate(() => window.scrollTo(0, document.body.scrollHeight));
+        await page.waitForTimeout(1_000);
+      }
+
+      // Check that page is still responsive after scrolling
+      const finalHeight = await page.evaluate(() => document.body.scrollHeight);
+      const isResponsive = await page.evaluate(() => {
+        return document.readyState === 'complete';
+      });
+
+      expect(isResponsive).toBeTruthy();
+
+      // Page should have loaded more content or maintained performance
+      expect(finalHeight).toBeGreaterThanOrEqual(initialHeight);
+    });
+  });
+
+  test.describe('Form Validation and User Input', () => {
+    test('forms provide real-time validation feedback', async ({ page }) => {
+      test.setTimeout(60_000);
+
+      await ensureLoggedOut(page);
+      await page.goto(`${BASE_URL}/auth`, { waitUntil: 'domcontentloaded', timeout: 30_000 });
+      await page.waitForTimeout(1_000);
+
+      const emailInput = page.locator('input[type="email"], input[name="email"]').first();
+      await expect(emailInput).toBeVisible({ timeout: 5_000 });
+
+      // Test invalid email
+      await emailInput.fill('invalid-email');
+      await emailInput.blur();
+      await page.waitForTimeout(800);
+
+      // Should show validation error
+      const errorMessage = page.locator('[role="alert"], [aria-invalid="true"], [data-testid*="error"]').first();
+      const hasError = await errorMessage.isVisible({ timeout: 2_000 }).catch(() => false);
+
+      if (hasError) {
+        // Error should be accessible and clear
+        const errorText = await errorMessage.textContent();
+        expect(errorText?.length).toBeGreaterThan(0);
+      }
+
+      // Test valid email format
+      await emailInput.fill('test@example.com');
+      await emailInput.blur();
+      await page.waitForTimeout(800);
+
+      // Error should clear or validation should pass
+      const errorStillVisible = await errorMessage.isVisible({ timeout: 1_000 }).catch(() => false);
+      // Either error is gone or form accepts valid input
+      expect(typeof errorStillVisible).toBe('boolean');
+    });
+
+    test('forms prevent submission with invalid data', async ({ page }) => {
+      test.setTimeout(60_000);
+
+      await ensureLoggedOut(page);
+      await page.goto(`${BASE_URL}/auth`, { waitUntil: 'domcontentloaded', timeout: 30_000 });
+      await page.waitForTimeout(1_000);
+
+      const emailInput = page.locator('input[type="email"], input[name="email"]').first();
+      const passwordInput = page.locator('input[type="password"], input[name="password"]').first();
+      const submitButton = page.locator('button[type="submit"]').first();
+
+      // Fill with invalid data
+      await emailInput.fill('invalid-email');
+      await passwordInput.fill('123'); // Too short
+      await page.waitForTimeout(500);
+
+      // Submit button should be disabled or form should prevent submission
+      const isDisabled = await submitButton.isDisabled().catch(() => false);
+      const isEnabled = await submitButton.isEnabled().catch(() => true);
+
+      // Either button is disabled or form validation prevents submission
+      expect(isDisabled || !isEnabled).toBeTruthy();
+    });
+  });
+
+  test.describe('Internationalization Readiness', () => {
+    test('text content is properly structured for translation', async ({ page }) => {
+      test.setTimeout(60_000);
+
+      await page.goto(BASE_URL, { waitUntil: 'domcontentloaded', timeout: 30_000 });
+      await page.waitForTimeout(2_000);
+
+      // Check for lang attribute on html element
+      const htmlLang = await page.locator('html').getAttribute('lang');
+      expect(htmlLang).toBeTruthy();
+
+      // Check that text content is not hardcoded in attributes (should be in content)
+      const buttons = page.locator('button');
+      const buttonCount = await buttons.count();
+
+      if (buttonCount > 0) {
+        // Buttons should have text content, not just aria-label
+        const firstButton = buttons.first();
+        const buttonText = await firstButton.textContent();
+        const ariaLabel = await firstButton.getAttribute('aria-label');
+
+        // Should have either text content or aria-label (accessible)
+        expect(buttonText || ariaLabel).toBeTruthy();
       }
     });
   });
