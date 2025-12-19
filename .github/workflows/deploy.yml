@@ -24,7 +24,7 @@ concurrency:
 
 env:
   NODE_VERSION: '24.x'
-  NPM_VERSION: '10.9.3'
+  NPM_VERSION: '11.6.1'
 
 jobs:
   # Pre-deployment validation

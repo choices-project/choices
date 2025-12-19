@@ -10,10 +10,12 @@ Use this guide as the single source of truth for shipping the Choices web applic
 ## 1. Preflight Checklist
 
 **Environment**
-- Install Node.js 24.11+ and npm 11+ (enforced via `web/package.json`).
+- Install Node.js 24.11+ and npm 11.6.1+ (enforced via `web/package.json` `packageManager` field and all CI/CD workflows).
 - Install the Supabase CLI (`npm install -g supabase`) and authenticate against the target project.
 - Create or update `web/.env.local` with the values listed in `ENVIRONMENT_VARIABLES.md`.
 - Ensure production secrets (Supabase service role, Upstash Redis, Resend, Sentry, cron key) exist in your hosting provider before promoting the build.
+
+**CI/CD Consistency**: All GitHub Actions workflows (`.github/workflows/*.yml`) and the Dockerfile enforce npm 11.6.1 to match the `packageManager` field. This ensures local development, CI, and production builds use identical tooling versions.
 
 **Local verification (inside `web/`)**
 ```bash

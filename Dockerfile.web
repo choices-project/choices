@@ -7,6 +7,9 @@ WORKDIR /app
 # Copy package files
 COPY web/package*.json ./
 
+# Enable corepack and install correct npm version (from packageManager field)
+RUN corepack enable && npm install -g npm@11.6.1
+
 # Install dependencies (including dev dependencies needed for build)
 RUN npm ci
 

@@ -21,7 +21,7 @@ jobs:
           cache: npm
           cache-dependency-path: web/package-lock.json
       - name: Use repo's npm version
-        run: npm i -g npm@10.9.3
+        run: npm i -g npm@11.6.1
       - name: Install (scripts blocked)
         working-directory: web
         run: npm run ci:install

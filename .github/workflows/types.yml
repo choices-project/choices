@@ -19,7 +19,7 @@ jobs:
       - name: Verify TypeScript config
         run: |
           node -e "const cfg=require('./tsconfig.ci.json'); if(!cfg.compilerOptions || cfg.compilerOptions.exactOptionalPropertyTypes !== true){console.error('exactOptionalPropertyTypes must be true in tsconfig.ci.json'); process.exit(1);} else {console.log('TypeScript config verified: exactOptionalPropertyTypes=true');}"
-      - run: cd web && npm run types:strict -- --exclude "**/quarantine/**" --exclude "**/*.disabled" || echo "Type check completed with errors (non-blocking)"
+      - run: cd web && npm run types:strict || echo "Type check completed with errors (non-blocking)"
         continue-on-error: true
-      - run: cd web && npm run lint -- --ignore-pattern "**/quarantine/**" --ignore-pattern "**/*.disabled" || echo "Lint completed with warnings (non-blocking)"
+      - run: cd web && npm run lint || echo "Lint completed with warnings (non-blocking)"
         continue-on-error: true

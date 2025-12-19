@@ -7,10 +7,12 @@
 ## Prerequisites
 
 - Node.js 24.11+ (matches the enforced version in `web/package.json`)
-- npm 11+ (ships with the Node.js installer above)
+- npm 11.6.1+ (enforced via `packageManager` field in `web/package.json` and CI workflows)
 - Supabase CLI (`npm install -g supabase`), required for migrations/type generation
 - Supabase account
 - Git
+
+**Note**: All CI/CD workflows enforce npm 11.6.1 for consistency. The Dockerfile and GitHub Actions workflows are configured to use this exact version to ensure reproducible builds.
 
 ---
 
