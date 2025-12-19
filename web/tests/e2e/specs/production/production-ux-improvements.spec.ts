@@ -48,8 +48,12 @@ test.describe('Production UX Improvements', () => {
       await page.waitForTimeout(3_000);
       
       // Check for empty state (may or may not be visible depending on content)
+      // FeedCore uses data-testid="unified-feed" and shows empty state when feeds.length === 0
       const emptyState = page.locator('text=/No feeds available|No content matches|Explore trending/i');
-      const hasContent = await page.locator('[role="feed"]').count() > 0;
+      // Check for feed items in the unified feed container
+      const feedContainer = page.locator('[data-testid="unified-feed"]');
+      const feedItems = feedContainer.locator('article, [class*="Card"], [class*="card"]');
+      const hasContent = (await feedItems.count()) > 0;
       
       // Either should have content OR show empty state with helpful message
       if (!hasContent) {
@@ -196,19 +200,19 @@ test.describe('Production UX Improvements', () => {
       
       // Type invalid email
       await emailInput.fill('invalid-email');
-      await page.waitForTimeout(500);
+      await page.waitForTimeout(800); // Wait for validation to appear
       
-      // Should show validation error or visual indicator
-      const errorIndicator = page.locator('[aria-invalid="true"], .border-red, text=/email.*error|invalid.*email/i').first();
-      const hasError = await errorIndicator.isVisible().catch(() => false);
+      // Should show validation error - check for data-testid or aria-invalid or visual indicator
+      const errorIndicator = page.locator('[data-testid="email-error"], [aria-invalid="true"], input.border-red-300').first();
+      const hasError = await errorIndicator.isVisible({ timeout: 2_000 }).catch(() => false);
       
       // Type valid email
       await emailInput.fill('test@example.com');
-      await page.waitForTimeout(500);
+      await page.waitForTimeout(800); // Wait for validation to update
       
-      // Should show success indicator or remove error
-      const successIndicator = page.locator('[aria-invalid="false"], .border-green, text=/valid|success/i').first();
-      const hasSuccess = await successIndicator.isVisible().catch(() => false);
+      // Should show success indicator - check for data-testid or visual indicator
+      const successIndicator = page.locator('[data-testid="email-validation"], input.border-green-300, [aria-invalid="false"]').first();
+      const hasSuccess = await successIndicator.isVisible({ timeout: 2_000 }).catch(() => false);
       
       // At minimum, form should respond to input
       expect(hasError || hasSuccess).toBeTruthy();
@@ -226,19 +230,19 @@ test.describe('Production UX Improvements', () => {
       
       // Type short password
       await passwordInput.fill('123');
-      await page.waitForTimeout(500);
+      await page.waitForTimeout(800); // Wait for validation to appear
       
-      // Should show validation error or visual indicator
-      const errorIndicator = page.locator('[aria-invalid="true"], .border-red, text=/password.*error|too short/i').first();
-      const hasError = await errorIndicator.isVisible().catch(() => false);
+      // Should show validation error - check for data-testid or aria-invalid or visual indicator
+      const errorIndicator = page.locator('[data-testid="password-error"], [aria-invalid="true"], input.border-red-300').first();
+      const hasError = await errorIndicator.isVisible({ timeout: 2_000 }).catch(() => false);
       
       // Type longer password
       await passwordInput.fill('password123');
-      await page.waitForTimeout(500);
+      await page.waitForTimeout(800); // Wait for validation to update
       
-      // Should show success indicator or remove error
-      const successIndicator = page.locator('[aria-invalid="false"], .border-green, text=/valid|success/i').first();
-      const hasSuccess = await successIndicator.isVisible().catch(() => false);
+      // Should show success indicator - check for data-testid or visual indicator
+      const successIndicator = page.locator('[data-testid="password-validation"], input.border-green-300, [aria-invalid="false"]').first();
+      const hasSuccess = await successIndicator.isVisible({ timeout: 2_000 }).catch(() => false);
       
       // At minimum, form should respond to input
       expect(hasError || hasSuccess).toBeTruthy();
@@ -263,23 +267,27 @@ test.describe('Production UX Improvements', () => {
       await emailInput.fill('test@example.com');
       await passwordInput.fill('wrongpassword');
       
-      // Click submit
-      await submitButton.click();
+      // Click submit and immediately check for loading state
+      const clickPromise = submitButton.click();
       
-      // Button should show loading state (spinner or disabled)
+      // Check loading state immediately (within 100ms of click)
+      await page.waitForTimeout(100);
+      
+      // Button should show loading state (spinner, disabled, or aria-busy)
       const loadingSpinner = page.locator('.animate-spin, [aria-busy="true"]').first();
       const isDisabled = await submitButton.isDisabled().catch(() => false);
       const hasLoadingText = await submitButton.textContent().then(text => 
         text?.toLowerCase().includes('loading') || text?.toLowerCase().includes('working')
       ).catch(() => false);
+      const hasAriaBusy = await submitButton.getAttribute('aria-busy').then(val => val === 'true').catch(() => false);
       
-      // Should show some loading indication
-      const isLoading = await loadingSpinner.isVisible().catch(() => false) || isDisabled || hasLoadingText;
+      // Should show some loading indication immediately after click
+      const isLoading = await loadingSpinner.isVisible().catch(() => false) || isDisabled || hasLoadingText || hasAriaBusy;
       
-      // Wait a bit for form to process
-      await page.waitForTimeout(2_000);
+      // Wait for click to complete
+      await clickPromise;
       
-      // Button should eventually return to normal state (or show error)
+      // Verify loading state was present
       expect(isLoading).toBeTruthy();
     });
   });
