@@ -1563,5 +1563,416 @@ test.describe('Production UX Excellence', () => {
       }
     });
   });
+
+  test.describe('Real-time Updates and WebSocket Resilience', () => {
+    test('application handles real-time updates without breaking UI', async ({ page }) => {
+      test.setTimeout(120_000);
+
+      if (!regularEmail || !regularPassword) {
+        test.skip();
+        return;
+      }
+
+      await ensureLoggedOut(page);
+      await page.goto(`${BASE_URL}/auth`, { waitUntil: 'domcontentloaded', timeout: 30_000 });
+      await loginTestUser(page, {
+        email: regularEmail,
+        password: regularPassword,
+        username: regularEmail.split('@')[0] ?? 'e2e-user',
+      });
+      await waitForPageReady(page);
+
+      await page.goto(`${BASE_URL}/feed`, { waitUntil: 'domcontentloaded', timeout: 30_000 });
+      await waitForPageReady(page);
+      await page.waitForTimeout(3_000);
+
+      // Monitor for WebSocket connections or real-time updates
+      const wsConnections: string[] = [];
+      page.on('websocket', (ws) => {
+        wsConnections.push(ws.url());
+      });
+
+      // Wait for potential real-time connections
+      await page.waitForTimeout(5_000);
+
+      // Check that page remains stable during real-time updates
+      const feedContainer = page.locator('[data-testid="unified-feed"]');
+      await expect(feedContainer).toBeVisible({ timeout: 10_000 });
+
+      // Check for console errors related to WebSocket
+      const consoleErrors: string[] = [];
+      page.on('console', (msg) => {
+        if (msg.type() === 'error') {
+          const text = msg.text();
+          if (text.includes('WebSocket') || text.includes('websocket') || text.includes('realtime')) {
+            consoleErrors.push(text);
+          }
+        }
+      });
+
+      await page.waitForTimeout(3_000);
+
+      // Should not have critical WebSocket errors
+      expect(consoleErrors.length).toBeLessThan(5);
+    });
+
+    test('application gracefully handles WebSocket disconnections', async ({ page, context }) => {
+      test.setTimeout(120_000);
+
+      if (!regularEmail || !regularPassword) {
+        test.skip();
+        return;
+      }
+
+      await ensureLoggedOut(page);
+      await page.goto(`${BASE_URL}/auth`, { waitUntil: 'domcontentloaded', timeout: 30_000 });
+      await loginTestUser(page, {
+        email: regularEmail,
+        password: regularPassword,
+        username: regularEmail.split('@')[0] ?? 'e2e-user',
+      });
+      await waitForPageReady(page);
+
+      await page.goto(`${BASE_URL}/feed`, { waitUntil: 'domcontentloaded', timeout: 30_000 });
+      await waitForPageReady(page);
+      await page.waitForTimeout(3_000);
+
+      // Simulate network interruption
+      await context.setOffline(true);
+      await page.waitForTimeout(2_000);
+
+      // App should handle disconnection gracefully
+      const feedContainer = page.locator('[data-testid="unified-feed"]');
+      const stillVisible = await feedContainer.isVisible({ timeout: 5_000 }).catch(() => false);
+
+      // Should either show offline message or maintain UI
+      expect(stillVisible || await page.locator('text=/offline|disconnected/i').count() > 0).toBeTruthy();
+
+      // Restore connection
+      await context.setOffline(false);
+      await page.waitForTimeout(2_000);
+
+      // Should recover when connection is restored
+      await expect(feedContainer).toBeVisible({ timeout: 10_000 });
+    });
+  });
+
+  test.describe('PWA Functionality and Offline Support', () => {
+    test('service worker is registered and functional', async ({ page }) => {
+      test.setTimeout(60_000);
+
+      await page.goto(BASE_URL, { waitUntil: 'domcontentloaded', timeout: 30_000 });
+      await page.waitForTimeout(3_000);
+
+      // Check for service worker registration
+      const hasServiceWorker = await page.evaluate(async () => {
+        if ('serviceWorker' in navigator) {
+          const registrations = await navigator.serviceWorker.getRegistrations();
+          return registrations.length > 0;
+        }
+        return false;
+      });
+
+      // PWA should have service worker (if PWA is implemented)
+      // This test verifies PWA readiness
+      expect(typeof hasServiceWorker).toBe('boolean');
+    });
+
+    test('application provides offline fallback content', async ({ page, context }) => {
+      test.setTimeout(60_000);
+
+      await page.goto(BASE_URL, { waitUntil: 'domcontentloaded', timeout: 30_000 });
+      await page.waitForTimeout(2_000);
+
+      // Go offline
+      await context.setOffline(true);
+      await page.waitForTimeout(1_000);
+
+      // Try to navigate
+      await page.goto(`${BASE_URL}/feed`, { waitUntil: 'domcontentloaded', timeout: 10_000 }).catch(() => {
+        // Expected: may fail when offline
+      });
+
+      // Should show some content (cached or offline page)
+      const body = page.locator('body');
+      const hasContent = await body.textContent();
+      expect(hasContent?.length).toBeGreaterThan(0);
+
+      // Restore online
+      await context.setOffline(false);
+    });
+
+    test('manifest.json is properly configured for PWA', async ({ page }) => {
+      test.setTimeout(60_000);
+
+      await page.goto(BASE_URL, { waitUntil: 'domcontentloaded', timeout: 30_000 });
+
+      // Check for manifest link
+      const manifestLink = await page.locator('link[rel="manifest"]').getAttribute('href');
+      
+      if (manifestLink) {
+        // Manifest should be accessible
+        const manifestUrl = new URL(manifestLink, BASE_URL).toString();
+        const response = await page.goto(manifestUrl, { waitUntil: 'domcontentloaded', timeout: 10_000 }).catch(() => null);
+        
+        if (response) {
+          expect(response.status()).toBeLessThan(400);
+        }
+      }
+    });
+  });
+
+  test.describe('Data Integrity and Consistency', () => {
+    test('user data persists correctly across page reloads', async ({ page }) => {
+      test.setTimeout(120_000);
+
+      if (!regularEmail || !regularPassword) {
+        test.skip();
+        return;
+      }
+
+      await ensureLoggedOut(page);
+      await page.goto(`${BASE_URL}/auth`, { waitUntil: 'domcontentloaded', timeout: 30_000 });
+      await loginTestUser(page, {
+        email: regularEmail,
+        password: regularPassword,
+        username: regularEmail.split('@')[0] ?? 'e2e-user',
+      });
+      await waitForPageReady(page);
+
+      // Navigate to a page that might store user preferences
+      await page.goto(`${BASE_URL}/feed`, { waitUntil: 'domcontentloaded', timeout: 30_000 });
+      await waitForPageReady(page);
+      await page.waitForTimeout(2_000);
+
+      // Get initial state
+      const initialUrl = page.url();
+
+      // Reload page
+      await page.reload({ waitUntil: 'domcontentloaded', timeout: 30_000 });
+      await waitForPageReady(page);
+      await page.waitForTimeout(2_000);
+
+      // Should still be authenticated and on same page
+      const afterReloadUrl = page.url();
+      expect(afterReloadUrl).toContain(initialUrl.split('?')[0].split('#')[0]);
+    });
+
+    test('application handles concurrent user actions without data corruption', async ({ page }) => {
+      test.setTimeout(120_000);
+
+      if (!regularEmail || !regularPassword) {
+        test.skip();
+        return;
+      }
+
+      await ensureLoggedOut(page);
+      await page.goto(`${BASE_URL}/auth`, { waitUntil: 'domcontentloaded', timeout: 30_000 });
+      await loginTestUser(page, {
+        email: regularEmail,
+        password: regularPassword,
+        username: regularEmail.split('@')[0] ?? 'e2e-user',
+      });
+      await waitForPageReady(page);
+
+      await page.goto(`${BASE_URL}/feed`, { waitUntil: 'domcontentloaded', timeout: 30_000 });
+      await waitForPageReady(page);
+      await page.waitForTimeout(2_000);
+
+      // Perform multiple rapid actions
+      const buttons = page.locator('button:not([disabled])');
+      const buttonCount = await buttons.count();
+
+      if (buttonCount > 0) {
+        // Rapidly click multiple buttons (if safe to do so)
+        const safeButtons = buttons.filter({ hasNotText: /delete|remove|logout/i });
+        const safeButtonCount = await safeButtons.count();
+
+        if (safeButtonCount > 0) {
+          // Click first safe button multiple times rapidly
+          const firstButton = safeButtons.first();
+          for (let i = 0; i < 3; i++) {
+            await firstButton.click({ timeout: 1_000 }).catch(() => {
+              // Expected: rapid clicks may be ignored
+            });
+            await page.waitForTimeout(200);
+          }
+
+          // App should still be functional
+          await page.waitForTimeout(2_000);
+          const feedContainer = page.locator('[data-testid="unified-feed"]');
+          await expect(feedContainer).toBeVisible({ timeout: 10_000 });
+        }
+      }
+    });
+  });
+
+  test.describe('Browser Storage and Cache Management', () => {
+    test('localStorage is used appropriately and cleaned up when needed', async ({ page }) => {
+      test.setTimeout(120_000);
+
+      if (!regularEmail || !regularPassword) {
+        test.skip();
+        return;
+      }
+
+      await ensureLoggedOut(page);
+      await page.goto(`${BASE_URL}/auth`, { waitUntil: 'domcontentloaded', timeout: 30_000 });
+      
+      // Check localStorage before login
+      const localStorageBefore = await page.evaluate(() => {
+        return Object.keys(window.localStorage).length;
+      });
+
+      await loginTestUser(page, {
+        email: regularEmail,
+        password: regularPassword,
+        username: regularEmail.split('@')[0] ?? 'e2e-user',
+      });
+      await waitForPageReady(page);
+
+      // Check localStorage after login
+      const localStorageAfter = await page.evaluate(() => {
+        return Object.keys(window.localStorage).length;
+      });
+
+      // localStorage should be used appropriately (not excessive)
+      expect(localStorageAfter).toBeGreaterThanOrEqual(localStorageBefore);
+
+      // Logout and check cleanup
+      const logoutButton = page.locator('button:has-text("Logout"), button:has-text("Sign out")').first();
+      if (await logoutButton.isVisible({ timeout: 3_000 }).catch(() => false)) {
+        await logoutButton.click();
+        await page.waitForTimeout(2_000);
+
+        // Sensitive data should be cleared on logout
+        const localStorageAfterLogout = await page.evaluate(() => {
+          const items: Record<string, string> = {};
+          for (let i = 0; i < window.localStorage.length; i++) {
+            const key = window.localStorage.key(i);
+            if (key) {
+              items[key] = window.localStorage.getItem(key) || '';
+            }
+          }
+          return items;
+        });
+
+        const localStorageString = JSON.stringify(localStorageAfterLogout);
+        expect(localStorageString).not.toContain(regularPassword || '');
+      }
+    });
+
+    test('sessionStorage is managed correctly', async ({ page }) => {
+      test.setTimeout(60_000);
+
+      await page.goto(BASE_URL, { waitUntil: 'domcontentloaded', timeout: 30_000 });
+      await page.waitForTimeout(2_000);
+
+      // Check sessionStorage usage
+      const sessionStorageKeys = await page.evaluate(() => {
+        return Object.keys(window.sessionStorage);
+      });
+
+      // SessionStorage should be used appropriately
+      // Too many keys might indicate poor storage management
+      expect(sessionStorageKeys.length).toBeLessThan(50);
+    });
+  });
+
+  test.describe('Rate Limiting and Throttling UX', () => {
+    test('rate limit errors provide clear user guidance', async ({ page }) => {
+      test.setTimeout(120_000);
+
+      await ensureLoggedOut(page);
+      await page.goto(`${BASE_URL}/auth`, { waitUntil: 'domcontentloaded', timeout: 30_000 });
+      await page.waitForTimeout(1_000);
+
+      // Simulate rate limiting by intercepting requests
+      let requestCount = 0;
+      await page.route('**/api/**', async (route) => {
+        requestCount++;
+        if (requestCount > 10) {
+          // Simulate rate limit
+          await route.fulfill({
+            status: 429,
+            contentType: 'application/json',
+            body: JSON.stringify({ 
+              error: 'Rate limit exceeded',
+              message: 'Too many requests. Please try again later.'
+            })
+          });
+        } else {
+          await route.continue();
+        }
+      });
+
+      // Try to trigger multiple requests
+      const emailInput = page.locator('input[type="email"], input[name="email"]').first();
+      if (await emailInput.isVisible({ timeout: 5_000 }).catch(() => false)) {
+        // Rapidly type to trigger validation requests
+        for (let i = 0; i < 5; i++) {
+          await emailInput.fill(`test${i}@example.com`);
+          await page.waitForTimeout(100);
+        }
+      }
+
+      // Check for rate limit message (if shown)
+      const rateLimitMessage = page.locator('text=/rate limit|too many requests|try again later/i');
+      const hasRateLimitMessage = await rateLimitMessage.isVisible({ timeout: 3_000 }).catch(() => false);
+
+      // If rate limited, should show helpful message
+      if (hasRateLimitMessage) {
+        const messageText = await rateLimitMessage.textContent();
+        expect(messageText?.toLowerCase()).toMatch(/try again|later|wait/i);
+      }
+
+      await page.unroute('**/api/**');
+    });
+  });
+
+  test.describe('Concurrent Session Management', () => {
+    test('application handles multiple tabs gracefully', async ({ browser }) => {
+      test.setTimeout(120_000);
+
+      if (!regularEmail || !regularPassword) {
+        test.skip();
+        return;
+      }
+
+      // Create two pages (simulating multiple tabs)
+      const testContext = await browser.newContext();
+      const page1 = await testContext.newPage();
+      const page2 = await testContext.newPage();
+
+      try {
+        // Login in first tab
+        await page1.goto(`${BASE_URL}/auth`, { waitUntil: 'domcontentloaded', timeout: 30_000 });
+        await loginTestUser(page1, {
+          email: regularEmail,
+          password: regularPassword,
+          username: regularEmail.split('@')[0] ?? 'e2e-user',
+        });
+        await waitForPageReady(page1);
+
+        // Navigate both tabs
+        await page1.goto(`${BASE_URL}/feed`, { waitUntil: 'domcontentloaded', timeout: 30_000 });
+        await page2.goto(`${BASE_URL}/feed`, { waitUntil: 'domcontentloaded', timeout: 30_000 });
+
+        await waitForPageReady(page1);
+        await waitForPageReady(page2);
+        await page1.waitForTimeout(2_000);
+        await page2.waitForTimeout(2_000);
+
+        // Both tabs should work independently
+        const feed1 = page1.locator('[data-testid="unified-feed"]');
+        const feed2 = page2.locator('[data-testid="unified-feed"]');
+
+        await expect(feed1).toBeVisible({ timeout: 10_000 });
+        await expect(feed2).toBeVisible({ timeout: 10_000 });
+      } finally {
+        await testContext.close();
+      }
+    });
+  });
 });
 

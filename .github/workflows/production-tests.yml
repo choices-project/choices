@@ -6,7 +6,7 @@ on:
       run_full_suite:
         description: 'Run full production test suite'
         required: false
-        default: true
+        default: 'true'
         type: boolean
   schedule:
     # Run production tests every 6 hours
