@@ -1,6 +1,6 @@
 'use client';
 
-import { Eye, EyeOff, Lock, Mail, UserPlus, CheckCircle2, AlertCircle } from 'lucide-react';
+import { Eye, EyeOff, Lock, Mail, UserPlus, CheckCircle2, AlertCircle, Loader2 } from 'lucide-react';
 import dynamicImport from 'next/dynamic';
 import { useRouter } from 'next/navigation';
 import React, { useState } from 'react';
@@ -302,6 +302,7 @@ export default function AuthPage() {
             <div>
               <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-1">
                 {t('auth.form.emailLabel')}
+                <span className="text-red-500 ml-1" aria-label="required">*</span>
               </label>
               <div className="relative">
                 <input
@@ -311,27 +312,40 @@ export default function AuthPage() {
                   value={formData.email}
                   onChange={(e) => setFormData({...formData, email: e.target.value})}
                   required
-                  className="w-full pl-10 pr-3 py-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500 focus-visible:ring-2 focus-visible:ring-blue-500"
+                  className={`w-full pl-10 pr-3 py-2 border rounded-md focus:ring-blue-500 focus:border-blue-500 focus-visible:ring-2 focus-visible:ring-blue-500 transition-colors ${
+                    formData.email && !formData.email.includes('@') 
+                      ? 'border-red-300 focus:border-red-500 focus:ring-red-500' 
+                      : formData.email && formData.email.includes('@')
+                      ? 'border-green-300'
+                      : 'border-gray-300'
+                  }`}
                   placeholder={t('auth.form.emailPlaceholder')}
-                      data-testid="login-email"
+                  data-testid="login-email"
                   aria-label={t('auth.form.emailAria')}
+                  aria-invalid={formData.email && !formData.email.includes('@')}
+                  aria-describedby={formData.email ? (formData.email.includes('@') ? 'email-success' : 'email-error') : undefined}
                 />
                 <Mail className="absolute left-3 top-2.5 h-5 w-5 text-gray-400" />
               </div>
-              {formData.email && (
-                <div data-testid="email-validation" className="mt-1 text-xs text-green-600">
-                  {t('auth.form.emailValidation')}
+              {formData.email && formData.email.includes('@') && (
+                <div id="email-success" data-testid="email-validation" className="mt-1 text-xs text-green-600 flex items-center gap-1" role="status">
+                  <CheckCircle2 className="h-3 w-3" aria-hidden="true" />
+                  <span>{t('auth.form.emailValidation')}</span>
                 </div>
               )}
-              <div data-testid="email-error" className="mt-1 text-xs text-red-600 hidden">
-                {t('auth.form.emailError')}
-              </div>
+              {formData.email && !formData.email.includes('@') && (
+                <div id="email-error" data-testid="email-error" className="mt-1 text-xs text-red-600 flex items-center gap-1" role="alert">
+                  <AlertCircle className="h-3 w-3" aria-hidden="true" />
+                  <span>{t('auth.form.emailError')}</span>
+                </div>
+              )}
             </div>
 
             {/* Password */}
             <div>
               <label htmlFor="password" className="block text-sm font-medium text-gray-700 mb-1">
                 {t('auth.form.passwordLabel')}
+                <span className="text-red-500 ml-1" aria-label="required">*</span>
               </label>
               <div className="relative">
                 <input
@@ -341,10 +355,18 @@ export default function AuthPage() {
                   value={formData.password}
                   onChange={(e) => setFormData({...formData, password: e.target.value})}
                   required
-                  className="w-full pl-10 pr-10 py-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500 focus-visible:ring-2 focus-visible:ring-blue-500"
+                  className={`w-full pl-10 pr-10 py-2 border rounded-md focus:ring-blue-500 focus:border-blue-500 focus-visible:ring-2 focus-visible:ring-blue-500 transition-colors ${
+                    formData.password && formData.password.length < 6 
+                      ? 'border-red-300 focus:border-red-500 focus:ring-red-500' 
+                      : formData.password && formData.password.length >= 6
+                      ? 'border-green-300'
+                      : 'border-gray-300'
+                  }`}
                   placeholder={t('auth.form.passwordPlaceholder')}
                   data-testid="login-password"
                   aria-label={t('auth.form.passwordAria')}
+                  aria-invalid={formData.password && formData.password.length < 6}
+                  aria-describedby={formData.password ? (formData.password.length >= 6 ? 'password-success' : 'password-error') : undefined}
                 />
                 <Lock className="absolute left-3 top-2.5 h-5 w-5 text-gray-400" />
                     <button
@@ -419,12 +441,13 @@ export default function AuthPage() {
           {/* Submit Button */}
               <button
                 type="submit"
-                className="w-full bg-blue-600 text-white py-2 px-4 rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition duration-150 ease-in-out"
+                className="w-full bg-blue-600 text-white py-2 px-4 rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition duration-150 ease-in-out disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
                 data-testid="login-submit"
                 aria-busy={isLoading}
                 disabled={isLoading}
             >
-              {isLoading ? t('auth.form.working') : isSignUp ? t('auth.form.submit.signUp') : t('auth.form.submit.signIn')}
+              {isLoading && <Loader2 className="h-4 w-4 animate-spin" aria-hidden="true" />}
+              <span>{isLoading ? t('auth.form.working') : isSignUp ? t('auth.form.submit.signUp') : t('auth.form.submit.signIn')}</span>
             </button>
         </form>
 
