@@ -91,9 +91,20 @@ export async function getSupabaseServerClient(): Promise<SupabaseClient<Database
   }
 
   const cookieAdapter = {
-    get: (name: string) => cookieStore?.get(name)?.value,
+    get: (name: string) => {
+      const value = cookieStore?.get(name)?.value;
+      // Debug logging for CI troubleshooting
+      if (process.env.CI === 'true' && name.includes('auth')) {
+        logger.info('[cookieAdapter.get]', { name, hasValue: !!value });
+      }
+      return value;
+    },
     set: (name: string, value: string, options: Record<string, unknown>) => {
       try {
+        // Debug logging for CI troubleshooting
+        if (process.env.CI === 'true' && name.includes('auth')) {
+          logger.info('[cookieAdapter.set]', { name, valueLength: value?.length });
+        }
         // Add domain attribute for production to work across www and non-www
         // Only set domain if on actual production domain (not localhost/127.0.0.1)
         const isProduction = process.env.NODE_ENV === 'production'
