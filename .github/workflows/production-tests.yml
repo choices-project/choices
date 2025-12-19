@@ -6,7 +6,7 @@ on:
       run_full_suite:
         description: 'Run full production test suite'
         required: false
-        default: 'true'
+        default: true
         type: boolean
   schedule:
     # Run production tests every 6 hours
@@ -89,9 +89,9 @@ jobs:
           script: |
             const fs = require('fs');
             const path = require('path');
-            
+
             let comment = '## Production Smoke Tests\n\n';
-            
+
             try {
               const resultsPath = path.join('web', 'test-results');
               if (fs.existsSync(resultsPath)) {
@@ -103,7 +103,7 @@ jobs:
             } catch (error) {
               comment += `❌ Error generating summary: ${error.message}\n`;
             }
-            
+
             github.rest.issues.createComment({
               issue_number: context.issue.number,
               owner: context.repo.owner,
@@ -278,7 +278,7 @@ jobs:
             const allPassed = '${{ needs.production-smoke-tests.result }}' === 'success' &&
                              ('${{ needs.production-e2e-tests.result }}' === 'success' || '${{ needs.production-e2e-tests.result }}' === 'skipped') &&
                              '${{ needs.production-api-tests.result }}' === 'success';
-            
+
             github.rest.repos.createCommitStatus({
               owner: context.repo.owner,
               repo: context.repo.repo,
