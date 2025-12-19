@@ -79,6 +79,16 @@ export async function getSupabaseServerClient(): Promise<SupabaseClient<Database
 
   // Read our custom access token cookie if present (set by /api/auth/login)
   const accessTokenCookie = cookieStore?.get('sb-access-token');
+  
+  // Debug logging for CI troubleshooting
+  if (process.env.CI === 'true') {
+    const allCookies = cookieStore ? Array.from(cookieStore.getAll()).map(c => c.name) : [];
+    logger.info('[getSupabaseServerClient] Cookies available:', { 
+      cookieNames: allCookies,
+      hasAccessToken: !!accessTokenCookie?.value,
+      accessTokenLength: accessTokenCookie?.value?.length
+    });
+  }
 
   const cookieAdapter = {
     get: (name: string) => cookieStore?.get(name)?.value,
@@ -109,26 +119,11 @@ export async function getSupabaseServerClient(): Promise<SupabaseClient<Database
     },
   }
 
-  // If we have a user access token cookie, forward it as an Authorization header
-  // so server-side Supabase queries run as the authenticated user.
-  // But first check if the token is expired to avoid JWT expired errors
-  const globalHeaders: Record<string, string> = {};
-  if (accessTokenCookie?.value) {
-    // Check if token is expired by reading the session expiry cookie
-    const expiryValue = cookieStore?.get('sb-session-expires')?.value;
-    const isExpired = expiryValue ? (parseInt(expiryValue, 10) * 1000) < Date.now() : false;
-    
-    if (!isExpired) {
-      globalHeaders['Authorization'] = `Bearer ${accessTokenCookie.value}`;
-    } else {
-      // Token is expired - don't send it, let Supabase use anon key
-      logger.warn('Server client: skipping expired access token');
-    }
-  }
-
+  // Supabase SSR client automatically handles authentication via cookies
+  // The cookieAdapter will provide cookies to the client, which will read
+  // the session and automatically refresh tokens as needed
   return createServerClient<Database>(url, key, {
     cookies: cookieAdapter,
-    ...(Object.keys(globalHeaders).length > 0 ? { global: { headers: globalHeaders } } : {}),
   })
 }
 
