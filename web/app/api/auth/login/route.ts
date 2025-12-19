@@ -55,9 +55,9 @@ export const POST = withErrorHandling(async (request: NextRequest) => {
             });
           }, 2000); // 2 second timeout
         });
-        
+
         const rateLimitResult = await Promise.race([rateLimitPromise, timeoutPromise]);
-        
+
         if (!rateLimitResult.allowed) {
           return rateLimitError('Too many login attempts. Please try again later.');
         }
@@ -169,8 +169,8 @@ export const POST = withErrorHandling(async (request: NextRequest) => {
     const displayName = (profile as any).display_name ?? profile.username ?? authData.user.email ?? 'User'
     logger.info('User profile loaded', { userId: authData.user.id, displayName })
 
-    logger.info('User logged in successfully', { 
-      userId: authData.user.id, 
+    logger.info('User logged in successfully', {
+      userId: authData.user.id,
       email: authData.user.email,
       displayName
     })
@@ -195,7 +195,7 @@ export const POST = withErrorHandling(async (request: NextRequest) => {
     if (authData.session) {
       const isProduction = process.env.NODE_ENV === 'production'
       const maxAge = 60 * 60 * 24 * 7 // 7 days
-      
+
       // Set domain to work across www and non-www subdomains in production
       // Only set domain if request is from actual production domain (not localhost/127.0.0.1)
       // Leading dot makes cookie valid for all subdomains (www, api, etc.)
@@ -204,14 +204,14 @@ export const POST = withErrorHandling(async (request: NextRequest) => {
       const cookieDomain = isProduction && isProductionDomain ? '.choices-app.com' : undefined
       // Only require HTTPS (secure) when actually on production domain, not localhost
       const requireSecure = isProduction && isProductionDomain
-      
+
       // Extract project ref from Supabase URL to set cookies with correct name format
       // Supabase SSR expects: sb-<project-ref>-auth-token
       const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || ''
       const projectRefMatch = supabaseUrl.match(/https?:\/\/([^.]+)\.supabase\.co/)
       const projectRef = projectRefMatch ? projectRefMatch[1] : 'unknown'
       const authTokenCookieName = `sb-${projectRef}-auth-token`
-      
+
       // Use Supabase SSR's expected cookie format - store session as JSON
       // Supabase SSR expects the session to be stored in a specific format
       const sessionData = {
@@ -222,7 +222,7 @@ export const POST = withErrorHandling(async (request: NextRequest) => {
         token_type: authData.session.token_type,
         user: authData.user
       }
-      
+
       // Set the auth token cookie with Supabase SSR's expected name and format
       response.cookies.set(authTokenCookieName, JSON.stringify(sessionData), {
         httpOnly: true,
@@ -232,7 +232,7 @@ export const POST = withErrorHandling(async (request: NextRequest) => {
         maxAge: maxAge,
         domain: cookieDomain // Share cookies across www and non-www
       })
-      
+
       // Also set the session expiry time for client-side checks (keep for backward compatibility)
       if (authData.session.expires_at) {
         response.cookies.set('sb-session-expires', authData.session.expires_at.toString(), {
@@ -244,7 +244,7 @@ export const POST = withErrorHandling(async (request: NextRequest) => {
           domain: cookieDomain // Share cookies across www and non-www
         })
       }
-      
+
       logger.info('Session cookies set successfully', {
         userId: authData.user.id,
         expiresAt: authData.session.expires_at,

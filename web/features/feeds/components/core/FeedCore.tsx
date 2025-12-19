@@ -224,12 +224,27 @@ export default function FeedCore({
     }
   }, [hashtagInput, onHashtagAdd]);
 
-  // Loading state
+  // Initial loading state - show skeleton loaders
   if (isLoading && feeds.length === 0) {
     return (
-      <div className={cn('unified-feed', className)} data-testid="unified-feed">
-        <div className="flex items-center justify-center min-h-[400px]">
-          <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-blue-600" />
+      <div className={cn('unified-feed', className)} data-testid="unified-feed" aria-label="Loading feeds">
+        <div className="space-y-4 py-8">
+          {[1, 2, 3, 4].map((i) => (
+            <Card key={i} className="animate-pulse">
+              <CardHeader>
+                <div className="h-6 bg-gray-200 rounded w-3/4 dark:bg-gray-700" />
+                <div className="h-4 bg-gray-200 rounded w-1/2 mt-2 dark:bg-gray-700" />
+              </CardHeader>
+              <CardContent>
+                <div className="h-4 bg-gray-200 rounded w-full mb-2 dark:bg-gray-700" />
+                <div className="h-4 bg-gray-200 rounded w-5/6 dark:bg-gray-700" />
+                <div className="flex gap-2 mt-4">
+                  <div className="h-8 bg-gray-200 rounded w-20 dark:bg-gray-700" />
+                  <div className="h-8 bg-gray-200 rounded w-20 dark:bg-gray-700" />
+                </div>
+              </CardContent>
+            </Card>
+          ))}
         </div>
       </div>
     );
@@ -239,15 +254,36 @@ export default function FeedCore({
   if (error) {
     return (
       <div className={cn('unified-feed', className)} data-testid="unified-feed">
-        <div className="flex items-center justify-center min-h-[400px]">
-          <div className="text-center">
-            <h3 className="text-lg font-semibold text-red-600">
+        <div className="flex items-center justify-center min-h-[400px] px-4">
+          <div className="text-center max-w-md" role="alert">
+            <div className="mb-6">
+              <svg
+                className="mx-auto h-16 w-16 text-red-500"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
+                aria-hidden="true"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={1.5}
+                  d="M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126zM12 15.75h.007v.008H12v-.008z"
+                />
+              </svg>
+            </div>
+            <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-2">
               {t('feeds.core.error.title')}
             </h3>
-            <p className="text-gray-600">{error}</p>
-            <Button onClick={onRefresh} className="mt-4">
-              {t('feeds.core.error.retry')}
-            </Button>
+            <p className="text-gray-600 dark:text-gray-400 mb-6">{error}</p>
+            <div className="space-y-3">
+              <Button onClick={onRefresh} variant="default" className="w-full sm:w-auto">
+                {t('feeds.core.error.retry')}
+              </Button>
+              <p className="text-sm text-gray-500 dark:text-gray-400">
+                {t('feeds.core.error.help')}
+              </p>
+            </div>
           </div>
         </div>
       </div>
@@ -407,13 +443,91 @@ export default function FeedCore({
 
         <TabsContent value="feed" id="feed-panel" role="tabpanel">
           {/* Feed Items */}
-          {feeds.length === 0 ? (
-            <div className="text-center py-12">
-              <p className="text-gray-600">
-                {selectedHashtags.length > 0
-                  ? t('feeds.core.empty.filters')
-                  : t('feeds.core.empty.default')}
-              </p>
+          {isLoading && feeds.length === 0 ? (
+            <div className="space-y-4 py-8" aria-label="Loading feeds">
+              {[1, 2, 3].map((i) => (
+                <Card key={i} className="animate-pulse">
+                  <CardHeader>
+                    <div className="h-6 bg-gray-200 rounded w-3/4 dark:bg-gray-700" />
+                    <div className="h-4 bg-gray-200 rounded w-1/2 mt-2 dark:bg-gray-700" />
+                  </CardHeader>
+                  <CardContent>
+                    <div className="h-4 bg-gray-200 rounded w-full mb-2 dark:bg-gray-700" />
+                    <div className="h-4 bg-gray-200 rounded w-5/6 dark:bg-gray-700" />
+                  </CardContent>
+                </Card>
+              ))}
+            </div>
+          ) : feeds.length === 0 ? (
+            <div className="text-center py-16 px-4" role="status" aria-live="polite">
+              <div className="max-w-md mx-auto">
+                <div className="mb-6">
+                  <svg
+                    className="mx-auto h-16 w-16 text-gray-400 dark:text-gray-500"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                    stroke="currentColor"
+                    aria-hidden="true"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={1.5}
+                      d="M12 6.75a.75.75 0 110-1.5.75.75 0 010 1.5zM12 12a.75.75 0 110-1.5.75.75 0 010 1.5zM12 17.25a.75.75 0 110-1.5.75.75 0 010 1.5zM18.75 6.75a.75.75 0 110-1.5.75.75 0 010 1.5zM18.75 12a.75.75 0 110-1.5.75.75 0 010 1.5zM18.75 17.25a.75.75 0 110-1.5.75.75 0 010 1.5zM5.25 6.75a.75.75 0 110-1.5.75.75 0 010 1.5zM5.25 12a.75.75 0 110-1.5.75.75 0 010 1.5zM5.25 17.25a.75.75 0 110-1.5.75.75 0 010 1.5z"
+                    />
+                  </svg>
+                </div>
+                <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-2">
+                  {selectedHashtags.length > 0
+                    ? t('feeds.core.empty.filters.title')
+                    : t('feeds.core.empty.default.title')}
+                </h3>
+                <p className="text-gray-600 dark:text-gray-400 mb-6">
+                  {selectedHashtags.length > 0
+                    ? t('feeds.core.empty.filters.description')
+                    : t('feeds.core.empty.default.description')}
+                </p>
+                {selectedHashtags.length > 0 ? (
+                  <Button
+                    onClick={() => {
+                      selectedHashtags.forEach(tag => onHashtagRemove(tag));
+                    }}
+                    variant="outline"
+                    className="mb-4"
+                  >
+                    {t('feeds.core.empty.filters.clear')}
+                  </Button>
+                ) : (
+                  <div className="space-y-3">
+                    <Button
+                      onClick={onRefresh}
+                      variant="default"
+                      className="w-full sm:w-auto"
+                    >
+                      {t('feeds.core.empty.default.refresh')}
+                    </Button>
+                    {trendingHashtags.length > 0 && (
+                      <div className="mt-6">
+                        <p className="text-sm text-gray-500 dark:text-gray-400 mb-3">
+                          {t('feeds.core.empty.default.suggestions')}
+                        </p>
+                        <div className="flex flex-wrap gap-2 justify-center">
+                          {trendingHashtags.slice(0, 5).map(tag => (
+                            <Badge
+                              key={tag}
+                              variant="secondary"
+                              className="cursor-pointer hover:bg-gray-200 dark:hover:bg-gray-700"
+                              onClick={() => onHashtagAdd(tag)}
+                            >
+                              #{tag}
+                            </Badge>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                )}
+              </div>
             </div>
           ) : (
             <div className="space-y-4" role="feed">
@@ -472,14 +586,60 @@ export default function FeedCore({
         </TabsContent>
 
         <TabsContent value="polls" id="polls-panel" role="tabpanel">
-          <div className="text-center py-12">
-            <p className="text-gray-600">{t('feeds.core.empty.polls')}</p>
+          <div className="text-center py-16 px-4" role="status" aria-live="polite">
+            <div className="max-w-md mx-auto">
+              <div className="mb-6">
+                <svg
+                  className="mx-auto h-16 w-16 text-gray-400 dark:text-gray-500"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  stroke="currentColor"
+                  aria-hidden="true"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={1.5}
+                    d="M9 12h3.75M9 15h3.75M9 18h3.75m3 .75H18a2.25 2.25 0 002.25-2.25V6.108c0-1.135-.845-2.098-1.976-2.192a48.424 48.424 0 00-1.123-.08m-5.801 0c-.065.21-.1.433-.1.664 0 .414.336.75.75.75h4.5a.75.75 0 00.75-.75 2.25 2.25 0 00-.1-.664m-5.8 0A2.251 2.251 0 0113.5 2.25H15c1.012 0 1.867.668 2.15 1.586m-5.8 0c-.376.023-.75.05-1.124.08C9.095 4.01 8.25 4.973 8.25 6.108V8.25m0 0H4.875c-.621 0-1.125.504-1.125 1.125v11.25c0 .621.504 1.125 1.125 1.125h9.75c.621 0 1.125-.504 1.125-1.125V9.375c0-.621-.504-1.125-1.125-1.125H8.25zM6.75 12h.008v.008H6.75V12zm0 3h.008v.008H6.75V15zm0 3h.008v.008H6.75V18z"
+                  />
+                </svg>
+              </div>
+              <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-2">
+                {t('feeds.core.empty.polls.title')}
+              </h3>
+              <p className="text-gray-600 dark:text-gray-400">
+                {t('feeds.core.empty.polls.description')}
+              </p>
+            </div>
           </div>
         </TabsContent>
 
         <TabsContent value="analytics" id="analytics-panel" role="tabpanel">
-          <div className="text-center py-12">
-            <p className="text-gray-600">{t('feeds.core.empty.analytics')}</p>
+          <div className="text-center py-16 px-4" role="status" aria-live="polite">
+            <div className="max-w-md mx-auto">
+              <div className="mb-6">
+                <svg
+                  className="mx-auto h-16 w-16 text-gray-400 dark:text-gray-500"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  stroke="currentColor"
+                  aria-hidden="true"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={1.5}
+                    d="M3 13.125C3 12.504 3.504 12 4.125 12h2.25c.621 0 1.125.504 1.125 1.125v6.75C7.5 20.496 6.996 21 6.375 21h-2.25A1.125 1.125 0 013 19.875v-6.75zM9.75 8.625c0-.621.504-1.125 1.125-1.125h2.25c.621 0 1.125.504 1.125 1.125v11.25c0 .621-.504 1.125-1.125 1.125h-2.25a1.125 1.125 0 01-1.125-1.125V8.625zM16.5 4.125c0-.621.504-1.125 1.125-1.125h2.25C20.496 3 21 3.504 21 4.125v15.75c0 .621-.504 1.125-1.125 1.125h-2.25a1.125 1.125 0 01-1.125-1.125V4.125z"
+                  />
+                </svg>
+              </div>
+              <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-2">
+                {t('feeds.core.empty.analytics.title')}
+              </h3>
+              <p className="text-gray-600 dark:text-gray-400">
+                {t('feeds.core.empty.analytics.description')}
+              </p>
+            </div>
           </div>
         </TabsContent>
       </Tabs>

@@ -2041,14 +2041,50 @@
         "analytics": "Analytics"
       },
       "empty": {
-        "filters": "No content matches your filters",
-        "default": "No feeds available",
-        "polls": "Polls view coming soon",
-        "analytics": "Analytics not available"
+        "filters": {
+          "title": "No content matches your filters",
+          "description": "Try removing some hashtag filters to see more content, or explore trending topics below.",
+          "clear": "Clear all filters"
+        },
+        "default": {
+          "title": "No feeds available",
+          "description": "There are no feeds to display right now. Check back soon for new content, or explore trending hashtags to discover what's happening.",
+          "refresh": "Refresh feed",
+          "suggestions": "Explore trending topics:"
+        },
+        "polls": {
+          "title": "Polls view coming soon",
+          "description": "We're working on bringing you a dedicated polls view. In the meantime, check out the Feed tab for poll content."
+        },
+        "analytics": {
+          "title": "Analytics not available",
+          "description": "Feed analytics will be available once you start engaging with content. Like, share, and bookmark items to see your activity insights."
+        }
+      },
+      "error": {
+        "title": "Unable to load feed",
+        "retry": "Try again",
+        "help": "If this problem persists, please refresh the page or contact support."
       },
       "actions": {
         "bookmark": "Bookmark",
-        "share": "Share"
+        "share": "Share",
+        "liked": {
+          "title": "Liked",
+          "message": "Item added to your liked content"
+        },
+        "unliked": {
+          "title": "Unliked",
+          "message": "Item removed from your liked content"
+        },
+        "bookmarked": {
+          "title": "Bookmarked",
+          "message": "Item saved to your bookmarks"
+        },
+        "unbookmarked": {
+          "title": "Unbookmarked",
+          "message": "Item removed from your bookmarks"
+        }
       },
       "status": {
         "online": "Online",

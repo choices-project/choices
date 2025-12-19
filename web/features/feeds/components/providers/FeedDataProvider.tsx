@@ -182,7 +182,27 @@ function HarnessFeedDataProvider({
   const handleLike = useCallback(async (itemId: string) => {
     clearErrorActionRef.current();
     try {
-      await likeFeedActionRef.current(itemId);
+      const feed = feedsRef.current.find(f => f.id === itemId);
+      const wasLiked = feed?.userInteraction?.liked ?? false;
+      
+      if (wasLiked) {
+        const unlikeFeedAction = useFeedsStore.getState().unlikeFeed;
+        await unlikeFeedAction(itemId);
+        addNotificationRef.current({
+          type: 'success',
+          title: tRef.current('feeds.actions.unliked.title'),
+          message: tRef.current('feeds.actions.unliked.message'),
+          duration: 2000,
+        });
+      } else {
+        await likeFeedActionRef.current(itemId);
+        addNotificationRef.current({
+          type: 'success',
+          title: tRef.current('feeds.actions.liked.title'),
+          message: tRef.current('feeds.actions.liked.message'),
+          duration: 2000,
+        });
+      }
     } catch (err) {
       logger.error('[HarnessFeedDataProvider] Failed to like feed:', err);
       const shortMessage = tRef.current('feeds.provider.errors.likeFeed.short');
@@ -194,7 +214,27 @@ function HarnessFeedDataProvider({
   const handleBookmark = useCallback(async (itemId: string) => {
     clearErrorActionRef.current();
     try {
-      await bookmarkFeedActionRef.current(itemId);
+      const feed = feedsRef.current.find(f => f.id === itemId);
+      const wasBookmarked = feed?.userInteraction?.bookmarked ?? false;
+      
+      if (wasBookmarked) {
+        const unbookmarkFeedAction = useFeedsStore.getState().unbookmarkFeed;
+        await unbookmarkFeedAction(itemId);
+        addNotificationRef.current({
+          type: 'success',
+          title: tRef.current('feeds.actions.unbookmarked.title'),
+          message: tRef.current('feeds.actions.unbookmarked.message'),
+          duration: 2000,
+        });
+      } else {
+        await bookmarkFeedActionRef.current(itemId);
+        addNotificationRef.current({
+          type: 'success',
+          title: tRef.current('feeds.actions.bookmarked.title'),
+          message: tRef.current('feeds.actions.bookmarked.message'),
+          duration: 2000,
+        });
+      }
     } catch (err) {
       logger.error('[HarnessFeedDataProvider] Failed to bookmark feed:', err);
       const shortMessage = tRef.current('feeds.provider.errors.bookmarkFeed.short');
@@ -496,12 +536,34 @@ function StandardFeedDataProvider({
   useEffect(() => { loadFeedsRef.current = loadFeeds; }, [loadFeeds]);
   const loadMoreFeedsRef = useRef(loadMoreFeeds);
   useEffect(() => { loadMoreFeedsRef.current = loadMoreFeeds; }, [loadMoreFeeds]);
+  const feedsRef = useRef(feeds);
+  useEffect(() => { feedsRef.current = feeds; }, [feeds]);
 
   // Interaction handlers - use refs to avoid re-renders
   const handleLike = useCallback(async (itemId: string) => {
     clearErrorActionRef.current();
     try {
-      await likeFeedActionRef.current(itemId);
+      const feed = feedsRef.current.find(f => f.id === itemId);
+      const wasLiked = feed?.userInteraction?.liked ?? false;
+      
+      if (wasLiked) {
+        const unlikeFeedAction = useFeedsStore.getState().unlikeFeed;
+        await unlikeFeedAction(itemId);
+        addNotificationRef.current({
+          type: 'success',
+          title: tRef.current('feeds.actions.unliked.title'),
+          message: tRef.current('feeds.actions.unliked.message'),
+          duration: 2000,
+        });
+      } else {
+        await likeFeedActionRef.current(itemId);
+        addNotificationRef.current({
+          type: 'success',
+          title: tRef.current('feeds.actions.liked.title'),
+          message: tRef.current('feeds.actions.liked.message'),
+          duration: 2000,
+        });
+      }
     } catch (err) {
       logger.error('Failed to like feed:', err);
       const shortMessage = tRef.current('feeds.provider.errors.likeFeed.short');
@@ -515,13 +577,31 @@ function StandardFeedDataProvider({
   useEffect(() => { refreshFeedsRef.current = refreshFeeds; }, [refreshFeeds]);
   const setFiltersActionRef = useRef(setFiltersAction);
   useEffect(() => { setFiltersActionRef.current = setFiltersAction; }, [setFiltersAction]);
-  const feedsRef = useRef(feeds);
-  useEffect(() => { feedsRef.current = feeds; }, [feeds]);
 
   const handleBookmark = useCallback(async (itemId: string) => {
     clearErrorActionRef.current();
     try {
-      await bookmarkFeedActionRef.current(itemId);
+      const feed = feedsRef.current.find(f => f.id === itemId);
+      const wasBookmarked = feed?.userInteraction?.bookmarked ?? false;
+      
+      if (wasBookmarked) {
+        const unbookmarkFeedAction = useFeedsStore.getState().unbookmarkFeed;
+        await unbookmarkFeedAction(itemId);
+        addNotificationRef.current({
+          type: 'success',
+          title: tRef.current('feeds.actions.unbookmarked.title'),
+          message: tRef.current('feeds.actions.unbookmarked.message'),
+          duration: 2000,
+        });
+      } else {
+        await bookmarkFeedActionRef.current(itemId);
+        addNotificationRef.current({
+          type: 'success',
+          title: tRef.current('feeds.actions.bookmarked.title'),
+          message: tRef.current('feeds.actions.bookmarked.message'),
+          duration: 2000,
+        });
+      }
     } catch (err) {
       logger.error('Failed to bookmark feed:', err);
       const shortMessage = tRef.current('feeds.provider.errors.bookmarkFeed.short');
