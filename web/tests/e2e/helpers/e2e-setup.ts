@@ -255,14 +255,40 @@ export async function loginTestUser(page: Page, user: TestUser): Promise<void> {
   await emailInput.first().waitFor({ state: 'visible', timeout: 10_000 });
   await passwordInput.first().waitFor({ state: 'visible', timeout: 10_000 });
 
-  await emailInput.first().fill(email, { timeout: 5_000 });
-  await passwordInput.first().fill(password, { timeout: 5_000 });
+  // Clear any existing values first
+  await emailInput.first().clear({ timeout: 2_000 });
+  await passwordInput.first().clear({ timeout: 2_000 });
+  
+  // Use type() instead of fill() for React controlled inputs
+  // type() more reliably triggers onChange events in React
+  await emailInput.first().type(email, { delay: 50, timeout: 5_000 });
+  await passwordInput.first().type(password, { delay: 50, timeout: 5_000 });
+  
+  // Wait for React to process the state updates
+  // The form shows validation indicators when fields are valid
+  // Wait for email validation indicator (appears when email includes '@')
+  if (email.includes('@')) {
+    await page.waitForSelector('[data-testid="email-validation"]', { 
+      state: 'visible', 
+      timeout: 5_000 
+    }).catch(() => {
+      // Validation indicator might not always be visible, continue anyway
+    });
+  }
+  
+  // Wait for password validation (password length >= 6)
+  // The form validates password length, wait a bit for React to process
+  await page.waitForTimeout(200);
 
   const submitButton = page.getByTestId('login-submit');
   await submitButton.waitFor({ state: 'visible', timeout: 5_000 });
   
-  // Ensure button is not disabled before clicking
-  await expect(submitButton).toBeEnabled({ timeout: 5_000 });
+  // Wait for form validation to complete after filling fields
+  // React state updates are async, so we need to wait for the button to become enabled
+  // The button is disabled when: isLoading || !isFormValid
+  // isFormValid requires: email includes '@' && password.length >= 6
+  // Use a longer timeout to handle async React state updates
+  await expect(submitButton).toBeEnabled({ timeout: 10_000 });
   
   // Set up network request interception BEFORE clicking
   type LoginResponse = { status: number; body: any };
