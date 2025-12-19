@@ -176,6 +176,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       initializeAuth(null, null, false)
       setSession(null)
       setUser(null)
+      // Redirect to landing page after logout
+      if (typeof window !== 'undefined') {
+        window.location.href = '/landing'
+      }
       return
     }
 
@@ -186,8 +190,16 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       initializeAuth(null, null, false)
       setSession(null)
       setUser(null)
+      // Redirect to landing page after logout
+      if (typeof window !== 'undefined') {
+        window.location.href = '/landing'
+      }
     } catch (error) {
       logger.error('Failed to sign out:', error)
+      // Still redirect even if signOut fails
+      if (typeof window !== 'undefined') {
+        window.location.href = '/landing'
+      }
     }
   }
 

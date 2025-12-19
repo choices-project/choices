@@ -24,6 +24,7 @@ import React, { useCallback, useEffect, useRef, useState } from 'react';
 import LanguageSelector from '@/components/shared/LanguageSelector';
 import ThemeSelector from '@/components/shared/ThemeSelector';
 import { Button } from '@/components/ui/button';
+import { useRouter } from 'next/navigation';
 
 import logger from '@/lib/utils/logger';
 
@@ -42,6 +43,7 @@ export default function GlobalNavigation() {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [_hasError, _setHasError] = useState(false);
   const pathname = usePathname();
+  const router = useRouter();
   const mobileMenuButtonRef = useRef<HTMLButtonElement>(null);
   const firstMobileNavLinkRef = useRef<HTMLAnchorElement>(null);
   const previouslyFocusedElementRef = useRef<HTMLElement | null>(null);
@@ -65,10 +67,15 @@ export default function GlobalNavigation() {
     try {
       closeMobileMenu();
       await authSignOut();
+      // Redirect to landing page after logout
+      // The signOut function in AuthContext should handle redirect, but we ensure it here too
+      router.push('/landing');
     } catch (error) {
       logger.error('Logout failed:', error);
+      // Still redirect even if logout fails
+      router.push('/landing');
     }
-  }, [authSignOut, closeMobileMenu]);
+  }, [authSignOut, closeMobileMenu, router]);
 
   const isActive = useCallback(
     (path: string) => pathname === path,

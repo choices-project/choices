@@ -1104,18 +1104,18 @@ test.describe('Production UX Excellence', () => {
       if (hasLogout) {
         const urlBeforeLogout = page.url();
         await logoutButton.click();
-        
+
         // Wait for redirect with longer timeout and multiple checks
         await page.waitForTimeout(2_000);
-        
+
         // Wait for URL to change or navigation to complete
         try {
           await page.waitForURL(
             (url) => {
               const href = url.href;
-              return href.includes('/landing') || 
-                     href.includes('/auth') || 
-                     href === BASE_URL || 
+              return href.includes('/landing') ||
+                     href.includes('/auth') ||
+                     href === BASE_URL ||
                      href === `${BASE_URL}/` ||
                      !href.includes('/feed') ||
                      href !== urlBeforeLogout;
@@ -1135,14 +1135,14 @@ test.describe('Production UX Excellence', () => {
                            currentUrl === `${BASE_URL}/` ||
                            !currentUrl.includes('/feed') ||
                            currentUrl !== urlBeforeLogout;
-        
+
         // If logout didn't redirect, try accessing protected page to verify logout worked
         if (!isLoggedOut) {
           await page.goto(`${BASE_URL}/feed`, { waitUntil: 'domcontentloaded', timeout: 30_000 });
           await page.waitForTimeout(3_000);
           const urlAfterAccess = page.url();
-          const isStillProtected = !urlAfterAccess.includes('/feed') || 
-                                  urlAfterAccess.includes('/auth') || 
+          const isStillProtected = !urlAfterAccess.includes('/feed') ||
+                                  urlAfterAccess.includes('/auth') ||
                                   urlAfterAccess.includes('/landing') ||
                                   urlAfterAccess === BASE_URL ||
                                   urlAfterAccess === `${BASE_URL}/`;
@@ -1320,9 +1320,9 @@ test.describe('Production UX Excellence', () => {
         password: regularPassword,
         username: regularEmail.split('@')[0] ?? 'e2e-user',
       });
-      
+
       await waitForPageReady(page);
-      
+
       // Now test slow network on feed page
       await page.goto(`${BASE_URL}/feed`, { waitUntil: 'domcontentloaded', timeout: 60_000 });
 
@@ -1804,11 +1804,11 @@ test.describe('Production UX Excellence', () => {
       // Check for content - either from cached page or offline fallback
       const body = page.locator('body');
       const hasContent = await body.textContent().catch(() => '');
-      
+
       // Also check for HTML content (even if text is empty, HTML structure might exist)
       const htmlContent = await page.content().catch(() => '');
       const hasHtmlContent = htmlContent && htmlContent.length > 100; // Basic HTML structure
-      
+
       // Should show some content (cached page, offline page, or at least HTML structure)
       // If offline mode isn't implemented, that's a UX improvement opportunity, not a failure
       expect(hasContent?.length || hasHtmlContent).toBeGreaterThan(0);

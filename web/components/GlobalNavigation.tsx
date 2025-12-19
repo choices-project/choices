@@ -47,7 +47,8 @@ export default function GlobalNavigation() {
     } finally {
       resetUserState()
       closeMobileMenu()
-      router.push('/login')
+      // Redirect to landing page (consistent with middleware behavior)
+      router.push('/landing')
     }
   }
 
