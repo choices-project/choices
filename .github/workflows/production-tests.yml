@@ -156,6 +156,7 @@ jobs:
             tests/e2e/specs/auth/auth-production.spec.ts \
             tests/e2e/specs/poll-production.spec.ts \
             tests/e2e/specs/production/production-critical-journeys.spec.ts \
+            tests/e2e/specs/production/production-ux-improvements.spec.ts \
             --config tests/e2e/playwright.config.ts \
             --project=chromium \
             --reporter=html,junit,github
@@ -164,6 +165,12 @@ jobs:
           PLAYWRIGHT_USE_MOCKS: '0'
           BASE_URL: ${{ env.PRODUCTION_URL }}
           PRODUCTION_URL: ${{ env.PRODUCTION_URL }}
+          E2E_USER_EMAIL: ${{ secrets.E2E_USER_EMAIL }}
+          E2E_USER_PASSWORD: ${{ secrets.E2E_USER_PASSWORD }}
+          E2E_ADMIN_EMAIL: ${{ secrets.E2E_ADMIN_EMAIL }}
+          E2E_ADMIN_PASSWORD: ${{ secrets.E2E_ADMIN_PASSWORD }}
+          NEXT_PUBLIC_SUPABASE_URL: ${{ secrets.NEXT_PUBLIC_SUPABASE_URL }}
+          NEXT_PUBLIC_SUPABASE_ANON_KEY: ${{ secrets.NEXT_PUBLIC_SUPABASE_ANON_KEY }}
 
       - name: Upload test results
         if: always()

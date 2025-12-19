@@ -311,18 +311,20 @@ jobs:
 
       - name: Start production server
         run: |
-          npx next start > server.log 2>&1 &
+          npm run start:ci > server.log 2>&1 &
           SERVER_PID=$!
+          echo "SERVER_PID=$SERVER_PID" >> $GITHUB_ENV
           echo "Started server with PID: $SERVER_PID"
 
           # Wait for server to be ready
-          for i in {1..60}; do
+          for i in {1..90}; do
             if curl -f http://127.0.0.1:3000/api/health > /dev/null 2>&1; then
               echo "Server is ready!"
               break
             fi
-            if [ $i -eq 60 ]; then
-              echo "Server failed to start"
+            if [ $i -eq 90 ]; then
+              echo "Server failed to start after 90 seconds"
+              echo "=== Server logs ==="
               cat server.log
               exit 1
             fi
@@ -342,6 +344,17 @@ jobs:
             --config tests/e2e/playwright.config.ts \
             --project=chromium \
             --reporter=html,junit
+        env:
+          CI: true
+          BASE_URL: http://127.0.0.1:3000
+          PLAYWRIGHT_USE_MOCKS: '0'
+          NEXT_PUBLIC_ENABLE_E2E_HARNESS: '1'
+          E2E_USER_EMAIL: ${{ secrets.E2E_USER_EMAIL }}
+          E2E_USER_PASSWORD: ${{ secrets.E2E_USER_PASSWORD }}
+          E2E_ADMIN_EMAIL: ${{ secrets.E2E_ADMIN_EMAIL }}
+          E2E_ADMIN_PASSWORD: ${{ secrets.E2E_ADMIN_PASSWORD }}
+          NEXT_PUBLIC_SUPABASE_URL: ${{ secrets.NEXT_PUBLIC_SUPABASE_URL }}
+          NEXT_PUBLIC_SUPABASE_ANON_KEY: ${{ secrets.NEXT_PUBLIC_SUPABASE_ANON_KEY }}
       
       - name: Run comprehensive production journeys
         run: |
@@ -365,10 +378,17 @@ jobs:
       - name: Stop production server
         if: always()
         run: |
+          # Try to kill by PID first, then fallback to pkill
+          if [ -n "$SERVER_PID" ]; then
+            kill $SERVER_PID 2>/dev/null || true
+            sleep 2
+            kill -9 $SERVER_PID 2>/dev/null || true
+          fi
           pkill -f "next start" || true
+          pkill -f "node.*server.js" || true
           if [ -f server.log ]; then
-            echo "=== Server logs ==="
-            tail -50 server.log || true
+            echo "=== Server logs (last 100 lines) ==="
+            tail -100 server.log || true
           fi
 
       - name: Upload auth-production results
