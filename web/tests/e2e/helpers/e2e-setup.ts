@@ -1,4 +1,4 @@
-import { expect, type Page } from '@playwright/test';
+import { type Page } from '@playwright/test';
 
 import { CIVICS_ADDRESS_LOOKUP, CIVICS_STATE_FIXTURE } from '../../fixtures/api/civics';
 import { buildDashboardData } from '../../fixtures/api/dashboard';
