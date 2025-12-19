@@ -322,7 +322,11 @@ export default function AuthPage() {
                   placeholder={t('auth.form.emailPlaceholder')}
                   data-testid="login-email"
                   aria-label={t('auth.form.emailAria')}
-                  aria-invalid={formData.email && !formData.email.includes('@')}
+                  aria-invalid={
+                    formData.email && formData.email.length > 0 && !formData.email.includes('@')
+                      ? true
+                      : undefined
+                  }
                   aria-describedby={formData.email ? (formData.email.includes('@') ? 'email-success' : 'email-error') : undefined}
                 />
                 <Mail className="absolute left-3 top-2.5 h-5 w-5 text-gray-400" />
@@ -365,7 +369,11 @@ export default function AuthPage() {
                   placeholder={t('auth.form.passwordPlaceholder')}
                   data-testid="login-password"
                   aria-label={t('auth.form.passwordAria')}
-                  aria-invalid={formData.password && formData.password.length < 6}
+                  aria-invalid={
+                    formData.password && formData.password.length > 0 && formData.password.length < 6
+                      ? true
+                      : undefined
+                  }
                   aria-describedby={formData.password ? (formData.password.length >= 6 ? 'password-success' : 'password-error') : undefined}
                 />
                 <Lock className="absolute left-3 top-2.5 h-5 w-5 text-gray-400" />
