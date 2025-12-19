@@ -95,6 +95,31 @@ test.describe('Production Observability', () => {
     // We *expect* this to be healthy in a correct production environment.
     // If it is 500 or similar, tests will fail and logs above will show details.
     expect(status).not.toBe(500);
+    
+    // Check for UX improvements: empty states, loading states, error handling
+    await waitForPageReady(page);
+    await page.waitForTimeout(2_000);
+    
+    // Check for proper error handling (if feed fails to load)
+    const errorMessage = page.locator('text=/Unable to load|Error loading/i').first();
+    const hasError = await errorMessage.isVisible().catch(() => false);
+    
+    if (hasError) {
+      // Error should have retry button
+      const retryButton = page.locator('button:has-text("Try again"), button:has-text("Retry")').first();
+      const hasRetry = await retryButton.isVisible().catch(() => false);
+      expect(hasRetry).toBeTruthy();
+    }
+    
+    // Check for empty state (if no content)
+    const emptyState = page.locator('text=/No feeds available|No content matches/i').first();
+    const hasEmptyState = await emptyState.isVisible().catch(() => false);
+    
+    if (hasEmptyState) {
+      // Empty state should have helpful actions
+      const hasActions = await page.locator('button:has-text("Refresh"), button:has-text("Clear")').count() > 0;
+      expect(hasActions).toBeTruthy();
+    }
   });
 
   test('privacy page API + console diagnostics', async ({ page }) => {

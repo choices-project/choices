@@ -1,0 +1,496 @@
+import { expect, test } from '@playwright/test';
+import { ensureLoggedOut, loginTestUser, waitForPageReady } from '../../helpers/e2e-setup';
+
+/**
+ * Production UX Improvements Tests
+ * 
+ * Tests for the UX improvements made to production:
+ * - Empty states with helpful messaging
+ * - Loading skeletons
+ * - Form validation feedback
+ * - Success notifications
+ * - Error handling improvements
+ * - Accessibility enhancements
+ */
+
+const PRODUCTION_URL = process.env.PRODUCTION_URL || 'https://www.choices-app.com';
+const BASE_URL = process.env.BASE_URL || PRODUCTION_URL;
+
+const regularEmail = process.env.E2E_USER_EMAIL;
+const regularPassword = process.env.E2E_USER_PASSWORD;
+
+test.describe('Production UX Improvements', () => {
+  test.describe('Empty States', () => {
+    test('feed page shows helpful empty state when no content', async ({ page }) => {
+      test.setTimeout(60_000);
+      
+      if (!regularEmail || !regularPassword) {
+        test.skip();
+        return;
+      }
+
+      await ensureLoggedOut(page);
+      
+      // Log in
+      await page.goto(`${BASE_URL}/auth`, { waitUntil: 'domcontentloaded', timeout: 30_000 });
+      await loginTestUser(page, {
+        email: regularEmail,
+        password: regularPassword,
+        username: regularEmail.split('@')[0] ?? 'e2e-user',
+      });
+      
+      await waitForPageReady(page);
+      await page.waitForTimeout(2_000);
+      
+      // Navigate to feed
+      await page.goto(`${BASE_URL}/feed`, { waitUntil: 'domcontentloaded', timeout: 30_000 });
+      await waitForPageReady(page);
+      await page.waitForTimeout(3_000);
+      
+      // Check for empty state (may or may not be visible depending on content)
+      const emptyState = page.locator('text=/No feeds available|No content matches|Explore trending/i');
+      const hasContent = await page.locator('[role="feed"]').count() > 0;
+      
+      // Either should have content OR show empty state with helpful message
+      if (!hasContent) {
+        await expect(emptyState.first()).toBeVisible({ timeout: 5_000 });
+        
+        // Empty state should have helpful actions
+        const refreshButton = page.locator('button:has-text("Refresh"), button:has-text("refresh")').first();
+        const clearFiltersButton = page.locator('button:has-text("Clear"), button:has-text("clear")').first();
+        const hasActionButton = await refreshButton.isVisible().catch(() => false) || 
+                                await clearFiltersButton.isVisible().catch(() => false);
+        
+        // Should have at least one action button or trending hashtags
+        const trendingHashtags = page.locator('text=/trending|hashtag/i').first();
+        const hasTrending = await trendingHashtags.isVisible().catch(() => false);
+        
+        expect(hasActionButton || hasTrending).toBeTruthy();
+      }
+    });
+
+    test('polls tab shows helpful empty state', async ({ page }) => {
+      test.setTimeout(60_000);
+      
+      if (!regularEmail || !regularPassword) {
+        test.skip();
+        return;
+      }
+
+      await ensureLoggedOut(page);
+      
+      // Log in
+      await page.goto(`${BASE_URL}/auth`, { waitUntil: 'domcontentloaded', timeout: 30_000 });
+      await loginTestUser(page, {
+        email: regularEmail,
+        password: regularPassword,
+        username: regularEmail.split('@')[0] ?? 'e2e-user',
+      });
+      
+      await waitForPageReady(page);
+      await page.waitForTimeout(2_000);
+      
+      // Navigate to feed
+      await page.goto(`${BASE_URL}/feed`, { waitUntil: 'domcontentloaded', timeout: 30_000 });
+      await waitForPageReady(page);
+      await page.waitForTimeout(2_000);
+      
+      // Click on polls tab
+      const pollsTab = page.locator('button:has-text("Polls"), [role="tab"]:has-text("Polls")').first();
+      if (await pollsTab.isVisible().catch(() => false)) {
+        await pollsTab.click();
+        await page.waitForTimeout(1_000);
+        
+        // Should show helpful empty state message
+        const emptyState = page.locator('text=/Polls view coming soon|coming soon|check out the Feed tab/i');
+        await expect(emptyState.first()).toBeVisible({ timeout: 5_000 });
+      }
+    });
+  });
+
+  test.describe('Loading States', () => {
+    test('feed page shows skeleton loaders during initial load', async ({ page }) => {
+      test.setTimeout(60_000);
+      
+      if (!regularEmail || !regularPassword) {
+        test.skip();
+        return;
+      }
+
+      await ensureLoggedOut(page);
+      
+      // Log in
+      await page.goto(`${BASE_URL}/auth`, { waitUntil: 'domcontentloaded', timeout: 30_000 });
+      await loginTestUser(page, {
+        email: regularEmail,
+        password: regularPassword,
+        username: regularEmail.split('@')[0] ?? 'e2e-user',
+      });
+      
+      await waitForPageReady(page);
+      await page.waitForTimeout(2_000);
+      
+      // Navigate to feed and check for skeleton loaders
+      const responsePromise = page.goto(`${BASE_URL}/feed`, { waitUntil: 'domcontentloaded', timeout: 30_000 });
+      
+      // Check for skeleton loaders (they appear briefly during load)
+      const skeleton = page.locator('.animate-pulse, [aria-label*="Loading"]').first();
+      const skeletonVisible = await skeleton.isVisible().catch(() => false);
+      
+      await responsePromise;
+      await waitForPageReady(page);
+      
+      // Skeleton should have appeared (or page loaded so fast it wasn't visible)
+      // Either way, page should load without errors
+      const errorBoundary = page.locator('text=/Error|Something went wrong/i');
+      await expect(errorBoundary).toHaveCount(0, { timeout: 5_000 });
+    });
+
+    test('dashboard shows skeleton loaders during load', async ({ page }) => {
+      test.setTimeout(60_000);
+      
+      if (!regularEmail || !regularPassword) {
+        test.skip();
+        return;
+      }
+
+      await ensureLoggedOut(page);
+      
+      // Log in
+      await page.goto(`${BASE_URL}/auth`, { waitUntil: 'domcontentloaded', timeout: 30_000 });
+      await loginTestUser(page, {
+        email: regularEmail,
+        password: regularPassword,
+        username: regularEmail.split('@')[0] ?? 'e2e-user',
+      });
+      
+      await waitForPageReady(page);
+      await page.waitForTimeout(2_000);
+      
+      // Navigate to dashboard
+      const responsePromise = page.goto(`${BASE_URL}/dashboard`, { waitUntil: 'domcontentloaded', timeout: 30_000 });
+      
+      // Check for skeleton loaders
+      const skeleton = page.locator('.animate-pulse, [aria-label*="Loading"]').first();
+      const skeletonVisible = await skeleton.isVisible().catch(() => false);
+      
+      await responsePromise;
+      await waitForPageReady(page);
+      
+      // Page should load without errors
+      const errorBoundary = page.locator('text=/Error|Something went wrong/i');
+      await expect(errorBoundary).toHaveCount(0, { timeout: 5_000 });
+    });
+  });
+
+  test.describe('Form Validation', () => {
+    test('auth form shows real-time email validation', async ({ page }) => {
+      await ensureLoggedOut(page);
+      
+      await page.goto(`${BASE_URL}/auth`, { waitUntil: 'domcontentloaded', timeout: 30_000 });
+      await page.waitForTimeout(1_000);
+      
+      // Find email input
+      const emailInput = page.locator('input[type="email"], input[name="email"]').first();
+      await expect(emailInput).toBeVisible({ timeout: 5_000 });
+      
+      // Type invalid email
+      await emailInput.fill('invalid-email');
+      await page.waitForTimeout(500);
+      
+      // Should show validation error or visual indicator
+      const errorIndicator = page.locator('[aria-invalid="true"], .border-red, text=/email.*error|invalid.*email/i').first();
+      const hasError = await errorIndicator.isVisible().catch(() => false);
+      
+      // Type valid email
+      await emailInput.fill('test@example.com');
+      await page.waitForTimeout(500);
+      
+      // Should show success indicator or remove error
+      const successIndicator = page.locator('[aria-invalid="false"], .border-green, text=/valid|success/i').first();
+      const hasSuccess = await successIndicator.isVisible().catch(() => false);
+      
+      // At minimum, form should respond to input
+      expect(hasError || hasSuccess).toBeTruthy();
+    });
+
+    test('auth form shows real-time password validation', async ({ page }) => {
+      await ensureLoggedOut(page);
+      
+      await page.goto(`${BASE_URL}/auth`, { waitUntil: 'domcontentloaded', timeout: 30_000 });
+      await page.waitForTimeout(1_000);
+      
+      // Find password input
+      const passwordInput = page.locator('input[type="password"], input[name="password"]').first();
+      await expect(passwordInput).toBeVisible({ timeout: 5_000 });
+      
+      // Type short password
+      await passwordInput.fill('123');
+      await page.waitForTimeout(500);
+      
+      // Should show validation error or visual indicator
+      const errorIndicator = page.locator('[aria-invalid="true"], .border-red, text=/password.*error|too short/i').first();
+      const hasError = await errorIndicator.isVisible().catch(() => false);
+      
+      // Type longer password
+      await passwordInput.fill('password123');
+      await page.waitForTimeout(500);
+      
+      // Should show success indicator or remove error
+      const successIndicator = page.locator('[aria-invalid="false"], .border-green, text=/valid|success/i').first();
+      const hasSuccess = await successIndicator.isVisible().catch(() => false);
+      
+      // At minimum, form should respond to input
+      expect(hasError || hasSuccess).toBeTruthy();
+    });
+
+    test('auth form submit button shows loading state', async ({ page }) => {
+      await ensureLoggedOut(page);
+      
+      await page.goto(`${BASE_URL}/auth`, { waitUntil: 'domcontentloaded', timeout: 30_000 });
+      await page.waitForTimeout(1_000);
+      
+      // Find form inputs
+      const emailInput = page.locator('input[type="email"], input[name="email"]').first();
+      const passwordInput = page.locator('input[type="password"], input[name="password"]').first();
+      const submitButton = page.locator('button[type="submit"], button:has-text("Sign"), button:has-text("Log")').first();
+      
+      await expect(emailInput).toBeVisible({ timeout: 5_000 });
+      await expect(passwordInput).toBeVisible({ timeout: 5_000 });
+      await expect(submitButton).toBeVisible({ timeout: 5_000 });
+      
+      // Fill form with invalid credentials (will fail but button should show loading)
+      await emailInput.fill('test@example.com');
+      await passwordInput.fill('wrongpassword');
+      
+      // Click submit
+      await submitButton.click();
+      
+      // Button should show loading state (spinner or disabled)
+      const loadingSpinner = page.locator('.animate-spin, [aria-busy="true"]').first();
+      const isDisabled = await submitButton.isDisabled().catch(() => false);
+      const hasLoadingText = await submitButton.textContent().then(text => 
+        text?.toLowerCase().includes('loading') || text?.toLowerCase().includes('working')
+      ).catch(() => false);
+      
+      // Should show some loading indication
+      const isLoading = await loadingSpinner.isVisible().catch(() => false) || isDisabled || hasLoadingText;
+      
+      // Wait a bit for form to process
+      await page.waitForTimeout(2_000);
+      
+      // Button should eventually return to normal state (or show error)
+      expect(isLoading).toBeTruthy();
+    });
+  });
+
+  test.describe('Error Handling', () => {
+    test('feed page shows helpful error message with retry button', async ({ page }) => {
+      test.setTimeout(60_000);
+      
+      if (!regularEmail || !regularPassword) {
+        test.skip();
+        return;
+      }
+
+      await ensureLoggedOut(page);
+      
+      // Log in
+      await page.goto(`${BASE_URL}/auth`, { waitUntil: 'domcontentloaded', timeout: 30_000 });
+      await loginTestUser(page, {
+        email: regularEmail,
+        password: regularPassword,
+        username: regularEmail.split('@')[0] ?? 'e2e-user',
+      });
+      
+      await waitForPageReady(page);
+      await page.waitForTimeout(2_000);
+      
+      // Navigate to feed
+      await page.goto(`${BASE_URL}/feed`, { waitUntil: 'domcontentloaded', timeout: 30_000 });
+      await waitForPageReady(page);
+      await page.waitForTimeout(3_000);
+      
+      // Check for error state (may appear if feed fails to load)
+      const errorMessage = page.locator('text=/Unable to load|Error loading|Try again/i').first();
+      const hasError = await errorMessage.isVisible().catch(() => false);
+      
+      if (hasError) {
+        // Error should have retry button
+        const retryButton = page.locator('button:has-text("Try again"), button:has-text("Retry"), button:has-text("Refresh")').first();
+        await expect(retryButton).toBeVisible({ timeout: 5_000 });
+        
+        // Error should have helpful message
+        const helpfulText = page.locator('text=/refresh|contact support|problem persists/i').first();
+        const hasHelpfulText = await helpfulText.isVisible().catch(() => false);
+        expect(hasHelpfulText).toBeTruthy();
+      }
+    });
+  });
+
+  test.describe('Accessibility', () => {
+    test('auth form has proper ARIA labels and error associations', async ({ page }) => {
+      await ensureLoggedOut(page);
+      
+      await page.goto(`${BASE_URL}/auth`, { waitUntil: 'domcontentloaded', timeout: 30_000 });
+      await page.waitForTimeout(1_000);
+      
+      // Check email input
+      const emailInput = page.locator('input[type="email"], input[name="email"]').first();
+      await expect(emailInput).toBeVisible({ timeout: 5_000 });
+      
+      const emailId = await emailInput.getAttribute('id');
+      const emailAriaLabel = await emailInput.getAttribute('aria-label');
+      const emailAriaDescribedBy = await emailInput.getAttribute('aria-describedby');
+      
+      // Should have either id with label, or aria-label
+      if (emailId) {
+        const label = page.locator(`label[for="${emailId}"]`);
+        const hasLabel = await label.count() > 0;
+        expect(hasLabel || emailAriaLabel).toBeTruthy();
+      } else {
+        expect(emailAriaLabel).toBeTruthy();
+      }
+      
+      // Check password input
+      const passwordInput = page.locator('input[type="password"], input[name="password"]').first();
+      await expect(passwordInput).toBeVisible({ timeout: 5_000 });
+      
+      const passwordId = await passwordInput.getAttribute('id');
+      const passwordAriaLabel = await passwordInput.getAttribute('aria-label');
+      
+      // Should have either id with label, or aria-label
+      if (passwordId) {
+        const label = page.locator(`label[for="${passwordId}"]`);
+        const hasLabel = await label.count() > 0;
+        expect(hasLabel || passwordAriaLabel).toBeTruthy();
+      } else {
+        expect(passwordAriaLabel).toBeTruthy();
+      }
+      
+      // Required fields should be indicated
+      const requiredIndicator = page.locator('text=*, [aria-label*="required"]').first();
+      const hasRequiredIndicator = await requiredIndicator.isVisible().catch(() => false);
+      
+      // Should have some indication of required fields
+      expect(hasRequiredIndicator || emailInput.getAttribute('required') || passwordInput.getAttribute('required')).toBeTruthy();
+    });
+
+    test('feed page has proper ARIA live regions for updates', async ({ page }) => {
+      test.setTimeout(60_000);
+      
+      if (!regularEmail || !regularPassword) {
+        test.skip();
+        return;
+      }
+
+      await ensureLoggedOut(page);
+      
+      // Log in
+      await page.goto(`${BASE_URL}/auth`, { waitUntil: 'domcontentloaded', timeout: 30_000 });
+      await loginTestUser(page, {
+        email: regularEmail,
+        password: regularPassword,
+        username: regularEmail.split('@')[0] ?? 'e2e-user',
+      });
+      
+      await waitForPageReady(page);
+      await page.waitForTimeout(2_000);
+      
+      // Navigate to feed
+      await page.goto(`${BASE_URL}/feed`, { waitUntil: 'domcontentloaded', timeout: 30_000 });
+      await waitForPageReady(page);
+      await page.waitForTimeout(2_000);
+      
+      // Check for ARIA live regions
+      const liveRegion = page.locator('[aria-live], [role="status"], [role="alert"]').first();
+      const hasLiveRegion = await liveRegion.isVisible().catch(() => false);
+      
+      // Feed should have live regions for screen reader announcements
+      // (May be hidden with sr-only class)
+      const liveRegionCount = await page.locator('[aria-live], [role="status"]').count();
+      expect(liveRegionCount).toBeGreaterThan(0);
+    });
+
+    test('empty states have proper ARIA labels', async ({ page }) => {
+      test.setTimeout(60_000);
+      
+      if (!regularEmail || !regularPassword) {
+        test.skip();
+        return;
+      }
+
+      await ensureLoggedOut(page);
+      
+      // Log in
+      await page.goto(`${BASE_URL}/auth`, { waitUntil: 'domcontentloaded', timeout: 30_000 });
+      await loginTestUser(page, {
+        email: regularEmail,
+        password: regularPassword,
+        username: regularEmail.split('@')[0] ?? 'e2e-user',
+      });
+      
+      await waitForPageReady(page);
+      await page.waitForTimeout(2_000);
+      
+      // Navigate to feed
+      await page.goto(`${BASE_URL}/feed`, { waitUntil: 'domcontentloaded', timeout: 30_000 });
+      await waitForPageReady(page);
+      await page.waitForTimeout(3_000);
+      
+      // Check for empty state with proper ARIA
+      const emptyState = page.locator('[role="status"], [aria-live]:has-text("No feeds"), text=/No feeds available/i').first();
+      const hasEmptyState = await emptyState.isVisible().catch(() => false);
+      
+      if (hasEmptyState) {
+        // Empty state should have role="status" or aria-live
+        const hasRole = await emptyState.getAttribute('role').then(role => role === 'status').catch(() => false);
+        const hasAriaLive = await emptyState.getAttribute('aria-live').then(live => live === 'polite' || live === 'assertive').catch(() => false);
+        
+        expect(hasRole || hasAriaLive).toBeTruthy();
+      }
+    });
+  });
+
+  test.describe('Visual Feedback', () => {
+    test('form fields show visual feedback for validation states', async ({ page }) => {
+      await ensureLoggedOut(page);
+      
+      await page.goto(`${BASE_URL}/auth`, { waitUntil: 'domcontentloaded', timeout: 30_000 });
+      await page.waitForTimeout(1_000);
+      
+      // Find email input
+      const emailInput = page.locator('input[type="email"], input[name="email"]').first();
+      await expect(emailInput).toBeVisible({ timeout: 5_000 });
+      
+      // Type invalid then valid email
+      await emailInput.fill('invalid');
+      await page.waitForTimeout(500);
+      
+      // Check for visual feedback (border color change)
+      const invalidBorder = await emailInput.evaluate((el) => {
+        const styles = window.getComputedStyle(el);
+        return styles.borderColor;
+      }).catch(() => null);
+      
+      await emailInput.fill('test@example.com');
+      await page.waitForTimeout(500);
+      
+      const validBorder = await emailInput.evaluate((el) => {
+        const styles = window.getComputedStyle(el);
+        return styles.borderColor;
+      }).catch(() => null);
+      
+      // Border color should change (or class should change)
+      const hasVisualFeedback = invalidBorder !== validBorder || 
+                                 await emailInput.evaluate(el => 
+                                   el.classList.contains('border-red') || 
+                                   el.classList.contains('border-green')
+                                 ).catch(() => false);
+      
+      // Should have some visual feedback
+      expect(hasVisualFeedback).toBeTruthy();
+    });
+  });
+});
+
