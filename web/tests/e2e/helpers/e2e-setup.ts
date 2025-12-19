@@ -265,22 +265,34 @@ export async function loginTestUser(page: Page, user: TestUser): Promise<void> {
   await passwordInput.first().fill(password, { timeout: 5_000 });
   
   // Trigger React's onChange by dispatching native events that React listens to
-  // Use InputEvent which React recognizes better than plain Event
+  // Use a cross-browser compatible approach that works in all environments
   await emailInput.first().evaluate((el: HTMLInputElement, value: string) => {
-    // Set the native value
+    // Set the native value using the setter
     const nativeInputValueSetter = Object.getOwnPropertyDescriptor(
       window.HTMLInputElement.prototype,
       'value'
     )?.set;
-    nativeInputValueSetter?.call(el, value);
+    if (nativeInputValueSetter) {
+      nativeInputValueSetter.call(el, value);
+    } else {
+      // Fallback if setter is not available
+      el.value = value;
+    }
     
-    // Create and dispatch InputEvent (React listens to this)
-    const inputEvent = new InputEvent('input', { 
-      bubbles: true, 
-      cancelable: true,
-      inputType: 'insertText',
-      data: value
-    });
+    // Create and dispatch input event (React listens to this)
+    // Use InputEvent if available, otherwise fall back to Event
+    let inputEvent: Event;
+    if (typeof InputEvent !== 'undefined') {
+      inputEvent = new InputEvent('input', { 
+        bubbles: true, 
+        cancelable: true,
+        inputType: 'insertText',
+        data: value
+      });
+    } else {
+      // Fallback for environments without InputEvent
+      inputEvent = new Event('input', { bubbles: true, cancelable: true });
+    }
     el.dispatchEvent(inputEvent);
     
     // Also dispatch change event
@@ -293,14 +305,23 @@ export async function loginTestUser(page: Page, user: TestUser): Promise<void> {
       window.HTMLInputElement.prototype,
       'value'
     )?.set;
-    nativeInputValueSetter?.call(el, value);
+    if (nativeInputValueSetter) {
+      nativeInputValueSetter.call(el, value);
+    } else {
+      el.value = value;
+    }
     
-    const inputEvent = new InputEvent('input', { 
-      bubbles: true, 
-      cancelable: true,
-      inputType: 'insertText',
-      data: value
-    });
+    let inputEvent: Event;
+    if (typeof InputEvent !== 'undefined') {
+      inputEvent = new InputEvent('input', { 
+        bubbles: true, 
+        cancelable: true,
+        inputType: 'insertText',
+        data: value
+      });
+    } else {
+      inputEvent = new Event('input', { bubbles: true, cancelable: true });
+    }
     el.dispatchEvent(inputEvent);
     
     const changeEvent = new Event('change', { bubbles: true, cancelable: true });
@@ -326,11 +347,15 @@ export async function loginTestUser(page: Page, user: TestUser): Promise<void> {
     // Re-trigger events every 3 attempts to ensure React processes them
     if (attempt > 0 && attempt % 3 === 0) {
       await emailInput.first().evaluate((el: HTMLInputElement) => {
-        const inputEvent = new InputEvent('input', { bubbles: true, cancelable: true });
+        const inputEvent = typeof InputEvent !== 'undefined' 
+          ? new InputEvent('input', { bubbles: true, cancelable: true })
+          : new Event('input', { bubbles: true, cancelable: true });
         el.dispatchEvent(inputEvent);
       });
       await passwordInput.first().evaluate((el: HTMLInputElement) => {
-        const inputEvent = new InputEvent('input', { bubbles: true, cancelable: true });
+        const inputEvent = typeof InputEvent !== 'undefined'
+          ? new InputEvent('input', { bubbles: true, cancelable: true })
+          : new Event('input', { bubbles: true, cancelable: true });
         el.dispatchEvent(inputEvent);
       });
     }
