@@ -273,17 +273,18 @@ export async function loginTestUser(page: Page, user: TestUser): Promise<void> {
   await passwordInput.first().click(); // Click to focus
   await passwordInput.first().clear({ timeout: 2_000 });
   
-  // Use fill() then trigger React events - this is more reliable
-  await emailInput.first().fill(email, { timeout: 5_000 });
-  await passwordInput.first().fill(password, { timeout: 5_000 });
+  // Use keyboard.type() which properly triggers React's onChange handlers
+  // This is more reliable than fill() + manual events for React controlled inputs
+  await emailInput.first().focus();
+  await page.keyboard.type(email, { delay: 10 });
   
-  // Trigger React's onChange by simulating user input events
-  // React listens to 'input' events on controlled inputs
+  await passwordInput.first().focus();
+  await page.keyboard.type(password, { delay: 10 });
+  
+  // Also trigger events manually as backup
   await emailInput.first().evaluate((el: HTMLInputElement) => {
-    // Trigger input event which React's onChange listens to
     const event = new Event('input', { bubbles: true, cancelable: true });
     el.dispatchEvent(event);
-    // Also trigger change for good measure
     const changeEvent = new Event('change', { bubbles: true, cancelable: true });
     el.dispatchEvent(changeEvent);
   });
