@@ -259,36 +259,96 @@ export async function loginTestUser(page: Page, user: TestUser): Promise<void> {
   await emailInput.first().clear({ timeout: 2_000 });
   await passwordInput.first().clear({ timeout: 2_000 });
   
-  // Use type() instead of fill() for React controlled inputs
-  // type() more reliably triggers onChange events in React
-  await emailInput.first().type(email, { delay: 50, timeout: 5_000 });
-  await passwordInput.first().type(password, { delay: 50, timeout: 5_000 });
+  // Use a more reliable approach: fill and then trigger React's onChange directly
+  // React controlled inputs need the onChange handler to fire to update state
+  await emailInput.first().fill(email, { timeout: 5_000 });
+  await passwordInput.first().fill(password, { timeout: 5_000 });
   
-  // Wait for React to process the state updates
-  // The form shows validation indicators when fields are valid
-  // Wait for email validation indicator (appears when email includes '@')
-  if (email.includes('@')) {
-    await page.waitForSelector('[data-testid="email-validation"]', { 
-      state: 'visible', 
-      timeout: 5_000 
-    }).catch(() => {
-      // Validation indicator might not always be visible, continue anyway
+  // Trigger React's onChange by dispatching native events that React listens to
+  // Use InputEvent which React recognizes better than plain Event
+  await emailInput.first().evaluate((el: HTMLInputElement, value: string) => {
+    // Set the native value
+    const nativeInputValueSetter = Object.getOwnPropertyDescriptor(
+      window.HTMLInputElement.prototype,
+      'value'
+    )?.set;
+    nativeInputValueSetter?.call(el, value);
+    
+    // Create and dispatch InputEvent (React listens to this)
+    const inputEvent = new InputEvent('input', { 
+      bubbles: true, 
+      cancelable: true,
+      inputType: 'insertText',
+      data: value
     });
-  }
+    el.dispatchEvent(inputEvent);
+    
+    // Also dispatch change event
+    const changeEvent = new Event('change', { bubbles: true, cancelable: true });
+    el.dispatchEvent(changeEvent);
+  }, email);
   
-  // Wait for password validation (password length >= 6)
-  // The form validates password length, wait a bit for React to process
-  await page.waitForTimeout(200);
-
+  await passwordInput.first().evaluate((el: HTMLInputElement, value: string) => {
+    const nativeInputValueSetter = Object.getOwnPropertyDescriptor(
+      window.HTMLInputElement.prototype,
+      'value'
+    )?.set;
+    nativeInputValueSetter?.call(el, value);
+    
+    const inputEvent = new InputEvent('input', { 
+      bubbles: true, 
+      cancelable: true,
+      inputType: 'insertText',
+      data: value
+    });
+    el.dispatchEvent(inputEvent);
+    
+    const changeEvent = new Event('change', { bubbles: true, cancelable: true });
+    el.dispatchEvent(changeEvent);
+  }, password);
+  
+  // Wait a moment for React to process the state updates
+  await page.waitForTimeout(300);
+  
+  // Wait for form validation to complete
+  // The button is disabled when: isLoading || !isFormValid
+  // isFormValid requires: email includes '@' && password.length >= 6
   const submitButton = page.getByTestId('login-submit');
   await submitButton.waitFor({ state: 'visible', timeout: 5_000 });
   
-  // Wait for form validation to complete after filling fields
-  // React state updates are async, so we need to wait for the button to become enabled
-  // The button is disabled when: isLoading || !isFormValid
-  // isFormValid requires: email includes '@' && password.length >= 6
-  // Use a longer timeout to handle async React state updates
-  await expect(submitButton).toBeEnabled({ timeout: 10_000 });
+  // Poll for button to become enabled with retries
+  // If still disabled, re-trigger events
+  let isEnabled = false;
+  for (let attempt = 0; attempt < 15; attempt++) {
+    isEnabled = !(await submitButton.isDisabled());
+    if (isEnabled) break;
+    
+    // Re-trigger events every 3 attempts to ensure React processes them
+    if (attempt > 0 && attempt % 3 === 0) {
+      await emailInput.first().evaluate((el: HTMLInputElement) => {
+        const inputEvent = new InputEvent('input', { bubbles: true, cancelable: true });
+        el.dispatchEvent(inputEvent);
+      });
+      await passwordInput.first().evaluate((el: HTMLInputElement) => {
+        const inputEvent = new InputEvent('input', { bubbles: true, cancelable: true });
+        el.dispatchEvent(inputEvent);
+      });
+    }
+    
+    await page.waitForTimeout(500);
+  }
+  
+  // Final check - ensure button is enabled
+  if (!isEnabled) {
+    // Last attempt: check if validation is actually failing
+    const emailValue = await emailInput.first().inputValue();
+    const passwordValue = await passwordInput.first().inputValue();
+    throw new Error(
+      `Submit button still disabled after all attempts. ` +
+      `Email: "${emailValue}" (valid: ${emailValue.includes('@')}), ` +
+      `Password length: ${passwordValue.length} (valid: ${passwordValue.length >= 6})`
+    );
+  }
   
   // Set up network request interception BEFORE clicking
   type LoginResponse = { status: number; body: any };
