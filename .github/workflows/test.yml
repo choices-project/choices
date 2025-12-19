@@ -163,7 +163,6 @@ jobs:
           tests/e2e/specs/analytics-dashboard-screen-reader.spec.ts
           tests/e2e/specs/analytics-dashboard-axe.spec.ts
           tests/e2e/specs/locale-switch.spec.ts
-          tests/e2e/specs/production/production-comprehensive-journeys.spec.ts
         env:
           CI: true
           BASE_URL: http://127.0.0.1:3000
@@ -343,6 +342,14 @@ jobs:
             --config tests/e2e/playwright.config.ts \
             --project=chromium \
             --reporter=html,junit
+      
+      - name: Run comprehensive production journeys
+        run: |
+          npx playwright test tests/e2e/specs/production/production-comprehensive-journeys.spec.ts \
+            --config tests/e2e/playwright.config.ts \
+            --project=chromium \
+            --reporter=html,junit \
+            --max-failures=3
         env:
           CI: true
           BASE_URL: http://127.0.0.1:3000

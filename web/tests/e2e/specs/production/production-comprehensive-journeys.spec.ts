@@ -1,5 +1,5 @@
 import { expect, test } from '@playwright/test';
-import { ensureLoggedOut, loginTestUser, waitForPageReady } from '../../helpers/e2e-setup';
+import { ensureLoggedOut, loginTestUser, waitForPageReady, SHOULD_USE_MOCKS } from '../../helpers/e2e-setup';
 
 /**
  * Production Comprehensive User Journeys
@@ -12,6 +12,9 @@ import { ensureLoggedOut, loginTestUser, waitForPageReady } from '../../helpers/
  * - Multi-step user journeys
  * - Error recovery scenarios
  * - Performance monitoring
+ * 
+ * Note: These tests are designed for production environments and will skip
+ * when mocks are enabled or when running in E2E harness mode.
  */
 
 const PRODUCTION_URL = process.env.PRODUCTION_URL || 'https://www.choices-app.com';
@@ -24,6 +27,9 @@ const adminEmail = process.env.E2E_ADMIN_EMAIL;
 const adminPassword = process.env.E2E_ADMIN_PASSWORD;
 
 test.describe('Production Comprehensive Journeys', () => {
+  // Skip all tests if mocks are enabled (but allow harness mode for production server testing)
+  test.skip(SHOULD_USE_MOCKS, 'Production tests require real backend (set PLAYWRIGHT_USE_MOCKS=0)');
+  
   test.describe('Complete Onboarding Flow', () => {
     test('new user can complete full onboarding journey', async ({ page }) => {
       test.setTimeout(180_000);
