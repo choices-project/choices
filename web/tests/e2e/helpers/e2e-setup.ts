@@ -1,4 +1,4 @@
-import { type Page } from '@playwright/test';
+import type { Page } from '@playwright/test';
 
 import { CIVICS_ADDRESS_LOOKUP, CIVICS_STATE_FIXTURE } from '../../fixtures/api/civics';
 import { buildDashboardData } from '../../fixtures/api/dashboard';
@@ -297,13 +297,12 @@ export async function loginTestUser(page: Page, user: TestUser): Promise<void> {
   
   // Wait for React to process - check that inputs have correct values
   await page.waitForFunction(
-    (expectedEmail: string, expectedPassword: string) => {
+    ({ expectedEmail, expectedPassword }: { expectedEmail: string; expectedPassword: string }) => {
       const emailInput = document.querySelector('[data-testid="login-email"]') as HTMLInputElement;
       const passwordInput = document.querySelector('[data-testid="login-password"]') as HTMLInputElement;
       return emailInput?.value === expectedEmail && passwordInput?.value === expectedPassword;
     },
-    email,
-    password,
+    { expectedEmail: email, expectedPassword: password },
     { timeout: 5_000 }
   );
   
