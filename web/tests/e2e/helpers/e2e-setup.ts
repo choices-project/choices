@@ -257,108 +257,113 @@ export async function loginTestUser(page: Page, user: TestUser): Promise<void> {
 
   // Ensure we're in sign-in mode (not sign-up) to avoid extra validation
   const toggleButton = page.locator('[data-testid="auth-toggle"]');
-  const isSignUpMode = await toggleButton.textContent().then(text => text?.includes('Sign In') || false).catch(() => false);
-  if (isSignUpMode) {
-    await toggleButton.click();
-    await page.waitForTimeout(200); // Wait for mode switch
+  try {
+    const toggleText = await toggleButton.textContent({ timeout: 2_000 });
+    if (toggleText?.includes('Sign In')) {
+      await toggleButton.click();
+      await page.waitForTimeout(300); // Wait for mode switch and React state update
+    }
+  } catch {
+    // Toggle might not be visible or already in correct mode
   }
   
-  // Clear any existing values first
-  await emailInput.first().focus();
+  // Clear inputs and ensure they're focused
+  await emailInput.first().click(); // Click to focus
   await emailInput.first().clear({ timeout: 2_000 });
-  await passwordInput.first().focus();
+  await passwordInput.first().click(); // Click to focus
   await passwordInput.first().clear({ timeout: 2_000 });
   
-  // Use type() method which is designed to work with React controlled inputs
-  // It properly triggers React's onChange handlers
-  await emailInput.first().type(email, { delay: 20, timeout: 5_000 });
-  await passwordInput.first().type(password, { delay: 20, timeout: 5_000 });
+  // Use fill() then trigger React events - this is more reliable
+  await emailInput.first().fill(email, { timeout: 5_000 });
+  await passwordInput.first().fill(password, { timeout: 5_000 });
   
-  // Also trigger events manually as backup to ensure React processes them
-  await emailInput.first().evaluate((el: HTMLInputElement, value: string) => {
-    // Set the native value using the setter
-    const nativeInputValueSetter = Object.getOwnPropertyDescriptor(
-      window.HTMLInputElement.prototype,
-      'value'
-    )?.set;
-    if (nativeInputValueSetter) {
-      nativeInputValueSetter.call(el, value);
-    } else {
-      // Fallback if setter is not available
-      el.value = value;
-    }
-    
-    // Create and dispatch input event (React listens to this)
-    // Use InputEvent if available, otherwise fall back to Event
-    let inputEvent: Event;
-    if (typeof InputEvent !== 'undefined') {
-      inputEvent = new InputEvent('input', { 
-        bubbles: true, 
-        cancelable: true,
-        inputType: 'insertText',
-        data: value
-      });
-    } else {
-      // Fallback for environments without InputEvent
-      inputEvent = new Event('input', { bubbles: true, cancelable: true });
-    }
-    el.dispatchEvent(inputEvent);
-    
-    // Also dispatch change event
+  // Trigger React's onChange by simulating user input events
+  // React listens to 'input' events on controlled inputs
+  await emailInput.first().evaluate((el: HTMLInputElement) => {
+    // Trigger input event which React's onChange listens to
+    const event = new Event('input', { bubbles: true, cancelable: true });
+    el.dispatchEvent(event);
+    // Also trigger change for good measure
     const changeEvent = new Event('change', { bubbles: true, cancelable: true });
     el.dispatchEvent(changeEvent);
-  }, email);
+  });
   
-  await passwordInput.first().evaluate((el: HTMLInputElement, value: string) => {
-    const nativeInputValueSetter = Object.getOwnPropertyDescriptor(
-      window.HTMLInputElement.prototype,
-      'value'
-    )?.set;
-    if (nativeInputValueSetter) {
-      nativeInputValueSetter.call(el, value);
-    } else {
-      el.value = value;
-    }
-    
-    let inputEvent: Event;
-    if (typeof InputEvent !== 'undefined') {
-      inputEvent = new InputEvent('input', { 
-        bubbles: true, 
-        cancelable: true,
-        inputType: 'insertText',
-        data: value
-      });
-    } else {
-      inputEvent = new Event('input', { bubbles: true, cancelable: true });
-    }
-    el.dispatchEvent(inputEvent);
-    
+  await passwordInput.first().evaluate((el: HTMLInputElement) => {
+    const event = new Event('input', { bubbles: true, cancelable: true });
+    el.dispatchEvent(event);
     const changeEvent = new Event('change', { bubbles: true, cancelable: true });
     el.dispatchEvent(changeEvent);
-  }, password);
+  });
   
-  // Wait for React to process state updates
-  // Check for validation indicators as a sign that React has processed the input
+  // Wait for React to process - check that inputs have correct values
+  await page.waitForFunction(
+    (expectedEmail: string, expectedPassword: string) => {
+      const emailInput = document.querySelector('[data-testid="login-email"]') as HTMLInputElement;
+      const passwordInput = document.querySelector('[data-testid="login-password"]') as HTMLInputElement;
+      return emailInput?.value === expectedEmail && passwordInput?.value === expectedPassword;
+    },
+    email,
+    password,
+    { timeout: 5_000 }
+  );
+  
+  // Wait a bit more for React state to update after inputs have values
+  await page.waitForTimeout(500);
+  
+  // Check for validation indicators (confirms React processed the input)
   if (email.includes('@')) {
     try {
       await page.waitForSelector('[data-testid="email-validation"]', { 
         state: 'visible', 
-        timeout: 3_000 
+        timeout: 2_000 
       });
     } catch {
-      // Validation indicator might not appear, continue anyway
+      // Continue even if validation indicator doesn't appear
     }
   }
   
-  // Wait for form validation to complete
-  // The button is disabled when: isLoading || !isFormValid
-  // isFormValid requires: email includes '@' && password.length >= 6
   const submitButton = page.getByTestId('login-submit');
   await submitButton.waitFor({ state: 'visible', timeout: 5_000 });
   
-  // Wait for button to become enabled - use expect with longer timeout
-  // This is more reliable than polling
-  await expect(submitButton).toBeEnabled({ timeout: 15_000 });
+  // Poll for button to become enabled with diagnostic info
+  let isEnabled = false;
+  for (let attempt = 0; attempt < 30; attempt++) {
+    isEnabled = !(await submitButton.isDisabled());
+    if (isEnabled) break;
+    
+    // Every 5 attempts, re-trigger events and check values
+    if (attempt > 0 && attempt % 5 === 0) {
+      const emailValue = await emailInput.first().inputValue();
+      const passwordValue = await passwordInput.first().inputValue();
+      
+      // Re-trigger events if values are correct but button still disabled
+      if (emailValue === email && passwordValue === password) {
+        await emailInput.first().evaluate((el: HTMLInputElement) => {
+          el.dispatchEvent(new Event('input', { bubbles: true, cancelable: true }));
+        });
+        await passwordInput.first().evaluate((el: HTMLInputElement) => {
+          el.dispatchEvent(new Event('input', { bubbles: true, cancelable: true }));
+        });
+      }
+    }
+    
+    await page.waitForTimeout(500);
+  }
+  
+  // Final check with detailed error message
+  if (!isEnabled) {
+    const emailValue = await emailInput.first().inputValue();
+    const passwordValue = await passwordInput.first().inputValue();
+    const emailValid = emailValue.includes('@');
+    const passwordValid = passwordValue.length >= 6;
+    
+    throw new Error(
+      `Submit button still disabled after 30 attempts (15 seconds). ` +
+      `Input values - Email: "${emailValue}" (expected: "${email}", valid: ${emailValid}), ` +
+      `Password length: ${passwordValue.length} (expected: ${password.length}, valid: ${passwordValid}). ` +
+      `This suggests React state (formData) is not updating from input events.`
+    );
+  }
   
   // Set up network request interception BEFORE clicking
   type LoginResponse = { status: number; body: any };
