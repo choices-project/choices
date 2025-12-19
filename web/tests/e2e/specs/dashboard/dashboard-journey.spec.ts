@@ -192,7 +192,7 @@ test.describe('Dashboard Journey', () => {
       // Verify the error is displayed in the UI
       // The notification exists in the harness (verified above), but the toast may not render in E2E harness
       // Instead, verify the error state is displayed in the feed component
-      await expect(page.getByText('Error Loading Feed')).toBeVisible({ timeout: 30_000 });
+      await expect(page.getByText('Unable to load feed')).toBeVisible({ timeout: 30_000 });
       
       // Optionally check for toast alert if it exists (may not render in E2E harness)
       const toastAlert = page
