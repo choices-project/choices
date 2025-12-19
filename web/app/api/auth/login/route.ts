@@ -205,8 +205,26 @@ export const POST = withErrorHandling(async (request: NextRequest) => {
       // Only require HTTPS (secure) when actually on production domain, not localhost
       const requireSecure = isProduction && isProductionDomain
       
-      // Set access token cookie with proper security settings
-      response.cookies.set('sb-access-token', authData.session.access_token, {
+      // Extract project ref from Supabase URL to set cookies with correct name format
+      // Supabase SSR expects: sb-<project-ref>-auth-token
+      const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || ''
+      const projectRefMatch = supabaseUrl.match(/https?:\/\/([^.]+)\.supabase\.co/)
+      const projectRef = projectRefMatch ? projectRefMatch[1] : 'unknown'
+      const authTokenCookieName = `sb-${projectRef}-auth-token`
+      
+      // Use Supabase SSR's expected cookie format - store session as JSON
+      // Supabase SSR expects the session to be stored in a specific format
+      const sessionData = {
+        access_token: authData.session.access_token,
+        refresh_token: authData.session.refresh_token,
+        expires_at: authData.session.expires_at,
+        expires_in: authData.session.expires_in,
+        token_type: authData.session.token_type,
+        user: authData.user
+      }
+      
+      // Set the auth token cookie with Supabase SSR's expected name and format
+      response.cookies.set(authTokenCookieName, JSON.stringify(sessionData), {
         httpOnly: true,
         secure: requireSecure, // HTTPS only on actual production domain
         sameSite: 'lax', // Allow cross-site requests for OAuth flows
@@ -215,17 +233,7 @@ export const POST = withErrorHandling(async (request: NextRequest) => {
         domain: cookieDomain // Share cookies across www and non-www
       })
       
-      // Set refresh token cookie with proper security settings
-      response.cookies.set('sb-refresh-token', authData.session.refresh_token, {
-        httpOnly: true,
-        secure: requireSecure, // HTTPS only on actual production domain
-        sameSite: 'lax', // Allow cross-site requests for OAuth flows
-        path: '/',
-        maxAge: maxAge,
-        domain: cookieDomain // Share cookies across www and non-www
-      })
-      
-      // Also set the session expiry time for client-side checks
+      // Also set the session expiry time for client-side checks (keep for backward compatibility)
       if (authData.session.expires_at) {
         response.cookies.set('sb-session-expires', authData.session.expires_at.toString(), {
           httpOnly: false, // Client needs to read this for session checks
