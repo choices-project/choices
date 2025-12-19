@@ -381,19 +381,18 @@ export default function AuthPage() {
                       {showPassword ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
                     </button>
               </div>
-              {formData.password && (
-                <>
-                  <div data-testid="password-strength" className="mt-1 text-xs text-green-600">
-                    {t('auth.form.passwordStrength')}
-                  </div>
-                  <div data-testid="password-security" className="mt-1 text-xs text-green-600">
-                    {t('auth.form.passwordSecurity')}
-                  </div>
-                </>
+              {formData.password && formData.password.length >= 6 && (
+                <div id="password-success" data-testid="password-validation" className="mt-1 text-xs text-green-600 flex items-center gap-1" role="status">
+                  <CheckCircle2 className="h-3 w-3" aria-hidden="true" />
+                  <span>{t('auth.form.passwordValidation')}</span>
+                </div>
               )}
-              <div data-testid="password-error" className="mt-1 text-xs text-red-600 hidden">
-                {t('auth.errors.passwordRequired')}
-              </div>
+              {formData.password && formData.password.length < 6 && formData.password.length > 0 && (
+                <div id="password-error" data-testid="password-error" className="mt-1 text-xs text-red-600 flex items-center gap-1" role="alert">
+                  <AlertCircle className="h-3 w-3" aria-hidden="true" />
+                  <span>{t('auth.form.passwordError')}</span>
+                </div>
+              )}
             </div>
 
             {/* Confirm Password (Sign Up only) */}
