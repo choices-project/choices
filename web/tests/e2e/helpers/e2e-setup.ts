@@ -225,7 +225,7 @@ export async function loginTestUser(page: Page, user: TestUser): Promise<void> {
   if (!currentUrl.includes('/auth')) {
     await page.goto('/auth', { waitUntil: 'domcontentloaded', timeout: 60_000 });
   }
-  
+
   await page.waitForSelector('[data-testid="auth-hydrated"]', { state: 'attached', timeout: 60_000 });
   await waitForPageReady(page);
 
@@ -266,6 +266,11 @@ export async function loginTestUser(page: Page, user: TestUser): Promise<void> {
   } catch {
     // Toggle might not be visible or already in correct mode
   }
+
+  // Wait for form to be fully hydrated and ready
+  await page.waitForSelector('[data-testid="auth-hydrated"]', { timeout: 10_000 }).catch(() => {
+    // Hydration marker might not exist, continue anyway
+  });
   
   // Clear inputs and ensure they're focused
   await emailInput.first().click(); // Click to focus
@@ -273,29 +278,55 @@ export async function loginTestUser(page: Page, user: TestUser): Promise<void> {
   await passwordInput.first().click(); // Click to focus
   await passwordInput.first().clear({ timeout: 2_000 });
   
-  // Use keyboard.type() which properly triggers React's onChange handlers
-  // This is more reliable than fill() + manual events for React controlled inputs
+  // Wait a moment for React to process the clear
+  await page.waitForTimeout(100);
+  
+  // Use pressSequentially which is designed for React controlled inputs
+  // It properly simulates character-by-character input that React recognizes
   await emailInput.first().focus();
-  await page.keyboard.type(email, { delay: 10 });
+  await emailInput.first().pressSequentially(email, { delay: 20 });
   
   await passwordInput.first().focus();
-  await page.keyboard.type(password, { delay: 10 });
+  await passwordInput.first().pressSequentially(password, { delay: 20 });
   
-  // Also trigger events manually as backup
+  // Wait for React to process the input
+  await page.waitForTimeout(300);
+  
+  // Verify inputs have values and trigger additional events if needed
+  const emailValue = await emailInput.first().inputValue();
+  const passwordValue = await passwordInput.first().inputValue();
+  
+  if (emailValue !== email || passwordValue !== password) {
+    // If values don't match, try fill() as fallback
+    await emailInput.first().fill(email, { timeout: 2_000 });
+    await passwordInput.first().fill(password, { timeout: 2_000 });
+    await page.waitForTimeout(200);
+  }
+  
+  // Trigger React events to ensure state updates
   await emailInput.first().evaluate((el: HTMLInputElement) => {
-    const event = new Event('input', { bubbles: true, cancelable: true });
-    el.dispatchEvent(event);
+    // Create a proper input event that React will recognize
+    const inputEvent = new Event('input', { bubbles: true, cancelable: true });
+    el.dispatchEvent(inputEvent);
     const changeEvent = new Event('change', { bubbles: true, cancelable: true });
     el.dispatchEvent(changeEvent);
+    // Also trigger focus/blur to ensure React processes the change
+    el.dispatchEvent(new Event('blur', { bubbles: true, cancelable: true }));
+    el.focus();
   });
   
   await passwordInput.first().evaluate((el: HTMLInputElement) => {
-    const event = new Event('input', { bubbles: true, cancelable: true });
-    el.dispatchEvent(event);
+    const inputEvent = new Event('input', { bubbles: true, cancelable: true });
+    el.dispatchEvent(inputEvent);
     const changeEvent = new Event('change', { bubbles: true, cancelable: true });
     el.dispatchEvent(changeEvent);
+    el.dispatchEvent(new Event('blur', { bubbles: true, cancelable: true }));
+    el.focus();
   });
   
+  // Wait for React state to update
+  await page.waitForTimeout(500);
+
   // Wait for React to process - check that inputs have correct values
   await page.waitForFunction(
     ({ expectedEmail, expectedPassword }: { expectedEmail: string; expectedPassword: string }) => {
@@ -306,36 +337,36 @@ export async function loginTestUser(page: Page, user: TestUser): Promise<void> {
     { expectedEmail: email, expectedPassword: password },
     { timeout: 5_000 }
   );
-  
+
   // Wait a bit more for React state to update after inputs have values
   await page.waitForTimeout(500);
-  
+
   // Check for validation indicators (confirms React processed the input)
   if (email.includes('@')) {
     try {
-      await page.waitForSelector('[data-testid="email-validation"]', { 
-        state: 'visible', 
-        timeout: 2_000 
+      await page.waitForSelector('[data-testid="email-validation"]', {
+        state: 'visible',
+        timeout: 2_000
       });
     } catch {
       // Continue even if validation indicator doesn't appear
     }
   }
-  
+
   const submitButton = page.getByTestId('login-submit');
   await submitButton.waitFor({ state: 'visible', timeout: 5_000 });
-  
+
   // Poll for button to become enabled with diagnostic info
   let isEnabled = false;
   for (let attempt = 0; attempt < 30; attempt++) {
     isEnabled = !(await submitButton.isDisabled());
     if (isEnabled) break;
-    
+
     // Every 5 attempts, re-trigger events and check values
     if (attempt > 0 && attempt % 5 === 0) {
       const emailValue = await emailInput.first().inputValue();
       const passwordValue = await passwordInput.first().inputValue();
-      
+
       // Re-trigger events if values are correct but button still disabled
       if (emailValue === email && passwordValue === password) {
         await emailInput.first().evaluate((el: HTMLInputElement) => {
@@ -346,17 +377,17 @@ export async function loginTestUser(page: Page, user: TestUser): Promise<void> {
         });
       }
     }
-    
+
     await page.waitForTimeout(500);
   }
-  
+
   // Final check with detailed error message
   if (!isEnabled) {
     const emailValue = await emailInput.first().inputValue();
     const passwordValue = await passwordInput.first().inputValue();
     const emailValid = emailValue.includes('@');
     const passwordValid = passwordValue.length >= 6;
-    
+
     throw new Error(
       `Submit button still disabled after 30 attempts (15 seconds). ` +
       `Input values - Email: "${emailValue}" (expected: "${email}", valid: ${emailValid}), ` +
@@ -364,28 +395,28 @@ export async function loginTestUser(page: Page, user: TestUser): Promise<void> {
       `This suggests React state (formData) is not updating from input events.`
     );
   }
-  
+
   // Set up network request interception BEFORE clicking
   type LoginResponse = { status: number; body: any };
-  
+
   // Increase timeout for production server which may be slower
   const isCI = process.env.CI === 'true' || process.env.CI === '1';
   const isProductionServer = process.env.BASE_URL?.includes('127.0.0.1') || process.env.BASE_URL?.includes('localhost');
   const apiTimeout = (isCI || isProductionServer) ? 60_000 : 30_000; // 60s for CI/production server, 30s for local
-  
+
   // Set up request promise to verify the request is actually being made
   const requestPromise = page.waitForRequest(
     (req) => req.url().includes('/api/auth/login') && req.method() === 'POST',
     { timeout: 10_000 } // Shorter timeout for request - should happen quickly after click
   ).catch(() => null);
-  
+
   // Set up response promise BEFORE clicking
   let loginResponse: LoginResponse | null = null;
   let apiError: string | null = null;
-  
+
   // Click submit
   await submitButton.click();
-  
+
   // Wait for request to be made (this verifies the form submission is working)
   const requestMade = await requestPromise;
   if (!requestMade) {
@@ -398,7 +429,7 @@ export async function loginTestUser(page: Page, user: TestUser): Promise<void> {
     }
     throw new Error('Login form submission failed - API request was not made. Check if form is properly configured.');
   }
-  
+
   // Now wait for the response
   try {
     const response = await page.waitForResponse(
@@ -448,7 +479,7 @@ export async function loginTestUser(page: Page, user: TestUser): Promise<void> {
   // Use longer timeout in CI or when BASE_URL is localhost (production server mode)
   // Reuse isCI and isProductionServer from above
   const authTimeout = (isCI || isProductionServer) ? 90_000 : 15_000; // 90s for CI/production server, 15s for local
-  
+
   try {
     // Wait for navigation or cookies/tokens
     // Accept dashboard, onboarding, feed, or admin routes (feed is the new default for authenticated users)
@@ -480,17 +511,17 @@ export async function loginTestUser(page: Page, user: TestUser): Promise<void> {
       const token = localStorage.getItem('supabase.auth.token');
       return token !== null && token !== 'null';
     }).catch(() => false);
-    
+
     // Check for any error messages on the page
     const pageText = await page.textContent('body').catch(() => '') ?? '';
     const hasError = pageText.includes('error') || pageText.includes('Error') || pageText.includes('failed');
-    
-    const apiResponseInfo = loginResponse 
+
+    const apiResponseInfo = loginResponse
       ? `status: ${loginResponse.status}, body: ${JSON.stringify(loginResponse.body).substring(0, 200)}`
-      : apiError 
+      : apiError
         ? `timeout/error: ${apiError}`
         : 'none (timeout waiting for response)';
-    
+
     throw new Error(
       `Authentication timeout after ${authTimeout}ms. ` +
       `Current URL: ${currentUrl}, ` +
@@ -501,7 +532,7 @@ export async function loginTestUser(page: Page, user: TestUser): Promise<void> {
       `Original error: ${error instanceof Error ? error.message : String(error)}`
     );
   }
-  
+
   // Give a moment for any post-auth processing
   await page.waitForTimeout(1_000);
 }
