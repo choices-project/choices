@@ -255,17 +255,26 @@ export async function loginTestUser(page: Page, user: TestUser): Promise<void> {
   await emailInput.first().waitFor({ state: 'visible', timeout: 10_000 });
   await passwordInput.first().waitFor({ state: 'visible', timeout: 10_000 });
 
+  // Ensure we're in sign-in mode (not sign-up) to avoid extra validation
+  const toggleButton = page.locator('[data-testid="auth-toggle"]');
+  const isSignUpMode = await toggleButton.textContent().then(text => text?.includes('Sign In') || false).catch(() => false);
+  if (isSignUpMode) {
+    await toggleButton.click();
+    await page.waitForTimeout(200); // Wait for mode switch
+  }
+  
   // Clear any existing values first
+  await emailInput.first().focus();
   await emailInput.first().clear({ timeout: 2_000 });
+  await passwordInput.first().focus();
   await passwordInput.first().clear({ timeout: 2_000 });
   
-  // Use a more reliable approach: fill and then trigger React's onChange directly
-  // React controlled inputs need the onChange handler to fire to update state
-  await emailInput.first().fill(email, { timeout: 5_000 });
-  await passwordInput.first().fill(password, { timeout: 5_000 });
+  // Use type() method which is designed to work with React controlled inputs
+  // It properly triggers React's onChange handlers
+  await emailInput.first().type(email, { delay: 20, timeout: 5_000 });
+  await passwordInput.first().type(password, { delay: 20, timeout: 5_000 });
   
-  // Trigger React's onChange by dispatching native events that React listens to
-  // Use a cross-browser compatible approach that works in all environments
+  // Also trigger events manually as backup to ensure React processes them
   await emailInput.first().evaluate((el: HTMLInputElement, value: string) => {
     // Set the native value using the setter
     const nativeInputValueSetter = Object.getOwnPropertyDescriptor(
@@ -328,8 +337,18 @@ export async function loginTestUser(page: Page, user: TestUser): Promise<void> {
     el.dispatchEvent(changeEvent);
   }, password);
   
-  // Wait a moment for React to process the state updates
-  await page.waitForTimeout(300);
+  // Wait for React to process state updates
+  // Check for validation indicators as a sign that React has processed the input
+  if (email.includes('@')) {
+    try {
+      await page.waitForSelector('[data-testid="email-validation"]', { 
+        state: 'visible', 
+        timeout: 3_000 
+      });
+    } catch {
+      // Validation indicator might not appear, continue anyway
+    }
+  }
   
   // Wait for form validation to complete
   // The button is disabled when: isLoading || !isFormValid
@@ -337,43 +356,9 @@ export async function loginTestUser(page: Page, user: TestUser): Promise<void> {
   const submitButton = page.getByTestId('login-submit');
   await submitButton.waitFor({ state: 'visible', timeout: 5_000 });
   
-  // Poll for button to become enabled with retries
-  // If still disabled, re-trigger events
-  let isEnabled = false;
-  for (let attempt = 0; attempt < 15; attempt++) {
-    isEnabled = !(await submitButton.isDisabled());
-    if (isEnabled) break;
-    
-    // Re-trigger events every 3 attempts to ensure React processes them
-    if (attempt > 0 && attempt % 3 === 0) {
-      await emailInput.first().evaluate((el: HTMLInputElement) => {
-        const inputEvent = typeof InputEvent !== 'undefined' 
-          ? new InputEvent('input', { bubbles: true, cancelable: true })
-          : new Event('input', { bubbles: true, cancelable: true });
-        el.dispatchEvent(inputEvent);
-      });
-      await passwordInput.first().evaluate((el: HTMLInputElement) => {
-        const inputEvent = typeof InputEvent !== 'undefined'
-          ? new InputEvent('input', { bubbles: true, cancelable: true })
-          : new Event('input', { bubbles: true, cancelable: true });
-        el.dispatchEvent(inputEvent);
-      });
-    }
-    
-    await page.waitForTimeout(500);
-  }
-  
-  // Final check - ensure button is enabled
-  if (!isEnabled) {
-    // Last attempt: check if validation is actually failing
-    const emailValue = await emailInput.first().inputValue();
-    const passwordValue = await passwordInput.first().inputValue();
-    throw new Error(
-      `Submit button still disabled after all attempts. ` +
-      `Email: "${emailValue}" (valid: ${emailValue.includes('@')}), ` +
-      `Password length: ${passwordValue.length} (valid: ${passwordValue.length >= 6})`
-    );
-  }
+  // Wait for button to become enabled - use expect with longer timeout
+  // This is more reliable than polling
+  await expect(submitButton).toBeEnabled({ timeout: 15_000 });
   
   // Set up network request interception BEFORE clicking
   type LoginResponse = { status: number; body: any };
