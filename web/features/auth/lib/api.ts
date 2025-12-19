@@ -38,7 +38,10 @@ export async function loginWithPassword(payload: LoginPayload) {
   });
   if (!response.ok) {
     const errorBody = await response.json().catch(() => ({}));
-    throw new Error(errorBody?.message ?? 'Login failed');
+    const error = new Error(errorBody?.message ?? 'Login failed');
+    // Attach status code for rate limit detection
+    (error as any).status = response.status;
+    throw error;
   }
   return response.json();
 }
@@ -55,7 +58,10 @@ export async function registerUser(payload: RegisterPayload) {
   });
   if (!response.ok) {
     const errorBody = await response.json().catch(() => ({}));
-    throw new Error(errorBody?.message ?? 'Registration failed');
+    const error = new Error(errorBody?.message ?? 'Registration failed');
+    // Attach status code for rate limit detection
+    (error as any).status = response.status;
+    throw error;
   }
   return response.json();
 }

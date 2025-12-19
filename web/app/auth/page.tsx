@@ -39,6 +39,7 @@ export default function AuthPage() {
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [message, setMessage] = useState<string | null>(null);
+  const [isRateLimited, setIsRateLimited] = useState(false);
   const userError = useUserError();
   const isLoading = useUserLoading();
   const {
@@ -106,6 +107,7 @@ export default function AuthPage() {
     e.preventDefault();
     clearAuthError();
     setMessage(null);
+    setIsRateLimited(false);
 
     const translateError = (key: string) => t(`auth.errors.${key}`);
     const applyError = (key: string) => setAuthError(translateError(key));
@@ -147,7 +149,15 @@ export default function AuthPage() {
             router.push('/onboarding');
           }, 1000);
         } else {
-          setAuthError(result.error ?? translateError('registrationFailed'));
+          // Check if it's a rate limit error
+          const isRateLimit = (result.error?.toLowerCase().includes('rate limit') || 
+                               result.error?.toLowerCase().includes('too many requests'));
+          if (isRateLimit) {
+            setIsRateLimited(true);
+            setAuthError(translateError('rateLimited') || 'Too many requests. Please try again later.');
+          } else {
+            setAuthError(result.error ?? translateError('registrationFailed'));
+          }
         }
       } else {
         // Create FormData for login
@@ -172,14 +182,36 @@ export default function AuthPage() {
           // Use router.replace to avoid adding to history
           router.replace('/feed');
         } catch (loginError: unknown) {
-          // loginAction might throw an error if authentication fails
-          const errorMessage = loginError instanceof Error ? loginError.message : translateError('loginFailed');
-          setAuthError(errorMessage ?? translateError('loginFailed'));
+          // Check if it's a rate limit error (429 status)
+          const isRateLimit = loginError instanceof Error && 
+                            ((loginError as any).status === 429 ||
+                             loginError.message.toLowerCase().includes('rate limit') ||
+                             loginError.message.toLowerCase().includes('too many requests'));
+          
+          if (isRateLimit) {
+            setIsRateLimited(true);
+            setAuthError(translateError('rateLimited') || 'Too many requests. Please try again later.');
+          } else {
+            // loginAction might throw an error if authentication fails
+            const errorMessage = loginError instanceof Error ? loginError.message : translateError('loginFailed');
+            setAuthError(errorMessage ?? translateError('loginFailed'));
+          }
         }
       }
     } catch (err) {
-      const errorMessage = err instanceof Error ? err.message : translateError('unexpected');
-      setAuthError(errorMessage ?? translateError('unexpected'));
+      // Check if it's a rate limit error
+      const isRateLimit = err instanceof Error && 
+                         ((err as any).status === 429 ||
+                          err.message.toLowerCase().includes('rate limit') ||
+                          err.message.toLowerCase().includes('too many requests'));
+      
+      if (isRateLimit) {
+        setIsRateLimited(true);
+        setAuthError(translateError('rateLimited') || 'Too many requests. Please try again later.');
+      } else {
+        const errorMessage = err instanceof Error ? err.message : translateError('unexpected');
+        setAuthError(errorMessage ?? translateError('unexpected'));
+      }
     }
     finally {
       setAuthLoading(false);
@@ -245,8 +277,27 @@ export default function AuthPage() {
               </div>
 
               {/* Rate Limit Message */}
-              <div data-testid="rate-limit-message" className="bg-yellow-50 border border-yellow-200 rounded-md p-4 hidden" role="alert">
-                <p className="text-sm text-yellow-700">{t('auth.form.rateLimited')}</p>
+              <div 
+                data-testid="rate-limit-message" 
+                className={`bg-yellow-50 border border-yellow-200 rounded-md p-4 ${isRateLimited ? '' : 'hidden'}`}
+                role="alert"
+                aria-live="assertive"
+              >
+                <div className="flex">
+                  <div className="flex-shrink-0">
+                    <svg className="h-5 w-5 text-yellow-400" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
+                      <path fillRule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
+                    </svg>
+                  </div>
+                  <div className="ml-3">
+                    <p className="text-sm text-yellow-700">
+                      {userError && isRateLimited ? userError : t('auth.form.rateLimited')}
+                    </p>
+                    <p className="mt-1 text-xs text-yellow-600">
+                      Please wait a moment before trying again.
+                    </p>
+                  </div>
+                </div>
               </div>
 
           {message && (
