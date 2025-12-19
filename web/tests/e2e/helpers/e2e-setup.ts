@@ -355,7 +355,7 @@ export async function loginTestUser(page: Page, user: TestUser): Promise<void> {
 
   const submitButton = page.getByTestId('login-submit');
   await submitButton.waitFor({ state: 'visible', timeout: 5_000 });
-  
+
   // Try to directly update React state if button is still disabled
   // This is a workaround for React controlled inputs not updating
   const isDisabled = await submitButton.isDisabled();
@@ -365,11 +365,11 @@ export async function loginTestUser(page: Page, user: TestUser): Promise<void> {
       // Find the form element
       const form = document.querySelector('[data-testid="login-form"]');
       if (!form) return;
-      
+
       // Try to find React component instance through DOM
       const emailInput = document.querySelector('[data-testid="login-email"]') as HTMLInputElement;
       const passwordInput = document.querySelector('[data-testid="login-password"]') as HTMLInputElement;
-      
+
       if (emailInput && passwordInput) {
         // Try to trigger React's onChange by creating a proper synthetic event
         // React uses SyntheticEvent, so we need to create an event that React recognizes
@@ -380,35 +380,35 @@ export async function loginTestUser(page: Page, user: TestUser): Promise<void> {
             writable: true,
             configurable: true
           });
-          
+
           // Create and dispatch input event
           const inputEvent = new Event('input', { bubbles: true, cancelable: true });
           Object.defineProperty(inputEvent, 'target', { value: target, enumerable: true });
           Object.defineProperty(inputEvent, 'currentTarget', { value: target, enumerable: true });
           target.dispatchEvent(inputEvent);
-          
+
           // Create and dispatch change event
           const changeEvent = new Event('change', { bubbles: true, cancelable: true });
           Object.defineProperty(changeEvent, 'target', { value: target, enumerable: true });
           Object.defineProperty(changeEvent, 'currentTarget', { value: target, enumerable: true });
           target.dispatchEvent(changeEvent);
         };
-        
+
         createSyntheticEvent(emailInput, emailValue);
         createSyntheticEvent(passwordInput, passwordValue);
       }
-    }, email, password);
-    
+    }, { emailValue: email, passwordValue: password });
+
     // Wait for React to process
     await page.waitForTimeout(1000);
   }
-  
+
   // Poll for button to become enabled
   let isEnabled = false;
   for (let attempt = 0; attempt < 20; attempt++) {
     isEnabled = !(await submitButton.isDisabled());
     if (isEnabled) break;
-    
+
     // Re-trigger events every few attempts
     if (attempt > 0 && attempt % 3 === 0) {
       await emailInput.first().evaluate((el: HTMLInputElement) => {
@@ -420,10 +420,10 @@ export async function loginTestUser(page: Page, user: TestUser): Promise<void> {
         el.dispatchEvent(event);
       });
     }
-    
+
     await page.waitForTimeout(500);
   }
-  
+
   // If still disabled but inputs are valid, try clicking anyway
   // Sometimes the disabled attribute is set but the form can still submit
   if (!isEnabled) {
@@ -431,7 +431,7 @@ export async function loginTestUser(page: Page, user: TestUser): Promise<void> {
     const passwordValue = await passwordInput.first().inputValue();
     const emailValid = emailValue.includes('@') && emailValue === email;
     const passwordValid = passwordValue.length >= 6 && passwordValue === password;
-    
+
     if (emailValid && passwordValid) {
       // Inputs are valid, try to force enable the button or click it anyway
       await submitButton.evaluate((el: HTMLButtonElement) => {
@@ -440,7 +440,7 @@ export async function loginTestUser(page: Page, user: TestUser): Promise<void> {
       await page.waitForTimeout(200);
       isEnabled = !(await submitButton.isDisabled());
     }
-    
+
     if (!isEnabled) {
       throw new Error(
         `Submit button still disabled after all attempts. ` +
