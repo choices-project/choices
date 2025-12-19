@@ -227,10 +227,15 @@ export default function FeedCore({
   // Initial loading state - show skeleton loaders
   if (isLoading && feeds.length === 0) {
     return (
-      <div className={cn('unified-feed', className)} data-testid="unified-feed" aria-label="Loading feeds">
+      <div 
+        className={cn('unified-feed', className)} 
+        data-testid="unified-feed" 
+        aria-label="Loading feeds"
+        aria-busy="true"
+      >
         <div className="space-y-4 py-8">
           {[1, 2, 3, 4].map((i) => (
-            <Card key={i} className="animate-pulse">
+            <Card key={i} className="animate-pulse" aria-hidden="true">
               <CardHeader>
                 <div className="h-6 bg-gray-200 rounded w-3/4 dark:bg-gray-700" />
                 <div className="h-4 bg-gray-200 rounded w-1/2 mt-2 dark:bg-gray-700" />
@@ -255,7 +260,7 @@ export default function FeedCore({
     return (
       <div className={cn('unified-feed', className)} data-testid="unified-feed">
         <div className="flex items-center justify-center min-h-[400px] px-4">
-          <div className="text-center max-w-md" role="alert">
+          <div className="text-center max-w-md" role="alert" data-testid="feed-error-boundary">
             <div className="mb-6">
               <svg
                 className="mx-auto h-16 w-16 text-red-500"
@@ -277,7 +282,12 @@ export default function FeedCore({
             </h3>
             <p className="text-gray-600 dark:text-gray-400 mb-6">{error}</p>
             <div className="space-y-3">
-              <Button onClick={onRefresh} variant="default" className="w-full sm:w-auto">
+              <Button 
+                onClick={onRefresh} 
+                variant="default" 
+                className="w-full sm:w-auto"
+                aria-label="Try again to load feed"
+              >
                 {t('feeds.core.error.retry')}
               </Button>
               <p className="text-sm text-gray-500 dark:text-gray-400">
@@ -444,7 +454,12 @@ export default function FeedCore({
         <TabsContent value="feed" id="feed-panel" role="tabpanel">
           {/* Feed Items */}
           {isLoading && feeds.length === 0 ? (
-            <div className="space-y-4 py-8" aria-label="Loading feeds">
+            <div 
+              className="space-y-4 py-8" 
+              aria-label="Loading feeds"
+              aria-busy="true"
+              data-testid="feed-loading-skeleton"
+            >
               {[1, 2, 3].map((i) => (
                 <Card key={i} className="animate-pulse">
                   <CardHeader>

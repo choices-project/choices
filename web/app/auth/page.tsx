@@ -446,16 +446,33 @@ export default function AuthPage() {
 
 
           {/* Submit Button */}
+          {/* Disable button if form is invalid or loading */}
+          {(() => {
+            const isEmailValid = formData.email && formData.email.includes('@');
+            const isPasswordValid = formData.password && formData.password.length >= 6;
+            const isFormValid = isEmailValid && isPasswordValid && 
+              (!isSignUp || (formData.displayName && formData.password === formData.confirmPassword));
+            const isDisabled = isLoading || !isFormValid;
+            
+            return (
               <button
                 type="submit"
                 className="w-full bg-blue-600 text-white py-2 px-4 rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition duration-150 ease-in-out disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
                 data-testid="login-submit"
                 aria-busy={isLoading}
-                disabled={isLoading}
-            >
-              {isLoading && <Loader2 className="h-4 w-4 animate-spin" aria-hidden="true" />}
-              <span>{isLoading ? t('auth.form.working') : isSignUp ? t('auth.form.submit.signUp') : t('auth.form.submit.signIn')}</span>
-            </button>
+                disabled={isDisabled}
+                aria-describedby={!isFormValid && !isLoading ? 'form-validation-hint' : undefined}
+              >
+                {isLoading && <Loader2 className="h-4 w-4 animate-spin" aria-hidden="true" />}
+                <span>{isLoading ? t('auth.form.working') : isSignUp ? t('auth.form.submit.signUp') : t('auth.form.submit.signIn')}</span>
+              </button>
+            );
+          })()}
+          {!formData.email || !formData.email.includes('@') || !formData.password || formData.password.length < 6 ? (
+            <div id="form-validation-hint" className="sr-only" role="status">
+              {t('auth.form.completeFields')}
+            </div>
+          ) : null}
         </form>
 
         {/* Passkey Authentication */}

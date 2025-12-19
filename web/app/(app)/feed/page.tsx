@@ -47,7 +47,11 @@ class ErrorBoundaryWrapper extends Component<
   render() {
     if (this.state.hasError) {
       return (
-        <div className="flex items-center justify-center min-h-[400px]">
+        <div 
+          className="flex items-center justify-center min-h-[400px]"
+          data-testid="feed-error-boundary"
+          role="alert"
+        >
           <div className="text-center">
             <p className="text-red-600 mb-4">Unable to load feed. Please refresh the page.</p>
             <button
@@ -55,7 +59,8 @@ class ErrorBoundaryWrapper extends Component<
                 this.setState({ hasError: false, error: null });
                 window.location.reload();
               }}
-              className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
+              className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
+              aria-label="Reload page to retry loading feed"
             >
               Reload Page
             </button>
@@ -101,9 +106,14 @@ function FeedContent() {
   if (!isMounted) {
     return (
       <div className="container mx-auto px-4 py-8">
-        <div className="space-y-4" aria-label="Loading feeds">
+        <div 
+          className="space-y-4" 
+          aria-label="Loading feeds"
+          aria-busy="true"
+          data-testid="feed-loading-skeleton"
+        >
           {[1, 2, 3].map((i) => (
-            <div key={i} className="animate-pulse">
+            <div key={i} className="animate-pulse" aria-hidden="true">
               <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-6">
                 <div className="h-6 bg-gray-200 dark:bg-gray-700 rounded w-3/4 mb-4" />
                 <div className="h-4 bg-gray-200 dark:bg-gray-700 rounded w-full mb-2" />
@@ -120,9 +130,14 @@ function FeedContent() {
     <div className="container mx-auto px-4 py-8">
       <Suspense
         fallback={
-          <div className="space-y-4" aria-label="Loading feeds">
+          <div 
+            className="space-y-4" 
+            aria-label="Loading feeds"
+            aria-busy="true"
+            data-testid="feed-loading-skeleton"
+          >
             {[1, 2, 3].map((i) => (
-              <div key={i} className="animate-pulse">
+              <div key={i} className="animate-pulse" aria-hidden="true">
                 <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-6">
                   <div className="h-6 bg-gray-200 dark:bg-gray-700 rounded w-3/4 mb-4" />
                   <div className="h-4 bg-gray-200 dark:bg-gray-700 rounded w-full mb-2" />
