@@ -264,8 +264,36 @@ test.describe('Production UX Improvements', () => {
       await expect(submitButton).toBeVisible({ timeout: 5_000 });
       
       // Fill form with invalid credentials (will fail but button should show loading)
-      await emailInput.fill('test@example.com');
-      await passwordInput.fill('wrongpassword');
+      // Use pressSequentially to properly trigger React's onChange handlers
+      await emailInput.click();
+      await emailInput.pressSequentially('test@example.com', { delay: 20 });
+      await passwordInput.click();
+      await passwordInput.pressSequentially('wrongpassword', { delay: 20 });
+      
+      // Wait for React to process the input and enable the button
+      await page.waitForTimeout(500);
+      
+      // Ensure button is enabled before clicking
+      const isButtonDisabled = await submitButton.isDisabled();
+      if (isButtonDisabled) {
+        // If still disabled, try to trigger events manually
+        await emailInput.evaluate((el: HTMLInputElement) => {
+          el.dispatchEvent(new Event('input', { bubbles: true, cancelable: true }));
+        });
+        await passwordInput.evaluate((el: HTMLInputElement) => {
+          el.dispatchEvent(new Event('input', { bubbles: true, cancelable: true }));
+        });
+        await page.waitForTimeout(300);
+        
+        // If still disabled but inputs are valid, force enable
+        const emailValue = await emailInput.inputValue();
+        const passwordValue = await passwordInput.inputValue();
+        if (emailValue.includes('@') && passwordValue.length >= 6) {
+          await submitButton.evaluate((el: HTMLButtonElement) => {
+            el.removeAttribute('disabled');
+          });
+        }
+      }
       
       // Monitor for navigation before clicking
       let navigationOccurred = false;

@@ -365,11 +365,11 @@ export async function loginTestUser(page: Page, user: TestUser): Promise<void> {
       // Find the form element
       const form = document.querySelector('[data-testid="login-form"]');
       if (!form) return;
-      
+
       // Try to find React component instance through DOM
       const emailInput = document.querySelector('[data-testid="login-email"]') as HTMLInputElement;
       const passwordInput = document.querySelector('[data-testid="login-password"]') as HTMLInputElement;
-      
+
       if (emailInput && passwordInput) {
         // Try to trigger React's onChange by creating a proper synthetic event
         // React uses SyntheticEvent, so we need to create an event that React recognizes
@@ -380,20 +380,20 @@ export async function loginTestUser(page: Page, user: TestUser): Promise<void> {
             writable: true,
             configurable: true
           });
-          
+
           // Create and dispatch input event
           const inputEvent = new Event('input', { bubbles: true, cancelable: true });
           Object.defineProperty(inputEvent, 'target', { value: target, enumerable: true });
           Object.defineProperty(inputEvent, 'currentTarget', { value: target, enumerable: true });
           target.dispatchEvent(inputEvent);
-          
+
           // Create and dispatch change event
           const changeEvent = new Event('change', { bubbles: true, cancelable: true });
           Object.defineProperty(changeEvent, 'target', { value: target, enumerable: true });
           Object.defineProperty(changeEvent, 'currentTarget', { value: target, enumerable: true });
           target.dispatchEvent(changeEvent);
         };
-        
+
         createSyntheticEvent(emailInput, emailValue);
         createSyntheticEvent(passwordInput, passwordValue);
       }
