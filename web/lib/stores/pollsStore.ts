@@ -1,3 +1,4 @@
+import { useMemo } from 'react';
 import { create } from 'zustand';
 import { devtools, persist } from 'zustand/middleware';
 import { immer } from 'zustand/middleware/immer';
@@ -1040,8 +1041,46 @@ export const usePollPagination = () =>
   );
 
 export const useFilteredPolls = () => usePollsStore((state) => state.getFilteredPolls());
-export const useFilteredPollCards = () =>
-  usePollsStore((state) => state.getFilteredPolls().map(createPollCardView));
+export const useFilteredPollCards = () => {
+  // Get the actual dependencies (polls and filters) with useShallow for stable references
+  const { polls, filters } = usePollsStore(
+    useShallow((state) => ({
+      polls: state.polls,
+      filters: state.filters,
+    })),
+  );
+  
+  // Memoize both the filtering and transformation based on actual dependencies
+  return useMemo(() => {
+    const filtered = polls.filter((poll) => {
+      if (filters.status.length > 0 && poll.status && !filters.status.includes(poll.status)) {
+        return false;
+      }
+
+      if (filters.category.length > 0 && poll.category && !filters.category.includes(poll.category)) {
+        return false;
+      }
+
+      if (filters.tags.length > 0 && poll.tags) {
+        const pollTags = Array.isArray(poll.tags) ? poll.tags : [];
+        if (!filters.tags.some((tag) => pollTags.includes(tag))) {
+          return false;
+        }
+      }
+
+      if (filters.trendingOnly) {
+        const trendingPosition = (poll as PollRow & { trending_position?: number }).trending_position;
+        if (!(typeof trendingPosition === 'number' && trendingPosition > 0)) {
+          return false;
+        }
+      }
+
+      return true;
+    });
+    
+    return filtered.map(createPollCardView);
+  }, [polls, filters]);
+};
 export const useActivePollsCount = () => usePollsStore((state) => state.getActivePollsCount());
 export const usePollById = (id: string) => usePollsStore((state) => state.getPollById(id));
 export const useSelectedPoll = () => {

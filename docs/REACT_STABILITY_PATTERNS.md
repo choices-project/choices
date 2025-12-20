@@ -1077,6 +1077,38 @@ const paginationLabel = useMemo(() => {
 
 **Key Principle**: Always use `useShallow` when store hooks return objects, and use refs for any callbacks/functions that might change identity (store actions, translation functions, router, etc.).
 
+**Critical: Array Transformations in Hooks**
+
+When a hook transforms arrays (like `.map()`, `.filter()`), it creates a new array reference on every call, causing infinite re-renders:
+
+```typescript
+// ❌ BAD: Creates new array on every render
+export const useFilteredPollCards = () =>
+  usePollsStore((state) => state.getFilteredPolls().map(createPollCardView));
+
+// ✅ GOOD: Memoize based on actual dependencies
+export const useFilteredPollCards = () => {
+  // Get the actual dependencies (polls and filters) with useShallow for stable references
+  const { polls, filters } = usePollsStore(
+    useShallow((state) => ({
+      polls: state.polls,
+      filters: state.filters,
+    })),
+  );
+  
+  // Memoize both the filtering and transformation based on actual dependencies
+  return useMemo(() => {
+    const filtered = polls.filter((poll) => {
+      // filtering logic
+    });
+    
+    return filtered.map(createPollCardView);
+  }, [polls, filters]);
+};
+```
+
+**Why this works**: `useShallow` ensures we only get new references when the actual data changes, and `useMemo` ensures we only recalculate the filtered/transformed array when dependencies change.
+
 ---
 
 *Last updated: December 18, 2025*
