@@ -329,8 +329,8 @@ export default function HashtagPollsFeed({
       <div className={cn('space-y-6', className)}>
         <Card>
           <CardContent className="p-6 text-center">
-            <Hash className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-            <p className="text-gray-600">{t('feeds.hashtagPolls.empty.title')}</p>
+            <Hash className="h-12 w-12 text-gray-400 dark:text-gray-500 mx-auto mb-4" />
+            <p className="text-gray-600 dark:text-gray-400">{t('feeds.hashtagPolls.empty.title')}</p>
           </CardContent>
         </Card>
       </div>
@@ -341,24 +341,24 @@ export default function HashtagPollsFeed({
     <div className={cn('space-y-6', className)}>
       <div className="flex items-center justify-between">
         <div>
-          <h2 className="text-2xl font-bold text-gray-900">
+          <h2 className="text-2xl font-bold text-gray-900 dark:text-gray-100">
             {t('feeds.hashtagPolls.header.title')}
           </h2>
-          <p className="text-sm text-gray-600">{t('feeds.hashtagPolls.header.subtitle')}</p>
+          <p className="text-sm text-gray-600 dark:text-gray-400">{t('feeds.hashtagPolls.header.subtitle')}</p>
         </div>
         {enableAnalytics && (
           <div className="flex items-center space-x-4">
             <div className="text-right">
-              <p className="text-sm text-gray-600">
+              <p className="text-sm text-gray-600 dark:text-gray-400">
                 {t('feeds.hashtagPolls.metrics.feedScore')}
               </p>
-              <p className="text-lg font-semibold text-blue-600">
+              <p className="text-lg font-semibold text-blue-600 dark:text-blue-400">
                 {formatPercent(feedScore)}
               </p>
             </div>
             <div className="text-right">
-              <p className="text-sm text-gray-600">{t('feeds.hashtagPolls.metrics.polls')}</p>
-              <p className="text-lg font-semibold text-green-600">
+              <p className="text-sm text-gray-600 dark:text-gray-400">{t('feeds.hashtagPolls.metrics.polls')}</p>
+              <p className="text-lg font-semibold text-green-600 dark:text-green-400">
                 {numberFormatter.format(filteredPolls.length)}
               </p>
             </div>
@@ -395,7 +395,7 @@ export default function HashtagPollsFeed({
 
             {enableTrending && trendingHashtags.length > 0 && (
               <div>
-                <p className="text-sm font-medium text-gray-700 mb-2">
+                <p className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                   {t('feeds.hashtagPolls.filters.trendingLabel')}
                 </p>
                 <div className="flex flex-wrap gap-2">
@@ -415,7 +415,7 @@ export default function HashtagPollsFeed({
             )}
 
             <div className="flex items-center space-x-4">
-              <p className="text-sm font-medium text-gray-700">
+              <p className="text-sm font-medium text-gray-700 dark:text-gray-300">
                 {t('feeds.hashtagPolls.filters.sortBy')}
               </p>
               <div className="flex space-x-2">
@@ -452,8 +452,8 @@ export default function HashtagPollsFeed({
           {filteredPolls.length === 0 ? (
             <Card>
               <CardContent className="p-6 text-center">
-                <Hash className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-                <p className="text-gray-600">
+                <Hash className="h-12 w-12 text-gray-400 dark:text-gray-500 mx-auto mb-4" />
+                <p className="text-gray-600 dark:text-gray-400">
                   {t('feeds.hashtagPolls.recommended.empty')}
                 </p>
                 <Button
@@ -483,10 +483,10 @@ export default function HashtagPollsFeed({
                     <CardContent className="p-6">
                       <div className="flex items-start justify-between mb-4">
                         <div className="flex-1">
-                          <h3 className="text-lg font-semibold text-gray-900 mb-2">
+                          <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-2">
                             {poll.title}
                           </h3>
-                          <p className="text-gray-600 mb-4">
+                          <p className="text-gray-600 dark:text-gray-400 mb-4">
                             {poll.summary ?? poll.content ?? t('feeds.hashtagPolls.recommended.noDescription')}
                           </p>
 
@@ -505,7 +505,7 @@ export default function HashtagPollsFeed({
                             </div>
                           )}
 
-                          <div className="flex flex-wrap items-center gap-4 text-sm text-gray-500">
+                          <div className="flex flex-wrap items-center gap-4 text-sm text-gray-500 dark:text-gray-400">
                             <div className="flex items-center">
                               <Users className="h-4 w-4 mr-1" />
                               {formatVotes(poll.pollData?.totalVotes ?? 0)}
@@ -523,7 +523,7 @@ export default function HashtagPollsFeed({
                       </div>
 
                       <div className="flex items-center justify-between">
-                        <div className="text-sm text-gray-600">{matchSummary}</div>
+                        <div className="text-sm text-gray-600 dark:text-gray-400">{matchSummary}</div>
                         <Button onClick={() => handlePollSelect(poll)} className="ml-4">
                           {t('feeds.hashtagPolls.recommended.viewPoll')}
                         </Button>
@@ -546,7 +546,7 @@ export default function HashtagPollsFeed({
             </CardHeader>
             <CardContent>
               {trendingHashtags.length === 0 ? (
-                <p className="text-gray-600 text-center py-8">
+                <p className="text-gray-600 dark:text-gray-400 text-center py-8">
                   {t('feeds.hashtagPolls.trending.empty')}
                 </p>
               ) : (
@@ -555,7 +555,7 @@ export default function HashtagPollsFeed({
                     <button
                       type="button"
                       key={hashtag}
-                      className="flex w-full items-center justify-between rounded-lg border p-4 text-left transition hover:bg-gray-50 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-500"
+                      className="flex w-full items-center justify-between rounded-lg border border-gray-200 dark:border-gray-700 p-4 text-left transition hover:bg-gray-50 dark:hover:bg-gray-800 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-500"
                       onClick={() => handleHashtagSelect(hashtag)}
                       aria-label={t('feeds.hashtagPolls.trending.select', { hashtag })}
                     >
@@ -567,7 +567,7 @@ export default function HashtagPollsFeed({
                         </div>
                         <div>
                           <p className="font-medium">#{hashtag}</p>
-                          <p className="text-sm text-gray-600">
+                          <p className="text-sm text-gray-600 dark:text-gray-400">
                             {t('feeds.hashtagPolls.trending.badge')}
                           </p>
                         </div>
@@ -595,7 +595,7 @@ export default function HashtagPollsFeed({
                   <CardContent>
                     <div className="space-y-2">
                       <div className="flex justify-between">
-                        <span className="text-sm text-gray-600">
+                        <span className="text-sm text-gray-600 dark:text-gray-400">
                           {t('feeds.hashtagPolls.analytics.pollsLabel')}
                         </span>
                         <span className="font-medium">
@@ -603,7 +603,7 @@ export default function HashtagPollsFeed({
                         </span>
                       </div>
                       <div className="flex justify-between">
-                        <span className="text-sm text-gray-600">
+                        <span className="text-sm text-gray-600 dark:text-gray-400">
                           {t('feeds.hashtagPolls.analytics.engagementLabel')}
                         </span>
                         <span className="font-medium">
@@ -611,7 +611,7 @@ export default function HashtagPollsFeed({
                         </span>
                       </div>
                       <div className="flex justify-between">
-                        <span className="text-sm text-gray-600">
+                        <span className="text-sm text-gray-600 dark:text-gray-400">
                           {t('feeds.hashtagPolls.analytics.interestLabel')}
                         </span>
                         <span className="font-medium">
@@ -620,7 +620,7 @@ export default function HashtagPollsFeed({
                       </div>
                       {analytic.trending_position > 0 && (
                         <div className="flex justify-between">
-                          <span className="text-sm text-gray-600">
+                          <span className="text-sm text-gray-600 dark:text-gray-400">
                             {t('feeds.hashtagPolls.analytics.trendingLabel')}
                           </span>
                           <span className="font-medium text-green-600">
@@ -638,8 +638,8 @@ export default function HashtagPollsFeed({
           ) : (
             <Card>
               <CardContent className="p-6 text-center">
-                <BarChart3 className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-                <p className="text-gray-600">
+                <BarChart3 className="h-12 w-12 text-gray-400 dark:text-gray-500 mx-auto mb-4" />
+                <p className="text-gray-600 dark:text-gray-400">
                   {t('feeds.hashtagPolls.analytics.empty')}
                 </p>
               </CardContent>
