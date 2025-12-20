@@ -305,82 +305,47 @@ export async function loginTestUser(page: Page, user: TestUser): Promise<void> {
   // Wait a moment for React to process the clear
   await page.waitForTimeout(100);
 
-  // Use a combination of fill() and React event triggering to ensure state updates
-  // First, fill the inputs with the values
-  await emailInput.first().fill(email, { timeout: 2_000 });
-  await passwordInput.first().fill(password, { timeout: 2_000 });
+      // For CI reliability, use keyboard.type() which simulates real user input
+      // This is slower but more reliable for React controlled inputs
+      // First clear the input, then type the value character by character
+      await emailInput.first().click();
+      await emailInput.first().clear({ timeout: 2_000 });
+      await page.keyboard.type(email, { delay: 10 }); // Small delay for React to process
 
-  // Now trigger React's onChange by creating proper synthetic events
-  // React's onChange is a synthetic event that wraps the native input event
-  // We need to trigger both input and change events to ensure React processes them
-  await emailInput.first().evaluate((el: HTMLInputElement, value: string) => {
-    // Set the value first (fill already did this, but ensure it's set)
-    const nativeInputValueSetter = Object.getOwnPropertyDescriptor(
-      window.HTMLInputElement.prototype,
-      'value'
-    )?.set;
-    if (nativeInputValueSetter) {
-      nativeInputValueSetter.call(el, value);
-    }
-
-    // Create and dispatch input event (React listens to this)
-    const inputEvent = new Event('input', { bubbles: true, cancelable: true });
-    // React's onChange handler expects e.target.value, so we need to set target
-    Object.defineProperty(inputEvent, 'target', {
-      value: el,
-      enumerable: true,
-    });
-    el.dispatchEvent(inputEvent);
-
-    // Also dispatch change event
-    const changeEvent = new Event('change', { bubbles: true, cancelable: true });
-    Object.defineProperty(changeEvent, 'target', {
-      value: el,
-      enumerable: true,
-    });
-    el.dispatchEvent(changeEvent);
-  }, email);
-
-  await passwordInput.first().evaluate((el: HTMLInputElement, value: string) => {
-    const nativeInputValueSetter = Object.getOwnPropertyDescriptor(
-      window.HTMLInputElement.prototype,
-      'value'
-    )?.set;
-    if (nativeInputValueSetter) {
-      nativeInputValueSetter.call(el, value);
-    }
-
-    const inputEvent = new Event('input', { bubbles: true, cancelable: true });
-    Object.defineProperty(inputEvent, 'target', {
-      value: el,
-      enumerable: true,
-    });
-    el.dispatchEvent(inputEvent);
-
-    const changeEvent = new Event('change', { bubbles: true, cancelable: true });
-    Object.defineProperty(changeEvent, 'target', {
-      value: el,
-      enumerable: true,
-    });
-    el.dispatchEvent(changeEvent);
-  }, password);
+      await passwordInput.first().click();
+      await passwordInput.first().clear({ timeout: 2_000 });
+      await page.keyboard.type(password, { delay: 10 }); // Small delay for React to process
 
   // Wait for React to process the events and update state
   await page.waitForTimeout(500);
 
-  // Wait for React to process - check that inputs have correct values
-  await page.waitForFunction(
-    ({ expectedEmail, expectedPassword }: { expectedEmail: string; expectedPassword: string }) => {
-      const emailInput = document.querySelector('[data-testid="login-email"]') as HTMLInputElement;
-      const passwordInput = document.querySelector('[data-testid="login-password"]') as HTMLInputElement;
-      return emailInput?.value === expectedEmail && passwordInput?.value === expectedPassword;
-    },
-    { expectedEmail: email, expectedPassword: password },
-    { timeout: 5_000 }
-  );
+      // Wait for React to process - check that inputs have correct values
+      // Also verify that React state (formData) has updated by checking button enabled state
+      await page.waitForFunction(
+        ({ expectedEmail, expectedPassword }: { expectedEmail: string; expectedPassword: string }) => {
+          const emailInput = document.querySelector('[data-testid="login-email"]') as HTMLInputElement;
+          const passwordInput = document.querySelector('[data-testid="login-password"]') as HTMLInputElement;
+          const submitButton = document.querySelector('[data-testid="login-submit"]') as HTMLButtonElement;
+          
+          // Check DOM values match
+          const domValuesMatch = emailInput?.value === expectedEmail && passwordInput?.value === expectedPassword;
+          
+          // Check if React state has updated (button enabled when form is valid)
+          // Email valid: contains @, Password valid: length >= 6
+          const emailValid = expectedEmail.includes('@');
+          const passwordValid = expectedPassword.length >= 6;
+          const shouldBeEnabled = emailValid && passwordValid;
+          const isEnabled = !submitButton?.disabled;
+          
+          // Return true only when DOM values match AND React state has synced (button state matches expected)
+          return domValuesMatch && (shouldBeEnabled === isEnabled);
+        },
+        { expectedEmail: email, expectedPassword: password },
+        { timeout: 10_000 } // Increased timeout for CI
+      );
 
-  // Wait a bit more for React state to update after inputs have values
-  await page.waitForTimeout(500);
+      // Wait a bit more for React state to fully update
+      await page.waitForTimeout(500);
 
   // Check for validation indicators (confirms React processed the input)
   if (email.includes('@')) {
