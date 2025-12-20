@@ -8,8 +8,8 @@ import { useProfile } from '@/features/profile/hooks/use-profile';
 
 import DashboardNavigation, { MobileDashboardNav } from '@/components/shared/DashboardNavigation';
 
-import { useAppActions } from '@/lib/stores/appStore';
 import { useIsAuthenticated, useUserLoading } from '@/lib/stores';
+import { useAppActions } from '@/lib/stores/appStore';
 import { logger } from '@/lib/utils/logger';
 
 // Use PersonalDashboard as the main dashboard component
@@ -88,13 +88,13 @@ export default function DashboardPage() {
         }
         adminCheckRef.current = true;
         setIsCheckingAdmin(true);
-        
+
         try {
           const response = await fetch('/api/admin/health?type=status', {
             headers: { 'Content-Type': 'application/json' },
             signal: AbortSignal.timeout(5_000), // 5 second timeout
           });
-          
+
           if (response.ok) {
             // User is admin - allow access to dashboard (they can navigate to admin dashboard)
             logger.debug('🚨 Dashboard: No profile but user is admin - allowing dashboard access');
@@ -106,14 +106,14 @@ export default function DashboardPage() {
           // If admin check fails or times out, assume not admin and redirect
           logger.debug('🚨 Dashboard: Admin check failed or user is not admin - redirecting to onboarding');
         }
-        
+
         // Not admin or check failed - redirect to onboarding
         logger.debug('🚨 Dashboard: No profile found - redirecting to onboarding');
         setIsCheckingAdmin(false);
         adminCheckRef.current = false;
         routerRef.current.replace('/onboarding');
       };
-      
+
       void checkAdminAndRedirect();
     }
   }, [isLoading, isUserLoading, isAuthenticated, profile, shouldBypassAuth]); // Removed router - use ref
