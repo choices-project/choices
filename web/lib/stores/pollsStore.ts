@@ -1105,7 +1105,7 @@ export const useFilteredPollCards = () => {
     });
     
     return filtered.map(createPollCardView);
-  }, [pollsData.pollsKey, filterKey, pollsData.polls, filterStatus, filterCategory, filterTags, filterTrendingOnly]);
+  }, [pollsData.pollsKey, filterKey, pollsData.polls]);
 };
 export const useActivePollsCount = () => usePollsStore((state) => state.getActivePollsCount());
 export const usePollById = (id: string) => usePollsStore((state) => state.getPollById(id));
