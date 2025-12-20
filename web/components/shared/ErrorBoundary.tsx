@@ -17,7 +17,7 @@ type ErrorBoundaryState = {
 
 /**
  * Error Boundary Component
- * 
+ *
  * Catches React errors in component tree and prevents entire app from crashing.
  * Provides fallback UI and error logging.
  */
@@ -43,7 +43,7 @@ export class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundarySt
       }
 
       return (
-        <div 
+        <div
           className="flex items-center justify-center min-h-[400px] px-4"
           data-testid="error-boundary"
           role="alert"
