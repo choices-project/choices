@@ -81,6 +81,18 @@ export default function ProfilePage() {
     }
   }, [exportProfile, profile?.id, user?.id]);
 
+  // Add timeout to prevent infinite loading - must be before early returns
+  const [loadingTimeout, setLoadingTimeout] = useState(false);
+  useEffect(() => {
+    if (profileLoading && !profile && !profileError) {
+      const timeout = setTimeout(() => {
+        setLoadingTimeout(true);
+      }, 15_000); // 15 second timeout
+      return () => clearTimeout(timeout);
+    }
+    setLoadingTimeout(false);
+  }, [profileLoading, profile, profileError]);
+
   if (isUserLoading || profileLoading) {
     return (
       <div className="flex items-center justify-center min-h-screen">
@@ -100,15 +112,30 @@ export default function ProfilePage() {
     );
   }
 
-  if (!profile && !profileError) {
-    // Show loading state instead of returning null (which causes blank page)
+  if ((profileLoading && !profile && !profileError) || loadingTimeout) {
+    // Show loading state with timeout message if taking too long
     return (
-      <div className="flex items-center justify-center min-h-screen">
-        <div className="text-center space-y-4 max-w-md">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto" />
-          <p className="text-gray-600 dark:text-gray-400">Loading profile...</p>
+      <ErrorBoundary>
+        <div className="flex items-center justify-center min-h-screen">
+          <div className="text-center space-y-4 max-w-md">
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto" />
+            <p className="text-gray-600 dark:text-gray-400">
+              {loadingTimeout ? 'Loading is taking longer than expected...' : 'Loading profile...'}
+            </p>
+            {loadingTimeout && (
+              <button
+                onClick={() => {
+                  void refetch();
+                  setLoadingTimeout(false);
+                }}
+                className="mt-4 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
+              >
+                Retry
+              </button>
+            )}
+          </div>
         </div>
-      </div>
+      </ErrorBoundary>
     );
   }
 

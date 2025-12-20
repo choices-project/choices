@@ -114,12 +114,24 @@ export default function PrivacyPage() {
     [mergeDraft, privacySettings, updatePrivacySettings]
   );
 
-  if (profileLoading) {
+  if (profileLoading || loadingTimeout) {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
         <div className="text-center">
           <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto mb-4" />
-          <p className="text-gray-600">Loading privacy settings...</p>
+          <p className="text-gray-600">
+            {loadingTimeout ? 'Loading is taking longer than expected...' : 'Loading privacy settings...'}
+          </p>
+          {loadingTimeout && (
+            <button
+              onClick={() => {
+                window.location.reload();
+              }}
+              className="mt-4 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
+            >
+              Reload Page
+            </button>
+          )}
         </div>
       </div>
     );

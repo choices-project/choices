@@ -108,10 +108,25 @@ export default function ProfilePreferencesPage() {
     }
   };
 
-  if (profileLoading) {
+  if (profileLoading || loadingTimeout) {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-        <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-blue-600" />
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-blue-600 mx-auto mb-4" />
+          <p className="text-gray-600">
+            {loadingTimeout ? 'Loading is taking longer than expected...' : 'Loading preferences...'}
+          </p>
+          {loadingTimeout && (
+            <button
+              onClick={() => {
+                window.location.reload();
+              }}
+              className="mt-4 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
+            >
+              Reload Page
+            </button>
+          )}
+        </div>
       </div>
     );
   }

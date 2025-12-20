@@ -43,32 +43,43 @@ export default function PollsPage() {
 
   const selectedCategory = filters.category[0] ?? 'all';
 
-  const numberFormatter = useMemo(
-    () => new Intl.NumberFormat(currentLanguage ?? undefined),
-    [currentLanguage],
-  );
+  // Use client-only formatters to prevent hydration mismatches
+  // React error #185 occurs when server and client render different content
+  const [isClient, setIsClient] = React.useState(false);
+  React.useEffect(() => {
+    setIsClient(true);
+  }, []);
 
-  const dateFormatter = useMemo(
-    () =>
-      new Intl.DateTimeFormat(currentLanguage ?? undefined, {
-        year: 'numeric',
-        month: 'short',
-        day: 'numeric',
-      }),
-    [currentLanguage],
-  );
+  const numberFormatter = useMemo(() => {
+    if (!isClient) return null; // Return null during SSR to prevent hydration mismatch
+    return new Intl.NumberFormat(currentLanguage ?? undefined);
+  }, [currentLanguage, isClient]);
+
+  const dateFormatter = useMemo(() => {
+    if (!isClient) return null; // Return null during SSR to prevent hydration mismatch
+    return new Intl.DateTimeFormat(currentLanguage ?? undefined, {
+      year: 'numeric',
+      month: 'short',
+      day: 'numeric',
+    });
+  }, [currentLanguage, isClient]);
 
   const formatVoteCount = useCallback(
-    (value: number) =>
-      t('polls.page.metadata.votes', {
+    (value: number) => {
+      if (!numberFormatter) return String(value); // Fallback during SSR
+      return t('polls.page.metadata.votes', {
         count: String(value),
         formattedCount: numberFormatter.format(value),
-      }),
+      });
+    },
     [numberFormatter, t],
   );
 
   const formatCreatedDate = useCallback(
-    (value: string) => dateFormatter.format(new Date(value)),
+    (value: string) => {
+      if (!dateFormatter) return new Date(value).toLocaleDateString(); // Fallback during SSR
+      return dateFormatter.format(new Date(value));
+    },
     [dateFormatter],
   );
 
@@ -82,24 +93,26 @@ export default function PollsPage() {
     [pagination.currentPage, pagination.itemsPerPage, pagination.totalResults],
   );
 
-  const paginationLabel = useMemo(
-    () =>
-      t('polls.page.pagination.showing', {
-        start: numberFormatter.format(paginationStart),
-        end: numberFormatter.format(paginationEnd),
-        total: numberFormatter.format(pagination.totalResults),
-      }),
-    [numberFormatter, paginationEnd, paginationStart, pagination.totalResults, t],
-  );
+  const paginationLabel = useMemo(() => {
+    if (!numberFormatter) {
+      return `${paginationStart}-${paginationEnd} of ${pagination.totalResults}`; // Fallback during SSR
+    }
+    return t('polls.page.pagination.showing', {
+      start: numberFormatter.format(paginationStart),
+      end: numberFormatter.format(paginationEnd),
+      total: numberFormatter.format(pagination.totalResults),
+    });
+  }, [numberFormatter, paginationEnd, paginationStart, pagination.totalResults, t]);
 
-  const paginationPageLabel = useMemo(
-    () =>
-      t('polls.page.pagination.pageLabel', {
-        current: numberFormatter.format(pagination.currentPage),
-        total: numberFormatter.format(pagination.totalPages),
-      }),
-    [numberFormatter, pagination.currentPage, pagination.totalPages, t],
-  );
+  const paginationPageLabel = useMemo(() => {
+    if (!numberFormatter) {
+      return `Page ${pagination.currentPage} of ${pagination.totalPages}`; // Fallback during SSR
+    }
+    return t('polls.page.pagination.pageLabel', {
+      current: numberFormatter.format(pagination.currentPage),
+      total: numberFormatter.format(pagination.totalPages),
+    });
+  }, [numberFormatter, pagination.currentPage, pagination.totalPages, t]);
 
   useEffect(() => {
     setCurrentRoute('/polls');

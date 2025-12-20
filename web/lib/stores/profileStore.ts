@@ -348,7 +348,21 @@ export const createProfileActions = (
 
       try {
         const { getCurrentProfile } = await import('@/features/profile/lib/profile-service');
-        const result = await getCurrentProfile();
+        
+        // Add timeout wrapper to ensure we don't hang forever
+        const timeoutPromise = new Promise<ProfileActionResult>((resolve) => {
+          setTimeout(() => {
+            resolve({
+              success: false,
+              error: 'Profile loading timed out after 30 seconds',
+            });
+          }, 30_000);
+        });
+
+        const result = await Promise.race([
+          getCurrentProfile(),
+          timeoutPromise,
+        ]);
 
         setState((state) => {
           state.isProfileLoading = false;
@@ -357,6 +371,8 @@ export const createProfileActions = (
             state.isProfileLoaded = true;
           } else if (result.error) {
             state.error = result.error;
+            // Don't set isProfileLoaded to false if we have a cached profile
+            // This allows pages to render with cached data even if refresh fails
           } else {
             state.error = 'Failed to load profile';
           }
@@ -369,8 +385,11 @@ export const createProfileActions = (
         return result;
       } catch (error) {
         setState((state) => {
-          state.error = error instanceof Error ? error.message : 'Failed to load profile';
+          const errorMessage = error instanceof Error ? error.message : 'Failed to load profile';
+          state.error = errorMessage;
           state.isProfileLoading = false;
+          // If we have a cached profile, don't clear it on error
+          // This allows pages to render with stale data rather than showing error
         });
         return {
           success: false,

@@ -354,7 +354,12 @@ export function transformProfileUpdateToApi(data: ProfileUpdateData): Record<str
  */
 export async function getCurrentProfile(): Promise<ProfileActionResult> {
   try {
+    // Add timeout to prevent hanging requests
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 30_000); // 30 second timeout
+
     const response = await fetch('/api/profile', {
+      signal: controller.signal,
       method: 'GET',
       credentials: 'include',
       headers: {
@@ -376,12 +381,14 @@ export async function getCurrentProfile(): Promise<ProfileActionResult> {
       };
     }
 
+    clearTimeout(timeoutId);
     return {
       success: true,
       data: profile,
     };
 
   } catch (error) {
+    clearTimeout(timeoutId);
     logger.error('Error fetching profile:', error);
     return {
       success: false,
