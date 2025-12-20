@@ -323,8 +323,9 @@ test.describe('Production UX Excellence', () => {
       const hasPasswordLabel = passwordAriaLabel || (passwordLabel && await passwordLabel.count() > 0);
       expect(hasPasswordLabel).toBeTruthy();
 
-      // Test error message accessibility
-      await emailInput.fill('invalid-email');
+      // Test error message accessibility - use pressSequentially to trigger React onChange
+      await emailInput.click();
+      await emailInput.pressSequentially('invalid-email', { delay: 20 });
       await page.waitForTimeout(800);
 
       const errorMessage = page.locator('[role="alert"], [aria-live="assertive"], [data-testid*="error"]').first();
@@ -774,9 +775,12 @@ test.describe('Production UX Excellence', () => {
       const emailInput = page.locator('input[type="email"], input[name="email"]').first();
       const passwordInput = page.locator('input[type="password"], input[name="password"]').first();
 
-      // Fill form
-      await emailInput.fill('test@example.com');
-      await passwordInput.fill('testpassword123');
+      // Fill form - use pressSequentially to trigger React onChange
+      await emailInput.click();
+      await emailInput.pressSequentially('test@example.com', { delay: 20 });
+      await passwordInput.click();
+      await passwordInput.pressSequentially('testpassword123', { delay: 20 });
+      await page.waitForTimeout(300); // Wait for React to process
 
       // Check if rate limit message element exists (even if hidden)
       const rateLimitMessage = page.locator('[data-testid="rate-limit-message"]');
@@ -1592,8 +1596,9 @@ test.describe('Production UX Excellence', () => {
       const emailInput = page.locator('input[type="email"], input[name="email"]').first();
       await expect(emailInput).toBeVisible({ timeout: 5_000 });
 
-      // Test invalid email
-      await emailInput.fill('invalid-email');
+      // Test invalid email - use pressSequentially to trigger React onChange
+      await emailInput.click();
+      await emailInput.pressSequentially('invalid-email', { delay: 20 });
       await emailInput.blur();
       await page.waitForTimeout(800);
 
