@@ -217,10 +217,10 @@ export async function ensureLoggedOut(page: Page): Promise<void> {
 /**
  * Logs in a test user via the authentication form.
  *
- * **Important:** This function uses `pressSequentially()` instead of `fill()` to properly
- * trigger React's `onChange` handlers for controlled inputs. React controlled inputs require
- * the `onChange` event to fire for React state to update, which enables form validation and
- * the submit button.
+ * **Important:** This function uses `fill()` followed by proper React synthetic event creation
+ * to trigger React's `onChange` handlers for controlled inputs. React controlled inputs require
+ * the `onChange` event to fire with `e.target.value` properly set for React state to update,
+ * which enables form validation and the submit button.
  *
  * @param page - Playwright Page instance
  * @param user - Test user credentials (email, password, username)
@@ -309,7 +309,7 @@ export async function loginTestUser(page: Page, user: TestUser): Promise<void> {
   // First, fill the inputs with the values
   await emailInput.first().fill(email, { timeout: 2_000 });
   await passwordInput.first().fill(password, { timeout: 2_000 });
-  
+
   // Now trigger React's onChange by creating proper synthetic events
   // React's onChange is a synthetic event that wraps the native input event
   // We need to trigger both input and change events to ensure React processes them
