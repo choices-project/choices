@@ -1042,28 +1042,19 @@ export const usePollPagination = () =>
 
 export const useFilteredPolls = () => usePollsStore((state) => state.getFilteredPolls());
 export const useFilteredPollCards = () => {
-  // Get polls array and create a stable key based on poll IDs and length
-  // This prevents re-renders when the array reference changes but contents are the same
-  const pollsData = usePollsStore(
-    useShallow((state) => ({
-      polls: state.polls,
-      // Create a stable key from poll IDs and length for comparison
-      pollsKey: state.polls.length > 0 
-        ? `${state.polls.length}:${state.polls.map(p => p.id).join(',')}`
-        : '0:',
-    })),
-  );
-  
-  // Get filter values as primitives/arrays for stable comparison
-  // This prevents re-renders when the filters object reference changes but values don't
+  // Get the raw data needed for filtering with stable references
+  const polls = usePollsStore(useShallow((state) => state.polls));
   const filterStatus = usePollsStore(useShallow((state) => state.filters.status));
   const filterCategory = usePollsStore(useShallow((state) => state.filters.category));
   const filterTags = usePollsStore(useShallow((state) => state.filters.tags));
   const filterTrendingOnly = usePollsStore((state) => state.filters.trendingOnly);
   
-  // Create stable filter key for memoization - serialize arrays to strings for comparison
-  // This ensures useMemo only recalculates when filter values actually change
-  // IMPORTANT: Create new arrays before sorting to avoid mutating the original arrays
+  // Create stable keys for memoization - these only change when actual values change
+  const pollsKey = useMemo(
+    () => polls.length > 0 ? `${polls.length}:${polls.map(p => p.id).sort().join(',')}` : '0:',
+    [polls],
+  );
+  
   const filterKey = useMemo(
     () => JSON.stringify({
       status: [...filterStatus].sort().join(','),
@@ -1071,14 +1062,12 @@ export const useFilteredPollCards = () => {
       tags: [...filterTags].sort().join(','),
       trendingOnly: filterTrendingOnly,
     }),
-    // Use stringified versions in dependencies to ensure stable comparison
-    [JSON.stringify([...filterStatus].sort()), JSON.stringify([...filterCategory].sort()), JSON.stringify([...filterTags].sort()), filterTrendingOnly],
+    [filterStatus, filterCategory, filterTags, filterTrendingOnly],
   );
   
-  // Memoize both the filtering and transformation based on polls key and filter key
-  // Using keys instead of arrays prevents unnecessary recalculations
+  // Memoize the filtering and transformation - only recalculate when keys change
   return useMemo(() => {
-    const filtered = pollsData.polls.filter((poll) => {
+    const filtered = polls.filter((poll) => {
       if (filterStatus.length > 0 && poll.status && !filterStatus.includes(poll.status)) {
         return false;
       }
@@ -1105,7 +1094,7 @@ export const useFilteredPollCards = () => {
     });
     
     return filtered.map(createPollCardView);
-  }, [pollsData.pollsKey, filterKey]);
+  }, [pollsKey, filterKey, polls, filterStatus, filterCategory, filterTags, filterTrendingOnly]);
 };
 export const useActivePollsCount = () => usePollsStore((state) => state.getActivePollsCount());
 export const usePollById = (id: string) => usePollsStore((state) => state.getPollById(id));
