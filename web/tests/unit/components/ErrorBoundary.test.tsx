@@ -22,7 +22,9 @@ const ThrowError = ({ shouldThrow = false }: { shouldThrow?: boolean }) => {
 describe('ErrorBoundary', () => {
   beforeEach(() => {
     // Suppress console.error for expected error boundary tests
-    jest.spyOn(console, 'error').mockImplementation(() => {});
+    jest.spyOn(console, 'error').mockImplementation(() => {
+      // Intentionally empty - suppresses console.error in tests
+    });
   });
 
   afterEach(() => {

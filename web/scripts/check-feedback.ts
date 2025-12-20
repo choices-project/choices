@@ -7,9 +7,8 @@
 import { dirname, resolve } from 'path';
 import { fileURLToPath } from 'url';
 
-import { config } from 'dotenv';
-
 import { createClient } from '@supabase/supabase-js';
+import { config } from 'dotenv';
 
 // Get __dirname equivalent for ES modules
 const __filename = fileURLToPath(import.meta.url);

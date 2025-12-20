@@ -10,7 +10,6 @@ import { getPollCategoryColor, getPollCategoryIcon } from '@/features/polls/cons
 import { ErrorBoundary } from '@/components/shared/ErrorBoundary';
 
 import { useAppActions } from '@/lib/stores/appStore';
-import logger from '@/lib/utils/logger';
 import {
   useFilteredPollCards,
   usePollFilters,
@@ -20,6 +19,7 @@ import {
   usePollsError,
   usePollsLoading,
 } from '@/lib/stores/pollsStore';
+import logger from '@/lib/utils/logger';
 
 import { useI18n } from '@/hooks/useI18n';
 
