@@ -417,37 +417,31 @@ test.describe('API endpoints (mock harness)', () => {
     test('/api/representatives/my returns empty array when table missing', async ({ page }) => {
       test.setTimeout(60_000);
 
-      if (!regularEmail || !regularPassword) {
-        test.skip(true, 'E2E_USER_EMAIL and E2E_USER_PASSWORD are required');
-        return;
-      }
-
-      await ensureLoggedOut(page);
-      await loginTestUser(page, {
-        email: regularEmail,
-        password: regularPassword,
-        username: regularEmail.split('@')[0] ?? 'e2e-user',
-      });
-      await waitForPageReady(page);
+      // Use the test user from beforeEach setup instead of requiring env vars
+      // This test verifies the endpoint returns 200 with empty array even if table is missing
+      authToken = await loginForToken(page, testData.user);
 
       // The endpoint should return 200 with empty array if table doesn't exist
       // This is better than 500 which would crash pages
-      // Use relative URL since we're in the same origin
-      const response = await page.request.get('/api/representatives/my', {
-        timeout: 10_000,
+      const response = await apiFetch(page, {
+        url: '/api/representatives/my',
+        headers: { Authorization: `Bearer ${authToken}` },
       });
 
       // Should return 200 (not 500) even if table is missing
-      expect(response.status()).toBe(200);
+      expect(response.status).toBe(200);
+      expect(response.body).toHaveProperty('success');
 
-      const body = await response.json();
-      expect(body).toHaveProperty('success');
-      
       // If successful, should have data structure
-      if (body.success) {
-        expect(body).toHaveProperty('data');
-        expect(body.data).toHaveProperty('representatives');
-        expect(Array.isArray(body.data.representatives)).toBe(true);
+      if (response.body && typeof response.body === 'object' && 'success' in response.body) {
+        const body = response.body as { success: boolean; data?: { representatives?: unknown[] } };
+        if (body.success) {
+          expect(body).toHaveProperty('data');
+          if (body.data) {
+            expect(body.data).toHaveProperty('representatives');
+            expect(Array.isArray(body.data.representatives)).toBe(true);
+          }
+        }
       }
     });
   });

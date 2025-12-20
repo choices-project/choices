@@ -353,11 +353,11 @@ export function transformProfileUpdateToApi(data: ProfileUpdateData): Record<str
  * Fetches profile data from API endpoint
  */
 export async function getCurrentProfile(): Promise<ProfileActionResult> {
-  try {
-    // Add timeout to prevent hanging requests
-    const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), 30_000); // 30 second timeout
+  // Add timeout to prevent hanging requests
+  const controller = new AbortController();
+  const timeoutId = setTimeout(() => controller.abort(), 30_000); // 30 second timeout
 
+  try {
     const response = await fetch('/api/profile', {
       signal: controller.signal,
       method: 'GET',
@@ -375,6 +375,7 @@ export async function getCurrentProfile(): Promise<ProfileActionResult> {
     const profile = transformApiResponseToProfile(apiData);
 
     if (!profile) {
+      clearTimeout(timeoutId);
       return {
         success: false,
         error: 'Failed to load profile data',

@@ -184,21 +184,43 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
 
     try {
-      const supabase = await getSupabaseBrowserClient()
-      await supabase.auth.signOut()
-      storeSignOut()
-      initializeAuth(null, null, false)
-      setSession(null)
-      setUser(null)
-      // Redirect to landing page after logout
+      // Call logout API endpoint to properly clear cookies
+      const response = await fetch('/api/auth/logout', {
+        method: 'POST',
+        credentials: 'include',
+      });
+
+      if (!response.ok) {
+        logger.warn('Logout API call failed, attempting direct signOut');
+        // Fallback to direct Supabase signOut
+        const supabase = await getSupabaseBrowserClient();
+        await supabase.auth.signOut();
+      }
+
+      // Clear local state
+      storeSignOut();
+      initializeAuth(null, null, false);
+      setSession(null);
+      setUser(null);
+
+      // Clear localStorage and sessionStorage
       if (typeof window !== 'undefined') {
-        window.location.href = '/landing'
+        window.localStorage.clear();
+        window.sessionStorage.clear();
+        // Hard redirect to ensure cookies are cleared
+        window.location.href = '/landing';
       }
     } catch (error) {
-      logger.error('Failed to sign out:', error)
-      // Still redirect even if signOut fails
+      logger.error('Failed to sign out:', error);
+      // Still clear state and redirect even if logout fails
+      storeSignOut();
+      initializeAuth(null, null, false);
+      setSession(null);
+      setUser(null);
       if (typeof window !== 'undefined') {
-        window.location.href = '/landing'
+        window.localStorage.clear();
+        window.sessionStorage.clear();
+        window.location.href = '/landing';
       }
     }
   }
