@@ -201,6 +201,95 @@ PWDEBUG=1 npx playwright test
 3. **Flaky tests**: Add appropriate waits and retries
 4. **Mock issues**: Check `PLAYWRIGHT_USE_MOCKS` environment variable
 
+## React Controlled Inputs
+
+### Important: Form Input Handling
+
+**React controlled inputs require special handling in E2E tests.** The application uses React controlled inputs where form state is managed by React, not the DOM.
+
+#### ❌ Don't Use `fill()`
+
+```typescript
+// WRONG - This doesn't trigger React's onChange handlers
+await emailInput.fill('test@example.com');
+await passwordInput.fill('password123');
+// Button will stay disabled because React state doesn't update
+```
+
+#### ✅ Use `pressSequentially()`
+
+```typescript
+// CORRECT - This properly triggers React's onChange handlers
+await emailInput.click();
+await emailInput.pressSequentially('test@example.com', { delay: 20 });
+await passwordInput.click();
+await passwordInput.pressSequentially('password123', { delay: 20 });
+await page.waitForTimeout(300); // Wait for React to process state updates
+```
+
+#### Why This Matters
+
+React controlled inputs use `value={formData.email}` and `onChange={(e) => setFormData({...formData, email: e.target.value})}`. The form validation checks `formData.email` and `formData.password`, not the input DOM values. If React state doesn't update, the submit button stays disabled.
+
+#### Helper Functions
+
+The `loginTestUser()` helper in `helpers/e2e-setup.ts` handles this correctly. Always use helper functions when available:
+
+```typescript
+import { loginTestUser } from '../helpers/e2e-setup';
+
+await loginTestUser(page, {
+  email: 'test@example.com',
+  password: 'password123',
+  username: 'testuser'
+});
+```
+
+#### Manual Form Filling
+
+If you need to fill forms manually, follow this pattern:
+
+```typescript
+// 1. Wait for form to be ready
+await page.waitForSelector('[data-testid="auth-hydrated"]', { timeout: 10_000 });
+
+// 2. Clear and focus inputs
+await emailInput.click();
+await emailInput.clear();
+await passwordInput.click();
+await passwordInput.clear();
+
+// 3. Use pressSequentially (not fill)
+await emailInput.pressSequentially('test@example.com', { delay: 20 });
+await passwordInput.pressSequentially('password123', { delay: 20 });
+
+// 4. Wait for React to process state updates
+await page.waitForTimeout(300);
+
+// 5. Verify inputs have correct values
+await page.waitForFunction(
+  ({ expectedEmail, expectedPassword }) => {
+    const emailInput = document.querySelector('[data-testid="login-email"]') as HTMLInputElement;
+    const passwordInput = document.querySelector('[data-testid="login-password"]') as HTMLInputElement;
+    return emailInput?.value === expectedEmail && passwordInput?.value === expectedPassword;
+  },
+  { expectedEmail: 'test@example.com', expectedPassword: 'password123' },
+  { timeout: 5_000 }
+);
+
+// 5. Check for validation indicators (optional)
+if (email.includes('@')) {
+  await page.waitForSelector('[data-testid="email-validation"]', { 
+    state: 'visible', 
+    timeout: 2_000 
+  }).catch(() => {});
+}
+
+// 6. Wait for button to be enabled
+const submitButton = page.getByTestId('login-submit');
+await expect(submitButton).toBeEnabled({ timeout: 10_000 });
+```
+
 ## Best Practices
 
 1. **Always clear authentication state** in `beforeEach` when testing auth flows
@@ -210,6 +299,9 @@ PWDEBUG=1 npx playwright test
 5. **Use helper functions** instead of duplicating code
 6. **Mock external APIs** in development, use real APIs in production tests
 7. **Document authentication requirements** in test file comments
+8. **Always use `pressSequentially()` for React controlled inputs** - never use `fill()`
+9. **Wait for React state updates** after filling form inputs
+10. **Verify form validation** by checking for validation indicators or button state
 
 ## Maintenance
 

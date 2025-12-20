@@ -1,6 +1,6 @@
 # Testing Guide
 
-_Last updated: January 2025 (Supabase query chain mocking patterns, logger mock patterns, API response structure documentation)_
+_Last updated: December 2025 (React controlled input handling in E2E tests, form validation patterns)_
 
 This guide explains how we exercise the Choices web app and where to add coverage when working on new features or store refactors.
 
@@ -194,6 +194,22 @@ We expose store and feature harnesses under `/app/(app)/e2e/*` to keep Playwrigh
     - `NEXT_PUBLIC_ENABLE_E2E_HARNESS=1`
     - `NEXT_DISABLE_REACT_DEV_OVERLAY=1`
   - Default base URL: `http://localhost:3000` (override with `PLAYWRIGHT_BASE_URL`).
+
+- React controlled inputs in E2E tests
+  - **Critical:** The application uses React controlled inputs where form state is managed by React, not the DOM.
+  - **Never use `fill()`** for form inputs - it doesn't trigger React's `onChange` handlers, so React state won't update and form validation won't work.
+  - **Always use `pressSequentially()`** to properly trigger React's `onChange` handlers:
+    ```typescript
+    // ❌ WRONG - Button will stay disabled
+    await emailInput.fill('test@example.com');
+    
+    // ✅ CORRECT - React state updates properly
+    await emailInput.click();
+    await emailInput.pressSequentially('test@example.com', { delay: 20 });
+    await page.waitForTimeout(300); // Wait for React to process
+    ```
+  - The `loginTestUser()` helper in `tests/e2e/helpers/e2e-setup.ts` handles this correctly - always use helper functions when available.
+  - See `web/tests/e2e/README.md` for detailed examples and best practices.
 
 ## Mocking Patterns (January 2025)
 
