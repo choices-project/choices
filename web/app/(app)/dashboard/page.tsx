@@ -9,6 +9,7 @@ import { useProfile } from '@/features/profile/hooks/use-profile';
 import DashboardNavigation, { MobileDashboardNav } from '@/components/shared/DashboardNavigation';
 
 import { useAppActions } from '@/lib/stores/appStore';
+import { useIsAuthenticated, useUserLoading } from '@/lib/stores';
 import { logger } from '@/lib/utils/logger';
 
 // Use PersonalDashboard as the main dashboard component
@@ -38,6 +39,8 @@ export default function DashboardPage() {
   const routerRef = useRef(router);
   useEffect(() => { routerRef.current = router; }, [router]);
   const { profile, isLoading, error } = useProfile();
+  const isAuthenticated = useIsAuthenticated();
+  const isUserLoading = useUserLoading();
   const { setCurrentRoute, setBreadcrumbs, setSidebarActiveSection } = useAppActions();
   const shouldBypassAuth = useMemo(
     () =>
@@ -65,13 +68,20 @@ export default function DashboardPage() {
     if (shouldBypassAuth) {
       return;
     }
-    if (!isLoading && !profile) {
+    // First check if user is authenticated - if not, redirect to auth
+    if (!isUserLoading && !isAuthenticated) {
+      logger.debug('🚨 Dashboard: Unauthenticated user - redirecting to auth');
+      routerRef.current.replace('/auth');
+      return;
+    }
+    // If authenticated but no profile, redirect to onboarding
+    if (!isLoading && isAuthenticated && !profile) {
       logger.debug('🚨 Dashboard: No profile found - redirecting to onboarding');
-      // Redirect to onboarding instead of auth, as user is already authenticated
+      // Redirect to onboarding as user is already authenticated
       // This provides better UX by guiding user to complete their profile
       routerRef.current.replace('/onboarding');
     }
-  }, [isLoading, profile, shouldBypassAuth]); // Removed router - use ref
+  }, [isLoading, isUserLoading, isAuthenticated, profile, shouldBypassAuth]); // Removed router - use ref
 
   if (isLoading) {
     return (
