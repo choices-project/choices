@@ -112,6 +112,15 @@ test.describe('Production Polls Page Deep Diagnostic', () => {
       });
     }
     
+    // Also show all console messages for debugging
+    const allLogMessages = consoleMessages.filter(m => m.type === 'log' || m.type === 'info');
+    if (allLogMessages.length > 0) {
+      console.log('\n=== ALL CONSOLE LOG/INFO MESSAGES ===');
+      allLogMessages.forEach((msg, i) => {
+        console.log(`${i + 1}. [${msg.type}] ${msg.text}`);
+      });
+    }
+    
     if (consoleErrors.length > 0) {
       console.log('\n=== CONSOLE ERRORS ===');
       consoleErrors.forEach((err, i) => {
