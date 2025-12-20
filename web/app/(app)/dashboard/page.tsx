@@ -142,15 +142,28 @@ export default function DashboardPage() {
     );
   }
 
-  if (!profile && !shouldBypassAuth) {
+  if (!profile && !shouldBypassAuth && !isLoading && !isCheckingAdmin) {
+    // Only show access denied if we're sure the user isn't authenticated and not loading
+    // This prevents showing error during redirect or while checking admin status
+    if (!isAuthenticated) {
+      return (
+        <div className="flex items-center justify-center min-h-screen px-4">
+          <div className="text-center space-y-4 max-w-md">
+            <h1 className="text-2xl font-bold text-red-600 dark:text-red-400">Access denied</h1>
+            <p className="text-gray-600 dark:text-gray-400">
+              You must be logged in to access the dashboard.
+            </p>
+            <p className="text-sm text-gray-500 dark:text-gray-500">Redirecting to login…</p>
+          </div>
+        </div>
+      );
+    }
+    // If authenticated but no profile, show loading while checking admin or redirecting
     return (
       <div className="flex items-center justify-center min-h-screen px-4">
         <div className="text-center space-y-4 max-w-md">
-          <h1 className="text-2xl font-bold text-red-600">Access denied</h1>
-          <p className="text-gray-600">
-            You must be logged in to access the dashboard.
-          </p>
-          <p className="text-sm text-gray-500">Redirecting to login…</p>
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto" />
+          <p className="text-gray-600 dark:text-gray-400">Setting up your dashboard...</p>
         </div>
       </div>
     );
