@@ -28,7 +28,11 @@ export const dynamic = 'force-dynamic';
 
 function PollsPageContent() {
   const initializedRef = useRef(false);
-  const [isMounted, setIsMounted] = React.useState(false);
+  // Set isMounted synchronously if window is available (client-side)
+  // This ensures the component can render immediately on the client
+  const [isMounted, setIsMounted] = React.useState(() => {
+    return typeof window !== 'undefined';
+  });
 
   const { t, currentLanguage } = useI18n();
   const { setCurrentRoute, setSidebarActiveSection, setBreadcrumbs } = useAppActions();
@@ -66,11 +70,13 @@ function PollsPageContent() {
     tRef.current = t;
   }, [loadPolls, setFilters, setTrendingOnly, setCurrentPage, setCurrentRoute, setSidebarActiveSection, setBreadcrumbs, t]);
 
-  // Set mounted state after component mounts
-  // This ensures Zustand store has time to hydrate from localStorage
+  // Ensure isMounted is set to true after first render
+  // This is a safety check in case the initial state didn't work
   React.useEffect(() => {
-    setIsMounted(true);
-  }, []);
+    if (!isMounted) {
+      setIsMounted(true);
+    }
+  }, [isMounted]);
 
   const selectedCategory = filters.category[0] ?? 'all';
 
