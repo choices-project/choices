@@ -1066,6 +1066,7 @@ export const useFilteredPollCards = () => {
   );
   
   // Memoize the filtering and transformation - only recalculate when keys change
+  // The arrays (polls, filterStatus, etc.) are captured in the closure, so we only need the keys as dependencies
   return useMemo(() => {
     const filtered = polls.filter((poll) => {
       if (filterStatus.length > 0 && poll.status && !filterStatus.includes(poll.status)) {
@@ -1094,7 +1095,7 @@ export const useFilteredPollCards = () => {
     });
     
     return filtered.map(createPollCardView);
-  }, [pollsKey, filterKey, polls, filterStatus, filterCategory, filterTags, filterTrendingOnly]);
+  }, [pollsKey, filterKey]);
 };
 export const useActivePollsCount = () => usePollsStore((state) => state.getActivePollsCount());
 export const usePollById = (id: string) => usePollsStore((state) => state.getPollById(id));
