@@ -207,9 +207,10 @@ function PollsPageContent() {
   );
 
   // Show loading state until component is mounted
+  // Use data attribute to help with debugging and ensure consistent SSR/client rendering
   if (!isMounted) {
     return (
-      <div className="container mx-auto px-4 py-8">
+      <div className="container mx-auto px-4 py-8" data-testid="polls-loading-mount">
         <div className="flex items-center justify-center min-h-[400px]">
           <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600" />
         </div>
@@ -220,7 +221,7 @@ function PollsPageContent() {
   // Show loading state if actually loading data
   if (isLoading) {
     return (
-      <div className="container mx-auto px-4 py-8">
+      <div className="container mx-auto px-4 py-8" data-testid="polls-loading-data">
         <div className="flex items-center justify-center min-h-[400px]">
           <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600" />
         </div>
