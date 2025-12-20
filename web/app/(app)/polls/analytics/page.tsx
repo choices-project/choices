@@ -72,7 +72,10 @@ export default function PollAnalyticsPage() {
   const [error, setError] = useState<string | null>(null)
 
   const loadAnalytics = useCallback(async () => {
-    if (!user) return
+    // Don't block - allow page to render even if user is loading
+    if (!user) {
+      return null; // Will be handled by loading state above
+    }
 
     try {
       setIsLoading(true)

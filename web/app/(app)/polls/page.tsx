@@ -48,7 +48,7 @@ export default function PollsPage() {
   // Use a ref to track if we're on the client, initialized immediately
   const isClientRef = React.useRef(typeof window !== 'undefined');
   const [isClient, setIsClient] = React.useState(isClientRef.current);
-  
+
   React.useEffect(() => {
     // Ensure isClient is true after mount
     if (!isClient) {
@@ -174,7 +174,7 @@ export default function PollsPage() {
     }
     return 'all';
   }, [filters.status, filters.trendingOnly]);
- 
+
 
   const handlePageChange = useCallback(
     (page: number) => {

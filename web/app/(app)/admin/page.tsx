@@ -202,8 +202,30 @@ export default function AdminDashboard() {
     )
   }
 
+  // Don't block rendering - show loading or access denied instead
+  // Returning null can cause pages to appear broken
+  // Don't block rendering - show authentication required message instead of returning null
+  // Returning null can cause pages to appear broken
   if (!isAuthenticated || !user) {
-    return null
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50 flex items-center justify-center">
+        <div className="text-center">
+          <div className="bg-white rounded-lg border border-gray-200 p-8 max-w-md mx-auto">
+            <div className="bg-red-100 rounded-full p-3 w-16 h-16 mx-auto mb-4 flex items-center justify-center">
+              <Lock className="h-8 w-8 text-red-600" />
+            </div>
+            <h1 className="text-xl font-bold text-gray-900 mb-2">Authentication Required</h1>
+            <p className="text-gray-600 mb-4">Please sign in to access the admin dashboard.</p>
+            <Link
+              href="/auth"
+              className="inline-flex items-center px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+            >
+              Sign In
+            </Link>
+          </div>
+        </div>
+      </div>
+    )
   }
 
   // Show access denied for non-admin users

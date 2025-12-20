@@ -39,10 +39,12 @@ export default function EditProfilePage() {
   }, [setBreadcrumbs, setCurrentRoute, setSidebarActiveSection]);
 
   useEffect(() => {
+    // Only redirect if we're certain user is not authenticated
+    // Don't redirect while authentication state is still loading
     if (!isLoading && !user) {
-      routerRef.current.replace('/login?redirectTo=/profile/edit');
+      routerRef.current.replace('/auth?redirectTo=/profile/edit');
     }
-  }, [isLoading, user]); // Removed router
+  }, [isLoading, user]);
 
   if (isLoading) {
     return (
