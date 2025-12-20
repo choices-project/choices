@@ -40,18 +40,32 @@ export default function PollsPage() {
   } = usePollsActions();
 
   const initializedRef = useRef(false);
+  const [isMounted, setIsMounted] = React.useState(false);
+
+  // Prevent hydration mismatch by only rendering content after mount
+  // This ensures server and client initial renders are identical (both show loading)
+  React.useEffect(() => {
+    setIsMounted(true);
+  }, []);
 
   const selectedCategory = filters.category[0] ?? 'all';
 
   // Use client-only formatters to prevent hydration mismatches
   // React error #185 occurs when server and client render different content
-  // CRITICAL: Start with false to ensure first client render matches server render
-  const [isClient, setIsClient] = React.useState(false);
+  // CRITICAL: Only use formatters after mount to ensure consistent rendering
+  const numberFormatter = useMemo(() => {
+    if (!isMounted) return null;
+    return new Intl.NumberFormat(currentLanguage ?? undefined);
+  }, [isMounted, currentLanguage]);
 
-  React.useEffect(() => {
-    // Only set to true after mount - this ensures first render matches server
-    setIsClient(true);
-  }, []);
+  const dateFormatter = useMemo(() => {
+    if (!isMounted) return null;
+    return new Intl.DateTimeFormat(currentLanguage ?? undefined, {
+      year: 'numeric',
+      month: 'short',
+      day: 'numeric',
+    });
+  }, [isMounted, currentLanguage]);
 
   const numberFormatter = useMemo(() => {
     // Always return a formatter on client, null on server
@@ -73,9 +87,9 @@ export default function PollsPage() {
 
   const formatVoteCount = useCallback(
     (value: number) => {
-      // During SSR or initial client render (before isClient is true), use simple string
+      // During SSR or initial client render (before mount), use simple string
       // This ensures server and first client render match exactly
-      if (!isClient || !numberFormatter) {
+      if (!isMounted || !numberFormatter) {
         return `${value} votes`; // Simple fallback that matches on both server and client
       }
       return t('polls.page.metadata.votes', {
@@ -83,21 +97,21 @@ export default function PollsPage() {
         formattedCount: numberFormatter.format(value),
       });
     },
-    [isClient, numberFormatter, t],
+    [isMounted, numberFormatter, t],
   );
 
   const formatCreatedDate = useCallback(
     (value: string) => {
-      // During SSR or initial client render (before isClient is true), use simple format
+      // During SSR or initial client render (before mount), use simple format
       // This ensures server and first client render match exactly
-      if (!isClient || !dateFormatter) {
+      if (!isMounted || !dateFormatter) {
         const date = new Date(value);
         // Use a simple format that will be consistent on server and client
         return date.toISOString().split('T')[0]; // YYYY-MM-DD format
       }
       return dateFormatter.format(new Date(value));
     },
-    [isClient, dateFormatter],
+    [isMounted, dateFormatter],
   );
 
   const paginationStart = useMemo(
@@ -112,7 +126,7 @@ export default function PollsPage() {
 
   const paginationLabel = useMemo(() => {
     // During SSR or initial client render, use simple format
-    if (!isClient || !numberFormatter) {
+    if (!isMounted || !numberFormatter) {
       return `${paginationStart}-${paginationEnd} of ${pagination.totalResults}`; // Fallback during SSR
     }
     return t('polls.page.pagination.showing', {
@@ -120,18 +134,18 @@ export default function PollsPage() {
       end: numberFormatter.format(paginationEnd),
       total: numberFormatter.format(pagination.totalResults),
     });
-  }, [isClient, numberFormatter, paginationEnd, paginationStart, pagination.totalResults, t]);
+  }, [isMounted, numberFormatter, paginationEnd, paginationStart, pagination.totalResults, t]);
 
   const paginationPageLabel = useMemo(() => {
     // During SSR or initial client render, use simple format
-    if (!isClient || !numberFormatter) {
+    if (!isMounted || !numberFormatter) {
       return `Page ${pagination.currentPage} of ${pagination.totalPages}`; // Fallback during SSR
     }
     return t('polls.page.pagination.pageLabel', {
       current: numberFormatter.format(pagination.currentPage),
       total: numberFormatter.format(pagination.totalPages),
     });
-  }, [isClient, numberFormatter, pagination.currentPage, pagination.totalPages, t]);
+  }, [isMounted, numberFormatter, pagination.currentPage, pagination.totalPages, t]);
 
   useEffect(() => {
     setCurrentRoute('/polls');
@@ -186,7 +200,9 @@ export default function PollsPage() {
     [loadPolls, pagination.totalPages, setCurrentPage],
   );
 
-  if (isLoading) {
+  // Show loading state during SSR and initial client render to prevent hydration mismatch
+  // This ensures server and client render identical content initially
+  if (!isMounted || isLoading) {
     return (
       <div className="container mx-auto px-4 py-8">
         <div className="flex items-center justify-center min-h-[400px]">
@@ -198,7 +214,7 @@ export default function PollsPage() {
 
   return (
     <ErrorBoundary>
-      <div className="container mx-auto px-4 py-8" suppressHydrationWarning>
+      <div className="container mx-auto px-4 py-8">
         <div className="mb-8">
           <h1 className="text-3xl font-bold text-gray-900 dark:text-gray-100 mb-2">{t('polls.page.title')}</h1>
           <p className="text-gray-600 dark:text-gray-400">{t('polls.page.subtitle')}</p>
