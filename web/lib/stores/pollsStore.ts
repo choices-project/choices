@@ -1,4 +1,4 @@
-import { useRef } from 'react';
+import { useMemo } from 'react';
 import { create } from 'zustand';
 import { devtools, persist } from 'zustand/middleware';
 import { immer } from 'zustand/middleware/immer';
@@ -1042,46 +1042,30 @@ export const usePollPagination = () =>
 
 export const useFilteredPolls = () => usePollsStore((state) => state.getFilteredPolls());
 export const useFilteredPollCards = () => {
-  // Get the raw data needed - use useShallow to ensure stable references
+  // Get polls and filters with useShallow for stable array references
   const polls = usePollsStore(useShallow((state) => state.polls));
-  const filters = usePollsStore(useShallow((state) => state.filters));
+  const filterStatus = usePollsStore(useShallow((state) => state.filters.status));
+  const filterCategory = usePollsStore(useShallow((state) => state.filters.category));
+  const filterTags = usePollsStore(useShallow((state) => state.filters.tags));
+  const filterTrendingOnly = usePollsStore((state) => state.filters.trendingOnly);
   
-  // Use refs to track previous values and only recalculate when they actually change
-  const prevPollsKeyRef = useRef<string>('');
-  const prevFilterKeyRef = useRef<string>('');
-  const resultRef = useRef<ReturnType<typeof createPollCardView>[]>([]);
-  
-  // Calculate current keys
-  const currentPollsKey = polls.length > 0 
-    ? `${polls.length}:${polls.map(p => p.id).sort().join(',')}`
-    : '0:';
-  const currentFilterKey = JSON.stringify({
-    status: [...filters.status].sort().join(','),
-    category: [...filters.category].sort().join(','),
-    tags: [...filters.tags].sort().join(','),
-    trendingOnly: filters.trendingOnly,
-  });
-  
-  // Only recalculate if keys actually changed
-  if (currentPollsKey !== prevPollsKeyRef.current || currentFilterKey !== prevFilterKeyRef.current) {
-    prevPollsKeyRef.current = currentPollsKey;
-    prevFilterKeyRef.current = currentFilterKey;
-    
-    // Filter polls
+  // Memoize the filtered and transformed result
+  // useShallow ensures arrays only change when contents change, not references
+  return useMemo(() => {
     const filtered = polls.filter((poll) => {
-      if (filters.status.length > 0 && poll.status && !filters.status.includes(poll.status)) {
+      if (filterStatus.length > 0 && poll.status && !filterStatus.includes(poll.status)) {
         return false;
       }
-      if (filters.category.length > 0 && poll.category && !filters.category.includes(poll.category)) {
+      if (filterCategory.length > 0 && poll.category && !filterCategory.includes(poll.category)) {
         return false;
       }
-      if (filters.tags.length > 0 && poll.tags) {
+      if (filterTags.length > 0 && poll.tags) {
         const pollTags = Array.isArray(poll.tags) ? poll.tags : [];
-        if (!filters.tags.some((tag) => pollTags.includes(tag))) {
+        if (!filterTags.some((tag) => pollTags.includes(tag))) {
           return false;
         }
       }
-      if (filters.trendingOnly) {
+      if (filterTrendingOnly) {
         const trendingPosition = (poll as PollRow & { trending_position?: number }).trending_position;
         if (!(typeof trendingPosition === 'number' && trendingPosition > 0)) {
           return false;
@@ -1090,11 +1074,8 @@ export const useFilteredPollCards = () => {
       return true;
     });
     
-    // Transform to cards
-    resultRef.current = filtered.map(createPollCardView);
-  }
-  
-  return resultRef.current;
+    return filtered.map(createPollCardView);
+  }, [polls, filterStatus, filterCategory, filterTags, filterTrendingOnly]);
 };
 export const useActivePollsCount = () => usePollsStore((state) => state.getActivePollsCount());
 export const usePollById = (id: string) => usePollsStore((state) => state.getPollById(id));
