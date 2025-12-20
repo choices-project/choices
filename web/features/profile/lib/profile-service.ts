@@ -390,6 +390,16 @@ export async function getCurrentProfile(): Promise<ProfileActionResult> {
 
   } catch (error) {
     clearTimeout(timeoutId);
+    
+    // Handle AbortError specifically (timeout or manual abort)
+    if (error instanceof Error && error.name === 'AbortError') {
+      logger.warn('Profile fetch was aborted (likely timeout)');
+      return {
+        success: false,
+        error: 'Profile request timed out. Please try again.',
+      };
+    }
+    
     logger.error('Error fetching profile:', error);
     return {
       success: false,

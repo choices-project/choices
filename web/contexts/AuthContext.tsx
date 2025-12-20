@@ -184,20 +184,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
 
     try {
-      // Call logout API endpoint to properly clear cookies
-      const response = await fetch('/api/auth/logout', {
-        method: 'POST',
-        credentials: 'include',
-      });
-
-      if (!response.ok) {
-        logger.warn('Logout API call failed, attempting direct signOut');
-        // Fallback to direct Supabase signOut
-        const supabase = await getSupabaseBrowserClient();
-        await supabase.auth.signOut();
-      }
-
-      // Clear local state
+      // Clear local state first to prevent any UI flicker
       storeSignOut();
       initializeAuth(null, null, false);
       setSession(null);
@@ -207,8 +194,48 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       if (typeof window !== 'undefined') {
         window.localStorage.clear();
         window.sessionStorage.clear();
-        // Hard redirect to ensure cookies are cleared
-        window.location.href = '/landing';
+      }
+
+      // Call logout API endpoint to properly clear cookies
+      // Use a timeout to prevent hanging
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 5_000); // 5 second timeout
+
+      try {
+        const response = await fetch('/api/auth/logout', {
+          method: 'POST',
+          credentials: 'include',
+          signal: controller.signal,
+        });
+
+        clearTimeout(timeoutId);
+
+        if (!response.ok) {
+          logger.warn('Logout API call failed, attempting direct signOut');
+          // Fallback to direct Supabase signOut
+          const supabase = await getSupabaseBrowserClient();
+          await supabase.auth.signOut().catch((err) => {
+            logger.warn('Direct Supabase signOut also failed:', err);
+          });
+        }
+      } catch (fetchError) {
+        clearTimeout(timeoutId);
+        // If fetch fails (network error, timeout, etc.), try direct Supabase signOut
+        if (fetchError instanceof Error && fetchError.name !== 'AbortError') {
+          logger.warn('Logout API fetch failed, attempting direct signOut', fetchError);
+          try {
+            const supabase = await getSupabaseBrowserClient();
+            await supabase.auth.signOut();
+          } catch (supabaseError) {
+            logger.warn('Direct Supabase signOut also failed:', supabaseError);
+          }
+        }
+      }
+
+      // Always redirect, even if API calls fail
+      if (typeof window !== 'undefined') {
+        // Use replace instead of href to prevent back button issues
+        window.location.replace('/landing');
       }
     } catch (error) {
       logger.error('Failed to sign out:', error);
@@ -220,7 +247,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       if (typeof window !== 'undefined') {
         window.localStorage.clear();
         window.sessionStorage.clear();
-        window.location.href = '/landing';
+        window.location.replace('/landing');
       }
     }
   }

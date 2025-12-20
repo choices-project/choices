@@ -61,17 +61,13 @@ export default function GlobalNavigation() {
     try {
       closeMobileMenu();
       // Call signOut which will handle the redirect internally
-      await authSignOut();
-      // Use window.location for a hard redirect to ensure cookies are cleared
-      // This is more reliable than router.push for logout
-      if (typeof window !== 'undefined') {
-        window.location.href = '/landing';
-      }
+      // Don't await - let it handle redirect in its own time
+      void authSignOut();
     } catch (error) {
       logger.error('Logout failed:', error);
-      // Still redirect even if logout fails
+      // Fallback redirect if signOut throws synchronously
       if (typeof window !== 'undefined') {
-        window.location.href = '/landing';
+        window.location.replace('/landing');
       }
     }
   }, [authSignOut, closeMobileMenu]);
