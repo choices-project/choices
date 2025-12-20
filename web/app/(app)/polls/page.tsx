@@ -1,7 +1,6 @@
 'use client';
 
 import { Plus, Users, BarChart3, Flame, Eye } from 'lucide-react';
-import dynamic from 'next/dynamic';
 import Link from 'next/link';
 import React, { useEffect, useCallback, useMemo, useRef } from 'react';
 
@@ -24,9 +23,9 @@ import logger from '@/lib/utils/logger';
 
 import { useI18n } from '@/hooks/useI18n';
 
-// Client-only component to prevent any SSR hydration mismatches
-// Since this uses dynamic() with ssr: false, it never renders on the server
-// This is the proper way to handle client-only content - no suppressHydrationWarning needed
+// Prevent static generation since this requires client-side state
+export const dynamic = 'force-dynamic';
+
 function PollsPageContent() {
   const initializedRef = useRef(false);
   const [isMounted, setIsMounted] = React.useState(false);
@@ -369,17 +368,6 @@ function PollsPageContent() {
   );
 }
 
-// Export as dynamically imported client-only component
-// Using dynamic() with ssr: false prevents server-side rendering entirely
-// This is the proper way to handle client-only content - no suppressHydrationWarning needed
-// The component will only render on the client, eliminating hydration mismatches at the source
-export default dynamic(() => Promise.resolve(PollsPageContent), {
-  ssr: false,
-  loading: () => (
-    <div className="container mx-auto px-4 py-8">
-      <div className="flex items-center justify-center min-h-[400px]">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600" />
-      </div>
-    </div>
-  ),
-});
+export default function PollsPage() {
+  return <PollsPageContent />;
+}
