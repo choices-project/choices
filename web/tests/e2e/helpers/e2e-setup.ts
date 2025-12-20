@@ -494,7 +494,7 @@ export async function loginTestUser(page: Page, user: TestUser): Promise<void> {
       await page.evaluate(() => {
         const emailInput = document.querySelector('[data-testid="login-email"]') as HTMLInputElement;
         const passwordInput = document.querySelector('[data-testid="login-password"]') as HTMLInputElement;
-        
+
         if (emailInput && passwordInput) {
           // Focus and trigger events to ensure React processes them
           emailInput.focus();
@@ -537,6 +537,13 @@ export async function loginTestUser(page: Page, user: TestUser): Promise<void> {
   let loginResponse: LoginResponse | null = null;
   let apiError: string | null = null;
 
+  // Ensure button is enabled and visible before clicking
+  await submitButton.waitFor({ state: 'visible', timeout: 2_000 });
+  const isButtonEnabledFinal = !(await submitButton.isDisabled());
+  if (!isButtonEnabledFinal) {
+    throw new Error('Submit button is not enabled. React state may not be synchronized.');
+  }
+
   // Click submit
   await submitButton.click();
 
@@ -544,12 +551,42 @@ export async function loginTestUser(page: Page, user: TestUser): Promise<void> {
   const requestMade = await requestPromise;
   if (!requestMade) {
     // Request wasn't made - check for validation errors or other issues
+    await page.waitForTimeout(1000); // Wait a bit for any error messages to appear
+    
     const authError = page.getByTestId('auth-error');
     const errorCount = await authError.count();
     if (errorCount > 0) {
       const errorText = await authError.first().textContent().catch(() => 'Unknown error');
-      throw new Error(`Login form validation error: ${errorText}. API request was not made.`);
+      
+      // Check if React state has the values - if not, that's the root cause
+      const reactStateCheck = await page.evaluate(({ emailValue, passwordValue }: { emailValue: string; passwordValue: string }) => {
+        const emailInput = document.querySelector('[data-testid="login-email"]') as HTMLInputElement;
+        const passwordInput = document.querySelector('[data-testid="login-password"]') as HTMLInputElement;
+        return {
+          emailValue: emailInput?.value || '',
+          passwordValue: passwordInput?.value || '',
+          emailMatches: emailInput?.value === emailValue,
+          passwordMatches: passwordInput?.value === passwordValue
+        };
+      }, { emailValue: email, passwordValue: password });
+      
+      throw new Error(
+        `Login form validation error: ${errorText}. API request was not made. ` +
+        `React state check - Email: "${reactStateCheck.emailValue}" (matches: ${reactStateCheck.emailMatches}), ` +
+        `Password length: ${reactStateCheck.passwordValue.length} (matches: ${reactStateCheck.passwordMatches}). ` +
+        `This suggests React's formData state is not synced with input values.`
+      );
     }
+    
+    // No error message, but request wasn't made - check if button is still disabled
+    const stillDisabled = await submitButton.isDisabled();
+    if (stillDisabled) {
+      throw new Error(
+        `Login form submission failed - API request was not made. Button is still disabled. ` +
+        `This indicates React state (formData) is not updating properly from input events.`
+      );
+    }
+    
     throw new Error('Login form submission failed - API request was not made. Check if form is properly configured.');
   }
 
