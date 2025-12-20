@@ -2,7 +2,7 @@
 
 import { Menu, X, Shield, User, LogOut, Vote, BarChart3, Home, Settings } from 'lucide-react';
 import Link from 'next/link';
-import { usePathname, useRouter } from 'next/navigation';
+import { usePathname } from 'next/navigation';
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 
 /**
@@ -38,7 +38,6 @@ export default function GlobalNavigation() {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [_hasError, _setHasError] = useState(false);
   const pathname = usePathname();
-  const router = useRouter();
   const mobileMenuButtonRef = useRef<HTMLButtonElement>(null);
   const firstMobileNavLinkRef = useRef<HTMLAnchorElement>(null);
   const previouslyFocusedElementRef = useRef<HTMLElement | null>(null);
