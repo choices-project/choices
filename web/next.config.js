@@ -299,7 +299,11 @@ const nextConfig = {
     const isProduction = process.env.NODE_ENV === 'production'
     const isReportOnly = process.env.CSP_REPORT_ONLY === 'true'
     // Check if we're in a Vercel preview environment (not production)
-    const isVercelPreview = process.env.VERCEL_ENV === 'preview' || process.env.VERCEL_ENV === 'development'
+    // Also check VERCEL_URL to detect Vercel deployments
+    const isVercelPreview = 
+      process.env.VERCEL_ENV === 'preview' || 
+      process.env.VERCEL_ENV === 'development' ||
+      (process.env.VERCEL_URL && !isProduction)
 
     // CSP configuration with two profiles: production and development
     const cspDirectives = {
@@ -309,6 +313,16 @@ const nextConfig = {
           "'self'",
           "'unsafe-inline'", // Required for Next.js
           "'unsafe-eval'", // Required for Next.js development
+          // Only include vercel.live in preview/development environments, not production
+          ...(isVercelPreview ? ['https://vercel.live'] : []),
+          'https://vercel.com', // Vercel analytics (safe for production)
+          'https://challenges.cloudflare.com', // Turnstile
+          'https://static.cloudflareinsights.com', // Cloudflare analytics
+        ],
+        // Explicitly set script-src-elem to match script-src for modern browsers
+        'script-src-elem': [
+          "'self'",
+          "'unsafe-inline'", // Required for Next.js
           // Only include vercel.live in preview/development environments, not production
           ...(isVercelPreview ? ['https://vercel.live'] : []),
           'https://vercel.com', // Vercel analytics (safe for production)
@@ -362,6 +376,16 @@ const nextConfig = {
           "'self'",
           "'unsafe-inline'",
           "'unsafe-eval'",
+          'http://localhost:*',
+          'http://127.0.0.1:*',
+          'https://vercel.live',
+          'https://challenges.cloudflare.com', // Turnstile
+          ...allowedDevOrigins,
+        ],
+        // Explicitly set script-src-elem to match script-src for modern browsers
+        'script-src-elem': [
+          "'self'",
+          "'unsafe-inline'",
           'http://localhost:*',
           'http://127.0.0.1:*',
           'https://vercel.live',
