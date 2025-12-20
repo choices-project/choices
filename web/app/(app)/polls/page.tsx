@@ -164,17 +164,17 @@ function PollsPageContent() {
   }, [isMounted]);
 
   useEffect(() => {
-    logger.debug('Polls page initialization useEffect', { isMounted, initialized: initializedRef.current });
+    console.log('[POLLS PAGE] Initialization useEffect', { isMounted, initialized: initializedRef.current });
     if (!isMounted) {
-      logger.debug('Polls page: not mounted yet, skipping initialization');
+      console.log('[POLLS PAGE] Not mounted yet, skipping initialization');
       return;
     }
     if (initializedRef.current) {
-      logger.debug('Polls page: already initialized, skipping');
+      console.log('[POLLS PAGE] Already initialized, skipping');
       return;
     }
     initializedRef.current = true;
-    logger.debug('Polls page: starting initialization', { 
+    console.log('[POLLS PAGE] Starting initialization', { 
       hasLoadPolls: !!loadPollsRef.current,
       hasSetFilters: !!setFiltersRef.current 
     });
@@ -182,12 +182,13 @@ function PollsPageContent() {
     // Use setTimeout to defer store updates until after React has completed the render cycle
     // This prevents store updates from blocking the initial render
     setTimeout(() => {
-      logger.debug('Polls page: executing initialization in setTimeout');
+      console.log('[POLLS PAGE] Executing initialization in setTimeout');
       setCurrentPageRef.current(1);
       setTrendingOnlyRef.current(false);
       setFiltersRef.current({ status: [] });
-      logger.debug('Polls page: calling loadPolls');
+      console.log('[POLLS PAGE] Calling loadPolls');
       loadPollsRef.current().catch((error) => {
+        console.error('[POLLS PAGE] Failed to load polls:', error);
         logger.warn('Failed to load polls (non-critical):', error);
       });
     }, 0);

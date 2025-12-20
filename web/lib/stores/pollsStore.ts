@@ -679,7 +679,7 @@ export const createPollsActions = (
     });
 
   const loadPolls = async (options?: LoadPollsOptions) => {
-    logger.debug('loadPolls called', { options });
+    console.log('[POLLS STORE] loadPolls called', { options });
     setLoading(true);
     clearError();
 
@@ -736,7 +736,7 @@ export const createPollsActions = (
       }
 
       const apiUrl = `/api/polls?${params.toString()}`;
-      logger.debug('Fetching polls from API', { url: apiUrl });
+      console.log('[POLLS STORE] Fetching polls from API', { url: apiUrl });
       const response = await fetch(apiUrl);
 
       if (!response.ok) {
@@ -804,7 +804,7 @@ export const createPollsActions = (
       setError(message);
       logger.error('Failed to load polls', { error, options, message });
     } finally {
-      logger.debug('loadPolls finally block - setting isLoading to false');
+      console.log('[POLLS STORE] loadPolls finally block - setting isLoading to false');
       setLoading(false);
     }
   };
