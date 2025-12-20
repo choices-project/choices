@@ -28,11 +28,9 @@ export const dynamic = 'force-dynamic';
 
 function PollsPageContent() {
   const initializedRef = useRef(false);
-  // Set isMounted synchronously if window is available (client-side)
-  // This ensures the component can render immediately on the client
-  const [isMounted, setIsMounted] = React.useState(() => {
-    return typeof window !== 'undefined';
-  });
+  // Set isMounted to false initially, then set to true in useEffect
+  // This ensures React has fully mounted before we try to use hooks
+  const [isMounted, setIsMounted] = React.useState(false);
 
   const { t, currentLanguage } = useI18n();
   const { setCurrentRoute, setSidebarActiveSection, setBreadcrumbs } = useAppActions();
@@ -70,13 +68,13 @@ function PollsPageContent() {
     tRef.current = t;
   }, [loadPolls, setFilters, setTrendingOnly, setCurrentPage, setCurrentRoute, setSidebarActiveSection, setBreadcrumbs, t]);
 
-  // Ensure isMounted is set to true after first render
-  // This is a safety check in case the initial state didn't work
+  // Set mounted state after component mounts
+  // Use requestAnimationFrame to ensure this runs after React has fully mounted
   React.useEffect(() => {
-    if (!isMounted) {
+    requestAnimationFrame(() => {
       setIsMounted(true);
-    }
-  }, [isMounted]);
+    });
+  }, []);
 
   const selectedCategory = filters.category[0] ?? 'all';
 
@@ -375,5 +373,17 @@ function PollsPageContent() {
 }
 
 export default function PollsPage() {
-  return <PollsPageContent />;
+  return (
+    <React.Suspense
+      fallback={
+        <div className="container mx-auto px-4 py-8">
+          <div className="flex items-center justify-center min-h-[400px]">
+            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600" />
+          </div>
+        </div>
+      }
+    >
+      <PollsPageContent />
+    </React.Suspense>
+  );
 }
