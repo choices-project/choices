@@ -679,6 +679,7 @@ export const createPollsActions = (
     });
 
   const loadPolls = async (options?: LoadPollsOptions) => {
+    logger.debug('loadPolls called', { options });
     setLoading(true);
     clearError();
 
@@ -734,10 +735,13 @@ export const createPollsActions = (
         params.append('trending', 'true');
       }
 
-      const response = await fetch(`/api/polls?${params.toString()}`);
+      const apiUrl = `/api/polls?${params.toString()}`;
+      logger.debug('Fetching polls from API', { url: apiUrl });
+      const response = await fetch(apiUrl);
 
       if (!response.ok) {
-        throw new Error('Failed to load polls');
+        logger.error('Polls API returned error', { status: response.status, statusText: response.statusText });
+        throw new Error(`Failed to load polls: ${response.status} ${response.statusText}`);
       }
 
       const payload = (await response.json()) as {
@@ -798,8 +802,9 @@ export const createPollsActions = (
     } catch (error) {
       const message = error instanceof Error ? error.message : 'Unknown error';
       setError(message);
-      logger.error('Failed to load polls', { error, options });
+      logger.error('Failed to load polls', { error, options, message });
     } finally {
+      logger.debug('loadPolls finally block - setting isLoading to false');
       setLoading(false);
     }
   };
