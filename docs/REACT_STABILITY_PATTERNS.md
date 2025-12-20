@@ -1109,8 +1109,375 @@ export const useFilteredPollCards = () => {
 
 **Why this works**: `useShallow` ensures we only get new references when the actual data changes, and `useMemo` ensures we only recalculate the filtered/transformed array when dependencies change.
 
+### 11. Polls Page: Client-Only Rendering and Loading State Management
+
+**Problem**: Polls page stuck in infinite loading spinner in production. React appears not to mount, and `isLoading` state gets stuck as `true`.
+
+**Root Causes Identified**:
+1. Using `dynamic()` wrapper with `ssr: false` can prevent React from mounting properly
+2. Suspense wrapper at export level can interfere with React hydration
+3. `isLoading` state stuck because `loadPolls` either isn't called or doesn't complete
+4. Diagnostic tests checking for `#__next` (Next.js 13+ app directory doesn't use this)
+
+**✅ GOOD: Simple Client-Only Pattern (Feed Page Reference)**
+
+The feed page works correctly and should be used as a reference pattern:
+
+```typescript
+// app/(app)/feed/page.tsx - WORKING PATTERN
+'use client';
+
+// Prevent static generation since this requires client-side state
+export const dynamic = 'force-dynamic';
+
+function FeedContent() {
+  const [isMounted, setIsMounted] = useState(false);
+
+  useEffect(() => {
+    setIsMounted(true);
+  }, []);
+
+  // Prevent hydration mismatch by only rendering content after mount
+  if (!isMounted) {
+    return (
+      <div className="container mx-auto px-4 py-8">
+        <div className="space-y-4" aria-label="Loading feeds" aria-busy="true">
+          {/* Loading skeleton */}
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="container mx-auto px-4 py-8">
+      {/* Actual content */}
+    </div>
+  );
+}
+
+export default function FeedPage() {
+  return <FeedContent />;
+}
+```
+
+**✅ GOOD: Polls Page Pattern (After Fixes)**
+
+```typescript
+// app/(app)/polls/page.tsx
+'use client';
+
+// Prevent static generation since this requires client-side state
+export const dynamic = 'force-dynamic';
+
+function PollsPageContent() {
+  const [isMounted, setIsMounted] = React.useState(false);
+  
+  // All hooks called at top level (required by React rules)
+  const polls = useFilteredPollCards();
+  const isLoading = usePollsLoading();
+  // ... other hooks
+
+  // Simple useEffect to set mounted - no requestAnimationFrame needed
+  React.useEffect(() => {
+    setIsMounted(true);
+  }, []);
+
+  // Show loading state until component is mounted
+  if (!isMounted) {
+    return (
+      <div className="container mx-auto px-4 py-8" data-testid="polls-loading-mount">
+        <div className="flex items-center justify-center min-h-[400px]">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600" />
+        </div>
+      </div>
+    );
+  }
+
+  // Show loading state if actually loading data
+  if (isLoading) {
+    return (
+      <div className="container mx-auto px-4 py-8" data-testid="polls-loading-data">
+        <div className="flex items-center justify-center min-h-[400px]">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600" />
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <ErrorBoundary>
+      {/* Actual content */}
+    </ErrorBoundary>
+  );
+}
+
+// Simple export - no Suspense wrapper needed
+export default function PollsPage() {
+  return <PollsPageContent />;
+}
+```
+
+**Key Differences from Previous Attempts**:
+- ❌ **Don't use** `dynamic(() => Promise.resolve(Component), { ssr: false })` - can prevent React mounting
+- ❌ **Don't wrap** export in Suspense - can interfere with hydration
+- ✅ **Do use** `export const dynamic = 'force-dynamic'` at top level
+- ✅ **Do use** simple `useEffect(() => setIsMounted(true), [])` - no `requestAnimationFrame` needed
+- ✅ **Do use** `data-testid` attributes to distinguish loading states in tests
+
+**Key Principle**: Match the working feed page pattern exactly. Simple is better - avoid unnecessary wrappers and complexity.
+
+### 12. Store Hook Optimization: Single Selector Pattern
+
+**Problem**: `useFilteredPollCards` was causing re-renders because it used multiple individual selectors, each creating a separate subscription.
+
+**Root Cause**: Multiple `useShallow` selectors create multiple store subscriptions, and object references can change even when data doesn't.
+
+**❌ BAD: Multiple Individual Selectors**
+
+```typescript
+export const useFilteredPollCards = () => {
+  // Multiple subscriptions - each can trigger re-renders
+  const polls = usePollsStore(useShallow((state) => state.polls));
+  const filterStatus = usePollsStore(useShallow((state) => state.filters.status));
+  const filterCategory = usePollsStore(useShallow((state) => state.filters.category));
+  const filterTags = usePollsStore(useShallow((state) => state.filters.tags));
+  const filterTrendingOnly = usePollsStore((state) => state.filters.trendingOnly);
+
+  // Complex key-based memoization that can still cause issues
+  const pollsKey = useMemo(() => /* ... */, [polls]);
+  const filterKey = useMemo(() => /* ... */, [filterStatus, filterCategory, filterTags, filterTrendingOnly]);
+
+  return useMemo(() => {
+    // filtering and mapping logic
+  }, [polls, filterStatus, filterCategory, filterTags, filterTrendingOnly, pollsKey, filterKey]);
+};
+```
+
+**✅ GOOD: Single Atomic Selector**
+
+```typescript
+export const useFilteredPollCards = () => {
+  // Single selector with useShallow to get all needed data at once
+  // This minimizes the number of store subscriptions and ensures atomic updates
+  const storeData = usePollsStore(
+    useShallow((state) => ({
+      polls: state.polls,
+      filterStatus: state.filters.status,
+      filterCategory: state.filters.category,
+      filterTags: state.filters.tags,
+      filterTrendingOnly: state.filters.trendingOnly,
+    }))
+  );
+
+  // Memoize the filtered and transformed result
+  // useShallow ensures we only recalculate when the actual data changes
+  return useMemo(() => {
+    const filtered = storeData.polls.filter((poll) => {
+      if (storeData.filterStatus.length > 0 && poll.status && !storeData.filterStatus.includes(poll.status)) {
+        return false;
+      }
+      if (storeData.filterCategory.length > 0 && poll.category && !storeData.filterCategory.includes(poll.category)) {
+        return false;
+      }
+      if (storeData.filterTags.length > 0 && poll.tags) {
+        const pollTags = Array.isArray(poll.tags) ? poll.tags : [];
+        if (!storeData.filterTags.some((tag) => pollTags.includes(tag))) {
+          return false;
+        }
+      }
+      if (storeData.filterTrendingOnly) {
+        const trendingPosition = (poll as PollRow & { trending_position?: number }).trending_position;
+        if (!(typeof trendingPosition === 'number' && trendingPosition > 0)) {
+          return false;
+        }
+      }
+      return true;
+    });
+
+    return filtered.map(createPollCardView);
+  }, [storeData]);
+};
+```
+
+**Key Principle**: Use a single `useShallow` selector to get all needed data atomically. This minimizes subscriptions and ensures stable references.
+
+### 13. Diagnostic Testing: Identifying Loading State Issues
+
+**Problem**: Pages stuck in loading state, but unclear whether React isn't mounting or `isLoading` is stuck.
+
+**Solution**: Create diagnostic tests that can identify the exact issue.
+
+**✅ GOOD: Diagnostic Test Pattern**
+
+```typescript
+// tests/e2e/specs/production/production-polls-deep-diagnostic.spec.ts
+test('deep diagnostic - check all state and warnings', async ({ page }) => {
+  // Collect all console messages
+  const consoleMessages: Array<{ type: string; text: string }> = [];
+  page.on('console', (msg) => {
+    const text = msg.text();
+    const type = msg.type();
+    consoleMessages.push({ type, text });
+  });
+
+  await page.goto(`${BASE_URL}/polls`, { waitUntil: 'domcontentloaded' });
+  
+  // Wait and check state multiple times
+  for (let i = 0; i < 10; i++) {
+    await page.waitForTimeout(1_000);
+    
+    const mountSpinner = await page.locator('[data-testid="polls-loading-mount"]').isVisible({ timeout: 500 }).catch(() => false);
+    const dataSpinner = await page.locator('[data-testid="polls-loading-data"]').isVisible({ timeout: 500 }).catch(() => false);
+    const hasContent = await page.locator('body').textContent().then(text => {
+      return text && text.length > 200 && !text.includes('Loading') && !text.includes('Something went wrong');
+    }).catch(() => false);
+    
+    console.log(`Check ${i + 1}: mountSpinner=${mountSpinner}, dataSpinner=${dataSpinner}, hasContent=${hasContent}`);
+  }
+  
+  // Check React state (Note: #__next doesn't exist in Next.js 13+ app directory)
+  const reactState = await page.evaluate(() => {
+    return {
+      readyState: document.readyState,
+      hasReactRoot: !!document.querySelector('#__next'), // May be false in app directory
+      bodyChildren: document.body.children.length,
+      hasSpinner: !!document.querySelector('.animate-spin'),
+    };
+  });
+  
+  // Log all findings
+  console.log('Mount Spinner (isMounted=false):', mountSpinner);
+  console.log('Data Spinner (isLoading=true):', dataSpinner);
+  console.log('React State:', reactState);
+  
+  // Show all console messages
+  const allLogMessages = consoleMessages.filter(m => m.type === 'log' || m.type === 'info');
+  if (allLogMessages.length > 0) {
+    console.log('\n=== ALL CONSOLE LOG/INFO MESSAGES ===');
+    allLogMessages.forEach((msg, i) => {
+      console.log(`${i + 1}. [${msg.type}] ${msg.text}`);
+    });
+  }
+});
+```
+
+**Key Diagnostic Points**:
+1. **Mount Spinner Visible**: React isn't mounting or `isMounted` never becomes `true`
+2. **Data Spinner Visible**: `isLoading` is stuck as `true` - check if `loadPolls` is being called/completing
+3. **React State**: `hasReactRoot: false` is expected in Next.js 13+ app directory (don't rely on `#__next`)
+4. **Console Logs**: Use `console.log` (not `logger.debug`) for visibility in E2E tests
+
+**Debugging Loading State Issues**:
+
+```typescript
+// Add logging to track initialization
+useEffect(() => {
+  console.log('[POLLS PAGE] Initialization useEffect', { isMounted, initialized: initializedRef.current });
+  if (!isMounted) {
+    console.log('[POLLS PAGE] Not mounted yet, skipping initialization');
+    return;
+  }
+  if (initializedRef.current) {
+    console.log('[POLLS PAGE] Already initialized, skipping');
+    return;
+  }
+  initializedRef.current = true;
+  console.log('[POLLS PAGE] Starting initialization');
+  
+  setTimeout(() => {
+    console.log('[POLLS PAGE] Calling loadPolls');
+    loadPollsRef.current().catch((error) => {
+      console.error('[POLLS PAGE] Failed to load polls:', error);
+    });
+  }, 0);
+}, [isMounted]);
+
+// In store
+const loadPolls = async (options?: LoadPollsOptions) => {
+  console.log('[POLLS STORE] loadPolls called', { options });
+  setLoading(true);
+  // ... API call
+  try {
+    console.log('[POLLS STORE] Fetching polls from API', { url: apiUrl });
+    const response = await fetch(apiUrl);
+    // ... process response
+  } catch (error) {
+    console.error('[POLLS STORE] Error loading polls:', error);
+  } finally {
+    console.log('[POLLS STORE] loadPolls finally block - setting isLoading to false');
+    setLoading(false);
+  }
+};
+```
+
+**Key Principle**: Use `data-testid` attributes and `console.log` (not `logger.debug`) to track component lifecycle and API calls in E2E tests. Distinguish between mount loading and data loading states.
+
+### 14. Content Security Policy: script-src-elem Directive
+
+**Problem**: CSP warnings about `vercel.live` script being blocked, even though `script-src` includes it.
+
+**Root Cause**: Modern browsers use `script-src-elem` for `<script>` elements. If not explicitly set, browsers fall back to `script-src`, but this can cause warnings.
+
+**✅ GOOD: Explicit script-src-elem Directive**
+
+```javascript
+// next.config.js
+async headers() {
+  const isVercelPreview = process.env.VERCEL_ENV === 'preview' || 
+                          process.env.VERCEL_ENV === 'development';
+  const isProduction = process.env.NODE_ENV === 'production';
+
+  return [
+    {
+      source: '/:path*',
+      headers: [
+        {
+          key: 'Content-Security-Policy',
+          value: [
+            "default-src 'self'",
+            `script-src 'self' 'unsafe-inline' 'unsafe-eval' ${isVercelPreview && !isProduction ? 'https://vercel.live' : ''} https://vercel.com https://challenges.cloudflare.com`,
+            // Explicitly set script-src-elem for modern browsers
+            `script-src-elem 'self' 'unsafe-inline' 'unsafe-eval' ${isVercelPreview && !isProduction ? 'https://vercel.live' : ''} https://vercel.com https://challenges.cloudflare.com`,
+            // ... other directives
+          ].join('; '),
+        },
+      ],
+    },
+  ];
+}
+```
+
+**Also Update Middleware**:
+
+```typescript
+// middleware.ts
+const isVercelPreviewHostname = request.nextUrl.hostname.endsWith('.vercel.app') || 
+                                 request.nextUrl.hostname.endsWith('.vercel.live');
+const isVercelPreviewEnv = process.env.VERCEL_ENV === 'preview' || 
+                           process.env.VERCEL_ENV === 'development';
+const isProduction = process.env.NODE_ENV === 'production';
+
+const effectiveCSPConfig = { ...SECURITY_CONFIG.csp };
+
+// Conditionally add vercel.live to script-src-elem if in a Vercel preview environment
+if ((isVercelPreviewHostname || isVercelPreviewEnv) && !isProduction) {
+  effectiveCSPConfig['script-src-elem'] = [
+    ...(effectiveCSPConfig['script-src-elem'] ?? []),
+    'https://vercel.live',
+  ];
+  effectiveCSPConfig['script-src'] = [
+    ...(effectiveCSPConfig['script-src'] ?? []),
+    'https://vercel.live',
+  ];
+}
+
+response.headers.set('Content-Security-Policy', buildCSPHeaderFromConfig(effectiveCSPConfig));
+```
+
+**Key Principle**: Always explicitly set `script-src-elem` for modern browsers. Use hostname-based detection in addition to environment variables for Vercel preview environments.
+
 ---
 
 *Last updated: December 18, 2025*
-*Related commits: cf6a358f, da2ee76d, 02f7276c, 5c73afba, 0c48f7df, c48f0e67, a8198885*
+*Related commits: cf6a358f, da2ee76d, 02f7276c, 5c73afba, 0c48f7df, c48f0e67, a8198885, d7d1593a, c0bea7e7, f72c252d, 9fb59c1d, 60647b24, 57e9394f, b4923e09, fb29de98, 722d94db, 6aac1fb4, f2d4aa65, 3aa2c6c2*
 
