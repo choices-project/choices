@@ -31,6 +31,7 @@ export const GET = withErrorHandling(async (request: NextRequest) => {
   try {
     // Get followed representatives with full representative data
     // Use a simpler query first to check if the table exists
+    // Make the join optional (left join) to handle missing representatives_core table
     const { data: followed, error: followedError } = await (supabase as any)
       .from('representative_follows')
       .select(`
@@ -44,7 +45,7 @@ export const GET = withErrorHandling(async (request: NextRequest) => {
         tags,
         created_at,
         updated_at,
-        representatives_core!inner (
+        representatives_core (
           id,
           name,
           party,
@@ -63,19 +64,19 @@ export const GET = withErrorHandling(async (request: NextRequest) => {
 
     if (followedError) {
       logger.error('Error fetching followed representatives:', followedError);
-      // If table doesn't exist or RLS issue, return empty array instead of 500
+      // If table doesn't exist, RLS issue, or any error, return empty array instead of 500
       // This allows pages to load even if representatives feature isn't fully set up
-      if (followedError.code === '42P01' || followedError.code === 'PGRST116' || followedError.message?.includes('permission denied')) {
-        logger.warn('Representatives table not accessible, returning empty list');
-        return successResponse({
-          representatives: [],
-          total: 0,
-          limit,
-          offset,
-          hasMore: false
-        });
-      }
-      return errorResponse('Failed to fetch followed representatives', 500);
+      logger.warn('Representatives table not accessible or error occurred, returning empty list', {
+        code: followedError.code,
+        message: followedError.message,
+      });
+      return successResponse({
+        representatives: [],
+        total: 0,
+        limit,
+        offset,
+        hasMore: false
+      });
     }
 
     // Get total count
@@ -90,21 +91,24 @@ export const GET = withErrorHandling(async (request: NextRequest) => {
     }
 
     // Transform data with type assertion for complex join
-    const representatives = (followed ?? []).map((follow: any) => ({
-      follow: {
-        id: follow.id,
-        user_id: follow.user_id,
-        notify_on_votes: follow.notify_on_votes,
-        notify_on_committee_activity: follow.notify_on_committee_activity,
-        notify_on_public_statements: follow.notify_on_public_statements,
-        notify_on_events: follow.notify_on_events,
-        notes: follow.notes,
-        tags: follow.tags,
-        created_at: follow.created_at,
-        updated_at: follow.updated_at
-      },
-      representative: follow.representatives_core
-    }));
+    // Filter out entries where the join failed (representatives_core is null)
+    const representatives = (followed ?? [])
+      .filter((follow: any) => follow.representatives_core != null)
+      .map((follow: any) => ({
+        follow: {
+          id: follow.id,
+          user_id: follow.user_id,
+          notify_on_votes: follow.notify_on_votes,
+          notify_on_committee_activity: follow.notify_on_committee_activity,
+          notify_on_public_statements: follow.notify_on_public_statements,
+          notify_on_events: follow.notify_on_events,
+          notes: follow.notes,
+          tags: follow.tags,
+          created_at: follow.created_at,
+          updated_at: follow.updated_at
+        },
+        representative: follow.representatives_core
+      }));
 
     return successResponse({
       representatives,

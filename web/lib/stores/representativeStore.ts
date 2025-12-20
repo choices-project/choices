@@ -383,9 +383,13 @@ export const createRepresentativeActions = (
       clearError();
 
       try {
-        const response = await fetch('/api/representatives/my');
+        const response = await fetch('/api/representatives/my', {
+          credentials: 'include',
+        });
 
         if (!response.ok) {
+          // For any error status (including 500), return empty array gracefully
+          // This prevents pages from crashing when the representatives feature isn't fully set up
           if (response.status === 401) {
             setState((state) => {
               state.userRepresentativeEntries = [];
@@ -393,11 +397,22 @@ export const createRepresentativeActions = (
               state.followedRepresentatives = [];
               state.userRepresentativesTotal = 0;
               state.userRepresentativesHasMore = false;
-              state.error = 'Please sign in to view your followed representatives';
             });
             return [];
           }
-          throw new Error('Failed to fetch user representatives');
+          // Log the error but don't throw - return empty array instead
+          logger.warn('Failed to fetch user representatives, returning empty array', {
+            status: response.status,
+            statusText: response.statusText,
+          });
+          setState((state) => {
+            state.userRepresentativeEntries = [];
+            state.userRepresentatives = [];
+            state.followedRepresentatives = [];
+            state.userRepresentativesTotal = 0;
+            state.userRepresentativesHasMore = false;
+          });
+          return [];
         }
 
         const data = await response.json() as {
