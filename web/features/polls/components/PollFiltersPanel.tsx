@@ -195,11 +195,22 @@ export function PollFiltersPanel({ actions }: PollFiltersPanelProps) {
   );
 
   const trendingCount = hashtagStats?.trendingCount ?? 0;
-  const numberFormatter = useMemo(
-    () => new Intl.NumberFormat(currentLanguage ?? undefined),
-    [currentLanguage],
-  );
-  const formattedTrendingCount = numberFormatter.format(trendingCount);
+  const [isMounted, setIsMounted] = React.useState(false);
+
+  React.useEffect(() => {
+    setIsMounted(true);
+  }, []);
+
+  // Only use formatters after mount to prevent hydration mismatches
+  const numberFormatter = useMemo(() => {
+    if (!isMounted) return null;
+    return new Intl.NumberFormat(currentLanguage ?? undefined);
+  }, [isMounted, currentLanguage]);
+
+  const formattedTrendingCount = isMounted && numberFormatter
+    ? numberFormatter.format(trendingCount)
+    : String(trendingCount);
+
   const trendingHeading =
     trendingCount > 0
       ? t('polls.filters.trending.headingWithCount', { count: formattedTrendingCount })

@@ -1,5 +1,8 @@
 'use client';
 
+// Prevent static generation since this requires client-side state and store hydration
+export const dynamic = 'force-dynamic';
+
 import { Plus, Users, BarChart3, Flame, Eye } from 'lucide-react';
 import Link from 'next/link';
 import React, { useEffect, useCallback, useMemo, useRef } from 'react';
@@ -45,13 +48,18 @@ export default function PollsPage() {
 
   // Prevent hydration mismatch by only rendering content after mount
   // This ensures server and client initial renders are identical (both show loading)
+  // CRITICAL: This pattern prevents React error #185 (hydration mismatch)
   React.useEffect(() => {
+    // Set mounted immediately after first render
     setIsMounted(true);
-    // Give store a moment to hydrate from localStorage if needed
-    // This prevents hydration mismatches from persisted store state
+    
+    // Give Zustand store a moment to hydrate from localStorage
+    // The persist middleware loads state asynchronously, so we need to wait
+    // This prevents hydration mismatches from persisted store state differences
     const timer = setTimeout(() => {
       setIsStoreReady(true);
     }, 0);
+    
     return () => clearTimeout(timer);
   }, []);
 
@@ -137,6 +145,9 @@ export default function PollsPage() {
   }, [isMounted, numberFormatter, pagination.currentPage, pagination.totalPages, t]);
 
   useEffect(() => {
+    // Only set breadcrumbs after mount to prevent hydration issues
+    if (!isMounted) return;
+
     setCurrentRoute('/polls');
     setSidebarActiveSection('polls');
     setBreadcrumbs([
@@ -149,7 +160,7 @@ export default function PollsPage() {
       setSidebarActiveSection(null);
       setBreadcrumbs([]);
     };
-  }, [setBreadcrumbs, setCurrentRoute, setSidebarActiveSection, t]);
+  }, [isMounted, setBreadcrumbs, setCurrentRoute, setSidebarActiveSection, t]);
 
   useEffect(() => {
     if (initializedRef.current) {
@@ -270,11 +281,11 @@ export default function PollsPage() {
               </p>
 
               <div className="flex items-center justify-between text-sm text-gray-500 mb-4">
-                <span className="inline-flex items-center">
+                <span className="inline-flex items-center" suppressHydrationWarning>
                   <Users className="h-4 w-4 mr-1" />
                   {formatVoteCount(typeof poll.totalVotes === 'number' ? poll.totalVotes : 0)}
                 </span>
-                <span>
+                <span suppressHydrationWarning>
                   {t('polls.page.metadata.created', {
                     date: formatCreatedDate(poll.createdAt),
                   })}
