@@ -80,15 +80,25 @@ export default function DashboardPage() {
     // If authenticated but no profile, check if user is admin first
     // Admin users should have profiles, but if profile is still loading or missing,
     // we should check admin status before redirecting to onboarding
+    // IMPORTANT: Only redirect if profile has finished loading AND is still null after a delay
+    // This prevents redirecting users while profile is still being fetched
     if (!isLoading && isAuthenticated && !profile && !isCheckingAdmin) {
-      // Check if user is admin by making a quick API call
-      // This prevents admin users from being incorrectly redirected to onboarding
+      // Wait a bit longer for profile to load - sometimes it takes a moment
+      // Only redirect if profile is truly missing after a reasonable delay
       const checkAdminAndRedirect = async () => {
         if (adminCheckRef.current) {
           return; // Already checking
         }
         adminCheckRef.current = true;
         setIsCheckingAdmin(true);
+
+        // Give profile a bit more time to load (3 seconds)
+        // This allows the profile fetch to complete
+        await new Promise(resolve => setTimeout(resolve, 3_000));
+
+        // Re-check if profile loaded by re-reading from the hook
+        // The profile state might have updated during the wait
+        // We'll check this in the render logic below
 
         try {
           const response = await fetch('/api/admin/health?type=status', {
@@ -150,28 +160,18 @@ export default function DashboardPage() {
     );
   }
 
-  if (!profile && !shouldBypassAuth && !isLoading && !isCheckingAdmin) {
-    // Only show access denied if we're sure the user isn't authenticated and not loading
-    // This prevents showing error during redirect or while checking admin status
-    if (!isAuthenticated) {
-      return (
-        <div className="flex items-center justify-center min-h-screen px-4">
-          <div className="text-center space-y-4 max-w-md">
-            <h1 className="text-2xl font-bold text-red-600 dark:text-red-400">Access denied</h1>
-            <p className="text-gray-600 dark:text-gray-400">
-              You must be logged in to access the dashboard.
-            </p>
-            <p className="text-sm text-gray-500 dark:text-gray-500">Redirecting to login…</p>
-          </div>
-        </div>
-      );
-    }
-    // If authenticated but no profile, show loading while checking admin or redirecting
+  // Only block rendering if user is definitely not authenticated
+  // Allow page to render even if profile is still loading or missing
+  // The PersonalDashboard component can handle missing profile gracefully
+  if (!shouldBypassAuth && !isUserLoading && !isAuthenticated) {
     return (
       <div className="flex items-center justify-center min-h-screen px-4">
         <div className="text-center space-y-4 max-w-md">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto" />
-          <p className="text-gray-600 dark:text-gray-400">Setting up your dashboard...</p>
+          <h1 className="text-2xl font-bold text-red-600 dark:text-red-400">Access denied</h1>
+          <p className="text-gray-600 dark:text-gray-400">
+            You must be logged in to access the dashboard.
+          </p>
+          <p className="text-sm text-gray-500 dark:text-gray-500">Redirecting to login…</p>
         </div>
       </div>
     );
