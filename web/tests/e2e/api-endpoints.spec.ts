@@ -2,7 +2,9 @@ import { expect, test, type Page } from '@playwright/test';
 
 import {
   cleanupE2ETestData,
+  ensureLoggedOut,
   getSeededData,
+  loginTestUser,
   setupE2ETestData,
   setupExternalAPIMocks,
   waitForPageReady,
@@ -85,6 +87,9 @@ async function loginForToken(page: Page, user: TestUser): Promise<string> {
 }
 
 const APP_BOOT_TIMEOUT = 90_000;
+const BASE_URL = process.env.BASE_URL || process.env.PLAYWRIGHT_BASE_URL || 'http://127.0.0.1:3000';
+const regularEmail = process.env.E2E_USER_EMAIL;
+const regularPassword = process.env.E2E_USER_PASSWORD;
 
 test.describe('API endpoints (mock harness)', () => {
   let seedHandle: SeedHandle;
@@ -395,13 +400,15 @@ test.describe('API endpoints (mock harness)', () => {
       test.setTimeout(60_000);
 
       // Test 404 for non-existent endpoint
-      const response404 = await page.request.get(`${BASE_URL}/api/nonexistent-endpoint`, {
+      // Use relative URL since we're in the same origin
+      const response404 = await page.request.get('/api/nonexistent-endpoint', {
         timeout: 10_000,
       });
       expect([404, 405]).toContain(response404.status());
 
       // Test 401 for protected endpoint without auth
-      const response401 = await page.request.get(`${BASE_URL}/api/profile`, {
+      // Use relative URL since we're in the same origin
+      const response401 = await page.request.get('/api/profile', {
         timeout: 10_000,
       });
       expect([401, 403]).toContain(response401.status());
@@ -425,7 +432,8 @@ test.describe('API endpoints (mock harness)', () => {
 
       // The endpoint should return 200 with empty array if table doesn't exist
       // This is better than 500 which would crash pages
-      const response = await page.request.get(`${BASE_URL}/api/representatives/my`, {
+      // Use relative URL since we're in the same origin
+      const response = await page.request.get('/api/representatives/my', {
         timeout: 10_000,
       });
 
