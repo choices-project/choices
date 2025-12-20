@@ -18,7 +18,7 @@
 
 'use client';
 
-import React, { useCallback, useEffect, useMemo } from 'react';
+import React, { useCallback, useEffect, useMemo, useState } from 'react';
 
 import MyDataDashboard from '@/features/profile/components/MyDataDashboard';
 import {
@@ -83,6 +83,18 @@ export default function PrivacyPage() {
     },
     [setProfileEditing],
   );
+
+  // Add timeout to prevent infinite loading - must be before early returns
+  const [loadingTimeout, setLoadingTimeout] = useState(false);
+  useEffect(() => {
+    if (profileLoading) {
+      const timeout = setTimeout(() => {
+        setLoadingTimeout(true);
+      }, 15_000); // 15 second timeout
+      return () => clearTimeout(timeout);
+    }
+    setLoadingTimeout(false);
+  }, [profileLoading]);
 
   const userId = profile?.id ?? profile?.user_id ?? user?.id ?? null;
 
