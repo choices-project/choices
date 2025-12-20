@@ -124,7 +124,7 @@ export default function GlobalNavigation() {
   // Error boundary for component
   if (_hasError) {
     return (
-      <nav className="bg-white shadow-sm border-b border-gray-200">
+      <nav className="bg-white dark:bg-gray-900 shadow-sm border-b border-gray-200 dark:border-gray-700">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between h-16">
             <div className="flex items-center">
@@ -142,7 +142,7 @@ export default function GlobalNavigation() {
   // Show loading state if user data is still loading or if we're not authenticated yet
   if (isLoading) {
     return (
-      <nav className="bg-white shadow-sm border-b border-gray-200">
+      <nav className="bg-white dark:bg-gray-900 shadow-sm border-b border-gray-200 dark:border-gray-700">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between h-16">
             <div className="flex items-center">
@@ -158,21 +158,21 @@ export default function GlobalNavigation() {
   }
 
   return (
-    <div className="sticky top-0 z-50 bg-white shadow-sm border-b border-gray-200">
+    <div className="sticky top-0 z-50 bg-white dark:bg-gray-900 shadow-sm border-b border-gray-200 dark:border-gray-700">
       <a
         href="#main-content"
         className="sr-only focus:not-sr-only focus:absolute focus:z-50 focus:rounded focus:bg-blue-600 focus:px-4 focus:py-2 focus:text-white"
       >
         {t('common.skipToContent')}
       </a>
-      <nav className="bg-white" aria-label="Primary navigation">
+      <nav className="bg-white dark:bg-gray-900" aria-label="Primary navigation">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex items-center justify-between h-16">
             {/* Logo and Brand */}
             <div className="flex items-center">
               <Link href="/" className="flex items-center space-x-2" onClick={closeMobileMenu}>
                 <Shield className="h-8 w-8 text-blue-600" />
-                <span className="text-xl font-bold text-gray-900">Choices</span>
+                <span className="text-xl font-bold text-gray-900 dark:text-gray-100">Choices</span>
               </Link>
             </div>
 
@@ -195,8 +195,8 @@ export default function GlobalNavigation() {
                     }
                     className={`flex items-center space-x-1 px-3 py-2 rounded-md text-sm font-medium transition-colors ${
                       isActive(item.href)
-                        ? 'text-blue-600 bg-blue-50'
-                        : 'text-gray-700 hover:text-blue-600 hover:bg-gray-50'
+                        ? 'text-blue-600 bg-blue-50 dark:bg-blue-900/20 dark:text-blue-400'
+                        : 'text-gray-700 dark:text-gray-300 hover:text-blue-600 dark:hover:text-blue-400 hover:bg-gray-50 dark:hover:bg-gray-800'
                     }`}
                   >
                     <Icon className="h-4 w-4" />
@@ -216,8 +216,8 @@ export default function GlobalNavigation() {
                     href="/profile"
                     className={`flex items-center space-x-1 px-3 py-2 rounded-md text-sm font-medium transition-colors ${
                       isActive('/profile')
-                        ? 'text-blue-600 bg-blue-50'
-                        : 'text-gray-700 hover:text-blue-600 hover:bg-gray-50'
+                        ? 'text-blue-600 bg-blue-50 dark:bg-blue-900/20 dark:text-blue-400'
+                        : 'text-gray-700 dark:text-gray-300 hover:text-blue-600 dark:hover:text-blue-400 hover:bg-gray-50 dark:hover:bg-gray-800'
                     }`}
                   >
                     <User className="h-4 w-4" />
@@ -227,8 +227,8 @@ export default function GlobalNavigation() {
                     href="/account/privacy"
                     className={`flex items-center space-x-1 px-3 py-2 rounded-md text-sm font-medium transition-colors ${
                       isActive('/account/privacy')
-                        ? 'text-blue-600 bg-blue-50'
-                        : 'text-gray-700 hover:text-blue-600 hover:bg-gray-50'
+                        ? 'text-blue-600 bg-blue-50 dark:bg-blue-900/20 dark:text-blue-400'
+                        : 'text-gray-700 dark:text-gray-300 hover:text-blue-600 dark:hover:text-blue-400 hover:bg-gray-50 dark:hover:bg-gray-800'
                     }`}
                   >
                     <Settings className="h-4 w-4" />
@@ -282,7 +282,7 @@ export default function GlobalNavigation() {
           {/* Mobile Navigation Menu */}
           {isMobileMenuOpen && (
             <div className="md:hidden" id={mobileMenuId}>
-              <div className="px-2 pt-2 pb-3 space-y-1 bg-white border-t border-gray-200">
+              <div className="px-2 pt-2 pb-3 space-y-1 bg-white dark:bg-gray-900 border-t border-gray-200 dark:border-gray-700">
                 {/* Mobile Navigation Items */}
                 {navigationItems.map((item, index) => {
                   const Icon = item.icon;

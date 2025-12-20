@@ -261,13 +261,13 @@ const FeedItem = memo(({
     <div 
       ref={itemRef}
       data-testid="feed-item"
-      className={`bg-white rounded-2xl shadow-sm border border-gray-200 overflow-hidden transition-all duration-200 hover:shadow-md ${className}`}
+      className={`bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-gray-200 dark:border-gray-700 overflow-hidden transition-all duration-200 hover:shadow-md ${className}`}
       onTouchStart={handleTouchStart}
       onTouchMove={handleTouchMove}
       onTouchEnd={handleTouchEnd}
     >
       {/* Header */}
-      <div className="p-4 border-b border-gray-100">
+      <div className="p-4 border-b border-gray-100 dark:border-gray-700">
         <div className="flex items-center space-x-3">
           <div className="relative">
             {item.representativePhoto ? (
@@ -292,19 +292,19 @@ const FeedItem = memo(({
           
           <div className="flex-1">
             <div className="flex items-center space-x-2">
-              <h3 className="font-semibold text-gray-900">{item.representativeName}</h3>
+              <h3 className="font-semibold text-gray-900 dark:text-gray-100">{item.representativeName}</h3>
               <span className={`px-2 py-1 rounded-full text-xs font-medium border ${getPartyColor(item.representativeParty)}`}>
                 {item.representativeParty}
               </span>
             </div>
-            <div className="flex items-center space-x-2 text-sm text-gray-500">
+            <div className="flex items-center space-x-2 text-sm text-gray-500 dark:text-gray-400">
               <MapPinIcon className="w-4 h-4" />
               <span>{item.representativeOffice}</span>
             </div>
           </div>
           
           <div className="text-right">
-            <div className="flex items-center space-x-2 text-sm text-gray-500">
+            <div className="flex items-center space-x-2 text-sm text-gray-500 dark:text-gray-400">
               <CalendarIcon className="w-4 h-4" />
               <span>{formatDate(item.date)}</span>
             </div>
@@ -314,9 +314,9 @@ const FeedItem = memo(({
 
       {/* Content */}
       <div className="p-4">
-        <h4 className="font-semibold text-gray-900 mb-2">{item.title}</h4>
+        <h4 className="font-semibold text-gray-900 dark:text-gray-100 mb-2">{item.title}</h4>
         {item.description && (
-          <div className="text-gray-600 mb-4">
+          <div className="text-gray-600 dark:text-gray-300 mb-4">
             {isExpanded ? (
               <p>{item.description}</p>
             ) : (
@@ -366,7 +366,7 @@ const FeedItem = memo(({
 
       {/* Engagement */}
       {showEngagement && (
-        <div className="px-4 py-3 border-t border-gray-100">
+        <div className="px-4 py-3 border-t border-gray-100 dark:border-gray-700">
           <div className="flex items-center justify-between">
             <div className="flex items-center space-x-6">
               <button
@@ -384,7 +384,7 @@ const FeedItem = memo(({
                 ) : (
                   <HeartIcon className="w-5 h-5" />
                 )}
-                <span className="text-sm font-medium">
+                <span className="text-sm font-medium text-gray-900 dark:text-gray-100">
                   {item.engagementMetrics?.likes ?? 0}
                 </span>
               </button>
@@ -398,7 +398,7 @@ const FeedItem = memo(({
                 aria-label={`Comment on ${item.title}`}
               >
                 <ChatBubbleLeftIcon className="w-5 h-5" />
-                <span className="text-sm font-medium">
+                <span className="text-sm font-medium text-gray-900 dark:text-gray-100">
                   {item.engagementMetrics?.comments ?? 0}
                 </span>
               </button>

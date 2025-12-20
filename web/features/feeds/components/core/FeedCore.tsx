@@ -321,7 +321,7 @@ export default function FeedCore({
       )}
       {/* Header */}
       <div className="flex justify-between items-center mb-6">
-        <h1 className="text-3xl font-bold">{t('feeds.core.header.title')}</h1>
+        <h1 className="text-3xl font-bold text-gray-900 dark:text-gray-100">{t('feeds.core.header.title')}</h1>
         <div className="flex gap-2">
           {isClient && (
             <Button
@@ -358,7 +358,7 @@ export default function FeedCore({
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-2">
                   <MapPin className="w-4 h-4 text-blue-600" />
-                  <span className="text-sm font-medium">
+                  <span className="text-sm font-medium text-gray-900 dark:text-gray-100">
                     {t('feeds.core.filters.districtLabel', { district: userDistrict })}
                   </span>
                 </div>
@@ -378,7 +378,7 @@ export default function FeedCore({
                 </Button>
               </div>
               {districtFilterEnabled && (
-                <p className="text-xs text-gray-600 mt-2">
+                <p className="text-xs text-gray-600 dark:text-gray-400 mt-2">
                   {t('feeds.core.filters.districtHelper', { district: userDistrict })}
                 </p>
               )}
@@ -417,7 +417,7 @@ export default function FeedCore({
           {/* Trending Hashtags */}
           {trendingHashtags.length > 0 && (
             <div>
-              <h4 className="text-sm font-semibold mb-2">
+              <h4 className="text-sm font-semibold mb-2 text-gray-900 dark:text-gray-100">
                 {t('feeds.core.filters.trendingHeading')}
               </h4>
               <div className="flex flex-wrap gap-2">
@@ -567,7 +567,7 @@ export default function FeedCore({
                     </div>
                   </CardHeader>
                   <CardContent>
-                    <p className="text-gray-700 mb-4">{feed.content}</p>
+                    <p className="text-gray-700 dark:text-gray-300 mb-4">{feed.content}</p>
                     
                     {/* Engagement */}
                     <div className="flex gap-4 mt-4">
@@ -660,7 +660,7 @@ export default function FeedCore({
       </Tabs>
 
       {/* Status indicators */}
-      <div className="flex justify-between items-center text-sm text-gray-500 mt-4">
+      <div className="flex justify-between items-center text-sm text-gray-500 dark:text-gray-400 mt-4">
         <span>{t('feeds.core.status.online')}</span>
         <span>{t('feeds.core.status.items', { count: feeds.length })}</span>
       </div>
