@@ -61,16 +61,21 @@ export default function GlobalNavigation() {
   const handleLogout = useCallback(async () => {
     try {
       closeMobileMenu();
+      // Call signOut which will handle the redirect internally
       await authSignOut();
-      // Redirect to landing page after logout
-      // The signOut function in AuthContext should handle redirect, but we ensure it here too
-      router.push('/landing');
+      // Use window.location for a hard redirect to ensure cookies are cleared
+      // This is more reliable than router.push for logout
+      if (typeof window !== 'undefined') {
+        window.location.href = '/landing';
+      }
     } catch (error) {
       logger.error('Logout failed:', error);
       // Still redirect even if logout fails
-      router.push('/landing');
+      if (typeof window !== 'undefined') {
+        window.location.href = '/landing';
+      }
     }
-  }, [authSignOut, closeMobileMenu, router]);
+  }, [authSignOut, closeMobileMenu]);
 
   const isActive = useCallback(
     (path: string) => pathname === path,
@@ -235,6 +240,7 @@ export default function GlobalNavigation() {
                     size="sm"
                     onClick={handleLogout}
                     className="flex items-center space-x-1"
+                    data-testid="logout-button"
                   >
                     <LogOut className="h-4 w-4" />
                     <span>{t('navigation.logout')}</span>

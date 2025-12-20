@@ -2,7 +2,7 @@
 
 import dynamic from 'next/dynamic';
 import { useRouter } from 'next/navigation';
-import React, { Suspense, useEffect, useMemo, useRef } from 'react';
+import React, { Suspense, useEffect, useMemo, useRef, useState } from 'react';
 
 import { useProfile } from '@/features/profile/hooks/use-profile';
 
@@ -49,6 +49,8 @@ export default function DashboardPage() {
       window.localStorage.getItem('e2e-dashboard-bypass') === '1',
     [],
   );
+  const [isCheckingAdmin, setIsCheckingAdmin] = useState(false);
+  const adminCheckRef = useRef<boolean>(false);
 
   useEffect(() => {
     setCurrentRoute('/dashboard');
@@ -74,12 +76,45 @@ export default function DashboardPage() {
       routerRef.current.replace('/auth');
       return;
     }
-    // If authenticated but no profile, redirect to onboarding
-    if (!isLoading && isAuthenticated && !profile) {
-      logger.debug('🚨 Dashboard: No profile found - redirecting to onboarding');
-      // Redirect to onboarding as user is already authenticated
-      // This provides better UX by guiding user to complete their profile
-      routerRef.current.replace('/onboarding');
+    // If authenticated but no profile, check if user is admin first
+    // Admin users should have profiles, but if profile is still loading or missing,
+    // we should check admin status before redirecting to onboarding
+    if (!isLoading && isAuthenticated && !profile && !isCheckingAdmin) {
+      // Check if user is admin by making a quick API call
+      // This prevents admin users from being incorrectly redirected to onboarding
+      const checkAdminAndRedirect = async () => {
+        if (adminCheckRef.current) {
+          return; // Already checking
+        }
+        adminCheckRef.current = true;
+        setIsCheckingAdmin(true);
+        
+        try {
+          const response = await fetch('/api/admin/health?type=status', {
+            headers: { 'Content-Type': 'application/json' },
+            signal: AbortSignal.timeout(5_000), // 5 second timeout
+          });
+          
+          if (response.ok) {
+            // User is admin - allow access to dashboard (they can navigate to admin dashboard)
+            logger.debug('🚨 Dashboard: No profile but user is admin - allowing dashboard access');
+            setIsCheckingAdmin(false);
+            adminCheckRef.current = false;
+            return; // Don't redirect
+          }
+        } catch (error) {
+          // If admin check fails or times out, assume not admin and redirect
+          logger.debug('🚨 Dashboard: Admin check failed or user is not admin - redirecting to onboarding');
+        }
+        
+        // Not admin or check failed - redirect to onboarding
+        logger.debug('🚨 Dashboard: No profile found - redirecting to onboarding');
+        setIsCheckingAdmin(false);
+        adminCheckRef.current = false;
+        routerRef.current.replace('/onboarding');
+      };
+      
+      void checkAdminAndRedirect();
     }
   }, [isLoading, isUserLoading, isAuthenticated, profile, shouldBypassAuth]); // Removed router - use ref
 

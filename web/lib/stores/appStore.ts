@@ -208,12 +208,18 @@ const applyThemeToDocument = (theme: SystemTheme) => {
     return;
   }
 
+  // Apply theme attribute
   document.documentElement.setAttribute('data-theme', theme);
+  
+  // Apply/remove dark class for Tailwind CSS
   if (theme === 'dark') {
     document.documentElement.classList.add('dark');
   } else {
     document.documentElement.classList.remove('dark');
   }
+  
+  // Also set color-scheme CSS property for better browser support
+  document.documentElement.style.colorScheme = theme;
 };
 
 export const createAppActions = (
