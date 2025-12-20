@@ -111,12 +111,12 @@ export default function AdminDashboard() {
 
     try {
       setLoading(true) // Ensure loading state is set
-      
+
       // Use a more reliable endpoint - just check if we can access admin health
       // This endpoint requires admin auth, so if it succeeds, we're admin
       const controller = new AbortController();
       const timeoutId = setTimeout(() => controller.abort(), 15_000); // 15 second timeout
-      
+
       try {
         const response = await fetch('/api/admin/health?type=status', {
           headers: {
