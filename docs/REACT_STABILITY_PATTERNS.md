@@ -280,6 +280,717 @@ The following files were audited and fixed for infinite re-render issues:
 
 ---
 
+## Production Issues: Hydration, Error Handling, and Resilience
+
+This section documents patterns for fixing production issues discovered during deployment, focusing on root causes rather than workarounds.
+
+### 1. React Hydration Mismatches (Error #185)
+
+**Problem**: React error #185 occurs when server-rendered HTML doesn't match client-rendered HTML, causing the entire page to crash with "Something went wrong".
+
+**Root Cause**: Components using client-only APIs (like `Intl.NumberFormat`, `localStorage`, browser APIs) during SSR, or components that render differently on server vs client.
+
+**❌ BAD: Suppressing Warnings**
+```typescript
+// This is a workaround, not a fix
+<div suppressHydrationWarning>
+  {typeof window !== 'undefined' ? clientValue : serverValue}
+</div>
+```
+
+**✅ GOOD: Client-Only Rendering with `dynamic()`**
+```typescript
+// app/(app)/polls/page.tsx
+'use client';
+
+import dynamic from 'next/dynamic';
+
+// Client-only component - never renders on server
+function PollsPageContent() {
+  // Component logic here
+  // Can safely use client-only APIs
+}
+
+// Export as dynamically imported client-only component
+// Using dynamic() with ssr: false prevents server-side rendering entirely
+// This is the proper way to handle client-only content - no suppressHydrationWarning needed
+// The component will only render on the client, eliminating hydration mismatches at the source
+export default dynamic(() => Promise.resolve(PollsPageContent), {
+  ssr: false,
+  loading: () => (
+    <div className="container mx-auto px-4 py-8">
+      <div className="flex items-center justify-center min-h-[400px]">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600" />
+      </div>
+    </div>
+  ),
+});
+```
+
+**When to Use**:
+- Components that use browser-only APIs (`localStorage`, `window`, `navigator`)
+- Components using `Intl` formatters that may differ between server/client
+- Components with complex client-side state that can't be serialized
+- Components that depend on Zustand store hydration from localStorage
+
+**Alternative: `isMounted` Pattern for Partial Client-Only Logic**
+
+If you can't make the entire component client-only, use `isMounted` to gate client-only APIs:
+
+```typescript
+// features/polls/components/PollFiltersPanel.tsx
+const [isMounted, setIsMounted] = React.useState(false);
+
+React.useEffect(() => {
+  setIsMounted(true);
+}, []);
+
+// Only use formatters after mount to prevent hydration mismatches
+const numberFormatter = useMemo(() => {
+  if (!isMounted) return null;
+  return new Intl.NumberFormat(currentLanguage ?? undefined);
+}, [isMounted, currentLanguage]);
+
+const formattedTrendingCount = isMounted && numberFormatter
+  ? numberFormatter.format(trendingCount)
+  : String(trendingCount); // Fallback for SSR
+```
+
+**Key Principle**: Fix hydration mismatches at the source by ensuring server and client render the same initial content, or by making the component entirely client-only.
+
+### 2. API Error Handling: Graceful Degradation
+
+**Problem**: API endpoints returning 500 errors crash entire pages, even when the feature is non-critical.
+
+**Root Cause**: Missing error handling or throwing errors instead of returning empty states.
+
+**❌ BAD: Throwing Errors**
+```typescript
+// app/api/representatives/my/route.ts
+const { data, error } = await supabase.from('representative_follows').select('*');
+
+if (error) {
+  return errorResponse('Failed to fetch', 500); // Crashes the page!
+}
+```
+
+**✅ GOOD: Graceful Degradation**
+```typescript
+// app/api/representatives/my/route.ts
+try {
+  const { data: followed, error: followedError } = await supabase
+    .from('representative_follows')
+    .select('*')
+    .eq('user_id', user.id);
+
+  if (followedError) {
+    logger.error('Error fetching followed representatives:', followedError);
+    // If table doesn't exist, RLS issue, or any error, return empty array instead of 500
+    // This allows pages to load even if representatives feature isn't fully set up
+    if (
+      followedError.code === '42P01' || // Table doesn't exist
+      followedError.code === 'PGRST116' || // RLS issue
+      followedError.message?.includes('permission denied')
+    ) {
+      logger.warn('Representatives table not accessible, returning empty list');
+      return successResponse({
+        representatives: [],
+        total: 0,
+        limit,
+        offset,
+        hasMore: false
+      });
+    }
+    return errorResponse('Failed to fetch followed representatives', 500);
+  }
+
+  // ... process data
+} catch (error) {
+  // Catch any unexpected errors and return empty array instead of 500
+  // This ensures pages can still load even if there's an unexpected error
+  logger.error('Unexpected error in /api/representatives/my:', error);
+  return successResponse({
+    representatives: [],
+    total: 0,
+    limit,
+    offset,
+    hasMore: false
+  });
+}
+```
+
+**Store-Level Error Handling**:
+
+```typescript
+// lib/stores/representativeStore.ts
+getUserRepresentatives: async () => {
+  setLoading(true);
+  clearError();
+
+  try {
+    const response = await fetch('/api/representatives/my');
+
+    if (!response.ok) {
+      if (response.status === 401) {
+        // Clear state for unauthorized users
+        setState((state) => {
+          state.userRepresentativeEntries = [];
+          state.userRepresentatives = [];
+          state.followedRepresentatives = [];
+          state.userRepresentativesTotal = 0;
+          state.userRepresentativesHasMore = false;
+          state.error = 'Please sign in to view your followed representatives';
+        });
+        return [];
+      }
+      throw new Error('Failed to fetch user representatives');
+    }
+
+    // ... process data
+  } catch (error) {
+    logger.warn('RepresentativeStore.getUserRepresentatives error (non-critical):', error);
+    // Don't set error state for API failures - allow pages to render without representatives
+    // Only set error for critical issues
+    if (error instanceof Error && !error.message.includes('Failed to fetch')) {
+      setError(error.message);
+    }
+    setState((state) => {
+      state.userRepresentativeEntries = [];
+      state.userRepresentatives = [];
+      state.followedRepresentatives = [];
+      state.userRepresentativesTotal = 0;
+      state.userRepresentativesHasMore = false;
+    });
+    return [];
+  } finally {
+    setLoading(false);
+  }
+},
+```
+
+**Component-Level Error Handling**:
+
+```typescript
+// features/dashboard/components/PersonalDashboard.tsx
+const refreshDashboard = async () => {
+  await Promise.all([
+    refetchProfile(),
+    loadPolls(),
+    getTrendingHashtags(undefined, 6),
+    getUserRepresentatives().catch((error) => {
+      // Log warning but don't crash the dashboard
+      logger.warn('Failed to refresh user representatives (non-critical):', error);
+    }),
+  ]);
+};
+```
+
+**Key Principle**: Non-critical features should fail gracefully, allowing the rest of the page to load. Return empty arrays/objects instead of throwing errors.
+
+### 3. Service Worker: Filtering Non-Cacheable URL Schemes
+
+**Problem**: Service worker throws `TypeError: Failed to execute 'put' on 'Cache': Request scheme 'chrome-extension' is unsupported` when trying to cache browser extension resources.
+
+**Root Cause**: Service worker attempting to cache URLs with unsupported schemes (`chrome-extension://`, `moz-extension://`, etc.).
+
+**❌ BAD: Caching All URLs**
+```javascript
+// public/service-worker.js
+async function cacheFirst(request, cacheName) {
+  const cached = await caches.match(request);
+  if (cached) return cached;
+
+  const response = await fetch(request);
+  if (response && response.ok) {
+    const cache = await caches.open(cacheName);
+    cache.put(request, response.clone()); // ❌ Fails for chrome-extension://
+  }
+  return response;
+}
+```
+
+**✅ GOOD: Filtering Cacheable Schemes**
+```javascript
+// public/service-worker.js
+// Check if a URL scheme is cacheable (exclude chrome-extension://, moz-extension://, etc.)
+function isCacheableScheme(url) {
+  try {
+    const urlObj = new URL(url);
+    // Only cache http/https URLs - exclude extension schemes and other non-cacheable schemes
+    return urlObj.protocol === 'http:' || urlObj.protocol === 'https:';
+  } catch {
+    return false;
+  }
+}
+
+async function cacheFirst(request, cacheName) {
+  // Skip caching for non-cacheable URL schemes (e.g., chrome-extension://)
+  if (!isCacheableScheme(request.url)) {
+    try {
+      return await fetch(request);
+    } catch (error) {
+      console.warn('[SW] Failed to fetch non-cacheable URL', request.url, error);
+      return new Response('Resource not available', { status: 503 });
+    }
+  }
+
+  const cached = await caches.match(request);
+  if (cached) {
+    return cached;
+  }
+
+  try {
+    const response = await fetch(request);
+    if (response && response.ok) {
+      const cache = await caches.open(cacheName);
+      // Only cache if the URL scheme is cacheable
+      if (isCacheableScheme(request.url)) {
+        cache.put(request, response.clone());
+      }
+    }
+    return response;
+  } catch (error) {
+    console.error('[SW] cacheFirst failed', error);
+    if (isPageRequest(request)) {
+      return offlineResponse(request);
+    }
+    return new Response('Offline', { status: 503 });
+  }
+}
+```
+
+**Key Principle**: Always validate URL schemes before attempting to cache. Only cache `http://` and `https://` URLs.
+
+### 4. Content Security Policy: Environment-Aware Configuration
+
+**Problem**: CSP blocks development/preview tools (like Vercel feedback widget) in production, or allows them in production when they shouldn't be.
+
+**Root Cause**: Static CSP configuration that doesn't account for different environments.
+
+**❌ BAD: Static CSP**
+```javascript
+// next.config.js
+'script-src': [
+  "'self'",
+  'https://vercel.live', // ❌ Always allowed, even in production
+],
+```
+
+**✅ GOOD: Environment-Aware CSP**
+```javascript
+// next.config.js
+async headers() {
+  const isProduction = process.env.NODE_ENV === 'production';
+  const isReportOnly = process.env.CSP_REPORT_ONLY === 'true';
+  // Check if we're in a Vercel preview environment (not production)
+  const isVercelPreview = process.env.VERCEL_ENV === 'preview' || 
+                          process.env.VERCEL_ENV === 'development';
+
+  const cspDirectives = {
+    production: {
+      'default-src': ["'self'"],
+      'script-src': [
+        "'self'",
+        "'unsafe-inline'", // Required for Next.js
+        "'unsafe-eval'", // Required for Next.js development
+        // Only include vercel.live in preview/development environments, not production
+        ...(isVercelPreview ? ['https://vercel.live'] : []),
+        'https://vercel.com', // Vercel analytics (safe for production)
+        'https://challenges.cloudflare.com', // Turnstile
+      ],
+      'connect-src': [
+        "'self'",
+        'https://*.supabase.co',
+        ...(isVercelPreview ? ['https://vercel.live'] : []), // Conditionally include
+        'https://vitals.vercel-insights.com',
+      ],
+      // ... other directives
+    },
+  };
+  // ... rest of CSP configuration
+}
+```
+
+**Key Principle**: Use environment variables to conditionally include development/preview tools in CSP. Never allow them in production.
+
+### 5. Sign Out: Using `replace` Instead of `href`
+
+**Problem**: After sign out, users can navigate back to authenticated pages using the browser back button.
+
+**Root Cause**: Using `window.location.href` or `router.push()` which adds to browser history.
+
+**❌ BAD: Adding to History**
+```typescript
+// contexts/AuthContext.tsx
+const signOut = async () => {
+  await supabase.auth.signOut();
+  window.location.href = '/landing'; // ❌ Adds to history
+  // or
+  router.push('/landing'); // ❌ Also adds to history
+};
+```
+
+**✅ GOOD: Replacing History Entry**
+```typescript
+// contexts/AuthContext.tsx
+const signOut = async () => {
+  try {
+    // Clear local state first
+    storeSignOut();
+    initializeAuth(null, null, false);
+    setSession(null);
+    setUser(null);
+
+    // Clear localStorage and sessionStorage
+    if (typeof window !== 'undefined') {
+      window.localStorage.clear();
+      window.sessionStorage.clear();
+    }
+
+    // Call logout API endpoint to properly clear cookies
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 5_000);
+
+    try {
+      const response = await fetch('/api/auth/logout', {
+        method: 'POST',
+        credentials: 'include',
+        signal: controller.signal,
+      });
+
+      clearTimeout(timeoutId);
+
+      if (!response.ok) {
+        logger.warn('Logout API call failed, attempting direct signOut');
+        const supabase = await getSupabaseBrowserClient();
+        await supabase.auth.signOut().catch((err) => {
+          logger.warn('Direct Supabase signOut also failed:', err);
+        });
+      }
+    } catch (fetchError) {
+      clearTimeout(timeoutId);
+      // Fallback to direct Supabase signOut
+      if (fetchError instanceof Error && fetchError.name !== 'AbortError') {
+        const supabase = await getSupabaseBrowserClient();
+        await supabase.auth.signOut();
+      }
+    }
+
+    // Always redirect, even if API calls fail
+    // Use replace instead of href to prevent back button issues
+    if (typeof window !== 'undefined') {
+      window.location.replace('/landing'); // ✅ Replaces history entry
+    }
+  } catch (error) {
+    logger.error('Failed to sign out:', error);
+    // Still clear state and redirect even if logout fails
+    if (typeof window !== 'undefined') {
+      window.localStorage.clear();
+      window.sessionStorage.clear();
+      window.location.replace('/landing');
+    }
+  }
+};
+```
+
+**Key Principle**: Use `window.location.replace()` for redirects after sign out to prevent users from navigating back to authenticated pages.
+
+### 6. Error Boundaries: Catching React Errors
+
+**Problem**: Unhandled React errors crash the entire application, showing a blank screen.
+
+**Root Cause**: No error boundaries to catch errors in the component tree.
+
+**✅ GOOD: Implementing Error Boundaries**
+```typescript
+// components/shared/ErrorBoundary.tsx
+'use client';
+
+import React, { Component, type ReactNode } from 'react';
+import logger from '@/lib/utils/logger';
+
+type ErrorBoundaryProps = {
+  children: ReactNode;
+  fallback?: ReactNode;
+  onError?: (error: Error, errorInfo: React.ErrorInfo) => void;
+};
+
+type ErrorBoundaryState = {
+  hasError: boolean;
+  error: Error | null;
+};
+
+export class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundaryState> {
+  constructor(props: ErrorBoundaryProps) {
+    super(props);
+    this.state = { hasError: false, error: null };
+  }
+
+  static getDerivedStateFromError(error: Error): ErrorBoundaryState {
+    return { hasError: true, error };
+  }
+
+  componentDidCatch(error: Error, errorInfo: React.ErrorInfo) {
+    logger.error('ErrorBoundary caught error:', { error, errorInfo });
+    this.props.onError?.(error, errorInfo);
+  }
+
+  render() {
+    if (this.state.hasError) {
+      if (this.props.fallback) {
+        return this.props.fallback;
+      }
+
+      return (
+        <div
+          className="flex items-center justify-center min-h-[400px] px-4"
+          data-testid="error-boundary"
+          role="alert"
+        >
+          <div className="text-center max-w-md">
+            <h2 className="text-xl font-semibold text-red-600 dark:text-red-400 mb-2">
+              Something went wrong
+            </h2>
+            <p className="text-gray-600 dark:text-gray-400 mb-4">
+              {this.state.error?.message || 'An unexpected error occurred'}
+            </p>
+            <button
+              onClick={() => {
+                this.setState({ hasError: false, error: null });
+                window.location.reload();
+              }}
+              className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
+              aria-label="Reload page to retry"
+            >
+              Reload Page
+            </button>
+          </div>
+        </div>
+      );
+    }
+
+    return this.props.children;
+  }
+}
+```
+
+**Usage in Layout**:
+```typescript
+// app/(app)/layout.tsx
+export default function AppLayout({ children }: { children: React.ReactNode }) {
+  return (
+    <FontProvider>
+      <QueryClientProvider client={queryClient}>
+        <AuthProvider>
+          <UserStoreProvider>
+            <ServiceWorkerProvider>
+              <ErrorBoundary> {/* Wrap entire app */}
+                <AppShell navigation={<GlobalNavigation />}>
+                  {children}
+                </AppShell>
+              </ErrorBoundary>
+            </ServiceWorkerProvider>
+          </UserStoreProvider>
+        </AuthProvider>
+      </QueryClientProvider>
+    </FontProvider>
+  );
+}
+```
+
+**Key Principle**: Wrap the entire application and individual pages with error boundaries to prevent a single error from crashing the entire app.
+
+### 7. Loading Timeouts: Preventing Infinite Loading States
+
+**Problem**: Pages show loading spinners indefinitely if API calls hang or fail silently.
+
+**Root Cause**: No timeout mechanism for loading states.
+
+**✅ GOOD: Implementing Loading Timeouts**
+```typescript
+// app/(app)/profile/page.tsx
+const [loadingTimeout, setLoadingTimeout] = useState(false);
+
+useEffect(() => {
+  if (!(profileLoading && !profile && !profileError)) {
+    setLoadingTimeout(false);
+    return;
+  }
+  const timeout = setTimeout(() => {
+    setLoadingTimeout(true);
+  }, 15_000); // 15 second timeout
+  return () => {
+    clearTimeout(timeout);
+  };
+}, [profileLoading, profile, profileError]);
+
+if ((profileLoading && !profile && !profileError) || loadingTimeout) {
+  return (
+    <ErrorBoundary>
+      <div className="flex items-center justify-center min-h-screen">
+        <div className="text-center space-y-4 max-w-md">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto" />
+          <p className="text-gray-600 dark:text-gray-400">
+            {loadingTimeout ? 'Loading is taking longer than expected...' : 'Loading profile...'}
+          </p>
+          {loadingTimeout && (
+            <button
+              onClick={() => {
+                void refetch();
+                setLoadingTimeout(false);
+              }}
+              className="mt-4 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
+            >
+              Retry
+            </button>
+          )}
+        </div>
+      </div>
+    </ErrorBoundary>
+  );
+}
+```
+
+**Key Principle**: Always implement timeouts for loading states and provide users with a way to retry or reload.
+
+### 8. API Request Timeouts: Preventing Hanging Requests
+
+**Problem**: API requests can hang indefinitely, causing poor UX and resource leaks.
+
+**Root Cause**: No timeout mechanism for fetch requests.
+
+**✅ GOOD: Using AbortController with Timeout**
+```typescript
+// features/profile/lib/profile-service.ts
+export async function getCurrentProfile(): Promise<ProfileActionResult> {
+  // Add timeout to prevent hanging requests
+  const controller = new AbortController();
+  const timeoutId = setTimeout(() => controller.abort(), 30_000); // 30 second timeout
+
+  try {
+    const response = await fetch('/api/profile', {
+      signal: controller.signal,
+      method: 'GET',
+      credentials: 'include',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+    });
+
+    clearTimeout(timeoutId);
+
+    if (!response.ok) {
+      throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+    }
+
+    const apiData = await response.json();
+    const profile = transformApiResponseToProfile(apiData);
+
+    if (!profile) {
+      return {
+        success: false,
+        error: 'Failed to load profile data',
+      };
+    }
+
+    return {
+      success: true,
+      data: profile,
+    };
+  } catch (error) {
+    clearTimeout(timeoutId); // Always clear timeout
+    logger.error('Error fetching profile:', error);
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : 'Failed to fetch profile',
+    };
+  }
+}
+```
+
+**Alternative: Using AbortSignal.timeout() (Modern Browsers)**
+```typescript
+// Modern browsers support AbortSignal.timeout()
+const response = await fetch('/api/profile', {
+  signal: AbortSignal.timeout(30_000), // 30 second timeout
+  method: 'GET',
+  credentials: 'include',
+});
+```
+
+**Key Principle**: Always implement timeouts for API requests to prevent hanging and provide better error handling.
+
+### 9. Admin User Redirect Logic
+
+**Problem**: Admin users are incorrectly redirected to onboarding when their profile isn't immediately available.
+
+**Root Cause**: Aggressive redirect logic that doesn't account for admin users or loading states.
+
+**✅ GOOD: Checking Admin Status Before Redirect**
+```typescript
+// app/(app)/dashboard/page.tsx
+const [isCheckingAdmin, setIsCheckingAdmin] = useState(false);
+const adminCheckRef = useRef<boolean>(false);
+
+useEffect(() => {
+  if (shouldBypassAuth) {
+    return;
+  }
+  // First check if user is authenticated - if not, redirect to auth
+  if (!isUserLoading && !isAuthenticated) {
+    logger.debug('🚨 Dashboard: Unauthenticated user - redirecting to auth');
+    routerRef.current.replace('/auth');
+    return;
+  }
+  // If authenticated but no profile, check if user is admin first
+  // Admin users should have profiles, but if profile is still loading or missing,
+  // we should check admin status before redirecting to onboarding
+  if (!isLoading && isAuthenticated && !profile && !isCheckingAdmin) {
+    const checkAdminAndRedirect = async () => {
+      if (adminCheckRef.current) {
+        return; // Already checking
+      }
+      adminCheckRef.current = true;
+      setIsCheckingAdmin(true);
+
+      try {
+        const response = await fetch('/api/admin/health?type=status', {
+          headers: { 'Content-Type': 'application/json' },
+          credentials: 'include',
+          signal: AbortSignal.timeout(5_000), // 5 second timeout
+        });
+
+        if (response.ok) {
+          // User is admin - allow access to dashboard (they can navigate to admin dashboard)
+          logger.debug('🚨 Dashboard: No profile but user is admin - allowing dashboard access');
+          setIsCheckingAdmin(false);
+          adminCheckRef.current = false;
+          return; // Don't redirect
+        } else if (response.status === 401 || response.status === 403) {
+          // Not admin or not authenticated - redirect to onboarding
+          logger.debug('🚨 Dashboard: User is not admin (401/403) - redirecting to onboarding');
+        }
+      } catch (error) {
+        // If admin check fails or times out, assume not admin and redirect
+        logger.debug('🚨 Dashboard: Admin check failed or user is not admin - redirecting to onboarding', error);
+      }
+
+      // Not admin or check failed - redirect to onboarding
+      logger.debug('🚨 Dashboard: No profile found - redirecting to onboarding');
+      setIsCheckingAdmin(false);
+      adminCheckRef.current = false;
+      routerRef.current.replace('/onboarding');
+    };
+
+    void checkAdminAndRedirect();
+  }
+}, [isLoading, isUserLoading, isAuthenticated, profile, isCheckingAdmin]);
+```
+
+**Key Principle**: Always check admin status before redirecting authenticated users to onboarding. Account for loading states and provide fallbacks.
+
+---
+
 *Last updated: December 18, 2025*
-*Related commits: cf6a358f, da2ee76d, 02f7276c, 5c73afba, 0c48f7df, c48f0e67*
+*Related commits: cf6a358f, da2ee76d, 02f7276c, 5c73afba, 0c48f7df, c48f0e67, a8198885*
 
