@@ -29,17 +29,7 @@ import { useI18n } from '@/hooks/useI18n';
 // This is the proper way to handle client-only content - no suppressHydrationWarning needed
 function PollsPageContent() {
   const initializedRef = useRef(false);
-  // Set mounted immediately using a ref to track if we've mounted
-  // This prevents infinite loops by ensuring hooks can complete
-  const mountedRef = useRef(false);
-  const [isMounted, setIsMounted] = React.useState(() => {
-    // Set mounted synchronously on first render
-    if (typeof window !== 'undefined') {
-      mountedRef.current = true;
-      return true;
-    }
-    return false;
-  });
+  const [isMounted, setIsMounted] = React.useState(false);
   const [isStoreReady, setIsStoreReady] = React.useState(false);
 
   const { t, currentLanguage } = useI18n();
@@ -78,15 +68,17 @@ function PollsPageContent() {
     tRef.current = t;
   }, [loadPolls, setFilters, setTrendingOnly, setCurrentPage, setCurrentRoute, setSidebarActiveSection, setBreadcrumbs, t]);
 
-  // Set store ready after mount
-  // Give Zustand store a moment to hydrate from localStorage
+  // Set mounted state after component mounts
+  // This ensures Zustand store has time to hydrate from localStorage
   React.useEffect(() => {
-    if (!isMounted) return;
+    setIsMounted(true);
+    // Give Zustand store a moment to hydrate from localStorage
+    // The persist middleware loads state asynchronously
     const timer = setTimeout(() => {
       setIsStoreReady(true);
     }, 0);
     return () => clearTimeout(timer);
-  }, [isMounted]);
+  }, []);
 
   const selectedCategory = filters.category[0] ?? 'all';
 
