@@ -74,7 +74,7 @@ export default function PollAnalyticsPage() {
   const loadAnalytics = useCallback(async () => {
     // Don't block - allow page to render even if user is loading
     if (!user) {
-      return null; // Will be handled by loading state above
+      return; // Early return - will be handled by loading state above
     }
 
     try {
