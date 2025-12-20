@@ -160,8 +160,8 @@ export default function PollsPage() {
   return (
     <div className="container mx-auto px-4 py-8">
       <div className="mb-8">
-        <h1 className="text-3xl font-bold text-gray-900 mb-2">{t('polls.page.title')}</h1>
-        <p className="text-gray-600">{t('polls.page.subtitle')}</p>
+        <h1 className="text-3xl font-bold text-gray-900 dark:text-gray-100 mb-2">{t('polls.page.title')}</h1>
+        <p className="text-gray-600 dark:text-gray-400">{t('polls.page.subtitle')}</p>
       </div>
 
       {error && (
@@ -178,8 +178,8 @@ export default function PollsPage() {
             <div className="text-gray-400 mb-4">
               <BarChart3 className="h-12 w-12 mx-auto" />
             </div>
-            <h3 className="text-lg font-medium text-gray-900 mb-2">{t('polls.page.empty.title')}</h3>
-            <p className="text-gray-600 mb-4">
+            <h3 className="text-lg font-medium text-gray-900 dark:text-gray-100 mb-2">{t('polls.page.empty.title')}</h3>
+            <p className="text-gray-600 dark:text-gray-400 mb-4">
               {((search.query ?? '') || selectedCategory !== 'all' || activeFilter !== 'all')
                 ? t('polls.page.empty.filters')
                 : t('polls.page.empty.ctaMessage')}
@@ -194,9 +194,9 @@ export default function PollsPage() {
           </div>
         ) : (
           polls.map((poll) => (
-            <div key={poll.id} className="bg-white rounded-lg border border-gray-200 p-6 hover:shadow-md transition-shadow">
+            <div key={poll.id} className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-6 hover:shadow-md transition-shadow">
               <div className="flex items-start justify-between mb-4">
-                <h3 className="text-lg font-semibold text-gray-900 line-clamp-2">
+                <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100 line-clamp-2">
                   {poll.title}
                 </h3>
                 {typeof poll.trendingPosition === 'number' && (
