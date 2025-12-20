@@ -41,11 +41,18 @@ export default function PollsPage() {
 
   const initializedRef = useRef(false);
   const [isMounted, setIsMounted] = React.useState(false);
+  const [isStoreReady, setIsStoreReady] = React.useState(false);
 
   // Prevent hydration mismatch by only rendering content after mount
   // This ensures server and client initial renders are identical (both show loading)
   React.useEffect(() => {
     setIsMounted(true);
+    // Give store a moment to hydrate from localStorage if needed
+    // This prevents hydration mismatches from persisted store state
+    const timer = setTimeout(() => {
+      setIsStoreReady(true);
+    }, 0);
+    return () => clearTimeout(timer);
   }, []);
 
   const selectedCategory = filters.category[0] ?? 'all';
@@ -184,9 +191,9 @@ export default function PollsPage() {
 
   // Show loading state during SSR and initial client render to prevent hydration mismatch
   // This ensures server and client render identical content initially
-  // CRITICAL: Wait for mount AND ensure polls data is stable before rendering
-  // This prevents hydration mismatches from store state differences
-  if (!isMounted) {
+  // CRITICAL: Wait for mount AND store hydration before rendering any content
+  // This prevents hydration mismatches from persisted store state differences
+  if (!isMounted || !isStoreReady) {
     return (
       <div className="container mx-auto px-4 py-8">
         <div className="flex items-center justify-center min-h-[400px]">
@@ -196,7 +203,7 @@ export default function PollsPage() {
     );
   }
 
-  // After mount, show loading only if actually loading
+  // After mount and store ready, show loading only if actually loading
   if (isLoading) {
     return (
       <div className="container mx-auto px-4 py-8">
