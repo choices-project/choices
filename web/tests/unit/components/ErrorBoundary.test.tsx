@@ -1,6 +1,6 @@
 /**
  * ErrorBoundary Component Tests
- * 
+ *
  * Tests for the ErrorBoundary component that catches React errors
  * and prevents the entire app from crashing.
  */

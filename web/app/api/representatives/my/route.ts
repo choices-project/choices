@@ -10,25 +10,25 @@ import type { NextRequest } from 'next/server';
 export const dynamic = 'force-dynamic';
 
 export const GET = withErrorHandling(async (request: NextRequest) => {
+  const supabase = await getSupabaseServerClient();
+
+  if (!supabase) {
+    logger.error('Supabase client not available');
+    return errorResponse('Service unavailable', 503);
+  }
+
+  const { data: { user }, error: userError } = await supabase.auth.getUser();
+
+  if (userError || !user) {
+    return authError('Authentication required');
+  }
+
+  // Parse query parameters
+  const { searchParams } = new URL(request.url);
+  const limit = parseInt(searchParams.get('limit') ?? '50');
+  const offset = parseInt(searchParams.get('offset') ?? '0');
+
   try {
-    const supabase = await getSupabaseServerClient();
-
-    if (!supabase) {
-      logger.error('Supabase client not available');
-      return errorResponse('Service unavailable', 503);
-    }
-
-    const { data: { user }, error: userError } = await supabase.auth.getUser();
-
-    if (userError || !user) {
-      return authError('Authentication required');
-    }
-
-    // Parse query parameters
-    const { searchParams } = new URL(request.url);
-    const limit = parseInt(searchParams.get('limit') ?? '50');
-    const offset = parseInt(searchParams.get('offset') ?? '0');
-
     // Get followed representatives with full representative data
     // Use a simpler query first to check if the table exists
     const { data: followed, error: followedError } = await (supabase as any)
@@ -85,7 +85,8 @@ export const GET = withErrorHandling(async (request: NextRequest) => {
       .eq('user_id', user.id);
 
     if (countError) {
-      logger.error('Error counting followed representatives:', countError);
+      logger.warn('Error counting followed representatives (non-critical):', countError);
+      // Don't fail the request if count fails - just use 0
     }
 
     // Transform data with type assertion for complex join
@@ -105,12 +106,24 @@ export const GET = withErrorHandling(async (request: NextRequest) => {
       representative: follow.representatives_core
     }));
 
-  return successResponse({
-    representatives,
-    total: count ?? 0,
-    limit,
-    offset,
-    hasMore: (count ?? 0) > offset + limit
-  });
+    return successResponse({
+      representatives,
+      total: count ?? 0,
+      limit,
+      offset,
+      hasMore: (count ?? 0) > offset + limit
+    });
+  } catch (error) {
+    // Catch any unexpected errors and return empty array instead of 500
+    // This ensures pages can still load even if there's an unexpected error
+    logger.error('Unexpected error in /api/representatives/my:', error);
+    return successResponse({
+      representatives: [],
+      total: 0,
+      limit,
+      offset,
+      hasMore: false
+    });
+  }
 });
 
