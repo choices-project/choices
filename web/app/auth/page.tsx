@@ -110,7 +110,14 @@ export default function AuthPage() {
     setIsRateLimited(false);
 
     const translateError = (key: string) => t(`auth.errors.${key}`);
-    const applyError = (key: string) => setAuthError(translateError(key));
+    const applyError = (key: string) => {
+      setAuthError(translateError(key));
+      setAuthLoading(false); // Reset loading state on validation error
+    };
+
+    // Set loading state immediately to provide user feedback
+    // This ensures users see loading state even if validation fails
+    setAuthLoading(true);
 
     // Client-side validation
     if (!formData.email) {
