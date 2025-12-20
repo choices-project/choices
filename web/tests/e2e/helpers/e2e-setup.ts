@@ -305,50 +305,67 @@ export async function loginTestUser(page: Page, user: TestUser): Promise<void> {
   // Wait a moment for React to process the clear
   await page.waitForTimeout(100);
 
-  // Use pressSequentially which is designed for React controlled inputs
-  // It properly simulates character-by-character input that React recognizes
-  await emailInput.first().focus();
-  await emailInput.first().pressSequentially(email, { delay: 20 });
+  // Use a combination of fill() and React event triggering to ensure state updates
+  // First, fill the inputs with the values
+  await emailInput.first().fill(email, { timeout: 2_000 });
+  await passwordInput.first().fill(password, { timeout: 2_000 });
+  
+  // Now trigger React's onChange by creating proper synthetic events
+  // React's onChange is a synthetic event that wraps the native input event
+  // We need to trigger both input and change events to ensure React processes them
+  await emailInput.first().evaluate((el: HTMLInputElement, value: string) => {
+    // Set the value first (fill already did this, but ensure it's set)
+    const nativeInputValueSetter = Object.getOwnPropertyDescriptor(
+      window.HTMLInputElement.prototype,
+      'value'
+    )?.set;
+    if (nativeInputValueSetter) {
+      nativeInputValueSetter.call(el, value);
+    }
 
-  await passwordInput.first().focus();
-  await passwordInput.first().pressSequentially(password, { delay: 20 });
-
-  // Wait for React to process the input
-  await page.waitForTimeout(300);
-
-  // Verify inputs have values and trigger additional events if needed
-  const emailValue = await emailInput.first().inputValue();
-  const passwordValue = await passwordInput.first().inputValue();
-
-  if (emailValue !== email || passwordValue !== password) {
-    // If values don't match, try fill() as fallback
-    await emailInput.first().fill(email, { timeout: 2_000 });
-    await passwordInput.first().fill(password, { timeout: 2_000 });
-    await page.waitForTimeout(200);
-  }
-
-  // Trigger React events to ensure state updates
-  await emailInput.first().evaluate((el: HTMLInputElement) => {
-    // Create a proper input event that React will recognize
+    // Create and dispatch input event (React listens to this)
     const inputEvent = new Event('input', { bubbles: true, cancelable: true });
+    // React's onChange handler expects e.target.value, so we need to set target
+    Object.defineProperty(inputEvent, 'target', {
+      value: el,
+      enumerable: true,
+    });
     el.dispatchEvent(inputEvent);
-    const changeEvent = new Event('change', { bubbles: true, cancelable: true });
-    el.dispatchEvent(changeEvent);
-    // Also trigger focus/blur to ensure React processes the change
-    el.dispatchEvent(new Event('blur', { bubbles: true, cancelable: true }));
-    el.focus();
-  });
 
-  await passwordInput.first().evaluate((el: HTMLInputElement) => {
+    // Also dispatch change event
+    const changeEvent = new Event('change', { bubbles: true, cancelable: true });
+    Object.defineProperty(changeEvent, 'target', {
+      value: el,
+      enumerable: true,
+    });
+    el.dispatchEvent(changeEvent);
+  }, email);
+
+  await passwordInput.first().evaluate((el: HTMLInputElement, value: string) => {
+    const nativeInputValueSetter = Object.getOwnPropertyDescriptor(
+      window.HTMLInputElement.prototype,
+      'value'
+    )?.set;
+    if (nativeInputValueSetter) {
+      nativeInputValueSetter.call(el, value);
+    }
+
     const inputEvent = new Event('input', { bubbles: true, cancelable: true });
+    Object.defineProperty(inputEvent, 'target', {
+      value: el,
+      enumerable: true,
+    });
     el.dispatchEvent(inputEvent);
-    const changeEvent = new Event('change', { bubbles: true, cancelable: true });
-    el.dispatchEvent(changeEvent);
-    el.dispatchEvent(new Event('blur', { bubbles: true, cancelable: true }));
-    el.focus();
-  });
 
-  // Wait for React state to update
+    const changeEvent = new Event('change', { bubbles: true, cancelable: true });
+    Object.defineProperty(changeEvent, 'target', {
+      value: el,
+      enumerable: true,
+    });
+    el.dispatchEvent(changeEvent);
+  }, password);
+
+  // Wait for React to process the events and update state
   await page.waitForTimeout(500);
 
   // Wait for React to process - check that inputs have correct values
@@ -552,12 +569,12 @@ export async function loginTestUser(page: Page, user: TestUser): Promise<void> {
   if (!requestMade) {
     // Request wasn't made - check for validation errors or other issues
     await page.waitForTimeout(1000); // Wait a bit for any error messages to appear
-    
+
     const authError = page.getByTestId('auth-error');
     const errorCount = await authError.count();
     if (errorCount > 0) {
       const errorText = await authError.first().textContent().catch(() => 'Unknown error');
-      
+
       // Check if React state has the values - if not, that's the root cause
       const reactStateCheck = await page.evaluate(({ emailValue, passwordValue }: { emailValue: string; passwordValue: string }) => {
         const emailInput = document.querySelector('[data-testid="login-email"]') as HTMLInputElement;
@@ -569,7 +586,7 @@ export async function loginTestUser(page: Page, user: TestUser): Promise<void> {
           passwordMatches: passwordInput?.value === passwordValue
         };
       }, { emailValue: email, passwordValue: password });
-      
+
       throw new Error(
         `Login form validation error: ${errorText}. API request was not made. ` +
         `React state check - Email: "${reactStateCheck.emailValue}" (matches: ${reactStateCheck.emailMatches}), ` +
@@ -577,7 +594,7 @@ export async function loginTestUser(page: Page, user: TestUser): Promise<void> {
         `This suggests React's formData state is not synced with input values.`
       );
     }
-    
+
     // No error message, but request wasn't made - check if button is still disabled
     const stillDisabled = await submitButton.isDisabled();
     if (stillDisabled) {
@@ -586,7 +603,7 @@ export async function loginTestUser(page: Page, user: TestUser): Promise<void> {
         `This indicates React state (formData) is not updating properly from input events.`
       );
     }
-    
+
     throw new Error('Login form submission failed - API request was not made. Check if form is properly configured.');
   }
 
