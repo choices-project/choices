@@ -65,7 +65,7 @@ export default function AuthPage() {
     const timer = setTimeout(() => {
       const endTime = performance.now();
       const loadTime = endTime - startTime;
-      logger.info('Auth page load time', { loadTime });
+      logger.debug('Auth page load time', { loadTime });
     }, 100);
     return () => clearTimeout(timer);
   }, []);

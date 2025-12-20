@@ -785,7 +785,7 @@ export const createPollsActions = (
         }
       });
 
-      logger.info('Polls loaded', {
+      logger.debug('Polls loaded', {
         status,
         categories,
         tags,

@@ -627,7 +627,7 @@ export const appStoreUtils = {
   initialize: () => {
     const state = useAppStore.getState();
     applyThemeToDocument(resolveTheme(state.theme, state.systemTheme));
-    logger.info('App store initialized');
+    logger.debug('App store initialized');
   },
 };
 

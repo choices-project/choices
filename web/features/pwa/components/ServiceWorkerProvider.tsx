@@ -119,7 +119,7 @@ export function ServiceWorkerProvider({
       },
 
       onActive: () => {
-        logger.info('Service worker activated');
+        logger.debug('Service worker activated');
       },
 
       debug,

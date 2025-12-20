@@ -127,12 +127,8 @@ export default async function RootLayout({
   return (
     <html lang={locale ?? DEFAULT_LOCALE}>
       <head>
-        {/* Preload critical resources */}
-        <link rel="preload" href="/icons/icon-192x192.svg" as="image" />
-        <link rel="preload" href="/manifest.json" as="fetch" crossOrigin="anonymous" />
-
-        {/* PWA Manifest */}
-        <link rel="manifest" href="/manifest.json" />
+        {/* PWA Manifest - no preload needed as it's loaded via rel="manifest" */}
+        <link rel="manifest" href="/manifest.json" crossOrigin="use-credentials" />
 
         {/* PWA Icons - Optimized loading */}
         <link rel="icon" href="/icons/icon-192x192.svg" />

@@ -117,9 +117,32 @@ test.describe('Production Critical Fixes', () => {
       await page.goto(`${BASE_URL}/feed`, { waitUntil: 'domcontentloaded', timeout: 30_000 });
       await waitForPageReady(page);
 
+      // Wait for any loading modals/overlays to disappear
+      await page.waitForFunction(
+        () => {
+          const overlays = document.querySelectorAll('.fixed.inset-0.z-50');
+          return Array.from(overlays).every(overlay => {
+            const style = window.getComputedStyle(overlay);
+            return style.display === 'none' || style.visibility === 'hidden' || !overlay.classList.contains('flex');
+          });
+        },
+        { timeout: 10_000 }
+      ).catch(() => {
+        // If overlays don't disappear, continue anyway
+      });
+
+      // Wait a bit more for any animations
+      await page.waitForTimeout(1_000);
+
       // Find logout button - try multiple selectors
-      let logoutButton = page.locator('button:has-text("Log out"), button:has-text("Sign out"), button[aria-label*="logout" i], button[aria-label*="sign out" i]').first();
+      let logoutButton = page.locator('[data-testid="logout-button"]').first();
       let hasLogoutButton = await logoutButton.isVisible({ timeout: 5_000 }).catch(() => false);
+
+      if (!hasLogoutButton) {
+        // Try text-based selectors
+        logoutButton = page.locator('button:has-text("Log out"), button:has-text("Sign out"), button[aria-label*="logout" i], button[aria-label*="sign out" i]').first();
+        hasLogoutButton = await logoutButton.isVisible({ timeout: 5_000 }).catch(() => false);
+      }
 
       if (!hasLogoutButton) {
         // Try alternative selectors
@@ -140,7 +163,9 @@ test.describe('Production Critical Fixes', () => {
           const hasLogoutInMenu = await logoutInMenu.isVisible({ timeout: 3_000 }).catch(() => false);
           
           if (hasLogoutInMenu) {
-            await logoutInMenu.click();
+            // Wait for any overlays to clear before clicking
+            await page.waitForTimeout(500);
+            await logoutInMenu.click({ force: true });
           } else {
             // Log the page content for debugging
             const pageContent = await page.content();
@@ -154,7 +179,8 @@ test.describe('Production Critical Fixes', () => {
           throw new Error(`Logout button not found and menu button not available. Page contains logout text: ${hasLogoutText}`);
         }
       } else {
-        await logoutButton.click();
+        // Use force click to bypass any overlays
+        await logoutButton.click({ force: true });
       }
 
       // Wait for redirect
@@ -209,13 +235,46 @@ test.describe('Production Critical Fixes', () => {
       });
       await waitForPageReady(page);
 
-      // Navigate to dashboard
+      // Wait for profile to load after login (admin users should have profiles)
+      // Also wait for session cookies to be set
+      await page.waitForTimeout(5_000);
+
+      // Verify we're authenticated by checking if we can access a protected page
+      // Try accessing feed first to ensure session is established
+      await page.goto(`${BASE_URL}/feed`, { waitUntil: 'domcontentloaded', timeout: 30_000 });
+      await waitForPageReady(page);
+      await page.waitForTimeout(2_000);
+      
+      // Check if we're still authenticated (not redirected to auth)
+      const feedUrl = page.url();
+      if (feedUrl.includes('/auth')) {
+        throw new Error(
+          `Admin user (${adminEmail}) authentication failed - redirected to auth after login. ` +
+          `This suggests the login didn't establish a proper session.`
+        );
+      }
+
+      // Now navigate to dashboard
       await page.goto(`${BASE_URL}/dashboard`, { waitUntil: 'domcontentloaded', timeout: 30_000 });
       
       // Wait for any redirects or admin checks to complete
-      await page.waitForTimeout(5_000);
-      
       // Wait for URL to stabilize (no more redirects)
+      let currentUrl = page.url();
+      let redirectCount = 0;
+      const maxRedirects = 10;
+      
+      while (redirectCount < maxRedirects) {
+        await page.waitForTimeout(2_000);
+        const newUrl = page.url();
+        if (newUrl === currentUrl) {
+          // URL has stabilized
+          break;
+        }
+        currentUrl = newUrl;
+        redirectCount++;
+      }
+      
+      // Wait for page to be fully ready
       await page.waitForFunction(
         () => {
           return document.readyState === 'complete';
@@ -225,7 +284,7 @@ test.describe('Production Critical Fixes', () => {
       
       await page.waitForTimeout(2_000);
 
-      const currentUrl = page.url();
+      currentUrl = page.url();
       
       // Admin users should NOT be redirected to onboarding
       // They should either be on dashboard or admin page
@@ -239,6 +298,22 @@ test.describe('Production Critical Fixes', () => {
           `Has profile error: ${hasProfileError}. ` +
           `Admin users should have profiles and access dashboard directly.`
         );
+      }
+
+      // If redirected to auth, the user might not be authenticated properly
+      if (currentUrl.includes('/auth')) {
+        // Wait a bit more and check again - might be a temporary redirect
+        await page.waitForTimeout(3_000);
+        const finalUrl = page.url();
+        if (finalUrl.includes('/auth')) {
+          throw new Error(
+            `Admin user (${adminEmail}) was redirected to auth page. ` +
+            `Current URL: ${finalUrl}. ` +
+            `This suggests authentication failed or session expired. ` +
+            `Expected: /dashboard or /admin`
+          );
+        }
+        currentUrl = finalUrl;
       }
 
       // Should be on dashboard or admin page

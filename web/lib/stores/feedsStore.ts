@@ -802,7 +802,7 @@ const createFeedsActions = (
           );
         });
 
-        logger.info('Feeds loaded', {
+        logger.debug('Feeds loaded', {
           category: payload.filters.category,
           count: payload.count,
         });

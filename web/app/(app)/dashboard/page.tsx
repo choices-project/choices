@@ -93,6 +93,7 @@ export default function DashboardPage() {
         try {
           const response = await fetch('/api/admin/health?type=status', {
             headers: { 'Content-Type': 'application/json' },
+            credentials: 'include',
             signal: AbortSignal.timeout(5_000), // 5 second timeout
           });
 
@@ -102,10 +103,16 @@ export default function DashboardPage() {
             setIsCheckingAdmin(false);
             adminCheckRef.current = false;
             return; // Don't redirect
+          } else if (response.status === 401 || response.status === 403) {
+            // Not admin or not authenticated - redirect to onboarding
+            logger.debug('🚨 Dashboard: User is not admin (401/403) - redirecting to onboarding');
+          } else {
+            // Other error - log but still redirect to be safe
+            logger.warn('🚨 Dashboard: Admin check returned non-OK status:', response.status);
           }
-        } catch {
+        } catch (error) {
           // If admin check fails or times out, assume not admin and redirect
-          logger.debug('🚨 Dashboard: Admin check failed or user is not admin - redirecting to onboarding');
+          logger.debug('🚨 Dashboard: Admin check failed or user is not admin - redirecting to onboarding', error);
         }
 
         // Not admin or check failed - redirect to onboarding
