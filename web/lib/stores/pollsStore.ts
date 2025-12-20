@@ -1041,50 +1041,69 @@ export const usePollPagination = () =>
   );
 
 export const useFilteredPolls = () => usePollsStore((state) => state.getFilteredPolls());
+// Helper to create a stable key from an array of polls
+const createPollsKey = (polls: PollRow[]): string => {
+  if (polls.length === 0) return '0:';
+  const ids = polls.map(p => p.id).sort();
+  return `${polls.length}:${ids.join(',')}`;
+};
+
+// Helper to create a stable key from filter values
+const createFilterKey = (filters: {
+  status: string[];
+  category: string[];
+  tags: string[];
+  trendingOnly: boolean;
+}): string => {
+  return JSON.stringify({
+    status: [...filters.status].sort().join(','),
+    category: [...filters.category].sort().join(','),
+    tags: [...filters.tags].sort().join(','),
+    trendingOnly: filters.trendingOnly,
+  });
+};
+
 export const useFilteredPollCards = () => {
-  // Get the raw data needed for filtering with stable references
-  const polls = usePollsStore(useShallow((state) => state.polls));
-  const filterStatus = usePollsStore(useShallow((state) => state.filters.status));
-  const filterCategory = usePollsStore(useShallow((state) => state.filters.category));
-  const filterTags = usePollsStore(useShallow((state) => state.filters.tags));
-  const filterTrendingOnly = usePollsStore((state) => state.filters.trendingOnly);
+  // Get all needed data in a single selector to minimize re-renders
+  const storeData = usePollsStore(
+    useShallow((state) => ({
+      polls: state.polls,
+      filters: state.filters,
+    })),
+  );
   
-  // Create stable keys for memoization - these only change when actual values change
+  // Create stable keys that only change when actual data changes
   const pollsKey = useMemo(
-    () => polls.length > 0 ? `${polls.length}:${polls.map(p => p.id).sort().join(',')}` : '0:',
-    [polls],
+    () => createPollsKey(storeData.polls),
+    [storeData.polls],
   );
   
   const filterKey = useMemo(
-    () => JSON.stringify({
-      status: [...filterStatus].sort().join(','),
-      category: [...filterCategory].sort().join(','),
-      tags: [...filterTags].sort().join(','),
-      trendingOnly: filterTrendingOnly,
-    }),
-    [filterStatus, filterCategory, filterTags, filterTrendingOnly],
+    () => createFilterKey(storeData.filters),
+    [storeData.filters],
   );
   
   // Memoize the filtering and transformation - only recalculate when keys change
-  // The arrays (polls, filterStatus, etc.) are captured in the closure, so we only need the keys as dependencies
+  // The storeData is captured in closure and will use latest values when keys change
   return useMemo(() => {
+    const { polls, filters } = storeData;
     const filtered = polls.filter((poll) => {
-      if (filterStatus.length > 0 && poll.status && !filterStatus.includes(poll.status)) {
+      if (filters.status.length > 0 && poll.status && !filters.status.includes(poll.status)) {
         return false;
       }
 
-      if (filterCategory.length > 0 && poll.category && !filterCategory.includes(poll.category)) {
+      if (filters.category.length > 0 && poll.category && !filters.category.includes(poll.category)) {
         return false;
       }
 
-      if (filterTags.length > 0 && poll.tags) {
+      if (filters.tags.length > 0 && poll.tags) {
         const pollTags = Array.isArray(poll.tags) ? poll.tags : [];
-        if (!filterTags.some((tag) => pollTags.includes(tag))) {
+        if (!filters.tags.some((tag) => pollTags.includes(tag))) {
           return false;
         }
       }
 
-      if (filterTrendingOnly) {
+      if (filters.trendingOnly) {
         const trendingPosition = (poll as PollRow & { trending_position?: number }).trending_position;
         if (!(typeof trendingPosition === 'number' && trendingPosition > 0)) {
           return false;
@@ -1095,7 +1114,7 @@ export const useFilteredPollCards = () => {
     });
     
     return filtered.map(createPollCardView);
-  }, [pollsKey, filterKey]);
+  }, [pollsKey, filterKey, storeData]);
 };
 export const useActivePollsCount = () => usePollsStore((state) => state.getActivePollsCount());
 export const usePollById = (id: string) => usePollsStore((state) => state.getPollById(id));
