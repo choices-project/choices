@@ -5,8 +5,8 @@ import { defineConfig, devices } from '@playwright/test';
 import { config as loadDotenv } from 'dotenv';
 
 // Get __dirname equivalent for ES modules
-const __filename = fileURLToPath(import.meta.url)
-const __dirname = dirname(__filename)
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = dirname(__filename);
 
 // Load environment variables from .env files
 // Priority order (highest to lowest): .env.local > .env.test.local > .env.test > .env
@@ -16,7 +16,7 @@ const envFiles = [
   { path: resolve(__dirname, '.env.test'), override: false },
   { path: resolve(__dirname, '.env.test.local'), override: false },
   { path: resolve(__dirname, '.env.local'), override: true }, // Highest priority - can override everything
-]
+];
 
 for (const { path: envFile, override } of envFiles) {
   try {
