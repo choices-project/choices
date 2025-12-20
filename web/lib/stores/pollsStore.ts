@@ -1071,18 +1071,18 @@ export const useFilteredPollCards = () => {
       filters: state.filters,
     })),
   );
-  
+
   // Create stable keys that only change when actual data changes
   const pollsKey = useMemo(
     () => createPollsKey(storeData.polls),
     [storeData.polls],
   );
-  
+
   const filterKey = useMemo(
     () => createFilterKey(storeData.filters),
     [storeData.filters],
   );
-  
+
   // Memoize the filtering and transformation - only recalculate when keys change
   // The storeData is captured in closure and will use latest values when keys change
   return useMemo(() => {
@@ -1112,9 +1112,9 @@ export const useFilteredPollCards = () => {
 
       return true;
     });
-    
+
     return filtered.map(createPollCardView);
-  }, [pollsKey, filterKey, storeData]);
+  }, [pollsKey, filterKey]);
 };
 export const useActivePollsCount = () => usePollsStore((state) => state.getActivePollsCount());
 export const usePollById = (id: string) => usePollsStore((state) => state.getPollById(id));
