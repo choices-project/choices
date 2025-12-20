@@ -327,10 +327,11 @@ test.describe('Production Edge Cases & Stress Tests', () => {
       await waitForPageReady(page);
       const feedUrl = page.url();
 
-      // Navigate to another page
-      await page.goto(`${BASE_URL}/dashboard`, { waitUntil: 'domcontentloaded', timeout: 30_000 });
+      // Navigate to another page (use profile instead of dashboard to avoid redirect issues)
+      // Dashboard may redirect if user doesn't have a profile, so use profile page instead
+      await page.goto(`${BASE_URL}/profile`, { waitUntil: 'domcontentloaded', timeout: 30_000 });
       await waitForPageReady(page);
-      const dashboardUrl = page.url();
+      const profileUrl = page.url();
 
       // Go back
       await page.goBack({ waitUntil: 'domcontentloaded', timeout: 30_000 });
@@ -343,8 +344,8 @@ test.describe('Production Edge Cases & Stress Tests', () => {
       await page.goForward({ waitUntil: 'domcontentloaded', timeout: 30_000 });
       await waitForPageReady(page);
       
-      // Should be forward to dashboard
-      expect(page.url()).toContain('/dashboard');
+      // Should be forward to profile page
+      expect(page.url()).toContain('/profile');
 
       // Page should be functional after navigation
       const body = page.locator('body');

@@ -66,8 +66,10 @@ export default function DashboardPage() {
       return;
     }
     if (!isLoading && !profile) {
-      logger.debug('🚨 Dashboard: No profile found - redirecting to login');
-      routerRef.current.replace('/auth');
+      logger.debug('🚨 Dashboard: No profile found - redirecting to onboarding');
+      // Redirect to onboarding instead of auth, as user is already authenticated
+      // This provides better UX by guiding user to complete their profile
+      routerRef.current.replace('/onboarding');
     }
   }, [isLoading, profile, shouldBypassAuth]); // Removed router - use ref
 
