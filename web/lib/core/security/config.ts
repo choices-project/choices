@@ -206,6 +206,10 @@ export const DEVELOPMENT_SECURITY_CONFIG: SecurityConfig = Object.assign({}, PRO
       ...PRODUCTION_SECURITY_CONFIG.csp['script-src'],
       "'unsafe-eval'", // Required for Next.js development
     ],
+    // Ensure script-src-elem is also included in development
+    'script-src-elem': [
+      ...(PRODUCTION_SECURITY_CONFIG.csp['script-src-elem'] || []),
+    ],
   },
   rateLimit: {
     ...PRODUCTION_SECURITY_CONFIG.rateLimit,

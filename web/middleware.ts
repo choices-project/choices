@@ -296,7 +296,28 @@ export async function middleware(request: NextRequest) {
   })
 
   // Add CSP header
-  response.headers.set('Content-Security-Policy', buildCSPHeaderFromConfig(SECURITY_CONFIG.csp))
+  // Check if we're on a Vercel preview domain (hostname-based check as fallback)
+  const hostname = request.nextUrl.hostname
+  const isVercelPreviewDomain = hostname.includes('.vercel.app') || hostname.includes('.vercel.live')
+  const isVercelPreview = 
+    process.env.VERCEL_ENV === 'preview' || 
+    process.env.VERCEL_ENV === 'development' ||
+    isVercelPreviewDomain ||
+    (process.env.VERCEL_URL && process.env.NODE_ENV !== 'production')
+  
+  // If we're on a Vercel preview domain, ensure vercel.live is in CSP
+  let cspConfig = SECURITY_CONFIG.csp
+  if (isVercelPreview && cspConfig['script-src'] && !cspConfig['script-src'].includes('https://vercel.live')) {
+    cspConfig = {
+      ...cspConfig,
+      'script-src': [...cspConfig['script-src'], 'https://vercel.live'],
+      'script-src-elem': cspConfig['script-src-elem'] 
+        ? [...cspConfig['script-src-elem'], 'https://vercel.live']
+        : ['https://vercel.live'],
+    }
+  }
+  
+  response.headers.set('Content-Security-Policy', buildCSPHeaderFromConfig(cspConfig))
 
   // Add HSTS header (only for HTTPS)
   if (request.headers.get('x-forwarded-proto') === 'https' ||
