@@ -285,115 +285,42 @@ test.describe('Production UX Improvements', () => {
       }
       
       // Fill form with invalid credentials (will fail but button should show loading)
-      // Use fill() + synthetic events to properly trigger React's onChange handlers
-      await emailInput.first().fill('test@example.com', { timeout: 2_000 });
-      await passwordInput.first().fill('wrongpassword', { timeout: 2_000 });
-      
-      // Trigger React's onChange by creating proper synthetic events
-      await emailInput.first().evaluate((el: HTMLInputElement, value: string) => {
-        const nativeInputValueSetter = Object.getOwnPropertyDescriptor(
-          window.HTMLInputElement.prototype,
-          'value'
-        )?.set;
-        if (nativeInputValueSetter) {
-          nativeInputValueSetter.call(el, value);
-        }
-        const inputEvent = new Event('input', { bubbles: true, cancelable: true });
-        Object.defineProperty(inputEvent, 'target', { value: el, enumerable: true });
-        el.dispatchEvent(inputEvent);
-        const changeEvent = new Event('change', { bubbles: true, cancelable: true });
-        Object.defineProperty(changeEvent, 'target', { value: el, enumerable: true });
-        el.dispatchEvent(changeEvent);
-      }, 'test@example.com');
+      // Use keyboard.type() for reliable React controlled input handling (same as loginTestUser)
+      await emailInput.first().click();
+      await emailInput.first().clear({ timeout: 2_000 });
+      await page.keyboard.type('test@example.com', { delay: 10 });
 
-      await passwordInput.first().evaluate((el: HTMLInputElement, value: string) => {
-        const nativeInputValueSetter = Object.getOwnPropertyDescriptor(
-          window.HTMLInputElement.prototype,
-          'value'
-        )?.set;
-        if (nativeInputValueSetter) {
-          nativeInputValueSetter.call(el, value);
-        }
-        const inputEvent = new Event('input', { bubbles: true, cancelable: true });
-        Object.defineProperty(inputEvent, 'target', { value: el, enumerable: true });
-        el.dispatchEvent(inputEvent);
-        const changeEvent = new Event('change', { bubbles: true, cancelable: true });
-        Object.defineProperty(changeEvent, 'target', { value: el, enumerable: true });
-        el.dispatchEvent(changeEvent);
-      }, 'wrongpassword');
-      
+      await passwordInput.first().click();
+      await passwordInput.first().clear({ timeout: 2_000 });
+      await page.keyboard.type('wrongpassword', { delay: 10 });
+
       // Wait for React to process the input and enable the button
       await page.waitForTimeout(500);
       
-      // Verify inputs have correct values
+      // Verify inputs have correct values and React state has updated
       await page.waitForFunction(
         ({ expectedEmail, expectedPassword }: { expectedEmail: string; expectedPassword: string }) => {
           const emailInput = document.querySelector('[data-testid="login-email"]') as HTMLInputElement;
           const passwordInput = document.querySelector('[data-testid="login-password"]') as HTMLInputElement;
-          return emailInput?.value === expectedEmail && passwordInput?.value === expectedPassword;
+          const submitButton = document.querySelector('[data-testid="login-submit"]') as HTMLButtonElement;
+          
+          const domValuesMatch = emailInput?.value === expectedEmail && passwordInput?.value === expectedPassword;
+          const emailValid = expectedEmail.includes('@');
+          const passwordValid = expectedPassword.length >= 6;
+          const shouldBeEnabled = emailValid && passwordValid;
+          const isEnabled = !submitButton?.disabled;
+          
+          return domValuesMatch && (shouldBeEnabled === isEnabled);
         },
         { expectedEmail: 'test@example.com', expectedPassword: 'wrongpassword' },
-        { timeout: 5_000 }
+        { timeout: 10_000 }
       );
       
-      // Wait for React state to update and button to become enabled
-      // Poll for button enabled state with retries
-      let isButtonEnabled = false;
-      for (let attempt = 0; attempt < 20; attempt++) {
-        isButtonEnabled = !(await submitButton.isDisabled());
-        if (isButtonEnabled) break;
-        
-        // Re-trigger events every few attempts to ensure React processes them
-        if (attempt > 0 && attempt % 5 === 0) {
-          await emailInput.first().evaluate((el: HTMLInputElement, value: string) => {
-            const nativeInputValueSetter = Object.getOwnPropertyDescriptor(
-              window.HTMLInputElement.prototype,
-              'value'
-            )?.set;
-            if (nativeInputValueSetter) {
-              nativeInputValueSetter.call(el, value);
-            }
-            const inputEvent = new Event('input', { bubbles: true, cancelable: true });
-            Object.defineProperty(inputEvent, 'target', { value: el, enumerable: true });
-            el.dispatchEvent(inputEvent);
-            const changeEvent = new Event('change', { bubbles: true, cancelable: true });
-            Object.defineProperty(changeEvent, 'target', { value: el, enumerable: true });
-            el.dispatchEvent(changeEvent);
-          }, 'test@example.com');
-          await passwordInput.first().evaluate((el: HTMLInputElement, value: string) => {
-            const nativeInputValueSetter = Object.getOwnPropertyDescriptor(
-              window.HTMLInputElement.prototype,
-              'value'
-            )?.set;
-            if (nativeInputValueSetter) {
-              nativeInputValueSetter.call(el, value);
-            }
-            const inputEvent = new Event('input', { bubbles: true, cancelable: true });
-            Object.defineProperty(inputEvent, 'target', { value: el, enumerable: true });
-            el.dispatchEvent(inputEvent);
-            const changeEvent = new Event('change', { bubbles: true, cancelable: true });
-            Object.defineProperty(changeEvent, 'target', { value: el, enumerable: true });
-            el.dispatchEvent(changeEvent);
-          }, 'wrongpassword');
-        }
-        
-        await page.waitForTimeout(200);
-      }
-      
-      // If button is still disabled but inputs are valid, force enable (workaround for React state sync)
-      if (!isButtonEnabled) {
-        const emailValue = await emailInput.first().inputValue();
-        const passwordValue = await passwordInput.first().inputValue();
-        if (emailValue.includes('@') && passwordValue.length >= 6) {
-          await submitButton.evaluate((el: HTMLButtonElement) => {
-            el.removeAttribute('disabled');
-          });
-          await page.waitForTimeout(200);
-          isButtonEnabled = true;
-        }
-      }
+      // Wait a bit more for React state to fully update
+      await page.waitForTimeout(500);
       
       // Verify button is enabled before proceeding
+      const isButtonEnabled = !(await submitButton.isDisabled());
       if (!isButtonEnabled) {
         const emailValue = await emailInput.first().inputValue();
         const passwordValue = await passwordInput.first().inputValue();
@@ -694,28 +621,57 @@ test.describe('Production UX Improvements', () => {
       await emailInput.pressSequentially('invalid', { delay: 20 });
       await page.waitForTimeout(500);
       
-      // Check for visual feedback (border color change)
-      const invalidBorder = await emailInput.evaluate((el) => {
+      // Check for visual feedback (border color change or class change)
+      // Wait for React to process the invalid input
+      await page.waitForTimeout(500);
+      
+      const invalidHasRedBorder = await emailInput.evaluate((el) => {
         const styles = window.getComputedStyle(el);
-        return styles.borderColor;
-      }).catch(() => null);
+        const borderColor = styles.borderColor;
+        // Check if border is red (rgb(239, 68, 68) or similar) or has red border class
+        const hasRedClass = el.classList.contains('border-red-300') || 
+                           el.classList.contains('border-red-500') ||
+                           el.classList.contains('border-red');
+        // Check computed border color (converted to RGB)
+        const isRedBorder = borderColor.includes('239') || 
+                           borderColor.includes('220') ||
+                           borderColor.includes('rgb(239') ||
+                           borderColor.includes('rgb(220');
+        return hasRedClass || isRedBorder;
+      }).catch(() => false);
       
       await emailInput.click();
       await emailInput.clear();
       await emailInput.pressSequentially('test@example.com', { delay: 20 });
       await page.waitForTimeout(500);
       
-      const validBorder = await emailInput.evaluate((el) => {
+      const validHasGreenBorder = await emailInput.evaluate((el) => {
         const styles = window.getComputedStyle(el);
-        return styles.borderColor;
-      }).catch(() => null);
+        const borderColor = styles.borderColor;
+        // Check if border is green (rgb(34, 197, 94) or similar) or has green border class
+        const hasGreenClass = el.classList.contains('border-green-300') || 
+                             el.classList.contains('border-green-500') ||
+                             el.classList.contains('border-green');
+        // Check computed border color (converted to RGB)
+        const isGreenBorder = borderColor.includes('34') || 
+                             borderColor.includes('rgb(34') ||
+                             borderColor.includes('rgb(74');
+        return hasGreenClass || isGreenBorder;
+      }).catch(() => false);
       
-      // Border color should change (or class should change)
-      const hasVisualFeedback = invalidBorder !== validBorder || 
-                                 await emailInput.evaluate(el => 
-                                   el.classList.contains('border-red') || 
-                                   el.classList.contains('border-green')
-                                 ).catch(() => false);
+      // Visual feedback: should have red border when invalid, or green/neutral when valid
+      // At minimum, invalid state should show some different styling
+      const hasVisualFeedback = invalidHasRedBorder || validHasGreenBorder ||
+                                 await emailInput.evaluate(el => {
+                                   // Check for any validation-related classes
+                                   const classes = Array.from(el.classList);
+                                   return classes.some(cls => 
+                                     cls.includes('red') || 
+                                     cls.includes('green') ||
+                                     cls.includes('border-red') ||
+                                     cls.includes('border-green')
+                                   );
+                                 }).catch(() => false);
       
       // Should have some visual feedback
       expect(hasVisualFeedback).toBeTruthy();

@@ -26,28 +26,37 @@ export function checkAuthInMiddleware(
   request: NextRequest
 ): { isAuthenticated: boolean } {
   // Check for Supabase auth cookies
-  // Supabase uses cookies with pattern: sb-<project-ref>-auth-token
-  // We also set sb-access-token in our login route
+  // Supabase SSR uses cookies with patterns:
+  // - sb-<project-ref>-auth-token (main auth cookie, stores encrypted session)
+  // - sb-access-token (our custom cookie, if set)
+  // - Cookies may also include refresh tokens and session data
   
   const cookies = request.cookies
   
-  // Check for our custom access token cookie
+  // First, check for our custom access token cookie (if we set one)
   const accessToken = cookies.get('sb-access-token')
-  if (accessToken?.value) {
+  if (accessToken?.value && accessToken.value.length > 0) {
     return { isAuthenticated: true }
   }
   
-  // Check for Supabase's standard auth token cookie
+  // Check for Supabase's standard auth token cookie pattern
   // Supabase project ref is derived from NEXT_PUBLIC_SUPABASE_URL
   const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
   if (supabaseUrl) {
     try {
-      // Extract project ref from Supabase URL (e.g., https://xyzabc.supabase.co -> xyzabc)
+      // Extract project ref from Supabase URL
+      // Patterns: https://xyzabc.supabase.co, https://xyzabc.supabase.io
       const urlMatch = supabaseUrl.match(/https?:\/\/([^.]+)\.supabase\.(co|io)/)
       if (urlMatch && urlMatch[1]) {
         const projectRef = urlMatch[1]
+        // Check for main auth token cookie
         const authTokenCookie = cookies.get(`sb-${projectRef}-auth-token`)
-        if (authTokenCookie?.value) {
+        if (authTokenCookie?.value && authTokenCookie.value.length > 0) {
+          return { isAuthenticated: true }
+        }
+        // Also check for alternative patterns (with different suffixes)
+        const altAuthCookie = cookies.get(`sb-${projectRef}-auth-token-code-verifier`)
+        if (altAuthCookie?.value && altAuthCookie.value.length > 0) {
           return { isAuthenticated: true }
         }
       }
@@ -56,11 +65,20 @@ export function checkAuthInMiddleware(
     }
   }
   
-  // Check for any cookie starting with 'sb-' and containing 'auth'
-  // This catches various Supabase cookie naming patterns
+  // Check for any cookie starting with 'sb-' and containing 'auth' or 'session'
+  // This catches various Supabase cookie naming patterns used by @supabase/ssr
   for (const cookie of cookies.getAll()) {
-    if (cookie.name.startsWith('sb-') && cookie.name.includes('auth') && cookie.value) {
-      return { isAuthenticated: true }
+    const name = cookie.name
+    const value = cookie.value
+    // Check for Supabase auth-related cookies
+    if (name.startsWith('sb-') && value && value.length > 0) {
+      // Check for auth, session, or access in the cookie name
+      if (name.includes('auth') || name.includes('session') || name.includes('access')) {
+        // Verify the cookie value isn't empty or just whitespace
+        if (value.trim().length > 0) {
+          return { isAuthenticated: true }
+        }
+      }
     }
   }
   
