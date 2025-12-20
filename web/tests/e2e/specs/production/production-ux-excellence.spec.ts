@@ -1629,9 +1629,11 @@ test.describe('Production UX Excellence', () => {
       const passwordInput = page.locator('input[type="password"], input[name="password"]').first();
       const submitButton = page.locator('button[type="submit"]').first();
 
-      // Fill with invalid data
-      await emailInput.fill('invalid-email');
-      await passwordInput.fill('123'); // Too short
+      // Fill with invalid data - use pressSequentially to trigger React onChange
+      await emailInput.click();
+      await emailInput.pressSequentially('invalid-email', { delay: 20 });
+      await passwordInput.click();
+      await passwordInput.pressSequentially('123', { delay: 20 }); // Too short
       await page.waitForTimeout(800); // Wait for validation to run
 
       // Check if form validation is working

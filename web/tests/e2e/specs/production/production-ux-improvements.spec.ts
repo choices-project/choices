@@ -198,8 +198,9 @@ test.describe('Production UX Improvements', () => {
       const emailInput = page.locator('input[type="email"], input[name="email"]').first();
       await expect(emailInput).toBeVisible({ timeout: 5_000 });
       
-      // Type invalid email
-      await emailInput.fill('invalid-email');
+      // Type invalid email - use pressSequentially to trigger React onChange
+      await emailInput.click();
+      await emailInput.pressSequentially('invalid-email', { delay: 20 });
       await page.waitForTimeout(800); // Wait for validation to appear
       
       // Should show validation error - check for data-testid or aria-invalid or visual indicator
@@ -207,7 +208,9 @@ test.describe('Production UX Improvements', () => {
       const hasError = await errorIndicator.isVisible({ timeout: 2_000 }).catch(() => false);
       
       // Type valid email
-      await emailInput.fill('test@example.com');
+      await emailInput.click();
+      await emailInput.clear();
+      await emailInput.pressSequentially('test@example.com', { delay: 20 });
       await page.waitForTimeout(800); // Wait for validation to update
       
       // Should show success indicator - check for data-testid or visual indicator
@@ -228,8 +231,9 @@ test.describe('Production UX Improvements', () => {
       const passwordInput = page.locator('input[type="password"], input[name="password"]').first();
       await expect(passwordInput).toBeVisible({ timeout: 5_000 });
       
-      // Type short password
-      await passwordInput.fill('123');
+      // Type short password - use pressSequentially to trigger React onChange
+      await passwordInput.click();
+      await passwordInput.pressSequentially('123', { delay: 20 });
       await page.waitForTimeout(800); // Wait for validation to appear
       
       // Should show validation error - check for data-testid or aria-invalid or visual indicator
@@ -237,7 +241,9 @@ test.describe('Production UX Improvements', () => {
       const hasError = await errorIndicator.isVisible({ timeout: 2_000 }).catch(() => false);
       
       // Type longer password
-      await passwordInput.fill('password123');
+      await passwordInput.click();
+      await passwordInput.clear();
+      await passwordInput.pressSequentially('password123', { delay: 20 });
       await page.waitForTimeout(800); // Wait for validation to update
       
       // Should show success indicator - check for data-testid or visual indicator
@@ -553,8 +559,9 @@ test.describe('Production UX Improvements', () => {
       const emailInput = page.locator('input[type="email"], input[name="email"]').first();
       await expect(emailInput).toBeVisible({ timeout: 5_000 });
       
-      // Type invalid then valid email
-      await emailInput.fill('invalid');
+      // Type invalid then valid email - use pressSequentially to trigger React onChange
+      await emailInput.click();
+      await emailInput.pressSequentially('invalid', { delay: 20 });
       await page.waitForTimeout(500);
       
       // Check for visual feedback (border color change)
@@ -563,7 +570,9 @@ test.describe('Production UX Improvements', () => {
         return styles.borderColor;
       }).catch(() => null);
       
-      await emailInput.fill('test@example.com');
+      await emailInput.click();
+      await emailInput.clear();
+      await emailInput.pressSequentially('test@example.com', { delay: 20 });
       await page.waitForTimeout(500);
       
       const validBorder = await emailInput.evaluate((el) => {
