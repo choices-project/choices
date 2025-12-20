@@ -148,7 +148,7 @@ export default function DashboardPage() {
         <div className="text-center space-y-4 max-w-md">
           <h1 className="text-2xl font-bold text-red-600">Access denied</h1>
           <p className="text-gray-600">
-            {error ?? 'You must be logged in to access the dashboard.'}
+            You must be logged in to access the dashboard.
           </p>
           <p className="text-sm text-gray-500">Redirecting to login…</p>
         </div>
