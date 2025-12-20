@@ -1,9 +1,7 @@
 'use client';
 
-// Prevent static generation since this requires client-side state and store hydration
-export const dynamic = 'force-dynamic';
-
 import { Plus, Users, BarChart3, Flame, Eye } from 'lucide-react';
+import dynamic from 'next/dynamic';
 import Link from 'next/link';
 import React, { useEffect, useCallback, useMemo, useRef } from 'react';
 
@@ -26,7 +24,14 @@ import logger from '@/lib/utils/logger';
 
 import { useI18n } from '@/hooks/useI18n';
 
-export default function PollsPage() {
+// Client-only component to prevent any SSR hydration mismatches
+// Since this uses dynamic() with ssr: false, it never renders on the server
+// This is the proper way to handle client-only content - no suppressHydrationWarning needed
+function PollsPageContent() {
+  const initializedRef = useRef(false);
+  const [isMounted, setIsMounted] = React.useState(false);
+  const [isStoreReady, setIsStoreReady] = React.useState(false);
+
   const { t, currentLanguage } = useI18n();
   const { setCurrentRoute, setSidebarActiveSection, setBreadcrumbs } = useAppActions();
   const polls = useFilteredPollCards();
@@ -42,32 +47,21 @@ export default function PollsPage() {
     setCurrentPage,
   } = usePollsActions();
 
-  const initializedRef = useRef(false);
-  const [isMounted, setIsMounted] = React.useState(false);
-  const [isStoreReady, setIsStoreReady] = React.useState(false);
-
-  // Prevent hydration mismatch by only rendering content after mount
-  // This ensures server and client initial renders are identical (both show loading)
-  // CRITICAL: This pattern prevents React error #185 (hydration mismatch)
+  // Set mounted state after component mounts
+  // This ensures Zustand store has time to hydrate from localStorage
   React.useEffect(() => {
-    // Set mounted immediately after first render
     setIsMounted(true);
-    
     // Give Zustand store a moment to hydrate from localStorage
-    // The persist middleware loads state asynchronously, so we need to wait
-    // This prevents hydration mismatches from persisted store state differences
+    // The persist middleware loads state asynchronously
     const timer = setTimeout(() => {
       setIsStoreReady(true);
     }, 0);
-    
     return () => clearTimeout(timer);
   }, []);
 
   const selectedCategory = filters.category[0] ?? 'all';
 
-  // Use client-only formatters to prevent hydration mismatches
-  // React error #185 occurs when server and client render different content
-  // CRITICAL: Only use formatters after mount to ensure consistent rendering
+  // Use client-only formatters - only create after mount
   const numberFormatter = useMemo(() => {
     if (!isMounted) return null;
     return new Intl.NumberFormat(currentLanguage ?? undefined);
@@ -84,10 +78,8 @@ export default function PollsPage() {
 
   const formatVoteCount = useCallback(
     (value: number) => {
-      // During SSR or initial client render (before mount), use simple string
-      // This ensures server and first client render match exactly
       if (!isMounted || !numberFormatter) {
-        return `${value} votes`; // Simple fallback that matches on both server and client
+        return `${value} votes`;
       }
       return t('polls.page.metadata.votes', {
         count: String(value),
@@ -99,12 +91,9 @@ export default function PollsPage() {
 
   const formatCreatedDate = useCallback(
     (value: string) => {
-      // During SSR or initial client render (before mount), use simple format
-      // This ensures server and first client render match exactly
       if (!isMounted || !dateFormatter) {
         const date = new Date(value);
-        // Use a simple format that will be consistent on server and client
-        return date.toISOString().split('T')[0]; // YYYY-MM-DD format
+        return date.toISOString().split('T')[0];
       }
       return dateFormatter.format(new Date(value));
     },
@@ -122,9 +111,8 @@ export default function PollsPage() {
   );
 
   const paginationLabel = useMemo(() => {
-    // During SSR or initial client render, use simple format
     if (!isMounted || !numberFormatter) {
-      return `${paginationStart}-${paginationEnd} of ${pagination.totalResults}`; // Fallback during SSR
+      return `${paginationStart}-${paginationEnd} of ${pagination.totalResults}`;
     }
     return t('polls.page.pagination.showing', {
       start: numberFormatter.format(paginationStart),
@@ -134,9 +122,8 @@ export default function PollsPage() {
   }, [isMounted, numberFormatter, paginationEnd, paginationStart, pagination.totalResults, t]);
 
   const paginationPageLabel = useMemo(() => {
-    // During SSR or initial client render, use simple format
     if (!isMounted || !numberFormatter) {
-      return `Page ${pagination.currentPage} of ${pagination.totalPages}`; // Fallback during SSR
+      return `Page ${pagination.currentPage} of ${pagination.totalPages}`;
     }
     return t('polls.page.pagination.pageLabel', {
       current: numberFormatter.format(pagination.currentPage),
@@ -145,7 +132,6 @@ export default function PollsPage() {
   }, [isMounted, numberFormatter, pagination.currentPage, pagination.totalPages, t]);
 
   useEffect(() => {
-    // Only set breadcrumbs after mount to prevent hydration issues
     if (!isMounted) return;
 
     setCurrentRoute('/polls');
@@ -170,10 +156,8 @@ export default function PollsPage() {
     setCurrentPage(1);
     setTrendingOnly(false);
     setFilters({ status: [] });
-    // Wrap in try-catch to prevent errors from crashing the page
     loadPolls().catch((error) => {
       logger.warn('Failed to load polls (non-critical):', error);
-      // Don't throw - allow page to render with empty state
     });
   }, [loadPolls, setCurrentPage, setFilters, setTrendingOnly]);
 
@@ -190,7 +174,6 @@ export default function PollsPage() {
     return 'all';
   }, [filters.status, filters.trendingOnly]);
 
-
   const handlePageChange = useCallback(
     (page: number) => {
       const nextPage = Math.max(1, Math.min(page, pagination.totalPages));
@@ -200,10 +183,7 @@ export default function PollsPage() {
     [loadPolls, pagination.totalPages, setCurrentPage],
   );
 
-  // Show loading state during SSR and initial client render to prevent hydration mismatch
-  // This ensures server and client render identical content initially
-  // CRITICAL: Wait for mount AND store hydration before rendering any content
-  // This prevents hydration mismatches from persisted store state differences
+  // Show loading state until component is mounted and store is ready
   if (!isMounted || !isStoreReady) {
     return (
       <div className="container mx-auto px-4 py-8">
@@ -214,7 +194,7 @@ export default function PollsPage() {
     );
   }
 
-  // After mount and store ready, show loading only if actually loading
+  // Show loading state if actually loading data
   if (isLoading) {
     return (
       <div className="container mx-auto px-4 py-8">
@@ -229,8 +209,12 @@ export default function PollsPage() {
     <ErrorBoundary>
       <div className="container mx-auto px-4 py-8">
         <div className="mb-8">
-          <h1 className="text-3xl font-bold text-gray-900 dark:text-gray-100 mb-2">{t('polls.page.title')}</h1>
-          <p className="text-gray-600 dark:text-gray-400">{t('polls.page.subtitle')}</p>
+          <h1 className="text-3xl font-bold text-gray-900 dark:text-gray-100 mb-2">
+            {t('polls.page.title')}
+          </h1>
+          <p className="text-gray-600 dark:text-gray-400">
+            {t('polls.page.subtitle')}
+          </p>
         </div>
 
         {error && (
@@ -241,116 +225,139 @@ export default function PollsPage() {
 
         <PollFiltersPanel />
 
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        {polls.length === 0 ? (
-          <div className="col-span-full text-center py-12">
-            <div className="text-gray-400 mb-4">
-              <BarChart3 className="h-12 w-12 mx-auto" />
-            </div>
-            <h3 className="text-lg font-medium text-gray-900 dark:text-gray-100 mb-2">{t('polls.page.empty.title')}</h3>
-            <p className="text-gray-600 dark:text-gray-400 mb-4">
-              {((search.query ?? '') || selectedCategory !== 'all' || activeFilter !== 'all')
-                ? t('polls.page.empty.filters')
-                : t('polls.page.empty.ctaMessage')}
-            </p>
-            <Link
-              href="/polls/create"
-              className="inline-flex items-center px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
-            >
-              <Plus className="h-4 w-4 mr-2" />
-              {t('polls.page.cta.create')}
-            </Link>
-          </div>
-        ) : (
-          polls.map((poll) => (
-            <div key={poll.id} className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-6 hover:shadow-md transition-shadow">
-              <div className="flex items-start justify-between mb-4">
-                <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100 line-clamp-2">
-                  {poll.title}
-                </h3>
-                {typeof poll.trendingPosition === 'number' && (
-                  <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-orange-100 text-orange-700">
-                    <Flame className="h-3 w-3 mr-1" />
-                    {t('polls.page.trendingBadge', { position: String(poll.trendingPosition) })}
-                  </span>
-                )}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          {polls.length === 0 ? (
+            <div className="col-span-full text-center py-12">
+              <div className="text-gray-400 mb-4">
+                <BarChart3 className="h-12 w-12 mx-auto" />
               </div>
-
-              <p className="text-sm text-gray-600 mb-4 line-clamp-3">
-                {poll.description || t('polls.page.descriptionFallback')}
+              <h3 className="text-lg font-medium text-gray-900 dark:text-gray-100 mb-2">
+                {t('polls.page.empty.title')}
+              </h3>
+              <p className="text-gray-600 dark:text-gray-400 mb-4">
+                {((search.query ?? '') || selectedCategory !== 'all' || activeFilter !== 'all')
+                  ? t('polls.page.empty.filters')
+                  : t('polls.page.empty.ctaMessage')}
               </p>
-
-              <div className="flex items-center justify-between text-sm text-gray-500 mb-4">
-                <span className="inline-flex items-center" suppressHydrationWarning>
-                  <Users className="h-4 w-4 mr-1" />
-                  {formatVoteCount(typeof poll.totalVotes === 'number' ? poll.totalVotes : 0)}
-                </span>
-                <span suppressHydrationWarning>
-                  {t('polls.page.metadata.created', {
-                    date: formatCreatedDate(poll.createdAt),
-                  })}
-                </span>
-              </div>
-
-              <div className="flex flex-wrap gap-2 mb-4">
-                <span className={`inline-flex items-center px-2 py-1 rounded-full text-xs ${getPollCategoryColor(poll.category)}`}>
-                  {getPollCategoryIcon(poll.category)} {t(`polls.categories.${poll.category}`, { defaultValue: poll.category })}
-                </span>
-                {poll.tags?.slice(0, 3).map((tag, index) => (
-                  <span key={`${poll.id}-tag-${index}`} className="inline-flex items-center px-2 py-1 rounded-full text-xs bg-gray-100 text-gray-700">
-                    #{tag}
-                  </span>
-                ))}
-              </div>
-
-              <div className="space-y-2">
-                <Link
-                  href={`/polls/${poll.id}`}
-                  className="inline-flex items-center justify-center w-full px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
-                >
-                  <Eye className="h-4 w-4 mr-2" />
-                  {t('polls.page.cta.view')}
-                </Link>
-                <Link
-                  href={`/polls/${poll.id}/results`}
-                  className="inline-flex items-center justify-center w-full px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors"
-                >
-                  <BarChart3 className="h-4 w-4 mr-2" />
-                  {t('polls.page.cta.results')}
-                </Link>
-              </div>
+              <Link
+                href="/polls/create"
+                className="inline-flex items-center px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+              >
+                <Plus className="h-4 w-4 mr-2" />
+                {t('polls.page.cta.create')}
+              </Link>
             </div>
-          ))
-        )}
-      </div>
+          ) : (
+            polls.map((poll) => (
+              <div
+                key={poll.id}
+                className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-6 hover:shadow-md transition-shadow"
+              >
+                <div className="flex items-start justify-between mb-4">
+                  <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100 line-clamp-2">
+                    {poll.title}
+                  </h3>
+                  {typeof poll.trendingPosition === 'number' && (
+                    <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-orange-100 text-orange-700">
+                      <Flame className="h-3 w-3 mr-1" />
+                      {t('polls.page.trendingBadge', { position: String(poll.trendingPosition) })}
+                    </span>
+                  )}
+                </div>
 
-      {pagination.totalPages > 1 && (
-        <div className="mt-6 flex flex-col gap-2 rounded-lg border border-gray-200 bg-white px-4 py-3 text-sm text-gray-600 md:flex-row md:items-center md:justify-between">
-          <span suppressHydrationWarning>{paginationLabel}</span>
-          <div className="flex items-center gap-2">
-            <button
-              type="button"
-              onClick={() => handlePageChange(pagination.currentPage - 1)}
-              disabled={pagination.currentPage === 1 || isLoading}
-              className="rounded-md border border-gray-200 px-3 py-1 text-sm font-medium text-gray-600 hover:bg-gray-50 disabled:cursor-not-allowed disabled:opacity-50"
-            >
-              {t('polls.page.pagination.previous')}
-            </button>
-            <span className="text-xs text-gray-500" suppressHydrationWarning>
-              {paginationPageLabel}
-            </span>
-            <button
-              type="button"
-              onClick={() => handlePageChange(pagination.currentPage + 1)}
-              disabled={pagination.currentPage === pagination.totalPages || isLoading}
-              className="rounded-md border border-gray-200 px-3 py-1 text-sm font-medium text-gray-600 hover:bg-gray-50 disabled:cursor-not-allowed disabled:opacity-50"
-            >
-              {t('polls.page.pagination.next')}
-            </button>
-          </div>
+                <p className="text-sm text-gray-600 mb-4 line-clamp-3">
+                  {poll.description || t('polls.page.descriptionFallback')}
+                </p>
+
+                <div className="flex items-center justify-between text-sm text-gray-500 mb-4">
+                  <span className="inline-flex items-center">
+                    <Users className="h-4 w-4 mr-1" />
+                    {formatVoteCount(typeof poll.totalVotes === 'number' ? poll.totalVotes : 0)}
+                  </span>
+                  <span>
+                    {t('polls.page.metadata.created', {
+                      date: formatCreatedDate(poll.createdAt),
+                    })}
+                  </span>
+                </div>
+
+                <div className="flex flex-wrap gap-2 mb-4">
+                  <span className={`inline-flex items-center px-2 py-1 rounded-full text-xs ${getPollCategoryColor(poll.category)}`}>
+                    {getPollCategoryIcon(poll.category)} {t(`polls.categories.${poll.category}`, { defaultValue: poll.category })}
+                  </span>
+                  {poll.tags?.slice(0, 3).map((tag, index) => (
+                    <span
+                      key={`${poll.id}-tag-${index}`}
+                      className="inline-flex items-center px-2 py-1 rounded-full text-xs bg-gray-100 text-gray-700"
+                    >
+                      #{tag}
+                    </span>
+                  ))}
+                </div>
+
+                <div className="space-y-2">
+                  <Link
+                    href={`/polls/${poll.id}`}
+                    className="inline-flex items-center justify-center w-full px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+                  >
+                    <Eye className="h-4 w-4 mr-2" />
+                    {t('polls.page.cta.view')}
+                  </Link>
+                  <Link
+                    href={`/polls/${poll.id}/results`}
+                    className="inline-flex items-center justify-center w-full px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors"
+                  >
+                    <BarChart3 className="h-4 w-4 mr-2" />
+                    {t('polls.page.cta.results')}
+                  </Link>
+                </div>
+              </div>
+            ))
+          )}
         </div>
-      )}
+
+        {pagination.totalPages > 1 && (
+          <div className="mt-6 flex flex-col gap-2 rounded-lg border border-gray-200 bg-white px-4 py-3 text-sm text-gray-600 md:flex-row md:items-center md:justify-between">
+            <span>{paginationLabel}</span>
+            <div className="flex items-center gap-2">
+              <button
+                type="button"
+                onClick={() => handlePageChange(pagination.currentPage - 1)}
+                disabled={pagination.currentPage === 1 || isLoading}
+                className="rounded-md border border-gray-200 px-3 py-1 text-sm font-medium text-gray-600 hover:bg-gray-50 disabled:cursor-not-allowed disabled:opacity-50"
+              >
+                {t('polls.page.pagination.previous')}
+              </button>
+              <span className="text-xs text-gray-500">
+                {paginationPageLabel}
+              </span>
+              <button
+                type="button"
+                onClick={() => handlePageChange(pagination.currentPage + 1)}
+                disabled={pagination.currentPage === pagination.totalPages || isLoading}
+                className="rounded-md border border-gray-200 px-3 py-1 text-sm font-medium text-gray-600 hover:bg-gray-50 disabled:cursor-not-allowed disabled:opacity-50"
+              >
+                {t('polls.page.pagination.next')}
+              </button>
+            </div>
+          </div>
+        )}
       </div>
     </ErrorBoundary>
   );
 }
+
+// Export as dynamically imported client-only component
+// Using dynamic() with ssr: false prevents server-side rendering entirely
+// This is the proper way to handle client-only content - no suppressHydrationWarning needed
+// The component will only render on the client, eliminating hydration mismatches at the source
+export default dynamic(() => Promise.resolve(PollsPageContent), {
+  ssr: false,
+  loading: () => (
+    <div className="container mx-auto px-4 py-8">
+      <div className="flex items-center justify-center min-h-[400px]">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600" />
+      </div>
+    </div>
+  ),
+});

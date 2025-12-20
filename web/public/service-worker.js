@@ -201,7 +201,28 @@ console.log(`[SW] Service worker loaded (version ${SW_VERSION})`);
 // Caching strategies
 // ---------------------------------------------------------------------------
 
+// Check if a URL scheme is cacheable (exclude chrome-extension://, moz-extension://, etc.)
+function isCacheableScheme(url) {
+  try {
+    const urlObj = new URL(url);
+    // Only cache http/https URLs - exclude extension schemes and other non-cacheable schemes
+    return urlObj.protocol === 'http:' || urlObj.protocol === 'https:';
+  } catch {
+    return false;
+  }
+}
+
 async function cacheFirst(request, cacheName) {
+  // Skip caching for non-cacheable URL schemes (e.g., chrome-extension://)
+  if (!isCacheableScheme(request.url)) {
+    try {
+      return await fetch(request);
+    } catch (error) {
+      console.warn('[SW] Failed to fetch non-cacheable URL', request.url, error);
+      return new Response('Resource not available', { status: 503 });
+    }
+  }
+
   const cached = await caches.match(request);
   if (cached) {
     broadcastAnalyticsEvent('CACHE_HIT', { cache: cacheName, url: request.url, strategy: 'cache-first' });
@@ -212,7 +233,10 @@ async function cacheFirst(request, cacheName) {
     const response = await fetch(request);
     if (response && response.ok) {
       const cache = await caches.open(cacheName);
-      cache.put(request, response.clone());
+      // Only cache if the URL scheme is cacheable
+      if (isCacheableScheme(request.url)) {
+        cache.put(request, response.clone());
+      }
     }
     broadcastAnalyticsEvent('CACHE_MISS', { cache: cacheName, url: request.url, strategy: 'cache-first' });
     return response;
@@ -227,11 +251,24 @@ async function cacheFirst(request, cacheName) {
 }
 
 async function networkFirst(request, cacheName) {
+  // Skip caching for non-cacheable URL schemes
+  if (!isCacheableScheme(request.url)) {
+    try {
+      return await fetch(request);
+    } catch (error) {
+      console.warn('[SW] Failed to fetch non-cacheable URL', request.url, error);
+      return new Response('Resource not available', { status: 503 });
+    }
+  }
+
   try {
     const response = await fetch(request);
     if (response && response.ok) {
       const cache = await caches.open(cacheName);
-      cache.put(request, response.clone());
+      // Only cache if the URL scheme is cacheable
+      if (isCacheableScheme(request.url)) {
+        cache.put(request, response.clone());
+      }
     }
     broadcastAnalyticsEvent('CACHE_MISS', { cache: cacheName, url: request.url, strategy: 'network-first' });
     return response;
@@ -247,12 +284,22 @@ async function networkFirst(request, cacheName) {
 }
 
 async function staleWhileRevalidate(request, cacheName) {
+  // Skip caching for non-cacheable URL schemes
+  if (!isCacheableScheme(request.url)) {
+    try {
+      return await fetch(request);
+    } catch (error) {
+      console.warn('[SW] Failed to fetch non-cacheable URL', request.url, error);
+      return new Response('Resource not available', { status: 503 });
+    }
+  }
+
   const cache = await caches.open(cacheName);
   const cachedResponse = await cache.match(request);
 
   const fetchPromise = fetch(request)
     .then((response) => {
-      if (response && response.ok) {
+      if (response && response.ok && isCacheableScheme(request.url)) {
         cache.put(request, response.clone());
       }
       broadcastAnalyticsEvent('CACHE_MISS', { cache: cacheName, url: request.url, strategy: 'stale-while-revalidate' });

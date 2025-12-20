@@ -178,7 +178,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       setUser(null)
       // Redirect to landing page after logout
       if (typeof window !== 'undefined') {
-        window.location.href = '/landing'
+        window.location.replace('/landing')
       }
       return
     }
@@ -232,9 +232,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         }
       }
 
-      // Always redirect, even if API calls fail
+      // Always redirect to landing page, even if API calls fail
       if (typeof window !== 'undefined') {
         // Use replace instead of href to prevent back button issues
+        // This ensures users are taken back to the landing page after sign out
         window.location.replace('/landing');
       }
     } catch (error) {

@@ -298,6 +298,8 @@ const nextConfig = {
   async headers() {
     const isProduction = process.env.NODE_ENV === 'production'
     const isReportOnly = process.env.CSP_REPORT_ONLY === 'true'
+    // Check if we're in a Vercel preview environment (not production)
+    const isVercelPreview = process.env.VERCEL_ENV === 'preview' || process.env.VERCEL_ENV === 'development'
 
     // CSP configuration with two profiles: production and development
     const cspDirectives = {
@@ -307,8 +309,9 @@ const nextConfig = {
           "'self'",
           "'unsafe-inline'", // Required for Next.js
           "'unsafe-eval'", // Required for Next.js development
-          'https://vercel.live', // Vercel preview
-          'https://vercel.com', // Vercel analytics
+          // Only include vercel.live in preview/development environments, not production
+          ...(isVercelPreview ? ['https://vercel.live'] : []),
+          'https://vercel.com', // Vercel analytics (safe for production)
           'https://challenges.cloudflare.com', // Turnstile
           'https://static.cloudflareinsights.com', // Cloudflare analytics
         ],
@@ -332,7 +335,8 @@ const nextConfig = {
           "'self'",
           'https://*.supabase.co',
           'https://*.supabase.io',
-          'https://vercel.live',
+          // Only include vercel.live in preview/development environments, not production
+          ...(isVercelPreview ? ['https://vercel.live'] : []),
           'https://vitals.vercel-insights.com',
           'https://challenges.cloudflare.com', // Turnstile
           'https://fonts.googleapis.com', // Google Fonts
