@@ -184,7 +184,20 @@ export default function PollsPage() {
 
   // Show loading state during SSR and initial client render to prevent hydration mismatch
   // This ensures server and client render identical content initially
-  if (!isMounted || isLoading) {
+  // CRITICAL: Wait for mount AND ensure polls data is stable before rendering
+  // This prevents hydration mismatches from store state differences
+  if (!isMounted) {
+    return (
+      <div className="container mx-auto px-4 py-8">
+        <div className="flex items-center justify-center min-h-[400px]">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600" />
+        </div>
+      </div>
+    );
+  }
+
+  // After mount, show loading only if actually loading
+  if (isLoading) {
     return (
       <div className="container mx-auto px-4 py-8">
         <div className="flex items-center justify-center min-h-[400px]">
