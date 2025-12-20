@@ -1,7 +1,8 @@
-import { defineConfig, devices } from '@playwright/test'
-import { config as loadDotenv } from 'dotenv'
-import { resolve, dirname } from 'path'
-import { fileURLToPath } from 'url'
+import { dirname, resolve } from 'path';
+import { fileURLToPath } from 'url';
+
+import { defineConfig, devices } from '@playwright/test';
+import { config as loadDotenv } from 'dotenv';
 
 // Get __dirname equivalent for ES modules
 const __filename = fileURLToPath(import.meta.url)
@@ -19,8 +20,8 @@ const envFiles = [
 
 for (const { path: envFile, override } of envFiles) {
   try {
-    loadDotenv({ path: envFile, override })
-  } catch (error) {
+    loadDotenv({ path: envFile, override });
+  } catch {
     // Ignore errors if file doesn't exist
   }
 }

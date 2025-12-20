@@ -415,7 +415,9 @@ test.describe('Production UX Improvements', () => {
       const requestPromise = page.waitForRequest(
         (req) => req.url().includes('/api/auth/login') && req.method() === 'POST',
         { timeout: 5_000 }
-      ).then(() => { apiRequestMade = true; }).catch(() => {});
+      ).then(() => { apiRequestMade = true; }).catch(() => {
+        // Request might not be made - that's OK, we'll check apiRequestMade later
+      });
       
       // Submit the form directly to ensure onSubmit handler is called
       // This is more reliable than clicking the button, especially if React state isn't synced
