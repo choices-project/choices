@@ -84,13 +84,16 @@ export default function ProfilePage() {
   // Add timeout to prevent infinite loading - must be before early returns
   const [loadingTimeout, setLoadingTimeout] = useState(false);
   useEffect(() => {
-    if (profileLoading && !profile && !profileError) {
-      const timeout = setTimeout(() => {
-        setLoadingTimeout(true);
-      }, 15_000); // 15 second timeout
-      return () => clearTimeout(timeout);
+    if (!(profileLoading && !profile && !profileError)) {
+      setLoadingTimeout(false);
+      return;
     }
-    setLoadingTimeout(false);
+    const timeout = setTimeout(() => {
+      setLoadingTimeout(true);
+    }, 15_000); // 15 second timeout
+    return () => {
+      clearTimeout(timeout);
+    };
   }, [profileLoading, profile, profileError]);
 
   if (isUserLoading || profileLoading) {
