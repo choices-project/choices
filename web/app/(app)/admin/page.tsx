@@ -111,32 +111,44 @@ export default function AdminDashboard() {
 
     try {
       setLoading(true) // Ensure loading state is set
-      const response = await fetch('/api/admin/health?type=status', {
-        headers: {
-          'Content-Type': 'application/json'
-        },
-        // Add timeout to prevent hanging
-        signal: AbortSignal.timeout(30_000) // 30 second timeout
-      })
+      
+      // Use a more reliable endpoint - just check if we can access admin health
+      // This endpoint requires admin auth, so if it succeeds, we're admin
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 15_000); // 15 second timeout
+      
+      try {
+        const response = await fetch('/api/admin/health?type=status', {
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          signal: controller.signal
+        })
 
-      if (response.ok) {
-        setIsAdmin(true)
-        await loadAdminStats()
-        setLoading(false)
-      } else if (response.status === 401 || response.status === 403) {
-        setIsAdmin(false)
-        setLoading(false)
-      } else {
-        // Log the error for debugging
-        const errorText = await response.text().catch(() => 'Unknown error')
-        logger.warn('Admin status check returned non-ok status:', { status: response.status, error: errorText })
-        setIsAdmin(false)
-        setLoading(false)
+        clearTimeout(timeoutId);
+
+        if (response.ok) {
+          setIsAdmin(true)
+          await loadAdminStats()
+          setLoading(false)
+        } else if (response.status === 401 || response.status === 403) {
+          setIsAdmin(false)
+          setLoading(false)
+        } else {
+          // Log the error for debugging
+          const errorText = await response.text().catch(() => 'Unknown error')
+          logger.warn('Admin status check returned non-ok status:', { status: response.status, error: errorText })
+          setIsAdmin(false)
+          setLoading(false)
+        }
+      } catch (fetchError) {
+        clearTimeout(timeoutId);
+        throw fetchError;
       }
     } catch (error) {
       // Handle timeout and network errors
-      if (error instanceof Error && error.name === 'TimeoutError') {
-        logger.error('Admin status check timed out after 30 seconds')
+      if (error instanceof Error && (error.name === 'AbortError' || error.message.includes('aborted'))) {
+        logger.error('Admin status check timed out after 15 seconds')
       } else {
         logger.error('Admin status check failed:', error instanceof Error ? error : new Error(String(error)))
       }
