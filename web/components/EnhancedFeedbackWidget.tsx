@@ -160,7 +160,7 @@ const EnhancedFeedbackWidget: React.FC = () => {
   const { trackEvent, trackUserAction, setLoading: setAnalyticsLoading, setError: setAnalyticsError } = useAnalyticsActions()
   const isLoadingAnalytics = useAnalyticsLoading()
   const error = useAnalyticsError()
-  
+
   // Use loading state to show loading indicator (combine analytics and submission loading)
   const isProcessing = isLoadingAnalytics || isSubmitting
 
@@ -237,6 +237,8 @@ const EnhancedFeedbackWidget: React.FC = () => {
     }
   }, [isOpen, step])
 
+  // In harness mode (E2E testing), always render the widget regardless of feature flag
+  // In production/regular mode, check feature flag
   if (!isHarnessMode && !isFeatureEnabled('FEEDBACK_WIDGET')) {
     return null
   }

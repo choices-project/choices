@@ -3,6 +3,8 @@
 import { ArrowRight, Shield, Users, Scale, Lock, Vote, TrendingUp } from 'lucide-react';
 import Link from 'next/link';
 
+import EnhancedFeedbackWidget from '@/components/EnhancedFeedbackWidget';
+
 import { useI18n } from '@/hooks/useI18n';
 
 /**
@@ -297,6 +299,9 @@ export default function LandingPageClient() {
           </div>
         </div>
       </footer>
+
+      {/* Feedback Widget - Allow users to provide feedback from landing page */}
+      <EnhancedFeedbackWidget />
     </div>
   );
 }
