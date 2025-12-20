@@ -1,9 +1,9 @@
 /**
  * Privacy & Data Management Page
- * 
+ *
  * 🔒 PRIVACY PARAMOUNT: Comprehensive privacy settings and data management
  * Integrates all privacy features in one cohesive interface
- * 
+ *
  * Features:
  * - View and edit all 16 privacy controls
  * - View all collected data by category
@@ -11,7 +11,7 @@
  * - Delete specific data categories
  * - Delete entire account
  * - Navigation back to main dashboard
- * 
+ *
  * Created: November 5, 2025
  * Status: ✅ ACTIVE - COMPREHENSIVE
  */
@@ -94,6 +94,7 @@ export default function PrivacyPage() {
       return () => clearTimeout(timeout);
     }
     setLoadingTimeout(false);
+    return undefined;
   }, [profileLoading]);
 
   const userId = profile?.id ?? profile?.user_id ?? user?.id ?? null;
