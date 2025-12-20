@@ -441,23 +441,19 @@ export async function loginTestUser(page: Page, user: TestUser): Promise<void> {
       if (reactStateReady) break;
     }
 
-    // Re-trigger events every few attempts to ensure React processes them
+    // Re-trigger input by typing last character again to ensure React processes
+    // This simulates real user interaction which React handles better
     if (attempt > 0 && attempt % 5 === 0) {
+      // Type the last character again to trigger React's onChange
       await emailInput.first().focus();
-      await emailInput.first().evaluate((el: HTMLInputElement) => {
-        // Trigger React's onChange by dispatching input event
-        const inputEvent = new Event('input', { bubbles: true, cancelable: true });
-        el.dispatchEvent(inputEvent);
-        const changeEvent = new Event('change', { bubbles: true, cancelable: true });
-        el.dispatchEvent(changeEvent);
-      });
+      await page.keyboard.press('End');
+      await page.keyboard.press('Backspace');
+      await page.keyboard.type(email.slice(-1), { delay: 10 });
+      
       await passwordInput.first().focus();
-      await passwordInput.first().evaluate((el: HTMLInputElement) => {
-        const inputEvent = new Event('input', { bubbles: true, cancelable: true });
-        el.dispatchEvent(inputEvent);
-        const changeEvent = new Event('change', { bubbles: true, cancelable: true });
-        el.dispatchEvent(changeEvent);
-      });
+      await page.keyboard.press('End');
+      await page.keyboard.press('Backspace');
+      await page.keyboard.type(password.slice(-1), { delay: 10 });
     }
 
     await page.waitForTimeout(300);
