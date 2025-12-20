@@ -140,29 +140,44 @@ test.describe('Auth – real backend', () => {
     // The page shows a loading state initially, then either shows access denied or admin dashboard
     // Wait for either the admin dashboard tab (which only appears when admin) or access denied message
     // Also check for loading state to ensure we're not stuck
-    await page.waitForFunction(
-      () => {
-        // Check if admin dashboard tab is visible (indicates admin access granted)
-        const adminTab = document.querySelector('[data-testid="admin-dashboard-tab"]');
-        if (adminTab && adminTab.offsetParent !== null) return true; // Check if actually visible
-        
-        // Check if access denied is visible (indicates admin access denied)
-        const accessDenied = document.querySelector('[data-testid="admin-access-denied"]');
-        if (accessDenied && accessDenied.offsetParent !== null) return true; // Check if actually visible
-        
-        // Check if still loading (if so, continue waiting)
-        const loading = document.querySelector('[data-testid="admin-loading"]');
-        if (loading && loading.offsetParent !== null) return false; // Still loading
-        
-        // If neither admin tab nor access denied nor loading, something else is shown
-        // Check for any admin content as fallback
-        const adminHeader = document.querySelector('h1');
-        if (adminHeader && adminHeader.textContent?.includes('Admin Dashboard')) return true;
-        
-        return false; // Still waiting
-      },
-      { timeout: 60_000 }
-    );
+    try {
+      await page.waitForFunction(
+        () => {
+          // Check if admin dashboard tab is visible (indicates admin access granted)
+          const adminTab = document.querySelector('[data-testid="admin-dashboard-tab"]');
+          if (adminTab && adminTab.offsetParent !== null) return true; // Check if actually visible
+          
+          // Check if access denied is visible (indicates admin access denied)
+          const accessDenied = document.querySelector('[data-testid="admin-access-denied"]');
+          if (accessDenied && accessDenied.offsetParent !== null) return true; // Check if actually visible
+          
+          // Check if still loading (if so, continue waiting)
+          const loading = document.querySelector('[data-testid="admin-loading"]');
+          if (loading && loading.offsetParent !== null) return false; // Still loading
+          
+          // If neither admin tab nor access denied nor loading, something else is shown
+          // Check for any admin content as fallback
+          const adminHeader = document.querySelector('h1');
+          if (adminHeader && adminHeader.textContent?.includes('Admin Dashboard')) return true;
+          
+          return false; // Still waiting
+        },
+        { timeout: 60_000 }
+      );
+    } catch (error) {
+      // If timeout, take a screenshot and check what's actually on the page
+      const pageContent = await page.content();
+      const hasAdminTab = pageContent.includes('admin-dashboard-tab');
+      const hasAccessDenied = pageContent.includes('admin-access-denied');
+      const hasLoading = pageContent.includes('admin-loading');
+      const bodyText = await page.locator('body').textContent().catch(() => '');
+      
+      throw new Error(
+        `Admin page did not resolve within timeout. ` +
+        `Page state - Admin tab: ${hasAdminTab}, Access denied: ${hasAccessDenied}, Loading: ${hasLoading}. ` +
+        `Body text preview: ${bodyText.substring(0, 200)}`
+      );
+    }
     
     // Verify the admin dashboard is visible (not access denied)
     // The admin dashboard tab should be visible if admin access is granted
