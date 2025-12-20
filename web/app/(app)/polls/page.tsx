@@ -30,7 +30,6 @@ import { useI18n } from '@/hooks/useI18n';
 function PollsPageContent() {
   const initializedRef = useRef(false);
   const [isMounted, setIsMounted] = React.useState(false);
-  const [isStoreReady, setIsStoreReady] = React.useState(false);
 
   const { t, currentLanguage } = useI18n();
   const { setCurrentRoute, setSidebarActiveSection, setBreadcrumbs } = useAppActions();
@@ -72,12 +71,6 @@ function PollsPageContent() {
   // This ensures Zustand store has time to hydrate from localStorage
   React.useEffect(() => {
     setIsMounted(true);
-    // Give Zustand store a moment to hydrate from localStorage
-    // The persist middleware loads state asynchronously
-    const timer = setTimeout(() => {
-      setIsStoreReady(true);
-    }, 0);
-    return () => clearTimeout(timer);
   }, []);
 
   const selectedCategory = filters.category[0] ?? 'all';
@@ -170,7 +163,7 @@ function PollsPageContent() {
   }, [isMounted]);
 
   useEffect(() => {
-    if (!isMounted || !isStoreReady) {
+    if (!isMounted) {
       return;
     }
     if (initializedRef.current) {
@@ -183,7 +176,7 @@ function PollsPageContent() {
     loadPollsRef.current().catch((error) => {
       logger.warn('Failed to load polls (non-critical):', error);
     });
-  }, [isMounted, isStoreReady]);
+  }, [isMounted]);
 
   const activeFilter: 'all' | 'active' | 'closed' | 'trending' = useMemo(() => {
     if (filters.trendingOnly) {
@@ -207,8 +200,8 @@ function PollsPageContent() {
     [pagination.totalPages],
   );
 
-  // Show loading state until component is mounted and store is ready
-  if (!isMounted || !isStoreReady) {
+  // Show loading state until component is mounted
+  if (!isMounted) {
     return (
       <div className="container mx-auto px-4 py-8">
         <div className="flex items-center justify-center min-h-[400px]">
