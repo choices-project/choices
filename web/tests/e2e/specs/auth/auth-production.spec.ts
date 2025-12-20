@@ -139,6 +139,7 @@ test.describe('Auth – real backend', () => {
     // Wait for admin status check to complete
     // The page shows a loading state initially, then either shows access denied or admin dashboard
     // Wait for either the admin dashboard tab (which only appears when admin) or access denied message
+    // Also check for loading state to ensure we're not stuck
     await page.waitForFunction(
       () => {
         // Check if admin dashboard tab is visible (indicates admin access granted)
@@ -149,7 +150,16 @@ test.describe('Auth – real backend', () => {
         const accessDenied = document.querySelector('[data-testid="admin-access-denied"]');
         if (accessDenied && accessDenied.offsetParent !== null) return true; // Check if actually visible
         
-        return false; // Still loading
+        // Check if still loading (if so, continue waiting)
+        const loading = document.querySelector('[data-testid="admin-loading"]');
+        if (loading && loading.offsetParent !== null) return false; // Still loading
+        
+        // If neither admin tab nor access denied nor loading, something else is shown
+        // Check for any admin content as fallback
+        const adminHeader = document.querySelector('h1');
+        if (adminHeader && adminHeader.textContent?.includes('Admin Dashboard')) return true;
+        
+        return false; // Still waiting
       },
       { timeout: 60_000 }
     );

@@ -170,7 +170,7 @@ export default function AdminDashboard() {
   if (isUserLoading || loading || isAdmin === null) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50 flex items-center justify-center">
-        <div className="text-center">
+        <div className="text-center" data-testid="admin-loading">
           <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto" />
           <p className="mt-2 text-gray-600">Loading admin dashboard...</p>
         </div>
@@ -193,7 +193,7 @@ export default function AdminDashboard() {
             </div>
             <h1 className="text-xl font-bold text-gray-900 mb-2">Access Denied</h1>
             <p className="text-gray-600 mb-4">You do not have access to the admin dashboard.</p>
-            <div data-testid={T.admin.accessDenied} className="text-red-600 font-medium">
+            <div data-testid="admin-access-denied" className="text-red-600 font-medium">
               Access Denied
             </div>
             <div className="mt-6">
