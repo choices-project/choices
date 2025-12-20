@@ -178,6 +178,9 @@ function PollsPageContent() {
   }, [isMounted]);
 
   useEffect(() => {
+    if (!isMounted || !isStoreReady) {
+      return;
+    }
     if (initializedRef.current) {
       return;
     }
@@ -188,7 +191,7 @@ function PollsPageContent() {
     loadPollsRef.current().catch((error) => {
       logger.warn('Failed to load polls (non-critical):', error);
     });
-  }, []);
+  }, [isMounted, isStoreReady]);
 
   const activeFilter: 'all' | 'active' | 'closed' | 'trending' = useMemo(() => {
     if (filters.trendingOnly) {

@@ -1,4 +1,4 @@
-import { useRef } from 'react';
+import { useMemo } from 'react';
 import { create } from 'zustand';
 import { devtools, persist } from 'zustand/middleware';
 import { immer } from 'zustand/middleware/immer';
@@ -1042,52 +1042,49 @@ export const usePollPagination = () =>
 
 export const useFilteredPolls = () => usePollsStore((state) => state.getFilteredPolls());
 export const useFilteredPollCards = () => {
-  // Use a single selector to get all needed data
-  // This minimizes the number of store subscriptions
-  const storeData = usePollsStore((state) => ({
-    polls: state.polls,
-    filterStatus: state.filters.status,
-    filterCategory: state.filters.category,
-    filterTags: state.filters.tags,
-    filterTrendingOnly: state.filters.trendingOnly,
-  }));
+  // Use individual selectors with useShallow for stable references
+  // This ensures we only re-render when the actual data changes, not just references
+  const polls = usePollsStore(useShallow((state) => state.polls));
+  const filterStatus = usePollsStore(useShallow((state) => state.filters.status));
+  const filterCategory = usePollsStore(useShallow((state) => state.filters.category));
+  const filterTags = usePollsStore(useShallow((state) => state.filters.tags));
+  const filterTrendingOnly = usePollsStore((state) => state.filters.trendingOnly);
   
-  // Use refs to track previous values and only recalculate when they actually change
-  const prevDataRef = useRef<{
-    pollsKey: string;
-    filterKey: string;
-    result: ReturnType<typeof createPollCardView>[];
-  } | null>(null);
+  // Create stable keys from the data for memoization
+  // This ensures useMemo only recalculates when the actual data changes
+  const pollsKey = useMemo(
+    () => polls.length > 0 
+      ? `${polls.length}:${polls.map(p => p.id).sort().join(',')}`
+      : '0:',
+    [polls]
+  );
+  const filterKey = useMemo(
+    () => JSON.stringify({
+      status: [...filterStatus].sort().join(','),
+      category: [...filterCategory].sort().join(','),
+      tags: [...filterTags].sort().join(','),
+      trendingOnly: filterTrendingOnly,
+    }),
+    [filterStatus, filterCategory, filterTags, filterTrendingOnly]
+  );
   
-  // Create stable keys from the data
-  const pollsKey = storeData.polls.length > 0 
-    ? `${storeData.polls.length}:${storeData.polls.map(p => p.id).sort().join(',')}`
-    : '0:';
-  const filterKey = JSON.stringify({
-    status: [...storeData.filterStatus].sort().join(','),
-    category: [...storeData.filterCategory].sort().join(','),
-    tags: [...storeData.filterTags].sort().join(','),
-    trendingOnly: storeData.filterTrendingOnly,
-  });
-  
-  // Only recalculate if keys actually changed
-  if (!prevDataRef.current || 
-      prevDataRef.current.pollsKey !== pollsKey || 
-      prevDataRef.current.filterKey !== filterKey) {
-    const filtered = storeData.polls.filter((poll) => {
-      if (storeData.filterStatus.length > 0 && poll.status && !storeData.filterStatus.includes(poll.status)) {
+  // Memoize the filtered and transformed result based on stable keys
+  // This prevents recalculation when object references change but data doesn't
+  return useMemo(() => {
+    const filtered = polls.filter((poll) => {
+      if (filterStatus.length > 0 && poll.status && !filterStatus.includes(poll.status)) {
         return false;
       }
-      if (storeData.filterCategory.length > 0 && poll.category && !storeData.filterCategory.includes(poll.category)) {
+      if (filterCategory.length > 0 && poll.category && !filterCategory.includes(poll.category)) {
         return false;
       }
-      if (storeData.filterTags.length > 0 && poll.tags) {
+      if (filterTags.length > 0 && poll.tags) {
         const pollTags = Array.isArray(poll.tags) ? poll.tags : [];
-        if (!storeData.filterTags.some((tag) => pollTags.includes(tag))) {
+        if (!filterTags.some((tag) => pollTags.includes(tag))) {
           return false;
         }
       }
-      if (storeData.filterTrendingOnly) {
+      if (filterTrendingOnly) {
         const trendingPosition = (poll as PollRow & { trending_position?: number }).trending_position;
         if (!(typeof trendingPosition === 'number' && trendingPosition > 0)) {
           return false;
@@ -1095,15 +1092,9 @@ export const useFilteredPollCards = () => {
       }
       return true;
     });
-    
-    prevDataRef.current = {
-      pollsKey,
-      filterKey,
-      result: filtered.map(createPollCardView),
-    };
-  }
-  
-  return prevDataRef.current.result;
+
+    return filtered.map(createPollCardView);
+  }, [pollsKey, filterKey, polls, filterStatus, filterCategory, filterTags, filterTrendingOnly]);
 };
 export const useActivePollsCount = () => usePollsStore((state) => state.getActivePollsCount());
 export const usePollById = (id: string) => usePollsStore((state) => state.getPollById(id));
