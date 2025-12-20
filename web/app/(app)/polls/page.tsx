@@ -45,24 +45,34 @@ export default function PollsPage() {
 
   // Use client-only formatters to prevent hydration mismatches
   // React error #185 occurs when server and client render different content
-  const [isClient, setIsClient] = React.useState(false);
+  // Use a ref to track if we're on the client, initialized immediately
+  const isClientRef = React.useRef(typeof window !== 'undefined');
+  const [isClient, setIsClient] = React.useState(isClientRef.current);
+  
   React.useEffect(() => {
-    setIsClient(true);
-  }, []);
+    // Ensure isClient is true after mount
+    if (!isClient) {
+      setIsClient(true);
+    }
+  }, [isClient]);
 
   const numberFormatter = useMemo(() => {
-    if (!isClient) return null; // Return null during SSR to prevent hydration mismatch
+    // Always return a formatter on client, null on server
+    // This ensures consistent behavior
+    if (typeof window === 'undefined') return null;
     return new Intl.NumberFormat(currentLanguage ?? undefined);
-  }, [currentLanguage, isClient]);
+  }, [currentLanguage]);
 
   const dateFormatter = useMemo(() => {
-    if (!isClient) return null; // Return null during SSR to prevent hydration mismatch
+    // Always return a formatter on client, null on server
+    // This ensures consistent behavior
+    if (typeof window === 'undefined') return null;
     return new Intl.DateTimeFormat(currentLanguage ?? undefined, {
       year: 'numeric',
       month: 'short',
       day: 'numeric',
     });
-  }, [currentLanguage, isClient]);
+  }, [currentLanguage]);
 
   const formatVoteCount = useCallback(
     (value: number) => {
@@ -179,7 +189,7 @@ export default function PollsPage() {
 
   return (
     <ErrorBoundary>
-      <div className="container mx-auto px-4 py-8">
+      <div className="container mx-auto px-4 py-8" suppressHydrationWarning>
         <div className="mb-8">
           <h1 className="text-3xl font-bold text-gray-900 dark:text-gray-100 mb-2">{t('polls.page.title')}</h1>
           <p className="text-gray-600 dark:text-gray-400">{t('polls.page.subtitle')}</p>
@@ -278,7 +288,7 @@ export default function PollsPage() {
 
       {pagination.totalPages > 1 && (
         <div className="mt-6 flex flex-col gap-2 rounded-lg border border-gray-200 bg-white px-4 py-3 text-sm text-gray-600 md:flex-row md:items-center md:justify-between">
-          <span>{paginationLabel}</span>
+          <span suppressHydrationWarning>{paginationLabel}</span>
           <div className="flex items-center gap-2">
             <button
               type="button"
@@ -288,7 +298,7 @@ export default function PollsPage() {
             >
               {t('polls.page.pagination.previous')}
             </button>
-            <span className="text-xs text-gray-500">
+            <span className="text-xs text-gray-500" suppressHydrationWarning>
               {paginationPageLabel}
             </span>
             <button
