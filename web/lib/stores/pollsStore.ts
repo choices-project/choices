@@ -1030,12 +1030,14 @@ export const usePollPreferences = () => usePollsStore((state) => state.preferenc
 export const usePollFilters = () => usePollsStore((state) => state.filters);
 export const usePollLastFetchedAt = () => usePollsStore((state) => state.lastFetchedAt);
 export const usePollPagination = () =>
-  usePollsStore((state) => ({
-    currentPage: state.search.currentPage,
-    totalPages: state.search.totalPages,
-    totalResults: state.search.totalResults,
-    itemsPerPage: state.preferences.itemsPerPage,
-  }));
+  usePollsStore(
+    useShallow((state) => ({
+      currentPage: state.search.currentPage,
+      totalPages: state.search.totalPages,
+      totalResults: state.search.totalResults,
+      itemsPerPage: state.preferences.itemsPerPage,
+    })),
+  );
 
 export const useFilteredPolls = () => usePollsStore((state) => state.getFilteredPolls());
 export const useFilteredPollCards = () =>

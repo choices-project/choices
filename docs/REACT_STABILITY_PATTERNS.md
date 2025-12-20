@@ -989,6 +989,94 @@ useEffect(() => {
 
 **Key Principle**: Always check admin status before redirecting authenticated users to onboarding. Account for loading states and provide fallbacks.
 
+### 10. Polls Page: Store Hook Stability and Refs Pattern
+
+**Problem**: React error #185 on polls page in production, caused by infinite re-render loops from unstable store hook return values and callbacks.
+
+**Root Cause**: 
+1. `usePollPagination` returned a new object on every render (not using `useShallow`)
+2. Store actions (`loadPolls`, `setFilters`, etc.) in `useEffect` and `useCallback` dependency arrays
+3. Translation function `t` in dependency arrays (even though stable, better to use refs)
+
+**✅ GOOD: Using `useShallow` for Store Hooks**
+
+```typescript
+// lib/stores/pollsStore.ts
+export const usePollPagination = () =>
+  usePollsStore(
+    useShallow((state) => ({
+      currentPage: state.search.currentPage,
+      totalPages: state.search.totalPages,
+      totalResults: state.search.totalResults,
+      itemsPerPage: state.preferences.itemsPerPage,
+    })),
+  );
+```
+
+**✅ GOOD: Using Refs for Store Actions**
+
+```typescript
+// app/(app)/polls/page.tsx
+const {
+  loadPolls,
+  setFilters,
+  setTrendingOnly,
+  setCurrentPage,
+} = usePollsActions();
+
+// Use refs for store actions to prevent infinite re-renders
+const loadPollsRef = useRef(loadPolls);
+const setFiltersRef = useRef(setFilters);
+const setTrendingOnlyRef = useRef(setTrendingOnly);
+const setCurrentPageRef = useRef(setCurrentPage);
+
+React.useEffect(() => {
+  loadPollsRef.current = loadPolls;
+  setFiltersRef.current = setFilters;
+  setTrendingOnlyRef.current = setTrendingOnly;
+  setCurrentPageRef.current = setCurrentPage;
+}, [loadPolls, setFilters, setTrendingOnly, setCurrentPage]);
+
+// Use refs in callbacks and effects
+useEffect(() => {
+  if (initializedRef.current) {
+    return;
+  }
+  initializedRef.current = true;
+  setCurrentPageRef.current(1);
+  setTrendingOnlyRef.current(false);
+  setFiltersRef.current({ status: [] });
+  loadPollsRef.current().catch((error) => {
+    logger.warn('Failed to load polls (non-critical):', error);
+  });
+}, []); // Empty deps - using refs
+```
+
+**✅ GOOD: Using Refs for Translation Function**
+
+```typescript
+// Even though t is stable from useI18n, using refs ensures no dependency issues
+const tRef = useRef(t);
+
+React.useEffect(() => {
+  tRef.current = t;
+}, [t]);
+
+// Use in useMemo and callbacks
+const paginationLabel = useMemo(() => {
+  if (!isMounted || !numberFormatter) {
+    return `${paginationStart}-${paginationEnd} of ${pagination.totalResults}`;
+  }
+  return tRef.current('polls.page.pagination.showing', {
+    start: numberFormatter.format(paginationStart),
+    end: numberFormatter.format(paginationEnd),
+    total: numberFormatter.format(pagination.totalResults),
+  });
+}, [isMounted, numberFormatter, paginationEnd, paginationStart, pagination.totalResults]); // t removed
+```
+
+**Key Principle**: Always use `useShallow` when store hooks return objects, and use refs for any callbacks/functions that might change identity (store actions, translation functions, router, etc.).
+
 ---
 
 *Last updated: December 18, 2025*

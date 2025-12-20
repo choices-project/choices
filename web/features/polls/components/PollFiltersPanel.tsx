@@ -72,19 +72,40 @@ export function PollFiltersPanel({ actions }: PollFiltersPanelProps) {
 
   const initializedRef = useRef(false);
 
+  // Use refs for store actions to prevent infinite re-renders
+  const loadPollsRef = useRef(loadPolls);
+  const setFiltersRef = useRef(setFilters);
+  const setTrendingOnlyRef = useRef(setTrendingOnly);
+  const setCurrentPageRef = useRef(setCurrentPage);
+  const setSearchQueryRef = useRef(setSearchQuery);
+  const searchPollsRef = useRef(searchPolls);
+  const clearSearchRef = useRef(clearSearch);
+  const hashtagActionsRef = useRef(hashtagActions);
+
+  React.useEffect(() => {
+    loadPollsRef.current = loadPolls;
+    setFiltersRef.current = setFilters;
+    setTrendingOnlyRef.current = setTrendingOnly;
+    setCurrentPageRef.current = setCurrentPage;
+    setSearchQueryRef.current = setSearchQuery;
+    searchPollsRef.current = searchPolls;
+    clearSearchRef.current = clearSearch;
+    hashtagActionsRef.current = hashtagActions;
+  }, [loadPolls, setFilters, setTrendingOnly, setCurrentPage, setSearchQuery, searchPolls, clearSearch, hashtagActions]);
+
   useEffect(() => {
     if (initializedRef.current) {
       return;
     }
     initializedRef.current = true;
-    void loadPolls();
-  }, [loadPolls]);
+    void loadPollsRef.current();
+  }, []);
 
   useEffect(() => {
     const fetchTrendingHashtags = async () => {
       try {
-        if (hashtagActions?.getTrendingHashtags) {
-          await hashtagActions.getTrendingHashtags();
+        if (hashtagActionsRef.current?.getTrendingHashtags) {
+          await hashtagActionsRef.current.getTrendingHashtags();
         }
       } catch (error) {
         logger.warn('Failed to load trending hashtags:', error);
@@ -92,7 +113,7 @@ export function PollFiltersPanel({ actions }: PollFiltersPanelProps) {
     };
 
     void fetchTrendingHashtags();
-  }, [hashtagActions]);
+  }, []);
 
   const selectedCategory = filters.category[0] ?? 'all';
   const selectedHashtags = filters.tags;
@@ -131,22 +152,22 @@ export function PollFiltersPanel({ actions }: PollFiltersPanelProps) {
           break;
       }
 
-      setCurrentPage(1);
-      setTrendingOnly(nextTrending);
-      setFilters({ status });
-      void loadPolls();
+      setCurrentPageRef.current(1);
+      setTrendingOnlyRef.current(nextTrending);
+      setFiltersRef.current({ status });
+      void loadPollsRef.current();
     },
-    [loadPolls, setCurrentPage, setFilters, setTrendingOnly],
+    [],
   );
 
   const handleCategoryChange = useCallback(
     (categoryId: string) => {
       const category = categoryId === 'all' ? [] : [categoryId];
-      setCurrentPage(1);
-      setFilters({ category });
-      void loadPolls();
+      setCurrentPageRef.current(1);
+      setFiltersRef.current({ category });
+      void loadPollsRef.current();
     },
-    [loadPolls, setCurrentPage, setFilters],
+    [],
   );
 
   const handleHashtagSelect = useCallback(
@@ -156,42 +177,42 @@ export function PollFiltersPanel({ actions }: PollFiltersPanelProps) {
         return;
       }
       const tags = [...selectedHashtags, normalized];
-      setCurrentPage(1);
-      setFilters({ tags });
-      void loadPolls();
+      setCurrentPageRef.current(1);
+      setFiltersRef.current({ tags });
+      void loadPollsRef.current();
     },
-    [loadPolls, selectedHashtags, setCurrentPage, setFilters],
+    [selectedHashtags],
   );
 
   const handleHashtagRemove = useCallback(
     (hashtag: string) => {
       const tags = selectedHashtags.filter((tag) => tag !== hashtag);
-      setCurrentPage(1);
-      setFilters({ tags });
-      void loadPolls();
+      setCurrentPageRef.current(1);
+      setFiltersRef.current({ tags });
+      void loadPollsRef.current();
     },
-    [loadPolls, selectedHashtags, setCurrentPage, setFilters],
+    [selectedHashtags],
   );
 
   const handleSearchSubmit = useCallback(
     (value: string) => {
       const trimmed = value.trim();
       if (trimmed.length === 0) {
-        void clearSearch();
+        void clearSearchRef.current();
         return;
       }
-      setSearchQuery(trimmed);
-      setCurrentPage(1);
-      void searchPolls(trimmed);
+      setSearchQueryRef.current(trimmed);
+      setCurrentPageRef.current(1);
+      void searchPollsRef.current(trimmed);
     },
-    [clearSearch, searchPolls, setCurrentPage, setSearchQuery],
+    [],
   );
 
   const handleSearchInputChange = useCallback(
     (event: React.ChangeEvent<HTMLInputElement>) => {
-      setSearchQuery(event.target.value);
+      setSearchQueryRef.current(event.target.value);
     },
-    [setSearchQuery],
+    [],
   );
 
   const trendingCount = hashtagStats?.trendingCount ?? 0;
