@@ -67,24 +67,6 @@ export default function PollsPage() {
     });
   }, [isMounted, currentLanguage]);
 
-  const numberFormatter = useMemo(() => {
-    // Always return a formatter on client, null on server
-    // This ensures consistent behavior
-    if (typeof window === 'undefined') return null;
-    return new Intl.NumberFormat(currentLanguage ?? undefined);
-  }, [currentLanguage]);
-
-  const dateFormatter = useMemo(() => {
-    // Always return a formatter on client, null on server
-    // This ensures consistent behavior
-    if (typeof window === 'undefined') return null;
-    return new Intl.DateTimeFormat(currentLanguage ?? undefined, {
-      year: 'numeric',
-      month: 'short',
-      day: 'numeric',
-    });
-  }, [currentLanguage]);
-
   const formatVoteCount = useCallback(
     (value: number) => {
       // During SSR or initial client render (before mount), use simple string
