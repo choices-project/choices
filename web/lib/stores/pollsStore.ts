@@ -1,4 +1,4 @@
-import { useMemo } from 'react';
+import { useRef } from 'react';
 import { create } from 'zustand';
 import { devtools, persist } from 'zustand/middleware';
 import { immer } from 'zustand/middleware/immer';
@@ -1042,30 +1042,52 @@ export const usePollPagination = () =>
 
 export const useFilteredPolls = () => usePollsStore((state) => state.getFilteredPolls());
 export const useFilteredPollCards = () => {
-  // Get polls and filters with useShallow for stable array references
-  const polls = usePollsStore(useShallow((state) => state.polls));
-  const filterStatus = usePollsStore(useShallow((state) => state.filters.status));
-  const filterCategory = usePollsStore(useShallow((state) => state.filters.category));
-  const filterTags = usePollsStore(useShallow((state) => state.filters.tags));
-  const filterTrendingOnly = usePollsStore((state) => state.filters.trendingOnly);
+  // Use a single selector to get all needed data
+  // This minimizes the number of store subscriptions
+  const storeData = usePollsStore((state) => ({
+    polls: state.polls,
+    filterStatus: state.filters.status,
+    filterCategory: state.filters.category,
+    filterTags: state.filters.tags,
+    filterTrendingOnly: state.filters.trendingOnly,
+  }));
   
-  // Memoize the filtered and transformed result
-  // useShallow ensures arrays only change when contents change, not references
-  return useMemo(() => {
-    const filtered = polls.filter((poll) => {
-      if (filterStatus.length > 0 && poll.status && !filterStatus.includes(poll.status)) {
+  // Use refs to track previous values and only recalculate when they actually change
+  const prevDataRef = useRef<{
+    pollsKey: string;
+    filterKey: string;
+    result: ReturnType<typeof createPollCardView>[];
+  } | null>(null);
+  
+  // Create stable keys from the data
+  const pollsKey = storeData.polls.length > 0 
+    ? `${storeData.polls.length}:${storeData.polls.map(p => p.id).sort().join(',')}`
+    : '0:';
+  const filterKey = JSON.stringify({
+    status: [...storeData.filterStatus].sort().join(','),
+    category: [...storeData.filterCategory].sort().join(','),
+    tags: [...storeData.filterTags].sort().join(','),
+    trendingOnly: storeData.filterTrendingOnly,
+  });
+  
+  // Only recalculate if keys actually changed
+  if (!prevDataRef.current || 
+      prevDataRef.current.pollsKey !== pollsKey || 
+      prevDataRef.current.filterKey !== filterKey) {
+    const filtered = storeData.polls.filter((poll) => {
+      if (storeData.filterStatus.length > 0 && poll.status && !storeData.filterStatus.includes(poll.status)) {
         return false;
       }
-      if (filterCategory.length > 0 && poll.category && !filterCategory.includes(poll.category)) {
+      if (storeData.filterCategory.length > 0 && poll.category && !storeData.filterCategory.includes(poll.category)) {
         return false;
       }
-      if (filterTags.length > 0 && poll.tags) {
+      if (storeData.filterTags.length > 0 && poll.tags) {
         const pollTags = Array.isArray(poll.tags) ? poll.tags : [];
-        if (!filterTags.some((tag) => pollTags.includes(tag))) {
+        if (!storeData.filterTags.some((tag) => pollTags.includes(tag))) {
           return false;
         }
       }
-      if (filterTrendingOnly) {
+      if (storeData.filterTrendingOnly) {
         const trendingPosition = (poll as PollRow & { trending_position?: number }).trending_position;
         if (!(typeof trendingPosition === 'number' && trendingPosition > 0)) {
           return false;
@@ -1074,8 +1096,14 @@ export const useFilteredPollCards = () => {
       return true;
     });
     
-    return filtered.map(createPollCardView);
-  }, [polls, filterStatus, filterCategory, filterTags, filterTrendingOnly]);
+    prevDataRef.current = {
+      pollsKey,
+      filterKey,
+      result: filtered.map(createPollCardView),
+    };
+  }
+  
+  return prevDataRef.current.result;
 };
 export const useActivePollsCount = () => usePollsStore((state) => state.getActivePollsCount());
 export const usePollById = (id: string) => usePollsStore((state) => state.getPollById(id));
