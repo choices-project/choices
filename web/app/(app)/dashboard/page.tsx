@@ -7,6 +7,7 @@ import React, { Suspense, useEffect, useMemo, useRef, useState } from 'react';
 import { useProfile } from '@/features/profile/hooks/use-profile';
 
 import DashboardNavigation, { MobileDashboardNav } from '@/components/shared/DashboardNavigation';
+import { ErrorBoundary } from '@/components/shared/ErrorBoundary';
 
 import { useIsAuthenticated, useUserLoading } from '@/lib/stores';
 import { useAppActions } from '@/lib/stores/appStore';
@@ -170,7 +171,7 @@ export default function DashboardPage() {
   }
 
   return (
-    <>
+    <ErrorBoundary>
       {/* 🔒 Cohesive Dashboard Navigation */}
       <DashboardNavigation />
 
@@ -198,6 +199,6 @@ export default function DashboardPage() {
 
       {/* 🔒 Mobile Navigation */}
       <MobileDashboardNav />
-    </>
+    </ErrorBoundary>
   );
 }

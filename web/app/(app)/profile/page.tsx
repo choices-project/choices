@@ -11,6 +11,7 @@ import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/components/ui/card';
+import { ErrorBoundary } from '@/components/shared/ErrorBoundary';
 
 import { useUser, useIsAuthenticated, useUserLoading } from '@/lib/stores';
 import { useAppActions } from '@/lib/stores/appStore';
@@ -129,21 +130,24 @@ export default function ProfilePage() {
 
   if (profileError) {
     return (
-      <div className="container mx-auto px-4 py-8">
-        <Alert variant="destructive">
-          <AlertTriangle className="h-4 w-4" />
-          <AlertDescription>
-            Failed to load profile data. Please try again.
-          </AlertDescription>
-        </Alert>
-      </div>
+      <ErrorBoundary>
+        <div className="container mx-auto px-4 py-8">
+          <Alert variant="destructive">
+            <AlertTriangle className="h-4 w-4" />
+            <AlertDescription>
+              Failed to load profile data. Please try again.
+            </AlertDescription>
+          </Alert>
+        </div>
+      </ErrorBoundary>
     );
   }
 
   // Profile data is already available from useProfile hook
 
   return (
-    <div className="container mx-auto px-4 py-8">
+    <ErrorBoundary>
+      <div className="container mx-auto px-4 py-8">
       <div className="max-w-4xl mx-auto">
         {/* Profile Header */}
         <Card className="mb-8">

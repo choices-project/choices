@@ -7,7 +7,10 @@ import React, { useEffect, useCallback, useMemo, useRef } from 'react';
 import { PollFiltersPanel } from '@/features/polls/components/PollFiltersPanel';
 import { getPollCategoryColor, getPollCategoryIcon } from '@/features/polls/constants/categories';
 
+import { ErrorBoundary } from '@/components/shared/ErrorBoundary';
+
 import { useAppActions } from '@/lib/stores/appStore';
+import logger from '@/lib/utils/logger';
 import {
   useFilteredPollCards,
   usePollFilters,
@@ -121,7 +124,11 @@ export default function PollsPage() {
     setCurrentPage(1);
     setTrendingOnly(false);
     setFilters({ status: [] });
-    void loadPolls();
+    // Wrap in try-catch to prevent errors from crashing the page
+    loadPolls().catch((error) => {
+      logger.warn('Failed to load polls (non-critical):', error);
+      // Don't throw - allow page to render with empty state
+    });
   }, [loadPolls, setCurrentPage, setFilters, setTrendingOnly]);
 
   const activeFilter: 'all' | 'active' | 'closed' | 'trending' = useMemo(() => {
@@ -158,19 +165,20 @@ export default function PollsPage() {
   }
 
   return (
-    <div className="container mx-auto px-4 py-8">
-      <div className="mb-8">
-        <h1 className="text-3xl font-bold text-gray-900 dark:text-gray-100 mb-2">{t('polls.page.title')}</h1>
-        <p className="text-gray-600 dark:text-gray-400">{t('polls.page.subtitle')}</p>
-      </div>
-
-      {error && (
-        <div className="mb-6 rounded-lg border border-red-200 bg-red-50 p-4 text-sm text-red-700">
-          {error}
+    <ErrorBoundary>
+      <div className="container mx-auto px-4 py-8">
+        <div className="mb-8">
+          <h1 className="text-3xl font-bold text-gray-900 dark:text-gray-100 mb-2">{t('polls.page.title')}</h1>
+          <p className="text-gray-600 dark:text-gray-400">{t('polls.page.subtitle')}</p>
         </div>
-      )}
 
-      <PollFiltersPanel />
+        {error && (
+          <div className="mb-6 rounded-lg border border-red-200 dark:border-red-800 bg-red-50 dark:bg-red-900/20 p-4 text-sm text-red-700 dark:text-red-400">
+            {error}
+          </div>
+        )}
+
+        <PollFiltersPanel />
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         {polls.length === 0 ? (

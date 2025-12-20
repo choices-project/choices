@@ -10,6 +10,7 @@ import { ServiceWorkerProvider } from '@/features/pwa/components/ServiceWorkerPr
 
 import EnhancedFeedbackWidget from '@/components/EnhancedFeedbackWidget';
 import { AppShell } from '@/components/shared/AppShell';
+import { ErrorBoundary } from '@/components/shared/ErrorBoundary';
 import FontProvider from '@/components/shared/FontProvider';
 import GlobalNavigation from '@/components/shared/GlobalNavigation';
 import SiteMessages from '@/components/SiteMessages';
@@ -82,7 +83,9 @@ export default function AppLayout({
                 siteMessages={<SiteMessages />}
                 feedback={!DISABLE_FEEDBACK_WIDGET ? <EnhancedFeedbackWidget /> : null}
               >
-                {children}
+                <ErrorBoundary>
+                  {children}
+                </ErrorBoundary>
               </AppShell>
             </ServiceWorkerProvider>
           </UserStoreProvider>

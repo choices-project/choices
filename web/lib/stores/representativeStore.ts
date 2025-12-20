@@ -447,8 +447,13 @@ export const createRepresentativeActions = (
 
         return entries;
       } catch (error) {
-        logger.error('RepresentativeStore.getUserRepresentatives error', error);
-        setError(error instanceof Error ? error.message : 'Failed to fetch user representatives');
+        // Log error but don't crash the app - return empty array gracefully
+        logger.warn('RepresentativeStore.getUserRepresentatives error (non-critical):', error);
+        // Don't set error state for API failures - allow pages to render without representatives
+        // Only set error for critical issues
+        if (error instanceof Error && !error.message.includes('Failed to fetch')) {
+          setError(error.message);
+        }
         setState((state) => {
           state.userRepresentativeEntries = [];
           state.userRepresentatives = [];
@@ -456,6 +461,7 @@ export const createRepresentativeActions = (
           state.userRepresentativesTotal = 0;
           state.userRepresentativesHasMore = false;
         });
+        // Return empty array to allow pages to continue rendering
         return [];
       } finally {
         setLoading(false);

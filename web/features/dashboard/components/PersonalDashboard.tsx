@@ -788,7 +788,9 @@ function StandardPersonalDashboard({ userId: fallbackUserId, className = '' }: P
         refetchProfile(),
         loadPolls(),
         getTrendingHashtags(undefined, 6),
-        getUserRepresentatives(),
+        getUserRepresentatives().catch((error) => {
+          logger.warn('Failed to refresh user representatives (non-critical):', error);
+        }),
       ]);
     } catch (error) {
       logger.error('Error refreshing dashboard', error as Error);

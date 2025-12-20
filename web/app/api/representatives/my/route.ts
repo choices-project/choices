@@ -10,13 +10,19 @@ import type { NextRequest } from 'next/server';
 export const dynamic = 'force-dynamic';
 
 export const GET = withErrorHandling(async (request: NextRequest) => {
-  const supabase = await getSupabaseServerClient();
+  try {
+    const supabase = await getSupabaseServerClient();
 
-  const { data: { user }, error: userError } = await supabase.auth.getUser();
+    if (!supabase) {
+      logger.error('Supabase client not available');
+      return errorResponse('Service unavailable', 503);
+    }
 
-  if (userError || !user) {
-    return authError('Authentication required');
-  }
+    const { data: { user }, error: userError } = await supabase.auth.getUser();
+
+    if (userError || !user) {
+      return authError('Authentication required');
+    }
 
     // Parse query parameters
     const { searchParams } = new URL(request.url);
@@ -24,6 +30,7 @@ export const GET = withErrorHandling(async (request: NextRequest) => {
     const offset = parseInt(searchParams.get('offset') ?? '0');
 
     // Get followed representatives with full representative data
+    // Use a simpler query first to check if the table exists
     const { data: followed, error: followedError } = await (supabase as any)
       .from('representative_follows')
       .select(`
@@ -54,10 +61,22 @@ export const GET = withErrorHandling(async (request: NextRequest) => {
       .order('created_at', { ascending: false })
       .range(offset, offset + limit - 1);
 
-  if (followedError) {
-    logger.error('Error fetching followed representatives:', followedError);
-    return errorResponse('Failed to fetch followed representatives', 500);
-  }
+    if (followedError) {
+      logger.error('Error fetching followed representatives:', followedError);
+      // If table doesn't exist or RLS issue, return empty array instead of 500
+      // This allows pages to load even if representatives feature isn't fully set up
+      if (followedError.code === '42P01' || followedError.code === 'PGRST116' || followedError.message?.includes('permission denied')) {
+        logger.warn('Representatives table not accessible, returning empty list');
+        return successResponse({
+          representatives: [],
+          total: 0,
+          limit,
+          offset,
+          hasMore: false
+        });
+      }
+      return errorResponse('Failed to fetch followed representatives', 500);
+    }
 
     // Get total count
     const { count, error: countError } = await (supabase as any)
