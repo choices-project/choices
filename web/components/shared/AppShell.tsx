@@ -67,7 +67,7 @@ export function AppShell({ navigation, siteMessages, feedback, children }: AppSh
 
   return (
     <div
-      className="min-h-screen bg-slate-50"
+      className="min-h-screen bg-slate-50 dark:bg-gray-900"
       data-testid="app-shell"
       data-theme={theme}
       data-sidebar-collapsed={String(sidebarCollapsed)}

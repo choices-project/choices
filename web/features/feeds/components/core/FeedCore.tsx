@@ -354,7 +354,7 @@ export default function FeedCore({
         <CardContent>
           {/* District Filter */}
           {userDistrict && (
-            <div className="mb-4 pb-4 border-b border-gray-200">
+            <div className="mb-4 pb-4 border-b border-gray-200 dark:border-gray-700">
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-2">
                   <MapPin className="w-4 h-4 text-blue-600" />

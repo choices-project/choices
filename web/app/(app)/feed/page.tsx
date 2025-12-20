@@ -127,7 +127,7 @@ function FeedContent() {
   }
 
   return (
-    <div className="container mx-auto px-4 py-8">
+    <div className="container mx-auto px-4 py-8 bg-white dark:bg-gray-900 min-h-screen">
       <Suspense
         fallback={
           <div 
