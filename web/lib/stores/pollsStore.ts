@@ -1042,50 +1042,35 @@ export const usePollPagination = () =>
 
 export const useFilteredPolls = () => usePollsStore((state) => state.getFilteredPolls());
 export const useFilteredPollCards = () => {
-  // Use individual selectors with useShallow for stable references
-  // This ensures we only re-render when the actual data changes, not just references
-  const polls = usePollsStore(useShallow((state) => state.polls));
-  const filterStatus = usePollsStore(useShallow((state) => state.filters.status));
-  const filterCategory = usePollsStore(useShallow((state) => state.filters.category));
-  const filterTags = usePollsStore(useShallow((state) => state.filters.tags));
-  const filterTrendingOnly = usePollsStore((state) => state.filters.trendingOnly);
-
-  // Create stable keys from the data for memoization
-  // This ensures useMemo only recalculates when the actual data changes
-  const pollsKey = useMemo(
-    () => polls.length > 0
-      ? `${polls.length}:${polls.map(p => p.id).sort().join(',')}`
-      : '0:',
-    [polls]
-  );
-  const filterKey = useMemo(
-    () => JSON.stringify({
-      status: [...filterStatus].sort().join(','),
-      category: [...filterCategory].sort().join(','),
-      tags: [...filterTags].sort().join(','),
-      trendingOnly: filterTrendingOnly,
-    }),
-    [filterStatus, filterCategory, filterTags, filterTrendingOnly]
+  // Use a single selector with useShallow to get all needed data at once
+  // This minimizes the number of store subscriptions and ensures atomic updates
+  const storeData = usePollsStore(
+    useShallow((state) => ({
+      polls: state.polls,
+      filterStatus: state.filters.status,
+      filterCategory: state.filters.category,
+      filterTags: state.filters.tags,
+      filterTrendingOnly: state.filters.trendingOnly,
+    }))
   );
 
   // Memoize the filtered and transformed result
-  // Use the keys to determine if recalculation is needed, but include polls/filters in deps
-  // to ensure we have the latest data when keys change
+  // useShallow ensures we only recalculate when the actual data changes
   return useMemo(() => {
-    const filtered = polls.filter((poll) => {
-      if (filterStatus.length > 0 && poll.status && !filterStatus.includes(poll.status)) {
+    const filtered = storeData.polls.filter((poll) => {
+      if (storeData.filterStatus.length > 0 && poll.status && !storeData.filterStatus.includes(poll.status)) {
         return false;
       }
-      if (filterCategory.length > 0 && poll.category && !filterCategory.includes(poll.category)) {
+      if (storeData.filterCategory.length > 0 && poll.category && !storeData.filterCategory.includes(poll.category)) {
         return false;
       }
-      if (filterTags.length > 0 && poll.tags) {
+      if (storeData.filterTags.length > 0 && poll.tags) {
         const pollTags = Array.isArray(poll.tags) ? poll.tags : [];
-        if (!filterTags.some((tag) => pollTags.includes(tag))) {
+        if (!storeData.filterTags.some((tag) => pollTags.includes(tag))) {
           return false;
         }
       }
-      if (filterTrendingOnly) {
+      if (storeData.filterTrendingOnly) {
         const trendingPosition = (poll as PollRow & { trending_position?: number }).trending_position;
         if (!(typeof trendingPosition === 'number' && trendingPosition > 0)) {
           return false;
@@ -1095,7 +1080,7 @@ export const useFilteredPollCards = () => {
     });
 
     return filtered.map(createPollCardView);
-  }, [polls, filterStatus, filterCategory, filterTags, filterTrendingOnly, pollsKey, filterKey]);
+  }, [storeData]);
 };
 export const useActivePollsCount = () => usePollsStore((state) => state.getActivePollsCount());
 export const usePollById = (id: string) => usePollsStore((state) => state.getPollById(id));
