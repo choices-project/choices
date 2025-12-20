@@ -1,4 +1,4 @@
-import { useMemo } from 'react';
+import { useRef } from 'react';
 import { create } from 'zustand';
 import { devtools, persist } from 'zustand/middleware';
 import { immer } from 'zustand/middleware/immer';
@@ -1042,26 +1042,59 @@ export const usePollPagination = () =>
 
 export const useFilteredPolls = () => usePollsStore((state) => state.getFilteredPolls());
 export const useFilteredPollCards = () => {
-  // Use the store's getFilteredPolls method directly
-  // This ensures we use the same filtering logic as the store
-  const filteredPolls = usePollsStore((state) => state.getFilteredPolls());
+  // Get the raw data needed - use useShallow to ensure stable references
+  const polls = usePollsStore(useShallow((state) => state.polls));
+  const filters = usePollsStore(useShallow((state) => state.filters));
   
-  // Create a stable key from the filtered polls for memoization
-  // This key only changes when the actual poll IDs or count changes
-  const pollsKey = useMemo(
-    () => {
-      if (filteredPolls.length === 0) return '0:';
-      const ids = filteredPolls.map(p => p.id).sort();
-      return `${filteredPolls.length}:${ids.join(',')}`;
-    },
-    [filteredPolls],
-  );
+  // Use refs to track previous values and only recalculate when they actually change
+  const prevPollsKeyRef = useRef<string>('');
+  const prevFilterKeyRef = useRef<string>('');
+  const resultRef = useRef<ReturnType<typeof createPollCardView>[]>([]);
   
-  // Memoize the transformation to poll cards
-  // Only recalculate when the pollsKey changes (i.e., when filtered polls actually change)
-  return useMemo(() => {
-    return filteredPolls.map(createPollCardView);
-  }, [pollsKey, filteredPolls]);
+  // Calculate current keys
+  const currentPollsKey = polls.length > 0 
+    ? `${polls.length}:${polls.map(p => p.id).sort().join(',')}`
+    : '0:';
+  const currentFilterKey = JSON.stringify({
+    status: [...filters.status].sort().join(','),
+    category: [...filters.category].sort().join(','),
+    tags: [...filters.tags].sort().join(','),
+    trendingOnly: filters.trendingOnly,
+  });
+  
+  // Only recalculate if keys actually changed
+  if (currentPollsKey !== prevPollsKeyRef.current || currentFilterKey !== prevFilterKeyRef.current) {
+    prevPollsKeyRef.current = currentPollsKey;
+    prevFilterKeyRef.current = currentFilterKey;
+    
+    // Filter polls
+    const filtered = polls.filter((poll) => {
+      if (filters.status.length > 0 && poll.status && !filters.status.includes(poll.status)) {
+        return false;
+      }
+      if (filters.category.length > 0 && poll.category && !filters.category.includes(poll.category)) {
+        return false;
+      }
+      if (filters.tags.length > 0 && poll.tags) {
+        const pollTags = Array.isArray(poll.tags) ? poll.tags : [];
+        if (!filters.tags.some((tag) => pollTags.includes(tag))) {
+          return false;
+        }
+      }
+      if (filters.trendingOnly) {
+        const trendingPosition = (poll as PollRow & { trending_position?: number }).trending_position;
+        if (!(typeof trendingPosition === 'number' && trendingPosition > 0)) {
+          return false;
+        }
+      }
+      return true;
+    });
+    
+    // Transform to cards
+    resultRef.current = filtered.map(createPollCardView);
+  }
+  
+  return resultRef.current;
 };
 export const useActivePollsCount = () => usePollsStore((state) => state.getActivePollsCount());
 export const usePollById = (id: string) => usePollsStore((state) => state.getPollById(id));
