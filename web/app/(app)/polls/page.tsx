@@ -76,7 +76,10 @@ export default function PollsPage() {
 
   const formatVoteCount = useCallback(
     (value: number) => {
-      if (!numberFormatter) return String(value); // Fallback during SSR
+      // During SSR or initial render, use simple string to avoid hydration mismatch
+      if (typeof window === 'undefined' || !numberFormatter) {
+        return `${value} votes`; // Simple fallback that matches on both server and client
+      }
       return t('polls.page.metadata.votes', {
         count: String(value),
         formattedCount: numberFormatter.format(value),
@@ -87,7 +90,12 @@ export default function PollsPage() {
 
   const formatCreatedDate = useCallback(
     (value: string) => {
-      if (!dateFormatter) return new Date(value).toLocaleDateString(); // Fallback during SSR
+      // During SSR or initial render, use simple format to avoid hydration mismatch
+      if (typeof window === 'undefined' || !dateFormatter) {
+        const date = new Date(value);
+        // Use a simple format that will be consistent on server and client
+        return date.toISOString().split('T')[0]; // YYYY-MM-DD format
+      }
       return dateFormatter.format(new Date(value));
     },
     [dateFormatter],
