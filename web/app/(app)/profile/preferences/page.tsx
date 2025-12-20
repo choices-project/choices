@@ -74,6 +74,21 @@ export default function ProfilePreferencesPage() {
     return undefined;
   }, [statusMessage]);
 
+  // Add timeout to prevent infinite loading - must be before early returns
+  const [loadingTimeout, setLoadingTimeout] = React.useState(false);
+  React.useEffect(() => {
+    if (!profileLoading) {
+      setLoadingTimeout(false);
+      return;
+    }
+    const timeout = setTimeout(() => {
+      setLoadingTimeout(true);
+    }, 15_000); // 15 second timeout
+    return () => {
+      clearTimeout(timeout);
+    };
+  }, [profileLoading]);
+
   const handleSaveInterests = async (interests: string[]) => {
     if (arraysAreEqual(interests, initialInterests)) {
       return;
