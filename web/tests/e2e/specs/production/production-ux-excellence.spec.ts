@@ -179,7 +179,7 @@ test.describe('Production UX Excellence', () => {
             if (navEntry) {
               resolve(navEntry.loadEventEnd - navEntry.fetchStart);
             } else {
-              resolve(performance.now());
+            resolve(performance.now());
             }
           } else {
             window.addEventListener('load', () => {
@@ -187,7 +187,7 @@ test.describe('Production UX Excellence', () => {
               if (navEntry) {
                 resolve(navEntry.loadEventEnd - navEntry.fetchStart);
               } else {
-                resolve(performance.now());
+              resolve(performance.now());
               }
             });
           }
@@ -1142,16 +1142,16 @@ test.describe('Production UX Excellence', () => {
 
         // If logout didn't redirect, try accessing protected page to verify logout worked
         if (!isLoggedOut) {
-          await page.goto(`${BASE_URL}/feed`, { waitUntil: 'domcontentloaded', timeout: 30_000 });
+        await page.goto(`${BASE_URL}/feed`, { waitUntil: 'domcontentloaded', timeout: 30_000 });
           await page.waitForTimeout(3_000);
-          const urlAfterAccess = page.url();
+        const urlAfterAccess = page.url();
           const isStillProtected = !urlAfterAccess.includes('/feed') ||
                                   urlAfterAccess.includes('/auth') ||
                                   urlAfterAccess.includes('/landing') ||
                                   urlAfterAccess === BASE_URL ||
                                   urlAfterAccess === `${BASE_URL}/`;
           // If we can't access feed, logout worked even if redirect didn't happen
-          expect(isStillProtected).toBeTruthy();
+        expect(isStillProtected).toBeTruthy();
         } else {
           expect(isLoggedOut).toBeTruthy();
         }

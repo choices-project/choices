@@ -216,19 +216,19 @@ export async function ensureLoggedOut(page: Page): Promise<void> {
 
 /**
  * Logs in a test user via the authentication form.
- * 
+ *
  * **Important:** This function uses `pressSequentially()` instead of `fill()` to properly
  * trigger React's `onChange` handlers for controlled inputs. React controlled inputs require
  * the `onChange` event to fire for React state to update, which enables form validation and
  * the submit button.
- * 
+ *
  * @param page - Playwright Page instance
  * @param user - Test user credentials (email, password, username)
  * @throws Error if email or password is missing
  * @throws Error if form inputs don't update React state (submit button stays disabled)
  * @throws Error if login API request fails
  * @throws Error if navigation to /feed or /onboarding doesn't occur after login
- * 
+ *
  * @example
  * ```typescript
  * await loginTestUser(page, {
@@ -427,41 +427,87 @@ export async function loginTestUser(page: Page, user: TestUser): Promise<void> {
     await page.waitForTimeout(1000);
   }
 
-  // Poll for button to become enabled
+  // Verify React state has updated by checking if button becomes enabled
+  // We need to wait for React's formData state to match the input values
   let isEnabled = false;
-  for (let attempt = 0; attempt < 20; attempt++) {
+  let reactStateReady = false;
+  
+  // Wait for React state to sync - check button enabled state AND verify React has processed the inputs
+  for (let attempt = 0; attempt < 30; attempt++) {
     isEnabled = !(await submitButton.isDisabled());
-    if (isEnabled) break;
+    
+    // Verify React state has actually updated by checking if form validation passes
+    // We check this by looking at whether the button is enabled, which depends on formData
+    if (isEnabled) {
+      // Double-check that React state is ready by verifying formData would pass validation
+      reactStateReady = await page.evaluate(({ emailValue, passwordValue }: { emailValue: string; passwordValue: string }) => {
+        // Check if form would be valid based on input values
+        const emailInput = document.querySelector('[data-testid="login-email"]') as HTMLInputElement;
+        const passwordInput = document.querySelector('[data-testid="login-password"]') as HTMLInputElement;
+        const submitButton = document.querySelector('[data-testid="login-submit"]') as HTMLButtonElement;
+        
+        if (!emailInput || !passwordInput || !submitButton) return false;
+        
+        const emailValid = emailInput.value.includes('@') && emailInput.value === emailValue;
+        const passwordValid = passwordInput.value.length >= 6 && passwordInput.value === passwordValue;
+        const buttonDisabled = submitButton.disabled;
+        
+        // If inputs are valid but button is disabled, React state hasn't synced yet
+        return emailValid && passwordValid && !buttonDisabled;
+      }, { emailValue: email, passwordValue: password }).catch(() => false);
+      
+      if (reactStateReady) break;
+    }
 
-    // Re-trigger events every few attempts
-    if (attempt > 0 && attempt % 3 === 0) {
+    // Re-trigger events every few attempts to ensure React processes them
+    if (attempt > 0 && attempt % 5 === 0) {
+      await emailInput.first().focus();
       await emailInput.first().evaluate((el: HTMLInputElement) => {
-        const event = new Event('input', { bubbles: true, cancelable: true });
-        el.dispatchEvent(event);
+        // Trigger React's onChange by dispatching input event
+        const inputEvent = new Event('input', { bubbles: true, cancelable: true });
+        el.dispatchEvent(inputEvent);
+        const changeEvent = new Event('change', { bubbles: true, cancelable: true });
+        el.dispatchEvent(changeEvent);
       });
+      await passwordInput.first().focus();
       await passwordInput.first().evaluate((el: HTMLInputElement) => {
-        const event = new Event('input', { bubbles: true, cancelable: true });
-        el.dispatchEvent(event);
+        const inputEvent = new Event('input', { bubbles: true, cancelable: true });
+        el.dispatchEvent(inputEvent);
+        const changeEvent = new Event('change', { bubbles: true, cancelable: true });
+        el.dispatchEvent(changeEvent);
       });
     }
 
-    await page.waitForTimeout(500);
+    await page.waitForTimeout(300);
   }
 
-  // If still disabled but inputs are valid, try clicking anyway
-  // Sometimes the disabled attribute is set but the form can still submit
-  if (!isEnabled) {
+  // Final verification: Ensure button is enabled before clicking
+  if (!isEnabled || !reactStateReady) {
     const emailValue = await emailInput.first().inputValue();
     const passwordValue = await passwordInput.first().inputValue();
     const emailValid = emailValue.includes('@') && emailValue === email;
     const passwordValid = passwordValue.length >= 6 && passwordValue === password;
 
     if (emailValid && passwordValid) {
-      // Inputs are valid, try to force enable the button or click it anyway
-      await submitButton.evaluate((el: HTMLButtonElement) => {
-        el.removeAttribute('disabled');
-      });
-      await page.waitForTimeout(200);
+      // Inputs are valid, but React state might not be synced
+      // Try one more time to trigger React state update
+      await page.evaluate(({ emailValue, passwordValue }: { emailValue: string; passwordValue: string }) => {
+        const emailInput = document.querySelector('[data-testid="login-email"]') as HTMLInputElement;
+        const passwordInput = document.querySelector('[data-testid="login-password"]') as HTMLInputElement;
+        
+        if (emailInput && passwordInput) {
+          // Focus and trigger events to ensure React processes them
+          emailInput.focus();
+          emailInput.blur();
+          passwordInput.focus();
+          passwordInput.blur();
+          
+          // Small delay to allow React to process
+          return new Promise(resolve => setTimeout(resolve, 100));
+        }
+      }, { emailValue: email, passwordValue: password });
+      
+      await page.waitForTimeout(500);
       isEnabled = !(await submitButton.isDisabled());
     }
 
