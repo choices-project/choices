@@ -170,12 +170,17 @@ function PollsPageContent() {
       return;
     }
     initializedRef.current = true;
-    setCurrentPageRef.current(1);
-    setTrendingOnlyRef.current(false);
-    setFiltersRef.current({ status: [] });
-    loadPollsRef.current().catch((error) => {
-      logger.warn('Failed to load polls (non-critical):', error);
-    });
+    
+    // Use setTimeout to defer store updates until after React has completed the render cycle
+    // This prevents store updates from blocking the initial render
+    setTimeout(() => {
+      setCurrentPageRef.current(1);
+      setTrendingOnlyRef.current(false);
+      setFiltersRef.current({ status: [] });
+      loadPollsRef.current().catch((error) => {
+        logger.warn('Failed to load polls (non-critical):', error);
+      });
+    }, 0);
   }, [isMounted]);
 
   const activeFilter: 'all' | 'active' | 'closed' | 'trending' = useMemo(() => {
