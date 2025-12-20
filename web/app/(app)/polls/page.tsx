@@ -69,11 +69,9 @@ function PollsPageContent() {
   }, [loadPolls, setFilters, setTrendingOnly, setCurrentPage, setCurrentRoute, setSidebarActiveSection, setBreadcrumbs, t]);
 
   // Set mounted state after component mounts
-  // Use requestAnimationFrame to ensure this runs after React has fully mounted
+  // Simple useEffect like feed page - this ensures React has mounted
   React.useEffect(() => {
-    requestAnimationFrame(() => {
-      setIsMounted(true);
-    });
+    setIsMounted(true);
   }, []);
 
   const selectedCategory = filters.category[0] ?? 'all';
