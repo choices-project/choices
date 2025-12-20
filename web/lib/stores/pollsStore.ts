@@ -1064,29 +1064,26 @@ const createFilterKey = (filters: {
 };
 
 export const useFilteredPollCards = () => {
-  // Get all needed data in a single selector to minimize re-renders
-  const storeData = usePollsStore(
-    useShallow((state) => ({
-      polls: state.polls,
-      filters: state.filters,
-    })),
-  );
-
+  // Get polls and filters separately with useShallow for stable array references
+  // This is more reliable than getting them together in one object
+  const polls = usePollsStore(useShallow((state) => state.polls));
+  const filters = usePollsStore(useShallow((state) => state.filters));
+  
   // Create stable keys that only change when actual data changes
+  // These useMemo hooks will only recalculate when the arrays actually change
   const pollsKey = useMemo(
-    () => createPollsKey(storeData.polls),
-    [storeData.polls],
+    () => createPollsKey(polls),
+    [polls],
   );
-
+  
   const filterKey = useMemo(
-    () => createFilterKey(storeData.filters),
-    [storeData.filters],
+    () => createFilterKey(filters),
+    [filters],
   );
-
+  
   // Memoize the filtering and transformation - only recalculate when keys change
-  // The storeData is captured in closure and will use latest values when keys change
+  // The polls and filters are captured in closure and will use latest values when keys change
   return useMemo(() => {
-    const { polls, filters } = storeData;
     const filtered = polls.filter((poll) => {
       if (filters.status.length > 0 && poll.status && !filters.status.includes(poll.status)) {
         return false;
@@ -1112,7 +1109,7 @@ export const useFilteredPollCards = () => {
 
       return true;
     });
-
+    
     return filtered.map(createPollCardView);
   }, [pollsKey, filterKey]);
 };
