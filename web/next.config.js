@@ -323,6 +323,7 @@ const nextConfig = {
         'script-src-elem': [
           "'self'",
           "'unsafe-inline'", // Required for Next.js
+          "'unsafe-eval'", // Required for Next.js development
           // Only include vercel.live in preview/development environments, not production
           ...(isVercelPreview ? ['https://vercel.live'] : []),
           'https://vercel.com', // Vercel analytics (safe for production)

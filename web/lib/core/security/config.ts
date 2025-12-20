@@ -30,6 +30,7 @@ export type SecurityConfig = {
 export type CSPConfig = {
   'default-src': string[]
   'script-src': string[]
+  'script-src-elem'?: string[] // For modern browsers
   'style-src': string[]
   'font-src': string[]
   'img-src': string[]
@@ -86,6 +87,29 @@ export const PRODUCTION_SECURITY_CONFIG: SecurityConfig = {
       "'unsafe-inline'", // Required for Next.js
       "'unsafe-eval'", // Required for Next.js and some dependencies
       'https://cdn.jsdelivr.net',
+      // Include vercel.live in preview/development environments
+      ...(process.env.VERCEL_ENV === 'preview' || 
+          process.env.VERCEL_ENV === 'development' ||
+          (process.env.VERCEL_URL && process.env.NODE_ENV !== 'production')
+          ? ['https://vercel.live'] : []),
+      'https://vercel.com', // Vercel analytics
+      'https://challenges.cloudflare.com', // Turnstile
+      'https://static.cloudflareinsights.com', // Cloudflare analytics
+    ],
+    // Explicitly set script-src-elem for modern browsers
+    'script-src-elem': [
+      "'self'",
+      "'unsafe-inline'",
+      "'unsafe-eval'",
+      'https://cdn.jsdelivr.net',
+      // Include vercel.live in preview/development environments
+      ...(process.env.VERCEL_ENV === 'preview' || 
+          process.env.VERCEL_ENV === 'development' ||
+          (process.env.VERCEL_URL && process.env.NODE_ENV !== 'production')
+          ? ['https://vercel.live'] : []),
+      'https://vercel.com',
+      'https://challenges.cloudflare.com',
+      'https://static.cloudflareinsights.com',
     ],
     'style-src': [
       "'self'",
