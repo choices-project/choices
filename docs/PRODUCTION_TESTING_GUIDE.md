@@ -1,6 +1,6 @@
 # Production Testing Guide
 
-**Last Updated**: December 2025
+**Last Updated**: December 2025 (React controlled input handling in E2E tests)
 
 ## Overview
 
@@ -265,6 +265,25 @@ Most users are on mobile:
 ### Issue: Test fails because loading state missing
 
 **Fix**: Add loading indicators (skeletons, spinners) during async operations.
+
+### Issue: Test fails because submit button stays disabled after filling form
+
+**Root Cause**: React controlled inputs require `onChange` events to update React state. Using `fill()` doesn't trigger these events.
+
+**Fix**: 
+- **Never use `fill()`** for React controlled inputs
+- **Always use `pressSequentially()`** to properly trigger React's `onChange` handlers:
+  ```typescript
+  // ❌ WRONG - Button will stay disabled
+  await emailInput.fill('test@example.com');
+  
+  // ✅ CORRECT - React state updates properly
+  await emailInput.click();
+  await emailInput.pressSequentially('test@example.com', { delay: 20 });
+  await page.waitForTimeout(300); // Wait for React to process
+  ```
+- Use the `loginTestUser()` helper from `tests/e2e/helpers/e2e-setup.ts` which handles this correctly
+- See `web/tests/e2e/README.md` for detailed examples
 
 ## Expanding Tests
 

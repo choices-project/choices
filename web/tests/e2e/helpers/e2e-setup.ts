@@ -214,6 +214,30 @@ export async function ensureLoggedOut(page: Page): Promise<void> {
   }).catch(() => undefined);
 }
 
+/**
+ * Logs in a test user via the authentication form.
+ * 
+ * **Important:** This function uses `pressSequentially()` instead of `fill()` to properly
+ * trigger React's `onChange` handlers for controlled inputs. React controlled inputs require
+ * the `onChange` event to fire for React state to update, which enables form validation and
+ * the submit button.
+ * 
+ * @param page - Playwright Page instance
+ * @param user - Test user credentials (email, password, username)
+ * @throws Error if email or password is missing
+ * @throws Error if form inputs don't update React state (submit button stays disabled)
+ * @throws Error if login API request fails
+ * @throws Error if navigation to /feed or /onboarding doesn't occur after login
+ * 
+ * @example
+ * ```typescript
+ * await loginTestUser(page, {
+ *   email: 'test@example.com',
+ *   password: 'password123',
+ *   username: 'testuser'
+ * });
+ * ```
+ */
 export async function loginTestUser(page: Page, user: TestUser): Promise<void> {
   const { email, password } = user;
   if (!email || !password) {
