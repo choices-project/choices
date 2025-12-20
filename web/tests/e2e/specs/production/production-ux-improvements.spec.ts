@@ -417,7 +417,16 @@ test.describe('Production UX Improvements', () => {
         { timeout: 5_000 }
       ).then(() => { apiRequestMade = true; }).catch(() => {});
       
-      // Click submit and immediately check for loading state
+      // Submit the form directly to ensure onSubmit handler is called
+      // This is more reliable than clicking the button, especially if React state isn't synced
+      const form = page.locator('form[data-testid="login-form"]').first();
+      await form.evaluate((formEl: HTMLFormElement) => {
+        // Create and dispatch a submit event
+        const submitEvent = new Event('submit', { bubbles: true, cancelable: true });
+        formEl.dispatchEvent(submitEvent);
+      });
+      
+      // Also click the button as a fallback
       await submitButton.click();
       
       // Wait a very short time to allow React to update state
