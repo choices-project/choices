@@ -1612,8 +1612,10 @@ test.describe('Production UX Excellence', () => {
         expect(errorText?.length).toBeGreaterThan(0);
       }
 
-      // Test valid email format
-      await emailInput.fill('test@example.com');
+      // Test valid email format - use pressSequentially to trigger React onChange
+      await emailInput.click();
+      await emailInput.clear();
+      await emailInput.pressSequentially('test@example.com', { delay: 20 });
       await emailInput.blur();
       await page.waitForTimeout(800);
 
