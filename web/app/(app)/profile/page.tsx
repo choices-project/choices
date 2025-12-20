@@ -45,6 +45,8 @@ export default function ProfilePage() {
   }, [setBreadcrumbs, setCurrentRoute, setSidebarActiveSection]);
 
   useEffect(() => {
+    // Only redirect if we're certain user is not authenticated
+    // Don't redirect while authentication state is still loading
     if (!isUserLoading && !isAuthenticated) {
       logger.debug('🚨 SECURITY: Unauthenticated user attempting to access profile - redirecting to login');
       routerRef.current.replace('/auth?redirectTo=/profile');
