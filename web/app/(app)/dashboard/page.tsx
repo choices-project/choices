@@ -38,7 +38,7 @@ export default function DashboardPage() {
   const router = useRouter();
   const routerRef = useRef(router);
   useEffect(() => { routerRef.current = router; }, [router]);
-  const { profile, isLoading, error } = useProfile();
+  const { profile, isLoading } = useProfile();
   const isAuthenticated = useIsAuthenticated();
   const isUserLoading = useUserLoading();
   const { setCurrentRoute, setBreadcrumbs, setSidebarActiveSection } = useAppActions();
@@ -102,7 +102,7 @@ export default function DashboardPage() {
             adminCheckRef.current = false;
             return; // Don't redirect
           }
-        } catch (error) {
+        } catch {
           // If admin check fails or times out, assume not admin and redirect
           logger.debug('🚨 Dashboard: Admin check failed or user is not admin - redirecting to onboarding');
         }
@@ -116,7 +116,7 @@ export default function DashboardPage() {
 
       void checkAdminAndRedirect();
     }
-  }, [isLoading, isUserLoading, isAuthenticated, profile, shouldBypassAuth]); // Removed router - use ref
+  }, [isLoading, isUserLoading, isAuthenticated, profile, shouldBypassAuth, isCheckingAdmin]); // Added isCheckingAdmin to dependencies
 
   if (isLoading) {
     return (

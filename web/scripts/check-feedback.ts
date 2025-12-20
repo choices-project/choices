@@ -4,10 +4,12 @@
  * Usage: npx tsx scripts/check-feedback.ts [--limit=10] [--hours=24]
  */
 
-import { createClient } from '@supabase/supabase-js';
-import { config } from 'dotenv';
-import { resolve, dirname } from 'path';
+import { dirname, resolve } from 'path';
 import { fileURLToPath } from 'url';
+
+import { config } from 'dotenv';
+
+import { createClient } from '@supabase/supabase-js';
 
 // Get __dirname equivalent for ES modules
 const __filename = fileURLToPath(import.meta.url);
@@ -37,6 +39,7 @@ const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY, {
 });
 
 async function checkRecentFeedback(limit = 10, hours = 24) {
+  // eslint-disable-next-line no-console
   console.log(`\n🔍 Checking for feedback submissions from the last ${hours} hours...\n`);
 
   const hoursAgo = new Date(Date.now() - hours * 60 * 60 * 1000);
@@ -54,36 +57,51 @@ async function checkRecentFeedback(limit = 10, hours = 24) {
   }
 
   if (!data || data.length === 0) {
+    // eslint-disable-next-line no-console
     console.log('📭 No feedback submissions found in the last', hours, 'hours.\n');
     return;
   }
 
+  // eslint-disable-next-line no-console
   console.log(`✅ Found ${data.length} feedback submission(s):\n`);
+  // eslint-disable-next-line no-console
   console.log('═'.repeat(80));
 
   data.forEach((feedback, index) => {
     const createdAt = new Date(feedback.created_at).toLocaleString();
     const userInfo = feedback.user_id ? `User ID: ${feedback.user_id}` : 'Anonymous';
     
+    // eslint-disable-next-line no-console
     console.log(`\n📝 Feedback #${index + 1}`);
+    // eslint-disable-next-line no-console
     console.log('─'.repeat(80));
+    // eslint-disable-next-line no-console
     console.log(`ID:           ${feedback.id}`);
+    // eslint-disable-next-line no-console
     console.log(`Type:         ${feedback.feedback_type || feedback.type || 'N/A'}`);
+    // eslint-disable-next-line no-console
     console.log(`Title:        ${feedback.title || 'N/A'}`);
+    // eslint-disable-next-line no-console
     console.log(`Sentiment:    ${feedback.sentiment || 'N/A'}`);
+    // eslint-disable-next-line no-console
     console.log(`Status:       ${feedback.status || 'N/A'}`);
+    // eslint-disable-next-line no-console
     console.log(`Priority:     ${feedback.priority || 'N/A'}`);
+    // eslint-disable-next-line no-console
     console.log(`User:         ${userInfo}`);
+    // eslint-disable-next-line no-console
     console.log(`Created:      ${createdAt}`);
     
     if (feedback.description) {
       const desc = feedback.description.length > 200 
         ? feedback.description.substring(0, 200) + '...' 
         : feedback.description;
+      // eslint-disable-next-line no-console
       console.log(`Description:  ${desc}`);
     }
     
     if (feedback.tags && Array.isArray(feedback.tags) && feedback.tags.length > 0) {
+      // eslint-disable-next-line no-console
       console.log(`Tags:         ${feedback.tags.join(', ')}`);
     }
     
@@ -92,9 +110,11 @@ async function checkRecentFeedback(limit = 10, hours = 24) {
         ? JSON.parse(feedback.user_journey) 
         : feedback.user_journey;
       if (journey?.currentPage) {
+        // eslint-disable-next-line no-console
         console.log(`Page:         ${journey.currentPage}`);
       }
       if (journey?.deviceInfo?.deviceType) {
+        // eslint-disable-next-line no-console
         console.log(`Device:       ${journey.deviceInfo.deviceType}`);
       }
     }
@@ -104,12 +124,15 @@ async function checkRecentFeedback(limit = 10, hours = 24) {
         ? JSON.parse(feedback.metadata) 
         : feedback.metadata;
       if (metadata?.security?.ipAddress) {
+        // eslint-disable-next-line no-console
         console.log(`IP Address:   ${metadata.security.ipAddress}`);
       }
     }
   });
 
+  // eslint-disable-next-line no-console
   console.log('\n' + '═'.repeat(80));
+  // eslint-disable-next-line no-console
   console.log(`\n✅ Total: ${data.length} feedback submission(s)\n`);
 }
 
