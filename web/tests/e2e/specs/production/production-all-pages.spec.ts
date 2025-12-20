@@ -197,6 +197,13 @@ test.describe('Production - All Pages & Features', () => {
           await expect(profileContent).toBeVisible({ timeout: 15_000 }).catch(() => {
             // Profile page might have different structure
           });
+
+          // Verify page doesn't show error boundary (indicates graceful error handling)
+          const errorBoundary = page.locator('[data-testid="error-boundary"]');
+          const hasErrorBoundary = await errorBoundary.isVisible({ timeout: 2_000 }).catch(() => false);
+          if (hasErrorBoundary) {
+            throw new Error('Profile page is showing error boundary - page should handle errors gracefully');
+          }
         } else if (finalUrl.includes('/auth')) {
           throw new Error('Profile page redirected to auth - authentication may have failed');
         }
@@ -240,12 +247,53 @@ test.describe('Production - All Pages & Features', () => {
           await expect(pollsContent).toBeVisible({ timeout: 15_000 }).catch(() => {
             // Polls page might have different structure
           });
+
+          // Verify page doesn't show error boundary (indicates graceful error handling)
+          const errorBoundary = page.locator('[data-testid="error-boundary"]');
+          const hasErrorBoundary = await errorBoundary.isVisible({ timeout: 2_000 }).catch(() => false);
+          if (hasErrorBoundary) {
+            throw new Error('Polls page is showing error boundary - page should handle errors gracefully');
+          }
         } else if (finalUrl.includes('/auth')) {
           throw new Error('Polls page redirected to auth - authentication may have failed');
         } else if (status === 404) {
           test.skip(true, 'Polls page route does not exist');
         }
       }
+    });
+
+    test('pages handle API errors gracefully without crashing', async ({ page }) => {
+      test.setTimeout(120_000);
+
+      if (!regularEmail || !regularPassword) {
+        test.skip(true, 'E2E_USER_EMAIL and E2E_USER_PASSWORD are required');
+        return;
+      }
+
+      await ensureLoggedOut(page);
+      await loginTestUser(page, {
+        email: regularEmail,
+        password: regularPassword,
+        username: regularEmail.split('@')[0] ?? 'e2e-user',
+      });
+      await waitForPageReady(page);
+
+      // Test that pages load even if API calls fail
+      // We'll check dashboard which calls getUserRepresentatives
+      await page.goto(`${BASE_URL}/dashboard`, { waitUntil: 'domcontentloaded', timeout: 30_000 });
+      await waitForPageReady(page);
+
+      // Page should load without showing error boundary
+      const errorBoundary = page.locator('[data-testid="error-boundary"]');
+      const hasErrorBoundary = await errorBoundary.isVisible({ timeout: 2_000 }).catch(() => false);
+      
+      // Page should still render content even if some API calls fail
+      const pageContent = page.locator('body');
+      const hasContent = await pageContent.textContent().then(text => (text?.length ?? 0) > 100).catch(() => false);
+
+      expect(hasContent).toBeTruthy();
+      // Error boundary should not be visible (errors should be handled gracefully)
+      expect(hasErrorBoundary).toBeFalsy();
     });
   });
 

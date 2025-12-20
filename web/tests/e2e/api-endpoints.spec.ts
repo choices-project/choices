@@ -389,5 +389,59 @@ test.describe('API endpoints (mock harness)', () => {
     const civicsFallback = await apiFetch(page, { url: '/api/v1/civics/by-state?state=CA&level=state' });
     expect(civicsFallback.status).toBe(200);
   });
+
+  test.describe('Error Handling', () => {
+    test('API endpoints return appropriate error responses', async ({ page }) => {
+      test.setTimeout(60_000);
+
+      // Test 404 for non-existent endpoint
+      const response404 = await page.request.get(`${BASE_URL}/api/nonexistent-endpoint`, {
+        timeout: 10_000,
+      });
+      expect([404, 405]).toContain(response404.status());
+
+      // Test 401 for protected endpoint without auth
+      const response401 = await page.request.get(`${BASE_URL}/api/profile`, {
+        timeout: 10_000,
+      });
+      expect([401, 403]).toContain(response401.status());
+    });
+
+    test('/api/representatives/my returns empty array when table missing', async ({ page }) => {
+      test.setTimeout(60_000);
+
+      if (!regularEmail || !regularPassword) {
+        test.skip(true, 'E2E_USER_EMAIL and E2E_USER_PASSWORD are required');
+        return;
+      }
+
+      await ensureLoggedOut(page);
+      await loginTestUser(page, {
+        email: regularEmail,
+        password: regularPassword,
+        username: regularEmail.split('@')[0] ?? 'e2e-user',
+      });
+      await waitForPageReady(page);
+
+      // The endpoint should return 200 with empty array if table doesn't exist
+      // This is better than 500 which would crash pages
+      const response = await page.request.get(`${BASE_URL}/api/representatives/my`, {
+        timeout: 10_000,
+      });
+
+      // Should return 200 (not 500) even if table is missing
+      expect(response.status()).toBe(200);
+
+      const body = await response.json();
+      expect(body).toHaveProperty('success');
+      
+      // If successful, should have data structure
+      if (body.success) {
+        expect(body).toHaveProperty('data');
+        expect(body.data).toHaveProperty('representatives');
+        expect(Array.isArray(body.data.representatives)).toBe(true);
+      }
+    });
+  });
 });
 
