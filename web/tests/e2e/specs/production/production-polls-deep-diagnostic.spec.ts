@@ -53,11 +53,13 @@ test.describe('Production Polls Page Deep Diagnostic', () => {
       await page.waitForTimeout(1_000);
       
       const spinnerVisible = await page.locator('.animate-spin, [class*="spinner"]').first().isVisible({ timeout: 500 }).catch(() => false);
+      const mountSpinner = await page.locator('[data-testid="polls-loading-mount"]').isVisible({ timeout: 500 }).catch(() => false);
+      const dataSpinner = await page.locator('[data-testid="polls-loading-data"]').isVisible({ timeout: 500 }).catch(() => false);
       const hasContent = await page.locator('body').textContent().then(text => {
         return text && text.length > 200 && !text.includes('Loading') && !text.includes('Something went wrong');
       }).catch(() => false);
       
-      console.log(`Check ${i + 1}: spinner=${spinnerVisible}, hasContent=${hasContent}`);
+      console.log(`Check ${i + 1}: spinner=${spinnerVisible}, mountSpinner=${mountSpinner}, dataSpinner=${dataSpinner}, hasContent=${hasContent}`);
       
       if (!spinnerVisible && hasContent) {
         console.log('Page loaded successfully!');
@@ -67,6 +69,8 @@ test.describe('Production Polls Page Deep Diagnostic', () => {
     
     // Final state check
     const spinnerVisible = await page.locator('.animate-spin, [class*="spinner"]').first().isVisible({ timeout: 2_000 }).catch(() => false);
+    const mountSpinner = await page.locator('[data-testid="polls-loading-mount"]').isVisible({ timeout: 500 }).catch(() => false);
+    const dataSpinner = await page.locator('[data-testid="polls-loading-data"]').isVisible({ timeout: 500 }).catch(() => false);
     const bodyText = await page.locator('body').textContent().catch(() => '');
     const hasContent = bodyText && bodyText.length > 200 && !bodyText.includes('Something went wrong');
     
@@ -84,6 +88,8 @@ test.describe('Production Polls Page Deep Diagnostic', () => {
     console.log('\n=== DEEP DIAGNOSTIC RESULTS ===');
     console.log('Current URL:', page.url());
     console.log('Spinner Visible:', spinnerVisible);
+    console.log('Mount Spinner (isMounted=false):', mountSpinner);
+    console.log('Data Spinner (isLoading=true):', dataSpinner);
     console.log('Has Content:', hasContent);
     console.log('Body Text Length:', bodyText?.length || 0);
     console.log('React State:', reactState);
