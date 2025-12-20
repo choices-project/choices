@@ -431,11 +431,11 @@ export async function loginTestUser(page: Page, user: TestUser): Promise<void> {
   // We need to wait for React's formData state to match the input values
   let isEnabled = false;
   let reactStateReady = false;
-  
+
   // Wait for React state to sync - check button enabled state AND verify React has processed the inputs
   for (let attempt = 0; attempt < 30; attempt++) {
     isEnabled = !(await submitButton.isDisabled());
-    
+
     // Verify React state has actually updated by checking if form validation passes
     // We check this by looking at whether the button is enabled, which depends on formData
     if (isEnabled) {
@@ -445,17 +445,17 @@ export async function loginTestUser(page: Page, user: TestUser): Promise<void> {
         const emailInput = document.querySelector('[data-testid="login-email"]') as HTMLInputElement;
         const passwordInput = document.querySelector('[data-testid="login-password"]') as HTMLInputElement;
         const submitButton = document.querySelector('[data-testid="login-submit"]') as HTMLButtonElement;
-        
+
         if (!emailInput || !passwordInput || !submitButton) return false;
-        
+
         const emailValid = emailInput.value.includes('@') && emailInput.value === emailValue;
         const passwordValid = passwordInput.value.length >= 6 && passwordInput.value === passwordValue;
         const buttonDisabled = submitButton.disabled;
-        
+
         // If inputs are valid but button is disabled, React state hasn't synced yet
         return emailValid && passwordValid && !buttonDisabled;
       }, { emailValue: email, passwordValue: password }).catch(() => false);
-      
+
       if (reactStateReady) break;
     }
 
@@ -491,7 +491,7 @@ export async function loginTestUser(page: Page, user: TestUser): Promise<void> {
     if (emailValid && passwordValid) {
       // Inputs are valid, but React state might not be synced
       // Try one more time to trigger React state update
-      await page.evaluate(({ emailValue, passwordValue }: { emailValue: string; passwordValue: string }) => {
+      await page.evaluate(() => {
         const emailInput = document.querySelector('[data-testid="login-email"]') as HTMLInputElement;
         const passwordInput = document.querySelector('[data-testid="login-password"]') as HTMLInputElement;
         
@@ -501,12 +501,10 @@ export async function loginTestUser(page: Page, user: TestUser): Promise<void> {
           emailInput.blur();
           passwordInput.focus();
           passwordInput.blur();
-          
-          // Small delay to allow React to process
-          return new Promise(resolve => setTimeout(resolve, 100));
         }
-      }, { emailValue: email, passwordValue: password });
-      
+        return true;
+      });
+
       await page.waitForTimeout(500);
       isEnabled = !(await submitButton.isDisabled());
     }
