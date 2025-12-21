@@ -2,7 +2,7 @@
 
 import { AlertCircle, BarChart3, Printer, Share2, Shield, Trophy } from 'lucide-react';
 import { useRouter } from 'next/navigation';
-import React, { useCallback, useEffect, useMemo, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
 import { useRecordPollEvent } from '@/features/polls/hooks/usePollAnalytics';
 import { usePollMilestoneNotifications, POLL_MILESTONES, type PollMilestone } from '@/features/polls/hooks/usePollMilestones';
@@ -113,16 +113,24 @@ export default function PollClient({ poll }: PollClientProps) {
   const votingStoreError = useVotingError();
   const storeIsVoting = useVotingIsVoting();
 
+  // Extract specific poll fields for metadata to avoid unnecessary re-renders
+  const pollId = poll.id;
+  const pollTitle = poll.title;
+  const votingMethod = poll.votingMethod;
+  const privacyLevel = poll.privacyLevel;
+  const pollStatusForMetadata = poll.status;
+  const pollCategoryForMetadata = poll.category;
+
   const pollMetadataFactory = useCallback(
     () => ({
-      pollId: poll.id,
-      pollTitle: poll.title,
-      votingMethod: poll.votingMethod,
-      privacyLevel: poll.privacyLevel,
-      status: poll.status,
-      category: poll.category
+      pollId,
+      pollTitle,
+      votingMethod,
+      privacyLevel,
+      status: pollStatusForMetadata,
+      category: pollCategoryForMetadata
     }),
-    [poll]
+    [pollId, pollTitle, votingMethod, privacyLevel, pollStatusForMetadata, pollCategoryForMetadata]
   )
 
   const recordPollEvent = useRecordPollEvent(pollMetadataFactory)
@@ -131,47 +139,60 @@ export default function PollClient({ poll }: PollClientProps) {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  const pollId = poll.id;
+  // Use refs for stable app store actions to prevent infinite re-renders
+  const setCurrentRouteRef = useRef(setCurrentRoute);
+  useEffect(() => { setCurrentRouteRef.current = setCurrentRoute; }, [setCurrentRoute]);
+  const setSidebarActiveSectionRef = useRef(setSidebarActiveSection);
+  useEffect(() => { setSidebarActiveSectionRef.current = setSidebarActiveSection; }, [setSidebarActiveSection]);
+  const setBreadcrumbsRef = useRef(setBreadcrumbs);
+  useEffect(() => { setBreadcrumbsRef.current = setBreadcrumbs; }, [setBreadcrumbs]);
+
+  // Use ref for stable translation function
+  const tRef = useRef(t);
+  useEffect(() => { tRef.current = t; }, [t]);
 
   useEffect(() => {
-    const pollPath = `/polls/${poll.id}`;
+    const pollPath = `/polls/${pollId}`;
 
-    setCurrentRoute(pollPath);
-    setSidebarActiveSection('polls');
-    setBreadcrumbs([
-      { label: t('polls.view.breadcrumbs.home'), href: '/' },
-      { label: t('polls.view.breadcrumbs.dashboard'), href: '/dashboard' },
-      { label: t('polls.view.breadcrumbs.polls'), href: '/polls' },
-      { label: poll.title ?? t('polls.view.breadcrumbs.pollDetail'), href: pollPath },
+    setCurrentRouteRef.current(pollPath);
+    setSidebarActiveSectionRef.current('polls');
+    setBreadcrumbsRef.current([
+      { label: tRef.current('polls.view.breadcrumbs.home'), href: '/' },
+      { label: tRef.current('polls.view.breadcrumbs.dashboard'), href: '/dashboard' },
+      { label: tRef.current('polls.view.breadcrumbs.polls'), href: '/polls' },
+      { label: pollTitle ?? tRef.current('polls.view.breadcrumbs.pollDetail'), href: pollPath },
     ]);
 
     return () => {
-      setSidebarActiveSection(null);
-      setBreadcrumbs([]);
+      setSidebarActiveSectionRef.current(null);
+      setBreadcrumbsRef.current([]);
     };
-  }, [poll.id, poll.title, setBreadcrumbs, setCurrentRoute, setSidebarActiveSection, t]);
+  }, [pollId, pollTitle]);
+
+  // Extract specific poll fields for memoization stability
+  const pollTotalVotesForBallot = typeof poll.totalVotes === 'number' ? poll.totalVotes : (typeof poll.totalvotes === 'number' ? poll.totalvotes : undefined);
+  const pollDescriptionForBallot = poll.description ?? null;
+  const pollOptionsForBallot = poll.options ?? [];
+  const pollVotingMethodForBallot = poll.votingMethod ?? 'single';
+  const pollEndtimeForBallot = poll.endtime ?? null;
+  const pollStatusForBallot = poll.status ?? 'active';
+  const pollCategoryForBallot = poll.category ?? null;
+  const pollCreatedAtForBallot = poll.createdAt ?? null;
 
   const pollDetailsForBallot = useMemo(() => {
-    const totalVotes =
-      typeof poll.totalVotes === 'number'
-        ? poll.totalVotes
-        : typeof poll.totalvotes === 'number'
-        ? poll.totalvotes
-        : undefined;
-
     return {
-      id: poll.id,
-      title: poll.title,
-      description: poll.description ?? null,
-      options: [...(poll.options ?? [])],
-      votingMethod: poll.votingMethod ?? 'single',
-      ...(totalVotes !== undefined ? { totalVotes } : {}),
-      endtime: poll.endtime ?? null,
-      status: poll.status ?? 'active',
-      category: poll.category ?? null,
-      createdAt: poll.createdAt ?? null,
+      id: pollId,
+      title: pollTitle,
+      description: pollDescriptionForBallot,
+      options: [...pollOptionsForBallot],
+      votingMethod: pollVotingMethodForBallot,
+      ...(pollTotalVotesForBallot !== undefined ? { totalVotes: pollTotalVotesForBallot } : {}),
+      endtime: pollEndtimeForBallot,
+      status: pollStatusForBallot,
+      category: pollCategoryForBallot,
+      createdAt: pollCreatedAtForBallot,
     };
-  }, [poll]);
+  }, [pollId, pollTitle, pollDescriptionForBallot, pollOptionsForBallot, pollVotingMethodForBallot, pollTotalVotesForBallot, pollEndtimeForBallot, pollStatusForBallot, pollCategoryForBallot, pollCreatedAtForBallot]);
 
   const combinedError = error ?? votingStoreError ?? null;
 
