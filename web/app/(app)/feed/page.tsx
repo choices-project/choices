@@ -53,16 +53,16 @@ class ErrorBoundaryWrapper extends Component<
           role="alert"
         >
           <div className="text-center">
-            <p className="text-red-600 mb-4">Unable to load feed. Please refresh the page.</p>
+            <p className="text-red-600 mb-4">Unable to load feed. Please try again.</p>
             <button
               onClick={() => {
                 this.setState({ hasError: false, error: null });
-                window.location.reload();
+                // Retry by resetting error state - component will re-render and attempt to load again
               }}
               className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
-              aria-label="Reload page to retry loading feed"
+              aria-label="Try again to load feed"
             >
-              Reload Page
+              Try again
             </button>
           </div>
         </div>

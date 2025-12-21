@@ -49,6 +49,7 @@ export default function ProfilePreferencesPage() {
   const updateProfileRef = useRef(updateProfile);
   useEffect(() => { updateProfileRef.current = updateProfile; }, [updateProfile]);
 
+  // Memoize initialInterests with stable reference
   const initialInterests = useMemo<string[]>(() => {
     return profile?.primary_concerns ?? [];
   }, [profile?.primary_concerns]);
@@ -72,11 +73,16 @@ export default function ProfilePreferencesPage() {
     };
   }, []);  
 
+  // Sync userInterests with initialInterests when profile changes
+  // Use a ref to track previous initialInterests to prevent unnecessary updates
+  const prevInitialInterestsRef = useRef<string[]>(initialInterests);
   useEffect(() => {
-    if (!arraysAreEqual(userInterests, initialInterests)) {
+    // Only update if the actual array contents changed (not just reference)
+    if (!arraysAreEqual(prevInitialInterestsRef.current, initialInterests)) {
+      prevInitialInterestsRef.current = initialInterests;
       setUserInterests(initialInterests);
     }
-  }, [initialInterests, userInterests]);
+  }, [initialInterests]);
 
   useEffect(() => {
     if (statusMessage?.type === 'success') {

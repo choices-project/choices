@@ -105,27 +105,43 @@ response.cookies.set(name, value, cookieOptions)
 2. ✅ **Remove domain attribute** - Let browser handle domain scoping
 3. ✅ **Add middleware debugging** - Enhanced logging for cookie inspection
 4. ✅ **Force attributes when copying** - Ensure cookies maintain security attributes
-5. ⏳ **Test after deployment** - Verify cookies now have correct attributes
-6. ⏳ **Verify middleware detects cookies** - Confirm middleware can read authentication
-7. ⏳ **Verify profile page loads** - Confirm no redirect to `/auth`
+5. ✅ **Enhanced cookie detection** - URL decoding and chunked cookie support
+6. ✅ **Create middleware client helper** - Supabase client for Edge Runtime
+7. ⏳ **Test after deployment** - Verify cookies now have correct attributes
+8. ⏳ **Verify middleware detects cookies** - Confirm middleware can read authentication (including chunked/encoded)
+9. ⏳ **Verify profile page loads** - Confirm no redirect to `/auth`
 
-## Latest Changes (Committed, Awaiting Deployment)
+## Latest Changes (Committed, January 2025)
 
-### Cookie Adapter Fixes
+### Cookie Adapter Fixes ✅
 - **Force `httpOnly: true`** for all auth cookies (regardless of Supabase SSR options)
 - **Force `secure: true`** in production for all auth cookies
 - **Enhanced logging** to track what options Supabase SSR passes vs what we set
 
-### Login Route Fixes
+### Login Route Fixes ✅
 - **Force attributes when copying** cookies to final response
 - **Enhanced logging** to track original vs final cookie attributes
 - **Better error handling** for cookie operations
 
-### Expected Results After Next Deployment
-- Cookies should have `httpOnly: true` and `secure: true` in production
-- Cookies should NOT have explicit domain attribute
-- Middleware should be able to read cookies correctly
-- Profile page should load without redirect to `/auth`
+### Middleware Cookie Detection Improvements ✅ (Latest)
+- **URL Decoding Support**: Handles URL-encoded cookie values in Cookie headers
+- **Chunked Cookie Detection**: Detects Supabase chunked cookies (`.0`, `.1`, `.2`, etc.) up to `.9`
+- **Lower Thresholds for Chunks**: Uses 5 char minimum for chunked cookies (vs 10 for main cookies)
+- **Enhanced Pattern Matching**: Improved regex patterns for cookie detection
+- **Multiple Detection Methods**: 4-layer fallback strategy (direct lookup, pattern matching, header parsing, chunked detection)
+
+### New Supabase Middleware Client Helper ✅ (Latest)
+- **File**: `web/utils/supabase/middleware-client.ts`
+- **Function**: `createSupabaseMiddlewareClient()` - Creates Supabase client for Edge Runtime
+- **Function**: `checkAuthWithSupabaseClient()` - Alternative auth check using Supabase client
+- **Purpose**: Provides proper Supabase SSR integration for middleware when needed
+
+### Expected Results After Deployment
+- ✅ Cookies should have `httpOnly: true` and `secure: true` in production
+- ✅ Cookies should NOT have explicit domain attribute
+- ✅ Middleware should be able to read cookies correctly (including URL-encoded and chunked)
+- ✅ Profile page should load without redirect to `/auth`
+- ✅ All protected routes should be accessible to authenticated users
 
 ## Test Commands
 

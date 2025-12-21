@@ -3,12 +3,18 @@ import type { NextRequest } from 'next/server'
 /**
  * Check if a user is authenticated in middleware context (Edge Runtime compatible)
  * 
- * This function works in Edge Runtime by checking for Supabase auth cookies directly
- * without importing @supabase/ssr or @supabase/supabase-js, which are not supported in Edge.
+ * This function works in Edge Runtime by checking for Supabase auth cookies directly.
+ * It uses manual cookie detection as a fallback when Supabase client creation fails.
  * 
  * Supabase stores auth tokens in cookies with the pattern:
- * - sb-<project-ref>-auth-token (main auth cookie)
- * - sb-access-token (custom cookie set by our login route)
+ * - sb-<project-ref>-auth-token (main auth cookie, stores encrypted session)
+ * - sb-<project-ref>-auth-token.0, sb-<project-ref>-auth-token.1 (chunked cookies for large sessions)
+ * - sb-access-token (custom cookie, if set)
+ * 
+ * Based on Supabase SSR documentation (December 2025):
+ * - Cookies are set by @supabase/ssr createServerClient
+ * - Cookies may be chunked if session data exceeds cookie size limits
+ * - Cookie names follow pattern: sb-<project-ref>-auth-token[.chunk-index]
  * 
  * @param request - The Next.js request object
  * @returns Object with isAuthenticated boolean
@@ -73,10 +79,19 @@ export function checkAuthInMiddleware(
   // Method 1: Check for our custom access token cookie (if we set one)
   const accessToken = cookies.get('sb-access-token')
   if (accessToken?.value && accessToken.value.length > 0) {
-    if (process.env.DEBUG_MIDDLEWARE === '1') {
-      console.warn('[checkAuthInMiddleware] Found sb-access-token cookie')
+    const trimmedValue = accessToken.value.trim()
+    // Check for substantial value (tokens are typically longer than 10 chars)
+    if (trimmedValue.length > 10 && 
+        trimmedValue !== 'null' && 
+        trimmedValue !== 'undefined' &&
+        trimmedValue !== '{}' &&
+        trimmedValue !== '""' &&
+        trimmedValue !== "''") {
+      if (process.env.DEBUG_MIDDLEWARE === '1') {
+        console.warn('[checkAuthInMiddleware] Found sb-access-token cookie')
+      }
+      return { isAuthenticated: true }
     }
-    return { isAuthenticated: true }
   }
   
   // Method 2: Check for Supabase's standard auth token cookie pattern
@@ -95,7 +110,14 @@ export function checkAuthInMiddleware(
         const authTokenCookie = cookies.get(expectedCookieName)
         if (authTokenCookie?.value && authTokenCookie.value.length > 0) {
           const trimmedValue = authTokenCookie.value.trim()
-          if (trimmedValue.length > 0 && trimmedValue !== 'null' && trimmedValue !== 'undefined') {
+          // Check for substantial value (auth tokens/session data are typically longer)
+          // Accept JSON objects (session data) or JWT tokens
+          if (trimmedValue.length > 10 && 
+              trimmedValue !== 'null' && 
+              trimmedValue !== 'undefined' &&
+              trimmedValue !== '{}' &&
+              trimmedValue !== '""' &&
+              trimmedValue !== "''") {
             if (process.env.DEBUG_MIDDLEWARE === '1') {
               console.warn('[checkAuthInMiddleware] Found expected auth cookie:', expectedCookieName)
             }
@@ -104,17 +126,29 @@ export function checkAuthInMiddleware(
         }
         
         // Also check for alternative patterns (with different suffixes)
+        // Supabase may chunk large cookies into multiple numbered cookies (.0, .1, .2, etc.)
         const altCookieNames = [
           `sb-${projectRef}-auth-token-code-verifier`,
-          `sb-${projectRef}-auth-token.0`,
-          `sb-${projectRef}-auth-token.1`,
         ]
+        
+        // Check numbered chunks (Supabase can create .0, .1, .2, etc. for large sessions)
+        for (let i = 0; i < 10; i++) {
+          altCookieNames.push(`sb-${projectRef}-auth-token.${i}`)
+        }
         
         for (const altCookieName of altCookieNames) {
           const altAuthCookie = cookies.get(altCookieName)
           if (altAuthCookie?.value && altAuthCookie.value.length > 0) {
             const trimmedValue = altAuthCookie.value.trim()
-            if (trimmedValue.length > 0 && trimmedValue !== 'null' && trimmedValue !== 'undefined') {
+            // Check for substantial value (even chunked cookies should have content)
+            // Lower threshold for chunked cookies as they may be smaller pieces
+            const minLength = altCookieName.includes('.') ? 5 : 10
+            if (trimmedValue.length >= minLength && 
+                trimmedValue !== 'null' && 
+                trimmedValue !== 'undefined' &&
+                trimmedValue !== '{}' &&
+                trimmedValue !== '""' &&
+                trimmedValue !== "''") {
               if (process.env.DEBUG_MIDDLEWARE === '1') {
                 console.warn('[checkAuthInMiddleware] Found alt auth cookie:', altCookieName)
               }
@@ -147,7 +181,14 @@ export function checkAuthInMiddleware(
       if (name.includes('auth') || name.includes('session') || name.includes('access')) {
         // Verify the cookie value isn't empty or just whitespace/null/undefined
         const trimmedValue = value.trim()
-        if (trimmedValue.length > 0 && trimmedValue !== 'null' && trimmedValue !== 'undefined' && trimmedValue !== '{}') {
+        // Check for substantial value (auth tokens are typically longer than 10 chars)
+        // Also accept JSON objects (session data stored as JSON)
+        if (trimmedValue.length > 10 && 
+            trimmedValue !== 'null' && 
+            trimmedValue !== 'undefined' && 
+            trimmedValue !== '{}' &&
+            trimmedValue !== '""' &&
+            trimmedValue !== "''") {
           // Found a valid auth cookie
           if (process.env.DEBUG_MIDDLEWARE === '1') {
             console.warn('[checkAuthInMiddleware] Found auth cookie in parsed cookies:', cookie.name)
@@ -174,9 +215,18 @@ export function checkAuthInMiddleware(
       const matches = [...cookieHeader.matchAll(pattern)]
       for (const match of matches) {
         if (match[1]) {
-          const cookieValue = match[1].trim()
-          // Verify the cookie value is valid
-          if (cookieValue.length > 0 && 
+          let cookieValue = match[1].trim()
+          
+          // Handle URL encoding - cookies in headers may be URL-encoded
+          try {
+            // Try to decode URL-encoded values
+            cookieValue = decodeURIComponent(cookieValue)
+          } catch {
+            // If decoding fails, use original value (might not be encoded)
+          }
+          
+          // Verify the cookie value is valid and substantial
+          if (cookieValue.length > 10 && 
               cookieValue !== 'null' && 
               cookieValue !== 'undefined' && 
               cookieValue !== '{}' &&
@@ -197,11 +247,22 @@ export function checkAuthInMiddleware(
     const sbMatches = [...cookieHeader.matchAll(sbCookiePattern)]
     for (const match of sbMatches) {
       const cookieName = match[1].toLowerCase()
-      const cookieValue = match[2].trim()
+      let cookieValue = match[2].trim()
+      
+      // Handle URL encoding - cookies in headers may be URL-encoded
+      try {
+        cookieValue = decodeURIComponent(cookieValue)
+      } catch {
+        // If decoding fails, use original value
+      }
       
       // If it's an auth-related cookie with a substantial value
+      // Lower threshold for chunked cookies (they may be smaller pieces)
+      const isChunked = cookieName.includes('.') && /\.\d+$/.test(cookieName)
+      const minLength = isChunked ? 5 : 10
+      
       if ((cookieName.includes('auth') || cookieName.includes('session') || cookieName.includes('access')) &&
-          cookieValue.length > 10 && // Substantial value (auth tokens are typically longer)
+          cookieValue.length >= minLength && 
           cookieValue !== 'null' && 
           cookieValue !== 'undefined' && 
           cookieValue !== '{}' &&

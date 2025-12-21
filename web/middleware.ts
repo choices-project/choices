@@ -1,7 +1,6 @@
 import { NextResponse } from 'next/server'
 
 import { checkAuthInMiddleware } from '@/utils/supabase/middleware'
-import { checkAuthWithSupabaseClient } from '@/utils/supabase/middleware-client'
 
 import {
   getSecurityConfig,
@@ -186,36 +185,13 @@ export async function middleware(request: NextRequest) {
 
   // Handle root path redirect based on authentication status
   if (pathname === '/') {
-    // Create response early for cookie handling
-    const response = NextResponse.next()
-    
-    // Try Supabase client auth check first (more reliable), fall back to cookie detection
-    let isAuthenticated = false
-    try {
-      const authResult = await checkAuthWithSupabaseClient(request, response)
-      isAuthenticated = authResult.isAuthenticated
-    } catch (error) {
-      // Fall back to cookie detection if Supabase client fails
-      logger.warn('[middleware] Supabase client auth check failed, falling back to cookie detection', { error })
-      const cookieAuth = checkAuthInMiddleware(request)
-      isAuthenticated = cookieAuth.isAuthenticated
-    }
+    // Check authentication status using cookie detection (Edge Runtime compatible)
+    const { isAuthenticated } = checkAuthInMiddleware(request)
 
     // Redirect based on authentication status
     const redirectPath = isAuthenticated ? '/feed' : '/landing'
     const redirectUrl = new URL(redirectPath, request.url)
     const redirectResponse = NextResponse.redirect(redirectUrl, 307)
-    
-    // Copy any cookies set by Supabase client
-    response.cookies.getAll().forEach(cookie => {
-      redirectResponse.cookies.set(cookie.name, cookie.value, {
-        httpOnly: cookie.httpOnly,
-        secure: cookie.secure,
-        sameSite: cookie.sameSite as 'strict' | 'lax' | 'none' | undefined,
-        path: cookie.path,
-        maxAge: cookie.maxAge,
-      })
-    })
     
     // Add cache headers to help with redirect performance
     redirectResponse.headers.set('Cache-Control', 'public, max-age=3600, stale-while-revalidate=86400')
@@ -235,20 +211,8 @@ export async function middleware(request: NextRequest) {
                          request.cookies.get('e2e-dashboard-bypass')?.value === '1';
 
     if (!isE2EHarness) {
-      // Create response early for cookie handling
-      const response = NextResponse.next()
-      
-      // Try Supabase client auth check first (more reliable), fall back to cookie detection
-      let isAuthenticated = false
-      try {
-        const authResult = await checkAuthWithSupabaseClient(request, response)
-        isAuthenticated = authResult.isAuthenticated
-      } catch (authError) {
-        // Fall back to cookie detection if Supabase client fails
-        logger.warn('[middleware] Supabase client auth check failed for protected route, falling back to cookie detection', { error: authError, pathname })
-        const cookieAuth = checkAuthInMiddleware(request)
-        isAuthenticated = cookieAuth.isAuthenticated
-      }
+      // Check authentication using cookie detection (Edge Runtime compatible)
+      const { isAuthenticated } = checkAuthInMiddleware(request)
 
       if (!isAuthenticated) {
         // Redirect unauthenticated users to auth page
@@ -263,19 +227,8 @@ export async function middleware(request: NextRequest) {
 
   // Redirect authenticated users away from auth pages (except during login flow)
   if (isAuthRoute && pathname !== '/auth') {
-    // Create response early for cookie handling
-    const response = NextResponse.next()
-    
-    // Try Supabase client auth check first (more reliable), fall back to cookie detection
-    let isAuthenticated = false
-    try {
-      const authResult = await checkAuthWithSupabaseClient(request, response)
-      isAuthenticated = authResult.isAuthenticated
-    } catch {
-      // Fall back to cookie detection if Supabase client fails
-      const cookieAuth = checkAuthInMiddleware(request)
-      isAuthenticated = cookieAuth.isAuthenticated
-    }
+    // Check authentication using cookie detection (Edge Runtime compatible)
+    const { isAuthenticated } = checkAuthInMiddleware(request)
 
     if (isAuthenticated) {
       // Authenticated users trying to access login/register should go to feed

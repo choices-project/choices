@@ -708,6 +708,7 @@ test.describe('Production UX Excellence', () => {
       }
 
       // At least some elements should be focusable during keyboard navigation
+      // Check that we found at least one focused element (focusableCount > 0)
       expect(focusableCount).toBeGreaterThan(0);
     });
   });
