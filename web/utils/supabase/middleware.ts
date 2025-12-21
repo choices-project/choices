@@ -45,6 +45,8 @@ export function checkAuthInMiddleware(
     const allCookieNames = allCookies.map(c => c.name)
      
     console.warn('[checkAuthInMiddleware] All cookies:', allCookieNames)
+     
+    console.warn('[checkAuthInMiddleware] Cookie header length:', cookieHeader.length)
     
     // Log auth-related cookies in detail
     const authCookies = allCookies.filter(c => 
@@ -61,17 +63,23 @@ export function checkAuthInMiddleware(
       })))
     } else {
        
-      console.warn('[checkAuthInMiddleware] No auth cookies found')
+      console.warn('[checkAuthInMiddleware] No auth cookies found in parsed cookies')
     }
   }
   
-  // First, check for our custom access token cookie (if we set one)
+  // STRATEGY: Check multiple methods to find auth cookies
+  // This ensures we catch cookies even if Next.js cookie parsing has issues in Edge Runtime
+  
+  // Method 1: Check for our custom access token cookie (if we set one)
   const accessToken = cookies.get('sb-access-token')
   if (accessToken?.value && accessToken.value.length > 0) {
+    if (process.env.DEBUG_MIDDLEWARE === '1') {
+      console.warn('[checkAuthInMiddleware] Found sb-access-token cookie')
+    }
     return { isAuthenticated: true }
   }
   
-  // Check for Supabase's standard auth token cookie pattern
+  // Method 2: Check for Supabase's standard auth token cookie pattern
   // Supabase project ref is derived from NEXT_PUBLIC_SUPABASE_URL
   const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
   if (supabaseUrl) {
@@ -81,43 +89,68 @@ export function checkAuthInMiddleware(
       const urlMatch = supabaseUrl.match(/https?:\/\/([^.]+)\.supabase\.(co|io)/)
       if (urlMatch && urlMatch[1]) {
         const projectRef = urlMatch[1]
-        // Check for main auth token cookie
-        const authTokenCookie = cookies.get(`sb-${projectRef}-auth-token`)
+        const expectedCookieName = `sb-${projectRef}-auth-token`
+        
+        // Check for main auth token cookie (case-sensitive as set by Supabase)
+        const authTokenCookie = cookies.get(expectedCookieName)
         if (authTokenCookie?.value && authTokenCookie.value.length > 0) {
-          return { isAuthenticated: true }
+          const trimmedValue = authTokenCookie.value.trim()
+          if (trimmedValue.length > 0 && trimmedValue !== 'null' && trimmedValue !== 'undefined') {
+            if (process.env.DEBUG_MIDDLEWARE === '1') {
+              console.warn('[checkAuthInMiddleware] Found expected auth cookie:', expectedCookieName)
+            }
+            return { isAuthenticated: true }
+          }
         }
+        
         // Also check for alternative patterns (with different suffixes)
-        const altAuthCookie = cookies.get(`sb-${projectRef}-auth-token-code-verifier`)
-        if (altAuthCookie?.value && altAuthCookie.value.length > 0) {
-          return { isAuthenticated: true }
+        const altCookieNames = [
+          `sb-${projectRef}-auth-token-code-verifier`,
+          `sb-${projectRef}-auth-token.0`,
+          `sb-${projectRef}-auth-token.1`,
+        ]
+        
+        for (const altCookieName of altCookieNames) {
+          const altAuthCookie = cookies.get(altCookieName)
+          if (altAuthCookie?.value && altAuthCookie.value.length > 0) {
+            const trimmedValue = altAuthCookie.value.trim()
+            if (trimmedValue.length > 0 && trimmedValue !== 'null' && trimmedValue !== 'undefined') {
+              if (process.env.DEBUG_MIDDLEWARE === '1') {
+                console.warn('[checkAuthInMiddleware] Found alt auth cookie:', altCookieName)
+              }
+              return { isAuthenticated: true }
+            }
+          }
         }
       }
-    } catch {
+    } catch (error) {
       // If URL parsing fails, continue to check other patterns
+      if (process.env.DEBUG_MIDDLEWARE === '1') {
+        console.warn('[checkAuthInMiddleware] Error extracting project ref:', error)
+      }
     }
   }
   
-  // Check for any cookie starting with 'sb-' and containing 'auth' or 'session'
+  // Method 3: Check ALL cookies for any starting with 'sb-' and containing 'auth' or 'session'
   // This catches various Supabase cookie naming patterns used by @supabase/ssr
-  // IMPORTANT: This is a fallback that should catch all Supabase auth cookies
+  // IMPORTANT: This is a comprehensive fallback that should catch all Supabase auth cookies
   const allCookies = cookies.getAll()
   
-  // First, try to find auth cookies in the parsed cookies
   for (const cookie of allCookies) {
     const name = cookie.name.toLowerCase() // Case-insensitive check
     const value = cookie.value
+    
     // Check for Supabase auth-related cookies
     // Match patterns: sb-*-auth-token, sb-*-auth-token-*, sb-access-token, etc.
     if (name.startsWith('sb-') && value && value.length > 0) {
       // Check for auth, session, or access in the cookie name
       if (name.includes('auth') || name.includes('session') || name.includes('access')) {
-        // Verify the cookie value isn't empty or just whitespace
+        // Verify the cookie value isn't empty or just whitespace/null/undefined
         const trimmedValue = value.trim()
-        if (trimmedValue.length > 0 && trimmedValue !== 'null' && trimmedValue !== 'undefined') {
+        if (trimmedValue.length > 0 && trimmedValue !== 'null' && trimmedValue !== 'undefined' && trimmedValue !== '{}') {
           // Found a valid auth cookie
           if (process.env.DEBUG_MIDDLEWARE === '1') {
-             
-            console.warn('[checkAuthInMiddleware] Found auth cookie in parsed cookies:', name)
+            console.warn('[checkAuthInMiddleware] Found auth cookie in parsed cookies:', cookie.name)
           }
           return { isAuthenticated: true }
         }
@@ -125,31 +158,57 @@ export function checkAuthInMiddleware(
     }
   }
   
-  // Fallback: Check the raw Cookie header for auth cookies
+  // Method 4: Fallback - Check the raw Cookie header string for auth cookies
   // This helps catch cookies that might not be parsed correctly by Next.js middleware
   // or cookies with domain attributes that might not be accessible via request.cookies
-  if (cookieHeader) {
-    // Look for sb-*-auth-token pattern in the cookie header
-    const authCookieMatch = cookieHeader.match(/sb-[^=]*-auth-token[^;]*=([^;]+)/i)
-    if (authCookieMatch && authCookieMatch[1]) {
-      const cookieValue = authCookieMatch[1].trim()
-      if (cookieValue.length > 0 && cookieValue !== 'null' && cookieValue !== 'undefined') {
-        if (process.env.DEBUG_MIDDLEWARE === '1') {
-           
-          console.warn('[checkAuthInMiddleware] Found auth cookie in Cookie header')
+  // This is especially important in Edge Runtime where cookie parsing can be more limited
+  if (cookieHeader && cookieHeader.length > 0) {
+    // Look for sb-*-auth-token pattern in the cookie header (case-insensitive)
+    // Pattern: sb-<anything>-auth-token=<value> or sb-<anything>-auth-token.0=<value>, etc.
+    const authCookiePatterns = [
+      /sb-[^=;]*-auth-token(?:\.\d+)?[^=]*=([^;]+)/gi,  // sb-*-auth-token or sb-*-auth-token.0, etc.
+      /sb-access-token[^=]*=([^;]+)/gi,                  // sb-access-token
+    ]
+    
+    for (const pattern of authCookiePatterns) {
+      const matches = [...cookieHeader.matchAll(pattern)]
+      for (const match of matches) {
+        if (match[1]) {
+          const cookieValue = match[1].trim()
+          // Verify the cookie value is valid
+          if (cookieValue.length > 0 && 
+              cookieValue !== 'null' && 
+              cookieValue !== 'undefined' && 
+              cookieValue !== '{}' &&
+              cookieValue !== '""' &&
+              cookieValue !== "''") {
+            if (process.env.DEBUG_MIDDLEWARE === '1') {
+              console.warn('[checkAuthInMiddleware] Found auth cookie in Cookie header:', match[0].substring(0, 50))
+            }
+            return { isAuthenticated: true }
+          }
         }
-        return { isAuthenticated: true }
       }
     }
     
-    // Also check for sb-access-token pattern
-    const accessTokenMatch = cookieHeader.match(/sb-access-token[^;]*=([^;]+)/i)
-    if (accessTokenMatch && accessTokenMatch[1]) {
-      const cookieValue = accessTokenMatch[1].trim()
-      if (cookieValue.length > 0 && cookieValue !== 'null' && cookieValue !== 'undefined') {
+    // Also check for any sb- cookie that might contain auth data
+    // Look for any cookie starting with sb- that has a substantial value (likely auth data)
+    const sbCookiePattern = /(sb-[^=;]+)=([^;]+)/gi
+    const sbMatches = [...cookieHeader.matchAll(sbCookiePattern)]
+    for (const match of sbMatches) {
+      const cookieName = match[1].toLowerCase()
+      const cookieValue = match[2].trim()
+      
+      // If it's an auth-related cookie with a substantial value
+      if ((cookieName.includes('auth') || cookieName.includes('session') || cookieName.includes('access')) &&
+          cookieValue.length > 10 && // Substantial value (auth tokens are typically longer)
+          cookieValue !== 'null' && 
+          cookieValue !== 'undefined' && 
+          cookieValue !== '{}' &&
+          cookieValue !== '""' &&
+          cookieValue !== "''") {
         if (process.env.DEBUG_MIDDLEWARE === '1') {
-           
-          console.warn('[checkAuthInMiddleware] Found access token in Cookie header')
+          console.warn('[checkAuthInMiddleware] Found substantial auth cookie in header:', cookieName)
         }
         return { isAuthenticated: true }
       }
@@ -158,15 +217,17 @@ export function checkAuthInMiddleware(
   
   // No auth cookies found
   if (process.env.DEBUG_MIDDLEWARE === '1') {
-     
     console.warn('[checkAuthInMiddleware] No auth cookies found. Total cookies:', allCookies.length)
-     
     console.warn('[checkAuthInMiddleware] Cookie names:', allCookies.map(c => c.name))
-     
     console.warn('[checkAuthInMiddleware] Cookie header present:', cookieHeader ? 'yes' : 'no')
+    console.warn('[checkAuthInMiddleware] Cookie header length:', cookieHeader.length)
     if (cookieHeader) {
-       
-      console.warn('[checkAuthInMiddleware] Cookie header preview:', cookieHeader.substring(0, 200))
+      // Log first part of cookie header (sanitized - no values)
+      const sanitized = cookieHeader.split(';').map(c => {
+        const [name] = c.split('=')
+        return name?.trim() || ''
+      }).filter(Boolean).join('; ')
+      console.warn('[checkAuthInMiddleware] Cookie header names (sanitized):', sanitized.substring(0, 300))
     }
   }
   
