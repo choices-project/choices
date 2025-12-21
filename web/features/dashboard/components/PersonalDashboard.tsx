@@ -166,17 +166,26 @@ function HarnessPersonalDashboard({ className = '' }: PersonalDashboardProps) {
   const { signOut: signOutUser } = useUserActions();
   const signOutUserRef = useRef(signOutUser);
   useEffect(() => { signOutUserRef.current = signOutUser; }, [signOutUser]);
+  const [isMounted, setIsMounted] = useState(false);
+  useEffect(() => {
+    setIsMounted(true);
+  }, []);
+
   const shouldBypassAuth = useMemo(
     () => {
       // In E2E harness mode, always bypass auth checks (authentication is mocked)
       if (process.env.NEXT_PUBLIC_ENABLE_E2E_HARNESS === '1') {
         return true;
       }
+      // Only check localStorage after mount to prevent hydration mismatch
+      if (!isMounted) {
+        return false;
+      }
       // Also check localStorage bypass flag for specific test scenarios
       return typeof window !== 'undefined' &&
         window.localStorage.getItem('e2e-dashboard-bypass') === '1';
     },
-    [],
+    [isMounted],
   );
   const fallbackAuthenticated = useMemo(() => {
     if (!shouldBypassAuth || typeof window === 'undefined') {
@@ -444,24 +453,23 @@ function HarnessPersonalDashboard({ className = '' }: PersonalDashboardProps) {
 }
 
 export default function PersonalDashboard(props: PersonalDashboardProps) {
-  const [useHarness, setUseHarness] = useState<boolean>(() => {
-    if (IS_E2E_HARNESS) {
-      return true;
-    }
-    if (typeof window !== 'undefined') {
-      return window.localStorage.getItem('e2e-dashboard-bypass') === '1';
-    }
-    return false;
-  });
+  const [isMounted, setIsMounted] = useState(false);
+  const [useHarness, setUseHarness] = useState<boolean>(IS_E2E_HARNESS);
 
   useEffect(() => {
-    if (useHarness || IS_E2E_HARNESS) {
+    setIsMounted(true);
+  }, []);
+
+  useEffect(() => {
+    if (!isMounted) return;
+    if (IS_E2E_HARNESS) {
+      setUseHarness(true);
       return;
     }
     if (typeof window !== 'undefined' && window.localStorage.getItem('e2e-dashboard-bypass') === '1') {
       setUseHarness(true);
     }
-  }, [useHarness]);
+  }, [isMounted]);
 
   return useHarness ? <HarnessPersonalDashboard {...props} /> : <StandardPersonalDashboard {...props} />;
 }
@@ -525,17 +533,26 @@ function StandardPersonalDashboard({ userId: fallbackUserId, className = '' }: P
   const analyticsError = useAnalyticsError();
   const analyticsLoading = useAnalyticsLoading();
   const { signOut: resetUserState } = useUserActions();
+  const [isMounted, setIsMounted] = useState(false);
+  useEffect(() => {
+    setIsMounted(true);
+  }, []);
+
   const shouldBypassAuth = useMemo(
     () => {
       // In E2E harness mode, always bypass auth checks (authentication is mocked)
       if (process.env.NEXT_PUBLIC_ENABLE_E2E_HARNESS === '1') {
         return true;
       }
+      // Only check localStorage after mount to prevent hydration mismatch
+      if (!isMounted) {
+        return false;
+      }
       // Also check localStorage bypass flag for specific test scenarios
       return typeof window !== 'undefined' &&
         window.localStorage.getItem('e2e-dashboard-bypass') === '1';
     },
-    [],
+    [isMounted],
   );
   const fallbackAuthenticated = useMemo(() => {
     if (!shouldBypassAuth || typeof window === 'undefined') {
