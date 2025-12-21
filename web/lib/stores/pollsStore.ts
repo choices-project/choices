@@ -740,7 +740,11 @@ export const createPollsActions = (
       // Diagnostic logging for production debugging
       // eslint-disable-next-line no-console
       console.log('[POLLS STORE] Fetching polls from API', { url: apiUrl });
-      const response = await fetch(apiUrl);
+      // Add timeout to prevent infinite loading state
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 30_000); // 30 second timeout
+      const response = await fetch(apiUrl, { signal: controller.signal });
+      clearTimeout(timeoutId);
 
       if (!response.ok) {
         logger.error('Polls API returned error', { status: response.status, statusText: response.statusText });
@@ -806,6 +810,10 @@ export const createPollsActions = (
       const message = error instanceof Error ? error.message : 'Unknown error';
       setError(message);
       logger.error('Failed to load polls', { error, options, message });
+      // Ensure loading state is cleared even on timeout/abort errors
+      if (error instanceof Error && error.name === 'AbortError') {
+        setError('Request timeout - polls API took too long to respond');
+      }
     } finally {
       // Diagnostic logging for production debugging
       // eslint-disable-next-line no-console
