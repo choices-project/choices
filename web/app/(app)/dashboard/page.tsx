@@ -26,7 +26,7 @@ export default function DashboardPage() {
   const isAuthenticated = useIsAuthenticated();
   const isUserLoading = useUserLoading();
   const { setCurrentRoute, setBreadcrumbs, setSidebarActiveSection } = useAppActions();
-  
+
   // Refs for stable app store actions
   const setCurrentRouteRef = useRef(setCurrentRoute);
   useEffect(() => { setCurrentRouteRef.current = setCurrentRoute; }, [setCurrentRoute]);
@@ -73,7 +73,7 @@ export default function DashboardPage() {
       setSidebarActiveSectionRef.current(null);
       setBreadcrumbsRef.current([]);
     };
-  }, []);  
+  }, []);
 
   useEffect(() => {
     // In E2E harness mode or when bypassing auth, skip all redirect checks (authentication is mocked)
@@ -150,7 +150,7 @@ export default function DashboardPage() {
     if (shouldBypassAuth || !isAuthenticated || isLoading) {
       return;
     }
-    
+
     // Check admin status if we have a profile or if we're authenticated
     const checkAdminStatus = async () => {
       try {
@@ -159,7 +159,7 @@ export default function DashboardPage() {
           credentials: 'include',
           signal: AbortSignal.timeout(5_000), // 5 second timeout
         });
-        
+
         if (response.ok) {
           setIsAdmin(true);
           logger.debug('🚨 Dashboard: User is admin - showing admin dashboard link');
@@ -171,7 +171,7 @@ export default function DashboardPage() {
         setIsAdmin(false);
       }
     };
-    
+
     void checkAdminStatus();
   }, [isAuthenticated, isLoading, shouldBypassAuth]);
 
@@ -263,7 +263,7 @@ export default function DashboardPage() {
             </div>
           </div>
         )}
-        
+
         <PersonalDashboard />
       </div>
 

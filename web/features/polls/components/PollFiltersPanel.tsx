@@ -59,8 +59,6 @@ export function PollFiltersPanel({ actions }: PollFiltersPanelProps) {
   const hashtagStats = useHashtagStats();
   const hashtagActions = useHashtagActions();
 
-  const initializedRef = useRef(false);
-
   // Use refs for store actions to prevent infinite re-renders
   const loadPollsRef = useRef(loadPolls);
   const setFiltersRef = useRef(setFilters);
@@ -82,13 +80,8 @@ export function PollFiltersPanel({ actions }: PollFiltersPanelProps) {
     hashtagActionsRef.current = hashtagActions;
   }, [loadPolls, setFilters, setTrendingOnly, setCurrentPage, setSearchQuery, searchPolls, clearSearch, hashtagActions]);
 
-  useEffect(() => {
-    if (initializedRef.current) {
-      return;
-    }
-    initializedRef.current = true;
-    void loadPollsRef.current();
-  }, []);
+  // Note: Removed initialization useEffect that called loadPolls
+  // The parent polls page handles initialization to prevent duplicate calls
 
   useEffect(() => {
     const fetchTrendingHashtags = async () => {
