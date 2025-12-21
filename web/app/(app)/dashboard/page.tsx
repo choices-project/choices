@@ -35,17 +35,27 @@ export default function DashboardPage() {
   const setSidebarActiveSectionRef = useRef(setSidebarActiveSection);
   useEffect(() => { setSidebarActiveSectionRef.current = setSidebarActiveSection; }, [setSidebarActiveSection]);
 
+  // Use isMounted to prevent hydration mismatch when checking localStorage
+  const [isMounted, setIsMounted] = useState(false);
+  useEffect(() => {
+    setIsMounted(true);
+  }, []);
+
   const shouldBypassAuth = useMemo(
     () => {
       // In E2E harness mode, always bypass auth checks (authentication is mocked)
       if (process.env.NEXT_PUBLIC_ENABLE_E2E_HARNESS === '1') {
         return true;
       }
-      // Also check localStorage bypass flag for specific test scenarios
+      // Only check localStorage after mount to prevent hydration mismatch
+      if (!isMounted) {
+        return false;
+      }
+      // Check localStorage bypass flag for specific test scenarios
       return typeof window !== 'undefined' &&
         window.localStorage.getItem('e2e-dashboard-bypass') === '1';
     },
-    [],
+    [isMounted],
   );
   const [isCheckingAdmin, setIsCheckingAdmin] = useState(false);
   const adminCheckRef = useRef<boolean>(false);
@@ -67,7 +77,7 @@ export default function DashboardPage() {
 
   useEffect(() => {
     // In E2E harness mode or when bypassing auth, skip all redirect checks (authentication is mocked)
-    if (shouldBypassAuth || process.env.NEXT_PUBLIC_ENABLE_E2E_HARNESS === '1') {
+    if (shouldBypassAuth) {
       return;
     }
     // First check if user is authenticated - if not, redirect to auth
@@ -210,7 +220,7 @@ export default function DashboardPage() {
   // Allow page to render even if profile is still loading or missing
   // The PersonalDashboard component can handle missing profile gracefully
   // In E2E harness mode, always allow rendering (authentication is mocked)
-  if (!shouldBypassAuth && !isUserLoading && !isAuthenticated && process.env.NEXT_PUBLIC_ENABLE_E2E_HARNESS !== '1') {
+  if (!shouldBypassAuth && !isUserLoading && !isAuthenticated) {
     return (
       <div className="flex items-center justify-center min-h-screen px-4">
         <div className="text-center space-y-4 max-w-md">
