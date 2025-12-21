@@ -673,6 +673,55 @@ export async function loginTestUser(page: Page, user: TestUser): Promise<void> {
   
   // Give a moment for any post-auth processing
   await page.waitForTimeout(1_000);
+  
+  // Verify Supabase auth cookies are actually present before proceeding
+  // This ensures cookies are set and will be sent with subsequent requests
+  // Match the same cookie patterns that checkAuthInMiddleware uses
+  const allCookies = await page.context().cookies();
+  
+  // Check for cookies that match middleware's checkAuthInMiddleware logic:
+  // 1. sb-access-token (custom cookie)
+  // 2. sb-<project-ref>-auth-token (Supabase standard)
+  // 3. Any sb- cookie with 'auth', 'session', or 'access' in the name
+  const hasAccessToken = allCookies.some(c => c.name === 'sb-access-token' && c.value && c.value.length > 0);
+  
+  // Extract project ref from NEXT_PUBLIC_SUPABASE_URL if available
+  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+  let hasProjectAuthToken = false;
+  let projectRef: string | null = null;
+  if (supabaseUrl) {
+    const urlMatch = supabaseUrl.match(/https?:\/\/([^.]+)\.supabase\.(co|io)/);
+    if (urlMatch && urlMatch[1]) {
+      projectRef = urlMatch[1];
+      hasProjectAuthToken = allCookies.some(c => 
+        c.name === `sb-${projectRef}-auth-token` && c.value && c.value.length > 0
+      );
+    }
+  }
+  
+  // Check for any sb- cookie with auth-related keywords
+  const hasAnySupabaseAuthCookie = allCookies.some(cookie => {
+    if (!cookie.name.startsWith('sb-') || !cookie.value || cookie.value.length === 0) {
+      return false;
+    }
+    return cookie.name.includes('auth') || 
+           cookie.name.includes('session') || 
+           cookie.name.includes('access');
+  });
+  
+  if (!hasAccessToken && !hasProjectAuthToken && !hasAnySupabaseAuthCookie) {
+    // Log available cookies for debugging
+    const cookieNames = allCookies.map(c => `${c.name}=${c.value.substring(0, 20)}...`).join(', ');
+    throw new Error(
+      `No Supabase auth cookies found after login. ` +
+      `Checked for: sb-access-token, sb-${projectRef || '<project-ref>'}-auth-token, or any sb-*auth* cookies. ` +
+      `Available cookies: ${cookieNames || 'none'}. ` +
+      `This may indicate a login failure or cookie setting issue.`
+    );
+  }
+  
+  // Additional wait to ensure cookies are fully propagated to browser context
+  await page.waitForTimeout(500);
 }
 
 export async function loginAsAdmin(page: Page, overrides: Partial<TestUser> = {}): Promise<void> {
