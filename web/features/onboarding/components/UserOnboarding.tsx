@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
 
 import {
   useNotificationActions,
@@ -75,24 +75,50 @@ export default function UserOnboarding({ onComplete, onSkip }: UserOnboardingPro
   const { addNotification } = useNotificationActions();
   const profileLocation = useProfileStore(profileSelectors.location);
 
+  // Refs for stable store actions
+  const restartOnboardingRef = useRef(restartOnboarding);
+  useEffect(() => { restartOnboardingRef.current = restartOnboarding; }, [restartOnboarding]);
+  const clearAllDataRef = useRef(clearAllData);
+  useEffect(() => { clearAllDataRef.current = clearAllData; }, [clearAllData]);
+  const setCurrentStateRef = useRef(setCurrentState);
+  useEffect(() => { setCurrentStateRef.current = setCurrentState; }, [setCurrentState]);
+  const goToStepRef = useRef(goToStep);
+  useEffect(() => { goToStepRef.current = goToStep; }, [goToStep]);
+  const markStepCompletedRef = useRef(markStepCompleted);
+  useEffect(() => { markStepCompletedRef.current = markStepCompleted; }, [markStepCompleted]);
+  const updateFormDataRef = useRef(updateFormData);
+  useEffect(() => { updateFormDataRef.current = updateFormData; }, [updateFormData]);
+  const setAddressLoadingRef = useRef(setAddressLoading);
+  useEffect(() => { setAddressLoadingRef.current = setAddressLoading; }, [setAddressLoading]);
+  const setRepresentativesRef = useRef(setRepresentatives);
+  useEffect(() => { setRepresentativesRef.current = setRepresentatives; }, [setRepresentatives]);
+  const addNotificationRef = useRef(addNotification);
+  useEffect(() => { addNotificationRef.current = addNotification; }, [addNotification]);
+  const markStepSkippedRef = useRef(markStepSkipped);
+  useEffect(() => { markStepSkippedRef.current = markStepSkipped; }, [markStepSkipped]);
+  const skipOnboardingRef = useRef(skipOnboarding);
+  useEffect(() => { skipOnboardingRef.current = skipOnboarding; }, [skipOnboarding]);
+  const completeOnboardingRef = useRef(completeOnboarding);
+  useEffect(() => { completeOnboardingRef.current = completeOnboarding; }, [completeOnboarding]);
+
   // ✅ Keep local state for component-specific concerns
   const selectedState = useMemo(() => profileLocation?.state ?? 'CA', [profileLocation?.state]);
   const [addressError, setAddressError] = useState<string | null>(null);
   const [completionPayload, setCompletionPayload] = useState<UserOnboardingResult | null>(null);
 
   useEffect(() => {
-    restartOnboarding();
+    restartOnboardingRef.current();
     return () => {
-      clearAllData();
+      clearAllDataRef.current();
     };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+     
   }, []);
 
   useEffect(() => {
     if (profileLocation?.state) {
-      setCurrentState(profileLocation.state);
+      setCurrentStateRef.current(profileLocation.state);
     }
-  }, [profileLocation?.state, setCurrentState]);
+  }, [profileLocation?.state]);  
 
   const loadRepresentativesForState = async (
     state: string,
@@ -103,8 +129,8 @@ export default function UserOnboarding({ onComplete, onSkip }: UserOnboardingPro
     }
 
     if (!skipLoading) {
-      setAddressLoading(true);
-      goToStep(2);
+      setAddressLoadingRef.current(true);
+      goToStepRef.current(2);
     }
 
     try {
@@ -118,12 +144,12 @@ export default function UserOnboarding({ onComplete, onSkip }: UserOnboardingPro
       const result = await response.json();
       const representativesList = extractRepresentatives(result);
 
-      setRepresentatives(representativesList);
-      setCurrentState(state);
-      goToStep(3);
-      markStepCompleted(2);
+      setRepresentativesRef.current(representativesList);
+      setCurrentStateRef.current(state);
+      goToStepRef.current(3);
+      markStepCompletedRef.current(2);
 
-      updateFormData(2, { state, representatives: representativesList, jurisdiction });
+      updateFormDataRef.current(2, { state, representatives: representativesList, jurisdiction });
 
       const payload: UserOnboardingResult = {
         state,
@@ -153,7 +179,7 @@ export default function UserOnboarding({ onComplete, onSkip }: UserOnboardingPro
             : `We found representatives near your address in ${state}.`
           : `${representativesList.length} representative(s) loaded for ${state}.`;
 
-      addNotification({
+      addNotificationRef.current({
         type: 'success',
         title: successTitle,
         message: successMessage,
@@ -162,7 +188,7 @@ export default function UserOnboarding({ onComplete, onSkip }: UserOnboardingPro
     } catch (error) {
       logger.error('Representative lookup failed:', error);
 
-      addNotification({
+      addNotificationRef.current({
         type: 'error',
         title: 'Representatives unavailable',
         message:
@@ -173,15 +199,15 @@ export default function UserOnboarding({ onComplete, onSkip }: UserOnboardingPro
       });
 
       if (source === 'state') {
-        markStepSkipped(2);
-        skipOnboarding();
+        markStepSkippedRef.current(2);
+        skipOnboardingRef.current();
         onSkip();
       }
 
       throw error;
     } finally {
       if (!skipLoading) {
-        setAddressLoading(false);
+        setAddressLoadingRef.current(false);
       }
     }
   };
@@ -193,8 +219,8 @@ export default function UserOnboarding({ onComplete, onSkip }: UserOnboardingPro
     }
 
     setAddressError(null);
-    setAddressLoading(true);
-    goToStep(2);
+    setAddressLoadingRef.current(true);
+    goToStepRef.current(2);
 
     try {
       const response = await fetch('/api/v1/civics/address-lookup', {
@@ -213,15 +239,15 @@ export default function UserOnboarding({ onComplete, onSkip }: UserOnboardingPro
       const jurisdiction = normalizeJurisdiction(result?.data?.jurisdiction ?? result?.jurisdiction);
       const resolvedState = jurisdiction?.state ?? null;
       if (!resolvedState) {
-        goToStep(1);
+        goToStepRef.current(1);
         setAddressError(
           'We could not determine your state from that address. Please double-check the address or use the state option.'
         );
 
-        addNotification({
+        addNotificationRef.current({
           type: 'warning',
           title: 'Need a little more info',
-          message: 'Please verify your address, or choose “Show General Representatives” to continue.',
+          message: 'Please verify your address, or choose "Show General Representatives" to continue.',
           duration: 6000,
         });
         return;
@@ -236,17 +262,17 @@ export default function UserOnboarding({ onComplete, onSkip }: UserOnboardingPro
     } catch (error) {
       logger.error('Address lookup failed:', error);
 
-      goToStep(1);
+      goToStepRef.current(1);
       setAddressError('We could not verify that address. Please double-check or try the state option below.');
 
-      addNotification({
+      addNotificationRef.current({
         type: 'error',
         title: 'Address lookup failed',
         message: 'We could not verify your address. You can correct it or browse representatives by state.',
         duration: 6000,
       });
     } finally {
-      setAddressLoading(false);
+      setAddressLoadingRef.current(false);
     }
   };
 
@@ -257,8 +283,8 @@ export default function UserOnboarding({ onComplete, onSkip }: UserOnboardingPro
       await loadRepresentativesForState(selectedState, { source: 'state' });
     } catch (error) {
       logger.error('State lookup failed:', error);
-      goToStep(1);
-      setAddressLoading(false);
+      goToStepRef.current(1);
+      setAddressLoadingRef.current(false);
     }
   };
 
@@ -280,7 +306,7 @@ export default function UserOnboarding({ onComplete, onSkip }: UserOnboardingPro
 
             <div className="space-y-4">
               <button
-                onClick={() => goToStep(1)}
+                onClick={() => goToStepRef.current(1)}
                 className="w-full bg-blue-600 text-white py-3 px-6 rounded-lg hover:bg-blue-700 transition-colors font-medium"
               >
                 Find My Representatives
@@ -342,7 +368,7 @@ export default function UserOnboarding({ onComplete, onSkip }: UserOnboardingPro
 
               <button
                 type="button"
-                onClick={() => goToStep(0)}
+                onClick={() => goToStepRef.current(0)}
                 className="px-4 py-3 text-gray-600 hover:text-gray-800 transition-colors"
               >
                 Back
@@ -387,7 +413,7 @@ export default function UserOnboarding({ onComplete, onSkip }: UserOnboardingPro
             <button
               onClick={() => {
                 if (completionPayload) {
-                  completeOnboarding();
+                  completeOnboardingRef.current();
                   onComplete(completionPayload);
                   return;
                 }
@@ -397,7 +423,7 @@ export default function UserOnboarding({ onComplete, onSkip }: UserOnboardingPro
                   jurisdiction: null,
                   representatives,
                 };
-                completeOnboarding();
+                completeOnboardingRef.current();
                 onComplete(fallbackPayload);
               }}
               className="w-full bg-blue-600 text-white py-3 px-6 rounded-lg hover:bg-blue-700 transition-colors font-medium"

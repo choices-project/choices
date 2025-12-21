@@ -17,7 +17,7 @@ TrendingUp,
   ArrowDown,
   Minus
 } from 'lucide-react';
-import React, { useState, useEffect, useCallback, useMemo } from 'react';
+import React, { useState, useEffect, useCallback, useMemo, useRef } from 'react';
 
 import {
   useHashtagActions,
@@ -74,22 +74,35 @@ const trendingHashtags = useTrendingHashtags();
 const { isLoading } = useHashtagLoading();
 const { error, searchError, hasError } = useHashtagError();
   const { getTrendingHashtags, setCategory, setSortBy, setTimeRange, setSearchQuery } = useHashtagActions();
+
+  // Refs for stable action callbacks
+  const getTrendingHashtagsRef = useRef(getTrendingHashtags);
+  useEffect(() => { getTrendingHashtagsRef.current = getTrendingHashtags; }, [getTrendingHashtags]);
+  const setCategoryRef = useRef(setCategory);
+  useEffect(() => { setCategoryRef.current = setCategory; }, [setCategory]);
+  const setSortByRef = useRef(setSortBy);
+  useEffect(() => { setSortByRef.current = setSortBy; }, [setSortBy]);
+  const setTimeRangeRef = useRef(setTimeRange);
+  useEffect(() => { setTimeRangeRef.current = setTimeRange; }, [setTimeRange]);
+  const setSearchQueryRef = useRef(setSearchQuery);
+  useEffect(() => { setSearchQueryRef.current = setSearchQuery; }, [setSearchQuery]);
+
 const errorMessage = error ?? searchError ?? null;
 
   const loadTrendingHashtags = useCallback(async () => {
     try {
-      await getTrendingHashtags();
+      await getTrendingHashtagsRef.current();
     } catch (err) {
       logger.error('Failed to load trending hashtags:', err);
     }
-  }, [getTrendingHashtags]);
+  }, []);  
 
   // Initialize filters from props
   useEffect(() => {
     if (category) {
-      setCategory(category);
+      setCategoryRef.current(category);
     }
-  }, [category, setCategory]);
+  }, [category]);  
 
   useEffect(() => {
     loadTrendingHashtags();
@@ -190,7 +203,7 @@ const errorMessage = error ?? searchError ?? null;
                     ...prev,
                     searchQuery: query,
                   }));
-                  setSearchQuery(query);
+                  setSearchQueryRef.current(query);
                 }}
                 className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-md text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent"
               />
@@ -205,7 +218,7 @@ const errorMessage = error ?? searchError ?? null;
                   ...prev,
                   selectedCategory: category,
                 }));
-                setCategory(category);
+                setCategoryRef.current(category);
               }}
               className="px-3 py-2 border border-gray-300 rounded-md text-sm focus:ring-2 focus:ring-blue-500"
             >
@@ -229,7 +242,7 @@ const errorMessage = error ?? searchError ?? null;
                   ...prev,
                   sortBy: sort,
                 }));
-                setSortBy(sort);
+                setSortByRef.current(sort);
               }}
               className="px-3 py-2 border border-gray-300 rounded-md text-sm focus:ring-2 focus:ring-blue-500"
             >
@@ -249,7 +262,7 @@ const errorMessage = error ?? searchError ?? null;
                   ...prev,
                   timeRange,
                 }));
-                setTimeRange(timeRange);
+                setTimeRangeRef.current(timeRange);
               }}
               className="px-3 py-2 border border-gray-300 rounded-md text-sm focus:ring-2 focus:ring-blue-500"
             >

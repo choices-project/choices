@@ -17,7 +17,7 @@
  * Fixed: December 11, 2025 - Added client-side only rendering to prevent hydration errors
  */
 
-import React, { useEffect, useState, Suspense, Component, type ReactNode } from 'react';
+import React, { useEffect, useState, useRef, Suspense, Component, type ReactNode } from 'react';
 
 import { UnifiedFeedRefactored } from '@/features/feeds';
 import { useFormattedDistrict } from '@/features/profile/hooks/useUserDistrict';
@@ -82,6 +82,14 @@ function FeedContent() {
   const { setCurrentRoute, setSidebarActiveSection, setBreadcrumbs } = useAppActions();
   const [isMounted, setIsMounted] = useState(false);
 
+  // Refs for stable app store actions
+  const setCurrentRouteRef = useRef(setCurrentRoute);
+  useEffect(() => { setCurrentRouteRef.current = setCurrentRoute; }, [setCurrentRoute]);
+  const setSidebarActiveSectionRef = useRef(setSidebarActiveSection);
+  useEffect(() => { setSidebarActiveSectionRef.current = setSidebarActiveSection; }, [setSidebarActiveSection]);
+  const setBreadcrumbsRef = useRef(setBreadcrumbs);
+  useEffect(() => { setBreadcrumbsRef.current = setBreadcrumbs; }, [setBreadcrumbs]);
+
   useEffect(() => {
     setIsMounted(true);
   }, []);
@@ -89,18 +97,18 @@ function FeedContent() {
   useEffect(() => {
     if (!isMounted) return;
     
-    setCurrentRoute('/feed');
-    setSidebarActiveSection('feed');
-    setBreadcrumbs([
+    setCurrentRouteRef.current('/feed');
+    setSidebarActiveSectionRef.current('feed');
+    setBreadcrumbsRef.current([
       { label: 'Home', href: '/' },
       { label: 'Feed', href: '/feed' },
     ]);
 
     return () => {
-      setSidebarActiveSection(null);
-      setBreadcrumbs([]);
+      setSidebarActiveSectionRef.current(null);
+      setBreadcrumbsRef.current([]);
     };
-  }, [isMounted, setBreadcrumbs, setCurrentRoute, setSidebarActiveSection]);
+  }, [isMounted]);  
 
   // Prevent hydration mismatch by only rendering content after mount
   if (!isMounted) {

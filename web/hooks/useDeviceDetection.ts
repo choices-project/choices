@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react'
+import { useState, useEffect, useCallback, useRef } from 'react'
 
 import { detectBrowser as detectBrowserInfo } from '@/lib/utils/browser-utils'
 import { devLog } from '@/lib/utils/logger'
@@ -237,6 +237,10 @@ export function useDeviceDetection() {
     }
   }, [detectDeviceType, detectOS, detectBrowser, checkCapabilities, getOptimizationSettings])
 
+  // Ref for stable detectDevice callback
+  const detectDeviceRef = useRef(detectDevice);
+  useEffect(() => { detectDeviceRef.current = detectDevice; }, [detectDevice]);
+
   const updateOptimizationSettings = useCallback((newSettings: Partial<OptimizationSettings>) => {
     setOptimizationSettings(prev => {
       if (!prev) return null;
@@ -309,27 +313,27 @@ export function useDeviceDetection() {
   }, [capabilities])
 
   useEffect(() => {
-    detectDevice()
+    detectDeviceRef.current()
 
     // Listen for window resize
     const handleResize = () => {
-      detectDevice()
+      detectDeviceRef.current()
     }
 
     window.addEventListener('resize', handleResize)
     return () => window.removeEventListener('resize', handleResize)
-  }, [detectDevice])
+  }, [])  
 
   // Listen for online/offline status
   useEffect(() => {
     const handleOnline = () => {
       devLog('Device came online')
-      detectDevice()
+      detectDeviceRef.current()
     }
 
     const handleOffline = () => {
       devLog('Device went offline')
-      detectDevice()
+      detectDeviceRef.current()
     }
 
     window.addEventListener('online', handleOnline)
@@ -339,7 +343,7 @@ export function useDeviceDetection() {
       window.removeEventListener('online', handleOnline)
       window.removeEventListener('offline', handleOffline)
     }
-  }, [detectDevice])
+  }, [])  
 
   return {
     deviceInfo,

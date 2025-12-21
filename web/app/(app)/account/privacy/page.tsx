@@ -18,7 +18,7 @@
 
 'use client';
 
-import React, { useCallback, useEffect, useMemo, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useState, useRef } from 'react';
 
 import MyDataDashboard from '@/features/profile/components/MyDataDashboard';
 import {
@@ -47,6 +47,20 @@ export default function PrivacyPage() {
   const { mergeDraft, setProfileEditing } = useProfileDraftActions();
   const { setCurrentRoute, setBreadcrumbs, setSidebarActiveSection } = useAppActions();
 
+  // Refs for stable app store actions
+  const setCurrentRouteRef = useRef(setCurrentRoute);
+  useEffect(() => { setCurrentRouteRef.current = setCurrentRoute; }, [setCurrentRoute]);
+  const setSidebarActiveSectionRef = useRef(setSidebarActiveSection);
+  useEffect(() => { setSidebarActiveSectionRef.current = setSidebarActiveSection; }, [setSidebarActiveSection]);
+  const setBreadcrumbsRef = useRef(setBreadcrumbs);
+  useEffect(() => { setBreadcrumbsRef.current = setBreadcrumbs; }, [setBreadcrumbs]);
+  
+  // Refs for stable profile draft actions
+  const mergeDraftRef = useRef(mergeDraft);
+  useEffect(() => { mergeDraftRef.current = mergeDraft; }, [mergeDraft]);
+  const setProfileEditingRef = useRef(setProfileEditing);
+  useEffect(() => { setProfileEditingRef.current = setProfileEditing; }, [setProfileEditing]);
+
   const privacySettings = useMemo<PrivacySettings>(() => {
     const existing =
       privacySettingsFromStore ??
@@ -56,32 +70,32 @@ export default function PrivacyPage() {
   }, [draft?.privacy_settings, privacySettingsFromStore, profile?.privacy_settings]);
 
   useEffect(() => {
-    setCurrentRoute('/account/privacy');
-    setSidebarActiveSection('privacy');
-    setBreadcrumbs([
+    setCurrentRouteRef.current('/account/privacy');
+    setSidebarActiveSectionRef.current('privacy');
+    setBreadcrumbsRef.current([
       { label: 'Home', href: '/' },
       { label: 'Dashboard', href: '/dashboard' },
       { label: 'Privacy & Data', href: '/account/privacy' },
     ]);
 
     return () => {
-      setSidebarActiveSection(null);
-      setBreadcrumbs([]);
+      setSidebarActiveSectionRef.current(null);
+      setBreadcrumbsRef.current([]);
     };
-  }, [setBreadcrumbs, setCurrentRoute, setSidebarActiveSection]);
+  }, []);  
 
   useEffect(() => {
     if (privacySettings) {
-      mergeDraft({ privacy_settings: privacySettings });
-      setProfileEditing(true);
+      mergeDraftRef.current({ privacy_settings: privacySettings });
+      setProfileEditingRef.current(true);
     }
-  }, [mergeDraft, privacySettings, setProfileEditing]);
+  }, [privacySettings]);  
 
   useEffect(
     () => () => {
-      setProfileEditing(false);
+      setProfileEditingRef.current(false);
     },
-    [setProfileEditing],
+    [],  
   );
 
   // Add timeout to prevent infinite loading - must be before early returns
@@ -101,17 +115,21 @@ export default function PrivacyPage() {
 
   const userId = profile?.id ?? profile?.user_id ?? user?.id ?? null;
 
+  // Ref for stable updatePrivacySettings callback
+  const updatePrivacySettingsRef = useRef(updatePrivacySettings);
+  useEffect(() => { updatePrivacySettingsRef.current = updatePrivacySettings; }, [updatePrivacySettings]);
+
   const handlePrivacyUpdate = useCallback(
     async (updates: Partial<PrivacySettings>) => {
       try {
-        mergeDraft({
+        mergeDraftRef.current({
           privacy_settings: {
             ...privacySettings,
             ...updates,
           },
         });
 
-        const result = await updatePrivacySettings(updates);
+        const result = await updatePrivacySettingsRef.current(updates);
 
         if (!result) {
           throw new Error('Failed to update privacy settings');
@@ -126,7 +144,7 @@ export default function PrivacyPage() {
         throw error;
       }
     },
-    [mergeDraft, privacySettings, updatePrivacySettings]
+    [privacySettings]  
   );
 
   if (profileLoading || loadingTimeout) {

@@ -1,6 +1,6 @@
 'use client';
 
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
 import {
   useHashtagActions,
@@ -182,27 +182,37 @@ export function useHashtagSearch(options: UseHashtagSearchOptions = {}) {
   const { searchError } = useHashtagError();
   const { searchHashtags, getSuggestions, clearErrors, clearSearch } = useHashtagActions();
 
+  // Refs for stable action callbacks
+  const searchHashtagsRef = useRef(searchHashtags);
+  useEffect(() => { searchHashtagsRef.current = searchHashtags; }, [searchHashtags]);
+  const getSuggestionsRef = useRef(getSuggestions);
+  useEffect(() => { getSuggestionsRef.current = getSuggestions; }, [getSuggestions]);
+  const clearSearchRef = useRef(clearSearch);
+  useEffect(() => { clearSearchRef.current = clearSearch; }, [clearSearch]);
+  const clearErrorsRef = useRef(clearErrors);
+  useEffect(() => { clearErrorsRef.current = clearErrors; }, [clearErrors]);
+
   useEffect(() => {
     if (query.length < minQueryLength) {
-      clearSearch();
+      clearSearchRef.current();
       return;
     }
 
     const timeoutId = setTimeout(() => {
-      void searchHashtags({
+      void searchHashtagsRef.current({
         query,
         limit: 20,
         offset: 0,
       });
-      void getSuggestions(query);
+      void getSuggestionsRef.current(query);
     }, debounceMs);
 
     return () => clearTimeout(timeoutId);
-  }, [query, debounceMs, minQueryLength, searchHashtags, getSuggestions, clearSearch]);
+  }, [query, debounceMs, minQueryLength]);  
 
   const clearError = useCallback(() => {
-    clearErrors();
-  }, [clearErrors]);
+    clearErrorsRef.current();
+  }, []);  
 
   return {
     query,

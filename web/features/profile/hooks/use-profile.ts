@@ -7,7 +7,7 @@
 
 'use client';
 
-import { useCallback, useEffect, useMemo } from 'react';
+import { useCallback, useEffect, useMemo, useRef } from 'react';
 import { useShallow } from 'zustand/react/shallow';
 
 import { useUserProfileEditData } from '@/lib/stores';
@@ -77,25 +77,33 @@ export function useProfile(): UseProfileReturn {
     }
   }, [shouldBypassProfileLoad]);
 
+  // Use refs for store actions to prevent infinite re-renders
+  const loadProfileRef = useRef(loadProfile);
+  useEffect(() => { loadProfileRef.current = loadProfile; }, [loadProfile]);
+
   useEffect(() => {
     if (shouldBypassProfileLoad) {
       return;
     }
     if (!isProfileLoaded && !isProfileLoading) {
-      void loadProfile();
+      void loadProfileRef.current();
     }
-  }, [isProfileLoaded, isProfileLoading, loadProfile, shouldBypassProfileLoad]);
+  }, [isProfileLoaded, isProfileLoading, shouldBypassProfileLoad]);  
+
+  // Use refs for refreshProfile
+  const refreshProfileRef = useRef(refreshProfile);
+  useEffect(() => { refreshProfileRef.current = refreshProfile; }, [refreshProfile]);
 
   const refetch = useCallback(async () => {
-    await refreshProfile();
-  }, [refreshProfile]);
+    await refreshProfileRef.current();
+  }, []);  
 
-  return {
+  return useMemo(() => ({
     profile: currentProfile ?? fallbackProfile ?? null,
     isLoading: isProfileLoading,
     error,
     refetch,
-  };
+  }), [currentProfile, fallbackProfile, isProfileLoading, error, refetch]);
 }
 
 export function useProfileUpdate(): UseProfileUpdateReturn {
@@ -107,18 +115,22 @@ export function useProfileUpdate(): UseProfileUpdateReturn {
     })),
   );
 
+  // Use ref for store action to prevent infinite re-renders
+  const updateProfileActionRef = useRef(updateProfileAction);
+  useEffect(() => { updateProfileActionRef.current = updateProfileAction; }, [updateProfileAction]);
+
   const updateProfile = useCallback(
     async (data: ProfileUpdateData): Promise<ProfileActionResult> => {
-      return await updateProfileAction(data);
+      return await updateProfileActionRef.current(data);
     },
-    [updateProfileAction],
+    [],  
   );
 
-  return {
+  return useMemo(() => ({
     updateProfile,
     isUpdating,
     error,
-  };
+  }), [updateProfile, isUpdating, error]);
 }
 
 export function useProfileAvatar(): UseProfileAvatarReturn {
@@ -131,19 +143,25 @@ export function useProfileAvatar(): UseProfileAvatarReturn {
     })),
   );
 
+  // Use refs for store actions to prevent infinite re-renders
+  const updateAvatarRef = useRef(updateAvatar);
+  useEffect(() => { updateAvatarRef.current = updateAvatar; }, [updateAvatar]);
+  const removeAvatarRef = useRef(removeAvatar);
+  useEffect(() => { removeAvatarRef.current = removeAvatar; }, [removeAvatar]);
+
   const uploadAvatar = useCallback(
     async (file: File): Promise<AvatarUploadResult> => {
-      return await updateAvatar(file);
+      return await updateAvatarRef.current(file);
     },
-    [updateAvatar],
+    [],  
   );
 
-  return {
+  return useMemo(() => ({
     uploadAvatar,
-    removeAvatar,
+    removeAvatar: removeAvatarRef.current,
     isUploading: isUploadingAvatar,
     error,
-  };
+  }), [uploadAvatar, isUploadingAvatar, error]);
 }
 
 export function useProfileDraft() {
@@ -197,9 +215,13 @@ export function useProfileExport(): UseProfileExportReturn {
     })),
   );
 
+  // Use ref for store action to prevent infinite re-renders
+  const exportProfileActionRef = useRef(exportProfileAction);
+  useEffect(() => { exportProfileActionRef.current = exportProfileAction; }, [exportProfileAction]);
+
   const exportProfile = useCallback(
     async (options?: ExportOptions): Promise<ProfileExportData> => {
-      const data = await exportProfileAction(options);
+      const data = await exportProfileActionRef.current(options);
 
       if (!data) {
         const message = 'Failed to export profile data';
@@ -209,14 +231,14 @@ export function useProfileExport(): UseProfileExportReturn {
 
       return data;
     },
-    [exportProfileAction],
+    [],  
   );
 
-  return {
+  return useMemo(() => ({
     exportProfile,
     isExporting,
     error,
-  };
+  }), [exportProfile, isExporting, error]);
 }
 
 export function useProfileDelete() {
@@ -228,15 +250,19 @@ export function useProfileDelete() {
     })),
   );
 
-  const deleteProfile = useCallback(async (): Promise<ProfileActionResult> => {
-    return await deleteProfileAction();
-  }, [deleteProfileAction]);
+  // Use ref for store action to prevent infinite re-renders
+  const deleteProfileActionRef = useRef(deleteProfileAction);
+  useEffect(() => { deleteProfileActionRef.current = deleteProfileAction; }, [deleteProfileAction]);
 
-  return {
+  const deleteProfile = useCallback(async (): Promise<ProfileActionResult> => {
+    return await deleteProfileActionRef.current();
+  }, []);  
+
+  return useMemo(() => ({
     deleteProfile,
     isDeleting: isUpdating,
     error,
-  };
+  }), [deleteProfile, isUpdating, error]);
 }
 
 export function useProfileLoadingStates() {

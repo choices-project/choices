@@ -3,7 +3,7 @@
 
 import { Search, Star, Clock, Users, Plus, Eye, BookOpen } from 'lucide-react';
 import { useRouter } from 'next/navigation';
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useRef } from 'react';
 
 import type { PollTemplate, PollCategory, TemplateCategory } from '@/features/polls/types';
 
@@ -250,6 +250,9 @@ const SAMPLETEMPLATES: PollTemplate[] = [
 
 export default function PollTemplatesPage() {
   const router = useRouter();
+  const routerRef = useRef(router);
+  useEffect(() => { routerRef.current = router; }, [router]);
+  
   const [searchQuery, setSearchQuery] = useState('');
   const debouncedSearchQuery = useDebounce(searchQuery, 300);
   const [selectedCategory, setSelectedCategory] = useState<PollCategory | 'all'>('all');
@@ -258,10 +261,18 @@ export default function PollTemplatesPage() {
   const [templates, _setTemplates] = useState<PollTemplate[]>(SAMPLETEMPLATES);
   const { setCurrentRoute, setSidebarActiveSection, setBreadcrumbs } = useAppActions();
 
+  // Refs for stable app store actions
+  const setCurrentRouteRef = useRef(setCurrentRoute);
+  useEffect(() => { setCurrentRouteRef.current = setCurrentRoute; }, [setCurrentRoute]);
+  const setSidebarActiveSectionRef = useRef(setSidebarActiveSection);
+  useEffect(() => { setSidebarActiveSectionRef.current = setSidebarActiveSection; }, [setSidebarActiveSection]);
+  const setBreadcrumbsRef = useRef(setBreadcrumbs);
+  useEffect(() => { setBreadcrumbsRef.current = setBreadcrumbs; }, [setBreadcrumbs]);
+
   useEffect(() => {
-    setCurrentRoute('/polls/templates');
-    setSidebarActiveSection('polls');
-    setBreadcrumbs([
+    setCurrentRouteRef.current('/polls/templates');
+    setSidebarActiveSectionRef.current('polls');
+    setBreadcrumbsRef.current([
       { label: 'Home', href: '/' },
       { label: 'Dashboard', href: '/dashboard' },
       { label: 'Polls', href: '/polls' },
@@ -269,10 +280,10 @@ export default function PollTemplatesPage() {
     ]);
 
     return () => {
-      setSidebarActiveSection(null);
-      setBreadcrumbs([]);
+      setSidebarActiveSectionRef.current(null);
+      setBreadcrumbsRef.current([]);
     };
-  }, [setBreadcrumbs, setCurrentRoute, setSidebarActiveSection]);
+  }, []);  
 
   const filteredTemplates = templates.filter(template => {
     const matchesSearch = template.name.toLowerCase().includes(debouncedSearchQuery.toLowerCase()) ||
@@ -310,7 +321,7 @@ export default function PollTemplatesPage() {
   });
 
   const handleUseTemplate = (template: PollTemplate) => {
-    router.push(`/polls/create?template=${template.id}`);
+    routerRef.current.push(`/polls/create?template=${template.id}`);
   };
 
   const previewTemplate = (template: PollTemplate) => {

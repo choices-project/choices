@@ -11,7 +11,7 @@
 'use client';
 
 import { Hash, TrendingUp, Eye, Share2, Users } from 'lucide-react';
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 
 import { HashtagInput, HashtagDisplay } from '@/features/hashtags';
 import type { Hashtag, PollHashtagIntegration as PollHashtagIntegrationType } from '@/features/hashtags/types';
@@ -108,6 +108,10 @@ export default function PollHashtagIntegration({
   const { trendingCount } = useHashtagStats();
   const { getTrendingHashtags } = useHashtagActions();
 
+  // Ref for stable store action
+  const getTrendingHashtagsRef = useRef(getTrendingHashtags);
+  useEffect(() => { getTrendingHashtagsRef.current = getTrendingHashtags; }, [getTrendingHashtags]);
+
   const trackHashtagEngagement = React.useCallback((action: 'view' | 'click' | 'share') => {
     logger.info(`Hashtag engagement tracked: ${action}`);
     void (async () => {
@@ -129,7 +133,7 @@ export default function PollHashtagIntegration({
 
   // Load trending hashtags on mount
   useEffect(() => {
-    void getTrendingHashtags();
+    void getTrendingHashtagsRef.current();
     // Record a view when the component mounts
     trackHashtagEngagement('view');
     // Fetch aggregated engagement totals (best-effort)
@@ -154,7 +158,7 @@ export default function PollHashtagIntegration({
         // ignore
       }
     })();
-  }, [getTrendingHashtags, poll.id, trackHashtagEngagement]);
+  }, [poll.id, trackHashtagEngagement]);  
 
   // Track hashtag engagement in real-time
   // Track hashtag engagement in real-time

@@ -17,7 +17,7 @@ import {
 } from 'lucide-react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
-import React, { useEffect, useState, useCallback } from 'react'
+import React, { useEffect, useState, useCallback, useRef } from 'react'
 
 import { getSupabaseBrowserClient } from '@/utils/supabase/client'
 
@@ -46,10 +46,23 @@ export default function AdminDashboard() {
   const isAuthenticated = useIsAuthenticated()
   const { signOut: resetUserState } = useUserActions()
   const router = useRouter()
+  const routerRef = useRef(router)
+  useEffect(() => { routerRef.current = router; }, [router])
   const [stats, setStats] = useState<AdminStats | null>(null)
   const [loading, setLoading] = useState(true)
   const [isAdmin, setIsAdmin] = useState<boolean | null>(null)
   const { setCurrentRoute, setSidebarActiveSection, setBreadcrumbs } = useAppActions();
+  
+  // Refs for stable app store actions
+  const setCurrentRouteRef = useRef(setCurrentRoute);
+  useEffect(() => { setCurrentRouteRef.current = setCurrentRoute; }, [setCurrentRoute]);
+  const setBreadcrumbsRef = useRef(setBreadcrumbs);
+  useEffect(() => { setBreadcrumbsRef.current = setBreadcrumbs; }, [setBreadcrumbs]);
+  const setSidebarActiveSectionRef = useRef(setSidebarActiveSection);
+  useEffect(() => { setSidebarActiveSectionRef.current = setSidebarActiveSection; }, [setSidebarActiveSection]);
+  const resetUserStateRef = useRef(resetUserState);
+  useEffect(() => { resetUserStateRef.current = resetUserState; }, [resetUserState]);
+  
   const { data: demographicData, loading: demographicsLoading } = useDemographics();
 
   const loadAdminStats = useCallback(async () => {
@@ -102,6 +115,9 @@ export default function AdminDashboard() {
     }
   }, [])
 
+  const loadAdminStatsRef = useRef(loadAdminStats);
+  useEffect(() => { loadAdminStatsRef.current = loadAdminStats; }, [loadAdminStats]);
+  
   const checkAdminStatus = useCallback(async () => {
     if (!isAuthenticated || !user) {
       setIsAdmin(false)
@@ -129,7 +145,7 @@ export default function AdminDashboard() {
 
         if (response.ok) {
           setIsAdmin(true)
-          await loadAdminStats()
+          await loadAdminStatsRef.current()
           setLoading(false)
         } else if (response.status === 401 || response.status === 403) {
           setIsAdmin(false)
@@ -155,20 +171,20 @@ export default function AdminDashboard() {
       setIsAdmin(false)
       setLoading(false)
     }
-  }, [isAuthenticated, user, loadAdminStats])
+  }, [isAuthenticated, user]) // Removed loadAdminStats - using loadAdminStatsRef
 
   useEffect(() => {
-    setCurrentRoute('/admin');
-    setSidebarActiveSection('admin-dashboard');
-    setBreadcrumbs([
+    setCurrentRouteRef.current('/admin');
+    setSidebarActiveSectionRef.current('admin-dashboard');
+    setBreadcrumbsRef.current([
       { label: 'Admin', href: '/admin' },
     ]);
 
     return () => {
-      setSidebarActiveSection(null);
-      setBreadcrumbs([]);
+      setSidebarActiveSectionRef.current(null);
+      setBreadcrumbsRef.current([]);
     };
-  }, [setBreadcrumbs, setCurrentRoute, setSidebarActiveSection]);
+  }, []);  
 
   useEffect(() => {
     if (!isUserLoading && isAuthenticated && user) {
@@ -179,17 +195,17 @@ export default function AdminDashboard() {
     }
   }, [isUserLoading, isAuthenticated, user, checkAdminStatus])
 
-  const handleLogout = async () => {
+  const handleLogout = useCallback(async () => {
     try {
       const supabase = await getSupabaseBrowserClient()
       await supabase.auth.signOut()
     } catch (error) {
       logger.error('Failed to sign out:', error instanceof Error ? error : new Error(String(error)))
     } finally {
-      resetUserState()
-      router.push('/login')
+      resetUserStateRef.current()
+      routerRef.current.push('/login')
     }
-  }
+  }, []);  
 
   if (isUserLoading || loading || isAdmin === null) {
     return (

@@ -84,7 +84,7 @@ export default function BiometricSetupPage() {
               email and password login.
             </p>
             <button
-              onClick={() => router.push('/profile')}
+              onClick={() => routerRef.current.push('/profile')}
               className="w-full bg-blue-600 text-white py-2 px-4 rounded-md hover:bg-blue-700 transition-colors"
             >
               Back to Profile
@@ -154,7 +154,7 @@ export default function BiometricSetupPage() {
           )}
 
           <button
-            onClick={() => router.push('/profile')}
+            onClick={() => routerRef.current.push('/profile')}
             className="w-full text-gray-600 hover:text-gray-800 transition-colors"
             disabled={isRegistering}
           >

@@ -1,7 +1,7 @@
 'use client'
 
 import Image from 'next/image'
-import React, { useState, useCallback } from 'react'
+import React, { useState, useCallback, useRef, useEffect } from 'react'
 
 type OptimizedImageProps = {
   src: string
@@ -29,20 +29,22 @@ export const OptimizedImage: React.FC<OptimizedImageProps> = ({
   const [isLoading, setIsLoading] = useState(true)
   const [hasError, setHasError] = useState(false)
 
+  // Refs for stable callback props
+  const onLoadRef = useRef(onLoad);
+  useEffect(() => { onLoadRef.current = onLoad; }, [onLoad]);
+  const onErrorRef = useRef(onError);
+  useEffect(() => { onErrorRef.current = onError; }, [onError]);
+
   const handleLoad = useCallback(() => {
     setIsLoading(false)
-    if (onLoad) {
-      onLoad()
-    }
-  }, [onLoad])
+    onLoadRef.current?.()
+  }, [])  
 
   const handleError = useCallback(() => {
     setIsLoading(false)
     setHasError(true)
-    if (onError) {
-      onError()
-    }
-  }, [onError])
+    onErrorRef.current?.()
+  }, [])  
 
   const handleRetry = useCallback(() => {
     setHasError(false)
@@ -50,13 +52,13 @@ export const OptimizedImage: React.FC<OptimizedImageProps> = ({
   }, [])
 
   return (
-    <div 
+    <div
       className={`optimized-image ${className}`}
       data-testid="optimized-image"
     >
       {/* Loading State */}
       {isLoading && !hasError && (
-        <div 
+        <div
           className="flex items-center justify-center bg-gray-100"
           style={{ width, height }}
           data-testid="loading-indicator"
@@ -67,7 +69,7 @@ export const OptimizedImage: React.FC<OptimizedImageProps> = ({
 
       {/* Error State */}
       {hasError && (
-        <div 
+        <div
           className="flex flex-col items-center justify-center bg-gray-100"
           style={{ width, height }}
           data-testid="image-error"

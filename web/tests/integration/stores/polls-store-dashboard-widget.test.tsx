@@ -31,6 +31,9 @@ jest.mock('@/features/polls/components/PollDashboardWidget', () => ({
     const error = usePollsError();
     const { loadPolls, refreshFeeds } = usePollsActions();
 
+    // Note: In production code, loadPolls should be used with refs pattern to prevent infinite loops
+    // This mock component is simplified for testing purposes
+    // usePollsActions now uses useShallow to ensure stable references, which helps with stability
     React.useEffect(() => {
       void loadPolls({});
     }, [loadPolls]);

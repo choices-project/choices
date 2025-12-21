@@ -43,11 +43,19 @@ export default function GlobalNavigation() {
   const previouslyFocusedElementRef = useRef<HTMLElement | null>(null);
   const mobileMenuId = 'global-navigation-mobile-menu';
   const { t } = useI18n();
+  
+  // Use ref for stable t function
+  const tRef = useRef(t);
+  useEffect(() => { tRef.current = t; }, [t]);
 
   // Auth integration via context
   const { user, isLoading: authLoading, logout: authSignOut } = useAuth();
   const isAuthenticated = Boolean(user);
   const isLoading = authLoading;
+  
+  // Use ref for stable authSignOut callback
+  const authSignOutRef = useRef(authSignOut);
+  useEffect(() => { authSignOutRef.current = authSignOut; }, [authSignOut]);
 
   const toggleMobileMenu = useCallback(() => {
     setIsMobileMenuOpen((open) => !open);
@@ -62,7 +70,7 @@ export default function GlobalNavigation() {
       closeMobileMenu();
       // Call signOut which will handle the redirect internally
       // Don't await - let it handle redirect in its own time
-      void authSignOut();
+      void authSignOutRef.current();
     } catch (error) {
       logger.error('Logout failed:', error);
       // Fallback redirect if signOut throws synchronously
@@ -70,18 +78,21 @@ export default function GlobalNavigation() {
         window.location.replace('/landing');
       }
     }
-  }, [authSignOut, closeMobileMenu]);
+  }, [closeMobileMenu]); // Removed authSignOut - using authSignOutRef
 
   const isActive = useCallback(
     (path: string) => pathname === path,
     [pathname],
   );
 
-  const navigationItems = [
-    { href: '/feed', label: t('navigation.home'), icon: Home },
-    { href: '/polls', label: t('navigation.polls'), icon: Vote },
-    { href: '/dashboard', label: t('navigation.dashboard'), icon: BarChart3 },
-  ];
+  const navigationItems = useMemo(
+    () => [
+      { href: '/feed', label: tRef.current('navigation.home'), icon: Home },
+      { href: '/polls', label: tRef.current('navigation.polls'), icon: Vote },
+      { href: '/dashboard', label: tRef.current('navigation.dashboard'), icon: BarChart3 },
+    ],
+    [], // Empty deps - using tRef
+  );
 
   useEffect(() => {
     if (isMobileMenuOpen) {

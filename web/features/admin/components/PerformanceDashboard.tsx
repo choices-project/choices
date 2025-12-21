@@ -1,6 +1,6 @@
 'use client'
 
-import React, { useEffect, useCallback } from 'react';
+import React, { useEffect, useCallback, useRef } from 'react';
 
 import {
   useDatabaseMetrics,
@@ -28,27 +28,37 @@ export default function PerformanceDashboard() {
     initialize,
   } = usePerformanceActions();
 
+  // Refs for stable action callbacks
+  const loadDatabasePerformanceRef = useRef(loadDatabasePerformance);
+  useEffect(() => { loadDatabasePerformanceRef.current = loadDatabasePerformance; }, [loadDatabasePerformance]);
+  const refreshMaterializedViewsRef = useRef(refreshMaterializedViews);
+  useEffect(() => { refreshMaterializedViewsRef.current = refreshMaterializedViews; }, [refreshMaterializedViews]);
+  const performDatabaseMaintenanceRef = useRef(performDatabaseMaintenance);
+  useEffect(() => { performDatabaseMaintenanceRef.current = performDatabaseMaintenance; }, [performDatabaseMaintenance]);
+  const initializeRef = useRef(initialize);
+  useEffect(() => { initializeRef.current = initialize; }, [initialize]);
+
   // Load performance statistics
   const loadPerformanceStats = useCallback(async () => {
-    await loadDatabasePerformance();
-  }, [loadDatabasePerformance])
+    await loadDatabasePerformanceRef.current();
+  }, [])  
 
 
   // Refresh materialized views
   const handleRefreshMaterializedViews = useCallback(async () => {
-    await refreshMaterializedViews();
-  }, [refreshMaterializedViews])
+    await refreshMaterializedViewsRef.current();
+  }, [])  
 
   // Perform database maintenance
   const handleDatabaseMaintenance = useCallback(async () => {
-    await performDatabaseMaintenance();
-  }, [performDatabaseMaintenance])
+    await performDatabaseMaintenanceRef.current();
+  }, [])  
 
   // Load data on mount
   useEffect(() => {
-    initialize();
+    initializeRef.current();
     loadPerformanceStats();
-  }, [initialize, loadPerformanceStats]);
+  }, [loadPerformanceStats]);  
 
   // Calculate performance insights
   const performanceInsights = {

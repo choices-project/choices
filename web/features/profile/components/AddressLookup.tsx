@@ -16,7 +16,7 @@
 'use client';
 
 import { MapPin, Search, AlertCircle, CheckCircle, Info } from 'lucide-react';
-import React, { useCallback, useState } from 'react';
+import React, { useCallback, useEffect, useRef, useState } from 'react';
 
 import { useProfileUpdate } from '@/features/profile/hooks/use-profile';
 
@@ -49,6 +49,10 @@ export function AddressLookup({
   const [error, setError] = useState<string | null>(null);
   const [isSaved, setIsSaved] = useState(false);
   const { updateProfile } = useProfileUpdate();
+
+  // Use ref for updateProfile callback to prevent infinite re-renders
+  const updateProfileRef = useRef(updateProfile);
+  useEffect(() => { updateProfileRef.current = updateProfile; }, [updateProfile]);
 
   const handleLookup = async () => {
     if (!address.trim()) {
@@ -134,7 +138,7 @@ export function AddressLookup({
           location,
         };
 
-        const result = await updateProfile({ demographics });
+        const result = await updateProfileRef.current({ demographics });
 
         if (!result.success) {
           throw new Error(result.error ?? 'Failed to save district to profile');
@@ -156,7 +160,7 @@ export function AddressLookup({
         logger.error('Failed to save district to profile', err instanceof Error ? err : new Error(errorMessage));
       }
     },
-    [onDistrictSaved, updateProfile]
+    [onDistrictSaved]  
   );
 
   const handleManualSave = async () => {

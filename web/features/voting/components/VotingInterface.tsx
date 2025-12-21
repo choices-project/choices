@@ -1,7 +1,7 @@
 'use client';
 
 import { Users, Clock, CheckCircle2, Shield, Lock, Unlock } from 'lucide-react'
-import React, { useCallback, useMemo } from 'react'
+import React, { useCallback, useEffect, useMemo, useRef } from 'react'
 
 import { useRecordPollEvent } from '@/features/polls/hooks/usePollAnalytics'
 import { useVotingCountdown } from '@/features/voting/hooks/useVotingCountdown'
@@ -86,6 +86,12 @@ export default function VotingInterface({
   const { addNotification } = useNotificationActions()
   const recordPollEvent = useRecordPollEvent()
 
+  // Refs for stable action callbacks
+  const addNotificationRef = useRef(addNotification)
+  useEffect(() => { addNotificationRef.current = addNotification; }, [addNotification])
+  const recordPollEventRef = useRef(recordPollEvent)
+  useEffect(() => { recordPollEventRef.current = recordPollEvent; }, [recordPollEvent])
+
   const storeHasVoted = useMemo(
     () => votingRecords.some((record) => record.ballotId === poll.id),
     [poll.id, votingRecords]
@@ -97,7 +103,7 @@ export default function VotingInterface({
   const emitAnalytics = useCallback(
     (action: string, payload?: VoteAnalyticsPayload) => {
       const metadata = payload?.metadata ?? {}
-      recordPollEvent(action, {
+      recordPollEventRef.current(action, {
         ...payload,
         label: payload?.label ?? poll.id,
         metadata: {
@@ -111,31 +117,31 @@ export default function VotingInterface({
         onAnalyticsEvent(action, payload)
       }
     },
-    [onAnalyticsEvent, poll.id, recordPollEvent]
+    [onAnalyticsEvent, poll.id]  
   )
 
   const notifySuccess = useCallback(
     (message: string) => {
-      addNotification({
+      addNotificationRef.current({
         type: 'success',
         title: 'Vote submitted',
         message,
         duration: notificationSettings.duration,
       })
     },
-    [addNotification, notificationSettings.duration]
+    [notificationSettings.duration]  
   )
 
   const notifyError = useCallback(
     (message: string) => {
-      addNotification({
+      addNotificationRef.current({
         type: 'error',
         title: 'Vote failed',
         message,
         duration: notificationSettings.duration,
       })
     },
-    [addNotification, notificationSettings.duration]
+    [notificationSettings.duration]  
   )
 
   const handleVoteResult = useCallback(

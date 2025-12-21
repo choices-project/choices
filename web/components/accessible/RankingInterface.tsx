@@ -2,17 +2,17 @@
 // PHASE 3: ACCESSIBLE RANKING INTERFACE
 // ============================================================================
 // Agent A3 - UX/Accessibility Specialist
-// 
+//
 // This component provides a fully accessible ranking interface for the
 // Ranked Choice Democracy Revolution platform.
-// 
+//
 // Features:
 // - WCAG 2.2 AA compliant keyboard navigation
 // - Screen reader support with live announcements
 // - Focus management and visual indicators
 // - Plain language instructions
 // - Real-time validation feedback
-// 
+//
 // Created: January 15, 2025
 // Status: Phase 3 Implementation
 // ============================================================================
@@ -73,9 +73,18 @@ export function AccessibleRankingInterface({
   className = ''
 }: RankingInterfaceProps) {
   // ============================================================================
+  // REFS FOR STABLE CALLBACK PROPS
+  // ============================================================================
+
+  const onRankingChangeRef = useRef(onRankingChange);
+  useEffect(() => { onRankingChangeRef.current = onRankingChange; }, [onRankingChange]);
+  const onValidationChangeRef = useRef(onValidationChange);
+  useEffect(() => { onValidationChangeRef.current = onValidationChange; }, [onValidationChange]);
+
+  // ============================================================================
   // STATE MANAGEMENT
   // ============================================================================
-  
+
   const [state, setState] = useState<RankingState>({
     rankings: initialRankings,
     focusedIndex: 0,
@@ -86,7 +95,7 @@ export function AccessibleRankingInterface({
 
   const [isExpanded, setIsExpanded] = useState(false);
   const [showInstructions, setShowInstructions] = useState(true);
-  
+
   const containerRef = useRef<HTMLDivElement>(null);
   const candidateRefs = useRef<(HTMLDivElement | null)[]>([]);
   const instructionsRef = useRef<HTMLDivElement>(null);
@@ -260,14 +269,14 @@ export function AccessibleRankingInterface({
       validationErrors: validation.errors,
       validationWarnings: validation.warnings
     }));
-    
-    onValidationChange(validation.errors.length === 0, validation.errors, validation.warnings);
-  }, [state.rankings, validateRankings, onValidationChange]);
+
+    onValidationChangeRef.current(validation.errors.length === 0, validation.errors, validation.warnings);
+  }, [state.rankings, validateRankings]);  
 
   // Notify parent of ranking changes
   useEffect(() => {
-    onRankingChange(state.rankings);
-  }, [state.rankings, onRankingChange]);
+    onRankingChangeRef.current(state.rankings);
+  }, [state.rankings]);  
 
   // Initialize candidate refs
   useEffect(() => {
@@ -297,7 +306,7 @@ export function AccessibleRankingInterface({
   // ============================================================================
 
   return (
-    <div 
+    <div
       ref={containerRef}
       className={`accessible-ranking-interface ${className}`}
       role="main"
@@ -325,17 +334,17 @@ export function AccessibleRankingInterface({
 
       {/* Instructions */}
       {showInstructions && (
-        <div 
+        <div
           ref={instructionsRef}
           id="ranking-instructions"
-          className="instructions" 
-          role="region" 
+          className="instructions"
+          role="region"
           aria-label="How to rank candidates"
         >
           <h3>How to Rank</h3>
           <p>
-            Click or use arrow keys to move candidates up or down. 
-            Your first choice gets your vote if they need it. 
+            Click or use arrow keys to move candidates up or down.
+            Your first choice gets your vote if they need it.
             If they don&apos;t need it, your vote goes to your second choice.
           </p>
           <ul>
@@ -348,9 +357,9 @@ export function AccessibleRankingInterface({
       )}
 
       {/* Candidates List */}
-      <div 
-        className="candidates-list" 
-        role="list" 
+      <div
+        className="candidates-list"
+        role="list"
         aria-labelledby="ranking-title"
         aria-describedby="ranking-description"
       >
@@ -379,7 +388,7 @@ export function AccessibleRankingInterface({
               <p id={`candidate-${candidate.id}-description`} className="candidate-bio">
                 {candidate.bio}
               </p>
-              
+
               {/* Social Insights */}
               {showSocialInsights && candidate.socialInsights && (
                 <div className="social-insights" aria-label="Social insights">
@@ -394,9 +403,9 @@ export function AccessibleRankingInterface({
                 </div>
               )}
             </div>
-            
+
             {/* Rank Indicator */}
-            <div 
+            <div
               className="rank-indicator"
               aria-live="polite"
               aria-atomic="true"
@@ -431,7 +440,7 @@ export function AccessibleRankingInterface({
           >
             {isExpanded ? 'Show Less' : `Add More Rankings (${candidates.length - 3} remaining)`}
           </button>
-          
+
           {isExpanded && (
             <div id="remaining-candidates" className="remaining-candidates">
               <h4>Additional Candidates</h4>
@@ -442,7 +451,7 @@ export function AccessibleRankingInterface({
       )}
 
       {/* Validation Section */}
-      <ValidationSection 
+      <ValidationSection
         errors={state.validationErrors}
         warnings={state.validationWarnings}
         rankings={state.rankings}
@@ -450,9 +459,9 @@ export function AccessibleRankingInterface({
       />
 
       {/* Screen Reader Announcements */}
-      <div 
-        aria-live="polite" 
-        aria-atomic="true" 
+      <div
+        aria-live="polite"
+        aria-atomic="true"
         className="sr-only"
         id="ranking-announcements"
       >
@@ -488,7 +497,7 @@ function ValidationSection({ errors, warnings, rankings, totalCandidates }: Vali
           <span className="error-message">{error}</span>
         </div>
       ))}
-      
+
       {/* Warnings */}
       {warnings.map((warning, index) => (
         <div
@@ -501,7 +510,7 @@ function ValidationSection({ errors, warnings, rankings, totalCandidates }: Vali
           <span className="warning-message">{warning}</span>
         </div>
       ))}
-      
+
       {/* Success */}
       {errors.length === 0 && rankings.length >= 2 && (
         <div className="validation-success" role="status">

@@ -158,10 +158,14 @@ const resolvePollVotes = (poll: Poll): number => {
 
 function HarnessPersonalDashboard({ className = '' }: PersonalDashboardProps) {
   const router = useRouter();
+  const routerRef = useRef(router);
+  useEffect(() => { routerRef.current = router; }, [router]);
   const { t } = useI18n();
   const isAuthenticated = useIsAuthenticated();
   const isUserLoading = useUserLoading();
   const { signOut: signOutUser } = useUserActions();
+  const signOutUserRef = useRef(signOutUser);
+  useEffect(() => { signOutUserRef.current = signOutUser; }, [signOutUser]);
   const shouldBypassAuth = useMemo(
     () =>
       process.env.NEXT_PUBLIC_ENABLE_E2E_HARNESS === '1' &&
@@ -189,7 +193,7 @@ function HarnessPersonalDashboard({ className = '' }: PersonalDashboardProps) {
     (state) => state.preferences?.dashboard ?? HARNESS_DEFAULT_DASHBOARD_PREFERENCES,
   );
   const handleHarnessLogout = useCallback(() => {
-    signOutUser();
+    signOutUserRef.current();
     if (typeof window !== 'undefined') {
       window.localStorage.setItem(
         'user-store',
@@ -216,8 +220,8 @@ function HarnessPersonalDashboard({ className = '' }: PersonalDashboardProps) {
       window.sessionStorage.clear();
       document.cookie = 'e2e-dashboard-bypass=; Max-Age=0; path=/';
     }
-    router.push('/auth');
-  }, [router, signOutUser]);
+    routerRef.current.push('/auth');
+  }, []);  
   const profileName = useProfileStore(
     (state) => state.profile?.display_name ?? state.profile?.username ?? null,
   );
@@ -249,7 +253,7 @@ function HarnessPersonalDashboard({ className = '' }: PersonalDashboardProps) {
             <p className='text-gray-600'>
               {t('dashboard.personal.harness.signIn.description')}
             </p>
-            <Button variant='default' onClick={() => router.push('/auth')}>
+            <Button variant='default' onClick={() => routerRef.current.push('/auth')}>
               {t('dashboard.personal.harness.signIn.button')}
             </Button>
           </CardContent>
@@ -297,7 +301,7 @@ function HarnessPersonalDashboard({ className = '' }: PersonalDashboardProps) {
           <Button
             variant='outline'
             size='sm'
-            onClick={() => router.push('/feed')}
+            onClick={() => routerRef.current.push('/feed')}
             className='flex items-center gap-2'
           >
             <Flame className='h-4 w-4' /> {t('dashboard.personal.harness.header.trendingButton')}
@@ -462,6 +466,11 @@ function StandardPersonalDashboard({ userId: fallbackUserId, className = '' }: P
   const routerRef = useRef(router);
   useEffect(() => { routerRef.current = router; }, [router]);
   const { t, currentLanguage } = useI18n();
+  
+  // Use ref for stable t function
+  const tRef = useRef(t);
+  useEffect(() => { tRef.current = t; }, [t]);
+  
   const numberFormatter = useMemo(
     () => new Intl.NumberFormat(currentLanguage ?? undefined),
     [currentLanguage],
@@ -495,6 +504,10 @@ function StandardPersonalDashboard({ userId: fallbackUserId, className = '' }: P
   const displayName = useProfileStore((state) => state.getDisplayName());
   const profilePreferences = useProfileStore((state) => state.preferences);
   const updatePreferences = useProfileStore((state) => state.updatePreferences);
+  
+  // Use ref for stable updatePreferences callback
+  const updatePreferencesRef = useRef(updatePreferences);
+  useEffect(() => { updatePreferencesRef.current = updatePreferences; }, [updatePreferences]);
 
   const polls = usePolls();
   const isPollsLoading = usePollsLoading();
@@ -711,13 +724,13 @@ function StandardPersonalDashboard({ userId: fallbackUserId, className = '' }: P
       const record = poll as Record<string, unknown>;
       return {
         id: String(record.id ?? record.poll_id ?? crypto.randomUUID()),
-        title: resolvePollTitle(poll, t('dashboard.personal.polls.untitled')),
+        title: resolvePollTitle(poll, tRef.current('dashboard.personal.polls.untitled')),
         created_at: (record.created_at as string) ?? new Date().toISOString(),
         total_votes: resolvePollVotes(poll),
         status: (record.status as string) ?? 'draft',
       };
     });
-  }, [sortedUserPolls, t]);
+  }, [sortedUserPolls]); // Removed t from deps - using tRef
 
   const totalVotesOnUserPolls = useMemo(
     () => userPolls.reduce((sum, poll) => sum + resolvePollVotes(poll), 0),
@@ -769,14 +782,17 @@ function StandardPersonalDashboard({ userId: fallbackUserId, className = '' }: P
       preferencesRef.current = nextPreferences;
 
       try {
-        await updatePreferences({ dashboard: nextPreferences } as Partial<ProfilePreferences>);
+        await updatePreferencesRef.current({ dashboard: nextPreferences } as Partial<ProfilePreferences>);
       } catch (error) {
         logger.error('Error saving dashboard preferences', error as Error);
       }
     },
-    [isAuthenticated, updatePreferences],
+    [isAuthenticated], // Removed updatePreferences - using updatePreferencesRef
   );
 
+  const refetchProfileRef = useRef(refetchProfile);
+  useEffect(() => { refetchProfileRef.current = refetchProfile; }, [refetchProfile]);
+  
   const handleRefresh = useCallback(async () => {
     if (!isAuthenticated) {
       logger.warn('Dashboard refresh skipped for unauthenticated user');
@@ -785,10 +801,10 @@ function StandardPersonalDashboard({ userId: fallbackUserId, className = '' }: P
     setIsRefreshing(true);
     try {
       await Promise.all([
-        refetchProfile(),
-        loadPolls(),
-        getTrendingHashtags(undefined, 6),
-        getUserRepresentatives().catch((error) => {
+        refetchProfileRef.current(),
+        loadPollsRef.current(),
+        getTrendingHashtagsRef.current(undefined, 6),
+        getUserRepresentativesRef.current().catch((error) => {
           logger.warn('Failed to refresh user representatives (non-critical):', error);
         }),
       ]);
@@ -797,7 +813,7 @@ function StandardPersonalDashboard({ userId: fallbackUserId, className = '' }: P
     } finally {
       setIsRefreshing(false);
     }
-  }, [getTrendingHashtags, getUserRepresentatives, isAuthenticated, loadPolls, refetchProfile]);
+  }, [isAuthenticated]);  
 
   const effectiveDisplayName =
     (displayName && displayName !== 'User' ? displayName : undefined) ??
@@ -805,63 +821,70 @@ function StandardPersonalDashboard({ userId: fallbackUserId, className = '' }: P
       (profileRecord?.fullName as string | undefined) ??
       (profileRecord?.username as string | undefined));
 
-  const dashboardTitle = effectiveDisplayName
-    ? t('dashboard.personal.header.titleWithName', { name: effectiveDisplayName })
-    : t('dashboard.personal.header.titleFallback');
+  const dashboardTitle = useMemo(() => {
+    return effectiveDisplayName
+      ? tRef.current('dashboard.personal.header.titleWithName', { name: effectiveDisplayName })
+      : tRef.current('dashboard.personal.header.titleFallback');
+  }, [effectiveDisplayName]);
 
-  const dashboardSubtitle = profileRecord?.bio
-    ? t('dashboard.personal.header.subtitleWithBio')
-    : t('dashboard.personal.header.subtitleDefault');
+  const dashboardSubtitle = useMemo(() => {
+    return profileRecord?.bio
+      ? tRef.current('dashboard.personal.header.subtitleWithBio')
+      : tRef.current('dashboard.personal.header.subtitleDefault');
+  }, [profileRecord?.bio]);
 
   const isLoading =
     isUserLoading || profileLoading || isPollsLoading || analyticsLoading;
 
-  const errorMessage =
-    profileError ??
-    pollsError ??
-    analyticsError ??
-    representativeError ??
-    (hasAnyError ? t('dashboard.personal.errors.generic') : null);
+  const errorMessage = useMemo(() => {
+    return (
+      profileError ??
+      pollsError ??
+      analyticsError ??
+      representativeError ??
+      (hasAnyError ? tRef.current('dashboard.personal.errors.generic') : null)
+    );
+  }, [profileError, pollsError, analyticsError, representativeError, hasAnyError]);
 
   const quickActions = useMemo(
     () => [
       {
         id: 'create-poll',
-        label: t('dashboard.personal.quickActions.createPoll.label'),
+        label: tRef.current('dashboard.personal.quickActions.createPoll.label'),
         icon: Plus,
         href: '/polls/create',
-        description: t('dashboard.personal.quickActions.createPoll.description'),
+        description: tRef.current('dashboard.personal.quickActions.createPoll.description'),
       },
       {
         id: 'update-profile',
-        label: t('dashboard.personal.quickActions.updateProfile.label'),
+        label: tRef.current('dashboard.personal.quickActions.updateProfile.label'),
         icon: Settings,
         href: '/profile/edit',
-        description: t('dashboard.personal.quickActions.updateProfile.description'),
+        description: tRef.current('dashboard.personal.quickActions.updateProfile.description'),
       },
       {
         id: 'privacy-settings',
-        label: t('dashboard.personal.quickActions.privacy.label'),
+        label: tRef.current('dashboard.personal.quickActions.privacy.label'),
         icon: Shield,
         href: '/account/privacy',
-        description: t('dashboard.personal.quickActions.privacy.description'),
+        description: tRef.current('dashboard.personal.quickActions.privacy.description'),
       },
       {
         id: 'set-location',
-        label: t('dashboard.personal.quickActions.location.label'),
+        label: tRef.current('dashboard.personal.quickActions.location.label'),
         icon: MapPin,
         href: '/profile/preferences',
-        description: t('dashboard.personal.quickActions.location.description'),
+        description: tRef.current('dashboard.personal.quickActions.location.description'),
       },
       {
         id: 'export-data',
-        label: t('dashboard.personal.quickActions.export.label'),
+        label: tRef.current('dashboard.personal.quickActions.export.label'),
         icon: Download,
         href: '/account/privacy',
-        description: t('dashboard.personal.quickActions.export.description'),
+        description: tRef.current('dashboard.personal.quickActions.export.description'),
       },
     ],
-    [t],
+    [], // Removed t from deps - using tRef
   );
 
   const representatives = useMemo(
@@ -930,7 +953,7 @@ function StandardPersonalDashboard({ userId: fallbackUserId, className = '' }: P
               {t('dashboard.personal.signIn.title')}
             </h3>
             <p className='text-gray-600'>{t('dashboard.personal.signIn.description')}</p>
-            <Button variant='default' onClick={() => router.push('/auth')}>
+            <Button variant='default' onClick={() => routerRef.current.push('/auth')}>
               {t('dashboard.personal.signIn.button')}
             </Button>
           </CardContent>
@@ -1129,7 +1152,7 @@ function StandardPersonalDashboard({ userId: fallbackUserId, className = '' }: P
                       trendingHashtags={trendingHashtags}
                       showGrowth
                       maxDisplay={4}
-                      onHashtagClick={(hashtag) => router.push(`/hashtags/${hashtag.name}`)}
+                      onHashtagClick={(hashtag) => routerRef.current.push(`/hashtags/${hashtag.name}`)}
                     />
                   ) : (
                     <div className='rounded-md border border-dashed border-gray-200 p-4 text-sm text-gray-600'>
@@ -1138,12 +1161,12 @@ function StandardPersonalDashboard({ userId: fallbackUserId, className = '' }: P
                   )}
 
                   <div className='flex items-center gap-2'>
-                    <Button variant='outline' className='flex-1' onClick={() => router.push('/feed')}>
+                    <Button variant='outline' className='flex-1' onClick={() => routerRef.current.push('/feed')}>
                       {t('dashboard.personal.trending.viewFeed')}
                     </Button>
                     <Button
                       variant='ghost'
-                      onClick={() => getTrendingHashtags(undefined, 6)}
+                      onClick={() => getTrendingHashtagsRef.current(undefined, 6)}
                       disabled={hashtagLoading}
                     >
                       {t('dashboard.personal.common.refresh')}
@@ -1173,7 +1196,7 @@ function StandardPersonalDashboard({ userId: fallbackUserId, className = '' }: P
                           key={action.id}
                           variant='outline'
                           className='h-auto w-full justify-start p-3'
-                          onClick={() => router.push(action.href)}
+                          onClick={() => routerRef.current.push(action.href)}
                         >
                           <Icon className='mr-3 h-4 w-4' />
                           <div className='text-left'>
@@ -1233,7 +1256,7 @@ function StandardPersonalDashboard({ userId: fallbackUserId, className = '' }: P
                             showActions={false}
                             showDetails={false}
                             className='border border-gray-100 hover:shadow-sm'
-                            onClick={() => router.push(`/representatives/${representative.id}`)}
+                            onClick={() => routerRef.current.push(`/representatives/${representative.id}`)}
                           />
                         ))}
                         {representatives.length > visibleRepresentatives.length && (
@@ -1241,7 +1264,7 @@ function StandardPersonalDashboard({ userId: fallbackUserId, className = '' }: P
                             variant='outline'
                             size='sm'
                             className='w-full'
-                            onClick={() => router.push('/representatives/my')}
+                            onClick={() => routerRef.current.push('/representatives/my')}
                           >
                             {t('dashboard.personal.representatives.viewAll')}
                           </Button>
@@ -1253,7 +1276,7 @@ function StandardPersonalDashboard({ userId: fallbackUserId, className = '' }: P
                         <Button
                           variant='outline'
                           size='sm'
-                          onClick={() => router.push('/profile/preferences')}
+                          onClick={() => routerRef.current.push('/profile/preferences')}
                         >
                           {t('dashboard.personal.representatives.updateAddress')}
                         </Button>
@@ -1279,7 +1302,7 @@ function StandardPersonalDashboard({ userId: fallbackUserId, className = '' }: P
                       <div className='text-sm text-gray-600'>
                         {t('dashboard.personal.personalized.message')}
                       </div>
-                      <Button variant='outline' className='w-full' onClick={() => router.push('/profile')}>
+                      <Button variant='outline' className='w-full' onClick={() => routerRef.current.push('/profile')}>
                         {t('dashboard.personal.personalized.updatePreferences')}
                       </Button>
                     </div>

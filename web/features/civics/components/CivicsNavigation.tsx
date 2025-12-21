@@ -44,6 +44,22 @@ export default function CivicsNavigation({
   const representativeLoading = useRepresentativeGlobalLoading();
   const findByLocation = useFindByLocation();
 
+  // Refs for stable callback props
+  const onAddressUpdateRef = useRef(onAddressUpdate);
+  useEffect(() => { onAddressUpdateRef.current = onAddressUpdate; }, [onAddressUpdate]);
+  const onRepresentativesClickRef = useRef(onRepresentativesClick);
+  useEffect(() => { onRepresentativesClickRef.current = onRepresentativesClick; }, [onRepresentativesClick]);
+
+  // Refs for stable store actions
+  const setShowAddressFormRef = useRef(setShowAddressForm);
+  useEffect(() => { setShowAddressFormRef.current = setShowAddressForm; }, [setShowAddressForm]);
+  const setNewAddressRef = useRef(setNewAddress);
+  useEffect(() => { setNewAddressRef.current = setNewAddress; }, [setNewAddress]);
+  const handleAddressUpdateRef = useRef(handleAddressUpdate);
+  useEffect(() => { handleAddressUpdateRef.current = handleAddressUpdate; }, [handleAddressUpdate]);
+  const findByLocationRef = useRef(findByLocation);
+  useEffect(() => { findByLocationRef.current = findByLocation; }, [findByLocation]);
+
   const displayAddress = currentAddress ?? storeCurrentAddress;
   const isUpdatingAddress = addressLoading || representativeLoading;
   const modalTitleId = useId();
@@ -56,12 +72,12 @@ export default function CivicsNavigation({
   const mobileMenuId = useId();
 
   const openAddressForm = useCallback(() => {
-    setShowAddressForm(true);
-  }, [setShowAddressForm]);
+    setShowAddressFormRef.current(true);
+  }, []);  
 
   const closeAddressForm = useCallback(() => {
-    setShowAddressForm(false);
-  }, [setShowAddressForm]);
+    setShowAddressFormRef.current(false);
+  }, []);  
 
   const toggleMobileMenu = useCallback(() => {
     setIsMobileMenuOpen((open) => !open);
@@ -79,9 +95,9 @@ export default function CivicsNavigation({
 
     try {
       const results = await Promise.allSettled([
-        handleAddressUpdate(trimmedAddress),
+        handleAddressUpdateRef.current(trimmedAddress),
         (async () => {
-          const response = await findByLocation({ address: trimmedAddress });
+          const response = await findByLocationRef.current({ address: trimmedAddress });
           if (!response?.success) {
             throw new Error(response?.error ?? t('civics.navigation.errors.fetchFailed'));
           }
@@ -93,21 +109,13 @@ export default function CivicsNavigation({
         throw rejection.reason;
       }
 
-      onAddressUpdate?.(trimmedAddress);
-      setNewAddress('');
-      setShowAddressForm(false);
+      onAddressUpdateRef.current?.(trimmedAddress);
+      setNewAddressRef.current('');
+      setShowAddressFormRef.current(false);
     } catch (error) {
       logger.error('Address update failed:', error);
     }
-  }, [
-    findByLocation,
-    handleAddressUpdate,
-    newAddress,
-    onAddressUpdate,
-    setNewAddress,
-    setShowAddressForm,
-    t,
-  ]);
+  }, [newAddress, t]);  
 
   useEffect(() => {
     if (isMobileMenuOpen) {
@@ -272,7 +280,7 @@ export default function CivicsNavigation({
               type="button"
               ref={firstMobileNavLinkRef}
               onClick={() => {
-                onRepresentativesClick();
+                onRepresentativesClickRef.current();
                 closeMobileMenu();
               }}
               className="flex w-full items-center justify-between rounded-lg border border-gray-200 px-4 py-3 text-left text-sm font-semibold text-gray-800 focus:outline-none focus:ring-2 focus:ring-blue-500"

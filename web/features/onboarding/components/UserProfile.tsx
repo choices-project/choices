@@ -7,7 +7,7 @@ import {
   PencilIcon
 } from '@heroicons/react/24/outline';
 import Image from 'next/image';
-import React, { useEffect } from 'react';
+import React, { useEffect, useRef } from 'react';
 
 import {
   useUserCurrentAddress,
@@ -67,14 +67,30 @@ export default function UserProfile({ onRepresentativesUpdate, onClose }: UserPr
   } = useUserActions();
   const profileLocation = useProfileStore(profileSelectors.location);
 
+  // Refs for stable store actions
+  const setCurrentStateRef = useRef(setCurrentState);
+  useEffect(() => { setCurrentStateRef.current = setCurrentState; }, [setCurrentState]);
+  const setCurrentAddressRef = useRef(setCurrentAddress);
+  useEffect(() => { setCurrentAddressRef.current = setCurrentAddress; }, [setCurrentAddress]);
+  const setRepresentativesRef = useRef(setRepresentatives);
+  useEffect(() => { setRepresentativesRef.current = setRepresentatives; }, [setRepresentatives]);
+  const setShowAddressFormRef = useRef(setShowAddressForm);
+  useEffect(() => { setShowAddressFormRef.current = setShowAddressForm; }, [setShowAddressForm]);
+  const setNewAddressRef = useRef(setNewAddress);
+  useEffect(() => { setNewAddressRef.current = setNewAddress; }, [setNewAddress]);
+  const setAddressLoadingRef = useRef(setAddressLoading);
+  useEffect(() => { setAddressLoadingRef.current = setAddressLoading; }, [setAddressLoading]);
+  const setSavedSuccessfullyRef = useRef(setSavedSuccessfully);
+  useEffect(() => { setSavedSuccessfullyRef.current = setSavedSuccessfully; }, [setSavedSuccessfully]);
+
   useEffect(() => {
     if (profileLocation?.state) {
-      setCurrentState(profileLocation.state);
+      setCurrentStateRef.current(profileLocation.state);
     }
-  }, [profileLocation?.state, setCurrentState]);
+  }, [profileLocation?.state]);  
 
   const handleAddressUpdateLocal = async () => {
-    setAddressLoading(true);
+    setAddressLoadingRef.current(true);
     try {
       const lookupResponse = await fetch('/api/v1/civics/address-lookup', {
         method: 'POST',
@@ -99,26 +115,27 @@ export default function UserProfile({ onRepresentativesUpdate, onClose }: UserPr
       const normalizedRepresentatives = extractRepresentatives(repsResult);
       
       // Update state
-      setCurrentAddress(newAddress);
-      setRepresentatives(normalizedRepresentatives);
+      setCurrentAddressRef.current(newAddress);
+      setRepresentativesRef.current(normalizedRepresentatives);
       
       // Notify parent component
       onRepresentativesUpdate(normalizedRepresentatives);
       
-      setShowAddressForm(false);
-      setNewAddress('');
-      setSavedSuccessfully(true);
-      setTimeout(() => setSavedSuccessfully(false), 3000);
+      setShowAddressFormRef.current(false);
+      setNewAddressRef.current('');
+      setSavedSuccessfullyRef.current(true);
+      setTimeout(() => setSavedSuccessfullyRef.current(false), 3000);
     } catch (error) {
       logger.error('Address update failed:', error);
+      setAddressLoadingRef.current(false);
       alert('Failed to update address. Please try again.');
     } finally {
-      setAddressLoading(false);
+      setAddressLoadingRef.current(false);
     }
   };
 
   const handleStateUpdate = async (state: string) => {
-    setAddressLoading(true);
+    setAddressLoadingRef.current(true);
     try {
       const response = await fetch(`/api/v1/civics/by-state?state=${state}&level=federal&limit=20`);
       if (!response.ok) throw new Error('State lookup failed');
@@ -126,19 +143,19 @@ export default function UserProfile({ onRepresentativesUpdate, onClose }: UserPr
       const normalizedRepresentatives = extractRepresentatives(result);
       
       // Update state
-      setCurrentState(state);
-      setRepresentatives(normalizedRepresentatives);
+      setCurrentStateRef.current(state);
+      setRepresentativesRef.current(normalizedRepresentatives);
       
       // Notify parent component
       onRepresentativesUpdate(normalizedRepresentatives);
       
-      setSavedSuccessfully(true);
-      setTimeout(() => setSavedSuccessfully(false), 3000);
+      setSavedSuccessfullyRef.current(true);
+      setTimeout(() => setSavedSuccessfullyRef.current(false), 3000);
     } catch (error) {
       logger.error('State update failed:', error);
       alert('Failed to update state. Please try again.');
     } finally {
-      setAddressLoading(false);
+      setAddressLoadingRef.current(false);
     }
   };
 
@@ -192,7 +209,7 @@ export default function UserProfile({ onRepresentativesUpdate, onClose }: UserPr
                     <p className="font-medium text-gray-900">{currentAddress}</p>
                   </div>
                   <button
-                    onClick={() => setShowAddressForm(true)}
+                    onClick={() => setShowAddressFormRef.current(true)}
                     className="p-2 text-blue-600 hover:text-blue-800 transition-colors"
                   >
                     <PencilIcon className="w-4 h-4" />
@@ -207,7 +224,7 @@ export default function UserProfile({ onRepresentativesUpdate, onClose }: UserPr
                     <p className="font-medium text-gray-900">{currentState}</p>
                   </div>
                   <button
-                    onClick={() => setShowAddressForm(true)}
+                    onClick={() => setShowAddressFormRef.current(true)}
                     className="p-2 text-blue-600 hover:text-blue-800 transition-colors"
                   >
                     <PencilIcon className="w-4 h-4" />
@@ -316,7 +333,7 @@ export default function UserProfile({ onRepresentativesUpdate, onClose }: UserPr
             <div className="flex items-center justify-between mb-6">
               <h3 className="text-lg font-semibold text-gray-900">Update Address</h3>
               <button
-                onClick={() => setShowAddressForm(false)}
+                onClick={() => setShowAddressFormRef.current(false)}
                 className="text-gray-400 hover:text-gray-600"
               >
                 <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -336,7 +353,7 @@ export default function UserProfile({ onRepresentativesUpdate, onClose }: UserPr
                 <input
                   type="text"
                   value={newAddress}
-                  onChange={(e) => setNewAddress(e.target.value)}
+                  onChange={(e) => setNewAddressRef.current(e.target.value)}
                   placeholder="123 Main St, City, State 12345"
                   className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                   required
@@ -354,7 +371,7 @@ export default function UserProfile({ onRepresentativesUpdate, onClose }: UserPr
                 
                 <button
                   type="button"
-                  onClick={() => setShowAddressForm(false)}
+                  onClick={() => setShowAddressFormRef.current(false)}
                   className="px-4 py-3 text-gray-600 hover:text-gray-800 transition-colors"
                 >
                   Cancel

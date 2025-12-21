@@ -1,39 +1,22 @@
 'use client';
 
-import dynamic from 'next/dynamic';
+import { Shield } from 'lucide-react';
 import { useRouter } from 'next/navigation';
-import React, { Suspense, useEffect, useMemo, useRef, useState } from 'react';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
 
+import { PersonalDashboard } from '@/features/dashboard';
 import { useProfile } from '@/features/profile/hooks/use-profile';
 
 import DashboardNavigation, { MobileDashboardNav } from '@/components/shared/DashboardNavigation';
 import { ErrorBoundary } from '@/components/shared/ErrorBoundary';
+import { Button } from '@/components/ui/button';
 
 import { useIsAuthenticated, useUserLoading } from '@/lib/stores';
 import { useAppActions } from '@/lib/stores/appStore';
 import { logger } from '@/lib/utils/logger';
 
-// Use PersonalDashboard as the main dashboard component
-const PersonalDashboard = dynamic(() => import('@/features/dashboard').then(mod => ({ default: mod.PersonalDashboard })), {
-  loading: () => (
-    <div className="space-y-6" aria-label="Loading dashboard content">
-      <div className="animate-pulse">
-        <div className="h-8 bg-gray-200 rounded w-1/3 dark:bg-gray-700 mb-4" />
-        <div className="h-4 bg-gray-200 rounded w-1/2 dark:bg-gray-700" />
-      </div>
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        {[1, 2, 3].map((i) => (
-          <div key={i} className="animate-pulse bg-white dark:bg-gray-800 rounded-lg shadow p-6">
-            <div className="h-6 bg-gray-200 rounded w-3/4 dark:bg-gray-700 mb-4" />
-            <div className="h-4 bg-gray-200 rounded w-full dark:bg-gray-700 mb-2" />
-            <div className="h-4 bg-gray-200 rounded w-5/6 dark:bg-gray-700" />
-          </div>
-        ))}
-      </div>
-    </div>
-  ),
-  ssr: false // Disable SSR due to client-side dependencies (browser APIs, localStorage, etc.)
-});
+// Prevent static generation since this requires client-side state
+export const dynamic = 'force-dynamic';
 
 export default function DashboardPage() {
   const router = useRouter();
@@ -43,6 +26,15 @@ export default function DashboardPage() {
   const isAuthenticated = useIsAuthenticated();
   const isUserLoading = useUserLoading();
   const { setCurrentRoute, setBreadcrumbs, setSidebarActiveSection } = useAppActions();
+  
+  // Refs for stable app store actions
+  const setCurrentRouteRef = useRef(setCurrentRoute);
+  useEffect(() => { setCurrentRouteRef.current = setCurrentRoute; }, [setCurrentRoute]);
+  const setBreadcrumbsRef = useRef(setBreadcrumbs);
+  useEffect(() => { setBreadcrumbsRef.current = setBreadcrumbs; }, [setBreadcrumbs]);
+  const setSidebarActiveSectionRef = useRef(setSidebarActiveSection);
+  useEffect(() => { setSidebarActiveSectionRef.current = setSidebarActiveSection; }, [setSidebarActiveSection]);
+
   const shouldBypassAuth = useMemo(
     () =>
       process.env.NEXT_PUBLIC_ENABLE_E2E_HARNESS === '1' &&
@@ -52,20 +44,21 @@ export default function DashboardPage() {
   );
   const [isCheckingAdmin, setIsCheckingAdmin] = useState(false);
   const adminCheckRef = useRef<boolean>(false);
+  const [isAdmin, setIsAdmin] = useState<boolean | null>(null);
 
   useEffect(() => {
-    setCurrentRoute('/dashboard');
-    setSidebarActiveSection('dashboard');
-    setBreadcrumbs([
+    setCurrentRouteRef.current('/dashboard');
+    setSidebarActiveSectionRef.current('dashboard');
+    setBreadcrumbsRef.current([
       { label: 'Home', href: '/' },
       { label: 'Dashboard', href: '/dashboard' },
     ]);
 
     return () => {
-      setSidebarActiveSection(null);
-      setBreadcrumbs([]);
+      setSidebarActiveSectionRef.current(null);
+      setBreadcrumbsRef.current([]);
     };
-  }, [setBreadcrumbs, setCurrentRoute, setSidebarActiveSection]);
+  }, []);  
 
   useEffect(() => {
     if (shouldBypassAuth) {
@@ -136,6 +129,36 @@ export default function DashboardPage() {
     }
   }, [isLoading, isUserLoading, isAuthenticated, profile, shouldBypassAuth, isCheckingAdmin]); // Added isCheckingAdmin to dependencies
 
+  // Check if user is admin when profile is loaded
+  useEffect(() => {
+    if (shouldBypassAuth || !isAuthenticated || isLoading) {
+      return;
+    }
+    
+    // Check admin status if we have a profile or if we're authenticated
+    const checkAdminStatus = async () => {
+      try {
+        const response = await fetch('/api/admin/health?type=status', {
+          headers: { 'Content-Type': 'application/json' },
+          credentials: 'include',
+          signal: AbortSignal.timeout(5_000), // 5 second timeout
+        });
+        
+        if (response.ok) {
+          setIsAdmin(true);
+          logger.debug('🚨 Dashboard: User is admin - showing admin dashboard link');
+        } else {
+          setIsAdmin(false);
+        }
+      } catch (error) {
+        // If check fails, assume not admin (don't show admin link)
+        setIsAdmin(false);
+      }
+    };
+    
+    void checkAdminStatus();
+  }, [isAuthenticated, isLoading, shouldBypassAuth]);
+
   if (isLoading) {
     return (
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8" aria-label="Loading dashboard">
@@ -182,27 +205,33 @@ export default function DashboardPage() {
       {/* 🔒 Cohesive Dashboard Navigation */}
       <DashboardNavigation />
 
-      <Suspense fallback={
-        <div className="space-y-6" aria-label="Loading dashboard content">
-          <div className="animate-pulse">
-            <div className="h-8 bg-gray-200 rounded w-1/3 dark:bg-gray-700 mb-4" />
-            <div className="h-4 bg-gray-200 rounded w-1/2 dark:bg-gray-700" />
-          </div>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {[1, 2, 3].map((i) => (
-              <div key={i} className="animate-pulse bg-white dark:bg-gray-800 rounded-lg shadow p-6">
-                <div className="h-6 bg-gray-200 rounded w-3/4 dark:bg-gray-700 mb-4" />
-                <div className="h-4 bg-gray-200 rounded w-full dark:bg-gray-700 mb-2" />
-                <div className="h-4 bg-gray-200 rounded w-5/6 dark:bg-gray-700" />
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        {/* Show admin dashboard link for admin users */}
+        {isAdmin === true && (
+          <div className="mb-6 p-4 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-3">
+                <Shield className="h-5 w-5 text-blue-600 dark:text-blue-400" />
+                <div>
+                  <h3 className="font-semibold text-blue-900 dark:text-blue-100">Admin Access Available</h3>
+                  <p className="text-sm text-blue-700 dark:text-blue-300">
+                    You have admin privileges. Access the admin dashboard for system management.
+                  </p>
+                </div>
               </div>
-            ))}
+              <Button
+                onClick={() => routerRef.current.push('/admin/dashboard')}
+                className="bg-blue-600 hover:bg-blue-700 text-white"
+              >
+                <Shield className="h-4 w-4 mr-2" />
+                Go to Admin Dashboard
+              </Button>
+            </div>
           </div>
-        </div>
-      }>
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-          <PersonalDashboard />
-        </div>
-      </Suspense>
+        )}
+        
+        <PersonalDashboard />
+      </div>
 
       {/* 🔒 Mobile Navigation */}
       <MobileDashboardNav />

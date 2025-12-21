@@ -1,5 +1,5 @@
 import { useRouter } from 'next/navigation';
-import React, { useEffect } from 'react';
+import React, { useEffect, useRef } from 'react';
 
 import { useIsAuthenticated, useUserLoading } from '@/lib/stores';
 import { logger } from '@/lib/utils/logger';
@@ -14,17 +14,17 @@ type AuthGuardProps = {
 
 /**
  * Authentication Guard Component
- * 
+ *
  * Protects routes and components that require authentication.
  * Redirects unauthenticated users to login page.
- * 
+ *
  * SECURITY: Critical component for preventing unauthorized access
- * 
+ *
  * Created: January 27, 2025
  * Status: ✅ ACTIVE - SECURITY CRITICAL
  */
-export function AuthGuard({ 
-  children, 
+export function AuthGuard({
+  children,
   redirectTo = '/auth',
   fallback = (
     <div className="flex items-center justify-center min-h-screen">
@@ -38,13 +38,15 @@ export function AuthGuard({
   const isAuthenticated = useIsAuthenticated();
   const isLoading = useUserLoading();
   const router = useRouter();
+  const routerRef = useRef(router);
+  useEffect(() => { routerRef.current = router; }, [router]);
 
   useEffect(() => {
     if (!isLoading && !isAuthenticated) {
       logger.warn('AuthGuard - Unauthenticated user blocked, redirecting to login');
-      router.push(redirectTo);
+      routerRef.current.push(redirectTo);
     }
-  }, [isAuthenticated, isLoading, router, redirectTo]);
+  }, [isAuthenticated, isLoading, redirectTo]);  
 
   // Show loading while checking authentication
   if (isLoading) {

@@ -679,6 +679,7 @@ export const createPollsActions = (
     });
 
   const loadPolls = async (options?: LoadPollsOptions) => {
+    // eslint-disable-next-line no-console
     console.log('[POLLS STORE] loadPolls called', { options });
     setLoading(true);
     clearError();
@@ -736,6 +737,8 @@ export const createPollsActions = (
       }
 
       const apiUrl = `/api/polls?${params.toString()}`;
+      // Diagnostic logging for production debugging
+      // eslint-disable-next-line no-console
       console.log('[POLLS STORE] Fetching polls from API', { url: apiUrl });
       const response = await fetch(apiUrl);
 
@@ -804,6 +807,8 @@ export const createPollsActions = (
       setError(message);
       logger.error('Failed to load polls', { error, options, message });
     } finally {
+      // Diagnostic logging for production debugging
+      // eslint-disable-next-line no-console
       console.log('[POLLS STORE] loadPolls finally block - setting isLoading to false');
       setLoading(false);
     }
@@ -1126,71 +1131,75 @@ const selectPollsActions = (state: PollsStore) => ({
 export const usePollsActions = () => usePollsStore(useShallow(selectPollsActions));
 
 export const usePollsStats = () =>
-  usePollsStore((state) => {
-    const analytics = derivePollAnalytics(
-      state.polls.map((poll) => {
-        const meta = poll as Record<string, unknown>;
-        const totalVotes =
-          typeof poll.total_votes === 'number'
-            ? poll.total_votes
-            : (typeof meta.totalVotes === 'number' ? (meta.totalVotes as number) : null);
-        const trendingPosition =
-          typeof meta.trending_position === 'number'
-            ? (meta.trending_position as number)
-            : (typeof meta.trendingPosition === 'number' ? (meta.trendingPosition as number) : null);
+  usePollsStore(
+    useShallow((state) => {
+      const analytics = derivePollAnalytics(
+        state.polls.map((poll) => {
+          const meta = poll as Record<string, unknown>;
+          const totalVotes =
+            typeof poll.total_votes === 'number'
+              ? poll.total_votes
+              : (typeof meta.totalVotes === 'number' ? (meta.totalVotes as number) : null);
+          const trendingPosition =
+            typeof meta.trending_position === 'number'
+              ? (meta.trending_position as number)
+              : (typeof meta.trendingPosition === 'number' ? (meta.trendingPosition as number) : null);
 
-        return {
-          status: poll.status,
-          total_votes: totalVotes,
-          trending_position: trendingPosition,
-        };
-      }),
-    );
+          return {
+            status: poll.status,
+            total_votes: totalVotes,
+            trending_position: trendingPosition,
+          };
+        }),
+      );
 
-    return {
-      total: analytics.total,
-      active: analytics.active,
-      closed: analytics.closed,
-      draft: analytics.draft,
-      archived: analytics.archived,
-      trending: analytics.trending,
-      totalVotes: analytics.totalVotes,
-      isLoading: state.isLoading,
-      error: state.error,
-    };
-  });
+      return {
+        total: analytics.total,
+        active: analytics.active,
+        closed: analytics.closed,
+        draft: analytics.draft,
+        archived: analytics.archived,
+        trending: analytics.trending,
+        totalVotes: analytics.totalVotes,
+        isLoading: state.isLoading,
+        error: state.error,
+      };
+    }),
+  );
 
 export const usePollsAnalytics = () =>
-  usePollsStore((state) => {
-    const analytics = derivePollAnalytics(
-      state.polls.map((poll) => {
-        const meta = poll as Record<string, unknown>;
-        const totalVotes =
-          typeof poll.total_votes === 'number'
-            ? poll.total_votes
-            : (typeof meta.totalVotes === 'number' ? (meta.totalVotes as number) : null);
-        const trendingPosition =
-          typeof meta.trending_position === 'number'
-            ? (meta.trending_position as number)
-            : (typeof meta.trendingPosition === 'number' ? (meta.trendingPosition as number) : null);
+  usePollsStore(
+    useShallow((state) => {
+      const analytics = derivePollAnalytics(
+        state.polls.map((poll) => {
+          const meta = poll as Record<string, unknown>;
+          const totalVotes =
+            typeof poll.total_votes === 'number'
+              ? poll.total_votes
+              : (typeof meta.totalVotes === 'number' ? (meta.totalVotes as number) : null);
+          const trendingPosition =
+            typeof meta.trending_position === 'number'
+              ? (meta.trending_position as number)
+              : (typeof meta.trendingPosition === 'number' ? (meta.trendingPosition as number) : null);
 
-        return {
-          status: poll.status,
-          total_votes: totalVotes,
-          trending_position: trendingPosition,
-        };
-      }),
-    );
+          return {
+            status: poll.status,
+            total_votes: totalVotes,
+            trending_position: trendingPosition,
+          };
+        }),
+      );
 
-    const averageVotes = analytics.total > 0 ? analytics.totalVotes / analytics.total : 0;
+      const averageVotes = analytics.total > 0 ? analytics.totalVotes / analytics.total : 0;
 
-    return {
-      ...analytics,
-      averageVotes,
-      lastFetchedAt: state.lastFetchedAt,
-      isLoading: state.isLoading,
-    };
-  });
+      return {
+        ...analytics,
+        averageVotes,
+        lastFetchedAt: state.lastFetchedAt,
+        isLoading: state.isLoading,
+      };
+    }),
+  );
 
 export const pollsStoreUtils = {
   getTrendingPolls: (limit = 10) => {

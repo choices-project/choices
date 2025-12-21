@@ -2,7 +2,7 @@
 
 import { Loader2 } from 'lucide-react';
 import { useRouter } from 'next/navigation';
-import { useEffect, useRef } from 'react';
+import { useCallback, useEffect, useRef } from 'react';
 
 import { ProfileEdit, useProfileLoadingStates } from '@/features/profile';
 import { useProfile } from '@/features/profile/hooks/use-profile';
@@ -22,10 +22,18 @@ export default function EditProfilePage() {
   const { isUpdating } = useProfileLoadingStates();
   const { setCurrentRoute, setBreadcrumbs, setSidebarActiveSection } = useAppActions();
 
+  // Refs for stable app store actions
+  const setCurrentRouteRef = useRef(setCurrentRoute);
+  useEffect(() => { setCurrentRouteRef.current = setCurrentRoute; }, [setCurrentRoute]);
+  const setBreadcrumbsRef = useRef(setBreadcrumbs);
+  useEffect(() => { setBreadcrumbsRef.current = setBreadcrumbs; }, [setBreadcrumbs]);
+  const setSidebarActiveSectionRef = useRef(setSidebarActiveSection);
+  useEffect(() => { setSidebarActiveSectionRef.current = setSidebarActiveSection; }, [setSidebarActiveSection]);
+
   useEffect(() => {
-    setCurrentRoute('/profile/edit');
-    setSidebarActiveSection('profile');
-    setBreadcrumbs([
+    setCurrentRouteRef.current('/profile/edit');
+    setSidebarActiveSectionRef.current('profile');
+    setBreadcrumbsRef.current([
       { label: 'Home', href: '/' },
       { label: 'Dashboard', href: '/dashboard' },
       { label: 'Profile', href: '/profile' },
@@ -33,10 +41,10 @@ export default function EditProfilePage() {
     ]);
 
     return () => {
-      setSidebarActiveSection(null);
-      setBreadcrumbs([]);
+      setSidebarActiveSectionRef.current(null);
+      setBreadcrumbsRef.current([]);
     };
-  }, [setBreadcrumbs, setCurrentRoute, setSidebarActiveSection]);
+  }, []);  
 
   useEffect(() => {
     // Only redirect if we're certain user is not authenticated
@@ -69,7 +77,7 @@ export default function EditProfilePage() {
               {error ?? 'We couldn’t load your profile. Please try again later.'}
             </AlertDescription>
           </Alert>
-          <Button onClick={() => router.push('/profile')} className="w-full">
+          <Button onClick={() => routerRef.current.push('/profile')} className="w-full">
             Return to profile
           </Button>
         </div>
@@ -77,13 +85,17 @@ export default function EditProfilePage() {
     );
   }
 
-  const handleSave = async () => {
-    await refetch();
-  };
+  // Use ref for refetch callback
+  const refetchRef = useRef(refetch);
+  useEffect(() => { refetchRef.current = refetch; }, [refetch]);
 
-  const handleCancel = () => {
-    router.push('/profile');
-  };
+  const handleSave = useCallback(async () => {
+    await refetchRef.current();
+  }, []);  
+
+  const handleCancel = useCallback(() => {
+    routerRef.current.push('/profile');
+  }, []);  
 
   return (
     <div className="min-h-screen bg-gray-50 py-8" data-testid="profile-edit-page">

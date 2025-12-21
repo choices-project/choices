@@ -9,7 +9,7 @@ import {
   LogOut,
 } from 'lucide-react';
 import { useRouter } from 'next/navigation';
-import React, { useState } from 'react';
+import React, { useState, useRef, useEffect, useCallback } from 'react';
 
 import { getSupabaseBrowserClient } from '@/utils/supabase/client';
 
@@ -26,26 +26,32 @@ import { logger } from '@/lib/utils/logger';
 
 export const Header: React.FC = () => {
   const router = useRouter();
+  const routerRef = useRef(router);
+  useEffect(() => { routerRef.current = router; }, [router]);
   const user = useUser();
   const { signOut: resetUserState } = useUserActions();
+  const resetUserStateRef = useRef(resetUserState);
+  useEffect(() => { resetUserStateRef.current = resetUserState; }, [resetUserState]);
   const notifications = useNotificationAdminNotifications();
   const unreadCount = useNotificationAdminUnreadCount();
   const { toggleSidebar } = useAdminActions();
   const { markAdminNotificationAsRead } = useNotificationActions();
+  const markAdminNotificationAsReadRef = useRef(markAdminNotificationAsRead);
+  useEffect(() => { markAdminNotificationAsReadRef.current = markAdminNotificationAsRead; }, [markAdminNotificationAsRead]);
   const [isUserMenuOpen, setIsUserMenuOpen] = useState(false);
   const sidebarCollapsed = useAdminSidebarCollapsed();
 
-  const handleLogout = async () => {
+  const handleLogout = useCallback(async () => {
     try {
       const supabase = await getSupabaseBrowserClient();
       await supabase.auth.signOut();
     } catch (error) {
       logger.error('Failed to sign out:', error instanceof Error ? error : new Error(String(error)));
     } finally {
-      resetUserState();
-      router.push('/login');
+      resetUserStateRef.current();
+      routerRef.current.push('/login');
     }
-  };
+  }, []);  
 
   const toggleUserMenu = () => {
     setIsUserMenuOpen((prev) => !prev);
@@ -118,7 +124,7 @@ export const Header: React.FC = () => {
                           ? 'bg-gray-50 hover:bg-gray-100'
                           : 'bg-blue-50 hover:bg-blue-100'
                       }`}
-                      onClick={() => markAdminNotificationAsRead(notification.id)}
+                      onClick={() => markAdminNotificationAsReadRef.current(notification.id)}
                       aria-label={`Mark notification "${notification.title}" as read`}
                     >
                       <div className="flex items-start justify-between">

@@ -1,7 +1,7 @@
 'use client';
 
 import { Settings, Heart, Shield, Save, Loader2, Sparkles, Target } from 'lucide-react';
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
 import InterestSelection from '@/features/onboarding/components/InterestSelection';
 import { useProfile, useProfileUpdate } from '@/features/profile/hooks/use-profile';
@@ -37,6 +37,18 @@ export default function ProfilePreferencesPage() {
   const { setCurrentRoute, setBreadcrumbs, setSidebarActiveSection } = useAppActions();
   const { userType, recommendations, nextMilestone, isLoading: userTypeLoading } = useUserType(user?.id);
 
+  // Refs for stable app store actions
+  const setCurrentRouteRef = useRef(setCurrentRoute);
+  useEffect(() => { setCurrentRouteRef.current = setCurrentRoute; }, [setCurrentRoute]);
+  const setBreadcrumbsRef = useRef(setBreadcrumbs);
+  useEffect(() => { setBreadcrumbsRef.current = setBreadcrumbs; }, [setBreadcrumbs]);
+  const setSidebarActiveSectionRef = useRef(setSidebarActiveSection);
+  useEffect(() => { setSidebarActiveSectionRef.current = setSidebarActiveSection; }, [setSidebarActiveSection]);
+
+  // Ref for updateProfile callback to prevent infinite re-renders
+  const updateProfileRef = useRef(updateProfile);
+  useEffect(() => { updateProfileRef.current = updateProfile; }, [updateProfile]);
+
   const initialInterests = useMemo<string[]>(() => {
     return profile?.primary_concerns ?? [];
   }, [profile?.primary_concerns]);
@@ -45,9 +57,9 @@ export default function ProfilePreferencesPage() {
   const [statusMessage, setStatusMessage] = useState<StatusMessage | null>(null);
 
   useEffect(() => {
-    setCurrentRoute('/profile/preferences');
-    setSidebarActiveSection('preferences');
-    setBreadcrumbs([
+    setCurrentRouteRef.current('/profile/preferences');
+    setSidebarActiveSectionRef.current('preferences');
+    setBreadcrumbsRef.current([
       { label: 'Home', href: '/' },
       { label: 'Dashboard', href: '/dashboard' },
       { label: 'Profile', href: '/profile' },
@@ -55,10 +67,10 @@ export default function ProfilePreferencesPage() {
     ]);
 
     return () => {
-      setSidebarActiveSection(null);
-      setBreadcrumbs([]);
+      setSidebarActiveSectionRef.current(null);
+      setBreadcrumbsRef.current([]);
     };
-  }, [setBreadcrumbs, setCurrentRoute, setSidebarActiveSection]);
+  }, []);  
 
   useEffect(() => {
     if (!arraysAreEqual(userInterests, initialInterests)) {
@@ -89,7 +101,7 @@ export default function ProfilePreferencesPage() {
     };
   }, [profileLoading]);
 
-  const handleSaveInterests = async (interests: string[]) => {
+  const handleSaveInterests = useCallback(async (interests: string[]) => {
     if (arraysAreEqual(interests, initialInterests)) {
       return;
     }
@@ -101,7 +113,7 @@ export default function ProfilePreferencesPage() {
     setStatusMessage(null);
 
     try {
-      const result = await updateProfile({ primary_concerns: interests });
+      const result = await updateProfileRef.current({ primary_concerns: interests });
 
       if (result.success) {
         setUserInterests(interests);
@@ -121,7 +133,7 @@ export default function ProfilePreferencesPage() {
         text: message,
       });
     }
-  };
+  }, [initialInterests, isUpdating]);  
 
   if (profileLoading || loadingTimeout) {
     return (

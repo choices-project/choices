@@ -47,7 +47,7 @@ jest.mock('@supabase/supabase-js', () => ({
   }))
 }));
 
-// Mock Next.js router
+// Mock Next.js router (Pages Router)
 jest.mock('next/router', () => ({
   useRouter() {
     return {
@@ -70,6 +70,32 @@ jest.mock('next/router', () => ({
     };
   },
 }));
+
+// Mock Next.js navigation (App Router) - used by most components
+// Note: Components use refs pattern for router stability (see REACT_STABILITY_PATTERNS.md)
+// Individual tests can override these mocks as needed
+jest.mock('next/navigation', () => {
+  const mockPush = jest.fn();
+  const mockReplace = jest.fn();
+  const mockPrefetch = jest.fn().mockResolvedValue(undefined);
+  const mockBack = jest.fn();
+  const mockRefresh = jest.fn().mockResolvedValue(undefined);
+  const mockForward = jest.fn();
+  
+  return {
+    useRouter: jest.fn(() => ({
+      push: mockPush,
+      replace: mockReplace,
+      prefetch: mockPrefetch,
+      back: mockBack,
+      refresh: mockRefresh,
+      forward: mockForward,
+    })),
+    usePathname: jest.fn(() => '/'),
+    useSearchParams: jest.fn(() => new URLSearchParams()),
+    useParams: jest.fn(() => ({})),
+  };
+});
 
 // Mock Next.js image component
 jest.mock('next/image', () => ({

@@ -11,6 +11,7 @@
 import { create } from 'zustand';
 import { devtools, persist } from 'zustand/middleware';
 import { immer } from 'zustand/middleware/immer';
+import { useShallow } from 'zustand/react/shallow';
 
 import { logger } from '@/lib/utils/logger';
 
@@ -719,64 +720,79 @@ export const profileSelectors = {
 };
 
 // Profile store hooks for common patterns
-export const useProfile = () => useProfileStore((state) => ({
-  profile: state.profile,
-  userProfile: state.userProfile,
-  isProfileLoaded: state.isProfileLoaded,
-  isProfileComplete: state.isProfileComplete,
-  profileCompleteness: state.profileCompleteness,
-  missingFields: state.missingFields
-}));
+// Using useShallow to ensure stable object references
+export const useProfile = () => useProfileStore(
+  useShallow((state) => ({
+    profile: state.profile,
+    userProfile: state.userProfile,
+    isProfileLoaded: state.isProfileLoaded,
+    isProfileComplete: state.isProfileComplete,
+    profileCompleteness: state.profileCompleteness,
+    missingFields: state.missingFields
+  }))
+);
 
-export const useProfileLoading = () => useProfileStore((state) => ({
-  isLoading: state.isProfileLoading,
-  isUpdating: state.isUpdating,
-  isUploadingAvatar: state.isUploadingAvatar,
-  isExporting: state.isExporting
-}));
+export const useProfileLoading = () => useProfileStore(
+  useShallow((state) => ({
+    isLoading: state.isProfileLoading,
+    isUpdating: state.isUpdating,
+    isUploadingAvatar: state.isUploadingAvatar,
+    isExporting: state.isExporting
+  }))
+);
 
-export const useProfileError = () => useProfileStore((state) => ({
-  error: state.error,
-  hasError: !!state.error
-}));
+export const useProfileError = () => useProfileStore(
+  useShallow((state) => ({
+    error: state.error,
+    hasError: !!state.error
+  }))
+);
 
-export const useProfileDisplay = () => useProfileStore((state) => ({
-  displayName: state.getDisplayName(),
-  initials: state.getInitials(),
-  trustTierDisplay: state.getTrustTierDisplay(),
-  isAdmin: state.isAdmin()
-}));
+export const useProfileDisplay = () => useProfileStore(
+  useShallow((state) => ({
+    displayName: state.getDisplayName(),
+    initials: state.getInitials(),
+    trustTierDisplay: state.getTrustTierDisplay(),
+    isAdmin: state.isAdmin()
+  }))
+);
 
-export const useProfileValidation = () => useProfileStore((state) => ({
-  validationErrors: state.validationErrors,
-  validationWarnings: state.validationWarnings,
-  hasValidationErrors: Object.keys(state.validationErrors).length > 0,
-  hasValidationWarnings: Object.keys(state.validationWarnings).length > 0
-}));
+export const useProfileValidation = () => useProfileStore(
+  useShallow((state) => ({
+    validationErrors: state.validationErrors,
+    validationWarnings: state.validationWarnings,
+    hasValidationErrors: Object.keys(state.validationErrors).length > 0,
+    hasValidationWarnings: Object.keys(state.validationWarnings).length > 0
+  }))
+);
 
-export const useProfileActions = () => useProfileStore((state) => ({
-  updateProfile: state.updateProfile,
-  updatePreferences: state.updatePreferences,
-  updatePrivacySettings: state.updatePrivacySettings,
-  updateAvatar: state.updateAvatar,
-  removeAvatar: state.removeAvatar,
-  loadProfile: state.loadProfile,
-  refreshProfile: state.refreshProfile,
-  exportProfile: state.exportProfile,
-  deleteProfile: state.deleteProfile,
-  validateProfile: state.validateProfile,
-  setValidationErrors: state.setValidationErrors,
-  clearValidation: state.clearValidation
-}));
+export const useProfileActions = () => useProfileStore(
+  useShallow((state) => ({
+    updateProfile: state.updateProfile,
+    updatePreferences: state.updatePreferences,
+    updatePrivacySettings: state.updatePrivacySettings,
+    updateAvatar: state.updateAvatar,
+    removeAvatar: state.removeAvatar,
+    loadProfile: state.loadProfile,
+    refreshProfile: state.refreshProfile,
+    exportProfile: state.exportProfile,
+    deleteProfile: state.deleteProfile,
+    validateProfile: state.validateProfile,
+    setValidationErrors: state.setValidationErrors,
+    clearValidation: state.clearValidation
+  }))
+);
 
-export const useProfileStats = () => useProfileStore((state) => ({
-  isProfileLoaded: state.isProfileLoaded,
-  isProfileComplete: state.isProfileComplete,
-  profileCompleteness: state.profileCompleteness,
-  missingFields: state.missingFields,
-  hasPreferences: !!state.preferences,
-  hasPrivacySettings: !!state.privacySettings
-}));
+export const useProfileStats = () => useProfileStore(
+  useShallow((state) => ({
+    isProfileLoaded: state.isProfileLoaded,
+    isProfileComplete: state.isProfileComplete,
+    profileCompleteness: state.profileCompleteness,
+    missingFields: state.missingFields,
+    hasPreferences: !!state.preferences,
+    hasPrivacySettings: !!state.privacySettings
+  }))
+);
 
 // Profile store utilities
 export const profileStoreUtils = {

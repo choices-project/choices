@@ -1,6 +1,6 @@
 'use client'
 
-import React, { useEffect, useCallback, useMemo } from 'react';
+import React, { useEffect, useCallback, useMemo, useRef } from 'react';
 
 
 import { 
@@ -39,24 +39,32 @@ export default function PWAFeatures({ className = '', showDetails = false }: PWA
     clearCache: () => Promise<void>;
   }, [pwaActions]);
 
-  // Use useCallback to prevent infinite loops
-  const handleOnline = useCallback(() => {
-    if (typeof window !== 'undefined' && pwa.setOnlineStatus) {
-      pwa.setOnlineStatus(true);
+  // Ref for stable setOnlineStatus callback
+  const setOnlineStatusRef = useRef(pwa.setOnlineStatus);
+  useEffect(() => { 
+    if (pwa.setOnlineStatus) {
+      setOnlineStatusRef.current = pwa.setOnlineStatus;
     }
-  }, [pwa]);
+  }, [pwa.setOnlineStatus]);
+
+  // Use useCallback to prevent infinite loops - use ref for stable identity
+  const handleOnline = useCallback(() => {
+    if (typeof window !== 'undefined' && setOnlineStatusRef.current) {
+      setOnlineStatusRef.current(true);
+    }
+  }, []);  
 
   const handleOffline = useCallback(() => {
-    if (typeof window !== 'undefined' && pwa.setOnlineStatus) {
-      pwa.setOnlineStatus(false);
+    if (typeof window !== 'undefined' && setOnlineStatusRef.current) {
+      setOnlineStatusRef.current(false);
     }
-  }, [pwa]);
+  }, []);  
 
   useEffect(() => {
     // Only run on client side and sync with Zustand store
-    if (typeof window !== 'undefined' && pwa.setOnlineStatus) {
+    if (typeof window !== 'undefined' && setOnlineStatusRef.current) {
       // Update Zustand store with current online status
-      pwa.setOnlineStatus(navigator.onLine);
+      setOnlineStatusRef.current(navigator.onLine);
       
       window.addEventListener('online', handleOnline);
       window.addEventListener('offline', handleOffline);
@@ -68,7 +76,7 @@ export default function PWAFeatures({ className = '', showDetails = false }: PWA
     }
     
     return undefined;
-  }, [handleOnline, handleOffline, pwa]) // Stable dependencies
+  }, [handleOnline, handleOffline]);  
 
   // Handle undefined store hooks gracefully - provide defaults for testing
   const safeInstallation = installation || { canInstall: true, isInstalled: false }

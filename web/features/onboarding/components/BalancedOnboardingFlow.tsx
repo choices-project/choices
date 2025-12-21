@@ -935,19 +935,23 @@ const CompleteStep: React.FC<{
  */
 const BalancedOnboardingFlow: React.FC = () => {
   const { t } = useI18n();
+  // Ref for stable translation function (even though useI18n stabilizes it, using ref for consistency)
+  const tRef = useRef(t);
+  useEffect(() => { tRef.current = t; }, [t]);
+  
   const currentStep = useOnboardingStep();
   const onboardingData = useOnboardingData();
   const isFlowCompleted = onboardingData?.isCompleted ?? false;
   const stepLabels = useMemo(
     () => [
-      t('onboarding.labels.welcome'),
-      t('onboarding.labels.privacy'),
-      t('onboarding.labels.demographics'),
-      t('onboarding.labels.authentication'),
-      t('onboarding.labels.profile'),
-      t('onboarding.labels.complete'),
+      tRef.current('onboarding.labels.welcome'),
+      tRef.current('onboarding.labels.privacy'),
+      tRef.current('onboarding.labels.demographics'),
+      tRef.current('onboarding.labels.authentication'),
+      tRef.current('onboarding.labels.profile'),
+      tRef.current('onboarding.labels.complete'),
     ],
-    [t],
+    [],  
   );
   const totalSteps = stepLabels.length || 6;
   const profileStepData = useMemo<ProfileData>(() => {
@@ -985,6 +989,15 @@ const BalancedOnboardingFlow: React.FC = () => {
     clearAllData,
   } = useOnboardingActions();
   const { signOut: resetUserState } = useUserActions();
+  
+  // Refs for store actions used in useEffect/callbacks
+  const restartOnboardingRef = useRef(restartOnboarding);
+  const clearAllDataRef = useRef(clearAllData);
+  const resetUserStateRef = useRef(resetUserState);
+  useEffect(() => { restartOnboardingRef.current = restartOnboarding; }, [restartOnboarding]);
+  useEffect(() => { clearAllDataRef.current = clearAllData; }, [clearAllData]);
+  useEffect(() => { resetUserStateRef.current = resetUserState; }, [resetUserState]);
+  
   const loading = useOnboardingLoading();
   const error = useOnboardingError();
 
@@ -998,11 +1011,11 @@ const BalancedOnboardingFlow: React.FC = () => {
   const [liveAnnouncement, setLiveAnnouncement] = useState('');
 
   useEffect(() => {
-    restartOnboarding();
+    restartOnboardingRef.current();
     return () => {
-      clearAllData();
+      clearAllDataRef.current();
     };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+     
   }, []);
 
   useEffect(() => {
@@ -1026,7 +1039,7 @@ const BalancedOnboardingFlow: React.FC = () => {
       return;
     }
     previousStepRef.current = currentStep;
-    const announcement = t('onboarding.progress.live.step', {
+    const announcement = tRef.current('onboarding.progress.live.step', {
       current: currentStep + 1,
       total: totalSteps,
       label: stepLabels[currentStep] ?? stepLabels[0],
@@ -1036,26 +1049,26 @@ const BalancedOnboardingFlow: React.FC = () => {
     if (mainRegionRef.current) {
       mainRegionRef.current.focus();
     }
-  }, [currentStep, stepLabels, totalSteps, t]);
+  }, [currentStep, stepLabels, totalSteps]);  
 
   useEffect(() => {
     if (!error || previousErrorRef.current === error) {
       return;
     }
     previousErrorRef.current = error;
-    const message = t('onboarding.progress.live.error', { message: error });
+    const message = tRef.current('onboarding.progress.live.error', { message: error });
     setLiveAnnouncement(message);
     ScreenReaderSupport.announce(message, 'assertive');
-  }, [error, t]);
+  }, [error]);  
 
   useEffect(() => {
     if (!isFlowCompleted) {
       return;
     }
-    const completionMessage = t('onboarding.progress.live.completed');
+    const completionMessage = tRef.current('onboarding.progress.live.completed');
     setLiveAnnouncement(completionMessage);
     ScreenReaderSupport.announce(completionMessage, 'polite');
-  }, [isFlowCompleted, t]);
+  }, [isFlowCompleted]);  
 
   // Check if user has already completed onboarding
   useEffect(() => {
@@ -1091,7 +1104,7 @@ const BalancedOnboardingFlow: React.FC = () => {
   };
 
   const handleSkip = () => {
-    resetUserState();
+    resetUserStateRef.current();
     skipOnboarding();
     goToStep(5);
   };

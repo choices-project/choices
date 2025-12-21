@@ -43,19 +43,8 @@ export function PollFiltersPanel({ actions }: PollFiltersPanelProps) {
   const filters = usePollFilters();
   const search = usePollSearch();
   const defaultActions = usePollsActions();
-  const computedActions = useMemo(
-    () =>
-      actions ?? {
-        loadPolls: defaultActions.loadPolls,
-        setFilters: defaultActions.setFilters,
-        setTrendingOnly: defaultActions.setTrendingOnly,
-        setCurrentPage: defaultActions.setCurrentPage,
-        setSearchQuery: defaultActions.setSearchQuery,
-        searchPolls: defaultActions.searchPolls,
-        clearSearch: defaultActions.clearSearch,
-      },
-    [actions, defaultActions],
-  );
+  // Use actions prop if provided, otherwise use defaultActions directly
+  // Don't wrap in useMemo as it can cause instability with defaultActions
   const {
     loadPolls,
     setFilters,
@@ -64,7 +53,7 @@ export function PollFiltersPanel({ actions }: PollFiltersPanelProps) {
     setSearchQuery,
     searchPolls,
     clearSearch,
-  } = computedActions;
+  } = actions ?? defaultActions;
 
   const trendingHashtags = useTrendingHashtags();
   const hashtagStats = useHashtagStats();

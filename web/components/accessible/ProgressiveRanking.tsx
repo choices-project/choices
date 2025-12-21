@@ -17,7 +17,7 @@
 // Status: Phase 3 Implementation
 // ============================================================================
 
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 
 import { ScreenReaderSupport } from '../../lib/accessibility/screen-reader';
 
@@ -80,6 +80,15 @@ export function ProgressiveRanking({
   showSocialInsights = true,
   className = ''
 }: ProgressiveRankingProps) {
+  // ============================================================================
+  // REFS FOR STABLE CALLBACK PROPS
+  // ============================================================================
+  
+  const onRankingChangeRef = useRef(onRankingChange);
+  useEffect(() => { onRankingChangeRef.current = onRankingChange; }, [onRankingChange]);
+  const onValidationChangeRef = useRef(onValidationChange);
+  useEffect(() => { onValidationChangeRef.current = onValidationChange; }, [onValidationChange]);
+  
   // ============================================================================
   // STATE MANAGEMENT
   // ============================================================================
@@ -242,13 +251,13 @@ export function ProgressiveRanking({
       validationWarnings: validation.warnings
     }));
     
-    onValidationChange(validation.errors.length === 0, validation.errors, validation.warnings);
-  }, [state.rankings, validateRankings, onValidationChange]);
+    onValidationChangeRef.current(validation.errors.length === 0, validation.errors, validation.warnings);
+  }, [state.rankings, validateRankings]);  
 
   // Notify parent of ranking changes
   useEffect(() => {
-    onRankingChange(state.rankings);
-  }, [state.rankings, onRankingChange]);
+    onRankingChangeRef.current(state.rankings);
+  }, [state.rankings]);  
 
   // ============================================================================
   // RENDER HELPERS

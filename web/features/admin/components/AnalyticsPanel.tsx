@@ -5,7 +5,7 @@
  * and integration with the enhanced analytics system.
  */
 
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -44,10 +44,24 @@ export default function AnalyticsPanel({
     clearError,
   } = useAnalyticsActions();
 
-  // Fetch data when component mounts or metric changes (include referenced store actions in deps)
+  // Refs for stable store actions
+  const setDashboardRef = useRef(setDashboard);
+  useEffect(() => { setDashboardRef.current = setDashboard; }, [setDashboard]);
+  const setPerformanceMetricsRef = useRef(setPerformanceMetrics);
+  useEffect(() => { setPerformanceMetricsRef.current = setPerformanceMetrics; }, [setPerformanceMetrics]);
+  const updateUserBehaviorRef = useRef(updateUserBehavior);
+  useEffect(() => { updateUserBehaviorRef.current = updateUserBehavior; }, [updateUserBehavior]);
+  const setLoadingRef = useRef(setLoading);
+  useEffect(() => { setLoadingRef.current = setLoading; }, [setLoading]);
+  const setErrorRef = useRef(setError);
+  useEffect(() => { setErrorRef.current = setError; }, [setError]);
+  const clearErrorRef = useRef(clearError);
+  useEffect(() => { clearErrorRef.current = clearError; }, [clearError]);
+
+  // Fetch data when component mounts or metric changes
   const fetchData = useCallback(async () => {
-    setLoading(true);
-    clearError();
+    setLoadingRef.current(true);
+    clearErrorRef.current();
 
     try {
       const response = await fetch('/api/analytics?type=general');
@@ -58,25 +72,25 @@ export default function AnalyticsPanel({
       const data = await response.json();
 
       if (data.dashboard) {
-        setDashboard(data.dashboard);
+        setDashboardRef.current(data.dashboard);
       }
       if (data.performanceMetrics) {
-        setPerformanceMetrics(data.performanceMetrics);
+        setPerformanceMetricsRef.current(data.performanceMetrics);
       }
       if (data.userBehavior) {
-        updateUserBehavior(data.userBehavior);
+        updateUserBehaviorRef.current(data.userBehavior);
       }
 
       logger.info('Analytics data loaded and stored successfully');
     } catch (err) {
       const errorMessage =
         err instanceof Error ? err.message : 'Failed to load analytics data';
-      setError(errorMessage);
+      setErrorRef.current(errorMessage);
       logger.error('Analytics fetch error:', err);
     } finally {
-      setLoading(false);
+      setLoadingRef.current(false);
     }
-  }, [clearError, setDashboard, setError, setLoading, setPerformanceMetrics, updateUserBehavior]);
+  }, []);  
 
   useEffect(() => {
     void fetchData();

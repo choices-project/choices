@@ -99,7 +99,7 @@ export default function CandidateDashboardPage() {
           <h1 className="text-3xl font-bold mb-2">Candidate Dashboard</h1>
           <p className="text-gray-600">Manage your candidacy and platform</p>
         </div>
-        <Button onClick={() => router.push('/candidate/declare')}>
+        <Button onClick={() => routerRef.current.push('/candidate/declare')}>
           <Building2 className="w-4 h-4 mr-2" />
           Declare New Candidacy
         </Button>
@@ -120,7 +120,7 @@ export default function CandidateDashboardPage() {
             <p className="text-gray-600 mb-6">
               Declare your candidacy to start building your platform and connecting with voters.
             </p>
-            <Button onClick={() => router.push('/candidate/declare')}>
+            <Button onClick={() => routerRef.current.push('/candidate/declare')}>
               Declare Candidacy
             </Button>
           </CardContent>
@@ -186,7 +186,7 @@ export default function CandidateDashboardPage() {
                       </Button>
                     )}
                     <Button
-                      onClick={() => router.push(`/candidate/platform/${platform.id}/edit`)}
+                      onClick={() => routerRef.current.push(`/candidate/platform/${platform.id}/edit`)}
                       variant="outline"
                     >
                       <Edit className="w-4 h-4 mr-2" />

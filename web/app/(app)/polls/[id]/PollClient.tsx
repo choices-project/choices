@@ -109,6 +109,30 @@ export default function PollClient({ poll }: PollClientProps) {
   const votingStoreError = useVotingError();
   const storeIsVoting = useVotingIsVoting();
 
+  // Use refs for router and store actions to prevent infinite re-renders
+  const routerRef = useRef(router);
+  React.useEffect(() => { routerRef.current = router; }, [router]);
+
+  const setBallotsRef = useRef(setBallots);
+  const setSelectedBallotRef = useRef(setSelectedBallot);
+  const setCurrentBallotRef = useRef(setCurrentBallot);
+  const setVotingLoadingRef = useRef(setVotingLoading);
+  const setVotingRef = useRef(setVoting);
+  const setVotingErrorRef = useRef(setVotingError);
+  const clearVotingErrorRef = useRef(clearVotingError);
+  const addVotingRecordRef = useRef(addVotingRecord);
+  const cancelVoteRef = useRef(cancelVote);
+
+  React.useEffect(() => { setBallotsRef.current = setBallots; }, [setBallots]);
+  React.useEffect(() => { setSelectedBallotRef.current = setSelectedBallot; }, [setSelectedBallot]);
+  React.useEffect(() => { setCurrentBallotRef.current = setCurrentBallot; }, [setCurrentBallot]);
+  React.useEffect(() => { setVotingLoadingRef.current = setVotingLoading; }, [setVotingLoading]);
+  React.useEffect(() => { setVotingRef.current = setVoting; }, [setVoting]);
+  React.useEffect(() => { setVotingErrorRef.current = setVotingError; }, [setVotingError]);
+  React.useEffect(() => { clearVotingErrorRef.current = clearVotingError; }, [clearVotingError]);
+  React.useEffect(() => { addVotingRecordRef.current = addVotingRecord; }, [addVotingRecord]);
+  React.useEffect(() => { cancelVoteRef.current = cancelVote; }, [cancelVote]);
+
   const pollMetadataFactory = useCallback(
     () => ({
       pollId: poll.id,
@@ -122,6 +146,8 @@ export default function PollClient({ poll }: PollClientProps) {
   );
 
   const recordPollEvent = useRecordPollEvent(pollMetadataFactory);
+  const recordPollEventRef = useRef(recordPollEvent);
+  React.useEffect(() => { recordPollEventRef.current = recordPollEvent; }, [recordPollEvent]);
 
   const [results, setResults] = useState<PollResultsState | null>(null);
   const [loading, setLoading] = useState(false);
@@ -134,6 +160,8 @@ export default function PollClient({ poll }: PollClientProps) {
   const [isUndoing, setIsUndoing] = useState(false);
   const notificationSettings = useNotificationSettings();
   const { addNotification } = useNotificationActions();
+  const addNotificationRef = useRef(addNotification);
+  React.useEffect(() => { addNotificationRef.current = addNotification; }, [addNotification]);
 
   const getOptionLabel = useCallback(
     (optionIndex: number, explicitLabel?: string | null) => {
@@ -174,26 +202,26 @@ export default function PollClient({ poll }: PollClientProps) {
 
   const notifyUndoSuccess = useCallback(
     (message: string) => {
-      addNotification({
+      addNotificationRef.current({
         type: 'success',
         title: 'Vote undone',
         message,
         duration: notificationSettings.duration,
       });
     },
-    [addNotification, notificationSettings.duration],
+    [notificationSettings.duration],
   );
 
   const notifyUndoError = useCallback(
     (message: string) => {
-      addNotification({
+      addNotificationRef.current({
         type: 'error',
         title: 'Unable to undo vote',
         message,
         duration: notificationSettings.duration,
       });
     },
-    [addNotification, notificationSettings.duration],
+    [notificationSettings.duration],
   );
 
   // Client-side vote status check
@@ -216,9 +244,9 @@ export default function PollClient({ poll }: PollClientProps) {
   const fetchPollData = useCallback(async () => {
     try {
       setLoading(true);
-      setVotingLoading(true);
+      setVotingLoadingRef.current(true);
       setError(null);
-      clearVotingError();
+      clearVotingErrorRef.current();
 
       const generalError = 'Failed to load poll results. Please try again later.';
 
@@ -228,7 +256,7 @@ export default function PollClient({ poll }: PollClientProps) {
         setResults(null);
         if (resultsResponse.status >= 500) {
           setError(generalError);
-          setVotingError(generalError);
+          setVotingErrorRef.current(generalError);
         }
         return;
       }
@@ -236,7 +264,7 @@ export default function PollClient({ poll }: PollClientProps) {
       const payload = await resultsResponse.json();
       if (!payload?.success || !payload.data) {
         setResults(null);
-        clearVotingError();
+        clearVotingErrorRef.current();
         return;
       }
 
@@ -308,17 +336,17 @@ export default function PollClient({ poll }: PollClientProps) {
         optionTotals,
         trustTierFilter: (data.trust_tier_filter as number | null) ?? null,
       });
-      clearVotingError();
+      clearVotingErrorRef.current();
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : 'Failed to load poll data';
       setResults(null);
       setError(errorMessage);
-      setVotingError(errorMessage);
+      setVotingErrorRef.current(errorMessage);
     } finally {
       setLoading(false);
-      setVotingLoading(false);
+      setVotingLoadingRef.current(false);
     }
-  }, [pollId, clearVotingError, setVotingError, setVotingLoading]);
+  }, [pollId]);
 
   useEffect(() => {
     if (pollId) {
@@ -354,15 +382,12 @@ export default function PollClient({ poll }: PollClientProps) {
 
     const ballot = createBallotFromPoll(pollDetailsForBallot, ballotContext);
 
-    setBallots([ballot]);
-    setSelectedBallot(ballot);
-    setCurrentBallot(ballot);
+    setBallotsRef.current([ballot]);
+    setSelectedBallotRef.current(ballot);
+    setCurrentBallotRef.current(ballot);
   }, [
     pollDetailsForBallot,
     results,
-    setBallots,
-    setCurrentBallot,
-    setSelectedBallot,
   ]);
 
   const handleUndoLastVote = useCallback(async () => {
@@ -370,14 +395,14 @@ export default function PollClient({ poll }: PollClientProps) {
       return;
     }
     setIsUndoing(true);
-    setVoting(true);
+    setVotingRef.current(true);
     setError(null);
-    clearVotingError();
+    clearVotingErrorRef.current();
 
     try {
-      await cancelVote(lastVoteId);
+      await cancelVoteRef.current(lastVoteId);
       notifyUndoSuccess('You can vote again.');
-      recordPollEvent('vote_undo', {
+      recordPollEventRef.current('vote_undo', {
         metadata: {
           context: 'poll_detail',
           voteId: lastVoteId,
@@ -390,9 +415,9 @@ export default function PollClient({ poll }: PollClientProps) {
     } catch (err) {
       const message = err instanceof Error ? err.message : 'Failed to undo vote';
       setError(message);
-      setVotingError(message);
+      setVotingErrorRef.current(message);
       notifyUndoError(message);
-      recordPollEvent('vote_undo_failed', {
+      recordPollEventRef.current('vote_undo_failed', {
         metadata: {
           context: 'poll_detail',
           voteId: lastVoteId,
@@ -400,36 +425,29 @@ export default function PollClient({ poll }: PollClientProps) {
         },
       });
     } finally {
-      setVoting(false);
+      setVotingRef.current(false);
       setIsUndoing(false);
     }
   }, [
-    cancelVote,
-    clearVotingError,
     fetchPollData,
     lastVoteId,
     notifyUndoError,
     notifyUndoSuccess,
-    recordPollEvent,
-    setError,
-    setHasVoted,
-    setShowVotingInterface,
-    setVoting,
-    setVotingError,
   ]);
 
   const hasRecordedViewRef = useRef(false);
 
   useEffect(() => {
     if (!hasRecordedViewRef.current) {
-      recordPollEvent('view_poll', {
+      recordPollEventRef.current('view_poll', {
         metadata: {
           context: 'poll_detail',
         },
       });
       hasRecordedViewRef.current = true;
     }
-  }, [recordPollEvent]);
+     
+  }, []);
 
   const handleVote = useCallback(async (submission: VoteSubmission): Promise<VoteResponse> => {
     const method = submission.method ?? (poll.votingMethod?.toLowerCase() as VoteSubmission['method']);
@@ -501,9 +519,9 @@ export default function PollClient({ poll }: PollClientProps) {
       };
     }
 
-    setVoting(true);
+    setVotingRef.current(true);
     setError(null);
-    clearVotingError();
+    clearVotingErrorRef.current();
 
     try {
       const response = await fetch(`/api/polls/${poll.id}/vote`, {
@@ -530,7 +548,7 @@ export default function PollClient({ poll }: PollClientProps) {
         (Array.isArray(result.voteIds) ? result.voteIds.find((value: unknown): value is string => typeof value === 'string') : undefined) ||
         'vote-recorded';
 
-      addVotingRecord(
+      addVotingRecordRef.current(
         createVotingRecordFromPollSubmission({
           poll: pollDetailsForBallot,
           submission,
@@ -546,24 +564,21 @@ export default function PollClient({ poll }: PollClientProps) {
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : 'Failed to submit vote';
       setError(errorMessage);
-      setVotingError(errorMessage);
+      setVotingErrorRef.current(errorMessage);
       setLastVoteId(null);
       return {
         ok: false,
         error: errorMessage,
       };
     } finally {
-      setVoting(false);
+      setVotingRef.current(false);
     }
+     
   }, [
-    addVotingRecord,
-    clearVotingError,
     fetchPollData,
     poll.id,
     poll.votingMethod,
     pollDetailsForBallot,
-    setVoting,
-    setVotingError,
   ]);
 
   const handleShare = async () => {
@@ -577,7 +592,7 @@ export default function PollClient({ poll }: PollClientProps) {
         await clipboard.writeText(url);
         setCopied(true);
         setTimeout(() => setCopied(false), 2000);
-        recordPollEvent('detail_copy_link', {
+        recordPollEventRef.current('detail_copy_link', {
           category: 'poll_share',
           metadata: {
             pollUrl: url,
@@ -586,7 +601,7 @@ export default function PollClient({ poll }: PollClientProps) {
       }
     } catch (err) {
       logger.error('Failed to copy URL:', err);
-      recordPollEvent('detail_share_failed', {
+      recordPollEventRef.current('detail_share_failed', {
         category: 'poll_share',
         metadata: {
           pollUrl: url,
@@ -596,14 +611,14 @@ export default function PollClient({ poll }: PollClientProps) {
     }
   };
 
-  const handleStartVoting = () => {
+  const handleStartVoting = useCallback(() => {
     setShowVotingInterface(true);
-    recordPollEvent('detail_start_voting', {
+    recordPollEventRef.current('detail_start_voting', {
       metadata: {
         context: 'poll_detail',
       },
     });
-  };
+  }, []);
 
   const formatVotingMethod = (method: string) => {
     switch (method) {
@@ -622,9 +637,9 @@ export default function PollClient({ poll }: PollClientProps) {
     }
   };
 
-  const handleBack = () => {
-    router.push('/polls');
-  };
+  const handleBack = useCallback(() => {
+    routerRef.current.push('/polls');
+  }, []);
 
   const formatDate = (dateString: string) => {
     return new Date(dateString).toLocaleDateString('en-US', {
@@ -645,14 +660,14 @@ export default function PollClient({ poll }: PollClientProps) {
 
   const handleResultsModeChange = useCallback((mode: ResultsMode) => {
     setResultsMode(mode);
-    recordPollEvent('detail_results_mode_changed', {
+    recordPollEventRef.current('detail_results_mode_changed', {
       label: mode,
       metadata: {
         context: 'poll_detail',
         mode,
       },
     });
-  }, [recordPollEvent]);
+  }, []);
 
 
   const isPollActive = poll.status === 'active';

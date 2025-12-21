@@ -22,6 +22,12 @@ export default function RegisterPage() {
   const initializeAuth = useUserStore((state) => state.initializeAuth)
   const setSessionAndDerived = useUserStore((state) => state.setSessionAndDerived)
 
+  // Refs for stable store actions
+  const initializeAuthRef = React.useRef(initializeAuth)
+  React.useEffect(() => { initializeAuthRef.current = initializeAuth; }, [initializeAuth])
+  const setSessionAndDerivedRef = React.useRef(setSessionAndDerived)
+  React.useEffect(() => { setSessionAndDerivedRef.current = setSessionAndDerived; }, [setSessionAndDerived])
+
   const syncSupabaseSession = React.useCallback(async () => {
     try {
       const supabase = await getSupabaseBrowserClient()
@@ -30,15 +36,15 @@ export default function RegisterPage() {
       } = await supabase.auth.getSession()
 
       if (session?.user) {
-        initializeAuth(session.user, session, true)
-        setSessionAndDerived(session)
+        initializeAuthRef.current(session.user, session, true)
+        setSessionAndDerivedRef.current(session)
       } else {
-        initializeAuth(null, null, false)
+        initializeAuthRef.current(null, null, false)
       }
     } catch (syncError) {
       logger.error('Register page failed to synchronize Supabase session', syncError)
     }
-  }, [initializeAuth, setSessionAndDerived])
+  }, [])  
 
   React.useEffect(() => setHydrated(true), [])
 

@@ -57,16 +57,15 @@ function PollsPageContent() {
   const setBreadcrumbsRef = useRef(setBreadcrumbs);
   const tRef = useRef(t);
 
-  React.useEffect(() => {
-    loadPollsRef.current = loadPolls;
-    setFiltersRef.current = setFilters;
-    setTrendingOnlyRef.current = setTrendingOnly;
-    setCurrentPageRef.current = setCurrentPage;
-    setCurrentRouteRef.current = setCurrentRoute;
-    setSidebarActiveSectionRef.current = setSidebarActiveSection;
-    setBreadcrumbsRef.current = setBreadcrumbs;
-    tRef.current = t;
-  }, [loadPolls, setFilters, setTrendingOnly, setCurrentPage, setCurrentRoute, setSidebarActiveSection, setBreadcrumbs, t]);
+  // Update refs individually to prevent unnecessary re-renders
+  React.useEffect(() => { loadPollsRef.current = loadPolls; }, [loadPolls]);
+  React.useEffect(() => { setFiltersRef.current = setFilters; }, [setFilters]);
+  React.useEffect(() => { setTrendingOnlyRef.current = setTrendingOnly; }, [setTrendingOnly]);
+  React.useEffect(() => { setCurrentPageRef.current = setCurrentPage; }, [setCurrentPage]);
+  React.useEffect(() => { setCurrentRouteRef.current = setCurrentRoute; }, [setCurrentRoute]);
+  React.useEffect(() => { setSidebarActiveSectionRef.current = setSidebarActiveSection; }, [setSidebarActiveSection]);
+  React.useEffect(() => { setBreadcrumbsRef.current = setBreadcrumbs; }, [setBreadcrumbs]);
+  React.useEffect(() => { tRef.current = t; }, [t]);
 
   // Set mounted state after component mounts
   // Simple useEffect like feed page - this ensures React has mounted
@@ -164,16 +163,21 @@ function PollsPageContent() {
   }, [isMounted]);
 
   useEffect(() => {
+    // Diagnostic logging for production debugging
+    // eslint-disable-next-line no-console
     console.log('[POLLS PAGE] Initialization useEffect', { isMounted, initialized: initializedRef.current });
     if (!isMounted) {
+      // eslint-disable-next-line no-console
       console.log('[POLLS PAGE] Not mounted yet, skipping initialization');
       return;
     }
     if (initializedRef.current) {
+      // eslint-disable-next-line no-console
       console.log('[POLLS PAGE] Already initialized, skipping');
       return;
     }
     initializedRef.current = true;
+    // eslint-disable-next-line no-console
     console.log('[POLLS PAGE] Starting initialization', { 
       hasLoadPolls: !!loadPollsRef.current,
       hasSetFilters: !!setFiltersRef.current 
@@ -182,12 +186,15 @@ function PollsPageContent() {
     // Use setTimeout to defer store updates until after React has completed the render cycle
     // This prevents store updates from blocking the initial render
     setTimeout(() => {
+      // eslint-disable-next-line no-console
       console.log('[POLLS PAGE] Executing initialization in setTimeout');
       setCurrentPageRef.current(1);
       setTrendingOnlyRef.current(false);
       setFiltersRef.current({ status: [] });
+      // eslint-disable-next-line no-console
       console.log('[POLLS PAGE] Calling loadPolls');
       loadPollsRef.current().catch((error) => {
+        // eslint-disable-next-line no-console
         console.error('[POLLS PAGE] Failed to load polls:', error);
         logger.warn('Failed to load polls (non-critical):', error);
       });
@@ -300,7 +307,7 @@ function PollsPageContent() {
                 </div>
 
                 <p className="text-sm text-gray-600 mb-4 line-clamp-3">
-                  {poll.description || t('polls.page.descriptionFallback')}
+                  {poll.description || tRef.current('polls.page.descriptionFallback')}
                 </p>
 
                 <div className="flex items-center justify-between text-sm text-gray-500 mb-4">

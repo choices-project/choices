@@ -1476,6 +1476,75 @@ response.headers.set('Content-Security-Policy', buildCSPHeaderFromConfig(effecti
 
 **Key Principle**: Always explicitly set `script-src-elem` for modern browsers. Use hostname-based detection in addition to environment variables for Vercel preview environments.
 
+### 15. Testing Components with Refs Pattern
+
+**Problem**: When testing components that use the refs pattern, you need to ensure mocks work correctly with refs.
+
+**✅ GOOD: Testing with Refs Pattern**
+
+The refs pattern doesn't change the external behavior of components from a testing perspective. Mocks work the same way:
+
+```typescript
+// Component uses refs internally
+const router = useRouter();
+const routerRef = useRef(router);
+useEffect(() => { routerRef.current = router; }, [router]);
+// ... later: routerRef.current.push('/dashboard');
+
+// Test mocks work normally
+const mockPush = jest.fn();
+jest.mock('next/navigation', () => ({
+  useRouter: () => ({ push: mockPush }),
+}));
+
+// Component still calls push, just through the ref
+render(<MyComponent />);
+expect(mockPush).toHaveBeenCalledWith('/dashboard');
+```
+
+**Key Points for Testing**:
+
+1. **Router Mocks**: Mock `next/navigation`'s `useRouter` to return an object with mock functions. The refs pattern doesn't change how these mocks are called.
+
+2. **Store Action Mocks**: Mock store actions normally. Components using refs will still call the mocked functions through refs.
+
+3. **Callback Prop Mocks**: Mock callback props normally. The refs pattern ensures stable references but doesn't change the callback invocation.
+
+4. **Test Setup**: The global test setup (`jest.setup.after.js`) includes mocks for `next/navigation` that work with the refs pattern.
+
+**Example Test**:
+
+```typescript
+describe('ComponentWithRefs', () => {
+  const mockPush = jest.fn();
+  const mockStoreAction = jest.fn();
+  
+  beforeEach(() => {
+    jest.clearAllMocks();
+    jest.mock('next/navigation', () => ({
+      useRouter: () => ({ push: mockPush }),
+    }));
+    jest.mock('@/lib/stores', () => ({
+      useMyStoreActions: () => ({ myAction: mockStoreAction }),
+    }));
+  });
+
+  it('calls router.push through ref', () => {
+    render(<ComponentWithRefs />);
+    // Component uses routerRef.current.push internally
+    expect(mockPush).toHaveBeenCalledWith('/expected-path');
+  });
+
+  it('calls store action through ref', () => {
+    render(<ComponentWithRefs />);
+    // Component uses actionRef.current() internally
+    expect(mockStoreAction).toHaveBeenCalled();
+  });
+});
+```
+
+**Key Principle**: The refs pattern is an internal implementation detail. Tests should focus on behavior, not implementation. Mock functions work the same way whether called directly or through refs.
+
 ---
 
 *Last updated: December 18, 2025*

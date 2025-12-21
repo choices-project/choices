@@ -72,6 +72,10 @@ export default function ProfilePage({
   const { isComplete, missingFields, completionPercentage } = useProfileCompleteness();
   const { exportProfile, isExporting, error: exportError } = useProfileExport();
 
+  // Use ref for exportProfile callback to prevent infinite re-renders
+  const exportProfileRef = useRef(exportProfile);
+  useEffect(() => { exportProfileRef.current = exportProfile; }, [exportProfile]);
+
   const [showExportConfirm, setShowExportConfirm] = useState(false);
   const [exportSuccess, setExportSuccess] = useState(false);
   const [exportErrorMessage, setExportErrorMessage] = useState<string | null>(null);
@@ -86,22 +90,26 @@ export default function ProfilePage({
   const exportDialogRef = useRef<HTMLDivElement | null>(null);
   const previouslyFocusedElement = useRef<HTMLElement | null>(null);
 
+  // Use ref for router to prevent infinite re-renders
+  const routerRef = useRef(router);
+  useEffect(() => { routerRef.current = router; }, [router]);
+
   const handleNavigate = useCallback(
     (path: string) => {
       try {
-        router.push(path);
+        routerRef.current.push(path);
       } catch (err) {
         logger.error('Failed to navigate', err instanceof Error ? err : new Error(String(err)));
       }
     },
-    [router],
+    [],  
   );
 
   const handleExportData = useCallback(async () => {
     setExportErrorMessage(null);
 
     try {
-      const data = await exportProfile({
+      const data = await exportProfileRef.current({
         includeActivity: true,
         includeVotes: true,
         includeComments: true,
@@ -128,7 +136,7 @@ export default function ProfilePage({
       setExportErrorMessage(message);
       logger.error('Profile export failed', err instanceof Error ? err : new Error(String(err)));
     }
-  }, [exportProfile]);
+  }, []);  
 
   useEffect(() => {
     if (!showExportConfirm) {

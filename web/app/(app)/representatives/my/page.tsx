@@ -11,7 +11,7 @@
 
 import { Heart, Users, Loader2, AlertCircle, Mail, Send } from 'lucide-react';
 import Link from 'next/link';
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
 import { RepresentativeCard } from '@/features/civics/components/representative/RepresentativeCard';
 import BulkContactModal from '@/features/contact/components/BulkContactModal';
@@ -46,6 +46,10 @@ export default function MyRepresentativesPage() {
   const loading = useRepresentativeGlobalLoading();
   const error = useRepresentativeError();
 
+  // Ref for stable store action
+  const getUserRepresentativesRef = useRef(getUserRepresentatives);
+  useEffect(() => { getUserRepresentativesRef.current = getUserRepresentatives; }, [getUserRepresentatives]);
+
   const followedRepresentatives = useMemo(
     () => representativeEntries.map((entry) => entry.representative),
     [representativeEntries]
@@ -54,12 +58,12 @@ export default function MyRepresentativesPage() {
   const representativeCount = representativeEntries.length;
 
   useEffect(() => {
-    void getUserRepresentatives();
-  }, [getUserRepresentatives]);
+    void getUserRepresentativesRef.current();
+  }, []);  
 
   const handleUnfollow = useCallback(() => {
-    void getUserRepresentatives();
-  }, [getUserRepresentatives]);
+    void getUserRepresentativesRef.current();
+  }, []);  
 
   if (loading) {
     return (

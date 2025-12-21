@@ -17,7 +17,7 @@ import {
   Zap,
   Flame,
 } from 'lucide-react';
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
 
 import { TrendingHashtagDisplay } from '@/features/hashtags/components/HashtagDisplay';
 
@@ -85,6 +85,18 @@ export default function ComprehensiveAdminDashboard({ className = '' }: Comprehe
   const { error: hashtagError } = useHashtagError();
   const { getTrendingHashtags } = useHashtagActions();
 
+  // Refs for stable action callbacks
+  const refreshDataRef = useRef(refreshData);
+  useEffect(() => { refreshDataRef.current = refreshData; }, [refreshData]);
+  const getTrendingHashtagsRef = useRef(getTrendingHashtags);
+  useEffect(() => { getTrendingHashtagsRef.current = getTrendingHashtags; }, [getTrendingHashtags]);
+  const addAdminNotificationRef = useRef(addAdminNotification);
+  useEffect(() => { addAdminNotificationRef.current = addAdminNotification; }, [addAdminNotification]);
+  const markAdminNotificationAsReadRef = useRef(markAdminNotificationAsRead);
+  useEffect(() => { markAdminNotificationAsReadRef.current = markAdminNotificationAsRead; }, [markAdminNotificationAsRead]);
+  const clearAllAdminNotificationsRef = useRef(clearAllAdminNotifications);
+  useEffect(() => { clearAllAdminNotificationsRef.current = clearAllAdminNotifications; }, [clearAllAdminNotifications]);
+
   const [selectedTab, setSelectedTab] = useState<'overview' | 'messages' | 'performance' | 'system' | 'activity'>(
     'overview',
   );
@@ -99,16 +111,16 @@ export default function ComprehensiveAdminDashboard({ className = '' }: Comprehe
   const [isRefreshing, setIsRefreshing] = useState(false);
 
   useEffect(() => {
-    void refreshData();
-    void getTrendingHashtags(undefined, 6);
-  }, [refreshData, getTrendingHashtags]);
+    void refreshDataRef.current();
+    void getTrendingHashtagsRef.current(undefined, 6);
+  }, []);  
 
   const handleRefresh = async () => {
     setIsRefreshing(true);
     const start = performance.now();
     try {
-      await Promise.all([refreshData(), getTrendingHashtags(undefined, 6)]);
-      addAdminNotification({
+      await Promise.all([refreshDataRef.current(), getTrendingHashtagsRef.current(undefined, 6)]);
+      addAdminNotificationRef.current({
         type: 'success',
         title: 'Dashboard refreshed',
         message: `Latest data loaded in ${Math.round(performance.now() - start)}ms.`,
@@ -117,7 +129,7 @@ export default function ComprehensiveAdminDashboard({ className = '' }: Comprehe
     } catch (error) {
       const message =
         error instanceof Error ? error.message : 'Failed to refresh admin data.';
-      addAdminNotification({
+      addAdminNotificationRef.current({
         type: 'error',
         title: 'Refresh failed',
         message,
@@ -133,7 +145,7 @@ export default function ComprehensiveAdminDashboard({ className = '' }: Comprehe
       return;
     }
     const timestamp = new Date().toISOString();
-    addAdminNotification({
+    addAdminNotificationRef.current({
       timestamp,
       created_at: timestamp,
       type: newMessage.type,
@@ -379,7 +391,7 @@ export default function ComprehensiveAdminDashboard({ className = '' }: Comprehe
                 <Button variant="outline" className="flex-1" onClick={() => window.open('/feed', '_blank')}>
                   View Community Feed
                 </Button>
-                <Button variant="ghost" onClick={() => getTrendingHashtags(undefined, 6)} disabled={hashtagLoading}>
+                <Button variant="ghost" onClick={() => getTrendingHashtagsRef.current(undefined, 6)} disabled={hashtagLoading}>
                   Refresh
                 </Button>
               </div>
@@ -447,7 +459,7 @@ export default function ComprehensiveAdminDashboard({ className = '' }: Comprehe
             <div className="flex items-center gap-2">
               <Button
                 variant="outline"
-                onClick={() => clearAllAdminNotifications()}
+                onClick={() => clearAllAdminNotificationsRef.current()}
                 disabled={!notifications.length}
               >
                 Clear All
@@ -616,7 +628,7 @@ export default function ComprehensiveAdminDashboard({ className = '' }: Comprehe
                         <Button
                           variant="outline"
                           size="sm"
-                          onClick={() => markAdminNotificationAsRead(message.id)}
+                          onClick={() => markAdminNotificationAsReadRef.current(message.id)}
                           title="Archive message"
                         >
                           <CheckCircle className="h-4 w-4" />
@@ -624,7 +636,7 @@ export default function ComprehensiveAdminDashboard({ className = '' }: Comprehe
                         <Button
                           variant="outline"
                           size="sm"
-                          onClick={() => markAdminNotificationAsRead(message.id)}
+                          onClick={() => markAdminNotificationAsReadRef.current(message.id)}
                           title="Mark as read"
                         >
                           <Edit className="h-4 w-4" />
@@ -632,7 +644,7 @@ export default function ComprehensiveAdminDashboard({ className = '' }: Comprehe
                         <Button
                           variant="outline"
                           size="sm"
-                          onClick={() => markAdminNotificationAsRead(message.id)}
+                          onClick={() => markAdminNotificationAsReadRef.current(message.id)}
                           title="Dismiss message"
                         >
                           <Trash2 className="h-4 w-4" />

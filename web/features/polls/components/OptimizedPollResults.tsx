@@ -36,6 +36,14 @@ export default function OptimizedPollResults({
   const [performanceMetrics, setPerformanceMetrics] = useState<any>(null)
   const [cacheStats, setCacheStats] = useState<any>(null)
 
+  // Use refs for stable callback props and translation function
+  const onResultsLoadedRef = useRef(onResultsLoaded);
+  useEffect(() => { onResultsLoadedRef.current = onResultsLoaded; }, [onResultsLoaded]);
+  const onErrorRef = useRef(onError);
+  useEffect(() => { onErrorRef.current = onError; }, [onError]);
+  const tRef = useRef(t);
+  useEffect(() => { tRef.current = t; }, [t]);
+
   // Memoized poll results loading function
   const loadPollResults = useCallback(async () => {
     if (!pollId) return
@@ -45,13 +53,13 @@ export default function OptimizedPollResults({
 
     try {
       const startTime = performance.now()
-      
+
       const pollResults = await optimizedPollService.getOptimizedPollResults(
         pollId,
         userId,
         includePrivate
       )
-      
+
       const endTime = performance.now()
       const loadTime = endTime - startTime
 
@@ -62,15 +70,15 @@ export default function OptimizedPollResults({
         timestamp: new Date().toISOString()
       })
 
-      onResultsLoaded?.()
+      onResultsLoadedRef.current?.()
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : 'Failed to load poll results'
       setError(errorMessage)
-      onError?.()
+      onErrorRef.current?.()
     } finally {
       setLoading(false)
     }
-  }, [pollId, userId, includePrivate, onResultsLoaded, onError])
+  }, [pollId, userId, includePrivate])  
 
   // Load cache statistics
   const loadCacheStats = useCallback(async () => {
@@ -92,7 +100,7 @@ export default function OptimizedPollResults({
   // Memoized sorted options for performance
   const sortedOptions = useMemo(() => {
     if (!results?.results) return []
-    
+
     return [...results.results].sort((a, b) => (b.voteCount ?? b.votes ?? 0) - (a.voteCount ?? a.votes ?? 0))
   }, [results?.results])
 
@@ -104,35 +112,35 @@ export default function OptimizedPollResults({
   // Memoized poll status display
   const pollStatusDisplay = useMemo(() => {
     if (!results) return null
-    
+
     const statusConfig = {
-      ended: { label: t('polls.results.status.ended'), color: 'text-red-600', bgColor: 'bg-red-50' },
-      active: { label: t('polls.results.status.active'), color: 'text-green-600', bgColor: 'bg-green-50' },
-      ongoing: { label: t('polls.results.status.ongoing'), color: 'text-blue-600', bgColor: 'bg-blue-50' }
+      ended: { label: tRef.current('polls.results.status.ended'), color: 'text-red-600', bgColor: 'bg-red-50' },
+      active: { label: tRef.current('polls.results.status.active'), color: 'text-green-600', bgColor: 'bg-green-50' },
+      ongoing: { label: tRef.current('polls.results.status.ongoing'), color: 'text-blue-600', bgColor: 'bg-blue-50' }
     }
-    
+
     const config = statusConfig[results.pollStatus as keyof typeof statusConfig]
     return config
-  }, [results, t])
+  }, [results])
 
   // Handle refresh
   const handleRefresh = useCallback(async () => {
     const refreshTime = Date.now();
-    ScreenReaderSupport.announce(t('polls.results.refreshing'), 'polite');
+    ScreenReaderSupport.announce(tRef.current('polls.results.refreshing'), 'polite');
     await loadPollResults()
     await loadCacheStats()
     previousRefreshRef.current = refreshTime;
-  }, [loadPollResults, loadCacheStats, t])
+  }, [loadPollResults, loadCacheStats])
 
   // Announce results updates
   useEffect(() => {
     if (!results || loading) return;
-    
+
     const totalVotes = results.totalVotes ?? 0;
     const topOption = sortedOptions[0];
     if (!topOption) return;
 
-    const summary = t('polls.results.summary', {
+    const summary = tRef.current('polls.results.summary', {
       totalVotes,
       topOption: topOption.label ?? topOption.option,
       topVotes: topOption.voteCount ?? topOption.votes,
@@ -140,7 +148,7 @@ export default function OptimizedPollResults({
     });
 
     ScreenReaderSupport.announce(summary, 'polite');
-  }, [results, sortedOptions, loading, t]);
+  }, [results, sortedOptions, loading]);
 
   if (loading) {
     return (
@@ -295,7 +303,7 @@ export default function OptimizedPollResults({
             const uniqueVoters = option.uniqueVoters ?? 0;
             const optionLabel = option.label ?? option.option;
             const optionSummaryId = `${resultsRegionId}-option-${index}-summary`;
-            
+
             return (
               <article
                 key={optionId}

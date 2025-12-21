@@ -77,15 +77,25 @@ export function ProfessionalChart({
   }
   const { data: storeData, maxValue: storeMaxValue, showTrends: storeShowTrends, showConfidence: storeShowConfidence } = useChartContext()
 
+  // Refs for stable store actions
+  const setChartDataRef = useRef(setChartData);
+  useEffect(() => { setChartDataRef.current = setChartData; }, [setChartData]);
+  const setChartMaxValueRef = useRef(setChartMaxValue);
+  useEffect(() => { setChartMaxValueRef.current = setChartMaxValue; }, [setChartMaxValue]);
+  const setChartShowTrendsRef = useRef(setChartShowTrends);
+  useEffect(() => { setChartShowTrendsRef.current = setChartShowTrends; }, [setChartShowTrends]);
+  const setChartShowConfidenceRef = useRef(setChartShowConfidence);
+  useEffect(() => { setChartShowConfidenceRef.current = setChartShowConfidence; }, [setChartShowConfidence]);
+
   // Update store when props change
   useEffect(() => {
     if (data.length > 0) {
-      setChartData(data);
-      setChartMaxValue(maxValue ?? Math.max(...data.map(item => item.value)));
-      setChartShowTrends(showTrends);
-      setChartShowConfidence(showConfidence);
+      setChartDataRef.current(data);
+      setChartMaxValueRef.current(maxValue ?? Math.max(...data.map(item => item.value)));
+      setChartShowTrendsRef.current(showTrends);
+      setChartShowConfidenceRef.current(showConfidence);
     }
-  }, [data, maxValue, showTrends, showConfidence, setChartData, setChartMaxValue, setChartShowTrends, setChartShowConfidence]);
+  }, [data, maxValue, showTrends, showConfidence]);  
 
   // Use store data or fallback to props
   const chartData = storeData.length > 0 ? storeData : data

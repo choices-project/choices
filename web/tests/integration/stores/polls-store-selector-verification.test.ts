@@ -66,6 +66,7 @@ describe('Polls Store Selector Verification', () => {
 
   it('ensures selectors are stable across renders', () => {
     // Selectors should be stable (memoized) to prevent unnecessary re-renders
+    // usePollsStats and usePollsAnalytics now use useShallow for additional stability
     const selector1 = usePolls;
     const selector2 = usePolls;
     

@@ -17,7 +17,11 @@ import { useUser, useIsAuthenticated, useUserLoading } from '@/lib/stores';
 import { useAppActions } from '@/lib/stores/appStore';
 import { logger } from '@/lib/utils/logger';
 
-export default function ProfilePage() {
+// Prevent static generation since this requires client-side state
+export const dynamic = 'force-dynamic';
+
+function ProfilePageContent() {
+  const [isMounted, setIsMounted] = React.useState(false);
   const router = useRouter();
   const routerRef = useRef(router);
   useEffect(() => { routerRef.current = router; }, [router]);
@@ -29,20 +33,42 @@ export default function ProfilePage() {
   const [exportStatus, setExportStatus] = useState<'success' | 'error' | null>(null);
   const { setCurrentRoute, setBreadcrumbs, setSidebarActiveSection } = useAppActions();
 
+  // Refs for stable app store actions
+  const setCurrentRouteRef = useRef(setCurrentRoute);
+  useEffect(() => { setCurrentRouteRef.current = setCurrentRoute; }, [setCurrentRoute]);
+  const setBreadcrumbsRef = useRef(setBreadcrumbs);
+  useEffect(() => { setBreadcrumbsRef.current = setBreadcrumbs; }, [setBreadcrumbs]);
+  const setSidebarActiveSectionRef = useRef(setSidebarActiveSection);
+  useEffect(() => { setSidebarActiveSectionRef.current = setSidebarActiveSection; }, [setSidebarActiveSection]);
+  
+  // Ref for stable exportProfile callback
+  const exportProfileRef = useRef(exportProfile);
+  useEffect(() => { exportProfileRef.current = exportProfile; }, [exportProfile]);
+
+  // Ref for stable refetch callback
+  const refetchRef = useRef(refetch);
+  useEffect(() => { refetchRef.current = refetch; }, [refetch]);
+
+  // Simple useEffect to set mounted - no requestAnimationFrame needed
+  React.useEffect(() => {
+    setIsMounted(true);
+  }, []);
+
   useEffect(() => {
-    setCurrentRoute('/profile');
-    setSidebarActiveSection('profile');
-    setBreadcrumbs([
+    if (!isMounted) return;
+    setCurrentRouteRef.current('/profile');
+    setSidebarActiveSectionRef.current('profile');
+    setBreadcrumbsRef.current([
       { label: 'Home', href: '/' },
       { label: 'Dashboard', href: '/dashboard' },
       { label: 'Profile', href: '/profile' },
     ]);
 
     return () => {
-      setSidebarActiveSection(null);
-      setBreadcrumbs([]);
+      setSidebarActiveSectionRef.current(null);
+      setBreadcrumbsRef.current([]);
     };
-  }, [setBreadcrumbs, setCurrentRoute, setSidebarActiveSection]);
+  }, [isMounted]);  
 
   useEffect(() => {
     // Only redirect if we're certain user is not authenticated
@@ -56,7 +82,7 @@ export default function ProfilePage() {
   const handleExportData = useCallback(async () => {
     setExportStatus(null);
     try {
-      const data = await exportProfile({
+      const data = await exportProfileRef.current({
         includeActivity: true,
         includeVotes: true,
         includeComments: true,
@@ -81,7 +107,7 @@ export default function ProfilePage() {
       setExportStatus('error');
       setTimeout(() => setExportStatus(null), 4000);
     }
-  }, [exportProfile, profile?.id, user?.id]);
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   // Add timeout to prevent infinite loading - must be before early returns
   const [loadingTimeout, setLoadingTimeout] = useState(false);
@@ -97,6 +123,17 @@ export default function ProfilePage() {
       clearTimeout(timeout);
     };
   }, [profileLoading, profile, profileError]);
+
+  // Show loading state until component is mounted
+  if (!isMounted) {
+    return (
+      <div className="container mx-auto px-4 py-8" data-testid="profile-loading-mount">
+        <div className="flex items-center justify-center min-h-[400px]">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600" />
+        </div>
+      </div>
+    );
+  }
 
   if (isUserLoading || profileLoading) {
     return (
@@ -130,7 +167,7 @@ export default function ProfilePage() {
             {loadingTimeout && (
               <button
                 onClick={() => {
-                  void refetch();
+                  void refetchRef.current();
                   setLoadingTimeout(false);
                 }}
                 className="mt-4 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
@@ -144,21 +181,21 @@ export default function ProfilePage() {
     );
   }
 
-  const handleEditProfile = () => {
-    router.push('/profile/edit');
-  };
+  const handleEditProfile = useCallback(() => {
+    routerRef.current.push('/profile/edit');
+  }, []);
 
-  const handleSettings = () => {
-    router.push('/profile/preferences');
-  };
+  const handleSettings = useCallback(() => {
+    routerRef.current.push('/profile/preferences');
+  }, []);
 
-  const handlePrivacySettings = () => {
-    router.push('/profile/preferences');
-  };
+  const handlePrivacySettings = useCallback(() => {
+    routerRef.current.push('/profile/preferences');
+  }, []);
 
-  const handleEditProfileFromActions = () => {
-    router.push('/profile/edit');
-  };
+  const handleEditProfileFromActions = useCallback(() => {
+    routerRef.current.push('/profile/edit');
+  }, []);
 
   if (profileError) {
     return (
@@ -278,7 +315,7 @@ export default function ProfilePage() {
             <AddressLookup 
               autoSave={true}
               onDistrictSaved={() => {
-                void refetch();
+                void refetchRef.current();
               }}
             />
           </CardContent>
@@ -332,4 +369,8 @@ export default function ProfilePage() {
       </div>
     </ErrorBoundary>
   );
+}
+
+export default function ProfilePage() {
+  return <ProfilePageContent />;
 }

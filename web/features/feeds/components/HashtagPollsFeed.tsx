@@ -16,7 +16,7 @@
 'use client';
 
 import { Hash, TrendingUp, Users, BarChart3, Clock } from 'lucide-react';
-import React, { useState, useEffect, useCallback, useMemo } from 'react';
+import React, { useState, useEffect, useCallback, useMemo, useRef } from 'react';
 
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -104,6 +104,18 @@ export default function HashtagPollsFeed({
   const { getTrendingHashtags } = useHashtagActions();
   const trendingHashtagsRaw = useTrendingHashtags();
 
+  // Refs for stable store actions
+  const loadFeedsRef = useRef(loadFeeds);
+  useEffect(() => { loadFeedsRef.current = loadFeeds; }, [loadFeeds]);
+  const getTrendingHashtagsRef = useRef(getTrendingHashtags);
+  useEffect(() => { getTrendingHashtagsRef.current = getTrendingHashtags; }, [getTrendingHashtags]);
+
+  // Refs for stable callback props
+  const onPollSelectRef = useRef(onPollSelect);
+  useEffect(() => { onPollSelectRef.current = onPollSelect; }, [onPollSelect]);
+  const onHashtagSelectRef = useRef(onHashtagSelect);
+  useEffect(() => { onHashtagSelectRef.current = onHashtagSelect; }, [onHashtagSelect]);
+
   const numberFormatter = useMemo(
     () => new Intl.NumberFormat(currentLanguage ?? undefined),
     [currentLanguage],
@@ -182,16 +194,16 @@ export default function HashtagPollsFeed({
   useEffect(() => {
     if (!userId) return;
 
-    void loadFeeds().catch((err) => {
+    void loadFeedsRef.current().catch((err) => {
       logger.error('Failed to load feeds for hashtag polls:', err);
     });
-  }, [userId, loadFeeds]);
+  }, [userId]);  
 
   useEffect(() => {
-    void getTrendingHashtags().catch((err) => {
+    void getTrendingHashtagsRef.current().catch((err) => {
       logger.error('Failed to load trending hashtags:', err);
     });
-  }, [getTrendingHashtags]);
+  }, []);  
 
   const pollItems = useMemo(
     () =>
@@ -275,17 +287,17 @@ export default function HashtagPollsFeed({
         }
         return [...prev, hashtag];
       });
-      onHashtagSelect?.(hashtag);
+      onHashtagSelectRef.current?.(hashtag);
     },
-    [onHashtagSelect]
+    []  
   );
 
   const handlePollSelect = useCallback(
     (poll: FeedItem) => {
       const id = poll.pollData?.id ?? poll.id;
-      onPollSelect?.(id);
+      onPollSelectRef.current?.(id);
     },
-    [onPollSelect]
+    []  
   );
 
   const getMatchScore = useCallback(
@@ -315,7 +327,7 @@ export default function HashtagPollsFeed({
         <Card>
           <CardContent className="p-6 text-center">
             <p className="text-red-600 mb-4">{storeError}</p>
-            <Button onClick={() => void loadFeeds()} variant="outline">
+            <Button onClick={() => void loadFeedsRef.current()} variant="outline">
               {t('feeds.hashtagPolls.error.retry')}
             </Button>
           </CardContent>
