@@ -33,11 +33,18 @@ export function checkAuthInMiddleware(
   
   const cookies = request.cookies
   
-  // Debug: Log all cookies for troubleshooting (only in non-production or when debugging)
-  if (process.env.NODE_ENV !== 'production' || process.env.DEBUG_MIDDLEWARE === '1') {
+  // Also check the Cookie header directly as a fallback
+  // This helps catch cookies that might not be parsed correctly by Next.js
+  const cookieHeader = request.headers.get('cookie') || ''
+  
+  // Debug: Log all cookies for troubleshooting (always log in production for debugging)
+  // Enable with DEBUG_MIDDLEWARE=1 environment variable
+  // Note: Using console.warn for debug logs as console.log is not allowed by lint rules
+  if (process.env.DEBUG_MIDDLEWARE === '1') {
     const allCookies = cookies.getAll()
     const allCookieNames = allCookies.map(c => c.name)
-    console.log('[checkAuthInMiddleware] All cookies:', allCookieNames)
+     
+    console.warn('[checkAuthInMiddleware] All cookies:', allCookieNames)
     
     // Log auth-related cookies in detail
     const authCookies = allCookies.filter(c => 
@@ -46,11 +53,15 @@ export function checkAuthInMiddleware(
       c.name.startsWith('sb-')
     )
     if (authCookies.length > 0) {
-      console.log('[checkAuthInMiddleware] Auth cookies found:', authCookies.map(c => ({
+       
+      console.warn('[checkAuthInMiddleware] Auth cookies found:', authCookies.map(c => ({
         name: c.name,
         valueLength: c.value.length,
         hasValue: c.value.length > 0,
       })))
+    } else {
+       
+      console.warn('[checkAuthInMiddleware] No auth cookies found')
     }
   }
   
@@ -88,18 +99,74 @@ export function checkAuthInMiddleware(
   
   // Check for any cookie starting with 'sb-' and containing 'auth' or 'session'
   // This catches various Supabase cookie naming patterns used by @supabase/ssr
-  for (const cookie of cookies.getAll()) {
-    const name = cookie.name
+  // IMPORTANT: This is a fallback that should catch all Supabase auth cookies
+  const allCookies = cookies.getAll()
+  
+  // First, try to find auth cookies in the parsed cookies
+  for (const cookie of allCookies) {
+    const name = cookie.name.toLowerCase() // Case-insensitive check
     const value = cookie.value
     // Check for Supabase auth-related cookies
+    // Match patterns: sb-*-auth-token, sb-*-auth-token-*, sb-access-token, etc.
     if (name.startsWith('sb-') && value && value.length > 0) {
       // Check for auth, session, or access in the cookie name
       if (name.includes('auth') || name.includes('session') || name.includes('access')) {
         // Verify the cookie value isn't empty or just whitespace
-        if (value.trim().length > 0) {
+        const trimmedValue = value.trim()
+        if (trimmedValue.length > 0 && trimmedValue !== 'null' && trimmedValue !== 'undefined') {
+          // Found a valid auth cookie
+          if (process.env.DEBUG_MIDDLEWARE === '1') {
+             
+            console.warn('[checkAuthInMiddleware] Found auth cookie in parsed cookies:', name)
+          }
           return { isAuthenticated: true }
         }
       }
+    }
+  }
+  
+  // Fallback: Check the raw Cookie header for auth cookies
+  // This helps catch cookies that might not be parsed correctly by Next.js middleware
+  // or cookies with domain attributes that might not be accessible via request.cookies
+  if (cookieHeader) {
+    // Look for sb-*-auth-token pattern in the cookie header
+    const authCookieMatch = cookieHeader.match(/sb-[^=]*-auth-token[^;]*=([^;]+)/i)
+    if (authCookieMatch && authCookieMatch[1]) {
+      const cookieValue = authCookieMatch[1].trim()
+      if (cookieValue.length > 0 && cookieValue !== 'null' && cookieValue !== 'undefined') {
+        if (process.env.DEBUG_MIDDLEWARE === '1') {
+           
+          console.warn('[checkAuthInMiddleware] Found auth cookie in Cookie header')
+        }
+        return { isAuthenticated: true }
+      }
+    }
+    
+    // Also check for sb-access-token pattern
+    const accessTokenMatch = cookieHeader.match(/sb-access-token[^;]*=([^;]+)/i)
+    if (accessTokenMatch && accessTokenMatch[1]) {
+      const cookieValue = accessTokenMatch[1].trim()
+      if (cookieValue.length > 0 && cookieValue !== 'null' && cookieValue !== 'undefined') {
+        if (process.env.DEBUG_MIDDLEWARE === '1') {
+           
+          console.warn('[checkAuthInMiddleware] Found access token in Cookie header')
+        }
+        return { isAuthenticated: true }
+      }
+    }
+  }
+  
+  // No auth cookies found
+  if (process.env.DEBUG_MIDDLEWARE === '1') {
+     
+    console.warn('[checkAuthInMiddleware] No auth cookies found. Total cookies:', allCookies.length)
+     
+    console.warn('[checkAuthInMiddleware] Cookie names:', allCookies.map(c => c.name))
+     
+    console.warn('[checkAuthInMiddleware] Cookie header present:', cookieHeader ? 'yes' : 'no')
+    if (cookieHeader) {
+       
+      console.warn('[checkAuthInMiddleware] Cookie header preview:', cookieHeader.substring(0, 200))
     }
   }
   

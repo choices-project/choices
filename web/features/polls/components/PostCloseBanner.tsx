@@ -32,6 +32,20 @@ export function PostCloseBanner({
 }: PostCloseBannerProps) {
   const { t, currentLanguage } = useI18n();
 
+  // All hooks must be called before any early returns
+  const dateFormatter = useMemo(
+    () => new Intl.DateTimeFormat(currentLanguage === 'es' ? 'es-ES' : 'en-US', {
+      month: 'short',
+      day: 'numeric',
+      year: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit'
+    }),
+    [currentLanguage],
+  );
+
+  const formatDate = useCallback((date: Date) => dateFormatter.format(date), [dateFormatter]);
+
   const statusInfo = useMemo(() => {
     switch (pollStatus) {
       case 'closed':
@@ -67,19 +81,6 @@ export function PostCloseBanner({
   }, [pollStatus, t]);
 
   if (!statusInfo) return null;
-
-  const dateFormatter = useMemo(
-    () => new Intl.DateTimeFormat(currentLanguage === 'es' ? 'es-ES' : 'en-US', {
-      month: 'short',
-      day: 'numeric',
-      year: 'numeric',
-      hour: '2-digit',
-      minute: '2-digit'
-    }),
-    [currentLanguage],
-  );
-
-  const formatDate = useCallback((date: Date) => dateFormatter.format(date), [dateFormatter]);
 
   return (
     <div className={className}>

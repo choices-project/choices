@@ -8,8 +8,8 @@
 import { logger } from '@/lib/utils/logger'
 
 import type { Database } from '@/types/supabase'
-import type { NextRequest, NextResponse } from 'next/server'
 import type { SupabaseClient } from '@supabase/supabase-js'
+import type { NextRequest, NextResponse } from 'next/server'
 
 // Runtime guard to prevent client-side usage
 const assertRunningOnServer = (fnName: string) => {
@@ -33,9 +33,16 @@ const validateEnvironment = () => {
     throw new Error(`Missing required environment variables: ${missing.join(', ')}`)
   }
 
+  const url = requiredVars.NEXT_PUBLIC_SUPABASE_URL
+  const key = requiredVars.NEXT_PUBLIC_SUPABASE_ANON_KEY
+  
+  if (!url || !key) {
+    throw new Error('Missing required Supabase environment variables')
+  }
+  
   return {
-    NEXT_PUBLIC_SUPABASE_URL: requiredVars.NEXT_PUBLIC_SUPABASE_URL!,
-    NEXT_PUBLIC_SUPABASE_ANON_KEY: requiredVars.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+    NEXT_PUBLIC_SUPABASE_URL: url,
+    NEXT_PUBLIC_SUPABASE_ANON_KEY: key,
   }
 }
 

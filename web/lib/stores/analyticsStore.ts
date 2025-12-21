@@ -7,9 +7,9 @@
 
 import { useMemo } from 'react';
 import { create } from 'zustand';
-import { useShallow } from 'zustand/react/shallow';
 import { devtools, persist } from 'zustand/middleware';
 import { immer } from 'zustand/middleware/immer';
+import { useShallow } from 'zustand/react/shallow';
 
 import type {
   AnalyticsAsyncState,

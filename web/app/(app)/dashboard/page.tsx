@@ -97,12 +97,12 @@ export default function DashboardPage() {
         clearTimeout(authRetryTimeoutRef.current);
         authRetryTimeoutRef.current = null;
       }
-      
+
       // Additional check: verify session cookie exists as fallback
-      const hasSessionCookie = typeof document !== 'undefined' && 
-        (document.cookie.includes('sb-') || 
+      const hasSessionCookie = typeof document !== 'undefined' &&
+        (document.cookie.includes('sb-') ||
          document.cookie.includes('auth-token'));
-      
+
       if (!hasSessionCookie) {
         logger.debug('🚨 Dashboard: No session cookie - redirecting to auth');
         routerRef.current.replace('/auth');
@@ -110,17 +110,17 @@ export default function DashboardPage() {
           // Cleanup function - no cleanup needed for immediate redirect
         };
       }
-      
+
       // If cookie exists but store says not authenticated, wait a bit for hydration
       // This handles the case where session cookie is set but store hasn't hydrated yet
       // We'll wait up to 1.5 seconds before redirecting
       logger.debug('🚨 Dashboard: Session cookie exists but auth not confirmed - waiting for hydration');
       authRetryTimeoutRef.current = setTimeout(() => {
         // Double-check cookie still exists and auth state
-        const stillHasCookie = typeof document !== 'undefined' && 
-          (document.cookie.includes('sb-') || 
+        const stillHasCookie = typeof document !== 'undefined' &&
+          (document.cookie.includes('sb-') ||
            document.cookie.includes('auth-token'));
-        
+
         if (!stillHasCookie) {
           logger.debug('🚨 Dashboard: Session cookie disappeared - redirecting to auth');
           routerRef.current.replace('/auth');
@@ -131,7 +131,7 @@ export default function DashboardPage() {
         }
         authRetryTimeoutRef.current = null;
       }, 1500); // Wait 1.5 seconds for hydration
-      
+
       return () => {
         if (authRetryTimeoutRef.current) {
           clearTimeout(authRetryTimeoutRef.current);
@@ -202,7 +202,7 @@ export default function DashboardPage() {
 
       void checkAdminAndRedirect();
     }
-    
+
     // Return cleanup function for all code paths
     return () => {
       // Cleanup function - no cleanup needed for other cases
