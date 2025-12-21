@@ -6,6 +6,7 @@ import React, {
   useCallback,
   useContext,
   useEffect,
+  useMemo,
   useRef,
   useState,
 } from 'react'
@@ -170,10 +171,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
   }, [applySession]) // applySession is now stable
 
-  const signOut = async () => {
+  const signOut = useCallback(async () => {
     if (IS_E2E_HARNESS) {
-      storeSignOut()
-      initializeAuth(null, null, false)
+      storeSignOutRef.current()
+      initializeAuthRef.current(null, null, false)
       setSession(null)
       setUser(null)
       // Redirect to landing page after logout
@@ -185,8 +186,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
     try {
       // Clear local state first to prevent any UI flicker
-      storeSignOut();
-      initializeAuth(null, null, false);
+      storeSignOutRef.current();
+      initializeAuthRef.current(null, null, false);
       setSession(null);
       setUser(null);
 
@@ -241,8 +242,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     } catch (error) {
       logger.error('Failed to sign out:', error);
       // Still clear state and redirect even if logout fails
-      storeSignOut();
-      initializeAuth(null, null, false);
+      storeSignOutRef.current();
+      initializeAuthRef.current(null, null, false);
       setSession(null);
       setUser(null);
       if (typeof window !== 'undefined') {
@@ -251,9 +252,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         window.location.replace('/landing');
       }
     }
-  }
+  }, []) // Empty deps - uses refs for store actions
 
-  const refreshSession = async () => {
+  const refreshSession = useCallback(async () => {
     if (IS_E2E_HARNESS) {
       return
     }
@@ -267,16 +268,19 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     } catch (error) {
       logger.error('Failed to refresh session:', error)
     }
-  }
+  }, [applySession]) // applySession is stable
 
-  const value = {
-    user,
-    session,
-    loading,
-    isLoading: loading,  // Alias for backward compatibility
-    signOut,
-    refreshSession,
-  }
+  const value = useMemo(
+    () => ({
+      user,
+      session,
+      loading,
+      isLoading: loading,  // Alias for backward compatibility
+      signOut,
+      refreshSession,
+    }),
+    [user, session, loading, signOut, refreshSession]
+  )
 
   return (
     <AuthContext.Provider value={value}>
