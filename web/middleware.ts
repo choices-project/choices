@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server'
 
 import { checkAuthInMiddleware } from '@/utils/supabase/middleware'
+import { checkAuthWithSupabaseClient } from '@/utils/supabase/middleware-client'
 
 import {
   getSecurityConfig,
@@ -185,18 +186,41 @@ export async function middleware(request: NextRequest) {
 
   // Handle root path redirect based on authentication status
   if (pathname === '/') {
-    // Check authentication status (Edge Runtime compatible - no Supabase client import)
-    const { isAuthenticated } = checkAuthInMiddleware(request);
+    // Create response early for cookie handling
+    const response = NextResponse.next()
+    
+    // Try Supabase client auth check first (more reliable), fall back to cookie detection
+    let isAuthenticated = false
+    try {
+      const authResult = await checkAuthWithSupabaseClient(request, response)
+      isAuthenticated = authResult.isAuthenticated
+    } catch (error) {
+      // Fall back to cookie detection if Supabase client fails
+      logger.warn('[middleware] Supabase client auth check failed, falling back to cookie detection', { error })
+      const cookieAuth = checkAuthInMiddleware(request)
+      isAuthenticated = cookieAuth.isAuthenticated
+    }
 
     // Redirect based on authentication status
-    const redirectPath = isAuthenticated ? '/feed' : '/landing';
-    const redirectUrl = new URL(redirectPath, request.url);
-    const redirectResponse = NextResponse.redirect(redirectUrl, 307);
+    const redirectPath = isAuthenticated ? '/feed' : '/landing'
+    const redirectUrl = new URL(redirectPath, request.url)
+    const redirectResponse = NextResponse.redirect(redirectUrl, 307)
+    
+    // Copy any cookies set by Supabase client
+    response.cookies.getAll().forEach(cookie => {
+      redirectResponse.cookies.set(cookie.name, cookie.value, {
+        httpOnly: cookie.httpOnly,
+        secure: cookie.secure,
+        sameSite: cookie.sameSite as 'strict' | 'lax' | 'none' | undefined,
+        path: cookie.path,
+        maxAge: cookie.maxAge,
+      })
+    })
     
     // Add cache headers to help with redirect performance
-    redirectResponse.headers.set('Cache-Control', 'public, max-age=3600, stale-while-revalidate=86400');
+    redirectResponse.headers.set('Cache-Control', 'public, max-age=3600, stale-while-revalidate=86400')
     
-    return redirectResponse;
+    return redirectResponse
   }
 
   // Protect routes that require authentication
@@ -211,26 +235,51 @@ export async function middleware(request: NextRequest) {
                          request.cookies.get('e2e-dashboard-bypass')?.value === '1';
 
     if (!isE2EHarness) {
-      const { isAuthenticated } = checkAuthInMiddleware(request);
+      // Create response early for cookie handling
+      const response = NextResponse.next()
+      
+      // Try Supabase client auth check first (more reliable), fall back to cookie detection
+      let isAuthenticated = false
+      try {
+        const authResult = await checkAuthWithSupabaseClient(request, response)
+        isAuthenticated = authResult.isAuthenticated
+      } catch (error) {
+        // Fall back to cookie detection if Supabase client fails
+        logger.warn('[middleware] Supabase client auth check failed for protected route, falling back to cookie detection', { error, pathname })
+        const cookieAuth = checkAuthInMiddleware(request)
+        isAuthenticated = cookieAuth.isAuthenticated
+      }
 
       if (!isAuthenticated) {
         // Redirect unauthenticated users to auth page
-        const authUrl = new URL('/auth', request.url);
+        const authUrl = new URL('/auth', request.url)
         // Preserve the original destination for redirect after login
         // Use 'redirectTo' to match client-side redirect logic
-        authUrl.searchParams.set('redirectTo', pathname);
-        return NextResponse.redirect(authUrl, 307);
+        authUrl.searchParams.set('redirectTo', pathname)
+        return NextResponse.redirect(authUrl, 307)
       }
     }
   }
 
   // Redirect authenticated users away from auth pages (except during login flow)
   if (isAuthRoute && pathname !== '/auth') {
-    const { isAuthenticated } = checkAuthInMiddleware(request);
+    // Create response early for cookie handling
+    const response = NextResponse.next()
+    
+    // Try Supabase client auth check first (more reliable), fall back to cookie detection
+    let isAuthenticated = false
+    try {
+      const authResult = await checkAuthWithSupabaseClient(request, response)
+      isAuthenticated = authResult.isAuthenticated
+    } catch (error) {
+      // Fall back to cookie detection if Supabase client fails
+      const cookieAuth = checkAuthInMiddleware(request)
+      isAuthenticated = cookieAuth.isAuthenticated
+    }
 
     if (isAuthenticated) {
       // Authenticated users trying to access login/register should go to feed
-      return NextResponse.redirect(new URL('/feed', request.url), 307);
+      return NextResponse.redirect(new URL('/feed', request.url), 307)
     }
   }
 
