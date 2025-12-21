@@ -11,9 +11,9 @@
  * - Handles session refresh automatically
  */
 
-import type { NextRequest, NextResponse } from 'next/server'
 import type { Database } from '@/types/supabase'
 import type { SupabaseClient } from '@supabase/supabase-js'
+import type { NextRequest, NextResponse } from 'next/server'
 
 /**
  * Create a Supabase client for middleware (Edge Runtime compatible)

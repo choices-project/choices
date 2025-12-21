@@ -243,9 +243,9 @@ export async function middleware(request: NextRequest) {
       try {
         const authResult = await checkAuthWithSupabaseClient(request, response)
         isAuthenticated = authResult.isAuthenticated
-      } catch (error) {
+      } catch (authError) {
         // Fall back to cookie detection if Supabase client fails
-        logger.warn('[middleware] Supabase client auth check failed for protected route, falling back to cookie detection', { error, pathname })
+        logger.warn('[middleware] Supabase client auth check failed for protected route, falling back to cookie detection', { error: authError, pathname })
         const cookieAuth = checkAuthInMiddleware(request)
         isAuthenticated = cookieAuth.isAuthenticated
       }
@@ -271,7 +271,7 @@ export async function middleware(request: NextRequest) {
     try {
       const authResult = await checkAuthWithSupabaseClient(request, response)
       isAuthenticated = authResult.isAuthenticated
-    } catch (error) {
+    } catch {
       // Fall back to cookie detection if Supabase client fails
       const cookieAuth = checkAuthInMiddleware(request)
       isAuthenticated = cookieAuth.isAuthenticated
