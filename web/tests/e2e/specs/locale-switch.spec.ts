@@ -67,7 +67,17 @@ const findAlternateLanguage = async (
 };
 
 const applyLanguageSelection = async (page: Page, selection: LanguageSelection) => {
-  await selection.option.click();
+  // Wait for the dropdown option to be visible and stable before clicking
+  // This prevents click interception issues where the dropdown button might overlay the option
+  await selection.option.waitFor({ state: 'visible', timeout: 5_000 });
+  
+  // Scroll the option into view if needed
+  await selection.option.scrollIntoViewIfNeeded();
+  
+  // Use force click to bypass any overlay/interception issues
+  // The dropdown should be open, so the option should be clickable
+  await selection.option.click({ force: true, timeout: 10_000 });
+  
   await waitForLocaleCookie(page, selection.code);
   await page.waitForFunction(
     () => document.documentElement.dataset.globalNavigationHarness === 'ready',

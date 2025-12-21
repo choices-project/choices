@@ -18,7 +18,9 @@ export default defineConfig({
     trace: 'on-first-retry',
     screenshot: 'only-on-failure',
     video: 'retain-on-failure',
-    extraHTTPHeaders: { 'x-e2e-bypass': '1' },
+    // Do NOT set x-e2e-bypass header for production tests
+    // This header bypasses authentication checks, but production tests need to test real auth flow
+    // extraHTTPHeaders: { 'x-e2e-bypass': '1' },
   },
 
   projects: [
