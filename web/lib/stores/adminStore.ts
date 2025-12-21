@@ -9,6 +9,7 @@ import { useMemo } from 'react';
 import { create } from 'zustand';
 import { devtools, persist } from 'zustand/middleware';
 import { immer } from 'zustand/middleware/immer';
+import { useShallow } from 'zustand/react/shallow';
 
 import { getSupabaseBrowserClient } from '@/utils/supabase/client';
 
@@ -1872,16 +1873,27 @@ export const useAdminFeatureFlagActions = () =>
     };
   }, []);
 
-export const useAdminStats = () =>
-  useAdminStore((state) => ({
-  totalUsers: state.users.length,
-    totalNotifications: state.notifications.length,
-    unreadNotifications: state.notifications.filter((notification) => !notification.read).length,
-  totalActivity: state.activityItems.length,
-}));
+export const useAdminStats = () => {
+  const { totalUsers, totalNotifications, unreadNotifications, totalActivity } = useAdminStore(
+    useShallow((state) => ({
+      totalUsers: state.users.length,
+      totalNotifications: state.notifications.length,
+      unreadNotifications: state.notifications.filter((notification) => !notification.read).length,
+      totalActivity: state.activityItems.length,
+    }))
+  );
+  return useMemo(() => ({ totalUsers, totalNotifications, unreadNotifications, totalActivity }), [
+    totalUsers,
+    totalNotifications,
+    unreadNotifications,
+    totalActivity,
+  ]);
+};
 
-export const useRecentActivity = () =>
-  useAdminStore((state) => state.activityItems.slice(0, 10));
+export const useRecentActivity = () => {
+  const activityItems = useAdminStore((state) => state.activityItems);
+  return useMemo(() => activityItems.slice(0, 10), [activityItems]);
+};
 
 export const adminStoreUtils = {
   getAdminStats: () => {

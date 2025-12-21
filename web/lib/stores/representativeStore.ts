@@ -684,11 +684,15 @@ export const useRepresentativeById = (representativeId: number | null) =>
 
     return state.detailCache[representativeId] ?? null;
   });
-export const useRepresentativeFilters = () =>
-  useRepresentativeStore((state) => ({
-    query: state.searchQuery,
-    lastSearchAt: state.lastSearchAt
-  }));
+export const useRepresentativeFilters = () => {
+  const { query, lastSearchAt } = useRepresentativeStore(
+    useShallow((state) => ({
+      query: state.searchQuery,
+      lastSearchAt: state.lastSearchAt
+    }))
+  );
+  return useMemo(() => ({ query, lastSearchAt }), [query, lastSearchAt]);
+};
 export const useRepresentativeDivisions = (representativeId: number | null) =>
   useRepresentativeStore((state) => {
     if (representativeId == null) {

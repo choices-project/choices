@@ -84,11 +84,23 @@ test.describe('Production Polls Page Deep Diagnostic', () => {
     const bodyText = await page.locator('body').textContent().catch(() => '');
     
     // Check React state
+    // Next.js App Router may not use #__next, so check multiple indicators
     const reactState = await page.evaluate(() => {
+      const hasNextRoot = !!document.querySelector('#__next');
+      const hasNextDiv = !!document.querySelector('[id*="__next"]');
+      const hasReactContent = document.body.querySelector('[data-reactroot], [data-react], [class*="react"]');
+      // React is likely mounted if we have substantial body content
+      const hasSubstantialContent = document.body.children.length > 5 && document.body.textContent && document.body.textContent.length > 1000;
+      
       return {
         readyState: document.readyState,
-        hasReactRoot: !!document.querySelector('#__next'),
+        hasReactRoot: hasNextRoot || hasNextDiv || !!hasReactContent || hasSubstantialContent,
+        hasNextRootId: hasNextRoot,
+        hasNextDiv: hasNextDiv,
+        hasReactContent: !!hasReactContent,
+        hasSubstantialContent,
         bodyChildren: document.body.children.length,
+        bodyTextLength: document.body.textContent?.length || 0,
         hasSpinner: !!document.querySelector('.animate-spin'),
       };
     }).catch(() => null);

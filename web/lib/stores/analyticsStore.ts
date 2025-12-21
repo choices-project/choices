@@ -7,6 +7,7 @@
 
 import { useMemo } from 'react';
 import { create } from 'zustand';
+import { useShallow } from 'zustand/react/shallow';
 import { devtools, persist } from 'zustand/middleware';
 import { immer } from 'zustand/middleware/immer';
 
@@ -1042,32 +1043,71 @@ export const useAnalyticsActions = () =>
     };
   }, []);
 
-export const useAnalyticsStats = () =>
-  useAnalyticsStore((state) => ({
-    totalEvents: state.events.length,
-    sessionId: state.sessionId,
-    trackingEnabled: state.trackingEnabled,
-    preferences: state.preferences,
-    hasPerformanceMetrics: !!state.performanceMetrics,
-    hasUserBehavior: !!state.userBehavior,
-    hasDashboard: !!state.dashboard,
-  }));
+export const useAnalyticsStats = () => {
+  const { totalEvents, sessionId, trackingEnabled, preferences, hasPerformanceMetrics, hasUserBehavior, hasDashboard } = useAnalyticsStore(
+    useShallow((state) => ({
+      totalEvents: state.events.length,
+      sessionId: state.sessionId,
+      trackingEnabled: state.trackingEnabled,
+      preferences: state.preferences,
+      hasPerformanceMetrics: !!state.performanceMetrics,
+      hasUserBehavior: !!state.userBehavior,
+      hasDashboard: !!state.dashboard,
+    })),
+  );
+  return useMemo(
+    () => ({
+      totalEvents,
+      sessionId,
+      trackingEnabled,
+      preferences,
+      hasPerformanceMetrics,
+      hasUserBehavior,
+      hasDashboard,
+    }),
+    [totalEvents, sessionId, trackingEnabled, preferences, hasPerformanceMetrics, hasUserBehavior, hasDashboard],
+  );
+};
 
-export const useAnalyticsSession = () =>
-  useAnalyticsStore((state) => ({
-    sessionId: state.sessionId,
-    events: state.events,
-    isTracking: state.isTracking,
-    isSending: state.isSending,
-  }));
+export const useAnalyticsSession = () => {
+  const { sessionId, events, isTracking, isSending } = useAnalyticsStore(
+    useShallow((state) => ({
+      sessionId: state.sessionId,
+      events: state.events,
+      isTracking: state.isTracking,
+      isSending: state.isSending,
+    })),
+  );
+  return useMemo(
+    () => ({
+      sessionId,
+      events,
+      isTracking,
+      isSending,
+    }),
+    [sessionId, events, isTracking, isSending],
+  );
+};
 
-export const useAnalyticsChartContext = () =>
-  useAnalyticsStore((state) => ({
-    data: state.chartData,
-    maxValue: state.chartMaxValue,
-    showTrends: state.chartShowTrends,
-    showConfidence: state.chartShowConfidence,
-  }));
+export const useAnalyticsChartContext = () => {
+  const { data, maxValue, showTrends, showConfidence } = useAnalyticsStore(
+    useShallow((state) => ({
+      data: state.chartData,
+      maxValue: state.chartMaxValue,
+      showTrends: state.chartShowTrends,
+      showConfidence: state.chartShowConfidence,
+    })),
+  );
+  return useMemo(
+    () => ({
+      data,
+      maxValue,
+      showTrends,
+      showConfidence,
+    }),
+    [data, maxValue, showTrends, showConfidence],
+  );
+};
 
 // ---------------------------------------------------------------------------
 // Utilities

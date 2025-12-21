@@ -256,14 +256,16 @@ export const POST = withErrorHandling(async (request: NextRequest): Promise<Next
     const hostname = request.headers.get('host') || ''
     const isProductionDomain = hostname.includes('choices-app.com')
     const requireSecure = isProduction && isProductionDomain
-    
+
     allCookies.forEach((cookie) => {
       const isAuthCookie = cookie.name.includes('auth') || cookie.name.includes('session') || cookie.name.startsWith('sb-')
-      
+
+      // For auth cookies, FORCE correct attributes regardless of what was set before
+      // This ensures cookies are always secure even if Supabase SSR set them incorrectly
       finalResponse.cookies.set(cookie.name, cookie.value, {
-        // For auth cookies, ensure httpOnly and secure are set correctly
-        httpOnly: cookie.httpOnly ?? (isAuthCookie ? true : undefined),
-        secure: cookie.secure ?? (isAuthCookie ? requireSecure : undefined),
+        // Force secure values for auth cookies
+        httpOnly: isAuthCookie ? true : (cookie.httpOnly ?? undefined),
+        secure: isAuthCookie ? requireSecure : (cookie.secure ?? undefined),
         sameSite: (cookie.sameSite as 'strict' | 'lax' | 'none' | undefined) ?? 'lax',
         path: cookie.path ?? '/',
         maxAge: cookie.maxAge,

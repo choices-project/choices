@@ -90,9 +90,10 @@ export async function getSupabaseApiRouteClient(
           path?: string
           maxAge?: number
         } = {
-          // Default to secure values for auth cookies
-          httpOnly: typeof options.httpOnly === 'boolean' ? options.httpOnly : (isAuthCookie ? true : undefined),
-          secure: typeof options.secure === 'boolean' ? options.secure : (isAuthCookie ? requireSecure : undefined),
+          // For auth cookies, FORCE secure values regardless of what Supabase SSR passes
+          // This ensures cookies are always set with proper security attributes
+          httpOnly: isAuthCookie ? true : (typeof options.httpOnly === 'boolean' ? options.httpOnly : undefined),
+          secure: isAuthCookie ? requireSecure : (typeof options.secure === 'boolean' ? options.secure : undefined),
           sameSite: (typeof options.sameSite === 'string' ? options.sameSite : 'lax') as 'strict' | 'lax' | 'none',
           path: typeof options.path === 'string' ? options.path : '/',
         }
@@ -106,9 +107,9 @@ export async function getSupabaseApiRouteClient(
         // This ensures cookies work correctly with middleware
         response.cookies.set(name, value, cookieOptions)
         
-        // Log cookie setting for debugging
+        // Log cookie setting for debugging (always log for auth cookies)
         if (isAuthCookie) {
-          logger.info('Setting auth cookie in API route', {
+          logger.info('Setting auth cookie in API route (cookie adapter)', {
             name,
             valueLength: value.length,
             httpOnly: cookieOptions.httpOnly,
@@ -116,6 +117,11 @@ export async function getSupabaseApiRouteClient(
             path: cookieOptions.path,
             isProduction,
             isProductionDomain,
+            requireSecure,
+            optionsReceived: {
+              httpOnly: typeof options.httpOnly === 'boolean' ? options.httpOnly : 'not provided',
+              secure: typeof options.secure === 'boolean' ? options.secure : 'not provided',
+            },
           })
         }
       } catch (error) {

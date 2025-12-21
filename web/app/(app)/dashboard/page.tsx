@@ -60,6 +60,7 @@ export default function DashboardPage() {
   const [isCheckingAdmin, setIsCheckingAdmin] = useState(false);
   const adminCheckRef = useRef<boolean>(false);
   const [isAdmin, setIsAdmin] = useState<boolean | null>(null);
+  const authRetryTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
   useEffect(() => {
     setCurrentRouteRef.current('/dashboard');
@@ -85,11 +86,58 @@ export default function DashboardPage() {
     if (isUserLoading) {
       return;
     }
-    // First check if user is authenticated - if not, redirect to auth
+    // First check if user is authenticated - if not, check session cookie and wait for hydration
     if (!isAuthenticated) {
-      logger.debug('🚨 Dashboard: Unauthenticated user - redirecting to auth');
-      routerRef.current.replace('/auth');
-      return;
+      // Clear any existing retry timeout
+      if (authRetryTimeoutRef.current) {
+        clearTimeout(authRetryTimeoutRef.current);
+        authRetryTimeoutRef.current = null;
+      }
+      
+      // Additional check: verify session cookie exists as fallback
+      const hasSessionCookie = typeof document !== 'undefined' && 
+        (document.cookie.includes('sb-') || 
+         document.cookie.includes('auth-token'));
+      
+      if (!hasSessionCookie) {
+        logger.debug('🚨 Dashboard: No session cookie - redirecting to auth');
+        routerRef.current.replace('/auth');
+        return;
+      }
+      
+      // If cookie exists but store says not authenticated, wait a bit for hydration
+      // This handles the case where session cookie is set but store hasn't hydrated yet
+      // We'll wait up to 1.5 seconds before redirecting
+      logger.debug('🚨 Dashboard: Session cookie exists but auth not confirmed - waiting for hydration');
+      authRetryTimeoutRef.current = setTimeout(() => {
+        // Double-check cookie still exists and auth state
+        const stillHasCookie = typeof document !== 'undefined' && 
+          (document.cookie.includes('sb-') || 
+           document.cookie.includes('auth-token'));
+        
+        if (!stillHasCookie) {
+          logger.debug('🚨 Dashboard: Session cookie disappeared - redirecting to auth');
+          routerRef.current.replace('/auth');
+        } else {
+          // Cookie still exists but auth not confirmed - redirect anyway
+          logger.debug('🚨 Dashboard: Session cookie exists but auth not confirmed after wait - redirecting to auth');
+          routerRef.current.replace('/auth');
+        }
+        authRetryTimeoutRef.current = null;
+      }, 1500); // Wait 1.5 seconds for hydration
+      
+      return () => {
+        if (authRetryTimeoutRef.current) {
+          clearTimeout(authRetryTimeoutRef.current);
+          authRetryTimeoutRef.current = null;
+        }
+      };
+    } else {
+      // Authenticated - clear any pending retry timeout
+      if (authRetryTimeoutRef.current) {
+        clearTimeout(authRetryTimeoutRef.current);
+        authRetryTimeoutRef.current = null;
+      }
     }
     // If authenticated but no profile, check if user is admin first
     // Admin users should have profiles, but if profile is still loading or missing,

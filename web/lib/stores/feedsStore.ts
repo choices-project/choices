@@ -11,6 +11,7 @@
  */
 
 import { useMemo } from 'react';
+import { useMemo } from 'react';
 import { create } from 'zustand';
 import { devtools, persist } from 'zustand/middleware';
 import { immer } from 'zustand/middleware/immer';
@@ -1140,34 +1141,61 @@ export const useFeedById = (id: string) => {
   return useFeedsStore(selector);
 };
 
-export const useFeedsStats = () =>
-  useFeedsStore((state) => ({
-    totalFeeds: state.feeds.length,
-    filteredFeeds: state.filteredFeeds.length,
-    totalCategories: state.categories.length,
-    enabledCategories: state.categories.filter((cat) => cat.enabled).length,
-    searchResults: state.search.results.length,
-    totalAvailable: state.totalAvailableFeeds,
-    hasMoreFeeds: state.hasMoreFeeds,
-    isLoading: state.isLoading,
-    isSearching: state.isSearching,
-    error: state.error,
-  }));
-
-export const useBookmarkedFeeds = () =>
-  useFeedsStore((state) =>
-    state.feeds.filter((feed) => feed.userInteraction.bookmarked)
+export const useFeedsStats = () => {
+  const { totalFeeds, filteredFeeds, totalCategories, enabledCategories, searchResults, totalAvailable, hasMoreFeeds, isLoading, isSearching, error } = useFeedsStore(
+    useShallow((state) => ({
+      totalFeeds: state.feeds.length,
+      filteredFeeds: state.filteredFeeds.length,
+      totalCategories: state.categories.length,
+      enabledCategories: state.categories.filter((cat) => cat.enabled).length,
+      searchResults: state.search.results.length,
+      totalAvailable: state.totalAvailableFeeds,
+      hasMoreFeeds: state.hasMoreFeeds,
+      isLoading: state.isLoading,
+      isSearching: state.isSearching,
+      error: state.error,
+    })),
   );
-
-export const useUnreadFeeds = () =>
-  useFeedsStore((state) =>
-    state.feeds.filter((feed) => !feed.userInteraction.read)
+  return useMemo(
+    () => ({
+      totalFeeds,
+      filteredFeeds,
+      totalCategories,
+      enabledCategories,
+      searchResults,
+      totalAvailable,
+      hasMoreFeeds,
+      isLoading,
+      isSearching,
+      error,
+    }),
+    [totalFeeds, filteredFeeds, totalCategories, enabledCategories, searchResults, totalAvailable, hasMoreFeeds, isLoading, isSearching, error],
   );
+};
 
-export const useLikedFeeds = () =>
-  useFeedsStore((state) =>
-    state.feeds.filter((feed) => feed.userInteraction.liked)
+export const useBookmarkedFeeds = () => {
+  const feeds = useFeedsStore((state) => state.feeds);
+  return useMemo(
+    () => feeds.filter((feed) => feed.userInteraction.bookmarked),
+    [feeds],
   );
+};
+
+export const useUnreadFeeds = () => {
+  const feeds = useFeedsStore((state) => state.feeds);
+  return useMemo(
+    () => feeds.filter((feed) => !feed.userInteraction.read),
+    [feeds],
+  );
+};
+
+export const useLikedFeeds = () => {
+  const feeds = useFeedsStore((state) => state.feeds);
+  return useMemo(
+    () => feeds.filter((feed) => feed.userInteraction.liked),
+    [feeds],
+  );
+};
 
 export const feedsStoreUtils = {
   getFeedsSummary: () => {
