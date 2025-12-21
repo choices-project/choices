@@ -100,6 +100,17 @@ export async function getSupabaseApiRouteClient(
 
         // Set cookie on NextResponse (this works in API routes)
         response.cookies.set(name, value, cookieOptions)
+        
+        // Log cookie setting for debugging
+        if (name.includes('auth') || name.includes('session')) {
+          logger.info('Setting auth cookie in API route', {
+            name,
+            valueLength: value.length,
+            httpOnly: cookieOptions.httpOnly,
+            secure: cookieOptions.secure,
+            path: cookieOptions.path,
+          })
+        }
       } catch (error) {
         logger.warn('Failed to set cookie in API route', { name, error })
       }

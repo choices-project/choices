@@ -106,7 +106,7 @@ export const POST = withErrorHandling(async (request: NextRequest): Promise<Next
     // E2E tests should use real Supabase authentication - no mock responses
 
     // Sign in with Supabase Auth
-    // Supabase SSR will automatically set cookies through our cookie adapter
+    // Supabase SSR should automatically set cookies through our cookie adapter
     const { data: authData, error: signInError } = await supabaseClient.auth.signInWithPassword({
       email: normalizedEmail,
       password: normalizedPassword
@@ -116,6 +116,15 @@ export const POST = withErrorHandling(async (request: NextRequest): Promise<Next
       logger.warn('Login failed', { email: normalizedEmail, error: signInError?.message })
       return authError('Invalid email or password');
     }
+
+    // Note: Supabase SSR with cookie adapter should set cookies automatically
+    // But we'll also manually ensure cookies are set as a fallback
+    // Check what cookies were set by Supabase SSR
+    const cookiesAfterLogin = response.cookies.getAll()
+    logger.info('Cookies after signInWithPassword', {
+      cookieCount: cookiesAfterLogin.length,
+      cookieNames: cookiesAfterLogin.map(c => c.name),
+    })
 
     // Get user profile for additional data
     const { data: initialProfile, error: profileError } = await supabaseClient
@@ -207,14 +216,74 @@ export const POST = withErrorHandling(async (request: NextRequest): Promise<Next
     }
 
     // Update the response body while preserving cookies set by Supabase SSR
-    const updatedResponse = NextResponse.json(responseData, {
-      status: 200,
-      headers: response.headers,
+    // Instead of creating a new response, update the existing one
+    const responseBody = JSON.stringify(responseData)
+    
+    // Get all cookies that were set by Supabase SSR
+    let allCookies = response.cookies.getAll()
+    
+    // If Supabase SSR didn't set cookies, manually set them
+    // Extract project ref for cookie name
+    const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || ''
+    const projectRefMatch = supabaseUrl.match(/https?:\/\/([^.]+)\.supabase\.(co|io)/)
+    const projectRef = projectRefMatch ? projectRefMatch[1] : 'unknown'
+    const authTokenCookieName = `sb-${projectRef}-auth-token`
+    
+    // Check if auth cookie was set
+    const hasAuthCookie = allCookies.some(c => c.name === authTokenCookieName || c.name.includes('auth'))
+    
+    if (!hasAuthCookie && authData.session) {
+      // Manually set the auth cookie in Supabase SSR format
+      const sessionData = {
+        access_token: authData.session.access_token,
+        refresh_token: authData.session.refresh_token,
+        expires_at: authData.session.expires_at,
+        expires_in: authData.session.expires_in,
+        token_type: authData.session.token_type,
+        user: authData.user
+      }
+      
+      const isProduction = process.env.NODE_ENV === 'production'
+      const hostname = request.headers.get('host') || ''
+      const isProductionDomain = hostname.includes('choices-app.com')
+      const requireSecure = isProduction && isProductionDomain
+      const maxAge = 60 * 60 * 24 * 7 // 7 days
+      
+      response.cookies.set(authTokenCookieName, JSON.stringify(sessionData), {
+        httpOnly: true,
+        secure: requireSecure,
+        sameSite: 'lax',
+        path: '/',
+        maxAge: maxAge,
+      })
+      
+      logger.info('Manually set auth cookie', {
+        cookieName: authTokenCookieName,
+        userId: authData.user.id,
+      })
+      
+      // Refresh cookie list
+      allCookies = response.cookies.getAll()
+    }
+    
+    logger.info('Final cookies before response', {
+      userId: authData.user.id,
+      expiresAt: authData.session?.expires_at,
+      cookieCount: allCookies.length,
+      cookieNames: allCookies.map(c => c.name),
     })
 
-    // Copy all cookies from the original response (set by Supabase SSR)
-    response.cookies.getAll().forEach((cookie) => {
-      updatedResponse.cookies.set(cookie.name, cookie.value, {
+    // Update the response body while preserving all cookies
+    const finalResponse = new NextResponse(responseBody, {
+      status: 200,
+      headers: {
+        'Content-Type': 'application/json',
+      },
+    })
+
+    // Copy all cookies from the original response
+    allCookies.forEach((cookie) => {
+      finalResponse.cookies.set(cookie.name, cookie.value, {
         httpOnly: cookie.httpOnly ?? true,
         secure: cookie.secure ?? false,
         sameSite: (cookie.sameSite as 'strict' | 'lax' | 'none' | undefined) ?? 'lax',
@@ -223,11 +292,10 @@ export const POST = withErrorHandling(async (request: NextRequest): Promise<Next
       })
     })
 
-    logger.info('Session cookies set successfully by Supabase SSR', {
-      userId: authData.user.id,
-      expiresAt: authData.session?.expires_at,
-      cookieCount: response.cookies.getAll().length,
+    logger.info('Final response cookies', {
+      cookieCount: finalResponse.cookies.getAll().length,
+      cookieNames: finalResponse.cookies.getAll().map(c => c.name),
     })
 
-    return updatedResponse
+    return finalResponse
 });
