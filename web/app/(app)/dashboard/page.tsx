@@ -36,10 +36,15 @@ export default function DashboardPage() {
   useEffect(() => { setSidebarActiveSectionRef.current = setSidebarActiveSection; }, [setSidebarActiveSection]);
 
   const shouldBypassAuth = useMemo(
-    () =>
-      process.env.NEXT_PUBLIC_ENABLE_E2E_HARNESS === '1' &&
-      typeof window !== 'undefined' &&
-      window.localStorage.getItem('e2e-dashboard-bypass') === '1',
+    () => {
+      // In E2E harness mode, always bypass auth checks (authentication is mocked)
+      if (process.env.NEXT_PUBLIC_ENABLE_E2E_HARNESS === '1') {
+        return true;
+      }
+      // Also check localStorage bypass flag for specific test scenarios
+      return typeof window !== 'undefined' &&
+        window.localStorage.getItem('e2e-dashboard-bypass') === '1';
+    },
     [],
   );
   const [isCheckingAdmin, setIsCheckingAdmin] = useState(false);
@@ -61,7 +66,8 @@ export default function DashboardPage() {
   }, []);  
 
   useEffect(() => {
-    if (shouldBypassAuth) {
+    // In E2E harness mode or when bypassing auth, skip all redirect checks (authentication is mocked)
+    if (shouldBypassAuth || process.env.NEXT_PUBLIC_ENABLE_E2E_HARNESS === '1') {
       return;
     }
     // First check if user is authenticated - if not, redirect to auth
@@ -150,7 +156,7 @@ export default function DashboardPage() {
         } else {
           setIsAdmin(false);
         }
-      } catch (error) {
+      } catch {
         // If check fails, assume not admin (don't show admin link)
         setIsAdmin(false);
       }
@@ -159,7 +165,24 @@ export default function DashboardPage() {
     void checkAdminStatus();
   }, [isAuthenticated, isLoading, shouldBypassAuth]);
 
-  if (isLoading) {
+  // Add loading timeout to prevent infinite loading state
+  // Allow dashboard to render even if profile is still loading (PersonalDashboard handles loading gracefully)
+  const [loadingTimeout, setLoadingTimeout] = useState(false);
+  useEffect(() => {
+    if (!isLoading) {
+      setLoadingTimeout(false);
+      return;
+    }
+    const timeout = setTimeout(() => {
+      setLoadingTimeout(true);
+    }, 10_000); // 10 second timeout - allow dashboard to render even if profile is slow
+    return () => clearTimeout(timeout);
+  }, [isLoading]);
+
+  // Show loading skeleton only if actively loading and not timed out
+  // In E2E harness mode or after timeout, allow dashboard to render (it handles missing profile gracefully)
+  // Also bypass loading check if user is authenticated (profile can load in background)
+  if (isLoading && !loadingTimeout && !shouldBypassAuth && !isAuthenticated) {
     return (
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8" aria-label="Loading dashboard">
         <div className="space-y-6">
@@ -186,7 +209,8 @@ export default function DashboardPage() {
   // Only block rendering if user is definitely not authenticated
   // Allow page to render even if profile is still loading or missing
   // The PersonalDashboard component can handle missing profile gracefully
-  if (!shouldBypassAuth && !isUserLoading && !isAuthenticated) {
+  // In E2E harness mode, always allow rendering (authentication is mocked)
+  if (!shouldBypassAuth && !isUserLoading && !isAuthenticated && process.env.NEXT_PUBLIC_ENABLE_E2E_HARNESS !== '1') {
     return (
       <div className="flex items-center justify-center min-h-screen px-4">
         <div className="text-center space-y-4 max-w-md">

@@ -6,6 +6,24 @@ import {
 } from '../../helpers/e2e-setup';
 
 test.describe('Admin Dashboard Stability Tests', () => {
+  test.beforeEach(async ({ page }) => {
+    // Set up admin user in localStorage and cookie before any navigation
+    await page.addInitScript(() => {
+      try {
+        localStorage.setItem('e2e-dashboard-bypass', '1');
+      } catch (e) {
+        // localStorage access may be restricted in some contexts
+        console.warn('Could not set localStorage:', e);
+      }
+    });
+    await page.context().addCookies([{
+      name: 'e2e-dashboard-bypass',
+      value: '1',
+      path: '/',
+      domain: '127.0.0.1',
+    }]);
+  });
+
   test('admin dashboard renders without infinite loops', async ({ page }) => {
     test.setTimeout(120_000);
     await page.setDefaultNavigationTimeout(60_000);
@@ -31,11 +49,6 @@ test.describe('Admin Dashboard Stability Tests', () => {
     });
 
     try {
-      // Set up admin user in localStorage
-      await page.evaluate(() => {
-        localStorage.setItem('e2e-dashboard-bypass', '1');
-        document.cookie = 'e2e-dashboard-bypass=1; path=/';
-      });
       
       // Navigate to admin dashboard
       await page.goto('/admin/dashboard', { waitUntil: 'domcontentloaded', timeout: 60_000 });
@@ -84,12 +97,6 @@ test.describe('Admin Dashboard Stability Tests', () => {
     });
 
     try {
-      // Set up admin user
-      await page.evaluate(() => {
-        localStorage.setItem('e2e-dashboard-bypass', '1');
-        document.cookie = 'e2e-dashboard-bypass=1; path=/';
-      });
-      
       // Navigate to personal dashboard first
       await page.goto('/dashboard', { waitUntil: 'domcontentloaded', timeout: 60_000 });
       await waitForPageReady(page);
@@ -135,12 +142,6 @@ test.describe('Admin Dashboard Stability Tests', () => {
     });
 
     try {
-      // Set up admin user
-      await page.evaluate(() => {
-        localStorage.setItem('e2e-dashboard-bypass', '1');
-        document.cookie = 'e2e-dashboard-bypass=1; path=/';
-      });
-      
       await page.goto('/admin/dashboard', { waitUntil: 'domcontentloaded', timeout: 60_000 });
       await waitForPageReady(page);
       

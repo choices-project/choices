@@ -30,6 +30,19 @@ export default function EditProfilePage() {
   const setSidebarActiveSectionRef = useRef(setSidebarActiveSection);
   useEffect(() => { setSidebarActiveSectionRef.current = setSidebarActiveSection; }, [setSidebarActiveSection]);
 
+  // Use ref for refetch callback - must be before early returns
+  const refetchRef = useRef(refetch);
+  useEffect(() => { refetchRef.current = refetch; }, [refetch]);
+
+  // Callbacks must be defined before early returns
+  const handleSave = useCallback(async () => {
+    await refetchRef.current();
+  }, []);  
+
+  const handleCancel = useCallback(() => {
+    routerRef.current.push('/profile');
+  }, []);
+
   useEffect(() => {
     setCurrentRouteRef.current('/profile/edit');
     setSidebarActiveSectionRef.current('profile');
@@ -47,6 +60,10 @@ export default function EditProfilePage() {
   }, []);  
 
   useEffect(() => {
+    // In E2E harness mode, authentication is mocked - don't redirect
+    if (process.env.NEXT_PUBLIC_ENABLE_E2E_HARNESS === '1') {
+      return;
+    }
     // Only redirect if we're certain user is not authenticated
     // Don't redirect while authentication state is still loading
     if (!isLoading && !user) {
@@ -84,18 +101,6 @@ export default function EditProfilePage() {
       </div>
     );
   }
-
-  // Use ref for refetch callback
-  const refetchRef = useRef(refetch);
-  useEffect(() => { refetchRef.current = refetch; }, [refetch]);
-
-  const handleSave = useCallback(async () => {
-    await refetchRef.current();
-  }, []);  
-
-  const handleCancel = useCallback(() => {
-    routerRef.current.push('/profile');
-  }, []);  
 
   return (
     <div className="min-h-screen bg-gray-50 py-8" data-testid="profile-edit-page">

@@ -372,6 +372,11 @@ export const createProfileActions = (
             state.isProfileLoaded = true;
           } else if (result.error) {
             state.error = result.error;
+            // If we get a 401 (Unauthorized), mark as loaded to prevent infinite retry loops
+            // This prevents the useEffect from continuously retrying when user is not authenticated
+            if (result.error.includes('401') || result.error.includes('Unauthorized')) {
+              state.isProfileLoaded = true; // Mark as "loaded" (even though failed) to stop retries
+            }
             // Don't set isProfileLoaded to false if we have a cached profile
             // This allows pages to render with cached data even if refresh fails
           } else {
@@ -389,6 +394,10 @@ export const createProfileActions = (
           const errorMessage = error instanceof Error ? error.message : 'Failed to load profile';
           state.error = errorMessage;
           state.isProfileLoading = false;
+          // If we get a 401 (Unauthorized), mark as loaded to prevent infinite retry loops
+          if (errorMessage.includes('401') || errorMessage.includes('Unauthorized')) {
+            state.isProfileLoaded = true; // Mark as "loaded" (even though failed) to stop retries
+          }
           // If we have a cached profile, don't clear it on error
           // This allows pages to render with stale data rather than showing error
         });

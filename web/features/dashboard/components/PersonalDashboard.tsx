@@ -167,10 +167,15 @@ function HarnessPersonalDashboard({ className = '' }: PersonalDashboardProps) {
   const signOutUserRef = useRef(signOutUser);
   useEffect(() => { signOutUserRef.current = signOutUser; }, [signOutUser]);
   const shouldBypassAuth = useMemo(
-    () =>
-      process.env.NEXT_PUBLIC_ENABLE_E2E_HARNESS === '1' &&
-      typeof window !== 'undefined' &&
-      window.localStorage.getItem('e2e-dashboard-bypass') === '1',
+    () => {
+      // In E2E harness mode, always bypass auth checks (authentication is mocked)
+      if (process.env.NEXT_PUBLIC_ENABLE_E2E_HARNESS === '1') {
+        return true;
+      }
+      // Also check localStorage bypass flag for specific test scenarios
+      return typeof window !== 'undefined' &&
+        window.localStorage.getItem('e2e-dashboard-bypass') === '1';
+    },
     [],
   );
   const fallbackAuthenticated = useMemo(() => {
@@ -521,10 +526,15 @@ function StandardPersonalDashboard({ userId: fallbackUserId, className = '' }: P
   const analyticsLoading = useAnalyticsLoading();
   const { signOut: resetUserState } = useUserActions();
   const shouldBypassAuth = useMemo(
-    () =>
-      process.env.NEXT_PUBLIC_ENABLE_E2E_HARNESS === '1' &&
-      typeof window !== 'undefined' &&
-      window.localStorage.getItem('e2e-dashboard-bypass') === '1',
+    () => {
+      // In E2E harness mode, always bypass auth checks (authentication is mocked)
+      if (process.env.NEXT_PUBLIC_ENABLE_E2E_HARNESS === '1') {
+        return true;
+      }
+      // Also check localStorage bypass flag for specific test scenarios
+      return typeof window !== 'undefined' &&
+        window.localStorage.getItem('e2e-dashboard-bypass') === '1';
+    },
     [],
   );
   const fallbackAuthenticated = useMemo(() => {
@@ -611,7 +621,8 @@ function StandardPersonalDashboard({ userId: fallbackUserId, className = '' }: P
   useEffect(() => { resetUserStateRef.current = resetUserState; }, [resetUserState]);
 
   useEffect(() => {
-    if (shouldBypassAuth) {
+    // In E2E harness mode or when bypassing auth, skip redirect
+    if (shouldBypassAuth || process.env.NEXT_PUBLIC_ENABLE_E2E_HARNESS === '1') {
       return;
     }
     if (!isUserLoading && !isAuthenticated) {

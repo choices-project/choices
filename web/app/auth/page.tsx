@@ -528,7 +528,7 @@ export default function AuthPage() {
           })()}
           {!formData.email || !formData.email.includes('@') || !formData.password || formData.password.length < 6 ? (
             <div id="form-validation-hint" className="sr-only" role="status">
-              {t('auth.form.completeFields')}
+              {t('auth.form.completeFields') || 'Please complete all required fields'}
             </div>
           ) : null}
         </form>

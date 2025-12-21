@@ -3,7 +3,7 @@
 import { Menu, X, Shield, User, LogOut, Vote, BarChart3, Home, Settings } from 'lucide-react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import React, { useCallback, useEffect, useRef, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
 /**
  * @fileoverview Global Navigation Component

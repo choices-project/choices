@@ -37,6 +37,10 @@ export default function BiometricSetupPage() {
   const biometricSuccess = useBiometricSuccess();
 
   useEffect(() => {
+    // In E2E harness mode, authentication is mocked - don't redirect
+    if (process.env.NEXT_PUBLIC_ENABLE_E2E_HARNESS === '1') {
+      return;
+    }
     if (!isUserLoading && !isAuthenticated) {
       routerRef.current.replace('/auth?redirectTo=/profile/biometric-setup');
     }

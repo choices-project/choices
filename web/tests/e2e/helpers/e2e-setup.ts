@@ -723,9 +723,11 @@ export async function setupExternalAPIMocks(page: Page, overrides: Partial<Exter
   };
 
   const shouldBypassHarnessAuth = (route: PlaywrightRoute) => {
-    if (process.env.NEXT_PUBLIC_ENABLE_E2E_HARNESS !== '1') {
-      return false;
+    // In E2E harness mode, always bypass auth checks (authentication is mocked)
+    if (process.env.NEXT_PUBLIC_ENABLE_E2E_HARNESS === '1') {
+      return true;
     }
+    // Also check for bypass cookie in non-harness scenarios
     const cookieHeader = route.request().headers()['cookie'] ?? '';
     return cookieHeader.includes('e2e-dashboard-bypass=1');
   };
@@ -930,7 +932,9 @@ export async function setupExternalAPIMocks(page: Page, overrides: Partial<Exter
     };
 
     const profileHandler: RouteHandler = async (route) => {
-      if (!hasAuthHeader(route) && !shouldBypassHarnessAuth(route)) {
+      // In E2E harness mode, always allow profile requests (authentication is mocked)
+      // Only check auth header if not in harness mode
+      if (!shouldBypassHarnessAuth(route) && !hasAuthHeader(route)) {
         await respondJson(route, unauthorizedResponse(), 401);
         return;
       }

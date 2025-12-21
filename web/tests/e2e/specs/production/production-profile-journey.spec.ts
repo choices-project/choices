@@ -88,7 +88,9 @@ test.describe('Production Profile Journey Tests', () => {
     
     if (preferencesVisible) {
       await preferencesLink.click();
-      await page.waitForURL(/\/profile\/preferences/, { timeout: 10_000 }).catch(() => {});
+      await page.waitForURL(/\/profile\/preferences/, { timeout: 10_000 }).catch(() => {
+        // Navigation may not happen if preferences link is not available
+      });
       await page.waitForTimeout(2_000);
 
       // Verify preferences page loaded (if navigation worked)
@@ -151,7 +153,9 @@ test.describe('Production Profile Journey Tests', () => {
       // If dialog appeared, close it
       if (dialogVisible) {
         const closeButton = page.locator('button:has-text("Cancel"), button[aria-label*="Close"]').first();
-        await closeButton.click().catch(() => {});
+        await closeButton.click().catch(() => {
+          // Close button may not be available
+        });
         await page.waitForTimeout(500);
       }
     }

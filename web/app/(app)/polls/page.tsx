@@ -194,7 +194,6 @@ function PollsPageContent() {
       // eslint-disable-next-line no-console
       console.log('[POLLS PAGE] Calling loadPolls');
       loadPollsRef.current().catch((error) => {
-        // eslint-disable-next-line no-console
         console.error('[POLLS PAGE] Failed to load polls:', error);
         logger.warn('Failed to load polls (non-critical):', error);
       });

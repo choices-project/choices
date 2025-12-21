@@ -11,6 +11,21 @@ test.describe('Dashboard Stability Tests', () => {
     await page.setDefaultNavigationTimeout(60_000);
     await page.setDefaultTimeout(40_000);
     
+    // Set up E2E bypass cookie for middleware auth bypass (same as admin dashboard tests)
+    await page.addInitScript(() => {
+      try {
+        localStorage.setItem('e2e-dashboard-bypass', '1');
+      } catch (e) {
+        console.warn('Could not set localStorage:', e);
+      }
+    });
+    await page.context().addCookies([{
+      name: 'e2e-dashboard-bypass',
+      value: '1',
+      path: '/',
+      domain: '127.0.0.1',
+    }]);
+    
     const consoleMessages: string[] = [];
     const consoleErrors: string[] = [];
     page.on('console', (msg) => {

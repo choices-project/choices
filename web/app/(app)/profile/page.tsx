@@ -49,6 +49,23 @@ function ProfilePageContent() {
   const refetchRef = useRef(refetch);
   useEffect(() => { refetchRef.current = refetch; }, [refetch]);
 
+  // Callbacks must be defined before early returns
+  const handleEditProfile = useCallback(() => {
+    routerRef.current.push('/profile/edit');
+  }, []);
+
+  const handleSettings = useCallback(() => {
+    routerRef.current.push('/profile/preferences');
+  }, []);
+
+  const handlePrivacySettings = useCallback(() => {
+    routerRef.current.push('/profile/preferences');
+  }, []);
+
+  const handleEditProfileFromActions = useCallback(() => {
+    routerRef.current.push('/profile/edit');
+  }, []);
+
   // Simple useEffect to set mounted - no requestAnimationFrame needed
   React.useEffect(() => {
     setIsMounted(true);
@@ -71,6 +88,10 @@ function ProfilePageContent() {
   }, [isMounted]);  
 
   useEffect(() => {
+    // In E2E harness mode, authentication is mocked - don't redirect
+    if (process.env.NEXT_PUBLIC_ENABLE_E2E_HARNESS === '1') {
+      return;
+    }
     // Only redirect if we're certain user is not authenticated
     // Don't redirect while authentication state is still loading
     if (!isUserLoading && !isAuthenticated) {
@@ -180,22 +201,6 @@ function ProfilePageContent() {
       </ErrorBoundary>
     );
   }
-
-  const handleEditProfile = useCallback(() => {
-    routerRef.current.push('/profile/edit');
-  }, []);
-
-  const handleSettings = useCallback(() => {
-    routerRef.current.push('/profile/preferences');
-  }, []);
-
-  const handlePrivacySettings = useCallback(() => {
-    routerRef.current.push('/profile/preferences');
-  }, []);
-
-  const handleEditProfileFromActions = useCallback(() => {
-    routerRef.current.push('/profile/edit');
-  }, []);
 
   if (profileError) {
     return (
