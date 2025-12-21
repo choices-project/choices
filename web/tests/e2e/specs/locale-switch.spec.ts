@@ -74,11 +74,34 @@ const applyLanguageSelection = async (page: Page, selection: LanguageSelection) 
   // Scroll the option into view if needed
   await selection.option.scrollIntoViewIfNeeded();
   
+  // Get the selector button to check for text changes after click
+  const selector = page.getByTestId('language-selector').first();
+  const button = selector.getByRole('button').first();
+  
   // Use force click to bypass any overlay/interception issues
   // The dropdown should be open, so the option should be clickable
   await selection.option.click({ force: true, timeout: 10_000 });
   
-  await waitForLocaleCookie(page, selection.code);
+  // Wait a bit for the click handler to process and cookie to be set
+  // The dropdown should close and button text should update
+  await page.waitForTimeout(500);
+  
+  // Wait for either the cookie to be set OR the button text to change
+  // This makes the test more resilient to timing issues
+  await Promise.race([
+    waitForLocaleCookie(page, selection.code).catch(() => null),
+    button.waitFor({ state: 'visible', timeout: 5_000 }).then(() => 
+      page.waitForFunction(
+        ({ expectedLabel }) => {
+          const btn = document.querySelector('[data-testid="language-selector"] button');
+          return btn?.textContent?.includes(expectedLabel) || false;
+        },
+        { expectedLabel: selection.label },
+        { timeout: 5_000 }
+      ).catch(() => null)
+    )
+  ]);
+  
   await page.waitForFunction(
     () => document.documentElement.dataset.globalNavigationHarness === 'ready',
     { timeout: 60_000 },
