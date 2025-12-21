@@ -275,25 +275,31 @@ export function useProfileLoadingStates() {
     })),
   );
 
-  return {
-    isLoading: isProfileLoading,
-    isUpdating,
-    isUpdatingAvatar: isUploadingAvatar,
-    isExporting,
-    isAnyUpdating: isUpdating || isUploadingAvatar || isExporting,
-  };
+  return useMemo(
+    () => ({
+      isLoading: isProfileLoading,
+      isUpdating,
+      isUpdatingAvatar: isUploadingAvatar,
+      isExporting,
+      isAnyUpdating: isUpdating || isUploadingAvatar || isExporting,
+    }),
+    [isProfileLoading, isUpdating, isUploadingAvatar, isExporting],
+  );
 }
 
 export function useProfileErrorStates() {
   const error = useProfileStore((state) => state.error);
 
-  return {
-    profileError: error,
-    updateError: error,
-    avatarError: error,
-    exportError: error,
-    hasAnyError: !!error,
-  };
+  return useMemo(
+    () => ({
+      profileError: error,
+      updateError: error,
+      avatarError: error,
+      exportError: error,
+      hasAnyError: !!error,
+    }),
+    [error],
+  );
 }
 
 export function useProfileData() {
@@ -301,37 +307,54 @@ export function useProfileData() {
   const loadingStates = useProfileLoadingStates();
   const errorStates = useProfileErrorStates();
 
-  return Object.assign({}, profile, loadingStates, errorStates);
+  return useMemo(
+    () => Object.assign({}, profile, loadingStates, errorStates),
+    [profile, loadingStates, errorStates],
+  );
 }
 
 export function useProfileCompleteness() {
-  const isComplete = useProfileStore((state) => state.isProfileComplete);
-  const missingFields = useProfileStore((state) => state.missingFields);
-  const completionPercentage = useProfileStore((state) => state.profileCompleteness);
+  const { isComplete, missingFields, completionPercentage } = useProfileStore(
+    useShallow((state) => ({
+      isComplete: state.isProfileComplete,
+      missingFields: state.missingFields,
+      completionPercentage: state.profileCompleteness,
+    })),
+  );
 
-  return {
-    isComplete,
-    missingFields,
-    completionPercentage,
-  };
+  return useMemo(
+    () => ({
+      isComplete,
+      missingFields,
+      completionPercentage,
+    }),
+    [isComplete, missingFields, completionPercentage],
+  );
 }
 
 export function useProfileDisplay() {
-  const displayName = useProfileStore((state) => state.getDisplayName());
-  const initials = useProfileStore((state) => state.getInitials());
-  const trustTier = useProfileStore(
-    (state) => (state.profile ?? state.userProfile)?.trust_tier ?? 'T0',
+  // Use a single selector with useShallow to get all display-related data at once
+  // This reduces subscriptions from 5 to 1 and ensures stable object reference
+  const { displayName, initials, trustTier, trustTierDisplay, isAdmin } = useProfileStore(
+    useShallow((state) => ({
+      displayName: state.getDisplayName(),
+      initials: state.getInitials(),
+      trustTier: (state.profile ?? state.userProfile)?.trust_tier ?? 'T0',
+      trustTierDisplay: state.getTrustTierDisplay(),
+      isAdmin: state.isAdmin(),
+    })),
   );
-  const trustTierDisplay = useProfileStore((state) => state.getTrustTierDisplay());
-  const isAdmin = useProfileStore((state) => state.isAdmin());
 
-  return {
-    displayName,
-    initials,
-    trustTier,
-    trustTierDisplay,
-    isAdmin,
-  };
+  return useMemo(
+    () => ({
+      displayName,
+      initials,
+      trustTier,
+      trustTierDisplay,
+      isAdmin,
+    }),
+    [displayName, initials, trustTier, trustTierDisplay, isAdmin],
+  );
 }
 
 

@@ -1069,13 +1069,19 @@ export const useHashtagSearch = () => {
 };
 
 export const useHashtagLoading = () => {
-  const isLoading = useHashtagStore((state) => state.isLoading);
-  const isSearching = useHashtagStore((state) => state.isSearching);
-  const isFollowing = useHashtagStore((state) => state.isFollowing);
-  const isUnfollowing = useHashtagStore((state) => state.isUnfollowing);
-  const isCreating = useHashtagStore((state) => state.isCreating);
-  const isUpdating = useHashtagStore((state) => state.isUpdating);
-  const isDeleting = useHashtagStore((state) => state.isDeleting);
+  // Use a single selector with useShallow to get all loading states at once
+  // This reduces subscriptions from 7 to 1 and ensures stable object reference
+  const { isLoading, isSearching, isFollowing, isUnfollowing, isCreating, isUpdating, isDeleting } = useHashtagStore(
+    useShallow((state) => ({
+      isLoading: state.isLoading,
+      isSearching: state.isSearching,
+      isFollowing: state.isFollowing,
+      isUnfollowing: state.isUnfollowing,
+      isCreating: state.isCreating,
+      isUpdating: state.isUpdating,
+      isDeleting: state.isDeleting,
+    })),
+  );
 
   return useMemo(
     () => ({
@@ -1092,10 +1098,16 @@ export const useHashtagLoading = () => {
 };
 
 export const useHashtagError = () => {
-  const error = useHashtagStore((state) => state.error);
-  const searchError = useHashtagStore((state) => state.searchError);
-  const followError = useHashtagStore((state) => state.followError);
-  const createError = useHashtagStore((state) => state.createError);
+  // Use a single selector with useShallow to get all error states at once
+  // This reduces subscriptions from 4 to 1 and ensures stable object reference
+  const { error, searchError, followError, createError } = useHashtagStore(
+    useShallow((state) => ({
+      error: state.error,
+      searchError: state.searchError,
+      followError: state.followError,
+      createError: state.createError,
+    })),
+  );
 
   return useMemo(
     () => ({
