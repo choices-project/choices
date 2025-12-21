@@ -258,14 +258,17 @@ export const useElectionCountdown = (
     upcomingElections.length,
   ]);
 
-  return {
-    divisionIds,
-    elections: upcomingElections,
-    nextElection,
-    daysUntilNextElection,
-    loading,
-    error,
-  } as {
+  return useMemo(
+    () => ({
+      divisionIds,
+      elections: upcomingElections,
+      nextElection,
+      daysUntilNextElection,
+      loading,
+      error,
+    }),
+    [divisionIds, upcomingElections, nextElection, daysUntilNextElection, loading, error],
+  ) as {
     divisionIds: string[];
     elections: CivicElection[];
     nextElection: CivicElection | null;

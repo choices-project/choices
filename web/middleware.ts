@@ -217,7 +217,8 @@ export async function middleware(request: NextRequest) {
         // Redirect unauthenticated users to auth page
         const authUrl = new URL('/auth', request.url);
         // Preserve the original destination for redirect after login
-        authUrl.searchParams.set('redirect', pathname);
+        // Use 'redirectTo' to match client-side redirect logic
+        authUrl.searchParams.set('redirectTo', pathname);
         return NextResponse.redirect(authUrl, 307);
       }
     }

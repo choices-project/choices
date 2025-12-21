@@ -8,9 +8,11 @@
  * Status: 🟡 MODERNISING
  */
 
+import { useMemo } from 'react';
 import { create } from 'zustand';
 import { devtools, persist } from 'zustand/middleware';
 import { immer } from 'zustand/middleware/immer';
+import { useShallow } from 'zustand/react/shallow';
 
 import { REPRESENTATIVE_CONSTANTS } from '@/types/representative';
 
@@ -661,11 +663,15 @@ export const useRepresentativeFollowLoading = () =>
   useRepresentativeStore(representativeSelectors.followMutationLoading);
 export const useUserRepresentativeEntries = () =>
   useRepresentativeStore(representativeSelectors.userRepresentativeEntries);
-export const useUserRepresentativeMeta = () =>
-  useRepresentativeStore((state) => ({
-    total: representativeSelectors.userRepresentativesTotal(state),
-    hasMore: representativeSelectors.userRepresentativesHasMore(state)
-  }));
+export const useUserRepresentativeMeta = () => {
+  const { total, hasMore } = useRepresentativeStore(
+    useShallow((state) => ({
+      total: representativeSelectors.userRepresentativesTotal(state),
+      hasMore: representativeSelectors.userRepresentativesHasMore(state),
+    })),
+  );
+  return useMemo(() => ({ total, hasMore }), [total, hasMore]);
+};
 export const useRepresentativeById = (representativeId: number | null) =>
   useRepresentativeStore((state) => {
     if (representativeId == null) {

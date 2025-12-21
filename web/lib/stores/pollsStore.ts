@@ -1059,10 +1059,13 @@ export const usePolls = () => usePollsStore((state) => state.polls);
 export const usePollsLoading = () => usePollsStore((state) => state.isLoading);
 export const usePollsError = () => usePollsStore((state) => state.error);
 export const usePollPreferences = () => usePollsStore((state) => state.preferences);
-export const usePollFilters = () => usePollsStore((state) => state.filters);
+export const usePollFilters = () => {
+  const filters = usePollsStore(useShallow((state) => state.filters));
+  return useMemo(() => filters, [filters]);
+};
 export const usePollLastFetchedAt = () => usePollsStore((state) => state.lastFetchedAt);
-export const usePollPagination = () =>
-  usePollsStore(
+export const usePollPagination = () => {
+  const { currentPage, totalPages, totalResults, itemsPerPage } = usePollsStore(
     useShallow((state) => ({
       currentPage: state.search.currentPage,
       totalPages: state.search.totalPages,
@@ -1070,6 +1073,16 @@ export const usePollPagination = () =>
       itemsPerPage: state.preferences.itemsPerPage,
     })),
   );
+  return useMemo(
+    () => ({
+      currentPage,
+      totalPages,
+      totalResults,
+      itemsPerPage,
+    }),
+    [currentPage, totalPages, totalResults, itemsPerPage],
+  );
+};
 
 export const useFilteredPolls = () => usePollsStore((state) => state.getFilteredPolls());
 export const useFilteredPollCards = () => {
@@ -1119,7 +1132,10 @@ export const useSelectedPoll = () => {
   const selectedId = usePollsStore((state) => state.uiState.selectedPollId);
   return usePollsStore((state) => (selectedId ? state.getPollById(selectedId) : null));
 };
-export const usePollSearch = () => usePollsStore((state) => state.search);
+export const usePollSearch = () => {
+  const search = usePollsStore(useShallow((state) => state.search));
+  return useMemo(() => search, [search]);
+};
 
 const selectPollsActions = (state: PollsStore) => ({
   loadPolls: state.loadPolls,

@@ -10,11 +10,11 @@ import React, {
   useRef,
   useState,
 } from 'react'
+import { useShallow } from 'zustand/react/shallow'
 
 import { getSupabaseBrowserClient } from '@/utils/supabase/client'
 
 import { useUserStore } from '@/lib/stores/userStore'
-import { useShallow } from 'zustand/react/shallow'
 import logger from '@/lib/utils/logger'
 
 import type { User, Session } from '@supabase/supabase-js'

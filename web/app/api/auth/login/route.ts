@@ -196,19 +196,18 @@ export const POST = withErrorHandling(async (request: NextRequest) => {
       const isProduction = process.env.NODE_ENV === 'production'
       const maxAge = 60 * 60 * 24 * 7 // 7 days
 
-      // Set domain to work across www and non-www subdomains in production
-      // Only set domain if request is from actual production domain (not localhost/127.0.0.1)
-      // Leading dot makes cookie valid for all subdomains (www, api, etc.)
+      // Determine cookie settings based on environment
+      // Note: Not setting domain attribute allows cookie to work with middleware
+      // The browser will automatically send cookies to the correct domain
       const hostname = request.headers.get('host') || ''
       const isProductionDomain = hostname.includes('choices-app.com')
-      const cookieDomain = isProduction && isProductionDomain ? '.choices-app.com' : undefined
       // Only require HTTPS (secure) when actually on production domain, not localhost
       const requireSecure = isProduction && isProductionDomain
 
       // Extract project ref from Supabase URL to set cookies with correct name format
       // Supabase SSR expects: sb-<project-ref>-auth-token
       const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || ''
-      const projectRefMatch = supabaseUrl.match(/https?:\/\/([^.]+)\.supabase\.co/)
+      const projectRefMatch = supabaseUrl.match(/https?:\/\/([^.]+)\.supabase\.(co|io)/)
       const projectRef = projectRefMatch ? projectRefMatch[1] : 'unknown'
       const authTokenCookieName = `sb-${projectRef}-auth-token`
 
@@ -224,13 +223,16 @@ export const POST = withErrorHandling(async (request: NextRequest) => {
       }
 
       // Set the auth token cookie with Supabase SSR's expected name and format
+      // Note: Not setting domain allows the cookie to work correctly with middleware
+      // The browser will automatically scope the cookie to the current domain
       response.cookies.set(authTokenCookieName, JSON.stringify(sessionData), {
         httpOnly: true,
         secure: requireSecure, // HTTPS only on actual production domain
         sameSite: 'lax', // Allow cross-site requests for OAuth flows
         path: '/',
         maxAge: maxAge,
-        domain: cookieDomain // Share cookies across www and non-www
+        // Explicitly omit domain - browser will handle domain scoping automatically
+        // This ensures middleware can read the cookie correctly
       })
 
       // Also set the session expiry time for client-side checks (keep for backward compatibility)
@@ -241,7 +243,7 @@ export const POST = withErrorHandling(async (request: NextRequest) => {
           sameSite: 'lax',
           path: '/',
           maxAge: maxAge,
-          domain: cookieDomain // Share cookies across www and non-www
+          // Explicitly omit domain - browser will handle domain scoping automatically
         })
       }
 

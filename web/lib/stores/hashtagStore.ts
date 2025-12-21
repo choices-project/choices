@@ -1159,13 +1159,25 @@ export const useHashtagSearchQuery = () =>
 
 export const useTrendingHashtags = () => useHashtagStore((state) => state.trendingHashtags);
 
-export const useHashtagStats = () =>
-  useHashtagStore((state) => ({
-    followedCount: state.followedHashtags.length,
-    trendingCount: state.trendingHashtags.length,
-    searchResultCount: state.searchResults?.hashtags.length ?? 0,
-    recentSearchesCount: state.recentSearches.length,
-  }));
+export const useHashtagStats = () => {
+  const { followedCount, trendingCount, searchResultCount, recentSearchesCount } = useHashtagStore(
+    useShallow((state) => ({
+      followedCount: state.followedHashtags.length,
+      trendingCount: state.trendingHashtags.length,
+      searchResultCount: state.searchResults?.hashtags.length ?? 0,
+      recentSearchesCount: state.recentSearches.length,
+    })),
+  );
+  return useMemo(
+    () => ({
+      followedCount,
+      trendingCount,
+      searchResultCount,
+      recentSearchesCount,
+    }),
+    [followedCount, trendingCount, searchResultCount, recentSearchesCount],
+  );
+};
 
 export const useHashtagList = () => useHashtagStore((state) => state.hashtags);
 export const useFollowedHashtags = () => useHashtagStore((state) => state.followedHashtags);

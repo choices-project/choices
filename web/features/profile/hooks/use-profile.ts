@@ -88,7 +88,7 @@ export function useProfile(): UseProfileReturn {
     if (!isProfileLoaded && !isProfileLoading) {
       void loadProfileRef.current();
     }
-  }, [isProfileLoaded, isProfileLoading, shouldBypassProfileLoad]);  
+  }, [isProfileLoaded, isProfileLoading, shouldBypassProfileLoad]);
 
   // Use refs for refreshProfile
   const refreshProfileRef = useRef(refreshProfile);
@@ -96,7 +96,7 @@ export function useProfile(): UseProfileReturn {
 
   const refetch = useCallback(async () => {
     await refreshProfileRef.current();
-  }, []);  
+  }, []);
 
   return useMemo(() => ({
     profile: currentProfile ?? fallbackProfile ?? null,
@@ -123,7 +123,7 @@ export function useProfileUpdate(): UseProfileUpdateReturn {
     async (data: ProfileUpdateData): Promise<ProfileActionResult> => {
       return await updateProfileActionRef.current(data);
     },
-    [],  
+    [],
   );
 
   return useMemo(() => ({
@@ -153,7 +153,7 @@ export function useProfileAvatar(): UseProfileAvatarReturn {
     async (file: File): Promise<AvatarUploadResult> => {
       return await updateAvatarRef.current(file);
     },
-    [],  
+    [],
   );
 
   return useMemo(() => ({
@@ -231,7 +231,7 @@ export function useProfileExport(): UseProfileExportReturn {
 
       return data;
     },
-    [],  
+    [],
   );
 
   return useMemo(() => ({
@@ -256,7 +256,7 @@ export function useProfileDelete() {
 
   const deleteProfile = useCallback(async (): Promise<ProfileActionResult> => {
     return await deleteProfileActionRef.current();
-  }, []);  
+  }, []);
 
   return useMemo(() => ({
     deleteProfile,
