@@ -218,22 +218,63 @@ export const POST = withErrorHandling(async (request: NextRequest): Promise<Next
     // Update the response body while preserving cookies set by Supabase SSR
     // Instead of creating a new response, update the existing one
     const responseBody = JSON.stringify(responseData)
-    
+
     // Get all cookies that were set by Supabase SSR
-    let allCookies = response.cookies.getAll()
-    
-    // If Supabase SSR didn't set cookies, manually set them
-    // Extract project ref for cookie name
+    const allCookies = response.cookies.getAll()
+
+    // Extract project ref for cookie name (needed for manual setting and logging)
     const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || ''
     const projectRefMatch = supabaseUrl.match(/https?:\/\/([^.]+)\.supabase\.(co|io)/)
     const projectRef = projectRefMatch ? projectRefMatch[1] : 'unknown'
     const authTokenCookieName = `sb-${projectRef}-auth-token`
+
+    // Check if auth cookie was set by Supabase SSR
+    const hasAuthCookie = allCookies.some(c =>
+      c.name === authTokenCookieName ||
+      (c.name.startsWith('sb-') && (c.name.includes('auth') || c.name.includes('session')))
+    )
+
+    logger.info('Cookies after signInWithPassword', {
+      userId: authData.user.id,
+      cookieCount: allCookies.length,
+      cookieNames: allCookies.map(c => c.name),
+      hasAuthCookie,
+      expectedCookieName: authTokenCookieName,
+    })
+
+    // Create the final response
+    const finalResponse = new NextResponse(responseBody, {
+      status: 200,
+      headers: {
+        'Content-Type': 'application/json',
+      },
+    })
+
+    // Copy all cookies from the original response (set by Supabase SSR)
+    // Ensure proper security attributes, especially for auth cookies
+    const isProduction = process.env.NODE_ENV === 'production'
+    const hostname = request.headers.get('host') || ''
+    const isProductionDomain = hostname.includes('choices-app.com')
+    const requireSecure = isProduction && isProductionDomain
     
-    // Check if auth cookie was set
-    const hasAuthCookie = allCookies.some(c => c.name === authTokenCookieName || c.name.includes('auth'))
-    
+    allCookies.forEach((cookie) => {
+      const isAuthCookie = cookie.name.includes('auth') || cookie.name.includes('session') || cookie.name.startsWith('sb-')
+      
+      finalResponse.cookies.set(cookie.name, cookie.value, {
+        // For auth cookies, ensure httpOnly and secure are set correctly
+        httpOnly: cookie.httpOnly ?? (isAuthCookie ? true : undefined),
+        secure: cookie.secure ?? (isAuthCookie ? requireSecure : undefined),
+        sameSite: (cookie.sameSite as 'strict' | 'lax' | 'none' | undefined) ?? 'lax',
+        path: cookie.path ?? '/',
+        maxAge: cookie.maxAge,
+        // IMPORTANT: Do NOT set domain attribute - let browser handle domain scoping
+        // This ensures cookies work correctly with middleware
+      })
+    })
+
+    // If Supabase SSR didn't set the auth cookie, manually set it
+    // This is a fallback to ensure cookies are always set
     if (!hasAuthCookie && authData.session) {
-      // Manually set the auth cookie in Supabase SSR format
       const sessionData = {
         access_token: authData.session.access_token,
         refresh_token: authData.session.refresh_token,
@@ -242,55 +283,31 @@ export const POST = withErrorHandling(async (request: NextRequest): Promise<Next
         token_type: authData.session.token_type,
         user: authData.user
       }
-      
+
       const isProduction = process.env.NODE_ENV === 'production'
       const hostname = request.headers.get('host') || ''
       const isProductionDomain = hostname.includes('choices-app.com')
       const requireSecure = isProduction && isProductionDomain
       const maxAge = 60 * 60 * 24 * 7 // 7 days
-      
-      response.cookies.set(authTokenCookieName, JSON.stringify(sessionData), {
+
+      // Set cookie directly on final response
+      // IMPORTANT: Do NOT set domain attribute - let browser handle domain scoping
+      // This ensures cookies work correctly with middleware
+      finalResponse.cookies.set(authTokenCookieName, JSON.stringify(sessionData), {
         httpOnly: true,
         secure: requireSecure,
         sameSite: 'lax',
         path: '/',
         maxAge: maxAge,
+        // Explicitly omit domain - browser will handle domain scoping automatically
       })
-      
-      logger.info('Manually set auth cookie', {
+
+      logger.info('Manually set auth cookie on final response', {
         cookieName: authTokenCookieName,
         userId: authData.user.id,
+        secure: requireSecure,
       })
-      
-      // Refresh cookie list
-      allCookies = response.cookies.getAll()
     }
-    
-    logger.info('Final cookies before response', {
-      userId: authData.user.id,
-      expiresAt: authData.session?.expires_at,
-      cookieCount: allCookies.length,
-      cookieNames: allCookies.map(c => c.name),
-    })
-
-    // Update the response body while preserving all cookies
-    const finalResponse = new NextResponse(responseBody, {
-      status: 200,
-      headers: {
-        'Content-Type': 'application/json',
-      },
-    })
-
-    // Copy all cookies from the original response
-    allCookies.forEach((cookie) => {
-      finalResponse.cookies.set(cookie.name, cookie.value, {
-        httpOnly: cookie.httpOnly ?? true,
-        secure: cookie.secure ?? false,
-        sameSite: (cookie.sameSite as 'strict' | 'lax' | 'none' | undefined) ?? 'lax',
-        path: cookie.path ?? '/',
-        maxAge: cookie.maxAge,
-      })
-    })
 
     logger.info('Final response cookies', {
       cookieCount: finalResponse.cookies.getAll().length,

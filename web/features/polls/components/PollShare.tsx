@@ -4,7 +4,7 @@
 import { Share2, Copy, Link, Twitter, Facebook, Linkedin, Mail, QrCode, Download } from 'lucide-react'
 import Image from 'next/image'
 import QRCode from 'qrcode'
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 
 import { isFeatureEnabled } from '@/lib/core/feature-flags'
 import { devLog } from '@/lib/utils/logger';
@@ -54,7 +54,7 @@ export default function PollShare({ pollId, poll }: PollShareProps) {
   const pollTitle = poll?.title ?? t('polls.share.defaultTitle')
   const socialSharingEnabled = isFeatureEnabled('SOCIAL_SHARING_POLLS')
 
-  const trackShare = async (platform: string, placement: string) => {
+  const trackShare = useCallback(async (platform: string, placement: string) => {
     try {
       await fetch('/api/share', {
         method: 'POST',
@@ -69,9 +69,9 @@ export default function PollShare({ pollId, poll }: PollShareProps) {
     } catch (error) {
       devLog('Failed to track share event', { error, platform, placement });
     }
-  }
+  }, [pollId])
 
-  const handleCopyLink = async () => {
+  const handleCopyLink = useCallback(async () => {
     try {
       const { safeNavigator } = await import('@/lib/utils/ssr-safe');
       const clipboard = safeNavigator(n => n.clipboard);
@@ -84,9 +84,9 @@ export default function PollShare({ pollId, poll }: PollShareProps) {
     } catch (error) {
       devLog('Failed to copy link:', { error })
     }
-  }
+  }, [pollUrl, trackShare])
 
-  const handleDownloadQR = async () => {
+  const handleDownloadQR = useCallback(async () => {
     if (!qrCodeDataUrl) {
       devLog('QR code not available for download', {})
       return
@@ -106,10 +106,10 @@ export default function PollShare({ pollId, poll }: PollShareProps) {
     } catch (error) {
       devLog('Failed to download QR code:', { error })
     }
-  }
+  }, [qrCodeDataUrl, pollId])
 
-  const handleNativeShare = async () => {
-    if (navigator.share) {
+  const handleNativeShare = useCallback(async () => {
+    if (typeof navigator !== 'undefined' && navigator.share) {
       try {
         await navigator.share({
           title: pollTitle,
@@ -121,9 +121,9 @@ export default function PollShare({ pollId, poll }: PollShareProps) {
         devLog('Error sharing:', { error })
       }
     }
-  }
+  }, [pollTitle, pollUrl, t, trackShare])
 
-  const handleSocialShare = (platform: string) => {
+  const handleSocialShare = useCallback((platform: string) => {
     if (!socialSharingEnabled) return
     
     const encodedUrl = encodeURIComponent(pollUrl)
@@ -149,7 +149,7 @@ export default function PollShare({ pollId, poll }: PollShareProps) {
       window.open(shareUrl, 'blank', 'width=600,height=400')
       void trackShare(platform, 'poll_share_social');
     }
-  }
+  }, [socialSharingEnabled, pollUrl, pollTitle, t, trackShare])
 
   return (
     <div className="space-y-6">

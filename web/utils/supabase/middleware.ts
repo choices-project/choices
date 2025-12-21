@@ -33,6 +33,27 @@ export function checkAuthInMiddleware(
   
   const cookies = request.cookies
   
+  // Debug: Log all cookies for troubleshooting (only in non-production or when debugging)
+  if (process.env.NODE_ENV !== 'production' || process.env.DEBUG_MIDDLEWARE === '1') {
+    const allCookies = cookies.getAll()
+    const allCookieNames = allCookies.map(c => c.name)
+    console.log('[checkAuthInMiddleware] All cookies:', allCookieNames)
+    
+    // Log auth-related cookies in detail
+    const authCookies = allCookies.filter(c => 
+      c.name.includes('auth') || 
+      c.name.includes('session') || 
+      c.name.startsWith('sb-')
+    )
+    if (authCookies.length > 0) {
+      console.log('[checkAuthInMiddleware] Auth cookies found:', authCookies.map(c => ({
+        name: c.name,
+        valueLength: c.value.length,
+        hasValue: c.value.length > 0,
+      })))
+    }
+  }
+  
   // First, check for our custom access token cookie (if we set one)
   const accessToken = cookies.get('sb-access-token')
   if (accessToken?.value && accessToken.value.length > 0) {

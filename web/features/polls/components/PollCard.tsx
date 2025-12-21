@@ -2,7 +2,7 @@
 
 import { Users, BarChart3, Eye, Clock, Calendar, User } from 'lucide-react';
 import Link from 'next/link';
-import React from 'react';
+import React, { useMemo, useCallback } from 'react';
 
 import type { PollRow } from '@/features/polls/types';
 
@@ -36,7 +36,7 @@ const getStatusColor = (status: PollRow['status']) => {
 const PollCard: React.FC<PollCardProps> = ({ poll, showActions = true, className = '' }) => {
   const { t, currentLanguage } = useI18n();
 
-  const votingMethodLabels: Record<string, string> = {
+  const votingMethodLabels: Record<string, string> = useMemo(() => ({
     single: t('polls.card.votingMethod.single'),
     'single-choice': t('polls.card.votingMethod.single'),
     approval: t('polls.card.votingMethod.approval'),
@@ -46,45 +46,59 @@ const PollCard: React.FC<PollCardProps> = ({ poll, showActions = true, className
     range: t('polls.card.votingMethod.range'),
     multiple: t('polls.card.votingMethod.multiple'),
     'multiple-choice': t('polls.card.votingMethod.multiple'),
-  };
+  }), [t]);
 
-  const statusLabels: Record<string, string> = {
+  const statusLabels: Record<string, string> = useMemo(() => ({
     active: t('polls.card.status.active'),
     closed: t('polls.card.status.closed'),
     draft: t('polls.card.status.draft'),
     archived: t('polls.card.status.archived'),
-  };
+  }), [t]);
 
-  const getVotingMethodLabel = (method: string | null | undefined) => {
-    const normalized = (method ?? 'single').toLowerCase();
-    return votingMethodLabels[normalized] ?? t('polls.card.votingMethod.unknown');
-  };
-
-  const formatDate = (dateString: string | null | undefined) => {
-    if (!dateString) return '—';
-    const d = new Date(dateString);
-    if (Number.isNaN(d.getTime())) return '—';
-    return new Intl.DateTimeFormat(currentLanguage ?? undefined, {
+  const dateFormatter = useMemo(
+    () => new Intl.DateTimeFormat(currentLanguage ?? undefined, {
       year: 'numeric',
       month: 'short',
       day: 'numeric',
-    }).format(d);
-  };
+    }),
+    [currentLanguage],
+  );
 
-  const formatTime = (dateString: string | null | undefined) => {
+  const timeFormatter = useMemo(
+    () => new Intl.DateTimeFormat(currentLanguage ?? undefined, {
+      hour: '2-digit',
+      minute: '2-digit',
+    }),
+    [currentLanguage],
+  );
+
+  const numberFormatter = useMemo(
+    () => new Intl.NumberFormat(currentLanguage ?? undefined, {
+      maximumFractionDigits: 0,
+    }),
+    [currentLanguage],
+  );
+
+  const getVotingMethodLabel = useCallback((method: string | null | undefined) => {
+    const normalized = (method ?? 'single').toLowerCase();
+    return votingMethodLabels[normalized] ?? t('polls.card.votingMethod.unknown');
+  }, [votingMethodLabels, t]);
+
+  const formatDate = useCallback((dateString: string | null | undefined) => {
     if (!dateString) return '—';
     const d = new Date(dateString);
     if (Number.isNaN(d.getTime())) return '—';
-    return new Intl.DateTimeFormat(currentLanguage ?? undefined, {
-      hour: '2-digit',
-      minute: '2-digit',
-    }).format(d);
-  };
+    return dateFormatter.format(d);
+  }, [dateFormatter]);
 
-  const formatNumber = (value: number) =>
-    new Intl.NumberFormat(currentLanguage ?? undefined, {
-      maximumFractionDigits: 0,
-    }).format(value);
+  const formatTime = useCallback((dateString: string | null | undefined) => {
+    if (!dateString) return '—';
+    const d = new Date(dateString);
+    if (Number.isNaN(d.getTime())) return '—';
+    return timeFormatter.format(d);
+  }, [timeFormatter]);
+
+  const formatNumber = useCallback((value: number) => numberFormatter.format(value), [numberFormatter]);
 
   const createdBy =
     (poll as PollRow & { created_by?: string | null; owner_name?: string | null }).created_by ??

@@ -1,7 +1,7 @@
 'use client';
 
 import { Clock, Lock, AlertTriangle, Info, CheckCircle } from 'lucide-react';
-import React from 'react';
+import React, { useMemo, useCallback } from 'react';
 
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Badge } from '@/components/ui/badge';
@@ -31,8 +31,8 @@ export function PostCloseBanner({
   className
 }: PostCloseBannerProps) {
   const { t, currentLanguage } = useI18n();
-  
-  const getStatusInfo = () => {
+
+  const statusInfo = useMemo(() => {
     switch (pollStatus) {
       case 'closed':
         return {
@@ -64,20 +64,22 @@ export function PostCloseBanner({
       default:
         return null;
     }
-  };
+  }, [pollStatus, t]);
 
-  const statusInfo = getStatusInfo();
   if (!statusInfo) return null;
 
-  const formatDate = (date: Date) => {
-    return new Intl.DateTimeFormat(currentLanguage === 'es' ? 'es-ES' : 'en-US', {
+  const dateFormatter = useMemo(
+    () => new Intl.DateTimeFormat(currentLanguage === 'es' ? 'es-ES' : 'en-US', {
       month: 'short',
       day: 'numeric',
       year: 'numeric',
       hour: '2-digit',
       minute: '2-digit'
-    }).format(date);
-  };
+    }),
+    [currentLanguage],
+  );
+
+  const formatDate = useCallback((date: Date) => dateFormatter.format(date), [dateFormatter]);
 
   return (
     <div className={className}>
@@ -99,7 +101,7 @@ export function PostCloseBanner({
               <AlertDescription className={statusInfo.textColor}>
                 {statusInfo.description}
               </AlertDescription>
-              
+
               {/* Additional status information */}
               <div className="mt-2 space-y-1 text-sm">
                 {baselineAt && (
@@ -129,7 +131,7 @@ export function PostCloseBanner({
               </div>
             </div>
           </div>
-          
+
           {/* Management actions */}
           {canManage && (
             <div className="flex flex-col space-y-2 ml-4">

@@ -71,8 +71,17 @@ test.describe('Production Polls Page Deep Diagnostic', () => {
     const spinnerVisible = await page.locator('.animate-spin, [class*="spinner"]').first().isVisible({ timeout: 2_000 }).catch(() => false);
     const mountSpinner = await page.locator('[data-testid="polls-loading-mount"]').isVisible({ timeout: 500 }).catch(() => false);
     const dataSpinner = await page.locator('[data-testid="polls-loading-data"]').isVisible({ timeout: 500 }).catch(() => false);
+    
+    // Check for polls page specific content
+    // We check for the container AND that it's not one of the loading spinners
+    const pollsContainer = page.locator('.container.mx-auto.px-4.py-8').filter({
+      hasNot: page.locator('[data-testid="polls-loading-mount"], [data-testid="polls-loading-data"]')
+    });
+    const hasPollsContainer = await pollsContainer.isVisible({ timeout: 2_000 }).catch(() => false);
+    const pollsContent = await pollsContainer.textContent().catch(() => '');
+    const hasContent = hasPollsContainer && pollsContent && pollsContent.length > 50;
+    
     const bodyText = await page.locator('body').textContent().catch(() => '');
-    const hasContent = bodyText && bodyText.length > 200 && !bodyText.includes('Something went wrong');
     
     // Check React state
     const reactState = await page.evaluate(() => {
@@ -90,7 +99,9 @@ test.describe('Production Polls Page Deep Diagnostic', () => {
     console.log('Spinner Visible:', spinnerVisible);
     console.log('Mount Spinner (isMounted=false):', mountSpinner);
     console.log('Data Spinner (isLoading=true):', dataSpinner);
+    console.log('Has Polls Container:', hasPollsContainer);
     console.log('Has Content:', hasContent);
+    console.log('Polls Content Length:', pollsContent?.length || 0);
     console.log('Body Text Length:', bodyText?.length || 0);
     console.log('React State:', reactState);
     console.log('\nConsole Messages Count:', consoleMessages.length);

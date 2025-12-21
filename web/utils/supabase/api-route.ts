@@ -1,6 +1,6 @@
 /**
  * Supabase client factory for API routes
- * 
+ *
  * This factory creates a Supabase client that properly handles cookies in API routes
  * using NextResponse instead of next/headers (which doesn't work in API routes).
  */
@@ -41,10 +41,10 @@ const validateEnvironment = () => {
 
 /**
  * Create a Supabase client for API routes with proper cookie handling
- * 
+ *
  * This function creates a Supabase client that uses NextResponse for cookie management,
  * which is required for API routes (next/headers doesn't work in API routes).
- * 
+ *
  * @param request - The Next.js request object
  * @param response - The Next.js response object (will be modified with cookies)
  * @returns Supabase client configured for API routes
@@ -73,42 +73,49 @@ export async function getSupabaseApiRouteClient(
     },
     set: (name: string, value: string, options: Record<string, unknown>) => {
       try {
-        // Extract cookie options
+        // Determine production status
+        const isProduction = process.env.NODE_ENV === 'production'
+        const hostname = request.headers.get('host') || ''
+        const isProductionDomain = hostname.includes('choices-app.com')
+        const requireSecure = isProduction && isProductionDomain
+
+        // Extract cookie options with secure defaults
+        // For auth cookies, always use secure defaults if not explicitly provided
+        const isAuthCookie = name.includes('auth') || name.includes('session') || name.startsWith('sb-')
+        
         const cookieOptions: {
           httpOnly?: boolean
           secure?: boolean
           sameSite?: 'strict' | 'lax' | 'none'
           path?: string
           maxAge?: number
-        } = {}
+        } = {
+          // Default to secure values for auth cookies
+          httpOnly: typeof options.httpOnly === 'boolean' ? options.httpOnly : (isAuthCookie ? true : undefined),
+          secure: typeof options.secure === 'boolean' ? options.secure : (isAuthCookie ? requireSecure : undefined),
+          sameSite: (typeof options.sameSite === 'string' ? options.sameSite : 'lax') as 'strict' | 'lax' | 'none',
+          path: typeof options.path === 'string' ? options.path : '/',
+        }
 
-        if (typeof options.httpOnly === 'boolean') {
-          cookieOptions.httpOnly = options.httpOnly
-        }
-        if (typeof options.secure === 'boolean') {
-          cookieOptions.secure = options.secure
-        }
-        if (typeof options.sameSite === 'string') {
-          cookieOptions.sameSite = options.sameSite as 'strict' | 'lax' | 'none'
-        }
-        if (typeof options.path === 'string') {
-          cookieOptions.path = options.path
-        }
         if (typeof options.maxAge === 'number') {
           cookieOptions.maxAge = options.maxAge
         }
 
         // Set cookie on NextResponse (this works in API routes)
+        // IMPORTANT: Do NOT set domain attribute - let browser handle domain scoping
+        // This ensures cookies work correctly with middleware
         response.cookies.set(name, value, cookieOptions)
         
         // Log cookie setting for debugging
-        if (name.includes('auth') || name.includes('session')) {
+        if (isAuthCookie) {
           logger.info('Setting auth cookie in API route', {
             name,
             valueLength: value.length,
             httpOnly: cookieOptions.httpOnly,
             secure: cookieOptions.secure,
             path: cookieOptions.path,
+            isProduction,
+            isProductionDomain,
           })
         }
       } catch (error) {

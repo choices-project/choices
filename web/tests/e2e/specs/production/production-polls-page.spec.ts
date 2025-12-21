@@ -76,14 +76,26 @@ test.describe('Production Polls Page Tests', () => {
       err.includes('hydration')
     );
 
-    // Wait a bit more for any final errors
+    // Wait a bit more for any final errors and for polls page to render
     await page.waitForTimeout(2_000);
 
-    // Check if page has loaded content
-    const hasContent = await page.locator('body').textContent().then(text => {
-      return text && text.length > 100 && !text.includes('Loading') && !text.includes('Something went wrong');
-    }).catch(() => false);
-
+    // Check for polls page specific loading spinners (these should NOT be visible)
+    const pollsMountSpinner = await page.locator('[data-testid="polls-loading-mount"]').isVisible({ timeout: 500 }).catch(() => false);
+    const pollsDataSpinner = await page.locator('[data-testid="polls-loading-data"]').isVisible({ timeout: 500 }).catch(() => false);
+    
+    // Check if polls page has loaded by looking for specific polls page content
+    // The polls page should have a container with polls content (either polls list or empty state)
+    // We check for the container AND that it's not one of the loading spinners
+    const pollsContainer = page.locator('.container.mx-auto.px-4.py-8').filter({
+      hasNot: page.locator('[data-testid="polls-loading-mount"], [data-testid="polls-loading-data"]')
+    });
+    const hasPollsContainer = await pollsContainer.isVisible({ timeout: 2_000 }).catch(() => false);
+    
+    // Check for polls page content - either polls list or empty state message
+    // Both indicate the page has loaded successfully
+    const pollsContent = await pollsContainer.textContent().catch(() => '');
+    const hasPollsContent = hasPollsContainer && pollsContent && pollsContent.length > 50;
+    
     // Check for error boundaries
     const errorBoundary = page.locator('[data-testid="error-boundary"], [role="alert"]:has-text("Something went wrong"), [role="alert"]:has-text("Error")');
     const hasErrorBoundary = await errorBoundary.isVisible({ timeout: 2_000 }).catch(() => false);
@@ -93,14 +105,28 @@ test.describe('Production Polls Page Tests', () => {
     console.log('CSP Violations:', cspViolations);
     console.log('React Errors:', reactErrors);
     console.log('Spinner Visible:', spinnerVisible);
-    console.log('Has Content:', hasContent);
+    console.log('Polls Mount Spinner:', pollsMountSpinner);
+    console.log('Polls Data Spinner:', pollsDataSpinner);
+    console.log('Has Polls Container:', hasPollsContainer);
+    console.log('Has Polls Content:', hasPollsContent);
     console.log('Has Error Boundary:', hasErrorBoundary);
 
-    // Fail if spinner is still visible after 10 seconds
+    // Fail if polls page loading spinners are still visible
+    if (pollsMountSpinner || pollsDataSpinner) {
+      throw new Error(
+        `Polls page stuck in loading state. ` +
+        `Mount spinner: ${pollsMountSpinner}, Data spinner: ${pollsDataSpinner}. ` +
+        `Console errors: ${consoleErrors.length}, ` +
+        `CSP violations: ${cspViolations.length}, ` +
+        `React errors: ${reactErrors.length}`
+      );
+    }
+    
+    // Also fail if generic spinner is visible (as a fallback check)
     if (spinnerVisible) {
       throw new Error(
         `Polls page stuck in loading state. ` +
-        `Spinner still visible after 10 seconds. ` +
+        `Generic spinner still visible after 10 seconds. ` +
         `Console errors: ${consoleErrors.length}, ` +
         `CSP violations: ${cspViolations.length}, ` +
         `React errors: ${reactErrors.length}`
@@ -126,8 +152,8 @@ test.describe('Production Polls Page Tests', () => {
       console.warn('CSP violations detected:', cspViolations);
     }
 
-    // Page should have loaded content
-    expect(hasContent).toBe(true);
+    // Page should have loaded polls content (container visible with content)
+    expect(hasPollsContent).toBe(true);
   });
 
   test('polls page has no CSP violations for vercel.live', async ({ page }) => {

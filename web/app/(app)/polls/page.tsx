@@ -249,12 +249,23 @@ function PollsPageContent() {
     <ErrorBoundary>
       <div className="container mx-auto px-4 py-8">
         <div className="mb-8">
-          <h1 className="text-3xl font-bold text-gray-900 dark:text-gray-100 mb-2">
-            {tRef.current('polls.page.title')}
-          </h1>
-          <p className="text-gray-600 dark:text-gray-400">
-            {tRef.current('polls.page.subtitle')}
-          </p>
+          <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4 mb-2">
+            <div className="flex-1">
+              <h1 className="text-3xl font-bold text-gray-900 dark:text-gray-100 mb-2">
+                {tRef.current('polls.page.title')}
+              </h1>
+              <p className="text-gray-600 dark:text-gray-400">
+                {tRef.current('polls.page.subtitle')}
+              </p>
+            </div>
+            <Link
+              href="/polls/create"
+              className="inline-flex items-center justify-center px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors whitespace-nowrap self-start sm:self-auto"
+            >
+              <Plus className="h-4 w-4 mr-2" />
+              {tRef.current('polls.page.cta.create')}
+            </Link>
+          </div>
         </div>
 
         {error && (

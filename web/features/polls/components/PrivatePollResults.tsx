@@ -1,6 +1,6 @@
 'use client'
 
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 
 
 import { logger } from '@/lib/utils/logger';
@@ -47,6 +47,10 @@ export default function PrivatePollResults({ poll, userId, onPrivacyBudgetExceed
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [privacyBudget, setPrivacyBudget] = useState<number | null>(null)
+
+  // Use ref for stable callback prop to prevent unnecessary re-renders
+  const onPrivacyBudgetExceededRef = useRef(onPrivacyBudgetExceeded);
+  useEffect(() => { onPrivacyBudgetExceededRef.current = onPrivacyBudgetExceeded; }, [onPrivacyBudgetExceeded]);
 
   const loadResults = useCallback(async () => {
     try {
@@ -119,14 +123,14 @@ export default function PrivatePollResults({ poll, userId, onPrivacyBudgetExceed
       
       if (error instanceof Error && error.message.includes('Privacy budget exceeded')) {
         setError('Privacy budget exceeded. Please try again later.')
-        onPrivacyBudgetExceeded?.()
+        onPrivacyBudgetExceededRef.current?.()
       } else {
         setError('Failed to load poll results')
       }
     } finally {
       setLoading(false)
     }
-  }, [poll.id, userId, onPrivacyBudgetExceeded])
+  }, [poll.id, userId])
 
   const loadPrivacyBudget = useCallback(async () => {
     try {

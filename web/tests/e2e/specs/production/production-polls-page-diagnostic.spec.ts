@@ -46,10 +46,21 @@ test.describe('Production Polls Page Diagnostic Tests', () => {
       err.includes('hydration')
     );
     
-    // Check if page has content (not just loading)
+    // Check for polls page specific content
+    // We check for the container AND that it's not one of the loading spinners
+    const pollsContainer = page.locator('.container.mx-auto.px-4.py-8').filter({
+      hasNot: page.locator('[data-testid="polls-loading-mount"], [data-testid="polls-loading-data"]')
+    });
+    const hasPollsContainer = await pollsContainer.isVisible({ timeout: 2_000 }).catch(() => false);
+    const pollsContent = await pollsContainer.textContent().catch(() => '');
+    const hasContent = hasPollsContainer && pollsContent && pollsContent.length > 50;
+    
+    // Check if stuck in loading - polls page loading spinners should not be visible
+    const pollsMountSpinner = await page.locator('[data-testid="polls-loading-mount"]').isVisible({ timeout: 500 }).catch(() => false);
+    const pollsDataSpinner = await page.locator('[data-testid="polls-loading-data"]').isVisible({ timeout: 500 }).catch(() => false);
+    const isStuckLoading = pollsMountSpinner || pollsDataSpinner;
+    
     const bodyText = await page.locator('body').textContent().catch(() => '');
-    const hasContent = bodyText && bodyText.length > 100 && !bodyText.includes('Something went wrong');
-    const isStuckLoading = bodyText && (bodyText.includes('Loading') || bodyText.trim().length < 50);
     
     // Get current URL to see if redirected
     const currentUrl = page.url();
@@ -58,6 +69,9 @@ test.describe('Production Polls Page Diagnostic Tests', () => {
     console.log('\n=== DIAGNOSTIC RESULTS ===');
     console.log('Current URL:', currentUrl);
     console.log('Spinner Visible:', spinnerVisible);
+    console.log('Polls Mount Spinner:', pollsMountSpinner);
+    console.log('Polls Data Spinner:', pollsDataSpinner);
+    console.log('Has Polls Container:', hasPollsContainer);
     console.log('Has Error Boundary:', hasErrorBoundary);
     console.log('Has Content:', hasContent);
     console.log('Is Stuck Loading:', isStuckLoading);

@@ -190,6 +190,12 @@ export const usePollMilestoneNotifications = ({
   } = usePollMilestoneState(pollId);
   const { addNotification } = useNotificationActions();
 
+  // Use refs for stable callbacks to prevent unnecessary re-renders
+  const addNotificationRef = useRef(addNotification);
+  useEffect(() => { addNotificationRef.current = addNotification; }, [addNotification]);
+  const onMilestoneReachedRef = useRef(onMilestoneReached);
+  useEffect(() => { onMilestoneReachedRef.current = onMilestoneReached; }, [onMilestoneReached]);
+
   useEffect(() => {
     if (!activePollId || !isReady) return;
 
@@ -200,16 +206,16 @@ export const usePollMilestoneNotifications = ({
 
       if (thresholdMet && optedIn && !alreadyAcknowledged) {
         acknowledgeMilestone(milestone);
-        addNotification({
+        addNotificationRef.current({
           type: 'success',
           title: `Milestone reached: ${milestone} votes`,
           message: `Your poll just crossed ${milestone.toLocaleString()} votes. Keep momentum going by sharing again.`,
           duration: 6000,
         });
-        onMilestoneReached?.(milestone);
+        onMilestoneReachedRef.current?.(milestone);
       }
     });
-  }, [acknowledgeMilestone, acknowledged, addNotification, isReady, milestones, onMilestoneReached, preferences, totalVotes, activePollId]);
+  }, [acknowledgeMilestone, acknowledged, isReady, milestones, preferences, totalVotes, activePollId]);
 
   const reachedMilestones = useMemo(
     () => milestones.filter((milestone) => totalVotes >= milestone),

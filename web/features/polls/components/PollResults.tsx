@@ -50,6 +50,12 @@ export default function OptimizedPollResults({
     averageAge: number;
   } | null>(null)
 
+  // Use refs for stable callback props to prevent unnecessary re-renders
+  const onResultsLoadedRef = useRef(onResultsLoaded);
+  useEffect(() => { onResultsLoadedRef.current = onResultsLoaded; }, [onResultsLoaded]);
+  const onErrorRef = useRef(onError);
+  useEffect(() => { onErrorRef.current = onError; }, [onError]);
+
   // Memoized poll results loading function
   const loadPollResults = useCallback(async () => {
     if (!pollId) return
@@ -76,15 +82,15 @@ export default function OptimizedPollResults({
         timestamp: new Date().toISOString()
       })
 
-      onResultsLoaded?.()
+      onResultsLoadedRef.current?.()
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : 'Failed to load poll results'
       setError(errorMessage)
-      onError?.()
+      onErrorRef.current?.()
     } finally {
       setLoading(false)
     }
-  }, [pollId, userId, includePrivate, onResultsLoaded, onError])
+  }, [pollId, userId, includePrivate])
 
   // Load cache statistics
   const loadCacheStats = useCallback(() => {

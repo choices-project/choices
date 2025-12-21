@@ -112,6 +112,10 @@ export default function PollHashtagIntegration({
   const getTrendingHashtagsRef = useRef(getTrendingHashtags);
   useEffect(() => { getTrendingHashtagsRef.current = getTrendingHashtags; }, [getTrendingHashtags]);
 
+  // Extract poll.id and poll.hashtags for stable dependencies
+  const pollId = poll.id;
+  const pollHashtags = poll.hashtags ?? [];
+
   const trackHashtagEngagement = React.useCallback((action: 'view' | 'click' | 'share') => {
     logger.info(`Hashtag engagement tracked: ${action}`);
     void (async () => {
@@ -120,26 +124,30 @@ export default function PollHashtagIntegration({
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
-            pollId: poll.id,
+            pollId,
             action,
-            hashtags: poll.hashtags ?? []
+            hashtags: pollHashtags
           })
         });
       } catch {
         // Swallow errors to avoid impacting UX
       }
     })();
-  }, [poll.hashtags, poll.id]);
+  }, [pollHashtags, pollId]);
+
+  // Use ref for stable trackHashtagEngagement callback
+  const trackHashtagEngagementRef = useRef(trackHashtagEngagement);
+  useEffect(() => { trackHashtagEngagementRef.current = trackHashtagEngagement; }, [trackHashtagEngagement]);
 
   // Load trending hashtags on mount
   useEffect(() => {
     void getTrendingHashtagsRef.current();
     // Record a view when the component mounts
-    trackHashtagEngagement('view');
+    trackHashtagEngagementRef.current('view');
     // Fetch aggregated engagement totals (best-effort)
     void (async () => {
       try {
-        const res = await fetch(`/api/analytics/hashtag/engagement?poll_id=${encodeURIComponent(poll.id)}&days=30`, {
+        const res = await fetch(`/api/analytics/hashtag/engagement?poll_id=${encodeURIComponent(pollId)}&days=30`, {
           method: 'GET',
           headers: { 'Content-Type': 'application/json' }
         });
@@ -158,10 +166,8 @@ export default function PollHashtagIntegration({
         // ignore
       }
     })();
-  }, [poll.id, trackHashtagEngagement]);  
+  }, [pollId]); // Only depend on pollId, trackHashtagEngagement is stable via ref
 
-  // Track hashtag engagement in real-time
-  // Track hashtag engagement in real-time
   const _trackHashtagEngagement = trackHashtagEngagement;
 
   // Handle hashtag updates with enhanced analytics
