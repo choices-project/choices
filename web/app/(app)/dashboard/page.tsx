@@ -80,8 +80,13 @@ export default function DashboardPage() {
     if (shouldBypassAuth) {
       return;
     }
+    // Wait for user loading to complete before checking authentication
+    // This prevents redirecting while auth state is still being initialized
+    if (isUserLoading) {
+      return;
+    }
     // First check if user is authenticated - if not, redirect to auth
-    if (!isUserLoading && !isAuthenticated) {
+    if (!isAuthenticated) {
       logger.debug('🚨 Dashboard: Unauthenticated user - redirecting to auth');
       routerRef.current.replace('/auth');
       return;

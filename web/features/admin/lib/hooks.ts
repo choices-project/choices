@@ -464,12 +464,23 @@ export const useRealTimeSubscriptions = () => {
   const { setSystemMetrics, addActivityItem } = useAdminActions();
   const { addAdminNotification } = useNotificationActions();
 
+  // Use refs for stable store actions to prevent infinite re-renders
+  const setSystemMetricsRef = React.useRef(setSystemMetrics);
+  const addActivityItemRef = React.useRef(addActivityItem);
+  const addAdminNotificationRef = React.useRef(addAdminNotification);
+
+  React.useEffect(() => {
+    setSystemMetricsRef.current = setSystemMetrics;
+    addActivityItemRef.current = addActivityItem;
+    addAdminNotificationRef.current = addAdminNotification;
+  }, [setSystemMetrics, addActivityItem, addAdminNotification]);
+
   const handleAdminEvent = React.useCallback((event: AdminRealtimeEvent) => {
     setLastAdminEvent(event);
 
     switch (event.type) {
       case 'system-metrics': {
-        setSystemMetrics(event.payload);
+        setSystemMetricsRef.current(event.payload);
         logger.debug('Real-time admin metrics update received', event.payload);
         break;
       }
@@ -490,7 +501,7 @@ export const useRealTimeSubscriptions = () => {
           notificationPayload.action = event.payload.action;
         }
 
-        addAdminNotification(notificationPayload);
+        addAdminNotificationRef.current(notificationPayload);
         logger.info('Real-time admin notification received', {
           notificationId: event.payload.id,
           title: event.payload.title,
@@ -513,7 +524,7 @@ export const useRealTimeSubscriptions = () => {
           activityPayload.metadata = event.payload.metadata;
         }
 
-        addActivityItem(activityPayload);
+        addActivityItemRef.current(activityPayload);
         logger.debug('Real-time admin activity recorded', {
           id: event.payload.id,
           type: event.payload.type,
@@ -523,7 +534,7 @@ export const useRealTimeSubscriptions = () => {
       default:
         break;
     }
-  }, [addActivityItem, addAdminNotification, setSystemMetrics]);
+  }, []); // Empty deps - using refs
 
   const handleFeedbackEvent = React.useCallback((event: FeedbackRealtimeEvent) => {
     setLatestFeedbackEvent(event);
@@ -539,7 +550,7 @@ export const useRealTimeSubscriptions = () => {
     };
 
     if (event.type === 'feedback-received') {
-      addAdminNotification({
+      addAdminNotificationRef.current({
         type: payload.priority === 'urgent' || payload.priority === 'high' ? 'warning' : 'info',
         title: 'New Feedback Received',
         message: summary,
@@ -550,7 +561,7 @@ export const useRealTimeSubscriptions = () => {
         priority: payload.priority,
       });
     } else if (event.type === 'feedback-updated') {
-      addAdminNotification({
+      addAdminNotificationRef.current({
         type: 'info',
         title: 'Feedback Updated',
         message: summary,
@@ -561,7 +572,7 @@ export const useRealTimeSubscriptions = () => {
         status: payload.severity,
       });
     }
-  }, [addAdminNotification]);
+  }, []); // Empty deps - using refs
 
   React.useEffect(() => {
     // Subscribe to admin updates
@@ -579,16 +590,22 @@ export const useRealTimeSubscriptions = () => {
     };
   }, [handleAdminEvent, handleFeedbackEvent]);
 
-  return {
-    subscriptions,
-    isConnected: subscriptions.length > 0,
-    closeAll: () => {
-      subscriptions.forEach(id => realTimeService.unsubscribe(id));
-      setSubscriptions([]);
-    },
-    lastAdminEvent,
-    latestFeedbackEvent,
+  const closeAllRef = React.useRef<() => void>();
+  closeAllRef.current = () => {
+    subscriptions.forEach(id => realTimeService.unsubscribe(id));
+    setSubscriptions([]);
   };
+
+  return React.useMemo(
+    () => ({
+      subscriptions,
+      isConnected: subscriptions.length > 0,
+      closeAll: () => closeAllRef.current?.(),
+      lastAdminEvent,
+      latestFeedbackEvent,
+    }),
+    [subscriptions, lastAdminEvent, latestFeedbackEvent],
+  );
 };
 
 
