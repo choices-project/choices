@@ -2,19 +2,20 @@
 
 ## Test Results Summary
 
-### Cookie Inspection Test Results
-- **Cookie IS being set**: `sb-muqwrehywjrbaeerjgfb-auth-token` exists after login
-- **Cookie attributes**:
-  - `httpOnly: false` ❌ (should be `true` for security)
-  - `secure: false` ❌ (should be `true` in production)
-  - `domain: www.choices-app.com` ⚠️ (explicitly set - may cause issues)
+### Cookie Inspection Test Results (Latest Deployment)
+- **Cookie IS being set**: `sb-muqwrehywjrbaeerjgfb-auth-token` exists after login ✅
+- **Cookie attributes** (Still incorrect after initial fixes):
+  - `httpOnly: false` ❌ (should be `true` for security) - **FIXED in latest code**
+  - `secure: false` ❌ (should be `true` in production) - **FIXED in latest code**
+  - `domain: www.choices-app.com` ⚠️ (explicitly set - may cause issues) - **FIXED in latest code**
   - `sameSite: Lax` ✅ (correct)
   - `path: /` ✅ (correct)
 
-### Profile Page Test Results
+### Profile Page Test Results (Latest Deployment)
 - **Status**: ❌ Still redirecting to `/auth?redirectTo=/profile`
 - **Current URL after login**: `/feed` ✅ (login works)
 - **Final URL after profile navigation**: `/auth?redirectTo=/profile` ❌ (middleware redirect)
+- **Root cause**: Cookie attributes are still wrong, preventing middleware from reading them correctly
 
 ## Root Cause Analysis
 
@@ -43,60 +44,88 @@ The middleware should be able to detect the cookie (`sb-muqwrehywjrbaeerjgfb-aut
    - Should detect: `sb-muqwrehywjrbaeerjgfb-auth-token`
    - Currently: Not detecting the cookie (redirects to `/auth`)
 
-## Recommended Fixes
+## Fixes Applied (Latest)
 
-### Fix 1: Ensure Cookie Attributes Are Correct
-When Supabase SSR sets cookies through our adapter, we should ensure proper attributes:
+### Fix 1: Force Cookie Attributes for Auth Cookies ✅
+**File**: `web/utils/supabase/api-route.ts`
+
+When Supabase SSR sets cookies through our adapter, we now FORCE correct attributes for auth cookies:
 
 ```typescript
-// In web/utils/supabase/api-route.ts cookieAdapter.set()
-const cookieOptions: {
-  httpOnly?: boolean
-  secure?: boolean
-  sameSite?: 'strict' | 'lax' | 'none'
-  path?: string
-  maxAge?: number
-} = {
-  // Default to secure values if not provided
-  httpOnly: typeof options.httpOnly === 'boolean' ? options.httpOnly : true,
-  secure: typeof options.secure === 'boolean' ? options.secure : (process.env.NODE_ENV === 'production'),
+// For auth cookies, FORCE secure values regardless of what Supabase SSR passes
+const isAuthCookie = name.includes('auth') || name.includes('session') || name.startsWith('sb-')
+
+const cookieOptions = {
+  // Force secure values for auth cookies
+  httpOnly: isAuthCookie ? true : (typeof options.httpOnly === 'boolean' ? options.httpOnly : undefined),
+  secure: isAuthCookie ? requireSecure : (typeof options.secure === 'boolean' ? options.secure : undefined),
   sameSite: (typeof options.sameSite === 'string' ? options.sameSite : 'lax') as 'strict' | 'lax' | 'none',
   path: typeof options.path === 'string' ? options.path : '/',
 }
-
-if (typeof options.maxAge === 'number') {
-  cookieOptions.maxAge = options.maxAge
-}
 ```
 
-### Fix 2: Remove Domain Attribute
+**Key change**: We now FORCE `httpOnly: true` and `secure: true` for auth cookies, even if Supabase SSR passes `false`.
+
+### Fix 2: Force Cookie Attributes When Copying ✅
+**File**: `web/app/api/auth/login/route.ts`
+
+When copying cookies to final response, we now force correct attributes:
+
+```typescript
+allCookies.forEach((cookie) => {
+  const isAuthCookie = cookie.name.includes('auth') || cookie.name.includes('session') || cookie.name.startsWith('sb-')
+  
+  // Force secure values for auth cookies
+  finalResponse.cookies.set(cookie.name, cookie.value, {
+    httpOnly: isAuthCookie ? true : (cookie.httpOnly ?? undefined),
+    secure: isAuthCookie ? requireSecure : (cookie.secure ?? undefined),
+    // ... other options
+  })
+})
+```
+
+### Fix 3: Enhanced Logging ✅
+**Files**: 
+- `web/utils/supabase/api-route.ts` - Logs cookie setting with options received
+- `web/app/api/auth/login/route.ts` - Logs cookie copying with original vs final attributes
+- `web/utils/supabase/middleware.ts` - Enhanced debugging for cookie inspection
+
+### Fix 4: Remove Domain Attribute ✅
 The cookie should NOT have an explicit domain attribute. Let the browser handle domain scoping:
 
 ```typescript
 // Don't set domain attribute - browser will handle it
 response.cookies.set(name, value, cookieOptions)
-// NOT: response.cookies.set(name, value, { ...cookieOptions, domain: 'www.choices-app.com' })
-```
-
-### Fix 3: Add Middleware Debugging
-Add logging to middleware to see what cookies it's actually receiving:
-
-```typescript
-// In web/utils/supabase/middleware.ts
-if (process.env.DEBUG_MIDDLEWARE === '1') {
-  const allCookies = request.cookies.getAll()
-  console.log('[Middleware] All cookies:', allCookies.map(c => c.name))
-  console.log('[Middleware] Looking for:', `sb-${projectRef}-auth-token`)
-}
+// IMPORTANT: Do NOT set domain attribute - let browser handle domain scoping
 ```
 
 ## Next Steps
 
-1. ✅ **Fix cookie attributes** - Ensure `httpOnly: true` and `secure: true` in production
+1. ✅ **Fix cookie attributes** - Force `httpOnly: true` and `secure: true` for auth cookies
 2. ✅ **Remove domain attribute** - Let browser handle domain scoping
-3. ✅ **Add middleware debugging** - Log what cookies middleware sees
-4. ⏳ **Test after deployment** - Verify middleware can now detect cookies
-5. ⏳ **Verify profile page loads** - Confirm no redirect to `/auth`
+3. ✅ **Add middleware debugging** - Enhanced logging for cookie inspection
+4. ✅ **Force attributes when copying** - Ensure cookies maintain security attributes
+5. ⏳ **Test after deployment** - Verify cookies now have correct attributes
+6. ⏳ **Verify middleware detects cookies** - Confirm middleware can read authentication
+7. ⏳ **Verify profile page loads** - Confirm no redirect to `/auth`
+
+## Latest Changes (Committed, Awaiting Deployment)
+
+### Cookie Adapter Fixes
+- **Force `httpOnly: true`** for all auth cookies (regardless of Supabase SSR options)
+- **Force `secure: true`** in production for all auth cookies
+- **Enhanced logging** to track what options Supabase SSR passes vs what we set
+
+### Login Route Fixes
+- **Force attributes when copying** cookies to final response
+- **Enhanced logging** to track original vs final cookie attributes
+- **Better error handling** for cookie operations
+
+### Expected Results After Next Deployment
+- Cookies should have `httpOnly: true` and `secure: true` in production
+- Cookies should NOT have explicit domain attribute
+- Middleware should be able to read cookies correctly
+- Profile page should load without redirect to `/auth`
 
 ## Test Commands
 
