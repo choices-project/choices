@@ -14,6 +14,7 @@ import React, {
 import { getSupabaseBrowserClient } from '@/utils/supabase/client'
 
 import { useUserStore } from '@/lib/stores/userStore'
+import { useShallow } from 'zustand/react/shallow'
 import logger from '@/lib/utils/logger'
 
 import type { User, Session } from '@supabase/supabase-js'
@@ -37,31 +38,39 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [session, setSession] = useState<Session | null>(null)
   const [loading, setLoading] = useState(true)
 
-  const initializeAuth = useUserStore((state) => state.initializeAuth)
-  const setSessionAndDerived = useUserStore((state) => state.setSessionAndDerived)
-  const setProfile = useUserStore((state) => state.setProfile)
-  const setProfileLoading = useUserStore((state) => state.setProfileLoading)
-  const setUserError = useUserStore((state) => state.setUserError)
-  const clearUserError = useUserStore((state) => state.clearUserError)
-  const storeSignOut = useUserStore((state) => state.signOut)
+  // Use a single selector with useShallow to get all store actions at once
+  // This reduces the number of subscriptions and ensures stable references
+  const storeActions = useUserStore(
+    useShallow((state) => ({
+      initializeAuth: state.initializeAuth,
+      setSessionAndDerived: state.setSessionAndDerived,
+      setProfile: state.setProfile,
+      setProfileLoading: state.setProfileLoading,
+      setUserError: state.setUserError,
+      clearUserError: state.clearUserError,
+      storeSignOut: state.signOut,
+    }))
+  )
 
   // Use refs to ensure stable callbacks and prevent infinite loops
-  const initializeAuthRef = useRef(initializeAuth)
-  const setSessionAndDerivedRef = useRef(setSessionAndDerived)
-  const setProfileRef = useRef(setProfile)
-  const setProfileLoadingRef = useRef(setProfileLoading)
-  const setUserErrorRef = useRef(setUserError)
-  const clearUserErrorRef = useRef(clearUserError)
-  const storeSignOutRef = useRef(storeSignOut)
+  // Zustand actions are stable, but we use refs as an extra safety measure
+  const initializeAuthRef = useRef(storeActions.initializeAuth)
+  const setSessionAndDerivedRef = useRef(storeActions.setSessionAndDerived)
+  const setProfileRef = useRef(storeActions.setProfile)
+  const setProfileLoadingRef = useRef(storeActions.setProfileLoading)
+  const setUserErrorRef = useRef(storeActions.setUserError)
+  const clearUserErrorRef = useRef(storeActions.clearUserError)
+  const storeSignOutRef = useRef(storeActions.storeSignOut)
 
-  // Keep refs in sync (these should be stable, but just in case)
-  useEffect(() => { initializeAuthRef.current = initializeAuth }, [initializeAuth])
-  useEffect(() => { setSessionAndDerivedRef.current = setSessionAndDerived }, [setSessionAndDerived])
-  useEffect(() => { setProfileRef.current = setProfile }, [setProfile])
-  useEffect(() => { setProfileLoadingRef.current = setProfileLoading }, [setProfileLoading])
-  useEffect(() => { setUserErrorRef.current = setUserError }, [setUserError])
-  useEffect(() => { clearUserErrorRef.current = clearUserError }, [clearUserError])
-  useEffect(() => { storeSignOutRef.current = storeSignOut }, [storeSignOut])
+  // Keep refs in sync - useShallow ensures the object reference is stable, but actions inside might change
+  // Actually, Zustand actions are always stable, so these effects should never run, but we keep them for safety
+  useEffect(() => { initializeAuthRef.current = storeActions.initializeAuth }, [storeActions.initializeAuth])
+  useEffect(() => { setSessionAndDerivedRef.current = storeActions.setSessionAndDerived }, [storeActions.setSessionAndDerived])
+  useEffect(() => { setProfileRef.current = storeActions.setProfile }, [storeActions.setProfile])
+  useEffect(() => { setProfileLoadingRef.current = storeActions.setProfileLoading }, [storeActions.setProfileLoading])
+  useEffect(() => { setUserErrorRef.current = storeActions.setUserError }, [storeActions.setUserError])
+  useEffect(() => { clearUserErrorRef.current = storeActions.clearUserError }, [storeActions.clearUserError])
+  useEffect(() => { storeSignOutRef.current = storeActions.storeSignOut }, [storeActions.storeSignOut])
 
   const hydrateProfile = useCallback(
     async (client: Awaited<ReturnType<typeof getSupabaseBrowserClient>>, userId: string) => {
