@@ -1,0 +1,3848 @@
+<testsuites id="" name="" tests="576" failures="0" skipped="576" errors="0" time="1.297763">
+<testsuite name="specs/auth/auth-production.spec.ts" timestamp="2025-12-21T20:04:15.369Z" hostname="chromium" tests="2" failures="0" skipped="2" time="0" errors="0">
+<testcase name="Auth – real backend › existing test user can sign in via /auth" classname="specs/auth/auth-production.spec.ts" time="0">
+<properties>
+<property name="skip" value="Set PLAYWRIGHT_USE_MOCKS=0 to exercise the real backend">
+</property>
+<property name="skip" value="E2E credentials (E2E_USER_EMAIL, E2E_USER_PASSWORD, E2E_ADMIN_EMAIL, E2E_ADMIN_PASSWORD) are required">
+</property>
+</properties>
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Auth – real backend › admin credentials unlock admin routes" classname="specs/auth/auth-production.spec.ts" time="0">
+<properties>
+<property name="skip" value="Set PLAYWRIGHT_USE_MOCKS=0 to exercise the real backend">
+</property>
+<property name="skip" value="E2E credentials (E2E_USER_EMAIL, E2E_USER_PASSWORD, E2E_ADMIN_EMAIL, E2E_ADMIN_PASSWORD) are required">
+</property>
+</properties>
+<skipped>
+</skipped>
+</testcase>
+</testsuite>
+<testsuite name="specs/poll-production.spec.ts" timestamp="2025-12-21T20:04:15.369Z" hostname="chromium" tests="1" failures="0" skipped="1" time="0" errors="0">
+<testcase name="Production poll journey › author completes accessible wizard and sees share dialog" classname="specs/poll-production.spec.ts" time="0">
+<skipped>
+</skipped>
+</testcase>
+</testsuite>
+<testsuite name="specs/production/production-admin-dashboard-deep-diagnostic.spec.ts" timestamp="2025-12-21T20:04:15.369Z" hostname="chromium" tests="3" failures="0" skipped="3" time="0" errors="0">
+<testcase name="Production Admin Dashboard Deep Diagnostic › deep diagnostic - check all state and warnings" classname="specs/production/production-admin-dashboard-deep-diagnostic.spec.ts" time="0">
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Production Admin Dashboard Deep Diagnostic › admin dashboard navigation from personal dashboard" classname="specs/production/production-admin-dashboard-deep-diagnostic.spec.ts" time="0">
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Production Admin Dashboard Deep Diagnostic › admin dashboard direct navigation" classname="specs/production/production-admin-dashboard-deep-diagnostic.spec.ts" time="0">
+<skipped>
+</skipped>
+</testcase>
+</testsuite>
+<testsuite name="specs/production/production-all-pages.spec.ts" timestamp="2025-12-21T20:04:15.369Z" hostname="chromium" tests="24" failures="0" skipped="24" time="0" errors="0">
+<testcase name="Production - All Pages &amp; Features › Public Pages › landing page loads and displays content" classname="specs/production/production-all-pages.spec.ts" time="0">
+<properties>
+<property name="skip" value="Production tests require real backend (set PLAYWRIGHT_USE_MOCKS=0)">
+</property>
+</properties>
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Production - All Pages &amp; Features › Public Pages › auth page loads and displays login form" classname="specs/production/production-all-pages.spec.ts" time="0">
+<properties>
+<property name="skip" value="Production tests require real backend (set PLAYWRIGHT_USE_MOCKS=0)">
+</property>
+</properties>
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Production - All Pages &amp; Features › Public Pages › terms page loads" classname="specs/production/production-all-pages.spec.ts" time="0">
+<properties>
+<property name="skip" value="Production tests require real backend (set PLAYWRIGHT_USE_MOCKS=0)">
+</property>
+</properties>
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Production - All Pages &amp; Features › Public Pages › privacy page loads" classname="specs/production/production-all-pages.spec.ts" time="0">
+<properties>
+<property name="skip" value="Production tests require real backend (set PLAYWRIGHT_USE_MOCKS=0)">
+</property>
+</properties>
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Production - All Pages &amp; Features › Authenticated Pages › feed page loads and displays content" classname="specs/production/production-all-pages.spec.ts" time="0">
+<properties>
+<property name="skip" value="Production tests require real backend (set PLAYWRIGHT_USE_MOCKS=0)">
+</property>
+</properties>
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Production - All Pages &amp; Features › Authenticated Pages › dashboard page loads" classname="specs/production/production-all-pages.spec.ts" time="0">
+<properties>
+<property name="skip" value="Production tests require real backend (set PLAYWRIGHT_USE_MOCKS=0)">
+</property>
+</properties>
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Production - All Pages &amp; Features › Authenticated Pages › profile page loads" classname="specs/production/production-all-pages.spec.ts" time="0">
+<properties>
+<property name="skip" value="Production tests require real backend (set PLAYWRIGHT_USE_MOCKS=0)">
+</property>
+</properties>
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Production - All Pages &amp; Features › Authenticated Pages › onboarding page loads (if redirected)" classname="specs/production/production-all-pages.spec.ts" time="0">
+<properties>
+<property name="skip" value="Production tests require real backend (set PLAYWRIGHT_USE_MOCKS=0)">
+</property>
+</properties>
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Production - All Pages &amp; Features › Authenticated Pages › polls page loads" classname="specs/production/production-all-pages.spec.ts" time="0">
+<properties>
+<property name="skip" value="Production tests require real backend (set PLAYWRIGHT_USE_MOCKS=0)">
+</property>
+</properties>
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Production - All Pages &amp; Features › Authenticated Pages › pages handle API errors gracefully without crashing" classname="specs/production/production-all-pages.spec.ts" time="0">
+<properties>
+<property name="skip" value="Production tests require real backend (set PLAYWRIGHT_USE_MOCKS=0)">
+</property>
+</properties>
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Production - All Pages &amp; Features › Admin Pages › admin dashboard loads" classname="specs/production/production-all-pages.spec.ts" time="0">
+<properties>
+<property name="skip" value="Production tests require real backend (set PLAYWRIGHT_USE_MOCKS=0)">
+</property>
+</properties>
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Production - All Pages &amp; Features › Admin Pages › admin users page loads" classname="specs/production/production-all-pages.spec.ts" time="0">
+<properties>
+<property name="skip" value="Production tests require real backend (set PLAYWRIGHT_USE_MOCKS=0)">
+</property>
+</properties>
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Production - All Pages &amp; Features › Admin Pages › admin feedback page loads" classname="specs/production/production-all-pages.spec.ts" time="0">
+<properties>
+<property name="skip" value="Production tests require real backend (set PLAYWRIGHT_USE_MOCKS=0)">
+</property>
+</properties>
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Production - All Pages &amp; Features › Admin Pages › admin analytics page loads" classname="specs/production/production-all-pages.spec.ts" time="0">
+<properties>
+<property name="skip" value="Production tests require real backend (set PLAYWRIGHT_USE_MOCKS=0)">
+</property>
+</properties>
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Production - All Pages &amp; Features › API Endpoints › health API endpoint works" classname="specs/production/production-all-pages.spec.ts" time="0">
+<properties>
+<property name="skip" value="Production tests require real backend (set PLAYWRIGHT_USE_MOCKS=0)">
+</property>
+</properties>
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Production - All Pages &amp; Features › API Endpoints › feeds API endpoint responds" classname="specs/production/production-all-pages.spec.ts" time="0">
+<properties>
+<property name="skip" value="Production tests require real backend (set PLAYWRIGHT_USE_MOCKS=0)">
+</property>
+</properties>
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Production - All Pages &amp; Features › API Endpoints › profile API endpoint responds" classname="specs/production/production-all-pages.spec.ts" time="0">
+<properties>
+<property name="skip" value="Production tests require real backend (set PLAYWRIGHT_USE_MOCKS=0)">
+</property>
+</properties>
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Production - All Pages &amp; Features › API Endpoints › polls API endpoint responds" classname="specs/production/production-all-pages.spec.ts" time="0">
+<properties>
+<property name="skip" value="Production tests require real backend (set PLAYWRIGHT_USE_MOCKS=0)">
+</property>
+</properties>
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Production - All Pages &amp; Features › API Endpoints › feedback API endpoint responds" classname="specs/production/production-all-pages.spec.ts" time="0">
+<properties>
+<property name="skip" value="Production tests require real backend (set PLAYWRIGHT_USE_MOCKS=0)">
+</property>
+</properties>
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Production - All Pages &amp; Features › API Endpoints › admin health API endpoint works (requires auth)" classname="specs/production/production-all-pages.spec.ts" time="0">
+<properties>
+<property name="skip" value="Production tests require real backend (set PLAYWRIGHT_USE_MOCKS=0)">
+</property>
+</properties>
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Production - All Pages &amp; Features › Navigation &amp; Routing › navigation links work" classname="specs/production/production-all-pages.spec.ts" time="0">
+<properties>
+<property name="skip" value="Production tests require real backend (set PLAYWRIGHT_USE_MOCKS=0)">
+</property>
+</properties>
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Production - All Pages &amp; Features › Navigation &amp; Routing › browser back/forward navigation works" classname="specs/production/production-all-pages.spec.ts" time="0">
+<properties>
+<property name="skip" value="Production tests require real backend (set PLAYWRIGHT_USE_MOCKS=0)">
+</property>
+</properties>
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Production - All Pages &amp; Features › Error Handling › 404 page handles missing routes" classname="specs/production/production-all-pages.spec.ts" time="0">
+<properties>
+<property name="skip" value="Production tests require real backend (set PLAYWRIGHT_USE_MOCKS=0)">
+</property>
+</properties>
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Production - All Pages &amp; Features › Error Handling › invalid API endpoint returns appropriate error" classname="specs/production/production-all-pages.spec.ts" time="0">
+<properties>
+<property name="skip" value="Production tests require real backend (set PLAYWRIGHT_USE_MOCKS=0)">
+</property>
+</properties>
+<skipped>
+</skipped>
+</testcase>
+</testsuite>
+<testsuite name="specs/production/production-comprehensive-journeys.spec.ts" timestamp="2025-12-21T20:04:15.369Z" hostname="chromium" tests="12" failures="0" skipped="12" time="0" errors="0">
+<testcase name="Production Comprehensive Journeys › Complete Onboarding Flow › new user can complete full onboarding journey" classname="specs/production/production-comprehensive-journeys.spec.ts" time="0">
+<properties>
+<property name="skip" value="Production tests require real backend (set PLAYWRIGHT_USE_MOCKS=0)">
+</property>
+</properties>
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Production Comprehensive Journeys › Poll Creation and Voting › authenticated user can view and interact with polls" classname="specs/production/production-comprehensive-journeys.spec.ts" time="0">
+<properties>
+<property name="skip" value="Production tests require real backend (set PLAYWRIGHT_USE_MOCKS=0)">
+</property>
+</properties>
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Production Comprehensive Journeys › Poll Creation and Voting › user can navigate to poll detail page" classname="specs/production/production-comprehensive-journeys.spec.ts" time="0">
+<properties>
+<property name="skip" value="Production tests require real backend (set PLAYWRIGHT_USE_MOCKS=0)">
+</property>
+</properties>
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Production Comprehensive Journeys › Feed Interactions › user can like and unlike feed items" classname="specs/production/production-comprehensive-journeys.spec.ts" time="0">
+<properties>
+<property name="skip" value="Production tests require real backend (set PLAYWRIGHT_USE_MOCKS=0)">
+</property>
+</properties>
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Production Comprehensive Journeys › Feed Interactions › user can bookmark feed items" classname="specs/production/production-comprehensive-journeys.spec.ts" time="0">
+<properties>
+<property name="skip" value="Production tests require real backend (set PLAYWRIGHT_USE_MOCKS=0)">
+</property>
+</properties>
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Production Comprehensive Journeys › Feed Interactions › user can refresh feed" classname="specs/production/production-comprehensive-journeys.spec.ts" time="0">
+<properties>
+<property name="skip" value="Production tests require real backend (set PLAYWRIGHT_USE_MOCKS=0)">
+</property>
+</properties>
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Production Comprehensive Journeys › Profile Management › user can view and edit profile" classname="specs/production/production-comprehensive-journeys.spec.ts" time="0">
+<properties>
+<property name="skip" value="Production tests require real backend (set PLAYWRIGHT_USE_MOCKS=0)">
+</property>
+</properties>
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Production Comprehensive Journeys › Profile Management › user can view profile preferences" classname="specs/production/production-comprehensive-journeys.spec.ts" time="0">
+<properties>
+<property name="skip" value="Production tests require real backend (set PLAYWRIGHT_USE_MOCKS=0)">
+</property>
+</properties>
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Production Comprehensive Journeys › Multi-Step User Journeys › complete user journey: landing -&gt; auth -&gt; feed -&gt; poll -&gt; profile" classname="specs/production/production-comprehensive-journeys.spec.ts" time="0">
+<properties>
+<property name="skip" value="Production tests require real backend (set PLAYWRIGHT_USE_MOCKS=0)">
+</property>
+</properties>
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Production Comprehensive Journeys › Error Recovery › user can recover from feed loading errors" classname="specs/production/production-comprehensive-journeys.spec.ts" time="0">
+<properties>
+<property name="skip" value="Production tests require real backend (set PLAYWRIGHT_USE_MOCKS=0)">
+</property>
+</properties>
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Production Comprehensive Journeys › Performance Monitoring › feed page loads within performance budget" classname="specs/production/production-comprehensive-journeys.spec.ts" time="0">
+<properties>
+<property name="skip" value="Production tests require real backend (set PLAYWRIGHT_USE_MOCKS=0)">
+</property>
+</properties>
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Production Comprehensive Journeys › Performance Monitoring › navigation between pages is fast" classname="specs/production/production-comprehensive-journeys.spec.ts" time="0">
+<properties>
+<property name="skip" value="Production tests require real backend (set PLAYWRIGHT_USE_MOCKS=0)">
+</property>
+</properties>
+<skipped>
+</skipped>
+</testcase>
+</testsuite>
+<testsuite name="specs/production/production-cookie-inspection.spec.ts" timestamp="2025-12-21T20:04:15.369Z" hostname="chromium" tests="1" failures="0" skipped="1" time="0" errors="0">
+<testcase name="Production Cookie Inspection › inspect cookies after login and during profile access" classname="specs/production/production-cookie-inspection.spec.ts" time="0">
+<skipped>
+</skipped>
+</testcase>
+</testsuite>
+<testsuite name="specs/production/production-critical-fixes.spec.ts" timestamp="2025-12-21T20:04:15.369Z" hostname="chromium" tests="4" failures="0" skipped="4" time="0" errors="0">
+<testcase name="Production Critical Fixes › Dark Mode › dark mode toggle works" classname="specs/production/production-critical-fixes.spec.ts" time="0">
+<properties>
+<property name="skip" value="Production tests require real backend (set PLAYWRIGHT_USE_MOCKS=0)">
+</property>
+</properties>
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Production Critical Fixes › Sign Out › sign out button works and redirects properly" classname="specs/production/production-critical-fixes.spec.ts" time="0">
+<properties>
+<property name="skip" value="Production tests require real backend (set PLAYWRIGHT_USE_MOCKS=0)">
+</property>
+</properties>
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Production Critical Fixes › Dashboard Redirect › admin user should access dashboard without redirect to onboarding" classname="specs/production/production-critical-fixes.spec.ts" time="0">
+<properties>
+<property name="skip" value="Production tests require real backend (set PLAYWRIGHT_USE_MOCKS=0)">
+</property>
+</properties>
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Production Critical Fixes › Dashboard Redirect › admin user should access admin dashboard" classname="specs/production/production-critical-fixes.spec.ts" time="0">
+<properties>
+<property name="skip" value="Production tests require real backend (set PLAYWRIGHT_USE_MOCKS=0)">
+</property>
+</properties>
+<skipped>
+</skipped>
+</testcase>
+</testsuite>
+<testsuite name="specs/production/production-critical-journeys.spec.ts" timestamp="2025-12-21T20:04:15.369Z" hostname="chromium" tests="7" failures="0" skipped="7" time="0" errors="0">
+<testcase name="Production Critical Journeys › unauthenticated user redirected to landing page from root" classname="specs/production/production-critical-journeys.spec.ts" time="0">
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Production Critical Journeys › authenticated user redirected to /feed from root" classname="specs/production/production-critical-journeys.spec.ts" time="0">
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Production Critical Journeys › feed page requires authentication" classname="specs/production/production-critical-journeys.spec.ts" time="0">
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Production Critical Journeys › navigation works between auth and other pages" classname="specs/production/production-critical-journeys.spec.ts" time="0">
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Production Critical Journeys › API health checks work" classname="specs/production/production-critical-journeys.spec.ts" time="0">
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Production Critical Journeys › middleware redirects unauthenticated users to landing page" classname="specs/production/production-critical-journeys.spec.ts" time="0">
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Production Critical Journeys › page handles errors gracefully" classname="specs/production/production-critical-journeys.spec.ts" time="0">
+<skipped>
+</skipped>
+</testcase>
+</testsuite>
+<testsuite name="specs/production/production-dashboard-deep-diagnostic.spec.ts" timestamp="2025-12-21T20:04:15.369Z" hostname="chromium" tests="2" failures="0" skipped="2" time="0" errors="0">
+<testcase name="Production Dashboard Deep Diagnostic › deep diagnostic - check all state and warnings" classname="specs/production/production-dashboard-deep-diagnostic.spec.ts" time="0">
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Production Dashboard Deep Diagnostic › dashboard navigation from global nav" classname="specs/production/production-dashboard-deep-diagnostic.spec.ts" time="0">
+<skipped>
+</skipped>
+</testcase>
+</testsuite>
+<testsuite name="specs/production/production-edge-cases.spec.ts" timestamp="2025-12-21T20:04:15.369Z" hostname="chromium" tests="12" failures="0" skipped="12" time="0" errors="0">
+<testcase name="Production Edge Cases &amp; Stress Tests › Form Input Edge Cases › auth form handles special characters and unicode in email" classname="specs/production/production-edge-cases.spec.ts" time="0">
+<properties>
+<property name="skip" value="Production tests require real backend (set PLAYWRIGHT_USE_MOCKS=0)">
+</property>
+</properties>
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Production Edge Cases &amp; Stress Tests › Form Input Edge Cases › auth form handles very long input values gracefully" classname="specs/production/production-edge-cases.spec.ts" time="0">
+<properties>
+<property name="skip" value="Production tests require real backend (set PLAYWRIGHT_USE_MOCKS=0)">
+</property>
+</properties>
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Production Edge Cases &amp; Stress Tests › Form Input Edge Cases › auth form handles rapid input changes without errors" classname="specs/production/production-edge-cases.spec.ts" time="0">
+<properties>
+<property name="skip" value="Production tests require real backend (set PLAYWRIGHT_USE_MOCKS=0)">
+</property>
+</properties>
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Production Edge Cases &amp; Stress Tests › Form Input Edge Cases › auth form handles empty string and whitespace-only inputs" classname="specs/production/production-edge-cases.spec.ts" time="0">
+<properties>
+<property name="skip" value="Production tests require real backend (set PLAYWRIGHT_USE_MOCKS=0)">
+</property>
+</properties>
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Production Edge Cases &amp; Stress Tests › Network Resilience › application handles intermittent network failures gracefully" classname="specs/production/production-edge-cases.spec.ts" time="0">
+<properties>
+<property name="skip" value="Production tests require real backend (set PLAYWRIGHT_USE_MOCKS=0)">
+</property>
+</properties>
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Production Edge Cases &amp; Stress Tests › Network Resilience › application handles slow network connections without timeout errors" classname="specs/production/production-edge-cases.spec.ts" time="0">
+<properties>
+<property name="skip" value="Production tests require real backend (set PLAYWRIGHT_USE_MOCKS=0)">
+</property>
+</properties>
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Production Edge Cases &amp; Stress Tests › Network Resilience › application handles request timeouts gracefully" classname="specs/production/production-edge-cases.spec.ts" time="0">
+<properties>
+<property name="skip" value="Production tests require real backend (set PLAYWRIGHT_USE_MOCKS=0)">
+</property>
+</properties>
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Production Edge Cases &amp; Stress Tests › State Management Edge Cases › application handles browser back/forward navigation correctly" classname="specs/production/production-edge-cases.spec.ts" time="0">
+<properties>
+<property name="skip" value="Production tests require real backend (set PLAYWRIGHT_USE_MOCKS=0)">
+</property>
+</properties>
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Production Edge Cases &amp; Stress Tests › State Management Edge Cases › application handles page refresh without losing critical state" classname="specs/production/production-edge-cases.spec.ts" time="0">
+<properties>
+<property name="skip" value="Production tests require real backend (set PLAYWRIGHT_USE_MOCKS=0)">
+</property>
+</properties>
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Production Edge Cases &amp; Stress Tests › State Management Edge Cases › application handles rapid tab switching gracefully" classname="specs/production/production-edge-cases.spec.ts" time="0">
+<properties>
+<property name="skip" value="Production tests require real backend (set PLAYWRIGHT_USE_MOCKS=0)">
+</property>
+</properties>
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Production Edge Cases &amp; Stress Tests › Performance Stress Tests › application handles rapid user interactions without lag" classname="specs/production/production-edge-cases.spec.ts" time="0">
+<properties>
+<property name="skip" value="Production tests require real backend (set PLAYWRIGHT_USE_MOCKS=0)">
+</property>
+</properties>
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Production Edge Cases &amp; Stress Tests › Performance Stress Tests › application handles large amounts of content without performance degradation" classname="specs/production/production-edge-cases.spec.ts" time="0">
+<properties>
+<property name="skip" value="Production tests require real backend (set PLAYWRIGHT_USE_MOCKS=0)">
+</property>
+</properties>
+<skipped>
+</skipped>
+</testcase>
+</testsuite>
+<testsuite name="specs/production/production-expanded.spec.ts" timestamp="2025-12-21T20:04:15.369Z" hostname="chromium" tests="26" failures="0" skipped="26" time="0" errors="0">
+<testcase name="Production Expanded Tests › API Endpoints › polls API endpoint responds" classname="specs/production/production-expanded.spec.ts" time="0">
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Production Expanded Tests › API Endpoints › notifications API endpoint responds" classname="specs/production/production-expanded.spec.ts" time="0">
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Production Expanded Tests › API Endpoints › analytics API endpoint responds" classname="specs/production/production-expanded.spec.ts" time="0">
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Production Expanded Tests › API Endpoints › profile API endpoint responds" classname="specs/production/production-expanded.spec.ts" time="0">
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Production Expanded Tests › API Endpoints › civics representative endpoint responds" classname="specs/production/production-expanded.spec.ts" time="0">
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Production Expanded Tests › API Endpoints › civics address lookup endpoint responds" classname="specs/production/production-expanded.spec.ts" time="0">
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Production Expanded Tests › Page Navigation › unauthenticated user redirected from feed to auth" classname="specs/production/production-expanded.spec.ts" time="0">
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Production Expanded Tests › Page Navigation › unauthenticated user can navigate to auth page" classname="specs/production/production-expanded.spec.ts" time="0">
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Production Expanded Tests › Page Navigation › root redirects to landing page consistently for unauthenticated users" classname="specs/production/production-expanded.spec.ts" time="0">
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Production Expanded Tests › Performance Metrics › root page redirect to landing is fast" classname="specs/production/production-expanded.spec.ts" time="0">
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Production Expanded Tests › Performance Metrics › feed page redirect to auth is fast" classname="specs/production/production-expanded.spec.ts" time="0">
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Production Expanded Tests › Performance Metrics › API response times are acceptable" classname="specs/production/production-expanded.spec.ts" time="0">
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Production Expanded Tests › Security Validations › CSP header is present and valid" classname="specs/production/production-expanded.spec.ts" time="0">
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Production Expanded Tests › Security Validations › X-Frame-Options prevents clickjacking" classname="specs/production/production-expanded.spec.ts" time="0">
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Production Expanded Tests › Security Validations › X-Content-Type-Options prevents MIME sniffing" classname="specs/production/production-expanded.spec.ts" time="0">
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Production Expanded Tests › Security Validations › Referrer-Policy is set" classname="specs/production/production-expanded.spec.ts" time="0">
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Production Expanded Tests › Security Validations › no sensitive data in response headers" classname="specs/production/production-expanded.spec.ts" time="0">
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Production Expanded Tests › Accessibility › pages have proper heading hierarchy" classname="specs/production/production-expanded.spec.ts" time="0">
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Production Expanded Tests › Accessibility › images have alt text" classname="specs/production/production-expanded.spec.ts" time="0">
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Production Expanded Tests › Accessibility › links have accessible text" classname="specs/production/production-expanded.spec.ts" time="0">
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Production Expanded Tests › Accessibility › form inputs have labels" classname="specs/production/production-expanded.spec.ts" time="0">
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Production Expanded Tests › Error Handling › handles malformed API requests gracefully" classname="specs/production/production-expanded.spec.ts" time="0">
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Production Expanded Tests › Error Handling › handles missing query parameters gracefully" classname="specs/production/production-expanded.spec.ts" time="0">
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Production Expanded Tests › Error Handling › handles very long URLs gracefully" classname="specs/production/production-expanded.spec.ts" time="0">
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Production Expanded Tests › Content Delivery › static assets are served correctly" classname="specs/production/production-expanded.spec.ts" time="0">
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Production Expanded Tests › Content Delivery › manifest.json is accessible" classname="specs/production/production-expanded.spec.ts" time="0">
+<skipped>
+</skipped>
+</testcase>
+</testsuite>
+<testsuite name="specs/production/production-feedback-widget.spec.ts" timestamp="2025-12-21T20:04:15.369Z" hostname="chromium" tests="8" failures="0" skipped="8" time="0" errors="0">
+<testcase name="Production Feedback Widget › feedback widget renders on landing page" classname="specs/production/production-feedback-widget.spec.ts" time="0">
+<properties>
+<property name="skip" value="Production tests require real backend (set PLAYWRIGHT_USE_MOCKS=0)">
+</property>
+</properties>
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Production Feedback Widget › feedback widget renders on feed page" classname="specs/production/production-feedback-widget.spec.ts" time="0">
+<properties>
+<property name="skip" value="Production tests require real backend (set PLAYWRIGHT_USE_MOCKS=0)">
+</property>
+</properties>
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Production Feedback Widget › feedback widget can be opened and displays form" classname="specs/production/production-feedback-widget.spec.ts" time="0">
+<properties>
+<property name="skip" value="Production tests require real backend (set PLAYWRIGHT_USE_MOCKS=0)">
+</property>
+</properties>
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Production Feedback Widget › feedback widget form flow works correctly" classname="specs/production/production-feedback-widget.spec.ts" time="0">
+<properties>
+<property name="skip" value="Production tests require real backend (set PLAYWRIGHT_USE_MOCKS=0)">
+</property>
+</properties>
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Production Feedback Widget › feedback widget API endpoint is accessible" classname="specs/production/production-feedback-widget.spec.ts" time="0">
+<properties>
+<property name="skip" value="Production tests require real backend (set PLAYWRIGHT_USE_MOCKS=0)">
+</property>
+</properties>
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Production Feedback Widget › feedback widget handles API errors gracefully" classname="specs/production/production-feedback-widget.spec.ts" time="0">
+<properties>
+<property name="skip" value="Production tests require real backend (set PLAYWRIGHT_USE_MOCKS=0)">
+</property>
+</properties>
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Production Feedback Widget › feedback widget can be closed" classname="specs/production/production-feedback-widget.spec.ts" time="0">
+<properties>
+<property name="skip" value="Production tests require real backend (set PLAYWRIGHT_USE_MOCKS=0)">
+</property>
+</properties>
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Production Feedback Widget › feedback widget is accessible via keyboard" classname="specs/production/production-feedback-widget.spec.ts" time="0">
+<properties>
+<property name="skip" value="Production tests require real backend (set PLAYWRIGHT_USE_MOCKS=0)">
+</property>
+</properties>
+<skipped>
+</skipped>
+</testcase>
+</testsuite>
+<testsuite name="specs/production/production-observability.spec.ts" timestamp="2025-12-21T20:04:15.369Z" hostname="chromium" tests="3" failures="0" skipped="3" time="0" errors="0">
+<testcase name="Production Observability › feed page API + console diagnostics" classname="specs/production/production-observability.spec.ts" time="0">
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Production Observability › privacy page API + console diagnostics" classname="specs/production/production-observability.spec.ts" time="0">
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Production Observability › dashboard navigation + auth diagnostics" classname="specs/production/production-observability.spec.ts" time="0">
+<skipped>
+</skipped>
+</testcase>
+</testsuite>
+<testsuite name="specs/production/production-polls-deep-diagnostic.spec.ts" timestamp="2025-12-21T20:04:15.369Z" hostname="chromium" tests="1" failures="0" skipped="1" time="0" errors="0">
+<testcase name="Production Polls Page Deep Diagnostic › deep diagnostic - check all state and warnings" classname="specs/production/production-polls-deep-diagnostic.spec.ts" time="0">
+<skipped>
+</skipped>
+</testcase>
+</testsuite>
+<testsuite name="specs/production/production-polls-page-diagnostic.spec.ts" timestamp="2025-12-21T20:04:15.369Z" hostname="chromium" tests="1" failures="0" skipped="1" time="0" errors="0">
+<testcase name="Production Polls Page Diagnostic Tests › polls page diagnostic - check loading state and errors" classname="specs/production/production-polls-page-diagnostic.spec.ts" time="0">
+<skipped>
+</skipped>
+</testcase>
+</testsuite>
+<testsuite name="specs/production/production-polls-page.spec.ts" timestamp="2025-12-21T20:04:15.369Z" hostname="chromium" tests="2" failures="0" skipped="2" time="0" errors="0">
+<testcase name="Production Polls Page Tests › polls page loads without infinite spinner" classname="specs/production/production-polls-page.spec.ts" time="0">
+<properties>
+<property name="skip" value="Production tests require real backend (set PLAYWRIGHT_USE_MOCKS=0)">
+</property>
+</properties>
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Production Polls Page Tests › polls page has no CSP violations for vercel.live" classname="specs/production/production-polls-page.spec.ts" time="0">
+<properties>
+<property name="skip" value="Production tests require real backend (set PLAYWRIGHT_USE_MOCKS=0)">
+</property>
+</properties>
+<skipped>
+</skipped>
+</testcase>
+</testsuite>
+<testsuite name="specs/production/production-profile-deep-diagnostic.spec.ts" timestamp="2025-12-21T20:04:15.369Z" hostname="chromium" tests="1" failures="0" skipped="1" time="0" errors="0">
+<testcase name="Production Profile Page Deep Diagnostic › deep diagnostic - check all state and warnings" classname="specs/production/production-profile-deep-diagnostic.spec.ts" time="0">
+<skipped>
+</skipped>
+</testcase>
+</testsuite>
+<testsuite name="specs/production/production-profile-journey.spec.ts" timestamp="2025-12-21T20:04:15.369Z" hostname="chromium" tests="2" failures="0" skipped="2" time="0" errors="0">
+<testcase name="Production Profile Journey Tests › complete profile navigation journey" classname="specs/production/production-profile-journey.spec.ts" time="0">
+<properties>
+<property name="skip" value="Production tests require real backend (set PLAYWRIGHT_USE_MOCKS=0)">
+</property>
+</properties>
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Production Profile Journey Tests › profile page interactions work correctly" classname="specs/production/production-profile-journey.spec.ts" time="0">
+<properties>
+<property name="skip" value="Production tests require real backend (set PLAYWRIGHT_USE_MOCKS=0)">
+</property>
+</properties>
+<skipped>
+</skipped>
+</testcase>
+</testsuite>
+<testsuite name="specs/production/production-profile-page.spec.ts" timestamp="2025-12-21T20:04:15.369Z" hostname="chromium" tests="2" failures="0" skipped="2" time="0" errors="0">
+<testcase name="Production Profile Page Tests › profile page loads without infinite spinner" classname="specs/production/production-profile-page.spec.ts" time="0">
+<properties>
+<property name="skip" value="Production tests require real backend (set PLAYWRIGHT_USE_MOCKS=0)">
+</property>
+</properties>
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Production Profile Page Tests › profile page navigation from global nav works" classname="specs/production/production-profile-page.spec.ts" time="0">
+<properties>
+<property name="skip" value="Production tests require real backend (set PLAYWRIGHT_USE_MOCKS=0)">
+</property>
+</properties>
+<skipped>
+</skipped>
+</testcase>
+</testsuite>
+<testsuite name="specs/production/production-profile-stability.spec.ts" timestamp="2025-12-21T20:04:15.369Z" hostname="chromium" tests="2" failures="0" skipped="2" time="0" errors="0">
+<testcase name="Production Profile Stability Tests › profile page does not trigger infinite re-renders" classname="specs/production/production-profile-stability.spec.ts" time="0">
+<properties>
+<property name="skip" value="Production tests require real backend (set PLAYWRIGHT_USE_MOCKS=0)">
+</property>
+</properties>
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Production Profile Stability Tests › profile edit page does not trigger infinite re-renders" classname="specs/production/production-profile-stability.spec.ts" time="0">
+<properties>
+<property name="skip" value="Production tests require real backend (set PLAYWRIGHT_USE_MOCKS=0)">
+</property>
+</properties>
+<skipped>
+</skipped>
+</testcase>
+</testsuite>
+<testsuite name="specs/production/production-smoke.spec.ts" timestamp="2025-12-21T20:04:15.369Z" hostname="chromium" tests="18" failures="0" skipped="18" time="0" errors="0">
+<testcase name="Production Smoke Tests › Critical Pages › root page redirects unauthenticated users to landing" classname="specs/production/production-smoke.spec.ts" time="0">
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Production Smoke Tests › Critical Pages › root page redirects authenticated users to /feed" classname="specs/production/production-smoke.spec.ts" time="0">
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Production Smoke Tests › Critical Pages › feed page requires authentication or redirects to /auth" classname="specs/production/production-smoke.spec.ts" time="0">
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Production Smoke Tests › Critical Pages › auth page loads" classname="specs/production/production-smoke.spec.ts" time="0">
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Production Smoke Tests › Critical Pages › dashboard page requires authentication" classname="specs/production/production-smoke.spec.ts" time="0">
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Production Smoke Tests › Critical Pages › health endpoint returns success" classname="specs/production/production-smoke.spec.ts" time="0">
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Production Smoke Tests › Critical Pages › civics health endpoint works" classname="specs/production/production-smoke.spec.ts" time="0">
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Production Smoke Tests › API Endpoints › feeds API endpoint responds" classname="specs/production/production-smoke.spec.ts" time="0">
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Production Smoke Tests › API Endpoints › civics by-state endpoint works" classname="specs/production/production-smoke.spec.ts" time="0">
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Production Smoke Tests › API Endpoints › site-messages API responds" classname="specs/production/production-smoke.spec.ts" time="0">
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Production Smoke Tests › Security Headers › security headers are present" classname="specs/production/production-smoke.spec.ts" time="0">
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Production Smoke Tests › Security Headers › HTTPS is enforced in production" classname="specs/production/production-smoke.spec.ts" time="0">
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Production Smoke Tests › Error Handling › 404 page handles missing routes" classname="specs/production/production-smoke.spec.ts" time="0">
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Production Smoke Tests › Error Handling › invalid API endpoint returns appropriate error" classname="specs/production/production-smoke.spec.ts" time="0">
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Production Smoke Tests › Performance › page load time is acceptable" classname="specs/production/production-smoke.spec.ts" time="0">
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Production Smoke Tests › Performance › feed page loads within acceptable time" classname="specs/production/production-smoke.spec.ts" time="0">
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Production Smoke Tests › Accessibility › page has proper HTML structure" classname="specs/production/production-smoke.spec.ts" time="0">
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Production Smoke Tests › Accessibility › feed page has accessible structure" classname="specs/production/production-smoke.spec.ts" time="0">
+<skipped>
+</skipped>
+</testcase>
+</testsuite>
+<testsuite name="specs/production/production-ux-excellence.spec.ts" timestamp="2025-12-21T20:04:15.369Z" hostname="chromium" tests="46" failures="0" skipped="46" time="0" errors="0">
+<testcase name="Production UX Excellence › Performance Metrics › landing page meets Core Web Vitals thresholds" classname="specs/production/production-ux-excellence.spec.ts" time="0">
+<properties>
+<property name="skip" value="Production tests require real backend (set PLAYWRIGHT_USE_MOCKS=0)">
+</property>
+</properties>
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Production UX Excellence › Performance Metrics › feed page loads efficiently" classname="specs/production/production-ux-excellence.spec.ts" time="0">
+<properties>
+<property name="skip" value="Production tests require real backend (set PLAYWRIGHT_USE_MOCKS=0)">
+</property>
+</properties>
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Production UX Excellence › Accessibility Excellence › keyboard navigation works throughout feed page" classname="specs/production/production-ux-excellence.spec.ts" time="0">
+<properties>
+<property name="skip" value="Production tests require real backend (set PLAYWRIGHT_USE_MOCKS=0)">
+</property>
+</properties>
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Production UX Excellence › Accessibility Excellence › screen reader announcements work for dynamic content" classname="specs/production/production-ux-excellence.spec.ts" time="0">
+<properties>
+<property name="skip" value="Production tests require real backend (set PLAYWRIGHT_USE_MOCKS=0)">
+</property>
+</properties>
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Production UX Excellence › Accessibility Excellence › form inputs have proper labels and error messages" classname="specs/production/production-ux-excellence.spec.ts" time="0">
+<properties>
+<property name="skip" value="Production tests require real backend (set PLAYWRIGHT_USE_MOCKS=0)">
+</property>
+</properties>
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Production UX Excellence › Error Recovery and Resilience › feed gracefully handles API failures with retry option" classname="specs/production/production-ux-excellence.spec.ts" time="0">
+<properties>
+<property name="skip" value="Production tests require real backend (set PLAYWRIGHT_USE_MOCKS=0)">
+</property>
+</properties>
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Production UX Excellence › Error Recovery and Resilience › application handles network disconnection gracefully" classname="specs/production/production-ux-excellence.spec.ts" time="0">
+<properties>
+<property name="skip" value="Production tests require real backend (set PLAYWRIGHT_USE_MOCKS=0)">
+</property>
+</properties>
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Production UX Excellence › Edge Cases and Boundary Conditions › handles very long poll titles and content gracefully" classname="specs/production/production-ux-excellence.spec.ts" time="0">
+<properties>
+<property name="skip" value="Production tests require real backend (set PLAYWRIGHT_USE_MOCKS=0)">
+</property>
+</properties>
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Production UX Excellence › Edge Cases and Boundary Conditions › handles rapid user interactions without breaking" classname="specs/production/production-ux-excellence.spec.ts" time="0">
+<properties>
+<property name="skip" value="Production tests require real backend (set PLAYWRIGHT_USE_MOCKS=0)">
+</property>
+</properties>
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Production UX Excellence › Edge Cases and Boundary Conditions › handles empty states with helpful guidance" classname="specs/production/production-ux-excellence.spec.ts" time="0">
+<properties>
+<property name="skip" value="Production tests require real backend (set PLAYWRIGHT_USE_MOCKS=0)">
+</property>
+</properties>
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Production UX Excellence › Real-World User Workflows › complete user journey: signup to first poll vote" classname="specs/production/production-ux-excellence.spec.ts" time="0">
+<properties>
+<property name="skip" value="Production tests require real backend (set PLAYWRIGHT_USE_MOCKS=0)">
+</property>
+</properties>
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Production UX Excellence › Real-World User Workflows › user can navigate entire app using only keyboard" classname="specs/production/production-ux-excellence.spec.ts" time="0">
+<properties>
+<property name="skip" value="Production tests require real backend (set PLAYWRIGHT_USE_MOCKS=0)">
+</property>
+</properties>
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Production UX Excellence › Mobile Responsiveness › feed page is usable on mobile viewport" classname="specs/production/production-ux-excellence.spec.ts" time="0">
+<properties>
+<property name="skip" value="Production tests require real backend (set PLAYWRIGHT_USE_MOCKS=0)">
+</property>
+</properties>
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Production UX Excellence › Rate Limiting UX › rate limit errors show helpful user messages" classname="specs/production/production-ux-excellence.spec.ts" time="0">
+<properties>
+<property name="skip" value="Production tests require real backend (set PLAYWRIGHT_USE_MOCKS=0)">
+</property>
+</properties>
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Production UX Excellence › Loading States and Progressive Enhancement › loading skeletons appear during feed load" classname="specs/production/production-ux-excellence.spec.ts" time="0">
+<properties>
+<property name="skip" value="Production tests require real backend (set PLAYWRIGHT_USE_MOCKS=0)">
+</property>
+</properties>
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Production UX Excellence › Loading States and Progressive Enhancement › progressive enhancement: app works with JavaScript disabled" classname="specs/production/production-ux-excellence.spec.ts" time="0">
+<properties>
+<property name="skip" value="Production tests require real backend (set PLAYWRIGHT_USE_MOCKS=0)">
+</property>
+</properties>
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Production UX Excellence › Data Persistence and State Management › user preferences persist across page reloads" classname="specs/production/production-ux-excellence.spec.ts" time="0">
+<properties>
+<property name="skip" value="Production tests require real backend (set PLAYWRIGHT_USE_MOCKS=0)">
+</property>
+</properties>
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Production UX Excellence › Data Persistence and State Management › form data persists during navigation (draft saving)" classname="specs/production/production-ux-excellence.spec.ts" time="0">
+<properties>
+<property name="skip" value="Production tests require real backend (set PLAYWRIGHT_USE_MOCKS=0)">
+</property>
+</properties>
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Production UX Excellence › Cross-Browser Compatibility › critical features work across different viewport sizes" classname="specs/production/production-ux-excellence.spec.ts" time="0">
+<properties>
+<property name="skip" value="Production tests require real backend (set PLAYWRIGHT_USE_MOCKS=0)">
+</property>
+</properties>
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Production UX Excellence › Security and Privacy UX › sensitive data is not exposed in page source" classname="specs/production/production-ux-excellence.spec.ts" time="0">
+<properties>
+<property name="skip" value="Production tests require real backend (set PLAYWRIGHT_USE_MOCKS=0)">
+</property>
+</properties>
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Production UX Excellence › Security and Privacy UX › logout clears sensitive data and redirects properly" classname="specs/production/production-ux-excellence.spec.ts" time="0">
+<properties>
+<property name="skip" value="Production tests require real backend (set PLAYWRIGHT_USE_MOCKS=0)">
+</property>
+</properties>
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Production UX Excellence › Content Quality and Readability › text content is readable and properly formatted" classname="specs/production/production-ux-excellence.spec.ts" time="0">
+<properties>
+<property name="skip" value="Production tests require real backend (set PLAYWRIGHT_USE_MOCKS=0)">
+</property>
+</properties>
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Production UX Excellence › Content Quality and Readability › images have proper alt text for accessibility" classname="specs/production/production-ux-excellence.spec.ts" time="0">
+<properties>
+<property name="skip" value="Production tests require real backend (set PLAYWRIGHT_USE_MOCKS=0)">
+</property>
+</properties>
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Production UX Excellence › Error Boundary and Resilience › application handles React errors gracefully with error boundaries" classname="specs/production/production-ux-excellence.spec.ts" time="0">
+<properties>
+<property name="skip" value="Production tests require real backend (set PLAYWRIGHT_USE_MOCKS=0)">
+</property>
+</properties>
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Production UX Excellence › Error Boundary and Resilience › application handles slow network connections gracefully" classname="specs/production/production-ux-excellence.spec.ts" time="0">
+<properties>
+<property name="skip" value="Production tests require real backend (set PLAYWRIGHT_USE_MOCKS=0)">
+</property>
+</properties>
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Production UX Excellence › Error Boundary and Resilience › application handles partial API failures without breaking" classname="specs/production/production-ux-excellence.spec.ts" time="0">
+<properties>
+<property name="skip" value="Production tests require real backend (set PLAYWRIGHT_USE_MOCKS=0)">
+</property>
+</properties>
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Production UX Excellence › Security and Privacy Headers › security headers are properly configured" classname="specs/production/production-ux-excellence.spec.ts" time="0">
+<properties>
+<property name="skip" value="Production tests require real backend (set PLAYWRIGHT_USE_MOCKS=0)">
+</property>
+</properties>
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Production UX Excellence › Security and Privacy Headers › sensitive data is not exposed in localStorage unnecessarily" classname="specs/production/production-ux-excellence.spec.ts" time="0">
+<properties>
+<property name="skip" value="Production tests require real backend (set PLAYWRIGHT_USE_MOCKS=0)">
+</property>
+</properties>
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Production UX Excellence › SEO and Meta Tags › pages have proper meta tags for SEO" classname="specs/production/production-ux-excellence.spec.ts" time="0">
+<properties>
+<property name="skip" value="Production tests require real backend (set PLAYWRIGHT_USE_MOCKS=0)">
+</property>
+</properties>
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Production UX Excellence › SEO and Meta Tags › pages have proper canonical URLs" classname="specs/production/production-ux-excellence.spec.ts" time="0">
+<properties>
+<property name="skip" value="Production tests require real backend (set PLAYWRIGHT_USE_MOCKS=0)">
+</property>
+</properties>
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Production UX Excellence › Performance Under Load › application remains responsive during multiple rapid navigations" classname="specs/production/production-ux-excellence.spec.ts" time="0">
+<properties>
+<property name="skip" value="Production tests require real backend (set PLAYWRIGHT_USE_MOCKS=0)">
+</property>
+</properties>
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Production UX Excellence › Performance Under Load › application handles large amounts of content gracefully" classname="specs/production/production-ux-excellence.spec.ts" time="0">
+<properties>
+<property name="skip" value="Production tests require real backend (set PLAYWRIGHT_USE_MOCKS=0)">
+</property>
+</properties>
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Production UX Excellence › Form Validation and User Input › forms provide real-time validation feedback" classname="specs/production/production-ux-excellence.spec.ts" time="0">
+<properties>
+<property name="skip" value="Production tests require real backend (set PLAYWRIGHT_USE_MOCKS=0)">
+</property>
+</properties>
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Production UX Excellence › Form Validation and User Input › forms prevent submission with invalid data" classname="specs/production/production-ux-excellence.spec.ts" time="0">
+<properties>
+<property name="skip" value="Production tests require real backend (set PLAYWRIGHT_USE_MOCKS=0)">
+</property>
+</properties>
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Production UX Excellence › Internationalization Readiness › text content is properly structured for translation" classname="specs/production/production-ux-excellence.spec.ts" time="0">
+<properties>
+<property name="skip" value="Production tests require real backend (set PLAYWRIGHT_USE_MOCKS=0)">
+</property>
+</properties>
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Production UX Excellence › Real-time Updates and WebSocket Resilience › application handles real-time updates without breaking UI" classname="specs/production/production-ux-excellence.spec.ts" time="0">
+<properties>
+<property name="skip" value="Production tests require real backend (set PLAYWRIGHT_USE_MOCKS=0)">
+</property>
+</properties>
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Production UX Excellence › Real-time Updates and WebSocket Resilience › application gracefully handles WebSocket disconnections" classname="specs/production/production-ux-excellence.spec.ts" time="0">
+<properties>
+<property name="skip" value="Production tests require real backend (set PLAYWRIGHT_USE_MOCKS=0)">
+</property>
+</properties>
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Production UX Excellence › PWA Functionality and Offline Support › service worker is registered and functional" classname="specs/production/production-ux-excellence.spec.ts" time="0">
+<properties>
+<property name="skip" value="Production tests require real backend (set PLAYWRIGHT_USE_MOCKS=0)">
+</property>
+</properties>
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Production UX Excellence › PWA Functionality and Offline Support › application provides offline fallback content" classname="specs/production/production-ux-excellence.spec.ts" time="0">
+<properties>
+<property name="skip" value="Production tests require real backend (set PLAYWRIGHT_USE_MOCKS=0)">
+</property>
+</properties>
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Production UX Excellence › PWA Functionality and Offline Support › manifest.json is properly configured for PWA" classname="specs/production/production-ux-excellence.spec.ts" time="0">
+<properties>
+<property name="skip" value="Production tests require real backend (set PLAYWRIGHT_USE_MOCKS=0)">
+</property>
+</properties>
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Production UX Excellence › Data Integrity and Consistency › user data persists correctly across page reloads" classname="specs/production/production-ux-excellence.spec.ts" time="0">
+<properties>
+<property name="skip" value="Production tests require real backend (set PLAYWRIGHT_USE_MOCKS=0)">
+</property>
+</properties>
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Production UX Excellence › Data Integrity and Consistency › application handles concurrent user actions without data corruption" classname="specs/production/production-ux-excellence.spec.ts" time="0">
+<properties>
+<property name="skip" value="Production tests require real backend (set PLAYWRIGHT_USE_MOCKS=0)">
+</property>
+</properties>
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Production UX Excellence › Browser Storage and Cache Management › localStorage is used appropriately and cleaned up when needed" classname="specs/production/production-ux-excellence.spec.ts" time="0">
+<properties>
+<property name="skip" value="Production tests require real backend (set PLAYWRIGHT_USE_MOCKS=0)">
+</property>
+</properties>
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Production UX Excellence › Browser Storage and Cache Management › sessionStorage is managed correctly" classname="specs/production/production-ux-excellence.spec.ts" time="0">
+<properties>
+<property name="skip" value="Production tests require real backend (set PLAYWRIGHT_USE_MOCKS=0)">
+</property>
+</properties>
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Production UX Excellence › Rate Limiting and Throttling UX › rate limit errors provide clear user guidance" classname="specs/production/production-ux-excellence.spec.ts" time="0">
+<properties>
+<property name="skip" value="Production tests require real backend (set PLAYWRIGHT_USE_MOCKS=0)">
+</property>
+</properties>
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Production UX Excellence › Concurrent Session Management › application handles multiple tabs gracefully" classname="specs/production/production-ux-excellence.spec.ts" time="0">
+<properties>
+<property name="skip" value="Production tests require real backend (set PLAYWRIGHT_USE_MOCKS=0)">
+</property>
+</properties>
+<skipped>
+</skipped>
+</testcase>
+</testsuite>
+<testsuite name="specs/production/production-ux-improvements.spec.ts" timestamp="2025-12-21T20:04:15.369Z" hostname="chromium" tests="12" failures="0" skipped="12" time="0" errors="0">
+<testcase name="Production UX Improvements › Empty States › feed page shows helpful empty state when no content" classname="specs/production/production-ux-improvements.spec.ts" time="0">
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Production UX Improvements › Empty States › polls tab shows helpful empty state" classname="specs/production/production-ux-improvements.spec.ts" time="0">
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Production UX Improvements › Loading States › feed page shows skeleton loaders during initial load" classname="specs/production/production-ux-improvements.spec.ts" time="0">
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Production UX Improvements › Loading States › dashboard shows skeleton loaders during load" classname="specs/production/production-ux-improvements.spec.ts" time="0">
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Production UX Improvements › Form Validation › auth form shows real-time email validation" classname="specs/production/production-ux-improvements.spec.ts" time="0">
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Production UX Improvements › Form Validation › auth form shows real-time password validation" classname="specs/production/production-ux-improvements.spec.ts" time="0">
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Production UX Improvements › Form Validation › auth form submit button shows loading state" classname="specs/production/production-ux-improvements.spec.ts" time="0">
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Production UX Improvements › Error Handling › feed page shows helpful error message with retry button" classname="specs/production/production-ux-improvements.spec.ts" time="0">
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Production UX Improvements › Accessibility › auth form has proper ARIA labels and error associations" classname="specs/production/production-ux-improvements.spec.ts" time="0">
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Production UX Improvements › Accessibility › feed page has proper ARIA live regions for updates" classname="specs/production/production-ux-improvements.spec.ts" time="0">
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Production UX Improvements › Accessibility › empty states have proper ARIA labels" classname="specs/production/production-ux-improvements.spec.ts" time="0">
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Production UX Improvements › Visual Feedback › form fields show visual feedback for validation states" classname="specs/production/production-ux-improvements.spec.ts" time="0">
+<skipped>
+</skipped>
+</testcase>
+</testsuite>
+<testsuite name="specs/auth/auth-production.spec.ts" timestamp="2025-12-21T20:04:15.369Z" hostname="firefox" tests="2" failures="0" skipped="2" time="0" errors="0">
+<testcase name="Auth – real backend › existing test user can sign in via /auth" classname="specs/auth/auth-production.spec.ts" time="0">
+<properties>
+<property name="skip" value="Set PLAYWRIGHT_USE_MOCKS=0 to exercise the real backend">
+</property>
+<property name="skip" value="E2E credentials (E2E_USER_EMAIL, E2E_USER_PASSWORD, E2E_ADMIN_EMAIL, E2E_ADMIN_PASSWORD) are required">
+</property>
+</properties>
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Auth – real backend › admin credentials unlock admin routes" classname="specs/auth/auth-production.spec.ts" time="0">
+<properties>
+<property name="skip" value="Set PLAYWRIGHT_USE_MOCKS=0 to exercise the real backend">
+</property>
+<property name="skip" value="E2E credentials (E2E_USER_EMAIL, E2E_USER_PASSWORD, E2E_ADMIN_EMAIL, E2E_ADMIN_PASSWORD) are required">
+</property>
+</properties>
+<skipped>
+</skipped>
+</testcase>
+</testsuite>
+<testsuite name="specs/poll-production.spec.ts" timestamp="2025-12-21T20:04:15.369Z" hostname="firefox" tests="1" failures="0" skipped="1" time="0" errors="0">
+<testcase name="Production poll journey › author completes accessible wizard and sees share dialog" classname="specs/poll-production.spec.ts" time="0">
+<skipped>
+</skipped>
+</testcase>
+</testsuite>
+<testsuite name="specs/production/production-admin-dashboard-deep-diagnostic.spec.ts" timestamp="2025-12-21T20:04:15.369Z" hostname="firefox" tests="3" failures="0" skipped="3" time="0" errors="0">
+<testcase name="Production Admin Dashboard Deep Diagnostic › deep diagnostic - check all state and warnings" classname="specs/production/production-admin-dashboard-deep-diagnostic.spec.ts" time="0">
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Production Admin Dashboard Deep Diagnostic › admin dashboard navigation from personal dashboard" classname="specs/production/production-admin-dashboard-deep-diagnostic.spec.ts" time="0">
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Production Admin Dashboard Deep Diagnostic › admin dashboard direct navigation" classname="specs/production/production-admin-dashboard-deep-diagnostic.spec.ts" time="0">
+<skipped>
+</skipped>
+</testcase>
+</testsuite>
+<testsuite name="specs/production/production-all-pages.spec.ts" timestamp="2025-12-21T20:04:15.369Z" hostname="firefox" tests="24" failures="0" skipped="24" time="0" errors="0">
+<testcase name="Production - All Pages &amp; Features › Public Pages › landing page loads and displays content" classname="specs/production/production-all-pages.spec.ts" time="0">
+<properties>
+<property name="skip" value="Production tests require real backend (set PLAYWRIGHT_USE_MOCKS=0)">
+</property>
+</properties>
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Production - All Pages &amp; Features › Public Pages › auth page loads and displays login form" classname="specs/production/production-all-pages.spec.ts" time="0">
+<properties>
+<property name="skip" value="Production tests require real backend (set PLAYWRIGHT_USE_MOCKS=0)">
+</property>
+</properties>
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Production - All Pages &amp; Features › Public Pages › terms page loads" classname="specs/production/production-all-pages.spec.ts" time="0">
+<properties>
+<property name="skip" value="Production tests require real backend (set PLAYWRIGHT_USE_MOCKS=0)">
+</property>
+</properties>
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Production - All Pages &amp; Features › Public Pages › privacy page loads" classname="specs/production/production-all-pages.spec.ts" time="0">
+<properties>
+<property name="skip" value="Production tests require real backend (set PLAYWRIGHT_USE_MOCKS=0)">
+</property>
+</properties>
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Production - All Pages &amp; Features › Authenticated Pages › feed page loads and displays content" classname="specs/production/production-all-pages.spec.ts" time="0">
+<properties>
+<property name="skip" value="Production tests require real backend (set PLAYWRIGHT_USE_MOCKS=0)">
+</property>
+</properties>
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Production - All Pages &amp; Features › Authenticated Pages › dashboard page loads" classname="specs/production/production-all-pages.spec.ts" time="0">
+<properties>
+<property name="skip" value="Production tests require real backend (set PLAYWRIGHT_USE_MOCKS=0)">
+</property>
+</properties>
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Production - All Pages &amp; Features › Authenticated Pages › profile page loads" classname="specs/production/production-all-pages.spec.ts" time="0">
+<properties>
+<property name="skip" value="Production tests require real backend (set PLAYWRIGHT_USE_MOCKS=0)">
+</property>
+</properties>
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Production - All Pages &amp; Features › Authenticated Pages › onboarding page loads (if redirected)" classname="specs/production/production-all-pages.spec.ts" time="0">
+<properties>
+<property name="skip" value="Production tests require real backend (set PLAYWRIGHT_USE_MOCKS=0)">
+</property>
+</properties>
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Production - All Pages &amp; Features › Authenticated Pages › polls page loads" classname="specs/production/production-all-pages.spec.ts" time="0">
+<properties>
+<property name="skip" value="Production tests require real backend (set PLAYWRIGHT_USE_MOCKS=0)">
+</property>
+</properties>
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Production - All Pages &amp; Features › Authenticated Pages › pages handle API errors gracefully without crashing" classname="specs/production/production-all-pages.spec.ts" time="0">
+<properties>
+<property name="skip" value="Production tests require real backend (set PLAYWRIGHT_USE_MOCKS=0)">
+</property>
+</properties>
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Production - All Pages &amp; Features › Admin Pages › admin dashboard loads" classname="specs/production/production-all-pages.spec.ts" time="0">
+<properties>
+<property name="skip" value="Production tests require real backend (set PLAYWRIGHT_USE_MOCKS=0)">
+</property>
+</properties>
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Production - All Pages &amp; Features › Admin Pages › admin users page loads" classname="specs/production/production-all-pages.spec.ts" time="0">
+<properties>
+<property name="skip" value="Production tests require real backend (set PLAYWRIGHT_USE_MOCKS=0)">
+</property>
+</properties>
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Production - All Pages &amp; Features › Admin Pages › admin feedback page loads" classname="specs/production/production-all-pages.spec.ts" time="0">
+<properties>
+<property name="skip" value="Production tests require real backend (set PLAYWRIGHT_USE_MOCKS=0)">
+</property>
+</properties>
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Production - All Pages &amp; Features › Admin Pages › admin analytics page loads" classname="specs/production/production-all-pages.spec.ts" time="0">
+<properties>
+<property name="skip" value="Production tests require real backend (set PLAYWRIGHT_USE_MOCKS=0)">
+</property>
+</properties>
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Production - All Pages &amp; Features › API Endpoints › health API endpoint works" classname="specs/production/production-all-pages.spec.ts" time="0">
+<properties>
+<property name="skip" value="Production tests require real backend (set PLAYWRIGHT_USE_MOCKS=0)">
+</property>
+</properties>
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Production - All Pages &amp; Features › API Endpoints › feeds API endpoint responds" classname="specs/production/production-all-pages.spec.ts" time="0">
+<properties>
+<property name="skip" value="Production tests require real backend (set PLAYWRIGHT_USE_MOCKS=0)">
+</property>
+</properties>
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Production - All Pages &amp; Features › API Endpoints › profile API endpoint responds" classname="specs/production/production-all-pages.spec.ts" time="0">
+<properties>
+<property name="skip" value="Production tests require real backend (set PLAYWRIGHT_USE_MOCKS=0)">
+</property>
+</properties>
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Production - All Pages &amp; Features › API Endpoints › polls API endpoint responds" classname="specs/production/production-all-pages.spec.ts" time="0">
+<properties>
+<property name="skip" value="Production tests require real backend (set PLAYWRIGHT_USE_MOCKS=0)">
+</property>
+</properties>
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Production - All Pages &amp; Features › API Endpoints › feedback API endpoint responds" classname="specs/production/production-all-pages.spec.ts" time="0">
+<properties>
+<property name="skip" value="Production tests require real backend (set PLAYWRIGHT_USE_MOCKS=0)">
+</property>
+</properties>
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Production - All Pages &amp; Features › API Endpoints › admin health API endpoint works (requires auth)" classname="specs/production/production-all-pages.spec.ts" time="0">
+<properties>
+<property name="skip" value="Production tests require real backend (set PLAYWRIGHT_USE_MOCKS=0)">
+</property>
+</properties>
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Production - All Pages &amp; Features › Navigation &amp; Routing › navigation links work" classname="specs/production/production-all-pages.spec.ts" time="0">
+<properties>
+<property name="skip" value="Production tests require real backend (set PLAYWRIGHT_USE_MOCKS=0)">
+</property>
+</properties>
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Production - All Pages &amp; Features › Navigation &amp; Routing › browser back/forward navigation works" classname="specs/production/production-all-pages.spec.ts" time="0">
+<properties>
+<property name="skip" value="Production tests require real backend (set PLAYWRIGHT_USE_MOCKS=0)">
+</property>
+</properties>
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Production - All Pages &amp; Features › Error Handling › 404 page handles missing routes" classname="specs/production/production-all-pages.spec.ts" time="0">
+<properties>
+<property name="skip" value="Production tests require real backend (set PLAYWRIGHT_USE_MOCKS=0)">
+</property>
+</properties>
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Production - All Pages &amp; Features › Error Handling › invalid API endpoint returns appropriate error" classname="specs/production/production-all-pages.spec.ts" time="0">
+<properties>
+<property name="skip" value="Production tests require real backend (set PLAYWRIGHT_USE_MOCKS=0)">
+</property>
+</properties>
+<skipped>
+</skipped>
+</testcase>
+</testsuite>
+<testsuite name="specs/production/production-comprehensive-journeys.spec.ts" timestamp="2025-12-21T20:04:15.369Z" hostname="firefox" tests="12" failures="0" skipped="12" time="0" errors="0">
+<testcase name="Production Comprehensive Journeys › Complete Onboarding Flow › new user can complete full onboarding journey" classname="specs/production/production-comprehensive-journeys.spec.ts" time="0">
+<properties>
+<property name="skip" value="Production tests require real backend (set PLAYWRIGHT_USE_MOCKS=0)">
+</property>
+</properties>
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Production Comprehensive Journeys › Poll Creation and Voting › authenticated user can view and interact with polls" classname="specs/production/production-comprehensive-journeys.spec.ts" time="0">
+<properties>
+<property name="skip" value="Production tests require real backend (set PLAYWRIGHT_USE_MOCKS=0)">
+</property>
+</properties>
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Production Comprehensive Journeys › Poll Creation and Voting › user can navigate to poll detail page" classname="specs/production/production-comprehensive-journeys.spec.ts" time="0">
+<properties>
+<property name="skip" value="Production tests require real backend (set PLAYWRIGHT_USE_MOCKS=0)">
+</property>
+</properties>
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Production Comprehensive Journeys › Feed Interactions › user can like and unlike feed items" classname="specs/production/production-comprehensive-journeys.spec.ts" time="0">
+<properties>
+<property name="skip" value="Production tests require real backend (set PLAYWRIGHT_USE_MOCKS=0)">
+</property>
+</properties>
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Production Comprehensive Journeys › Feed Interactions › user can bookmark feed items" classname="specs/production/production-comprehensive-journeys.spec.ts" time="0">
+<properties>
+<property name="skip" value="Production tests require real backend (set PLAYWRIGHT_USE_MOCKS=0)">
+</property>
+</properties>
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Production Comprehensive Journeys › Feed Interactions › user can refresh feed" classname="specs/production/production-comprehensive-journeys.spec.ts" time="0">
+<properties>
+<property name="skip" value="Production tests require real backend (set PLAYWRIGHT_USE_MOCKS=0)">
+</property>
+</properties>
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Production Comprehensive Journeys › Profile Management › user can view and edit profile" classname="specs/production/production-comprehensive-journeys.spec.ts" time="0">
+<properties>
+<property name="skip" value="Production tests require real backend (set PLAYWRIGHT_USE_MOCKS=0)">
+</property>
+</properties>
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Production Comprehensive Journeys › Profile Management › user can view profile preferences" classname="specs/production/production-comprehensive-journeys.spec.ts" time="0">
+<properties>
+<property name="skip" value="Production tests require real backend (set PLAYWRIGHT_USE_MOCKS=0)">
+</property>
+</properties>
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Production Comprehensive Journeys › Multi-Step User Journeys › complete user journey: landing -&gt; auth -&gt; feed -&gt; poll -&gt; profile" classname="specs/production/production-comprehensive-journeys.spec.ts" time="0">
+<properties>
+<property name="skip" value="Production tests require real backend (set PLAYWRIGHT_USE_MOCKS=0)">
+</property>
+</properties>
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Production Comprehensive Journeys › Error Recovery › user can recover from feed loading errors" classname="specs/production/production-comprehensive-journeys.spec.ts" time="0">
+<properties>
+<property name="skip" value="Production tests require real backend (set PLAYWRIGHT_USE_MOCKS=0)">
+</property>
+</properties>
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Production Comprehensive Journeys › Performance Monitoring › feed page loads within performance budget" classname="specs/production/production-comprehensive-journeys.spec.ts" time="0">
+<properties>
+<property name="skip" value="Production tests require real backend (set PLAYWRIGHT_USE_MOCKS=0)">
+</property>
+</properties>
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Production Comprehensive Journeys › Performance Monitoring › navigation between pages is fast" classname="specs/production/production-comprehensive-journeys.spec.ts" time="0">
+<properties>
+<property name="skip" value="Production tests require real backend (set PLAYWRIGHT_USE_MOCKS=0)">
+</property>
+</properties>
+<skipped>
+</skipped>
+</testcase>
+</testsuite>
+<testsuite name="specs/production/production-cookie-inspection.spec.ts" timestamp="2025-12-21T20:04:15.369Z" hostname="firefox" tests="1" failures="0" skipped="1" time="0" errors="0">
+<testcase name="Production Cookie Inspection › inspect cookies after login and during profile access" classname="specs/production/production-cookie-inspection.spec.ts" time="0">
+<skipped>
+</skipped>
+</testcase>
+</testsuite>
+<testsuite name="specs/production/production-critical-fixes.spec.ts" timestamp="2025-12-21T20:04:15.369Z" hostname="firefox" tests="4" failures="0" skipped="4" time="0" errors="0">
+<testcase name="Production Critical Fixes › Dark Mode › dark mode toggle works" classname="specs/production/production-critical-fixes.spec.ts" time="0">
+<properties>
+<property name="skip" value="Production tests require real backend (set PLAYWRIGHT_USE_MOCKS=0)">
+</property>
+</properties>
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Production Critical Fixes › Sign Out › sign out button works and redirects properly" classname="specs/production/production-critical-fixes.spec.ts" time="0">
+<properties>
+<property name="skip" value="Production tests require real backend (set PLAYWRIGHT_USE_MOCKS=0)">
+</property>
+</properties>
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Production Critical Fixes › Dashboard Redirect › admin user should access dashboard without redirect to onboarding" classname="specs/production/production-critical-fixes.spec.ts" time="0">
+<properties>
+<property name="skip" value="Production tests require real backend (set PLAYWRIGHT_USE_MOCKS=0)">
+</property>
+</properties>
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Production Critical Fixes › Dashboard Redirect › admin user should access admin dashboard" classname="specs/production/production-critical-fixes.spec.ts" time="0">
+<properties>
+<property name="skip" value="Production tests require real backend (set PLAYWRIGHT_USE_MOCKS=0)">
+</property>
+</properties>
+<skipped>
+</skipped>
+</testcase>
+</testsuite>
+<testsuite name="specs/production/production-critical-journeys.spec.ts" timestamp="2025-12-21T20:04:15.369Z" hostname="firefox" tests="7" failures="0" skipped="7" time="0" errors="0">
+<testcase name="Production Critical Journeys › unauthenticated user redirected to landing page from root" classname="specs/production/production-critical-journeys.spec.ts" time="0">
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Production Critical Journeys › authenticated user redirected to /feed from root" classname="specs/production/production-critical-journeys.spec.ts" time="0">
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Production Critical Journeys › feed page requires authentication" classname="specs/production/production-critical-journeys.spec.ts" time="0">
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Production Critical Journeys › navigation works between auth and other pages" classname="specs/production/production-critical-journeys.spec.ts" time="0">
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Production Critical Journeys › API health checks work" classname="specs/production/production-critical-journeys.spec.ts" time="0">
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Production Critical Journeys › middleware redirects unauthenticated users to landing page" classname="specs/production/production-critical-journeys.spec.ts" time="0">
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Production Critical Journeys › page handles errors gracefully" classname="specs/production/production-critical-journeys.spec.ts" time="0">
+<skipped>
+</skipped>
+</testcase>
+</testsuite>
+<testsuite name="specs/production/production-dashboard-deep-diagnostic.spec.ts" timestamp="2025-12-21T20:04:15.369Z" hostname="firefox" tests="2" failures="0" skipped="2" time="0" errors="0">
+<testcase name="Production Dashboard Deep Diagnostic › deep diagnostic - check all state and warnings" classname="specs/production/production-dashboard-deep-diagnostic.spec.ts" time="0">
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Production Dashboard Deep Diagnostic › dashboard navigation from global nav" classname="specs/production/production-dashboard-deep-diagnostic.spec.ts" time="0">
+<skipped>
+</skipped>
+</testcase>
+</testsuite>
+<testsuite name="specs/production/production-edge-cases.spec.ts" timestamp="2025-12-21T20:04:15.369Z" hostname="firefox" tests="12" failures="0" skipped="12" time="0" errors="0">
+<testcase name="Production Edge Cases &amp; Stress Tests › Form Input Edge Cases › auth form handles special characters and unicode in email" classname="specs/production/production-edge-cases.spec.ts" time="0">
+<properties>
+<property name="skip" value="Production tests require real backend (set PLAYWRIGHT_USE_MOCKS=0)">
+</property>
+</properties>
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Production Edge Cases &amp; Stress Tests › Form Input Edge Cases › auth form handles very long input values gracefully" classname="specs/production/production-edge-cases.spec.ts" time="0">
+<properties>
+<property name="skip" value="Production tests require real backend (set PLAYWRIGHT_USE_MOCKS=0)">
+</property>
+</properties>
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Production Edge Cases &amp; Stress Tests › Form Input Edge Cases › auth form handles rapid input changes without errors" classname="specs/production/production-edge-cases.spec.ts" time="0">
+<properties>
+<property name="skip" value="Production tests require real backend (set PLAYWRIGHT_USE_MOCKS=0)">
+</property>
+</properties>
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Production Edge Cases &amp; Stress Tests › Form Input Edge Cases › auth form handles empty string and whitespace-only inputs" classname="specs/production/production-edge-cases.spec.ts" time="0">
+<properties>
+<property name="skip" value="Production tests require real backend (set PLAYWRIGHT_USE_MOCKS=0)">
+</property>
+</properties>
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Production Edge Cases &amp; Stress Tests › Network Resilience › application handles intermittent network failures gracefully" classname="specs/production/production-edge-cases.spec.ts" time="0">
+<properties>
+<property name="skip" value="Production tests require real backend (set PLAYWRIGHT_USE_MOCKS=0)">
+</property>
+</properties>
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Production Edge Cases &amp; Stress Tests › Network Resilience › application handles slow network connections without timeout errors" classname="specs/production/production-edge-cases.spec.ts" time="0">
+<properties>
+<property name="skip" value="Production tests require real backend (set PLAYWRIGHT_USE_MOCKS=0)">
+</property>
+</properties>
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Production Edge Cases &amp; Stress Tests › Network Resilience › application handles request timeouts gracefully" classname="specs/production/production-edge-cases.spec.ts" time="0">
+<properties>
+<property name="skip" value="Production tests require real backend (set PLAYWRIGHT_USE_MOCKS=0)">
+</property>
+</properties>
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Production Edge Cases &amp; Stress Tests › State Management Edge Cases › application handles browser back/forward navigation correctly" classname="specs/production/production-edge-cases.spec.ts" time="0">
+<properties>
+<property name="skip" value="Production tests require real backend (set PLAYWRIGHT_USE_MOCKS=0)">
+</property>
+</properties>
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Production Edge Cases &amp; Stress Tests › State Management Edge Cases › application handles page refresh without losing critical state" classname="specs/production/production-edge-cases.spec.ts" time="0">
+<properties>
+<property name="skip" value="Production tests require real backend (set PLAYWRIGHT_USE_MOCKS=0)">
+</property>
+</properties>
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Production Edge Cases &amp; Stress Tests › State Management Edge Cases › application handles rapid tab switching gracefully" classname="specs/production/production-edge-cases.spec.ts" time="0">
+<properties>
+<property name="skip" value="Production tests require real backend (set PLAYWRIGHT_USE_MOCKS=0)">
+</property>
+</properties>
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Production Edge Cases &amp; Stress Tests › Performance Stress Tests › application handles rapid user interactions without lag" classname="specs/production/production-edge-cases.spec.ts" time="0">
+<properties>
+<property name="skip" value="Production tests require real backend (set PLAYWRIGHT_USE_MOCKS=0)">
+</property>
+</properties>
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Production Edge Cases &amp; Stress Tests › Performance Stress Tests › application handles large amounts of content without performance degradation" classname="specs/production/production-edge-cases.spec.ts" time="0">
+<properties>
+<property name="skip" value="Production tests require real backend (set PLAYWRIGHT_USE_MOCKS=0)">
+</property>
+</properties>
+<skipped>
+</skipped>
+</testcase>
+</testsuite>
+<testsuite name="specs/production/production-expanded.spec.ts" timestamp="2025-12-21T20:04:15.369Z" hostname="firefox" tests="26" failures="0" skipped="26" time="0" errors="0">
+<testcase name="Production Expanded Tests › API Endpoints › polls API endpoint responds" classname="specs/production/production-expanded.spec.ts" time="0">
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Production Expanded Tests › API Endpoints › notifications API endpoint responds" classname="specs/production/production-expanded.spec.ts" time="0">
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Production Expanded Tests › API Endpoints › analytics API endpoint responds" classname="specs/production/production-expanded.spec.ts" time="0">
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Production Expanded Tests › API Endpoints › profile API endpoint responds" classname="specs/production/production-expanded.spec.ts" time="0">
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Production Expanded Tests › API Endpoints › civics representative endpoint responds" classname="specs/production/production-expanded.spec.ts" time="0">
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Production Expanded Tests › API Endpoints › civics address lookup endpoint responds" classname="specs/production/production-expanded.spec.ts" time="0">
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Production Expanded Tests › Page Navigation › unauthenticated user redirected from feed to auth" classname="specs/production/production-expanded.spec.ts" time="0">
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Production Expanded Tests › Page Navigation › unauthenticated user can navigate to auth page" classname="specs/production/production-expanded.spec.ts" time="0">
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Production Expanded Tests › Page Navigation › root redirects to landing page consistently for unauthenticated users" classname="specs/production/production-expanded.spec.ts" time="0">
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Production Expanded Tests › Performance Metrics › root page redirect to landing is fast" classname="specs/production/production-expanded.spec.ts" time="0">
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Production Expanded Tests › Performance Metrics › feed page redirect to auth is fast" classname="specs/production/production-expanded.spec.ts" time="0">
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Production Expanded Tests › Performance Metrics › API response times are acceptable" classname="specs/production/production-expanded.spec.ts" time="0">
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Production Expanded Tests › Security Validations › CSP header is present and valid" classname="specs/production/production-expanded.spec.ts" time="0">
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Production Expanded Tests › Security Validations › X-Frame-Options prevents clickjacking" classname="specs/production/production-expanded.spec.ts" time="0">
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Production Expanded Tests › Security Validations › X-Content-Type-Options prevents MIME sniffing" classname="specs/production/production-expanded.spec.ts" time="0">
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Production Expanded Tests › Security Validations › Referrer-Policy is set" classname="specs/production/production-expanded.spec.ts" time="0">
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Production Expanded Tests › Security Validations › no sensitive data in response headers" classname="specs/production/production-expanded.spec.ts" time="0">
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Production Expanded Tests › Accessibility › pages have proper heading hierarchy" classname="specs/production/production-expanded.spec.ts" time="0">
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Production Expanded Tests › Accessibility › images have alt text" classname="specs/production/production-expanded.spec.ts" time="0">
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Production Expanded Tests › Accessibility › links have accessible text" classname="specs/production/production-expanded.spec.ts" time="0">
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Production Expanded Tests › Accessibility › form inputs have labels" classname="specs/production/production-expanded.spec.ts" time="0">
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Production Expanded Tests › Error Handling › handles malformed API requests gracefully" classname="specs/production/production-expanded.spec.ts" time="0">
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Production Expanded Tests › Error Handling › handles missing query parameters gracefully" classname="specs/production/production-expanded.spec.ts" time="0">
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Production Expanded Tests › Error Handling › handles very long URLs gracefully" classname="specs/production/production-expanded.spec.ts" time="0">
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Production Expanded Tests › Content Delivery › static assets are served correctly" classname="specs/production/production-expanded.spec.ts" time="0">
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Production Expanded Tests › Content Delivery › manifest.json is accessible" classname="specs/production/production-expanded.spec.ts" time="0">
+<skipped>
+</skipped>
+</testcase>
+</testsuite>
+<testsuite name="specs/production/production-feedback-widget.spec.ts" timestamp="2025-12-21T20:04:15.369Z" hostname="firefox" tests="8" failures="0" skipped="8" time="0" errors="0">
+<testcase name="Production Feedback Widget › feedback widget renders on landing page" classname="specs/production/production-feedback-widget.spec.ts" time="0">
+<properties>
+<property name="skip" value="Production tests require real backend (set PLAYWRIGHT_USE_MOCKS=0)">
+</property>
+</properties>
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Production Feedback Widget › feedback widget renders on feed page" classname="specs/production/production-feedback-widget.spec.ts" time="0">
+<properties>
+<property name="skip" value="Production tests require real backend (set PLAYWRIGHT_USE_MOCKS=0)">
+</property>
+</properties>
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Production Feedback Widget › feedback widget can be opened and displays form" classname="specs/production/production-feedback-widget.spec.ts" time="0">
+<properties>
+<property name="skip" value="Production tests require real backend (set PLAYWRIGHT_USE_MOCKS=0)">
+</property>
+</properties>
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Production Feedback Widget › feedback widget form flow works correctly" classname="specs/production/production-feedback-widget.spec.ts" time="0">
+<properties>
+<property name="skip" value="Production tests require real backend (set PLAYWRIGHT_USE_MOCKS=0)">
+</property>
+</properties>
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Production Feedback Widget › feedback widget API endpoint is accessible" classname="specs/production/production-feedback-widget.spec.ts" time="0">
+<properties>
+<property name="skip" value="Production tests require real backend (set PLAYWRIGHT_USE_MOCKS=0)">
+</property>
+</properties>
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Production Feedback Widget › feedback widget handles API errors gracefully" classname="specs/production/production-feedback-widget.spec.ts" time="0">
+<properties>
+<property name="skip" value="Production tests require real backend (set PLAYWRIGHT_USE_MOCKS=0)">
+</property>
+</properties>
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Production Feedback Widget › feedback widget can be closed" classname="specs/production/production-feedback-widget.spec.ts" time="0">
+<properties>
+<property name="skip" value="Production tests require real backend (set PLAYWRIGHT_USE_MOCKS=0)">
+</property>
+</properties>
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Production Feedback Widget › feedback widget is accessible via keyboard" classname="specs/production/production-feedback-widget.spec.ts" time="0">
+<properties>
+<property name="skip" value="Production tests require real backend (set PLAYWRIGHT_USE_MOCKS=0)">
+</property>
+</properties>
+<skipped>
+</skipped>
+</testcase>
+</testsuite>
+<testsuite name="specs/production/production-observability.spec.ts" timestamp="2025-12-21T20:04:15.369Z" hostname="firefox" tests="3" failures="0" skipped="3" time="0" errors="0">
+<testcase name="Production Observability › feed page API + console diagnostics" classname="specs/production/production-observability.spec.ts" time="0">
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Production Observability › privacy page API + console diagnostics" classname="specs/production/production-observability.spec.ts" time="0">
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Production Observability › dashboard navigation + auth diagnostics" classname="specs/production/production-observability.spec.ts" time="0">
+<skipped>
+</skipped>
+</testcase>
+</testsuite>
+<testsuite name="specs/production/production-polls-deep-diagnostic.spec.ts" timestamp="2025-12-21T20:04:15.369Z" hostname="firefox" tests="1" failures="0" skipped="1" time="0" errors="0">
+<testcase name="Production Polls Page Deep Diagnostic › deep diagnostic - check all state and warnings" classname="specs/production/production-polls-deep-diagnostic.spec.ts" time="0">
+<skipped>
+</skipped>
+</testcase>
+</testsuite>
+<testsuite name="specs/production/production-polls-page-diagnostic.spec.ts" timestamp="2025-12-21T20:04:15.369Z" hostname="firefox" tests="1" failures="0" skipped="1" time="0" errors="0">
+<testcase name="Production Polls Page Diagnostic Tests › polls page diagnostic - check loading state and errors" classname="specs/production/production-polls-page-diagnostic.spec.ts" time="0">
+<skipped>
+</skipped>
+</testcase>
+</testsuite>
+<testsuite name="specs/production/production-polls-page.spec.ts" timestamp="2025-12-21T20:04:15.369Z" hostname="firefox" tests="2" failures="0" skipped="2" time="0" errors="0">
+<testcase name="Production Polls Page Tests › polls page loads without infinite spinner" classname="specs/production/production-polls-page.spec.ts" time="0">
+<properties>
+<property name="skip" value="Production tests require real backend (set PLAYWRIGHT_USE_MOCKS=0)">
+</property>
+</properties>
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Production Polls Page Tests › polls page has no CSP violations for vercel.live" classname="specs/production/production-polls-page.spec.ts" time="0">
+<properties>
+<property name="skip" value="Production tests require real backend (set PLAYWRIGHT_USE_MOCKS=0)">
+</property>
+</properties>
+<skipped>
+</skipped>
+</testcase>
+</testsuite>
+<testsuite name="specs/production/production-profile-deep-diagnostic.spec.ts" timestamp="2025-12-21T20:04:15.369Z" hostname="firefox" tests="1" failures="0" skipped="1" time="0" errors="0">
+<testcase name="Production Profile Page Deep Diagnostic › deep diagnostic - check all state and warnings" classname="specs/production/production-profile-deep-diagnostic.spec.ts" time="0">
+<skipped>
+</skipped>
+</testcase>
+</testsuite>
+<testsuite name="specs/production/production-profile-journey.spec.ts" timestamp="2025-12-21T20:04:15.369Z" hostname="firefox" tests="2" failures="0" skipped="2" time="0" errors="0">
+<testcase name="Production Profile Journey Tests › complete profile navigation journey" classname="specs/production/production-profile-journey.spec.ts" time="0">
+<properties>
+<property name="skip" value="Production tests require real backend (set PLAYWRIGHT_USE_MOCKS=0)">
+</property>
+</properties>
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Production Profile Journey Tests › profile page interactions work correctly" classname="specs/production/production-profile-journey.spec.ts" time="0">
+<properties>
+<property name="skip" value="Production tests require real backend (set PLAYWRIGHT_USE_MOCKS=0)">
+</property>
+</properties>
+<skipped>
+</skipped>
+</testcase>
+</testsuite>
+<testsuite name="specs/production/production-profile-page.spec.ts" timestamp="2025-12-21T20:04:15.369Z" hostname="firefox" tests="2" failures="0" skipped="2" time="0" errors="0">
+<testcase name="Production Profile Page Tests › profile page loads without infinite spinner" classname="specs/production/production-profile-page.spec.ts" time="0">
+<properties>
+<property name="skip" value="Production tests require real backend (set PLAYWRIGHT_USE_MOCKS=0)">
+</property>
+</properties>
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Production Profile Page Tests › profile page navigation from global nav works" classname="specs/production/production-profile-page.spec.ts" time="0">
+<properties>
+<property name="skip" value="Production tests require real backend (set PLAYWRIGHT_USE_MOCKS=0)">
+</property>
+</properties>
+<skipped>
+</skipped>
+</testcase>
+</testsuite>
+<testsuite name="specs/production/production-profile-stability.spec.ts" timestamp="2025-12-21T20:04:15.369Z" hostname="firefox" tests="2" failures="0" skipped="2" time="0" errors="0">
+<testcase name="Production Profile Stability Tests › profile page does not trigger infinite re-renders" classname="specs/production/production-profile-stability.spec.ts" time="0">
+<properties>
+<property name="skip" value="Production tests require real backend (set PLAYWRIGHT_USE_MOCKS=0)">
+</property>
+</properties>
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Production Profile Stability Tests › profile edit page does not trigger infinite re-renders" classname="specs/production/production-profile-stability.spec.ts" time="0">
+<properties>
+<property name="skip" value="Production tests require real backend (set PLAYWRIGHT_USE_MOCKS=0)">
+</property>
+</properties>
+<skipped>
+</skipped>
+</testcase>
+</testsuite>
+<testsuite name="specs/production/production-smoke.spec.ts" timestamp="2025-12-21T20:04:15.369Z" hostname="firefox" tests="18" failures="0" skipped="18" time="0" errors="0">
+<testcase name="Production Smoke Tests › Critical Pages › root page redirects unauthenticated users to landing" classname="specs/production/production-smoke.spec.ts" time="0">
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Production Smoke Tests › Critical Pages › root page redirects authenticated users to /feed" classname="specs/production/production-smoke.spec.ts" time="0">
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Production Smoke Tests › Critical Pages › feed page requires authentication or redirects to /auth" classname="specs/production/production-smoke.spec.ts" time="0">
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Production Smoke Tests › Critical Pages › auth page loads" classname="specs/production/production-smoke.spec.ts" time="0">
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Production Smoke Tests › Critical Pages › dashboard page requires authentication" classname="specs/production/production-smoke.spec.ts" time="0">
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Production Smoke Tests › Critical Pages › health endpoint returns success" classname="specs/production/production-smoke.spec.ts" time="0">
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Production Smoke Tests › Critical Pages › civics health endpoint works" classname="specs/production/production-smoke.spec.ts" time="0">
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Production Smoke Tests › API Endpoints › feeds API endpoint responds" classname="specs/production/production-smoke.spec.ts" time="0">
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Production Smoke Tests › API Endpoints › civics by-state endpoint works" classname="specs/production/production-smoke.spec.ts" time="0">
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Production Smoke Tests › API Endpoints › site-messages API responds" classname="specs/production/production-smoke.spec.ts" time="0">
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Production Smoke Tests › Security Headers › security headers are present" classname="specs/production/production-smoke.spec.ts" time="0">
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Production Smoke Tests › Security Headers › HTTPS is enforced in production" classname="specs/production/production-smoke.spec.ts" time="0">
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Production Smoke Tests › Error Handling › 404 page handles missing routes" classname="specs/production/production-smoke.spec.ts" time="0">
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Production Smoke Tests › Error Handling › invalid API endpoint returns appropriate error" classname="specs/production/production-smoke.spec.ts" time="0">
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Production Smoke Tests › Performance › page load time is acceptable" classname="specs/production/production-smoke.spec.ts" time="0">
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Production Smoke Tests › Performance › feed page loads within acceptable time" classname="specs/production/production-smoke.spec.ts" time="0">
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Production Smoke Tests › Accessibility › page has proper HTML structure" classname="specs/production/production-smoke.spec.ts" time="0">
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Production Smoke Tests › Accessibility › feed page has accessible structure" classname="specs/production/production-smoke.spec.ts" time="0">
+<skipped>
+</skipped>
+</testcase>
+</testsuite>
+<testsuite name="specs/production/production-ux-excellence.spec.ts" timestamp="2025-12-21T20:04:15.369Z" hostname="firefox" tests="46" failures="0" skipped="46" time="0" errors="0">
+<testcase name="Production UX Excellence › Performance Metrics › landing page meets Core Web Vitals thresholds" classname="specs/production/production-ux-excellence.spec.ts" time="0">
+<properties>
+<property name="skip" value="Production tests require real backend (set PLAYWRIGHT_USE_MOCKS=0)">
+</property>
+</properties>
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Production UX Excellence › Performance Metrics › feed page loads efficiently" classname="specs/production/production-ux-excellence.spec.ts" time="0">
+<properties>
+<property name="skip" value="Production tests require real backend (set PLAYWRIGHT_USE_MOCKS=0)">
+</property>
+</properties>
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Production UX Excellence › Accessibility Excellence › keyboard navigation works throughout feed page" classname="specs/production/production-ux-excellence.spec.ts" time="0">
+<properties>
+<property name="skip" value="Production tests require real backend (set PLAYWRIGHT_USE_MOCKS=0)">
+</property>
+</properties>
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Production UX Excellence › Accessibility Excellence › screen reader announcements work for dynamic content" classname="specs/production/production-ux-excellence.spec.ts" time="0">
+<properties>
+<property name="skip" value="Production tests require real backend (set PLAYWRIGHT_USE_MOCKS=0)">
+</property>
+</properties>
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Production UX Excellence › Accessibility Excellence › form inputs have proper labels and error messages" classname="specs/production/production-ux-excellence.spec.ts" time="0">
+<properties>
+<property name="skip" value="Production tests require real backend (set PLAYWRIGHT_USE_MOCKS=0)">
+</property>
+</properties>
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Production UX Excellence › Error Recovery and Resilience › feed gracefully handles API failures with retry option" classname="specs/production/production-ux-excellence.spec.ts" time="0">
+<properties>
+<property name="skip" value="Production tests require real backend (set PLAYWRIGHT_USE_MOCKS=0)">
+</property>
+</properties>
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Production UX Excellence › Error Recovery and Resilience › application handles network disconnection gracefully" classname="specs/production/production-ux-excellence.spec.ts" time="0">
+<properties>
+<property name="skip" value="Production tests require real backend (set PLAYWRIGHT_USE_MOCKS=0)">
+</property>
+</properties>
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Production UX Excellence › Edge Cases and Boundary Conditions › handles very long poll titles and content gracefully" classname="specs/production/production-ux-excellence.spec.ts" time="0">
+<properties>
+<property name="skip" value="Production tests require real backend (set PLAYWRIGHT_USE_MOCKS=0)">
+</property>
+</properties>
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Production UX Excellence › Edge Cases and Boundary Conditions › handles rapid user interactions without breaking" classname="specs/production/production-ux-excellence.spec.ts" time="0">
+<properties>
+<property name="skip" value="Production tests require real backend (set PLAYWRIGHT_USE_MOCKS=0)">
+</property>
+</properties>
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Production UX Excellence › Edge Cases and Boundary Conditions › handles empty states with helpful guidance" classname="specs/production/production-ux-excellence.spec.ts" time="0">
+<properties>
+<property name="skip" value="Production tests require real backend (set PLAYWRIGHT_USE_MOCKS=0)">
+</property>
+</properties>
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Production UX Excellence › Real-World User Workflows › complete user journey: signup to first poll vote" classname="specs/production/production-ux-excellence.spec.ts" time="0">
+<properties>
+<property name="skip" value="Production tests require real backend (set PLAYWRIGHT_USE_MOCKS=0)">
+</property>
+</properties>
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Production UX Excellence › Real-World User Workflows › user can navigate entire app using only keyboard" classname="specs/production/production-ux-excellence.spec.ts" time="0">
+<properties>
+<property name="skip" value="Production tests require real backend (set PLAYWRIGHT_USE_MOCKS=0)">
+</property>
+</properties>
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Production UX Excellence › Mobile Responsiveness › feed page is usable on mobile viewport" classname="specs/production/production-ux-excellence.spec.ts" time="0">
+<properties>
+<property name="skip" value="Production tests require real backend (set PLAYWRIGHT_USE_MOCKS=0)">
+</property>
+</properties>
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Production UX Excellence › Rate Limiting UX › rate limit errors show helpful user messages" classname="specs/production/production-ux-excellence.spec.ts" time="0">
+<properties>
+<property name="skip" value="Production tests require real backend (set PLAYWRIGHT_USE_MOCKS=0)">
+</property>
+</properties>
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Production UX Excellence › Loading States and Progressive Enhancement › loading skeletons appear during feed load" classname="specs/production/production-ux-excellence.spec.ts" time="0">
+<properties>
+<property name="skip" value="Production tests require real backend (set PLAYWRIGHT_USE_MOCKS=0)">
+</property>
+</properties>
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Production UX Excellence › Loading States and Progressive Enhancement › progressive enhancement: app works with JavaScript disabled" classname="specs/production/production-ux-excellence.spec.ts" time="0">
+<properties>
+<property name="skip" value="Production tests require real backend (set PLAYWRIGHT_USE_MOCKS=0)">
+</property>
+</properties>
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Production UX Excellence › Data Persistence and State Management › user preferences persist across page reloads" classname="specs/production/production-ux-excellence.spec.ts" time="0">
+<properties>
+<property name="skip" value="Production tests require real backend (set PLAYWRIGHT_USE_MOCKS=0)">
+</property>
+</properties>
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Production UX Excellence › Data Persistence and State Management › form data persists during navigation (draft saving)" classname="specs/production/production-ux-excellence.spec.ts" time="0">
+<properties>
+<property name="skip" value="Production tests require real backend (set PLAYWRIGHT_USE_MOCKS=0)">
+</property>
+</properties>
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Production UX Excellence › Cross-Browser Compatibility › critical features work across different viewport sizes" classname="specs/production/production-ux-excellence.spec.ts" time="0">
+<properties>
+<property name="skip" value="Production tests require real backend (set PLAYWRIGHT_USE_MOCKS=0)">
+</property>
+</properties>
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Production UX Excellence › Security and Privacy UX › sensitive data is not exposed in page source" classname="specs/production/production-ux-excellence.spec.ts" time="0">
+<properties>
+<property name="skip" value="Production tests require real backend (set PLAYWRIGHT_USE_MOCKS=0)">
+</property>
+</properties>
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Production UX Excellence › Security and Privacy UX › logout clears sensitive data and redirects properly" classname="specs/production/production-ux-excellence.spec.ts" time="0">
+<properties>
+<property name="skip" value="Production tests require real backend (set PLAYWRIGHT_USE_MOCKS=0)">
+</property>
+</properties>
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Production UX Excellence › Content Quality and Readability › text content is readable and properly formatted" classname="specs/production/production-ux-excellence.spec.ts" time="0">
+<properties>
+<property name="skip" value="Production tests require real backend (set PLAYWRIGHT_USE_MOCKS=0)">
+</property>
+</properties>
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Production UX Excellence › Content Quality and Readability › images have proper alt text for accessibility" classname="specs/production/production-ux-excellence.spec.ts" time="0">
+<properties>
+<property name="skip" value="Production tests require real backend (set PLAYWRIGHT_USE_MOCKS=0)">
+</property>
+</properties>
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Production UX Excellence › Error Boundary and Resilience › application handles React errors gracefully with error boundaries" classname="specs/production/production-ux-excellence.spec.ts" time="0">
+<properties>
+<property name="skip" value="Production tests require real backend (set PLAYWRIGHT_USE_MOCKS=0)">
+</property>
+</properties>
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Production UX Excellence › Error Boundary and Resilience › application handles slow network connections gracefully" classname="specs/production/production-ux-excellence.spec.ts" time="0">
+<properties>
+<property name="skip" value="Production tests require real backend (set PLAYWRIGHT_USE_MOCKS=0)">
+</property>
+</properties>
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Production UX Excellence › Error Boundary and Resilience › application handles partial API failures without breaking" classname="specs/production/production-ux-excellence.spec.ts" time="0">
+<properties>
+<property name="skip" value="Production tests require real backend (set PLAYWRIGHT_USE_MOCKS=0)">
+</property>
+</properties>
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Production UX Excellence › Security and Privacy Headers › security headers are properly configured" classname="specs/production/production-ux-excellence.spec.ts" time="0">
+<properties>
+<property name="skip" value="Production tests require real backend (set PLAYWRIGHT_USE_MOCKS=0)">
+</property>
+</properties>
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Production UX Excellence › Security and Privacy Headers › sensitive data is not exposed in localStorage unnecessarily" classname="specs/production/production-ux-excellence.spec.ts" time="0">
+<properties>
+<property name="skip" value="Production tests require real backend (set PLAYWRIGHT_USE_MOCKS=0)">
+</property>
+</properties>
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Production UX Excellence › SEO and Meta Tags › pages have proper meta tags for SEO" classname="specs/production/production-ux-excellence.spec.ts" time="0">
+<properties>
+<property name="skip" value="Production tests require real backend (set PLAYWRIGHT_USE_MOCKS=0)">
+</property>
+</properties>
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Production UX Excellence › SEO and Meta Tags › pages have proper canonical URLs" classname="specs/production/production-ux-excellence.spec.ts" time="0">
+<properties>
+<property name="skip" value="Production tests require real backend (set PLAYWRIGHT_USE_MOCKS=0)">
+</property>
+</properties>
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Production UX Excellence › Performance Under Load › application remains responsive during multiple rapid navigations" classname="specs/production/production-ux-excellence.spec.ts" time="0">
+<properties>
+<property name="skip" value="Production tests require real backend (set PLAYWRIGHT_USE_MOCKS=0)">
+</property>
+</properties>
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Production UX Excellence › Performance Under Load › application handles large amounts of content gracefully" classname="specs/production/production-ux-excellence.spec.ts" time="0">
+<properties>
+<property name="skip" value="Production tests require real backend (set PLAYWRIGHT_USE_MOCKS=0)">
+</property>
+</properties>
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Production UX Excellence › Form Validation and User Input › forms provide real-time validation feedback" classname="specs/production/production-ux-excellence.spec.ts" time="0">
+<properties>
+<property name="skip" value="Production tests require real backend (set PLAYWRIGHT_USE_MOCKS=0)">
+</property>
+</properties>
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Production UX Excellence › Form Validation and User Input › forms prevent submission with invalid data" classname="specs/production/production-ux-excellence.spec.ts" time="0">
+<properties>
+<property name="skip" value="Production tests require real backend (set PLAYWRIGHT_USE_MOCKS=0)">
+</property>
+</properties>
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Production UX Excellence › Internationalization Readiness › text content is properly structured for translation" classname="specs/production/production-ux-excellence.spec.ts" time="0">
+<properties>
+<property name="skip" value="Production tests require real backend (set PLAYWRIGHT_USE_MOCKS=0)">
+</property>
+</properties>
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Production UX Excellence › Real-time Updates and WebSocket Resilience › application handles real-time updates without breaking UI" classname="specs/production/production-ux-excellence.spec.ts" time="0">
+<properties>
+<property name="skip" value="Production tests require real backend (set PLAYWRIGHT_USE_MOCKS=0)">
+</property>
+</properties>
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Production UX Excellence › Real-time Updates and WebSocket Resilience › application gracefully handles WebSocket disconnections" classname="specs/production/production-ux-excellence.spec.ts" time="0">
+<properties>
+<property name="skip" value="Production tests require real backend (set PLAYWRIGHT_USE_MOCKS=0)">
+</property>
+</properties>
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Production UX Excellence › PWA Functionality and Offline Support › service worker is registered and functional" classname="specs/production/production-ux-excellence.spec.ts" time="0">
+<properties>
+<property name="skip" value="Production tests require real backend (set PLAYWRIGHT_USE_MOCKS=0)">
+</property>
+</properties>
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Production UX Excellence › PWA Functionality and Offline Support › application provides offline fallback content" classname="specs/production/production-ux-excellence.spec.ts" time="0">
+<properties>
+<property name="skip" value="Production tests require real backend (set PLAYWRIGHT_USE_MOCKS=0)">
+</property>
+</properties>
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Production UX Excellence › PWA Functionality and Offline Support › manifest.json is properly configured for PWA" classname="specs/production/production-ux-excellence.spec.ts" time="0">
+<properties>
+<property name="skip" value="Production tests require real backend (set PLAYWRIGHT_USE_MOCKS=0)">
+</property>
+</properties>
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Production UX Excellence › Data Integrity and Consistency › user data persists correctly across page reloads" classname="specs/production/production-ux-excellence.spec.ts" time="0">
+<properties>
+<property name="skip" value="Production tests require real backend (set PLAYWRIGHT_USE_MOCKS=0)">
+</property>
+</properties>
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Production UX Excellence › Data Integrity and Consistency › application handles concurrent user actions without data corruption" classname="specs/production/production-ux-excellence.spec.ts" time="0">
+<properties>
+<property name="skip" value="Production tests require real backend (set PLAYWRIGHT_USE_MOCKS=0)">
+</property>
+</properties>
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Production UX Excellence › Browser Storage and Cache Management › localStorage is used appropriately and cleaned up when needed" classname="specs/production/production-ux-excellence.spec.ts" time="0">
+<properties>
+<property name="skip" value="Production tests require real backend (set PLAYWRIGHT_USE_MOCKS=0)">
+</property>
+</properties>
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Production UX Excellence › Browser Storage and Cache Management › sessionStorage is managed correctly" classname="specs/production/production-ux-excellence.spec.ts" time="0">
+<properties>
+<property name="skip" value="Production tests require real backend (set PLAYWRIGHT_USE_MOCKS=0)">
+</property>
+</properties>
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Production UX Excellence › Rate Limiting and Throttling UX › rate limit errors provide clear user guidance" classname="specs/production/production-ux-excellence.spec.ts" time="0">
+<properties>
+<property name="skip" value="Production tests require real backend (set PLAYWRIGHT_USE_MOCKS=0)">
+</property>
+</properties>
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Production UX Excellence › Concurrent Session Management › application handles multiple tabs gracefully" classname="specs/production/production-ux-excellence.spec.ts" time="0">
+<properties>
+<property name="skip" value="Production tests require real backend (set PLAYWRIGHT_USE_MOCKS=0)">
+</property>
+</properties>
+<skipped>
+</skipped>
+</testcase>
+</testsuite>
+<testsuite name="specs/production/production-ux-improvements.spec.ts" timestamp="2025-12-21T20:04:15.369Z" hostname="firefox" tests="12" failures="0" skipped="12" time="0" errors="0">
+<testcase name="Production UX Improvements › Empty States › feed page shows helpful empty state when no content" classname="specs/production/production-ux-improvements.spec.ts" time="0">
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Production UX Improvements › Empty States › polls tab shows helpful empty state" classname="specs/production/production-ux-improvements.spec.ts" time="0">
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Production UX Improvements › Loading States › feed page shows skeleton loaders during initial load" classname="specs/production/production-ux-improvements.spec.ts" time="0">
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Production UX Improvements › Loading States › dashboard shows skeleton loaders during load" classname="specs/production/production-ux-improvements.spec.ts" time="0">
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Production UX Improvements › Form Validation › auth form shows real-time email validation" classname="specs/production/production-ux-improvements.spec.ts" time="0">
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Production UX Improvements › Form Validation › auth form shows real-time password validation" classname="specs/production/production-ux-improvements.spec.ts" time="0">
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Production UX Improvements › Form Validation › auth form submit button shows loading state" classname="specs/production/production-ux-improvements.spec.ts" time="0">
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Production UX Improvements › Error Handling › feed page shows helpful error message with retry button" classname="specs/production/production-ux-improvements.spec.ts" time="0">
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Production UX Improvements › Accessibility › auth form has proper ARIA labels and error associations" classname="specs/production/production-ux-improvements.spec.ts" time="0">
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Production UX Improvements › Accessibility › feed page has proper ARIA live regions for updates" classname="specs/production/production-ux-improvements.spec.ts" time="0">
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Production UX Improvements › Accessibility › empty states have proper ARIA labels" classname="specs/production/production-ux-improvements.spec.ts" time="0">
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Production UX Improvements › Visual Feedback › form fields show visual feedback for validation states" classname="specs/production/production-ux-improvements.spec.ts" time="0">
+<skipped>
+</skipped>
+</testcase>
+</testsuite>
+<testsuite name="specs/auth/auth-production.spec.ts" timestamp="2025-12-21T20:04:15.369Z" hostname="webkit" tests="2" failures="0" skipped="2" time="0" errors="0">
+<testcase name="Auth – real backend › existing test user can sign in via /auth" classname="specs/auth/auth-production.spec.ts" time="0">
+<properties>
+<property name="skip" value="Set PLAYWRIGHT_USE_MOCKS=0 to exercise the real backend">
+</property>
+<property name="skip" value="E2E credentials (E2E_USER_EMAIL, E2E_USER_PASSWORD, E2E_ADMIN_EMAIL, E2E_ADMIN_PASSWORD) are required">
+</property>
+</properties>
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Auth – real backend › admin credentials unlock admin routes" classname="specs/auth/auth-production.spec.ts" time="0">
+<properties>
+<property name="skip" value="Set PLAYWRIGHT_USE_MOCKS=0 to exercise the real backend">
+</property>
+<property name="skip" value="E2E credentials (E2E_USER_EMAIL, E2E_USER_PASSWORD, E2E_ADMIN_EMAIL, E2E_ADMIN_PASSWORD) are required">
+</property>
+</properties>
+<skipped>
+</skipped>
+</testcase>
+</testsuite>
+<testsuite name="specs/poll-production.spec.ts" timestamp="2025-12-21T20:04:15.369Z" hostname="webkit" tests="1" failures="0" skipped="1" time="0" errors="0">
+<testcase name="Production poll journey › author completes accessible wizard and sees share dialog" classname="specs/poll-production.spec.ts" time="0">
+<skipped>
+</skipped>
+</testcase>
+</testsuite>
+<testsuite name="specs/production/production-admin-dashboard-deep-diagnostic.spec.ts" timestamp="2025-12-21T20:04:15.369Z" hostname="webkit" tests="3" failures="0" skipped="3" time="0" errors="0">
+<testcase name="Production Admin Dashboard Deep Diagnostic › deep diagnostic - check all state and warnings" classname="specs/production/production-admin-dashboard-deep-diagnostic.spec.ts" time="0">
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Production Admin Dashboard Deep Diagnostic › admin dashboard navigation from personal dashboard" classname="specs/production/production-admin-dashboard-deep-diagnostic.spec.ts" time="0">
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Production Admin Dashboard Deep Diagnostic › admin dashboard direct navigation" classname="specs/production/production-admin-dashboard-deep-diagnostic.spec.ts" time="0">
+<skipped>
+</skipped>
+</testcase>
+</testsuite>
+<testsuite name="specs/production/production-all-pages.spec.ts" timestamp="2025-12-21T20:04:15.369Z" hostname="webkit" tests="24" failures="0" skipped="24" time="0" errors="0">
+<testcase name="Production - All Pages &amp; Features › Public Pages › landing page loads and displays content" classname="specs/production/production-all-pages.spec.ts" time="0">
+<properties>
+<property name="skip" value="Production tests require real backend (set PLAYWRIGHT_USE_MOCKS=0)">
+</property>
+</properties>
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Production - All Pages &amp; Features › Public Pages › auth page loads and displays login form" classname="specs/production/production-all-pages.spec.ts" time="0">
+<properties>
+<property name="skip" value="Production tests require real backend (set PLAYWRIGHT_USE_MOCKS=0)">
+</property>
+</properties>
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Production - All Pages &amp; Features › Public Pages › terms page loads" classname="specs/production/production-all-pages.spec.ts" time="0">
+<properties>
+<property name="skip" value="Production tests require real backend (set PLAYWRIGHT_USE_MOCKS=0)">
+</property>
+</properties>
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Production - All Pages &amp; Features › Public Pages › privacy page loads" classname="specs/production/production-all-pages.spec.ts" time="0">
+<properties>
+<property name="skip" value="Production tests require real backend (set PLAYWRIGHT_USE_MOCKS=0)">
+</property>
+</properties>
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Production - All Pages &amp; Features › Authenticated Pages › feed page loads and displays content" classname="specs/production/production-all-pages.spec.ts" time="0">
+<properties>
+<property name="skip" value="Production tests require real backend (set PLAYWRIGHT_USE_MOCKS=0)">
+</property>
+</properties>
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Production - All Pages &amp; Features › Authenticated Pages › dashboard page loads" classname="specs/production/production-all-pages.spec.ts" time="0">
+<properties>
+<property name="skip" value="Production tests require real backend (set PLAYWRIGHT_USE_MOCKS=0)">
+</property>
+</properties>
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Production - All Pages &amp; Features › Authenticated Pages › profile page loads" classname="specs/production/production-all-pages.spec.ts" time="0">
+<properties>
+<property name="skip" value="Production tests require real backend (set PLAYWRIGHT_USE_MOCKS=0)">
+</property>
+</properties>
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Production - All Pages &amp; Features › Authenticated Pages › onboarding page loads (if redirected)" classname="specs/production/production-all-pages.spec.ts" time="0">
+<properties>
+<property name="skip" value="Production tests require real backend (set PLAYWRIGHT_USE_MOCKS=0)">
+</property>
+</properties>
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Production - All Pages &amp; Features › Authenticated Pages › polls page loads" classname="specs/production/production-all-pages.spec.ts" time="0">
+<properties>
+<property name="skip" value="Production tests require real backend (set PLAYWRIGHT_USE_MOCKS=0)">
+</property>
+</properties>
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Production - All Pages &amp; Features › Authenticated Pages › pages handle API errors gracefully without crashing" classname="specs/production/production-all-pages.spec.ts" time="0">
+<properties>
+<property name="skip" value="Production tests require real backend (set PLAYWRIGHT_USE_MOCKS=0)">
+</property>
+</properties>
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Production - All Pages &amp; Features › Admin Pages › admin dashboard loads" classname="specs/production/production-all-pages.spec.ts" time="0">
+<properties>
+<property name="skip" value="Production tests require real backend (set PLAYWRIGHT_USE_MOCKS=0)">
+</property>
+</properties>
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Production - All Pages &amp; Features › Admin Pages › admin users page loads" classname="specs/production/production-all-pages.spec.ts" time="0">
+<properties>
+<property name="skip" value="Production tests require real backend (set PLAYWRIGHT_USE_MOCKS=0)">
+</property>
+</properties>
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Production - All Pages &amp; Features › Admin Pages › admin feedback page loads" classname="specs/production/production-all-pages.spec.ts" time="0">
+<properties>
+<property name="skip" value="Production tests require real backend (set PLAYWRIGHT_USE_MOCKS=0)">
+</property>
+</properties>
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Production - All Pages &amp; Features › Admin Pages › admin analytics page loads" classname="specs/production/production-all-pages.spec.ts" time="0">
+<properties>
+<property name="skip" value="Production tests require real backend (set PLAYWRIGHT_USE_MOCKS=0)">
+</property>
+</properties>
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Production - All Pages &amp; Features › API Endpoints › health API endpoint works" classname="specs/production/production-all-pages.spec.ts" time="0">
+<properties>
+<property name="skip" value="Production tests require real backend (set PLAYWRIGHT_USE_MOCKS=0)">
+</property>
+</properties>
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Production - All Pages &amp; Features › API Endpoints › feeds API endpoint responds" classname="specs/production/production-all-pages.spec.ts" time="0">
+<properties>
+<property name="skip" value="Production tests require real backend (set PLAYWRIGHT_USE_MOCKS=0)">
+</property>
+</properties>
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Production - All Pages &amp; Features › API Endpoints › profile API endpoint responds" classname="specs/production/production-all-pages.spec.ts" time="0">
+<properties>
+<property name="skip" value="Production tests require real backend (set PLAYWRIGHT_USE_MOCKS=0)">
+</property>
+</properties>
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Production - All Pages &amp; Features › API Endpoints › polls API endpoint responds" classname="specs/production/production-all-pages.spec.ts" time="0">
+<properties>
+<property name="skip" value="Production tests require real backend (set PLAYWRIGHT_USE_MOCKS=0)">
+</property>
+</properties>
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Production - All Pages &amp; Features › API Endpoints › feedback API endpoint responds" classname="specs/production/production-all-pages.spec.ts" time="0">
+<properties>
+<property name="skip" value="Production tests require real backend (set PLAYWRIGHT_USE_MOCKS=0)">
+</property>
+</properties>
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Production - All Pages &amp; Features › API Endpoints › admin health API endpoint works (requires auth)" classname="specs/production/production-all-pages.spec.ts" time="0">
+<properties>
+<property name="skip" value="Production tests require real backend (set PLAYWRIGHT_USE_MOCKS=0)">
+</property>
+</properties>
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Production - All Pages &amp; Features › Navigation &amp; Routing › navigation links work" classname="specs/production/production-all-pages.spec.ts" time="0">
+<properties>
+<property name="skip" value="Production tests require real backend (set PLAYWRIGHT_USE_MOCKS=0)">
+</property>
+</properties>
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Production - All Pages &amp; Features › Navigation &amp; Routing › browser back/forward navigation works" classname="specs/production/production-all-pages.spec.ts" time="0">
+<properties>
+<property name="skip" value="Production tests require real backend (set PLAYWRIGHT_USE_MOCKS=0)">
+</property>
+</properties>
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Production - All Pages &amp; Features › Error Handling › 404 page handles missing routes" classname="specs/production/production-all-pages.spec.ts" time="0">
+<properties>
+<property name="skip" value="Production tests require real backend (set PLAYWRIGHT_USE_MOCKS=0)">
+</property>
+</properties>
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Production - All Pages &amp; Features › Error Handling › invalid API endpoint returns appropriate error" classname="specs/production/production-all-pages.spec.ts" time="0">
+<properties>
+<property name="skip" value="Production tests require real backend (set PLAYWRIGHT_USE_MOCKS=0)">
+</property>
+</properties>
+<skipped>
+</skipped>
+</testcase>
+</testsuite>
+<testsuite name="specs/production/production-comprehensive-journeys.spec.ts" timestamp="2025-12-21T20:04:15.369Z" hostname="webkit" tests="12" failures="0" skipped="12" time="0" errors="0">
+<testcase name="Production Comprehensive Journeys › Complete Onboarding Flow › new user can complete full onboarding journey" classname="specs/production/production-comprehensive-journeys.spec.ts" time="0">
+<properties>
+<property name="skip" value="Production tests require real backend (set PLAYWRIGHT_USE_MOCKS=0)">
+</property>
+</properties>
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Production Comprehensive Journeys › Poll Creation and Voting › authenticated user can view and interact with polls" classname="specs/production/production-comprehensive-journeys.spec.ts" time="0">
+<properties>
+<property name="skip" value="Production tests require real backend (set PLAYWRIGHT_USE_MOCKS=0)">
+</property>
+</properties>
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Production Comprehensive Journeys › Poll Creation and Voting › user can navigate to poll detail page" classname="specs/production/production-comprehensive-journeys.spec.ts" time="0">
+<properties>
+<property name="skip" value="Production tests require real backend (set PLAYWRIGHT_USE_MOCKS=0)">
+</property>
+</properties>
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Production Comprehensive Journeys › Feed Interactions › user can like and unlike feed items" classname="specs/production/production-comprehensive-journeys.spec.ts" time="0">
+<properties>
+<property name="skip" value="Production tests require real backend (set PLAYWRIGHT_USE_MOCKS=0)">
+</property>
+</properties>
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Production Comprehensive Journeys › Feed Interactions › user can bookmark feed items" classname="specs/production/production-comprehensive-journeys.spec.ts" time="0">
+<properties>
+<property name="skip" value="Production tests require real backend (set PLAYWRIGHT_USE_MOCKS=0)">
+</property>
+</properties>
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Production Comprehensive Journeys › Feed Interactions › user can refresh feed" classname="specs/production/production-comprehensive-journeys.spec.ts" time="0">
+<properties>
+<property name="skip" value="Production tests require real backend (set PLAYWRIGHT_USE_MOCKS=0)">
+</property>
+</properties>
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Production Comprehensive Journeys › Profile Management › user can view and edit profile" classname="specs/production/production-comprehensive-journeys.spec.ts" time="0">
+<properties>
+<property name="skip" value="Production tests require real backend (set PLAYWRIGHT_USE_MOCKS=0)">
+</property>
+</properties>
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Production Comprehensive Journeys › Profile Management › user can view profile preferences" classname="specs/production/production-comprehensive-journeys.spec.ts" time="0">
+<properties>
+<property name="skip" value="Production tests require real backend (set PLAYWRIGHT_USE_MOCKS=0)">
+</property>
+</properties>
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Production Comprehensive Journeys › Multi-Step User Journeys › complete user journey: landing -&gt; auth -&gt; feed -&gt; poll -&gt; profile" classname="specs/production/production-comprehensive-journeys.spec.ts" time="0">
+<properties>
+<property name="skip" value="Production tests require real backend (set PLAYWRIGHT_USE_MOCKS=0)">
+</property>
+</properties>
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Production Comprehensive Journeys › Error Recovery › user can recover from feed loading errors" classname="specs/production/production-comprehensive-journeys.spec.ts" time="0">
+<properties>
+<property name="skip" value="Production tests require real backend (set PLAYWRIGHT_USE_MOCKS=0)">
+</property>
+</properties>
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Production Comprehensive Journeys › Performance Monitoring › feed page loads within performance budget" classname="specs/production/production-comprehensive-journeys.spec.ts" time="0">
+<properties>
+<property name="skip" value="Production tests require real backend (set PLAYWRIGHT_USE_MOCKS=0)">
+</property>
+</properties>
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Production Comprehensive Journeys › Performance Monitoring › navigation between pages is fast" classname="specs/production/production-comprehensive-journeys.spec.ts" time="0">
+<properties>
+<property name="skip" value="Production tests require real backend (set PLAYWRIGHT_USE_MOCKS=0)">
+</property>
+</properties>
+<skipped>
+</skipped>
+</testcase>
+</testsuite>
+<testsuite name="specs/production/production-cookie-inspection.spec.ts" timestamp="2025-12-21T20:04:15.369Z" hostname="webkit" tests="1" failures="0" skipped="1" time="0" errors="0">
+<testcase name="Production Cookie Inspection › inspect cookies after login and during profile access" classname="specs/production/production-cookie-inspection.spec.ts" time="0">
+<skipped>
+</skipped>
+</testcase>
+</testsuite>
+<testsuite name="specs/production/production-critical-fixes.spec.ts" timestamp="2025-12-21T20:04:15.369Z" hostname="webkit" tests="4" failures="0" skipped="4" time="0" errors="0">
+<testcase name="Production Critical Fixes › Dark Mode › dark mode toggle works" classname="specs/production/production-critical-fixes.spec.ts" time="0">
+<properties>
+<property name="skip" value="Production tests require real backend (set PLAYWRIGHT_USE_MOCKS=0)">
+</property>
+</properties>
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Production Critical Fixes › Sign Out › sign out button works and redirects properly" classname="specs/production/production-critical-fixes.spec.ts" time="0">
+<properties>
+<property name="skip" value="Production tests require real backend (set PLAYWRIGHT_USE_MOCKS=0)">
+</property>
+</properties>
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Production Critical Fixes › Dashboard Redirect › admin user should access dashboard without redirect to onboarding" classname="specs/production/production-critical-fixes.spec.ts" time="0">
+<properties>
+<property name="skip" value="Production tests require real backend (set PLAYWRIGHT_USE_MOCKS=0)">
+</property>
+</properties>
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Production Critical Fixes › Dashboard Redirect › admin user should access admin dashboard" classname="specs/production/production-critical-fixes.spec.ts" time="0">
+<properties>
+<property name="skip" value="Production tests require real backend (set PLAYWRIGHT_USE_MOCKS=0)">
+</property>
+</properties>
+<skipped>
+</skipped>
+</testcase>
+</testsuite>
+<testsuite name="specs/production/production-critical-journeys.spec.ts" timestamp="2025-12-21T20:04:15.369Z" hostname="webkit" tests="7" failures="0" skipped="7" time="0" errors="0">
+<testcase name="Production Critical Journeys › unauthenticated user redirected to landing page from root" classname="specs/production/production-critical-journeys.spec.ts" time="0">
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Production Critical Journeys › authenticated user redirected to /feed from root" classname="specs/production/production-critical-journeys.spec.ts" time="0">
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Production Critical Journeys › feed page requires authentication" classname="specs/production/production-critical-journeys.spec.ts" time="0">
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Production Critical Journeys › navigation works between auth and other pages" classname="specs/production/production-critical-journeys.spec.ts" time="0">
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Production Critical Journeys › API health checks work" classname="specs/production/production-critical-journeys.spec.ts" time="0">
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Production Critical Journeys › middleware redirects unauthenticated users to landing page" classname="specs/production/production-critical-journeys.spec.ts" time="0">
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Production Critical Journeys › page handles errors gracefully" classname="specs/production/production-critical-journeys.spec.ts" time="0">
+<skipped>
+</skipped>
+</testcase>
+</testsuite>
+<testsuite name="specs/production/production-dashboard-deep-diagnostic.spec.ts" timestamp="2025-12-21T20:04:15.369Z" hostname="webkit" tests="2" failures="0" skipped="2" time="0" errors="0">
+<testcase name="Production Dashboard Deep Diagnostic › deep diagnostic - check all state and warnings" classname="specs/production/production-dashboard-deep-diagnostic.spec.ts" time="0">
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Production Dashboard Deep Diagnostic › dashboard navigation from global nav" classname="specs/production/production-dashboard-deep-diagnostic.spec.ts" time="0">
+<skipped>
+</skipped>
+</testcase>
+</testsuite>
+<testsuite name="specs/production/production-edge-cases.spec.ts" timestamp="2025-12-21T20:04:15.369Z" hostname="webkit" tests="12" failures="0" skipped="12" time="0" errors="0">
+<testcase name="Production Edge Cases &amp; Stress Tests › Form Input Edge Cases › auth form handles special characters and unicode in email" classname="specs/production/production-edge-cases.spec.ts" time="0">
+<properties>
+<property name="skip" value="Production tests require real backend (set PLAYWRIGHT_USE_MOCKS=0)">
+</property>
+</properties>
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Production Edge Cases &amp; Stress Tests › Form Input Edge Cases › auth form handles very long input values gracefully" classname="specs/production/production-edge-cases.spec.ts" time="0">
+<properties>
+<property name="skip" value="Production tests require real backend (set PLAYWRIGHT_USE_MOCKS=0)">
+</property>
+</properties>
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Production Edge Cases &amp; Stress Tests › Form Input Edge Cases › auth form handles rapid input changes without errors" classname="specs/production/production-edge-cases.spec.ts" time="0">
+<properties>
+<property name="skip" value="Production tests require real backend (set PLAYWRIGHT_USE_MOCKS=0)">
+</property>
+</properties>
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Production Edge Cases &amp; Stress Tests › Form Input Edge Cases › auth form handles empty string and whitespace-only inputs" classname="specs/production/production-edge-cases.spec.ts" time="0">
+<properties>
+<property name="skip" value="Production tests require real backend (set PLAYWRIGHT_USE_MOCKS=0)">
+</property>
+</properties>
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Production Edge Cases &amp; Stress Tests › Network Resilience › application handles intermittent network failures gracefully" classname="specs/production/production-edge-cases.spec.ts" time="0">
+<properties>
+<property name="skip" value="Production tests require real backend (set PLAYWRIGHT_USE_MOCKS=0)">
+</property>
+</properties>
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Production Edge Cases &amp; Stress Tests › Network Resilience › application handles slow network connections without timeout errors" classname="specs/production/production-edge-cases.spec.ts" time="0">
+<properties>
+<property name="skip" value="Production tests require real backend (set PLAYWRIGHT_USE_MOCKS=0)">
+</property>
+</properties>
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Production Edge Cases &amp; Stress Tests › Network Resilience › application handles request timeouts gracefully" classname="specs/production/production-edge-cases.spec.ts" time="0">
+<properties>
+<property name="skip" value="Production tests require real backend (set PLAYWRIGHT_USE_MOCKS=0)">
+</property>
+</properties>
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Production Edge Cases &amp; Stress Tests › State Management Edge Cases › application handles browser back/forward navigation correctly" classname="specs/production/production-edge-cases.spec.ts" time="0">
+<properties>
+<property name="skip" value="Production tests require real backend (set PLAYWRIGHT_USE_MOCKS=0)">
+</property>
+</properties>
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Production Edge Cases &amp; Stress Tests › State Management Edge Cases › application handles page refresh without losing critical state" classname="specs/production/production-edge-cases.spec.ts" time="0">
+<properties>
+<property name="skip" value="Production tests require real backend (set PLAYWRIGHT_USE_MOCKS=0)">
+</property>
+</properties>
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Production Edge Cases &amp; Stress Tests › State Management Edge Cases › application handles rapid tab switching gracefully" classname="specs/production/production-edge-cases.spec.ts" time="0">
+<properties>
+<property name="skip" value="Production tests require real backend (set PLAYWRIGHT_USE_MOCKS=0)">
+</property>
+</properties>
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Production Edge Cases &amp; Stress Tests › Performance Stress Tests › application handles rapid user interactions without lag" classname="specs/production/production-edge-cases.spec.ts" time="0">
+<properties>
+<property name="skip" value="Production tests require real backend (set PLAYWRIGHT_USE_MOCKS=0)">
+</property>
+</properties>
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Production Edge Cases &amp; Stress Tests › Performance Stress Tests › application handles large amounts of content without performance degradation" classname="specs/production/production-edge-cases.spec.ts" time="0">
+<properties>
+<property name="skip" value="Production tests require real backend (set PLAYWRIGHT_USE_MOCKS=0)">
+</property>
+</properties>
+<skipped>
+</skipped>
+</testcase>
+</testsuite>
+<testsuite name="specs/production/production-expanded.spec.ts" timestamp="2025-12-21T20:04:15.369Z" hostname="webkit" tests="26" failures="0" skipped="26" time="0" errors="0">
+<testcase name="Production Expanded Tests › API Endpoints › polls API endpoint responds" classname="specs/production/production-expanded.spec.ts" time="0">
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Production Expanded Tests › API Endpoints › notifications API endpoint responds" classname="specs/production/production-expanded.spec.ts" time="0">
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Production Expanded Tests › API Endpoints › analytics API endpoint responds" classname="specs/production/production-expanded.spec.ts" time="0">
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Production Expanded Tests › API Endpoints › profile API endpoint responds" classname="specs/production/production-expanded.spec.ts" time="0">
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Production Expanded Tests › API Endpoints › civics representative endpoint responds" classname="specs/production/production-expanded.spec.ts" time="0">
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Production Expanded Tests › API Endpoints › civics address lookup endpoint responds" classname="specs/production/production-expanded.spec.ts" time="0">
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Production Expanded Tests › Page Navigation › unauthenticated user redirected from feed to auth" classname="specs/production/production-expanded.spec.ts" time="0">
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Production Expanded Tests › Page Navigation › unauthenticated user can navigate to auth page" classname="specs/production/production-expanded.spec.ts" time="0">
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Production Expanded Tests › Page Navigation › root redirects to landing page consistently for unauthenticated users" classname="specs/production/production-expanded.spec.ts" time="0">
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Production Expanded Tests › Performance Metrics › root page redirect to landing is fast" classname="specs/production/production-expanded.spec.ts" time="0">
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Production Expanded Tests › Performance Metrics › feed page redirect to auth is fast" classname="specs/production/production-expanded.spec.ts" time="0">
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Production Expanded Tests › Performance Metrics › API response times are acceptable" classname="specs/production/production-expanded.spec.ts" time="0">
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Production Expanded Tests › Security Validations › CSP header is present and valid" classname="specs/production/production-expanded.spec.ts" time="0">
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Production Expanded Tests › Security Validations › X-Frame-Options prevents clickjacking" classname="specs/production/production-expanded.spec.ts" time="0">
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Production Expanded Tests › Security Validations › X-Content-Type-Options prevents MIME sniffing" classname="specs/production/production-expanded.spec.ts" time="0">
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Production Expanded Tests › Security Validations › Referrer-Policy is set" classname="specs/production/production-expanded.spec.ts" time="0">
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Production Expanded Tests › Security Validations › no sensitive data in response headers" classname="specs/production/production-expanded.spec.ts" time="0">
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Production Expanded Tests › Accessibility › pages have proper heading hierarchy" classname="specs/production/production-expanded.spec.ts" time="0">
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Production Expanded Tests › Accessibility › images have alt text" classname="specs/production/production-expanded.spec.ts" time="0">
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Production Expanded Tests › Accessibility › links have accessible text" classname="specs/production/production-expanded.spec.ts" time="0">
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Production Expanded Tests › Accessibility › form inputs have labels" classname="specs/production/production-expanded.spec.ts" time="0">
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Production Expanded Tests › Error Handling › handles malformed API requests gracefully" classname="specs/production/production-expanded.spec.ts" time="0">
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Production Expanded Tests › Error Handling › handles missing query parameters gracefully" classname="specs/production/production-expanded.spec.ts" time="0">
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Production Expanded Tests › Error Handling › handles very long URLs gracefully" classname="specs/production/production-expanded.spec.ts" time="0">
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Production Expanded Tests › Content Delivery › static assets are served correctly" classname="specs/production/production-expanded.spec.ts" time="0">
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Production Expanded Tests › Content Delivery › manifest.json is accessible" classname="specs/production/production-expanded.spec.ts" time="0">
+<skipped>
+</skipped>
+</testcase>
+</testsuite>
+<testsuite name="specs/production/production-feedback-widget.spec.ts" timestamp="2025-12-21T20:04:15.369Z" hostname="webkit" tests="8" failures="0" skipped="8" time="0" errors="0">
+<testcase name="Production Feedback Widget › feedback widget renders on landing page" classname="specs/production/production-feedback-widget.spec.ts" time="0">
+<properties>
+<property name="skip" value="Production tests require real backend (set PLAYWRIGHT_USE_MOCKS=0)">
+</property>
+</properties>
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Production Feedback Widget › feedback widget renders on feed page" classname="specs/production/production-feedback-widget.spec.ts" time="0">
+<properties>
+<property name="skip" value="Production tests require real backend (set PLAYWRIGHT_USE_MOCKS=0)">
+</property>
+</properties>
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Production Feedback Widget › feedback widget can be opened and displays form" classname="specs/production/production-feedback-widget.spec.ts" time="0">
+<properties>
+<property name="skip" value="Production tests require real backend (set PLAYWRIGHT_USE_MOCKS=0)">
+</property>
+</properties>
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Production Feedback Widget › feedback widget form flow works correctly" classname="specs/production/production-feedback-widget.spec.ts" time="0">
+<properties>
+<property name="skip" value="Production tests require real backend (set PLAYWRIGHT_USE_MOCKS=0)">
+</property>
+</properties>
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Production Feedback Widget › feedback widget API endpoint is accessible" classname="specs/production/production-feedback-widget.spec.ts" time="0">
+<properties>
+<property name="skip" value="Production tests require real backend (set PLAYWRIGHT_USE_MOCKS=0)">
+</property>
+</properties>
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Production Feedback Widget › feedback widget handles API errors gracefully" classname="specs/production/production-feedback-widget.spec.ts" time="0">
+<properties>
+<property name="skip" value="Production tests require real backend (set PLAYWRIGHT_USE_MOCKS=0)">
+</property>
+</properties>
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Production Feedback Widget › feedback widget can be closed" classname="specs/production/production-feedback-widget.spec.ts" time="0">
+<properties>
+<property name="skip" value="Production tests require real backend (set PLAYWRIGHT_USE_MOCKS=0)">
+</property>
+</properties>
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Production Feedback Widget › feedback widget is accessible via keyboard" classname="specs/production/production-feedback-widget.spec.ts" time="0">
+<properties>
+<property name="skip" value="Production tests require real backend (set PLAYWRIGHT_USE_MOCKS=0)">
+</property>
+</properties>
+<skipped>
+</skipped>
+</testcase>
+</testsuite>
+<testsuite name="specs/production/production-observability.spec.ts" timestamp="2025-12-21T20:04:15.369Z" hostname="webkit" tests="3" failures="0" skipped="3" time="0" errors="0">
+<testcase name="Production Observability › feed page API + console diagnostics" classname="specs/production/production-observability.spec.ts" time="0">
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Production Observability › privacy page API + console diagnostics" classname="specs/production/production-observability.spec.ts" time="0">
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Production Observability › dashboard navigation + auth diagnostics" classname="specs/production/production-observability.spec.ts" time="0">
+<skipped>
+</skipped>
+</testcase>
+</testsuite>
+<testsuite name="specs/production/production-polls-deep-diagnostic.spec.ts" timestamp="2025-12-21T20:04:15.369Z" hostname="webkit" tests="1" failures="0" skipped="1" time="0" errors="0">
+<testcase name="Production Polls Page Deep Diagnostic › deep diagnostic - check all state and warnings" classname="specs/production/production-polls-deep-diagnostic.spec.ts" time="0">
+<skipped>
+</skipped>
+</testcase>
+</testsuite>
+<testsuite name="specs/production/production-polls-page-diagnostic.spec.ts" timestamp="2025-12-21T20:04:15.369Z" hostname="webkit" tests="1" failures="0" skipped="1" time="0" errors="0">
+<testcase name="Production Polls Page Diagnostic Tests › polls page diagnostic - check loading state and errors" classname="specs/production/production-polls-page-diagnostic.spec.ts" time="0">
+<skipped>
+</skipped>
+</testcase>
+</testsuite>
+<testsuite name="specs/production/production-polls-page.spec.ts" timestamp="2025-12-21T20:04:15.369Z" hostname="webkit" tests="2" failures="0" skipped="2" time="0" errors="0">
+<testcase name="Production Polls Page Tests › polls page loads without infinite spinner" classname="specs/production/production-polls-page.spec.ts" time="0">
+<properties>
+<property name="skip" value="Production tests require real backend (set PLAYWRIGHT_USE_MOCKS=0)">
+</property>
+</properties>
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Production Polls Page Tests › polls page has no CSP violations for vercel.live" classname="specs/production/production-polls-page.spec.ts" time="0">
+<properties>
+<property name="skip" value="Production tests require real backend (set PLAYWRIGHT_USE_MOCKS=0)">
+</property>
+</properties>
+<skipped>
+</skipped>
+</testcase>
+</testsuite>
+<testsuite name="specs/production/production-profile-deep-diagnostic.spec.ts" timestamp="2025-12-21T20:04:15.369Z" hostname="webkit" tests="1" failures="0" skipped="1" time="0" errors="0">
+<testcase name="Production Profile Page Deep Diagnostic › deep diagnostic - check all state and warnings" classname="specs/production/production-profile-deep-diagnostic.spec.ts" time="0">
+<skipped>
+</skipped>
+</testcase>
+</testsuite>
+<testsuite name="specs/production/production-profile-journey.spec.ts" timestamp="2025-12-21T20:04:15.369Z" hostname="webkit" tests="2" failures="0" skipped="2" time="0" errors="0">
+<testcase name="Production Profile Journey Tests › complete profile navigation journey" classname="specs/production/production-profile-journey.spec.ts" time="0">
+<properties>
+<property name="skip" value="Production tests require real backend (set PLAYWRIGHT_USE_MOCKS=0)">
+</property>
+</properties>
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Production Profile Journey Tests › profile page interactions work correctly" classname="specs/production/production-profile-journey.spec.ts" time="0">
+<properties>
+<property name="skip" value="Production tests require real backend (set PLAYWRIGHT_USE_MOCKS=0)">
+</property>
+</properties>
+<skipped>
+</skipped>
+</testcase>
+</testsuite>
+<testsuite name="specs/production/production-profile-page.spec.ts" timestamp="2025-12-21T20:04:15.369Z" hostname="webkit" tests="2" failures="0" skipped="2" time="0" errors="0">
+<testcase name="Production Profile Page Tests › profile page loads without infinite spinner" classname="specs/production/production-profile-page.spec.ts" time="0">
+<properties>
+<property name="skip" value="Production tests require real backend (set PLAYWRIGHT_USE_MOCKS=0)">
+</property>
+</properties>
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Production Profile Page Tests › profile page navigation from global nav works" classname="specs/production/production-profile-page.spec.ts" time="0">
+<properties>
+<property name="skip" value="Production tests require real backend (set PLAYWRIGHT_USE_MOCKS=0)">
+</property>
+</properties>
+<skipped>
+</skipped>
+</testcase>
+</testsuite>
+<testsuite name="specs/production/production-profile-stability.spec.ts" timestamp="2025-12-21T20:04:15.369Z" hostname="webkit" tests="2" failures="0" skipped="2" time="0" errors="0">
+<testcase name="Production Profile Stability Tests › profile page does not trigger infinite re-renders" classname="specs/production/production-profile-stability.spec.ts" time="0">
+<properties>
+<property name="skip" value="Production tests require real backend (set PLAYWRIGHT_USE_MOCKS=0)">
+</property>
+</properties>
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Production Profile Stability Tests › profile edit page does not trigger infinite re-renders" classname="specs/production/production-profile-stability.spec.ts" time="0">
+<properties>
+<property name="skip" value="Production tests require real backend (set PLAYWRIGHT_USE_MOCKS=0)">
+</property>
+</properties>
+<skipped>
+</skipped>
+</testcase>
+</testsuite>
+<testsuite name="specs/production/production-smoke.spec.ts" timestamp="2025-12-21T20:04:15.369Z" hostname="webkit" tests="18" failures="0" skipped="18" time="0" errors="0">
+<testcase name="Production Smoke Tests › Critical Pages › root page redirects unauthenticated users to landing" classname="specs/production/production-smoke.spec.ts" time="0">
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Production Smoke Tests › Critical Pages › root page redirects authenticated users to /feed" classname="specs/production/production-smoke.spec.ts" time="0">
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Production Smoke Tests › Critical Pages › feed page requires authentication or redirects to /auth" classname="specs/production/production-smoke.spec.ts" time="0">
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Production Smoke Tests › Critical Pages › auth page loads" classname="specs/production/production-smoke.spec.ts" time="0">
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Production Smoke Tests › Critical Pages › dashboard page requires authentication" classname="specs/production/production-smoke.spec.ts" time="0">
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Production Smoke Tests › Critical Pages › health endpoint returns success" classname="specs/production/production-smoke.spec.ts" time="0">
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Production Smoke Tests › Critical Pages › civics health endpoint works" classname="specs/production/production-smoke.spec.ts" time="0">
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Production Smoke Tests › API Endpoints › feeds API endpoint responds" classname="specs/production/production-smoke.spec.ts" time="0">
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Production Smoke Tests › API Endpoints › civics by-state endpoint works" classname="specs/production/production-smoke.spec.ts" time="0">
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Production Smoke Tests › API Endpoints › site-messages API responds" classname="specs/production/production-smoke.spec.ts" time="0">
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Production Smoke Tests › Security Headers › security headers are present" classname="specs/production/production-smoke.spec.ts" time="0">
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Production Smoke Tests › Security Headers › HTTPS is enforced in production" classname="specs/production/production-smoke.spec.ts" time="0">
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Production Smoke Tests › Error Handling › 404 page handles missing routes" classname="specs/production/production-smoke.spec.ts" time="0">
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Production Smoke Tests › Error Handling › invalid API endpoint returns appropriate error" classname="specs/production/production-smoke.spec.ts" time="0">
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Production Smoke Tests › Performance › page load time is acceptable" classname="specs/production/production-smoke.spec.ts" time="0">
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Production Smoke Tests › Performance › feed page loads within acceptable time" classname="specs/production/production-smoke.spec.ts" time="0">
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Production Smoke Tests › Accessibility › page has proper HTML structure" classname="specs/production/production-smoke.spec.ts" time="0">
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Production Smoke Tests › Accessibility › feed page has accessible structure" classname="specs/production/production-smoke.spec.ts" time="0">
+<skipped>
+</skipped>
+</testcase>
+</testsuite>
+<testsuite name="specs/production/production-ux-excellence.spec.ts" timestamp="2025-12-21T20:04:15.369Z" hostname="webkit" tests="46" failures="0" skipped="46" time="0" errors="0">
+<testcase name="Production UX Excellence › Performance Metrics › landing page meets Core Web Vitals thresholds" classname="specs/production/production-ux-excellence.spec.ts" time="0">
+<properties>
+<property name="skip" value="Production tests require real backend (set PLAYWRIGHT_USE_MOCKS=0)">
+</property>
+</properties>
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Production UX Excellence › Performance Metrics › feed page loads efficiently" classname="specs/production/production-ux-excellence.spec.ts" time="0">
+<properties>
+<property name="skip" value="Production tests require real backend (set PLAYWRIGHT_USE_MOCKS=0)">
+</property>
+</properties>
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Production UX Excellence › Accessibility Excellence › keyboard navigation works throughout feed page" classname="specs/production/production-ux-excellence.spec.ts" time="0">
+<properties>
+<property name="skip" value="Production tests require real backend (set PLAYWRIGHT_USE_MOCKS=0)">
+</property>
+</properties>
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Production UX Excellence › Accessibility Excellence › screen reader announcements work for dynamic content" classname="specs/production/production-ux-excellence.spec.ts" time="0">
+<properties>
+<property name="skip" value="Production tests require real backend (set PLAYWRIGHT_USE_MOCKS=0)">
+</property>
+</properties>
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Production UX Excellence › Accessibility Excellence › form inputs have proper labels and error messages" classname="specs/production/production-ux-excellence.spec.ts" time="0">
+<properties>
+<property name="skip" value="Production tests require real backend (set PLAYWRIGHT_USE_MOCKS=0)">
+</property>
+</properties>
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Production UX Excellence › Error Recovery and Resilience › feed gracefully handles API failures with retry option" classname="specs/production/production-ux-excellence.spec.ts" time="0">
+<properties>
+<property name="skip" value="Production tests require real backend (set PLAYWRIGHT_USE_MOCKS=0)">
+</property>
+</properties>
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Production UX Excellence › Error Recovery and Resilience › application handles network disconnection gracefully" classname="specs/production/production-ux-excellence.spec.ts" time="0">
+<properties>
+<property name="skip" value="Production tests require real backend (set PLAYWRIGHT_USE_MOCKS=0)">
+</property>
+</properties>
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Production UX Excellence › Edge Cases and Boundary Conditions › handles very long poll titles and content gracefully" classname="specs/production/production-ux-excellence.spec.ts" time="0">
+<properties>
+<property name="skip" value="Production tests require real backend (set PLAYWRIGHT_USE_MOCKS=0)">
+</property>
+</properties>
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Production UX Excellence › Edge Cases and Boundary Conditions › handles rapid user interactions without breaking" classname="specs/production/production-ux-excellence.spec.ts" time="0">
+<properties>
+<property name="skip" value="Production tests require real backend (set PLAYWRIGHT_USE_MOCKS=0)">
+</property>
+</properties>
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Production UX Excellence › Edge Cases and Boundary Conditions › handles empty states with helpful guidance" classname="specs/production/production-ux-excellence.spec.ts" time="0">
+<properties>
+<property name="skip" value="Production tests require real backend (set PLAYWRIGHT_USE_MOCKS=0)">
+</property>
+</properties>
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Production UX Excellence › Real-World User Workflows › complete user journey: signup to first poll vote" classname="specs/production/production-ux-excellence.spec.ts" time="0">
+<properties>
+<property name="skip" value="Production tests require real backend (set PLAYWRIGHT_USE_MOCKS=0)">
+</property>
+</properties>
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Production UX Excellence › Real-World User Workflows › user can navigate entire app using only keyboard" classname="specs/production/production-ux-excellence.spec.ts" time="0">
+<properties>
+<property name="skip" value="Production tests require real backend (set PLAYWRIGHT_USE_MOCKS=0)">
+</property>
+</properties>
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Production UX Excellence › Mobile Responsiveness › feed page is usable on mobile viewport" classname="specs/production/production-ux-excellence.spec.ts" time="0">
+<properties>
+<property name="skip" value="Production tests require real backend (set PLAYWRIGHT_USE_MOCKS=0)">
+</property>
+</properties>
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Production UX Excellence › Rate Limiting UX › rate limit errors show helpful user messages" classname="specs/production/production-ux-excellence.spec.ts" time="0">
+<properties>
+<property name="skip" value="Production tests require real backend (set PLAYWRIGHT_USE_MOCKS=0)">
+</property>
+</properties>
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Production UX Excellence › Loading States and Progressive Enhancement › loading skeletons appear during feed load" classname="specs/production/production-ux-excellence.spec.ts" time="0">
+<properties>
+<property name="skip" value="Production tests require real backend (set PLAYWRIGHT_USE_MOCKS=0)">
+</property>
+</properties>
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Production UX Excellence › Loading States and Progressive Enhancement › progressive enhancement: app works with JavaScript disabled" classname="specs/production/production-ux-excellence.spec.ts" time="0">
+<properties>
+<property name="skip" value="Production tests require real backend (set PLAYWRIGHT_USE_MOCKS=0)">
+</property>
+</properties>
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Production UX Excellence › Data Persistence and State Management › user preferences persist across page reloads" classname="specs/production/production-ux-excellence.spec.ts" time="0">
+<properties>
+<property name="skip" value="Production tests require real backend (set PLAYWRIGHT_USE_MOCKS=0)">
+</property>
+</properties>
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Production UX Excellence › Data Persistence and State Management › form data persists during navigation (draft saving)" classname="specs/production/production-ux-excellence.spec.ts" time="0">
+<properties>
+<property name="skip" value="Production tests require real backend (set PLAYWRIGHT_USE_MOCKS=0)">
+</property>
+</properties>
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Production UX Excellence › Cross-Browser Compatibility › critical features work across different viewport sizes" classname="specs/production/production-ux-excellence.spec.ts" time="0">
+<properties>
+<property name="skip" value="Production tests require real backend (set PLAYWRIGHT_USE_MOCKS=0)">
+</property>
+</properties>
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Production UX Excellence › Security and Privacy UX › sensitive data is not exposed in page source" classname="specs/production/production-ux-excellence.spec.ts" time="0">
+<properties>
+<property name="skip" value="Production tests require real backend (set PLAYWRIGHT_USE_MOCKS=0)">
+</property>
+</properties>
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Production UX Excellence › Security and Privacy UX › logout clears sensitive data and redirects properly" classname="specs/production/production-ux-excellence.spec.ts" time="0">
+<properties>
+<property name="skip" value="Production tests require real backend (set PLAYWRIGHT_USE_MOCKS=0)">
+</property>
+</properties>
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Production UX Excellence › Content Quality and Readability › text content is readable and properly formatted" classname="specs/production/production-ux-excellence.spec.ts" time="0">
+<properties>
+<property name="skip" value="Production tests require real backend (set PLAYWRIGHT_USE_MOCKS=0)">
+</property>
+</properties>
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Production UX Excellence › Content Quality and Readability › images have proper alt text for accessibility" classname="specs/production/production-ux-excellence.spec.ts" time="0">
+<properties>
+<property name="skip" value="Production tests require real backend (set PLAYWRIGHT_USE_MOCKS=0)">
+</property>
+</properties>
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Production UX Excellence › Error Boundary and Resilience › application handles React errors gracefully with error boundaries" classname="specs/production/production-ux-excellence.spec.ts" time="0">
+<properties>
+<property name="skip" value="Production tests require real backend (set PLAYWRIGHT_USE_MOCKS=0)">
+</property>
+</properties>
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Production UX Excellence › Error Boundary and Resilience › application handles slow network connections gracefully" classname="specs/production/production-ux-excellence.spec.ts" time="0">
+<properties>
+<property name="skip" value="Production tests require real backend (set PLAYWRIGHT_USE_MOCKS=0)">
+</property>
+</properties>
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Production UX Excellence › Error Boundary and Resilience › application handles partial API failures without breaking" classname="specs/production/production-ux-excellence.spec.ts" time="0">
+<properties>
+<property name="skip" value="Production tests require real backend (set PLAYWRIGHT_USE_MOCKS=0)">
+</property>
+</properties>
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Production UX Excellence › Security and Privacy Headers › security headers are properly configured" classname="specs/production/production-ux-excellence.spec.ts" time="0">
+<properties>
+<property name="skip" value="Production tests require real backend (set PLAYWRIGHT_USE_MOCKS=0)">
+</property>
+</properties>
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Production UX Excellence › Security and Privacy Headers › sensitive data is not exposed in localStorage unnecessarily" classname="specs/production/production-ux-excellence.spec.ts" time="0">
+<properties>
+<property name="skip" value="Production tests require real backend (set PLAYWRIGHT_USE_MOCKS=0)">
+</property>
+</properties>
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Production UX Excellence › SEO and Meta Tags › pages have proper meta tags for SEO" classname="specs/production/production-ux-excellence.spec.ts" time="0">
+<properties>
+<property name="skip" value="Production tests require real backend (set PLAYWRIGHT_USE_MOCKS=0)">
+</property>
+</properties>
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Production UX Excellence › SEO and Meta Tags › pages have proper canonical URLs" classname="specs/production/production-ux-excellence.spec.ts" time="0">
+<properties>
+<property name="skip" value="Production tests require real backend (set PLAYWRIGHT_USE_MOCKS=0)">
+</property>
+</properties>
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Production UX Excellence › Performance Under Load › application remains responsive during multiple rapid navigations" classname="specs/production/production-ux-excellence.spec.ts" time="0">
+<properties>
+<property name="skip" value="Production tests require real backend (set PLAYWRIGHT_USE_MOCKS=0)">
+</property>
+</properties>
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Production UX Excellence › Performance Under Load › application handles large amounts of content gracefully" classname="specs/production/production-ux-excellence.spec.ts" time="0">
+<properties>
+<property name="skip" value="Production tests require real backend (set PLAYWRIGHT_USE_MOCKS=0)">
+</property>
+</properties>
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Production UX Excellence › Form Validation and User Input › forms provide real-time validation feedback" classname="specs/production/production-ux-excellence.spec.ts" time="0">
+<properties>
+<property name="skip" value="Production tests require real backend (set PLAYWRIGHT_USE_MOCKS=0)">
+</property>
+</properties>
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Production UX Excellence › Form Validation and User Input › forms prevent submission with invalid data" classname="specs/production/production-ux-excellence.spec.ts" time="0">
+<properties>
+<property name="skip" value="Production tests require real backend (set PLAYWRIGHT_USE_MOCKS=0)">
+</property>
+</properties>
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Production UX Excellence › Internationalization Readiness › text content is properly structured for translation" classname="specs/production/production-ux-excellence.spec.ts" time="0">
+<properties>
+<property name="skip" value="Production tests require real backend (set PLAYWRIGHT_USE_MOCKS=0)">
+</property>
+</properties>
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Production UX Excellence › Real-time Updates and WebSocket Resilience › application handles real-time updates without breaking UI" classname="specs/production/production-ux-excellence.spec.ts" time="0">
+<properties>
+<property name="skip" value="Production tests require real backend (set PLAYWRIGHT_USE_MOCKS=0)">
+</property>
+</properties>
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Production UX Excellence › Real-time Updates and WebSocket Resilience › application gracefully handles WebSocket disconnections" classname="specs/production/production-ux-excellence.spec.ts" time="0">
+<properties>
+<property name="skip" value="Production tests require real backend (set PLAYWRIGHT_USE_MOCKS=0)">
+</property>
+</properties>
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Production UX Excellence › PWA Functionality and Offline Support › service worker is registered and functional" classname="specs/production/production-ux-excellence.spec.ts" time="0">
+<properties>
+<property name="skip" value="Production tests require real backend (set PLAYWRIGHT_USE_MOCKS=0)">
+</property>
+</properties>
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Production UX Excellence › PWA Functionality and Offline Support › application provides offline fallback content" classname="specs/production/production-ux-excellence.spec.ts" time="0">
+<properties>
+<property name="skip" value="Production tests require real backend (set PLAYWRIGHT_USE_MOCKS=0)">
+</property>
+</properties>
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Production UX Excellence › PWA Functionality and Offline Support › manifest.json is properly configured for PWA" classname="specs/production/production-ux-excellence.spec.ts" time="0">
+<properties>
+<property name="skip" value="Production tests require real backend (set PLAYWRIGHT_USE_MOCKS=0)">
+</property>
+</properties>
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Production UX Excellence › Data Integrity and Consistency › user data persists correctly across page reloads" classname="specs/production/production-ux-excellence.spec.ts" time="0">
+<properties>
+<property name="skip" value="Production tests require real backend (set PLAYWRIGHT_USE_MOCKS=0)">
+</property>
+</properties>
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Production UX Excellence › Data Integrity and Consistency › application handles concurrent user actions without data corruption" classname="specs/production/production-ux-excellence.spec.ts" time="0">
+<properties>
+<property name="skip" value="Production tests require real backend (set PLAYWRIGHT_USE_MOCKS=0)">
+</property>
+</properties>
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Production UX Excellence › Browser Storage and Cache Management › localStorage is used appropriately and cleaned up when needed" classname="specs/production/production-ux-excellence.spec.ts" time="0">
+<properties>
+<property name="skip" value="Production tests require real backend (set PLAYWRIGHT_USE_MOCKS=0)">
+</property>
+</properties>
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Production UX Excellence › Browser Storage and Cache Management › sessionStorage is managed correctly" classname="specs/production/production-ux-excellence.spec.ts" time="0">
+<properties>
+<property name="skip" value="Production tests require real backend (set PLAYWRIGHT_USE_MOCKS=0)">
+</property>
+</properties>
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Production UX Excellence › Rate Limiting and Throttling UX › rate limit errors provide clear user guidance" classname="specs/production/production-ux-excellence.spec.ts" time="0">
+<properties>
+<property name="skip" value="Production tests require real backend (set PLAYWRIGHT_USE_MOCKS=0)">
+</property>
+</properties>
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Production UX Excellence › Concurrent Session Management › application handles multiple tabs gracefully" classname="specs/production/production-ux-excellence.spec.ts" time="0">
+<properties>
+<property name="skip" value="Production tests require real backend (set PLAYWRIGHT_USE_MOCKS=0)">
+</property>
+</properties>
+<skipped>
+</skipped>
+</testcase>
+</testsuite>
+<testsuite name="specs/production/production-ux-improvements.spec.ts" timestamp="2025-12-21T20:04:15.369Z" hostname="webkit" tests="12" failures="0" skipped="12" time="0" errors="0">
+<testcase name="Production UX Improvements › Empty States › feed page shows helpful empty state when no content" classname="specs/production/production-ux-improvements.spec.ts" time="0">
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Production UX Improvements › Empty States › polls tab shows helpful empty state" classname="specs/production/production-ux-improvements.spec.ts" time="0">
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Production UX Improvements › Loading States › feed page shows skeleton loaders during initial load" classname="specs/production/production-ux-improvements.spec.ts" time="0">
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Production UX Improvements › Loading States › dashboard shows skeleton loaders during load" classname="specs/production/production-ux-improvements.spec.ts" time="0">
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Production UX Improvements › Form Validation › auth form shows real-time email validation" classname="specs/production/production-ux-improvements.spec.ts" time="0">
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Production UX Improvements › Form Validation › auth form shows real-time password validation" classname="specs/production/production-ux-improvements.spec.ts" time="0">
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Production UX Improvements › Form Validation › auth form submit button shows loading state" classname="specs/production/production-ux-improvements.spec.ts" time="0">
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Production UX Improvements › Error Handling › feed page shows helpful error message with retry button" classname="specs/production/production-ux-improvements.spec.ts" time="0">
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Production UX Improvements › Accessibility › auth form has proper ARIA labels and error associations" classname="specs/production/production-ux-improvements.spec.ts" time="0">
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Production UX Improvements › Accessibility › feed page has proper ARIA live regions for updates" classname="specs/production/production-ux-improvements.spec.ts" time="0">
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Production UX Improvements › Accessibility › empty states have proper ARIA labels" classname="specs/production/production-ux-improvements.spec.ts" time="0">
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Production UX Improvements › Visual Feedback › form fields show visual feedback for validation states" classname="specs/production/production-ux-improvements.spec.ts" time="0">
+<skipped>
+</skipped>
+</testcase>
+</testsuite>
+</testsuites>
