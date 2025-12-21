@@ -1,5 +1,5 @@
 
-import { getSupabaseServerClient } from '@/utils/supabase/server'
+import { getSupabaseApiRouteClient } from '@/utils/supabase/api-route'
 
 import {
   withErrorHandling,
@@ -12,6 +12,8 @@ import {
 import { apiRateLimiter } from '@/lib/rate-limiting/api-rate-limiter'
 import { logger } from '@/lib/utils/logger'
 
+import { NextResponse } from 'next/server'
+
 import type { Database } from '@/utils/supabase/types'
 import type { NextRequest} from 'next/server';
 
@@ -22,7 +24,7 @@ type LoginRequestBody = {
   password?: string;
 };
 
-export const POST = withErrorHandling(async (request: NextRequest) => {
+export const POST = withErrorHandling(async (request: NextRequest): Promise<NextResponse> => {
     // CSRF protection is handled by Next.js middleware in production
     // For now, we'll skip CSRF validation in test environment
 
@@ -90,12 +92,21 @@ export const POST = withErrorHandling(async (request: NextRequest) => {
 
     const normalizedPassword = password ?? ''
 
-    // Use Supabase Auth for authentication
-    const supabaseClient = await getSupabaseServerClient()
+    // Create response early so we can use it for cookie handling
+    const response = successResponse({
+      user: null,
+      session: null,
+      token: null,
+    })
+
+    // Use Supabase Auth for authentication with API route client
+    // This ensures cookies are set correctly via NextResponse
+    const supabaseClient = await getSupabaseApiRouteClient(request, response)
 
     // E2E tests should use real Supabase authentication - no mock responses
 
     // Sign in with Supabase Auth
+    // Supabase SSR will automatically set cookies through our cookie adapter
     const { data: authData, error: signInError } = await supabaseClient.auth.signInWithPassword({
       email: normalizedEmail,
       password: normalizedPassword
@@ -175,88 +186,48 @@ export const POST = withErrorHandling(async (request: NextRequest) => {
       displayName
     })
 
-    // Create standardized response with user data
-    const response = successResponse({
-      user: {
-        id: authData.user.id,
-        email: authData.user.email,
-        user_id: profile.user_id,
-        display_name: displayName,
-        bio: profile.bio,
-        created_at: profile.created_at,
-        updated_at: profile.updated_at
-      },
-      session: authData.session,
-      token: authData.session?.access_token
-    })
-
-    // Set Supabase session cookies for middleware authentication
-    // These cookies are critical for session persistence in production
-    if (authData.session) {
-      const isProduction = process.env.NODE_ENV === 'production'
-      const maxAge = 60 * 60 * 24 * 7 // 7 days
-
-      // Determine cookie settings based on environment
-      // Note: Not setting domain attribute allows cookie to work with middleware
-      // The browser will automatically send cookies to the correct domain
-      const hostname = request.headers.get('host') || ''
-      const isProductionDomain = hostname.includes('choices-app.com')
-      // Only require HTTPS (secure) when actually on production domain, not localhost
-      const requireSecure = isProduction && isProductionDomain
-
-      // Extract project ref from Supabase URL to set cookies with correct name format
-      // Supabase SSR expects: sb-<project-ref>-auth-token
-      const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || ''
-      const projectRefMatch = supabaseUrl.match(/https?:\/\/([^.]+)\.supabase\.(co|io)/)
-      const projectRef = projectRefMatch ? projectRefMatch[1] : 'unknown'
-      const authTokenCookieName = `sb-${projectRef}-auth-token`
-
-      // Use Supabase SSR's expected cookie format - store session as JSON
-      // Supabase SSR expects the session to be stored in a specific format
-      const sessionData = {
-        access_token: authData.session.access_token,
-        refresh_token: authData.session.refresh_token,
-        expires_at: authData.session.expires_at,
-        expires_in: authData.session.expires_in,
-        token_type: authData.session.token_type,
-        user: authData.user
+    // Update response with user data
+    // Note: Supabase SSR has already set cookies through the cookie adapter
+    // We just need to update the response body JSON
+    const responseData = {
+      success: true,
+      data: {
+        user: {
+          id: authData.user.id,
+          email: authData.user.email,
+          user_id: profile.user_id,
+          display_name: displayName,
+          bio: profile.bio,
+          created_at: profile.created_at,
+          updated_at: profile.updated_at
+        },
+        session: authData.session,
+        token: authData.session?.access_token
       }
-
-      // Set the auth token cookie with Supabase SSR's expected name and format
-      // Note: Not setting domain allows the cookie to work correctly with middleware
-      // The browser will automatically scope the cookie to the current domain
-      response.cookies.set(authTokenCookieName, JSON.stringify(sessionData), {
-        httpOnly: true,
-        secure: requireSecure, // HTTPS only on actual production domain
-        sameSite: 'lax', // Allow cross-site requests for OAuth flows
-        path: '/',
-        maxAge: maxAge,
-        // Explicitly omit domain - browser will handle domain scoping automatically
-        // This ensures middleware can read the cookie correctly
-      })
-
-      // Also set the session expiry time for client-side checks (keep for backward compatibility)
-      if (authData.session.expires_at) {
-        response.cookies.set('sb-session-expires', authData.session.expires_at.toString(), {
-          httpOnly: false, // Client needs to read this for session checks
-          secure: requireSecure,
-          sameSite: 'lax',
-          path: '/',
-          maxAge: maxAge,
-          // Explicitly omit domain - browser will handle domain scoping automatically
-        })
-      }
-
-      logger.info('Session cookies set successfully', {
-        userId: authData.user.id,
-        expiresAt: authData.session.expires_at,
-        isProduction
-      })
-    } else {
-      logger.warn('No session returned from Supabase auth - cookies not set', {
-        userId: authData.user.id
-      })
     }
 
-    return response
+    // Update the response body while preserving cookies set by Supabase SSR
+    const updatedResponse = NextResponse.json(responseData, {
+      status: 200,
+      headers: response.headers,
+    })
+
+    // Copy all cookies from the original response (set by Supabase SSR)
+    response.cookies.getAll().forEach((cookie) => {
+      updatedResponse.cookies.set(cookie.name, cookie.value, {
+        httpOnly: cookie.httpOnly ?? true,
+        secure: cookie.secure ?? false,
+        sameSite: (cookie.sameSite as 'strict' | 'lax' | 'none' | undefined) ?? 'lax',
+        path: cookie.path ?? '/',
+        maxAge: cookie.maxAge,
+      })
+    })
+
+    logger.info('Session cookies set successfully by Supabase SSR', {
+      userId: authData.user.id,
+      expiresAt: authData.session?.expires_at,
+      cookieCount: response.cookies.getAll().length,
+    })
+
+    return updatedResponse
 });
