@@ -742,9 +742,22 @@ export const createPollsActions = (
       console.log('[POLLS STORE] Fetching polls from API', { url: apiUrl });
       // Add timeout to prevent infinite loading state
       const controller = new AbortController();
-      const timeoutId = setTimeout(() => controller.abort(), 30_000); // 30 second timeout
-      const response = await fetch(apiUrl, { signal: controller.signal });
-      clearTimeout(timeoutId);
+      const timeoutId = setTimeout(() => {
+        controller.abort();
+      }, 30_000); // 30 second timeout
+      let response: Response;
+      try {
+        response = await fetch(apiUrl, { signal: controller.signal });
+        clearTimeout(timeoutId);
+      } catch (fetchError) {
+        clearTimeout(timeoutId);
+        // Re-throw abort errors as timeout errors with clearer message
+        if (fetchError instanceof Error && fetchError.name === 'AbortError') {
+          throw new Error('Request timeout - polls API took too long to respond');
+        }
+        // Re-throw other fetch errors (network errors, etc.)
+        throw fetchError;
+      }
 
       if (!response.ok) {
         logger.error('Polls API returned error', { status: response.status, statusText: response.statusText });
