@@ -79,12 +79,16 @@ export default function DashboardPage() {
   useEffect(() => {
     // In E2E harness mode or when bypassing auth, skip all redirect checks (authentication is mocked)
     if (shouldBypassAuth) {
-      return;
+      return () => {
+        // Cleanup function - no cleanup needed for bypass case
+      };
     }
     // Wait for user loading to complete before checking authentication
     // This prevents redirecting while auth state is still being initialized
     if (isUserLoading) {
-      return;
+      return () => {
+        // Cleanup function - no cleanup needed for loading case
+      };
     }
     // First check if user is authenticated - if not, check session cookie and wait for hydration
     if (!isAuthenticated) {
@@ -102,7 +106,9 @@ export default function DashboardPage() {
       if (!hasSessionCookie) {
         logger.debug('🚨 Dashboard: No session cookie - redirecting to auth');
         routerRef.current.replace('/auth');
-        return;
+        return () => {
+          // Cleanup function - no cleanup needed for immediate redirect
+        };
       }
       
       // If cookie exists but store says not authenticated, wait a bit for hydration
@@ -196,6 +202,11 @@ export default function DashboardPage() {
 
       void checkAdminAndRedirect();
     }
+    
+    // Return cleanup function for all code paths
+    return () => {
+      // Cleanup function - no cleanup needed for other cases
+    };
   }, [isLoading, isUserLoading, isAuthenticated, profile, shouldBypassAuth, isCheckingAdmin]); // Added isCheckingAdmin to dependencies
 
   // Check if user is admin when profile is loaded
