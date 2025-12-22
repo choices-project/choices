@@ -177,20 +177,18 @@ async function checkAuthentication(request: NextRequest): Promise<boolean> {
   const projectRef = projectRefMatch?.[1] ?? 'unknown'
   const authCookieName = `sb-${projectRef}-auth-token`
 
-  // Check for Supabase auth cookie using comprehensive approach
-  // First try the expected cookie name
+  // Find the auth cookie - check multiple methods since Edge Runtime parsing can be unreliable
   let authCookie = request.cookies.get(authCookieName)
   
-  // If not found, check ALL cookies for any starting with 'sb-' and containing 'auth'
-  // This handles edge cases where cookie parsing might have issues in Edge Runtime
+  // If not found by exact name, search all cookies
   if (!authCookie?.value || authCookie.value.length < 10) {
     const allCookies = request.cookies.getAll()
     for (const cookie of allCookies) {
       const name = cookie.name.toLowerCase()
-      // Match patterns: sb-*-auth-token, sb-*-auth-token-*, sb-access-token, etc.
-      if (name.startsWith('sb-') && (name.includes('auth') || name.includes('session') || name.includes('access'))) {
+      // Match Supabase auth cookie patterns
+      if (name.startsWith('sb-') && (name.includes('auth') || name.includes('session'))) {
         const value = cookie.value?.trim() || ''
-        // Check for substantial value (auth tokens are typically longer than 10 chars)
+        // Must have actual content (not empty/null/undefined markers)
         if (value.length > 10 && 
             value !== 'null' && 
             value !== 'undefined' && 
@@ -204,28 +202,46 @@ async function checkAuthentication(request: NextRequest): Promise<boolean> {
     }
   }
   
-  // Also check for chunked cookies (Supabase may split large cookies)
+  // Check for chunked cookies (Supabase may split large cookies)
   if (!authCookie?.value || authCookie.value.length < 10) {
     for (let i = 0; i < 10; i++) {
       const chunkedCookie = request.cookies.get(`${authCookieName}.${i}`)
       if (chunkedCookie?.value && chunkedCookie.value.length >= 10) {
-        // Found chunked cookie - Supabase uses chunking for large cookies
-        // If we have at least one chunk, the session exists
-        return true
+        authCookie = chunkedCookie
+        break
       }
     }
+  }
+  
+  // Final fallback: Check raw Cookie header (Edge Runtime cookie parsing can fail)
+  if (!authCookie?.value || authCookie.value.length < 10) {
+    const cookieHeader = request.headers.get('cookie') || ''
+    if (cookieHeader) {
+      // Look for the expected cookie name in the header
+      const authCookiePattern = new RegExp(`${authCookieName.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}=([^;]+)`, 'i')
+      const match = cookieHeader.match(authCookiePattern)
+      if (match && match[1]) {
+        let cookieValue = match[1].trim()
+        try {
+          cookieValue = decodeURIComponent(cookieValue)
+        } catch {
+          // If decoding fails, use original value
+        }
+        if (cookieValue.length > 10) {
+          // Create a mock cookie object for parsing
+          authCookie = { name: authCookieName, value: cookieValue } as { name: string; value: string }
+        }
+      }
+    }
+  }
+  
+  // If no cookie found by any method, user is not authenticated
+  if (!authCookie?.value || authCookie.value.length < 10) {
     return false
   }
-
-  // If cookie exists and has substantial data (likely a valid session),
-  // trust it immediately - the cookie is set by Supabase SSR and is authoritative
-  // This is the most reliable check and avoids parsing issues
-  const hasSubstantialCookie = authCookie.value.length > 100
-  if (hasSubstantialCookie) {
-    // Trust substantial cookies immediately - they're set by Supabase SSR
-    // This is the most reliable authentication check
-    return true
-  }
+  
+  // SECURITY: We must parse and verify the cookie - never trust based on size alone
+  // The cookie must contain valid user data or access_token to be trusted
 
   // Extract access_token from cookie value
   // Supabase SSR stores session as base64-encoded JSON with structure:
@@ -246,11 +262,7 @@ async function checkAuthentication(request: NextRequest): Promise<boolean> {
     try {
       jsonString = atob(cookieValue)
     } catch {
-      // If base64 decode fails, but we have a substantial cookie, trust it
-      // The cookie is set by Supabase SSR and is authoritative
-      if (hasSubstantialCookie) {
-        return true
-      }
+      // If base64 decode fails, cookie is invalid
       return false
     }
 
@@ -259,11 +271,7 @@ async function checkAuthentication(request: NextRequest): Promise<boolean> {
     try {
       sessionData = JSON.parse(jsonString)
     } catch {
-      // If JSON parse fails, but we have a substantial cookie, trust it
-      // The cookie is set by Supabase SSR and is authoritative
-      if (hasSubstantialCookie) {
-        return true
-      }
+      // If JSON parse fails, cookie is invalid
       return false
     }
 
@@ -291,11 +299,7 @@ async function checkAuthentication(request: NextRequest): Promise<boolean> {
     // The cookie itself is set by Supabase SSR and is proof of authentication
     // We don't need to verify the token if we have valid user data
   } catch {
-    // Any other parsing error - if we have a substantial cookie, trust it
-    // The cookie is set by Supabase SSR and is authoritative
-    if (hasSubstantialCookie) {
-      return true
-    }
+    // Any parsing error means the cookie is invalid - cannot trust it
     return false
   }
 
@@ -345,13 +349,7 @@ async function checkAuthentication(request: NextRequest): Promise<boolean> {
   }
 
   // If we reach here, we couldn't extract a token or verify it
-  // As a last resort, if we have a substantial cookie (likely valid session),
-  // trust it - the cookie itself is set by Supabase SSR and is authoritative
-  if (hasSubstantialCookie) {
-    return true
-  }
-
-  // Return false for security if we can't verify authentication
+  // Without valid user data or a verified access_token, we cannot trust the cookie
   return false
 }
 
