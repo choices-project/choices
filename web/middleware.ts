@@ -1,4 +1,4 @@
-import { createServerClient } from '@supabase/ssr'
+import { createClient } from '@supabase/supabase-js'
 import { NextResponse, type NextRequest } from 'next/server'
 
 import {
@@ -159,51 +159,47 @@ function validateRequest(request: NextRequest): { valid: boolean; reason?: strin
 }
 
 /**
- * Create Supabase client for middleware using standard SSR approach
+ * Create Supabase client for Edge Runtime middleware
+ * Uses Supabase's recommended approach for Edge Runtime compatibility
  */
 function createSupabaseMiddlewareClient(request: NextRequest, response: NextResponse) {
-  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
-  const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
-  
+  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
+  const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
+
   if (!supabaseUrl || !supabaseAnonKey) {
-    throw new Error('Missing Supabase environment variables');
+    throw new Error('Missing Supabase environment variables')
   }
-  
-  return createServerClient<Database>(
-    supabaseUrl,
-    supabaseAnonKey,
-    {
-      cookies: {
-        get(name: string) {
-          return request.cookies.get(name)?.value
+
+  // Use createClient from @supabase/supabase-js (Edge Runtime compatible)
+  // with custom cookie handling for middleware
+  return createClient<Database>(supabaseUrl, supabaseAnonKey, {
+    auth: {
+      persistSession: false, // Middleware doesn't persist sessions
+      autoRefreshToken: false, // No auto-refresh in middleware
+      detectSessionInUrl: false, // No URL-based session detection in middleware
+      storage: {
+        getItem: (key: string) => {
+          // Get cookie value from request
+          const cookie = request.cookies.get(key)
+          return cookie?.value ?? null
         },
-        set(name: string, value: string, options: any) {
-          request.cookies.set({
-            name,
-            value,
-            ...options,
-          })
-          response.cookies.set({
-            name,
-            value,
-            ...options,
+        setItem: (key: string, value: string) => {
+          // Set cookie in response
+          response.cookies.set(key, value, {
+            httpOnly: true,
+            secure: process.env.NODE_ENV === 'production',
+            sameSite: 'lax',
+            path: '/',
+            maxAge: 60 * 60 * 24 * 7, // 7 days
           })
         },
-        remove(name: string, options: any) {
-          request.cookies.set({
-            name,
-            value: '',
-            ...options,
-          })
-          response.cookies.set({
-            name,
-            value: '',
-            ...options,
-          })
+        removeItem: (key: string) => {
+          // Remove cookie from response
+          response.cookies.delete(key)
         },
       },
-    }
-  )
+    },
+  })
 }
 
 export async function middleware(request: NextRequest) {
@@ -272,7 +268,7 @@ export async function middleware(request: NextRequest) {
                          request.cookies.get('e2e-dashboard-bypass')?.value === '1';
 
     if (!isE2EHarness) {
-      // Use standard Supabase SSR approach for auth check
+      // Use Supabase's recommended approach for Edge Runtime
       const response = NextResponse.next()
       const supabase = createSupabaseMiddlewareClient(request, response)
       const { data: { user } } = await supabase.auth.getUser()
@@ -304,7 +300,7 @@ export async function middleware(request: NextRequest) {
 
   // Redirect authenticated users away from auth pages (except during login flow)
   if (isAuthRoute && pathname !== '/auth') {
-    // Use standard Supabase SSR approach for auth check
+    // Use Supabase's recommended approach for Edge Runtime
     const response = NextResponse.next()
     const supabase = createSupabaseMiddlewareClient(request, response)
     const { data: { user } } = await supabase.auth.getUser()
@@ -313,7 +309,7 @@ export async function middleware(request: NextRequest) {
     if (isAuthenticated) {
       // Authenticated users trying to access login/register should go to feed
       const redirectResponse = NextResponse.redirect(new URL('/feed', request.url), 307)
-      
+
       // Copy cookies from response to redirect response
       response.cookies.getAll().forEach((cookie) => {
         redirectResponse.cookies.set(cookie.name, cookie.value, {
@@ -324,7 +320,7 @@ export async function middleware(request: NextRequest) {
           maxAge: cookie.maxAge,
         })
       })
-      
+
       return redirectResponse
     }
   }
