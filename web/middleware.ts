@@ -156,10 +156,16 @@ function validateRequest(request: NextRequest): { valid: boolean; reason?: strin
 }
 
 /**
- * Check if user is authenticated using Supabase SSR (proper approach)
+ * Check if user is authenticated by verifying Supabase access token
  * 
- * Uses createServerClient from @supabase/ssr with a cookie adapter for Edge Runtime.
- * This is the recommended way to check authentication in Next.js middleware.
+ * Supabase SSR stores the session in a cookie as base64-encoded JSON containing:
+ * - access_token: JWT token that must be verified with Supabase Auth API
+ * - user: User object (not trusted alone - token must be verified)
+ * 
+ * Security: We MUST verify the access_token with Supabase's Auth API.
+ * Simply checking for a user object in the cookie is insecure and can be spoofed.
+ * 
+ * This approach works in Edge Runtime using only fetch and atob (no @supabase/ssr).
  */
 async function checkAuthentication(request: NextRequest): Promise<boolean> {
   const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
@@ -169,47 +175,59 @@ async function checkAuthentication(request: NextRequest): Promise<boolean> {
     return false
   }
 
-  try {
-    // Import createServerClient dynamically (Edge Runtime compatible)
-    const { createServerClient } = await import('@supabase/ssr')
+  // Extract project ref to determine cookie name
+  const projectRefMatch = supabaseUrl.match(/https?:\/\/([^.]+)\.supabase\.(co|io)/)
+  const projectRef = projectRefMatch?.[1] ?? 'unknown'
+  const authCookieName = `sb-${projectRef}-auth-token`
 
-    // Create cookie adapter for Edge Runtime middleware
-    // Note: set/remove are no-ops in middleware (read-only for auth checking)
-    const cookieAdapter = {
-      get: (name: string) => {
-        const cookie = request.cookies.get(name)
-        return cookie?.value
-      },
-      set: (_name: string, _value: string, _options: Record<string, unknown>) => {
-        // In middleware, we can't modify cookies on the response
-        // This is read-only for authentication checking
-        // Cookies are set by Supabase SSR in API routes/server components
-      },
-      remove: (_name: string, _options: Record<string, unknown>) => {
-        // In middleware, we can't remove cookies
-        // This is read-only for authentication checking
-      },
+  // Get the auth cookie
+  const authCookie = request.cookies.get(authCookieName)
+  if (!authCookie?.value || authCookie.value.length < 10) {
+    return false
+  }
+
+  try {
+    // Parse the cookie value
+    let cookieValue = authCookie.value
+
+    // Remove 'base64-' prefix if present (Supabase SSR format)
+    if (cookieValue.startsWith('base64-')) {
+      cookieValue = cookieValue.substring(7)
     }
 
-    // Create Supabase client with cookie adapter
-    const supabase = createServerClient(supabaseUrl, supabaseAnonKey, {
-      cookies: cookieAdapter,
+    // Decode base64 to get JSON string (Edge Runtime compatible - atob is available)
+    const jsonString = atob(cookieValue)
+    const sessionData = JSON.parse(jsonString)
+
+    // Extract access_token - this is what we MUST verify
+    const accessToken = sessionData?.access_token || null
+
+    if (!accessToken || typeof accessToken !== 'string') {
+      // No access token = not authenticated
+      return false
+    }
+
+    // SECURITY: Verify the access token with Supabase Auth API
+    // This is the ONLY way to ensure the token is valid and not spoofed
+    // We use fetch (Edge Runtime compatible) to call Supabase's user endpoint
+    const response = await fetch(`${supabaseUrl}/auth/v1/user`, {
+      method: 'GET',
+      headers: {
+        'Authorization': `Bearer ${accessToken}`,
+        'apikey': supabaseAnonKey,
+      },
     })
 
-    // Use getUser() - this is the proper way to check authentication
-    // It reads the session from cookies and verifies it
-    const { data: { user }, error } = await supabase.auth.getUser()
-
-    // If we have a user, they are authenticated
-    if (user && !error) {
+    // Only trust if Supabase confirms the token is valid (200 OK)
+    if (response.ok) {
+      // Token is valid - user is authenticated
       return true
     }
 
-    // No user or error means not authenticated
+    // Token verification failed (401, 403, etc.) - not authenticated
     return false
-  } catch (error) {
-    // If anything fails, assume not authenticated
-    logger.warn('Authentication check failed in middleware', { error })
+  } catch {
+    // If anything fails (parsing, network, etc.), user is not authenticated
     return false
   }
 }
