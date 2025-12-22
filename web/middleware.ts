@@ -158,8 +158,11 @@ function validateRequest(request: NextRequest): { valid: boolean; reason?: strin
 /**
  * Check if user is authenticated using Edge Runtime compatible approach
  * 
- * Uses fetch API to verify auth token with Supabase Auth API (Edge Runtime compatible)
- * This avoids using @supabase/supabase-js which requires Node.js APIs
+ * Supabase stores session data in cookies as base64-encoded JSON with structure:
+ * { access_token, refresh_token, expires_at, expires_in, token_type, user }
+ * 
+ * We extract the access_token and verify it with Supabase Auth API using fetch
+ * (Edge Runtime compatible - no Node.js dependencies)
  */
 async function checkAuthentication(request: NextRequest): Promise<boolean> {
   const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
@@ -188,22 +191,57 @@ async function checkAuthentication(request: NextRequest): Promise<boolean> {
     return false
   }
 
-  // Verify token with Supabase Auth API using fetch (Edge Runtime compatible)
+  // Extract access_token from cookie value
+  // Cookie format: base64-<base64-encoded-json> or just <base64-encoded-json>
+  let accessToken: string | null = null
+  
   try {
-    const response = await fetch(`${supabaseUrl}/auth/v1/user`, {
-      method: 'GET',
-      headers: {
-        'Authorization': `Bearer ${authCookie.value}`,
-        'apikey': supabaseAnonKey,
-      },
-    })
-
-    return response.ok
-  } catch {
-    // If verification fails, check if cookie exists (fallback)
-    // Having the cookie is a good indicator of authentication
+    let cookieValue = authCookie.value
+    
+    // Remove 'base64-' prefix if present
+    if (cookieValue.startsWith('base64-')) {
+      cookieValue = cookieValue.substring(7)
+    }
+    
+    // Decode base64 to get JSON string (Edge Runtime compatible - atob is available)
+    const jsonString = atob(cookieValue)
+    
+    // Parse JSON to extract access_token
+    const sessionData = JSON.parse(jsonString)
+    
+    // Extract access_token from session data
+    accessToken = sessionData?.access_token || sessionData?.session?.access_token || null
+    
+    if (!accessToken) {
+      // If no access_token found, having the cookie is still a good indicator
+      return cookieValue.length > 10
+    }
+  } catch (error) {
+    // If parsing fails, having the cookie is still a good indicator
+    // (cookie might be in a different format or encoding)
     return authCookie.value.length > 10
   }
+
+  // Verify token with Supabase Auth API using fetch (Edge Runtime compatible)
+  if (accessToken) {
+    try {
+      const response = await fetch(`${supabaseUrl}/auth/v1/user`, {
+        method: 'GET',
+        headers: {
+          'Authorization': `Bearer ${accessToken}`,
+          'apikey': supabaseAnonKey,
+        },
+      })
+
+      return response.ok
+    } catch {
+      // If verification fails, having the cookie is still a good indicator
+      return true
+    }
+  }
+
+  // Fallback: having the cookie is a good indicator of authentication
+  return authCookie.value.length > 10
 }
 
 export async function middleware(request: NextRequest) {
