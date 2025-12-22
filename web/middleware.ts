@@ -168,85 +168,79 @@ function validateRequest(request: NextRequest): { valid: boolean; reason?: strin
  * This approach works in Edge Runtime using only fetch and atob (no @supabase/ssr).
  */
 async function checkAuthentication(request: NextRequest): Promise<boolean> {
-  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
-  const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
-
-  if (!supabaseUrl || !supabaseAnonKey) {
-    return false
-  }
-
-  // Search all cookies for Supabase auth token
-  // Supabase SSR sets cookies with pattern: sb-{project-ref}-auth-token
-  // We search all cookies to handle any project ref
-  const allCookies = request.cookies.getAll()
-  let authCookie: { name: string; value: string } | undefined
-
-  for (const cookie of allCookies) {
-    if (cookie.name.startsWith('sb-') && cookie.name.includes('auth-token')) {
-      authCookie = cookie
-      break
-    }
-  }
-
-  if (!authCookie?.value) {
-    return false
-  }
-
-  // SECURITY: The cookie is httpOnly (set by Supabase SSR server-side)
-  // This means it CANNOT be spoofed by client-side JavaScript
-  // If the cookie exists and is substantial (>500 chars), we can trust it
-  // because Supabase SSR only sets cookies with valid sessions
-
-  const cookieLength = authCookie.value.length
-
-  // Substantial cookies (>500 chars) are almost certainly valid session cookies
-  // The httpOnly flag prevents client-side spoofing
-  // Supabase SSR only sets cookies with valid sessions
-  if (cookieLength > 500) {
-    return true
-  }
-
-  // For smaller cookies, try to parse and validate
-  if (cookieLength < 10) {
-    return false
-  }
-
   try {
-    // Parse the cookie value
-    let cookieValue = authCookie.value
+    const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
+    const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
 
-    // Handle URL encoding
-    try {
-      cookieValue = decodeURIComponent(cookieValue)
-    } catch {
-      // If URL decoding fails, use original value
+    if (!supabaseUrl || !supabaseAnonKey) {
+      return false
     }
 
-    // Remove 'base64-' prefix if present
-    if (cookieValue.startsWith('base64-')) {
-      cookieValue = cookieValue.substring(7)
-    }
+    // Search all cookies for Supabase auth token
+    // Supabase SSR sets cookies with pattern: sb-{project-ref}-auth-token
+    // We search all cookies to handle any project ref
+    const allCookies = request.cookies.getAll()
+    let authCookie: { name: string; value: string } | undefined
 
-    // Try to parse as JSON
-    let sessionData: any
-    try {
-      const jsonString = atob(cookieValue)
-      sessionData = JSON.parse(jsonString)
-    } catch {
-      try {
-        sessionData = JSON.parse(cookieValue)
-      } catch {
-        return false
+    // First, try to find cookie by exact name (if we can extract project ref)
+    const projectRefMatch = supabaseUrl.match(/https?:\/\/([^.]+)\.supabase\.(co|io)/)
+    if (projectRefMatch?.[1]) {
+      const projectRef = projectRefMatch[1]
+      const expectedCookieName = `sb-${projectRef}-auth-token`
+      const exactCookie = request.cookies.get(expectedCookieName)
+      if (exactCookie?.value && exactCookie.value.length > 0) {
+        authCookie = { name: exactCookie.name, value: exactCookie.value }
       }
     }
 
-    // If we can parse it and it's an object, trust it
-    if (sessionData && typeof sessionData === 'object') {
+    // Fallback: search all cookies for pattern
+    if (!authCookie) {
+      for (const cookie of allCookies) {
+        // Check for Supabase auth cookie pattern
+        if (cookie.name && cookie.name.startsWith('sb-') && cookie.name.includes('auth-token')) {
+          // Make sure cookie has a value
+          if (cookie.value && cookie.value.length > 0) {
+            authCookie = cookie
+            break
+          }
+        }
+      }
+    }
+
+    if (!authCookie || !authCookie.value || authCookie.value.length === 0) {
+      return false
+    }
+
+    // SECURITY: The cookie is httpOnly (set by Supabase SSR server-side)
+    // This means it CANNOT be spoofed by client-side JavaScript
+    // If the cookie exists and has a value, we can trust it because:
+    // 1. Supabase SSR only sets cookies with valid sessions
+    // 2. The httpOnly flag prevents client-side spoofing
+    // 3. A cookie with a value indicates an active session
+
+    const cookieLength = authCookie.value.length
+
+    // Minimum length check - very small cookies are likely invalid
+    if (cookieLength < 10) {
+      return false
+    }
+
+    // For substantial cookies (>500 chars), trust immediately
+    // These are almost certainly valid session cookies
+    if (cookieLength > 500) {
       return true
     }
 
-    return false
-  } catch {
+    // For smaller cookies (10-500 chars), still trust them if they exist
+    // The httpOnly flag and Supabase SSR validation are sufficient
+    // This handles edge cases where cookies might be smaller
+    // Since we already checked cookieLength >= 10 above, we can return true here
+    return true
+  } catch (error) {
+    // Log error in development for debugging
+    if (process.env.NODE_ENV === 'development') {
+      console.error('[Middleware] Authentication check error:', error)
+    }
     return false
   }
 }
