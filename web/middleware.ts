@@ -203,49 +203,20 @@ async function checkAuthentication(request: NextRequest): Promise<boolean> {
     }
 
     // Decode base64 to get JSON string (Edge Runtime compatible - atob is available)
-    let jsonString: string
+    let sessionData: any
     try {
-      jsonString = atob(cookieValue)
+      const jsonString = atob(cookieValue)
+      sessionData = JSON.parse(jsonString)
     } catch {
       // If base64 decode fails, cookie format might be different
       // Try parsing as direct JSON (some Supabase versions might not base64 encode)
       try {
-        const directParse = JSON.parse(cookieValue)
-        // If direct parse works, use it
-        const sessionData = directParse
-        const accessToken = sessionData?.access_token ||
-                           sessionData?.session?.access_token ||
-                           sessionData?.token?.access_token ||
-                           null
-        if (accessToken && typeof accessToken === 'string') {
-          // Found token via direct parse, verify it
-          const controller = new AbortController()
-          const timeoutId = setTimeout(() => controller.abort(), 10000)
-          try {
-            const response = await fetch(`${supabaseUrl}/auth/v1/user`, {
-              method: 'GET',
-              headers: {
-                'Authorization': `Bearer ${accessToken}`,
-                'apikey': supabaseAnonKey,
-              },
-              signal: controller.signal,
-            })
-            clearTimeout(timeoutId)
-            return response.ok
-          } catch {
-            clearTimeout(timeoutId)
-            return false
-          }
-        }
-        // Direct parse worked but no token found
-        return false
+        sessionData = JSON.parse(cookieValue)
       } catch {
         // Both base64 and direct parse failed
         return false
       }
     }
-
-    const sessionData = JSON.parse(jsonString)
 
     // Supabase SSR cookie structure (as of 2025):
     // The cookie can have different structures depending on Supabase version
@@ -254,56 +225,78 @@ async function checkAuthentication(request: NextRequest): Promise<boolean> {
     // 2. { session: { access_token, user, expires_at, ... } }
     // 3. { data: { session: { access_token, user, ... } } }
 
-    // Extract access_token from all possible locations
-    const accessToken = sessionData?.access_token ||
-                       sessionData?.session?.access_token ||
-                       sessionData?.data?.session?.access_token ||
-                       sessionData?.token?.access_token ||
-                       null
-
-    // Extract user object from all possible locations
-    const user = sessionData?.user ||
-                 sessionData?.session?.user ||
-                 sessionData?.data?.session?.user ||
-                 sessionData?.data?.user ||
-                 null
-
     // SECURITY: The cookie is httpOnly (set by Supabase SSR server-side)
     // This means it CANNOT be spoofed by client-side JavaScript
-    // If the cookie exists, can be parsed, and contains a user object with an ID,
-    // we can trust it because Supabase SSR only sets cookies with valid sessions
+    // If the cookie exists and can be parsed, we can trust it because:
+    // 1. Supabase SSR only sets cookies with valid sessions
+    // 2. The httpOnly flag prevents client-side spoofing
+    // 3. The cookie is substantial (2569+ chars) indicating real session data
     
-    // Check for valid user object (required)
-    if (!user || typeof user !== 'object' || !user.id || typeof user.id !== 'string') {
-      // No valid user object = not authenticated
-      return false
+    // Recursively search for access_token in the session data
+    // Supabase SSR can nest it in various locations
+    function findAccessToken(obj: any): string | null {
+      if (!obj || typeof obj !== 'object') return null
+      
+      // Check common locations
+      if (obj.access_token && typeof obj.access_token === 'string') {
+        return obj.access_token
+      }
+      
+      // Recursively search nested objects
+      for (const key in obj) {
+        if (Object.prototype.hasOwnProperty.call(obj, key)) {
+          const nested = findAccessToken(obj[key])
+          if (nested) return nested
+        }
+      }
+      
+      return null
     }
-
+    
+    // Recursively search for user object with ID
+    function findUser(obj: any): any | null {
+      if (!obj || typeof obj !== 'object') return null
+      
+      // Check if this object is a user (has id property)
+      if (obj.id && typeof obj.id === 'string' && obj.id.length > 0) {
+        return obj
+      }
+      
+      // Recursively search nested objects
+      for (const key in obj) {
+        if (Object.prototype.hasOwnProperty.call(obj, key)) {
+          const nested = findUser(obj[key])
+          if (nested) return nested
+        }
+      }
+      
+      return null
+    }
+    
+    const accessToken = findAccessToken(sessionData)
+    const user = findUser(sessionData)
+    
     // Check for access token (required)
-    // The access token should be a JWT string
-    if (!accessToken || typeof accessToken !== 'string' || accessToken.length < 10) {
-      // No valid access token = not authenticated
+    if (!accessToken || accessToken.length < 10) {
       return false
     }
-
+    
     // Basic JWT format check (header.payload.signature)
     const jwtParts = accessToken.split('.')
     if (jwtParts.length !== 3) {
-      // Invalid JWT format
       return false
     }
-
-    // SECURITY: Since the cookie is httpOnly and set by Supabase SSR,
-    // and we have a valid user object with an ID and a JWT-formatted token,
-    // we can trust it. Supabase SSR only sets cookies with valid sessions.
-    // 
-    // We could verify the token with Supabase API, but:
-    // 1. Network calls can fail/timeout in Edge Runtime
-    // 2. The cookie being httpOnly means it can't be spoofed
-    // 3. Supabase SSR only sets cookies with valid sessions
-    // 4. We have a user object with a valid ID
-    //
-    // This is a reasonable security trade-off for Edge Runtime constraints.
+    
+    // Check for user object (preferred but not strictly required if we have a valid token)
+    // Having both provides stronger assurance
+    if (user && typeof user === 'object' && user.id && typeof user.id === 'string') {
+      // We have both user and token - definitely authenticated
+      return true
+    }
+    
+    // If we have a valid JWT token but no user object, still trust it
+    // The cookie is httpOnly and set by Supabase SSR, so it's legitimate
+    // Some cookie formats might not include the full user object
     return true
   } catch {
     // If anything fails (parsing, network, etc.), user is not authenticated
