@@ -187,19 +187,21 @@ export async function middleware(request: NextRequest) {
 
   // Handle root path redirect based on authentication status
   if (pathname === '/') {
-    // Use the comprehensive authentication check from utils/supabase/middleware
-    // This function has extensive cookie detection logic that handles all edge cases
-    const { isAuthenticated } = checkAuthInMiddleware(request)
+    // Create response for cookie handling
+    const redirectResponse = NextResponse.next()
+    
+    // Use Supabase SSR approach for authentication check
+    const { isAuthenticated } = await checkAuthInMiddleware(request, redirectResponse)
 
     // Redirect based on authentication status
     const redirectPath = isAuthenticated ? '/feed' : '/landing'
     const redirectUrl = new URL(redirectPath, request.url)
-    const redirectResponse = NextResponse.redirect(redirectUrl, 307)
+    const finalRedirect = NextResponse.redirect(redirectUrl, 307)
 
     // Add cache headers to help with redirect performance
-    redirectResponse.headers.set('Cache-Control', 'public, max-age=3600, stale-while-revalidate=86400')
+    finalRedirect.headers.set('Cache-Control', 'public, max-age=3600, stale-while-revalidate=86400')
 
-    return redirectResponse
+    return finalRedirect
   }
 
   // Protect routes that require authentication
@@ -214,8 +216,11 @@ export async function middleware(request: NextRequest) {
                          request.cookies.get('e2e-dashboard-bypass')?.value === '1';
 
     if (!isE2EHarness) {
-      // Use the comprehensive authentication check from utils/supabase/middleware
-      const { isAuthenticated } = checkAuthInMiddleware(request)
+      // Create response for cookie handling
+      const response = NextResponse.next()
+      
+      // Use Supabase SSR approach for authentication check
+      const { isAuthenticated } = await checkAuthInMiddleware(request, response)
 
       if (!isAuthenticated) {
         // Redirect unauthenticated users to auth page
@@ -230,8 +235,11 @@ export async function middleware(request: NextRequest) {
 
   // Redirect authenticated users away from auth pages (except during login flow)
   if (isAuthRoute && pathname !== '/auth') {
-    // Use the comprehensive authentication check from utils/supabase/middleware
-    const { isAuthenticated } = checkAuthInMiddleware(request)
+    // Create response for cookie handling
+    const response = NextResponse.next()
+    
+    // Use Supabase SSR approach for authentication check
+    const { isAuthenticated } = await checkAuthInMiddleware(request, response)
 
     if (isAuthenticated) {
       // Authenticated users trying to access login/register should go to feed

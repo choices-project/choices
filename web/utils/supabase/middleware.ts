@@ -1,42 +1,67 @@
-import type { NextRequest } from 'next/server'
+import type { NextRequest, NextResponse } from 'next/server'
 
 /**
- * @deprecated This function is deprecated. Use standard Supabase SSR approach instead.
- *
- * The main middleware now uses `createServerClient` from `@supabase/ssr` with `getUser()`
- * which is the recommended approach. This function is kept for backward compatibility
- * but should not be used in new code.
- *
  * Check if a user is authenticated in middleware context (Edge Runtime compatible)
- *
- * This function works in Edge Runtime by checking for Supabase auth cookies directly.
- * It uses manual cookie detection as a fallback when Supabase client creation fails.
- *
- * Supabase stores auth tokens in cookies with the pattern:
- * - sb-<project-ref>-auth-token (main auth cookie, stores encrypted session)
- * - sb-<project-ref>-auth-token.0, sb-<project-ref>-auth-token.1 (chunked cookies for large sessions)
- * - sb-access-token (custom cookie, if set)
- *
- * Based on Supabase SSR documentation (December 2025):
- * - Cookies are set by @supabase/ssr createServerClient
- * - Cookies may be chunked if session data exceeds cookie size limits
- * - Cookie names follow pattern: sb-<project-ref>-auth-token[.chunk-index]
- *
+ * 
+ * Uses Supabase SSR's createServerClient which properly handles cookies in Edge Runtime.
+ * Falls back to manual cookie detection if Supabase client creation fails.
+ * 
  * @param request - The Next.js request object
+ * @param response - Optional NextResponse for cookie handling
  * @returns Object with isAuthenticated boolean
- *
+ * 
  * @example
  * ```typescript
  * export function middleware(request: NextRequest) {
- *   const { isAuthenticated } = checkAuthInMiddleware(request)
+ *   const response = NextResponse.next()
+ *   const { isAuthenticated } = checkAuthInMiddleware(request, response)
  *   const redirectPath = isAuthenticated ? '/feed' : '/auth'
  *   return NextResponse.redirect(new URL(redirectPath, request.url))
  * }
  * ```
  */
-export function checkAuthInMiddleware(
-  request: NextRequest
-): { isAuthenticated: boolean } {
+export async function checkAuthInMiddleware(
+  request: NextRequest,
+  response?: NextResponse
+): Promise<{ isAuthenticated: boolean }> {
+  // Try Supabase SSR approach first (recommended for Edge Runtime)
+  try {
+    const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
+    const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
+    
+    if (supabaseUrl && supabaseAnonKey) {
+      const { createServerClient } = await import('@supabase/ssr')
+      
+      // Create cookie adapter for Edge Runtime middleware
+      const supabase = createServerClient(supabaseUrl, supabaseAnonKey, {
+        cookies: {
+          getAll() {
+            return request.cookies.getAll()
+          },
+          setAll(cookiesToSet) {
+            if (response) {
+              cookiesToSet.forEach(({ name, value, options }) => {
+                response.cookies.set(name, value, options)
+              })
+            }
+          },
+        },
+      })
+      
+      // Check if user is authenticated
+      const { data: { user }, error } = await supabase.auth.getUser()
+      
+      if (user && !error) {
+        return { isAuthenticated: true }
+      }
+    }
+  } catch (error) {
+    // Fall back to manual cookie detection if Supabase client fails
+    // This can happen in Edge Runtime with certain configurations
+    // Silent fallback - don't log to avoid noise
+  }
+  
+  // Fallback: Manual cookie detection (original implementation)
   // Check for Supabase auth cookies
   // Supabase SSR uses cookies with patterns:
   // - sb-<project-ref>-auth-token (main auth cookie, stores encrypted session)
