@@ -216,7 +216,7 @@ async function checkAuthentication(request: NextRequest): Promise<boolean> {
       // If no access_token found, having the cookie is still a good indicator
       return cookieValue.length > 10
     }
-  } catch (error) {
+  } catch {
     // If parsing fails, having the cookie is still a good indicator
     // (cookie might be in a different format or encoding)
     return authCookie.value.length > 10
