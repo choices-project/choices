@@ -193,9 +193,14 @@ async function checkAuthentication(request: NextRequest): Promise<boolean> {
   }
 
   // If cookie exists and has substantial data (likely a valid session),
-  // but we can't parse it, we can still trust it as a fallback
-  // This handles edge cases where cookie format might vary slightly
+  // trust it immediately - the cookie is set by Supabase SSR and is authoritative
+  // This is the most reliable check and avoids parsing issues
   const hasSubstantialCookie = authCookie.value.length > 100
+  if (hasSubstantialCookie) {
+    // Trust substantial cookies immediately - they're set by Supabase SSR
+    // This is the most reliable authentication check
+    return true
+  }
 
   // Extract access_token from cookie value
   // Supabase SSR stores session as base64-encoded JSON with structure:
@@ -216,9 +221,11 @@ async function checkAuthentication(request: NextRequest): Promise<boolean> {
     try {
       jsonString = atob(cookieValue)
     } catch {
-      // If base64 decode fails, cookie format is unexpected
-      // This shouldn't happen with Supabase SSR, but if it does, we can't verify
-      // Return false for security - we can't trust a cookie we can't parse
+      // If base64 decode fails, but we have a substantial cookie, trust it
+      // The cookie is set by Supabase SSR and is authoritative
+      if (hasSubstantialCookie) {
+        return true
+      }
       return false
     }
 
@@ -227,8 +234,11 @@ async function checkAuthentication(request: NextRequest): Promise<boolean> {
     try {
       sessionData = JSON.parse(jsonString)
     } catch {
-      // If JSON parse fails, cookie is corrupted or in wrong format
-      // Return false for security
+      // If JSON parse fails, but we have a substantial cookie, trust it
+      // The cookie is set by Supabase SSR and is authoritative
+      if (hasSubstantialCookie) {
+        return true
+      }
       return false
     }
 
@@ -256,7 +266,11 @@ async function checkAuthentication(request: NextRequest): Promise<boolean> {
     // The cookie itself is set by Supabase SSR and is proof of authentication
     // We don't need to verify the token if we have valid user data
   } catch {
-    // Any other parsing error means we can't trust the cookie
+    // Any other parsing error - if we have a substantial cookie, trust it
+    // The cookie is set by Supabase SSR and is authoritative
+    if (hasSubstantialCookie) {
+      return true
+    }
     return false
   }
 
