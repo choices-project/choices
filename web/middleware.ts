@@ -1,5 +1,7 @@
 import { NextResponse, type NextRequest } from 'next/server'
 
+import { checkAuthInMiddleware } from '@/utils/supabase/middleware'
+
 import {
   getSecurityConfig,
   buildCSPHeader as buildCSPHeaderFromConfig,
@@ -12,8 +14,6 @@ import {
   resolveLocale
 } from '@/lib/i18n/config'
 import logger from '@/lib/utils/logger'
-
-import { checkAuthInMiddleware } from '@/utils/supabase/middleware'
 
 
 /**
