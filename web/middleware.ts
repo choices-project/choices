@@ -200,7 +200,11 @@ async function checkAuthentication(request: NextRequest): Promise<boolean> {
     const sessionData = JSON.parse(jsonString)
 
     // Extract access_token - this is what we MUST verify
-    const accessToken = sessionData?.access_token || null
+    // Supabase SSR stores it in different possible locations
+    const accessToken = sessionData?.access_token || 
+                       sessionData?.session?.access_token ||
+                       sessionData?.token?.access_token ||
+                       null
 
     if (!accessToken || typeof accessToken !== 'string') {
       // No access token = not authenticated
