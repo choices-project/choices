@@ -48,8 +48,22 @@ test.describe('Dashboard Journey', () => {
     await page.setDefaultNavigationTimeout(60_000);
     await page.setDefaultTimeout(40_000);
     const consoleMessages: string[] = [];
+    const consoleErrors: string[] = [];
+    const consoleWarnings: string[] = [];
     page.on('console', (msg) => {
-      consoleMessages.push(`${msg.type()}: ${msg.text()}`);
+      const text = msg.text();
+      consoleMessages.push(`${msg.type()}: ${text}`);
+      if (msg.type() === 'error') {
+        consoleErrors.push(text);
+      }
+      if (msg.type() === 'warning') {
+        consoleWarnings.push(text);
+      }
+    });
+
+    // Capture page errors (including React errors)
+    page.on('pageerror', (error) => {
+      consoleErrors.push(`Page error: ${error.message}`);
     });
     const cleanupMocks = await setupExternalAPIMocks(page, {
       feeds: true,
@@ -65,18 +79,48 @@ test.describe('Dashboard Journey', () => {
       const harnessStartTime = Date.now();
       await page.goto('/e2e/dashboard-journey');
       await waitForPageReady(page);
-      
+
       // Diagnostic: Check harness initialization
       const harnessInitTime = Date.now() - harnessStartTime;
       console.log('[dashboard-journey] Page load time:', harnessInitTime, 'ms');
-      
-      await page.waitForFunction(
-        () => document.documentElement.dataset.dashboardJourneyHarness === 'ready',
-        { timeout: 60_000 },
-      );
-      const harnessReadyTime = Date.now() - harnessStartTime;
-      console.log('[dashboard-journey] Harness ready time:', harnessReadyTime, 'ms');
-      
+
+      // Diagnostic: Check for React errors immediately
+      if (consoleErrors.length > 0) {
+        const reactErrors = consoleErrors.filter(err =>
+          err.includes('Error #185') ||
+          err.includes('Maximum update depth exceeded') ||
+          err.includes('Minified React error')
+        );
+        if (reactErrors.length > 0) {
+          console.error('[dashboard-journey] ⚠️ React errors detected before harness ready:', reactErrors);
+        }
+      }
+
+      // Wait for harness with diagnostic logging
+      let harnessReadyTime = 0;
+      try {
+        await page.waitForFunction(
+          () => document.documentElement.dataset.dashboardJourneyHarness === 'ready',
+          { timeout: 60_000 },
+        );
+        harnessReadyTime = Date.now() - harnessStartTime;
+        console.log('[dashboard-journey] ✅ Harness ready time:', harnessReadyTime, 'ms');
+      } catch (error) {
+        harnessReadyTime = Date.now() - harnessStartTime;
+        console.error('[dashboard-journey] ❌ Harness not ready after', harnessReadyTime, 'ms');
+        // Check for React errors that might have prevented harness from initializing
+        const reactErrors = consoleErrors.filter(err =>
+          err.includes('Error #185') ||
+          err.includes('Maximum update depth exceeded') ||
+          err.includes('Minified React error')
+        );
+        if (reactErrors.length > 0) {
+          console.error('[dashboard-journey] React Error #185 likely prevented harness initialization');
+          console.error('[dashboard-journey] React errors:', reactErrors);
+        }
+        throw error;
+      }
+
       // Diagnostic: Check harness state
       const harnessState = await page.evaluate(() => {
         const w = window as HarnessWindow;
@@ -84,19 +128,31 @@ test.describe('Dashboard Journey', () => {
           hasNotificationHarness: !!w.__notificationHarnessRef,
           hasUserStoreHarness: !!w.__userStoreHarness,
           harnessReady: document.documentElement.dataset.dashboardJourneyHarness === 'ready',
+          currentPath: window.location.pathname,
         };
       });
       console.log('[dashboard-journey] Harness state:', harnessState);
-      
+
+      // Diagnostic: Check for React Error #185 after harness should be ready
+      const reactErrorsAfterReady = consoleErrors.filter(err =>
+        err.includes('Error #185') ||
+        err.includes('Maximum update depth exceeded') ||
+        err.includes('Minified React error')
+      );
+      if (reactErrorsAfterReady.length > 0) {
+        console.error('[dashboard-journey] ⚠️ React Error #185 detected after harness ready:', reactErrorsAfterReady.length, 'errors');
+        console.error('[dashboard-journey] First error:', reactErrorsAfterReady[0]);
+      }
+
       const dashboardVisibleTime = Date.now();
       await expect(page.getByTestId('personal-dashboard')).toBeVisible();
       const dashboardVisibleDuration = Date.now() - dashboardVisibleTime;
       console.log('[dashboard-journey] Dashboard visible after:', dashboardVisibleDuration, 'ms');
-      
+
       await expect(page.getByTestId('dashboard-title')).toContainText('Welcome back');
       await expect(page.getByTestId('personal-analytics')).toBeVisible();
       await expect(page.getByTestId('dashboard-settings')).toBeVisible();
-      
+
       // Wait for feeds-live-message to be attached before asserting text
       // This element may not be present if FeedDataProvider isn't used on the dashboard
       const feedsLiveMessage = page.getByTestId('feeds-live-message');
@@ -218,7 +274,7 @@ test.describe('Dashboard Journey', () => {
       // Instead, verify the error state is displayed in the feed component
       // The error title "Unable to load feed" should be visible
       await expect(page.getByText('Unable to load feed', { exact: false })).toBeVisible({ timeout: 30_000 });
-      
+
       // Optionally check for toast alert if it exists (may not render in E2E harness)
       const toastAlert = page
         .getByRole('alert')
@@ -266,7 +322,7 @@ test.describe('Dashboard Journey', () => {
       await expect(page.getByTestId('show-elected-officials-toggle')).not.toBeChecked();
     } finally {
       if (consoleMessages.length) {
-         
+
         console.log('[dashboard-journey console]', consoleMessages.join('\n'));
       }
       await cleanupMocks();

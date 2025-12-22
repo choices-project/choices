@@ -1492,9 +1492,18 @@ export const createAdminActions = (
 
     enableFeatureFlag: (flagId) => {
       const state = get();
+      // If flag doesn't exist in store but is a mutable flag, initialize it
       if (!Object.prototype.hasOwnProperty.call(state.featureFlags.flags, flagId)) {
-        logger.warn('Attempted to enable locked feature flag', { flagId });
-        return false;
+        // Check if it's a mutable flag (exists in FEATURE_FLAGS)
+        if (MUTABLE_FLAG_KEYS.includes(flagId)) {
+          // Initialize the flag in the store first
+          setState((draft) => {
+            draft.featureFlags.flags[flagId] = false; // Initialize as disabled
+          });
+        } else {
+          logger.warn('Attempted to enable locked or unknown feature flag', { flagId });
+          return false;
+        }
       }
 
       const success = featureFlagManager.enable(flagId);
@@ -1514,9 +1523,18 @@ export const createAdminActions = (
 
     disableFeatureFlag: (flagId) => {
       const state = get();
+      // If flag doesn't exist in store but is a mutable flag, initialize it
       if (!Object.prototype.hasOwnProperty.call(state.featureFlags.flags, flagId)) {
-        logger.warn('Attempted to disable locked feature flag', { flagId });
-        return false;
+        // Check if it's a mutable flag (exists in FEATURE_FLAGS)
+        if (MUTABLE_FLAG_KEYS.includes(flagId)) {
+          // Initialize the flag in the store first
+          setState((draft) => {
+            draft.featureFlags.flags[flagId] = true; // Initialize as enabled
+          });
+        } else {
+          logger.warn('Attempted to disable locked or unknown feature flag', { flagId });
+          return false;
+        }
       }
 
       const success = featureFlagManager.disable(flagId);

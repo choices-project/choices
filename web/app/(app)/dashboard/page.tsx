@@ -170,27 +170,30 @@ export default function DashboardPage() {
   const setSidebarActiveSectionRef = useRef(setSidebarActiveSection);
   useEffect(() => { setSidebarActiveSectionRef.current = setSidebarActiveSection; }, [setSidebarActiveSection]);
 
-  // Use isMounted to prevent hydration mismatch when checking localStorage
-  const [isMounted, setIsMounted] = useState(false);
-  useEffect(() => {
-    setIsMounted(true);
-  }, []);
-
+  // Check bypass flag immediately on client side (don't wait for mount)
+  // This prevents authentication checks from running before bypass is recognized
+  // Safe to check localStorage on client as long as we guard with typeof window check
   const shouldBypassAuth = useMemo(
     () => {
       // In E2E harness mode, always bypass auth checks (authentication is mocked)
       if (process.env.NEXT_PUBLIC_ENABLE_E2E_HARNESS === '1') {
         return true;
       }
-      // Only check localStorage after mount to prevent hydration mismatch
-      if (!isMounted) {
-        return false;
+      // Check localStorage immediately (client-side only check is safe)
+      // This prevents timing issues where auth checks run before bypass flag is seen
+      // Guard with typeof window to prevent SSR issues
+      if (typeof window === 'undefined') {
+        return false; // SSR - no bypass
       }
       // Check localStorage bypass flag for specific test scenarios
-      return typeof window !== 'undefined' &&
-        window.localStorage.getItem('e2e-dashboard-bypass') === '1';
+      try {
+        return window.localStorage.getItem('e2e-dashboard-bypass') === '1';
+      } catch {
+        // localStorage might not be available (some browsers/contexts)
+        return false;
+      }
     },
-    [isMounted],
+    [], // No dependencies - check once on mount, value doesn't change
   );
   const [isCheckingAdmin, setIsCheckingAdmin] = useState(false);
   const adminCheckRef = useRef<boolean>(false);

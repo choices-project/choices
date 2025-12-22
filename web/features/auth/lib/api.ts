@@ -31,6 +31,7 @@ export async function loginWithPassword(payload: LoginPayload) {
   const response = await fetch('/api/auth/login', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
+    credentials: 'include', // CRITICAL: Include cookies in request/response for authentication
     body: JSON.stringify({
       email: payload.email,
       password: payload.password,
@@ -50,6 +51,7 @@ export async function registerUser(payload: RegisterPayload) {
   const response = await fetch('/api/auth/register', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
+    credentials: 'include', // CRITICAL: Include cookies in request/response for authentication
     body: JSON.stringify({
       email: payload.email,
       username: payload.username,

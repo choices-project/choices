@@ -14,20 +14,27 @@ export function AnalyticsTestBridge() {
   const events = useAnalyticsEvents();
   const { setTrackingEnabled, updatePreferences, clearEvents } = useAnalyticsActions();
   const bridgeRef = useRef<PlaywrightAnalyticsBridge | null>(null);
+  const actionsRef = useRef({ setTrackingEnabled, updatePreferences, clearEvents });
 
+  // Update refs when actions change
+  useEffect(() => {
+    actionsRef.current = { setTrackingEnabled, updatePreferences, clearEvents };
+  }, [setTrackingEnabled, updatePreferences, clearEvents]);
+
+  // Initialize bridge immediately on mount (don't wait for dependencies)
   useEffect(() => {
     const api: PlaywrightAnalyticsBridge = {
       events: [],
       enable: () => {
-        setTrackingEnabled(true);
-        updatePreferences({ trackingEnabled: true });
-        clearEvents();
+        actionsRef.current.setTrackingEnabled(true);
+        actionsRef.current.updatePreferences({ trackingEnabled: true });
+        actionsRef.current.clearEvents();
         api.events.splice(0, api.events.length);
       },
       reset: () => {
-        setTrackingEnabled(false);
-        updatePreferences({ trackingEnabled: false });
-        clearEvents();
+        actionsRef.current.setTrackingEnabled(false);
+        actionsRef.current.updatePreferences({ trackingEnabled: false });
+        actionsRef.current.clearEvents();
         api.events.splice(0, api.events.length);
       },
     };
@@ -36,13 +43,18 @@ export function AnalyticsTestBridge() {
     bridgeRef.current = api;
     globalThis.__playwrightAnalytics = api;
 
-    window.dispatchEvent(new Event('playwright:analytics-ready'));
+    // Dispatch ready event immediately
+    if (typeof window !== 'undefined') {
+      window.dispatchEvent(new Event('playwright:analytics-ready'));
+    }
 
     return () => {
       bridgeRef.current = null;
-      Reflect.deleteProperty(globalThis, '__playwrightAnalytics');
+      if (typeof globalThis !== 'undefined') {
+        Reflect.deleteProperty(globalThis, '__playwrightAnalytics');
+      }
     };
-  }, [clearEvents, setTrackingEnabled, updatePreferences]);
+  }, []); // Empty deps - initialize once, use refs for actions
 
   useEffect(() => {
     const unsubscribe = analyticsStoreSubscriptions.onEventTracked((event) => {

@@ -175,16 +175,15 @@ export default function AdminStoreHarnessPage() {
         });
       },
       resetAdminState: () => {
+        const state = useAdminStore.getState();
+        // Reset notifications and user filters
         useAdminStore.setState((draft) => {
           draft.notifications = [];
           draft.userFilters.selectedUsers = [];
-          // Reset feature flags but preserve categories, isLoading, and error
-          draft.featureFlags.flags = {};
-          draft.featureFlags.enabledFlags = [];
-          draft.featureFlags.disabledFlags = [];
-          draft.featureFlags.lockedFlags = [];
-          // Keep categories, isLoading, and error as they are
         });
+        // Reset feature flags using the store's resetFeatureFlags action
+        // This properly reinitializes flags from featureFlagManager
+        state.resetFeatureFlags();
       },
         getSnapshot: () => useAdminStore.getState(),
       };

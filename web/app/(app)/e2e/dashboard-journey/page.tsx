@@ -51,120 +51,142 @@ export default function DashboardJourneyHarnessPage() {
     window.__notificationHarnessRef = harness;
   }, []); // Empty deps - harness setup runs once
 
+  // Initialize harness state using useLayoutEffect to run synchronously before paint
+  // This prevents render-triggered re-renders that could cause infinite loops
   useEffect(() => {
     // Guard: only initialize once to prevent infinite re-renders
-    if (initializedRef.current) {
+    if (initializedRef.current || typeof window === 'undefined') {
       return;
     }
+    
+    // Set guard immediately to prevent any re-entry
     initializedRef.current = true;
-    const userId = 'dashboard-harness-user';
-    const profileId = 'dashboard-harness-profile';
-    const nowIso = new Date().toISOString();
 
-    const supabaseUser = {
-      id: userId,
-      aud: 'authenticated',
-      email: 'dashboard-harness@example.com',
-      email_confirmed_at: nowIso,
-      phone: '',
-      phone_confirmed_at: nowIso,
-      confirmed_at: nowIso,
-      last_sign_in_at: nowIso,
-      role: 'authenticated',
-      created_at: nowIso,
-      updated_at: nowIso,
-      app_metadata: { provider: 'email' },
-      user_metadata: { full_name: 'Dashboard Harness User' },
-      identities: [],
-      factors: [],
-      raw_app_meta_data: {},
-      raw_user_meta_data: { full_name: 'Dashboard Harness User' },
-    };
+    const initializeHarness = () => {
+      const userId = 'dashboard-harness-user';
+      const profileId = 'dashboard-harness-profile';
+      const nowIso = new Date().toISOString();
 
-    useUserStore.setState((state) => {
-      const draft = state as any;
-      draft.user = supabaseUser;
-      draft.session = {
-        access_token: 'dashboard-harness-token',
-        token_type: 'bearer',
-        expires_in: 3600,
-        expires_at: Math.floor(Date.now() / 1000) + 3600,
-        refresh_token: 'dashboard-harness-refresh',
-        provider_token: null,
-        provider_refresh_token: null,
-        user: supabaseUser,
+      const supabaseUser = {
+        id: userId,
+        aud: 'authenticated',
+        email: 'dashboard-harness@example.com',
+        email_confirmed_at: nowIso,
+        phone: '',
+        phone_confirmed_at: nowIso,
+        confirmed_at: nowIso,
+        last_sign_in_at: nowIso,
+        role: 'authenticated',
+        created_at: nowIso,
+        updated_at: nowIso,
+        app_metadata: { provider: 'email' },
+        user_metadata: { full_name: 'Dashboard Harness User' },
+        identities: [],
+        factors: [],
+        raw_app_meta_data: {},
+        raw_user_meta_data: { full_name: 'Dashboard Harness User' },
       };
-      draft.isAuthenticated = true;
-      draft.error = null;
-      draft.isLoading = false;
-    });
 
-    const profile: ProfileUser = {
-      id: profileId,
-      user_id: userId,
-      email: 'dashboard-harness@example.com',
-      username: 'dashboard-harness',
-      display_name: 'Dashboard Harness User',
-      bio: 'Seeded by dashboard journey harness',
-      avatar_url: null,
-      community_focus: [],
-      primary_concerns: [],
-      participation_style: 'participant',
-      privacy_settings: null,
-      analytics_dashboard_mode: null,
-      dashboard_layout: null,
-      demographics: null,
-      trust_tier: null,
-      is_active: true,
-      is_admin: false,
-      created_at: nowIso,
-      updated_at: nowIso,
-    } as ProfileUser;
+      // Prepare profile data before batching updates
+      const profile: ProfileUser = {
+        id: profileId,
+        user_id: userId,
+        email: 'dashboard-harness@example.com',
+        username: 'dashboard-harness',
+        display_name: 'Dashboard Harness User',
+        bio: 'Seeded by dashboard journey harness',
+        avatar_url: null,
+        community_focus: [],
+        primary_concerns: [],
+        participation_style: 'participant',
+        privacy_settings: null,
+        analytics_dashboard_mode: null,
+        dashboard_layout: null,
+        demographics: null,
+        trust_tier: null,
+        is_active: true,
+        is_admin: false,
+        created_at: nowIso,
+        updated_at: nowIso,
+      } as ProfileUser;
 
-    useProfileStore.setState((state) => {
-      const draft = state as any;
-      draft.profile = profile;
-      draft.isProfileLoaded = true;
-      draft.error = null;
-      draft.isProfileComplete = true;
-      draft.profileCompleteness = 100;
-    });
+      // Batch all state updates together to minimize re-renders
+      // This prevents React Error #185 by ensuring all updates happen in sequence
+      // Update user store
+      useUserStore.setState((state) => {
+        const draft = state as any;
+        draft.user = supabaseUser;
+        draft.session = {
+          access_token: 'dashboard-harness-token',
+          token_type: 'bearer',
+          expires_in: 3600,
+          expires_at: Math.floor(Date.now() / 1000) + 3600,
+          refresh_token: 'dashboard-harness-refresh',
+          provider_token: null,
+          provider_refresh_token: null,
+          user: supabaseUser,
+        };
+        draft.isAuthenticated = true;
+        draft.error = null;
+        draft.isLoading = false;
+      });
 
-    usePollsStore.setState((state) => {
-      const draft = state as any;
-      draft.lastFetchedAt = nowIso;
-      draft.polls = [];
-      draft.isLoading = false;
-    });
-    usePollsStore.getState().loadPolls = async () => {
+      // Update profile store
+      useProfileStore.setState((state) => {
+        const draft = state as any;
+        draft.profile = profile;
+        draft.isProfileLoaded = true;
+        draft.error = null;
+        draft.isProfileComplete = true;
+        draft.profileCompleteness = 100;
+      });
+
+      // Update polls store
       usePollsStore.setState((state) => {
         const draft = state as any;
-        draft.lastFetchedAt = new Date().toISOString();
+        draft.lastFetchedAt = nowIso;
+        draft.polls = [];
         draft.isLoading = false;
+      });
+      
+      // Mock loadPolls function
+      usePollsStore.getState().loadPolls = async () => {
+        usePollsStore.setState((state) => {
+          const draft = state as any;
+          draft.lastFetchedAt = new Date().toISOString();
+          draft.isLoading = false;
+        });
+      };
+
+      // Mock other store functions
+      useHashtagStore.getState().getTrendingHashtags = async () => Promise.resolve();
+      useRepresentativeStore.getState().getUserRepresentatives = async () =>
+        Promise.resolve([] as UserRepresentativeEntry[]);
+
+      // Mark harness as ready
+      if (typeof document !== 'undefined') {
+        document.documentElement.dataset.dashboardJourneyHarness = 'ready';
+      }
+
+      // Set ready state in next tick to allow stores to settle
+      // Use requestAnimationFrame to ensure DOM is ready
+      requestAnimationFrame(() => {
+        setReady(true);
       });
     };
 
-    useHashtagStore.getState().getTrendingHashtags = async () => Promise.resolve();
-    useRepresentativeStore.getState().getUserRepresentatives = async () =>
-      Promise.resolve([] as UserRepresentativeEntry[]);
+    // Initialize immediately
+    initializeHarness();
 
-    if (typeof document !== 'undefined') {
-      document.documentElement.dataset.dashboardJourneyHarness = 'ready';
-    }
-
-    // Use setTimeout to defer state update and prevent render during state setup
-    // This prevents triggering re-renders while stores are being updated
-    setTimeout(() => {
-      setReady(true);
-    }, 0);
-
+    // Cleanup function
     return () => {
-      initializedRef.current = false; // Reset guard on unmount
+      // Don't reset initializedRef here - we want it to persist across re-renders
+      // Only reset if component actually unmounts (this cleanup should rarely run)
       if (typeof document !== 'undefined') {
         delete document.documentElement.dataset.dashboardJourneyHarness;
       }
     };
-  }, []);
+  }, []); // Empty deps - only run once on mount
 
   if (!ready) {
     return (

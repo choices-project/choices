@@ -151,15 +151,29 @@ test.describe('Authentication Flow', () => {
       await page.waitForTimeout(3_000);
       
       // Check for authentication tokens/cookies
+      // Note: httpOnly cookies won't be accessible via document.cookie, so use Playwright's cookie API
       await expect
         .poll(
           async () => {
-            const hasCookie = await page.evaluate(() => document.cookie.includes('sb-'));
+            // Check for httpOnly cookies using Playwright's cookie API
+            const cookies = await page.context().cookies();
+            const hasHttpOnlyCookie = cookies.some(c => 
+              c.name.startsWith('sb-') && 
+              (c.name.includes('auth') || c.name.includes('session')) &&
+              c.value && 
+              c.value.length > 0
+            );
+            
+            // Also check for non-httpOnly cookies via document.cookie
+            const hasNonHttpOnlyCookie = await page.evaluate(() => document.cookie.includes('sb-'));
+            
+            // Check localStorage (set by client-side code)
             const hasToken = await page.evaluate(() => {
               const token = localStorage.getItem('supabase.auth.token');
               return token !== null && token !== 'null';
             });
-            return hasCookie || hasToken;
+            
+            return hasHttpOnlyCookie || hasNonHttpOnlyCookie || hasToken;
           },
           { timeout: 60_000, intervals: [2_000] },
         )
@@ -188,11 +202,23 @@ test.describe('Authentication Flow', () => {
       await waitForPageReady(page);
       
       // Wait for authentication
+      // Note: httpOnly cookies won't be accessible via document.cookie, so use Playwright's cookie API
       await expect
         .poll(
           async () => {
-            const hasCookie = await page.evaluate(() => document.cookie.includes('sb-'));
-            return hasCookie;
+            // Check for httpOnly cookies using Playwright's cookie API
+            const cookies = await page.context().cookies();
+            const hasHttpOnlyCookie = cookies.some(c => 
+              c.name.startsWith('sb-') && 
+              (c.name.includes('auth') || c.name.includes('session')) &&
+              c.value && 
+              c.value.length > 0
+            );
+            
+            // Also check for non-httpOnly cookies via document.cookie
+            const hasNonHttpOnlyCookie = await page.evaluate(() => document.cookie.includes('sb-'));
+            
+            return hasHttpOnlyCookie || hasNonHttpOnlyCookie;
           },
           { timeout: 60_000, intervals: [2_000] },
         )
@@ -226,11 +252,23 @@ test.describe('Authentication Flow', () => {
       await waitForPageReady(page);
       
       // Wait for authentication
+      // Note: httpOnly cookies won't be accessible via document.cookie, so use Playwright's cookie API
       await expect
         .poll(
           async () => {
-            const hasCookie = await page.evaluate(() => document.cookie.includes('sb-'));
-            return hasCookie;
+            // Check for httpOnly cookies using Playwright's cookie API
+            const cookies = await page.context().cookies();
+            const hasHttpOnlyCookie = cookies.some(c => 
+              c.name.startsWith('sb-') && 
+              (c.name.includes('auth') || c.name.includes('session')) &&
+              c.value && 
+              c.value.length > 0
+            );
+            
+            // Also check for non-httpOnly cookies via document.cookie
+            const hasNonHttpOnlyCookie = await page.evaluate(() => document.cookie.includes('sb-'));
+            
+            return hasHttpOnlyCookie || hasNonHttpOnlyCookie;
           },
           { timeout: 60_000, intervals: [2_000] },
         )
@@ -267,11 +305,23 @@ test.describe('Authentication Flow', () => {
       await waitForPageReady(page);
       
       // Wait for authentication
+      // Note: httpOnly cookies won't be accessible via document.cookie, so use Playwright's cookie API
       await expect
         .poll(
           async () => {
-            const hasCookie = await page.evaluate(() => document.cookie.includes('sb-'));
-            return hasCookie;
+            // Check for httpOnly cookies using Playwright's cookie API
+            const cookies = await page.context().cookies();
+            const hasHttpOnlyCookie = cookies.some(c => 
+              c.name.startsWith('sb-') && 
+              (c.name.includes('auth') || c.name.includes('session')) &&
+              c.value && 
+              c.value.length > 0
+            );
+            
+            // Also check for non-httpOnly cookies via document.cookie
+            const hasNonHttpOnlyCookie = await page.evaluate(() => document.cookie.includes('sb-'));
+            
+            return hasHttpOnlyCookie || hasNonHttpOnlyCookie;
           },
           { timeout: 60_000, intervals: [2_000] },
         )
@@ -311,11 +361,23 @@ test.describe('Authentication Flow', () => {
       await waitForPageReady(page);
       
       // Wait for authentication
+      // Note: httpOnly cookies won't be accessible via document.cookie, so use Playwright's cookie API
       await expect
         .poll(
           async () => {
-            const hasCookie = await page.evaluate(() => document.cookie.includes('sb-'));
-            return hasCookie;
+            // Check for httpOnly cookies using Playwright's cookie API
+            const cookies = await page.context().cookies();
+            const hasHttpOnlyCookie = cookies.some(c => 
+              c.name.startsWith('sb-') && 
+              (c.name.includes('auth') || c.name.includes('session')) &&
+              c.value && 
+              c.value.length > 0
+            );
+            
+            // Also check for non-httpOnly cookies via document.cookie
+            const hasNonHttpOnlyCookie = await page.evaluate(() => document.cookie.includes('sb-'));
+            
+            return hasHttpOnlyCookie || hasNonHttpOnlyCookie;
           },
           { timeout: 60_000, intervals: [2_000] },
         )
@@ -352,11 +414,23 @@ test.describe('Authentication Flow', () => {
       await waitForPageReady(page);
       
       // Wait for authentication
+      // Note: httpOnly cookies won't be accessible via document.cookie, so use Playwright's cookie API
       await expect
         .poll(
           async () => {
-            const hasCookie = await page.evaluate(() => document.cookie.includes('sb-'));
-            return hasCookie;
+            // Check for httpOnly cookies using Playwright's cookie API
+            const cookies = await page.context().cookies();
+            const hasHttpOnlyCookie = cookies.some(c => 
+              c.name.startsWith('sb-') && 
+              (c.name.includes('auth') || c.name.includes('session')) &&
+              c.value && 
+              c.value.length > 0
+            );
+            
+            // Also check for non-httpOnly cookies via document.cookie
+            const hasNonHttpOnlyCookie = await page.evaluate(() => document.cookie.includes('sb-'));
+            
+            return hasHttpOnlyCookie || hasNonHttpOnlyCookie;
           },
           { timeout: 60_000, intervals: [2_000] },
         )

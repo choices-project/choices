@@ -88,7 +88,16 @@ export default function LanguageSelector({
       // Update local state immediately for instant UI feedback
       setSelectedLanguage(language);
       updateSettings({ language });
+      
+      // Set locale cookie and refresh router
       await changeLanguage(language);
+      
+      // Force a re-render by updating state after a brief delay
+      // This ensures the UI updates even if router.refresh() is slow
+      setTimeout(() => {
+        setSelectedLanguage(language); // Keep selected language until hook catches up
+      }, 100);
+      
       const languageLabel = getDisplayName(language);
       announce(t('navigation.languageSelector.live.changed', { language: languageLabel }));
     } catch (error) {
@@ -102,9 +111,11 @@ export default function LanguageSelector({
   };
 
   // Reset selectedLanguage when currentLanguage updates (after router.refresh() completes)
+  // But only if they match - keep selectedLanguage if currentLanguage hasn't updated yet
   useEffect(() => {
     if (selectedLanguage && currentLanguage === selectedLanguage) {
-      setSelectedLanguage(null); // Clear local state once hook has caught up
+      // Clear local state once hook has caught up
+      setSelectedLanguage(null);
     }
   }, [currentLanguage, selectedLanguage]);
 
