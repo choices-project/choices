@@ -193,6 +193,7 @@ async function checkAuthentication(request: NextRequest): Promise<boolean> {
 
   // Extract access_token from cookie value
   // Cookie format: base64-<base64-encoded-json> or just <base64-encoded-json>
+  // Supabase stores session as: { access_token, refresh_token, expires_at, user, ... }
   let accessToken: string | null = null
   
   try {
@@ -204,17 +205,37 @@ async function checkAuthentication(request: NextRequest): Promise<boolean> {
     }
     
     // Decode base64 to get JSON string (Edge Runtime compatible - atob is available)
-    const jsonString = atob(cookieValue)
+    // Note: atob may throw if input is not valid base64, so we catch and fallback
+    let jsonString: string
+    try {
+      jsonString = atob(cookieValue)
+    } catch {
+      // If base64 decode fails, cookie might be in a different format
+      // Having a substantial cookie value is still a good indicator
+      return cookieValue.length > 10
+    }
     
     // Parse JSON to extract access_token
     const sessionData = JSON.parse(jsonString)
     
     // Extract access_token from session data
-    accessToken = sessionData?.access_token || sessionData?.session?.access_token || null
+    // Supabase stores it directly in the root or in a session object
+    accessToken = sessionData?.access_token || 
+                  sessionData?.session?.access_token || 
+                  sessionData?.token?.access_token ||
+                  null
     
-    if (!accessToken) {
-      // If no access_token found, having the cookie is still a good indicator
+    // If we have a user object, that's also a good indicator of authentication
+    const hasUser = sessionData?.user && typeof sessionData.user === 'object'
+    
+    if (!accessToken && !hasUser) {
+      // If no access_token or user found, having the cookie is still a good indicator
       return cookieValue.length > 10
+    }
+    
+    // If we have user data but no access_token, still consider authenticated
+    if (!accessToken && hasUser) {
+      return true
     }
   } catch {
     // If parsing fails, having the cookie is still a good indicator
