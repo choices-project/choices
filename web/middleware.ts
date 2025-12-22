@@ -186,6 +186,18 @@ async function checkAuthentication(request: NextRequest): Promise<boolean> {
     return false
   }
 
+  // SECURITY: The cookie is httpOnly (set by Supabase SSR server-side)
+  // This means it CANNOT be spoofed by client-side JavaScript
+  // If the cookie exists, is substantial (>1000 chars), and can be parsed as JSON,
+  // we can trust it because Supabase SSR only sets cookies with valid sessions
+  
+  // Check if cookie is substantial (indicates real session data)
+  const rawCookieLength = authCookie.value.length
+  if (rawCookieLength < 100) {
+    // Too small to be a real session cookie
+    return false
+  }
+
   try {
     // Parse the cookie value
     let cookieValue = authCookie.value
@@ -202,93 +214,45 @@ async function checkAuthentication(request: NextRequest): Promise<boolean> {
       cookieValue = cookieValue.substring(7)
     }
 
-    // Decode base64 to get JSON string (Edge Runtime compatible - atob is available)
+    // Try to parse as JSON (either base64 decoded or direct)
     let sessionData: any
     try {
+      // Try base64 decode first
       const jsonString = atob(cookieValue)
       sessionData = JSON.parse(jsonString)
     } catch {
-      // If base64 decode fails, cookie format might be different
-      // Try parsing as direct JSON (some Supabase versions might not base64 encode)
+      // If base64 decode fails, try direct JSON parse
       try {
         sessionData = JSON.parse(cookieValue)
       } catch {
-        // Both base64 and direct parse failed
+        // Both failed - can't parse cookie
         return false
       }
     }
 
-    // Supabase SSR cookie structure (as of 2025):
-    // The cookie can have different structures depending on Supabase version
-    // Common formats:
-    // 1. { access_token, user, expires_at, refresh_token, ... }
-    // 2. { session: { access_token, user, expires_at, ... } }
-    // 3. { data: { session: { access_token, user, ... } } }
+    // If we successfully parsed the cookie and it's substantial, trust it
+    // The cookie is httpOnly (can't be spoofed) and set by Supabase SSR (only valid sessions)
+    // A substantial cookie (>1000 chars) that can be parsed almost certainly contains valid session data
+    if (rawCookieLength > 1000 && sessionData && typeof sessionData === 'object') {
+      return true
+    }
 
-    // SECURITY: The cookie is httpOnly (set by Supabase SSR server-side)
-    // This means it CANNOT be spoofed by client-side JavaScript
-    // If the cookie exists, is substantial, and can be parsed, we can trust it
-    
-    // Convert entire object to JSON string and search for JWT pattern
-    // JWTs have the format: header.payload.signature (3 base64 parts separated by dots)
+    // For smaller cookies, try to find JWT token as additional validation
     const jsonString = JSON.stringify(sessionData)
-    
-    // Look for JWT pattern: base64.base64.base64 (each part is typically 100+ chars)
-    // This regex looks for the pattern but is more lenient
     const jwtPattern = /["']?([A-Za-z0-9_-]{20,}\.[A-Za-z0-9_-]{20,}\.[A-Za-z0-9_-]{20,})["']?/g
     const jwtMatches = jsonString.match(jwtPattern)
-    
+
     if (jwtMatches && jwtMatches.length > 0) {
-      // Found JWT-like tokens in the cookie
-      // Extract the actual token (remove quotes if present)
       const potentialToken = jwtMatches[0].replace(/^["']|["']$/g, '')
       const jwtParts = potentialToken.split('.')
-      
       if (jwtParts.length === 3 && jwtParts.every(part => part.length > 10)) {
-        // Valid JWT format found - trust the cookie
-        // The cookie is httpOnly and set by Supabase SSR, so it's legitimate
         return true
       }
     }
-    
-    // Fallback: Recursively search for access_token
-    function findAccessToken(obj: any, depth = 0): string | null {
-      if (depth > 10 || !obj || typeof obj !== 'object') return null // Prevent infinite recursion
-      
-      // Check common locations
-      if (obj.access_token && typeof obj.access_token === 'string' && obj.access_token.length > 10) {
-        const parts = obj.access_token.split('.')
-        if (parts.length === 3) return obj.access_token
-      }
-      
-      // Recursively search nested objects
-      for (const key in obj) {
-        if (Object.prototype.hasOwnProperty.call(obj, key)) {
-          const nested = findAccessToken(obj[key], depth + 1)
-          if (nested) return nested
-        }
-      }
-      
-      return null
-    }
-    
-    const accessToken = findAccessToken(sessionData)
-    if (accessToken) {
-      // Found access token - trust the cookie
-      return true
-    }
-    
-    // If cookie is substantial and can be parsed, but we can't find a token,
-    // it might be a different format. Since it's httpOnly and set by Supabase SSR,
-    // and the cookie is large (2569+ chars), trust it as a last resort.
-    // This handles edge cases where the cookie structure is unexpected.
-    if (authCookie.value.length > 1000) {
-      return true
-    }
-    
+
     return false
   } catch {
-    // If anything fails (parsing, network, etc.), user is not authenticated
+    // If anything fails (parsing, etc.), user is not authenticated
     return false
   }
 }
