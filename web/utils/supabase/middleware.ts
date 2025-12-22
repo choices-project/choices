@@ -87,30 +87,42 @@ export function checkAuthInMiddleware(
   // Method 0: FIRST check Cookie header directly (most reliable for httpOnly cookies in Edge Runtime)
   // This is especially important because httpOnly cookies may not be accessible via request.cookies.getAll()
   if (cookieHeader && cookieHeader.length > 0) {
-    // Look for any sb- cookie with 'auth' in the name and substantial value
-    // This is a more permissive pattern that should catch all Supabase auth cookies
-    const sbAuthPattern = /(sb-[^=;]*-auth[^=;]*)=([^;]+)/gi
-    const matches = [...cookieHeader.matchAll(sbAuthPattern)]
-    for (const match of matches) {
-      if (match[1] && match[2]) {
-        let cookieValue = match[2].trim()
+    // Split cookie header by semicolon and check each cookie
+    // This is more reliable than regex for edge cases
+    const cookiePairs = cookieHeader.split(';').map(c => c.trim())
 
-        // Handle URL encoding
-        try {
-          cookieValue = decodeURIComponent(cookieValue)
-        } catch {
-          // If decoding fails, use original value
-        }
+    for (const cookiePair of cookiePairs) {
+      const equalIndex = cookiePair.indexOf('=')
+      if (equalIndex === -1) continue
+
+      const cookieName = cookiePair.substring(0, equalIndex).trim().toLowerCase()
+      let cookieValue = cookiePair.substring(equalIndex + 1).trim()
+
+      // Handle URL encoding
+      try {
+        cookieValue = decodeURIComponent(cookieValue)
+      } catch {
+        // If decoding fails, use original value
+      }
+
+      // Check if it's a Supabase auth cookie
+      // Pattern: sb-* containing 'auth', 'session', or 'access'
+      if (cookieName.startsWith('sb-') &&
+          (cookieName.includes('auth') || cookieName.includes('session') || cookieName.includes('access'))) {
 
         // Check for substantial value (2569 chars should definitely pass)
-        if (cookieValue.length > 10 &&
+        // Lower threshold for chunked cookies
+        const isChunked = cookieName.includes('.') && /\.\d+$/.test(cookieName)
+        const minLength = isChunked ? 5 : 10
+
+        if (cookieValue.length >= minLength &&
             cookieValue !== 'null' &&
             cookieValue !== 'undefined' &&
             cookieValue !== '{}' &&
             cookieValue !== '""' &&
             cookieValue !== "''") {
           if (process.env.DEBUG_MIDDLEWARE === '1') {
-            console.warn('[checkAuthInMiddleware] Found auth cookie in header (Method 0):', match[1])
+            console.warn('[checkAuthInMiddleware] Found auth cookie in header (Method 0):', cookieName, 'length:', cookieValue.length)
           }
           return { isAuthenticated: true }
         }
