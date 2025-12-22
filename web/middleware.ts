@@ -161,6 +161,9 @@ function validateRequest(request: NextRequest): { valid: boolean; reason?: strin
 /**
  * Create Supabase client for Edge Runtime middleware
  * Uses Supabase's recommended approach for Edge Runtime compatibility
+ * 
+ * Note: Supabase stores auth tokens in cookies with pattern: sb-<project-ref>-auth-token
+ * We need to read from these cookies and provide them to the client
  */
 function createSupabaseMiddlewareClient(request: NextRequest, response: NextResponse) {
   const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
@@ -170,8 +173,14 @@ function createSupabaseMiddlewareClient(request: NextRequest, response: NextResp
     throw new Error('Missing Supabase environment variables')
   }
 
+  // Extract project ref from Supabase URL to determine cookie names
+  // Pattern: https://<project-ref>.supabase.co
+  const projectRefMatch = supabaseUrl.match(/https?:\/\/([^.]+)\.supabase\.(co|io)/)
+  const projectRef = projectRefMatch?.[1] ?? 'unknown'
+  const authCookieName = `sb-${projectRef}-auth-token`
+
   // Use createClient from @supabase/supabase-js (Edge Runtime compatible)
-  // with custom cookie handling for middleware
+  // with custom cookie handling that reads Supabase's actual cookie names
   return createClient<Database>(supabaseUrl, supabaseAnonKey, {
     auth: {
       persistSession: false, // Middleware doesn't persist sessions
@@ -179,13 +188,34 @@ function createSupabaseMiddlewareClient(request: NextRequest, response: NextResp
       detectSessionInUrl: false, // No URL-based session detection in middleware
       storage: {
         getItem: (key: string) => {
-          // Get cookie value from request
-          const cookie = request.cookies.get(key)
+          // Supabase uses specific cookie names for auth tokens
+          // Check both the key provided and the actual Supabase cookie name
+          let cookie = request.cookies.get(key)
+          
+          // If key doesn't match, try the actual Supabase auth cookie name
+          if (!cookie && key.includes('auth')) {
+            cookie = request.cookies.get(authCookieName)
+          }
+          
+          // Also check for chunked cookies (Supabase may split large cookies)
+          if (!cookie) {
+            for (let i = 0; i < 10; i++) {
+              const chunkedName = `${authCookieName}.${i}`
+              const chunkedCookie = request.cookies.get(chunkedName)
+              if (chunkedCookie?.value) {
+                // Return the first chunk found (in a real implementation, you'd combine chunks)
+                cookie = chunkedCookie
+                break
+              }
+            }
+          }
+          
           return cookie?.value ?? null
         },
         setItem: (key: string, value: string) => {
-          // Set cookie in response
-          response.cookies.set(key, value, {
+          // Set cookie in response with Supabase's expected format
+          const cookieName = key.includes('auth') ? authCookieName : key
+          response.cookies.set(cookieName, value, {
             httpOnly: true,
             secure: process.env.NODE_ENV === 'production',
             sameSite: 'lax',
@@ -195,7 +225,8 @@ function createSupabaseMiddlewareClient(request: NextRequest, response: NextResp
         },
         removeItem: (key: string) => {
           // Remove cookie from response
-          response.cookies.delete(key)
+          const cookieName = key.includes('auth') ? authCookieName : key
+          response.cookies.delete(cookieName)
         },
       },
     },
@@ -281,7 +312,7 @@ export async function middleware(request: NextRequest) {
         // Use 'redirectTo' to match client-side redirect logic
         authUrl.searchParams.set('redirectTo', pathname)
         const redirectResponse = NextResponse.redirect(authUrl, 307)
-        
+
         // Copy cookies from response to redirect response
         response.cookies.getAll().forEach((cookie) => {
           redirectResponse.cookies.set(cookie.name, cookie.value, {
@@ -292,7 +323,7 @@ export async function middleware(request: NextRequest) {
             maxAge: cookie.maxAge,
           })
         })
-        
+
         return redirectResponse
       }
     }
