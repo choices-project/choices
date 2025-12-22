@@ -34,6 +34,9 @@ export default function DashboardJourneyHarnessPage() {
   const updateSettingsRef = useRef(updateSettings);
   useEffect(() => { updateSettingsRef.current = updateSettings; }, [updateSettings]);
 
+  // Guard to prevent re-initialization (fixes React Error #185)
+  const initializedRef = useRef(false);
+
   useEffect(() => {
     if (typeof window === 'undefined') {
       return;
@@ -49,6 +52,11 @@ export default function DashboardJourneyHarnessPage() {
   }, []); // Empty deps - harness setup runs once
 
   useEffect(() => {
+    // Guard: only initialize once to prevent infinite re-renders
+    if (initializedRef.current) {
+      return;
+    }
+    initializedRef.current = true;
     const userId = 'dashboard-harness-user';
     const profileId = 'dashboard-harness-profile';
     const nowIso = new Date().toISOString();
@@ -144,9 +152,14 @@ export default function DashboardJourneyHarnessPage() {
       document.documentElement.dataset.dashboardJourneyHarness = 'ready';
     }
 
-    setReady(true);
+    // Use setTimeout to defer state update and prevent render during state setup
+    // This prevents triggering re-renders while stores are being updated
+    setTimeout(() => {
+      setReady(true);
+    }, 0);
 
     return () => {
+      initializedRef.current = false; // Reset guard on unmount
       if (typeof document !== 'undefined') {
         delete document.documentElement.dataset.dashboardJourneyHarness;
       }

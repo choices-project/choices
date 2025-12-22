@@ -62,13 +62,37 @@ test.describe('Dashboard Journey', () => {
 
     try {
       // Navigate to the dashboard journey harness and wait for stores to hydrate
+      const harnessStartTime = Date.now();
       await page.goto('/e2e/dashboard-journey');
       await waitForPageReady(page);
+      
+      // Diagnostic: Check harness initialization
+      const harnessInitTime = Date.now() - harnessStartTime;
+      console.log('[dashboard-journey] Page load time:', harnessInitTime, 'ms');
+      
       await page.waitForFunction(
         () => document.documentElement.dataset.dashboardJourneyHarness === 'ready',
         { timeout: 60_000 },
       );
+      const harnessReadyTime = Date.now() - harnessStartTime;
+      console.log('[dashboard-journey] Harness ready time:', harnessReadyTime, 'ms');
+      
+      // Diagnostic: Check harness state
+      const harnessState = await page.evaluate(() => {
+        const w = window as HarnessWindow;
+        return {
+          hasNotificationHarness: !!w.__notificationHarnessRef,
+          hasUserStoreHarness: !!w.__userStoreHarness,
+          harnessReady: document.documentElement.dataset.dashboardJourneyHarness === 'ready',
+        };
+      });
+      console.log('[dashboard-journey] Harness state:', harnessState);
+      
+      const dashboardVisibleTime = Date.now();
       await expect(page.getByTestId('personal-dashboard')).toBeVisible();
+      const dashboardVisibleDuration = Date.now() - dashboardVisibleTime;
+      console.log('[dashboard-journey] Dashboard visible after:', dashboardVisibleDuration, 'ms');
+      
       await expect(page.getByTestId('dashboard-title')).toContainText('Welcome back');
       await expect(page.getByTestId('personal-analytics')).toBeVisible();
       await expect(page.getByTestId('dashboard-settings')).toBeVisible();

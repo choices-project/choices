@@ -29,6 +29,7 @@ import {
 } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { useShallow } from 'zustand/react/shallow';
 
 import { ElectionCountdownCard } from '@/features/civics/components/countdown/ElectionCountdownCard';
 import { RepresentativeCard } from '@/features/civics/components/representative/RepresentativeCard';
@@ -514,9 +515,14 @@ function StandardPersonalDashboard({ userId: fallbackUserId, className = '' }: P
   const isAuthenticated = useIsAuthenticated();
   const isUserLoading = useUserLoading();
 
-  const displayName = useProfileStore((state) => state.getDisplayName());
-  const profilePreferences = useProfileStore((state) => state.preferences);
-  const updatePreferences = useProfileStore((state) => state.updatePreferences);
+  // Optimize store subscriptions with useShallow
+  const { displayName, profilePreferences, updatePreferences } = useProfileStore(
+    useShallow((state) => ({
+      displayName: state.getDisplayName(),
+      profilePreferences: state.preferences,
+      updatePreferences: state.updatePreferences,
+    })),
+  );
   
   // Use ref for stable updatePreferences callback
   const updatePreferencesRef = useRef(updatePreferences);
@@ -532,7 +538,8 @@ function StandardPersonalDashboard({ userId: fallbackUserId, className = '' }: P
   const userBehavior = useAnalyticsBehavior();
   const analyticsError = useAnalyticsError();
   const analyticsLoading = useAnalyticsLoading();
-  const { signOut: resetUserState } = useUserActions();
+  // REMOVED: resetUserState - no longer needed since we removed auth redirect logic
+  // Dashboard page wrapper handles all auth checks and redirects
   const [isMounted, setIsMounted] = useState(false);
   useEffect(() => {
     setIsMounted(true);
@@ -572,8 +579,10 @@ function StandardPersonalDashboard({ userId: fallbackUserId, className = '' }: P
   const effectiveIsAuthenticated = isAuthenticated || fallbackAuthenticated;
 
   const trendingHashtags = useTrendingHashtags();
-  const hashtagLoading = useHashtagLoading().isLoading;
-  const hashtagError = useHashtagError().error;
+  const hashtagLoadingState = useHashtagLoading();
+  const hashtagLoading = hashtagLoadingState.isLoading;
+  const hashtagErrorState = useHashtagError();
+  const hashtagError = hashtagErrorState.error;
   const { getTrendingHashtags } = useHashtagActions();
 
   const [selectedTab, setSelectedTab] = useState('overview');
@@ -581,10 +590,11 @@ function StandardPersonalDashboard({ userId: fallbackUserId, className = '' }: P
   const hasRequestedTrending = useRef(false);
   const hasRequestedRepresentatives = useRef(false);
 
+  // Optimize representative store subscriptions
   const representativeEntries = useUserRepresentativeEntries();
   const representativeLoading = useRepresentativeGlobalLoading();
   const representativeError = useRepresentativeError();
-  const getUserRepresentatives = useGetUserRepresentatives();
+  const getUserRepresentatives = useGetUserRepresentatives(); // This is a hook, not a selector
 
   const resolvedDashboardPreferences = useMemo(() => {
     const stored = profilePreferences?.dashboard;
@@ -633,20 +643,11 @@ function StandardPersonalDashboard({ userId: fallbackUserId, className = '' }: P
     void getUserRepresentativesRef.current();
   }, [effectiveIsAuthenticated, isUserLoading]); // Removed getUserRepresentatives
 
-  // Refs for stable callbacks in auth redirect effect
-  const resetUserStateRef = useRef(resetUserState);
-  useEffect(() => { resetUserStateRef.current = resetUserState; }, [resetUserState]);
-
-  useEffect(() => {
-    // In E2E harness mode or when bypassing auth, skip redirect
-    if (shouldBypassAuth || process.env.NEXT_PUBLIC_ENABLE_E2E_HARNESS === '1') {
-      return;
-    }
-    if (!isUserLoading && !isAuthenticated) {
-      resetUserStateRef.current();
-      routerRef.current.replace('/auth?redirectTo=/dashboard');
-    }
-  }, [isAuthenticated, isUserLoading, shouldBypassAuth]); // Removed resetUserState, router
+  // REMOVED: Auth redirect logic from PersonalDashboard component
+  // Dashboard page wrapper handles all auth checks and redirects
+  // PersonalDashboard should just render content (like feed/polls components)
+  // Trust middleware and page wrapper have already validated authentication
+  // This matches the pattern used by feed and polls pages which work correctly
 
   useEffect(() => {
     if (!effectiveIsAuthenticated) {
@@ -869,10 +870,11 @@ function StandardPersonalDashboard({ userId: fallbackUserId, className = '' }: P
       profileError ??
       pollsError ??
       analyticsError ??
+      hashtagError ??
       representativeError ??
       (hasAnyError ? tRef.current('dashboard.personal.errors.generic') : null)
     );
-  }, [profileError, pollsError, analyticsError, representativeError, hasAnyError]);
+  }, [profileError, pollsError, analyticsError, hashtagError, representativeError, hasAnyError]);
 
   const quickActions = useMemo(
     () => [
@@ -972,23 +974,12 @@ function StandardPersonalDashboard({ userId: fallbackUserId, className = '' }: P
     },
   });
 
-  if (!isAuthenticated && !isUserLoading) {
-    return (
-      <div className={`space-y-6 ${className}`}>
-        <Card>
-          <CardContent className='space-y-4 p-6 text-center'>
-            <h3 className='text-xl font-semibold text-gray-900'>
-              {t('dashboard.personal.signIn.title')}
-            </h3>
-            <p className='text-gray-600'>{t('dashboard.personal.signIn.description')}</p>
-            <Button variant='default' onClick={() => routerRef.current.push('/auth')}>
-              {t('dashboard.personal.signIn.button')}
-            </Button>
-          </CardContent>
-        </Card>
-      </div>
-    );
-  }
+  // REMOVED: Auth check that blocked rendering
+  // Dashboard page wrapper handles all auth checks and redirects
+  // PersonalDashboard should just render content (like feed/polls components)
+  // Trust middleware and page wrapper have already validated authentication
+  // If we're rendering this component, user is authenticated (page wrapper checked)
+  // This matches the pattern used by feed and polls pages which work correctly
 
   if (isLoading) {
     return (

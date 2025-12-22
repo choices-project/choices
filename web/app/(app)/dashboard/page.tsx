@@ -15,8 +15,142 @@ import { useIsAuthenticated, useUserLoading, useUserStore } from '@/lib/stores';
 import { useAppActions } from '@/lib/stores/appStore';
 import { logger } from '@/lib/utils/logger';
 
+import { useAuth } from '@/hooks/useAuth';
+
 // Prevent static generation since this requires client-side state
 export const dynamic = 'force-dynamic';
+
+/**
+ * Check if session cookies exist (matches middleware logic)
+ * Polls for cookies with retry logic to handle timing issues
+ *
+ * This function implements the same cookie detection logic as the middleware
+ * to ensure consistency between server-side and client-side auth checks.
+ */
+async function checkSessionCookies(
+  maxAttempts: number = 15,
+  intervalMs: number = 200
+): Promise<boolean> {
+  if (typeof window === 'undefined') {
+    return false;
+  }
+
+  for (let attempt = 0; attempt < maxAttempts; attempt++) {
+    const cookieString = document.cookie;
+
+    // Method 1: Check for custom access token cookie (if we set one)
+    const accessTokenMatch = cookieString.match(/sb-access-token=([^;]+)/);
+    if (accessTokenMatch && accessTokenMatch[1]) {
+      const trimmedValue = accessTokenMatch[1].trim();
+      if (trimmedValue.length > 10 &&
+          trimmedValue !== 'null' &&
+          trimmedValue !== 'undefined' &&
+          trimmedValue !== '{}' &&
+          trimmedValue !== '""' &&
+          trimmedValue !== "''") {
+        if (process.env.DEBUG_DASHBOARD === '1') {
+          logger.debug('🚨 Dashboard: Found sb-access-token cookie', { attempt: attempt + 1 });
+        }
+        return true;
+      }
+    }
+
+    // Method 2: Check for Supabase project-specific auth token cookie
+    // Extract project ref from NEXT_PUBLIC_SUPABASE_URL if available
+    const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+    if (supabaseUrl) {
+      try {
+        const urlMatch = supabaseUrl.match(/https?:\/\/([^.]+)\.supabase\.(co|io)/);
+        if (urlMatch && urlMatch[1]) {
+          const projectRef = urlMatch[1];
+          const expectedCookieName = `sb-${projectRef}-auth-token`;
+          const cookieMatch = cookieString.match(new RegExp(`${expectedCookieName.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}=([^;]+)`));
+
+          if (cookieMatch && cookieMatch[1]) {
+            const trimmedValue = cookieMatch[1].trim();
+            if (trimmedValue.length > 10 &&
+                trimmedValue !== 'null' &&
+                trimmedValue !== 'undefined' &&
+                trimmedValue !== '{}' &&
+                trimmedValue !== '""' &&
+                trimmedValue !== "''") {
+              if (process.env.DEBUG_DASHBOARD === '1') {
+                logger.debug('🚨 Dashboard: Found expected auth cookie', { cookieName: expectedCookieName, attempt: attempt + 1 });
+              }
+              return true;
+            }
+          }
+
+          // Also check for chunked cookies (.0, .1, etc.)
+          for (let i = 0; i < 10; i++) {
+            const chunkCookieName = `${expectedCookieName}.${i}`;
+            const chunkMatch = cookieString.match(new RegExp(`${chunkCookieName.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}=([^;]+)`));
+            if (chunkMatch && chunkMatch[1]) {
+              const trimmedValue = chunkMatch[1].trim();
+              if (trimmedValue.length >= 5 && // Lower threshold for chunked cookies
+                  trimmedValue !== 'null' &&
+                  trimmedValue !== 'undefined' &&
+                  trimmedValue !== '{}' &&
+                  trimmedValue !== '""' &&
+                  trimmedValue !== "''") {
+                if (process.env.DEBUG_DASHBOARD === '1') {
+                  logger.debug('🚨 Dashboard: Found chunked auth cookie', { cookieName: chunkCookieName, attempt: attempt + 1 });
+                }
+                return true;
+              }
+            }
+          }
+        }
+      } catch (error) {
+        // If URL parsing fails, continue to check other patterns
+        if (process.env.DEBUG_DASHBOARD === '1') {
+          logger.debug('🚨 Dashboard: Error extracting project ref', error);
+        }
+      }
+    }
+
+    // Method 3: Check ALL cookies for any starting with 'sb-' and containing 'auth' or 'session'
+    // This is a comprehensive fallback (matches middleware Method 3)
+    const cookies = cookieString.split(';').map(c => c.trim());
+    for (const cookie of cookies) {
+      if (!cookie) continue;
+      const [name, value] = cookie.split('=');
+      if (!name || !value) continue;
+
+      const nameLower = name.toLowerCase();
+      // Check for Supabase auth-related cookies
+      if (nameLower.startsWith('sb-') && (nameLower.includes('auth') || nameLower.includes('session') || nameLower.includes('access'))) {
+        const trimmedValue = value.trim();
+        // Check for substantial value (auth tokens are typically longer than 10 chars)
+        // Lower threshold for chunked cookies
+        const isChunked = nameLower.includes('.') && /\.\d+$/.test(nameLower);
+        const minLength = isChunked ? 5 : 10;
+
+        if (trimmedValue.length >= minLength &&
+            trimmedValue !== 'null' &&
+            trimmedValue !== 'undefined' &&
+            trimmedValue !== '{}' &&
+            trimmedValue !== '""' &&
+            trimmedValue !== "''") {
+          if (process.env.DEBUG_DASHBOARD === '1') {
+            logger.debug('🚨 Dashboard: Found auth cookie in parsed cookies', { cookieName: name, attempt: attempt + 1 });
+          }
+          return true;
+        }
+      }
+    }
+
+    // Wait before next attempt (except on last attempt)
+    if (attempt < maxAttempts - 1) {
+      await new Promise(resolve => setTimeout(resolve, intervalMs));
+    }
+  }
+
+  if (process.env.DEBUG_DASHBOARD === '1') {
+    logger.debug('🚨 Dashboard: No session cookies found after polling', { attempts: maxAttempts });
+  }
+  return false;
+}
 
 export default function DashboardPage() {
   const router = useRouter();
@@ -25,6 +159,7 @@ export default function DashboardPage() {
   const { profile, isLoading } = useProfile();
   const isAuthenticated = useIsAuthenticated();
   const isUserLoading = useUserLoading();
+  const { isLoading: isAuthContextLoading } = useAuth(); // AuthContext loading state
   const { setCurrentRoute, setBreadcrumbs, setSidebarActiveSection } = useAppActions();
 
   // Refs for stable app store actions
@@ -61,6 +196,9 @@ export default function DashboardPage() {
   const adminCheckRef = useRef<boolean>(false);
   const [isAdmin, setIsAdmin] = useState<boolean | null>(null);
   const authRetryTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const [hasCookies, setHasCookies] = useState<boolean | null>(null); // null = checking, true = has cookies, false = no cookies
+  const cookieCheckRef = useRef<Promise<boolean> | null>(null);
+  const [isStoreHydrated, setIsStoreHydrated] = useState<boolean>(false); // Track if Zustand persist has hydrated
 
   useEffect(() => {
     setCurrentRouteRef.current('/dashboard');
@@ -76,6 +214,96 @@ export default function DashboardPage() {
     };
   }, []);
 
+  // Check if Zustand persist store has hydrated (Target 2.2)
+  useEffect(() => {
+    if (shouldBypassAuth) {
+      setIsStoreHydrated(true); // In bypass mode, assume hydrated
+      return () => {
+        // Cleanup function - no cleanup needed
+      };
+    }
+
+    const persist = (useUserStore as typeof useUserStore & {
+      persist?: {
+        hasHydrated?: () => boolean;
+        onFinishHydration?: (callback: () => void) => (() => void) | void;
+      };
+    }).persist;
+
+    if (persist?.hasHydrated?.()) {
+      setIsStoreHydrated(true);
+      if (process.env.DEBUG_DASHBOARD === '1') {
+        logger.debug('🚨 Dashboard: Store already hydrated');
+      }
+      return () => {
+        // Cleanup function - no cleanup needed
+      };
+    } else if (persist?.onFinishHydration) {
+      const unsubscribeHydration = persist.onFinishHydration(() => {
+        setIsStoreHydrated(true);
+        if (process.env.DEBUG_DASHBOARD === '1') {
+          logger.debug('🚨 Dashboard: Store hydration complete');
+        }
+      });
+
+      // Timeout fallback: assume hydrated after 2 seconds even if callback hasn't fired
+      const timeout = setTimeout(() => {
+        setIsStoreHydrated(true);
+        if (process.env.DEBUG_DASHBOARD === '1') {
+          logger.debug('🚨 Dashboard: Store hydration timeout - assuming hydrated');
+        }
+      }, 2_000);
+
+      return () => {
+        if (typeof unsubscribeHydration === 'function') {
+          unsubscribeHydration();
+        }
+        clearTimeout(timeout);
+      };
+    } else {
+      // No persist hydration API available - assume hydrated immediately
+      setIsStoreHydrated(true);
+      if (process.env.DEBUG_DASHBOARD === '1') {
+        logger.debug('🚨 Dashboard: No persist hydration API - assuming hydrated');
+      }
+      return () => {
+        // Cleanup function - no cleanup needed
+      };
+    }
+  }, [shouldBypassAuth]);
+
+  // Poll for cookies asynchronously - cookies may not be immediately available
+  useEffect(() => {
+    if (shouldBypassAuth || typeof window === 'undefined') {
+      setHasCookies(true); // Bypass = assume cookies exist
+      return;
+    }
+
+    // Only check once per mount (use ref to prevent duplicate checks)
+    if (cookieCheckRef.current) {
+      return;
+    }
+
+    setHasCookies(null); // Mark as checking
+    cookieCheckRef.current = checkSessionCookies(15, 200); // 15 attempts × 200ms = 3 seconds max
+
+    cookieCheckRef.current.then((found) => {
+      setHasCookies(found);
+      cookieCheckRef.current = null;
+      if (process.env.DEBUG_DASHBOARD === '1') {
+        logger.debug('🚨 Dashboard: Cookie check complete', { hasCookies: found });
+      }
+    }).catch((error) => {
+      logger.error('🚨 Dashboard: Cookie check failed', error);
+      setHasCookies(false);
+      cookieCheckRef.current = null;
+    });
+
+    return () => {
+      cookieCheckRef.current = null;
+    };
+  }, [shouldBypassAuth]);
+
   useEffect(() => {
     // In E2E harness mode or when bypassing auth, skip all redirect checks (authentication is mocked)
     if (shouldBypassAuth) {
@@ -83,11 +311,26 @@ export default function DashboardPage() {
         // Cleanup function - no cleanup needed for bypass case
       };
     }
-    // Wait for user loading to complete before checking authentication
+    // Wait for user loading, AuthContext loading, AND store hydration to complete before checking authentication
     // This prevents redirecting while auth state is still being initialized
-    if (isUserLoading) {
+    // AuthContext initializes the user store, so all three must complete
+    if (isUserLoading || isAuthContextLoading || !isStoreHydrated) {
+      if (process.env.DEBUG_DASHBOARD === '1' && (!isStoreHydrated || isUserLoading || isAuthContextLoading)) {
+        logger.debug('🚨 Dashboard: Waiting for initialization', {
+          isUserLoading,
+          isAuthContextLoading,
+          isStoreHydrated,
+        });
+      }
       return () => {
         // Cleanup function - no cleanup needed for loading case
+      };
+    }
+    // Wait for cookie check to complete before making redirect decisions
+    // hasCookies === null means we're still checking
+    if (hasCookies === null) {
+      return () => {
+        // Cleanup function - no cleanup needed while checking
       };
     }
     // First check if user is authenticated - if not, check session cookie and wait for hydration
@@ -98,46 +341,45 @@ export default function DashboardPage() {
         authRetryTimeoutRef.current = null;
       }
 
-      // Additional check: verify session cookie exists as fallback
-      // If middleware allowed the request through, cookies exist and user IS authenticated
-      // Trust the cookies and allow rendering while auth state hydrates
-      const hasSessionCookie = typeof document !== 'undefined' &&
-        (document.cookie.includes('sb-') ||
-         document.cookie.includes('auth-token'));
-
-      if (!hasSessionCookie) {
-        // No cookies at all - definitely not authenticated, redirect immediately
-        logger.debug('🚨 Dashboard: No session cookie - redirecting to auth');
+      // Check cookie availability (from async polling)
+      if (!hasCookies) {
+        // No cookies found after polling - definitely not authenticated, redirect
+        if (process.env.DEBUG_DASHBOARD === '1') {
+          logger.debug('🚨 Dashboard: No session cookies found after polling - redirecting to auth');
+        }
         routerRef.current.replace('/auth');
         return () => {
           // Cleanup function - no cleanup needed for immediate redirect
         };
       }
 
-      // Cookie exists - middleware already validated authentication, so trust it
+      // Cookies exist - middleware already validated authentication, so trust it
       // Allow page to render while auth state hydrates (can take 3-5 seconds in production)
       // Only redirect if cookies disappear or auth state fails to hydrate after extended wait
-      logger.debug('🚨 Dashboard: Session cookie exists - trusting middleware, allowing render while auth hydrates');
+      if (process.env.DEBUG_DASHBOARD === '1') {
+        logger.debug('🚨 Dashboard: Session cookies exist - trusting middleware, allowing render while auth hydrates');
+      }
       authRetryTimeoutRef.current = setTimeout(() => {
         // After extended wait, check if cookies still exist and auth state has hydrated
-        const stillHasCookie = typeof document !== 'undefined' &&
-          (document.cookie.includes('sb-') ||
-           document.cookie.includes('auth-token'));
-        // Access store directly to check auth state without causing re-render
-        const currentAuthState = useUserStore.getState().isAuthenticated;
+        checkSessionCookies(3, 200).then((stillHasCookie) => {
+          // Access store directly to check auth state without causing re-render
+          const currentAuthState = useUserStore.getState().isAuthenticated;
 
-        if (!stillHasCookie) {
-          // Cookies disappeared - definitely not authenticated
-          logger.debug('🚨 Dashboard: Session cookie disappeared after wait - redirecting to auth');
-          routerRef.current.replace('/auth');
-        } else if (!currentAuthState) {
-          // Cookies still exist but auth state hasn't hydrated after extended wait
-          // This is unusual but could happen if there's a store hydration issue
-          // Log a warning but DON'T redirect - cookies are authoritative, allow render
-          logger.warn('🚨 Dashboard: Session cookie exists but auth state not hydrated after extended wait - allowing render anyway (cookies are authoritative)');
-        }
-        // If currentAuthState is true, no action needed - auth has successfully hydrated
-        authRetryTimeoutRef.current = null;
+          if (!stillHasCookie) {
+            // Cookies disappeared - definitely not authenticated
+            if (process.env.DEBUG_DASHBOARD === '1') {
+              logger.debug('🚨 Dashboard: Session cookies disappeared after wait - redirecting to auth');
+            }
+            routerRef.current.replace('/auth');
+          } else if (!currentAuthState) {
+            // Cookies still exist but auth state hasn't hydrated after extended wait
+            // This is unusual but could happen if there's a store hydration issue
+            // Log a warning but DON'T redirect - cookies are authoritative, allow render
+            logger.warn('🚨 Dashboard: Session cookies exist but auth state not hydrated after extended wait - allowing render anyway (cookies are authoritative)');
+          }
+          // If currentAuthState is true, no action needed - auth has successfully hydrated
+          authRetryTimeoutRef.current = null;
+        });
       }, 5000); // Wait 5 seconds for hydration (production can be slower)
 
       return () => {
@@ -151,6 +393,10 @@ export default function DashboardPage() {
       if (authRetryTimeoutRef.current) {
         clearTimeout(authRetryTimeoutRef.current);
         authRetryTimeoutRef.current = null;
+      }
+      // Update cookie state if authenticated (cookies should exist)
+      if (hasCookies === false) {
+        setHasCookies(true);
       }
     }
     // If authenticated but no profile, check if user is admin first
@@ -215,7 +461,7 @@ export default function DashboardPage() {
     return () => {
       // Cleanup function - no cleanup needed for other cases
     };
-  }, [isLoading, isUserLoading, isAuthenticated, profile, shouldBypassAuth, isCheckingAdmin]); // Added isCheckingAdmin to dependencies
+  }, [isLoading, isUserLoading, isAuthContextLoading, isAuthenticated, profile, shouldBypassAuth, isCheckingAdmin, hasCookies, isStoreHydrated]); // Added isAuthContextLoading, hasCookies, and isStoreHydrated to dependencies
 
   // Check if user is admin when profile is loaded
   useEffect(() => {
@@ -264,7 +510,8 @@ export default function DashboardPage() {
   // Show loading skeleton only if actively loading and not timed out
   // In E2E harness mode or after timeout, allow dashboard to render (it handles missing profile gracefully)
   // Also bypass loading check if user is authenticated (profile can load in background)
-  if (isLoading && !loadingTimeout && !shouldBypassAuth && !isAuthenticated) {
+  // Wait for AuthContext to finish initializing before showing loading skeleton
+  if (isLoading && !loadingTimeout && !shouldBypassAuth && !isAuthenticated && !isAuthContextLoading) {
     return (
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8" aria-label="Loading dashboard">
         <div className="space-y-6">
@@ -293,15 +540,25 @@ export default function DashboardPage() {
   // Allow page to render even if profile is still loading or missing
   // The PersonalDashboard component can handle missing profile gracefully
   // In E2E harness mode, always allow rendering (authentication is mocked)
-  const hasSessionCookie = typeof window !== 'undefined' &&
-    (document.cookie.includes('sb-') || document.cookie.includes('auth-token'));
-  
+
+  // Use async cookie check result (hasCookies) instead of synchronous document.cookie read
+  // hasCookies === null means still checking, so allow render while checking
+  // hasCookies === true means cookies exist, allow render
+  // hasCookies === false means no cookies, block render if not authenticated
+
   // Only show access denied if:
   // 1. Not bypassing auth
-  // 2. Not loading
-  // 3. Not authenticated in store
-  // 4. AND no session cookies exist (definitely not authenticated)
-  if (!shouldBypassAuth && !isUserLoading && !isAuthenticated && !hasSessionCookie) {
+  // 2. Not loading (user store, AuthContext, or store hydration)
+  // 3. Cookie check completed (hasCookies !== null)
+  // 4. Not authenticated in store
+  // 5. AND no session cookies exist (definitely not authenticated)
+  //
+  // Note: We trust middleware has already validated cookies, so we only block if:
+  // - All loading is complete AND
+  // - No cookies found after polling AND
+  // - Store confirms not authenticated
+  // This matches the pattern used by feed/polls pages - trust middleware, simple checks
+  if (!shouldBypassAuth && !isUserLoading && !isAuthContextLoading && isStoreHydrated && hasCookies === false && !isAuthenticated) {
     return (
       <div className="flex items-center justify-center min-h-screen px-4">
         <div className="text-center space-y-4 max-w-md">
@@ -309,7 +566,11 @@ export default function DashboardPage() {
           <p className="text-gray-600 dark:text-gray-400">
             You must be logged in to access the dashboard.
           </p>
-          <p className="text-sm text-gray-500 dark:text-gray-500">Redirecting to login…</p>
+          <p className="text-sm text-gray-500 dark:text-gray-500">
+            {hasCookies === false && !isAuthenticated
+              ? 'Please log in to continue.'
+              : 'Redirecting to login…'}
+          </p>
         </div>
       </div>
     );
