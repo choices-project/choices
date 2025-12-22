@@ -188,7 +188,7 @@ export async function middleware(request: NextRequest) {
   // Handle root path redirect based on authentication status
   if (pathname === '/') {
     // Use Supabase authentication check (Edge Runtime compatible)
-    const { isAuthenticated } = await checkAuthInMiddleware(request)
+    const { isAuthenticated } = checkAuthInMiddleware(request)
 
     // Redirect based on authentication status
     const redirectPath = isAuthenticated ? '/feed' : '/landing'
@@ -214,7 +214,7 @@ export async function middleware(request: NextRequest) {
 
     if (!isE2EHarness) {
       // Use Supabase authentication check (Edge Runtime compatible)
-      const { isAuthenticated } = await checkAuthInMiddleware(request)
+      const { isAuthenticated } = checkAuthInMiddleware(request)
 
       if (!isAuthenticated) {
         // Redirect unauthenticated users to auth page
@@ -230,7 +230,7 @@ export async function middleware(request: NextRequest) {
   // Redirect authenticated users away from auth pages (except during login flow)
   if (isAuthRoute && pathname !== '/auth') {
     // Use Supabase authentication check (Edge Runtime compatible)
-    const { isAuthenticated } = await checkAuthInMiddleware(request)
+    const { isAuthenticated } = checkAuthInMiddleware(request)
 
     if (isAuthenticated) {
       // Authenticated users trying to access login/register should go to feed
