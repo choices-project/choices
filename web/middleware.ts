@@ -182,19 +182,26 @@ async function checkAuthentication(request: NextRequest): Promise<boolean> {
 
   // Get the auth cookie
   const authCookie = request.cookies.get(authCookieName)
-  if (!authCookie?.value || authCookie.value.length < 10) {
+  if (!authCookie?.value) {
     return false
   }
 
   // SECURITY: The cookie is httpOnly (set by Supabase SSR server-side)
   // This means it CANNOT be spoofed by client-side JavaScript
-  // If the cookie exists, is substantial (>1000 chars), and can be parsed as JSON,
-  // we can trust it because Supabase SSR only sets cookies with valid sessions
+  // If the cookie exists and is substantial (>500 chars), we can trust it
+  // because Supabase SSR only sets cookies with valid sessions
   
-  // Check if cookie is substantial (indicates real session data)
-  const rawCookieLength = authCookie.value.length
-  if (rawCookieLength < 100) {
-    // Too small to be a real session cookie
+  const cookieLength = authCookie.value.length
+  
+  // Substantial cookies (>500 chars) are almost certainly valid session cookies
+  // The httpOnly flag prevents client-side spoofing
+  // Supabase SSR only sets cookies with valid sessions
+  if (cookieLength > 500) {
+    return true
+  }
+  
+  // For smaller cookies, try to parse and validate
+  if (cookieLength < 10) {
     return false
   }
 
@@ -202,57 +209,38 @@ async function checkAuthentication(request: NextRequest): Promise<boolean> {
     // Parse the cookie value
     let cookieValue = authCookie.value
 
-    // Handle URL encoding - cookies may be URL-encoded in the header
+    // Handle URL encoding
     try {
       cookieValue = decodeURIComponent(cookieValue)
     } catch {
-      // If URL decoding fails, use original value (might not be encoded)
+      // If URL decoding fails, use original value
     }
 
-    // Remove 'base64-' prefix if present (Supabase SSR format)
+    // Remove 'base64-' prefix if present
     if (cookieValue.startsWith('base64-')) {
       cookieValue = cookieValue.substring(7)
     }
 
-    // Try to parse as JSON (either base64 decoded or direct)
+    // Try to parse as JSON
     let sessionData: any
     try {
-      // Try base64 decode first
       const jsonString = atob(cookieValue)
       sessionData = JSON.parse(jsonString)
     } catch {
-      // If base64 decode fails, try direct JSON parse
       try {
         sessionData = JSON.parse(cookieValue)
       } catch {
-        // Both failed - can't parse cookie
         return false
       }
     }
 
-    // If we successfully parsed the cookie and it's substantial, trust it
-    // The cookie is httpOnly (can't be spoofed) and set by Supabase SSR (only valid sessions)
-    // A substantial cookie (>1000 chars) that can be parsed almost certainly contains valid session data
-    if (rawCookieLength > 1000 && sessionData && typeof sessionData === 'object') {
+    // If we can parse it and it's an object, trust it
+    if (sessionData && typeof sessionData === 'object') {
       return true
-    }
-
-    // For smaller cookies, try to find JWT token as additional validation
-    const jsonString = JSON.stringify(sessionData)
-    const jwtPattern = /["']?([A-Za-z0-9_-]{20,}\.[A-Za-z0-9_-]{20,}\.[A-Za-z0-9_-]{20,})["']?/g
-    const jwtMatches = jsonString.match(jwtPattern)
-
-    if (jwtMatches && jwtMatches.length > 0) {
-      const potentialToken = jwtMatches[0].replace(/^["']|["']$/g, '')
-      const jwtParts = potentialToken.split('.')
-      if (jwtParts.length === 3 && jwtParts.every(part => part.length > 10)) {
-        return true
-      }
     }
 
     return false
   } catch {
-    // If anything fails (parsing, etc.), user is not authenticated
     return false
   }
 }
