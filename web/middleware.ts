@@ -183,6 +183,7 @@ async function checkAuthentication(request: NextRequest): Promise<boolean> {
     let authCookie: { name: string; value: string } | undefined
 
     // First, try to find cookie by exact name (if we can extract project ref)
+    // Supabase URL format: https://{project-ref}.supabase.co or https://{project-ref}.supabase.io
     const projectRefMatch = supabaseUrl.match(/https?:\/\/([^.]+)\.supabase\.(co|io)/)
     if (projectRefMatch?.[1]) {
       const projectRef = projectRefMatch[1]
@@ -194,9 +195,11 @@ async function checkAuthentication(request: NextRequest): Promise<boolean> {
     }
 
     // Fallback: search all cookies for pattern
+    // This handles cases where project ref extraction fails or cookie name varies
     if (!authCookie) {
       for (const cookie of allCookies) {
         // Check for Supabase auth cookie pattern
+        // Pattern: sb-*-auth-token (where * is the project ref)
         if (cookie.name && cookie.name.startsWith('sb-') && cookie.name.includes('auth-token')) {
           // Make sure cookie has a value
           if (cookie.value && cookie.value.length > 0) {
@@ -206,10 +209,32 @@ async function checkAuthentication(request: NextRequest): Promise<boolean> {
         }
       }
     }
+    
+    // Additional fallback: check Cookie header directly
+    // Sometimes request.cookies might not include all cookies in Edge Runtime
+    if (!authCookie) {
+      const cookieHeader = request.headers.get('cookie')
+      if (cookieHeader) {
+        // Parse cookie header manually
+        const cookies = cookieHeader.split(';').map(c => c.trim())
+        for (const cookieStr of cookies) {
+          const [name, ...valueParts] = cookieStr.split('=')
+          const value = valueParts.join('=') // Handle values that contain '='
+          if (name && name.startsWith('sb-') && name.includes('auth-token') && value && value.length > 0) {
+            authCookie = { name: name.trim(), value: value.trim() }
+            break
+          }
+        }
+      }
+    }
 
     if (!authCookie || !authCookie.value || authCookie.value.length === 0) {
+      // No cookie found - return false
       return false
     }
+
+    // Debug: Log cookie found (only in development to avoid exposing in production)
+    // In production, we rely on the cookie length check below
 
     // SECURITY: The cookie is httpOnly (set by Supabase SSR server-side)
     // This means it CANNOT be spoofed by client-side JavaScript
