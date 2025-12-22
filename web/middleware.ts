@@ -12,6 +12,7 @@ import {
   resolveLocale
 } from '@/lib/i18n/config'
 import logger from '@/lib/utils/logger'
+import { checkAuthInMiddleware } from '@/utils/supabase/middleware'
 
 
 /**
@@ -155,125 +156,9 @@ function validateRequest(request: NextRequest): { valid: boolean; reason?: strin
   return { valid: true }
 }
 
-/**
- * Check if user is authenticated by verifying Supabase access token
- *
- * Supabase SSR stores the session in a cookie as base64-encoded JSON containing:
- * - access_token: JWT token that must be verified with Supabase Auth API
- * - user: User object (not trusted alone - token must be verified)
- *
- * Security: We MUST verify the access_token with Supabase's Auth API.
- * Simply checking for a user object in the cookie is insecure and can be spoofed.
- *
- * This approach works in Edge Runtime using only fetch and atob (no @supabase/ssr).
- */
-async function checkAuthentication(request: NextRequest): Promise<boolean> {
-  try {
-    const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
-    const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
-
-    if (!supabaseUrl || !supabaseAnonKey) {
-      return false
-    }
-
-    // Search all cookies for Supabase auth token
-    // Supabase SSR sets cookies with pattern: sb-{project-ref}-auth-token
-    // We search all cookies to handle any project ref
-    const allCookies = request.cookies.getAll()
-    let authCookie: { name: string; value: string } | undefined
-
-    // First, try to find cookie by exact name (if we can extract project ref)
-    // Supabase URL format: https://{project-ref}.supabase.co or https://{project-ref}.supabase.io
-    const projectRefMatch = supabaseUrl.match(/https?:\/\/([^.]+)\.supabase\.(co|io)/)
-    if (projectRefMatch?.[1]) {
-      const projectRef = projectRefMatch[1]
-      const expectedCookieName = `sb-${projectRef}-auth-token`
-      const exactCookie = request.cookies.get(expectedCookieName)
-      if (exactCookie && exactCookie.value && typeof exactCookie.value === 'string' && exactCookie.value.length > 0) {
-        authCookie = { name: exactCookie.name, value: exactCookie.value }
-      }
-    }
-
-    // Fallback: search all cookies for pattern
-    // This handles cases where project ref extraction fails or cookie name varies
-    if (!authCookie && allCookies.length > 0) {
-      for (const cookie of allCookies) {
-        // Check for Supabase auth cookie pattern
-        // Pattern: sb-*-auth-token (where * is the project ref)
-        if (cookie && cookie.name && typeof cookie.name === 'string' && 
-            cookie.name.startsWith('sb-') && cookie.name.includes('auth-token')) {
-          // Make sure cookie has a value
-          if (cookie.value && typeof cookie.value === 'string' && cookie.value.length > 0) {
-            authCookie = { name: cookie.name, value: cookie.value }
-            break
-          }
-        }
-      }
-    }
-
-    // Note: httpOnly cookies are NOT in the Cookie header - they're only accessible via request.cookies
-    // So we don't need to check the Cookie header for httpOnly cookies
-
-    // Validate cookie exists and has content
-    if (!authCookie) {
-      return false
-    }
-
-    // Get the raw cookie value - handle potential undefined/null
-    let cookieValue = authCookie.value || ''
-
-    // Check if value is empty or just whitespace
-    if (!cookieValue || cookieValue.trim().length === 0) {
-      return false
-    }
-
-    // SECURITY: The cookie is httpOnly (set by Supabase SSR server-side)
-    // This means it CANNOT be spoofed by client-side JavaScript
-    // If the cookie exists and has a value, we can trust it because:
-    // 1. Supabase SSR only sets cookies with valid sessions
-    // 2. The httpOnly flag prevents client-side spoofing
-    // 3. A cookie with a value indicates an active session
-
-    // Try URL decoding in case the cookie value is URL-encoded
-    // This can happen in some edge cases
-    try {
-      const decoded = decodeURIComponent(cookieValue)
-      // Use decoded if it's different (was encoded)
-      if (decoded !== cookieValue && decoded.length > 0) {
-        cookieValue = decoded
-      }
-    } catch {
-      // If URL decoding fails, use original value
-      // This is fine - not all cookies are URL-encoded
-    }
-
-    const cookieLength = cookieValue.length
-
-    // Minimum length check - very small cookies are likely invalid
-    if (cookieLength < 10) {
-      return false
-    }
-
-    // For substantial cookies (>500 chars), trust immediately
-    // These are almost certainly valid session cookies
-    // The cookie in tests is 2569 chars, so this should definitely pass
-    if (cookieLength > 500) {
-      return true
-    }
-
-    // For smaller cookies (10-500 chars), still trust them if they exist
-    // The httpOnly flag and Supabase SSR validation are sufficient
-    // This handles edge cases where cookies might be smaller
-    // Since we already checked cookieLength >= 10 above, we can return true here
-    return true
-  } catch (error) {
-    // Log error in development for debugging
-    if (process.env.NODE_ENV === 'development') {
-      console.error('[Middleware] Authentication check error:', error)
-    }
-    return false
-  }
-}
+// Authentication check is now handled by checkAuthInMiddleware from @/utils/supabase/middleware
+// This removes duplicate logic and uses the comprehensive cookie detection implementation
+// that handles all edge cases including chunked cookies, various naming patterns, etc.
 
 export async function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl
@@ -301,8 +186,9 @@ export async function middleware(request: NextRequest) {
 
   // Handle root path redirect based on authentication status
   if (pathname === '/') {
-    // Use Edge Runtime compatible authentication check
-    const isAuthenticated = await checkAuthentication(request)
+    // Use the comprehensive authentication check from utils/supabase/middleware
+    // This function has extensive cookie detection logic that handles all edge cases
+    const { isAuthenticated } = checkAuthInMiddleware(request)
 
     // Redirect based on authentication status
     const redirectPath = isAuthenticated ? '/feed' : '/landing'
@@ -327,8 +213,8 @@ export async function middleware(request: NextRequest) {
                          request.cookies.get('e2e-dashboard-bypass')?.value === '1';
 
     if (!isE2EHarness) {
-      // Use Edge Runtime compatible authentication check
-      const isAuthenticated = await checkAuthentication(request)
+      // Use the comprehensive authentication check from utils/supabase/middleware
+      const { isAuthenticated } = checkAuthInMiddleware(request)
 
       if (!isAuthenticated) {
         // Redirect unauthenticated users to auth page
@@ -343,8 +229,8 @@ export async function middleware(request: NextRequest) {
 
   // Redirect authenticated users away from auth pages (except during login flow)
   if (isAuthRoute && pathname !== '/auth') {
-    // Use Edge Runtime compatible authentication check
-    const isAuthenticated = await checkAuthentication(request)
+    // Use the comprehensive authentication check from utils/supabase/middleware
+    const { isAuthenticated } = checkAuthInMiddleware(request)
 
     if (isAuthenticated) {
       // Authenticated users trying to access login/register should go to feed
