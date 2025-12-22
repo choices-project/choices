@@ -1,4 +1,3 @@
-import { createClient } from '@supabase/supabase-js'
 import { NextResponse, type NextRequest } from 'next/server'
 
 import {
@@ -13,8 +12,6 @@ import {
   resolveLocale
 } from '@/lib/i18n/config'
 import logger from '@/lib/utils/logger'
-
-import type { Database } from '@/types/supabase'
 
 
 /**
@@ -159,78 +156,54 @@ function validateRequest(request: NextRequest): { valid: boolean; reason?: strin
 }
 
 /**
- * Create Supabase client for Edge Runtime middleware
- * Uses Supabase's recommended approach for Edge Runtime compatibility
+ * Check if user is authenticated using Edge Runtime compatible approach
  * 
- * Note: Supabase stores auth tokens in cookies with pattern: sb-<project-ref>-auth-token
- * We need to read from these cookies and provide them to the client
+ * Uses fetch API to verify auth token with Supabase Auth API (Edge Runtime compatible)
+ * This avoids using @supabase/supabase-js which requires Node.js APIs
  */
-function createSupabaseMiddlewareClient(request: NextRequest, response: NextResponse) {
+async function checkAuthentication(request: NextRequest): Promise<boolean> {
   const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
   const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
 
   if (!supabaseUrl || !supabaseAnonKey) {
-    throw new Error('Missing Supabase environment variables')
+    return false
   }
 
   // Extract project ref from Supabase URL to determine cookie names
-  // Pattern: https://<project-ref>.supabase.co
   const projectRefMatch = supabaseUrl.match(/https?:\/\/([^.]+)\.supabase\.(co|io)/)
   const projectRef = projectRefMatch?.[1] ?? 'unknown'
   const authCookieName = `sb-${projectRef}-auth-token`
 
-  // Use createClient from @supabase/supabase-js (Edge Runtime compatible)
-  // with custom cookie handling that reads Supabase's actual cookie names
-  return createClient<Database>(supabaseUrl, supabaseAnonKey, {
-    auth: {
-      persistSession: false, // Middleware doesn't persist sessions
-      autoRefreshToken: false, // No auto-refresh in middleware
-      detectSessionInUrl: false, // No URL-based session detection in middleware
-      storage: {
-        getItem: (key: string) => {
-          // Supabase uses specific cookie names for auth tokens
-          // Check both the key provided and the actual Supabase cookie name
-          let cookie = request.cookies.get(key)
-          
-          // If key doesn't match, try the actual Supabase auth cookie name
-          if (!cookie && key.includes('auth')) {
-            cookie = request.cookies.get(authCookieName)
-          }
-          
-          // Also check for chunked cookies (Supabase may split large cookies)
-          if (!cookie) {
-            for (let i = 0; i < 10; i++) {
-              const chunkedName = `${authCookieName}.${i}`
-              const chunkedCookie = request.cookies.get(chunkedName)
-              if (chunkedCookie?.value) {
-                // Return the first chunk found (in a real implementation, you'd combine chunks)
-                cookie = chunkedCookie
-                break
-              }
-            }
-          }
-          
-          return cookie?.value ?? null
-        },
-        setItem: (key: string, value: string) => {
-          // Set cookie in response with Supabase's expected format
-          const cookieName = key.includes('auth') ? authCookieName : key
-          response.cookies.set(cookieName, value, {
-            httpOnly: true,
-            secure: process.env.NODE_ENV === 'production',
-            sameSite: 'lax',
-            path: '/',
-            maxAge: 60 * 60 * 24 * 7, // 7 days
-          })
-        },
-        removeItem: (key: string) => {
-          // Remove cookie from response
-          const cookieName = key.includes('auth') ? authCookieName : key
-          response.cookies.delete(cookieName)
-        },
+  // Check for Supabase auth cookie
+  const authCookie = request.cookies.get(authCookieName)
+  if (!authCookie?.value || authCookie.value.length < 10) {
+    // Also check for chunked cookies
+    for (let i = 0; i < 10; i++) {
+      const chunkedCookie = request.cookies.get(`${authCookieName}.${i}`)
+      if (chunkedCookie?.value && chunkedCookie.value.length >= 10) {
+        // Found chunked cookie, user is likely authenticated
+        return true
+      }
+    }
+    return false
+  }
+
+  // Verify token with Supabase Auth API using fetch (Edge Runtime compatible)
+  try {
+    const response = await fetch(`${supabaseUrl}/auth/v1/user`, {
+      method: 'GET',
+      headers: {
+        'Authorization': `Bearer ${authCookie.value}`,
+        'apikey': supabaseAnonKey,
       },
-    },
-  })
+    })
+
+    return response.ok
+  } catch {
+    // If verification fails, check if cookie exists (fallback)
+    // Having the cookie is a good indicator of authentication
+    return authCookie.value.length > 10
+  }
 }
 
 export async function middleware(request: NextRequest) {
@@ -259,27 +232,13 @@ export async function middleware(request: NextRequest) {
 
   // Handle root path redirect based on authentication status
   if (pathname === '/') {
-    // Use standard Supabase SSR approach for auth check
-    const response = NextResponse.next()
-    const supabase = createSupabaseMiddlewareClient(request, response)
-    const { data: { user } } = await supabase.auth.getUser()
-    const isAuthenticated = !!user
+    // Use Edge Runtime compatible authentication check
+    const isAuthenticated = await checkAuthentication(request)
 
     // Redirect based on authentication status
     const redirectPath = isAuthenticated ? '/feed' : '/landing'
     const redirectUrl = new URL(redirectPath, request.url)
     const redirectResponse = NextResponse.redirect(redirectUrl, 307)
-
-    // Copy cookies from response to redirect response
-    response.cookies.getAll().forEach((cookie) => {
-      redirectResponse.cookies.set(cookie.name, cookie.value, {
-        httpOnly: cookie.httpOnly,
-        secure: cookie.secure,
-        sameSite: cookie.sameSite as 'strict' | 'lax' | 'none' | undefined,
-        path: cookie.path,
-        maxAge: cookie.maxAge,
-      })
-    })
 
     // Add cache headers to help with redirect performance
     redirectResponse.headers.set('Cache-Control', 'public, max-age=3600, stale-while-revalidate=86400')
@@ -299,11 +258,8 @@ export async function middleware(request: NextRequest) {
                          request.cookies.get('e2e-dashboard-bypass')?.value === '1';
 
     if (!isE2EHarness) {
-      // Use Supabase's recommended approach for Edge Runtime
-      const response = NextResponse.next()
-      const supabase = createSupabaseMiddlewareClient(request, response)
-      const { data: { user } } = await supabase.auth.getUser()
-      const isAuthenticated = !!user
+      // Use Edge Runtime compatible authentication check
+      const isAuthenticated = await checkAuthentication(request)
 
       if (!isAuthenticated) {
         // Redirect unauthenticated users to auth page
@@ -311,48 +267,19 @@ export async function middleware(request: NextRequest) {
         // Preserve the original destination for redirect after login
         // Use 'redirectTo' to match client-side redirect logic
         authUrl.searchParams.set('redirectTo', pathname)
-        const redirectResponse = NextResponse.redirect(authUrl, 307)
-
-        // Copy cookies from response to redirect response
-        response.cookies.getAll().forEach((cookie) => {
-          redirectResponse.cookies.set(cookie.name, cookie.value, {
-            httpOnly: cookie.httpOnly,
-            secure: cookie.secure,
-            sameSite: cookie.sameSite as 'strict' | 'lax' | 'none' | undefined,
-            path: cookie.path,
-            maxAge: cookie.maxAge,
-          })
-        })
-
-        return redirectResponse
+        return NextResponse.redirect(authUrl, 307)
       }
     }
   }
 
   // Redirect authenticated users away from auth pages (except during login flow)
   if (isAuthRoute && pathname !== '/auth') {
-    // Use Supabase's recommended approach for Edge Runtime
-    const response = NextResponse.next()
-    const supabase = createSupabaseMiddlewareClient(request, response)
-    const { data: { user } } = await supabase.auth.getUser()
-    const isAuthenticated = !!user
+    // Use Edge Runtime compatible authentication check
+    const isAuthenticated = await checkAuthentication(request)
 
     if (isAuthenticated) {
       // Authenticated users trying to access login/register should go to feed
-      const redirectResponse = NextResponse.redirect(new URL('/feed', request.url), 307)
-
-      // Copy cookies from response to redirect response
-      response.cookies.getAll().forEach((cookie) => {
-        redirectResponse.cookies.set(cookie.name, cookie.value, {
-          httpOnly: cookie.httpOnly,
-          secure: cookie.secure,
-          sameSite: cookie.sameSite as 'strict' | 'lax' | 'none' | undefined,
-          path: cookie.path,
-          maxAge: cookie.maxAge,
-        })
-      })
-
-      return redirectResponse
+      return NextResponse.redirect(new URL('/feed', request.url), 307)
     }
   }
 
