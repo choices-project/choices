@@ -190,18 +190,66 @@ async function checkAuthentication(request: NextRequest): Promise<boolean> {
     // Parse the cookie value
     let cookieValue = authCookie.value
 
+    // Handle URL encoding - cookies may be URL-encoded in the header
+    try {
+      cookieValue = decodeURIComponent(cookieValue)
+    } catch {
+      // If URL decoding fails, use original value (might not be encoded)
+    }
+
     // Remove 'base64-' prefix if present (Supabase SSR format)
     if (cookieValue.startsWith('base64-')) {
       cookieValue = cookieValue.substring(7)
     }
 
     // Decode base64 to get JSON string (Edge Runtime compatible - atob is available)
-    const jsonString = atob(cookieValue)
+    let jsonString: string
+    try {
+      jsonString = atob(cookieValue)
+    } catch {
+      // If base64 decode fails, cookie format might be different
+      // Try parsing as direct JSON (some Supabase versions might not base64 encode)
+      try {
+        const directParse = JSON.parse(cookieValue)
+        // If direct parse works, use it
+        const sessionData = directParse
+        const accessToken = sessionData?.access_token || 
+                           sessionData?.session?.access_token ||
+                           sessionData?.token?.access_token ||
+                           null
+        if (accessToken && typeof accessToken === 'string') {
+          // Found token via direct parse, verify it
+          const controller = new AbortController()
+          const timeoutId = setTimeout(() => controller.abort(), 10000)
+          try {
+            const response = await fetch(`${supabaseUrl}/auth/v1/user`, {
+              method: 'GET',
+              headers: {
+                'Authorization': `Bearer ${accessToken}`,
+                'apikey': supabaseAnonKey,
+              },
+              signal: controller.signal,
+            })
+            clearTimeout(timeoutId)
+            return response.ok
+          } catch {
+            clearTimeout(timeoutId)
+            return false
+          }
+        }
+        // Direct parse worked but no token found
+        return false
+      } catch {
+        // Both base64 and direct parse failed
+        return false
+      }
+    }
+    
     const sessionData = JSON.parse(jsonString)
 
     // Extract access_token - this is what we MUST verify
     // Supabase SSR stores it in different possible locations
-    const accessToken = sessionData?.access_token || 
+    const accessToken = sessionData?.access_token ||
                        sessionData?.session?.access_token ||
                        sessionData?.token?.access_token ||
                        null
@@ -240,7 +288,7 @@ async function checkAuthentication(request: NextRequest): Promise<boolean> {
       return false
     } catch {
       clearTimeout(timeoutId)
-      
+
       // SECURITY: If we can't verify the token (network error, timeout, etc.),
       // we MUST fail closed - do NOT trust the cookie
       // Trusting unverified cookies is a security vulnerability
