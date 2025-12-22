@@ -212,7 +212,7 @@ async function checkAuthentication(request: NextRequest): Promise<boolean> {
     // We use fetch (Edge Runtime compatible) to call Supabase's user endpoint
     // Add timeout to prevent hanging (Edge Runtime has timeout limits)
     const controller = new AbortController()
-    const timeoutId = setTimeout(() => controller.abort(), 5000) // 5 second timeout
+    const timeoutId = setTimeout(() => controller.abort(), 10000) // 10 second timeout
 
     try {
       const response = await fetch(`${supabaseUrl}/auth/v1/user`, {
@@ -237,18 +237,10 @@ async function checkAuthentication(request: NextRequest): Promise<boolean> {
     } catch {
       clearTimeout(timeoutId)
       
-      // If fetch fails (timeout, network error, etc.), we can't verify
-      // However, if we have a valid user object in the cookie (set by Supabase SSR),
-      // we can trust it as a fallback - Supabase SSR only sets cookies with valid sessions
-      // This is a reasonable fallback for network issues while maintaining security
-      const user = sessionData?.user
-      if (user && typeof user === 'object' && user.id) {
-        // Valid user object in cookie + network failure = trust the cookie
-        // Supabase SSR only sets cookies with valid sessions, so this is safe
-        return true
-      }
-      
-      // No user object or network failure = not authenticated
+      // SECURITY: If we can't verify the token (network error, timeout, etc.),
+      // we MUST fail closed - do NOT trust the cookie
+      // Trusting unverified cookies is a security vulnerability
+      // If there's a network issue, the user will need to retry
       return false
     }
   } catch {
