@@ -156,13 +156,10 @@ function validateRequest(request: NextRequest): { valid: boolean; reason?: strin
 }
 
 /**
- * Check if user is authenticated using Edge Runtime compatible approach
- *
- * Supabase stores session data in cookies as base64-encoded JSON with structure:
- * { access_token, refresh_token, expires_at, expires_in, token_type, user }
- *
- * We extract the access_token and verify it with Supabase Auth API using fetch
- * (Edge Runtime compatible - no Node.js dependencies)
+ * Check if user is authenticated using Supabase SSR (proper approach)
+ * 
+ * Uses createServerClient from @supabase/ssr with a cookie adapter for Edge Runtime.
+ * This is the recommended way to check authentication in Next.js middleware.
  */
 async function checkAuthentication(request: NextRequest): Promise<boolean> {
   const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
@@ -172,185 +169,49 @@ async function checkAuthentication(request: NextRequest): Promise<boolean> {
     return false
   }
 
-  // Extract project ref from Supabase URL to determine cookie names
-  const projectRefMatch = supabaseUrl.match(/https?:\/\/([^.]+)\.supabase\.(co|io)/)
-  const projectRef = projectRefMatch?.[1] ?? 'unknown'
-  const authCookieName = `sb-${projectRef}-auth-token`
-
-  // Find the auth cookie - check multiple methods since Edge Runtime parsing can be unreliable
-  let authCookie = request.cookies.get(authCookieName)
-  
-  // If not found by exact name, search all cookies
-  if (!authCookie?.value || authCookie.value.length < 10) {
-    const allCookies = request.cookies.getAll()
-    for (const cookie of allCookies) {
-      const name = cookie.name.toLowerCase()
-      // Match Supabase auth cookie patterns
-      if (name.startsWith('sb-') && (name.includes('auth') || name.includes('session'))) {
-        const value = cookie.value?.trim() || ''
-        // Must have actual content (not empty/null/undefined markers)
-        if (value.length > 10 && 
-            value !== 'null' && 
-            value !== 'undefined' && 
-            value !== '{}' &&
-            value !== '""' &&
-            value !== "''") {
-          authCookie = cookie
-          break
-        }
-      }
-    }
-  }
-  
-  // Check for chunked cookies (Supabase may split large cookies)
-  if (!authCookie?.value || authCookie.value.length < 10) {
-    for (let i = 0; i < 10; i++) {
-      const chunkedCookie = request.cookies.get(`${authCookieName}.${i}`)
-      if (chunkedCookie?.value && chunkedCookie.value.length >= 10) {
-        authCookie = chunkedCookie
-        break
-      }
-    }
-  }
-  
-  // Final fallback: Check raw Cookie header (Edge Runtime cookie parsing can fail)
-  if (!authCookie?.value || authCookie.value.length < 10) {
-    const cookieHeader = request.headers.get('cookie') || ''
-    if (cookieHeader) {
-      // Look for the expected cookie name in the header
-      const authCookiePattern = new RegExp(`${authCookieName.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}=([^;]+)`, 'i')
-      const match = cookieHeader.match(authCookiePattern)
-      if (match && match[1]) {
-        let cookieValue = match[1].trim()
-        try {
-          cookieValue = decodeURIComponent(cookieValue)
-        } catch {
-          // If decoding fails, use original value
-        }
-        if (cookieValue.length > 10) {
-          // Create a mock cookie object for parsing
-          authCookie = { name: authCookieName, value: cookieValue } as { name: string; value: string }
-        }
-      }
-    }
-  }
-  
-  // If no cookie found by any method, user is not authenticated
-  if (!authCookie?.value || authCookie.value.length < 10) {
-    return false
-  }
-  
-  // SECURITY: We must parse and verify the cookie - never trust based on size alone
-  // The cookie must contain valid user data or access_token to be trusted
-
-  // Extract access_token from cookie value
-  // Supabase SSR stores session as base64-encoded JSON with structure:
-  // { access_token, refresh_token, expires_at, expires_in, token_type, user }
-  let accessToken: string | null = null
-  let hasUser = false
-
   try {
-    let cookieValue = authCookie.value
+    // Import createServerClient dynamically (Edge Runtime compatible)
+    const { createServerClient } = await import('@supabase/ssr')
 
-    // Remove 'base64-' prefix if present (Supabase SSR format)
-    if (cookieValue.startsWith('base64-')) {
-      cookieValue = cookieValue.substring(7)
+    // Create cookie adapter for Edge Runtime middleware
+    // Note: set/remove are no-ops in middleware (read-only for auth checking)
+    const cookieAdapter = {
+      get: (name: string) => {
+        const cookie = request.cookies.get(name)
+        return cookie?.value
+      },
+      set: (_name: string, _value: string, _options: Record<string, unknown>) => {
+        // In middleware, we can't modify cookies on the response
+        // This is read-only for authentication checking
+        // Cookies are set by Supabase SSR in API routes/server components
+      },
+      remove: (_name: string, _options: Record<string, unknown>) => {
+        // In middleware, we can't remove cookies
+        // This is read-only for authentication checking
+      },
     }
 
-    // Decode base64 to get JSON string (Edge Runtime compatible - atob is available)
-    let jsonString: string
-    try {
-      jsonString = atob(cookieValue)
-    } catch {
-      // If base64 decode fails, cookie is invalid
-      return false
+    // Create Supabase client with cookie adapter
+    const supabase = createServerClient(supabaseUrl, supabaseAnonKey, {
+      cookies: cookieAdapter,
+    })
+
+    // Use getUser() - this is the proper way to check authentication
+    // It reads the session from cookies and verifies it
+    const { data: { user }, error } = await supabase.auth.getUser()
+
+    // If we have a user, they are authenticated
+    if (user && !error) {
+      return true
     }
 
-    // Parse JSON to extract session data
-    let sessionData: any
-    try {
-      sessionData = JSON.parse(jsonString)
-    } catch {
-      // If JSON parse fails, cookie is invalid
-      return false
-    }
-
-    // Extract access_token from session data
-    // Supabase stores it directly in the root of the session object
-    accessToken = sessionData?.access_token || null
-
-    // Check for user object as primary indicator of authentication
-    // The user object in the cookie is set by Supabase SSR and is authoritative
-    // User object structure: { id, email, aud, role, ... }
-    // Be lenient - if user object exists and has an id, trust it
-    const userObj = sessionData?.user
-    hasUser = Boolean(
-      userObj &&
-      typeof userObj === 'object' &&
-      userObj.id
-    )
-
-    // If we have neither access_token nor user, cookie is invalid
-    if (!accessToken && !hasUser) {
-      return false
-    }
-
-    // If we have a valid user object, we can trust the session
-    // The cookie itself is set by Supabase SSR and is proof of authentication
-    // We don't need to verify the token if we have valid user data
-  } catch {
-    // Any parsing error means the cookie is invalid - cannot trust it
+    // No user or error means not authenticated
+    return false
+  } catch (error) {
+    // If anything fails, assume not authenticated
+    logger.warn('Authentication check failed in middleware', { error })
     return false
   }
-
-  // If we have valid user data in the cookie, trust it as authentication
-  // The cookie itself is set by Supabase SSR and is a valid session indicator
-  // This avoids network calls that can timeout or fail in Edge Runtime
-  // The presence of a valid user object in the cookie is sufficient proof of authentication
-  if (hasUser) {
-    return true
-  }
-
-  // If we have an access_token but no user object, try to verify with Supabase
-  // This is a fallback for edge cases where user object might be missing
-  // However, in practice, Supabase SSR always includes user data in the cookie
-  if (accessToken) {
-    try {
-      // Try to verify token, but don't block on it if it fails
-      // Use a simple fetch without complex timeout logic (Edge Runtime compatible)
-      const response = await fetch(`${supabaseUrl}/auth/v1/user`, {
-        method: 'GET',
-        headers: {
-          'Authorization': `Bearer ${accessToken}`,
-          'apikey': supabaseAnonKey,
-        },
-      })
-
-      // If verification succeeds, user is authenticated
-      if (response.ok) {
-        return true
-      }
-
-      // If verification explicitly fails (401/403), user is not authenticated
-      if (response.status === 401 || response.status === 403) {
-        return false
-      }
-
-      // For other errors (500s, timeouts, etc.), if we have the cookie with access_token,
-      // trust it - the cookie itself is set by Supabase and is authoritative
-      // This handles network issues without breaking authentication
-      return true
-    } catch {
-      // Network errors (timeout, connection refused, etc.)
-      // If we have an access_token in the cookie, trust it
-      // The cookie is set by Supabase SSR and is a valid session indicator
-      return true
-    }
-  }
-
-  // If we reach here, we couldn't extract a token or verify it
-  // Without valid user data or a verified access_token, we cannot trust the cookie
-  return false
 }
 
 export async function middleware(request: NextRequest) {
