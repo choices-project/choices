@@ -12,6 +12,7 @@ import {
   resolveLocale
 } from '@/lib/i18n/config'
 import logger from '@/lib/utils/logger'
+
 import { checkAuthInMiddleware } from '@/utils/supabase/middleware'
 
 
