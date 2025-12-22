@@ -180,8 +180,20 @@ async function checkAuthentication(request: NextRequest): Promise<boolean> {
   const projectRef = projectRefMatch?.[1] ?? 'unknown'
   const authCookieName = `sb-${projectRef}-auth-token`
 
-  // Get the auth cookie
-  const authCookie = request.cookies.get(authCookieName)
+  // Get the auth cookie - try exact name first, then search all cookies
+  let authCookie = request.cookies.get(authCookieName)
+  
+  // Fallback: search all cookies for Supabase auth pattern
+  if (!authCookie) {
+    const allCookies = request.cookies.getAll()
+    for (const cookie of allCookies) {
+      if (cookie.name.startsWith('sb-') && cookie.name.includes('auth-token')) {
+        authCookie = cookie
+        break
+      }
+    }
+  }
+
   if (!authCookie?.value) {
     return false
   }
@@ -190,16 +202,16 @@ async function checkAuthentication(request: NextRequest): Promise<boolean> {
   // This means it CANNOT be spoofed by client-side JavaScript
   // If the cookie exists and is substantial (>500 chars), we can trust it
   // because Supabase SSR only sets cookies with valid sessions
-  
+
   const cookieLength = authCookie.value.length
-  
+
   // Substantial cookies (>500 chars) are almost certainly valid session cookies
   // The httpOnly flag prevents client-side spoofing
   // Supabase SSR only sets cookies with valid sessions
   if (cookieLength > 500) {
     return true
   }
-  
+
   // For smaller cookies, try to parse and validate
   if (cookieLength < 10) {
     return false
