@@ -180,11 +180,12 @@ async function checkAuthentication(request: NextRequest): Promise<boolean> {
   // Check for Supabase auth cookie
   const authCookie = request.cookies.get(authCookieName)
   if (!authCookie?.value || authCookie.value.length < 10) {
-    // Also check for chunked cookies
+    // Also check for chunked cookies (Supabase may split large cookies)
     for (let i = 0; i < 10; i++) {
       const chunkedCookie = request.cookies.get(`${authCookieName}.${i}`)
       if (chunkedCookie?.value && chunkedCookie.value.length >= 10) {
-        // Found chunked cookie, user is likely authenticated
+        // Found chunked cookie - Supabase uses chunking for large cookies
+        // If we have at least one chunk, the session exists
         return true
       }
     }
@@ -192,77 +193,130 @@ async function checkAuthentication(request: NextRequest): Promise<boolean> {
   }
 
   // Extract access_token from cookie value
-  // Cookie format: base64-<base64-encoded-json> or just <base64-encoded-json>
-  // Supabase stores session as: { access_token, refresh_token, expires_at, user, ... }
+  // Supabase SSR stores session as base64-encoded JSON with structure:
+  // { access_token, refresh_token, expires_at, expires_in, token_type, user }
   let accessToken: string | null = null
+  let hasUser = false
   
   try {
     let cookieValue = authCookie.value
     
-    // Remove 'base64-' prefix if present
+    // Remove 'base64-' prefix if present (Supabase SSR format)
     if (cookieValue.startsWith('base64-')) {
       cookieValue = cookieValue.substring(7)
     }
     
     // Decode base64 to get JSON string (Edge Runtime compatible - atob is available)
-    // Note: atob may throw if input is not valid base64, so we catch and fallback
     let jsonString: string
     try {
       jsonString = atob(cookieValue)
     } catch {
-      // If base64 decode fails, cookie might be in a different format
-      // Having a substantial cookie value is still a good indicator
-      return cookieValue.length > 10
+      // If base64 decode fails, cookie format is unexpected
+      // This shouldn't happen with Supabase SSR, but if it does, we can't verify
+      // Return false for security - we can't trust a cookie we can't parse
+      return false
     }
     
-    // Parse JSON to extract access_token
-    const sessionData = JSON.parse(jsonString)
+    // Parse JSON to extract session data
+    let sessionData: any
+    try {
+      sessionData = JSON.parse(jsonString)
+    } catch {
+      // If JSON parse fails, cookie is corrupted or in wrong format
+      // Return false for security
+      return false
+    }
     
     // Extract access_token from session data
-    // Supabase stores it directly in the root or in a session object
-    accessToken = sessionData?.access_token || 
-                  sessionData?.session?.access_token || 
-                  sessionData?.token?.access_token ||
-                  null
+    // Supabase stores it directly in the root of the session object
+    accessToken = sessionData?.access_token || null
     
-    // If we have a user object, that's also a good indicator of authentication
-    const hasUser = sessionData?.user && typeof sessionData.user === 'object'
+    // Check for user object as secondary indicator
+    hasUser = sessionData?.user && typeof sessionData.user === 'object' && sessionData.user.id
     
+    // If we have neither access_token nor user, cookie is invalid
     if (!accessToken && !hasUser) {
-      // If no access_token or user found, having the cookie is still a good indicator
-      return cookieValue.length > 10
+      return false
     }
     
-    // If we have user data but no access_token, still consider authenticated
+    // If we have user but no access_token, the token might be in a nested structure
+    // But we still need a token to verify, so return false
     if (!accessToken && hasUser) {
-      return true
+      // Without an access_token, we can't verify the session
+      // This could happen if cookie format changed, but we should verify properly
+      return false
     }
   } catch {
-    // If parsing fails, having the cookie is still a good indicator
-    // (cookie might be in a different format or encoding)
-    return authCookie.value.length > 10
+    // Any other parsing error means we can't trust the cookie
+    return false
   }
 
   // Verify token with Supabase Auth API using fetch (Edge Runtime compatible)
+  // This is the ONLY authoritative way to check if a token is valid
   if (accessToken) {
     try {
+      // Set a reasonable timeout for the verification request
+      const controller = new AbortController()
+      const timeoutId = setTimeout(() => controller.abort(), 5000) // 5 second timeout
+      
       const response = await fetch(`${supabaseUrl}/auth/v1/user`, {
         method: 'GET',
         headers: {
           'Authorization': `Bearer ${accessToken}`,
           'apikey': supabaseAnonKey,
         },
+        signal: controller.signal,
       })
+      
+      clearTimeout(timeoutId)
 
-      return response.ok
+      // Only return true if Supabase confirms the token is valid
+      // Status 200 = valid token, user is authenticated
+      if (response.ok) {
+        return true
+      }
+      
+      // If verification explicitly fails (401/403), user is not authenticated
+      // Status 401 = unauthorized (invalid/expired token)
+      // Status 403 = forbidden (token valid but insufficient permissions)
+      if (response.status === 401 || response.status === 403) {
+        return false
+      }
+      
+      // For other HTTP errors (500s, 502s, etc.), we can't safely determine auth status
+      // However, if we have a valid user object in the cookie, we can trust it
+      // This handles cases where Supabase API is temporarily down but the session is valid
+      if (hasUser && response.status >= 500) {
+        // Server error - trust the cookie if it has user data
+        return true
+      }
+      
+      // For other errors, return false for security
+      return false
     } catch {
-      // If verification fails, having the cookie is still a good indicator
-      return true
+      // Network errors (timeout, connection refused, etc.) mean we can't verify the token
+      // If we have user data in the cookie, trust it as a fallback
+      // This handles temporary network issues without breaking authentication
+      if (hasUser) {
+        // We have user data in the cookie, so the session was valid at some point
+        // Trust it during network outages
+        return true
+      }
+      
+      // No user data and network error - can't verify, so return false
+      return false
     }
   }
 
-  // Fallback: having the cookie is a good indicator of authentication
-  return authCookie.value.length > 10
+  // If we have user data but no access_token, we can still trust the session
+  // The user object in the cookie is a valid indicator of authentication
+  if (hasUser) {
+    return true
+  }
+
+  // If we reach here, we couldn't extract a token or verify it
+  // Return false for security
+  return false
 }
 
 export async function middleware(request: NextRequest) {
