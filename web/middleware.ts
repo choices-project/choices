@@ -187,21 +187,18 @@ export async function middleware(request: NextRequest) {
 
   // Handle root path redirect based on authentication status
   if (pathname === '/') {
-    // Create response for cookie handling
-    const redirectResponse = NextResponse.next()
-
-    // Use Supabase SSR approach for authentication check
-    const { isAuthenticated } = await checkAuthInMiddleware(request, redirectResponse)
+    // Use Supabase authentication check (Edge Runtime compatible)
+    const { isAuthenticated } = await checkAuthInMiddleware(request)
 
     // Redirect based on authentication status
     const redirectPath = isAuthenticated ? '/feed' : '/landing'
     const redirectUrl = new URL(redirectPath, request.url)
-    const finalRedirect = NextResponse.redirect(redirectUrl, 307)
+    const redirectResponse = NextResponse.redirect(redirectUrl, 307)
 
     // Add cache headers to help with redirect performance
-    finalRedirect.headers.set('Cache-Control', 'public, max-age=3600, stale-while-revalidate=86400')
+    redirectResponse.headers.set('Cache-Control', 'public, max-age=3600, stale-while-revalidate=86400')
 
-    return finalRedirect
+    return redirectResponse
   }
 
   // Protect routes that require authentication
@@ -216,11 +213,8 @@ export async function middleware(request: NextRequest) {
                          request.cookies.get('e2e-dashboard-bypass')?.value === '1';
 
     if (!isE2EHarness) {
-      // Create response for cookie handling
-      const response = NextResponse.next()
-      
-      // Use Supabase SSR approach for authentication check
-      const { isAuthenticated } = await checkAuthInMiddleware(request, response)
+      // Use Supabase authentication check (Edge Runtime compatible)
+      const { isAuthenticated } = await checkAuthInMiddleware(request)
 
       if (!isAuthenticated) {
         // Redirect unauthenticated users to auth page
@@ -230,27 +224,18 @@ export async function middleware(request: NextRequest) {
         authUrl.searchParams.set('redirectTo', pathname)
         return NextResponse.redirect(authUrl, 307)
       }
-      
-      // Return response with updated cookies if authenticated
-      return response
     }
   }
 
   // Redirect authenticated users away from auth pages (except during login flow)
   if (isAuthRoute && pathname !== '/auth') {
-    // Create response for cookie handling
-    const response = NextResponse.next()
-    
-    // Use Supabase SSR approach for authentication check
-    const { isAuthenticated } = await checkAuthInMiddleware(request, response)
+    // Use Supabase authentication check (Edge Runtime compatible)
+    const { isAuthenticated } = await checkAuthInMiddleware(request)
 
     if (isAuthenticated) {
       // Authenticated users trying to access login/register should go to feed
       return NextResponse.redirect(new URL('/feed', request.url), 307)
     }
-    
-    // Return response with updated cookies if not authenticated
-    return response
   }
 
   // Skip middleware for static files and API routes that don't need security headers
@@ -365,9 +350,6 @@ export async function middleware(request: NextRequest) {
 
   return response
 }
-
-// Use Node.js runtime to support @supabase/ssr
-export const runtime = 'nodejs'
 
 export const config = {
   matcher: [
