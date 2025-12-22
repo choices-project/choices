@@ -114,7 +114,7 @@ export default function PollHashtagIntegration({
 
   // Extract poll.id and poll.hashtags for stable dependencies
   const pollId = poll.id;
-  const pollHashtags = poll.hashtags ?? [];
+  const pollHashtags = React.useMemo(() => poll.hashtags ?? [], [poll.hashtags]);
 
   const trackHashtagEngagement = React.useCallback((action: 'view' | 'click' | 'share') => {
     logger.info(`Hashtag engagement tracked: ${action}`);

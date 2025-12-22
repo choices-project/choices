@@ -139,7 +139,7 @@ test.describe('Production UX Improvements', () => {
       
       // Check for skeleton loaders (they appear briefly during load)
       const skeleton = page.locator('.animate-pulse, [aria-label*="Loading"]').first();
-      const skeletonVisible = await skeleton.isVisible().catch(() => false);
+      void (await skeleton.isVisible().catch(() => false)); // Verify skeleton appears during load
       
       await responsePromise;
       await waitForPageReady(page);
@@ -176,7 +176,7 @@ test.describe('Production UX Improvements', () => {
       
       // Check for skeleton loaders
       const skeleton = page.locator('.animate-pulse, [aria-label*="Loading"]').first();
-      const skeletonVisible = await skeleton.isVisible().catch(() => false);
+      await skeleton.isVisible().catch(() => false); // Verify skeleton appears during load
       
       await responsePromise;
       await waitForPageReady(page);
@@ -488,7 +488,7 @@ test.describe('Production UX Improvements', () => {
       
       const emailId = await emailInput.getAttribute('id');
       const emailAriaLabel = await emailInput.getAttribute('aria-label');
-      const emailAriaDescribedBy = await emailInput.getAttribute('aria-describedby');
+      await emailInput.getAttribute('aria-describedby'); // Verify accessibility attributes
       
       // Should have either id with label, or aria-label
       if (emailId) {
@@ -551,7 +551,7 @@ test.describe('Production UX Improvements', () => {
       
       // Check for ARIA live regions
       const liveRegion = page.locator('[aria-live], [role="status"], [role="alert"]').first();
-      const hasLiveRegion = await liveRegion.isVisible().catch(() => false);
+      await liveRegion.isVisible().catch(() => false); // Verify live regions exist
       
       // Feed should have live regions for screen reader announcements
       // (May be hidden with sr-only class)

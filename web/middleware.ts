@@ -1,6 +1,5 @@
-import { NextResponse } from 'next/server'
-
-import { checkAuthInMiddleware } from '@/utils/supabase/middleware'
+import { createServerClient } from '@supabase/ssr'
+import { NextResponse, type NextRequest } from 'next/server'
 
 import {
   getSecurityConfig,
@@ -15,7 +14,7 @@ import {
 } from '@/lib/i18n/config'
 import logger from '@/lib/utils/logger'
 
-import type { NextRequest } from 'next/server'
+import type { Database } from '@/types/supabase'
 
 
 /**
@@ -159,6 +158,54 @@ function validateRequest(request: NextRequest): { valid: boolean; reason?: strin
   return { valid: true }
 }
 
+/**
+ * Create Supabase client for middleware using standard SSR approach
+ */
+function createSupabaseMiddlewareClient(request: NextRequest, response: NextResponse) {
+  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+  const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+  
+  if (!supabaseUrl || !supabaseAnonKey) {
+    throw new Error('Missing Supabase environment variables');
+  }
+  
+  return createServerClient<Database>(
+    supabaseUrl,
+    supabaseAnonKey,
+    {
+      cookies: {
+        get(name: string) {
+          return request.cookies.get(name)?.value
+        },
+        set(name: string, value: string, options: any) {
+          request.cookies.set({
+            name,
+            value,
+            ...options,
+          })
+          response.cookies.set({
+            name,
+            value,
+            ...options,
+          })
+        },
+        remove(name: string, options: any) {
+          request.cookies.set({
+            name,
+            value: '',
+            ...options,
+          })
+          response.cookies.set({
+            name,
+            value: '',
+            ...options,
+          })
+        },
+      },
+    }
+  )
+}
+
 export async function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl
 
@@ -185,13 +232,27 @@ export async function middleware(request: NextRequest) {
 
   // Handle root path redirect based on authentication status
   if (pathname === '/') {
-    // Check authentication status using cookie detection (Edge Runtime compatible)
-    const { isAuthenticated } = checkAuthInMiddleware(request)
+    // Use standard Supabase SSR approach for auth check
+    const response = NextResponse.next()
+    const supabase = createSupabaseMiddlewareClient(request, response)
+    const { data: { user } } = await supabase.auth.getUser()
+    const isAuthenticated = !!user
 
     // Redirect based on authentication status
     const redirectPath = isAuthenticated ? '/feed' : '/landing'
     const redirectUrl = new URL(redirectPath, request.url)
     const redirectResponse = NextResponse.redirect(redirectUrl, 307)
+
+    // Copy cookies from response to redirect response
+    response.cookies.getAll().forEach((cookie) => {
+      redirectResponse.cookies.set(cookie.name, cookie.value, {
+        httpOnly: cookie.httpOnly,
+        secure: cookie.secure,
+        sameSite: cookie.sameSite as 'strict' | 'lax' | 'none' | undefined,
+        path: cookie.path,
+        maxAge: cookie.maxAge,
+      })
+    })
 
     // Add cache headers to help with redirect performance
     redirectResponse.headers.set('Cache-Control', 'public, max-age=3600, stale-while-revalidate=86400')
@@ -211,8 +272,11 @@ export async function middleware(request: NextRequest) {
                          request.cookies.get('e2e-dashboard-bypass')?.value === '1';
 
     if (!isE2EHarness) {
-      // Check authentication using cookie detection (Edge Runtime compatible)
-      const { isAuthenticated } = checkAuthInMiddleware(request)
+      // Use standard Supabase SSR approach for auth check
+      const response = NextResponse.next()
+      const supabase = createSupabaseMiddlewareClient(request, response)
+      const { data: { user } } = await supabase.auth.getUser()
+      const isAuthenticated = !!user
 
       if (!isAuthenticated) {
         // Redirect unauthenticated users to auth page
@@ -220,19 +284,48 @@ export async function middleware(request: NextRequest) {
         // Preserve the original destination for redirect after login
         // Use 'redirectTo' to match client-side redirect logic
         authUrl.searchParams.set('redirectTo', pathname)
-        return NextResponse.redirect(authUrl, 307)
+        const redirectResponse = NextResponse.redirect(authUrl, 307)
+        
+        // Copy cookies from response to redirect response
+        response.cookies.getAll().forEach((cookie) => {
+          redirectResponse.cookies.set(cookie.name, cookie.value, {
+            httpOnly: cookie.httpOnly,
+            secure: cookie.secure,
+            sameSite: cookie.sameSite as 'strict' | 'lax' | 'none' | undefined,
+            path: cookie.path,
+            maxAge: cookie.maxAge,
+          })
+        })
+        
+        return redirectResponse
       }
     }
   }
 
   // Redirect authenticated users away from auth pages (except during login flow)
   if (isAuthRoute && pathname !== '/auth') {
-    // Check authentication using cookie detection (Edge Runtime compatible)
-    const { isAuthenticated } = checkAuthInMiddleware(request)
+    // Use standard Supabase SSR approach for auth check
+    const response = NextResponse.next()
+    const supabase = createSupabaseMiddlewareClient(request, response)
+    const { data: { user } } = await supabase.auth.getUser()
+    const isAuthenticated = !!user
 
     if (isAuthenticated) {
       // Authenticated users trying to access login/register should go to feed
-      return NextResponse.redirect(new URL('/feed', request.url), 307)
+      const redirectResponse = NextResponse.redirect(new URL('/feed', request.url), 307)
+      
+      // Copy cookies from response to redirect response
+      response.cookies.getAll().forEach((cookie) => {
+        redirectResponse.cookies.set(cookie.name, cookie.value, {
+          httpOnly: cookie.httpOnly,
+          secure: cookie.secure,
+          sameSite: cookie.sameSite as 'strict' | 'lax' | 'none' | undefined,
+          path: cookie.path,
+          maxAge: cookie.maxAge,
+        })
+      })
+      
+      return redirectResponse
     }
   }
 

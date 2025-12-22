@@ -1,4 +1,4 @@
-import { expect, test } from '@playwright/test';
+import { test } from '@playwright/test';
 import { ensureLoggedOut, loginTestUser, waitForPageReady } from '../../helpers/e2e-setup';
 
 const PRODUCTION_URL = process.env.PRODUCTION_URL || 'https://www.choices-app.com';
@@ -19,7 +19,7 @@ test.describe('Production Cookie Inspection', () => {
     // Step 1: Logout and clear all cookies
     await ensureLoggedOut(page);
     await context.clearCookies();
-    
+
     console.log('\n=== STEP 1: Initial State (After Logout) ===');
     const initialCookies = await context.cookies();
     console.log('Cookies after logout:', initialCookies.length);
@@ -50,13 +50,13 @@ test.describe('Production Cookie Inspection', () => {
     const cookiesAfterLogin = await context.cookies();
     console.log('\n=== STEP 4: After Login ===');
     console.log('Cookies after login:', cookiesAfterLogin.length);
-    
-    const authCookies = cookiesAfterLogin.filter(c => 
-      c.name.includes('auth') || 
-      c.name.includes('session') || 
+
+    const authCookies = cookiesAfterLogin.filter(c =>
+      c.name.includes('auth') ||
+      c.name.includes('session') ||
       c.name.startsWith('sb-')
     );
-    
+
     console.log('\nAuth-related cookies:', authCookies.length);
     authCookies.forEach(cookie => {
       console.log(`  - ${cookie.name}:`);
@@ -86,13 +86,13 @@ test.describe('Production Cookie Inspection', () => {
     const cookiesAfterProfileNav = await context.cookies();
     console.log('\n=== STEP 7: After Profile Navigation ===');
     console.log('Cookies after profile nav:', cookiesAfterProfileNav.length);
-    
-    const authCookiesAfterNav = cookiesAfterProfileNav.filter(c => 
-      c.name.includes('auth') || 
-      c.name.includes('session') || 
+
+    const authCookiesAfterNav = cookiesAfterProfileNav.filter(c =>
+      c.name.includes('auth') ||
+      c.name.includes('session') ||
       c.name.startsWith('sb-')
     );
-    
+
     console.log('\nAuth-related cookies after nav:', authCookiesAfterNav.length);
     authCookiesAfterNav.forEach(cookie => {
       console.log(`  - ${cookie.name}: ${cookie.value.length} chars`);
@@ -107,7 +107,7 @@ test.describe('Production Cookie Inspection', () => {
 
     // Step 9: Check network requests for Set-Cookie headers
     console.log('\n=== STEP 9: Network Request Analysis ===');
-    const requests = [];
+    const requests: Array<{ url: string; status: number; setCookie: string[] }> = [];
     page.on('response', (response) => {
       const setCookieHeaders = response.headers()['set-cookie'];
       if (setCookieHeaders) {
@@ -126,11 +126,11 @@ test.describe('Production Cookie Inspection', () => {
     console.log('\nResponses with Set-Cookie headers:', requests.length);
     requests.forEach((req, i) => {
       console.log(`\n${i + 1}. ${req.url} (${req.status})`);
-      req.setCookie.forEach((cookie, j) => {
+      req.setCookie.forEach((cookie: string, j: number) => {
         const cookieParts = cookie.split(';');
         const cookieName = cookieParts[0].split('=')[0];
         console.log(`   Cookie ${j + 1}: ${cookieName}`);
-        cookieParts.forEach((part, k) => {
+        cookieParts.forEach((part: string, k: number) => {
           if (k > 0) console.log(`     ${part.trim()}`);
         });
       });

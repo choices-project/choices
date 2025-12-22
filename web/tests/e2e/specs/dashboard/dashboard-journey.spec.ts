@@ -211,7 +211,8 @@ test.describe('Dashboard Journey', () => {
       await expect(page.getByTestId('show-elected-officials-toggle')).not.toBeChecked();
 
       // Set up authentication cookie so middleware allows navigation to /feed
-      // The middleware checks for sb-access-token or other Supabase auth cookies
+      // Middleware uses standard Supabase SSR (createServerClient + getUser())
+      // which will detect any valid Supabase auth cookies set by @supabase/ssr
       await page.context().addCookies([
         {
           name: 'sb-access-token',

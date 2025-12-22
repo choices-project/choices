@@ -56,7 +56,7 @@ async function attachObservability(page: Page, label: string, baseUrl: string) {
 test.describe('Production Observability', () => {
   test('feed page API + console diagnostics', async ({ page }) => {
     if (!IS_PRODUCTION_TARGET) {
-      test.skip('Production observability tests run only against real production targets');
+      test.skip(true, 'Production observability tests run only against real production targets');
     }
 
     test.setTimeout(120_000);
@@ -138,7 +138,7 @@ test.describe('Production Observability', () => {
 
   test('privacy page API + console diagnostics', async ({ page }) => {
     if (!IS_PRODUCTION_TARGET) {
-      test.skip('Production observability tests run only against real production targets');
+      test.skip(true, 'Production observability tests run only against real production targets');
     }
     test.setTimeout(120_000);
 
@@ -175,7 +175,7 @@ test.describe('Production Observability', () => {
 
   test('dashboard navigation + auth diagnostics', async ({ page }) => {
     if (!IS_PRODUCTION_TARGET) {
-      test.skip('Production observability tests run only against real production targets');
+      test.skip(true, 'Production observability tests run only against real production targets');
     }
     test.setTimeout(120_000);
 

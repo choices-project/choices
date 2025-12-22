@@ -191,7 +191,7 @@ test.describe('Auth – real backend', () => {
       );
     } catch (error) {
       // If timeout, check what's actually on the page
-      const bodyText = await page.locator('body').textContent().catch(() => '');
+      const bodyText = await page.locator('body').textContent().catch(() => '') ?? '';
       const hasAdminContent = bodyText.includes('Admin Dashboard') || 
                               bodyText.includes('Quick Stats') ||
                               bodyText.includes('Topics:');

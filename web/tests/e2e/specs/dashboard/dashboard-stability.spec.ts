@@ -20,7 +20,7 @@ test.describe('Dashboard Stability Tests', () => {
       }
     });
     // Note: Cookie domain handling for E2E tests
-    // Middleware checks for e2e-dashboard-bypass cookie (line 211 in middleware.ts)
+    // Middleware checks for e2e-dashboard-bypass cookie to bypass auth (see middleware.ts)
     // Dashboard page checks localStorage for e2e-dashboard-bypass (more reliable for cross-domain)
     // Try to set cookie, but don't fail if domain mismatch (localStorage is primary method)
     const baseUrl = process.env.BASE_URL || 'https://www.choices-app.com';

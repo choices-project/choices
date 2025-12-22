@@ -1,6 +1,12 @@
 import type { NextRequest } from 'next/server'
 
 /**
+ * @deprecated This function is deprecated. Use standard Supabase SSR approach instead.
+ * 
+ * The main middleware now uses `createServerClient` from `@supabase/ssr` with `getUser()`
+ * which is the recommended approach. This function is kept for backward compatibility
+ * but should not be used in new code.
+ * 
  * Check if a user is authenticated in middleware context (Edge Runtime compatible)
  * 
  * This function works in Edge Runtime by checking for Supabase auth cookies directly.

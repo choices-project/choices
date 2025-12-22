@@ -1,4 +1,4 @@
-import { expect, test } from '@playwright/test';
+import { test } from '@playwright/test';
 import { ensureLoggedOut, loginTestUser, waitForPageReady } from '../../helpers/e2e-setup';
 
 const PRODUCTION_URL = process.env.PRODUCTION_URL || 'https://www.choices-app.com';
@@ -81,7 +81,7 @@ test.describe('Production Polls Page Deep Diagnostic', () => {
     const pollsContent = await pollsContainer.textContent().catch(() => '');
     const hasContent = hasPollsContainer && pollsContent && pollsContent.length > 50;
     
-    const bodyText = await page.locator('body').textContent().catch(() => '');
+    const bodyText = await page.locator('body').textContent().catch(() => '') ?? '';
     
     // Check React state
     // Next.js App Router may not use #__next, so check multiple indicators

@@ -64,7 +64,7 @@ test.describe('Production Profile Stability Tests', () => {
 
     // Monitor page for 30 seconds to detect infinite loops
     const initialState = {
-      bodyTextLength: (await page.locator('body').textContent()).length,
+      bodyTextLength: (await page.locator('body').textContent() ?? '').length,
       spinnerVisible: await page.locator('.animate-spin').first().isVisible({ timeout: 500 }).catch(() => false),
     };
 
@@ -73,7 +73,7 @@ test.describe('Production Profile Stability Tests', () => {
       await page.waitForTimeout(2_000);
       
       const currentState = {
-        bodyTextLength: (await page.locator('body').textContent()).length,
+        bodyTextLength: (await page.locator('body').textContent() ?? '').length,
         spinnerVisible: await page.locator('.animate-spin').first().isVisible({ timeout: 500 }).catch(() => false),
         url: page.url(),
       };

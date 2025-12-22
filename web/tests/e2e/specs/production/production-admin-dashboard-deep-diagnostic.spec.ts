@@ -71,7 +71,7 @@ test.describe('Production Admin Dashboard Deep Diagnostic', () => {
     const hasAdminTitle = await page.locator('text=Comprehensive Admin Dashboard').isVisible({ timeout: 2_000 }).catch(() => false);
     const hasTotalUsers = await page.locator('text=Total Users').isVisible({ timeout: 2_000 }).catch(() => false);
     const hasTabs = await page.locator('button:has-text("Overview"), button:has-text("Site Messages")').first().isVisible({ timeout: 2_000 }).catch(() => false);
-    const bodyText = await page.locator('body').textContent().catch(() => '');
+    const bodyText = await page.locator('body').textContent().catch(() => '') ?? '';
     const hasContent = bodyText && bodyText.length > 200 && !bodyText.includes('Something went wrong') && !bodyText.includes('Access denied');
     const hasAccessDenied = bodyText.includes('Access denied') || bodyText.includes('Authentication Required');
     

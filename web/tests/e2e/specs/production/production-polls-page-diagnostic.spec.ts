@@ -1,4 +1,4 @@
-import { expect, test } from '@playwright/test';
+import { test } from '@playwright/test';
 
 const PRODUCTION_URL = process.env.PRODUCTION_URL || 'https://www.choices-app.com';
 const BASE_URL = process.env.BASE_URL || PRODUCTION_URL;
@@ -60,7 +60,8 @@ test.describe('Production Polls Page Diagnostic Tests', () => {
     const pollsDataSpinner = await page.locator('[data-testid="polls-loading-data"]').isVisible({ timeout: 500 }).catch(() => false);
     const isStuckLoading = pollsMountSpinner || pollsDataSpinner;
     
-    const bodyText = await page.locator('body').textContent().catch(() => '');
+    // bodyText captured for diagnostic purposes
+    void (await page.locator('body').textContent().catch(() => '') ?? '');
     
     // Get current URL to see if redirected
     const currentUrl = page.url();

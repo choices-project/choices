@@ -172,7 +172,7 @@ export default function PollClient({ poll }: PollClientProps) {
   // Extract specific poll fields for memoization stability
   const pollTotalVotesForBallot = typeof poll.totalVotes === 'number' ? poll.totalVotes : (typeof poll.totalvotes === 'number' ? poll.totalvotes : undefined);
   const pollDescriptionForBallot = poll.description ?? null;
-  const pollOptionsForBallot = poll.options ?? [];
+  const pollOptionsForBallot = React.useMemo(() => poll.options ?? [], [poll.options]);
   const pollVotingMethodForBallot = poll.votingMethod ?? 'single';
   const pollEndtimeForBallot = poll.endtime ?? null;
   const pollStatusForBallot = poll.status ?? 'active';

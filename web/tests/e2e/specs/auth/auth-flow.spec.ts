@@ -140,6 +140,22 @@ test.describe('Authentication Flow', () => {
     test('user can log in with valid credentials', async ({ page }) => {
       test.setTimeout(120_000);
       
+      // Diagnostic: Capture console messages and network requests
+      const consoleMessages: string[] = [];
+      const networkRequests: Array<{ url: string; status: number; method: string }> = [];
+      
+      page.on('console', (msg) => {
+        consoleMessages.push(`[${msg.type()}] ${msg.text()}`);
+      });
+      
+      page.on('response', (response) => {
+        networkRequests.push({
+          url: response.url(),
+          status: response.status(),
+          method: response.request().method(),
+        });
+      });
+      
       await page.goto(`${BASE_URL}/auth`, { waitUntil: 'domcontentloaded', timeout: 30_000 });
       
       // Fill in login form
@@ -150,8 +166,26 @@ test.describe('Authentication Flow', () => {
       // Wait for authentication to complete
       await page.waitForTimeout(3_000);
       
+      // Diagnostic: Check cookies before polling
+      const cookiesBefore = await page.context().cookies();
+      const authCookiesBefore = cookiesBefore.filter(c => 
+        c.name.startsWith('sb-') && 
+        (c.name.includes('auth') || c.name.includes('session') || c.name.includes('access'))
+      );
+      console.log('[DIAGNOSTIC] Cookies before auth check:', {
+        total: cookiesBefore.length,
+        authCookies: authCookiesBefore.map(c => ({
+          name: c.name,
+          valueLength: c.value.length,
+          httpOnly: c.httpOnly,
+          secure: c.secure,
+        })),
+      });
+      
       // Check for authentication tokens/cookies
       // Note: httpOnly cookies won't be accessible via document.cookie, so use Playwright's cookie API
+      let authCheckResult: { hasHttpOnlyCookie: boolean; hasNonHttpOnlyCookie: boolean; hasToken: boolean; cookies: any[] } | null = null;
+      
       await expect
         .poll(
           async () => {
@@ -173,14 +207,48 @@ test.describe('Authentication Flow', () => {
               return token !== null && token !== 'null';
             });
             
+            authCheckResult = {
+              hasHttpOnlyCookie,
+              hasNonHttpOnlyCookie,
+              hasToken,
+              cookies: cookies.filter(c => c.name.startsWith('sb-')),
+            };
+            
             return hasHttpOnlyCookie || hasNonHttpOnlyCookie || hasToken;
           },
           { timeout: 60_000, intervals: [2_000] },
         )
         .toBeTruthy();
       
+      // Diagnostic: Log auth check results
+      console.log('[DIAGNOSTIC] Auth check result:', authCheckResult);
+      console.log('[DIAGNOSTIC] Current URL:', page.url());
+      
       // Should redirect after login (to dashboard or feed)
+      const finalUrl = page.url();
       await expect(page).toHaveURL(/(dashboard|feed|onboarding)/, { timeout: 60_000 });
+      
+      // Diagnostic: Capture final state
+      const cookiesAfter = await page.context().cookies();
+      const authCookiesAfter = cookiesAfter.filter(c => 
+        c.name.startsWith('sb-') && 
+        (c.name.includes('auth') || c.name.includes('session') || c.name.includes('access'))
+      );
+      
+      console.log('[DIAGNOSTIC] Final state:', {
+        finalUrl,
+        cookiesAfter: {
+          total: cookiesAfter.length,
+          authCookies: authCookiesAfter.map(c => ({
+            name: c.name,
+            valueLength: c.value.length,
+            httpOnly: c.httpOnly,
+            secure: c.secure,
+          })),
+        },
+        consoleErrors: consoleMessages.filter(m => m.includes('[error]')),
+        loginRequests: networkRequests.filter(r => r.url.includes('/api/auth/login')),
+      });
     });
 
     test('authenticated user visiting root redirects to /feed', async ({ page }) => {
@@ -224,8 +292,57 @@ test.describe('Authentication Flow', () => {
         )
         .toBeTruthy();
       
+      // Diagnostic: Log auth state before root visit
+      const cookiesBeforeRoot = await page.context().cookies();
+      const authCookiesBeforeRoot = cookiesBeforeRoot.filter(c => 
+        c.name.startsWith('sb-') && 
+        (c.name.includes('auth') || c.name.includes('session'))
+      );
+      console.log('[DIAGNOSTIC] Auth state before root visit:', {
+        currentUrl: page.url(),
+        authCookies: authCookiesBeforeRoot.map(c => ({
+          name: c.name,
+          valueLength: c.value.length,
+          httpOnly: c.httpOnly,
+          secure: c.secure,
+          domain: c.domain,
+          path: c.path,
+        })),
+      });
+      
+      // Diagnostic: Capture redirect chain
+      const redirectChain: string[] = [];
+      page.on('response', (response) => {
+        if (response.status() >= 300 && response.status() < 400) {
+          const location = response.headers()['location'];
+          redirectChain.push(`${response.status()} ${response.request().method()} -> ${location || 'no location'}`);
+        }
+      });
+      
       // Now visit root - should redirect to /feed
       await page.goto(BASE_URL, { waitUntil: 'networkidle', timeout: 30_000 });
+      
+      // Diagnostic: Check what happened
+      const finalUrl = page.url();
+      const cookiesAfterRoot = await page.context().cookies();
+      const authCookiesAfterRoot = cookiesAfterRoot.filter(c => 
+        c.name.startsWith('sb-') && 
+        (c.name.includes('auth') || c.name.includes('session'))
+      );
+      
+      console.log('[DIAGNOSTIC] Root redirect result:', {
+        finalUrl,
+        expectedFeed: finalUrl.includes('/feed'),
+        redirectedToLanding: finalUrl.includes('/landing'),
+        redirectedToAuth: finalUrl.includes('/auth'),
+        redirectChain: redirectChain.filter(r => r.includes(BASE_URL) || r.includes('/feed') || r.includes('/landing')),
+        authCookiesAfterRoot: authCookiesAfterRoot.map(c => ({
+          name: c.name,
+          valueLength: c.value.length,
+          httpOnly: c.httpOnly,
+        })),
+        cookiesPersisted: authCookiesAfterRoot.length === authCookiesBeforeRoot.length,
+      });
       
       // Authenticated users should be redirected to /feed
       await expect(page).toHaveURL(new RegExp(`${BASE_URL.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}/feed`), { timeout: 10_000 });

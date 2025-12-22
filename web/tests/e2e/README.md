@@ -33,7 +33,7 @@ The application implements an authentication-first redirect policy:
 - **Authenticated users** visiting `/` are redirected to `/feed`
 - Protected routes (e.g., `/feed`, `/dashboard`) redirect unauthenticated users to `/auth`
 
-This behavior is implemented in `web/middleware.ts` using Supabase authentication checks.
+This behavior is implemented in `web/middleware.ts` using standard Supabase SSR (`createServerClient` + `getUser()`) for authentication checks.
 
 ### Test Authentication
 
