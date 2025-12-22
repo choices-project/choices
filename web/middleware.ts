@@ -192,7 +192,7 @@ async function checkAuthentication(request: NextRequest): Promise<boolean> {
     return false
   }
 
-  // If cookie exists and has substantial data (likely a valid session), 
+  // If cookie exists and has substantial data (likely a valid session),
   // but we can't parse it, we can still trust it as a fallback
   // This handles edge cases where cookie format might vary slightly
   const hasSubstantialCookie = authCookie.value.length > 100
@@ -235,15 +235,15 @@ async function checkAuthentication(request: NextRequest): Promise<boolean> {
     // Extract access_token from session data
     // Supabase stores it directly in the root of the session object
     accessToken = sessionData?.access_token || null
-    
+
     // Check for user object as primary indicator of authentication
     // The user object in the cookie is set by Supabase SSR and is authoritative
     // User object structure: { id, email, aud, role, ... }
     // Be lenient - if user object exists and has an id, trust it
     const userObj = sessionData?.user
     hasUser = Boolean(
-      userObj && 
-      typeof userObj === 'object' && 
+      userObj &&
+      typeof userObj === 'object' &&
       userObj.id
     )
 
