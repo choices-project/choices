@@ -2,7 +2,7 @@ import type { NextRequest } from 'next/server'
 
 /**
  * Check if a user is authenticated in middleware context (Edge Runtime compatible)
- * 
+ *
  * Edge Runtime compatible implementation that checks for Supabase auth cookies.
  * No external dependencies - uses only Next.js built-in APIs.
  *
@@ -16,10 +16,10 @@ import type { NextRequest } from 'next/server'
  * 1. Supabase sets cookies with httpOnly and secure flags
  * 2. Only substantial values indicate real sessions (not cleared/expired)
  * 3. Edge Runtime doesn't support full Supabase client verification
- * 
+ *
  * @param request - The Next.js request object
  * @returns Object with isAuthenticated boolean
- * 
+ *
  * @example
  * ```typescript
  * export function middleware(request: NextRequest) {
@@ -36,23 +36,15 @@ export function checkAuthInMiddleware(
   // Supabase sets these cookies securely (httpOnly, secure), so presence indicates authentication
   // No need to verify token - if cookie exists and is substantial, trust it
 
-  // Check Cookie header directly (most reliable in Edge Runtime)
+  // PRIORITY: Check Cookie header first (most reliable for httpOnly cookies in Edge Runtime)
+  // request.cookies.getAll() may not include httpOnly cookies in Edge Runtime
   const cookieHeader = request.headers.get('cookie') || ''
-  
-  // Also check parsed cookies as fallback
-  const cookies = request.cookies.getAll()
 
-  // Find Supabase auth cookie - check both header and parsed cookies
+  // Find Supabase auth cookie - prioritize Cookie header parsing
   let authCookie: { name: string; value: string } | null = null
 
-  // First, try parsed cookies
-  authCookie = cookies.find(cookie =>
-    cookie.name.startsWith('sb-') &&
-    (cookie.name.includes('auth') || cookie.name.includes('session'))
-  ) || null
-
-  // If not found in parsed cookies, check Cookie header
-  if (!authCookie && cookieHeader) {
+  // First, check Cookie header (most reliable for httpOnly cookies)
+  if (cookieHeader && cookieHeader.length > 0) {
     const cookiePairs = cookieHeader.split(';').map(c => c.trim())
     for (const cookiePair of cookiePairs) {
       const equalIndex = cookiePair.indexOf('=')
@@ -61,13 +53,15 @@ export function checkAuthInMiddleware(
       const cookieName = cookiePair.substring(0, equalIndex).trim()
       let cookieValue = cookiePair.substring(equalIndex + 1).trim()
 
-      // Handle URL encoding
+      // Handle URL encoding (cookies may be URL-encoded in header)
       try {
         cookieValue = decodeURIComponent(cookieValue)
       } catch {
         // If decoding fails, use original value
       }
-      
+
+      // Check if it's a Supabase auth cookie
+      // Pattern: sb-* containing 'auth' or 'session'
       if (cookieName.startsWith('sb-') &&
           (cookieName.includes('auth') || cookieName.includes('session'))) {
         authCookie = { name: cookieName, value: cookieValue }
@@ -76,21 +70,30 @@ export function checkAuthInMiddleware(
     }
   }
 
+  // Fallback: Check parsed cookies if Cookie header didn't work
+  if (!authCookie) {
+    const cookies = request.cookies.getAll()
+    authCookie = cookies.find(cookie =>
+      cookie.name.startsWith('sb-') &&
+      (cookie.name.includes('auth') || cookie.name.includes('session'))
+    ) || null
+  }
+
   // If no auth cookie found, user is not authenticated
-  if (!authCookie || !authCookie.value || authCookie.value.length < 10) {
+  if (!authCookie || !authCookie.value) {
     return { isAuthenticated: false }
   }
 
   // Check for invalid/empty cookie values
   const trimmedValue = authCookie.value.trim()
-  if (trimmedValue === 'null' ||
+  if (trimmedValue.length < 10 ||
+      trimmedValue === 'null' ||
       trimmedValue === 'undefined' ||
       trimmedValue === '{}' ||
       trimmedValue === '""' ||
-      trimmedValue === "''" ||
-      trimmedValue.length < 10) {
-  return { isAuthenticated: false }
-}
+      trimmedValue === "''") {
+    return { isAuthenticated: false }
+  }
 
   // If cookie exists and is substantial, user is authenticated
   // Supabase sets these cookies securely (httpOnly, secure flags)
