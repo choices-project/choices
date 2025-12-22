@@ -157,10 +157,10 @@ function validateRequest(request: NextRequest): { valid: boolean; reason?: strin
 
 /**
  * Check if user is authenticated using Edge Runtime compatible approach
- * 
+ *
  * Supabase stores session data in cookies as base64-encoded JSON with structure:
  * { access_token, refresh_token, expires_at, expires_in, token_type, user }
- * 
+ *
  * We extract the access_token and verify it with Supabase Auth API using fetch
  * (Edge Runtime compatible - no Node.js dependencies)
  */
@@ -197,15 +197,15 @@ async function checkAuthentication(request: NextRequest): Promise<boolean> {
   // { access_token, refresh_token, expires_at, expires_in, token_type, user }
   let accessToken: string | null = null
   let hasUser = false
-  
+
   try {
     let cookieValue = authCookie.value
-    
+
     // Remove 'base64-' prefix if present (Supabase SSR format)
     if (cookieValue.startsWith('base64-')) {
       cookieValue = cookieValue.substring(7)
     }
-    
+
     // Decode base64 to get JSON string (Edge Runtime compatible - atob is available)
     let jsonString: string
     try {
@@ -216,7 +216,7 @@ async function checkAuthentication(request: NextRequest): Promise<boolean> {
       // Return false for security - we can't trust a cookie we can't parse
       return false
     }
-    
+
     // Parse JSON to extract session data
     let sessionData: any
     try {
@@ -226,20 +226,27 @@ async function checkAuthentication(request: NextRequest): Promise<boolean> {
       // Return false for security
       return false
     }
-    
+
     // Extract access_token from session data
     // Supabase stores it directly in the root of the session object
     accessToken = sessionData?.access_token || null
     
     // Check for user object as primary indicator of authentication
     // The user object in the cookie is set by Supabase SSR and is authoritative
-    hasUser = sessionData?.user && typeof sessionData.user === 'object' && sessionData.user.id
-    
+    // User object structure: { id, email, aud, role, ... }
+    // Be lenient - if user object exists and has an id, trust it
+    const userObj = sessionData?.user
+    hasUser = Boolean(
+      userObj && 
+      typeof userObj === 'object' && 
+      userObj.id
+    )
+
     // If we have neither access_token nor user, cookie is invalid
     if (!accessToken && !hasUser) {
       return false
     }
-    
+
     // If we have a valid user object, we can trust the session
     // The cookie itself is set by Supabase SSR and is proof of authentication
     // We don't need to verify the token if we have valid user data
@@ -275,12 +282,12 @@ async function checkAuthentication(request: NextRequest): Promise<boolean> {
       if (response.ok) {
         return true
       }
-      
+
       // If verification explicitly fails (401/403), user is not authenticated
       if (response.status === 401 || response.status === 403) {
         return false
       }
-      
+
       // For other errors (500s, timeouts, etc.), if we have the cookie with access_token,
       // trust it - the cookie itself is set by Supabase and is authoritative
       // This handles network issues without breaking authentication
