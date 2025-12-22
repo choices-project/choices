@@ -177,10 +177,35 @@ async function checkAuthentication(request: NextRequest): Promise<boolean> {
   const projectRef = projectRefMatch?.[1] ?? 'unknown'
   const authCookieName = `sb-${projectRef}-auth-token`
 
-  // Check for Supabase auth cookie
-  const authCookie = request.cookies.get(authCookieName)
+  // Check for Supabase auth cookie using comprehensive approach
+  // First try the expected cookie name
+  let authCookie = request.cookies.get(authCookieName)
+  
+  // If not found, check ALL cookies for any starting with 'sb-' and containing 'auth'
+  // This handles edge cases where cookie parsing might have issues in Edge Runtime
   if (!authCookie?.value || authCookie.value.length < 10) {
-    // Also check for chunked cookies (Supabase may split large cookies)
+    const allCookies = request.cookies.getAll()
+    for (const cookie of allCookies) {
+      const name = cookie.name.toLowerCase()
+      // Match patterns: sb-*-auth-token, sb-*-auth-token-*, sb-access-token, etc.
+      if (name.startsWith('sb-') && (name.includes('auth') || name.includes('session') || name.includes('access'))) {
+        const value = cookie.value?.trim() || ''
+        // Check for substantial value (auth tokens are typically longer than 10 chars)
+        if (value.length > 10 && 
+            value !== 'null' && 
+            value !== 'undefined' && 
+            value !== '{}' &&
+            value !== '""' &&
+            value !== "''") {
+          authCookie = cookie
+          break
+        }
+      }
+    }
+  }
+  
+  // Also check for chunked cookies (Supabase may split large cookies)
+  if (!authCookie?.value || authCookie.value.length < 10) {
     for (let i = 0; i < 10; i++) {
       const chunkedCookie = request.cookies.get(`${authCookieName}.${i}`)
       if (chunkedCookie?.value && chunkedCookie.value.length >= 10) {
