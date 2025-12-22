@@ -189,7 +189,7 @@ export async function middleware(request: NextRequest) {
   if (pathname === '/') {
     // Create response for cookie handling
     const redirectResponse = NextResponse.next()
-    
+
     // Use Supabase SSR approach for authentication check
     const { isAuthenticated } = await checkAuthInMiddleware(request, redirectResponse)
 
@@ -230,6 +230,9 @@ export async function middleware(request: NextRequest) {
         authUrl.searchParams.set('redirectTo', pathname)
         return NextResponse.redirect(authUrl, 307)
       }
+      
+      // Return response with updated cookies if authenticated
+      return response
     }
   }
 
@@ -245,6 +248,9 @@ export async function middleware(request: NextRequest) {
       // Authenticated users trying to access login/register should go to feed
       return NextResponse.redirect(new URL('/feed', request.url), 307)
     }
+    
+    // Return response with updated cookies if not authenticated
+    return response
   }
 
   // Skip middleware for static files and API routes that don't need security headers
@@ -359,6 +365,9 @@ export async function middleware(request: NextRequest) {
 
   return response
 }
+
+// Use Node.js runtime to support @supabase/ssr
+export const runtime = 'nodejs'
 
 export const config = {
   matcher: [
