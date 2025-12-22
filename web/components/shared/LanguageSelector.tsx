@@ -47,6 +47,8 @@ export default function LanguageSelector({
   const menuId = useId();
   const toggleRef = useRef<HTMLButtonElement | null>(null);
   const [liveMessage, setLiveMessage] = useState('');
+  // Track selected language locally for immediate UI update while router.refresh() completes
+  const [selectedLanguage, setSelectedLanguage] = useState<string | null>(null);
 
   const announce = useCallback(
     (message: string, politeness: 'polite' | 'assertive' = 'polite') => {
@@ -78,19 +80,33 @@ export default function LanguageSelector({
   };
   const { updateSettings } = useAppActions();
 
+  // Use selectedLanguage if set (for immediate UI update), otherwise use currentLanguage from hook
+  const displayLanguage = selectedLanguage ?? currentLanguage;
+
   const handleLanguageChange = async (language: string) => {
     try {
+      // Update local state immediately for instant UI feedback
+      setSelectedLanguage(language);
       updateSettings({ language });
       await changeLanguage(language);
       const languageLabel = getDisplayName(language);
       announce(t('navigation.languageSelector.live.changed', { language: languageLabel }));
     } catch (error) {
       logger.error('Failed to change language:', error);
+      // Reset selected language on error
+      setSelectedLanguage(null);
       announce(t('navigation.languageSelector.live.error'), 'assertive');
     } finally {
       setIsOpen(false);
     }
   };
+
+  // Reset selectedLanguage when currentLanguage updates (after router.refresh() completes)
+  useEffect(() => {
+    if (selectedLanguage && currentLanguage === selectedLanguage) {
+      setSelectedLanguage(null); // Clear local state once hook has caught up
+    }
+  }, [currentLanguage, selectedLanguage]);
 
   const LiveRegion = () => (
     <div
@@ -147,7 +163,7 @@ export default function LanguageSelector({
           aria-controls={`${menuId}-menu`}
         >
           <GlobeAltIcon className="h-4 w-4" />
-          <span>{getDisplayName(currentLanguage)}</span>
+          <span>{getDisplayName(displayLanguage)}</span>
           <ChevronDownIcon className="h-4 w-4" />
         </button>
 
@@ -208,7 +224,7 @@ export default function LanguageSelector({
         >
           <div className="flex items-center space-x-2">
             <GlobeAltIcon className="h-4 w-4 text-gray-400" />
-            <span>{getDisplayName(currentLanguage)}</span>
+            <span>{getDisplayName(displayLanguage)}</span>
           </div>
           <ChevronDownIcon className="h-4 w-4 text-gray-400" />
         </button>

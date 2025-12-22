@@ -2,9 +2,7 @@ import { expect, test, type Page } from '@playwright/test';
 
 import {
   cleanupE2ETestData,
-  ensureLoggedOut,
   getSeededData,
-  loginTestUser,
   setupE2ETestData,
   setupExternalAPIMocks,
   waitForPageReady,
@@ -87,9 +85,11 @@ async function loginForToken(page: Page, user: TestUser): Promise<string> {
 }
 
 const APP_BOOT_TIMEOUT = 90_000;
-const BASE_URL = process.env.BASE_URL || process.env.PLAYWRIGHT_BASE_URL || 'http://127.0.0.1:3000';
-const regularEmail = process.env.E2E_USER_EMAIL;
-const regularPassword = process.env.E2E_USER_PASSWORD;
+
+// Skip these tests when running against production (without mocks)
+// These tests are designed for mock harness mode and create test users that don't exist in production
+const IS_PRODUCTION_WITHOUT_MOCKS = process.env.PLAYWRIGHT_USE_MOCKS === '0' && 
+  (process.env.BASE_URL?.includes('choices-app.com') || process.env.BASE_URL?.includes('production'));
 
 test.describe('API endpoints (mock harness)', () => {
   let seedHandle: SeedHandle;
@@ -97,6 +97,12 @@ test.describe('API endpoints (mock harness)', () => {
   let authToken: string;
 
   test.beforeEach(async ({ page }) => {
+    // Skip all tests in this suite when running against production without mocks
+    // These tests require mock harness mode to create test users that don't exist in production
+    if (IS_PRODUCTION_WITHOUT_MOCKS) {
+      test.skip();
+      return;
+    }
     seedHandle = await setupE2ETestData({
       user: {
         email: 'api-test@example.com',

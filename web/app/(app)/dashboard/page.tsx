@@ -11,7 +11,7 @@ import DashboardNavigation, { MobileDashboardNav } from '@/components/shared/Das
 import { ErrorBoundary } from '@/components/shared/ErrorBoundary';
 import { Button } from '@/components/ui/button';
 
-import { useIsAuthenticated, useUserLoading } from '@/lib/stores';
+import { useIsAuthenticated, useUserLoading, useUserStore } from '@/lib/stores';
 import { useAppActions } from '@/lib/stores/appStore';
 import { logger } from '@/lib/utils/logger';
 
@@ -99,11 +99,14 @@ export default function DashboardPage() {
       }
 
       // Additional check: verify session cookie exists as fallback
+      // If middleware allowed the request through, cookies exist and user IS authenticated
+      // Trust the cookies and allow rendering while auth state hydrates
       const hasSessionCookie = typeof document !== 'undefined' &&
         (document.cookie.includes('sb-') ||
          document.cookie.includes('auth-token'));
 
       if (!hasSessionCookie) {
+        // No cookies at all - definitely not authenticated, redirect immediately
         logger.debug('🚨 Dashboard: No session cookie - redirecting to auth');
         routerRef.current.replace('/auth');
         return () => {
@@ -111,26 +114,31 @@ export default function DashboardPage() {
         };
       }
 
-      // If cookie exists but store says not authenticated, wait a bit for hydration
-      // This handles the case where session cookie is set but store hasn't hydrated yet
-      // We'll wait up to 1.5 seconds before redirecting
-      logger.debug('🚨 Dashboard: Session cookie exists but auth not confirmed - waiting for hydration');
+      // Cookie exists - middleware already validated authentication, so trust it
+      // Allow page to render while auth state hydrates (can take 3-5 seconds in production)
+      // Only redirect if cookies disappear or auth state fails to hydrate after extended wait
+      logger.debug('🚨 Dashboard: Session cookie exists - trusting middleware, allowing render while auth hydrates');
       authRetryTimeoutRef.current = setTimeout(() => {
-        // Double-check cookie still exists and auth state
+        // After extended wait, check if cookies still exist and auth state has hydrated
         const stillHasCookie = typeof document !== 'undefined' &&
           (document.cookie.includes('sb-') ||
            document.cookie.includes('auth-token'));
+        // Access store directly to check auth state without causing re-render
+        const currentAuthState = useUserStore.getState().isAuthenticated;
 
         if (!stillHasCookie) {
-          logger.debug('🚨 Dashboard: Session cookie disappeared - redirecting to auth');
+          // Cookies disappeared - definitely not authenticated
+          logger.debug('🚨 Dashboard: Session cookie disappeared after wait - redirecting to auth');
           routerRef.current.replace('/auth');
-        } else {
-          // Cookie still exists but auth not confirmed - redirect anyway
-          logger.debug('🚨 Dashboard: Session cookie exists but auth not confirmed after wait - redirecting to auth');
-          routerRef.current.replace('/auth');
+        } else if (!currentAuthState) {
+          // Cookies still exist but auth state hasn't hydrated after extended wait
+          // This is unusual but could happen if there's a store hydration issue
+          // Log a warning but DON'T redirect - cookies are authoritative, allow render
+          logger.warn('🚨 Dashboard: Session cookie exists but auth state not hydrated after extended wait - allowing render anyway (cookies are authoritative)');
         }
+        // If currentAuthState is true, no action needed - auth has successfully hydrated
         authRetryTimeoutRef.current = null;
-      }, 1500); // Wait 1.5 seconds for hydration
+      }, 5000); // Wait 5 seconds for hydration (production can be slower)
 
       return () => {
         if (authRetryTimeoutRef.current) {
@@ -280,11 +288,20 @@ export default function DashboardPage() {
     );
   }
 
-  // Only block rendering if user is definitely not authenticated
+  // Only block rendering if user is definitely not authenticated AND no cookies exist
+  // If cookies exist, middleware already validated authentication, so allow rendering
   // Allow page to render even if profile is still loading or missing
   // The PersonalDashboard component can handle missing profile gracefully
   // In E2E harness mode, always allow rendering (authentication is mocked)
-  if (!shouldBypassAuth && !isUserLoading && !isAuthenticated) {
+  const hasSessionCookie = typeof window !== 'undefined' &&
+    (document.cookie.includes('sb-') || document.cookie.includes('auth-token'));
+  
+  // Only show access denied if:
+  // 1. Not bypassing auth
+  // 2. Not loading
+  // 3. Not authenticated in store
+  // 4. AND no session cookies exist (definitely not authenticated)
+  if (!shouldBypassAuth && !isUserLoading && !isAuthenticated && !hasSessionCookie) {
     return (
       <div className="flex items-center justify-center min-h-screen px-4">
         <div className="text-center space-y-4 max-w-md">

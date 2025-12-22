@@ -125,34 +125,16 @@ export default function AdminStoreHarnessPage() {
         });
       },
       enableFeatureFlag: (flagId: string) => {
+        // Use the store's actual enableFeatureFlag action to ensure consistency
+        // This properly calls recalcFeatureFlags() to update enabledFlags/disabledFlags
         const currentState = useAdminStore.getState();
-        const currentFlags = currentState.featureFlags.flags;
-        if (currentFlags[flagId] === true) {
-          return true;
-        }
-        useAdminStore.setState((draft) => {
-          draft.featureFlags.flags[flagId] = true;
-          if (!draft.featureFlags.enabledFlags.includes(flagId)) {
-            draft.featureFlags.enabledFlags.push(flagId);
-          }
-          draft.featureFlags.disabledFlags = draft.featureFlags.disabledFlags.filter((f) => f !== flagId);
-        });
-        return true;
+        return currentState.enableFeatureFlag(flagId);
       },
       disableFeatureFlag: (flagId: string) => {
+        // Use the store's actual disableFeatureFlag action to ensure consistency
+        // This properly calls recalcFeatureFlags() to update enabledFlags/disabledFlags
         const currentState = useAdminStore.getState();
-        const currentFlags = currentState.featureFlags.flags;
-        if (currentFlags[flagId] === false) {
-          return true;
-        }
-        useAdminStore.setState((draft) => {
-          draft.featureFlags.flags[flagId] = false;
-          draft.featureFlags.enabledFlags = draft.featureFlags.enabledFlags.filter((f) => f !== flagId);
-          if (!draft.featureFlags.disabledFlags.includes(flagId)) {
-            draft.featureFlags.disabledFlags.push(flagId);
-          }
-        });
-        return true;
+        return currentState.disableFeatureFlag(flagId);
       },
       setReimportProgress: (progress: Partial<AdminReimportProgress>) => {
         useAdminStore.setState((draft) => {
