@@ -175,22 +175,16 @@ async function checkAuthentication(request: NextRequest): Promise<boolean> {
     return false
   }
 
-  // Extract project ref to determine cookie name
-  const projectRefMatch = supabaseUrl.match(/https?:\/\/([^.]+)\.supabase\.(co|io)/)
-  const projectRef = projectRefMatch?.[1] ?? 'unknown'
-  const authCookieName = `sb-${projectRef}-auth-token`
+  // Search all cookies for Supabase auth token
+  // Supabase SSR sets cookies with pattern: sb-{project-ref}-auth-token
+  // We search all cookies to handle any project ref
+  const allCookies = request.cookies.getAll()
+  let authCookie: { name: string; value: string } | undefined
 
-  // Get the auth cookie - try exact name first, then search all cookies
-  let authCookie = request.cookies.get(authCookieName)
-  
-  // Fallback: search all cookies for Supabase auth pattern
-  if (!authCookie) {
-    const allCookies = request.cookies.getAll()
-    for (const cookie of allCookies) {
-      if (cookie.name.startsWith('sb-') && cookie.name.includes('auth-token')) {
-        authCookie = cookie
-        break
-      }
+  for (const cookie of allCookies) {
+    if (cookie.name.startsWith('sb-') && cookie.name.includes('auth-token')) {
+      authCookie = cookie
+      break
     }
   }
 
