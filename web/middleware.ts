@@ -189,44 +189,30 @@ async function checkAuthentication(request: NextRequest): Promise<boolean> {
       const projectRef = projectRefMatch[1]
       const expectedCookieName = `sb-${projectRef}-auth-token`
       const exactCookie = request.cookies.get(expectedCookieName)
-      if (exactCookie?.value && exactCookie.value.length > 0) {
+      if (exactCookie && exactCookie.value && typeof exactCookie.value === 'string' && exactCookie.value.length > 0) {
         authCookie = { name: exactCookie.name, value: exactCookie.value }
       }
     }
 
     // Fallback: search all cookies for pattern
     // This handles cases where project ref extraction fails or cookie name varies
-    if (!authCookie) {
+    if (!authCookie && allCookies.length > 0) {
       for (const cookie of allCookies) {
         // Check for Supabase auth cookie pattern
         // Pattern: sb-*-auth-token (where * is the project ref)
-        if (cookie.name && cookie.name.startsWith('sb-') && cookie.name.includes('auth-token')) {
+        if (cookie && cookie.name && typeof cookie.name === 'string' && 
+            cookie.name.startsWith('sb-') && cookie.name.includes('auth-token')) {
           // Make sure cookie has a value
-          if (cookie.value && cookie.value.length > 0) {
-            authCookie = cookie
+          if (cookie.value && typeof cookie.value === 'string' && cookie.value.length > 0) {
+            authCookie = { name: cookie.name, value: cookie.value }
             break
           }
         }
       }
     }
 
-    // Additional fallback: check Cookie header directly
-    // Sometimes request.cookies might not include all cookies in Edge Runtime
-    if (!authCookie) {
-      const cookieHeader = request.headers.get('cookie')
-      if (cookieHeader) {
-        // Parse cookie header manually
-        const cookies = cookieHeader.split(';').map(c => c.trim())
-        for (const cookieStr of cookies) {
-          const [name, ...valueParts] = cookieStr.split('=')
-          const value = valueParts.join('=') // Handle values that contain '='
-          if (name && name.startsWith('sb-') && name.includes('auth-token') && value && value.length > 0) {
-            authCookie = { name: name.trim(), value: value.trim() }
-            break
-          }
-        }
-      }
-    }
+    // Note: httpOnly cookies are NOT in the Cookie header - they're only accessible via request.cookies
+    // So we don't need to check the Cookie header for httpOnly cookies
 
     // Validate cookie exists and has content
     if (!authCookie) {
@@ -235,7 +221,7 @@ async function checkAuthentication(request: NextRequest): Promise<boolean> {
 
     // Get the raw cookie value - handle potential undefined/null
     let cookieValue = authCookie.value || ''
-    
+
     // Check if value is empty or just whitespace
     if (!cookieValue || cookieValue.trim().length === 0) {
       return false
