@@ -129,6 +129,21 @@ export default function GlobalNavigation() {
     [], // Empty deps - using tRef
   );
 
+  // DIAGNOSTIC: Log when rendering full navigation (must be after navigationItems but before early returns)
+  useEffect(() => {
+    if (!isLoading && !_hasError) {
+      if (process.env.DEBUG_DASHBOARD === '1' || (typeof window !== 'undefined' && window.localStorage.getItem('e2e-dashboard-bypass') === '1')) {
+        logger.debug('🚨 GlobalNavigation: Rendering full navigation', {
+          navigationItemsCount: navigationItems.length,
+          dashboardNavItem: navigationItems.find(item => item.href === '/dashboard'),
+          isAuthenticated,
+          user: user ? { id: user.id, email: user.email } : null,
+          pathname,
+        });
+      }
+    }
+  }, [isLoading, _hasError, navigationItems, isAuthenticated, user, pathname]);
+
   useEffect(() => {
     if (isMobileMenuOpen) {
       previouslyFocusedElementRef.current = document.activeElement as HTMLElement | null;
