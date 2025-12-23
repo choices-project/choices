@@ -586,9 +586,11 @@ export default function DashboardPage() {
   // - Store confirms not authenticated
   // This matches the pattern used by feed/polls pages - trust middleware, simple checks
   // CRITICAL: If bypass flag is set, always allow render (E2E testing)
+  // This must be checked BEFORE any other conditions to prevent redirects
   if (shouldBypassAuth) {
     // Bypass is set - render dashboard immediately, skip all auth checks
     // This allows E2E tests to access dashboard without authentication
+    // Fall through to render dashboard content
   } else if (!isUserLoading && !isAuthContextLoading && isStoreHydrated && hasCookies === false && !isAuthenticated) {
     return (
       <div className="flex items-center justify-center min-h-screen px-4">
