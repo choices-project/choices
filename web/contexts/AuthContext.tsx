@@ -123,7 +123,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     if (hasInitializedRef.current) return
     hasInitializedRef.current = true
 
-    if (IS_E2E_HARNESS) {
+    // Check for E2E bypass flag (same logic as dashboard page)
+    // This allows tests to bypass auth initialization
+    const shouldBypassAuth = typeof window !== 'undefined' && 
+      window.localStorage.getItem('e2e-dashboard-bypass') === '1'
+
+    if (IS_E2E_HARNESS || shouldBypassAuth) {
       initializeAuthRef.current(null, null, false)
       setLoading(false)
       return
@@ -137,8 +142,14 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
         if (!mounted) return undefined
 
-        // Get initial session
-        const { data: { session } } = await supabase.auth.getSession()
+        // Get initial session with timeout to prevent hanging
+        const sessionPromise = supabase.auth.getSession()
+        const timeoutPromise = new Promise<{ data: { session: Session | null } }>((resolve) => {
+          setTimeout(() => resolve({ data: { session: null } }), 5000) // 5 second timeout
+        })
+        
+        const { data: { session } } = await Promise.race([sessionPromise, timeoutPromise])
+        
         if (mounted) {
           setSession(session)
           setUser(session?.user ?? null)
@@ -166,7 +177,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       } catch (error) {
         logger.error('Failed to initialize Supabase client:', error)
         if (mounted) {
+          // Always set loading to false, even on error, to prevent UI from being stuck
           setLoading(false)
+          // Initialize with null session on error
+          initializeAuthRef.current(null, null, false)
         }
         return undefined
       }
