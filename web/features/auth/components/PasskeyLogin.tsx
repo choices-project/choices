@@ -147,7 +147,7 @@ export function PasskeyLogin({
 
       <CardContent className="space-y-4">
         {success ? (
-          <div className="text-center space-y-4">
+          <div className="text-center space-y-4" data-testid="passkey-login-success">
             <CheckCircle className="h-12 w-12 text-green-500 mx-auto" />
             <div>
               <h3 className="text-lg font-semibold text-green-700">Authentication Successful!</h3>

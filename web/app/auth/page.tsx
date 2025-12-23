@@ -72,6 +72,7 @@ export default function AuthPage() {
 
   // Sync DOM values with React state for E2E test compatibility
   // This ensures that when tests use page.fill(), the React state updates
+  // Also triggers change events to ensure validation runs
   React.useEffect(() => {
     const emailInput = document.getElementById('email') as HTMLInputElement;
     const passwordInput = document.getElementById('password') as HTMLInputElement;
@@ -82,6 +83,8 @@ export default function AuthPage() {
       const currentValue = emailInput.value;
       setFormData(prev => {
         if (prev.email !== currentValue) {
+          // Trigger change event to ensure validation runs
+          emailInput.dispatchEvent(new Event('change', { bubbles: true }));
           return { ...prev, email: currentValue };
         }
         return prev;
@@ -92,6 +95,8 @@ export default function AuthPage() {
       const currentValue = passwordInput.value;
       setFormData(prev => {
         if (prev.password !== currentValue) {
+          // Trigger change event to ensure validation runs
+          passwordInput.dispatchEvent(new Event('change', { bubbles: true }));
           return { ...prev, password: currentValue };
         }
         return prev;
@@ -103,15 +108,20 @@ export default function AuthPage() {
     passwordInput.addEventListener('input', syncPassword);
     
     // Also sync periodically to catch any direct DOM manipulation (E2E tests)
+    // Increased frequency and duration for better E2E test compatibility
     const interval = setInterval(() => {
       syncEmail();
       syncPassword();
-    }, 100);
+    }, 50); // Check every 50ms for faster response
+
+    // Run for 5 seconds to catch late DOM updates
+    const timeout = setTimeout(() => clearInterval(interval), 5000);
 
     return () => {
       emailInput.removeEventListener('input', syncEmail);
       passwordInput.removeEventListener('input', syncPassword);
       clearInterval(interval);
+      clearTimeout(timeout);
     };
   }, []); // Empty deps - only run once on mount
 

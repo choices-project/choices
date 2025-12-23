@@ -194,27 +194,40 @@ export default function DashboardPage() {
 
   // Re-check bypass flag periodically to catch cases where it's set after initial render
   // This handles E2E tests that set localStorage via addInitScript
+  // Also handles case where middleware redirected to /auth but bypass flag is now set
   useEffect(() => {
     if (typeof window === 'undefined') return;
-
+    
     // Check immediately
     const checkBypass = () => {
       try {
         const bypassValue = window.localStorage.getItem('e2e-dashboard-bypass') === '1';
         if (bypassValue !== shouldBypassAuth) {
           setShouldBypassAuth(bypassValue);
+          
+          // CRITICAL: If bypass flag is now set and we're on /auth with redirectTo=/dashboard, redirect back
+          if (bypassValue && window.location.pathname === '/auth') {
+            const searchParams = new URLSearchParams(window.location.search);
+            const redirectTo = searchParams.get('redirectTo');
+            if (redirectTo === '/dashboard' || redirectTo === '/feed') {
+              if (process.env.DEBUG_DASHBOARD === '1') {
+                logger.debug('🚨 Dashboard: Bypass flag detected during periodic check - redirecting back to dashboard');
+              }
+              window.location.replace(redirectTo);
+            }
+          }
         }
       } catch {
         // localStorage might not be available
       }
     };
-
+    
     checkBypass();
-
-    // Check periodically for first 2 seconds (covers addInitScript timing)
+    
+    // Check periodically for first 3 seconds (covers addInitScript timing and middleware redirects)
     const interval = setInterval(checkBypass, 100);
-    const timeout = setTimeout(() => clearInterval(interval), 2000);
-
+    const timeout = setTimeout(() => clearInterval(interval), 3000);
+    
     return () => {
       clearInterval(interval);
       clearTimeout(timeout);

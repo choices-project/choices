@@ -181,7 +181,7 @@ export function PasskeyRegister({
 
       <CardContent className="space-y-4">
         {success ? (
-          <div className="text-center space-y-4">
+          <div className="text-center space-y-4" data-testid="passkey-register-success">
             <CheckCircle className="h-12 w-12 text-green-500 mx-auto" />
             <div>
               <h3 className="text-lg font-semibold text-green-700">Registration Successful!</h3>
