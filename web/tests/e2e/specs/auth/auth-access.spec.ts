@@ -171,23 +171,38 @@ test.describe('Auth access harness', () => {
     
     await registerButton.click();
     
-    // Wait a bit for async operations
-    await page.waitForTimeout(2_000);
+    // Wait for success message to appear - use test ID for more reliable detection
+    // First wait for the success test ID to show 'true', then wait for the text to be visible
+    await page.waitForFunction(
+      () => {
+        const successTestId = document.querySelector('[data-testid="auth-access-success"]');
+        return successTestId?.textContent?.trim() === 'true';
+      },
+      { timeout: 15_000 }
+    );
     
-    // Capture state after click
+    // Also wait for the success message text to be visible
+    await expect(page.getByTestId('passkey-register-success')).toBeVisible({ timeout: 15_000 });
+    await expect(page.getByText('Registration Successful!')).toBeVisible({ timeout: 5_000 });
+    
+    // Capture state after success for diagnostics
     const afterClickDiagnostics = await page.evaluate(() => {
       const successMessage = Array.from(document.querySelectorAll('*')).find(el => 
         el.textContent?.includes('Registration Successful') || el.textContent?.includes('Success')
       );
       const successTestId = document.querySelector('[data-testid="auth-access-success"]');
       const errorTestId = document.querySelector('[data-testid="auth-access-error"]');
+      const registerSuccessTestId = document.querySelector('[data-testid="passkey-register-success"]');
       
       return {
         successMessage: {
           exists: !!successMessage,
           text: successMessage?.textContent?.trim() || null,
           visible: successMessage ? (successMessage as HTMLElement).offsetParent !== null : false,
-          innerHTML: successMessage ? (successMessage as HTMLElement).innerHTML.substring(0, 200) : null,
+        },
+        registerSuccessTestId: {
+          exists: !!registerSuccessTestId,
+          visible: registerSuccessTestId ? (registerSuccessTestId as HTMLElement).offsetParent !== null : false,
         },
         successTestId: {
           exists: !!successTestId,
@@ -197,53 +212,11 @@ test.describe('Auth access harness', () => {
           exists: !!errorTestId,
           text: errorTestId?.textContent?.trim() || null,
         },
-        consoleErrors: (window as any).__playwright_console_errors || [],
       };
     });
-    console.log('[DIAGNOSTIC] Passkey registration state after click:', JSON.stringify(afterClickDiagnostics, null, 2));
+    console.log('[DIAGNOSTIC] Passkey registration state after success:', JSON.stringify(afterClickDiagnostics, null, 2));
 
-    // DIAGNOSTIC: Additional comprehensive state check before assertions
-    const finalState = await page.evaluate(() => {
-      const successElements = Array.from(document.querySelectorAll('*')).filter(el => 
-        el.textContent?.includes('Success') || el.textContent?.includes('Successful')
-      );
-      const errorElements = Array.from(document.querySelectorAll('*')).filter(el => 
-        el.textContent?.includes('Error') || el.textContent?.includes('Failed')
-      );
-      
-      return {
-        successElements: successElements.map(el => ({
-          tag: el.tagName,
-          text: el.textContent?.trim(),
-          visible: (el as HTMLElement).offsetParent !== null,
-          testId: (el as HTMLElement).getAttribute('data-testid'),
-        })),
-        errorElements: errorElements.map(el => ({
-          tag: el.tagName,
-          text: el.textContent?.trim(),
-          visible: (el as HTMLElement).offsetParent !== null,
-          testId: (el as HTMLElement).getAttribute('data-testid'),
-        })),
-        successTestId: {
-          exists: !!document.querySelector('[data-testid="auth-access-success"]'),
-          text: document.querySelector('[data-testid="auth-access-success"]')?.textContent?.trim(),
-          visible: document.querySelector('[data-testid="auth-access-success"]') ? 
-            (document.querySelector('[data-testid="auth-access-success"]') as HTMLElement).offsetParent !== null : false,
-        },
-        errorTestId: {
-          exists: !!document.querySelector('[data-testid="auth-access-error"]'),
-          text: document.querySelector('[data-testid="auth-access-error"]')?.textContent?.trim(),
-          visible: document.querySelector('[data-testid="auth-access-error"]') ? 
-            (document.querySelector('[data-testid="auth-access-error"]') as HTMLElement).offsetParent !== null : false,
-        },
-        localStorage: {
-          biometricSuccess: localStorage.getItem('biometric-success'),
-        },
-      };
-    });
-    console.log('[DIAGNOSTIC] Final passkey registration state:', JSON.stringify(finalState, null, 2));
-
-    await expect(page.getByText('Registration Successful!')).toBeVisible();
+    // Verify all success indicators
     await expect(page.getByTestId('auth-access-success')).toHaveText('true');
     await expect(page.getByTestId('auth-access-error')).toHaveText('none');
   });

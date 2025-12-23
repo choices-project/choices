@@ -158,14 +158,14 @@ export default function DashboardPage() {
   const routerRef = useRef(router);
   const pathname = usePathname();
   const searchParams = useSearchParams();
-  
+
   useEffect(() => { routerRef.current = router; }, [router]);
-  
+
   // CRITICAL: Immediate redirect recovery if we're on /auth but bypass flag is set
   // This handles the case where middleware redirected before client-side check could run
   useEffect(() => {
     if (typeof window === 'undefined') return;
-    
+
     // Check if we're on /auth with redirectTo parameter and bypass flag is set
     if (pathname === '/auth') {
       const redirectTo = searchParams.get('redirectTo');
@@ -186,7 +186,7 @@ export default function DashboardPage() {
       }
     }
   }, [pathname, searchParams]);
-  
+
   const { profile, isLoading } = useProfile();
   const isAuthenticated = useIsAuthenticated();
   const isUserLoading = useUserLoading();
