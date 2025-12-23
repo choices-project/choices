@@ -193,6 +193,18 @@ export async function middleware(request: NextRequest) {
     // Redirect based on authentication status
     const redirectPath = isAuthenticated ? '/feed' : '/landing'
     const redirectUrl = new URL(redirectPath, request.url)
+    
+    // DIAGNOSTIC: Log what we're redirecting to
+    if (diagnostics) {
+      console.warn('[middleware] Root redirect decision:', {
+        isAuthenticated,
+        redirectPath,
+        redirectUrl: redirectUrl.toString(),
+        cookieHeaderPresent: diagnostics.cookieHeaderPresent,
+        authCookieFound: diagnostics.authCookieFound,
+      })
+    }
+    
     const redirectResponse = NextResponse.redirect(redirectUrl, 307)
 
     // Add cache headers to help with redirect performance
@@ -201,6 +213,7 @@ export async function middleware(request: NextRequest) {
     // Add diagnostic headers for debugging (always add for now to see what's happening)
     if (diagnostics) {
       redirectResponse.headers.set('X-Auth-Debug-IsAuthenticated', String(isAuthenticated))
+      redirectResponse.headers.set('X-Auth-Debug-RedirectPath', redirectPath)
       redirectResponse.headers.set('X-Auth-Debug-CookieHeaderPresent', String(diagnostics.cookieHeaderPresent))
       redirectResponse.headers.set('X-Auth-Debug-CookieHeaderLength', String(diagnostics.cookieHeaderLength || 0))
       redirectResponse.headers.set('X-Auth-Debug-HasSbInHeader', String(diagnostics.hasSbInHeader))
