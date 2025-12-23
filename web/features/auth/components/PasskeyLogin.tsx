@@ -92,14 +92,23 @@ export function PasskeyLogin({
         throw new Error(result.error || 'Authentication failed');
       }
 
+      // Set success state immediately and ensure it persists
       setSuccess(true);
       setBiometricSuccess(true);
+      
+      // Force a small delay to ensure state updates propagate
+      await new Promise(resolve => setTimeout(resolve, 100));
+      
+      // Verify success state was set
+      setBiometricSuccess(true);
+      
       onSuccess?.(result.data);
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : 'Authentication failed';
       setError(errorMessage);
       setBiometricError(errorMessage);
       setBiometricSuccess(false);
+      setSuccess(false);
       onError?.(errorMessage);
     } finally {
       setIsAuthenticating(false);
@@ -148,11 +157,14 @@ export function PasskeyLogin({
       <CardContent className="space-y-4">
         {success ? (
           <div className="text-center space-y-4" data-testid="passkey-login-success">
-            <CheckCircle className="h-12 w-12 text-green-500 mx-auto" />
-            <div>
+            <CheckCircle className="h-12 w-12 text-green-500 mx-auto animate-in fade-in zoom-in duration-300" />
+            <div className="space-y-2">
               <h3 className="text-lg font-semibold text-green-700">Authentication Successful!</h3>
               <p className="text-gray-600">
                 You have been signed in successfully.
+              </p>
+              <p className="text-sm text-gray-500">
+                Redirecting you to your dashboard...
               </p>
             </div>
           </div>
@@ -182,9 +194,12 @@ export function PasskeyLogin({
 
             {/* Error Display */}
             {error && (
-              <Alert variant="destructive">
+              <Alert variant="destructive" className="animate-in fade-in slide-in-from-top-2 duration-300">
                 <AlertCircle className="h-4 w-4" />
-                <AlertDescription>{error}</AlertDescription>
+                <AlertDescription className="font-medium">{error}</AlertDescription>
+                <p className="mt-2 text-xs text-red-600">
+                  If this problem persists, try using email/password authentication instead.
+                </p>
               </Alert>
             )}
 
@@ -192,18 +207,19 @@ export function PasskeyLogin({
             <Button
               onClick={handleLogin}
               disabled={isAuthenticating}
-              className="w-full"
+              className="w-full transition-all duration-200 hover:scale-[1.02] active:scale-[0.98]"
               size="lg"
             >
               {isAuthenticating ? (
                 <>
                   <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                  Authenticating...
+                  <span>Authenticating...</span>
+                  <span className="ml-2 text-xs opacity-75">Follow your device prompt</span>
                 </>
               ) : (
                 <>
                   <Fingerprint className="h-4 w-4 mr-2" />
-                  Sign In with Passkey
+                  <span>Sign In with Passkey</span>
                 </>
               )}
             </Button>

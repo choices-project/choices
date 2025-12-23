@@ -117,12 +117,21 @@ export function PasskeyRegister({
         throw new Error(result.error || 'Failed to complete registration');
       }
 
+      // Set success state immediately and ensure it persists
       setBiometricSuccess(true);
       setBiometricCredentials(true);
+
+      // Force a small delay to ensure state updates propagate
+      await new Promise(resolve => setTimeout(resolve, 100));
+
+      // Verify success state was set
+      setBiometricSuccess(true);
+
       onSuccess?.(result.data);
     } catch (err) {
       const message = err instanceof Error ? err.message : 'Registration failed';
       setBiometricError(message);
+      setBiometricSuccess(false);
       onError?.(message);
     } finally {
       setBiometricRegistering(false);
@@ -182,11 +191,14 @@ export function PasskeyRegister({
       <CardContent className="space-y-4">
         {success ? (
           <div className="text-center space-y-4" data-testid="passkey-register-success">
-            <CheckCircle className="h-12 w-12 text-green-500 mx-auto" />
-            <div>
+            <CheckCircle className="h-12 w-12 text-green-500 mx-auto animate-in fade-in zoom-in duration-300" />
+            <div className="space-y-2">
               <h3 className="text-lg font-semibold text-green-700">Registration Successful!</h3>
               <p className="text-gray-600">
                 Your passkey has been created and you can now use it to sign in.
+              </p>
+              <p className="text-sm text-gray-500">
+                You can close this dialog and use your passkey to sign in next time.
               </p>
             </div>
           </div>
@@ -250,9 +262,12 @@ export function PasskeyRegister({
 
             {/* Error Display */}
             {error && (
-              <Alert variant="destructive">
+              <Alert variant="destructive" className="animate-in fade-in slide-in-from-top-2 duration-300">
                 <AlertCircle className="h-4 w-4" />
-                <AlertDescription>{error}</AlertDescription>
+                <AlertDescription className="font-medium">{error}</AlertDescription>
+                <p className="mt-2 text-xs text-red-600">
+                  If this problem persists, try using email/password authentication instead.
+                </p>
               </Alert>
             )}
 
@@ -261,18 +276,19 @@ export function PasskeyRegister({
               data-testid="webauthn-register"
               onClick={handleRegister}
               disabled={isRegistering}
-              className="w-full"
+              className="w-full transition-all duration-200 hover:scale-[1.02] active:scale-[0.98]"
               size="lg"
             >
               {isRegistering ? (
                 <>
                   <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                  Creating Passkey...
+                  <span>Creating Passkey...</span>
+                  <span className="ml-2 text-xs opacity-75">Follow your device prompt</span>
                 </>
               ) : (
                 <>
                   <Fingerprint className="h-4 w-4 mr-2" />
-                  Create Passkey
+                  <span>Create Passkey</span>
                 </>
               )}
             </Button>

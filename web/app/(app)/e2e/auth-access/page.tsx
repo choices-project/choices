@@ -53,6 +53,16 @@ export default function AuthAccessHarnessPage() {
     };
   }, []); // Empty deps - setup runs once
 
+  // Ensure success state is properly reflected in the test ID
+  useEffect(() => {
+    if (typeof document !== 'undefined') {
+      const successElement = document.querySelector('[data-testid="auth-access-success"]');
+      if (successElement) {
+        successElement.textContent = String(Boolean(biometricSuccess));
+      }
+    }
+  }, [biometricSuccess]);
+
   return (
     <main
       data-testid="auth-access-harness"

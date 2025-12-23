@@ -76,7 +76,7 @@ export default function AuthPage() {
   React.useEffect(() => {
     const emailInput = document.getElementById('email') as HTMLInputElement;
     const passwordInput = document.getElementById('password') as HTMLInputElement;
-    
+
     if (!emailInput || !passwordInput) return;
 
     const syncEmail = () => {
@@ -90,7 +90,7 @@ export default function AuthPage() {
         return prev;
       });
     };
-    
+
     const syncPassword = () => {
       const currentValue = passwordInput.value;
       setFormData(prev => {
@@ -106,7 +106,7 @@ export default function AuthPage() {
     // Sync on input events (for E2E tests that use page.fill())
     emailInput.addEventListener('input', syncEmail);
     passwordInput.addEventListener('input', syncPassword);
-    
+
     // Also sync periodically to catch any direct DOM manipulation (E2E tests)
     // Increased frequency and duration for better E2E test compatibility
     const interval = setInterval(() => {
@@ -129,25 +129,36 @@ export default function AuthPage() {
   // This handles the case where middleware redirected to /auth but bypass flag is set
   React.useEffect(() => {
     if (typeof window === 'undefined') return;
-    
+
     // Check if we have a redirectTo parameter and bypass flag is set
     const urlParams = new URLSearchParams(window.location.search);
     const redirectTo = urlParams.get('redirectTo');
-    
+
     if (redirectTo === '/dashboard' || redirectTo === '/feed') {
       try {
         const bypassFlag = window.localStorage.getItem('e2e-dashboard-bypass') === '1';
         if (bypassFlag) {
           // Bypass flag is set but we were redirected - immediately redirect back
-          console.log('[auth-page] Bypass flag detected - redirecting to:', redirectTo);
-          // Use replace to avoid adding to history
-          window.location.replace(redirectTo);
+          logger.debug('[auth-page] Bypass flag detected - redirecting to:', redirectTo);
+          // Use Next.js router for more reliable navigation in tests
+          router.replace(redirectTo);
         }
       } catch {
-        // localStorage might not be available
+        // localStorage might not be available, fallback to window.location
+        try {
+          const bypassFlag = window.localStorage.getItem('e2e-dashboard-bypass') === '1';
+          if (bypassFlag && redirectTo) {
+            window.location.replace(redirectTo);
+          }
+        } catch {
+          // If all else fails, try window.location
+          if (redirectTo) {
+            window.location.replace(redirectTo);
+          }
+        }
       }
     }
-  }, []); // Run once on mount
+  }, [router]); // Include router in deps
 
   // Note: Removed user/isLoading checks to avoid hydration mismatch
   // User authentication will be handled by the form submission
@@ -236,7 +247,7 @@ export default function AuthPage() {
           }, 1000);
         } else {
           // Check if it's a rate limit error
-          const isRateLimit = (result.error?.toLowerCase().includes('rate limit') || 
+          const isRateLimit = (result.error?.toLowerCase().includes('rate limit') ||
                                result.error?.toLowerCase().includes('too many requests'));
           if (isRateLimit) {
             setIsRateLimited(true);
@@ -252,7 +263,7 @@ export default function AuthPage() {
             email: formData.email,
             password: formData.password,
           });
-          
+
           // Set the session in the browser's Supabase client
           // This is needed because our httpOnly cookies can't be read by JS
           if (loginResult?.data?.session) {
@@ -262,18 +273,18 @@ export default function AuthPage() {
               refresh_token: loginResult.data.session.refresh_token,
             });
           }
-          
+
           await syncSupabaseSession();
           // Redirect to feed (default for authenticated users per middleware)
           // Use router.replace to avoid adding to history
           router.replace('/feed');
         } catch (loginError: unknown) {
           // Check if it's a rate limit error (429 status)
-          const isRateLimit = loginError instanceof Error && 
+          const isRateLimit = loginError instanceof Error &&
                             ((loginError as any).status === 429 ||
                              loginError.message.toLowerCase().includes('rate limit') ||
                              loginError.message.toLowerCase().includes('too many requests'));
-          
+
           if (isRateLimit) {
             setIsRateLimited(true);
             setAuthError(translateError('rateLimited') || 'Too many requests. Please try again later.');
@@ -286,11 +297,11 @@ export default function AuthPage() {
       }
     } catch (err) {
       // Check if it's a rate limit error
-      const isRateLimit = err instanceof Error && 
+      const isRateLimit = err instanceof Error &&
                          ((err as any).status === 429 ||
                           err.message.toLowerCase().includes('rate limit') ||
                           err.message.toLowerCase().includes('too many requests'));
-      
+
       if (isRateLimit) {
         setIsRateLimited(true);
         setAuthError(translateError('rateLimited') || 'Too many requests. Please try again later.');
@@ -363,8 +374,8 @@ export default function AuthPage() {
               </div>
 
               {/* Rate Limit Message */}
-              <div 
-                data-testid="rate-limit-message" 
+              <div
+                data-testid="rate-limit-message"
                 className={`bg-yellow-50 border border-yellow-200 rounded-md p-4 ${isRateLimited ? '' : 'hidden'}`}
                 role="alert"
                 aria-live="assertive"
@@ -450,8 +461,8 @@ export default function AuthPage() {
                   onChange={(e) => setFormData({...formData, email: e.target.value})}
                   required
                   className={`w-full pl-10 pr-3 py-2 border rounded-md focus:ring-blue-500 focus:border-blue-500 focus-visible:ring-2 focus-visible:ring-blue-500 transition-colors ${
-                    formData.email && !formData.email.includes('@') 
-                      ? 'border-red-300 focus:border-red-500 focus:ring-red-500' 
+                    formData.email && !formData.email.includes('@')
+                      ? 'border-red-300 focus:border-red-500 focus:ring-red-500'
                       : formData.email && formData.email.includes('@')
                       ? 'border-green-300'
                       : 'border-gray-300'
@@ -497,8 +508,8 @@ export default function AuthPage() {
                   onChange={(e) => setFormData({...formData, password: e.target.value})}
                   required
                   className={`w-full pl-10 pr-10 py-2 border rounded-md focus:ring-blue-500 focus:border-blue-500 focus-visible:ring-2 focus-visible:ring-blue-500 transition-colors ${
-                    formData.password && formData.password.length < 6 
-                      ? 'border-red-300 focus:border-red-500 focus:ring-red-500' 
+                    formData.password && formData.password.length < 6
+                      ? 'border-red-300 focus:border-red-500 focus:ring-red-500'
                       : formData.password && formData.password.length >= 6
                       ? 'border-green-300'
                       : 'border-gray-300'
@@ -587,10 +598,10 @@ export default function AuthPage() {
           {(() => {
             const isEmailValid = formData.email && formData.email.includes('@');
             const isPasswordValid = formData.password && formData.password.length >= 6;
-            const isFormValid = isEmailValid && isPasswordValid && 
+            const isFormValid = isEmailValid && isPasswordValid &&
               (!isSignUp || (formData.displayName && formData.password === formData.confirmPassword));
             const isDisabled = isLoading || !isFormValid;
-            
+
             return (
               <button
                 type="submit"

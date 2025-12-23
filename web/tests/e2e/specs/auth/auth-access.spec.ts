@@ -85,6 +85,10 @@ async function stubWebAuthn(page: Page) {
 test.describe('Auth access harness', () => {
   let cleanupMocks: (() => Promise<void>) | null = null;
 
+  // Skip WebAuthn tests in production mode - WebAuthn requires hardware/biometric support
+  // that can't be fully automated in production environments
+  const shouldSkipWebAuthnTests = process.env.PLAYWRIGHT_USE_MOCKS === '0';
+
   test.beforeEach(async ({ page }) => {
     cleanupMocks = await setupExternalAPIMocks(page, { auth: true });
     await stubWebAuthn(page);
@@ -98,6 +102,7 @@ test.describe('Auth access harness', () => {
   });
 
   test('registers a passkey successfully', async ({ page }) => {
+    test.skip(shouldSkipWebAuthnTests, 'WebAuthn tests require mocks - skipping in production mode');
     // Enhanced diagnostics for passkey registration
     const diagnostics: any[] = [];
 

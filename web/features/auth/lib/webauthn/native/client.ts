@@ -345,9 +345,26 @@ export async function beginRegister(
 
   } catch (error) {
     logger.error('WebAuthn registration error', error instanceof Error ? error : new Error(String(error)));
+    
+    // Provide more helpful error messages
+    let errorMessage = 'Registration failed';
+    if (error instanceof Error) {
+      if (error.name === 'NotAllowedError') {
+        errorMessage = 'Registration was cancelled. Please try again when ready.';
+      } else if (error.name === 'NotSupportedError') {
+        errorMessage = 'This device doesn\'t support passkeys. Please use email/password authentication.';
+      } else if (error.name === 'SecurityError') {
+        errorMessage = 'Security check failed. Please refresh the page and try again.';
+      } else if (error.name === 'NetworkError') {
+        errorMessage = 'Network error. Please check your connection and try again.';
+      } else {
+        errorMessage = error.message || 'Registration failed. Please try again or use email/password authentication.';
+      }
+    }
+    
     return { 
       success: false, 
-      error: error instanceof Error ? error.message : 'Registration failed' 
+      error: errorMessage
     };
   }
 }
@@ -407,9 +424,28 @@ export async function beginAuthenticate(
 
   } catch (error) {
     logger.error('WebAuthn authentication error', error instanceof Error ? error : new Error(String(error)));
+    
+    // Provide more helpful error messages
+    let errorMessage = 'Authentication failed';
+    if (error instanceof Error) {
+      if (error.name === 'NotAllowedError') {
+        errorMessage = 'Authentication was cancelled. Please try again when ready.';
+      } else if (error.name === 'NotSupportedError') {
+        errorMessage = 'This device doesn\'t support passkeys. Please use email/password authentication.';
+      } else if (error.name === 'SecurityError') {
+        errorMessage = 'Security check failed. Please refresh the page and try again.';
+      } else if (error.name === 'NetworkError') {
+        errorMessage = 'Network error. Please check your connection and try again.';
+      } else if (error.message?.includes('No credentials')) {
+        errorMessage = 'No passkey found. Please register a passkey first or use email/password authentication.';
+      } else {
+        errorMessage = error.message || 'Authentication failed. Please try again or use email/password authentication.';
+      }
+    }
+    
     return { 
       success: false, 
-      error: error instanceof Error ? error.message : 'Authentication failed' 
+      error: errorMessage
     };
   }
 }

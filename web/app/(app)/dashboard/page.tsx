@@ -1,8 +1,7 @@
 'use client';
 
 import { Shield } from 'lucide-react';
-import { useRouter } from 'next/navigation';
-import { usePathname, useSearchParams } from 'next/navigation';
+import { usePathname, useRouter, useSearchParams } from 'next/navigation';
 import React, { useEffect, useRef, useState } from 'react';
 
 import { PersonalDashboard } from '@/features/dashboard';
@@ -177,11 +176,22 @@ export default function DashboardPage() {
             if (process.env.DEBUG_DASHBOARD === '1') {
               logger.debug('🚨 Dashboard: Bypass flag detected on /auth page - immediately redirecting back');
             }
-            // Use replace to avoid adding to history
-            window.location.replace(redirectTo);
+            // Use Next.js router for more reliable navigation in tests
+            routerRef.current.replace(redirectTo);
           }
         } catch {
-          // localStorage might not be available
+          // localStorage might not be available, fallback to window.location
+          try {
+            const bypassFlag = window.localStorage.getItem('e2e-dashboard-bypass') === '1';
+            if (bypassFlag && redirectTo) {
+              window.location.replace(redirectTo);
+            }
+          } catch {
+            // If all else fails, try window.location
+            if (redirectTo) {
+              window.location.replace(redirectTo);
+            }
+          }
         }
       }
     }
@@ -244,7 +254,8 @@ export default function DashboardPage() {
               if (process.env.DEBUG_DASHBOARD === '1') {
                 logger.debug('🚨 Dashboard: Bypass flag detected during periodic check - redirecting back to dashboard');
               }
-              window.location.replace(redirectTo);
+              // Use Next.js router for more reliable navigation in tests
+              routerRef.current.replace(redirectTo);
             }
           }
         }

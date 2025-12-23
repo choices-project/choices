@@ -1398,9 +1398,11 @@ function StandardPersonalDashboard({ userId: fallbackUserId, className = '' }: P
                       <input
                         type='checkbox'
                         checked={showElectedOfficials}
-                        onChange={(event) =>
-                          preferencesRefresher({ showElectedOfficials: event.target.checked })
-                        }
+                        onChange={(event) => {
+                          const newValue = event.target.checked;
+                          // Update state immediately - preferencesRefresher updates local state synchronously
+                          preferencesRefresher({ showElectedOfficials: newValue });
+                        }}
                         className='rounded'
                         data-testid='show-elected-officials-toggle'
                       />

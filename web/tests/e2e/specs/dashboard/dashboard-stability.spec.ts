@@ -79,12 +79,19 @@ test.describe('Dashboard Stability Tests', () => {
       const preNavState = await page.evaluate(() => {
         let bypassFlag = null;
         let userStore = 'missing';
+        let cookies = '';
         try {
           bypassFlag = localStorage.getItem('e2e-dashboard-bypass');
           userStore = localStorage.getItem('user-store') ? 'exists' : 'missing';
         } catch (e) {
           // SecurityError can occur in cross-origin contexts
           console.warn('Could not access localStorage:', e);
+        }
+        try {
+          cookies = document.cookie;
+        } catch (e) {
+          // SecurityError can occur in cross-origin contexts
+          console.warn('Could not access document.cookie:', e);
         }
         return {
           url: window.location.href,
@@ -93,10 +100,15 @@ test.describe('Dashboard Stability Tests', () => {
             bypassFlag,
             userStore,
           },
-          cookies: document.cookie,
+          cookies,
         };
       });
       console.log('[dashboard-stability] Pre-navigation state:', JSON.stringify(preNavState, null, 2));
+
+      // Navigate to base URL first to ensure cookie is established
+      const baseUrl = process.env.BASE_URL || 'https://www.choices-app.com';
+      await page.goto(baseUrl, { waitUntil: 'domcontentloaded', timeout: 60_000 });
+      await page.waitForTimeout(500); // Small delay to ensure cookie is set
 
       // Navigate to dashboard
       await page.goto('/dashboard', { waitUntil: 'domcontentloaded', timeout: 60_000 });
@@ -104,16 +116,30 @@ test.describe('Dashboard Stability Tests', () => {
 
       // DIAGNOSTIC: Check state immediately after navigation
       const postNavState = await page.evaluate(() => {
+        let bypassFlag = null;
+        let userStore = 'missing';
+        let cookies = '';
+        try {
+          bypassFlag = localStorage.getItem('e2e-dashboard-bypass');
+          userStore = localStorage.getItem('user-store') ? 'exists' : 'missing';
+        } catch (e) {
+          console.warn('Could not access localStorage:', e);
+        }
+        try {
+          cookies = document.cookie;
+        } catch (e) {
+          console.warn('Could not access document.cookie:', e);
+        }
         return {
           url: window.location.href,
           pathname: window.location.pathname,
           search: window.location.search,
           hash: window.location.hash,
           localStorage: {
-            bypassFlag: localStorage.getItem('e2e-dashboard-bypass'),
-            userStore: localStorage.getItem('user-store') ? 'exists' : 'missing',
+            bypassFlag,
+            userStore,
           },
-          cookies: document.cookie,
+          cookies,
           hasAppShell: !!document.querySelector('[data-testid="app-shell"]'),
           hasDashboardContent: !!document.querySelector('[data-testid="dashboard-page-content"]'),
           hasPersonalDashboard: !!document.querySelector('[data-testid="personal-dashboard"]'),
@@ -273,6 +299,30 @@ test.describe('Dashboard Stability Tests', () => {
     });
 
     try {
+      // Set up E2E bypass cookie for middleware auth bypass
+      const baseUrl = process.env.BASE_URL || 'https://www.choices-app.com';
+      const url = new URL(baseUrl);
+      const domain = url.hostname.startsWith('www.') ? url.hostname.substring(4) : url.hostname;
+
+      try {
+        await page.context().addCookies([{
+          name: 'e2e-dashboard-bypass',
+          value: '1',
+          path: '/',
+          domain: `.${domain}`,
+          sameSite: 'None' as const,
+          secure: true,
+          httpOnly: false,
+        }]);
+        console.log('[dashboard-stability] E2E bypass cookie set for domain:', `.${domain}`);
+      } catch (error) {
+        console.log('[dashboard-stability] Cookie setting failed (expected in some envs), using localStorage only:', error);
+      }
+
+      // Navigate to base URL first to ensure cookie is established
+      await page.goto(baseUrl, { waitUntil: 'domcontentloaded', timeout: 60_000 });
+      await page.waitForTimeout(500); // Small delay to ensure cookie is set
+
       // Navigate to feed first
       await page.goto('/feed', { waitUntil: 'domcontentloaded', timeout: 60_000 });
       await waitForPageReady(page);
@@ -525,6 +575,26 @@ test.describe('Dashboard Stability Tests', () => {
       }
     });
 
+    // Set up E2E bypass cookie for middleware auth bypass
+    const baseUrl = process.env.BASE_URL || 'https://www.choices-app.com';
+    const url = new URL(baseUrl);
+    const domain = url.hostname.startsWith('www.') ? url.hostname.substring(4) : url.hostname;
+
+    try {
+      await page.context().addCookies([{
+        name: 'e2e-dashboard-bypass',
+        value: '1',
+        path: '/',
+        domain: `.${domain}`,
+        sameSite: 'None' as const,
+        secure: true,
+        httpOnly: false,
+      }]);
+      console.log('[dashboard-stability] E2E bypass cookie set for domain:', `.${domain}`);
+    } catch (error) {
+      console.log('[dashboard-stability] Cookie setting failed (expected in some envs), using localStorage only:', error);
+    }
+
     const cleanupMocks = await setupExternalAPIMocks(page, {
       feeds: true,
       notifications: true,
@@ -534,6 +604,10 @@ test.describe('Dashboard Stability Tests', () => {
     });
 
     try {
+      // Navigate to base URL first to ensure cookie is established
+      await page.goto(baseUrl, { waitUntil: 'domcontentloaded', timeout: 60_000 });
+      await page.waitForTimeout(500); // Small delay to ensure cookie is set
+
       await page.goto('/dashboard', { waitUntil: 'domcontentloaded', timeout: 60_000 });
       await waitForPageReady(page);
 
@@ -632,17 +706,34 @@ test.describe('Dashboard Stability Tests', () => {
       await expect(electedToggle).toBeVisible({ timeout: 10_000 });
 
       const initialChecked = await electedToggle.isChecked();
-      await electedToggle.click();
-      await expect(electedToggle).not.toBeChecked();
 
-      // Reload to verify persistence
+      // Click the toggle and wait for the state to change
+      // Use waitForFunction to ensure the checkbox state actually changes
+      const expectedNewState = !initialChecked;
+      await electedToggle.click();
+
+      // Wait for the checkbox state to actually change
+      await page.waitForFunction(
+        ({ testId, expectedState }) => {
+          const checkbox = document.querySelector(`[data-testid="${testId}"]`) as HTMLInputElement;
+          return checkbox && checkbox.checked === expectedState;
+        },
+        { testId: 'show-elected-officials-toggle', expectedState: expectedNewState },
+        { timeout: 10_000 }
+      );
+
+      // Verify the state is correct
+      const afterClickChecked = await electedToggle.isChecked();
+      expect(afterClickChecked).toBe(expectedNewState);
+
+      // Reload to verify persistence - the new state should persist, not revert
       await page.reload();
       await waitForPageReady(page);
       await expect(page.getByTestId('personal-dashboard')).toBeVisible({ timeout: 30_000 });
 
-      // Verify toggle state persisted
+      // Verify toggle state persisted - should be the new state, not the original
       const afterReloadChecked = await page.getByTestId('show-elected-officials-toggle').isChecked();
-      expect(afterReloadChecked).toBe(initialChecked);
+      expect(afterReloadChecked).toBe(expectedNewState);
 
     } finally {
       await cleanupMocks();

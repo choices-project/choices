@@ -4,6 +4,8 @@ import * as React from 'react';
 
 import { useAccessibleDialog } from '@/lib/accessibility/useAccessibleDialog';
 
+import PasskeyLogin from './PasskeyLogin';
+import PasskeyRegister from './PasskeyRegister';
 import {
   useInitializeBiometricState,
   useUserActions,
@@ -79,15 +81,9 @@ export function PasskeyControls() {
     setMode('idle');
   }, [updateSuccess]);
 
-  const handleBiometricAuth = React.useCallback(() => {
-    setMode('biometric');
-    updateError(null);
-  }, [updateError]);
-
-  const handleCrossDeviceAuth = React.useCallback(() => {
-    setMode('crossDevice');
-    updateError(null);
-  }, [updateError]);
+  // Note: These handlers are kept for potential future use but currently not used
+  // as we're using PasskeyRegister/PasskeyLogin components directly
+  // They may be used in the biometric/crossDevice dialogs if those are re-enabled
 
   const handleViewCredentials = React.useCallback(() => {
     setMode('viewing');
@@ -161,111 +157,106 @@ export function PasskeyControls() {
     liveMessage: 'Manage passkey credentials dialog opened.',
   });
 
-  return (
-    <div className="space-y-4">
-      <div className="flex flex-col sm:flex-row gap-2">
-        <button 
-          data-testid="webauthn-register" 
-          className="flex-1 px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition-colors" 
-          onClick={handleRegister}
+  // Use a simpler approach - show the actual components based on mode
+  if (mode === 'register') {
+    return (
+      <div className="space-y-4">
+        <PasskeyRegister
+          onSuccess={() => {
+            handleCompleteRegistration();
+          }}
+          onError={(error) => {
+            updateError(error);
+          }}
+        />
+        <button
+          data-testid="cancel-webauthn"
+          className="w-full px-4 py-2 text-sm text-gray-600 hover:text-gray-800 focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-offset-2 rounded-md transition-colors"
+          onClick={handleCancel}
         >
-          Register a passkey
-        </button>
-        <button 
-          data-testid="webauthn-login" 
-          className="flex-1 px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition-colors" 
-          onClick={handleLogin}
-        >
-          Sign in with passkey
+          Cancel
         </button>
       </div>
-      
-      {/* Advanced options - collapsible */}
+    );
+  }
+
+  if (mode === 'login') {
+    return (
+      <div className="space-y-4">
+        <PasskeyLogin
+          onSuccess={() => {
+            handleCompleteAuthentication();
+          }}
+          onError={(error) => {
+            updateError(error);
+          }}
+        />
+        <button
+          data-testid="cancel-webauthn"
+          className="w-full px-4 py-2 text-sm text-gray-600 hover:text-gray-800 focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-offset-2 rounded-md transition-colors"
+          onClick={handleCancel}
+        >
+          Cancel
+        </button>
+      </div>
+    );
+  }
+
+  return (
+    <div className="space-y-4">
+      {/* Simplified, cleaner interface */}
+      <div className="rounded-lg border border-gray-200 bg-white p-4 shadow-sm">
+        <div className="flex flex-col sm:flex-row gap-3">
+          <button
+            data-testid="webauthn-register"
+            className="flex-1 px-4 py-3 text-sm font-medium text-white bg-blue-600 border border-blue-600 rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition-all duration-200 hover:scale-[1.02] active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed"
+            onClick={handleRegister}
+          >
+            <span className="flex items-center justify-center gap-2">
+              <span>🔐</span>
+              <span>Create Passkey</span>
+            </span>
+          </button>
+          <button
+            data-testid="webauthn-login"
+            className="flex-1 px-4 py-3 text-sm font-medium text-blue-600 bg-white border border-blue-600 rounded-md hover:bg-blue-50 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition-all duration-200 hover:scale-[1.02] active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed"
+            onClick={handleLogin}
+          >
+            <span className="flex items-center justify-center gap-2">
+              <span>🔑</span>
+              <span>Sign In with Passkey</span>
+            </span>
+          </button>
+        </div>
+
+        {/* Helpful info text */}
+        <p className="mt-3 text-xs text-gray-500 text-center">
+          Use your device&apos;s fingerprint, face ID, or security key for secure, passwordless authentication
+        </p>
+      </div>
+
+      {/* Advanced options - collapsible, less prominent */}
       <details className="text-sm">
-        <summary className="cursor-pointer text-gray-600 hover:text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 rounded px-2 py-1">
+        <summary className="cursor-pointer text-gray-500 hover:text-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 rounded px-2 py-1 text-xs">
           Advanced options
         </summary>
         <div className="mt-2 space-y-2 pl-4">
           <button
             data-testid="register-additional-passkey-button"
-            className="block w-full text-left px-3 py-2 text-sm text-gray-700 hover:bg-gray-50 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
+            className="block w-full text-left px-3 py-2 text-sm text-gray-700 hover:bg-gray-50 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition-colors"
             onClick={handleRegister}
           >
             Register additional passkey
           </button>
           <button
             data-testid="view-credentials-button"
-            className="block w-full text-left px-3 py-2 text-sm text-gray-700 hover:bg-gray-50 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
+            className="block w-full text-left px-3 py-2 text-sm text-gray-700 hover:bg-gray-50 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition-colors"
             onClick={handleViewCredentials}
           >
             View credentials
           </button>
         </div>
       </details>
-
-      {mode === 'register' && (
-        <div
-          className="modal p-4 border rounded"
-          role="dialog"
-          aria-modal="true"
-          aria-labelledby="passkey-register-title"
-          ref={registerDialogRef}
-        >
-          <p id="passkey-register-title" className="text-lg font-semibold">
-            Registering passkey…
-          </p>
-          <div className="space-x-2 mt-4">
-            <button data-testid="webauthn-biometric" className="btn" onClick={handleBiometricAuth}>
-              Use biometrics
-            </button>
-            <button data-testid="webauthn-cross-device" className="btn" onClick={handleCrossDeviceAuth}>
-              Use another device
-            </button>
-            <button
-              data-testid="complete-registration"
-              className="btn"
-              onClick={handleCompleteRegistration}
-              ref={registerPrimaryButtonRef}
-            >
-              Complete registration
-            </button>
-            <button data-testid="cancel-webauthn" className="btn" onClick={handleCancel}>
-              Cancel
-            </button>
-          </div>
-          <div data-testid="webauthn-qr" className="qr-placeholder mt-4 h-32 w-32 bg-gray-200" />
-        </div>
-      )}
-
-      {mode === 'login' && (
-        <div
-          className="modal p-4 border rounded"
-          role="dialog"
-          aria-modal="true"
-          aria-labelledby="passkey-login-title"
-          ref={loginDialogRef}
-        >
-          <p id="passkey-login-title" className="text-lg font-semibold">
-            Authenticate with passkey…
-          </p>
-          <div className="space-x-2 mt-4">
-            <button data-testid="webauthn-biometric" className="btn" onClick={handleBiometricAuth}>
-              Use biometrics
-            </button>
-            <button
-              data-testid="complete-authentication"
-              className="btn"
-              onClick={handleCompleteAuthentication}
-              ref={loginPrimaryButtonRef}
-            >
-              Complete authentication
-            </button>
-            <button data-testid="cancel-webauthn" className="btn" onClick={handleCancel}>
-              Cancel
-            </button>
-          </div>
-        </div>
-      )}
 
       {mode === 'biometric' && (
         <div
@@ -367,17 +358,29 @@ export function PasskeyControls() {
       {success === 'registration-success' && (
         <div
           data-testid="registration-success"
-          className="rounded border border-green-200 bg-green-50 p-4"
+          className="rounded-lg border border-green-300 bg-green-50 p-4 animate-in fade-in slide-in-from-top-2 duration-300"
         >
-          Registration successful!
+          <div className="flex items-center gap-2">
+            <span className="text-green-600 text-xl">✓</span>
+            <div>
+              <p className="font-semibold text-green-800">Registration successful!</p>
+              <p className="text-sm text-green-700">Your passkey has been created and saved.</p>
+            </div>
+          </div>
         </div>
       )}
       {success === 'login-success' && (
         <div
           data-testid="login-success"
-          className="rounded border border-green-200 bg-green-50 p-4"
+          className="rounded-lg border border-green-300 bg-green-50 p-4 animate-in fade-in slide-in-from-top-2 duration-300"
         >
-          Login successful!
+          <div className="flex items-center gap-2">
+            <span className="text-green-600 text-xl">✓</span>
+            <div>
+              <p className="font-semibold text-green-800">Login successful!</p>
+              <p className="text-sm text-green-700">You have been signed in successfully.</p>
+            </div>
+          </div>
         </div>
       )}
       {success === 'biometric-success' && (
@@ -408,41 +411,68 @@ export function PasskeyControls() {
       {error === 'operation-cancelled' && (
         <div
           data-testid="operation-cancelled"
-          className="rounded border border-yellow-200 bg-yellow-50 p-4"
+          className="rounded-lg border border-yellow-300 bg-yellow-50 p-4 animate-in fade-in slide-in-from-top-2 duration-300"
         >
-          Operation cancelled
+          <div className="flex items-center gap-2">
+            <span className="text-yellow-600">⚠</span>
+            <p className="text-sm font-medium text-yellow-800">Operation cancelled</p>
+          </div>
         </div>
       )}
       {error === 'operation-timeout' && (
         <div
           data-testid="operation-timeout"
-          className="rounded border border-red-200 bg-red-50 p-4"
+          className="rounded-lg border border-red-300 bg-red-50 p-4 animate-in fade-in slide-in-from-top-2 duration-300"
         >
-          Operation timed out
+          <div className="flex items-center gap-2">
+            <span className="text-red-600">✗</span>
+            <div>
+              <p className="text-sm font-medium text-red-800">Operation timed out</p>
+              <p className="text-xs text-red-700 mt-1">Please try again or use email/password authentication.</p>
+            </div>
+          </div>
         </div>
       )}
       {error === 'authentication-error' && (
         <div
           data-testid="authentication-error"
-          className="rounded border border-red-200 bg-red-50 p-4"
+          className="rounded-lg border border-red-300 bg-red-50 p-4 animate-in fade-in slide-in-from-top-2 duration-300"
         >
-          No credentials found
+          <div className="flex items-center gap-2">
+            <span className="text-red-600">✗</span>
+            <div>
+              <p className="text-sm font-medium text-red-800">No credentials found</p>
+              <p className="text-xs text-red-700 mt-1">Please register a passkey first or use email/password authentication.</p>
+            </div>
+          </div>
         </div>
       )}
       {error === 'network-error' && (
         <div
           data-testid="webauthn-network-error"
-          className="rounded border border-red-200 bg-red-50 p-4"
+          className="rounded-lg border border-red-300 bg-red-50 p-4 animate-in fade-in slide-in-from-top-2 duration-300"
         >
-          Network error
+          <div className="flex items-center gap-2">
+            <span className="text-red-600">✗</span>
+            <div>
+              <p className="text-sm font-medium text-red-800">Network error</p>
+              <p className="text-xs text-red-700 mt-1">Please check your connection and try again.</p>
+            </div>
+          </div>
         </div>
       )}
       {error === 'server-error' && (
         <div
           data-testid="webauthn-server-error"
-          className="rounded border border-red-200 bg-red-50 p-4"
+          className="rounded-lg border border-red-300 bg-red-50 p-4 animate-in fade-in slide-in-from-top-2 duration-300"
         >
-          Server error
+          <div className="flex items-center gap-2">
+            <span className="text-red-600">✗</span>
+            <div>
+              <p className="text-sm font-medium text-red-800">Server error</p>
+              <p className="text-xs text-red-700 mt-1">Please try again later or use email/password authentication.</p>
+            </div>
+          </div>
         </div>
       )}
 
