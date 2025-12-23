@@ -72,6 +72,17 @@ export default function AppLayout({
     );
   }
 
+  // DIAGNOSTIC: Log when AppLayout renders AppShell
+  React.useEffect(() => {
+    if (process.env.DEBUG_DASHBOARD === '1' || (typeof window !== 'undefined' && window.localStorage.getItem('e2e-dashboard-bypass') === '1')) {
+      console.warn('[DIAGNOSTIC] AppLayout: Rendering AppShell', {
+        IS_E2E_HARNESS,
+        bypassFlag: typeof window !== 'undefined' ? window.localStorage.getItem('e2e-dashboard-bypass') : 'SSR',
+        currentUrl: typeof window !== 'undefined' ? window.location.href : 'SSR',
+      });
+    }
+  }, []);
+
   return (
     <FontProvider>
       <QueryClientProvider client={queryClient}>

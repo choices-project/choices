@@ -75,9 +75,43 @@ test.describe('Dashboard Stability Tests', () => {
     });
 
     try {
+      // DIAGNOSTIC: Check state before navigating to dashboard
+      const preNavState = await page.evaluate(() => {
+        return {
+          url: window.location.href,
+          pathname: window.location.pathname,
+          localStorage: {
+            bypassFlag: localStorage.getItem('e2e-dashboard-bypass'),
+            userStore: localStorage.getItem('user-store') ? 'exists' : 'missing',
+          },
+          cookies: document.cookie,
+        };
+      });
+      console.log('[dashboard-stability] Pre-navigation state:', JSON.stringify(preNavState, null, 2));
+
       // Navigate to dashboard
       await page.goto('/dashboard', { waitUntil: 'domcontentloaded', timeout: 60_000 });
       await waitForPageReady(page);
+
+      // DIAGNOSTIC: Check state immediately after navigation
+      const postNavState = await page.evaluate(() => {
+        return {
+          url: window.location.href,
+          pathname: window.location.pathname,
+          search: window.location.search,
+          hash: window.location.hash,
+          localStorage: {
+            bypassFlag: localStorage.getItem('e2e-dashboard-bypass'),
+            userStore: localStorage.getItem('user-store') ? 'exists' : 'missing',
+          },
+          cookies: document.cookie,
+          hasAppShell: !!document.querySelector('[data-testid="app-shell"]'),
+          hasDashboardContent: !!document.querySelector('[data-testid="dashboard-page-content"]'),
+          hasPersonalDashboard: !!document.querySelector('[data-testid="personal-dashboard"]'),
+          hasLoginForm: !!document.querySelector('[data-testid="login-form"]'),
+        };
+      });
+      console.log('[dashboard-stability] Post-navigation state:', JSON.stringify(postNavState, null, 2));
 
       // Diagnostic: Check cookie availability
       const cookies = await page.context().cookies();
@@ -241,6 +275,23 @@ test.describe('Dashboard Stability Tests', () => {
       if (consoleWarnings.length > 0) {
         console.log('[dashboard-stability] Console warnings during page load:', consoleWarnings);
       }
+
+      // DIAGNOSTIC: Check if we're on dashboard or auth page
+      const currentUrl = page.url();
+      const currentPath = new URL(currentUrl).pathname;
+      console.log('[dashboard-stability] Current URL after feed load:', currentUrl);
+      console.log('[dashboard-stability] Current pathname:', currentPath);
+
+      // DIAGNOSTIC: Check bypass flag state
+      const bypassState = await page.evaluate(() => {
+        return {
+          localStorage: window.localStorage.getItem('e2e-dashboard-bypass'),
+          cookies: document.cookie,
+          url: window.location.href,
+          pathname: window.location.pathname,
+        };
+      });
+      console.log('[dashboard-stability] Bypass state before navigation:', JSON.stringify(bypassState, null, 2));
 
       // Diagnostic: Check if dashboard nav exists before clicking
       const dashboardNav = page.locator('[data-testid="dashboard-nav"]');

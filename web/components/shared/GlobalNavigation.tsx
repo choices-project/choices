@@ -71,6 +71,22 @@ export default function GlobalNavigation() {
   const shouldBypassLoading = loadingTimeout || (typeof window !== 'undefined' && 
     window.localStorage.getItem('e2e-dashboard-bypass') === '1');
   const isLoading = authLoading && !shouldBypassLoading;
+
+  // DIAGNOSTIC: Log GlobalNavigation render state for debugging
+  useEffect(() => {
+    if (process.env.DEBUG_DASHBOARD === '1' || (typeof window !== 'undefined' && window.localStorage.getItem('e2e-dashboard-bypass') === '1')) {
+      logger.debug('🚨 GlobalNavigation: Render state', {
+        authLoading,
+        loadingTimeout,
+        shouldBypassLoading,
+        isLoading,
+        isAuthenticated,
+        user: user ? { id: user.id, email: user.email } : null,
+        pathname,
+        bypassFlag: typeof window !== 'undefined' ? window.localStorage.getItem('e2e-dashboard-bypass') : 'SSR',
+      });
+    }
+  }, [authLoading, loadingTimeout, shouldBypassLoading, isLoading, isAuthenticated, user, pathname]);
   
   // Use ref for stable authSignOut callback
   const authSignOutRef = useRef(authSignOut);
@@ -167,8 +183,18 @@ export default function GlobalNavigation() {
 
   // Show loading state if user data is still loading or if we're not authenticated yet
   if (isLoading) {
+    // DIAGNOSTIC: Log when showing loading skeleton
+    if (process.env.DEBUG_DASHBOARD === '1' || (typeof window !== 'undefined' && window.localStorage.getItem('e2e-dashboard-bypass') === '1')) {
+      logger.debug('🚨 GlobalNavigation: Showing loading skeleton', {
+        authLoading,
+        loadingTimeout,
+        shouldBypassLoading,
+        isLoading,
+        bypassFlag: typeof window !== 'undefined' ? window.localStorage.getItem('e2e-dashboard-bypass') : 'SSR',
+      });
+    }
     return (
-      <nav className="bg-white dark:bg-gray-900 shadow-sm border-b border-gray-200 dark:border-gray-700">
+      <nav className="bg-white dark:bg-gray-900 shadow-sm border-b border-gray-200 dark:border-gray-700" data-testid="global-nav-loading">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between h-16">
             <div className="flex items-center">
@@ -183,8 +209,21 @@ export default function GlobalNavigation() {
     );
   }
 
+  // DIAGNOSTIC: Log when rendering full navigation
+  useEffect(() => {
+    if (process.env.DEBUG_DASHBOARD === '1' || (typeof window !== 'undefined' && window.localStorage.getItem('e2e-dashboard-bypass') === '1')) {
+      logger.debug('🚨 GlobalNavigation: Rendering full navigation', {
+        navigationItemsCount: navigationItems.length,
+        dashboardNavItem: navigationItems.find(item => item.href === '/dashboard'),
+        isAuthenticated,
+        user: user ? { id: user.id, email: user.email } : null,
+        pathname,
+      });
+    }
+  }, [navigationItems, isAuthenticated, user, pathname]);
+
   return (
-    <div className="sticky top-0 z-50 bg-white dark:bg-gray-900 shadow-sm border-b border-gray-200 dark:border-gray-700">
+    <div className="sticky top-0 z-50 bg-white dark:bg-gray-900 shadow-sm border-b border-gray-200 dark:border-gray-700" data-testid="global-navigation">
       <a
         href="#main-content"
         className="sr-only focus:not-sr-only focus:absolute focus:z-50 focus:rounded focus:bg-blue-600 focus:px-4 focus:py-2 focus:text-white"
@@ -206,6 +245,16 @@ export default function GlobalNavigation() {
             <div className="hidden md:flex md:items-center md:space-x-8">
               {navigationItems.map((item) => {
                 const Icon = item.icon;
+                const isDashboardNav = item.href === '/dashboard';
+                // DIAGNOSTIC: Log dashboard nav rendering
+                if (isDashboardNav && (process.env.DEBUG_DASHBOARD === '1' || (typeof window !== 'undefined' && window.localStorage.getItem('e2e-dashboard-bypass') === '1'))) {
+                  logger.debug('🚨 GlobalNavigation: Rendering dashboard nav link', {
+                    href: item.href,
+                    label: item.label,
+                    isActive: isActive(item.href),
+                    testId: 'dashboard-nav',
+                  });
+                }
                 return (
                   <Link
                     key={item.href}

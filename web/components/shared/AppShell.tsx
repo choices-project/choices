@@ -65,6 +65,24 @@ export function AppShell({ navigation, siteMessages, feedback, children }: AppSh
     }
   }, [theme]);
 
+  // DIAGNOSTIC: Log when AppShell renders
+  useEffect(() => {
+    if (process.env.DEBUG_DASHBOARD === '1' || (typeof window !== 'undefined' && window.localStorage.getItem('e2e-dashboard-bypass') === '1')) {
+      console.warn('[DIAGNOSTIC] AppShell: Rendering', {
+        theme,
+        sidebarCollapsed,
+        sidebarWidth,
+        sidebarPinned,
+        hasNavigation: !!navigation,
+        hasSiteMessages: !!siteMessages,
+        hasFeedback: !!feedback,
+        hasChildren: !!children,
+        currentUrl: typeof window !== 'undefined' ? window.location.href : 'SSR',
+        bypassFlag: typeof window !== 'undefined' ? window.localStorage.getItem('e2e-dashboard-bypass') : 'SSR',
+      });
+    }
+  }, [theme, sidebarCollapsed, sidebarWidth, sidebarPinned, navigation, siteMessages, feedback, children]);
+
   return (
     <div
       className="min-h-screen bg-slate-50 dark:bg-gray-900"

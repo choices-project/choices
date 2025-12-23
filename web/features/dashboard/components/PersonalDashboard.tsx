@@ -465,12 +465,38 @@ export default function PersonalDashboard(props: PersonalDashboardProps) {
     if (!isMounted) return;
     if (IS_E2E_HARNESS) {
       setUseHarness(true);
+      if (process.env.DEBUG_DASHBOARD === '1' || (typeof window !== 'undefined' && window.localStorage.getItem('e2e-dashboard-bypass') === '1')) {
+        logger.debug('🚨 PersonalDashboard: Using harness mode (IS_E2E_HARNESS)', { IS_E2E_HARNESS });
+      }
       return;
     }
     if (typeof window !== 'undefined' && window.localStorage.getItem('e2e-dashboard-bypass') === '1') {
       setUseHarness(true);
+      if (process.env.DEBUG_DASHBOARD === '1') {
+        logger.debug('🚨 PersonalDashboard: Using harness mode (bypass flag)', { bypassFlag: '1' });
+      }
+    } else {
+      if (process.env.DEBUG_DASHBOARD === '1' || (typeof window !== 'undefined' && window.localStorage.getItem('e2e-dashboard-bypass') === '1')) {
+        logger.debug('🚨 PersonalDashboard: Using standard mode', { 
+          bypassFlag: typeof window !== 'undefined' ? window.localStorage.getItem('e2e-dashboard-bypass') : 'SSR',
+          IS_E2E_HARNESS 
+        });
+      }
     }
   }, [isMounted]);
+
+  // DIAGNOSTIC: Log which component is being rendered
+  useEffect(() => {
+    if (process.env.DEBUG_DASHBOARD === '1' || (typeof window !== 'undefined' && window.localStorage.getItem('e2e-dashboard-bypass') === '1')) {
+      logger.debug('🚨 PersonalDashboard: Render decision', {
+        isMounted,
+        useHarness,
+        IS_E2E_HARNESS,
+        bypassFlag: typeof window !== 'undefined' ? window.localStorage.getItem('e2e-dashboard-bypass') : 'SSR',
+        component: useHarness ? 'HarnessPersonalDashboard' : 'StandardPersonalDashboard',
+      });
+    }
+  }, [isMounted, useHarness]);
 
   return useHarness ? <HarnessPersonalDashboard {...props} /> : <StandardPersonalDashboard {...props} />;
 }

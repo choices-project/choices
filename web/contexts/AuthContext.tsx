@@ -129,6 +129,14 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       window.localStorage.getItem('e2e-dashboard-bypass') === '1'
 
     if (IS_E2E_HARNESS || shouldBypassAuth) {
+      // DIAGNOSTIC: Log bypass in AuthContext
+      if (process.env.DEBUG_DASHBOARD === '1' || shouldBypassAuth) {
+        logger.debug('🚨 AuthContext: Bypassing auth initialization', {
+          IS_E2E_HARNESS,
+          shouldBypassAuth,
+          bypassFlag: typeof window !== 'undefined' ? window.localStorage.getItem('e2e-dashboard-bypass') : 'SSR',
+        });
+      }
       initializeAuthRef.current(null, null, false)
       setLoading(false)
       return
@@ -137,6 +145,13 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     let mounted = true
 
     const bootstrapAuth = async (): Promise<(() => void) | undefined> => {
+      // DIAGNOSTIC: Log auth bootstrap start
+      if (process.env.DEBUG_DASHBOARD === '1' || (typeof window !== 'undefined' && window.localStorage.getItem('e2e-dashboard-bypass') === '1')) {
+        logger.debug('🚨 AuthContext: Starting auth bootstrap', {
+          mounted,
+          shouldBypassAuth: typeof window !== 'undefined' && window.localStorage.getItem('e2e-dashboard-bypass') === '1',
+        });
+      }
       try {
         const supabase = await getSupabaseBrowserClient()
 

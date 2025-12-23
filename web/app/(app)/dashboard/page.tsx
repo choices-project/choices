@@ -610,12 +610,30 @@ export default function DashboardPage() {
   // - No cookies found after polling AND
   // - Store confirms not authenticated
   // This matches the pattern used by feed/polls pages - trust middleware, simple checks
+  // DIAGNOSTIC: Log render decision for debugging
+  if (process.env.DEBUG_DASHBOARD === '1' || (typeof window !== 'undefined' && window.localStorage.getItem('e2e-dashboard-bypass') === '1')) {
+    logger.debug('🚨 Dashboard: Render decision', {
+      shouldBypassAuth,
+      isUserLoading,
+      isAuthContextLoading,
+      isStoreHydrated,
+      hasCookies,
+      isAuthenticated,
+      isLoading,
+      loadingTimeout,
+      currentUrl: typeof window !== 'undefined' ? window.location.href : 'SSR',
+    });
+  }
+
   // CRITICAL: If bypass flag is set, always allow render (E2E testing)
   // This must be checked BEFORE any other conditions to prevent redirects
   if (shouldBypassAuth) {
     // Bypass is set - render dashboard immediately, skip all auth checks
     // This allows E2E tests to access dashboard without authentication
     // Fall through to render dashboard content
+    if (process.env.DEBUG_DASHBOARD === '1' || (typeof window !== 'undefined' && window.localStorage.getItem('e2e-dashboard-bypass') === '1')) {
+      logger.debug('🚨 Dashboard: Bypass flag active - rendering dashboard content');
+    }
   } else if (!isUserLoading && !isAuthContextLoading && isStoreHydrated && hasCookies === false && !isAuthenticated) {
     return (
       <div className="flex items-center justify-center min-h-screen px-4">
@@ -634,8 +652,26 @@ export default function DashboardPage() {
     );
   }
 
+  // DIAGNOSTIC: Log when dashboard content is about to render
+  useEffect(() => {
+    if (process.env.DEBUG_DASHBOARD === '1' || (typeof window !== 'undefined' && window.localStorage.getItem('e2e-dashboard-bypass') === '1')) {
+      logger.debug('🚨 Dashboard: Rendering dashboard content', {
+        shouldBypassAuth,
+        isAuthenticated,
+        profile: profile ? { id: profile.id, username: profile.username } : null,
+        isLoading,
+        isAdmin,
+        currentUrl: typeof window !== 'undefined' ? window.location.href : 'SSR',
+      });
+    }
+  }, [shouldBypassAuth, isAuthenticated, profile, isLoading, isAdmin]);
+
   return (
     <ErrorBoundary>
+      {/* DIAGNOSTIC: Add data attribute for test detection */}
+      <div data-testid="dashboard-page-content" style={{ display: 'none' }}>
+        Dashboard content rendering
+      </div>
       {/* 🔒 Cohesive Dashboard Navigation */}
       <DashboardNavigation />
 

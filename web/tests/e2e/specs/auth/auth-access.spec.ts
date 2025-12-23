@@ -202,6 +202,47 @@ test.describe('Auth access harness', () => {
     });
     console.log('[DIAGNOSTIC] Passkey registration state after click:', JSON.stringify(afterClickDiagnostics, null, 2));
 
+    // DIAGNOSTIC: Additional comprehensive state check before assertions
+    const finalState = await page.evaluate(() => {
+      const successElements = Array.from(document.querySelectorAll('*')).filter(el => 
+        el.textContent?.includes('Success') || el.textContent?.includes('Successful')
+      );
+      const errorElements = Array.from(document.querySelectorAll('*')).filter(el => 
+        el.textContent?.includes('Error') || el.textContent?.includes('Failed')
+      );
+      
+      return {
+        successElements: successElements.map(el => ({
+          tag: el.tagName,
+          text: el.textContent?.trim(),
+          visible: (el as HTMLElement).offsetParent !== null,
+          testId: (el as HTMLElement).getAttribute('data-testid'),
+        })),
+        errorElements: errorElements.map(el => ({
+          tag: el.tagName,
+          text: el.textContent?.trim(),
+          visible: (el as HTMLElement).offsetParent !== null,
+          testId: (el as HTMLElement).getAttribute('data-testid'),
+        })),
+        successTestId: {
+          exists: !!document.querySelector('[data-testid="auth-access-success"]'),
+          text: document.querySelector('[data-testid="auth-access-success"]')?.textContent?.trim(),
+          visible: document.querySelector('[data-testid="auth-access-success"]') ? 
+            (document.querySelector('[data-testid="auth-access-success"]') as HTMLElement).offsetParent !== null : false,
+        },
+        errorTestId: {
+          exists: !!document.querySelector('[data-testid="auth-access-error"]'),
+          text: document.querySelector('[data-testid="auth-access-error"]')?.textContent?.trim(),
+          visible: document.querySelector('[data-testid="auth-access-error"]') ? 
+            (document.querySelector('[data-testid="auth-access-error"]') as HTMLElement).offsetParent !== null : false,
+        },
+        localStorage: {
+          biometricSuccess: localStorage.getItem('biometric-success'),
+        },
+      };
+    });
+    console.log('[DIAGNOSTIC] Final passkey registration state:', JSON.stringify(finalState, null, 2));
+
     await expect(page.getByText('Registration Successful!')).toBeVisible();
     await expect(page.getByTestId('auth-access-success')).toHaveText('true');
     await expect(page.getByTestId('auth-access-error')).toHaveText('none');

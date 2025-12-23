@@ -142,21 +142,46 @@ test.describe('Authentication Flow', () => {
       
       // Diagnostic: Capture console messages and network requests
       const consoleMessages: string[] = [];
-      const networkRequests: Array<{ url: string; status: number; method: string }> = [];
+      const networkRequests: Array<{ url: string; status: number; method: string; headers: Record<string, string> }> = [];
       
       page.on('console', (msg) => {
         consoleMessages.push(`[${msg.type()}] ${msg.text()}`);
+        // Capture diagnostic logs
+        if (msg.text().includes('[DIAGNOSTIC]') || msg.text().includes('🚨')) {
+          console.log(`[DIAGNOSTIC] ${msg.text()}`);
+        }
       });
       
       page.on('response', (response) => {
+        const headers: Record<string, string> = {};
+        response.headers().forEach((value, key) => {
+          headers[key] = value;
+        });
         networkRequests.push({
           url: response.url(),
           status: response.status(),
           method: response.request().method(),
+          headers,
         });
       });
       
+      // DIAGNOSTIC: Log initial state before navigation
+      console.log('[DIAGNOSTIC] About to navigate to /auth', {
+        baseUrl: BASE_URL,
+        timestamp: new Date().toISOString(),
+      });
+      
       await page.goto(`${BASE_URL}/auth`, { waitUntil: 'domcontentloaded', timeout: 30_000 });
+      
+      // DIAGNOSTIC: Log state after navigation
+      const postNavState = await page.evaluate(() => {
+        return {
+          url: window.location.href,
+          pathname: window.location.pathname,
+          search: window.location.search,
+        };
+      });
+      console.log('[DIAGNOSTIC] Post-navigation state:', JSON.stringify(postNavState, null, 2));
       
       // Wait for auth page to be hydrated
       await page.waitForSelector('[data-testid="auth-hydrated"]', { state: 'attached', timeout: 30_000 });
