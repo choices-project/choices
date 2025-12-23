@@ -198,8 +198,8 @@ export async function middleware(request: NextRequest) {
     // Add cache headers to help with redirect performance
     redirectResponse.headers.set('Cache-Control', 'public, max-age=3600, stale-while-revalidate=86400')
     
-    // Add diagnostic headers for debugging (only in non-production or with DEBUG_MIDDLEWARE)
-    if (diagnostics && (process.env.DEBUG_MIDDLEWARE === '1' || process.env.NODE_ENV !== 'production')) {
+    // Add diagnostic headers for debugging (always add for now to see what's happening)
+    if (diagnostics) {
       redirectResponse.headers.set('X-Auth-Debug-IsAuthenticated', String(isAuthenticated))
       redirectResponse.headers.set('X-Auth-Debug-CookieHeaderPresent', String(diagnostics.cookieHeaderPresent))
       redirectResponse.headers.set('X-Auth-Debug-CookieHeaderLength', String(diagnostics.cookieHeaderLength || 0))

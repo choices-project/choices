@@ -310,12 +310,21 @@ test.describe('Authentication Flow', () => {
         })),
       });
       
-      // Diagnostic: Capture redirect chain
+      // Diagnostic: Capture redirect chain and diagnostic headers
       const redirectChain: string[] = [];
+      const diagnosticHeaders: Record<string, string> = {};
       page.on('response', (response) => {
         if (response.status() >= 300 && response.status() < 400) {
           const location = response.headers()['location'];
           redirectChain.push(`${response.status()} ${response.request().method()} -> ${location || 'no location'}`);
+          
+          // Capture diagnostic headers
+          const headers = response.headers();
+          Object.keys(headers).forEach(key => {
+            if (key.toLowerCase().startsWith('x-auth-debug-')) {
+              diagnosticHeaders[key] = headers[key];
+            }
+          });
         }
       });
       
@@ -342,6 +351,7 @@ test.describe('Authentication Flow', () => {
           httpOnly: c.httpOnly,
         })),
         cookiesPersisted: authCookiesAfterRoot.length === authCookiesBeforeRoot.length,
+        diagnosticHeaders,
       });
       
       // Authenticated users should be redirected to /feed
