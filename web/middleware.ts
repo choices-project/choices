@@ -549,8 +549,21 @@ export async function middleware(request: NextRequest) {
     // Check for PLAYWRIGHT_USE_MOCKS env var (even if 0, presence indicates test scenario)
     const isPlaywrightTest = typeof process.env.PLAYWRIGHT_USE_MOCKS !== 'undefined';
     // Check for E2E bypass cookie - if present, allow bypass (cookie is only set by tests)
-    const hasE2EBypassCookie = request.cookies.get('e2e-dashboard-bypass')?.value === '1' ||
-      request.cookies.get('E2E')?.value === '1';
+    const bypassCookie1 = request.cookies.get('e2e-dashboard-bypass');
+    const bypassCookie2 = request.cookies.get('E2E');
+    const hasE2EBypassCookie = bypassCookie1?.value === '1' || bypassCookie2?.value === '1';
+    
+    // DIAGNOSTIC: Log bypass cookie check for debugging
+    if (process.env.DEBUG_MIDDLEWARE === '1' || process.env.NODE_ENV !== 'production' || isPlaywrightTest) {
+      console.warn('[middleware] Bypass cookie check:', {
+        pathname,
+        hasE2EBypassCookie,
+        bypassCookie1Value: bypassCookie1?.value,
+        bypassCookie2Value: bypassCookie2?.value,
+        allCookies: Array.from(request.cookies.getAll()).map(c => ({ name: c.name, value: c.value.substring(0, 20) + '...' })),
+        timestamp: new Date().toISOString(),
+      });
+    }
 
     // If bypass cookie is present, always allow bypass (cookie is test-specific and secure)
     // Otherwise, check other E2E harness conditions

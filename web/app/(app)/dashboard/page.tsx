@@ -309,7 +309,11 @@ export default function DashboardPage() {
 
   useEffect(() => {
     // In E2E harness mode or when bypassing auth, skip all redirect checks (authentication is mocked)
+    // CRITICAL: Check bypass flag FIRST before any other logic
     if (shouldBypassAuth) {
+      if (process.env.DEBUG_DASHBOARD === '1') {
+        logger.debug('🚨 Dashboard: Bypass flag set - skipping all auth checks and redirects');
+      }
       return () => {
         // Cleanup function - no cleanup needed for bypass case
       };
@@ -337,7 +341,7 @@ export default function DashboardPage() {
       };
     }
     // First check if user is authenticated - if not, check session cookie and wait for hydration
-    // Skip all redirect logic if bypass flag is set (E2E testing)
+    // Double-check bypass flag here as well (defensive programming)
     if (!shouldBypassAuth && !isAuthenticated) {
       // Clear any existing retry timeout
       if (authRetryTimeoutRef.current) {

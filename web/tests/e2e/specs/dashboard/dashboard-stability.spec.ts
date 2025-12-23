@@ -33,12 +33,27 @@ test.describe('Dashboard Stability Tests', () => {
         value: '1',
         path: '/',
         domain: `.${domain}`, // Use .domain for cross-subdomain support
+        sameSite: 'None' as const, // Allow cross-site requests
+        secure: true, // Required for SameSite=None
+        httpOnly: false, // Allow JavaScript access (for diagnostics)
       }]);
       console.log('[dashboard-stability] E2E bypass cookie set for domain:', `.${domain}`);
+      
+      // Verify cookie was set
+      const cookiesAfterSet = await page.context().cookies();
+      const bypassCookie = cookiesAfterSet.find(c => c.name === 'e2e-dashboard-bypass');
+      console.log('[dashboard-stability] Bypass cookie verification:', {
+        found: !!bypassCookie,
+        value: bypassCookie?.value,
+        domain: bypassCookie?.domain,
+        path: bypassCookie?.path,
+        sameSite: bypassCookie?.sameSite,
+        secure: bypassCookie?.secure,
+      });
     } catch (error) {
       // Cookie domain mismatch is acceptable - localStorage is the primary method
       // Dashboard page checks localStorage (more reliable than cookie in cross-domain scenarios)
-      console.log('[dashboard-stability] Cookie setting failed (expected in some envs), using localStorage only');
+      console.log('[dashboard-stability] Cookie setting failed (expected in some envs), using localStorage only:', error);
     }
 
     const consoleMessages: string[] = [];
