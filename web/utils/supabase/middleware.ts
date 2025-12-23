@@ -2,7 +2,7 @@ import type { NextRequest } from 'next/server'
 
 /**
  * Check if a user is authenticated in middleware context (Edge Runtime compatible)
- *
+ * 
  * Edge Runtime compatible implementation that checks for Supabase auth cookies.
  * No external dependencies - uses only Next.js built-in APIs.
  *
@@ -16,10 +16,10 @@ import type { NextRequest } from 'next/server'
  * 1. Supabase sets cookies with httpOnly and secure flags
  * 2. Only substantial values indicate real sessions (not cleared/expired)
  * 3. Edge Runtime doesn't support full Supabase client verification
- *
+ * 
  * @param request - The Next.js request object
  * @returns Object with isAuthenticated boolean
- *
+ * 
  * @example
  * ```typescript
  * export function middleware(request: NextRequest) {
@@ -138,6 +138,38 @@ export function checkAuthInMiddleware(
         cookie.value &&
         cookie.value.length >= 10
       ) || null
+    }
+  }
+
+  // Final fallback: Check Cookie header for ANY sb- cookie with substantial value
+  // This catches cases where exact name matching fails but cookie exists
+  if (!authCookie && cookieHeader && cookieHeader.length > 0) {
+    // Look for any sb- cookie with substantial value
+    const sbCookiePattern = /sb-[^=;]+=([^;]+)/gi
+    const matches = [...cookieHeader.matchAll(sbCookiePattern)]
+    
+    for (const match of matches) {
+      if (match[0] && match[1]) {
+        const fullMatch = match[0]
+        const equalIndex = fullMatch.indexOf('=')
+        if (equalIndex === -1) continue
+        
+        const cookieName = fullMatch.substring(0, equalIndex).trim()
+        let cookieValue = fullMatch.substring(equalIndex + 1).trim()
+        
+        // Handle URL encoding
+      try {
+        cookieValue = decodeURIComponent(cookieValue)
+      } catch {
+        // If decoding fails, use original value
+      }
+      
+        // If it's a substantial sb- cookie, trust it
+        if (cookieName.startsWith('sb-') && cookieValue.length >= 100) {
+          authCookie = { name: cookieName, value: cookieValue }
+          break
+        }
+      }
     }
   }
 
