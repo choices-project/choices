@@ -193,7 +193,7 @@ export async function middleware(request: NextRequest) {
     // Redirect based on authentication status
     const redirectPath = isAuthenticated ? '/feed' : '/landing'
     const redirectUrl = new URL(redirectPath, request.url)
-    
+
     // DIAGNOSTIC: Log what we're redirecting to
     console.warn('[middleware] Root path redirect:', {
       pathname,
@@ -204,12 +204,12 @@ export async function middleware(request: NextRequest) {
       authCookieFound: diagnostics?.authCookieFound,
       timestamp: new Date().toISOString(),
     })
-    
+
     const redirectResponse = NextResponse.redirect(redirectUrl, 307)
 
     // Add cache headers to help with redirect performance
     redirectResponse.headers.set('Cache-Control', 'public, max-age=3600, stale-while-revalidate=86400')
-    
+
     // Add diagnostic headers for debugging (always add for now to see what's happening)
     if (diagnostics) {
       redirectResponse.headers.set('X-Auth-Debug-IsAuthenticated', String(isAuthenticated))
@@ -242,7 +242,17 @@ export async function middleware(request: NextRequest) {
 
     if (!isE2EHarness) {
       // Use Supabase authentication check (Edge Runtime compatible)
-      const { isAuthenticated } = checkAuthInMiddleware(request)
+      const { isAuthenticated, diagnostics } = checkAuthInMiddleware(request)
+
+      // DIAGNOSTIC: Log protected route check
+      console.warn('[middleware] Protected route check:', {
+        pathname,
+        isAuthenticated,
+        isE2EHarness,
+        cookieHeaderPresent: diagnostics?.cookieHeaderPresent,
+        authCookieFound: diagnostics?.authCookieFound,
+        timestamp: new Date().toISOString(),
+      })
 
       if (!isAuthenticated) {
         // Redirect unauthenticated users to auth page
@@ -250,6 +260,10 @@ export async function middleware(request: NextRequest) {
         // Preserve the original destination for redirect after login
         // Use 'redirectTo' to match client-side redirect logic
         authUrl.searchParams.set('redirectTo', pathname)
+        console.warn('[middleware] Redirecting unauthenticated user from protected route:', {
+          pathname,
+          redirectTo: authUrl.toString(),
+        })
         return NextResponse.redirect(authUrl, 307)
       }
     }
