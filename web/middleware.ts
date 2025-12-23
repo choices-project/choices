@@ -190,8 +190,18 @@ export async function middleware(request: NextRequest) {
     // Use Supabase authentication check (Edge Runtime compatible)
     const { isAuthenticated, diagnostics } = checkAuthInMiddleware(request)
 
+    // WORKAROUND: SameSite=Lax cookies may not be sent on programmatic top-level navigations
+    // (like page.goto() in tests), but they ARE sent on same-site fetch requests (like RSC).
+    // If cookies aren't detected on the initial request, redirect to /feed anyway and let
+    // the protected route handler verify auth on subsequent requests where cookies will be available.
+    // This is safe because /feed is protected and will redirect to /auth if not authenticated.
+    const hasReferer = !!request.headers.get('referer')
+    const shouldRedirectToFeed = isAuthenticated || (hasReferer && !diagnostics?.cookieHeaderPresent)
+
     // Redirect based on authentication status
-    const redirectPath = isAuthenticated ? '/feed' : '/landing'
+    // If authenticated OR if we have a referer (indicating same-site navigation) but no cookies detected,
+    // redirect to /feed to let it check again when cookies are available
+    const redirectPath = shouldRedirectToFeed ? '/feed' : '/landing'
     const redirectUrl = new URL(redirectPath, request.url)
 
     // DIAGNOSTIC: Log what we're redirecting to
