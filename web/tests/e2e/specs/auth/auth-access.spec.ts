@@ -100,13 +100,13 @@ test.describe('Auth access harness', () => {
   test('registers a passkey successfully', async ({ page }) => {
     // Enhanced diagnostics for passkey registration
     const diagnostics: any[] = [];
-    
+
     page.on('console', (msg) => {
       if (msg.text().includes('passkey') || msg.text().includes('webauthn') || msg.text().includes('credential')) {
         diagnostics.push({ type: msg.type(), text: msg.text(), timestamp: Date.now() });
       }
     });
-    
+
     page.on('response', async (response) => {
       if (response.url().includes('/api/auth') || response.url().includes('passkey') || response.url().includes('webauthn')) {
         diagnostics.push({
@@ -131,16 +131,16 @@ test.describe('Auth access harness', () => {
     );
 
     const registerButton = page.getByRole('button', { name: 'Create Passkey' });
-    
+
     // Comprehensive diagnostics for passkey registration
     const registerDiagnostics = await page.evaluate(() => {
-      const successMessage = Array.from(document.querySelectorAll('*')).find(el => 
+      const successMessage = Array.from(document.querySelectorAll('*')).find(el =>
         el.textContent?.includes('Registration Successful') || el.textContent?.includes('Success')
       );
       const successTestId = document.querySelector('[data-testid="auth-access-success"]');
       const errorTestId = document.querySelector('[data-testid="auth-access-error"]');
       const harnessReady = document.documentElement.dataset.authAccessHarness;
-      
+
       return {
         harnessReady,
         successMessage: {
@@ -168,9 +168,9 @@ test.describe('Auth access harness', () => {
       };
     });
     console.log('[DIAGNOSTIC] Passkey registration state before click:', JSON.stringify(registerDiagnostics, null, 2));
-    
+
     await registerButton.click();
-    
+
     // Wait for success message to appear - use test ID for more reliable detection
     // First wait for the success test ID to show 'true', then wait for the text to be visible
     await page.waitForFunction(
@@ -180,20 +180,20 @@ test.describe('Auth access harness', () => {
       },
       { timeout: 15_000 }
     );
-    
+
     // Also wait for the success message text to be visible
     await expect(page.getByTestId('passkey-register-success')).toBeVisible({ timeout: 15_000 });
     await expect(page.getByText('Registration Successful!')).toBeVisible({ timeout: 5_000 });
-    
+
     // Capture state after success for diagnostics
     const afterClickDiagnostics = await page.evaluate(() => {
-      const successMessage = Array.from(document.querySelectorAll('*')).find(el => 
+      const successMessage = Array.from(document.querySelectorAll('*')).find(el =>
         el.textContent?.includes('Registration Successful') || el.textContent?.includes('Success')
       );
       const successTestId = document.querySelector('[data-testid="auth-access-success"]');
       const errorTestId = document.querySelector('[data-testid="auth-access-error"]');
       const registerSuccessTestId = document.querySelector('[data-testid="passkey-register-success"]');
-      
+
       return {
         successMessage: {
           exists: !!successMessage,
@@ -235,15 +235,15 @@ test.describe('Auth access harness', () => {
     );
 
     const loginButton = page.getByRole('button', { name: 'Sign In with Passkey' });
-    
+
     // Comprehensive diagnostics for passkey authentication
     const loginDiagnostics = await page.evaluate(() => {
-      const successMessage = Array.from(document.querySelectorAll('*')).find(el => 
+      const successMessage = Array.from(document.querySelectorAll('*')).find(el =>
         el.textContent?.includes('Authentication Successful') || el.textContent?.includes('Success')
       );
       const successTestId = document.querySelector('[data-testid="auth-access-success"]');
       const errorTestId = document.querySelector('[data-testid="auth-access-error"]');
-      
+
       return {
         successMessage: {
           exists: !!successMessage,
@@ -261,26 +261,41 @@ test.describe('Auth access harness', () => {
       };
     });
     console.log('[DIAGNOSTIC] Passkey authentication state before click:', JSON.stringify(loginDiagnostics, null, 2));
-    
+
     await loginButton.click();
     
-    // Wait a bit for async operations
-    await page.waitForTimeout(2_000);
+    // Wait for success message to appear - use test ID for more reliable detection
+    // First wait for the success test ID to show 'true', then wait for the text to be visible
+    await page.waitForFunction(
+      () => {
+        const successTestId = document.querySelector('[data-testid="auth-access-success"]');
+        return successTestId?.textContent?.trim() === 'true';
+      },
+      { timeout: 15_000 }
+    );
     
-    // Capture state after click
+    // Also wait for the success message text to be visible
+    await expect(page.getByTestId('passkey-login-success')).toBeVisible({ timeout: 15_000 });
+    await expect(page.getByText('Authentication Successful!')).toBeVisible({ timeout: 5_000 });
+    
+    // Capture state after success for diagnostics
     const afterClickDiagnostics = await page.evaluate(() => {
       const successMessage = Array.from(document.querySelectorAll('*')).find(el => 
         el.textContent?.includes('Authentication Successful') || el.textContent?.includes('Success')
       );
       const successTestId = document.querySelector('[data-testid="auth-access-success"]');
       const errorTestId = document.querySelector('[data-testid="auth-access-error"]');
+      const loginSuccessTestId = document.querySelector('[data-testid="passkey-login-success"]');
       
       return {
         successMessage: {
           exists: !!successMessage,
           text: successMessage?.textContent?.trim() || null,
           visible: successMessage ? (successMessage as HTMLElement).offsetParent !== null : false,
-          innerHTML: successMessage ? (successMessage as HTMLElement).innerHTML.substring(0, 200) : null,
+        },
+        loginSuccessTestId: {
+          exists: !!loginSuccessTestId,
+          visible: loginSuccessTestId ? (loginSuccessTestId as HTMLElement).offsetParent !== null : false,
         },
         successTestId: {
           exists: !!successTestId,
@@ -292,9 +307,9 @@ test.describe('Auth access harness', () => {
         },
       };
     });
-    console.log('[DIAGNOSTIC] Passkey authentication state after click:', JSON.stringify(afterClickDiagnostics, null, 2));
+    console.log('[DIAGNOSTIC] Passkey authentication state after success:', JSON.stringify(afterClickDiagnostics, null, 2));
 
-    await expect(page.getByText('Authentication Successful!')).toBeVisible();
+    // Verify all success indicators
     await expect(page.getByTestId('auth-access-success')).toHaveText('true');
     await expect(page.getByTestId('auth-access-error')).toHaveText('none');
   });
@@ -309,13 +324,13 @@ test.describe('Auth access harness', () => {
 
     await page.getByTestId('login-email').fill('test-user@example.com');
     await page.getByTestId('login-password').fill('TestPassword123!');
-    
+
     // Diagnostic: Check form state before submit
     const formState = await page.evaluate(() => {
       const emailInput = document.querySelector('[data-testid="login-email"]') as HTMLInputElement;
       const passwordInput = document.querySelector('[data-testid="login-password"]') as HTMLInputElement;
       const submitButton = document.querySelector('[data-testid="login-submit"]') as HTMLButtonElement;
-      
+
       return {
         email: emailInput?.value || null,
         password: passwordInput?.value || null,
@@ -325,7 +340,7 @@ test.describe('Auth access harness', () => {
       };
     });
     console.log('[DIAGNOSTIC] Login form state (harness mode):', JSON.stringify(formState, null, 2));
-    
+
     // Wait for button to be enabled
     await page.waitForFunction(
       () => {
@@ -336,7 +351,7 @@ test.describe('Auth access harness', () => {
     ).catch(() => {
       console.log('[DIAGNOSTIC] Login button remained disabled in harness mode');
     });
-    
+
     await page.getByTestId('login-submit').click();
 
     await expect(page).toHaveURL(/\/auth/, { timeout: 15_000 });
