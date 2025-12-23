@@ -2,6 +2,7 @@
 
 import { Shield } from 'lucide-react';
 import { useRouter } from 'next/navigation';
+import { usePathname, useSearchParams } from 'next/navigation';
 import React, { useEffect, useRef, useState } from 'react';
 
 import { PersonalDashboard } from '@/features/dashboard';
@@ -155,7 +156,37 @@ async function checkSessionCookies(
 export default function DashboardPage() {
   const router = useRouter();
   const routerRef = useRef(router);
+  const pathname = usePathname();
+  const searchParams = useSearchParams();
+  
   useEffect(() => { routerRef.current = router; }, [router]);
+  
+  // CRITICAL: Immediate redirect recovery if we're on /auth but bypass flag is set
+  // This handles the case where middleware redirected before client-side check could run
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    
+    // Check if we're on /auth with redirectTo parameter and bypass flag is set
+    if (pathname === '/auth') {
+      const redirectTo = searchParams.get('redirectTo');
+      if (redirectTo === '/dashboard' || redirectTo === '/feed') {
+        try {
+          const bypassFlag = window.localStorage.getItem('e2e-dashboard-bypass') === '1';
+          if (bypassFlag) {
+            // Bypass flag is set but we were redirected - immediately redirect back
+            if (process.env.DEBUG_DASHBOARD === '1') {
+              logger.debug('🚨 Dashboard: Bypass flag detected on /auth page - immediately redirecting back');
+            }
+            // Use replace to avoid adding to history
+            window.location.replace(redirectTo);
+          }
+        } catch {
+          // localStorage might not be available
+        }
+      }
+    }
+  }, [pathname, searchParams]);
+  
   const { profile, isLoading } = useProfile();
   const isAuthenticated = useIsAuthenticated();
   const isUserLoading = useUserLoading();

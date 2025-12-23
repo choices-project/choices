@@ -506,6 +506,37 @@ test.describe('Authentication Flow', () => {
       });
       
       // Authenticated users should be redirected to /feed
+      // Note: SameSite=Lax cookies may not be sent on programmatic navigations,
+      // so middleware may redirect to /landing first, then to /feed on next request
+      // Wait for final redirect to /feed (handles two-step redirect)
+      let currentUrl = page.url();
+      let attempts = 0;
+      const maxAttempts = 5;
+      
+      while (!currentUrl.includes('/feed') && attempts < maxAttempts) {
+        // If we're on /landing, wait for the next redirect
+        if (currentUrl.includes('/landing')) {
+          await page.waitForTimeout(1_000);
+          // Trigger a navigation to help cookies be sent
+          await page.evaluate(() => {
+            window.history.pushState({}, '', window.location.pathname);
+          });
+          await page.waitForTimeout(500);
+        }
+        
+        try {
+          await page.waitForURL(new RegExp(`${BASE_URL.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}/feed`), { 
+            timeout: 5_000,
+            waitUntil: 'networkidle'
+          });
+          currentUrl = page.url();
+          break;
+        } catch {
+          currentUrl = page.url();
+          attempts++;
+        }
+      }
+      
       await expect(page).toHaveURL(new RegExp(`${BASE_URL.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}/feed`), { timeout: 10_000 });
     });
   });
