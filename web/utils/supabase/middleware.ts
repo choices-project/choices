@@ -2,7 +2,7 @@ import type { NextRequest } from 'next/server'
 
 /**
  * Check if a user is authenticated in middleware context (Edge Runtime compatible)
- * 
+ *
  * Edge Runtime compatible implementation that checks for Supabase auth cookies.
  * No external dependencies - uses only Next.js built-in APIs.
  *
@@ -16,10 +16,10 @@ import type { NextRequest } from 'next/server'
  * 1. Supabase sets cookies with httpOnly and secure flags
  * 2. Only substantial values indicate real sessions (not cleared/expired)
  * 3. Edge Runtime doesn't support full Supabase client verification
- * 
+ *
  * @param request - The Next.js request object
  * @returns Object with isAuthenticated boolean
- * 
+ *
  * @example
  * ```typescript
  * export function middleware(request: NextRequest) {
@@ -64,7 +64,7 @@ export function checkAuthInMiddleware(
   // PRIORITY: Check Cookie header first (most reliable for httpOnly cookies in Edge Runtime)
   // request.cookies.getAll() may not include httpOnly cookies in Edge Runtime
   const cookieHeader = request.headers.get('cookie') || ''
-  
+
   // DIAGNOSTIC: Log Cookie header presence and length
   if (enableDiagnostics) {
     console.warn('[checkAuthInMiddleware] Cookie header present:', cookieHeader ? 'yes' : 'no')
@@ -83,7 +83,7 @@ export function checkAuthInMiddleware(
   let authCookie: { name: string; value: string } | null = null
   const projectRef = getProjectRef()
   const expectedCookieName = projectRef ? `sb-${projectRef}-auth-token` : null
-  
+
   // DIAGNOSTIC: Collect diagnostic info
   const diagnostics: Record<string, unknown> = {
     cookieHeaderPresent: !!cookieHeader,
@@ -92,7 +92,7 @@ export function checkAuthInMiddleware(
     projectRef,
     expectedCookieName,
   }
-  
+
   // DIAGNOSTIC: Log expected cookie name
   if (enableDiagnostics) {
     console.warn('[checkAuthInMiddleware] Project ref:', projectRef)
@@ -254,7 +254,7 @@ export function checkAuthInMiddleware(
       } catch {
         // If decoding fails, use original value
       }
-      
+
         // If it's a substantial sb- cookie, trust it
         if (cookieName.startsWith('sb-') && cookieValue.length >= 100) {
           authCookie = { name: cookieName, value: cookieValue }
@@ -272,7 +272,7 @@ export function checkAuthInMiddleware(
   }
   diagnostics.parsedCookiesCount = request.cookies.getAll().length
   diagnostics.parsedCookiesHasSb = request.cookies.getAll().some(c => c.name.startsWith('sb-'))
-  
+
   // If no auth cookie found, user is not authenticated
   if (!authCookie || !authCookie.value) {
     if (enableDiagnostics) {
@@ -282,16 +282,6 @@ export function checkAuthInMiddleware(
     }
     return { isAuthenticated: false, diagnostics }
   }
-  
-  // DIAGNOSTIC: Log successful authentication
-  if (enableDiagnostics) {
-    console.warn('[checkAuthInMiddleware] Auth cookie found - returning true:', {
-      name: authCookie.name,
-      valueLength: authCookie.value.length
-    })
-  }
-  
-  return { isAuthenticated: true, diagnostics }
 
   // Check for invalid/empty cookie values
   const trimmedValue = authCookie.value.trim()
@@ -301,8 +291,19 @@ export function checkAuthInMiddleware(
       trimmedValue === '{}' ||
       trimmedValue === '""' ||
       trimmedValue === "''") {
-  return { isAuthenticated: false }
-}
+    if (enableDiagnostics) {
+      console.warn('[checkAuthInMiddleware] Auth cookie value is invalid - returning false')
+    }
+    return { isAuthenticated: false, diagnostics }
+  }
+
+  // DIAGNOSTIC: Log successful authentication
+  if (enableDiagnostics) {
+    console.warn('[checkAuthInMiddleware] Auth cookie found - returning true:', {
+      name: authCookie.name,
+      valueLength: authCookie.value.length
+    })
+  }
 
   // If cookie exists and is substantial, user is authenticated
   // Supabase sets these cookies securely (httpOnly, secure flags)
@@ -311,5 +312,5 @@ export function checkAuthInMiddleware(
   // 1. Cookies are set by Supabase with proper security flags
   // 2. Only substantial values indicate real sessions (not cleared/expired)
   // 3. Edge Runtime doesn't support full Supabase client verification
-  return { isAuthenticated: true }
+  return { isAuthenticated: true, diagnostics }
 }
