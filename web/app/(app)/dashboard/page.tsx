@@ -197,14 +197,14 @@ export default function DashboardPage() {
   // Also handles case where middleware redirected to /auth but bypass flag is now set
   useEffect(() => {
     if (typeof window === 'undefined') return;
-    
+
     // Check immediately
     const checkBypass = () => {
       try {
         const bypassValue = window.localStorage.getItem('e2e-dashboard-bypass') === '1';
         if (bypassValue !== shouldBypassAuth) {
           setShouldBypassAuth(bypassValue);
-          
+
           // CRITICAL: If bypass flag is now set and we're on /auth with redirectTo=/dashboard, redirect back
           if (bypassValue && window.location.pathname === '/auth') {
             const searchParams = new URLSearchParams(window.location.search);
@@ -221,13 +221,13 @@ export default function DashboardPage() {
         // localStorage might not be available
       }
     };
-    
+
     checkBypass();
-    
+
     // Check periodically for first 3 seconds (covers addInitScript timing and middleware redirects)
     const interval = setInterval(checkBypass, 100);
     const timeout = setTimeout(() => clearInterval(interval), 3000);
-    
+
     return () => {
       clearInterval(interval);
       clearTimeout(timeout);
