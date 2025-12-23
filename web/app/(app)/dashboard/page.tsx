@@ -196,7 +196,7 @@ export default function DashboardPage() {
   // This handles E2E tests that set localStorage via addInitScript
   useEffect(() => {
     if (typeof window === 'undefined') return;
-    
+
     // Check immediately
     const checkBypass = () => {
       try {
@@ -208,13 +208,13 @@ export default function DashboardPage() {
         // localStorage might not be available
       }
     };
-    
+
     checkBypass();
-    
+
     // Check periodically for first 2 seconds (covers addInitScript timing)
     const interval = setInterval(checkBypass, 100);
     const timeout = setTimeout(() => clearInterval(interval), 2000);
-    
+
     return () => {
       clearInterval(interval);
       clearTimeout(timeout);
@@ -420,9 +420,9 @@ export default function DashboardPage() {
       authRetryTimeoutRef.current = setTimeout(() => {
         // CRITICAL: Check bypass flag before any delayed redirects
         // Re-check bypass flag in case it was set after the timeout was created
-        const currentBypassFlag = typeof window !== 'undefined' && 
+        const currentBypassFlag = typeof window !== 'undefined' &&
           window.localStorage.getItem('e2e-dashboard-bypass') === '1';
-        
+
         if (shouldBypassAuth || currentBypassFlag) {
           if (process.env.DEBUG_DASHBOARD === '1' || currentBypassFlag) {
             logger.debug('🚨 Dashboard: Bypass flag detected in delayed check - skipping redirect');
@@ -434,9 +434,9 @@ export default function DashboardPage() {
         // After extended wait, check if cookies still exist and auth state has hydrated
         checkSessionCookies(3, 200).then((stillHasCookie) => {
           // CRITICAL: Re-check bypass flag before redirecting
-          const stillBypassFlag = typeof window !== 'undefined' && 
+          const stillBypassFlag = typeof window !== 'undefined' &&
             window.localStorage.getItem('e2e-dashboard-bypass') === '1';
-          
+
           if (shouldBypassAuth || stillBypassFlag) {
             if (process.env.DEBUG_DASHBOARD === '1' || stillBypassFlag) {
               logger.debug('🚨 Dashboard: Bypass flag detected in delayed cookie check - skipping redirect');

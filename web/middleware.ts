@@ -554,13 +554,19 @@ export async function middleware(request: NextRequest) {
     const hasE2EBypassCookie = bypassCookie1?.value === '1' || bypassCookie2?.value === '1';
 
     // DIAGNOSTIC: Log bypass cookie check for debugging
-    if (process.env.DEBUG_MIDDLEWARE === '1' || process.env.NODE_ENV !== 'production' || isPlaywrightTest) {
+    // Always log when PLAYWRIGHT_USE_MOCKS is set (production tests) or in debug mode
+    if (process.env.DEBUG_MIDDLEWARE === '1' || process.env.NODE_ENV !== 'production' || isPlaywrightTest || hasE2EBypassCookie) {
       console.warn('[middleware] Bypass cookie check:', {
         pathname,
         hasE2EBypassCookie,
         bypassCookie1Value: bypassCookie1?.value,
         bypassCookie2Value: bypassCookie2?.value,
-        allCookies: Array.from(request.cookies.getAll()).map(c => ({ name: c.name, value: c.value.substring(0, 20) + '...' })),
+        isPlaywrightTest,
+        PLAYWRIGHT_USE_MOCKS: process.env.PLAYWRIGHT_USE_MOCKS,
+        allCookies: Array.from(request.cookies.getAll()).map(c => ({ 
+          name: c.name, 
+          value: c.value.length > 20 ? c.value.substring(0, 20) + '...' : c.value,
+        })),
         timestamp: new Date().toISOString(),
       });
     }
