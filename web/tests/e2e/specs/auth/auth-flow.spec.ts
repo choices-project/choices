@@ -154,7 +154,8 @@ test.describe('Authentication Flow', () => {
       
       page.on('response', (response) => {
         const headers: Record<string, string> = {};
-        response.headers().forEach((value, key) => {
+        const responseHeaders = response.headers();
+        Object.entries(responseHeaders).forEach(([key, value]) => {
           headers[key] = value;
         });
         networkRequests.push({

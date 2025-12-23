@@ -558,6 +558,22 @@ export default function DashboardPage() {
     return () => clearTimeout(timeout);
   }, [isLoading]);
 
+  // DIAGNOSTIC: Log when dashboard content is about to render (must be before early returns)
+  useEffect(() => {
+    if (shouldBypassAuth || (!isUserLoading && !isAuthContextLoading && isStoreHydrated && (hasCookies !== false || isAuthenticated))) {
+      if (process.env.DEBUG_DASHBOARD === '1' || (typeof window !== 'undefined' && window.localStorage.getItem('e2e-dashboard-bypass') === '1')) {
+        logger.debug('🚨 Dashboard: Rendering dashboard content', {
+          shouldBypassAuth,
+          isAuthenticated,
+          profile: profile ? { id: profile.id, username: profile.username } : null,
+          isLoading,
+          isAdmin,
+          currentUrl: typeof window !== 'undefined' ? window.location.href : 'SSR',
+        });
+      }
+    }
+  }, [shouldBypassAuth, isAuthenticated, profile, isLoading, isAdmin, isUserLoading, isAuthContextLoading, isStoreHydrated, hasCookies]);
+
   // Show loading skeleton only if actively loading and not timed out
   // In E2E harness mode or after timeout, allow dashboard to render (it handles missing profile gracefully)
   // Also bypass loading check if user is authenticated (profile can load in background)
@@ -651,20 +667,6 @@ export default function DashboardPage() {
       </div>
     );
   }
-
-  // DIAGNOSTIC: Log when dashboard content is about to render
-  useEffect(() => {
-    if (process.env.DEBUG_DASHBOARD === '1' || (typeof window !== 'undefined' && window.localStorage.getItem('e2e-dashboard-bypass') === '1')) {
-      logger.debug('🚨 Dashboard: Rendering dashboard content', {
-        shouldBypassAuth,
-        isAuthenticated,
-        profile: profile ? { id: profile.id, username: profile.username } : null,
-        isLoading,
-        isAdmin,
-        currentUrl: typeof window !== 'undefined' ? window.location.href : 'SSR',
-      });
-    }
-  }, [shouldBypassAuth, isAuthenticated, profile, isLoading, isAdmin]);
 
   return (
     <ErrorBoundary>

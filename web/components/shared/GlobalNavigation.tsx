@@ -87,6 +87,21 @@ export default function GlobalNavigation() {
       });
     }
   }, [authLoading, loadingTimeout, shouldBypassLoading, isLoading, isAuthenticated, user, pathname]);
+
+  // DIAGNOSTIC: Log when rendering full navigation (must be before early returns)
+  useEffect(() => {
+    if (!isLoading && !_hasError) {
+      if (process.env.DEBUG_DASHBOARD === '1' || (typeof window !== 'undefined' && window.localStorage.getItem('e2e-dashboard-bypass') === '1')) {
+        logger.debug('🚨 GlobalNavigation: Rendering full navigation', {
+          navigationItemsCount: navigationItems.length,
+          dashboardNavItem: navigationItems.find(item => item.href === '/dashboard'),
+          isAuthenticated,
+          user: user ? { id: user.id, email: user.email } : null,
+          pathname,
+        });
+      }
+    }
+  }, [isLoading, _hasError, navigationItems, isAuthenticated, user, pathname]);
   
   // Use ref for stable authSignOut callback
   const authSignOutRef = useRef(authSignOut);
@@ -209,18 +224,6 @@ export default function GlobalNavigation() {
     );
   }
 
-  // DIAGNOSTIC: Log when rendering full navigation
-  useEffect(() => {
-    if (process.env.DEBUG_DASHBOARD === '1' || (typeof window !== 'undefined' && window.localStorage.getItem('e2e-dashboard-bypass') === '1')) {
-      logger.debug('🚨 GlobalNavigation: Rendering full navigation', {
-        navigationItemsCount: navigationItems.length,
-        dashboardNavItem: navigationItems.find(item => item.href === '/dashboard'),
-        isAuthenticated,
-        user: user ? { id: user.id, email: user.email } : null,
-        pathname,
-      });
-    }
-  }, [navigationItems, isAuthenticated, user, pathname]);
 
   return (
     <div className="sticky top-0 z-50 bg-white dark:bg-gray-900 shadow-sm border-b border-gray-200 dark:border-gray-700" data-testid="global-navigation">
