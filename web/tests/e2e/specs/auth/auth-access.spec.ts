@@ -263,7 +263,7 @@ test.describe('Auth access harness', () => {
     console.log('[DIAGNOSTIC] Passkey authentication state before click:', JSON.stringify(loginDiagnostics, null, 2));
 
     await loginButton.click();
-    
+
     // Wait for success message to appear - use test ID for more reliable detection
     // First wait for the success test ID to show 'true', then wait for the text to be visible
     await page.waitForFunction(
@@ -273,20 +273,20 @@ test.describe('Auth access harness', () => {
       },
       { timeout: 15_000 }
     );
-    
+
     // Also wait for the success message text to be visible
     await expect(page.getByTestId('passkey-login-success')).toBeVisible({ timeout: 15_000 });
     await expect(page.getByText('Authentication Successful!')).toBeVisible({ timeout: 5_000 });
-    
+
     // Capture state after success for diagnostics
     const afterClickDiagnostics = await page.evaluate(() => {
-      const successMessage = Array.from(document.querySelectorAll('*')).find(el => 
+      const successMessage = Array.from(document.querySelectorAll('*')).find(el =>
         el.textContent?.includes('Authentication Successful') || el.textContent?.includes('Success')
       );
       const successTestId = document.querySelector('[data-testid="auth-access-success"]');
       const errorTestId = document.querySelector('[data-testid="auth-access-error"]');
       const loginSuccessTestId = document.querySelector('[data-testid="passkey-login-success"]');
-      
+
       return {
         successMessage: {
           exists: !!successMessage,
