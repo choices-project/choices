@@ -195,15 +195,15 @@ export async function middleware(request: NextRequest) {
     const redirectUrl = new URL(redirectPath, request.url)
     
     // DIAGNOSTIC: Log what we're redirecting to
-    if (diagnostics) {
-      console.warn('[middleware] Root redirect decision:', {
-        isAuthenticated,
-        redirectPath,
-        redirectUrl: redirectUrl.toString(),
-        cookieHeaderPresent: diagnostics.cookieHeaderPresent,
-        authCookieFound: diagnostics.authCookieFound,
-      })
-    }
+    console.warn('[middleware] Root path redirect:', {
+      pathname,
+      isAuthenticated,
+      redirectPath,
+      redirectUrl: redirectUrl.toString(),
+      cookieHeaderPresent: diagnostics?.cookieHeaderPresent,
+      authCookieFound: diagnostics?.authCookieFound,
+      timestamp: new Date().toISOString(),
+    })
     
     const redirectResponse = NextResponse.redirect(redirectUrl, 307)
 
