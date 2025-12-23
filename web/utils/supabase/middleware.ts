@@ -64,18 +64,26 @@ export function checkAuthInMiddleware(
   // PRIORITY: Check Cookie header first (most reliable for httpOnly cookies in Edge Runtime)
   // request.cookies.getAll() may not include httpOnly cookies in Edge Runtime
   const cookieHeader = request.headers.get('cookie') || ''
+  const pathname = request.nextUrl.pathname
+  const isRootPath = pathname === '/'
 
-  // DIAGNOSTIC: Log Cookie header presence and length
-  if (enableDiagnostics) {
-    console.warn('[checkAuthInMiddleware] Cookie header present:', cookieHeader ? 'yes' : 'no')
-    console.warn('[checkAuthInMiddleware] Cookie header length:', cookieHeader.length)
+  // DIAGNOSTIC: Log Cookie header presence and length - ALWAYS log for root path
+  if (enableDiagnostics || isRootPath) {
+    console.warn('[checkAuthInMiddleware] Cookie detection start:', {
+      pathname,
+      cookieHeaderPresent: !!cookieHeader,
+      cookieHeaderLength: cookieHeader.length,
+      hasSbInHeader: cookieHeader.includes('sb-'),
+      cookieHeaderPreview: cookieHeader.substring(0, 300),
+    })
     if (cookieHeader) {
       const cookieNames = cookieHeader.split(';').map(c => {
         const [name] = c.split('=')
         return name?.trim() || ''
       }).filter(Boolean)
-      console.warn('[checkAuthInMiddleware] Cookie header names (first 5):', cookieNames.slice(0, 5))
-      console.warn('[checkAuthInMiddleware] Has sb- cookie in header:', cookieHeader.includes('sb-'))
+      console.warn('[checkAuthInMiddleware] Cookie header names (first 10):', cookieNames.slice(0, 10))
+    } else {
+      console.warn('[checkAuthInMiddleware] NO COOKIE HEADER - this is the problem!')
     }
   }
 
