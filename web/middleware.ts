@@ -573,13 +573,15 @@ export async function middleware(request: NextRequest) {
       const { isAuthenticated, diagnostics } = checkAuthInMiddleware(request)
 
       // DIAGNOSTIC: Log protected route check (only in debug/test mode)
-      if (process.env.DEBUG_MIDDLEWARE === '1' || process.env.NODE_ENV !== 'production') {
+      if (process.env.DEBUG_MIDDLEWARE === '1' || process.env.NODE_ENV !== 'production' || hasE2EBypassCookie) {
         console.warn('[middleware] Protected route check:', {
           pathname,
           isAuthenticated,
           isE2EHarness,
+          hasE2EBypassCookie,
           cookieHeaderPresent: diagnostics?.cookieHeaderPresent,
           authCookieFound: diagnostics?.authCookieFound,
+          bypassCookieValue: request.cookies.get('e2e-dashboard-bypass')?.value,
           timestamp: new Date().toISOString(),
         })
       }

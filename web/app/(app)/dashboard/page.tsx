@@ -337,7 +337,8 @@ export default function DashboardPage() {
       };
     }
     // First check if user is authenticated - if not, check session cookie and wait for hydration
-    if (!isAuthenticated) {
+    // Skip all redirect logic if bypass flag is set (E2E testing)
+    if (!shouldBypassAuth && !isAuthenticated) {
       // Clear any existing retry timeout
       if (authRetryTimeoutRef.current) {
         clearTimeout(authRetryTimeoutRef.current);
@@ -364,6 +365,10 @@ export default function DashboardPage() {
       }
       authRetryTimeoutRef.current = setTimeout(() => {
         // After extended wait, check if cookies still exist and auth state has hydrated
+        // Skip this check if bypass flag is set (E2E testing)
+        if (shouldBypassAuth) {
+          return;
+        }
         checkSessionCookies(3, 200).then((stillHasCookie) => {
           // Access store directly to check auth state without causing re-render
           const currentAuthState = useUserStore.getState().isAuthenticated;
