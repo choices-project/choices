@@ -2,7 +2,7 @@ import type { NextRequest } from 'next/server'
 
 /**
  * Check if a user is authenticated in middleware context (Edge Runtime compatible)
- * 
+ *
  * Edge Runtime compatible implementation that checks for Supabase auth cookies.
  * No external dependencies - uses only Next.js built-in APIs.
  *
@@ -16,10 +16,10 @@ import type { NextRequest } from 'next/server'
  * 1. Supabase sets cookies with httpOnly and secure flags
  * 2. Only substantial values indicate real sessions (not cleared/expired)
  * 3. Edge Runtime doesn't support full Supabase client verification
- * 
+ *
  * @param request - The Next.js request object
  * @returns Object with isAuthenticated boolean
- * 
+ *
  * @example
  * ```typescript
  * export function middleware(request: NextRequest) {
@@ -52,7 +52,7 @@ export function checkAuthInMiddleware(
   const isSupabaseAuthCookie = (cookieName: string): boolean => {
     // Must start with sb-
     if (!cookieName.startsWith('sb-')) return false
-    
+
     // Check for auth or session in name
     const lowerName = cookieName.toLowerCase()
     return lowerName.includes('auth') || lowerName.includes('session')
@@ -70,15 +70,23 @@ export function checkAuthInMiddleware(
   // First, check Cookie header (most reliable for httpOnly cookies)
   if (cookieHeader && cookieHeader.length > 0) {
     // Try exact match first if we have project ref
-    if (expectedCookieName) {
-      const exactMatch = cookieHeader.match(new RegExp(`(?:^|;\\s*)${expectedCookieName.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}=([^;]+)`, 'i'))
-      if (exactMatch && exactMatch[1]) {
-        let cookieValue = exactMatch[1].trim()
+    // Use simple string search for exact cookie name (more reliable than regex)
+    if (expectedCookieName && cookieHeader.includes(expectedCookieName + '=')) {
+      const cookieStart = cookieHeader.indexOf(expectedCookieName + '=')
+      if (cookieStart !== -1) {
+        const valueStart = cookieStart + expectedCookieName.length + 1
+        let valueEnd = cookieHeader.indexOf(';', valueStart)
+        if (valueEnd === -1) valueEnd = cookieHeader.length
+        
+        let cookieValue = cookieHeader.substring(valueStart, valueEnd).trim()
+        
+        // Handle URL encoding
         try {
-            cookieValue = decodeURIComponent(cookieValue)
-          } catch {
+          cookieValue = decodeURIComponent(cookieValue)
+        } catch {
           // If decoding fails, use original value
         }
+        
         if (cookieValue.length >= 10) {
           authCookie = { name: expectedCookieName, value: cookieValue }
         }
@@ -96,12 +104,12 @@ export function checkAuthInMiddleware(
         let cookieValue = cookiePair.substring(equalIndex + 1).trim()
 
         // Handle URL encoding (cookies may be URL-encoded in header)
-      try {
-        cookieValue = decodeURIComponent(cookieValue)
-      } catch {
-        // If decoding fails, use original value
-      }
-      
+        try {
+          cookieValue = decodeURIComponent(cookieValue)
+        } catch {
+          // If decoding fails, use original value
+        }
+
         // Check if it's a Supabase auth cookie
         if (isSupabaseAuthCookie(cookieName) && cookieValue.length >= 10) {
           authCookie = { name: cookieName, value: cookieValue }
@@ -114,7 +122,7 @@ export function checkAuthInMiddleware(
   // Fallback: Check parsed cookies if Cookie header didn't work
   if (!authCookie) {
     const cookies = request.cookies.getAll()
-    
+
     // Try exact match first
     if (expectedCookieName) {
       const exactCookie = cookies.find(c => c.name === expectedCookieName)
