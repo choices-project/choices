@@ -292,7 +292,7 @@ test.describe('Authentication Flow', () => {
         )
         .toBeTruthy();
       
-      // Diagnostic: Log auth state before root visit
+      // Comprehensive diagnostics: Log auth state before root visit
       const cookiesBeforeRoot = await page.context().cookies();
       const authCookiesBeforeRoot = cookiesBeforeRoot.filter(c => 
         c.name.startsWith('sb-') && 

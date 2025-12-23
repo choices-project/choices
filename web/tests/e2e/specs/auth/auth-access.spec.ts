@@ -98,6 +98,26 @@ test.describe('Auth access harness', () => {
   });
 
   test('registers a passkey successfully', async ({ page }) => {
+    // Enhanced diagnostics for passkey registration
+    const diagnostics: any[] = [];
+    
+    page.on('console', (msg) => {
+      if (msg.text().includes('passkey') || msg.text().includes('webauthn') || msg.text().includes('credential')) {
+        diagnostics.push({ type: msg.type(), text: msg.text(), timestamp: Date.now() });
+      }
+    });
+    
+    page.on('response', async (response) => {
+      if (response.url().includes('/api/auth') || response.url().includes('passkey') || response.url().includes('webauthn')) {
+        diagnostics.push({
+          type: 'network',
+          url: response.url(),
+          status: response.status(),
+          method: response.request().method(),
+          timestamp: Date.now(),
+        });
+      }
+    });
     await page.goto('/e2e/auth-access', { waitUntil: 'domcontentloaded' });
     await waitForPageReady(page);
     console.info(

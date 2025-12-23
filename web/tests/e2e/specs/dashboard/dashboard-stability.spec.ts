@@ -206,23 +206,71 @@ test.describe('Dashboard Stability Tests', () => {
       const navExists = await dashboardNav.count();
       console.log('[dashboard-stability] Dashboard nav element count:', navExists);
 
+      // Comprehensive diagnostics for GlobalNavigation
+      const navDiagnostics = await page.evaluate(() => {
+        const nav = document.querySelector('nav') || document.querySelector('[role="navigation"]');
+        const allLinks = Array.from(document.querySelectorAll('a[href]'));
+        const dashboardLinks = allLinks.filter(link => 
+          link.getAttribute('href')?.includes('dashboard') || 
+          link.textContent?.toLowerCase().includes('dashboard')
+        );
+        const navLinks = allLinks.filter(link => 
+          link.closest('nav') || link.closest('[role="navigation"]')
+        );
+        
+        // Check for loading skeleton
+        const loadingSkeleton = document.querySelector('.animate-pulse');
+        const hasLoadingSkeleton = !!loadingSkeleton;
+        
+        // Check for GlobalNavigation component structure
+        const globalNav = document.querySelector('[class*="GlobalNavigation"]') || 
+                         document.querySelector('nav[aria-label*="navigation"]') ||
+                         nav;
+        
+        return {
+          hasNav: !!nav,
+          navHTML: nav ? nav.innerHTML.substring(0, 1000) : null,
+          allLinksCount: allLinks.length,
+          dashboardLinksCount: dashboardLinks.length,
+          dashboardLinks: dashboardLinks.map(link => ({
+            href: link.getAttribute('href'),
+            text: link.textContent?.trim(),
+            testId: link.getAttribute('data-testid'),
+            visible: link.offsetParent !== null,
+          })),
+          navLinksCount: navLinks.length,
+          navLinks: navLinks.slice(0, 10).map(link => ({
+            href: link.getAttribute('href'),
+            text: link.textContent?.trim(),
+            testId: link.getAttribute('data-testid'),
+          })),
+          hasLoadingSkeleton,
+          loadingSkeletonHTML: loadingSkeleton ? loadingSkeleton.outerHTML.substring(0, 200) : null,
+          globalNavExists: !!globalNav,
+        };
+      });
+      console.log('[dashboard-stability] Navigation diagnostics:', JSON.stringify(navDiagnostics, null, 2));
+
+      // Check AuthContext state
+      const authContextDiagnostics = await page.evaluate(() => {
+        // Try to access React DevTools or component state
+        const reactFiber = (window as any).__REACT_DEVTOOLS_GLOBAL_HOOK__;
+        return {
+          reactDevToolsAvailable: !!reactFiber,
+          localStorage: {
+            bypassFlag: localStorage.getItem('e2e-dashboard-bypass'),
+            userStore: localStorage.getItem('user-store') ? 'exists' : 'missing',
+          },
+          cookies: document.cookie,
+        };
+      });
+      console.log('[dashboard-stability] AuthContext diagnostics:', JSON.stringify(authContextDiagnostics, null, 2));
+
       if (navExists === 0) {
         // Try alternative selectors
         const altNav = page.locator('text=Dashboard').or(page.locator('a[href*="dashboard"]'));
         const altNavCount = await altNav.count();
         console.log('[dashboard-stability] Alternative dashboard nav elements found:', altNavCount);
-
-        if (altNavCount === 0) {
-          // Log page structure for debugging
-          const pageStructure = await page.evaluate(() => {
-            const nav = document.querySelector('nav') || document.querySelector('[role="navigation"]');
-            return {
-              hasNav: !!nav,
-              navHTML: nav ? nav.innerHTML.substring(0, 500) : null,
-            };
-          });
-          console.log('[dashboard-stability] Navigation structure:', pageStructure);
-        }
       }
 
       await expect(dashboardNav).toBeVisible({ timeout: 10_000 });
@@ -247,6 +295,15 @@ test.describe('Dashboard Stability Tests', () => {
   test('dashboard preferences persist and toggle correctly', async ({ page }) => {
     test.setTimeout(120_000);
 
+    // Set up E2E bypass for this test
+    await page.addInitScript(() => {
+      try {
+        localStorage.setItem('e2e-dashboard-bypass', '1');
+      } catch (e) {
+        console.warn('Could not set localStorage:', e);
+      }
+    });
+
     const cleanupMocks = await setupExternalAPIMocks(page, {
       feeds: true,
       notifications: true,
@@ -258,6 +315,95 @@ test.describe('Dashboard Stability Tests', () => {
     try {
       await page.goto('/dashboard', { waitUntil: 'domcontentloaded', timeout: 60_000 });
       await waitForPageReady(page);
+
+      // Comprehensive diagnostics for PersonalDashboard
+      const dashboardDiagnostics = await page.evaluate(() => {
+        const personalDashboard = document.querySelector('[data-testid="personal-dashboard"]');
+        const dashboardHeader = document.querySelector('[data-testid="dashboard-header"]');
+        const dashboardTitle = document.querySelector('[data-testid="dashboard-title"]');
+        const personalAnalytics = document.querySelector('[data-testid="personal-analytics"]');
+        const dashboardNav = document.querySelector('[data-testid="dashboard-nav"]');
+        const settingsContent = document.querySelector('[data-testid="settings-content"]');
+        
+        // Check for loading states
+        const loadingSkeletons = document.querySelectorAll('.animate-pulse, [class*="Skeleton"]');
+        const spinners = document.querySelectorAll('.animate-spin');
+        
+        // Check for error states
+        const errorMessages = document.querySelectorAll('[class*="error"], [class*="Error"]');
+        
+        // Check page structure
+        const mainContent = document.querySelector('main') || document.querySelector('[role="main"]');
+        const dashboardPage = document.querySelector('[class*="dashboard"]');
+        
+        return {
+          personalDashboard: {
+            exists: !!personalDashboard,
+            visible: personalDashboard ? (personalDashboard as HTMLElement).offsetParent !== null : false,
+            innerHTML: personalDashboard ? (personalDashboard as HTMLElement).innerHTML.substring(0, 500) : null,
+          },
+          dashboardHeader: {
+            exists: !!dashboardHeader,
+            visible: dashboardHeader ? (dashboardHeader as HTMLElement).offsetParent !== null : false,
+          },
+          dashboardTitle: {
+            exists: !!dashboardTitle,
+            visible: dashboardTitle ? (dashboardTitle as HTMLElement).offsetParent !== null : false,
+            text: dashboardTitle?.textContent?.trim(),
+          },
+          personalAnalytics: {
+            exists: !!personalAnalytics,
+            visible: personalAnalytics ? (personalAnalytics as HTMLElement).offsetParent !== null : false,
+          },
+          dashboardNav: {
+            exists: !!dashboardNav,
+            visible: dashboardNav ? (dashboardNav as HTMLElement).offsetParent !== null : false,
+          },
+          settingsContent: {
+            exists: !!settingsContent,
+            visible: settingsContent ? (settingsContent as HTMLElement).offsetParent !== null : false,
+          },
+          loadingStates: {
+            skeletonsCount: loadingSkeletons.length,
+            spinnersCount: spinners.length,
+            hasLoading: loadingSkeletons.length > 0 || spinners.length > 0,
+          },
+          errorStates: {
+            errorsCount: errorMessages.length,
+            errorTexts: Array.from(errorMessages).slice(0, 3).map(el => el.textContent?.trim()),
+          },
+          pageStructure: {
+            hasMain: !!mainContent,
+            hasDashboardPage: !!dashboardPage,
+            url: window.location.href,
+            pathname: window.location.pathname,
+          },
+          localStorage: {
+            bypassFlag: localStorage.getItem('e2e-dashboard-bypass'),
+            userStore: localStorage.getItem('user-store') ? 'exists' : 'missing',
+            profileStore: localStorage.getItem('profile-store') ? 'exists' : 'missing',
+          },
+        };
+      });
+      console.log('[dashboard-stability] PersonalDashboard diagnostics:', JSON.stringify(dashboardDiagnostics, null, 2));
+
+      // Check component rendering state
+      const componentState = await page.evaluate(() => {
+        // Try to find React component state via DOM attributes or data attributes
+        const allTestIds = Array.from(document.querySelectorAll('[data-testid]')).map(el => ({
+          testId: el.getAttribute('data-testid'),
+          tag: el.tagName,
+          visible: (el as HTMLElement).offsetParent !== null,
+          className: el.className,
+        }));
+        
+        return {
+          allTestIds: allTestIds.slice(0, 20),
+          totalTestIds: allTestIds.length,
+        };
+      });
+      console.log('[dashboard-stability] Component state:', JSON.stringify(componentState, null, 2));
+
       await expect(page.getByTestId('personal-dashboard')).toBeVisible({ timeout: 30_000 });
 
       // Toggle elected officials
