@@ -312,18 +312,38 @@ test.describe('Authentication Flow', () => {
       
       // Diagnostic: Capture redirect chain and diagnostic headers
       const redirectChain: string[] = [];
+      const redirectDetails: Array<{
+        status: number;
+        method: string;
+        from: string;
+        to: string;
+        headers: Record<string, string>;
+      }> = [];
       const diagnosticHeaders: Record<string, string> = {};
-      page.on('response', (response) => {
+      page.on('response', async (response) => {
         if (response.status() >= 300 && response.status() < 400) {
           const location = response.headers()['location'];
-          redirectChain.push(`${response.status()} ${response.request().method()} -> ${location || 'no location'}`);
+          const request = response.request();
+          const fromUrl = request.url();
+          const toUrl = location ? new URL(location, fromUrl).toString() : 'no location';
+          redirectChain.push(`${response.status()} ${request.method()} -> ${location || 'no location'}`);
           
-          // Capture diagnostic headers
-          const headers = response.headers();
+          // Capture full redirect details with diagnostic headers
+          const headers = await response.allHeaders();
+          const debugHeaders: Record<string, string> = {};
           Object.keys(headers).forEach(key => {
             if (key.toLowerCase().startsWith('x-auth-debug-')) {
-              diagnosticHeaders[key] = headers[key];
+              debugHeaders[key] = headers[key];
+              diagnosticHeaders[key] = headers[key]; // Keep for backward compatibility
             }
+          });
+          
+          redirectDetails.push({
+            status: response.status(),
+            method: request.method(),
+            from: fromUrl,
+            to: toUrl,
+            headers: debugHeaders,
           });
         }
       });
@@ -345,6 +365,14 @@ test.describe('Authentication Flow', () => {
         redirectedToLanding: finalUrl.includes('/landing'),
         redirectedToAuth: finalUrl.includes('/auth'),
         redirectChain: redirectChain.filter(r => r.includes(BASE_URL) || r.includes('/feed') || r.includes('/landing')),
+        redirectDetails: redirectDetails.map(r => ({
+          from: r.from.replace(BASE_URL, ''),
+          to: r.to.replace(BASE_URL, ''),
+          status: r.status,
+          isAuthenticated: r.headers['x-auth-debug-isauthenticated'],
+          redirectPath: r.headers['x-auth-debug-redirectpath'],
+          authCookieFound: r.headers['x-auth-debug-authcookiefound'],
+        })),
         authCookiesAfterRoot: authCookiesAfterRoot.map(c => ({
           name: c.name,
           valueLength: c.value.length,
