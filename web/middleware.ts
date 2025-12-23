@@ -192,14 +192,20 @@ export async function middleware(request: NextRequest) {
 
     // WORKAROUND: SameSite=Lax cookies may not be sent on programmatic top-level navigations
     // (like page.goto() in tests), but they ARE sent on same-site fetch requests (like RSC).
-    // If cookies aren't detected on the initial request, redirect to /feed anyway and let
-    // the protected route handler verify auth on subsequent requests where cookies will be available.
-    // This is safe because /feed is protected and will redirect to /auth if not authenticated.
-    const hasReferer = !!request.headers.get('referer')
-    const shouldRedirectToFeed = isAuthenticated || (hasReferer && !diagnostics?.cookieHeaderPresent)
+    // Since /feed is protected and will verify auth, we can redirect unauthenticated-looking
+    // requests to /feed and let it check again when cookies are available on subsequent requests.
+    // This is safe because /feed will redirect to /auth if not authenticated.
+    //
+    // Strategy: Always redirect to /feed if:
+    // 1. User is authenticated (cookies detected), OR
+    // 2. No cookies detected but this looks like a browser request (has User-Agent)
+    //    This handles the case where cookies aren't sent on initial navigation but will be
+    //    available on subsequent requests (RSC, etc.)
+    const hasUserAgent = !!request.headers.get('user-agent')
+    const shouldRedirectToFeed = isAuthenticated || (hasUserAgent && !diagnostics?.cookieHeaderPresent)
 
     // Redirect based on authentication status
-    // If authenticated OR if we have a referer (indicating same-site navigation) but no cookies detected,
+    // If authenticated OR if this looks like a browser request without cookies (SameSite issue),
     // redirect to /feed to let it check again when cookies are available
     const redirectPath = shouldRedirectToFeed ? '/feed' : '/landing'
     const redirectUrl = new URL(redirectPath, request.url)
