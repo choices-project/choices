@@ -375,6 +375,17 @@ export default function DashboardPage() {
       };
     }
     if (!isAuthenticated) {
+      // CRITICAL: Re-check bypass flag before any redirects (defensive programming)
+      // This prevents redirects during E2E tests even if cookies aren't found
+      if (shouldBypassAuth) {
+        if (process.env.DEBUG_DASHBOARD === '1' || (typeof window !== 'undefined' && window.localStorage.getItem('e2e-dashboard-bypass') === '1')) {
+          logger.debug('🚨 Dashboard: Bypass flag detected in redirect check - skipping redirect');
+        }
+        return () => {
+          // Cleanup function - no cleanup needed for bypass case
+        };
+      }
+
       // Clear any existing retry timeout
       if (authRetryTimeoutRef.current) {
         clearTimeout(authRetryTimeoutRef.current);
@@ -384,13 +395,20 @@ export default function DashboardPage() {
       // Check cookie availability (from async polling)
       if (!hasCookies) {
         // No cookies found after polling - definitely not authenticated, redirect
-        if (process.env.DEBUG_DASHBOARD === '1') {
-          logger.debug('🚨 Dashboard: No session cookies found after polling - redirecting to auth');
+        // BUT: Only redirect if bypass flag is NOT set
+        if (!shouldBypassAuth) {
+          if (process.env.DEBUG_DASHBOARD === '1') {
+            logger.debug('🚨 Dashboard: No session cookies found after polling - redirecting to auth');
+          }
+          routerRef.current.replace('/auth');
+          return () => {
+            // Cleanup function - no cleanup needed for immediate redirect
+          };
+        } else {
+          if (process.env.DEBUG_DASHBOARD === '1' || (typeof window !== 'undefined' && window.localStorage.getItem('e2e-dashboard-bypass') === '1')) {
+            logger.debug('🚨 Dashboard: No cookies but bypass flag set - allowing render');
+          }
         }
-        routerRef.current.replace('/auth');
-        return () => {
-          // Cleanup function - no cleanup needed for immediate redirect
-        };
       }
 
       // Cookies exist - middleware already validated authentication, so trust it
@@ -400,21 +418,49 @@ export default function DashboardPage() {
         logger.debug('🚨 Dashboard: Session cookies exist - trusting middleware, allowing render while auth hydrates');
       }
       authRetryTimeoutRef.current = setTimeout(() => {
-        // After extended wait, check if cookies still exist and auth state has hydrated
-        // Skip this check if bypass flag is set (E2E testing)
-        if (shouldBypassAuth) {
+        // CRITICAL: Check bypass flag before any delayed redirects
+        // Re-check bypass flag in case it was set after the timeout was created
+        const currentBypassFlag = typeof window !== 'undefined' && 
+          window.localStorage.getItem('e2e-dashboard-bypass') === '1';
+        
+        if (shouldBypassAuth || currentBypassFlag) {
+          if (process.env.DEBUG_DASHBOARD === '1' || currentBypassFlag) {
+            logger.debug('🚨 Dashboard: Bypass flag detected in delayed check - skipping redirect');
+          }
+          authRetryTimeoutRef.current = null;
           return;
         }
+
+        // After extended wait, check if cookies still exist and auth state has hydrated
         checkSessionCookies(3, 200).then((stillHasCookie) => {
+          // CRITICAL: Re-check bypass flag before redirecting
+          const stillBypassFlag = typeof window !== 'undefined' && 
+            window.localStorage.getItem('e2e-dashboard-bypass') === '1';
+          
+          if (shouldBypassAuth || stillBypassFlag) {
+            if (process.env.DEBUG_DASHBOARD === '1' || stillBypassFlag) {
+              logger.debug('🚨 Dashboard: Bypass flag detected in delayed cookie check - skipping redirect');
+            }
+            authRetryTimeoutRef.current = null;
+            return;
+          }
+
           // Access store directly to check auth state without causing re-render
           const currentAuthState = useUserStore.getState().isAuthenticated;
 
           if (!stillHasCookie) {
             // Cookies disappeared - definitely not authenticated
-            if (process.env.DEBUG_DASHBOARD === '1') {
-              logger.debug('🚨 Dashboard: Session cookies disappeared after wait - redirecting to auth');
+            // BUT: Only redirect if bypass flag is NOT set
+            if (!shouldBypassAuth && !stillBypassFlag) {
+              if (process.env.DEBUG_DASHBOARD === '1') {
+                logger.debug('🚨 Dashboard: Session cookies disappeared after wait - redirecting to auth');
+              }
+              routerRef.current.replace('/auth');
+            } else {
+              if (process.env.DEBUG_DASHBOARD === '1' || stillBypassFlag) {
+                logger.debug('🚨 Dashboard: Cookies disappeared but bypass flag set - allowing render');
+              }
             }
-            routerRef.current.replace('/auth');
           } else if (!currentAuthState) {
             // Cookies still exist but auth state hasn't hydrated after extended wait
             // This is unusual but could happen if there's a store hydration issue

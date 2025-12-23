@@ -77,12 +77,21 @@ test.describe('Dashboard Stability Tests', () => {
     try {
       // DIAGNOSTIC: Check state before navigating to dashboard
       const preNavState = await page.evaluate(() => {
+        let bypassFlag = null;
+        let userStore = 'missing';
+        try {
+          bypassFlag = localStorage.getItem('e2e-dashboard-bypass');
+          userStore = localStorage.getItem('user-store') ? 'exists' : 'missing';
+        } catch (e) {
+          // SecurityError can occur in cross-origin contexts
+          console.warn('Could not access localStorage:', e);
+        }
         return {
           url: window.location.href,
           pathname: window.location.pathname,
           localStorage: {
-            bypassFlag: localStorage.getItem('e2e-dashboard-bypass'),
-            userStore: localStorage.getItem('user-store') ? 'exists' : 'missing',
+            bypassFlag,
+            userStore,
           },
           cookies: document.cookie,
         };
