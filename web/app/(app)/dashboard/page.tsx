@@ -2,7 +2,7 @@
 
 import { Shield } from 'lucide-react';
 import { useRouter } from 'next/navigation';
-import React, { useEffect, useMemo, useRef, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 
 import { PersonalDashboard } from '@/features/dashboard';
 import { useProfile } from '@/features/profile/hooks/use-profile';
@@ -170,31 +170,56 @@ export default function DashboardPage() {
   const setSidebarActiveSectionRef = useRef(setSidebarActiveSection);
   useEffect(() => { setSidebarActiveSectionRef.current = setSidebarActiveSection; }, [setSidebarActiveSection]);
 
-  // Check bypass flag immediately on client side (don't wait for mount)
+  // Check bypass flag - use state that updates to handle timing issues
   // This prevents authentication checks from running before bypass is recognized
   // Safe to check localStorage on client as long as we guard with typeof window check
-  const shouldBypassAuth = useMemo(
-    () => {
-      // In E2E harness mode, always bypass auth checks (authentication is mocked)
-      if (process.env.NEXT_PUBLIC_ENABLE_E2E_HARNESS === '1') {
-        return true;
-      }
-      // Check localStorage immediately (client-side only check is safe)
-      // This prevents timing issues where auth checks run before bypass flag is seen
-      // Guard with typeof window to prevent SSR issues
-      if (typeof window === 'undefined') {
-        return false; // SSR - no bypass
-      }
-      // Check localStorage bypass flag for specific test scenarios
+  const [shouldBypassAuth, setShouldBypassAuth] = useState(() => {
+    // In E2E harness mode, always bypass auth checks (authentication is mocked)
+    if (process.env.NEXT_PUBLIC_ENABLE_E2E_HARNESS === '1') {
+      return true;
+    }
+    // Check localStorage immediately (client-side only check is safe)
+    // Guard with typeof window to prevent SSR issues
+    if (typeof window === 'undefined') {
+      return false; // SSR - no bypass
+    }
+    // Check localStorage bypass flag for specific test scenarios
+    try {
+      return window.localStorage.getItem('e2e-dashboard-bypass') === '1';
+    } catch {
+      // localStorage might not be available (some browsers/contexts)
+      return false;
+    }
+  });
+
+  // Re-check bypass flag periodically to catch cases where it's set after initial render
+  // This handles E2E tests that set localStorage via addInitScript
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    
+    // Check immediately
+    const checkBypass = () => {
       try {
-        return window.localStorage.getItem('e2e-dashboard-bypass') === '1';
+        const bypassValue = window.localStorage.getItem('e2e-dashboard-bypass') === '1';
+        if (bypassValue !== shouldBypassAuth) {
+          setShouldBypassAuth(bypassValue);
+        }
       } catch {
-        // localStorage might not be available (some browsers/contexts)
-        return false;
+        // localStorage might not be available
       }
-    },
-    [], // No dependencies - check once on mount, value doesn't change
-  );
+    };
+    
+    checkBypass();
+    
+    // Check periodically for first 2 seconds (covers addInitScript timing)
+    const interval = setInterval(checkBypass, 100);
+    const timeout = setTimeout(() => clearInterval(interval), 2000);
+    
+    return () => {
+      clearInterval(interval);
+      clearTimeout(timeout);
+    };
+  }, [shouldBypassAuth]);
   const [isCheckingAdmin, setIsCheckingAdmin] = useState(false);
   const adminCheckRef = useRef<boolean>(false);
   const [isAdmin, setIsAdmin] = useState<boolean | null>(null);
