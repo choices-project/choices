@@ -38,7 +38,7 @@ test.describe('Dashboard Stability Tests', () => {
         httpOnly: false, // Allow JavaScript access (for diagnostics)
       }]);
       console.log('[dashboard-stability] E2E bypass cookie set for domain:', `.${domain}`);
-      
+
       // Verify cookie was set
       const cookiesAfterSet = await page.context().cookies();
       const bypassCookie = cookiesAfterSet.find(c => c.name === 'e2e-dashboard-bypass');
@@ -254,20 +254,20 @@ test.describe('Dashboard Stability Tests', () => {
         const main = document.querySelector('main');
         const footer = document.querySelector('footer');
         const body = document.body;
-        
+
         // Check for error boundaries
         const errorBoundary = document.querySelector('[data-testid="error-boundary"]');
-        
+
         // Check for E2E harness loading
         const e2eHarnessLoading = document.querySelector('[data-testid="e2e-harness-loading"]');
-        
+
         // Get all top-level divs to understand structure
         const topLevelDivs = Array.from(body.children).filter(child => child.tagName === 'DIV').map(div => ({
           className: div.className,
           dataTestId: (div as HTMLElement).getAttribute('data-testid'),
           innerHTML: (div as HTMLElement).innerHTML.substring(0, 500),
         }));
-        
+
         return {
           appShell: {
             exists: !!appShell,
@@ -319,28 +319,28 @@ test.describe('Dashboard Stability Tests', () => {
         const allNavs = Array.from(document.querySelectorAll('nav'));
         const headerNav = document.querySelector('header nav');
         const footerNav = document.querySelector('footer nav');
-        
+
         // Check for GlobalNavigation specifically (should be in header)
         const header = document.querySelector('header');
         const headerContent = header ? header.innerHTML : null;
-        
+
         // Find all links in header vs footer
         const headerLinks = header ? Array.from(header.querySelectorAll('a[href]')) : [];
         const footerLinks = footerNav ? Array.from(footerNav.querySelectorAll('a[href]')) : [];
-        
+
         // Check for specific navigation items
         const feedLink = Array.from(document.querySelectorAll('a[href="/feed"]'));
         const pollsLink = Array.from(document.querySelectorAll('a[href="/polls"]'));
         const dashboardLink = Array.from(document.querySelectorAll('a[href="/dashboard"]'));
         const dashboardNavTestId = Array.from(document.querySelectorAll('[data-testid="dashboard-nav"]'));
-        
+
         // Check for loading skeleton in header
         const headerLoadingSkeleton = header ? header.querySelector('.animate-pulse') : null;
-        
+
         // Check for GlobalNavigation component by class or structure
         const stickyNav = document.querySelector('.sticky.top-0');
         const globalNavWrapper = document.querySelector('[class*="sticky"][class*="top-0"]');
-        
+
         // Check AuthContext state via window
         const authState = {
           hasWindow: typeof window !== 'undefined',
@@ -349,7 +349,7 @@ test.describe('Dashboard Stability Tests', () => {
             userStore: localStorage.getItem('user-store') ? 'exists' : 'missing',
           } : null,
         };
-        
+
         return {
           navs: {
             total: allNavs.length,
@@ -485,18 +485,18 @@ test.describe('Dashboard Stability Tests', () => {
         const personalAnalytics = document.querySelector('[data-testid="personal-analytics"]');
         const dashboardNav = document.querySelector('[data-testid="dashboard-nav"]');
         const settingsContent = document.querySelector('[data-testid="settings-content"]');
-        
+
         // Check for loading states
         const loadingSkeletons = document.querySelectorAll('.animate-pulse, [class*="Skeleton"]');
         const spinners = document.querySelectorAll('.animate-spin');
-        
+
         // Check for error states
         const errorMessages = document.querySelectorAll('[class*="error"], [class*="Error"]');
-        
+
         // Check page structure
         const mainContent = document.querySelector('main') || document.querySelector('[role="main"]');
         const dashboardPage = document.querySelector('[class*="dashboard"]');
-        
+
         return {
           personalDashboard: {
             exists: !!personalDashboard,
@@ -557,7 +557,7 @@ test.describe('Dashboard Stability Tests', () => {
           visible: (el as HTMLElement).offsetParent !== null,
           className: el.className,
         }));
-        
+
         return {
           allTestIds: allTestIds.slice(0, 20),
           totalTestIds: allTestIds.length,

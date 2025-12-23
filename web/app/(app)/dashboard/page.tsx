@@ -342,7 +342,14 @@ export default function DashboardPage() {
     }
     // First check if user is authenticated - if not, check session cookie and wait for hydration
     // Double-check bypass flag here as well (defensive programming)
-    if (!shouldBypassAuth && !isAuthenticated) {
+    // CRITICAL: Re-check bypass flag here to prevent any redirects during E2E tests
+    if (shouldBypassAuth) {
+      // Bypass is set - skip all auth checks and allow render
+      return () => {
+        // Cleanup function - no cleanup needed for bypass case
+      };
+    }
+    if (!isAuthenticated) {
       // Clear any existing retry timeout
       if (authRetryTimeoutRef.current) {
         clearTimeout(authRetryTimeoutRef.current);
@@ -460,6 +467,13 @@ export default function DashboardPage() {
         }
 
         // Not admin or check failed - redirect to onboarding
+        // CRITICAL: Skip redirect if bypass flag is set (E2E testing)
+        if (shouldBypassAuth) {
+          logger.debug('🚨 Dashboard: Bypass flag set - skipping onboarding redirect');
+          setIsCheckingAdmin(false);
+          adminCheckRef.current = false;
+          return;
+        }
         logger.debug('🚨 Dashboard: No profile found - redirecting to onboarding');
         setIsCheckingAdmin(false);
         adminCheckRef.current = false;
@@ -523,6 +537,7 @@ export default function DashboardPage() {
   // In E2E harness mode or after timeout, allow dashboard to render (it handles missing profile gracefully)
   // Also bypass loading check if user is authenticated (profile can load in background)
   // Wait for AuthContext to finish initializing before showing loading skeleton
+  // CRITICAL: If bypass flag is set, skip loading skeleton and render dashboard immediately
   if (isLoading && !loadingTimeout && !shouldBypassAuth && !isAuthenticated && !isAuthContextLoading) {
     return (
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8" aria-label="Loading dashboard">
@@ -559,7 +574,7 @@ export default function DashboardPage() {
   // hasCookies === false means no cookies, block render if not authenticated
 
   // Only show access denied if:
-  // 1. Not bypassing auth
+  // 1. Not bypassing auth (CRITICAL: Check bypass flag first)
   // 2. Not loading (user store, AuthContext, or store hydration)
   // 3. Cookie check completed (hasCookies !== null)
   // 4. Not authenticated in store
@@ -570,7 +585,11 @@ export default function DashboardPage() {
   // - No cookies found after polling AND
   // - Store confirms not authenticated
   // This matches the pattern used by feed/polls pages - trust middleware, simple checks
-  if (!shouldBypassAuth && !isUserLoading && !isAuthContextLoading && isStoreHydrated && hasCookies === false && !isAuthenticated) {
+  // CRITICAL: If bypass flag is set, always allow render (E2E testing)
+  if (shouldBypassAuth) {
+    // Bypass is set - render dashboard immediately, skip all auth checks
+    // This allows E2E tests to access dashboard without authentication
+  } else if (!isUserLoading && !isAuthContextLoading && isStoreHydrated && hasCookies === false && !isAuthenticated) {
     return (
       <div className="flex items-center justify-center min-h-screen px-4">
         <div className="text-center space-y-4 max-w-md">

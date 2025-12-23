@@ -70,6 +70,51 @@ export default function AuthPage() {
     return () => clearTimeout(timer);
   }, []);
 
+  // Sync DOM values with React state for E2E test compatibility
+  // This ensures that when tests use page.fill(), the React state updates
+  React.useEffect(() => {
+    const emailInput = document.getElementById('email') as HTMLInputElement;
+    const passwordInput = document.getElementById('password') as HTMLInputElement;
+    
+    if (!emailInput || !passwordInput) return;
+
+    const syncEmail = () => {
+      const currentValue = emailInput.value;
+      setFormData(prev => {
+        if (prev.email !== currentValue) {
+          return { ...prev, email: currentValue };
+        }
+        return prev;
+      });
+    };
+    
+    const syncPassword = () => {
+      const currentValue = passwordInput.value;
+      setFormData(prev => {
+        if (prev.password !== currentValue) {
+          return { ...prev, password: currentValue };
+        }
+        return prev;
+      });
+    };
+
+    // Sync on input events (for E2E tests that use page.fill())
+    emailInput.addEventListener('input', syncEmail);
+    passwordInput.addEventListener('input', syncPassword);
+    
+    // Also sync periodically to catch any direct DOM manipulation (E2E tests)
+    const interval = setInterval(() => {
+      syncEmail();
+      syncPassword();
+    }, 100);
+
+    return () => {
+      emailInput.removeEventListener('input', syncEmail);
+      passwordInput.removeEventListener('input', syncPassword);
+      clearInterval(interval);
+    };
+  }, []); // Empty deps - only run once on mount
+
   // Note: Removed user/isLoading checks to avoid hydration mismatch
   // User authentication will be handled by the form submission
 

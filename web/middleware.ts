@@ -552,7 +552,7 @@ export async function middleware(request: NextRequest) {
     const bypassCookie1 = request.cookies.get('e2e-dashboard-bypass');
     const bypassCookie2 = request.cookies.get('E2E');
     const hasE2EBypassCookie = bypassCookie1?.value === '1' || bypassCookie2?.value === '1';
-    
+
     // DIAGNOSTIC: Log bypass cookie check for debugging
     if (process.env.DEBUG_MIDDLEWARE === '1' || process.env.NODE_ENV !== 'production' || isPlaywrightTest) {
       console.warn('[middleware] Bypass cookie check:', {
