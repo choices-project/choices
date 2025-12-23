@@ -158,9 +158,83 @@ test.describe('Authentication Flow', () => {
       
       await page.goto(`${BASE_URL}/auth`, { waitUntil: 'domcontentloaded', timeout: 30_000 });
       
+      // Wait for auth page to be hydrated
+      await page.waitForSelector('[data-testid="auth-hydrated"]', { state: 'attached', timeout: 30_000 });
+      
       // Fill in login form
       await page.fill('input[type="email"]', regularEmail!);
       await page.fill('input[type="password"]', regularPassword!);
+      
+      // Comprehensive diagnostics for login form state
+      const formDiagnostics = await page.evaluate(() => {
+        const emailInput = document.querySelector('[data-testid="login-email"]') as HTMLInputElement;
+        const passwordInput = document.querySelector('[data-testid="login-password"]') as HTMLInputElement;
+        const submitButton = document.querySelector('[data-testid="login-submit"]') as HTMLButtonElement;
+        
+        return {
+          emailInput: {
+            exists: !!emailInput,
+            value: emailInput?.value || null,
+            valueLength: emailInput?.value?.length || 0,
+            hasAtSymbol: emailInput?.value?.includes('@') || false,
+          },
+          passwordInput: {
+            exists: !!passwordInput,
+            value: passwordInput?.value || null,
+            valueLength: passwordInput?.value?.length || 0,
+            meetsMinLength: (passwordInput?.value?.length || 0) >= 6,
+          },
+          submitButton: {
+            exists: !!submitButton,
+            disabled: submitButton?.disabled ?? null,
+            ariaBusy: submitButton?.getAttribute('aria-busy'),
+            className: submitButton?.className || null,
+            textContent: submitButton?.textContent?.trim() || null,
+          },
+          formValidation: {
+            emailValid: emailInput?.value?.includes('@') || false,
+            passwordValid: (passwordInput?.value?.length || 0) >= 6,
+            shouldBeEnabled: (emailInput?.value?.includes('@') || false) && ((passwordInput?.value?.length || 0) >= 6),
+          },
+        };
+      });
+      console.log('[DIAGNOSTIC] Login form state before submit:', JSON.stringify(formDiagnostics, null, 2));
+      
+      // Wait for React to process the input and enable the button
+      await page.waitForFunction(
+        ({ expectedEmail, expectedPassword }: { expectedEmail: string; expectedPassword: string }) => {
+          const emailInput = document.querySelector('[data-testid="login-email"]') as HTMLInputElement;
+          const passwordInput = document.querySelector('[data-testid="login-password"]') as HTMLInputElement;
+          const submitButton = document.querySelector('[data-testid="login-submit"]') as HTMLButtonElement;
+          
+          const emailValid = emailInput?.value === expectedEmail && expectedEmail.includes('@');
+          const passwordValid = passwordInput?.value === expectedPassword && expectedPassword.length >= 6;
+          const isEnabled = !submitButton?.disabled;
+          
+          return emailValid && passwordValid && isEnabled;
+        },
+        { expectedEmail: regularEmail!, expectedPassword: regularPassword! },
+        { timeout: 10_000 }
+      ).catch(async () => {
+        // If button is still disabled, capture final state
+        const finalState = await page.evaluate(() => {
+          const emailInput = document.querySelector('[data-testid="login-email"]') as HTMLInputElement;
+          const passwordInput = document.querySelector('[data-testid="login-password"]') as HTMLInputElement;
+          const submitButton = document.querySelector('[data-testid="login-submit"]') as HTMLButtonElement;
+          
+          return {
+            email: emailInput?.value || null,
+            password: passwordInput?.value || null,
+            buttonDisabled: submitButton?.disabled ?? null,
+            buttonAriaBusy: submitButton?.getAttribute('aria-busy'),
+            emailValid: emailInput?.value?.includes('@') || false,
+            passwordValid: (passwordInput?.value?.length || 0) >= 6,
+          };
+        });
+        console.log('[DIAGNOSTIC] Login form final state (button still disabled):', JSON.stringify(finalState, null, 2));
+        throw new Error('Login button remained disabled after form fill');
+      });
+      
       await page.click('button[type="submit"]');
       
       // Wait for authentication to complete
@@ -349,7 +423,30 @@ test.describe('Authentication Flow', () => {
       });
       
       // Now visit root - should redirect to /feed
+      // Diagnostic: Capture initial request details (SameSite cookie issue)
+      const initialRequestDetails: Array<{ url: string; headers: Record<string, string>; cookies: string[] }> = [];
+      page.on('request', async (request) => {
+        if (request.url() === BASE_URL || request.url() === `${BASE_URL}/`) {
+          const headers = await request.allHeaders();
+          const cookies = headers['cookie'] || '';
+          initialRequestDetails.push({
+            url: request.url(),
+            headers: Object.fromEntries(
+              Object.entries(headers).filter(([key]) => 
+                key.toLowerCase() === 'cookie' || key.toLowerCase().startsWith('x-')
+              )
+            ),
+            cookies: cookies ? cookies.split('; ').filter(Boolean) : [],
+          });
+        }
+      });
+      
       await page.goto(BASE_URL, { waitUntil: 'networkidle', timeout: 30_000 });
+      
+      // Diagnostic: Log initial request cookie state
+      if (initialRequestDetails.length > 0) {
+        console.log('[DIAGNOSTIC] Initial root request cookie state:', JSON.stringify(initialRequestDetails, null, 2));
+      }
       
       // Diagnostic: Check what happened
       const finalUrl = page.url();

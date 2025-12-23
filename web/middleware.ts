@@ -551,18 +551,21 @@ export async function middleware(request: NextRequest) {
     // Check for E2E bypass cookie - if present, allow bypass (cookie is only set by tests)
     const hasE2EBypassCookie = request.cookies.get('e2e-dashboard-bypass')?.value === '1' ||
       request.cookies.get('E2E')?.value === '1';
-    const isE2EHarness =
-      // Only allow in non-production environments OR when Playwright test env vars are present OR when bypass cookie is present
-      (process.env.NODE_ENV !== 'production' || isPlaywrightTest || hasE2EBypassCookie) && (
+
+    // If bypass cookie is present, always allow bypass (cookie is test-specific and secure)
+    // Otherwise, check other E2E harness conditions
+    const isE2EHarness = hasE2EBypassCookie || (
+      // Only allow in non-production environments OR when Playwright test env vars are present
+      (process.env.NODE_ENV !== 'production' || isPlaywrightTest) && (
         process.env.NEXT_PUBLIC_ENABLE_E2E_HARNESS === '1' ||
         process.env.PLAYWRIGHT_USE_MOCKS === '1' ||
         process.env.E2E === '1' ||
-        hasE2EBypassCookie ||
         // E2E bypass headers are checked in test environments OR when Playwright env vars are present
         ((process.env.NODE_ENV === 'test' || isPlaywrightTest) && (
           request.headers.get('x-e2e-bypass') === '1'
         ))
-      );
+      )
+    );
 
     if (!isE2EHarness) {
       // SECURITY: Always verify authentication for protected routes
