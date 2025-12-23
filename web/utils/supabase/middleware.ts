@@ -2,7 +2,7 @@ import type { NextRequest } from 'next/server'
 
 /**
  * Check if a user is authenticated in middleware context (Edge Runtime compatible)
- *
+ * 
  * Edge Runtime compatible implementation that checks for Supabase auth cookies.
  * No external dependencies - uses only Next.js built-in APIs.
  *
@@ -16,10 +16,10 @@ import type { NextRequest } from 'next/server'
  * 1. Supabase sets cookies with httpOnly and secure flags
  * 2. Only substantial values indicate real sessions (not cleared/expired)
  * 3. Edge Runtime doesn't support full Supabase client verification
- *
+ * 
  * @param request - The Next.js request object
  * @returns Object with isAuthenticated boolean
- *
+ * 
  * @example
  * ```typescript
  * export function middleware(request: NextRequest) {
@@ -31,7 +31,7 @@ import type { NextRequest } from 'next/server'
  */
 export function checkAuthInMiddleware(
   request: NextRequest
-): { isAuthenticated: boolean } {
+): { isAuthenticated: boolean; diagnostics?: Record<string, unknown> } {
   // Edge Runtime compatible: Just check for substantial auth cookie
   // Supabase sets these cookies securely (httpOnly, secure), so presence indicates authentication
   // No need to verify token - if cookie exists and is substantial, trust it
@@ -64,7 +64,7 @@ export function checkAuthInMiddleware(
   // PRIORITY: Check Cookie header first (most reliable for httpOnly cookies in Edge Runtime)
   // request.cookies.getAll() may not include httpOnly cookies in Edge Runtime
   const cookieHeader = request.headers.get('cookie') || ''
-
+  
   // DIAGNOSTIC: Log Cookie header presence and length
   if (enableDiagnostics) {
     console.warn('[checkAuthInMiddleware] Cookie header present:', cookieHeader ? 'yes' : 'no')
@@ -83,7 +83,16 @@ export function checkAuthInMiddleware(
   let authCookie: { name: string; value: string } | null = null
   const projectRef = getProjectRef()
   const expectedCookieName = projectRef ? `sb-${projectRef}-auth-token` : null
-
+  
+  // DIAGNOSTIC: Collect diagnostic info
+  const diagnostics: Record<string, unknown> = {
+    cookieHeaderPresent: !!cookieHeader,
+    cookieHeaderLength: cookieHeader.length,
+    hasSbInHeader: cookieHeader.includes('sb-'),
+    projectRef,
+    expectedCookieName,
+  }
+  
   // DIAGNOSTIC: Log expected cookie name
   if (enableDiagnostics) {
     console.warn('[checkAuthInMiddleware] Project ref:', projectRef)
@@ -245,7 +254,7 @@ export function checkAuthInMiddleware(
       } catch {
         // If decoding fails, use original value
       }
-
+      
         // If it's a substantial sb- cookie, trust it
         if (cookieName.startsWith('sb-') && cookieValue.length >= 100) {
           authCookie = { name: cookieName, value: cookieValue }
@@ -255,6 +264,15 @@ export function checkAuthInMiddleware(
     }
   }
 
+  // DIAGNOSTIC: Add final diagnostic info
+  diagnostics.authCookieFound = !!authCookie
+  if (authCookie) {
+    diagnostics.authCookieName = authCookie.name
+    diagnostics.authCookieValueLength = authCookie.value?.length || 0
+  }
+  diagnostics.parsedCookiesCount = request.cookies.getAll().length
+  diagnostics.parsedCookiesHasSb = request.cookies.getAll().some(c => c.name.startsWith('sb-'))
+  
   // If no auth cookie found, user is not authenticated
   if (!authCookie || !authCookie.value) {
     if (enableDiagnostics) {
@@ -262,9 +280,9 @@ export function checkAuthInMiddleware(
       console.warn('[checkAuthInMiddleware] Cookie header had sb-:', cookieHeader.includes('sb-'))
       console.warn('[checkAuthInMiddleware] Parsed cookies had sb-:', request.cookies.getAll().some(c => c.name.startsWith('sb-')))
     }
-    return { isAuthenticated: false }
+    return { isAuthenticated: false, diagnostics }
   }
-
+  
   // DIAGNOSTIC: Log successful authentication
   if (enableDiagnostics) {
     console.warn('[checkAuthInMiddleware] Auth cookie found - returning true:', {
@@ -272,6 +290,8 @@ export function checkAuthInMiddleware(
       valueLength: authCookie.value.length
     })
   }
+  
+  return { isAuthenticated: true, diagnostics }
 
   // Check for invalid/empty cookie values
   const trimmedValue = authCookie.value.trim()

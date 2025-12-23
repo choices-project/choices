@@ -188,7 +188,7 @@ export async function middleware(request: NextRequest) {
   // Handle root path redirect based on authentication status
   if (pathname === '/') {
     // Use Supabase authentication check (Edge Runtime compatible)
-    const { isAuthenticated } = checkAuthInMiddleware(request)
+    const { isAuthenticated, diagnostics } = checkAuthInMiddleware(request)
 
     // Redirect based on authentication status
     const redirectPath = isAuthenticated ? '/feed' : '/landing'
@@ -197,6 +197,21 @@ export async function middleware(request: NextRequest) {
 
     // Add cache headers to help with redirect performance
     redirectResponse.headers.set('Cache-Control', 'public, max-age=3600, stale-while-revalidate=86400')
+    
+    // Add diagnostic headers for debugging (only in non-production or with DEBUG_MIDDLEWARE)
+    if (diagnostics && (process.env.DEBUG_MIDDLEWARE === '1' || process.env.NODE_ENV !== 'production')) {
+      redirectResponse.headers.set('X-Auth-Debug-IsAuthenticated', String(isAuthenticated))
+      redirectResponse.headers.set('X-Auth-Debug-CookieHeaderPresent', String(diagnostics.cookieHeaderPresent))
+      redirectResponse.headers.set('X-Auth-Debug-CookieHeaderLength', String(diagnostics.cookieHeaderLength || 0))
+      redirectResponse.headers.set('X-Auth-Debug-HasSbInHeader', String(diagnostics.hasSbInHeader))
+      redirectResponse.headers.set('X-Auth-Debug-AuthCookieFound', String(diagnostics.authCookieFound))
+      redirectResponse.headers.set('X-Auth-Debug-ParsedCookiesCount', String(diagnostics.parsedCookiesCount || 0))
+      redirectResponse.headers.set('X-Auth-Debug-ParsedCookiesHasSb', String(diagnostics.parsedCookiesHasSb))
+      if (diagnostics.authCookieName) {
+        redirectResponse.headers.set('X-Auth-Debug-AuthCookieName', String(diagnostics.authCookieName))
+        redirectResponse.headers.set('X-Auth-Debug-AuthCookieValueLength', String(diagnostics.authCookieValueLength || 0))
+      }
+    }
 
     return redirectResponse
   }
