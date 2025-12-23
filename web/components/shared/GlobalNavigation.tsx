@@ -49,6 +49,8 @@ export default function GlobalNavigation() {
   useEffect(() => { tRef.current = t; }, [t]);
 
   // Auth integration via context
+  // Note: useAuth will throw if not within AuthProvider, but that's expected
+  // and should be caught by ErrorBoundary in the layout
   const { user, isLoading: authLoading, logout: authSignOut } = useAuth();
   const isAuthenticated = Boolean(user);
   const [loadingTimeout, setLoadingTimeout] = useState(false);

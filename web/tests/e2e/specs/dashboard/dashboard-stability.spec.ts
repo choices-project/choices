@@ -188,6 +188,24 @@ test.describe('Dashboard Stability Tests', () => {
       }
     });
 
+    // Capture all console errors and warnings
+    const consoleErrors: string[] = [];
+    const consoleWarnings: string[] = [];
+    page.on('console', (msg) => {
+      const text = msg.text();
+      if (msg.type() === 'error') {
+        consoleErrors.push(text);
+      }
+      if (msg.type() === 'warning') {
+        consoleWarnings.push(text);
+      }
+    });
+
+    // Capture page errors
+    page.on('pageerror', (error) => {
+      consoleErrors.push(`Page error: ${error.message}`);
+    });
+
     const cleanupMocks = await setupExternalAPIMocks(page, {
       feeds: true,
       notifications: true,
@@ -201,55 +219,183 @@ test.describe('Dashboard Stability Tests', () => {
       await page.goto('/feed', { waitUntil: 'domcontentloaded', timeout: 60_000 });
       await waitForPageReady(page);
 
+      // Log any errors that occurred during page load
+      if (consoleErrors.length > 0) {
+        console.log('[dashboard-stability] Console errors during page load:', consoleErrors);
+      }
+      if (consoleWarnings.length > 0) {
+        console.log('[dashboard-stability] Console warnings during page load:', consoleWarnings);
+      }
+
       // Diagnostic: Check if dashboard nav exists before clicking
       const dashboardNav = page.locator('[data-testid="dashboard-nav"]');
       const navExists = await dashboardNav.count();
       console.log('[dashboard-stability] Dashboard nav element count:', navExists);
 
-      // Comprehensive diagnostics for GlobalNavigation
-      const navDiagnostics = await page.evaluate(() => {
-        const nav = document.querySelector('nav') || document.querySelector('[role="navigation"]');
-        const allLinks = Array.from(document.querySelectorAll('a[href]'));
-        const dashboardLinks = allLinks.filter(link => 
-          link.getAttribute('href')?.includes('dashboard') || 
-          link.textContent?.toLowerCase().includes('dashboard')
-        );
-        const navLinks = allLinks.filter(link => 
-          link.closest('nav') || link.closest('[role="navigation"]')
-        );
+      // Check if AppShell exists and capture full page structure
+      const appShellCheck = await page.evaluate(() => {
+        const appShell = document.querySelector('[data-testid="app-shell"]');
+        const header = document.querySelector('header');
+        const main = document.querySelector('main');
+        const footer = document.querySelector('footer');
+        const body = document.body;
         
-        // Check for loading skeleton
-        const loadingSkeleton = document.querySelector('.animate-pulse');
-        const hasLoadingSkeleton = !!loadingSkeleton;
+        // Check for error boundaries
+        const errorBoundary = document.querySelector('[data-testid="error-boundary"]');
         
-        // Check for GlobalNavigation component structure
-        const globalNav = document.querySelector('[class*="GlobalNavigation"]') || 
-                         document.querySelector('nav[aria-label*="navigation"]') ||
-                         nav;
+        // Check for E2E harness loading
+        const e2eHarnessLoading = document.querySelector('[data-testid="e2e-harness-loading"]');
+        
+        // Get all top-level divs to understand structure
+        const topLevelDivs = Array.from(body.children).filter(child => child.tagName === 'DIV').map(div => ({
+          className: div.className,
+          dataTestId: (div as HTMLElement).getAttribute('data-testid'),
+          innerHTML: (div as HTMLElement).innerHTML.substring(0, 500),
+        }));
         
         return {
-          hasNav: !!nav,
-          navHTML: nav ? nav.innerHTML.substring(0, 1000) : null,
-          allLinksCount: allLinks.length,
-          dashboardLinksCount: dashboardLinks.length,
-          dashboardLinks: dashboardLinks.map(link => ({
-            href: link.getAttribute('href'),
-            text: link.textContent?.trim(),
-            testId: link.getAttribute('data-testid'),
-            visible: link.offsetParent !== null,
+          appShell: {
+            exists: !!appShell,
+            innerHTML: appShell ? (appShell as HTMLElement).innerHTML.substring(0, 1000) : null,
+            attributes: appShell ? Array.from((appShell as HTMLElement).attributes).map(attr => ({
+              name: attr.name,
+              value: attr.value,
+            })) : [],
+          },
+          header: {
+            exists: !!header,
+            innerHTML: header ? (header as HTMLElement).innerHTML.substring(0, 1000) : null,
+            children: header ? Array.from(header.children).map(child => ({
+              tagName: child.tagName,
+              className: child.className,
+              innerHTML: child.innerHTML.substring(0, 200),
+            })) : [],
+          },
+          main: {
+            exists: !!main,
+            className: main ? (main as HTMLElement).className : null,
+            id: main ? (main as HTMLElement).id : null,
+          },
+          footer: {
+            exists: !!footer,
+          },
+          errorBoundary: {
+            exists: !!errorBoundary,
+            innerHTML: errorBoundary ? (errorBoundary as HTMLElement).innerHTML.substring(0, 500) : null,
+          },
+          e2eHarnessLoading: {
+            exists: !!e2eHarnessLoading,
+            innerHTML: e2eHarnessLoading ? (e2eHarnessLoading as HTMLElement).innerHTML.substring(0, 500) : null,
+          },
+          topLevelDivs,
+          bodyChildren: Array.from(body.children).map(child => ({
+            tagName: child.tagName,
+            className: (child as HTMLElement).className,
+            id: (child as HTMLElement).id,
+            dataTestId: (child as HTMLElement).getAttribute('data-testid'),
           })),
-          navLinksCount: navLinks.length,
-          navLinks: navLinks.slice(0, 10).map(link => ({
-            href: link.getAttribute('href'),
-            text: link.textContent?.trim(),
-            testId: link.getAttribute('data-testid'),
-          })),
-          hasLoadingSkeleton,
-          loadingSkeletonHTML: loadingSkeleton ? loadingSkeleton.outerHTML.substring(0, 200) : null,
-          globalNavExists: !!globalNav,
         };
       });
-      console.log('[dashboard-stability] Navigation diagnostics:', JSON.stringify(navDiagnostics, null, 2));
+      console.log('[dashboard-stability] AppShell structure:', JSON.stringify(appShellCheck, null, 2));
+
+      // Comprehensive diagnostics for GlobalNavigation
+      const navDiagnostics = await page.evaluate(() => {
+        // Find all nav elements
+        const allNavs = Array.from(document.querySelectorAll('nav'));
+        const headerNav = document.querySelector('header nav');
+        const footerNav = document.querySelector('footer nav');
+        
+        // Check for GlobalNavigation specifically (should be in header)
+        const header = document.querySelector('header');
+        const headerContent = header ? header.innerHTML : null;
+        
+        // Find all links in header vs footer
+        const headerLinks = header ? Array.from(header.querySelectorAll('a[href]')) : [];
+        const footerLinks = footerNav ? Array.from(footerNav.querySelectorAll('a[href]')) : [];
+        
+        // Check for specific navigation items
+        const feedLink = Array.from(document.querySelectorAll('a[href="/feed"]'));
+        const pollsLink = Array.from(document.querySelectorAll('a[href="/polls"]'));
+        const dashboardLink = Array.from(document.querySelectorAll('a[href="/dashboard"]'));
+        const dashboardNavTestId = Array.from(document.querySelectorAll('[data-testid="dashboard-nav"]'));
+        
+        // Check for loading skeleton in header
+        const headerLoadingSkeleton = header ? header.querySelector('.animate-pulse') : null;
+        
+        // Check for GlobalNavigation component by class or structure
+        const stickyNav = document.querySelector('.sticky.top-0');
+        const globalNavWrapper = document.querySelector('[class*="sticky"][class*="top-0"]');
+        
+        // Check AuthContext state via window
+        const authState = {
+          hasWindow: typeof window !== 'undefined',
+          localStorage: typeof window !== 'undefined' ? {
+            bypassFlag: localStorage.getItem('e2e-dashboard-bypass'),
+            userStore: localStorage.getItem('user-store') ? 'exists' : 'missing',
+          } : null,
+        };
+        
+        return {
+          navs: {
+            total: allNavs.length,
+            inHeader: headerNav ? 1 : 0,
+            inFooter: footerNav ? 1 : 0,
+            headerNavHTML: headerNav ? headerNav.innerHTML.substring(0, 500) : null,
+            footerNavHTML: footerNav ? footerNav.innerHTML.substring(0, 500) : null,
+          },
+          header: {
+            exists: !!header,
+            innerHTML: headerContent ? headerContent.substring(0, 1000) : null,
+            linksCount: headerLinks.length,
+            links: headerLinks.map(link => ({
+              href: link.getAttribute('href'),
+              text: link.textContent?.trim(),
+              testId: link.getAttribute('data-testid'),
+              visible: (link as HTMLElement).offsetParent !== null,
+              parent: link.parentElement?.tagName,
+            })),
+          },
+          footer: {
+            linksCount: footerLinks.length,
+            links: footerLinks.map(link => ({
+              href: link.getAttribute('href'),
+              text: link.textContent?.trim(),
+            })),
+          },
+          navigationItems: {
+            feedLink: {
+              count: feedLink.length,
+              visible: feedLink.length > 0 ? (feedLink[0] as HTMLElement).offsetParent !== null : false,
+              testId: feedLink.length > 0 ? feedLink[0].getAttribute('data-testid') : null,
+            },
+            pollsLink: {
+              count: pollsLink.length,
+              visible: pollsLink.length > 0 ? (pollsLink[0] as HTMLElement).offsetParent !== null : false,
+              testId: pollsLink.length > 0 ? pollsLink[0].getAttribute('data-testid') : null,
+            },
+            dashboardLink: {
+              count: dashboardLink.length,
+              visible: dashboardLink.length > 0 ? (dashboardLink[0] as HTMLElement).offsetParent !== null : false,
+              testId: dashboardLink.length > 0 ? dashboardLink[0].getAttribute('data-testid') : null,
+            },
+            dashboardNavTestId: {
+              count: dashboardNavTestId.length,
+              visible: dashboardNavTestId.length > 0 ? (dashboardNavTestId[0] as HTMLElement).offsetParent !== null : false,
+            },
+          },
+          loadingStates: {
+            hasHeaderLoadingSkeleton: !!headerLoadingSkeleton,
+            loadingSkeletonHTML: headerLoadingSkeleton ? headerLoadingSkeleton.outerHTML.substring(0, 200) : null,
+          },
+          structure: {
+            hasStickyNav: !!stickyNav,
+            hasGlobalNavWrapper: !!globalNavWrapper,
+            stickyNavHTML: stickyNav ? stickyNav.outerHTML.substring(0, 500) : null,
+          },
+          authState,
+        };
+      });
+      console.log('[dashboard-stability] Comprehensive Navigation diagnostics:', JSON.stringify(navDiagnostics, null, 2));
 
       // Check AuthContext state
       const authContextDiagnostics = await page.evaluate(() => {
