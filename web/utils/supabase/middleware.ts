@@ -2,7 +2,7 @@ import type { NextRequest } from 'next/server'
 
 /**
  * Check if a user is authenticated in middleware context (Edge Runtime compatible)
- * 
+ *
  * Edge Runtime compatible implementation that checks for Supabase auth cookies.
  * No external dependencies - uses only Next.js built-in APIs.
  *
@@ -16,10 +16,10 @@ import type { NextRequest } from 'next/server'
  * 1. Supabase sets cookies with httpOnly and secure flags
  * 2. Only substantial values indicate real sessions (not cleared/expired)
  * 3. Edge Runtime doesn't support full Supabase client verification
- * 
+ *
  * @param request - The Next.js request object
  * @returns Object with isAuthenticated boolean
- * 
+ *
  * @example
  * ```typescript
  * export function middleware(request: NextRequest) {
@@ -35,6 +35,9 @@ export function checkAuthInMiddleware(
   // Edge Runtime compatible: Just check for substantial auth cookie
   // Supabase sets these cookies securely (httpOnly, secure), so presence indicates authentication
   // No need to verify token - if cookie exists and is substantial, trust it
+
+  // DIAGNOSTIC: Log what we're checking
+  const enableDiagnostics = process.env.DEBUG_MIDDLEWARE === '1' || process.env.NODE_ENV !== 'production'
 
   // Helper to extract project ref from Supabase URL for exact cookie name matching
   const getProjectRef = (): string | null => {
@@ -62,33 +65,68 @@ export function checkAuthInMiddleware(
   // request.cookies.getAll() may not include httpOnly cookies in Edge Runtime
   const cookieHeader = request.headers.get('cookie') || ''
 
+  // DIAGNOSTIC: Log Cookie header presence and length
+  if (enableDiagnostics) {
+    console.warn('[checkAuthInMiddleware] Cookie header present:', cookieHeader ? 'yes' : 'no')
+    console.warn('[checkAuthInMiddleware] Cookie header length:', cookieHeader.length)
+    if (cookieHeader) {
+      const cookieNames = cookieHeader.split(';').map(c => {
+        const [name] = c.split('=')
+        return name?.trim() || ''
+      }).filter(Boolean)
+      console.warn('[checkAuthInMiddleware] Cookie header names (first 5):', cookieNames.slice(0, 5))
+      console.warn('[checkAuthInMiddleware] Has sb- cookie in header:', cookieHeader.includes('sb-'))
+    }
+  }
+
   // Find Supabase auth cookie - prioritize Cookie header parsing
   let authCookie: { name: string; value: string } | null = null
   const projectRef = getProjectRef()
   const expectedCookieName = projectRef ? `sb-${projectRef}-auth-token` : null
 
+  // DIAGNOSTIC: Log expected cookie name
+  if (enableDiagnostics) {
+    console.warn('[checkAuthInMiddleware] Project ref:', projectRef)
+    console.warn('[checkAuthInMiddleware] Expected cookie name:', expectedCookieName)
+  }
+
   // SIMPLEST CHECK FIRST: If Cookie header contains "sb-" and has substantial content, trust it
   // This is the most permissive check - if any sb- cookie exists with substantial value, authenticate
   if (cookieHeader && cookieHeader.includes('sb-')) {
+    if (enableDiagnostics) {
+      console.warn('[checkAuthInMiddleware] Running simplest check: looking for any sb- cookie with >=100 chars')
+    }
     // Find all sb- cookies and check for substantial values
     const sbMatches = cookieHeader.matchAll(/(?:^|;\s*)(sb-[^=]+)=([^;]+)/g)
     for (const match of sbMatches) {
       if (match[1] && match[2]) {
         const cookieName = match[1].trim()
         let cookieValue = match[2].trim()
-        
+
         // Handle URL encoding
         try {
           cookieValue = decodeURIComponent(cookieValue)
         } catch {
           // If decoding fails, use original value
         }
-        
+
         // If cookie value is substantial (>=100 chars), trust it as auth
         // 2569 chars should definitely pass this check
         if (cookieValue.length >= 100) {
+          if (enableDiagnostics) {
+            console.warn('[checkAuthInMiddleware] Found substantial sb- cookie:', {
+              name: cookieName,
+              valueLength: cookieValue.length,
+              method: 'simplest-check'
+            })
+          }
           authCookie = { name: cookieName, value: cookieValue }
           break
+        } else if (enableDiagnostics) {
+          console.warn('[checkAuthInMiddleware] sb- cookie too short:', {
+            name: cookieName,
+            valueLength: cookieValue.length
+          })
         }
       }
     }
@@ -150,11 +188,28 @@ export function checkAuthInMiddleware(
   if (!authCookie) {
     const cookies = request.cookies.getAll()
 
+    // DIAGNOSTIC: Log parsed cookies
+    if (enableDiagnostics) {
+      console.warn('[checkAuthInMiddleware] Checking parsed cookies, count:', cookies.length)
+      const cookieNames = cookies.map(c => c.name)
+      console.warn('[checkAuthInMiddleware] Parsed cookie names:', cookieNames)
+      const sbCookies = cookies.filter(c => c.name.startsWith('sb-'))
+      console.warn('[checkAuthInMiddleware] sb- cookies in parsed cookies:', sbCookies.map(c => ({
+        name: c.name,
+        valueLength: c.value.length
+      })))
+    }
+
     // Try exact match first
     if (expectedCookieName) {
       const exactCookie = cookies.find(c => c.name === expectedCookieName)
       if (exactCookie && exactCookie.value && exactCookie.value.length >= 10) {
+        if (enableDiagnostics) {
+          console.warn('[checkAuthInMiddleware] Found exact cookie match in parsed cookies:', expectedCookieName)
+        }
         authCookie = { name: exactCookie.name, value: exactCookie.value }
+      } else if (enableDiagnostics) {
+        console.warn('[checkAuthInMiddleware] Exact cookie not found in parsed cookies:', expectedCookieName)
       }
     }
 
@@ -190,7 +245,7 @@ export function checkAuthInMiddleware(
       } catch {
         // If decoding fails, use original value
       }
-      
+
         // If it's a substantial sb- cookie, trust it
         if (cookieName.startsWith('sb-') && cookieValue.length >= 100) {
           authCookie = { name: cookieName, value: cookieValue }
@@ -202,7 +257,20 @@ export function checkAuthInMiddleware(
 
   // If no auth cookie found, user is not authenticated
   if (!authCookie || !authCookie.value) {
+    if (enableDiagnostics) {
+      console.warn('[checkAuthInMiddleware] No auth cookie found - returning false')
+      console.warn('[checkAuthInMiddleware] Cookie header had sb-:', cookieHeader.includes('sb-'))
+      console.warn('[checkAuthInMiddleware] Parsed cookies had sb-:', request.cookies.getAll().some(c => c.name.startsWith('sb-')))
+    }
     return { isAuthenticated: false }
+  }
+
+  // DIAGNOSTIC: Log successful authentication
+  if (enableDiagnostics) {
+    console.warn('[checkAuthInMiddleware] Auth cookie found - returning true:', {
+      name: authCookie.name,
+      valueLength: authCookie.value.length
+    })
   }
 
   // Check for invalid/empty cookie values
