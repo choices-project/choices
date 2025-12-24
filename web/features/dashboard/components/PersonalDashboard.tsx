@@ -302,27 +302,9 @@ function HarnessPersonalDashboard({ className = '' }: PersonalDashboardProps) {
     }
   }, []);
 
-  // In harness mode, always render dashboard even if auth state isn't fully initialized
-  // The harness page sets up all the necessary state, so we should trust it
-  if (!shouldBypassAuth && !isUserLoading && !effectiveIsAuthenticated && !IS_E2E_HARNESS) {
-    return (
-      <div className={`space-y-6 ${className}`}>
-        <Card>
-          <CardContent className='space-y-4 p-6 text-center'>
-            <h3 className='text-xl font-semibold text-gray-900'>
-              {t('dashboard.personal.harness.signIn.title')}
-            </h3>
-            <p className='text-gray-600'>
-              {t('dashboard.personal.harness.signIn.description')}
-            </p>
-            <Button variant='default' onClick={() => routerRef.current.push('/auth')}>
-              {t('dashboard.personal.harness.signIn.button')}
-            </Button>
-          </CardContent>
-        </Card>
-      </div>
-    );
-  }
+  // CRITICAL: Never return early based on shouldBypassAuth - it changes after mount causing hydration mismatch
+  // Always render the same component structure, conditionally show content within
+  // The dashboard page wrapper handles auth checks, so we should always render dashboard content
 
   return (
     <div className={`space-y-6 ${className}`} data-testid='personal-dashboard'>
