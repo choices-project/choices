@@ -369,7 +369,8 @@ export default function DashboardPage() {
 
   // Poll for cookies asynchronously - cookies may not be immediately available
   useEffect(() => {
-    if (shouldBypassAuth || checkBypassFlag() || typeof window === 'undefined') {
+    // Only check bypass flag in useEffect after client mount
+    if (shouldBypassAuth || (isClient && checkBypassFlag()) || typeof window === 'undefined') {
       setHasCookies(true); // Bypass = assume cookies exist
       return;
     }
@@ -732,10 +733,9 @@ export default function DashboardPage() {
   // In E2E harness mode or after timeout, allow dashboard to render (it handles missing profile gracefully)
   // Also bypass loading check if user is authenticated (profile can load in background)
   // Wait for AuthContext to finish initializing before showing loading skeleton
-  // CRITICAL: Only check bypass on client to prevent hydration mismatch
-  // On server, always show loading state to ensure consistent rendering
-  const shouldBypass = isClient && (shouldBypassAuth || checkBypassFlag());
-  if (isLoading && !loadingTimeout && !shouldBypass && !isAuthenticated && !isAuthContextLoading) {
+  // CRITICAL: Only use state value (shouldBypassAuth) - don't call checkBypassFlag() during render
+  // This prevents hydration mismatch by ensuring consistent render decisions
+  if (isLoading && !loadingTimeout && !shouldBypassAuth && !isAuthenticated && !isAuthContextLoading) {
     return (
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8" aria-label="Loading dashboard">
         <div className="space-y-6">
@@ -759,28 +759,40 @@ export default function DashboardPage() {
     );
   }
 
+  // CRITICAL: During SSR and initial client render (before hydration), render consistent content
+  // Only after isClient becomes true should we check bypass flags and make render decisions
+  // This ensures server and client render the same initial HTML structure
+  if (!isClient) {
+    // During SSR and initial client render, show loading state
+    // This matches what the server renders, preventing hydration mismatch
+    return (
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8" aria-label="Loading dashboard">
+        <div className="space-y-6">
+          <div className="animate-pulse">
+            <div className="h-8 bg-gray-200 rounded w-1/3 dark:bg-gray-700 mb-4" />
+            <div className="h-4 bg-gray-200 rounded w-1/2 dark:bg-gray-700" />
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   // CRITICAL: If bypass flag is set, always allow render (E2E testing)
   // This must be checked BEFORE any other conditions to prevent redirects
-  // Check both state and localStorage directly to catch cases where state hasn't updated yet
-  // Only check on client - on server, always assume not bypassed to ensure consistent rendering
-  const finalShouldBypass = isClient && (shouldBypassAuth || checkBypassFlag());
+  // Only check on client after hydration - use state value to avoid calling checkBypassFlag() during render
+  const finalShouldBypass = shouldBypassAuth;
   
   if (finalShouldBypass) {
-    // Update state if we detected bypass via localStorage but state wasn't set yet
-    if (checkBypassFlag() && !shouldBypassAuth) {
-      setShouldBypassAuth(true);
-    }
     // Bypass is set - render dashboard immediately, skip all auth checks
     // This allows E2E tests to access dashboard without authentication
     // Fall through to render dashboard content
-    if (process.env.DEBUG_DASHBOARD === '1' || checkBypassFlag()) {
+    if (process.env.DEBUG_DASHBOARD === '1') {
       logger.debug('🚨 Dashboard: Bypass flag active - rendering dashboard content', {
         shouldBypassAuth,
-        currentBypassFlag: checkBypassFlag(),
         envHarness: process.env.NEXT_PUBLIC_ENABLE_E2E_HARNESS === '1',
       });
     }
-  } else if (isClient && !isUserLoading && !isAuthContextLoading && isStoreHydrated && hasCookies === false && !isAuthenticated) {
+  } else if (!isUserLoading && !isAuthContextLoading && isStoreHydrated && hasCookies === false && !isAuthenticated) {
     return (
       <div className="flex items-center justify-center min-h-screen px-4">
         <div className="text-center space-y-4 max-w-md">

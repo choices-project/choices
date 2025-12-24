@@ -2,7 +2,7 @@ import { test, expect } from '@playwright/test';
 
 /**
  * Production Hydration Check Test
- * 
+ *
  * Verifies that pages render without React hydration mismatch errors (error #185).
  * This test checks the console for hydration errors and ensures pages load correctly.
  */
