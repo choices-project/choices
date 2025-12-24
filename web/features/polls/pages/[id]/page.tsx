@@ -138,9 +138,13 @@ export default async function PollPage({ params }: { params: { id: string } }) {
   const { id } = params;
 
   try {
-    const baseUrl = process.env.NEXT_PUBLIC_SITE_URL ?? process.env.NEXT_PUBLIC_BASE_URL ?? process.env.VERCEL_URL ?? 'https://choices-app.com';
-    const siteUrl = baseUrl.replace(/\/$/, '');
-    const res = await fetch(`${siteUrl}/api/polls/${id}`, {
+    // Use relative URL for API calls to avoid base URL issues
+    // This works in both development and production
+    const protocol = process.env.NODE_ENV === 'production' ? 'https' : 'http';
+    const host = allHeaders.get('host') ?? 'localhost:3000';
+    const baseUrl = `${protocol}://${host}`;
+    
+    const res = await fetch(`${baseUrl}/api/polls/${id}`, {
       cache: 'no-store',
       headers: {
         ...(cookieHeader ? { cookie: cookieHeader } : {}),
@@ -149,17 +153,34 @@ export default async function PollPage({ params }: { params: { id: string } }) {
     });
 
     if (!res.ok) {
+      logger.error('Poll API returned error', { status: res.status, pollId: id });
       throw new Error(`poll load ${res.status}`);
     }
 
     const payload = await res.json();
     if (!payload?.success || !payload?.data) {
+      logger.error('Malformed poll response', { pollId: id, payload });
       throw new Error('Malformed poll response');
     }
 
     return <PollClient poll={payload.data} />;
   } catch (error) {
-    logger.error('Failed to render poll page', error);
-    return <div data-testid="poll-error">Unable to load poll.</div>;
+    logger.error('Failed to render poll page', { error, pollId: id });
+    return (
+      <div className="flex min-h-screen items-center justify-center px-4">
+        <div className="text-center space-y-4 max-w-md">
+          <h1 className="text-2xl font-bold text-gray-900 dark:text-gray-100">Unable to load poll</h1>
+          <p className="text-gray-600 dark:text-gray-400">
+            We couldn't find or load this poll. It may have been deleted or you may not have permission to view it.
+          </p>
+          <a
+            href="/polls"
+            className="inline-block rounded-md bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700 dark:bg-blue-500 dark:hover:bg-blue-600"
+          >
+            Browse all polls
+          </a>
+        </div>
+      </div>
+    );
   }
 }

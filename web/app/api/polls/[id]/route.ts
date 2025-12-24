@@ -1,4 +1,5 @@
 import { getSupabaseServerClient } from '@/utils/supabase/server';
+import { z } from 'zod';
 
 import { withErrorHandling, successResponse, notFoundError, validationError, errorResponse } from '@/lib/api';
 
@@ -11,11 +12,13 @@ export const GET = withErrorHandling(async (
   _request: NextRequest,
   { params }: { params: { id: string } }
 ) => {
-    const pollId = params.id;
-
-    if (!pollId) {
-      return validationError({ pollId: 'Poll ID is required' });
+    // Validate poll ID format (UUID)
+    const pollIdValidation = z.string().uuid('Invalid poll ID format').safeParse(params.id);
+    if (!pollIdValidation.success) {
+      return validationError({ pollId: 'Invalid poll ID format' });
     }
+    
+    const pollId = pollIdValidation.data;
 
     const supabaseClient = await getSupabaseServerClient();
     if (!supabaseClient) {

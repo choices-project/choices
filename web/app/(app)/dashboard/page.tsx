@@ -213,25 +213,30 @@ export default function DashboardPage() {
 
   // Check bypass flag - use state that updates to handle timing issues
   // This prevents authentication checks from running before bypass is recognized
-  // Safe to check localStorage on client as long as we guard with typeof window check
-  const [shouldBypassAuth, setShouldBypassAuth] = useState(() => {
+  // CRITICAL: Initialize to false to prevent hydration mismatch, then check in useEffect
+  // This ensures server and client render the same initial state
+  const [shouldBypassAuth, setShouldBypassAuth] = useState(false);
+  const [isClient, setIsClient] = useState(false);
+  
+  // Set client flag after mount to prevent hydration mismatch
+  useEffect(() => {
+    setIsClient(true);
+    
     // In E2E harness mode, always bypass auth checks (authentication is mocked)
     if (process.env.NEXT_PUBLIC_ENABLE_E2E_HARNESS === '1') {
-      return true;
+      setShouldBypassAuth(true);
+      return;
     }
-    // Check localStorage immediately (client-side only check is safe)
-    // Guard with typeof window to prevent SSR issues
-    if (typeof window === 'undefined') {
-      return false; // SSR - no bypass
-    }
+    
     // Check localStorage bypass flag for specific test scenarios
     try {
-      return window.localStorage.getItem('e2e-dashboard-bypass') === '1';
+      const bypassValue = window.localStorage.getItem('e2e-dashboard-bypass') === '1';
+      setShouldBypassAuth(bypassValue);
     } catch {
       // localStorage might not be available (some browsers/contexts)
-      return false;
+      setShouldBypassAuth(false);
     }
-  });
+  }, []);
 
   // Re-check bypass flag periodically to catch cases where it's set after initial render
   // This handles E2E tests that set localStorage via addInitScript
@@ -740,6 +745,22 @@ export default function DashboardPage() {
       loadingTimeout,
       currentUrl: typeof window !== 'undefined' ? window.location.href : 'SSR',
     });
+  }
+
+  // CRITICAL: Wait for client-side hydration before making render decisions
+  // This prevents hydration mismatch errors (React error #185)
+  if (!isClient) {
+    // Render a minimal loading state during SSR to match initial client render
+    return (
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8" aria-label="Loading dashboard">
+        <div className="space-y-6">
+          <div className="animate-pulse">
+            <div className="h-8 bg-gray-200 rounded w-1/3 dark:bg-gray-700 mb-4" />
+            <div className="h-4 bg-gray-200 rounded w-1/2 dark:bg-gray-700" />
+          </div>
+        </div>
+      </div>
+    );
   }
 
   // CRITICAL: If bypass flag is set, always allow render (E2E testing)
