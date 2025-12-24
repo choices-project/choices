@@ -69,9 +69,13 @@ async function handleBounce(
   const bounceType = (data?.bounce_type ?? data?.reason ?? 'unknown') as string;
   const reason = (data?.bounce_reason ?? data?.reason ?? 'unknown') as string;
 
+  // Redact email address for security - only log domain
+  const emailDomain = typeof email === 'string' && email.includes('@') 
+    ? email.split('@')[1] 
+    : 'unknown';
   logger.warn('Email bounce detected', {
     messageId,
-    email: typeof email === 'string' ? email : 'unknown',
+    emailDomain,
     bounceType,
     reason,
   });
@@ -125,11 +129,12 @@ async function handleBounce(
           if (updateError) {
             logger.error('Failed to update user email status for hard bounce', {
               userId,
-              email,
+              emailDomain: typeof email === 'string' && email.includes('@') ? email.split('@')[1] : 'unknown',
               error: updateError,
             });
           } else {
-            logger.info('Marked email as invalid due to hard bounce', { userId, email });
+            const emailDomain = typeof email === 'string' && email.includes('@') ? email.split('@')[1] : 'unknown';
+            logger.info('Marked email as invalid due to hard bounce', { userId, emailDomain });
           }
         } else {
           // For soft bounces, increment bounce count but don't invalidate yet
@@ -167,7 +172,8 @@ async function handleBounce(
         }
       }
     } catch (error) {
-      logger.error('Failed to handle bounce for user', { email, error });
+      const emailDomain = typeof email === 'string' && email.includes('@') ? email.split('@')[1] : 'unknown';
+      logger.error('Failed to handle bounce for user', { emailDomain, error });
     }
   }
 }
@@ -185,9 +191,13 @@ async function handleComplaint(
   const email = data?.to ?? payload?.to ?? null;
   const complaintType = (data?.complaint_type ?? 'spam') as string;
 
+  // Redact email address for security - only log domain
+  const complaintEmailDomain = typeof email === 'string' && email.includes('@') 
+    ? email.split('@')[1] 
+    : 'unknown';
   logger.warn('Email complaint detected', {
     messageId,
-    email: typeof email === 'string' ? email : 'unknown',
+    emailDomain: complaintEmailDomain,
     complaintType,
   });
 
@@ -235,13 +245,15 @@ async function handleComplaint(
           });
         
         if (updateError) {
+          const emailDomain = typeof email === 'string' && email.includes('@') ? email.split('@')[1] : 'unknown';
           logger.error('Failed to unsubscribe user after complaint', {
             userId,
-            email,
+            emailDomain,
             error: updateError,
           });
         } else {
-          logger.info('Unsubscribed user from emails due to complaint', { userId, email });
+          const emailDomain = typeof email === 'string' && email.includes('@') ? email.split('@')[1] : 'unknown';
+          logger.info('Unsubscribed user from emails due to complaint', { userId, emailDomain });
         }
         
         // Also update notification preferences to disable email notifications
@@ -263,7 +275,8 @@ async function handleComplaint(
         }
       }
     } catch (error) {
-      logger.error('Failed to handle complaint for user', { email, error });
+      const complaintEmailDomain = typeof email === 'string' && email.includes('@') ? email.split('@')[1] : 'unknown';
+      logger.error('Failed to handle complaint for user', { emailDomain: complaintEmailDomain, error });
     }
   }
 }

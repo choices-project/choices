@@ -1,3 +1,5 @@
+import { z } from 'zod';
+
 import { getSupabaseServerClient } from '@/utils/supabase/server';
 
 import { requireAdminOr401 } from '@/lib/admin-auth';
@@ -6,6 +8,29 @@ import { RealTimeNewsService } from '@/lib/core/services/real-time-news';
 import { createAuditLogService } from '@/lib/services/audit-log-service';
 
 import type { NextRequest} from 'next/server';
+
+// Validation schema for breaking news creation
+// Note: fullStory and sourceUrl are required by the service, entities must be NewsEntity[]
+const breakingNewsSchema = z.object({
+  headline: z.string().min(1, 'Headline is required').max(500, 'Headline must be at most 500 characters'),
+  summary: z.string().min(1, 'Summary is required').max(2000, 'Summary must be at most 2000 characters'),
+  fullStory: z.string().max(10000, 'Full story must be at most 10000 characters').default(''),
+  sourceUrl: z.string().url('Source URL must be a valid URL').default(''),
+  sourceName: z.string().min(1, 'Source name is required').max(200, 'Source name must be at most 200 characters'),
+  sourceReliability: z.number().min(0).max(1).optional().default(0.9),
+  category: z.array(z.string()).max(20, 'Maximum 20 categories allowed').optional().default([]),
+  urgency: z.enum(['low', 'medium', 'high', 'breaking']).optional().default('medium'),
+  sentiment: z.enum(['positive', 'negative', 'neutral', 'mixed']).optional().default('neutral'),
+  entities: z.array(z.object({
+    name: z.string(),
+    type: z.enum(['person', 'organization', 'location', 'event', 'policy', 'concept']).optional(),
+    confidence: z.number().min(0).max(1).optional(),
+    role: z.string().optional(),
+    stance: z.enum(['support', 'oppose', 'neutral', 'unknown']).optional(),
+    metadata: z.record(z.string(), z.union([z.string(), z.number(), z.boolean()])).optional(),
+  })).max(50, 'Maximum 50 entities allowed').optional().default([]),
+  metadata: z.record(z.string(), z.unknown()).optional().default({}),
+});
 
 
 export const dynamic = 'force-dynamic';
@@ -68,38 +93,26 @@ export const POST = withErrorHandling(async (request: NextRequest) => {
     return authError('Authentication required');
   }
 
-  const body = await request.json().catch(() => null);
-  const {
-    headline,
-    summary,
-    fullStory,
-    sourceUrl,
-    sourceName,
-    sourceReliability = 0.9,
-    category = [],
-    urgency = 'medium',
-    sentiment = 'neutral',
-    entities = [],
-    metadata = {}
-  } = body;
+  // Parse and validate request body
+  let rawBody: unknown;
+  try {
+    rawBody = await request.json();
+  } catch {
+    return validationError({ body: 'Request body must be valid JSON' });
+  }
 
-  if (!headline || !summary || !sourceName) {
-    return validationError({
-      headline: headline ? '' : 'Headline is required',
-      summary: summary ? '' : 'Summary is required',
-      sourceName: sourceName ? '' : 'Source name is required'
+  // Validate with Zod schema
+  const validationResult = breakingNewsSchema.safeParse(rawBody);
+  if (!validationResult.success) {
+    const fieldErrors: Record<string, string> = {};
+    validationResult.error.issues.forEach((issue) => {
+      const field = issue.path.join('.') || 'body';
+      fieldErrors[field] = issue.message;
     });
+    return validationError(fieldErrors, 'Invalid breaking news data');
   }
 
-  if (!Array.isArray(category) || !Array.isArray(entities)) {
-    return validationError({
-      category: Array.isArray(category) ? '' : 'Category must be an array',
-      entities: Array.isArray(entities) ? '' : 'Entities must be an array'
-    }, 'Invalid payload shape');
-  }
-
-  const service = new RealTimeNewsService();
-  const story = await service.createBreakingNews({
+  const {
     headline,
     summary,
     fullStory,
@@ -110,7 +123,33 @@ export const POST = withErrorHandling(async (request: NextRequest) => {
     urgency,
     sentiment,
     entities,
-    metadata
+    metadata,
+  } = validationResult.data;
+
+  const service = new RealTimeNewsService();
+  // Transform metadata to match service expectations
+  const serviceMetadata = {
+    keywords: Array.isArray(metadata?.keywords) ? metadata.keywords : [],
+    controversy: typeof metadata?.controversy === 'number' ? metadata.controversy : 0,
+    timeSensitivity: (metadata?.timeSensitivity as 'low' | 'medium' | 'high') ?? 'medium',
+    geographicScope: (metadata?.geographicScope as 'local' | 'national' | 'international' | 'global') ?? 'national',
+    politicalImpact: typeof metadata?.politicalImpact === 'number' ? metadata.politicalImpact : 0,
+    publicInterest: typeof metadata?.publicInterest === 'number' ? metadata.publicInterest : 0,
+    complexity: (metadata?.complexity as 'low' | 'medium' | 'high') ?? undefined,
+  };
+  
+  const story = await service.createBreakingNews({
+    headline,
+    summary,
+    fullStory: fullStory ?? '',
+    sourceUrl: sourceUrl ?? '',
+    sourceName,
+    sourceReliability,
+    category,
+    urgency,
+    sentiment,
+    entities: entities as any, // Service expects NewsEntity[] but accepts transformed data
+    metadata: serviceMetadata
   });
 
   if (!story) {

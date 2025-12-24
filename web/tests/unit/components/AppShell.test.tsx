@@ -157,7 +157,7 @@ describe('AppShell', () => {
   it('reflects sidebar persistence state via data attributes', () => {
     act(() => {
       const store = useAppStore.getState();
-      store.setSidebarCollapsed(true);
+      // Note: setSidebarPinned(true) automatically sets collapsed to false
       store.setSidebarWidth(240);
       store.setSidebarPinned(true);
     });
@@ -169,9 +169,207 @@ describe('AppShell', () => {
     );
 
     const shell = screen.getByTestId('app-shell');
+    // When pinned, sidebar is not collapsed
     expect(shell).toHaveAttribute('data-sidebar-collapsed', 'false');
     expect(shell).toHaveAttribute('data-sidebar-width', '240');
     expect(shell).toHaveAttribute('data-sidebar-pinned', 'true');
+  });
+
+  it('persists theme state across component remounts', async () => {
+    // Set theme to dark
+    act(() => {
+      useAppStore.getState().setTheme('dark');
+    });
+
+    const { unmount } = render(
+      <AppShell navigation={<div>nav</div>} siteMessages={<div>messages</div>}>
+        <div>content</div>
+      </AppShell>,
+    );
+
+    let shell = screen.getByTestId('app-shell');
+    expect(shell).toHaveAttribute('data-theme', 'dark');
+
+    // Unmount and remount - theme should persist
+    unmount();
+
+    render(
+      <AppShell navigation={<div>nav</div>} siteMessages={<div>messages</div>}>
+        <div>content</div>
+      </AppShell>,
+    );
+
+    shell = screen.getByTestId('app-shell');
+    await waitFor(() => {
+      expect(shell).toHaveAttribute('data-theme', 'dark');
+    });
+  });
+
+  it('persists sidebar state across component remounts', async () => {
+    // Set sidebar state
+    act(() => {
+      const store = useAppStore.getState();
+      // Note: setSidebarPinned(true) automatically sets collapsed to false
+      store.setSidebarWidth(300);
+      store.setSidebarPinned(true);
+    });
+
+    const { unmount } = render(
+      <AppShell navigation={<div>nav</div>} siteMessages={<div>messages</div>}>
+        <div>content</div>
+      </AppShell>,
+    );
+
+    let shell = screen.getByTestId('app-shell');
+    // When pinned, sidebar is not collapsed
+    expect(shell).toHaveAttribute('data-sidebar-collapsed', 'false');
+    expect(shell).toHaveAttribute('data-sidebar-width', '300');
+    expect(shell).toHaveAttribute('data-sidebar-pinned', 'true');
+
+    // Unmount and remount - sidebar state should persist
+    unmount();
+
+    render(
+      <AppShell navigation={<div>nav</div>} siteMessages={<div>messages</div>}>
+        <div>content</div>
+      </AppShell>,
+    );
+
+    shell = screen.getByTestId('app-shell');
+    await waitFor(() => {
+      expect(shell).toHaveAttribute('data-sidebar-collapsed', 'false');
+      expect(shell).toHaveAttribute('data-sidebar-width', '300');
+      expect(shell).toHaveAttribute('data-sidebar-pinned', 'true');
+    });
+  });
+
+  it('uses selector hooks correctly (not direct store access)', () => {
+    // This test verifies that AppShell uses selector hooks
+    // by checking that the component re-renders when store state changes
+    act(() => {
+      useAppStore.getState().setTheme('light');
+    });
+
+    const { rerender } = render(
+      <AppShell navigation={<div>nav</div>} siteMessages={<div>messages</div>}>
+        <div>content</div>
+      </AppShell>,
+    );
+
+    let shell = screen.getByTestId('app-shell');
+    expect(shell).toHaveAttribute('data-theme', 'light');
+
+    // Change theme - component should update via selector hook
+    act(() => {
+      useAppStore.getState().setTheme('dark');
+    });
+
+    rerender(
+      <AppShell navigation={<div>nav</div>} siteMessages={<div>messages</div>}>
+        <div>content</div>
+      </AppShell>,
+    );
+
+    shell = screen.getByTestId('app-shell');
+    expect(shell).toHaveAttribute('data-theme', 'dark');
+  });
+
+  it('handles sidebar width clamping correctly', () => {
+    act(() => {
+      const store = useAppStore.getState();
+      // Set width below minimum (200)
+      store.setSidebarWidth(150);
+    });
+
+    render(
+      <AppShell navigation={<div>nav</div>} siteMessages={<div>messages</div>}>
+        <div>content</div>
+      </AppShell>,
+    );
+
+    const shell = screen.getByTestId('app-shell');
+    // Width should be clamped to minimum of 200
+    expect(shell).toHaveAttribute('data-sidebar-width', '200');
+  });
+
+  it('handles sidebar width maximum clamping correctly', () => {
+    act(() => {
+      const store = useAppStore.getState();
+      // Set width above maximum (400)
+      store.setSidebarWidth(500);
+    });
+
+    render(
+      <AppShell navigation={<div>nav</div>} siteMessages={<div>messages</div>}>
+        <div>content</div>
+      </AppShell>,
+    );
+
+    const shell = screen.getByTestId('app-shell');
+    // Width should be clamped to maximum of 400
+    expect(shell).toHaveAttribute('data-sidebar-width', '400');
+  });
+
+  it('handles sidebar pinning automatically collapsing when unpinned', () => {
+    act(() => {
+      const store = useAppStore.getState();
+      store.setSidebarPinned(true);
+      store.setSidebarCollapsed(false);
+    });
+
+    const { rerender } = render(
+      <AppShell navigation={<div>nav</div>} siteMessages={<div>messages</div>}>
+        <div>content</div>
+      </AppShell>,
+    );
+
+    let shell = screen.getByTestId('app-shell');
+    expect(shell).toHaveAttribute('data-sidebar-pinned', 'true');
+    expect(shell).toHaveAttribute('data-sidebar-collapsed', 'false');
+
+    // Unpinning should not automatically collapse (that's handled by setSidebarPinned)
+    act(() => {
+      useAppStore.getState().setSidebarPinned(false);
+    });
+
+    rerender(
+      <AppShell navigation={<div>nav</div>} siteMessages={<div>messages</div>}>
+        <div>content</div>
+      </AppShell>,
+    );
+
+    shell = screen.getByTestId('app-shell');
+    expect(shell).toHaveAttribute('data-sidebar-pinned', 'false');
+  });
+
+  it('handles theme toggle correctly', () => {
+    act(() => {
+      useAppStore.getState().setTheme('light');
+    });
+
+    const { rerender } = render(
+      <AppShell navigation={<div>nav</div>} siteMessages={<div>messages</div>}>
+        <div>content</div>
+      </AppShell>,
+    );
+
+    let shell = screen.getByTestId('app-shell');
+    expect(shell).toHaveAttribute('data-theme', 'light');
+
+    // Toggle theme
+    act(() => {
+      useAppStore.getState().toggleTheme();
+    });
+
+    rerender(
+      <AppShell navigation={<div>nav</div>} siteMessages={<div>messages</div>}>
+        <div>content</div>
+      </AppShell>,
+    );
+
+    shell = screen.getByTestId('app-shell');
+    // Should toggle from light to dark
+    expect(shell).toHaveAttribute('data-theme', 'dark');
   });
 });
 

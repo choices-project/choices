@@ -1,4 +1,6 @@
 
+import { z } from 'zod'
+
 import { getSupabaseServerClient } from '@/utils/supabase/server'
 
 import {
@@ -17,14 +19,21 @@ import {
   createCsrfErrorResponse
 } from '../_shared'
 
+
 import type { NextRequest } from 'next/server';
 
-type RegisterRequestBody = {
-  email?: string;
-  password?: string;
-  username?: string;
-  display_name?: string;
-};
+// Validation schema for registration request
+const registerSchema = z.object({
+  email: z.string().email('Invalid email format').min(1, 'Email is required'),
+  password: z.string().min(8, 'Password must be at least 8 characters').min(1, 'Password is required'),
+  username: z.string()
+    .min(3, 'Username must be at least 3 characters')
+    .max(20, 'Username must be at most 20 characters')
+    .regex(/^[a-zA-Z0-9_-]+$/, 'Username must contain only letters, numbers, hyphens, and underscores'),
+  display_name: z.string().max(100, 'Display name must be at most 100 characters').optional(),
+});
+
+type RegisterRequestBody = z.infer<typeof registerSchema>;
 
 
 export const POST = withErrorHandling(async (request: NextRequest) => {
@@ -46,49 +55,31 @@ export const POST = withErrorHandling(async (request: NextRequest) => {
       return rateLimitError('Too many registration attempts. Please try again later.');
     }
 
-    // Validate request
+    // Validate request body parsing
     const parsedBody = await parseBody<RegisterRequestBody>(request)
     if (!parsedBody.success) {
       return parsedBody.error
     }
-    const { email, password, username, display_name } = parsedBody.data
 
-    // Validate required fields
-    const missingFields: Record<string, string> = {}
-    if (!email) {
-      missingFields.email = 'Email is required'
-    }
-    if (!password) {
-      missingFields.password = 'Password is required'
-    }
-    if (!username) {
-      missingFields.username = 'Username is required'
-    }
-    if (Object.keys(missingFields).length > 0) {
-      return validationError(missingFields, 'Email, password, and username are required')
+    // Validate with Zod schema
+    const validationResult = registerSchema.safeParse(parsedBody.data)
+    if (!validationResult.success) {
+      const fieldErrors: Record<string, string> = {}
+      validationResult.error.issues.forEach((issue) => {
+        const field = issue.path[0] as string
+        if (field) {
+          fieldErrors[field] = issue.message
+        }
+      })
+      return validationError(fieldErrors, 'Invalid registration data')
     }
 
-    const ensuredEmail = email as string;
-    const ensuredPassword = password as string;
-    const ensuredUsername = username as string;
+    const { email, password, username, display_name } = validationResult.data
 
-    // Validate username format
-    if (!/^[a-zA-Z0-9_-]{3,20}$/.test(ensuredUsername)) {
-      return validationError({
-        username: 'Username must be 3-20 characters, letters, numbers, hyphens, and underscores only'
-      });
-    }
-
-    // Validate password strength
-    if (ensuredPassword.length < 8) {
-      return validationError({
-        password: 'Password must be at least 8 characters long'
-      });
-    }
-
-    const normalizedEmail = ensuredEmail.toLowerCase().trim()
-    const normalizedUsername = ensuredUsername.trim()
-    const displayName = (display_name ?? ensuredUsername).trim()
+    // Normalize validated data
+    const normalizedEmail = email.toLowerCase().trim()
+    const normalizedUsername = username.trim()
+    const displayName = (display_name ?? username).trim()
 
     // Use Supabase Auth for registration
     const supabaseClient = await getSupabaseServerClient()
@@ -98,7 +89,7 @@ export const POST = withErrorHandling(async (request: NextRequest) => {
     // Sign up with Supabase Auth
     const { data: authData, error: authError } = await supabaseClient.auth.signUp({
       email: normalizedEmail,
-      password: ensuredPassword,
+      password: password,
       options: {
         data: {
           username: normalizedUsername,

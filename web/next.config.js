@@ -115,7 +115,7 @@ const nextConfig = {
         ...config.resolve.alias,
         '@vercel/og': false,
       };
-      
+
       // Exclude Supabase packages from middleware bundle (Edge Runtime incompatible)
       // These should only be used in API routes with Node.js runtime
       config.resolve.alias = {
@@ -123,7 +123,7 @@ const nextConfig = {
         '@supabase/ssr': false,
         '@supabase/supabase-js': false,
       };
-      
+
       // Define browser globals as undefined for server-side compatibility
       config.plugins.push(new webpack.DefinePlugin({
         self: JSON.stringify('globalThis'),
@@ -153,7 +153,7 @@ const nextConfig = {
         '@supabase/ssr': 'commonjs @supabase/ssr',
         '@supabase/realtime-js': 'commonjs @supabase/realtime-js'
       });
-      
+
       // Add file-loader for @vercel/og
       config.module.rules.push({
         test: /\.(png|jpg|jpeg|gif|svg|woff|woff2|eot|ttf|otf)$/,
@@ -329,8 +329,8 @@ const nextConfig = {
     const isReportOnly = process.env.CSP_REPORT_ONLY === 'true'
     // Check if we're in a Vercel preview environment (not production)
     // Also check VERCEL_URL to detect Vercel deployments
-    const isVercelPreview = 
-      process.env.VERCEL_ENV === 'preview' || 
+    const isVercelPreview =
+      process.env.VERCEL_ENV === 'preview' ||
       process.env.VERCEL_ENV === 'development' ||
       (process.env.VERCEL_URL && !isProduction)
 

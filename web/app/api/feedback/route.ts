@@ -1,3 +1,5 @@
+import { z } from 'zod';
+
 import { getSupabaseAdminClient, getSupabaseServerClient } from '@/utils/supabase/server';
 
 import {
@@ -17,32 +19,21 @@ import type { NextRequest } from 'next/server';
 
 export const dynamic = 'force-dynamic';
 
-const FEEDBACK_TYPES = [
-  'bug',
-  'feature',
-  'general',
-  'performance',
-  'accessibility',
-  'security',
-  'correction',
-  'csp-violation',
-] as const;
+// Validation schema for feedback request
+const feedbackSchema = z.object({
+  type: z.enum(['bug', 'feature', 'general', 'performance', 'accessibility', 'security', 'correction', 'csp-violation']),
+  title: z.string().min(1, 'Title is required').max(200, 'Title must be at most 200 characters'),
+  description: z.string().min(1, 'Description is required').max(1000, 'Description must be at most 1000 characters'),
+  sentiment: z.enum(['positive', 'negative', 'neutral', 'mixed']),
+  screenshot: z.string().url().optional().nullable(),
+  userJourney: z.record(z.string(), z.unknown()).optional().nullable(),
+  feedbackContext: z.object({
+    aiAnalysis: z.record(z.string(), z.unknown()).optional(),
+  }).passthrough().optional().nullable(),
+  'csp-report': z.record(z.string(), z.unknown()).optional(),
+});
 
-const SENTIMENT_VALUES = ['positive', 'negative', 'neutral', 'mixed'] as const;
-
-type FeedbackRequestBody = {
-  type: string;
-  title: string;
-  description: string;
-  sentiment: string;
-  screenshot?: string | null;
-  userJourney?: Record<string, any> | null;
-  feedbackContext?: {
-    aiAnalysis?: Record<string, any>;
-    [key: string]: unknown;
-  } | null;
-  ['csp-report']?: Record<string, any>;
-};
+type FeedbackRequestBody = z.infer<typeof feedbackSchema>;
 
 // Security configuration for feedback API
 const securityConfig = {
@@ -97,6 +88,17 @@ export const POST = withErrorHandling(async (request: NextRequest) => {
     return parsedBody.error;
   }
 
+  // Validate with Zod schema
+  const validationResult = feedbackSchema.safeParse(parsedBody.data);
+  if (!validationResult.success) {
+    const fieldErrors: Record<string, string> = {};
+    validationResult.error.issues.forEach((issue) => {
+      const field = issue.path.join('.') || 'body';
+      fieldErrors[field] = issue.message;
+    });
+    return validationError(fieldErrors, 'Invalid feedback data');
+  }
+
   const {
     type,
     title,
@@ -105,26 +107,9 @@ export const POST = withErrorHandling(async (request: NextRequest) => {
     screenshot,
     userJourney,
     feedbackContext,
-  } = parsedBody.data;
+  } = validationResult.data;
 
-  const missingFields: Record<string, string> = {};
-  if (!type) missingFields.type = 'Type is required';
-  if (!title) missingFields.title = 'Title is required';
-  if (!description) missingFields.description = 'Description is required';
-  if (!sentiment) missingFields.sentiment = 'Sentiment is required';
-
-  if (Object.keys(missingFields).length > 0) {
-    return validationError(missingFields, 'Missing required fields');
-  }
-
-  if (!FEEDBACK_TYPES.includes(type as (typeof FEEDBACK_TYPES)[number])) {
-    return validationError({ type: 'Invalid feedback type' });
-  }
-
-  if (!SENTIMENT_VALUES.includes(sentiment as (typeof SENTIMENT_VALUES)[number])) {
-    return validationError({ sentiment: 'Invalid sentiment value' });
-  }
-
+  // Additional content validation (spam detection, etc.)
   const titleValidation = validateContent(title, 'title');
   if (!titleValidation.valid) {
     return validationError({ title: titleValidation.reason ?? 'Invalid title' });
@@ -200,7 +185,7 @@ export const POST = withErrorHandling(async (request: NextRequest) => {
 
     const { data: cspResult, error: cspError } = await supabaseClient
       .from('feedback')
-      .insert(stripUndefinedDeep(cspData))
+      .insert(stripUndefinedDeep(cspData) as any)
       .select()
       .single();
 
@@ -227,7 +212,7 @@ export const POST = withErrorHandling(async (request: NextRequest) => {
     );
   }
 
-  const metadataPayload: Json = {
+  const metadataPayload = {
     feedbackContext: (feedbackContext ?? {}) as Json,
     userAgent: userJourney?.userAgent ?? null,
     deviceInfo: userJourney?.deviceInfo ?? null,
@@ -243,7 +228,7 @@ export const POST = withErrorHandling(async (request: NextRequest) => {
       userAgent: request.headers.get('user-agent') ?? 'unknown',
       timestamp: new Date().toISOString(),
     },
-  };
+  } as Json;
 
   const priority =
     type === 'security'
@@ -271,9 +256,11 @@ export const POST = withErrorHandling(async (request: NextRequest) => {
     user_id: feedbackData.user_id ? 'authenticated' : 'anonymous',
     type: feedbackData.feedback_type,
     sentiment: feedbackData.sentiment,
-    sessionId: userJourney?.sessionId,
-    currentPage: userJourney?.currentPage,
-    deviceType: userJourney?.deviceInfo?.type,
+    sessionId: (userJourney as Record<string, unknown>)?.sessionId,
+    currentPage: (userJourney as Record<string, unknown>)?.currentPage,
+    deviceType: (userJourney as Record<string, unknown>)?.deviceInfo && typeof (userJourney as Record<string, unknown>).deviceInfo === 'object' && (userJourney as Record<string, unknown>).deviceInfo !== null
+      ? ((userJourney as Record<string, unknown>).deviceInfo as Record<string, unknown>)?.type
+      : undefined,
   });
 
   const { data, error } = await supabaseClient.from('feedback').insert([stripUndefinedDeep(feedbackData)]).select();
@@ -350,21 +337,27 @@ export const POST = withErrorHandling(async (request: NextRequest) => {
       ? (data[0] as { id: string }).id
       : null;
 
+  const journey = userJourney as Record<string, unknown> | null | undefined;
+  const deviceInfo = journey?.deviceInfo && typeof journey.deviceInfo === 'object' && journey.deviceInfo !== null
+    ? (journey.deviceInfo as Record<string, unknown>)
+    : null;
+  const errors = Array.isArray(journey?.errors) ? journey.errors : [];
+  
   devLog('Enhanced feedback submitted:', {
     type,
     sentiment,
-    page: userJourney?.currentPage,
-    device: userJourney?.deviceInfo?.type,
-    browser: userJourney?.deviceInfo?.browser,
-    os: userJourney?.deviceInfo?.os,
-    sessionId: userJourney?.sessionId,
+    page: journey?.currentPage,
+    device: deviceInfo?.type,
+    browser: deviceInfo?.browser,
+    os: deviceInfo?.os,
+    sessionId: journey?.sessionId,
     timestamp: new Date().toISOString(),
     user_id: user?.id ? 'authenticated' : 'anonymous',
     performance: {
-      pageLoadTime: userJourney?.pageLoadTime,
-      timeOnPage: userJourney?.timeOnPage,
+      pageLoadTime: journey?.pageLoadTime,
+      timeOnPage: journey?.timeOnPage,
     },
-    errors: userJourney?.errors?.length ?? 0,
+    errors: errors.length,
   });
 
   return successResponse(buildFeedbackResponse(insertedRecord, userJourney));

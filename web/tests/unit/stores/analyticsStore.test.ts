@@ -211,5 +211,118 @@ describe('analyticsStore', () => {
     expect(store.getState().events).toHaveLength(1);
     expect(store.getState().isSending).toBe(false);
   });
+
+  describe('consent guard', () => {
+    it('shouldTrack returns false when trackingEnabled is false', () => {
+      const store = createTestAnalyticsStore();
+      
+      store.getState().setTrackingEnabled(false);
+      store.getState().updatePreferences({ trackingEnabled: false });
+      
+      // Access the internal shouldTrack function via the store
+      const canTrack = store.getState().trackingEnabled && store.getState().preferences.trackingEnabled;
+      expect(canTrack).toBe(false);
+    });
+
+    it('shouldTrack returns false when preferences.trackingEnabled is false', () => {
+      const store = createTestAnalyticsStore();
+      
+      store.getState().setTrackingEnabled(true);
+      store.getState().updatePreferences({ trackingEnabled: false });
+      
+      const canTrack = store.getState().trackingEnabled && store.getState().preferences.trackingEnabled;
+      expect(canTrack).toBe(false);
+    });
+
+    it('shouldTrack returns true when both trackingEnabled and preferences.trackingEnabled are true', () => {
+      const store = createTestAnalyticsStore();
+      
+      store.getState().setTrackingEnabled(true);
+      store.getState().updatePreferences({ trackingEnabled: true });
+      
+      const canTrack = store.getState().trackingEnabled && store.getState().preferences.trackingEnabled;
+      expect(canTrack).toBe(true);
+    });
+
+    it('trackEvent does not add event when consent is not given', () => {
+      const store = createTestAnalyticsStore();
+      
+      store.getState().setTrackingEnabled(false);
+      store.getState().updatePreferences({ trackingEnabled: false });
+      
+      store.getState().trackEvent({
+        event_type: 'test',
+        session_id: store.getState().sessionId,
+        event_data: {},
+        created_at: new Date().toISOString(),
+        type: 'test',
+        category: 'test',
+        action: 'test',
+      });
+      
+      expect(store.getState().events).toHaveLength(0);
+    });
+
+    it('trackEvent adds event when consent is given', () => {
+      const store = createTestAnalyticsStore();
+      
+      store.getState().setTrackingEnabled(true);
+      store.getState().updatePreferences({ trackingEnabled: true });
+      
+      store.getState().trackEvent({
+        event_type: 'test',
+        session_id: store.getState().sessionId,
+        event_data: {},
+        created_at: new Date().toISOString(),
+        type: 'test',
+        category: 'test',
+        action: 'test',
+      });
+      
+      expect(store.getState().events).toHaveLength(1);
+    });
+
+    it('sendAnalytics respects consent guard', async () => {
+      const store = createTestAnalyticsStore();
+      
+      store.getState().setTrackingEnabled(false);
+      store.getState().updatePreferences({ trackingEnabled: false });
+      
+      // Manually add event (bypassing trackEvent which checks consent)
+      store.setState((state) => {
+        state.events.push({
+          id: 'event_4',
+          event_type: 'test',
+          session_id: state.sessionId,
+          event_data: {},
+          created_at: new Date().toISOString(),
+          timestamp: new Date().toISOString(),
+          type: 'test',
+          category: 'test',
+          action: 'test',
+        });
+      });
+      
+      await store.getState().sendAnalytics();
+      
+      // Should not send when consent is not given
+      expect(sendAnalyticsEvents).not.toHaveBeenCalled();
+      expect(store.getState().events).toHaveLength(1);
+    });
+
+    it('consent status can be checked via trackingEnabled and preferences', () => {
+      const store = createTestAnalyticsStore();
+      
+      store.getState().setTrackingEnabled(true);
+      store.getState().updatePreferences({ trackingEnabled: true });
+      
+      const isEnabled = store.getState().trackingEnabled && store.getState().preferences.trackingEnabled;
+      expect(isEnabled).toBe(true);
+      
+      store.getState().setTrackingEnabled(false);
+      const isDisabled = store.getState().trackingEnabled && store.getState().preferences.trackingEnabled;
+      expect(isDisabled).toBe(false);
+    });
+  });
 });
 

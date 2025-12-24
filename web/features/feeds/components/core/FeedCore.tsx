@@ -2,16 +2,16 @@
 
 /**
  * FeedCore Component
- * 
+ *
  * Core feed display component with NO side effects or complex state.
  * Purely presentational - receives data and callbacks as props.
- * 
+ *
  * This component CANNOT have infinite loops because:
  * - No useEffect hooks
  * - No store subscriptions
  * - No complex state management
  * - Pure props-based rendering
- * 
+ *
  * Created: November 5, 2025
  * Enhanced: November 5, 2025 - Added district filtering UI
  * Status: ✅ Production-grade architecture
@@ -102,7 +102,7 @@ export default function FeedCore({
   const [isClient, setIsClient] = useState(false);
   const [isPulling, setIsPulling] = useState(false);
   const [pullDistance, setPullDistance] = useState(0);
-  
+
   const observerRef = useRef<IntersectionObserver | null>(null);
   const loadMoreRef = useRef<HTMLDivElement>(null);
   const startY = useRef(0);
@@ -116,7 +116,7 @@ export default function FeedCore({
       const systemPrefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
       const shouldBeDark = stored ? stored === 'true' : systemPrefersDark;
       setIsDarkMode(shouldBeDark);
-      
+
       if (shouldBeDark) {
         document.documentElement.classList.add('dark');
       } else {
@@ -150,7 +150,7 @@ export default function FeedCore({
     };
   }, [onLoadMore, hasMore, isLoading, isClient]);
 
- 
+
 
   // Pull-to-refresh
   useEffect(() => {
@@ -166,13 +166,13 @@ export default function FeedCore({
 
     const handleTouchMove = (e: TouchEvent) => {
       if (window.scrollY > 0) return;
-      
+
       const touch = e.touches[0];
       if (!touch) return;
-      
+
       const currentY = touch.clientY;
       const distance = currentY - startY.current;
-      
+
       if (distance > 0 && distance < 150) {
         setIsPulling(true);
         setPullDistance(distance);
@@ -201,11 +201,11 @@ export default function FeedCore({
 
   const toggleDarkMode = useCallback(() => {
     if (typeof window === 'undefined') return;
-    
+
     const newMode = !isDarkMode;
     setIsDarkMode(newMode);
     localStorage.setItem('darkMode', String(newMode));
-    
+
     if (newMode) {
       document.documentElement.classList.add('dark');
     } else {
@@ -213,7 +213,7 @@ export default function FeedCore({
     }
   }, [isDarkMode]);
 
- 
+
 
   const handleHashtagSubmit = useCallback((e: React.FormEvent) => {
     e.preventDefault();
@@ -227,13 +227,15 @@ export default function FeedCore({
   // Initial loading state - show skeleton loaders
   if (isLoading && feeds.length === 0) {
     return (
-      <div 
-        className={cn('unified-feed', className)} 
-        data-testid="unified-feed" 
+      <div
+        className={cn('unified-feed', className)}
+        data-testid="unified-feed"
         aria-label="Loading feeds"
         aria-busy="true"
+        aria-live="polite"
+        role="status"
       >
-        <div className="space-y-4 py-8">
+        <div className="space-y-4 py-8" data-testid="feed-loading-skeleton">
           {[1, 2, 3, 4].map((i) => (
             <Card key={i} className="animate-pulse" aria-hidden="true">
               <CardHeader>
@@ -282,9 +284,9 @@ export default function FeedCore({
             </h3>
             <p className="text-gray-600 dark:text-gray-400 mb-6">{error}</p>
             <div className="space-y-3">
-              <Button 
-                onClick={onRefresh} 
-                variant="default" 
+              <Button
+                onClick={onRefresh}
+                variant="default"
                 className="w-full sm:w-auto"
                 aria-label="Try again to load feed"
               >
@@ -301,14 +303,14 @@ export default function FeedCore({
   }
 
   return (
-    <div 
+    <div
       ref={scrollContainerRef}
-      className={cn('unified-feed max-w-4xl mx-auto relative', className)} 
+      className={cn('unified-feed max-w-4xl mx-auto relative', className)}
       data-testid="unified-feed"
     >
       {/* Pull-to-refresh indicator */}
       {isPulling && (
-        <div 
+        <div
           className="absolute top-0 left-1/2 transform -translate-x-1/2 z-50 transition-all"
           style={{ top: Math.min(pullDistance - 40, 60) }}
         >
@@ -454,8 +456,8 @@ export default function FeedCore({
         <TabsContent value="feed" id="feed-panel" role="tabpanel">
           {/* Feed Items */}
           {isLoading && feeds.length === 0 ? (
-            <div 
-              className="space-y-4 py-8" 
+            <div
+              className="space-y-4 py-8"
               aria-label="Loading feeds"
               aria-busy="true"
               data-testid="feed-loading-skeleton"
@@ -514,13 +516,33 @@ export default function FeedCore({
                   </Button>
                 ) : (
                   <div className="space-y-3">
-                    <Button
-                      onClick={onRefresh}
-                      variant="default"
-                      className="w-full sm:w-auto"
-                    >
-                      {t('feeds.core.empty.default.refresh')}
-                    </Button>
+                    <div className="flex flex-col sm:flex-row gap-3 justify-center">
+                      <Button
+                        onClick={onRefresh}
+                        variant="default"
+                        className="w-full sm:w-auto"
+                        aria-label={t('feeds.core.empty.default.refresh')}
+                      >
+                        {t('feeds.core.empty.default.refresh')}
+                      </Button>
+                      <Button
+                        onClick={() => {
+                          // Explore action: show trending hashtags or navigate to polls
+                          if (trendingHashtags.length > 0) {
+                            // Add first trending hashtag to explore
+                            onHashtagAdd(trendingHashtags[0]);
+                          } else {
+                            // Fallback to refresh
+                            onRefresh();
+                          }
+                        }}
+                        variant="outline"
+                        className="w-full sm:w-auto"
+                        aria-label={t('feeds.core.empty.default.explore') || 'Explore content'}
+                      >
+                        {t('feeds.core.empty.default.explore') || 'Explore'}
+                      </Button>
+                    </div>
                     {trendingHashtags.length > 0 && (
                       <div className="mt-6">
                         <p className="text-sm text-gray-500 dark:text-gray-400 mb-3">
@@ -533,6 +555,15 @@ export default function FeedCore({
                               variant="secondary"
                               className="cursor-pointer hover:bg-gray-200 dark:hover:bg-gray-700"
                               onClick={() => onHashtagAdd(tag)}
+                              role="button"
+                              tabIndex={0}
+                              onKeyDown={(e) => {
+                                if (e.key === 'Enter' || e.key === ' ') {
+                                  e.preventDefault();
+                                  onHashtagAdd(tag);
+                                }
+                              }}
+                              aria-label={`Explore ${tag} hashtag`}
                             >
                               #{tag}
                             </Badge>
@@ -553,7 +584,7 @@ export default function FeedCore({
                       <CardTitle className="flex-1">{feed.title}</CardTitle>
                       {/* District Badge */}
                       {feed.district && (
-                        <DistrictIndicator 
+                        <DistrictIndicator
                           feedItemDistrict={feed.district}
                           {...(userDistrict ? { userDistrict } : {})}
                           size="sm"
@@ -568,7 +599,7 @@ export default function FeedCore({
                   </CardHeader>
                   <CardContent>
                     <p className="text-gray-700 dark:text-gray-300 mb-4">{feed.content}</p>
-                    
+
                     {/* Engagement */}
                     <div className="flex gap-4 mt-4">
                       <Button

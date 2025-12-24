@@ -81,7 +81,7 @@ export default function GlobalNavigation() {
         shouldBypassLoading,
         isLoading,
         isAuthenticated,
-        user: user ? { id: user.id, email: user.email } : null,
+        user: user ? { id: user.id, email: user.email ? `${user.email.split('@')[0]}@***` : null } : null,
         pathname,
         bypassFlag: typeof window !== 'undefined' ? window.localStorage.getItem('e2e-dashboard-bypass') : 'SSR',
       });

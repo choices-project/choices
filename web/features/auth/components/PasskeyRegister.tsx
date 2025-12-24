@@ -19,6 +19,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 
+import { useUserStore } from '@/lib/stores/userStore';
 import logger from '@/lib/utils/logger';
 
 import {
@@ -114,7 +115,22 @@ export function PasskeyRegister({
         const result = await beginRegister(registerOptions);
 
       if (!result.success) {
-        throw new Error(result.error || 'Failed to complete registration');
+        // Set error state immediately to ensure it's set synchronously
+        const errorMessage = result.error || 'Failed to complete registration';
+        setBiometricError(errorMessage);
+        setBiometricSuccess(false);
+        setBiometricRegistering(false);
+        onError?.(errorMessage);
+        // Use requestAnimationFrame to ensure React processes the state update and re-renders
+        // This is more reliable than setTimeout(0) for ensuring DOM updates
+        await new Promise(resolve => {
+          requestAnimationFrame(() => {
+            requestAnimationFrame(() => {
+              resolve(undefined);
+            });
+          });
+        });
+        return; // Return early instead of throwing to ensure error state is set
       }
 
       // Set success state immediately and ensure it persists
@@ -129,11 +145,14 @@ export function PasskeyRegister({
 
       onSuccess?.(result.data);
     } catch (err) {
-      const message = err instanceof Error ? err.message : 'Registration failed';
-      setBiometricError(message);
-      setBiometricSuccess(false);
-      onError?.(message);
-    } finally {
+      // Set error state if not already set (for unexpected errors)
+      const currentError = useUserStore.getState().biometric.error;
+      if (!currentError) {
+        const message = err instanceof Error ? err.message : 'Registration failed';
+        setBiometricError(message);
+        setBiometricSuccess(false);
+        onError?.(message);
+      }
       setBiometricRegistering(false);
     }
   }, [

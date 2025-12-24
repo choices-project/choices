@@ -79,8 +79,55 @@ test.describe('Production Critical Journeys', () => {
       return;
     }
     
+    // CRITICAL: Wait for authentication cookies to be set in browser context before navigating to root
+    // SameSite=Lax cookies may not be sent on programmatic navigations (page.goto),
+    // so we need to ensure cookies are available in the browser context first
+    const cookies = await page.context().cookies();
+    const hasAuthCookie = cookies.some(cookie => 
+      cookie.name.startsWith('sb-') && 
+      (cookie.name.includes('auth') || cookie.name.includes('session') || cookie.value.length > 100)
+    );
+    
+    if (!hasAuthCookie) {
+      // Wait a bit more and check again - cookies might be set asynchronously
+      await page.waitForTimeout(2_000);
+      const cookiesRetry = await page.context().cookies();
+      const hasAuthCookieRetry = cookiesRetry.some(cookie => 
+        cookie.name.startsWith('sb-') && 
+        (cookie.name.includes('auth') || cookie.name.includes('session') || cookie.value.length > 100)
+      );
+      
+      if (!hasAuthCookieRetry) {
+        console.warn('[test] Auth cookies not found in browser context after login. Cookies:', 
+          cookiesRetry.map(c => c.name).join(', '));
+      }
+    }
+    
+    // Additional wait to ensure cookies are fully set in browser context
+    await page.waitForTimeout(1_000);
+    
     // Now visit root - should redirect to /feed for authenticated users
-    await page.goto(BASE_URL, { waitUntil: 'networkidle', timeout: 30_000 });
+    // Try to use a link click if possible (sends SameSite=Lax cookies),
+    // otherwise fall back to page.goto()
+    try {
+      // Look for a link to home/root in the navigation
+      const homeLink = page.locator('a[href="/"], a[href="/feed"], nav a').first();
+      const linkCount = await homeLink.count();
+      if (linkCount > 0) {
+        // Click the link to trigger a user-initiated navigation (sends SameSite=Lax cookies)
+        await homeLink.click({ timeout: 5_000 });
+        await page.waitForURL(
+          new RegExp(`${BASE_URL.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}/(feed|onboarding|landing)`),
+          { timeout: 30_000 }
+        );
+      } else {
+        // No link found, use page.goto() as fallback
+        await page.goto(BASE_URL, { waitUntil: 'networkidle', timeout: 30_000 });
+      }
+    } catch {
+      // If link click fails, fall back to page.goto()
+      await page.goto(BASE_URL, { waitUntil: 'networkidle', timeout: 30_000 });
+    }
     
     // Wait for redirect to complete
     await page.waitForTimeout(3_000);

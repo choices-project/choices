@@ -129,6 +129,9 @@
       "lastUpdatedFull": "Updated: {time}",
       "lastUpdatedShort": "• {time}"
     },
+    "accessibility": {
+      "skipToTable": "Skip to data table"
+    },
     "buttons": {
       "showDetails": "Show details",
       "hideDetails": "Hide details",

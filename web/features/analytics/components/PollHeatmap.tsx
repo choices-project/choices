@@ -497,14 +497,29 @@ export default function PollHeatmap({
             aria-labelledby={`${chartRegionId}-title`}
             aria-describedby={`${chartRegionId}-summary`}
           >
+            <a
+              href={`#${summarySectionId}-polls`}
+              className="sr-only focus:not-sr-only focus:absolute focus:top-0 focus:left-0 focus:z-50 focus:px-4 focus:py-2 focus:bg-primary focus:text-primary-foreground focus:rounded-md focus:shadow-lg focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2"
+              onClick={(e) => {
+                e.preventDefault();
+                const element = document.getElementById(`${summarySectionId}-polls`);
+                if (element) {
+                  element.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                  element.focus();
+                }
+              }}
+            >
+              {t('analytics.accessibility.skipToTable')}
+            </a>
             <p id={`${chartRegionId}-title`} className="sr-only">
               Poll engagement heatmap
             </p>
             <p id={`${chartRegionId}-summary`} className="sr-only" aria-live="polite">
               {chartSummaryText}
             </p>
-            <ResponsiveContainer width="100%" height="100%">
-              <BarChart data={chartData} margin={{ top: 20, right: 30, left: 20, bottom: 80 }}>
+            <div tabIndex={-1}>
+              <ResponsiveContainer width="100%" height="100%">
+                <BarChart data={chartData} margin={{ top: 20, right: 30, left: 20, bottom: 80 }}>
                 <CartesianGrid strokeDasharray="3 3" />
                 <XAxis
                   dataKey="name"
@@ -567,8 +582,9 @@ export default function PollHeatmap({
                     />
                   ))}
                 </Bar>
-              </BarChart>
-            </ResponsiveContainer>
+                </BarChart>
+              </ResponsiveContainer>
+            </div>
             <p className="mt-2 text-sm text-muted-foreground" aria-live="polite">
               {chartSummaryText}
             </p>
@@ -637,13 +653,18 @@ export default function PollHeatmap({
             {summaryIntro}
           </p>
 
-          <AnalyticsSummaryTable
-            tableId={`${summarySectionId}-polls`}
-            title={t('analytics.heatmap.table.title')}
-            description={t('analytics.heatmap.table.description')}
-            columns={tableColumns}
-            rows={tableRows}
-          />
+          <section
+            id={`${summarySectionId}-polls`}
+            tabIndex={-1}
+          >
+            <AnalyticsSummaryTable
+              tableId={`${summarySectionId}-polls`}
+              title={t('analytics.heatmap.table.title')}
+              description={t('analytics.heatmap.table.description')}
+              columns={tableColumns}
+              rows={tableRows}
+            />
+          </section>
         </section>
       </CardContent>
     </Card>

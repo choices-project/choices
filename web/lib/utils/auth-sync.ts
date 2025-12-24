@@ -28,7 +28,9 @@ export async function forceAuthStateSync(): Promise<boolean> {
     }
     
     if (session?.user) {
-      logger.info('✅ Session found, user authenticated:', { email: session.user.email });
+      // Redact email for security - only log domain
+      const emailDomain = session.user.email?.split('@')[1] || 'unknown';
+      logger.info('✅ Session found, user authenticated:', { emailDomain, userId: session.user.id });
       
       // Force a page reload to trigger UserStoreProvider re-initialization
       if (typeof window !== 'undefined') {

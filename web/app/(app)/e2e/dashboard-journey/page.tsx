@@ -62,6 +62,12 @@ export default function DashboardJourneyHarnessPage() {
     // Set guard immediately to prevent any re-entry
     initializedRef.current = true;
 
+    // Ensure localStorage bypass flag is set so PersonalDashboard renders harness version
+    // This is needed because IS_E2E_HARNESS is a compile-time constant and may not be set
+    if (typeof window !== 'undefined') {
+      window.localStorage.setItem('e2e-dashboard-bypass', '1');
+    }
+
     const initializeHarness = () => {
       const userId = 'dashboard-harness-user';
       const profileId = 'dashboard-harness-profile';

@@ -1,9 +1,16 @@
+import { z } from 'zod';
+
 import { getSupabaseServerClient } from '@/utils/supabase/server';
 
 import { withErrorHandling, authError, successResponse, errorResponse } from '@/lib/api';
 import { logger } from '@/lib/utils/logger';
 
 import type { NextRequest } from 'next/server';
+
+// Validation schema for onboarding completion request
+const completeOnboardingSchema = z.object({
+  preferences: z.record(z.string(), z.unknown()).optional(),
+});
 
 
 
@@ -27,10 +34,16 @@ export const POST = withErrorHandling(async (req: NextRequest) => {
 
   if (contentType?.includes('application/json')) {
     try {
-      const body = await req.json();
-      const parsedPreferences =
-        typeof body?.preferences === 'object' && body?.preferences !== null ? body.preferences : {};
-      preferences = parsedPreferences as Record<string, unknown>;
+      const rawBody = await req.json();
+      
+      // Validate with Zod schema
+      const validationResult = completeOnboardingSchema.safeParse(rawBody);
+      if (!validationResult.success) {
+        logger.warn('Invalid onboarding completion data', { errors: validationResult.error.issues });
+        return errorResponse('Invalid request payload', 400, undefined, 'ONBOARDING_INVALID_PAYLOAD');
+      }
+
+      preferences = validationResult.data.preferences ?? {};
     } catch (parseError) {
       logger.warn('Invalid JSON supplied to onboarding completion route', { error: parseError });
       return errorResponse('Invalid request payload', 400, undefined, 'ONBOARDING_INVALID_PAYLOAD');

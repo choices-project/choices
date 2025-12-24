@@ -566,6 +566,22 @@ export default function TrendsChart({
           </div>
         </div>
 
+        {/* Skip to data table link for keyboard users */}
+        <a
+          href={`#${summarySectionId}-trends`}
+          className="sr-only focus:not-sr-only focus:absolute focus:top-0 focus:left-0 focus:z-50 focus:px-4 focus:py-2 focus:bg-primary focus:text-primary-foreground focus:rounded-md focus:shadow-lg focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2"
+          onClick={(e) => {
+            e.preventDefault();
+            const element = document.getElementById(`${summarySectionId}-trends`);
+            if (element) {
+              element.scrollIntoView({ behavior: 'smooth', block: 'start' });
+              element.focus();
+            }
+          }}
+        >
+          {t('analytics.accessibility.skipToTable')}
+        </a>
+
         {/* Chart */}
         {data.length === 0 ? (
           <div
@@ -583,6 +599,7 @@ export default function TrendsChart({
             role="group"
             aria-labelledby={`${chartRegionId}-title`}
             aria-describedby={`${chartRegionId}-summary`}
+            tabIndex={-1}
           >
             <p id={`${chartRegionId}-title`} className="sr-only">
               {t('analytics.trends.chart.title')}
@@ -600,6 +617,12 @@ export default function TrendsChart({
                     angle={isMobile ? -45 : 0}
                     textAnchor={isMobile ? "end" : "middle"}
                     height={isMobile ? 60 : 30}
+                    label={{
+                      value: t('analytics.trends.chart.axes.date'),
+                      position: 'insideBottom',
+                      offset: -5,
+                      style: { fontSize: isMobile ? 10 : 12 },
+                    }}
                   />
                   <YAxis
                     yAxisId="left"
@@ -681,6 +704,12 @@ export default function TrendsChart({
                     angle={isMobile ? -45 : 0}
                     textAnchor={isMobile ? "end" : "middle"}
                     height={isMobile ? 60 : 30}
+                    label={{
+                      value: t('analytics.trends.chart.axes.date'),
+                      position: 'insideBottom',
+                      offset: -5,
+                      style: { fontSize: isMobile ? 10 : 12 },
+                    }}
                   />
                   <YAxis
                     yAxisId="left"
@@ -759,8 +788,10 @@ export default function TrendsChart({
         )}
 
         <section
+          id={`${summarySectionId}-trends`}
           aria-labelledby={`${summarySectionId}-heading`}
           className="mt-6 space-y-4"
+          tabIndex={-1}
         >
           <h2
             id={`${summarySectionId}-heading`}

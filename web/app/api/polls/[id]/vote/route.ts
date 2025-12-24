@@ -1,4 +1,5 @@
 import { NextResponse } from 'next/server';
+import { z } from 'zod';
 
 import { getSupabaseServerClient } from '@/utils/supabase/server';
 
@@ -18,16 +19,32 @@ import type { NextRequest } from 'next/server';
 
 export const dynamic = 'force-dynamic';
 
-type VoteRequestBody = {
-  choice?: number;
-  optionId?: string;
-  metadata?: Record<string, unknown>;
-  selections?: number[];
-  approvals?: Array<string | number>;
-  rankings?: Array<string | number>;
-  allocations?: Record<string, number>;
-  ratings?: Record<string, number>;
-};
+// Validation schema for vote request body
+// Note: Different voting methods use different fields, so we allow all and validate based on method
+const voteRequestBodySchema = z.object({
+  choice: z.number().int().optional(),
+  optionId: z.string().uuid().optional(),
+  metadata: z.record(z.string(), z.unknown()).optional(),
+  selections: z.array(z.union([z.number().int(), z.string()])).optional(),
+  approvals: z.array(z.union([z.string(), z.number().int()])).optional(),
+  rankings: z.array(z.union([z.string(), z.number().int()])).optional(),
+  allocations: z.record(z.string(), z.number()).optional(),
+  ratings: z.record(z.string(), z.number()).optional(),
+}).refine(
+  (data) => {
+    // At least one voting field must be present
+    return data.choice !== undefined ||
+           data.optionId !== undefined ||
+           (data.selections && data.selections.length > 0) ||
+           (data.approvals && data.approvals.length > 0) ||
+           (data.rankings && data.rankings.length > 0) ||
+           (data.allocations && Object.keys(data.allocations).length > 0) ||
+           (data.ratings && Object.keys(data.ratings).length > 0);
+  },
+  { message: 'At least one voting field must be provided' }
+);
+
+type VoteRequestBody = z.infer<typeof voteRequestBodySchema>;
 
 type PollOptionRow = {
   id: string;
@@ -100,12 +117,26 @@ export const POST = withErrorHandling(async (request: NextRequest, { params }: {
     return authError('Authentication required to vote');
   }
 
-  let body: VoteRequestBody;
+  // Parse and validate request body
+  let rawBody: unknown;
   try {
-    body = await request.json();
+    rawBody = await request.json();
   } catch {
     return validationError({ body: 'Request body must be valid JSON' });
   }
+
+  // Validate with Zod schema
+  const validationResult = voteRequestBodySchema.safeParse(rawBody);
+  if (!validationResult.success) {
+    const fieldErrors: Record<string, string> = {};
+    validationResult.error.issues.forEach((issue) => {
+      const field = issue.path.join('.') || 'body';
+      fieldErrors[field] = issue.message;
+    });
+    return validationError(fieldErrors, 'Invalid vote data');
+  }
+
+  const body: VoteRequestBody = validationResult.data;
 
   const selectFieldsWithMetadata = `
         id,
@@ -448,8 +479,15 @@ export const POST = withErrorHandling(async (request: NextRequest, { params }: {
 export const HEAD = withErrorHandling(async (_request: NextRequest, { params }: { params: { id: string } }) => {
   const pollId = params.id;
 
-  if (!pollId) {
-    return new NextResponse(null, { status: 204 });
+  // Validate poll ID from params
+  if (!pollId || typeof pollId !== 'string' || pollId.trim().length === 0) {
+    return new NextResponse(null, { status: 400 });
+  }
+
+  // Validate poll ID format (should be UUID)
+  const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+  if (!uuidRegex.test(pollId)) {
+    return new NextResponse(null, { status: 400 });
   }
 
   const supabase = await getSupabaseServerClient();
@@ -509,8 +547,15 @@ export const HEAD = withErrorHandling(async (_request: NextRequest, { params }: 
 export const GET = withErrorHandling(async (_request: NextRequest, { params }: { params: { id: string } }) => {
   const pollId = params.id;
 
-  if (!pollId) {
-    return validationError({ pollId: 'Poll ID is required' });
+  // Validate poll ID from params
+  if (!pollId || typeof pollId !== 'string' || pollId.trim().length === 0) {
+    return validationError({ pollId: 'Poll ID is required and must be a valid string' });
+  }
+
+  // Validate poll ID format (should be UUID)
+  const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+  if (!uuidRegex.test(pollId)) {
+    return validationError({ pollId: 'Poll ID must be a valid UUID' });
   }
 
   const supabase = await getSupabaseServerClient();

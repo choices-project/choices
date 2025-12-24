@@ -1,6 +1,6 @@
 # Testing Guide
 
-_Last updated: December 2025 (React controlled input handling in E2E tests, form validation patterns)_
+_Last updated: January 2026 (RTL component integration patterns, consent guard testing, accessibility testing)_
 
 This guide explains how we exercise the Choices web app and where to add coverage when working on new features or store refactors.
 
@@ -108,7 +108,7 @@ Utilities:
 | Layer | Tooling | What to Cover | Example |
 | --- | --- | --- | --- |
 | Unit | Jest + ts-jest | Pure functions, store actions, Supabase helpers | `tests/unit/stores/notification.store.test.ts`, `tests/unit/stores/deviceStore.test.ts`, `tests/unit/stores/pwaStore.test.ts`, `tests/unit/stores/widgetStore.keyboard.test.ts`, `tests/unit/features/civics/useElectionCountdown.test.ts`, `tests/unit/api/analytics/election-notifications.test.ts` |
-| RTL integration | React Testing Library + Jest | Components that interact with stores, timers, or async flows | `tests/unit/features/analytics/AnalyticsPanel.test.tsx`, `tests/unit/components/PWAStatus.test.tsx` |
+| RTL integration | React Testing Library + Jest | Components that interact with stores, timers, or async flows | `tests/unit/features/analytics/AnalyticsPanel.test.tsx`, `tests/unit/components/PWAStatus.test.tsx`, `tests/unit/components/AppShell.test.tsx` |
 | Playwright harness | Playwright | Cross-store and UI journeys, feature flags, notification flows | `tests/e2e/specs/analytics-store.spec.ts`, `tests/e2e/specs/notification-store.spec.ts`, `tests/e2e/specs/pwa-store.spec.ts`, `tests/e2e/specs/widget-dashboard-keyboard.spec.ts` |
 | API integration | Jest + supertest (when needed) | Next.js API routes with Supabase mocks | `tests/unit/api/pwa/notifications/subscribe.test.ts`, `tests/unit/api/pwa/notifications/send.test.ts`, `tests/unit/api/analytics/election-notifications.test.ts` |
 
@@ -159,6 +159,12 @@ We expose store and feature harnesses under `/app/(app)/e2e/*` to keep Playwrigh
 
 - **Selector verification tests** (`tests/integration/stores/*selector-verification*.test.ts`) instantiate the actual store creator/middleware stack and assert each exported selector points at the expected slice. Use these when refactoring selector bundles (see the polls, app, and pwa store suites for references).
 - **Persistence tests** (`tests/integration/stores/*-persistence.test.ts`) hydrate via `createSafeStorage()` to ensure `partialize` payloads survive reloads. Anytime you add/remove persisted fields (app/pwa/poll-wizard stores), update the matching test.
+- **RTL component integration tests** (`tests/unit/components/*.test.tsx`) test components that consume stores via selector hooks. These verify that components correctly reflect store state changes and handle edge cases like persistence across remounts. See `tests/unit/components/AppShell.test.tsx` for examples of:
+  - Testing theme persistence and system theme resolution
+  - Testing sidebar state (collapsed, width, pinned) with edge cases (width clamping, pinning behavior)
+  - Verifying components use selector hooks correctly (not direct store access)
+  - Testing state persistence across component remounts
+- **Consent guard tests** (`tests/unit/stores/analyticsStore.test.ts`) verify that analytics tracking respects user consent. These tests ensure events are not tracked or sent when consent is not given, and that consent status can be checked correctly.
 - **API integration suites** (`tests/integration/api/**`) share fixtures with MSW and Playwright. Prefer this layer for Next.js routes with complex Supabase mocking (e.g., candidate verification, device flow).
 - **Multi-surface E2E flows**: use `tests/e2e/specs/push-notifications.spec.ts`, `tests/e2e/specs/auth-production.spec.ts`, and `tests/e2e/specs/candidate-verification.spec.ts` as blueprints. They mix harness helpers, REST helpers, and accessibility assertions to keep CI deterministic.
 

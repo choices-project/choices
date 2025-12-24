@@ -544,11 +544,33 @@ export default function TrustTierComparisonChart({
               </p>
             </div>
 
-            <div className="h-80" role="img" aria-label={t('analytics.trust.sections.participation.chartLabel')}>
+            <a
+              href={`#${summarySectionId}-trust`}
+              className="sr-only focus:not-sr-only focus:absolute focus:top-0 focus:left-0 focus:z-50 focus:px-4 focus:py-2 focus:bg-primary focus:text-primary-foreground focus:rounded-md focus:shadow-lg focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2"
+              onClick={(e) => {
+                e.preventDefault();
+                const element = document.getElementById(`${summarySectionId}-trust`);
+                if (element) {
+                  element.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                  element.focus();
+                }
+              }}
+            >
+              {t('analytics.accessibility.skipToTable')}
+            </a>
+            <div className="h-80" role="img" aria-label={t('analytics.trust.sections.participation.chartLabel')} tabIndex={-1}>
               <ResponsiveContainer width="100%" height="100%">
                 <BarChart data={data.tiers} margin={{ top: 20, right: 30, left: 20, bottom: 20 }}>
                   <CartesianGrid strokeDasharray="3 3" />
-                  <XAxis dataKey="tier" />
+                  <XAxis 
+                    dataKey="tier"
+                    label={{
+                      value: t('analytics.trust.axes.tier'),
+                      position: 'insideBottom',
+                      offset: -5,
+                      style: { fontSize: 12 },
+                    }}
+                  />
                   <YAxis
                     label={{
                       value: t('analytics.trust.axes.percentage'),
@@ -658,7 +680,15 @@ export default function TrustTierComparisonChart({
               <ResponsiveContainer width="100%" height="100%">
                 <BarChart data={data.tiers} margin={{ top: 20, right: 30, left: 20, bottom: 20 }}>
                   <CartesianGrid strokeDasharray="3 3" />
-                  <XAxis dataKey="tier" />
+                  <XAxis 
+                    dataKey="tier"
+                    label={{
+                      value: t('analytics.trust.axes.tier'),
+                      position: 'insideBottom',
+                      offset: -5,
+                      style: { fontSize: 12 },
+                    }}
+                  />
                   <YAxis
                     label={{
                       value: t('analytics.trust.axes.score'),
@@ -830,13 +860,18 @@ export default function TrustTierComparisonChart({
             </p>
           ) : null}
 
-          <AnalyticsSummaryTable
-            tableId={`${summarySectionId}-trust`}
-            title={t('analytics.trust.table.title')}
-            description={t('analytics.trust.table.description')}
-            columns={tableColumns}
-            rows={tableRows}
-          />
+          <section
+            id={`${summarySectionId}-trust`}
+            tabIndex={-1}
+          >
+            <AnalyticsSummaryTable
+              tableId={`${summarySectionId}-trust`}
+              title={t('analytics.trust.table.title')}
+              description={t('analytics.trust.table.description')}
+              columns={tableColumns}
+              rows={tableRows}
+            />
+          </section>
         </section>
 
         {/* Refresh Button */}

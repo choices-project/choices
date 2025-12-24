@@ -72,6 +72,28 @@ jobs:
         cd web
         npm run types:ci
 
+    - name: Extract i18n messages
+      run: |
+        cd web
+        npm run i18n:extract
+
+    - name: Check for missing translations
+      run: |
+        cd web
+        # Check if snapshot file changed compared to committed version
+        if ! git diff --exit-code HEAD -- messages/en.snapshot.json; then
+          echo "❌ i18n extraction found new strings that need translation"
+          echo "Please run 'npm run i18n:extract' and commit the updated snapshot file"
+          git diff HEAD -- messages/en.snapshot.json || true
+          exit 1
+        fi
+        echo "✅ All i18n strings are up to date"
+
+    - name: Lint locale files
+      run: |
+        cd web
+        npm run lint:locale
+
   # Unit Tests
   unit-tests:
     name: Unit Tests

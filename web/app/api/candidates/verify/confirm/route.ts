@@ -1,6 +1,7 @@
 // Server route handler
 
 import { NextResponse, type NextRequest } from 'next/server';
+import { z } from 'zod';
 
 import { getSupabaseServerClient } from '@/utils/supabase/server';
 
@@ -14,6 +15,11 @@ import { createRateLimiter, rateLimitMiddleware } from '@/lib/core/security/rate
 import { logger } from '@/lib/utils/logger';
 
 export const dynamic = 'force-dynamic';
+
+// Validation schema for verification code confirmation
+const verifyConfirmSchema = z.object({
+  code: z.string().min(1, 'Code is required').max(10, 'Code must be at most 10 characters').regex(/^\d+$/, 'Code must contain only digits'),
+});
 
 const MAX_FAILED_ATTEMPTS = 5;
 const CODE_VALIDITY_MINUTES = 15;
@@ -102,12 +108,26 @@ export const POST = withErrorHandling(async (request: NextRequest) => {
   } = await supabase.auth.getUser();
   if (!user || !user.id) return errorResponse('Authentication required', 401);
 
-  const body = await request.json();
-  const { code } = body;
-
-  if (!code || typeof code !== 'string' || code.trim().length === 0) {
-    return validationError({ code: 'Code is required' });
+  // Parse and validate request body
+  let rawBody: unknown;
+  try {
+    rawBody = await request.json();
+  } catch {
+    return validationError({ body: 'Request body must be valid JSON' });
   }
+
+  // Validate with Zod schema
+  const validationResult = verifyConfirmSchema.safeParse(rawBody);
+  if (!validationResult.success) {
+    const fieldErrors: Record<string, string> = {};
+    validationResult.error.issues.forEach((issue) => {
+      const field = issue.path[0] as string || 'code';
+      fieldErrors[field] = issue.message;
+    });
+    return validationError(fieldErrors, 'Invalid verification code format');
+  }
+
+  const { code } = validationResult.data;
 
   // Find the most recent challenge for this user
   const challengeQuery = supabase

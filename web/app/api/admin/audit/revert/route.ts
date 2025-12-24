@@ -32,6 +32,8 @@
  * }
  */
 
+import { z } from 'zod';
+
 import { getSupabaseServerClient } from '@/utils/supabase/server';
 
 import {
@@ -47,6 +49,12 @@ import { apiRateLimiter } from '@/lib/rate-limiting/api-rate-limiter';
 import { logger } from '@/lib/utils/logger';
 
 import type { NextRequest } from 'next/server';
+
+// Validation schema for audit revert request
+const auditRevertSchema = z.object({
+  type: z.enum(['candidate', 'representative']),
+  id: z.string().min(1, 'Audit log entry ID is required').uuid('Audit log entry ID must be a valid UUID'),
+});
 
 
 export const dynamic = 'force-dynamic';
@@ -74,10 +82,15 @@ export const POST = withErrorHandling(async (request: NextRequest) => {
     request.headers.get('x-real-ip') ??
     'unknown';
   const userAgent = request.headers.get('user-agent');
-  const rateLimitResult = await apiRateLimiter.checkLimit(clientIp, 'admin:audit:revert', {
-    ...REVERT_RATE_LIMIT,
-    ...(userAgent ? { userAgent } : {}),
-  });
+  const rateLimitResult = await apiRateLimiter.checkLimit(
+    clientIp,
+    'admin:audit:revert',
+    {
+      maxRequests: REVERT_RATE_LIMIT.maxRequests,
+      windowMs: REVERT_RATE_LIMIT.windowMs,
+      ...(userAgent ? { userAgent } : {}),
+    }
+  );
 
   if (!rateLimitResult.allowed) {
     logger.warn('Field revert endpoint: Rate limit exceeded', { ip: clientIp });
@@ -95,28 +108,26 @@ export const POST = withErrorHandling(async (request: NextRequest) => {
   }
 
   // Parse and validate request body
-  let body: { type?: string; id?: string };
+  let rawBody: unknown;
   try {
-    body = await request.json();
+    rawBody = await request.json();
   } catch (error) {
     logger.warn('Field revert endpoint: Invalid JSON payload', error);
     return validationError({ body: 'Invalid JSON payload' });
   }
 
-  const type = String(body.type ?? '').toLowerCase();
-  const id = String(body.id ?? '');
-
-  if (!['candidate', 'representative'].includes(type)) {
-    return validationError({
-      type: "Type must be 'candidate' or 'representative'",
+  // Validate with Zod schema
+  const validationResult = auditRevertSchema.safeParse(rawBody);
+  if (!validationResult.success) {
+    const fieldErrors: Record<string, string> = {};
+    validationResult.error.issues.forEach((issue) => {
+      const field = issue.path[0] as string || 'body';
+      fieldErrors[field] = issue.message;
     });
+    return validationError(fieldErrors, 'Invalid revert request data');
   }
 
-  if (!id || id.trim().length === 0) {
-    return validationError({
-      id: 'Audit log entry ID is required',
-    });
-  }
+  const { type, id } = validationResult.data;
 
   try {
     if (type === 'candidate') {

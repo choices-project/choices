@@ -11,6 +11,8 @@
  * @since 1.0.0
  */
 
+import { z } from 'zod';
+
 import { getSupabaseServerClient } from '@/utils/supabase/server';
 
 import type { Hashtag, PollHashtagIntegration } from '@/features/hashtags/types';
@@ -480,11 +482,40 @@ export const POST = withErrorHandling(async (request: NextRequest) => {
     return authError('Authentication required');
   }
 
-    let body: Record<string, any>;
+    // Parse and validate request body
+    let rawBody: unknown;
     try {
-      body = await request.json();
+      rawBody = await request.json();
     } catch {
       return validationError({ body: 'Invalid JSON payload.' });
+    }
+
+    // Validation schema for poll creation
+    const pollCreationSchema = z.object({
+      title: z.string().min(1, 'Title is required').max(200, 'Title must be at most 200 characters'),
+      description: z.string().max(5000, 'Description must be at most 5000 characters').optional(),
+      question: z.string().min(1, 'Question is required').max(500, 'Question must be at most 500 characters'),
+      options: z.array(z.union([
+        z.string().min(1, 'Option text cannot be empty'),
+        z.object({
+          text: z.string().min(1, 'Option text cannot be empty'),
+        }).passthrough(),
+      ])).min(2, 'Provide at least two poll options').max(20, 'Maximum 20 options allowed'),
+      category: z.string().max(100, 'Category must be at most 100 characters').optional(),
+      tags: z.array(z.string()).max(10, 'Maximum 10 tags allowed').optional(),
+      settings: z.record(z.string(), z.unknown()).optional(),
+      metadata: z.record(z.string(), z.unknown()).optional(),
+    });
+
+    // Validate with Zod schema
+    const validationResult = pollCreationSchema.safeParse(rawBody);
+    if (!validationResult.success) {
+      const fieldErrors: Record<string, string> = {};
+      validationResult.error.issues.forEach((issue) => {
+        const field = issue.path.join('.') || 'body';
+        fieldErrors[field] = issue.message;
+      });
+      return validationError(fieldErrors, 'Invalid poll data');
     }
 
     const {
@@ -496,7 +527,7 @@ export const POST = withErrorHandling(async (request: NextRequest) => {
       tags,
       settings,
       metadata,
-    } = body;
+    } = validationResult.data;
 
     const resolveVotingMethod = () => {
       const method = (metadata?.votingMethod ?? settings?.votingMethod ?? 'single').toString().toLowerCase();
@@ -521,43 +552,29 @@ export const POST = withErrorHandling(async (request: NextRequest) => {
 
     const normalizedVotingMethod = resolveVotingMethod();
 
-    // Validate required fields
-    if (!title || !question) {
-      return validationError({
-        ...(title ? {} : { title: 'Title is required.' }),
-        ...(question ? {} : { question: 'Question is required.' }),
-      });
-    }
-
-    if (!options || !Array.isArray(options) || options.length < 2) {
-      return validationError({
-        options: 'Provide at least two poll options.',
-      });
-    }
-
     // Create sophisticated poll with enhanced features
-    const autoLockAt = settings?.autoLockDuration
-      ? new Date(Date.now() + settings.autoLockDuration * 24 * 60 * 60 * 1000).toISOString()
+    // Type-safe check for autoLockDuration
+    const autoLockDuration = typeof settings?.autoLockDuration === 'number' ? settings.autoLockDuration : null;
+    const autoLockAt = autoLockDuration
+      ? new Date(Date.now() + autoLockDuration * 24 * 60 * 60 * 1000).toISOString()
       : null;
 
-    const { data: poll, error: pollError } = await supabase
-      .from('polls')
-      .insert({
-        title: title.trim(),
-        description: description?.trim() ?? '',
-        question: question.trim(),
-        category: category ?? 'general',
-        tags: tags ?? [],
-        created_by: user.id,
-        status: 'active',
-        voting_method: normalizedVotingMethod,
+    const pollData = {
+      title: title.trim(),
+      description: description?.trim() ?? '',
+      question: question.trim(),
+      category: category ?? 'general',
+      tags: tags ?? [],
+      created_by: user.id,
+      status: 'active',
+      voting_method: normalizedVotingMethod,
 
         // Sophisticated poll features
         auto_lock_at: autoLockAt,
-        lock_duration: settings?.autoLockDuration ?? null,
-        lock_type: settings?.autoLockDuration ? 'automatic' : null,
-        moderation_status: settings?.requireModeration ? 'pending' : 'approved',
-        privacy_level: settings?.privacyLevel ?? 'public',
+        lock_duration: autoLockDuration ?? null,
+        lock_type: autoLockDuration ? 'automatic' : null,
+        moderation_status: typeof settings?.requireModeration === 'boolean' && settings.requireModeration ? 'pending' : 'approved',
+        privacy_level: typeof settings?.privacyLevel === 'string' ? settings.privacyLevel : 'public',
         is_verified: false,
         is_featured: false,
         is_trending: false,
@@ -567,31 +584,35 @@ export const POST = withErrorHandling(async (request: NextRequest) => {
         total_views: 0,
         participation: 0,
 
-        // Advanced settings
+        // Advanced settings (type-safe extraction)
         poll_settings: {
-          allow_anonymous: settings?.allowAnonymousVotes !== false,
-          require_verification: settings?.requireVerification ?? false,
-          auto_lock_duration: settings?.autoLockDuration ?? null,
-          moderation_required: settings?.requireModeration ?? false,
-          allow_multiple_votes: settings?.allowMultipleVotes ?? false,
-          max_selections: metadata?.maxSelections ?? settings?.maxSelections ?? null,
+          allow_anonymous: typeof settings?.allowAnonymousVotes === 'boolean' ? settings.allowAnonymousVotes !== false : true,
+          require_verification: typeof settings?.requireVerification === 'boolean' ? settings.requireVerification : false,
+          auto_lock_duration: autoLockDuration ?? null,
+          moderation_required: typeof settings?.requireModeration === 'boolean' ? settings.requireModeration : false,
+          allow_multiple_votes: typeof settings?.allowMultipleVotes === 'boolean' ? settings.allowMultipleVotes : false,
+          max_selections: (typeof metadata?.maxSelections === 'number' ? metadata.maxSelections : typeof settings?.maxSelections === 'number' ? settings.maxSelections : null),
           voting_method: normalizedVotingMethod,
-          show_results_before_close: settings?.showResultsBeforeClose ?? false,
-          allow_comments: settings?.allowComments !== false,
-          allow_sharing: settings?.allowSharing !== false,
-          require_authentication: settings?.requireAuthentication ?? false
+          show_results_before_close: typeof settings?.showResultsBeforeClose === 'boolean' ? settings.showResultsBeforeClose : false,
+          allow_comments: typeof settings?.allowComments === 'boolean' ? settings.allowComments !== false : true,
+          allow_sharing: typeof settings?.allowSharing === 'boolean' ? settings.allowSharing !== false : true,
+          require_authentication: typeof settings?.requireAuthentication === 'boolean' ? settings.requireAuthentication : false
         },
         settings: {
-          allow_multiple_votes: settings?.allowMultipleVotes ?? false,
-          allow_anonymous_votes: settings?.allowAnonymousVotes ?? true,
-          show_results_before_close: settings?.showResultsBeforeClose ?? false,
-          allow_comments: settings?.allowComments ?? true,
-          allow_sharing: settings?.allowSharing !== false,
-          require_authentication: settings?.requireAuthentication ?? false
+          allow_multiple_votes: typeof settings?.allowMultipleVotes === 'boolean' ? settings.allowMultipleVotes : false,
+          allow_anonymous_votes: typeof settings?.allowAnonymousVotes === 'boolean' ? settings.allowAnonymousVotes : true,
+          show_results_before_close: typeof settings?.showResultsBeforeClose === 'boolean' ? settings.showResultsBeforeClose : false,
+          allow_comments: typeof settings?.allowComments === 'boolean' ? settings.allowComments : true,
+          allow_sharing: typeof settings?.allowSharing === 'boolean' ? settings.allowSharing !== false : true,
+          require_authentication: typeof settings?.requireAuthentication === 'boolean' ? settings.requireAuthentication : false
         },
         created_at: new Date().toISOString(),
         updated_at: new Date().toISOString()
-      })
+    };
+
+    const { data: poll, error: pollError } = await supabase
+      .from('polls')
+      .insert(pollData as any)
       .select()
       .single();
 
@@ -600,11 +621,12 @@ export const POST = withErrorHandling(async (request: NextRequest) => {
       return errorResponse('Failed to create poll', 500, pollError.message);
     }
 
-    const normalizedOptions = options.map((option: any, index: number) => {
+    // Normalize options (Zod already validated structure, but we normalize for database)
+    const normalizedOptions = options.map((option, index: number) => {
       const value =
         typeof option === 'string'
           ? option.trim()
-          : typeof option?.text === 'string'
+          : typeof option === 'object' && option !== null && 'text' in option && typeof option.text === 'string'
             ? option.text.trim()
             : '';
       return { value, order: index };

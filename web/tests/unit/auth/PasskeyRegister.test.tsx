@@ -20,6 +20,8 @@ describe('PasskeyRegister', () => {
   beforeEach(() => {
     jest.clearAllMocks();
     useUserStore.getState().signOut();
+    // Reset biometric state to ensure clean test state
+    useUserStore.getState().resetBiometric();
     Object.defineProperty(window, 'PublicKeyCredential', {
       value: {
         isUserVerifyingPlatformAuthenticatorAvailable: jest
@@ -29,6 +31,11 @@ describe('PasskeyRegister', () => {
       writable: true,
       configurable: true,
     });
+  });
+
+  afterEach(() => {
+    // Ensure state is fully cleaned up after each test
+    useUserStore.getState().resetBiometric();
   });
 
   it('shows success message when registration succeeds', async () => {
@@ -47,6 +54,8 @@ describe('PasskeyRegister', () => {
   });
 
   it('shows error message when registration fails', async () => {
+    // Ensure clean state before test
+    useUserStore.getState().resetBiometric();
     beginRegister.mockResolvedValue({ success: false, error: 'Registration failed' });
 
     render(<PasskeyRegister />);
@@ -55,8 +64,13 @@ describe('PasskeyRegister', () => {
     const createButton = await screen.findByRole('button', { name: /Create Passkey/i });
     await user.click(createButton);
 
-    await waitFor(() =>
-      expect(screen.getByText(/Registration failed/i)).toBeInTheDocument(),
+    // Wait for error to appear - component sets error state and re-renders
+    await waitFor(
+      () => {
+        const errorText = screen.getByText(/Registration failed/i);
+        expect(errorText).toBeInTheDocument();
+      },
+      { timeout: 5000 }
     );
     expect(useUserStore.getState().biometric.error).toBe('Registration failed');
   });

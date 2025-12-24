@@ -633,6 +633,20 @@ export default function TemporalAnalysisChart({
                 {hourlySummaryText}
               </p>
             ) : null}
+            <a
+              href={`#${summarySectionId}-hourly`}
+              className="sr-only focus:not-sr-only focus:absolute focus:top-0 focus:left-0 focus:z-50 focus:px-4 focus:py-2 focus:bg-primary focus:text-primary-foreground focus:rounded-md focus:shadow-lg focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2"
+              onClick={(e) => {
+                e.preventDefault();
+                const element = document.getElementById(`${summarySectionId}-hourly`);
+                if (element) {
+                  element.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                  element.focus();
+                }
+              }}
+            >
+              {t('analytics.accessibility.skipToTable')}
+            </a>
             <div className="mb-4">
               <h3 className="text-sm font-semibold text-gray-900 mb-2">{t('analytics.temporal.sections.hourly.title')}</h3>
               <p className="text-xs text-gray-600">
@@ -641,7 +655,7 @@ export default function TemporalAnalysisChart({
             </div>
 
             {/* Heatmap Grid */}
-            <div className="mb-6 grid grid-cols-12 gap-2" role="group" aria-label={t('analytics.temporal.sections.hourly.heatmapLabel')}>
+            <div className="mb-6 grid grid-cols-12 gap-2" role="group" aria-label={t('analytics.temporal.sections.hourly.heatmapLabel')} tabIndex={-1}>
               {data.hourly.map((hour) => (
                 <div
                   key={hour.hour}
@@ -922,27 +936,42 @@ export default function TemporalAnalysisChart({
             </p>
           ) : null}
 
-          <AnalyticsSummaryTable
-            tableId={`${summarySectionId}-hourly`}
-            title={t('analytics.temporal.tables.hourly.title')}
-            description={t('analytics.temporal.tables.hourly.description')}
-            columns={hourlyColumns}
-            rows={hourlyRows}
-          />
-          <AnalyticsSummaryTable
-            tableId={`${summarySectionId}-daily`}
-            title={t('analytics.temporal.tables.daily.title')}
-            description={t('analytics.temporal.tables.daily.description')}
-            columns={dailyColumns}
-            rows={dailyRows}
-          />
-          <AnalyticsSummaryTable
-            tableId={`${summarySectionId}-velocity`}
-            title={t('analytics.temporal.tables.velocity.title')}
-            description={t('analytics.temporal.tables.velocity.description')}
-            columns={velocityColumns}
-            rows={velocityRows}
-          />
+          <section
+            id={`${summarySectionId}-hourly`}
+            tabIndex={-1}
+          >
+            <AnalyticsSummaryTable
+              tableId={`${summarySectionId}-hourly`}
+              title={t('analytics.temporal.tables.hourly.title')}
+              description={t('analytics.temporal.tables.hourly.description')}
+              columns={hourlyColumns}
+              rows={hourlyRows}
+            />
+          </section>
+          <section
+            id={`${summarySectionId}-daily`}
+            tabIndex={-1}
+          >
+            <AnalyticsSummaryTable
+              tableId={`${summarySectionId}-daily`}
+              title={t('analytics.temporal.tables.daily.title')}
+              description={t('analytics.temporal.tables.daily.description')}
+              columns={dailyColumns}
+              rows={dailyRows}
+            />
+          </section>
+          <section
+            id={`${summarySectionId}-velocity`}
+            tabIndex={-1}
+          >
+            <AnalyticsSummaryTable
+              tableId={`${summarySectionId}-velocity`}
+              title={t('analytics.temporal.tables.velocity.title')}
+              description={t('analytics.temporal.tables.velocity.description')}
+              columns={velocityColumns}
+              rows={velocityRows}
+            />
+          </section>
         </section>
       </CardContent>
     </Card>

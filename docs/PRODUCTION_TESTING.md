@@ -1,156 +1,320 @@
-# Production Testing
+# Production Testing Guide
 
-This document describes the production testing infrastructure for the Choices application.
+**Last Updated**: December 2025 (React controlled input handling in E2E tests)
 
 ## Overview
 
-Production tests verify that the deployed application at `https://choices-app.com` is working correctly. These tests run against the actual live site to catch deployment issues, configuration problems, and regressions that might not appear in local or CI environments.
+Production testing validates the actual user experience in the live environment. Unlike unit or integration tests that run in isolation, production tests run against the deployed application to catch real-world issues.
 
-## Test Suites
+## Philosophy
 
-### 1. Production Smoke Tests (`production-smoke.spec.ts`)
+**Tests reveal issues → We fix the code → Better UX/UI**
 
-Critical functionality tests that verify:
-- **Critical Pages**: Root redirect, feed page, auth page, dashboard access
-- **API Endpoints**: Health checks, feeds API, civics API, site messages
-- **Security Headers**: CSP, X-Frame-Options, HTTPS enforcement
-- **Error Handling**: 404 pages, invalid endpoints
-- **Performance**: Page load times
-- **Accessibility**: HTML structure, semantic elements
+- ✅ **Good**: Test fails → Fix code → Test passes → Better user experience
+- ❌ **Bad**: Test fails → Weaken test → Test passes → Users still experience issues
 
-### 2. Production Critical Journeys (`production-critical-journeys.spec.ts`)
+## Test Categories
 
-End-to-end user journey tests that verify:
-- Root page redirects to feed correctly
-- Feed page loads without hydration errors (React error #185)
-- Navigation between pages works
-- API health checks respond correctly
-- Middleware redirects work
-- Error handling is graceful
+### 1. Performance Metrics (Core Web Vitals)
 
-### 3. Production E2E Tests
+**What we test:**
+- Largest Contentful Paint (LCP) < 2.5s
+- First Input Delay (FID) < 100ms
+- Cumulative Layout Shift (CLS) < 0.1
+- First Contentful Paint (FCP) < 1.8s
+- Time to First Byte (TTFB) < 600ms
 
-Full end-to-end tests using real credentials:
-- **Auth Production** (`auth-production.spec.ts`): User and admin authentication
-- **Poll Production** (`poll-production.spec.ts`): Poll creation and sharing
+**Why it matters:**
+- Google uses these metrics for search rankings
+- Users perceive slow sites as broken
+- Poor performance = lost users
+
+**Files:**
+- `web/tests/e2e/specs/production/production-ux-excellence.spec.ts` (Performance Metrics section)
+
+### 2. Accessibility Excellence
+
+**What we test:**
+- Keyboard navigation works throughout the app
+- Screen reader announcements for dynamic content
+- Form inputs have proper labels and error messages
+- ARIA attributes are correct
+- Focus indicators are visible
+
+**Why it matters:**
+- Legal requirement (ADA, WCAG)
+- 15% of users have disabilities
+- Better for everyone (keyboard shortcuts, clear labels)
+
+**Files:**
+- `web/tests/e2e/specs/production/production-ux-excellence.spec.ts` (Accessibility Excellence section)
+- `web/tests/e2e/specs/analytics-dashboard-screen-reader.spec.ts`
+- `web/tests/e2e/specs/analytics-dashboard-axe.spec.ts`
+
+### 3. Error Recovery and Resilience
+
+**What we test:**
+- API failures show helpful error messages
+- Retry buttons work correctly
+- Network disconnection is handled gracefully
+- Error boundaries catch React errors
+- Users can recover from errors
+
+**Why it matters:**
+- Networks are unreliable
+- APIs can fail
+- Users need to understand what went wrong
+- Users need a way to fix it
+
+**Files:**
+- `web/tests/e2e/specs/production/production-ux-excellence.spec.ts` (Error Recovery section)
+- `web/tests/e2e/specs/production/production-ux-improvements.spec.ts` (Error Handling section)
+
+### 4. Edge Cases and Boundary Conditions
+
+**What we test:**
+- Very long content (titles, descriptions)
+- Rapid user interactions (click spam)
+- Empty states with helpful guidance
+- Large datasets
+- Slow network conditions
+
+**Why it matters:**
+- Real users do unexpected things
+- Edge cases break in production
+- Empty states need to guide users
+
+**Files:**
+- `web/tests/e2e/specs/production/production-ux-excellence.spec.ts` (Edge Cases section)
+
+### 5. Real-World User Workflows
+
+**What we test:**
+- Complete user journeys (signup → first vote)
+- Keyboard-only navigation
+- Multi-step processes
+- State persistence across navigation
+
+**Why it matters:**
+- Users don't use features in isolation
+- Real workflows reveal integration issues
+- Keyboard users need full functionality
+
+**Files:**
+- `web/tests/e2e/specs/production/production-comprehensive-journeys.spec.ts`
+- `web/tests/e2e/specs/production/production-ux-excellence.spec.ts` (Real-World Workflows section)
+
+### 6. Mobile Responsiveness
+
+**What we test:**
+- Content is usable on mobile viewports
+- Touch targets are large enough (44x44px minimum)
+- Text is readable (14px+ font size)
+- Layout doesn't break on small screens
+
+**Why it matters:**
+- 60%+ of users are on mobile
+- Small touch targets are frustrating
+- Unreadable text loses users
+
+**Files:**
+- `web/tests/e2e/specs/production/production-ux-excellence.spec.ts` (Mobile Responsiveness section)
+
+### 7. Security and Privacy UX
+
+**What we test:**
+- Sensitive data not exposed in page source
+- Logout clears data properly
+- Protected content inaccessible after logout
+- Rate limiting shows helpful messages
+
+**Why it matters:**
+- Security vulnerabilities
+- Privacy regulations (GDPR, CCPA)
+- User trust
+
+**Files:**
+- `web/tests/e2e/specs/production/production-ux-excellence.spec.ts` (Security and Privacy UX section)
+
+### 8. Content Quality
+
+**What we test:**
+- Text is readable (proper font sizes, contrast)
+- Images have alt text
+- Content is properly formatted
+- Headings are structured correctly
+
+**Why it matters:**
+- Accessibility
+- SEO
+- User comprehension
+
+**Files:**
+- `web/tests/e2e/specs/production/production-ux-excellence.spec.ts` (Content Quality section)
 
 ## Running Production Tests
 
-### Automated (CI/CD)
-
-Production tests run automatically:
-- **On schedule**: Every 6 hours via cron
-- **On push to main**: When production test files change
-- **On demand**: Via `workflow_dispatch` in GitHub Actions
-
-### Manual Execution
-
-To run production tests locally:
+### Local (against production URL)
 
 ```bash
 cd web
-
-# Run smoke tests against production
-BASE_URL=https://choices-app.com npx playwright test production-smoke.spec.ts
-
-# Run critical journeys
-BASE_URL=https://choices-app.com npx playwright test production-critical-journeys.spec.ts
-
-# Run all production tests
-BASE_URL=https://choices-app.com PRODUCTION_URL=https://choices-app.com npx playwright test production-*.spec.ts auth-production.spec.ts poll-production.spec.ts
+PLAYWRIGHT_USE_MOCKS=0 BASE_URL=https://www.choices-app.com npm run test:e2e
 ```
 
-### Testing Against Local Server
+### CI/CD
 
-To test against a local server instead:
+Production tests run automatically:
+- On push to `main` (if production test files changed)
+- Every 6 hours via scheduled cron
+- On manual workflow dispatch
 
+**Workflow**: `.github/workflows/production-tests.yml`
+
+## When Tests Fail
+
+### Step 1: Understand the Failure
+
+Read the test output carefully:
+- What element was expected?
+- What was actually found?
+- What's the error message?
+
+### Step 2: Reproduce Locally
+
+Run the failing test locally:
 ```bash
-BASE_URL=http://127.0.0.1:3000 npx playwright test production-smoke.spec.ts
+cd web
+npx playwright test tests/e2e/specs/production/production-ux-excellence.spec.ts --grep "test name"
 ```
 
-## Test Configuration
+### Step 3: Fix the Root Cause
 
-### Environment Variables
+**Don't weaken the test!** Instead:
 
-- `BASE_URL`: The base URL to test against (default: `https://choices-app.com`)
-- `PRODUCTION_URL`: Explicit production URL (default: `https://choices-app.com`)
-- `E2E_USER_EMAIL`: Test user email (for E2E tests)
-- `E2E_USER_PASSWORD`: Test user password (for E2E tests)
-- `E2E_ADMIN_EMAIL`: Admin user email (for E2E tests)
-- `E2E_ADMIN_PASSWORD`: Admin user password (for E2E tests)
-- `PLAYWRIGHT_USE_MOCKS`: Set to `'0'` to use real backend (default: `'1'`)
+1. **Performance failures**: Optimize code (lazy loading, code splitting, caching)
+2. **Accessibility failures**: Add proper ARIA, labels, keyboard support
+3. **Error handling failures**: Add error boundaries, retry logic, helpful messages
+4. **Empty state failures**: Add empty state UI with helpful guidance
+5. **Loading state failures**: Add loading indicators, skeletons
 
-### GitHub Actions Workflow
+### Step 4: Verify the Fix
 
-The production tests workflow (`.github/workflows/production-tests.yml`) includes:
-
-1. **Production Smoke Tests**: Fast smoke tests for critical functionality
-2. **Production E2E Tests**: Full end-to-end tests with authentication
-3. **Production API Tests**: API endpoint verification
-4. **Test Summary**: Aggregated results and status checks
-
-## What Gets Tested
-
-### Critical Fixes Verified
-
-1. **Root Redirect**: `/` correctly redirects to `/feed` via middleware
-2. **Feed Page Loading**: Feed page loads without React hydration errors
-3. **Error Handling**: 500 errors are caught and handled gracefully
-4. **API Health**: All health endpoints respond correctly
-5. **Security Headers**: Security headers are present and correct
-
-### Continuous Monitoring
-
-Production tests serve as continuous monitoring:
-- Detect deployment failures immediately
-- Catch configuration issues
-- Verify fixes are working in production
-- Monitor performance regressions
-- Ensure security headers are present
-
-## Test Results
-
-Test results are available:
-- **GitHub Actions**: Workflow run artifacts
-- **PR Comments**: Automatic comments on pull requests
-- **Status Checks**: Commit status checks for production test results
+Run the test again to ensure it passes:
+```bash
+npx playwright test tests/e2e/specs/production/production-ux-excellence.spec.ts --grep "test name"
+```
 
 ## Best Practices
 
-1. **Run after deployments**: Always run production tests after deploying to production
-2. **Monitor regularly**: Check test results from scheduled runs
-3. **Fix failures immediately**: Production test failures indicate real issues
-4. **Update tests with features**: Add tests for new critical features
-5. **Keep credentials secure**: Use GitHub Secrets for test credentials
+### 1. Test Real User Scenarios
 
-## Troubleshooting
+Don't test implementation details. Test what users actually do:
+- ✅ "User can complete onboarding"
+- ❌ "Component renders with correct props"
 
-### Tests Fail After Deployment
+### 2. Test Failure Scenarios
 
-1. Check Vercel deployment logs for build/runtime errors
-2. Verify environment variables are set correctly
-3. Check if the deployment actually completed
-4. Verify the production URL is accessible
+Happy paths are easy. Test what happens when things go wrong:
+- Network failures
+- API errors
+- Invalid input
+- Rate limiting
 
-### Intermittent Failures
+### 3. Test Accessibility
 
-1. Check for rate limiting (tests may hit rate limits)
-2. Verify network connectivity
-3. Check if external services (Supabase, etc.) are available
-4. Review test timeouts - may need adjustment
+Accessibility isn't optional:
+- Keyboard navigation
+- Screen reader support
+- Proper ARIA attributes
+- Focus management
 
-### Authentication Tests Fail
+### 4. Test Performance
 
-1. Verify test credentials are correct in GitHub Secrets
-2. Check if test accounts exist in production database
-3. Verify Supabase configuration is correct
-4. Check for account lockouts or restrictions
+Users leave slow sites:
+- Core Web Vitals
+- Time to interactive
+- Bundle sizes
+- Resource loading
 
-## Future Enhancements
+### 5. Test Mobile
 
-- [ ] Add performance benchmarking
-- [ ] Add visual regression testing
-- [ ] Add load testing against production
-- [ ] Add monitoring/alerting integration
-- [ ] Add test result dashboards
+Most users are on mobile:
+- Responsive layouts
+- Touch targets
+- Readable text
+- Mobile navigation
+
+## Common Issues and Fixes
+
+### Issue: Test fails because element not found
+
+**Fix**: Check if element exists in production. If not, add it. If it does exist, fix the selector.
+
+### Issue: Test fails because timeout
+
+**Fix**: Check if page is actually slow. If yes, optimize performance. If no, increase timeout appropriately.
+
+### Issue: Test fails because validation not working
+
+**Fix**: Add real-time validation to the form. Don't remove the test.
+
+### Issue: Test fails because empty state missing
+
+**Fix**: Add empty state UI with helpful message and actions.
+
+### Issue: Test fails because loading state missing
+
+**Fix**: Add loading indicators (skeletons, spinners) during async operations.
+
+### Issue: Test fails because submit button stays disabled after filling form
+
+**Root Cause**: React controlled inputs require `onChange` events to update React state. Using `fill()` doesn't trigger these events.
+
+**Fix**: 
+- **Never use `fill()`** for React controlled inputs
+- **Always use `pressSequentially()`** to properly trigger React's `onChange` handlers:
+  ```typescript
+  // ❌ WRONG - Button will stay disabled
+  await emailInput.fill('test@example.com');
+  
+  // ✅ CORRECT - React state updates properly
+  await emailInput.click();
+  await emailInput.pressSequentially('test@example.com', { delay: 20 });
+  await page.waitForTimeout(300); // Wait for React to process
+  ```
+- Use the `loginTestUser()` helper from `tests/e2e/helpers/e2e-setup.ts` which handles this correctly
+- See `web/tests/e2e/README.md` for detailed examples
+
+## Expanding Tests
+
+When adding new features, add production tests:
+
+1. **User Journey Test**: Can a user complete the full workflow?
+2. **Error Handling Test**: What happens when things go wrong?
+3. **Accessibility Test**: Can keyboard/screen reader users use it?
+4. **Performance Test**: Does it meet Core Web Vitals?
+5. **Mobile Test**: Does it work on mobile?
+
+## Monitoring
+
+Production tests run:
+- **Scheduled**: Every 6 hours
+- **On Push**: When production test files change
+- **Manual**: Via GitHub Actions workflow dispatch
+
+Results are available in:
+- GitHub Actions workflow runs
+- Test artifacts (HTML reports, screenshots)
+- CI status checks
+
+## Resources
+
+- [Playwright Documentation](https://playwright.dev/)
+- [Web Content Accessibility Guidelines (WCAG)](https://www.w3.org/WAI/WCAG21/quickref/)
+- [Core Web Vitals](https://web.dev/vitals/)
+- [Testing Best Practices](https://playwright.dev/docs/best-practices)
+
+---
+
+**Remember**: Production tests are your safety net. They catch issues before users do. When they fail, they're telling you something needs to be fixed in the code, not the test.
 

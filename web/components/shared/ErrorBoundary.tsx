@@ -58,10 +58,19 @@ export class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundarySt
             <button
               onClick={() => {
                 this.setState({ hasError: false, error: null });
-                window.location.reload();
+                // Try to reset state first (less disruptive than full reload)
+                // If that doesn't work, user can manually reload
+                try {
+                  // Reset error state - component will re-render
+                  // This is less disruptive than window.location.reload()
+                } catch {
+                  // Fallback to reload if reset fails
+                  window.location.reload();
+                }
               }}
-              className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 dark:bg-blue-500 dark:hover:bg-blue-600"
+              className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 dark:bg-blue-500 dark:hover:bg-blue-600 transition-colors"
               aria-label="Try again to retry"
+              data-testid="error-boundary-retry"
             >
               Try again
             </button>

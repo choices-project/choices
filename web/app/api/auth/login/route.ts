@@ -1,4 +1,5 @@
 import { NextResponse } from 'next/server'
+import { z } from 'zod'
 
 import { getSupabaseApiRouteClient } from '@/utils/supabase/api-route'
 
@@ -18,10 +19,14 @@ import type { NextRequest} from 'next/server';
 
 // Use generated types from Supabase - automatically stays in sync with your database schema
 type UserProfile = Database['public']['Tables']['user_profiles']['Row']
-type LoginRequestBody = {
-  email?: string;
-  password?: string;
-};
+
+// Validation schema for login request
+const loginSchema = z.object({
+  email: z.string().email('Invalid email format').min(1, 'Email is required'),
+  password: z.string().min(1, 'Password is required').min(8, 'Password must be at least 8 characters'),
+});
+
+type LoginRequestBody = z.infer<typeof loginSchema>;
 
 export const POST = withErrorHandling(async (request: NextRequest): Promise<NextResponse> => {
     // CSRF protection is handled by Next.js middleware in production
@@ -68,28 +73,30 @@ export const POST = withErrorHandling(async (request: NextRequest): Promise<Next
       }
     }
 
-    // Validate request
+    // Validate request body parsing
     const parsedBody = await parseBody<LoginRequestBody>(request)
     if (!parsedBody.success) {
       return parsedBody.error
     }
-    const { email, password } = parsedBody.data
 
-    // Validate required fields
-    const missingFields: Record<string, string> = {}
-    if (!email) {
-      missingFields.email = 'Email is required'
-    }
-    if (!password) {
-      missingFields.password = 'Password is required'
-    }
-    if (Object.keys(missingFields).length > 0) {
-      return validationError(missingFields, 'Email and password are required')
+    // Validate with Zod schema
+    const validationResult = loginSchema.safeParse(parsedBody.data)
+    if (!validationResult.success) {
+      const fieldErrors: Record<string, string> = {}
+      validationResult.error.issues.forEach((issue) => {
+        const field = issue.path[0] as string
+        if (field) {
+          fieldErrors[field] = issue.message
+        }
+      })
+      return validationError(fieldErrors, 'Invalid login credentials')
     }
 
-    const normalizedEmail = (email ?? '').toLowerCase().trim()
+    const { email, password } = validationResult.data
 
-    const normalizedPassword = password ?? ''
+    // Normalize email (Zod already validated format)
+    const normalizedEmail = email.toLowerCase().trim()
+    const normalizedPassword = password
 
     // Create response early so we can use it for cookie handling
     const response = successResponse({
@@ -112,7 +119,9 @@ export const POST = withErrorHandling(async (request: NextRequest): Promise<Next
     })
 
     if (signInError || !authData.user) {
-      logger.warn('Login failed', { email: normalizedEmail, error: signInError?.message })
+      // Don't log email address for security - only log domain for debugging
+      const emailDomain = normalizedEmail.split('@')[1] || 'unknown';
+      logger.warn('Login failed', { emailDomain, error: signInError?.message })
       return authError('Invalid email or password');
     }
 

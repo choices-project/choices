@@ -100,15 +100,17 @@ export default function PushNotificationsHarnessPage() {
 
   // Use Zustand store for harness state - ensures immediate, synchronous updates
   // Use selectors to ensure component subscribes to specific state slices
+  // Zustand selectors automatically trigger re-renders when the selected state changes
   const isSubscribed = usePushNotificationsHarnessStore((state) => state.isSubscribed);
   const subscriptionEndpoint = usePushNotificationsHarnessStore((state) => state.subscriptionEndpoint);
   const preferences = usePushNotificationsHarnessStore((state) => state.preferences);
   const permission = usePushNotificationsHarnessStore((state) => state.permission);
 
-  // Subscribe to store changes to force re-render
+  // Subscribe to store changes to ensure re-renders happen immediately
+  // This is a backup mechanism - Zustand selectors should handle this automatically
   useEffect(() => {
     const unsubscribe = usePushNotificationsHarnessStore.subscribe(() => {
-      // Force re-render when store changes
+      // Force re-render when any part of the store changes
       setForceUpdate((prev) => prev + 1);
     });
     return unsubscribe;
@@ -189,7 +191,7 @@ export default function PushNotificationsHarnessPage() {
 
     // Mark as ready - stores are set up
     setReady(true);
-    document.documentElement.dataset.pushNotificationsHarness = 'ready';
+      document.documentElement.dataset.pushNotificationsHarness = 'ready';
   }, []);
 
   // Create stable harness that uses callbacks to access latest state/setters
@@ -241,11 +243,16 @@ export default function PushNotificationsHarnessPage() {
           if (process.env.NEXT_PUBLIC_ENABLE_E2E_HARNESS === '1' || process.env.PLAYWRIGHT_USE_MOCKS === '1') {
             // Update Zustand store directly - this triggers immediate re-render
             // Zustand updates are synchronous, so the store is updated immediately
-            usePushNotificationsHarnessStore.getState().setIsSubscribed(true);
-            usePushNotificationsHarnessStore.getState().setSubscriptionEndpoint('e2e-test-endpoint');
+            const store = usePushNotificationsHarnessStore.getState();
+            store.setIsSubscribed(true);
+            store.setSubscriptionEndpoint('e2e-test-endpoint');
 
             // Update ref immediately for synchronous access
             isSubscribedRef.current = true;
+
+            // Force a re-render by updating the force update counter
+            // This ensures React processes the Zustand store update immediately
+            setForceUpdate((prev) => prev + 1);
 
             // Give React a moment to process the store update and re-render
             // Zustand automatically triggers re-renders, but we need to wait for DOM update
@@ -375,6 +382,10 @@ export default function PushNotificationsHarnessPage() {
           // Update ref immediately for synchronous access
           preferencesRef.current = updated;
 
+          // Force a re-render by updating the force update counter
+          // This ensures React processes the Zustand store update immediately
+          setForceUpdate((prev) => prev + 1);
+
           // Give React a moment to process the store update and re-render
           // Zustand automatically triggers re-renders, but we need to wait for DOM update
           await new Promise(resolve => {
@@ -462,7 +473,7 @@ export default function PushNotificationsHarnessPage() {
           `,
         }}
       />
-      <div className="min-h-screen bg-gray-50 p-8" data-testid="push-notifications-harness">
+    <div className="min-h-screen bg-gray-50 p-8" data-testid="push-notifications-harness">
       <div className="max-w-4xl mx-auto">
         <h1 className="text-3xl font-bold text-gray-900 mb-2">Push Notifications E2E Harness</h1>
         <p className="text-gray-600 mb-8">

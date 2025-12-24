@@ -3,8 +3,8 @@ import { test } from '@playwright/test';
 import { runAxeAudit } from '../helpers/accessibility';
 import { waitForPageReady } from '../helpers/e2e-setup';
 
-test.describe('@axe Analytics dashboard baseline', () => {
-  test('collects axe baseline for analytics dashboard harness', async ({ page }) => {
+test.describe('@axe Analytics dashboard accessibility', () => {
+  test('enforces WCAG 2.0/2.1 A/AA compliance for analytics dashboard', async ({ page }) => {
     await page.goto('/e2e/analytics-dashboard', { waitUntil: 'domcontentloaded', timeout: 60_000 });
     await waitForPageReady(page);
 
@@ -15,7 +15,7 @@ test.describe('@axe Analytics dashboard baseline', () => {
 
     await page.getByRole('heading', { name: 'Analytics dashboard', exact: true }).waitFor({ timeout: 60_000 });
 
-    const results = await runAxeAudit(page, 'analytics dashboard baseline', { allowViolations: true });
+    const results = await runAxeAudit(page, 'analytics dashboard baseline', { allowViolations: false });
 
     await test.info().attach('analytics-dashboard-axe-results.json', {
       body: JSON.stringify(results, null, 2),
