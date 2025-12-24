@@ -110,9 +110,18 @@ const nextConfig = {
     if (isServer) {
       // Handle @vercel/og for OG image generation in Edge Runtime
       // Exclude it from webpack bundling since it's used in Edge Runtime
+      // Also exclude from middleware bundle to prevent WASM dependency issues
       config.resolve.alias = {
         ...config.resolve.alias,
         '@vercel/og': false,
+      };
+      
+      // Exclude Supabase packages from middleware bundle (Edge Runtime incompatible)
+      // These should only be used in API routes with Node.js runtime
+      config.resolve.alias = {
+        ...config.resolve.alias,
+        '@supabase/ssr': false,
+        '@supabase/supabase-js': false,
       };
       
       // Define browser globals as undefined for server-side compatibility

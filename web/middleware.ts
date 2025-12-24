@@ -762,6 +762,7 @@ export const config = {
     /*
      * Match all request paths except for the ones starting with:
      * - api/webhooks (webhook endpoints)
+     * - api/og (OG image generation routes - use Edge Runtime with WASM, incompatible with middleware)
      * - _next/static (static files)
      * - _next/image (image optimization files)
      * - favicon.ico (favicon file)
@@ -771,6 +772,6 @@ export const config = {
      * - icons/ (PWA icons)
      * - api/health (health check endpoint - must work during maintenance)
      */
-    '/((?!api/webhooks|_next/static|_next/image|favicon.ico|manifest.json|sw.js|workbox-|icons/|api/health).*)',
+    '/((?!api/webhooks|api/og|_next/static|_next/image|favicon.ico|manifest.json|sw.js|workbox-|icons/|api/health).*)',
   ],
 }
