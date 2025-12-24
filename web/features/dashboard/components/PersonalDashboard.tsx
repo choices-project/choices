@@ -167,27 +167,21 @@ function HarnessPersonalDashboard({ className = '' }: PersonalDashboardProps) {
   const { signOut: signOutUser } = useUserActions();
   const signOutUserRef = useRef(signOutUser);
   useEffect(() => { signOutUserRef.current = signOutUser; }, [signOutUser]);
-  const [isMounted, setIsMounted] = useState(false);
-  useEffect(() => {
-    setIsMounted(true);
-  }, []);
-
-  const shouldBypassAuth = useMemo(
-    () => {
-      // In E2E harness mode, always bypass auth checks (authentication is mocked)
-      if (process.env.NEXT_PUBLIC_ENABLE_E2E_HARNESS === '1') {
-        return true;
-      }
-      // Only check localStorage after mount to prevent hydration mismatch
-      if (!isMounted) {
-        return false;
-      }
-      // Also check localStorage bypass flag for specific test scenarios
-      return typeof window !== 'undefined' &&
-        window.localStorage.getItem('e2e-dashboard-bypass') === '1';
-    },
-    [isMounted],
+  // CRITICAL: Never use isMounted in useMemo for render logic - it changes after mount causing hydration mismatch
+  // Use useState instead, set in useEffect after mount
+  const [shouldBypassAuth, setShouldBypassAuth] = useState<boolean>(
+    process.env.NEXT_PUBLIC_ENABLE_E2E_HARNESS === '1'
   );
+
+  useEffect(() => {
+    if (process.env.NEXT_PUBLIC_ENABLE_E2E_HARNESS === '1') {
+      return; // Already set to true
+    }
+    // Check localStorage after mount
+    if (typeof window !== 'undefined' && window.localStorage.getItem('e2e-dashboard-bypass') === '1') {
+      setShouldBypassAuth(true);
+    }
+  }, []);
   // CRITICAL: Use useState instead of useMemo to prevent hydration mismatch
   // Initialize to false (same on server and client), then check localStorage in useEffect
   const [fallbackAuthenticated, setFallbackAuthenticated] = useState(false);
@@ -569,27 +563,21 @@ function StandardPersonalDashboard({ userId: fallbackUserId, className = '' }: P
   const analyticsLoading = useAnalyticsLoading();
   // REMOVED: resetUserState - no longer needed since we removed auth redirect logic
   // Dashboard page wrapper handles all auth checks and redirects
-  const [isMounted, setIsMounted] = useState(false);
-  useEffect(() => {
-    setIsMounted(true);
-  }, []);
-
-  const shouldBypassAuth = useMemo(
-    () => {
-      // In E2E harness mode, always bypass auth checks (authentication is mocked)
-      if (process.env.NEXT_PUBLIC_ENABLE_E2E_HARNESS === '1') {
-        return true;
-      }
-      // Only check localStorage after mount to prevent hydration mismatch
-      if (!isMounted) {
-        return false;
-      }
-      // Also check localStorage bypass flag for specific test scenarios
-      return typeof window !== 'undefined' &&
-        window.localStorage.getItem('e2e-dashboard-bypass') === '1';
-    },
-    [isMounted],
+  // CRITICAL: Never use isMounted in useMemo for render logic - it changes after mount causing hydration mismatch
+  // Use useState instead, set in useEffect after mount
+  const [shouldBypassAuth, setShouldBypassAuth] = useState<boolean>(
+    process.env.NEXT_PUBLIC_ENABLE_E2E_HARNESS === '1'
   );
+
+  useEffect(() => {
+    if (process.env.NEXT_PUBLIC_ENABLE_E2E_HARNESS === '1') {
+      return; // Already set to true
+    }
+    // Check localStorage after mount
+    if (typeof window !== 'undefined' && window.localStorage.getItem('e2e-dashboard-bypass') === '1') {
+      setShouldBypassAuth(true);
+    }
+  }, []);
   // CRITICAL: Use useState instead of useMemo to prevent hydration mismatch
   // Initialize to false (same on server and client), then check localStorage in useEffect
   const [fallbackAuthenticated, setFallbackAuthenticated] = useState(false);
