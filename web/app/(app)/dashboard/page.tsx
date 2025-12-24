@@ -732,8 +732,9 @@ export default function DashboardPage() {
   // In E2E harness mode or after timeout, allow dashboard to render (it handles missing profile gracefully)
   // Also bypass loading check if user is authenticated (profile can load in background)
   // Wait for AuthContext to finish initializing before showing loading skeleton
-  // CRITICAL: If bypass flag is set, skip loading skeleton and render dashboard immediately
-  const shouldBypass = shouldBypassAuth || checkBypassFlag();
+  // CRITICAL: Only check bypass on client to prevent hydration mismatch
+  // On server, always show loading state to ensure consistent rendering
+  const shouldBypass = isClient && (shouldBypassAuth || checkBypassFlag());
   if (isLoading && !loadingTimeout && !shouldBypass && !isAuthenticated && !isAuthContextLoading) {
     return (
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8" aria-label="Loading dashboard">
@@ -758,26 +759,11 @@ export default function DashboardPage() {
     );
   }
 
-  // CRITICAL: Wait for client-side hydration before making render decisions
-  // This prevents hydration mismatch errors (React error #185)
-  if (!isClient) {
-    // Render a minimal loading state during SSR to match initial client render
-    return (
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8" aria-label="Loading dashboard">
-        <div className="space-y-6">
-          <div className="animate-pulse">
-            <div className="h-8 bg-gray-200 rounded w-1/3 dark:bg-gray-700 mb-4" />
-            <div className="h-4 bg-gray-200 rounded w-1/2 dark:bg-gray-700" />
-          </div>
-        </div>
-      </div>
-    );
-  }
-
   // CRITICAL: If bypass flag is set, always allow render (E2E testing)
   // This must be checked BEFORE any other conditions to prevent redirects
   // Check both state and localStorage directly to catch cases where state hasn't updated yet
-  const finalShouldBypass = shouldBypassAuth || checkBypassFlag();
+  // Only check on client - on server, always assume not bypassed to ensure consistent rendering
+  const finalShouldBypass = isClient && (shouldBypassAuth || checkBypassFlag());
   
   if (finalShouldBypass) {
     // Update state if we detected bypass via localStorage but state wasn't set yet
@@ -794,7 +780,7 @@ export default function DashboardPage() {
         envHarness: process.env.NEXT_PUBLIC_ENABLE_E2E_HARNESS === '1',
       });
     }
-  } else if (!isUserLoading && !isAuthContextLoading && isStoreHydrated && hasCookies === false && !isAuthenticated) {
+  } else if (isClient && !isUserLoading && !isAuthContextLoading && isStoreHydrated && hasCookies === false && !isAuthenticated) {
     return (
       <div className="flex items-center justify-center min-h-screen px-4">
         <div className="text-center space-y-4 max-w-md">
