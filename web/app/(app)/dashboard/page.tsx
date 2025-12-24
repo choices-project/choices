@@ -233,12 +233,12 @@ export default function DashboardPage() {
   // This ensures server and client render the same initial state
   const [shouldBypassAuth, setShouldBypassAuth] = useState(false);
   const [isClient, setIsClient] = useState(false);
-  
+
   // Set client flag and check bypass immediately after mount to prevent hydration mismatch
   // Check bypass flag synchronously on first client render to avoid delays
   useEffect(() => {
     setIsClient(true);
-    
+
     // Check bypass flag immediately
     const bypassValue = checkBypassFlag();
     if (bypassValue) {
@@ -405,7 +405,7 @@ export default function DashboardPage() {
     // CRITICAL: Check bypass flag FIRST before any other logic
     // Use helper function to check bypass consistently
     const bypassCheck1 = shouldBypassAuth || checkBypassFlag();
-    
+
     if (bypassCheck1) {
       // Update state if we detected bypass via localStorage but state wasn't set yet
       if (checkBypassFlag() && !shouldBypassAuth) {
@@ -448,7 +448,7 @@ export default function DashboardPage() {
     // Double-check bypass flag here as well (defensive programming)
     // CRITICAL: Re-check bypass flag here to prevent any redirects during E2E tests
     const bypassCheck2 = shouldBypassAuth || checkBypassFlag();
-    
+
     if (bypassCheck2) {
       // Update state if we detected bypass via localStorage but state wasn't set yet
       if (checkBypassFlag() && !shouldBypassAuth) {
@@ -487,7 +487,7 @@ export default function DashboardPage() {
         // BUT: Only redirect if bypass flag is NOT set
         // Re-check bypass flag here as well
         const bypassCheck4 = shouldBypassAuth || checkBypassFlag();
-        
+
         if (!bypassCheck4) {
           if (process.env.DEBUG_DASHBOARD === '1') {
             logger.debug('🚨 Dashboard: No session cookies found after polling - redirecting to auth');
@@ -643,7 +643,7 @@ export default function DashboardPage() {
         // Not admin or check failed - redirect to onboarding
         // CRITICAL: Skip redirect if bypass flag is set (E2E testing)
         const bypassCheck8 = shouldBypassAuth || checkBypassFlag();
-        
+
         if (bypassCheck8) {
           logger.debug('🚨 Dashboard: Bypass flag set - skipping onboarding redirect', {
             shouldBypassAuth,
@@ -759,29 +759,14 @@ export default function DashboardPage() {
     );
   }
 
-  // CRITICAL: During SSR and initial client render (before hydration), render consistent content
-  // Only after isClient becomes true should we check bypass flags and make render decisions
-  // This ensures server and client render the same initial HTML structure
-  if (!isClient) {
-    // During SSR and initial client render, show loading state
-    // This matches what the server renders, preventing hydration mismatch
-    return (
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8" aria-label="Loading dashboard">
-        <div className="space-y-6">
-          <div className="animate-pulse">
-            <div className="h-8 bg-gray-200 rounded w-1/3 dark:bg-gray-700 mb-4" />
-            <div className="h-4 bg-gray-200 rounded w-1/2 dark:bg-gray-700" />
-          </div>
-        </div>
-      </div>
-    );
-  }
+  // CRITICAL: To prevent hydration mismatch, we must ensure server and client render the same structure
+  // Since this is a 'use client' component, server doesn't render it - but React still needs consistent structure
+  // Use suppressHydrationWarning on the container that will change after hydration
+  // CRITICAL: Never return early based on isClient - this causes hydration mismatch
+  // React requires the same component structure on server and client initial render
+  // Use isClient only to conditionally determine bypass, not to change structure
+  const finalShouldBypass = isClient ? shouldBypassAuth : false;
 
-  // CRITICAL: If bypass flag is set, always allow render (E2E testing)
-  // This must be checked BEFORE any other conditions to prevent redirects
-  // Only check on client after hydration - use state value to avoid calling checkBypassFlag() during render
-  const finalShouldBypass = shouldBypassAuth;
-  
   if (finalShouldBypass) {
     // Bypass is set - render dashboard immediately, skip all auth checks
     // This allows E2E tests to access dashboard without authentication
