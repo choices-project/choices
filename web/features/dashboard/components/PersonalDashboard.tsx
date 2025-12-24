@@ -485,28 +485,18 @@ function HarnessPersonalDashboard({ className = '' }: PersonalDashboardProps) {
 }
 
 export default function PersonalDashboard(props: PersonalDashboardProps) {
-  // In harness mode, always use harness component immediately (no state delay)
-  // Hooks must be called unconditionally before any early returns
-  // For non-harness mode, check bypass flag
-  // CRITICAL: Initialize to false to prevent hydration mismatch, then check in useEffect
-  const [useHarness, setUseHarness] = useState<boolean>(false);
-
-  useEffect(() => {
-    // Check bypass flag after mount to prevent hydration mismatch
-    if (typeof window !== 'undefined' && window.localStorage.getItem('e2e-dashboard-bypass') === '1') {
-      setUseHarness(true);
-      if (process.env.DEBUG_DASHBOARD === '1') {
-        logger.debug('🚨 PersonalDashboard: Using harness mode (bypass flag)', { bypassFlag: '1' });
-      }
-    }
-  }, []);
-
-  // This ensures the test can find the element right away
+  // CRITICAL: Never conditionally render different components based on state that changes after mount
+  // This causes hydration mismatch when useHarness changes from false to true
+  // Always render StandardPersonalDashboard - it handles both harness and standard modes internally
+  // IS_E2E_HARNESS env check is OK because it's constant at build time
+  
   if (IS_E2E_HARNESS) {
     return <HarnessPersonalDashboard {...props} />;
   }
 
-  return useHarness ? <HarnessPersonalDashboard {...props} /> : <StandardPersonalDashboard {...props} />;
+  // Always render StandardPersonalDashboard - it checks bypass flag internally via shouldBypassAuth
+  // This ensures same component structure during hydration
+  return <StandardPersonalDashboard {...props} />;
 }
 
 function StandardPersonalDashboard({ userId: fallbackUserId, className = '' }: PersonalDashboardProps) {
