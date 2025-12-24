@@ -91,8 +91,11 @@ export const GET = withErrorHandling(async (
 
     // If user is authenticated, check if they're the creator for access control
     if (user && data.created_by !== user.id) {
-      // For now, allow access to all actions (is_public column doesn't exist yet)
-      // TODO: Add is_public column to schema
+      // Check if action is public (is_public column exists in schema)
+      // If is_public is false or null, only creator can access
+      if (data.is_public !== true) {
+        return errorResponse('Access denied: This action is not public', 403);
+      }
     }
 
     return successResponse(data);

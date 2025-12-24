@@ -8,6 +8,7 @@ import { PollFiltersPanel } from '@/features/polls/components/PollFiltersPanel';
 import { getPollCategoryColor, getPollCategoryIcon } from '@/features/polls/constants/categories';
 
 import { ErrorBoundary } from '@/components/shared/ErrorBoundary';
+import { Skeleton } from '@/components/ui/skeleton';
 
 import { useAppActions } from '@/lib/stores/appStore';
 import {
@@ -226,9 +227,26 @@ function PollsPageContent() {
   // Use data attribute to help with debugging and ensure consistent SSR/client rendering
   if (!isMounted) {
     return (
-      <div className="container mx-auto px-4 py-8" data-testid="polls-loading-mount">
-        <div className="flex items-center justify-center min-h-[400px]">
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600" />
+      <div className="container mx-auto px-4 py-8" data-testid="polls-loading-mount" aria-label="Loading polls" aria-busy="true">
+        <div className="mb-8">
+          <Skeleton className="h-10 w-64 mb-2" />
+          <Skeleton className="h-5 w-96" />
+        </div>
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          {[1, 2, 3, 4, 5, 6].map((i) => (
+            <div key={i} className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-6">
+              <Skeleton className="h-6 w-3/4 mb-4" />
+              <Skeleton className="h-4 w-full mb-2" />
+              <Skeleton className="h-4 w-5/6 mb-4" />
+              <div className="flex items-center justify-between mb-4">
+                <Skeleton className="h-4 w-24" />
+                <Skeleton className="h-4 w-32" />
+              </div>
+              <Skeleton className="h-4 w-20 mb-4" />
+              <Skeleton className="h-10 w-full mb-2" />
+              <Skeleton className="h-10 w-full" />
+            </div>
+          ))}
         </div>
       </div>
     );
@@ -237,9 +255,27 @@ function PollsPageContent() {
   // Show loading state if actually loading data
   if (isLoading) {
     return (
-      <div className="container mx-auto px-4 py-8" data-testid="polls-loading-data">
-        <div className="flex items-center justify-center min-h-[400px]">
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600" />
+      <div className="container mx-auto px-4 py-8" data-testid="polls-loading-data" aria-label="Loading polls" aria-busy="true">
+        <div className="mb-8">
+          <Skeleton className="h-10 w-64 mb-2" />
+          <Skeleton className="h-5 w-96" />
+        </div>
+        <PollFiltersPanel />
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mt-6">
+          {[1, 2, 3, 4, 5, 6].map((i) => (
+            <div key={i} className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-6">
+              <Skeleton className="h-6 w-3/4 mb-4" />
+              <Skeleton className="h-4 w-full mb-2" />
+              <Skeleton className="h-4 w-5/6 mb-4" />
+              <div className="flex items-center justify-between mb-4">
+                <Skeleton className="h-4 w-24" />
+                <Skeleton className="h-4 w-32" />
+              </div>
+              <Skeleton className="h-4 w-20 mb-4" />
+              <Skeleton className="h-10 w-full mb-2" />
+              <Skeleton className="h-10 w-full" />
+            </div>
+          ))}
         </div>
       </div>
     );
@@ -260,17 +296,42 @@ function PollsPageContent() {
             </div>
             <Link
               href="/polls/create"
-              className="inline-flex items-center justify-center px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors whitespace-nowrap self-start sm:self-auto"
+              className="inline-flex items-center justify-center px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors whitespace-nowrap self-start sm:self-auto focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
+              aria-label="Create a new poll"
             >
-              <Plus className="h-4 w-4 mr-2" />
+              <Plus className="h-4 w-4 mr-2" aria-hidden="true" />
               {tRef.current('polls.page.cta.create')}
             </Link>
           </div>
         </div>
 
         {error && (
-          <div className="mb-6 rounded-lg border border-red-200 dark:border-red-800 bg-red-50 dark:bg-red-900/20 p-4 text-sm text-red-700 dark:text-red-400">
-            {error}
+          <div 
+            className="mb-6 rounded-lg border border-red-200 dark:border-red-800 bg-red-50 dark:bg-red-900/20 p-4 text-sm text-red-700 dark:text-red-400"
+            role="alert"
+            aria-live="assertive"
+            aria-atomic="true"
+          >
+            <div className="flex items-start gap-2">
+              <svg className="h-5 w-5 flex-shrink-0 mt-0.5" fill="currentColor" viewBox="0 0 20 20" aria-hidden="true">
+                <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" />
+              </svg>
+              <div className="flex-1">
+                <p className="font-medium">Unable to load polls</p>
+                <p className="mt-1">{error}</p>
+                <button
+                  onClick={() => {
+                    loadPollsRef.current().catch((err) => {
+                      logger.error('Failed to retry loading polls:', err);
+                    });
+                  }}
+                  className="mt-2 text-sm font-medium underline hover:no-underline focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2 rounded"
+                  aria-label="Retry loading polls"
+                >
+                  Try again
+                </button>
+              </div>
+            </div>
           </div>
         )}
 
@@ -278,8 +339,8 @@ function PollsPageContent() {
 
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {polls.length === 0 ? (
-            <div className="col-span-full text-center py-12">
-              <div className="text-gray-400 mb-4">
+            <div className="col-span-full text-center py-12" role="status" aria-live="polite">
+              <div className="text-gray-400 mb-4" aria-hidden="true">
                 <BarChart3 className="h-12 w-12 mx-auto" />
               </div>
               <h3 className="text-lg font-medium text-gray-900 dark:text-gray-100 mb-2">
@@ -292,9 +353,10 @@ function PollsPageContent() {
               </p>
               <Link
                 href="/polls/create"
-                className="inline-flex items-center px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+                className="inline-flex items-center px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
+                aria-label="Create a new poll"
               >
-                <Plus className="h-4 w-4 mr-2" />
+                <Plus className="h-4 w-4 mr-2" aria-hidden="true" />
                 {tRef.current('polls.page.cta.create')}
               </Link>
             </div>
@@ -349,16 +411,18 @@ function PollsPageContent() {
                 <div className="space-y-2">
                   <Link
                     href={`/polls/${poll.id}`}
-                    className="inline-flex items-center justify-center w-full px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+                    className="inline-flex items-center justify-center w-full px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
+                    aria-label={`View poll: ${poll.title}`}
                   >
-                    <Eye className="h-4 w-4 mr-2" />
+                    <Eye className="h-4 w-4 mr-2" aria-hidden="true" />
                     {tRef.current('polls.page.cta.view')}
                   </Link>
                   <Link
                     href={`/polls/${poll.id}/results`}
-                    className="inline-flex items-center justify-center w-full px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors"
+                    className="inline-flex items-center justify-center w-full px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-offset-2"
+                    aria-label={`View results for poll: ${poll.title}`}
                   >
-                    <BarChart3 className="h-4 w-4 mr-2" />
+                    <BarChart3 className="h-4 w-4 mr-2" aria-hidden="true" />
                     {tRef.current('polls.page.cta.results')}
                   </Link>
                 </div>
@@ -375,7 +439,9 @@ function PollsPageContent() {
                 type="button"
                 onClick={() => handlePageChange(pagination.currentPage - 1)}
                 disabled={pagination.currentPage === 1 || isLoading}
-                className="rounded-md border border-gray-200 px-3 py-1 text-sm font-medium text-gray-600 hover:bg-gray-50 disabled:cursor-not-allowed disabled:opacity-50"
+                className="rounded-md border border-gray-200 px-3 py-1 text-sm font-medium text-gray-600 hover:bg-gray-50 disabled:cursor-not-allowed disabled:opacity-50 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
+                aria-label={`Go to previous page, page ${pagination.currentPage - 1}`}
+                aria-disabled={pagination.currentPage === 1 || isLoading}
               >
                 {tRef.current('polls.page.pagination.previous')}
               </button>
@@ -386,7 +452,9 @@ function PollsPageContent() {
                 type="button"
                 onClick={() => handlePageChange(pagination.currentPage + 1)}
                 disabled={pagination.currentPage === pagination.totalPages || isLoading}
-                className="rounded-md border border-gray-200 px-3 py-1 text-sm font-medium text-gray-600 hover:bg-gray-50 disabled:cursor-not-allowed disabled:opacity-50"
+                className="rounded-md border border-gray-200 px-3 py-1 text-sm font-medium text-gray-600 hover:bg-gray-50 disabled:cursor-not-allowed disabled:opacity-50 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
+                aria-label={`Go to next page, page ${pagination.currentPage + 1}`}
+                aria-disabled={pagination.currentPage === pagination.totalPages || isLoading}
               >
                 {tRef.current('polls.page.pagination.next')}
               </button>

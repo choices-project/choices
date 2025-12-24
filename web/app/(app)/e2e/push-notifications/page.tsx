@@ -1,12 +1,42 @@
 'use client';
 
-import { Component, useEffect, useRef, useState } from 'react';
+import React, { Component, useEffect, useRef, useState } from 'react';
+import { create } from 'zustand';
 
 import NotificationPreferences from '@/features/pwa/components/NotificationPreferences';
 
 import { usePWAStore } from '@/lib/stores/pwaStore';
 import { useUserStore } from '@/lib/stores/userStore';
 import { logger } from '@/lib/utils/logger';
+
+// Create a dedicated Zustand store for harness state
+// This ensures immediate, synchronous updates that React will automatically reflect
+type PushNotificationsHarnessStore = {
+  isSubscribed: boolean;
+  subscriptionEndpoint: string | null;
+  preferences: Record<string, boolean>;
+  permission: NotificationPermission | 'unsupported';
+  setIsSubscribed: (value: boolean) => void;
+  setSubscriptionEndpoint: (value: string | null) => void;
+  setPreferences: (value: Record<string, boolean>) => void;
+  setPermission: (value: NotificationPermission | 'unsupported') => void;
+};
+
+const usePushNotificationsHarnessStore = create<PushNotificationsHarnessStore>((set) => ({
+  isSubscribed: false,
+  subscriptionEndpoint: null,
+  preferences: {
+    newPolls: true,
+    pollResults: true,
+    systemUpdates: false,
+    weeklyDigest: true,
+  },
+  permission: 'unsupported',
+  setIsSubscribed: (value) => set({ isSubscribed: value }),
+  setSubscriptionEndpoint: (value) => set({ subscriptionEndpoint: value }),
+  setPreferences: (value) => set({ preferences: value }),
+  setPermission: (value) => set({ permission: value }),
+}));
 
 // Error boundary for NotificationPreferences to prevent render errors from blocking the page
 class NotificationPreferencesErrorBoundary extends Component<
@@ -59,188 +89,44 @@ declare global {
   var __pushNotificationsHarness: PushNotificationsHarness | undefined;
 }
 
+// Note: Harness is set up via script tag in JSX (runs before React hydrates)
+// and then replaced with the real harness in useLayoutEffect
+
 export default function PushNotificationsHarnessPage() {
   // Follow the working pattern from dashboard-journey: simple ready state
   const [ready, setReady] = useState(false);
-  const [permission, setPermission] = useState<NotificationPermission | 'unsupported'>('unsupported');
-  const [isSubscribed, setIsSubscribed] = useState(false);
-  const [subscriptionEndpoint, setSubscriptionEndpoint] = useState<string | null>(null);
-  const [preferences, setPreferences] = useState<Record<string, boolean>>({
-    newPolls: true,
-    pollResults: true,
-    systemUpdates: false,
-    weeklyDigest: true,
-  });
-  // Use refs to access current state in harness (since useEffect has empty deps)
+  // Force update counter to ensure re-renders when store updates
+  const [, setForceUpdate] = useState(0);
+
+  // Use Zustand store for harness state - ensures immediate, synchronous updates
+  // Use selectors to ensure component subscribes to specific state slices
+  const isSubscribed = usePushNotificationsHarnessStore((state) => state.isSubscribed);
+  const subscriptionEndpoint = usePushNotificationsHarnessStore((state) => state.subscriptionEndpoint);
+  const preferences = usePushNotificationsHarnessStore((state) => state.preferences);
+  const permission = usePushNotificationsHarnessStore((state) => state.permission);
+
+  // Subscribe to store changes to force re-render
+  useEffect(() => {
+    const unsubscribe = usePushNotificationsHarnessStore.subscribe(() => {
+      // Force re-render when store changes
+      setForceUpdate((prev) => prev + 1);
+    });
+    return unsubscribe;
+  }, []);
+
+  // Use refs to access current state in harness (for synchronous access)
   const preferencesRef = useRef(preferences);
   const isSubscribedRef = useRef(isSubscribed);
+
+  // Update refs whenever store state changes
   useEffect(() => {
     preferencesRef.current = preferences;
     isSubscribedRef.current = isSubscribed;
   }, [preferences, isSubscribed]);
 
-  // Set up harness object (first useEffect - similar to dashboard-journey pattern)
-  useEffect(() => {
-    if (typeof window === 'undefined') {
-      return;
-    }
-
-    // Create harness object immediately (doesn't depend on async operations)
-    const harness: PushNotificationsHarness = {
-        getNotificationPermission: () => {
-          if (!('Notification' in window)) {
-            return 'unsupported';
-          }
-          return Notification.permission;
-        },
-
-        getSubscriptionStatus: async () => {
-          // In E2E harness mode, use local state instead of checking service worker
-          if (process.env.NEXT_PUBLIC_ENABLE_E2E_HARNESS === '1' || process.env.PLAYWRIGHT_USE_MOCKS === '1') {
-            return isSubscribedRef.current;
-          }
-          
-          if (!('serviceWorker' in navigator) || !('PushManager' in window)) {
-            return false;
-          }
-          try {
-            const registration = await navigator.serviceWorker.ready;
-            const subscription = await registration.pushManager.getSubscription();
-            return !!subscription;
-          } catch {
-            return false;
-          }
-        },
-
-        requestPermission: async () => {
-          if (!('Notification' in window)) {
-            throw new Error('Notifications not supported');
-          }
-          const result = await Notification.requestPermission();
-          setPermission(result);
-          return result;
-        },
-
-        subscribe: async () => {
-          if (!('serviceWorker' in navigator) || !('PushManager' in window)) {
-            // In E2E tests, simulate subscription success if service worker not available
-            if (process.env.NEXT_PUBLIC_ENABLE_E2E_HARNESS === '1' || process.env.PLAYWRIGHT_USE_MOCKS === '1') {
-              setIsSubscribed(true);
-              setSubscriptionEndpoint('e2e-test-endpoint');
-              return true;
-            }
-            throw new Error('Push notifications not supported');
-          }
-
-          if (Notification.permission !== 'granted') {
-            const perm = await Notification.requestPermission();
-            if (perm !== 'granted') {
-              return false;
-            }
-            setPermission(perm);
-          }
-
-          try {
-            // Add timeout to prevent indefinite blocking in E2E tests
-            const timeoutPromise = new Promise<never>((_, reject) => {
-              setTimeout(() => reject(new Error('Service worker ready timeout')), 10000);
-            });
-            
-            const registration = await Promise.race([
-              navigator.serviceWorker.ready,
-              timeoutPromise,
-            ]);
-            
-            const vapidKey = process.env.NEXT_PUBLIC_WEB_PUSH_VAPID_PUBLIC_KEY ?? 
-                             process.env.WEB_PUSH_VAPID_PUBLIC_KEY ?? '';
-            if (!vapidKey) {
-              // In E2E tests, simulate subscription if VAPID key not configured
-              if (process.env.NEXT_PUBLIC_ENABLE_E2E_HARNESS === '1' || process.env.PLAYWRIGHT_USE_MOCKS === '1') {
-                setIsSubscribed(true);
-                setSubscriptionEndpoint('e2e-test-endpoint');
-                return true;
-              }
-              throw new Error('VAPID key not configured');
-            }
-
-            const urlBase64ToUint8Array = (base64String: string): Uint8Array => {
-              const padding = '='.repeat((4 - (base64String.length % 4)) % 4);
-              const base64 = (base64String + padding).replace(/-/g, '+').replace(/_/g, '/');
-              const rawData = window.atob(base64);
-              const outputArray = new Uint8Array(rawData.length);
-              for (let i = 0; i < rawData.length; ++i) {
-                outputArray[i] = rawData.charCodeAt(i);
-              }
-              return outputArray;
-            };
-
-            const applicationServerKey = urlBase64ToUint8Array(vapidKey);
-            const subscription = await registration.pushManager.subscribe({
-              userVisibleOnly: true,
-              applicationServerKey,
-            });
-
-            setIsSubscribed(true);
-            setSubscriptionEndpoint(subscription.endpoint);
-            return true;
-          } catch (error) {
-            // In E2E tests, simulate subscription success on error
-            if (process.env.NEXT_PUBLIC_ENABLE_E2E_HARNESS === '1' || process.env.PLAYWRIGHT_USE_MOCKS === '1') {
-              setIsSubscribed(true);
-              setSubscriptionEndpoint('e2e-test-endpoint');
-              return true;
-            }
-            logger.error('Subscription failed', error instanceof Error ? error : new Error(String(error)));
-            return false;
-          }
-        },
-
-        unsubscribe: async () => {
-          // In E2E harness mode, just update local state
-          if (process.env.NEXT_PUBLIC_ENABLE_E2E_HARNESS === '1' || process.env.PLAYWRIGHT_USE_MOCKS === '1') {
-            setIsSubscribed(false);
-            setSubscriptionEndpoint(null);
-            return true;
-          }
-
-          if (!('serviceWorker' in navigator) || !('PushManager' in window)) {
-            return false;
-          }
-
-          try {
-            const registration = await navigator.serviceWorker.ready;
-            const subscription = await registration.pushManager.getSubscription();
-            if (subscription) {
-              await subscription.unsubscribe();
-              setIsSubscribed(false);
-              setSubscriptionEndpoint(null);
-              return true;
-            }
-            return false;
-          } catch (error) {
-          logger.error('Unsubscribe failed', error instanceof Error ? error : new Error(String(error)));
-            return false;
-          }
-        },
-
-        updatePreferences: async (newPreferences) => {
-          setPreferences((prev) => ({ ...prev, ...newPreferences }));
-          return true;
-        },
-
-        getPreferences: async () => {
-          // Access current preferences from ref (since useEffect has empty deps)
-          return preferencesRef.current;
-        },
-    };
-
-    // Set up harness immediately (harness object is ready)
-    (window as any).__pushNotificationsHarness = harness;
-  }, []); // Empty deps - set up once
-
-  // Set up stores and signal ready (second useEffect - similar to dashboard-journey pattern)
-  useEffect(() => {
-    if (typeof window === 'undefined') {
+  // Set up stores once on mount
+  React.useLayoutEffect(() => {
+    if (typeof window === 'undefined' || typeof document === 'undefined') {
       return;
     }
 
@@ -296,30 +182,233 @@ export default function PushNotificationsHarnessPage() {
       draft.error = null;
     });
 
-    // Set up notification state synchronously
+    // Set up notification state synchronously using store
     if ('Notification' in window) {
-      setPermission(Notification.permission);
+      usePushNotificationsHarnessStore.getState().setPermission(Notification.permission);
     }
 
-    // Set dataset attribute to signal readiness
-    if (typeof document !== 'undefined') {
-      document.documentElement.dataset.pushNotificationsHarness = 'ready';
-    }
-
-    // Mark as ready - harness and stores are set up
+    // Mark as ready - stores are set up
     setReady(true);
+    document.documentElement.dataset.pushNotificationsHarness = 'ready';
+  }, []);
+
+  // Create stable harness that uses callbacks to access latest state/setters
+  // This avoids recreating the harness on every render while ensuring it always has latest values
+  React.useLayoutEffect(() => {
+    if (typeof window === 'undefined' || typeof document === 'undefined' || !ready) {
+      return;
+    }
+
+    // Create harness object with stable reference
+    // Methods use callbacks to access latest state/setters on each call
+    const harness: PushNotificationsHarness = {
+        getNotificationPermission: () => {
+          if (!('Notification' in window)) {
+            return 'unsupported';
+          }
+          return Notification.permission;
+        },
+
+        getSubscriptionStatus: async () => {
+          // In E2E harness mode, use store state instead of checking service worker
+          if (process.env.NEXT_PUBLIC_ENABLE_E2E_HARNESS === '1' || process.env.PLAYWRIGHT_USE_MOCKS === '1') {
+            return usePushNotificationsHarnessStore.getState().isSubscribed;
+          }
+
+          if (!('serviceWorker' in navigator) || !('PushManager' in window)) {
+            return false;
+          }
+          try {
+            const registration = await navigator.serviceWorker.ready;
+            const subscription = await registration.pushManager.getSubscription();
+            return !!subscription;
+          } catch {
+            return false;
+          }
+        },
+
+        requestPermission: async () => {
+          if (!('Notification' in window)) {
+            throw new Error('Notifications not supported');
+          }
+          const result = await Notification.requestPermission();
+          usePushNotificationsHarnessStore.getState().setPermission(result);
+          return result;
+        },
+
+        subscribe: async () => {
+          // In E2E tests, always simulate subscription success
+          if (process.env.NEXT_PUBLIC_ENABLE_E2E_HARNESS === '1' || process.env.PLAYWRIGHT_USE_MOCKS === '1') {
+            // Update Zustand store directly - this triggers immediate re-render
+            // Zustand updates are synchronous, so the store is updated immediately
+            usePushNotificationsHarnessStore.getState().setIsSubscribed(true);
+            usePushNotificationsHarnessStore.getState().setSubscriptionEndpoint('e2e-test-endpoint');
+
+            // Update ref immediately for synchronous access
+            isSubscribedRef.current = true;
+
+            // Give React a moment to process the store update and re-render
+            // Zustand automatically triggers re-renders, but we need to wait for DOM update
+            await new Promise(resolve => {
+              // Use requestAnimationFrame to wait for next paint cycle
+              requestAnimationFrame(() => {
+                requestAnimationFrame(() => {
+                  resolve(undefined);
+                });
+              });
+            });
+
+            return true;
+          }
+
+          if (!('serviceWorker' in navigator) || !('PushManager' in window)) {
+            throw new Error('Push notifications not supported');
+          }
+
+          if (Notification.permission !== 'granted') {
+            const perm = await Notification.requestPermission();
+            if (perm !== 'granted') {
+              return false;
+            }
+            usePushNotificationsHarnessStore.getState().setPermission(perm);
+          }
+
+          try {
+            // Add timeout to prevent indefinite blocking in E2E tests
+            const timeoutPromise = new Promise<never>((_, reject) => {
+              setTimeout(() => reject(new Error('Service worker ready timeout')), 10000);
+            });
+
+            const registration = await Promise.race([
+              navigator.serviceWorker.ready,
+              timeoutPromise,
+            ]);
+
+            const vapidKey = process.env.NEXT_PUBLIC_WEB_PUSH_VAPID_PUBLIC_KEY ??
+                             process.env.WEB_PUSH_VAPID_PUBLIC_KEY ?? '';
+            if (!vapidKey) {
+              // In E2E tests, simulate subscription if VAPID key not configured
+              if (process.env.NEXT_PUBLIC_ENABLE_E2E_HARNESS === '1' || process.env.PLAYWRIGHT_USE_MOCKS === '1') {
+                isSubscribedRef.current = true;
+                const store = usePushNotificationsHarnessStore.getState();
+                store.setIsSubscribed(true);
+                store.setSubscriptionEndpoint('e2e-test-endpoint');
+                await Promise.resolve();
+                return true;
+              }
+              throw new Error('VAPID key not configured');
+            }
+
+            const urlBase64ToUint8Array = (base64String: string): Uint8Array => {
+              const padding = '='.repeat((4 - (base64String.length % 4)) % 4);
+              const base64 = (base64String + padding).replace(/-/g, '+').replace(/_/g, '/');
+              const rawData = window.atob(base64);
+              const outputArray = new Uint8Array(rawData.length);
+              for (let i = 0; i < rawData.length; ++i) {
+                outputArray[i] = rawData.charCodeAt(i);
+              }
+              return outputArray;
+            };
+
+            const applicationServerKey = urlBase64ToUint8Array(vapidKey);
+            const subscription = await registration.pushManager.subscribe({
+              userVisibleOnly: true,
+              applicationServerKey,
+            });
+
+            const store = usePushNotificationsHarnessStore.getState();
+            store.setIsSubscribed(true);
+            store.setSubscriptionEndpoint(subscription.endpoint);
+            return true;
+          } catch (error) {
+            // In E2E tests, simulate subscription success on error
+            if (process.env.NEXT_PUBLIC_ENABLE_E2E_HARNESS === '1' || process.env.PLAYWRIGHT_USE_MOCKS === '1') {
+              isSubscribedRef.current = true;
+              const store = usePushNotificationsHarnessStore.getState();
+              store.setIsSubscribed(true);
+              store.setSubscriptionEndpoint('e2e-test-endpoint');
+              await Promise.resolve();
+              return true;
+            }
+            logger.error('Subscription failed', error instanceof Error ? error : new Error(String(error)));
+            return false;
+          }
+        },
+
+        unsubscribe: async () => {
+          // In E2E harness mode, just update store state
+          if (process.env.NEXT_PUBLIC_ENABLE_E2E_HARNESS === '1' || process.env.PLAYWRIGHT_USE_MOCKS === '1') {
+            const store = usePushNotificationsHarnessStore.getState();
+            store.setIsSubscribed(false);
+            store.setSubscriptionEndpoint(null);
+            return true;
+          }
+
+          if (!('serviceWorker' in navigator) || !('PushManager' in window)) {
+            return false;
+          }
+
+          try {
+            const registration = await navigator.serviceWorker.ready;
+            const subscription = await registration.pushManager.getSubscription();
+            if (subscription) {
+              await subscription.unsubscribe();
+              const store = usePushNotificationsHarnessStore.getState();
+              store.setIsSubscribed(false);
+              store.setSubscriptionEndpoint(null);
+              return true;
+            }
+            return false;
+          } catch (error) {
+          logger.error('Unsubscribe failed', error instanceof Error ? error : new Error(String(error)));
+            return false;
+          }
+        },
+
+        updatePreferences: async (newPreferences) => {
+          // Update Zustand store directly - this triggers immediate re-render
+          // Zustand updates are synchronous, so the store is updated immediately
+          const store = usePushNotificationsHarnessStore.getState();
+          const updated = { ...store.preferences, ...newPreferences };
+          store.setPreferences(updated);
+
+          // Update ref immediately for synchronous access
+          preferencesRef.current = updated;
+
+          // Give React a moment to process the store update and re-render
+          // Zustand automatically triggers re-renders, but we need to wait for DOM update
+          await new Promise(resolve => {
+            // Use requestAnimationFrame to wait for next paint cycle
+            requestAnimationFrame(() => {
+              requestAnimationFrame(() => {
+                resolve(undefined);
+              });
+            });
+          });
+
+          return true;
+        },
+
+        getPreferences: async () => {
+          // Access current preferences from ref (since useEffect has empty deps)
+          return preferencesRef.current;
+        },
+    };
+
+    // Set up harness immediately (harness object is ready)
+    (window as any).__pushNotificationsHarness = harness;
 
     return () => {
-      if (typeof document !== 'undefined') {
-        delete document.documentElement.dataset.pushNotificationsHarness;
+      if ((window as any).__pushNotificationsHarness === harness) {
+        delete (window as any).__pushNotificationsHarness;
       }
     };
-  }, []); // Empty deps - set up once
+  }, [ready]); // Create once when ready, harness methods use refs to access latest setters
 
   // Check subscription status asynchronously in a separate effect (non-blocking)
   useEffect(() => {
     if (!ready) return; // Only check after harness is ready
-    
+
     if ('Notification' in window && 'serviceWorker' in navigator && 'PushManager' in window) {
       (async () => {
         try {
@@ -327,15 +416,16 @@ export default function PushNotificationsHarnessPage() {
           const timeoutPromise = new Promise<never>((_, reject) => {
             setTimeout(() => reject(new Error('Service worker check timeout')), 5000);
           });
-          
+
           const registration = await Promise.race([
             navigator.serviceWorker.ready,
             timeoutPromise,
           ]);
-          
+
           const subscription = await registration.pushManager.getSubscription();
-          setIsSubscribed(!!subscription);
-          setSubscriptionEndpoint(subscription?.endpoint ?? null);
+          const store = usePushNotificationsHarnessStore.getState();
+          store.setIsSubscribed(!!subscription);
+          store.setSubscriptionEndpoint(subscription?.endpoint ?? null);
         } catch (error) {
           // Log but don't block - service worker may not be available in E2E tests
           logger.error('Failed to check subscription', error instanceof Error ? error : new Error(String(error)));
@@ -349,7 +439,30 @@ export default function PushNotificationsHarnessPage() {
   // Always render harness element (following poll-wizard pattern - no conditional rendering)
   // The dataset attribute signals readiness to tests
   return (
-    <div className="min-h-screen bg-gray-50 p-8" data-testid="push-notifications-harness">
+    <>
+      {/* Script to set up harness immediately on page load, before React hydrates */}
+      <script
+        dangerouslySetInnerHTML={{
+          __html: `
+            (function() {
+              if (typeof window === 'undefined') return;
+              // Set up placeholder harness immediately
+              if (!window.__pushNotificationsHarness) {
+                window.__pushNotificationsHarness = {
+                  getNotificationPermission: function() { return 'unsupported'; },
+                  getSubscriptionStatus: function() { return Promise.resolve(false); },
+                  requestPermission: function() { return Promise.resolve('denied'); },
+                  subscribe: function() { return Promise.resolve(false); },
+                  unsubscribe: function() { return Promise.resolve(false); },
+                  updatePreferences: function() { return Promise.resolve(false); },
+                  getPreferences: function() { return Promise.resolve(null); }
+                };
+              }
+            })();
+          `,
+        }}
+      />
+      <div className="min-h-screen bg-gray-50 p-8" data-testid="push-notifications-harness">
       <div className="max-w-4xl mx-auto">
         <h1 className="text-3xl font-bold text-gray-900 mb-2">Push Notifications E2E Harness</h1>
         <p className="text-gray-600 mb-8">
@@ -404,5 +517,6 @@ export default function PushNotificationsHarnessPage() {
         </div>
       </div>
     </div>
+    </>
   );
 }

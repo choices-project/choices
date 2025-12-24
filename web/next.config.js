@@ -36,6 +36,7 @@ const nextConfig = {
       '@supabase/ssr',
       '@supabase/realtime-js',
       '@supabase/supabase-js',
+      '@vercel/og',
       // Externalize all Supabase packages to prevent browser globals in server bundles
     ],
     // Disable CSS optimization to avoid critters dependency issues
@@ -107,6 +108,13 @@ const nextConfig = {
     }
 
     if (isServer) {
+      // Handle @vercel/og for OG image generation in Edge Runtime
+      // Exclude it from webpack bundling since it's used in Edge Runtime
+      config.resolve.alias = {
+        ...config.resolve.alias,
+        '@vercel/og': false,
+      };
+      
       // Define browser globals as undefined for server-side compatibility
       config.plugins.push(new webpack.DefinePlugin({
         self: JSON.stringify('globalThis'),
@@ -135,6 +143,18 @@ const nextConfig = {
         '@supabase/supabase-js': 'commonjs @supabase/supabase-js',
         '@supabase/ssr': 'commonjs @supabase/ssr',
         '@supabase/realtime-js': 'commonjs @supabase/realtime-js'
+      });
+      
+      // Add file-loader for @vercel/og
+      config.module.rules.push({
+        test: /\.(png|jpg|jpeg|gif|svg|woff|woff2|eot|ttf|otf)$/,
+        use: {
+          loader: 'file-loader',
+          options: {
+            publicPath: '/_next/static/',
+            outputPath: 'static/',
+          },
+        },
       });
 
       // More aggressive Supabase externalization for server builds

@@ -19,8 +19,10 @@ import type { Metadata } from 'next';
  */
 export async function generateMetadata({ params }: { params: { id: string } }): Promise<Metadata> {
   const { id } = params;
-  const baseUrl = process.env.NEXT_PUBLIC_BASE_URL ?? process.env.VERCEL_URL ?? 'http://localhost:3000';
-  const pollUrl = `${baseUrl.replace(/\/$/, '')}/polls/${id}`;
+  // Use NEXT_PUBLIC_SITE_URL if available (standard Next.js pattern), fallback to other options
+  const baseUrl = process.env.NEXT_PUBLIC_SITE_URL ?? process.env.NEXT_PUBLIC_BASE_URL ?? process.env.VERCEL_URL ?? 'https://choices-app.com';
+  const siteUrl = baseUrl.replace(/\/$/, '');
+  const pollUrl = `${siteUrl}/polls/${id}`;
 
   try {
     const allHeaders = await headers();
@@ -89,22 +91,20 @@ export async function generateMetadata({ params }: { params: { id: string } }): 
         url: pollUrl,
         siteName: 'Choices',
         type: 'website',
-        // TODO: Add og:image when SOCIAL_SHARING_OG feature is implemented
-        // images: [
-        //   {
-        //     url: `${baseUrl}/api/og/poll/${id}`,
-        //     width: 1200,
-        //     height: 630,
-        //     alt: title,
-        //   },
-        // ],
+        images: [
+          {
+            url: `${siteUrl}/api/og/poll/${id}`,
+            width: 1200,
+            height: 630,
+            alt: title,
+          },
+        ],
       },
       twitter: {
         card: 'summary_large_image',
         title,
         description: truncatedDescription,
-        // TODO: Add twitter:image when SOCIAL_SHARING_OG feature is implemented
-        // images: [`${baseUrl}/api/og/poll/${id}`],
+        images: [`${siteUrl}/api/og/poll/${id}`],
       },
     };
   } catch (error) {
@@ -138,8 +138,9 @@ export default async function PollPage({ params }: { params: { id: string } }) {
   const { id } = params;
 
   try {
-    const baseUrl = process.env.NEXT_PUBLIC_BASE_URL ?? process.env.VERCEL_URL ?? 'http://localhost:3000';
-    const res = await fetch(`${baseUrl.replace(/\/$/, '')}/api/polls/${id}`, {
+    const baseUrl = process.env.NEXT_PUBLIC_SITE_URL ?? process.env.NEXT_PUBLIC_BASE_URL ?? process.env.VERCEL_URL ?? 'https://choices-app.com';
+    const siteUrl = baseUrl.replace(/\/$/, '');
+    const res = await fetch(`${siteUrl}/api/polls/${id}`, {
       cache: 'no-store',
       headers: {
         ...(cookieHeader ? { cookie: cookieHeader } : {}),

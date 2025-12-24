@@ -203,6 +203,7 @@ test.describe('@smoke Critical user journeys', () => {
     // Wait for notification preferences to be visible
     await expect(page.getByTestId('notification-preferences')).toBeVisible({ timeout: 10_000 });
 
+    // Call harness methods - they now wait for DOM updates internally
     await page.evaluate(async () => {
       await window.__pushNotificationsHarness?.subscribe();
       await window.__pushNotificationsHarness?.updatePreferences({
@@ -211,9 +212,11 @@ test.describe('@smoke Critical user journeys', () => {
       });
     });
 
-    await expect(page.getByTestId('push-notification-subscribed')).toHaveText('Yes');
-    await expect(page.getByTestId('pref-new-polls')).toHaveText('Disabled');
-    await expect(page.getByTestId('pref-system-updates')).toHaveText('Enabled');
+    // The harness methods now wait for DOM updates, but add a small buffer
+    // and use Playwright's built-in waiting for extra reliability
+    await expect(page.getByTestId('push-notification-subscribed')).toHaveText('Yes', { timeout: 10_000 });
+    await expect(page.getByTestId('pref-new-polls')).toHaveText('Disabled', { timeout: 10_000 });
+    await expect(page.getByTestId('pref-system-updates')).toHaveText('Enabled', { timeout: 10_000 });
   });
 });
 

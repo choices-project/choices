@@ -168,11 +168,9 @@ export default function DashboardJourneyHarnessPage() {
         document.documentElement.dataset.dashboardJourneyHarness = 'ready';
       }
 
-      // Set ready state in next tick to allow stores to settle
-      // Use requestAnimationFrame to ensure DOM is ready
-      requestAnimationFrame(() => {
-        setReady(true);
-      });
+      // Set ready state synchronously to ensure component renders immediately
+      // This allows the test to find the [data-testid="personal-dashboard"] element
+      setReady(true);
     };
 
     // Initialize immediately

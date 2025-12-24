@@ -126,9 +126,11 @@ export const DeviceList: React.FC<DeviceListProps> = ({
       <div 
         className={`device-list ${className}`}
         data-testid="device-list"
+        aria-label="Loading devices"
+        aria-busy="true"
       >
         <div className="flex items-center justify-center p-8">
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500" />
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500" aria-hidden="true" />
           <span className="ml-2">{t('common.devices.loading')}</span>
         </div>
       </div>
@@ -141,13 +143,25 @@ export const DeviceList: React.FC<DeviceListProps> = ({
       <div 
         className={`device-list ${className}`}
         data-testid="device-list"
+        role="alert"
+        aria-live="assertive"
       >
         <div className="flex flex-col items-center justify-center p-8">
-          <span className="text-red-600 mb-4">{t('common.devices.loadFailed')}</span>
+          <svg 
+            className="h-8 w-8 text-red-600 mb-4" 
+            fill="none" 
+            stroke="currentColor" 
+            viewBox="0 0 24 24"
+            aria-hidden="true"
+          >
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z" />
+          </svg>
+          <span className="text-red-600 mb-4 font-medium">{t('common.devices.loadFailed')}</span>
           <button
             onClick={handleRetry}
-            className="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600"
+            className="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition-colors"
             data-testid="retry-button"
+            aria-label="Retry loading devices"
           >
             {t('common.actions.retry')}
           </button>
@@ -162,16 +176,28 @@ export const DeviceList: React.FC<DeviceListProps> = ({
       <div 
         className={`device-list ${className}`}
         data-testid="device-list"
+        role="status"
+        aria-live="polite"
       >
         <div className="flex flex-col items-center justify-center p-8">
+          <svg 
+            className="h-8 w-8 text-gray-400 mb-4" 
+            fill="none" 
+            stroke="currentColor" 
+            viewBox="0 0 24 24"
+            aria-hidden="true"
+          >
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 18h.01M8 21h8a2 2 0 002-2V5a2 2 0 00-2-2H8a2 2 0 00-2 2v14a2 2 0 002 2z" />
+          </svg>
           <span className="text-gray-500 mb-4">{t('common.devices.empty')}</span>
           {onAddDevice && (
             <button
               onClick={handleAddDevice}
-              className="flex items-center px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600"
+              className="flex items-center px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition-colors"
               data-testid="add-device-button"
+              aria-label="Add a new device"
             >
-              <Plus className="w-4 h-4 mr-2" />
+              <Plus className="w-4 h-4 mr-2" aria-hidden="true" />
               {t('common.devices.add')}
             </button>
           )}

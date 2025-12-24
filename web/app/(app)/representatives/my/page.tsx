@@ -9,7 +9,7 @@
 
 'use client';
 
-import { Heart, Users, Loader2, AlertCircle, Mail, Send } from 'lucide-react';
+import { Heart, Users, AlertCircle, Mail, Send } from 'lucide-react';
 import Link from 'next/link';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
@@ -19,6 +19,7 @@ import ContactModal from '@/features/contact/components/ContactModal';
 
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Skeleton } from '@/components/ui/skeleton';
 
 import {
   useUserRepresentativeEntries,
@@ -67,12 +68,29 @@ export default function MyRepresentativesPage() {
 
   if (loading) {
     return (
-      <div className="container mx-auto px-4 py-8">
-        <div className="flex items-center justify-center min-h-[400px]">
-          <div className="text-center">
-            <Loader2 className="w-8 h-8 animate-spin mx-auto mb-4 text-gray-400" />
-            <p className="text-gray-600">Loading your representatives...</p>
-          </div>
+      <div className="container mx-auto px-4 py-8" aria-label="Loading representatives" aria-busy="true">
+        <div className="mb-8">
+          <Skeleton className="h-10 w-64 mb-2" />
+          <Skeleton className="h-5 w-96" />
+        </div>
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          {[1, 2, 3, 4, 5, 6].map((i) => (
+            <Card key={i}>
+              <CardHeader>
+                <div className="flex items-center gap-4">
+                  <Skeleton className="h-16 w-16 rounded-full" />
+                  <div className="flex-1">
+                    <Skeleton className="h-6 w-32 mb-2" />
+                    <Skeleton className="h-4 w-24" />
+                  </div>
+                </div>
+              </CardHeader>
+              <CardContent>
+                <Skeleton className="h-4 w-full mb-2" />
+                <Skeleton className="h-4 w-3/4" />
+              </CardContent>
+            </Card>
+          ))}
         </div>
       </div>
     );
@@ -80,19 +98,36 @@ export default function MyRepresentativesPage() {
 
   if (error) {
     return (
-      <div className="container mx-auto px-4 py-8">
+      <div className="container mx-auto px-4 py-8" role="alert" aria-live="assertive">
         <Card>
           <CardHeader>
             <CardTitle className="flex items-center space-x-2">
-              <AlertCircle className="w-5 h-5 text-red-500" />
-              <span>Error</span>
+              <AlertCircle className="w-5 h-5 text-red-500" aria-hidden="true" />
+              <span>Error Loading Representatives</span>
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <p className="text-gray-600 mb-4">{error}</p>
-            <Button asChild>
-              <Link href="/representatives">Browse Representatives</Link>
-            </Button>
+            <div className="space-y-4">
+              <p className="text-gray-600">{error}</p>
+              <div className="flex gap-4">
+                <Button 
+                  onClick={() => {
+                    void getUserRepresentativesRef.current();
+                  }}
+                  className="focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
+                  aria-label="Retry loading representatives"
+                >
+                  Try Again
+                </Button>
+                <Button 
+                  asChild
+                  variant="outline"
+                  className="focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
+                >
+                  <Link href="/representatives">Browse Representatives</Link>
+                </Button>
+              </div>
+            </div>
           </CardContent>
         </Card>
       </div>

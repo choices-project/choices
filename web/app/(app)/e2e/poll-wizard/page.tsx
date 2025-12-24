@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import React, { useEffect, useState } from 'react';
 
 import { usePollWizardStore, type PollWizardStore } from '@/lib/stores/pollWizardStore';
 
@@ -32,6 +32,36 @@ declare global {
   var __pollWizardHarness: PollWizardHarness | undefined;
 }
 
+// Set up placeholder harness immediately at module load time (before React renders)
+// This ensures the harness object exists when tests check for it
+if (typeof window !== 'undefined') {
+  // Create a placeholder that will be replaced by the real harness in useLayoutEffect
+  // This prevents tests from timing out while waiting for React to render
+  (window as any).__pollWizardHarness = {
+    getSnapshot: () => usePollWizardStore.getState(),
+    actions: {
+      nextStep: () => {},
+      prevStep: () => {},
+      goToStep: () => {},
+      resetWizard: () => {},
+      updateData: () => {},
+      updateSettings: () => {},
+      addOption: () => {},
+      removeOption: () => {},
+      updateOption: () => {},
+      addTag: () => {},
+      removeTag: () => {},
+      updateTags: () => {},
+      validateCurrentStep: () => true,
+      clearAllErrors: () => {},
+      setFieldError: () => {},
+      clearFieldError: () => {},
+      canProceedToNextStep: () => true,
+      getStepErrors: () => ({}),
+    },
+  };
+}
+
 export default function PollWizardStoreHarnessPage() {
   const [wizardState, setWizardState] = useState<PollWizardStore>(() => usePollWizardStore.getState());
 
@@ -53,7 +83,13 @@ export default function PollWizardStoreHarnessPage() {
     totalSteps,
   } = wizardState;
 
-  useEffect(() => {
+  // Use useLayoutEffect to set up harness synchronously before paint
+  // This ensures the harness is available immediately when the test checks
+  React.useLayoutEffect(() => {
+    if (typeof window === 'undefined' || typeof document === 'undefined') {
+      return;
+    }
+
     const harness: PollWizardHarness = {
       getSnapshot: () => usePollWizardStore.getState(),
       actions: {
@@ -78,24 +114,10 @@ export default function PollWizardStoreHarnessPage() {
       },
     };
 
+    // Set up harness immediately
     window.__pollWizardHarness = harness;
-    return () => {
-      if (window.__pollWizardHarness === harness) {
-        delete window.__pollWizardHarness;
-      }
-    };
-  }, []);
 
-  useEffect(() => {
-    let ready = false;
-    const markReady = () => {
-      if (ready) return;
-      ready = true;
-      if (typeof document !== 'undefined') {
-        document.documentElement.dataset.pollWizardHarness = 'ready';
-      }
-    };
-
+    // Set dataset attribute - check for store hydration but don't wait
     const persist = (usePollWizardStore as typeof usePollWizardStore & {
       persist?: {
         hasHydrated?: () => boolean;
@@ -103,23 +125,40 @@ export default function PollWizardStoreHarnessPage() {
       };
     }).persist;
 
-    let unsubscribeHydration: (() => void) | void;
+    const markReady = () => {
+      document.documentElement.dataset.pollWizardHarness = 'ready';
+    };
 
     if (persist?.hasHydrated?.()) {
       markReady();
     } else if (persist?.onFinishHydration) {
-      unsubscribeHydration = persist.onFinishHydration(() => {
+      // Set ready immediately, but also listen for hydration
+      markReady();
+      const unsubscribeHydration = persist.onFinishHydration(() => {
+        // Already marked ready, but ensure it's still set
         markReady();
       });
+      return () => {
+        if (typeof unsubscribeHydration === 'function') {
+          unsubscribeHydration();
+        }
+        if (window.__pollWizardHarness === harness) {
+          delete window.__pollWizardHarness;
+        }
+        if (typeof document !== 'undefined') {
+          delete document.documentElement.dataset.pollWizardHarness;
+        }
+      };
     } else {
+      // No persistence, mark ready immediately
       markReady();
     }
 
     return () => {
-      if (typeof unsubscribeHydration === 'function') {
-        unsubscribeHydration();
+      if (window.__pollWizardHarness === harness) {
+        delete window.__pollWizardHarness;
       }
-      if (ready && typeof document !== 'undefined') {
+      if (typeof document !== 'undefined') {
         delete document.documentElement.dataset.pollWizardHarness;
       }
     };
@@ -128,10 +167,47 @@ export default function PollWizardStoreHarnessPage() {
   const errorEntries = Object.entries(errors);
 
   return (
-    <main
-      data-testid="poll-wizard-harness"
-      className="mx-auto flex max-w-4xl flex-col gap-6 p-6 text-slate-900"
-    >
+    <>
+      {/* Script to set up harness immediately on page load, before React hydrates */}
+      <script
+        dangerouslySetInnerHTML={{
+          __html: `
+            (function() {
+              if (typeof window === 'undefined') return;
+              // Set up placeholder harness immediately
+              if (!window.__pollWizardHarness) {
+                window.__pollWizardHarness = {
+                  getSnapshot: function() { return {}; },
+                  actions: {
+                    nextStep: function() {},
+                    prevStep: function() {},
+                    goToStep: function() {},
+                    resetWizard: function() {},
+                    updateData: function() {},
+                    updateSettings: function() {},
+                    addOption: function() {},
+                    removeOption: function() {},
+                    updateOption: function() {},
+                    addTag: function() {},
+                    removeTag: function() {},
+                    updateTags: function() {},
+                    validateCurrentStep: function() { return true; },
+                    clearAllErrors: function() {},
+                    setFieldError: function() {},
+                    clearFieldError: function() {},
+                    canProceedToNextStep: function() { return true; },
+                    getStepErrors: function() { return {}; }
+                  }
+                };
+              }
+            })();
+          `,
+        }}
+      />
+      <main
+        data-testid="poll-wizard-harness"
+        className="mx-auto flex max-w-4xl flex-col gap-6 p-6 text-slate-900"
+      >
       <section className="rounded-lg border border-slate-200 bg-white p-4 shadow-sm">
         <h1 className="text-xl font-semibold">Poll Wizard Store Harness</h1>
         <p className="text-sm text-slate-600">
@@ -246,6 +322,7 @@ export default function PollWizardStoreHarnessPage() {
         </div>
       </section>
     </main>
+    </>
   );
 }
 

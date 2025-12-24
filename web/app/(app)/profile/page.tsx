@@ -12,6 +12,7 @@ import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/components/ui/card';
+import { Skeleton } from '@/components/ui/skeleton';
 
 import { useUser, useIsAuthenticated, useUserLoading } from '@/lib/stores';
 import { useAppActions } from '@/lib/stores/appStore';
@@ -40,7 +41,7 @@ function ProfilePageContent() {
   useEffect(() => { setBreadcrumbsRef.current = setBreadcrumbs; }, [setBreadcrumbs]);
   const setSidebarActiveSectionRef = useRef(setSidebarActiveSection);
   useEffect(() => { setSidebarActiveSectionRef.current = setSidebarActiveSection; }, [setSidebarActiveSection]);
-  
+
   // Ref for stable exportProfile callback
   const exportProfileRef = useRef(exportProfile);
   useEffect(() => { exportProfileRef.current = exportProfile; }, [exportProfile]);
@@ -48,6 +49,11 @@ function ProfilePageContent() {
   // Ref for stable refetch callback
   const refetchRef = useRef(refetch);
   useEffect(() => { refetchRef.current = refetch; }, [refetch]);
+
+  // Set mounted immediately on client side
+  useEffect(() => {
+    setIsMounted(true);
+  }, []);
 
   // Callbacks must be defined before early returns
   const handleEditProfile = useCallback(() => {
@@ -66,11 +72,6 @@ function ProfilePageContent() {
     routerRef.current.push('/profile/edit');
   }, []);
 
-  // Simple useEffect to set mounted - no requestAnimationFrame needed
-  React.useEffect(() => {
-    setIsMounted(true);
-  }, []);
-
   useEffect(() => {
     if (!isMounted) return;
     setCurrentRouteRef.current('/profile');
@@ -85,7 +86,7 @@ function ProfilePageContent() {
       setSidebarActiveSectionRef.current(null);
       setBreadcrumbsRef.current([]);
     };
-  }, [isMounted]);  
+  }, [isMounted]);
 
   useEffect(() => {
     // In E2E harness mode, authentication is mocked - don't redirect
@@ -145,21 +146,45 @@ function ProfilePageContent() {
     };
   }, [profileLoading, profile, profileError]);
 
-  // Show loading state until component is mounted
-  if (!isMounted) {
+  // Show loading state until component is mounted or while loading
+  if (!isMounted || isUserLoading || profileLoading) {
     return (
-      <div className="container mx-auto px-4 py-8" data-testid="profile-loading-mount">
-        <div className="flex items-center justify-center min-h-[400px]">
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600" />
+      <div className="container mx-auto px-4 py-8" data-testid="profile-loading" aria-label="Loading profile" aria-busy="true">
+        <div className="max-w-4xl mx-auto space-y-8">
+          <Card>
+            <CardHeader className="text-center">
+              <Skeleton className="h-24 w-24 rounded-full mx-auto mb-4" />
+              <Skeleton className="h-8 w-48 mx-auto mb-2" />
+              <Skeleton className="h-5 w-64 mx-auto" />
+              <div className="flex justify-center gap-4 mt-4">
+                <Skeleton className="h-10 w-32" />
+                <Skeleton className="h-10 w-32" />
+              </div>
+            </CardHeader>
+          </Card>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <Card>
+              <CardHeader>
+                <Skeleton className="h-6 w-48" />
+              </CardHeader>
+              <CardContent>
+                <Skeleton className="h-4 w-full mb-4" />
+                <Skeleton className="h-4 w-3/4 mb-4" />
+                <Skeleton className="h-4 w-5/6" />
+              </CardContent>
+            </Card>
+            <Card>
+              <CardHeader>
+                <Skeleton className="h-6 w-40" />
+              </CardHeader>
+              <CardContent>
+                <Skeleton className="h-4 w-full mb-4" />
+                <Skeleton className="h-4 w-3/4 mb-4" />
+                <Skeleton className="h-4 w-5/6" />
+              </CardContent>
+            </Card>
+          </div>
         </div>
-      </div>
-    );
-  }
-
-  if (isUserLoading || profileLoading) {
-    return (
-      <div className="flex items-center justify-center min-h-screen">
-        <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-blue-600" />
       </div>
     );
   }
@@ -179,9 +204,9 @@ function ProfilePageContent() {
     // Show loading state with timeout message if taking too long
     return (
       <ErrorBoundary>
-        <div className="flex items-center justify-center min-h-screen">
+        <div className="flex items-center justify-center min-h-screen" aria-label="Loading profile" aria-busy="true">
           <div className="text-center space-y-4 max-w-md">
-            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto" />
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto" aria-hidden="true" />
             <p className="text-gray-600 dark:text-gray-400">
               {loadingTimeout ? 'Loading is taking longer than expected...' : 'Loading profile...'}
             </p>
@@ -191,7 +216,8 @@ function ProfilePageContent() {
                   void refetchRef.current();
                   setLoadingTimeout(false);
                 }}
-                className="mt-4 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
+                className="mt-4 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition-colors"
+                aria-label="Retry loading profile"
               >
                 Retry
               </button>
@@ -206,10 +232,22 @@ function ProfilePageContent() {
     return (
       <ErrorBoundary>
         <div className="container mx-auto px-4 py-8">
-          <Alert variant="destructive">
-            <AlertTriangle className="h-4 w-4" />
+          <Alert variant="destructive" role="alert" aria-live="assertive">
+            <AlertTriangle className="h-4 w-4" aria-hidden="true" />
             <AlertDescription>
-              Failed to load profile data. Please try again.
+              <div className="space-y-2">
+                <p className="font-medium">Failed to load profile data</p>
+                <p className="text-sm">{profileError}</p>
+                <button
+                  onClick={() => {
+                    void refetchRef.current();
+                  }}
+                  className="mt-2 text-sm font-medium underline hover:no-underline focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2 rounded"
+                  aria-label="Retry loading profile"
+                >
+                  Try again
+                </button>
+              </div>
             </AlertDescription>
           </Alert>
         </div>
@@ -239,12 +277,22 @@ function ProfilePageContent() {
               {profile?.email ?? 'No email provided'}
             </CardDescription>
             <div className="flex justify-center gap-4 mt-4">
-              <Button onClick={handleEditProfile} variant="outline">
-                <Edit className="h-4 w-4 mr-2" />
+              <Button
+                onClick={handleEditProfile}
+                variant="outline"
+                className="focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
+                aria-label="Edit your profile"
+              >
+                <Edit className="h-4 w-4 mr-2" aria-hidden="true" />
                 Edit Profile
               </Button>
-              <Button onClick={handleSettings} variant="outline">
-                <Settings className="h-4 w-4 mr-2" />
+              <Button
+                onClick={handleSettings}
+                variant="outline"
+                className="focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
+                aria-label="Open settings"
+              >
+                <Settings className="h-4 w-4 mr-2" aria-hidden="true" />
                 Settings
               </Button>
             </div>
@@ -317,7 +365,7 @@ function ProfilePageContent() {
             </CardDescription>
           </CardHeader>
           <CardContent>
-            <AddressLookup 
+            <AddressLookup
               autoSave={true}
               onDistrictSaved={() => {
                 void refetchRef.current();
@@ -336,21 +384,33 @@ function ProfilePageContent() {
           </CardHeader>
           <CardContent>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <Button onClick={handlePrivacySettings} variant="outline" className="justify-start">
-                <Shield className="h-4 w-4 mr-2" />
+              <Button
+                onClick={handlePrivacySettings}
+                variant="outline"
+                className="justify-start focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
+                aria-label="Open privacy settings"
+              >
+                <Shield className="h-4 w-4 mr-2" aria-hidden="true" />
                 Privacy Settings
               </Button>
-              <Button onClick={handleEditProfileFromActions} variant="outline" className="justify-start">
-                <Edit className="h-4 w-4 mr-2" />
+              <Button
+                onClick={handleEditProfileFromActions}
+                variant="outline"
+                className="justify-start focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
+                aria-label="Edit your profile"
+              >
+                <Edit className="h-4 w-4 mr-2" aria-hidden="true" />
                 Edit Profile
               </Button>
-              <Button 
-                onClick={handleExportData} 
-                variant="outline" 
-                className="justify-start"
+              <Button
+                onClick={handleExportData}
+                variant="outline"
+                className="justify-start focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
                 disabled={isExporting}
+                aria-label={isExporting ? 'Exporting profile data' : 'Export your profile data'}
+                aria-disabled={isExporting}
               >
-                <Download className="h-4 w-4 mr-2" />
+                <Download className="h-4 w-4 mr-2" aria-hidden="true" />
                 {isExporting ? 'Exporting...' : 'Export Data'}
               </Button>
               {exportStatus === 'success' && (

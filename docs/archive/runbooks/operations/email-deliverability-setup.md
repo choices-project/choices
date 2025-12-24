@@ -243,21 +243,30 @@ DMARC reports are sent daily to the email address in your `rua` field.
 
 ## Step 8: Handle Bounces and Complaints
 
-The webhook handler (`/api/webhooks/resend`) automatically:
+The webhook handler (`/api/webhooks/resend`) automatically handles bounces and complaints:
 
 1. **Bounces:**
-   - Logs bounce events to `platform_analytics`
-   - Categorizes as hard/soft bounce
-   - TODO: Implement automatic email address invalidation
+   - ✅ Logs bounce events to `platform_analytics`
+   - ✅ Categorizes as hard/soft bounce
+   - ✅ **Hard bounces:** Immediately marks email as invalid in `user_privacy_preferences`
+   - ✅ **Soft bounces:** Tracks bounce count, invalidates after 3 soft bounces
+   - ✅ Updates `email_status` and `email_bounce_count` fields
 
 2. **Complaints (Spam Reports):**
-   - Logs complaint events
-   - TODO: Implement automatic unsubscribe
+   - ✅ Logs complaint events to `platform_analytics`
+   - ✅ Immediately unsubscribes user from all marketing and contact emails
+   - ✅ Disables email notifications in `user_notification_preferences`
+   - ✅ Sets `email_status` to `'complained'`
 
-**Next Steps:**
-- Implement bounce handling logic (mark invalid emails)
-- Implement complaint handling (unsubscribe users)
-- Set up alerts for high bounce/complaint rates
+**Implementation Details:**
+- Webhook signature verification is implemented using `RESEND_WEBHOOK_SECRET`
+- All events are logged for analytics and monitoring
+- User preferences are automatically updated to prevent future emails to invalid/complained addresses
+
+**Monitoring:**
+- Check `platform_analytics` table for `email_bounce` and `email_complaint` events
+- Monitor bounce/complaint rates via analytics dashboard
+- Set up alerts for high bounce/complaint rates (recommended: >5% bounce rate)
 
 ## Troubleshooting
 
@@ -294,13 +303,20 @@ The webhook handler (`/api/webhooks/resend`) automatically:
 - [ ] Domain verified in Resend
 - [ ] SPF record added and verified
 - [ ] DKIM records added and verified
-- [ ] DMARC record added (start with `p=none`)
-- [ ] `RESEND_WEBHOOK_SECRET` configured
+- [ ] **DMARC record added** (start with `p=none`, move to `p=quarantine` after monitoring)
+- [ ] `RESEND_WEBHOOK_SECRET` configured in environment variables
 - [ ] `RESEND_FROM_EMAIL` uses verified domain
-- [ ] Test emails delivered to major providers
-- [ ] Webhook handler tested (bounce/complaint events)
-- [ ] DMARC reports being received
-- [ ] Monitoring/alerting configured for bounce rates
+- [ ] Webhook endpoint configured in Resend: `https://yourdomain.com/api/webhooks/resend`
+- [ ] Test emails delivered to major providers (Gmail, Outlook, Yahoo)
+- [ ] Webhook handler tested (send test bounce/complaint events via Resend dashboard)
+- [ ] DMARC reports being received at configured email address
+- [ ] Monitoring/alerting configured for bounce rates (recommended: alert if >5%)
+- [ ] Bounce and complaint handling verified (check `user_privacy_preferences` table after test events)
+
+**DMARC Policy Status:**
+- ✅ Webhook signature verification implemented in code
+- ⚠️ **Action Required:** Configure DMARC DNS record (see Step 2)
+- ⚠️ **Action Required:** Set up email address to receive DMARC reports (`rua` field)
 
 ## References
 

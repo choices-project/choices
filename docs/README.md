@@ -15,7 +15,7 @@ This index lists the active documentation set after the November 2025 cleanup. L
 | Development setup | [`DEVELOPMENT.md`](DEVELOPMENT.md) |
 | Testing strategy | [`TESTING.md`](TESTING.md) |
 | State management standards | [`STATE_MANAGEMENT.md`](STATE_MANAGEMENT.md) |
-| Technical roadmap (**single source**) | [`ROADMAP_SINGLE_SOURCE.md`](ROADMAP_SINGLE_SOURCE.md) |
+| Technical roadmap (**single source**) | [`scratch/ROADMAP_SINGLE_SOURCE.md`](../scratch/ROADMAP_SINGLE_SOURCE.md) |
 | Canonical utilities guide | [`UTILS_GUIDE.md`](UTILS_GUIDE.md) |
 | Security & privacy references | [`SECURITY.md`](SECURITY.md), [`PRIVACY_POLICY.md`](PRIVACY_POLICY.md) |
 
@@ -63,6 +63,6 @@ Outdated or superseded documents live under the archive tree above, including th
 
 - Update this README whenever new core docs are added or archived.
 - Keep summary tables in `CURRENT_STATUS.md` and `FEATURES.md` realistic—avoid “perfect completion” phrasing.
-- Do not use `/scratch` documents for planning; the single source is `ROADMAP_SINGLE_SOURCE.md`.
+- The single source roadmap is `scratch/ROADMAP_SINGLE_SOURCE.md` (moved from docs to consolidate work).
 
 For questions or missing documentation, see the ownership notes in each doc and raise in `#web-platform`.

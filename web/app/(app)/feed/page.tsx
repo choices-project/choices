@@ -53,13 +53,19 @@ class ErrorBoundaryWrapper extends Component<
           role="alert"
         >
           <div className="text-center">
-            <p className="text-red-600 mb-4">Unable to load feed. Please try again.</p>
+            <div className="mb-4">
+              <svg className="h-12 w-12 mx-auto text-red-600 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z" />
+              </svg>
+              <p className="text-red-600 font-medium mb-2">Unable to load feed</p>
+              <p className="text-gray-600 text-sm mb-4">We encountered an error while loading your feed. Please try again.</p>
+            </div>
             <button
               onClick={() => {
                 this.setState({ hasError: false, error: null });
                 // Retry by resetting error state - component will re-render and attempt to load again
               }}
-              className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
+              className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition-colors"
               aria-label="Try again to load feed"
             >
               Try again

@@ -8,7 +8,7 @@ import { useProfile, useProfileUpdate } from '@/features/profile/hooks/use-profi
 
 import DataUsageExplanation from '@/components/shared/DataUsageExplanation';
 
-import { useUser } from '@/lib/stores';
+import { useUser, useIsAuthenticated, useUserLoading } from '@/lib/stores';
 import { useAppActions } from '@/lib/stores/appStore';
 import logger from '@/lib/utils/logger';
 
@@ -31,11 +31,20 @@ const arraysAreEqual = (a: string[], b: string[]) => {
 };
 
 export default function ProfilePreferencesPage() {
+  const [isMounted, setIsMounted] = React.useState(false);
   const user = useUser();
+  // Hooks must be called unconditionally at the top level
+  const isAuthenticated = useIsAuthenticated();
+  const isUserLoading = useUserLoading();
   const { profile, isLoading: profileLoading, error: profileError } = useProfile();
   const { updateProfile, isUpdating, error: updateError } = useProfileUpdate();
   const { setCurrentRoute, setBreadcrumbs, setSidebarActiveSection } = useAppActions();
   const { userType, recommendations, nextMilestone, isLoading: userTypeLoading } = useUserType(user?.id);
+
+  // Set mounted immediately on client side
+  useEffect(() => {
+    setIsMounted(true);
+  }, []);
 
   // Refs for stable app store actions
   const setCurrentRouteRef = useRef(setCurrentRoute);
@@ -58,6 +67,7 @@ export default function ProfilePreferencesPage() {
   const [statusMessage, setStatusMessage] = useState<StatusMessage | null>(null);
 
   useEffect(() => {
+    if (!isMounted) return;
     setCurrentRouteRef.current('/profile/preferences');
     setSidebarActiveSectionRef.current('preferences');
     setBreadcrumbsRef.current([
@@ -71,7 +81,7 @@ export default function ProfilePreferencesPage() {
       setSidebarActiveSectionRef.current(null);
       setBreadcrumbsRef.current([]);
     };
-  }, []);  
+  }, [isMounted]);  
 
   // Sync userInterests with initialInterests when profile changes
   // Use a ref to track previous initialInterests to prevent unnecessary updates
@@ -93,7 +103,7 @@ export default function ProfilePreferencesPage() {
   }, [statusMessage]);
 
   // Add timeout to prevent infinite loading - must be before early returns
-  const [loadingTimeout, setLoadingTimeout] = React.useState(false);
+  const [_loadingTimeout, setLoadingTimeout] = React.useState(false);
   React.useEffect(() => {
     if (!profileLoading) {
       setLoadingTimeout(false);
@@ -141,30 +151,31 @@ export default function ProfilePreferencesPage() {
     }
   }, [initialInterests, isUpdating]);  
 
-  if (profileLoading || loadingTimeout) {
+  // Check authentication - useEffect must be called unconditionally
+  useEffect(() => {
+    // In E2E harness mode, authentication is mocked - don't redirect
+    if (process.env.NEXT_PUBLIC_ENABLE_E2E_HARNESS === '1') {
+      return;
+    }
+    // Only redirect if we're certain user is not authenticated
+    // Don't redirect while authentication state is still loading
+    if (isMounted && !isUserLoading && !isAuthenticated) {
+      window.location.href = '/auth?redirectTo=/profile/preferences';
+    }
+  }, [isMounted, isAuthenticated, isUserLoading]);
+
+  if (!isMounted || isUserLoading) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center" data-testid="preferences-loading-auth" aria-label="Loading preferences" aria-busy="true">
         <div className="text-center">
-          <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-blue-600 mx-auto mb-4" />
-          <p className="text-gray-600">
-            {loadingTimeout ? 'Loading is taking longer than expected...' : 'Loading preferences...'}
-          </p>
-          {loadingTimeout && (
-            <button
-              onClick={() => {
-                window.location.reload();
-              }}
-              className="mt-4 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
-            >
-              Reload Page
-            </button>
-          )}
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4" />
+          <p className="text-gray-600">Loading...</p>
         </div>
       </div>
     );
   }
 
-  if (!user) {
+  if (!user || !isAuthenticated) {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
         <div className="text-center space-y-4">

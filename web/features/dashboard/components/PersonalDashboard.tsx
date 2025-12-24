@@ -257,7 +257,9 @@ function HarnessPersonalDashboard({ className = '' }: PersonalDashboardProps) {
     }
   }, []);
 
-  if (!shouldBypassAuth && !isUserLoading && !effectiveIsAuthenticated) {
+  // In harness mode, always render dashboard even if auth state isn't fully initialized
+  // The harness page sets up all the necessary state, so we should trust it
+  if (!shouldBypassAuth && !isUserLoading && !effectiveIsAuthenticated && !IS_E2E_HARNESS) {
     return (
       <div className={`space-y-6 ${className}`}>
         <Card>
@@ -454,8 +456,17 @@ function HarnessPersonalDashboard({ className = '' }: PersonalDashboardProps) {
 }
 
 export default function PersonalDashboard(props: PersonalDashboardProps) {
+  // In harness mode, always use harness component immediately (no state delay)
+  // Hooks must be called unconditionally before any early returns
+  // For non-harness mode, check bypass flag
+  const [useHarness, setUseHarness] = useState<boolean>(() => {
+    if (typeof window !== 'undefined' && window.localStorage.getItem('e2e-dashboard-bypass') === '1') {
+      return true;
+    }
+    return false;
+  });
+
   const [isMounted, setIsMounted] = useState(false);
-  const [useHarness, setUseHarness] = useState<boolean>(IS_E2E_HARNESS);
 
   useEffect(() => {
     setIsMounted(true);
@@ -463,40 +474,18 @@ export default function PersonalDashboard(props: PersonalDashboardProps) {
 
   useEffect(() => {
     if (!isMounted) return;
-    if (IS_E2E_HARNESS) {
-      setUseHarness(true);
-      if (process.env.DEBUG_DASHBOARD === '1' || (typeof window !== 'undefined' && window.localStorage.getItem('e2e-dashboard-bypass') === '1')) {
-        logger.debug('🚨 PersonalDashboard: Using harness mode (IS_E2E_HARNESS)', { IS_E2E_HARNESS });
-      }
-      return;
-    }
     if (typeof window !== 'undefined' && window.localStorage.getItem('e2e-dashboard-bypass') === '1') {
       setUseHarness(true);
       if (process.env.DEBUG_DASHBOARD === '1') {
         logger.debug('🚨 PersonalDashboard: Using harness mode (bypass flag)', { bypassFlag: '1' });
       }
-    } else {
-      if (process.env.DEBUG_DASHBOARD === '1' || (typeof window !== 'undefined' && window.localStorage.getItem('e2e-dashboard-bypass') === '1')) {
-        logger.debug('🚨 PersonalDashboard: Using standard mode', { 
-          bypassFlag: typeof window !== 'undefined' ? window.localStorage.getItem('e2e-dashboard-bypass') : 'SSR',
-          IS_E2E_HARNESS 
-        });
-      }
     }
   }, [isMounted]);
 
-  // DIAGNOSTIC: Log which component is being rendered
-  useEffect(() => {
-    if (process.env.DEBUG_DASHBOARD === '1' || (typeof window !== 'undefined' && window.localStorage.getItem('e2e-dashboard-bypass') === '1')) {
-      logger.debug('🚨 PersonalDashboard: Render decision', {
-        isMounted,
-        useHarness,
-        IS_E2E_HARNESS,
-        bypassFlag: typeof window !== 'undefined' ? window.localStorage.getItem('e2e-dashboard-bypass') : 'SSR',
-        component: useHarness ? 'HarnessPersonalDashboard' : 'StandardPersonalDashboard',
-      });
-    }
-  }, [isMounted, useHarness]);
+  // This ensures the test can find the element right away
+  if (IS_E2E_HARNESS) {
+    return <HarnessPersonalDashboard {...props} />;
+  }
 
   return useHarness ? <HarnessPersonalDashboard {...props} /> : <StandardPersonalDashboard {...props} />;
 }

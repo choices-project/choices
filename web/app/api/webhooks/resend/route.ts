@@ -93,10 +93,83 @@ async function handleBounce(
     }
   }
 
-  // TODO: Implement bounce handling logic:
-  // - Mark email as invalid if hard bounce
-  // - Retry soft bounces after delay
-  // - Update user email status in database
+  // Implement bounce handling logic
+  if (supabase && typeof email === 'string') {
+    try {
+      // Find user by email in user_profiles table
+      const { data: userProfile } = await (supabase as any)
+        .from('user_profiles')
+        .select('user_id')
+        .eq('email', email)
+        .single();
+      
+      if (userProfile?.user_id) {
+        const userId = userProfile.user_id;
+        const isHardBounce = bounceType === 'hard' || bounceType === 'permanent';
+        
+        // Update user privacy preferences to mark email as invalid for hard bounces
+        if (isHardBounce) {
+          const { error: updateError } = await (supabase as any)
+            .from('user_privacy_preferences')
+            .upsert({
+              user_id: userId,
+              allow_marketing: false,
+              allow_contact: false,
+              email_status: 'invalid',
+              email_bounce_count: 1,
+              updated_at: new Date().toISOString(),
+            }, {
+              onConflict: 'user_id',
+            });
+          
+          if (updateError) {
+            logger.error('Failed to update user email status for hard bounce', {
+              userId,
+              email,
+              error: updateError,
+            });
+          } else {
+            logger.info('Marked email as invalid due to hard bounce', { userId, email });
+          }
+        } else {
+          // For soft bounces, increment bounce count but don't invalidate yet
+          const { data: existingPrefs } = await (supabase as any)
+            .from('user_privacy_preferences')
+            .select('email_bounce_count')
+            .eq('user_id', userId)
+            .single();
+          
+          const bounceCount = (existingPrefs?.email_bounce_count || 0) + 1;
+          
+          // Invalidate after 3 soft bounces
+          if (bounceCount >= 3) {
+            await (supabase as any)
+              .from('user_privacy_preferences')
+              .upsert({
+                user_id: userId,
+                email_status: 'invalid',
+                email_bounce_count: bounceCount,
+                updated_at: new Date().toISOString(),
+              }, {
+                onConflict: 'user_id',
+              });
+          } else {
+            await (supabase as any)
+              .from('user_privacy_preferences')
+              .upsert({
+                user_id: userId,
+                email_bounce_count: bounceCount,
+                updated_at: new Date().toISOString(),
+              }, {
+                onConflict: 'user_id',
+              });
+          }
+        }
+      }
+    } catch (error) {
+      logger.error('Failed to handle bounce for user', { email, error });
+    }
+  }
 }
 
 /**
@@ -134,10 +207,65 @@ async function handleComplaint(
     }
   }
 
-  // TODO: Implement complaint handling logic:
-  // - Immediately unsubscribe user from emails
-  // - Flag email address to avoid future sends
-  // - Update user preferences in database
+  // Implement complaint handling logic
+  if (supabase && typeof email === 'string') {
+    try {
+      // Find user by email in user_profiles table
+      const { data: userProfile } = await (supabase as any)
+        .from('user_profiles')
+        .select('user_id')
+        .eq('email', email)
+        .single();
+      
+      if (userProfile?.user_id) {
+        const userId = userProfile.user_id;
+        
+        // Immediately unsubscribe user from all marketing and contact emails
+        const { error: updateError } = await (supabase as any)
+          .from('user_privacy_preferences')
+          .upsert({
+            user_id: userId,
+            allow_marketing: false,
+            allow_contact: false,
+            email_status: 'complained',
+            email_complaint_count: 1,
+            updated_at: new Date().toISOString(),
+          }, {
+            onConflict: 'user_id',
+          });
+        
+        if (updateError) {
+          logger.error('Failed to unsubscribe user after complaint', {
+            userId,
+            email,
+            error: updateError,
+          });
+        } else {
+          logger.info('Unsubscribed user from emails due to complaint', { userId, email });
+        }
+        
+        // Also update notification preferences to disable email notifications
+        const { error: notifError } = await (supabase as any)
+          .from('user_notification_preferences')
+          .upsert({
+            user_id: userId,
+            email_enabled: false,
+            updated_at: new Date().toISOString(),
+          }, {
+            onConflict: 'user_id',
+          });
+        
+        if (notifError) {
+          logger.warn('Failed to update notification preferences after complaint', {
+            userId,
+            error: notifError,
+          });
+        }
+      }
+    } catch (error) {
+      logger.error('Failed to handle complaint for user', { email, error });
+    }
+  }
 }
 
 export const POST = withErrorHandling(async (request: NextRequest) => {

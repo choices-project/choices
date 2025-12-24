@@ -44,6 +44,9 @@ export const POST = withErrorHandling(async (_request: NextRequest) => {
   }
 
   // Basic domain filter; rely on linking checks at confirm step
+  // Note: Multiple challenges can exist for a user. The confirm route queries
+  // for the most recent challenge (ordered by created_at DESC, limit 1), so
+  // requesting a new code will automatically make it the active one.
   const email = user.email;
   const code = generateCode();
   const expiresAt = new Date(Date.now() + 15 * 60 * 1000).toISOString();

@@ -1,10 +1,17 @@
-# Project Status — January 2026
+# Project Status — December 2025
 
-_Last updated: January 2026_
+_Last updated: December 2025_
 
 The Choices platform is mid-stream on a modernization pass. Core civic features remain available, but several stores, docs, and analytics surfaces still require investment before we can claim production readiness.
 
-**Recent Updates (December 2024):**
+**Recent Updates (December 2025):**
+- ✅ **P0 Production Readiness Complete** - All critical production readiness items completed
+  - OG image test logger mocks fixed (11/11 tests passing)
+  - Candidate verification edge cases verified (53/53 tests passing)
+  - DMARC policy implementation documented
+  - Admin audit list/diff functionality enhanced
+  - Rate limit production verification documented
+  - Admin stats endpoint sanity checks enhanced
 - ✅ All critical environment variables configured in Vercel (26 total)
 - ✅ Fixed critical table name mismatch (`representative_follows` vs `user_followed_representatives`)
 - ✅ Store modernization largely complete (most stores follow creator pattern)
@@ -19,18 +26,25 @@ The Choices platform is mid-stream on a modernization pass. Core civic features 
 | Documentation | ✅ Current | Core docs refreshed; scratch materials archived; single-source roadmap established. |
 | Testing | 🚧 Needs expansion | Jest suites cover key stores; Playwright harnesses exist for profile + notification stores; analytics and civic flows still lack modern coverage. |
 | Analytics dashboard | ✅ Real data live | Supabase-backed endpoints (`/api/analytics/**`, unified API) with privacy-aware queries, Redis caching, and admin gating; see `docs/ANALYTICS_PIPELINE.md`. |
-| Admin tooling | 🔄 Being refit | Feature flag UI and notification system now consume shared hooks; broader audit tooling still references legacy patterns. |
+| Admin tooling | ✅ Enhanced | Feature flag UI and notification system now consume shared hooks; audit tooling enhanced with diff functionality, filtering, and comprehensive logging. |
 | Civic/notifications UX | ✅ Stable surface | Poll creation, onboarding, and notifications flows run on refactored APIs but still need ongoing regression coverage. |
 
 ---
 
 ## Recent Highlights
 
+- **P0 Production Readiness Complete (December 2025)** — All critical production readiness items completed:
+  - OG image test logger mocks fixed (all 11 tests passing)
+  - Candidate verification edge cases verified (expired/wrong code handling working correctly)
+  - DMARC policy implementation documented with DNS configuration guide
+  - Admin audit endpoints enhanced with diff comparison, filtering, and search
+  - Rate limit production verification guide created
+  - Admin stats endpoints enhanced with comprehensive logging and error handling
 - **OpenStates ingest overhaul** — Parser/stager now capture biographies, aliases, extras, expanded office metadata, and identifier maps; downstream enrichers + preview tooling surface the full dataset.
 - **Notification store** migrated to the shared creator/selectors pattern with unit, RTL integration, and new Playwright harness coverage (`/e2e/notification-store`).
 - **Admin notification widget** updated to consume shared hooks, aligning admin toasts with global behaviour.
 - **Voter registration CTA shipped** — Address lookup now renders state-specific registration links, Vote.gov guidance, and status checks backed by the new Supabase table + modernized store.
-- **Documentation cleanup** underway: development guide refreshed, modernization guidelines captured, and outdated “perfect completion” docs queued for archival.
+- **Documentation cleanup** underway: development guide refreshed, modernization guidelines captured, and outdated "perfect completion" docs queued for archival.
 - **Analytics funnels & KPIs** — `/api/analytics/funnels` + `/api/analytics/kpi` power the new dashboard funnel + KPI widgets; Playwright now covers admin feature-flag toggles via harness + API.
 
 ---
@@ -56,7 +70,7 @@ The Choices platform is mid-stream on a modernization pass. Core civic features 
 - Phase 5 — Documentation: High-level ingest summary will be maintained here; detailed runbooks under `services/supabase-operations-guide.md`.
 
 References:
-- Single-source roadmap entries: `docs/ROADMAP_SINGLE_SOURCE.md` (Section E)
+- Single-source roadmap entries: `scratch/ROADMAP_SINGLE_SOURCE.md` (Section E)
 - Backend plan: `services/civics-backend/ROADMAP.md`
 
 ---
@@ -84,9 +98,9 @@ References:
 
 ## References
 
-- Technical roadmap (single source): `docs/ROADMAP_SINGLE_SOURCE.md`
+- Technical roadmap (single source): `scratch/ROADMAP_SINGLE_SOURCE.md`
 - Testing strategy: `docs/TESTING.md`
 - State management standards: `docs/STATE_MANAGEMENT.md`
 
-For ongoing progress updates, track in `docs/ROADMAP_SINGLE_SOURCE.md`.
+For ongoing progress updates, track in `scratch/ROADMAP_SINGLE_SOURCE.md`.
 

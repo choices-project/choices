@@ -213,11 +213,20 @@ export default function AnalyticsPage() {
 
   if (loading && !analyticsData) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 flex items-center justify-center">
-        <div className="text-center">
-          <RefreshCw className="animate-spin h-12 w-12 text-blue-600 mx-auto mb-4" />
-          <h2 className="text-xl font-semibold text-gray-700">Loading Analytics...</h2>
-          <p className="text-gray-500 mt-2">Gathering comprehensive data insights</p>
+      <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100" aria-label="Loading analytics" aria-busy="true">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+          <div className="bg-white rounded-xl shadow-sm border p-6 mb-8">
+            <div className="h-8 bg-gray-200 rounded w-64 mb-2 animate-pulse" />
+            <div className="h-4 bg-gray-200 rounded w-96 animate-pulse" />
+          </div>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {[1, 2, 3, 4, 5, 6].map((i) => (
+              <div key={i} className="bg-white rounded-xl shadow-sm border p-6">
+                <div className="h-6 bg-gray-200 rounded w-3/4 mb-4 animate-pulse" />
+                <div className="h-32 bg-gray-200 rounded animate-pulse" />
+              </div>
+            ))}
+          </div>
         </div>
       </div>
     );
@@ -225,14 +234,15 @@ export default function AnalyticsPage() {
 
   if (error) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 flex items-center justify-center">
+      <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 flex items-center justify-center" role="alert" aria-live="assertive">
         <div className="text-center max-w-md mx-auto p-8">
-          <Bell className="h-16 w-16 text-red-400 mx-auto mb-4" />
+          <Bell className="h-16 w-16 text-red-400 mx-auto mb-4" aria-hidden="true" />
           <h1 className="text-2xl font-bold text-gray-900 mb-2">Analytics Error</h1>
           <p className="text-gray-600 mb-4">{error}</p>
           <button
             onClick={() => sendAnalytics()}
-            className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors"
+            className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
+            aria-label="Retry loading analytics"
           >
             Retry
           </button>
@@ -274,13 +284,15 @@ export default function AnalyticsPage() {
                   },
                   created_at: new Date().toISOString()
                 })}
-                className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors"
+                className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
+                aria-label="Enable auto-refresh for analytics"
               >
                 Enable Auto-refresh
               </button>
               <button
                 onClick={() => exportAnalytics()}
-                className="bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 transition-colors"
+                className="bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 transition-colors focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2"
+                aria-label="Export analytics data"
               >
                 Export Data
               </button>
