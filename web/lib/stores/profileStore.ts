@@ -200,10 +200,28 @@ export const createProfileActions = (
       });
 
       try {
-        const { updateProfile } = await import('@/features/profile/lib/profile-service');
-        const result = await updateProfile({} as ProfileUpdateData);
+        // Update preferences via POST /api/profile with body.preferences
+        // The API expects preferences in body.preferences and stores them in privacy_settings
+        const response = await fetch('/api/profile', {
+          method: 'POST',
+          credentials: 'include',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            preferences: preferences,
+          }),
+        });
 
-        if (result.success) {
+        if (!response.ok) {
+          const errorData = await response.json().catch(() => ({ error: 'Failed to update preferences' }));
+          throw new Error(errorData.error ?? `HTTP ${response.status}: ${response.statusText}`);
+        }
+
+        const result = await response.json();
+        
+        if (result.success !== false) {
+          // Update local store state with merged preferences
           setState((state) => {
             if (state.preferences) {
               Object.assign(state.preferences, preferences);
@@ -370,6 +388,14 @@ export const createProfileActions = (
           if (result.success && result.data) {
             state.profile = result.data ?? null;
             state.isProfileLoaded = true;
+            // Also set userProfile and preferences from API response
+            if (result.data) {
+              state.userProfile = result.data;
+              // Set preferences from API response if available
+              if (result.preferences) {
+                state.preferences = result.preferences;
+              }
+            }
           } else if (result.error) {
             state.error = result.error;
             // If we get a 401 (Unauthorized), mark as loaded to prevent infinite retry loops

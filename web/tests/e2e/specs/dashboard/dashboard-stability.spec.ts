@@ -579,18 +579,34 @@ test.describe('Dashboard Stability Tests', () => {
     const baseUrl = process.env.BASE_URL || 'https://www.choices-app.com';
     const url = new URL(baseUrl);
     const domain = url.hostname.startsWith('www.') ? url.hostname.substring(4) : url.hostname;
+    
+    // For localhost, don't use dot prefix (localhost cookies don't work with .localhost)
+    // For other domains, use dot prefix for subdomain support
+    const cookieDomain = domain === 'localhost' || domain === '127.0.0.1' 
+      ? domain 
+      : `.${domain}`;
 
     try {
       await page.context().addCookies([{
         name: 'e2e-dashboard-bypass',
         value: '1',
         path: '/',
-        domain: `.${domain}`,
-        sameSite: 'None' as const,
-        secure: true,
+        domain: cookieDomain,
+        sameSite: 'Lax' as const, // Use Lax for localhost compatibility
+        secure: domain !== 'localhost' && domain !== '127.0.0.1', // Only secure for non-localhost
         httpOnly: false,
       }]);
-      console.log('[dashboard-stability] E2E bypass cookie set for domain:', `.${domain}`);
+      console.log('[dashboard-stability] E2E bypass cookie set for domain:', cookieDomain);
+      
+      // Verify cookie was set
+      const cookiesAfterSet = await page.context().cookies();
+      const bypassCookie = cookiesAfterSet.find(c => c.name === 'e2e-dashboard-bypass');
+      console.log('[dashboard-stability] Bypass cookie verification:', {
+        found: !!bypassCookie,
+        value: bypassCookie?.value,
+        domain: bypassCookie?.domain,
+        path: bypassCookie?.path,
+      });
     } catch (error) {
       console.log('[dashboard-stability] Cookie setting failed (expected in some envs), using localStorage only:', error);
     }
@@ -605,12 +621,43 @@ test.describe('Dashboard Stability Tests', () => {
 
     try {
       // Navigate to base URL first to ensure cookie is established
-      await page.goto(baseUrl, { waitUntil: 'domcontentloaded', timeout: 60_000 });
+      // Use full URL to ensure we're on the correct domain
+      const fullBaseUrl = baseUrl.endsWith('/') ? baseUrl.slice(0, -1) : baseUrl;
+      await page.goto(fullBaseUrl, { waitUntil: 'domcontentloaded', timeout: 60_000 });
       await page.waitForTimeout(500); // Small delay to ensure cookie is set
+      
+      // Verify cookie is present before navigating to dashboard
+      const cookiesBeforeNav = await page.context().cookies();
+      const bypassCookieBeforeNav = cookiesBeforeNav.find(c => c.name === 'e2e-dashboard-bypass');
+      console.log('[dashboard-stability] Cookie before dashboard navigation:', {
+        found: !!bypassCookieBeforeNav,
+        value: bypassCookieBeforeNav?.value,
+        domain: bypassCookieBeforeNav?.domain,
+        url: page.url(),
+      });
 
-      await page.goto('/dashboard', { waitUntil: 'domcontentloaded', timeout: 60_000 });
+      // Navigate to dashboard using full URL to ensure cookie domain matches
+      await page.goto(`${fullBaseUrl}/dashboard`, { waitUntil: 'domcontentloaded', timeout: 60_000 });
       await waitForPageReady(page);
+      
+      // Verify we're still on the dashboard page (not redirected)
+      const currentUrl = page.url();
+      console.log('[dashboard-stability] Current URL after navigation:', currentUrl);
+      if (!currentUrl.includes('/dashboard') && currentUrl.includes('/auth')) {
+        console.warn('[dashboard-stability] WARNING: Redirected to /auth instead of /dashboard');
+        // Check cookies again after navigation
+        const cookiesAfterNav = await page.context().cookies();
+        const bypassCookieAfterNav = cookiesAfterNav.find(c => c.name === 'e2e-dashboard-bypass');
+        console.log('[dashboard-stability] Cookie after navigation:', {
+          found: !!bypassCookieAfterNav,
+          value: bypassCookieAfterNav?.value,
+          domain: bypassCookieAfterNav?.domain,
+        });
+      }
 
+      // Wait a bit longer for React to hydrate and render
+      await page.waitForTimeout(2000);
+      
       // Comprehensive diagnostics for PersonalDashboard
       const dashboardDiagnostics = await page.evaluate(() => {
         const personalDashboard = document.querySelector('[data-testid="personal-dashboard"]');
@@ -619,6 +666,7 @@ test.describe('Dashboard Stability Tests', () => {
         const personalAnalytics = document.querySelector('[data-testid="personal-analytics"]');
         const dashboardNav = document.querySelector('[data-testid="dashboard-nav"]');
         const settingsContent = document.querySelector('[data-testid="settings-content"]');
+        const dashboardPageContent = document.querySelector('[data-testid="dashboard-page-content"]');
 
         // Check for loading states
         const loadingSkeletons = document.querySelectorAll('.animate-pulse, [class*="Skeleton"]');
@@ -630,6 +678,18 @@ test.describe('Dashboard Stability Tests', () => {
         // Check page structure
         const mainContent = document.querySelector('main') || document.querySelector('[role="main"]');
         const dashboardPage = document.querySelector('[class*="dashboard"]');
+        const bodyText = document.body.innerText.substring(0, 500);
+        const bodyHTML = document.body.innerHTML.substring(0, 1000);
+
+        // Check for React error boundaries
+        const errorBoundary = document.querySelector('[class*="error-boundary"], [class*="ErrorBoundary"]');
+        
+        // Check all data-testid elements
+        const allTestIds = Array.from(document.querySelectorAll('[data-testid]')).map(el => ({
+          id: el.getAttribute('data-testid'),
+          tag: el.tagName,
+          visible: (el as HTMLElement).offsetParent !== null,
+        }));
 
         return {
           personalDashboard: {
@@ -658,6 +718,10 @@ test.describe('Dashboard Stability Tests', () => {
             exists: !!settingsContent,
             visible: settingsContent ? (settingsContent as HTMLElement).offsetParent !== null : false,
           },
+          dashboardPageContent: {
+            exists: !!dashboardPageContent,
+            visible: dashboardPageContent ? (dashboardPageContent as HTMLElement).offsetParent !== null : false,
+          },
           loadingStates: {
             skeletonsCount: loadingSkeletons.length,
             spinnersCount: spinners.length,
@@ -666,13 +730,17 @@ test.describe('Dashboard Stability Tests', () => {
           errorStates: {
             errorsCount: errorMessages.length,
             errorTexts: Array.from(errorMessages).slice(0, 3).map(el => el.textContent?.trim()),
+            errorBoundary: !!errorBoundary,
           },
           pageStructure: {
             hasMain: !!mainContent,
             hasDashboardPage: !!dashboardPage,
             url: window.location.href,
             pathname: window.location.pathname,
+            bodyTextPreview: bodyText,
+            bodyHTMLPreview: bodyHTML,
           },
+          allTestIds: allTestIds.slice(0, 15),
           localStorage: {
             bypassFlag: localStorage.getItem('e2e-dashboard-bypass'),
             userStore: localStorage.getItem('user-store') ? 'exists' : 'missing',

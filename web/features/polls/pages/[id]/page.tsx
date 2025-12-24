@@ -171,7 +171,7 @@ export default async function PollPage({ params }: { params: { id: string } }) {
         <div className="text-center space-y-4 max-w-md">
           <h1 className="text-2xl font-bold text-gray-900 dark:text-gray-100">Unable to load poll</h1>
           <p className="text-gray-600 dark:text-gray-400">
-            We couldn't find or load this poll. It may have been deleted or you may not have permission to view it.
+            We couldn&apos;t find or load this poll. It may have been deleted or you may not have permission to view it.
           </p>
           <a
             href="/polls"

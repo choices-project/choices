@@ -4,6 +4,8 @@ import React, { useEffect, useRef } from 'react';
 
 import { ComprehensiveAdminDashboard } from '@/features/admin';
 
+import { ErrorBoundary } from '@/components/shared/ErrorBoundary';
+
 import { useAppActions } from '@/lib/stores/appStore';
 
 import { AdminLayout } from '../layout/AdminLayout';
@@ -38,9 +40,11 @@ export default function AdminDashboardPage() {
 
   return (
     <AdminLayout>
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        <ComprehensiveAdminDashboard />
-      </div>
+      <ErrorBoundary>
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+          <ComprehensiveAdminDashboard />
+        </div>
+      </ErrorBoundary>
     </AdminLayout>
   );
 }

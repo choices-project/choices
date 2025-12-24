@@ -1033,7 +1033,7 @@ export function AccessiblePollWizard() {
               <CheckCircle2 className="mt-0.5 h-5 w-5" />
               <div>
                 <p className="font-medium">Poll published!</p>
-                <p>Your poll "{submissionResult.data?.title ?? submissionResult.title}" is ready for voters.</p>
+                <p>Your poll &quot;{submissionResult.data?.title ?? submissionResult.title}&quot; is ready for voters.</p>
               </div>
             </div>
           )}

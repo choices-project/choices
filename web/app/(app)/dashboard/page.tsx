@@ -21,6 +21,22 @@ import { useAuth } from '@/hooks/useAuth';
 export const dynamic = 'force-dynamic';
 
 /**
+ * Helper function to check bypass flag from localStorage
+ * This is used throughout the component to ensure bypass is checked consistently
+ */
+function checkBypassFlag(): boolean {
+  if (typeof window === 'undefined') {
+    return false;
+  }
+  try {
+    return window.localStorage.getItem('e2e-dashboard-bypass') === '1' ||
+           process.env.NEXT_PUBLIC_ENABLE_E2E_HARNESS === '1';
+  } catch {
+    return process.env.NEXT_PUBLIC_ENABLE_E2E_HARNESS === '1';
+  }
+}
+
+/**
  * Check if session cookies exist (matches middleware logic)
  * Polls for cookies with retry logic to handle timing issues
  *
@@ -170,7 +186,7 @@ export default function DashboardPage() {
       const redirectTo = searchParams.get('redirectTo');
       if (redirectTo === '/dashboard' || redirectTo === '/feed') {
         try {
-          const bypassFlag = window.localStorage.getItem('e2e-dashboard-bypass') === '1';
+          const bypassFlag = checkBypassFlag();
           if (bypassFlag) {
             // Bypass flag is set but we were redirected - immediately redirect back
             if (process.env.DEBUG_DASHBOARD === '1') {
@@ -182,7 +198,7 @@ export default function DashboardPage() {
         } catch {
           // localStorage might not be available, fallback to window.location
           try {
-            const bypassFlag = window.localStorage.getItem('e2e-dashboard-bypass') === '1';
+            const bypassFlag = checkBypassFlag();
             if (bypassFlag && redirectTo) {
               window.location.replace(redirectTo);
             }
@@ -218,23 +234,18 @@ export default function DashboardPage() {
   const [shouldBypassAuth, setShouldBypassAuth] = useState(false);
   const [isClient, setIsClient] = useState(false);
   
-  // Set client flag after mount to prevent hydration mismatch
+  // Set client flag and check bypass immediately after mount to prevent hydration mismatch
+  // Check bypass flag synchronously on first client render to avoid delays
   useEffect(() => {
     setIsClient(true);
     
-    // In E2E harness mode, always bypass auth checks (authentication is mocked)
-    if (process.env.NEXT_PUBLIC_ENABLE_E2E_HARNESS === '1') {
+    // Check bypass flag immediately
+    const bypassValue = checkBypassFlag();
+    if (bypassValue) {
       setShouldBypassAuth(true);
-      return;
-    }
-    
-    // Check localStorage bypass flag for specific test scenarios
-    try {
-      const bypassValue = window.localStorage.getItem('e2e-dashboard-bypass') === '1';
-      setShouldBypassAuth(bypassValue);
-    } catch {
-      // localStorage might not be available (some browsers/contexts)
-      setShouldBypassAuth(false);
+      if (process.env.DEBUG_DASHBOARD === '1') {
+        logger.debug('🚨 Dashboard: Bypass flag detected in initial useEffect', { bypassValue });
+      }
     }
   }, []);
 
@@ -246,26 +257,22 @@ export default function DashboardPage() {
 
     // Check immediately
     const checkBypass = () => {
-      try {
-        const bypassValue = window.localStorage.getItem('e2e-dashboard-bypass') === '1';
-        if (bypassValue !== shouldBypassAuth) {
-          setShouldBypassAuth(bypassValue);
+      const bypassValue = checkBypassFlag();
+      if (bypassValue !== shouldBypassAuth) {
+        setShouldBypassAuth(bypassValue);
 
-          // CRITICAL: If bypass flag is now set and we're on /auth with redirectTo=/dashboard, redirect back
-          if (bypassValue && window.location.pathname === '/auth') {
-            const searchParams = new URLSearchParams(window.location.search);
-            const redirectTo = searchParams.get('redirectTo');
-            if (redirectTo === '/dashboard' || redirectTo === '/feed') {
-              if (process.env.DEBUG_DASHBOARD === '1') {
-                logger.debug('🚨 Dashboard: Bypass flag detected during periodic check - redirecting back to dashboard');
-              }
-              // Use Next.js router for more reliable navigation in tests
-              routerRef.current.replace(redirectTo);
+        // CRITICAL: If bypass flag is now set and we're on /auth with redirectTo=/dashboard, redirect back
+        if (bypassValue && window.location.pathname === '/auth') {
+          const searchParams = new URLSearchParams(window.location.search);
+          const redirectTo = searchParams.get('redirectTo');
+          if (redirectTo === '/dashboard' || redirectTo === '/feed') {
+            if (process.env.DEBUG_DASHBOARD === '1') {
+              logger.debug('🚨 Dashboard: Bypass flag detected during periodic check - redirecting back to dashboard');
             }
+            // Use Next.js router for more reliable navigation in tests
+            routerRef.current.replace(redirectTo);
           }
         }
-      } catch {
-        // localStorage might not be available
       }
     };
 
@@ -304,7 +311,7 @@ export default function DashboardPage() {
 
   // Check if Zustand persist store has hydrated (Target 2.2)
   useEffect(() => {
-    if (shouldBypassAuth) {
+    if (shouldBypassAuth || checkBypassFlag()) {
       setIsStoreHydrated(true); // In bypass mode, assume hydrated
       return () => {
         // Cleanup function - no cleanup needed
@@ -362,7 +369,7 @@ export default function DashboardPage() {
 
   // Poll for cookies asynchronously - cookies may not be immediately available
   useEffect(() => {
-    if (shouldBypassAuth || typeof window === 'undefined') {
+    if (shouldBypassAuth || checkBypassFlag() || typeof window === 'undefined') {
       setHasCookies(true); // Bypass = assume cookies exist
       return;
     }
@@ -395,9 +402,20 @@ export default function DashboardPage() {
   useEffect(() => {
     // In E2E harness mode or when bypassing auth, skip all redirect checks (authentication is mocked)
     // CRITICAL: Check bypass flag FIRST before any other logic
-    if (shouldBypassAuth) {
-      if (process.env.DEBUG_DASHBOARD === '1') {
-        logger.debug('🚨 Dashboard: Bypass flag set - skipping all auth checks and redirects');
+    // Use helper function to check bypass consistently
+    const bypassCheck1 = shouldBypassAuth || checkBypassFlag();
+    
+    if (bypassCheck1) {
+      // Update state if we detected bypass via localStorage but state wasn't set yet
+      if (checkBypassFlag() && !shouldBypassAuth) {
+        setShouldBypassAuth(true);
+      }
+      if (process.env.DEBUG_DASHBOARD === '1' || checkBypassFlag()) {
+        logger.debug('🚨 Dashboard: Bypass flag set - skipping all auth checks and redirects', {
+          shouldBypassAuth,
+          currentBypassFlag: checkBypassFlag(),
+          envHarness: process.env.NEXT_PUBLIC_ENABLE_E2E_HARNESS === '1',
+        });
       }
       return () => {
         // Cleanup function - no cleanup needed for bypass case
@@ -428,7 +446,13 @@ export default function DashboardPage() {
     // First check if user is authenticated - if not, check session cookie and wait for hydration
     // Double-check bypass flag here as well (defensive programming)
     // CRITICAL: Re-check bypass flag here to prevent any redirects during E2E tests
-    if (shouldBypassAuth) {
+    const bypassCheck2 = shouldBypassAuth || checkBypassFlag();
+    
+    if (bypassCheck2) {
+      // Update state if we detected bypass via localStorage but state wasn't set yet
+      if (checkBypassFlag() && !shouldBypassAuth) {
+        setShouldBypassAuth(true);
+      }
       // Bypass is set - skip all auth checks and allow render
       return () => {
         // Cleanup function - no cleanup needed for bypass case
@@ -437,9 +461,13 @@ export default function DashboardPage() {
     if (!isAuthenticated) {
       // CRITICAL: Re-check bypass flag before any redirects (defensive programming)
       // This prevents redirects during E2E tests even if cookies aren't found
-      if (shouldBypassAuth) {
-        if (process.env.DEBUG_DASHBOARD === '1' || (typeof window !== 'undefined' && window.localStorage.getItem('e2e-dashboard-bypass') === '1')) {
-          logger.debug('🚨 Dashboard: Bypass flag detected in redirect check - skipping redirect');
+      const bypassCheck3 = shouldBypassAuth || checkBypassFlag();
+      if (bypassCheck3) {
+        if (process.env.DEBUG_DASHBOARD === '1' || checkBypassFlag()) {
+          logger.debug('🚨 Dashboard: Bypass flag detected in redirect check - skipping redirect', {
+            shouldBypassAuth,
+            currentBypassFlag: checkBypassFlag(),
+          });
         }
         return () => {
           // Cleanup function - no cleanup needed for bypass case
@@ -456,7 +484,10 @@ export default function DashboardPage() {
       if (!hasCookies) {
         // No cookies found after polling - definitely not authenticated, redirect
         // BUT: Only redirect if bypass flag is NOT set
-        if (!shouldBypassAuth) {
+        // Re-check bypass flag here as well
+        const bypassCheck4 = shouldBypassAuth || checkBypassFlag();
+        
+        if (!bypassCheck4) {
           if (process.env.DEBUG_DASHBOARD === '1') {
             logger.debug('🚨 Dashboard: No session cookies found after polling - redirecting to auth');
           }
@@ -465,8 +496,11 @@ export default function DashboardPage() {
             // Cleanup function - no cleanup needed for immediate redirect
           };
         } else {
-          if (process.env.DEBUG_DASHBOARD === '1' || (typeof window !== 'undefined' && window.localStorage.getItem('e2e-dashboard-bypass') === '1')) {
-            logger.debug('🚨 Dashboard: No cookies but bypass flag set - allowing render');
+          if (process.env.DEBUG_DASHBOARD === '1' || checkBypassFlag()) {
+            logger.debug('🚨 Dashboard: No cookies but bypass flag set - allowing render', {
+              shouldBypassAuth,
+              currentBypassFlag: checkBypassFlag(),
+            });
           }
         }
       }
@@ -480,12 +514,14 @@ export default function DashboardPage() {
       authRetryTimeoutRef.current = setTimeout(() => {
         // CRITICAL: Check bypass flag before any delayed redirects
         // Re-check bypass flag in case it was set after the timeout was created
-        const currentBypassFlag = typeof window !== 'undefined' &&
-          window.localStorage.getItem('e2e-dashboard-bypass') === '1';
+        const bypassCheck5 = shouldBypassAuth || checkBypassFlag();
 
-        if (shouldBypassAuth || currentBypassFlag) {
-          if (process.env.DEBUG_DASHBOARD === '1' || currentBypassFlag) {
-            logger.debug('🚨 Dashboard: Bypass flag detected in delayed check - skipping redirect');
+        if (bypassCheck5) {
+          if (process.env.DEBUG_DASHBOARD === '1' || checkBypassFlag()) {
+            logger.debug('🚨 Dashboard: Bypass flag detected in delayed check - skipping redirect', {
+              shouldBypassAuth,
+              currentBypassFlag: checkBypassFlag(),
+            });
           }
           authRetryTimeoutRef.current = null;
           return;
@@ -494,12 +530,14 @@ export default function DashboardPage() {
         // After extended wait, check if cookies still exist and auth state has hydrated
         checkSessionCookies(3, 200).then((stillHasCookie) => {
           // CRITICAL: Re-check bypass flag before redirecting
-          const stillBypassFlag = typeof window !== 'undefined' &&
-            window.localStorage.getItem('e2e-dashboard-bypass') === '1';
+          const bypassCheck6 = shouldBypassAuth || checkBypassFlag();
 
-          if (shouldBypassAuth || stillBypassFlag) {
-            if (process.env.DEBUG_DASHBOARD === '1' || stillBypassFlag) {
-              logger.debug('🚨 Dashboard: Bypass flag detected in delayed cookie check - skipping redirect');
+          if (bypassCheck6) {
+            if (process.env.DEBUG_DASHBOARD === '1' || checkBypassFlag()) {
+              logger.debug('🚨 Dashboard: Bypass flag detected in delayed cookie check - skipping redirect', {
+                shouldBypassAuth,
+                currentBypassFlag: checkBypassFlag(),
+              });
             }
             authRetryTimeoutRef.current = null;
             return;
@@ -511,14 +549,18 @@ export default function DashboardPage() {
           if (!stillHasCookie) {
             // Cookies disappeared - definitely not authenticated
             // BUT: Only redirect if bypass flag is NOT set
-            if (!shouldBypassAuth && !stillBypassFlag) {
+            const bypassCheck7 = shouldBypassAuth || checkBypassFlag();
+            if (!bypassCheck7) {
               if (process.env.DEBUG_DASHBOARD === '1') {
                 logger.debug('🚨 Dashboard: Session cookies disappeared after wait - redirecting to auth');
               }
               routerRef.current.replace('/auth');
             } else {
-              if (process.env.DEBUG_DASHBOARD === '1' || stillBypassFlag) {
-                logger.debug('🚨 Dashboard: Cookies disappeared but bypass flag set - allowing render');
+              if (process.env.DEBUG_DASHBOARD === '1' || checkBypassFlag()) {
+                logger.debug('🚨 Dashboard: Cookies disappeared but bypass flag set - allowing render', {
+                  shouldBypassAuth,
+                  currentBypassFlag: checkBypassFlag(),
+                });
               }
             }
           } else if (!currentAuthState) {
@@ -599,8 +641,13 @@ export default function DashboardPage() {
 
         // Not admin or check failed - redirect to onboarding
         // CRITICAL: Skip redirect if bypass flag is set (E2E testing)
-        if (shouldBypassAuth) {
-          logger.debug('🚨 Dashboard: Bypass flag set - skipping onboarding redirect');
+        const bypassCheck8 = shouldBypassAuth || checkBypassFlag();
+        
+        if (bypassCheck8) {
+          logger.debug('🚨 Dashboard: Bypass flag set - skipping onboarding redirect', {
+            shouldBypassAuth,
+            currentBypassFlag: checkBypassFlag(),
+          });
           setIsCheckingAdmin(false);
           adminCheckRef.current = false;
           return;
@@ -622,7 +669,7 @@ export default function DashboardPage() {
 
   // Check if user is admin when profile is loaded
   useEffect(() => {
-    if (shouldBypassAuth || !isAuthenticated || isLoading) {
+    if (shouldBypassAuth || checkBypassFlag() || !isAuthenticated || isLoading) {
       return;
     }
 
@@ -666,8 +713,9 @@ export default function DashboardPage() {
 
   // DIAGNOSTIC: Log when dashboard content is about to render (must be before early returns)
   useEffect(() => {
-    if (shouldBypassAuth || (!isUserLoading && !isAuthContextLoading && isStoreHydrated && (hasCookies !== false || isAuthenticated))) {
-      if (process.env.DEBUG_DASHBOARD === '1' || (typeof window !== 'undefined' && window.localStorage.getItem('e2e-dashboard-bypass') === '1')) {
+    const shouldBypass = shouldBypassAuth || checkBypassFlag();
+    if (shouldBypass || (!isUserLoading && !isAuthContextLoading && isStoreHydrated && (hasCookies !== false || isAuthenticated))) {
+      if (process.env.DEBUG_DASHBOARD === '1' || checkBypassFlag()) {
         logger.debug('🚨 Dashboard: Rendering dashboard content', {
           shouldBypassAuth,
           isAuthenticated,
@@ -685,7 +733,8 @@ export default function DashboardPage() {
   // Also bypass loading check if user is authenticated (profile can load in background)
   // Wait for AuthContext to finish initializing before showing loading skeleton
   // CRITICAL: If bypass flag is set, skip loading skeleton and render dashboard immediately
-  if (isLoading && !loadingTimeout && !shouldBypassAuth && !isAuthenticated && !isAuthContextLoading) {
+  const shouldBypass = shouldBypassAuth || checkBypassFlag();
+  if (isLoading && !loadingTimeout && !shouldBypass && !isAuthenticated && !isAuthContextLoading) {
     return (
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8" aria-label="Loading dashboard">
         <div className="space-y-6">
@@ -709,44 +758,6 @@ export default function DashboardPage() {
     );
   }
 
-  // Only block rendering if user is definitely not authenticated AND no cookies exist
-  // If cookies exist, middleware already validated authentication, so allow rendering
-  // Allow page to render even if profile is still loading or missing
-  // The PersonalDashboard component can handle missing profile gracefully
-  // In E2E harness mode, always allow rendering (authentication is mocked)
-
-  // Use async cookie check result (hasCookies) instead of synchronous document.cookie read
-  // hasCookies === null means still checking, so allow render while checking
-  // hasCookies === true means cookies exist, allow render
-  // hasCookies === false means no cookies, block render if not authenticated
-
-  // Only show access denied if:
-  // 1. Not bypassing auth (CRITICAL: Check bypass flag first)
-  // 2. Not loading (user store, AuthContext, or store hydration)
-  // 3. Cookie check completed (hasCookies !== null)
-  // 4. Not authenticated in store
-  // 5. AND no session cookies exist (definitely not authenticated)
-  //
-  // Note: We trust middleware has already validated cookies, so we only block if:
-  // - All loading is complete AND
-  // - No cookies found after polling AND
-  // - Store confirms not authenticated
-  // This matches the pattern used by feed/polls pages - trust middleware, simple checks
-  // DIAGNOSTIC: Log render decision for debugging
-  if (process.env.DEBUG_DASHBOARD === '1' || (typeof window !== 'undefined' && window.localStorage.getItem('e2e-dashboard-bypass') === '1')) {
-    logger.debug('🚨 Dashboard: Render decision', {
-      shouldBypassAuth,
-      isUserLoading,
-      isAuthContextLoading,
-      isStoreHydrated,
-      hasCookies,
-      isAuthenticated,
-      isLoading,
-      loadingTimeout,
-      currentUrl: typeof window !== 'undefined' ? window.location.href : 'SSR',
-    });
-  }
-
   // CRITICAL: Wait for client-side hydration before making render decisions
   // This prevents hydration mismatch errors (React error #185)
   if (!isClient) {
@@ -765,12 +776,23 @@ export default function DashboardPage() {
 
   // CRITICAL: If bypass flag is set, always allow render (E2E testing)
   // This must be checked BEFORE any other conditions to prevent redirects
-  if (shouldBypassAuth) {
+  // Check both state and localStorage directly to catch cases where state hasn't updated yet
+  const finalShouldBypass = shouldBypassAuth || checkBypassFlag();
+  
+  if (finalShouldBypass) {
+    // Update state if we detected bypass via localStorage but state wasn't set yet
+    if (checkBypassFlag() && !shouldBypassAuth) {
+      setShouldBypassAuth(true);
+    }
     // Bypass is set - render dashboard immediately, skip all auth checks
     // This allows E2E tests to access dashboard without authentication
     // Fall through to render dashboard content
-    if (process.env.DEBUG_DASHBOARD === '1' || (typeof window !== 'undefined' && window.localStorage.getItem('e2e-dashboard-bypass') === '1')) {
-      logger.debug('🚨 Dashboard: Bypass flag active - rendering dashboard content');
+    if (process.env.DEBUG_DASHBOARD === '1' || checkBypassFlag()) {
+      logger.debug('🚨 Dashboard: Bypass flag active - rendering dashboard content', {
+        shouldBypassAuth,
+        currentBypassFlag: checkBypassFlag(),
+        envHarness: process.env.NEXT_PUBLIC_ENABLE_E2E_HARNESS === '1',
+      });
     }
   } else if (!isUserLoading && !isAuthContextLoading && isStoreHydrated && hasCookies === false && !isAuthenticated) {
     return (

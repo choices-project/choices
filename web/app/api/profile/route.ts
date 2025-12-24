@@ -59,7 +59,15 @@ const preferencesSchema = z.object({
   timezone: z.string().optional(),
   marketing_emails: z.boolean().optional(),
   weekly_digest: z.boolean().optional(),
-});
+  // Support dashboard preferences nested structure
+  dashboard: z.object({
+    showElectedOfficials: z.boolean().optional(),
+    showQuickActions: z.boolean().optional(),
+    showRecentActivity: z.boolean().optional(),
+    showEngagementScore: z.boolean().optional(),
+  }).optional(),
+  // Allow any additional preferences for extensibility
+}).passthrough();
 
 const interestsSchema = z.object({
   categories: z.array(z.string()).optional(),
@@ -228,11 +236,31 @@ export const POST = withErrorHandling(async (request: NextRequest) => {
         return validationError(errorDetails, 'Invalid preferences data');
       }
 
-      // Update privacy_settings in user_profiles table
+      // Update preferences in user_profiles table
+      // Store in preferences field (not privacy_settings) to support dashboard and other preferences
+      // Merge with existing preferences to avoid overwriting other preference data
+      // Deep merge nested objects like dashboard
+      const existingPreferences = (currentProfile?.preferences as Record<string, unknown>) ?? {};
+      const mergedPreferences: Record<string, unknown> = { ...existingPreferences };
+      
+      // Deep merge nested objects
+      for (const [key, value] of Object.entries(parsedPreferences.data)) {
+        if (value && typeof value === 'object' && !Array.isArray(value) && existingPreferences[key] && typeof existingPreferences[key] === 'object' && !Array.isArray(existingPreferences[key])) {
+          // Deep merge nested object
+          mergedPreferences[key] = {
+            ...(existingPreferences[key] as Record<string, unknown>),
+            ...(value as Record<string, unknown>),
+          };
+        } else {
+          // Shallow merge for primitives and arrays
+          mergedPreferences[key] = value;
+        }
+      }
+      
       const { data, error } = await supabase
         .from('user_profiles')
         .update({
-          privacy_settings: parsedPreferences.data,
+          preferences: mergedPreferences,
           updated_at: new Date().toISOString()
         })
         .eq('user_id', user.id)

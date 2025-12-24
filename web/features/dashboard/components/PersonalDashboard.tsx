@@ -191,7 +191,7 @@ function HarnessPersonalDashboard({ className = '' }: PersonalDashboardProps) {
   // CRITICAL: Use useState instead of useMemo to prevent hydration mismatch
   // Initialize to false (same on server and client), then check localStorage in useEffect
   const [fallbackAuthenticated, setFallbackAuthenticated] = useState(false);
-  
+
   useEffect(() => {
     if (!shouldBypassAuth || typeof window === 'undefined') {
       setFallbackAuthenticated(false);
@@ -209,11 +209,55 @@ function HarnessPersonalDashboard({ className = '' }: PersonalDashboardProps) {
       setFallbackAuthenticated(false);
     }
   }, [shouldBypassAuth]);
-  
+
   const effectiveIsAuthenticated = isAuthenticated || fallbackAuthenticated;
   const dashboardPreferences = useProfileStore(
     (state) => state.preferences?.dashboard ?? HARNESS_DEFAULT_DASHBOARD_PREFERENCES,
   );
+
+  // Get updatePreferences from store for harness mode
+  const { updatePreferences } = useProfileStore(
+    useShallow((state) => ({
+      updatePreferences: state.updatePreferences,
+    })),
+  );
+  const updatePreferencesRef = useRef(updatePreferences);
+  useEffect(() => { updatePreferencesRef.current = updatePreferences; }, [updatePreferences]);
+
+  // Define handlePreferenceToggle for harness mode
+  const handlePreferenceToggle = useCallback(
+    (key: keyof DashboardPreferences) => async (event: React.ChangeEvent<HTMLInputElement>) => {
+      const checked = event.target.checked;
+      let nextDashboardPrefs: DashboardPreferences | null = null;
+      useProfileStore.setState((state) => {
+        const currentPreferences = state.preferences ?? ({} as ProfilePreferences);
+        const nextDashboard = {
+          ...(currentPreferences.dashboard ?? HARNESS_DEFAULT_DASHBOARD_PREFERENCES),
+          [key]: checked,
+        };
+        const updated = {
+          ...currentPreferences,
+          dashboard: nextDashboard,
+        } as ProfilePreferences;
+        state.preferences = updated;
+        nextDashboardPrefs = nextDashboard;
+      });
+      // Persist to localStorage in harness mode
+      if (IS_E2E_HARNESS && nextDashboardPrefs) {
+        persistHarnessPreferences(nextDashboardPrefs);
+      }
+      // Also persist to API if authenticated
+      if (effectiveIsAuthenticated && updatePreferencesRef.current && nextDashboardPrefs) {
+        try {
+          await updatePreferencesRef.current({ dashboard: nextDashboardPrefs } as Partial<ProfilePreferences>);
+        } catch (error) {
+          logger.error('Error saving dashboard preferences via toggle', error as Error);
+        }
+      }
+    },
+    [effectiveIsAuthenticated]
+  );
+
   const handleHarnessLogout = useCallback(() => {
     signOutUserRef.current();
     if (typeof window !== 'undefined') {
@@ -243,7 +287,7 @@ function HarnessPersonalDashboard({ className = '' }: PersonalDashboardProps) {
       document.cookie = 'e2e-dashboard-bypass=; Max-Age=0; path=/';
     }
     routerRef.current.push('/auth');
-  }, []);  
+  }, []);
   const profileName = useProfileStore(
     (state) => state.profile?.display_name ?? state.profile?.username ?? null,
   );
@@ -285,28 +329,6 @@ function HarnessPersonalDashboard({ className = '' }: PersonalDashboardProps) {
       </div>
     );
   }
-
-  const handlePreferenceToggle = (key: keyof DashboardPreferences) =>
-    (event: React.ChangeEvent<HTMLInputElement>) => {
-      const checked = event.target.checked;
-      let nextDashboardPrefs: DashboardPreferences | null = null;
-      useProfileStore.setState((state) => {
-        const currentPreferences = state.preferences ?? ({} as ProfilePreferences);
-        const nextDashboard = {
-          ...(currentPreferences.dashboard ?? HARNESS_DEFAULT_DASHBOARD_PREFERENCES),
-          [key]: checked,
-        };
-        const updated = {
-          ...currentPreferences,
-          dashboard: nextDashboard,
-        } as ProfilePreferences;
-        state.preferences = updated;
-        nextDashboardPrefs = nextDashboard;
-      });
-      if (IS_E2E_HARNESS) {
-        persistHarnessPreferences(nextDashboardPrefs);
-      }
-    };
 
   return (
     <div className={`space-y-6 ${className}`} data-testid='personal-dashboard'>
@@ -492,11 +514,14 @@ function StandardPersonalDashboard({ userId: fallbackUserId, className = '' }: P
   const routerRef = useRef(router);
   useEffect(() => { routerRef.current = router; }, [router]);
   const { t, currentLanguage } = useI18n();
-  
+
   // Use ref for stable t function
   const tRef = useRef(t);
   useEffect(() => { tRef.current = t; }, [t]);
-  
+
+  // StandardPersonalDashboard uses preferencesRefresher instead of handlePreferenceToggle
+  // (defined later in the component)
+
   const numberFormatter = useMemo(
     () => new Intl.NumberFormat(currentLanguage ?? undefined),
     [currentLanguage],
@@ -535,10 +560,12 @@ function StandardPersonalDashboard({ userId: fallbackUserId, className = '' }: P
       updatePreferences: state.updatePreferences,
     })),
   );
-  
+
   // Use ref for stable updatePreferences callback
   const updatePreferencesRef = useRef(updatePreferences);
   useEffect(() => { updatePreferencesRef.current = updatePreferences; }, [updatePreferences]);
+
+  // StandardPersonalDashboard uses preferencesRefresher (defined later) instead of handlePreferenceToggle
 
   const polls = usePolls();
   const isPollsLoading = usePollsLoading();
@@ -576,7 +603,7 @@ function StandardPersonalDashboard({ userId: fallbackUserId, className = '' }: P
   // CRITICAL: Use useState instead of useMemo to prevent hydration mismatch
   // Initialize to false (same on server and client), then check localStorage in useEffect
   const [fallbackAuthenticated, setFallbackAuthenticated] = useState(false);
-  
+
   useEffect(() => {
     if (!shouldBypassAuth || typeof window === 'undefined') {
       setFallbackAuthenticated(false);
@@ -594,7 +621,7 @@ function StandardPersonalDashboard({ userId: fallbackUserId, className = '' }: P
       setFallbackAuthenticated(false);
     }
   }, [shouldBypassAuth]);
-  
+
   const effectiveIsAuthenticated = isAuthenticated || fallbackAuthenticated;
 
   const trendingHashtags = useTrendingHashtags();
@@ -728,7 +755,7 @@ function StandardPersonalDashboard({ userId: fallbackUserId, className = '' }: P
   // CRITICAL: Use useState instead of useMemo to prevent hydration mismatch
   // Date.now() will be different on server vs client, so we need to set it after mount
   const [thirtyDaysAgo, setThirtyDaysAgo] = useState(0);
-  
+
   useEffect(() => {
     setThirtyDaysAgo(Date.now() - THIRTY_DAYS_MS);
   }, []);
@@ -852,7 +879,7 @@ function StandardPersonalDashboard({ userId: fallbackUserId, className = '' }: P
 
   const refetchProfileRef = useRef(refetchProfile);
   useEffect(() => { refetchProfileRef.current = refetchProfile; }, [refetchProfile]);
-  
+
   const handleRefresh = useCallback(async () => {
     if (!isAuthenticated) {
       logger.warn('Dashboard refresh skipped for unauthenticated user');
@@ -873,7 +900,7 @@ function StandardPersonalDashboard({ userId: fallbackUserId, className = '' }: P
     } finally {
       setIsRefreshing(false);
     }
-  }, [isAuthenticated]);  
+  }, [isAuthenticated]);
 
   const effectiveDisplayName =
     (displayName && displayName !== 'User' ? displayName : undefined) ??

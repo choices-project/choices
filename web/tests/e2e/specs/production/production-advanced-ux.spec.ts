@@ -79,7 +79,7 @@ test.describe('Production Advanced UX', () => {
 
       // Step 5: Check if poll creation is accessible
       const createPollButton = page.locator('button:has-text("Create"), a[href*="poll"], button[aria-label*="create" i]').first();
-      const canCreatePoll = await createPollButton.isVisible({ timeout: 5_000 }).catch(() => false);
+      await createPollButton.isVisible({ timeout: 5_000 }).catch(() => false);
 
       // Verify state is maintained throughout workflow
       const localStorage = await page.evaluate(() => {
@@ -284,9 +284,9 @@ test.describe('Production Advanced UX', () => {
         await waitForPageReady(page);
 
         // Check if value persisted (some forms may auto-save, others may not)
-        const inputValue = await textInput.inputValue().catch(() => '');
         // Note: This test verifies navigation works, not necessarily that form data persists
         // (persistence depends on implementation)
+        await textInput.inputValue().catch(() => '');
       }
     });
   });
@@ -354,10 +354,10 @@ test.describe('Production Advanced UX', () => {
       await waitForPageReady(page);
 
       // Check for ARIA live regions
-      const liveRegions = await page.locator('[aria-live], [role="status"], [role="alert"]').count();
+      await page.locator('[aria-live], [role="status"], [role="alert"]').count();
 
       // Check for proper ARIA labels
-      const elementsWithAria = await page.locator('[aria-label], [aria-labelledby]').count();
+      await page.locator('[aria-label], [aria-labelledby]').count();
 
       // At minimum, interactive elements should have proper labels
       const interactiveElements = await page.locator('button, a, input, select, textarea').count();

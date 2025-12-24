@@ -191,6 +191,7 @@ export type VotingPreferences = {
 export type ProfileActionResult = {
   success: boolean;
   data?: UserProfile;
+  preferences?: ProfilePreferences | null;
   error?: string;
 }
 

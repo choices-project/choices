@@ -39,7 +39,10 @@ export function createProfilePayload(record?: Record<string, unknown> | null): P
         trust_tier: normalizeTrustTier(profile.trust_tier),
       }
     : null;
-  const preferences = (typedRecord?.privacy_settings as PrivacySettings | undefined) ?? null;
+  // Read preferences from preferences field first, fall back to privacy_settings for backward compatibility
+  const preferences = (typedRecord?.preferences as PrivacySettings | undefined) ?? 
+                      (typedRecord?.privacy_settings as PrivacySettings | undefined) ?? 
+                      null;
 
   const categories = toStringArray(typedRecord?.primary_concerns);
   const keywords = toStringArray(typedRecord?.community_focus);

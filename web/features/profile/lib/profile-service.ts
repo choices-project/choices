@@ -18,6 +18,7 @@ import {
 import type {
   ProfileUser,
   UserProfile,
+  ProfilePreferences,
   ProfileUpdateData,
   ProfileActionResult,
   ProfileValidationResult,
@@ -382,10 +383,14 @@ export async function getCurrentProfile(): Promise<ProfileActionResult> {
       };
     }
 
+    // Extract preferences from API response if available
+    const preferences = (apiData as { preferences?: unknown })?.preferences ?? null;
+
     clearTimeout(timeoutId);
     return {
       success: true,
       data: profile,
+      preferences: preferences as ProfilePreferences | null,
     };
 
   } catch (error) {
