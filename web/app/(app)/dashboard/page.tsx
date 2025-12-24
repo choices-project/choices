@@ -759,13 +759,10 @@ export default function DashboardPage() {
     );
   }
 
-  // CRITICAL: To prevent hydration mismatch, we must ensure server and client render the same structure
-  // Since this is a 'use client' component, server doesn't render it - but React still needs consistent structure
-  // Use suppressHydrationWarning on the container that will change after hydration
-  // CRITICAL: Never return early based on isClient - this causes hydration mismatch
-  // React requires the same component structure on server and client initial render
-  // Use isClient only to conditionally determine bypass, not to change structure
-  const finalShouldBypass = isClient ? shouldBypassAuth : false;
+  // CRITICAL: Never use isClient in render logic - it changes after mount and causes hydration mismatch
+  // Only use shouldBypassAuth state value which is set in useEffect after mount
+  // This ensures consistent render decisions during hydration
+  const finalShouldBypass = shouldBypassAuth;
 
   if (finalShouldBypass) {
     // Bypass is set - render dashboard immediately, skip all auth checks
