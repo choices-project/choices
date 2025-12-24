@@ -459,28 +459,18 @@ export default function PersonalDashboard(props: PersonalDashboardProps) {
   // In harness mode, always use harness component immediately (no state delay)
   // Hooks must be called unconditionally before any early returns
   // For non-harness mode, check bypass flag
-  const [useHarness, setUseHarness] = useState<boolean>(() => {
-    if (typeof window !== 'undefined' && window.localStorage.getItem('e2e-dashboard-bypass') === '1') {
-      return true;
-    }
-    return false;
-  });
-
-  const [isMounted, setIsMounted] = useState(false);
+  // CRITICAL: Initialize to false to prevent hydration mismatch, then check in useEffect
+  const [useHarness, setUseHarness] = useState<boolean>(false);
 
   useEffect(() => {
-    setIsMounted(true);
-  }, []);
-
-  useEffect(() => {
-    if (!isMounted) return;
+    // Check bypass flag after mount to prevent hydration mismatch
     if (typeof window !== 'undefined' && window.localStorage.getItem('e2e-dashboard-bypass') === '1') {
       setUseHarness(true);
       if (process.env.DEBUG_DASHBOARD === '1') {
         logger.debug('🚨 PersonalDashboard: Using harness mode (bypass flag)', { bypassFlag: '1' });
       }
     }
-  }, [isMounted]);
+  }, []);
 
   // This ensures the test can find the element right away
   if (IS_E2E_HARNESS) {
