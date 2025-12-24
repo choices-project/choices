@@ -188,21 +188,28 @@ function HarnessPersonalDashboard({ className = '' }: PersonalDashboardProps) {
     },
     [isMounted],
   );
-  const fallbackAuthenticated = useMemo(() => {
+  // CRITICAL: Use useState instead of useMemo to prevent hydration mismatch
+  // Initialize to false (same on server and client), then check localStorage in useEffect
+  const [fallbackAuthenticated, setFallbackAuthenticated] = useState(false);
+  
+  useEffect(() => {
     if (!shouldBypassAuth || typeof window === 'undefined') {
-      return false;
+      setFallbackAuthenticated(false);
+      return;
     }
     try {
       const raw = window.localStorage.getItem('user-store');
       if (!raw) {
-        return false;
+        setFallbackAuthenticated(false);
+        return;
       }
       const parsed = JSON.parse(raw);
-      return Boolean(parsed.state?.isAuthenticated);
+      setFallbackAuthenticated(Boolean(parsed.state?.isAuthenticated));
     } catch {
-      return false;
+      setFallbackAuthenticated(false);
     }
   }, [shouldBypassAuth]);
+  
   const effectiveIsAuthenticated = isAuthenticated || fallbackAuthenticated;
   const dashboardPreferences = useProfileStore(
     (state) => state.preferences?.dashboard ?? HARNESS_DEFAULT_DASHBOARD_PREFERENCES,
@@ -566,21 +573,28 @@ function StandardPersonalDashboard({ userId: fallbackUserId, className = '' }: P
     },
     [isMounted],
   );
-  const fallbackAuthenticated = useMemo(() => {
+  // CRITICAL: Use useState instead of useMemo to prevent hydration mismatch
+  // Initialize to false (same on server and client), then check localStorage in useEffect
+  const [fallbackAuthenticated, setFallbackAuthenticated] = useState(false);
+  
+  useEffect(() => {
     if (!shouldBypassAuth || typeof window === 'undefined') {
-      return false;
+      setFallbackAuthenticated(false);
+      return;
     }
     try {
       const raw = window.localStorage.getItem('user-store');
       if (!raw) {
-        return false;
+        setFallbackAuthenticated(false);
+        return;
       }
       const parsed = JSON.parse(raw);
-      return Boolean(parsed.state?.isAuthenticated);
+      setFallbackAuthenticated(Boolean(parsed.state?.isAuthenticated));
     } catch {
-      return false;
+      setFallbackAuthenticated(false);
     }
   }, [shouldBypassAuth]);
+  
   const effectiveIsAuthenticated = isAuthenticated || fallbackAuthenticated;
 
   const trendingHashtags = useTrendingHashtags();
