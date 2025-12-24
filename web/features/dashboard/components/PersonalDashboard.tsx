@@ -725,7 +725,13 @@ function StandardPersonalDashboard({ userId: fallbackUserId, className = '' }: P
     [analyticsEvents],
   );
 
-  const thirtyDaysAgo = useMemo(() => Date.now() - THIRTY_DAYS_MS, []);
+  // CRITICAL: Use useState instead of useMemo to prevent hydration mismatch
+  // Date.now() will be different on server vs client, so we need to set it after mount
+  const [thirtyDaysAgo, setThirtyDaysAgo] = useState(0);
+  
+  useEffect(() => {
+    setThirtyDaysAgo(Date.now() - THIRTY_DAYS_MS);
+  }, []);
 
   const votesLast30Days = useMemo(
     () =>
@@ -759,10 +765,12 @@ function StandardPersonalDashboard({ userId: fallbackUserId, className = '' }: P
           event.event_data?.pollId ??
           event.label ??
           '') as string | number | undefined;
+        // CRITICAL: Use consistent fallback to prevent hydration mismatch
+        const eventTimestamp = event.created_at ?? event.timestamp;
         return {
           id: event.id,
           poll_id: typeof pollIdRaw === 'number' ? String(pollIdRaw) : (pollIdRaw ?? 'unknown'),
-          created_at: event.created_at ?? event.timestamp ?? new Date().toISOString(),
+          created_at: eventTimestamp ?? '1970-01-01T00:00:00.000Z', // Consistent fallback instead of Date.now()
         };
       });
   }, [voteEvents]);
@@ -770,10 +778,14 @@ function StandardPersonalDashboard({ userId: fallbackUserId, className = '' }: P
   const recentPolls = useMemo<PersonalAnalytics['recent_polls']>(() => {
     return sortedUserPolls.slice(0, 2).map((poll) => {
       const record = poll as Record<string, unknown>;
+      // CRITICAL: Use consistent fallback to prevent hydration mismatch
+      // Only use fallback if data is truly missing (shouldn't happen in production)
+      const pollId = record.id ?? record.poll_id;
+      const createdAt = record.created_at as string | undefined;
       return {
-        id: String(record.id ?? record.poll_id ?? crypto.randomUUID()),
+        id: pollId ? String(pollId) : 'unknown',
         title: resolvePollTitle(poll, tRef.current('dashboard.personal.polls.untitled')),
-        created_at: (record.created_at as string) ?? new Date().toISOString(),
+        created_at: createdAt ?? '1970-01-01T00:00:00.000Z', // Consistent fallback instead of Date.now()
         total_votes: resolvePollVotes(poll),
         status: (record.status as string) ?? 'draft',
       };

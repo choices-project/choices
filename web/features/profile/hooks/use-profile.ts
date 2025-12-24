@@ -7,7 +7,7 @@
 
 'use client';
 
-import { useCallback, useEffect, useMemo, useRef } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useShallow } from 'zustand/react/shallow';
 
 import { useUserProfileEditData } from '@/lib/stores';
@@ -53,13 +53,16 @@ export function useProfile(): UseProfileReturn {
     })),
   );
 
-  const shouldBypassProfileLoad = useMemo(
-    () =>
-      process.env.NEXT_PUBLIC_ENABLE_E2E_HARNESS === '1' &&
+  // CRITICAL: Use useState instead of useMemo to prevent hydration mismatch
+  // Initialize to false, then check localStorage in useEffect after mount
+  const [shouldBypassProfileLoad, setShouldBypassProfileLoad] = useState(false);
+  
+  useEffect(() => {
+    const bypass = process.env.NEXT_PUBLIC_ENABLE_E2E_HARNESS === '1' &&
       typeof window !== 'undefined' &&
-      window.localStorage.getItem('e2e-dashboard-bypass') === '1',
-    [],
-  );
+      window.localStorage.getItem('e2e-dashboard-bypass') === '1';
+    setShouldBypassProfileLoad(bypass);
+  }, []);
 
   const fallbackProfile = useMemo(() => {
     if (!shouldBypassProfileLoad || typeof window === 'undefined') {
