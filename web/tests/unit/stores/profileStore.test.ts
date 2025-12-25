@@ -109,15 +109,21 @@ describe('profileStore', () => {
       state.preferences = { theme: 'dark', showDashboardCards: true } as any;
     });
 
-    (updateProfile as jest.Mock).mockResolvedValue({
-      success: true,
-      data: null,
-      error: null,
+    // Mock fetch instead of updateProfile since updatePreferences uses fetch
+    global.fetch = jest.fn().mockResolvedValue({
+      ok: true,
+      json: async () => ({
+        success: true,
+        data: { preferences: { theme: 'light', showDashboardCards: true } },
+      }),
     });
 
     const result = await store.getState().updatePreferences({ theme: 'light' });
 
-    expect(updateProfile).toHaveBeenCalledWith({});
+    expect(global.fetch).toHaveBeenCalledWith('/api/profile', expect.objectContaining({
+      method: 'POST',
+      body: JSON.stringify({ preferences: { theme: 'light' } }),
+    }));
     expect(result).toBe(true);
     expect(store.getState().preferences).toEqual({
       theme: 'light',
@@ -129,15 +135,23 @@ describe('profileStore', () => {
 
   it('updatePreferences records error state when service fails', async () => {
     const store = createTestProfileStore();
-    (updateProfile as jest.Mock).mockResolvedValue({
-      success: false,
-      data: null,
-      error: 'network error',
+    
+    // Mock fetch to return an error response
+    global.fetch = jest.fn().mockResolvedValue({
+      ok: false,
+      status: 500,
+      statusText: 'Internal Server Error',
+      json: async () => ({
+        error: 'network error',
+      }),
     });
 
     const result = await store.getState().updatePreferences({ theme: 'light' });
 
-    expect(updateProfile).toHaveBeenCalledWith({});
+    expect(global.fetch).toHaveBeenCalledWith('/api/profile', expect.objectContaining({
+      method: 'POST',
+      body: JSON.stringify({ preferences: { theme: 'light' } }),
+    }));
     expect(result).toBe(false);
     expect(store.getState().preferences).toBeNull();
     expect(store.getState().isUpdating).toBe(false);

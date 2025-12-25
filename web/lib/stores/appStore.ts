@@ -480,6 +480,23 @@ export const useAppStore = create<AppStore>()(
           features: state.features,
           settings: state.settings,
         }),
+        // Ensure non-persisted fields are reset to initial values on rehydration
+        onRehydrateStorage: () => (state) => {
+          if (state) {
+            // Reset non-persisted fields to initial values
+            const initial = createInitialAppState();
+            state.currentRoute = initial.currentRoute;
+            state.previousRoute = initial.previousRoute;
+            state.breadcrumbs = initial.breadcrumbs;
+            state.activeModal = initial.activeModal;
+            state.modalData = initial.modalData;
+            state.modalStack = initial.modalStack;
+            state.isLoading = initial.isLoading;
+            state.isInitializing = initial.isInitializing;
+            state.isUpdating = initial.isUpdating;
+            state.error = initial.error;
+          }
+        },
       },
     ),
     { name: 'app-store' },

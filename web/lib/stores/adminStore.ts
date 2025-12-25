@@ -670,10 +670,11 @@ export const createAdminActions = (
         },
 
         loadUsers: async () => {
+          // Set loading state synchronously before any async operations
+          setLoadingState(true);
+          clearErrorState();
+          
           try {
-        setLoadingState(true);
-        clearErrorState();
-
             const supabase = await getSupabaseBrowserClient();
             if (!supabase) {
               throw new Error('Database connection not available');
@@ -1120,10 +1121,11 @@ export const createAdminActions = (
         },
 
         loadSystemSettings: async () => {
+          // Set loading state synchronously before any async operations
+          setLoadingState(true);
+          clearErrorState();
+          
           try {
-        setLoadingState(true);
-        clearErrorState();
-
             const supabase = await getSupabaseBrowserClient();
             if (!supabase) {
               throw new Error('Database connection not available');
@@ -1344,9 +1346,11 @@ export const createAdminActions = (
     },
 
         saveSystemSettings: async () => {
+          // Set saving state synchronously before any async operations
+          setIsSavingSettingsState(true);
+          clearErrorState();
+          
           try {
-        setIsSavingSettingsState(true);
-        clearErrorState();
 
         const settings = get().systemSettings;
         if (!settings) {

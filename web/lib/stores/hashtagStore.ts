@@ -701,54 +701,66 @@ const createHashtagActions = (
             state.analyticsSummary = null;
           });
         } else {
-          const data = result.data as Record<string, unknown>;
-          const systemHealthRaw =
-            (data.system_health as Record<string, number> | undefined) ??
-            (data.systemHealth as Record<string, number> | undefined) ??
-            {};
+          type HashtagStatsResponse = {
+            totalHashtags?: number;
+            total_hashtags?: number;
+            trendingCount?: number;
+            trending_count?: number;
+            verifiedCount?: number;
+            verified_count?: number;
+            categories?: Record<string, number>;
+            categoryBreakdown?: Record<string, number>;
+            topHashtags?: Hashtag[];
+            top_hashtags?: Hashtag[];
+            recentActivity?: HashtagActivity[];
+            recent_activity?: HashtagActivity[];
+            system_health?: {
+              api_response_time?: number;
+              apiResponseTime?: number;
+              cache_hit_rate?: number;
+              cacheHitRate?: number;
+              database_performance?: number;
+              databasePerformance?: number;
+              error_rate?: number;
+              errorRate?: number;
+            };
+            systemHealth?: {
+              api_response_time?: number;
+              apiResponseTime?: number;
+              cache_hit_rate?: number;
+              cacheHitRate?: number;
+              database_performance?: number;
+              databasePerformance?: number;
+              error_rate?: number;
+              errorRate?: number;
+            };
+          };
+
+          const data = result.data as HashtagStatsResponse;
+          const systemHealthRaw = data.system_health ?? data.systemHealth ?? {};
 
           const summary: HashtagStatsSummary = {
             totalHashtags:
-              (data.totalHashtags as number | undefined) ??
-              (data.total_hashtags as number | undefined) ??
-              0,
+              data.totalHashtags ?? data.total_hashtags ?? 0,
             trendingCount:
-              (data.trendingCount as number | undefined) ??
-              (data.trending_count as number | undefined) ??
-              0,
+              data.trendingCount ?? data.trending_count ?? 0,
             verifiedCount:
-              (data.verifiedCount as number | undefined) ??
-              (data.verified_count as number | undefined) ??
-              0,
+              data.verifiedCount ?? data.verified_count ?? 0,
             categories:
-              (data.categories as Record<string, number> | undefined) ??
-              (data.categoryBreakdown as Record<string, number> | undefined) ??
-              {},
+              data.categories ?? data.categoryBreakdown ?? {},
             topHashtags:
-              (data.topHashtags as Hashtag[] | undefined) ??
-              (data.top_hashtags as Hashtag[] | undefined) ??
-              [],
+              data.topHashtags ?? data.top_hashtags ?? [],
             recentActivity:
-              (data.recentActivity as HashtagActivity[] | undefined) ??
-              (data.recent_activity as HashtagActivity[] | undefined) ??
-              [],
+              data.recentActivity ?? data.recent_activity ?? [],
             systemHealth: {
               apiResponseTime:
-                (systemHealthRaw.api_response_time as number | undefined) ??
-                (systemHealthRaw.apiResponseTime as number | undefined) ??
-                0,
+                systemHealthRaw.api_response_time ?? systemHealthRaw.apiResponseTime ?? 0,
               cacheHitRate:
-                (systemHealthRaw.cache_hit_rate as number | undefined) ??
-                (systemHealthRaw.cacheHitRate as number | undefined) ??
-                0,
+                systemHealthRaw.cache_hit_rate ?? systemHealthRaw.cacheHitRate ?? 0,
               databasePerformance:
-                (systemHealthRaw.database_performance as number | undefined) ??
-                (systemHealthRaw.databasePerformance as number | undefined) ??
-                0,
+                systemHealthRaw.database_performance ?? systemHealthRaw.databasePerformance ?? 0,
               errorRate:
-                (systemHealthRaw.error_rate as number | undefined) ??
-                (systemHealthRaw.errorRate as number | undefined) ??
-                0,
+                systemHealthRaw.error_rate ?? systemHealthRaw.errorRate ?? 0,
             },
           };
 

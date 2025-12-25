@@ -467,5 +467,330 @@ describe('adminStore', () => {
       expect(useAdminStore.getState().featureFlags.flags.SOCIAL_SHARING).toBe(false);
     });
   });
+
+  describe('async user operations (RTL)', () => {
+    const { getSupabaseBrowserClient } = require('@/utils/supabase/client');
+
+    beforeEach(() => {
+      jest.clearAllMocks();
+    });
+
+    it('loadUsers sets loading state during fetch', async () => {
+      const mockClient = {
+        from: jest.fn(() => ({
+          select: jest.fn(() => ({
+            order: jest.fn().mockResolvedValue({
+              data: [],
+              error: null,
+            }),
+          })),
+        })),
+      };
+
+      getSupabaseBrowserClient.mockResolvedValue(mockClient);
+
+      const store = useAdminStore.getState();
+      
+      const loadPromise = store.loadUsers();
+      // Loading should be true during the operation (check immediately after calling)
+      // Use getState() to ensure we get the latest state
+      expect(useAdminStore.getState().isLoading).toBe(true);
+      
+      await loadPromise;
+      
+      expect(store.isLoading).toBe(false);
+      expect(mockClient.from).toHaveBeenCalledWith('user_profiles');
+    });
+
+    it('loadUsers populates users array on success', async () => {
+      const mockUsers = [
+        {
+          id: 'user-1',
+          user_id: 'user-1',
+          email: 'user1@example.com',
+          display_name: 'User One',
+          is_admin: false,
+          is_active: true,
+          created_at: '2024-01-01T00:00:00Z',
+          updated_at: '2024-01-02T00:00:00Z',
+        },
+        {
+          id: 'user-2',
+          user_id: 'user-2',
+          email: 'admin@example.com',
+          display_name: 'Admin User',
+          is_admin: true,
+          is_active: true,
+          created_at: '2024-01-01T00:00:00Z',
+        },
+      ];
+
+      const mockClient = {
+        from: jest.fn(() => ({
+          select: jest.fn(() => ({
+            order: jest.fn().mockResolvedValue({
+              data: mockUsers,
+              error: null,
+            }),
+          })),
+        })),
+      };
+
+      getSupabaseBrowserClient.mockResolvedValue(mockClient);
+
+      await useAdminStore.getState().loadUsers();
+
+      const users = useAdminStore.getState().users;
+      expect(users).toHaveLength(2);
+      expect(users[0]).toMatchObject({
+        id: 'user-1',
+        email: 'user1@example.com',
+        name: 'User One',
+        role: 'user',
+        status: 'active',
+      });
+      expect(users[1]).toMatchObject({
+        id: 'user-2',
+        email: 'admin@example.com',
+        name: 'Admin User',
+        role: 'admin',
+        status: 'active',
+      });
+    });
+
+    it('loadUsers handles errors gracefully', async () => {
+      const mockClient = {
+        from: jest.fn(() => ({
+          select: jest.fn(() => ({
+            order: jest.fn().mockResolvedValue({
+              data: null,
+              error: { message: 'Database connection failed' },
+            }),
+          })),
+        })),
+      };
+
+      getSupabaseBrowserClient.mockResolvedValue(mockClient);
+
+      await useAdminStore.getState().loadUsers();
+
+      const store = useAdminStore.getState();
+      expect(store.error).toBeTruthy();
+      expect(store.error).toContain('Failed to fetch users');
+      expect(store.isLoading).toBe(false);
+    });
+
+    it('updateUserRole updates user role in store after API call', async () => {
+      const mockUser = {
+        id: 'user-1',
+        user_id: 'user-1',
+        email: 'user@example.com',
+        display_name: 'Test User',
+        is_admin: false,
+        is_active: true,
+        created_at: '2024-01-01T00:00:00Z',
+      };
+
+      // Set up initial user in store
+      act(() => {
+        useAdminStore.setState((state) => {
+          state.users = [
+            {
+              id: 'user-1',
+              email: 'user@example.com',
+              name: 'Test User',
+              role: 'user',
+              status: 'active',
+              is_admin: false,
+              created_at: '2024-01-01T00:00:00Z',
+            },
+          ];
+        });
+      });
+
+      const mockClient = {
+        from: jest.fn(() => ({
+          update: jest.fn(() => ({
+            eq: jest.fn().mockResolvedValue({
+              data: null,
+              error: null,
+            }),
+          })),
+        })),
+      };
+
+      getSupabaseBrowserClient.mockResolvedValue(mockClient);
+
+      await useAdminStore.getState().updateUserRole('user-1', 'admin');
+
+      const updatedUser = useAdminStore.getState().users.find((u) => u.id === 'user-1');
+      expect(updatedUser?.role).toBe('admin');
+      expect(updatedUser?.is_admin).toBe(true);
+    });
+
+    it('updateUserStatus updates user status in store after API call', async () => {
+      act(() => {
+        useAdminStore.setState((state) => {
+          state.users = [
+            {
+              id: 'user-1',
+              email: 'user@example.com',
+              name: 'Test User',
+              role: 'user',
+              status: 'active',
+              is_admin: false,
+              created_at: '2024-01-01T00:00:00Z',
+            },
+          ];
+        });
+      });
+
+      const mockClient = {
+        from: jest.fn(() => ({
+          update: jest.fn(() => ({
+            eq: jest.fn().mockResolvedValue({
+              data: null,
+              error: null,
+            }),
+          })),
+        })),
+      };
+
+      getSupabaseBrowserClient.mockResolvedValue(mockClient);
+
+      await useAdminStore.getState().updateUserStatus('user-1', 'suspended');
+
+      const updatedUser = useAdminStore.getState().users.find((u) => u.id === 'user-1');
+      expect(updatedUser?.status).toBe('suspended');
+    });
+
+    it('deleteUser removes user from store after API call', async () => {
+      act(() => {
+        useAdminStore.setState((state) => {
+          state.users = [
+            {
+              id: 'user-1',
+              email: 'user1@example.com',
+              name: 'User One',
+              role: 'user',
+              status: 'active',
+              is_admin: false,
+              created_at: '2024-01-01T00:00:00Z',
+            },
+            {
+              id: 'user-2',
+              email: 'user2@example.com',
+              name: 'User Two',
+              role: 'user',
+              status: 'active',
+              is_admin: false,
+              created_at: '2024-01-01T00:00:00Z',
+            },
+          ];
+        });
+      });
+
+      const mockClient = {
+        from: jest.fn(() => ({
+          delete: jest.fn(() => ({
+            eq: jest.fn().mockResolvedValue({
+              data: null,
+              error: null,
+            }),
+          })),
+        })),
+      };
+
+      getSupabaseBrowserClient.mockResolvedValue(mockClient);
+
+      await useAdminStore.getState().deleteUser('user-1');
+
+      const users = useAdminStore.getState().users;
+      expect(users).toHaveLength(1);
+      expect(users.find((u) => u.id === 'user-1')).toBeUndefined();
+      expect(users.find((u) => u.id === 'user-2')).toBeDefined();
+    });
+  });
+
+  describe('async settings operations (RTL)', () => {
+    const { getSupabaseBrowserClient } = require('@/utils/supabase/client');
+
+    beforeEach(() => {
+      jest.clearAllMocks();
+    });
+
+    it('loadSystemSettings sets loading state during fetch', async () => {
+      const mockClient = {
+        from: jest.fn(),
+      };
+
+      getSupabaseBrowserClient.mockResolvedValue(mockClient);
+
+      const store = useAdminStore.getState();
+      
+      const loadPromise = store.loadSystemSettings();
+      // Loading should be true during the operation (check immediately after calling)
+      // Use getState() to ensure we get the latest state
+      expect(useAdminStore.getState().isLoading).toBe(true);
+      
+      await loadPromise;
+      
+      expect(store.isLoading).toBe(false);
+    });
+
+    it('loadSystemSettings loads default settings', async () => {
+      const mockClient = {
+        from: jest.fn(),
+      };
+
+      getSupabaseBrowserClient.mockResolvedValue(mockClient);
+
+      await useAdminStore.getState().loadSystemSettings();
+
+      const settings = useAdminStore.getState().systemSettings;
+      expect(settings).not.toBeNull();
+      expect(settings?.general.siteName).toBe('Choices Platform');
+      expect(settings?.general.maintenanceMode).toBe(false);
+    });
+
+    it('saveSystemSettings sets isSavingSettings flag', async () => {
+      const mockClient = {
+        from: jest.fn(),
+      };
+
+      getSupabaseBrowserClient.mockResolvedValue(mockClient);
+
+      // First load settings
+      await useAdminStore.getState().loadSystemSettings();
+
+      const store = useAdminStore.getState();
+      const savePromise = store.saveSystemSettings();
+      
+      // Use getState() to ensure we get the latest state
+      expect(useAdminStore.getState().isSavingSettings).toBe(true);
+      
+      await savePromise;
+      
+      expect(store.isSavingSettings).toBe(false);
+    });
+
+    it('saveSystemSettings handles errors gracefully', async () => {
+      const mockClient = {
+        from: jest.fn(() => {
+          throw new Error('Save failed');
+        }),
+      };
+
+      getSupabaseBrowserClient.mockResolvedValue(mockClient);
+
+      await useAdminStore.getState().loadSystemSettings();
+
+      await useAdminStore.getState().saveSystemSettings();
+
+      const store = useAdminStore.getState();
+      expect(store.error).toBeTruthy();
+      expect(store.isSavingSettings).toBe(false);
+    });
+  });
 });
 

@@ -78,6 +78,8 @@ module.exports = {
       testMatch: [
         '<rootDir>/tests/unit/**/*.test.{js,jsx,ts,tsx}',
         '<rootDir>/tests/unit/**/*.spec.{js,jsx,ts,tsx}',
+        '<rootDir>/tests/integration/**/*.test.{js,jsx,ts,tsx}',
+        '<rootDir>/tests/integration/**/*.spec.{js,jsx,ts,tsx}',
         '<rootDir>/tests/api/**/*.test.{js,jsx,ts,tsx}',
         '<rootDir>/tests/api/**/*.spec.{js,jsx,ts,tsx}',
         '<rootDir>/lib/**/*.test.{js,jsx,ts,tsx}',

@@ -311,3 +311,265 @@ describe('appStore', () => {
   });
 });
 
+describe('appStore persistence', () => {
+  let mockStorage: Record<string, string>;
+
+  beforeEach(() => {
+    mockStorage = {};
+  });
+
+  const createPersistedTestStore = () => {
+    const storage = {
+      getItem: (name: string) => mockStorage[name] || null,
+      setItem: (name: string, value: string) => {
+        mockStorage[name] = value;
+      },
+      removeItem: (name: string) => {
+        delete mockStorage[name];
+      },
+    };
+
+    return create<AppStore>()(
+      persist(immer(appStoreCreator), {
+        name: 'app-store',
+        storage: createJSONStorage(() => storage),
+      }),
+    );
+  };
+
+  describe('theme persistence', () => {
+    it('persists theme preference across store recreations', () => {
+      const store1 = createPersistedTestStore();
+      
+      store1.getState().setTheme('dark');
+      expect(store1.getState().theme).toBe('dark');
+
+      // Create a new store instance (simulating page reload)
+      const store2 = createPersistedTestStore();
+      
+      // Theme should be restored from persistence
+      expect(store2.getState().theme).toBe('dark');
+      expect(store2.getState().resolvedTheme).toBe('dark');
+    });
+
+    it('persists system theme preference', () => {
+      const store1 = createPersistedTestStore();
+      
+      store1.getState().setTheme('system');
+      store1.getState().updateSystemTheme('dark');
+      
+      const store2 = createPersistedTestStore();
+      
+      expect(store2.getState().theme).toBe('system');
+      // Note: systemTheme itself is not persisted, but the theme preference is
+      expect(store2.getState().theme).toBe('system');
+    });
+
+    it('persists theme changes sequentially', () => {
+      const store1 = createPersistedTestStore();
+      
+      store1.getState().setTheme('light');
+      expect(store1.getState().theme).toBe('light');
+
+      store1.getState().setTheme('dark');
+      expect(store1.getState().theme).toBe('dark');
+
+      const store2 = createPersistedTestStore();
+      expect(store2.getState().theme).toBe('dark');
+    });
+
+    it('persists resolved theme correctly for explicit themes', () => {
+      const store1 = createPersistedTestStore();
+      
+      store1.getState().setTheme('dark');
+      const resolvedBefore = store1.getState().resolvedTheme;
+
+      const store2 = createPersistedTestStore();
+      
+      // For explicit themes (not 'system'), resolved theme should match
+      expect(store2.getState().resolvedTheme).toBe(resolvedBefore);
+    });
+  });
+
+  describe('sidebar persistence', () => {
+    it('persists sidebar collapsed state across store recreations', () => {
+      const store1 = createPersistedTestStore();
+      
+      store1.getState().setSidebarCollapsed(true);
+      expect(store1.getState().sidebarCollapsed).toBe(true);
+
+      const store2 = createPersistedTestStore();
+      
+      expect(store2.getState().sidebarCollapsed).toBe(true);
+    });
+
+    it('persists sidebar width across store recreations', () => {
+      const store1 = createPersistedTestStore();
+      
+      store1.getState().setSidebarWidth(320);
+      expect(store1.getState().sidebarWidth).toBe(320);
+
+      const store2 = createPersistedTestStore();
+      
+      expect(store2.getState().sidebarWidth).toBe(320);
+    });
+
+    it('persists sidebar pinned state across store recreations', () => {
+      const store1 = createPersistedTestStore();
+      
+      store1.getState().setSidebarPinned(true);
+      expect(store1.getState().sidebarPinned).toBe(true);
+      // Pinned sidebars should not be collapsed
+      expect(store1.getState().sidebarCollapsed).toBe(false);
+
+      const store2 = createPersistedTestStore();
+      
+      expect(store2.getState().sidebarPinned).toBe(true);
+      expect(store2.getState().sidebarCollapsed).toBe(false);
+    });
+
+    it('persists all sidebar properties together', () => {
+      const store1 = createPersistedTestStore();
+      
+      store1.getState().setSidebarWidth(300);
+      store1.getState().setSidebarPinned(false);
+      store1.getState().setSidebarCollapsed(true);
+
+      const store2 = createPersistedTestStore();
+      
+      expect(store2.getState().sidebarWidth).toBe(300);
+      expect(store2.getState().sidebarPinned).toBe(false);
+      expect(store2.getState().sidebarCollapsed).toBe(true);
+    });
+
+    it('persists sidebar width clamping across recreations', () => {
+      const store1 = createPersistedTestStore();
+      
+      // Set a clamped value
+      store1.getState().setSidebarWidth(500); // Should clamp to 400
+      expect(store1.getState().sidebarWidth).toBe(400);
+
+      const store2 = createPersistedTestStore();
+      
+      // Clamped value should persist
+      expect(store2.getState().sidebarWidth).toBe(400);
+    });
+  });
+
+  describe('combined theme and sidebar persistence', () => {
+    it('persists both theme and sidebar state together', () => {
+      const store1 = createPersistedTestStore();
+      
+      store1.getState().setTheme('dark');
+      store1.getState().setSidebarCollapsed(true);
+      store1.getState().setSidebarWidth(280);
+
+      const store2 = createPersistedTestStore();
+      
+      expect(store2.getState().theme).toBe('dark');
+      expect(store2.getState().sidebarCollapsed).toBe(true);
+      expect(store2.getState().sidebarWidth).toBe(280);
+    });
+
+    it('handles sequential updates to both theme and sidebar', () => {
+      const store1 = createPersistedTestStore();
+      
+      // Initial settings
+      store1.getState().setTheme('light');
+      store1.getState().setSidebarCollapsed(false);
+
+      // Update theme
+      store1.getState().setTheme('dark');
+
+      // Update sidebar
+      store1.getState().setSidebarCollapsed(true);
+      store1.getState().setSidebarWidth(300);
+
+      const store2 = createPersistedTestStore();
+      
+      expect(store2.getState().theme).toBe('dark');
+      expect(store2.getState().sidebarCollapsed).toBe(true);
+      expect(store2.getState().sidebarWidth).toBe(300);
+    });
+
+    it('persists settings alongside theme and sidebar', () => {
+      const store1 = createPersistedTestStore();
+      
+      store1.getState().setTheme('dark');
+      store1.getState().setSidebarCollapsed(true);
+      store1.getState().updateSettings({ compactMode: true, animations: false });
+
+      const store2 = createPersistedTestStore();
+      
+      expect(store2.getState().theme).toBe('dark');
+      expect(store2.getState().sidebarCollapsed).toBe(true);
+      expect(store2.getState().settings.compactMode).toBe(true);
+      expect(store2.getState().settings.animations).toBe(false);
+    });
+  });
+
+  describe('persistence edge cases', () => {
+    it('handles missing persisted data gracefully', () => {
+      // Don't set any data in mockStorage
+      const store = createPersistedTestStore();
+      
+      // Should fall back to initial state
+      expect(store.getState().theme).toBe(initialAppState.theme);
+      expect(store.getState().sidebarCollapsed).toBe(initialAppState.sidebarCollapsed);
+    });
+
+    it('handles corrupted persisted data gracefully', () => {
+      // Set invalid JSON
+      mockStorage['app-store'] = '{ invalid json }';
+      
+      // Should not throw and should use initial state
+      expect(() => {
+        const store = createPersistedTestStore();
+        expect(store.getState().theme).toBeDefined();
+      }).not.toThrow();
+    });
+
+    it('persists only partialized fields', async () => {
+      const store1 = createPersistedTestStore();
+      
+      // Set both persisted and non-persisted state
+      store1.getState().setTheme('dark'); // Persisted
+      store1.getState().setSidebarCollapsed(true); // Persisted
+      store1.getState().setCurrentRoute('/test'); // Not persisted
+      store1.getState().setBreadcrumbs([{ label: 'Test', href: '/test' }]); // Not persisted
+
+      // Wait for persist to write
+      await new Promise(resolve => setTimeout(resolve, 50));
+
+      const store2 = createPersistedTestStore();
+      
+      // Wait for rehydration to complete (onRehydrateStorage is called asynchronously)
+      await new Promise(resolve => setTimeout(resolve, 50));
+      
+      // Only persisted fields should be restored
+      expect(store2.getState().theme).toBe('dark');
+      expect(store2.getState().sidebarCollapsed).toBe(true);
+      // Non-persisted fields should be initial values (reset by onRehydrateStorage)
+      expect(store2.getState().currentRoute).toBe(initialAppState.currentRoute);
+      expect(store2.getState().breadcrumbs).toEqual(initialAppState.breadcrumbs);
+    });
+  });
+
+  describe('persistence with feature flags', () => {
+    it('persists feature flags alongside theme and sidebar', () => {
+      const store1 = createPersistedTestStore();
+      
+      store1.getState().setTheme('dark');
+      store1.getState().setSidebarCollapsed(true);
+      store1.getState().setFeatureFlags({ featureA: true, featureB: false });
+
+      const store2 = createPersistedTestStore();
+      
+      expect(store2.getState().theme).toBe('dark');
+      expect(store2.getState().sidebarCollapsed).toBe(true);
+      expect(store2.getState().features.featureA).toBe(true);
+      expect(store2.getState().features.featureB).toBe(false);
+    });
+  });
+});
+

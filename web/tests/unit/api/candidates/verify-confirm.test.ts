@@ -285,7 +285,7 @@ describe('POST /api/candidates/verify/confirm - Wrong Code Handling', () => {
     mockRequest = {
       headers: new Headers(),
       nextUrl: new URL('http://localhost/api/candidates/verify/confirm'),
-      json: jest.fn().mockResolvedValue({ code: 'wrong-code' })
+      json: jest.fn().mockResolvedValue({ code: '999999' }) // Valid numeric code that doesn't match
     } as unknown as NextRequest;
   });
 

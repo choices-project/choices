@@ -11,8 +11,9 @@
 'use client'
 
 import { WifiOff, Wifi, AlertCircle, CheckCircle } from 'lucide-react'
-import React, { useEffect, useState } from 'react';
+import React, { useEffect } from 'react';
 
+import { useIsOnline, useDeviceActions } from '@/lib/stores/deviceStore';
 import { usePWAOffline, usePWAPreferences, usePWAActions } from '@/lib/stores/pwaStore'
 
 type OfflineIndicatorProps = {
@@ -32,42 +33,29 @@ type OfflineIndicatorProps = {
  * @returns Offline indicator UI or null if online and not showing details
  */
 export default function OfflineIndicator({ showDetails = false, className = '' }: OfflineIndicatorProps) {
+  // Use deviceStore for network status (modernized pattern)
+  const isOnline = useIsOnline();
+  const { updateDeviceInfo } = useDeviceActions();
+  
+  // Use PWA store for offline data management
   const offline = usePWAOffline();
   const preferences = usePWAPreferences();
   const { setOnlineStatus } = usePWAActions();
-  const [isOnline, setIsOnline] = useState<boolean>(offline.isOnline);
 
   const offlineVotes = offline.offlineData.queuedActions.length;
   const hasOfflineData = offlineVotes > 0;
 
+  // Sync deviceStore network status with PWA store
   useEffect(() => {
-    if (typeof window === 'undefined') {
-      return;
+    setOnlineStatus(isOnline);
+  }, [isOnline, setOnlineStatus]);
+
+  // Update device info when network status changes (ensures deviceStore stays in sync)
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      updateDeviceInfo();
     }
-
-    const handleOnline = () => {
-      setOnlineStatus(true);
-      setIsOnline(true);
-    };
-
-    const handleOffline = () => {
-      setOnlineStatus(false);
-      setIsOnline(false);
-    };
-
-    setIsOnline(navigator.onLine);
-    window.addEventListener('online', handleOnline);
-    window.addEventListener('offline', handleOffline);
-
-    return () => {
-      window.removeEventListener('online', handleOnline);
-      window.removeEventListener('offline', handleOffline);
-    };
-  }, [setOnlineStatus]);
-
-  useEffect(() => {
-    setIsOnline(offline.isOnline);
-  }, [offline.isOnline]);
+  }, [isOnline, updateDeviceInfo]);
 
   // Don't show if PWA is not enabled
   if (!preferences.offlineMode) {

@@ -1,8 +1,9 @@
 'use client'
 
-import React, { useEffect, useCallback, useMemo, useRef } from 'react';
+import React, { useEffect, useMemo, useRef } from 'react';
 
 
+import { useIsOnline, useDeviceActions } from '@/lib/stores/deviceStore'
 import { 
   usePWAInstallation,
   usePWAOffline,
@@ -47,43 +48,27 @@ export default function PWAFeatures({ className = '', showDetails = false }: PWA
     }
   }, [pwa.setOnlineStatus]);
 
-  // Use useCallback to prevent infinite loops - use ref for stable identity
-  const handleOnline = useCallback(() => {
-    if (typeof window !== 'undefined' && setOnlineStatusRef.current) {
-      setOnlineStatusRef.current(true);
-    }
-  }, []);  
-
-  const handleOffline = useCallback(() => {
-    if (typeof window !== 'undefined' && setOnlineStatusRef.current) {
-      setOnlineStatusRef.current(false);
-    }
-  }, []);  
+  // Use deviceStore for network status (modernized pattern)
+  const isOnline = useIsOnline();
+  const { updateDeviceInfo } = useDeviceActions();
 
   useEffect(() => {
-    // Only run on client side and sync with Zustand store
-    if (typeof window !== 'undefined' && setOnlineStatusRef.current) {
-      // Update Zustand store with current online status
-      setOnlineStatusRef.current(navigator.onLine);
-      
-      window.addEventListener('online', handleOnline);
-      window.addEventListener('offline', handleOffline);
-      
-      return () => {
-        window.removeEventListener('online', handleOnline);
-        window.removeEventListener('offline', handleOffline);
-      }
+    // Sync deviceStore network status with PWA store
+    if (setOnlineStatusRef.current) {
+      setOnlineStatusRef.current(isOnline);
     }
-    
-    return undefined;
-  }, [handleOnline, handleOffline]);  
+  }, [isOnline]);
+
+  useEffect(() => {
+    // Update device info when network status changes (ensures deviceStore stays in sync)
+    if (typeof window !== 'undefined') {
+      updateDeviceInfo();
+    }
+  }, [isOnline, updateDeviceInfo]);  
 
   // Handle undefined store hooks gracefully - provide defaults for testing
   const safeInstallation = installation || { canInstall: true, isInstalled: false }
   const safeOffline = offline || { isOnline: true, offlineData: { cachedPages: [], queuedActions: [] } }
-  
-  // Use Zustand store's online status instead of local state
-  const isOnline = safeOffline.isOnline
 
   // Only render if PWA can be installed or is already installed
   if (!safeInstallation.canInstall && !safeInstallation.isInstalled) {

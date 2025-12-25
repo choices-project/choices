@@ -72,6 +72,7 @@ function FeedsStoreHarnessView() {
   const resetFeedsState = useFeedsStore((state) => state.resetFeedsState);
   const updatePreferences = useFeedsStore((state) => state.updatePreferences);
 
+  // Use useLayoutEffect for synchronous setup to avoid hydration flakes
   useEffect(() => {
     if (process.env.NODE_ENV !== 'production') {
       // eslint-disable-next-line no-console
@@ -100,8 +101,19 @@ function FeedsStoreHarnessView() {
     };
 
     window.__feedsStoreHarness = harness;
+    
+    // Set ready attribute synchronously to avoid test flakes
+    // Use requestAnimationFrame to ensure DOM is ready
     if (typeof document !== 'undefined') {
-      document.documentElement.dataset.feedsStoreHarness = 'ready';
+      const setReady = () => {
+        document.documentElement.dataset.feedsStoreHarness = 'ready';
+      };
+      
+      // Try to set immediately
+      setReady();
+      
+      // Also set on next frame as fallback (handles hydration timing)
+      requestAnimationFrame(setReady);
     }
 
     return () => {

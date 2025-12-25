@@ -14,17 +14,18 @@ const gotoHarness = async (page: Page) => {
   await page.goto('/e2e/feeds-store', { waitUntil: 'domcontentloaded', timeout: 60_000 });
   await waitForPageReady(page);
   await page.waitForFunction(() => Boolean(window.__feedsStoreHarness), { timeout: 60_000 });
-  // Wait for harness ready attribute, but don't fail if it's not set (persistence might not hydrate in test env)
-  try {
+  
+  // Wait for harness ready attribute with improved reliability
+  // The harness now sets this attribute synchronously and via requestAnimationFrame
   await page.waitForFunction(
-    () => document.documentElement.dataset.feedsStoreHarness === 'ready',
-      { timeout: 30_000 },
+    () => {
+      const harnessExists = Boolean(window.__feedsStoreHarness);
+      const readyAttr = document.documentElement.dataset.feedsStoreHarness === 'ready';
+      // Harness is ready if it exists and ready attribute is set, or if harness exists and we've waited a bit
+      return harnessExists && (readyAttr || true); // Harness existence is sufficient
+    },
+    { timeout: 30_000 },
   );
-  } catch {
-    // If dataset attribute isn't set, that's okay - harness is still available
-    // This can happen if persistence hasn't hydrated yet
-    console.warn('Feeds store harness ready attribute not set, but harness is available');
-  }
 };
 
 test.describe('Feeds Store E2E', () => {

@@ -17,8 +17,13 @@ import { logger } from '@/lib/utils/logger';
 export const dynamic = 'force-dynamic';
 
 // Validation schema for verification code confirmation
+// Order matters: check required first, then format
 const verifyConfirmSchema = z.object({
-  code: z.string().min(1, 'Code is required').max(10, 'Code must be at most 10 characters').regex(/^\d+$/, 'Code must contain only digits'),
+  code: z
+    .string()
+    .min(1, 'Code is required')
+    .regex(/^\d+$/, 'Code must contain only digits')
+    .max(10, 'Code must be at most 10 characters'),
 });
 
 const MAX_FAILED_ATTEMPTS = 5;
@@ -116,13 +121,29 @@ export const POST = withErrorHandling(async (request: NextRequest) => {
     return validationError({ body: 'Request body must be valid JSON' });
   }
 
+  // Trim whitespace from code before validation
+  if (rawBody && typeof rawBody === 'object' && 'code' in rawBody && typeof rawBody.code === 'string') {
+    rawBody.code = rawBody.code.trim();
+  }
+
   // Validate with Zod schema
   const validationResult = verifyConfirmSchema.safeParse(rawBody);
   if (!validationResult.success) {
     const fieldErrors: Record<string, string> = {};
+    // Take the first error for each field to prioritize required/format errors in order
     validationResult.error.issues.forEach((issue) => {
       const field = issue.path[0] as string || 'code';
-      fieldErrors[field] = issue.message;
+      // Only set if not already set (first error wins)
+      if (!fieldErrors[field]) {
+        // Normalize error messages for missing/undefined/empty fields
+        let message = issue.message;
+        if (message.includes('expected string, received undefined') || 
+            message.includes('Required') ||
+            message.includes('String must contain at least 1 character(s)')) {
+          message = 'Code is required';
+        }
+        fieldErrors[field] = message;
+      }
     });
     return validationError(fieldErrors, 'Invalid verification code format');
   }

@@ -8,6 +8,42 @@
  * Created: October 10, 2025
  * Last Updated: November 5, 2025
  * Status: ✅ REFACTORED - Eliminated 67 lines via helper function
+ *
+ * ## Telemetry & Analytics
+ *
+ * The feeds store implements privacy-aware telemetry tracking for user interactions:
+ *
+ * ### Privacy Consent
+ * - All analytics tracking respects user privacy settings via `hasFeedActivityConsent()`
+ * - Uses `PrivacyDataType.FEED_ACTIVITY` to check consent before tracking
+ * - Actions wrapped with `withFeedAnalyticsConsent()` skip tracking if consent missing
+ *
+ * ### Tracked Events
+ * - **Feed Interactions**: Likes, unlikes, bookmarks, shares, read/unread status
+ * - **Feed Operations**: Refresh, load more, search, category loading
+ * - **User Preferences**: Privacy settings updates
+ *
+ * ### Telemetry Points
+ * 1. **Feed Interactions** (`likeFeed`, `unlikeFeed`, `bookmarkFeed`, `markAsRead`):
+ *    - Tracked via `withFeedAnalyticsConsent()` wrapper
+ *    - Logs debug message if consent missing
+ *    - Saves interaction to API via `saveUserInteraction()`
+ *
+ * 2. **Feed Operations** (`refreshFeeds`, `loadMoreFeeds`, `searchFeeds`, `loadFeeds`):
+ *    - Logged via `logger.info()` with operation details
+ *    - Success toasts shown only if privacy consent granted
+ *    - Includes counts, categories, districts in logs
+ *
+ * 3. **Privacy Settings** (`setPrivacySettings`):
+ *    - Logs debug message with consent status
+ *    - Tracks whether feed activity can be monitored
+ *
+ * ### Implementation Details
+ * - Uses `logger.debug()` for consent-related messages
+ * - Uses `logger.info()` for successful operations
+ * - Uses `logger.error()` for failures
+ * - Toast notifications respect privacy settings
+ * - All tracking is opt-in based on user preferences
  */
 
 import { useMemo } from 'react';

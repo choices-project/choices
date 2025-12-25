@@ -115,22 +115,14 @@ export function PasskeyRegister({
         const result = await beginRegister(registerOptions);
 
       if (!result.success) {
-        // Set error state immediately to ensure it's set synchronously
+        // Set error state immediately and synchronously
         const errorMessage = result.error || 'Failed to complete registration';
+        // Set all error-related state synchronously
         setBiometricError(errorMessage);
         setBiometricSuccess(false);
         setBiometricRegistering(false);
         onError?.(errorMessage);
-        // Use requestAnimationFrame to ensure React processes the state update and re-renders
-        // This is more reliable than setTimeout(0) for ensuring DOM updates
-        await new Promise(resolve => {
-          requestAnimationFrame(() => {
-            requestAnimationFrame(() => {
-              resolve(undefined);
-            });
-          });
-        });
-        return; // Return early instead of throwing to ensure error state is set
+        return; // Return early to ensure error state is set
       }
 
       // Set success state immediately and ensure it persists

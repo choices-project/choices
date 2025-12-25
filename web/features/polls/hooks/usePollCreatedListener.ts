@@ -1,7 +1,7 @@
 import { useRouter } from 'next/navigation';
 import { useEffect, useRef } from 'react';
 
-import { useNotificationStore } from '@/lib/stores/notificationStore';
+import { useNotificationActions } from '@/lib/stores/notificationStore';
 
 type PollCreatedDetail = {
   id?: string;
@@ -16,7 +16,7 @@ const isPollCreatedEvent = (event: Event): event is CustomEvent<PollCreatedDetai
 export const usePollCreatedListener = () => {
   const router = useRouter();
   // Get stable reference to addNotification directly from store
-  const addNotification = useNotificationStore((state) => state.addNotification);
+  const { addNotification } = useNotificationActions();
   
   // Use refs to avoid dependency issues
   const routerRef = useRef(router);

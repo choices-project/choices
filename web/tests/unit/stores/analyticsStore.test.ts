@@ -323,6 +323,189 @@ describe('analyticsStore', () => {
       const isDisabled = store.getState().trackingEnabled && store.getState().preferences.trackingEnabled;
       expect(isDisabled).toBe(false);
     });
+
+    it('trackPageView respects consent guard', () => {
+      const store = createTestAnalyticsStore();
+      
+      // Without consent
+      store.getState().setTrackingEnabled(false);
+      store.getState().updatePreferences({ trackingEnabled: false });
+      store.getState().trackPageView('/test-page');
+      expect(store.getState().events).toHaveLength(0);
+      
+      // With consent
+      store.getState().setTrackingEnabled(true);
+      store.getState().updatePreferences({ trackingEnabled: true });
+      store.getState().trackPageView('/test-page');
+      expect(store.getState().events.length).toBeGreaterThan(0);
+      expect(store.getState().events[0].type).toBe('page_view');
+      expect(store.getState().events[0].label).toBe('/test-page');
+    });
+
+    it('trackUserAction respects consent guard', () => {
+      const store = createTestAnalyticsStore();
+      
+      // Without consent
+      store.getState().setTrackingEnabled(false);
+      store.getState().updatePreferences({ trackingEnabled: false });
+      store.getState().trackUserAction('click', 'button', 'submit-btn', 1);
+      expect(store.getState().events).toHaveLength(0);
+      
+      // With consent
+      store.getState().setTrackingEnabled(true);
+      store.getState().updatePreferences({ trackingEnabled: true });
+      store.getState().trackUserAction('click', 'button', 'submit-btn', 1);
+      expect(store.getState().events.length).toBeGreaterThan(0);
+      expect(store.getState().events[0].type).toBe('user_action');
+      expect(store.getState().events[0].action).toBe('click');
+      expect(store.getState().events[0].category).toBe('button');
+      expect(store.getState().events[0].label).toBe('submit-btn');
+    });
+
+    it('trackError respects consent guard', () => {
+      const store = createTestAnalyticsStore();
+      
+      // Without consent
+      store.getState().setTrackingEnabled(false);
+      store.getState().updatePreferences({ trackingEnabled: false });
+      const testError = new Error('Test error');
+      store.getState().trackError(testError, { context: 'test' });
+      expect(store.getState().events).toHaveLength(0);
+      
+      // With consent
+      store.getState().setTrackingEnabled(true);
+      store.getState().updatePreferences({ trackingEnabled: true });
+      store.getState().trackError(testError, { context: 'test' });
+      expect(store.getState().events.length).toBeGreaterThan(0);
+      expect(store.getState().events[0].type).toBe('error');
+      expect(store.getState().events[0].label).toBe('Test error');
+    });
+
+    it('trackPerformance respects performanceTracking preference', () => {
+      const store = createTestAnalyticsStore();
+      
+      // Without performance tracking enabled
+      store.getState().setTrackingEnabled(true);
+      store.getState().updatePreferences({ 
+        trackingEnabled: true,
+        performanceTracking: false 
+      });
+      store.getState().trackPerformance({ pageLoadTime: 100 });
+      expect(store.getState().performanceMetrics).toBeNull();
+      
+      // With performance tracking enabled
+      store.getState().updatePreferences({ performanceTracking: true });
+      store.getState().trackPerformance({ pageLoadTime: 100 });
+      expect(store.getState().performanceMetrics).not.toBeNull();
+      expect(store.getState().performanceMetrics?.pageLoadTime).toBe(100);
+    });
+
+    it('consent guard blocks tracking when only trackingEnabled is true', () => {
+      const store = createTestAnalyticsStore();
+      
+      store.getState().setTrackingEnabled(true);
+      store.getState().updatePreferences({ trackingEnabled: false });
+      
+      store.getState().trackEvent({
+        event_type: 'test',
+        session_id: store.getState().sessionId,
+        event_data: {},
+        created_at: new Date().toISOString(),
+        type: 'test',
+        category: 'test',
+        action: 'test',
+      });
+      
+      expect(store.getState().events).toHaveLength(0);
+    });
+
+    it('consent guard blocks tracking when only preferences.trackingEnabled is true', () => {
+      const store = createTestAnalyticsStore();
+      
+      store.getState().setTrackingEnabled(false);
+      store.getState().updatePreferences({ trackingEnabled: true });
+      
+      store.getState().trackEvent({
+        event_type: 'test',
+        session_id: store.getState().sessionId,
+        event_data: {},
+        created_at: new Date().toISOString(),
+        type: 'test',
+        category: 'test',
+        action: 'test',
+      });
+      
+      expect(store.getState().events).toHaveLength(0);
+    });
+
+    it('consent can be toggled on and off', () => {
+      const store = createTestAnalyticsStore();
+      const sessionId = store.getState().sessionId;
+      
+      // Start disabled
+      store.getState().setTrackingEnabled(false);
+      store.getState().updatePreferences({ trackingEnabled: false });
+      store.getState().trackEvent({
+        event_type: 'test',
+        session_id: sessionId,
+        event_data: {},
+        created_at: new Date().toISOString(),
+        type: 'test',
+        category: 'test',
+        action: 'test',
+      });
+      expect(store.getState().events).toHaveLength(0);
+      
+      // Enable
+      store.getState().setTrackingEnabled(true);
+      store.getState().updatePreferences({ trackingEnabled: true });
+      store.getState().trackEvent({
+        event_type: 'test',
+        session_id: sessionId,
+        event_data: {},
+        created_at: new Date().toISOString(),
+        type: 'test',
+        category: 'test',
+        action: 'test',
+      });
+      expect(store.getState().events).toHaveLength(1);
+      
+      // Disable again
+      store.getState().setTrackingEnabled(false);
+      store.getState().trackEvent({
+        event_type: 'test2',
+        session_id: sessionId,
+        event_data: {},
+        created_at: new Date().toISOString(),
+        type: 'test2',
+        category: 'test2',
+        action: 'test2',
+      });
+      expect(store.getState().events).toHaveLength(1); // Still only 1 event
+    });
+
+    it('consent guard prevents event accumulation when disabled', () => {
+      const store = createTestAnalyticsStore();
+      const sessionId = store.getState().sessionId;
+      
+      store.getState().setTrackingEnabled(false);
+      store.getState().updatePreferences({ trackingEnabled: false });
+      
+      // Try to track multiple events
+      for (let i = 0; i < 5; i++) {
+        store.getState().trackEvent({
+          event_type: `test_${i}`,
+          session_id: sessionId,
+          event_data: {},
+          created_at: new Date().toISOString(),
+          type: `test_${i}`,
+          category: 'test',
+          action: 'test',
+        });
+      }
+      
+      expect(store.getState().events).toHaveLength(0);
+    });
   });
 });
 

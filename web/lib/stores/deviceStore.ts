@@ -566,6 +566,10 @@ export const createDeviceActions = (
     teardown: () => {
       const { cleanupListeners } = get();
       cleanupListeners?.();
+      set((state) => {
+        state.listenersRegistered = false;
+        state.cleanupListeners = null;
+      });
     },
   };
 };
