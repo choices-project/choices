@@ -33,7 +33,7 @@ test.describe('Production Hydration Check', () => {
     const consoleErrors: string[] = [];
     const reactErrors: string[] = [];
     const allConsoleLogs: string[] = [];
-    const hydrationMismatches: Array<{ element: string; serverHTML: string; clientHTML: string }> = [];
+    // const hydrationMismatches: Array<{ element: string; serverHTML: string; clientHTML: string }> = [];
 
     // Capture ALL console messages for diagnostics
     page.on('console', (msg) => {

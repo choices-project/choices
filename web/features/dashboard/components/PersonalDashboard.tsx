@@ -487,22 +487,37 @@ function StandardPersonalDashboard({ userId: fallbackUserId, className = '' }: P
   // StandardPersonalDashboard uses preferencesRefresher instead of handlePreferenceToggle
   // (defined later in the component)
 
-  const numberFormatter = useMemo(
-    () => new Intl.NumberFormat(currentLanguage ?? undefined),
-    [currentLanguage],
-  );
-  const dateFormatter = useMemo(
-    () =>
-      new Intl.DateTimeFormat(currentLanguage ?? undefined, {
-        year: 'numeric',
-        month: 'short',
-        day: 'numeric',
-      }),
-    [currentLanguage],
-  );
+  // CRITICAL: Follow polls page pattern - only create formatters after mount
+  // This prevents hydration mismatches from Intl formatters using different locales
+  const [isMounted, setIsMounted] = useState(false);
+
+  useEffect(() => {
+    setIsMounted(true);
+  }, []);
+
+  // Only create formatters after mount to prevent hydration mismatch
+  const numberFormatter = useMemo(() => {
+    if (!isMounted) return null;
+    return new Intl.NumberFormat(currentLanguage ?? undefined);
+  }, [isMounted, currentLanguage]);
+
+  const dateFormatter = useMemo(() => {
+    if (!isMounted) return null;
+    return new Intl.DateTimeFormat(currentLanguage ?? undefined, {
+      year: 'numeric',
+      month: 'short',
+      day: 'numeric',
+    });
+  }, [isMounted, currentLanguage]);
+
   const formatNumber = useCallback(
-    (value: number) => numberFormatter.format(value),
-    [numberFormatter],
+    (value: number) => {
+      if (!isMounted || !numberFormatter) {
+        return String(value); // Fallback during SSR
+      }
+      return numberFormatter.format(value);
+    },
+    [isMounted, numberFormatter],
   );
 
   const {
@@ -1009,11 +1024,7 @@ function StandardPersonalDashboard({ userId: fallbackUserId, className = '' }: P
   // CRITICAL: Follow feed/polls pattern - return loading skeleton during SSR/initial render
   // This ensures consistent server/client rendering structure, preventing hydration mismatches
   // After mount, render actual content (matches feed/polls page pattern)
-  const [isMounted, setIsMounted] = useState(false);
-
-  useEffect(() => {
-    setIsMounted(true);
-  }, []);
+  // isMounted is already declared above for formatters
 
   // During SSR/initial render, always return loading skeleton (same structure on server and client)
   // This matches the pattern used by feed and polls pages which don't have hydration issues
@@ -1184,7 +1195,7 @@ function StandardPersonalDashboard({ userId: fallbackUserId, className = '' }: P
                         </span>
                         <span className='text-sm text-gray-600'>
                           {t('dashboard.personal.engagement.participationValue', {
-                            score: numberFormatter.format(analytics.participation_score),
+                            score: formatNumber(analytics.participation_score),
                           })}
                         </span>
                       </div>
@@ -1500,7 +1511,9 @@ function StandardPersonalDashboard({ userId: fallbackUserId, className = '' }: P
                           {t('dashboard.personal.recentActivity.items.vote')}
                         </div>
                         <div className='text-xs text-gray-500'>
-                          {dateFormatter.format(new Date(vote.created_at))}
+                          {isMounted && dateFormatter
+                            ? dateFormatter.format(new Date(vote.created_at))
+                            : new Date(vote.created_at).toISOString().split('T')[0]}
                         </div>
                       </div>
                     </div>
@@ -1515,7 +1528,9 @@ function StandardPersonalDashboard({ userId: fallbackUserId, className = '' }: P
                         <div className='text-xs text-gray-500'>
                           {t('dashboard.personal.recentActivity.pollSummary', {
                             votes: formatNumber(poll.total_votes),
-                            date: dateFormatter.format(new Date(poll.created_at)),
+                            date: isMounted && dateFormatter
+                              ? dateFormatter.format(new Date(poll.created_at))
+                              : new Date(poll.created_at).toISOString().split('T')[0],
                           })}
                         </div>
                       </div>
