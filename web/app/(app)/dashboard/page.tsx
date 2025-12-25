@@ -728,14 +728,19 @@ export default function DashboardPage() {
       }
     }
   }, [shouldBypassAuth, isAuthenticated, profile, isLoading, isAdmin, isUserLoading, isAuthContextLoading, isStoreHydrated, hasCookies]);
+  // CRITICAL: Guard conditional returns with mounted check to prevent hydration mismatch
+  const [isMountedForPageRender, setIsMountedForPageRender] = useState(false);
 
+  useEffect(() => {
+    setIsMountedForPageRender(true);
+  }, []);
   // Show loading skeleton only if actively loading and not timed out
   // In E2E harness mode or after timeout, allow dashboard to render (it handles missing profile gracefully)
   // Also bypass loading check if user is authenticated (profile can load in background)
   // Wait for AuthContext to finish initializing before showing loading skeleton
   // CRITICAL: Only use state value (shouldBypassAuth) - don't call checkBypassFlag() during render
   // This prevents hydration mismatch by ensuring consistent render decisions
-  if (isLoading && !loadingTimeout && !shouldBypassAuth && !isAuthenticated && !isAuthContextLoading) {
+  if (isMountedForPageRender && isLoading && !loadingTimeout && !shouldBypassAuth && !isAuthenticated && !isAuthContextLoading) {
     return (
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8" aria-label="Loading dashboard">
         <div className="space-y-6">
@@ -774,7 +779,7 @@ export default function DashboardPage() {
         envHarness: process.env.NEXT_PUBLIC_ENABLE_E2E_HARNESS === '1',
       });
     }
-  } else if (!isUserLoading && !isAuthContextLoading && isStoreHydrated && hasCookies === false && !isAuthenticated) {
+  } else if (isMountedForPageRender && !isUserLoading && !isAuthContextLoading && isStoreHydrated && hasCookies === false && !isAuthenticated) {
     return (
       <div className="flex items-center justify-center min-h-screen px-4">
         <div className="text-center space-y-4 max-w-md">
@@ -803,7 +808,7 @@ export default function DashboardPage() {
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* Show admin dashboard link for admin users */}
-        {isAdmin === true && (
+        {isMountedForPageRender && isAdmin === true && (
           <div className="mb-6 p-4 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-3">
