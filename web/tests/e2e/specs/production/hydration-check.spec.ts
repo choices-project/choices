@@ -84,10 +84,67 @@ test.describe('Production Hydration Check', () => {
     });
 
     console.log('Page loaded, waiting for dashboard...');
+    console.log(`Current URL: ${page.url()}`);
+    console.log(`Page title: ${await page.title()}`);
 
-    // Wait for dashboard to fully render
-    await page.waitForSelector('[data-testid="personal-dashboard"]', { timeout: 30000 });
-    console.log('Dashboard element found');
+    // Enhanced diagnostics: Check what's actually on the page
+    const pageDiagnostics = await page.evaluate(() => {
+      return {
+        url: window.location.href,
+        pathname: window.location.pathname,
+        hasPersonalDashboard: !!document.querySelector('[data-testid="personal-dashboard"]'),
+        hasDashboardPageContent: !!document.querySelector('[data-testid="dashboard-page-content"]'),
+        hasLoadingSkeleton: !!document.querySelector('[aria-label="Loading dashboard"]'),
+        bodyText: document.body.innerText.substring(0, 500),
+        allTestIds: Array.from(document.querySelectorAll('[data-testid]')).map(el => el.getAttribute('data-testid')),
+      };
+    });
+    console.log('\n=== PAGE DIAGNOSTICS (after initial load) ===');
+    console.log(JSON.stringify(pageDiagnostics, null, 2));
+
+    // Wait for page to be fully loaded (networkidle or load)
+    await page.waitForLoadState('networkidle', { timeout: 30000 }).catch(() => {
+      console.log('Network idle timeout - continuing anyway');
+    });
+
+    // Check again after network idle
+    const pageDiagnosticsAfterLoad = await page.evaluate(() => {
+      return {
+        url: window.location.href,
+        pathname: window.location.pathname,
+        hasPersonalDashboard: !!document.querySelector('[data-testid="personal-dashboard"]'),
+        hasDashboardPageContent: !!document.querySelector('[data-testid="dashboard-page-content"]'),
+        hasLoadingSkeleton: !!document.querySelector('[aria-label="Loading dashboard"]'),
+        bodyText: document.body.innerText.substring(0, 500),
+      };
+    });
+    console.log('\n=== PAGE DIAGNOSTICS (after network idle) ===');
+    console.log(JSON.stringify(pageDiagnosticsAfterLoad, null, 2));
+
+    // Wait for dashboard to fully render (with longer timeout and better error handling)
+    try {
+      await page.waitForSelector('[data-testid="personal-dashboard"]', { timeout: 30000 });
+      console.log('Dashboard element found');
+    } catch (error) {
+      // Enhanced error diagnostics
+      const finalDiagnostics = await page.evaluate(() => {
+        return {
+          url: window.location.href,
+          pathname: window.location.pathname,
+          hasPersonalDashboard: !!document.querySelector('[data-testid="personal-dashboard"]'),
+          hasDashboardPageContent: !!document.querySelector('[data-testid="dashboard-page-content"]'),
+          hasLoadingSkeleton: !!document.querySelector('[aria-label="Loading dashboard"]'),
+          hasAccessDenied: document.body.innerText.includes('Access denied'),
+          hasAuthRedirect: window.location.pathname === '/auth',
+          bodyText: document.body.innerText.substring(0, 1000),
+          allTestIds: Array.from(document.querySelectorAll('[data-testid]')).map(el => el.getAttribute('data-testid')),
+          htmlSnippet: document.body.innerHTML.substring(0, 2000),
+        };
+      });
+      console.log('\n=== FINAL PAGE DIAGNOSTICS (after timeout) ===');
+      console.log(JSON.stringify(finalDiagnostics, null, 2));
+      throw error;
+    }
     
     await page.waitForTimeout(5000); // Allow any async rendering to complete
     console.log('Waited 5 seconds for async rendering');

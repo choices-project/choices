@@ -37,7 +37,6 @@ import { useI18n } from '@/hooks/useI18n';
 export default function GlobalNavigation() {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [_hasError, _setHasError] = useState(false);
-  const pathname = usePathname();
   const mobileMenuButtonRef = useRef<HTMLButtonElement>(null);
   const firstMobileNavLinkRef = useRef<HTMLAnchorElement>(null);
   const previouslyFocusedElementRef = useRef<HTMLElement | null>(null);
@@ -47,6 +46,16 @@ export default function GlobalNavigation() {
   // Use ref for stable t function
   const tRef = useRef(t);
   useEffect(() => { tRef.current = t; }, [t]);
+
+  // CRITICAL: Guard usePathname() usage with isMounted to prevent hydration mismatch
+  // usePathname() can return different values on server vs client
+  // We must call the hook at the top level, but guard its usage in isActive()
+  const [isMountedForNavRender, setIsMountedForNavRender] = useState(false);
+  const pathname = usePathname();
+  
+  useEffect(() => {
+    setIsMountedForNavRender(true);
+  }, []);
 
   // Auth integration via context
   // Note: useAuth will throw if not within AuthProvider, but that's expected
@@ -71,15 +80,6 @@ export default function GlobalNavigation() {
   const shouldBypassLoading = loadingTimeout || (typeof window !== 'undefined' && 
     window.localStorage.getItem('e2e-dashboard-bypass') === '1');
   const isLoading = authLoading && !shouldBypassLoading;
-
-  // CRITICAL: Guard conditional return with mounted check to prevent hydration mismatch
-  // During SSR/initial render, always render the same structure (navigation content)
-  // After mount, the conditional return can safely show loading skeleton via normal React updates
-  const [isMountedForNavRender, setIsMountedForNavRender] = useState(false);
-  
-  useEffect(() => {
-    setIsMountedForNavRender(true);
-  }, []);
 
   // DIAGNOSTIC: Log GlobalNavigation render state for debugging
   useEffect(() => {
@@ -124,9 +124,17 @@ export default function GlobalNavigation() {
     }
   }, [closeMobileMenu]); // Removed authSignOut - using authSignOutRef
 
+  // CRITICAL: Only check active state after mount to prevent hydration mismatch
+  // During SSR, all links should appear inactive (consistent structure)
+  // This ensures the same DOM structure on server and client during initial render
   const isActive = useCallback(
-    (path: string) => pathname === path,
-    [pathname],
+    (path: string) => {
+      if (!isMountedForNavRender) {
+        return false; // During SSR/initial render, no links are active
+      }
+      return pathname === path;
+    },
+    [pathname, isMountedForNavRender],
   );
 
   const navigationItems = useMemo(
