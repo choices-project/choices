@@ -795,37 +795,8 @@ function StandardPersonalDashboard({ userId: fallbackUserId, className = '' }: P
     return Math.min(100, Math.max(behaviorScore, derivedScore));
   }, [pollCreatedEvents.length, userBehavior?.engagementScore, voteEvents.length]);
 
-  // CRITICAL: Ensure isLoading, errorMessage, and analytics are consistent during SSR
-  // During SSR, always use false/null/empty to prevent hydration mismatch
-  // After mount, use actual store values
-  const [isClientMounted, setIsClientMounted] = useState(false);
-  
-  useEffect(() => {
-    setIsClientMounted(true);
-  }, []);
-
-  // CRITICAL: Ensure analytics is consistent during SSR to prevent hydration mismatch
-  // During SSR, use empty/default values; after mount, use actual store values
+  // Analytics - computed from store values (safe after mount check)
   const analytics: PersonalAnalytics = useMemo(() => {
-    // During SSR, return default values to ensure consistent rendering
-    if (!isClientMounted) {
-      return {
-        user_id: 'anonymous',
-        total_votes: 0,
-        total_polls_created: 0,
-        active_polls: 0,
-        total_votes_on_user_polls: 0,
-        participation_score: 0,
-        recent_activity: {
-          votes_last_30_days: 0,
-          polls_created_last_30_days: 0,
-        },
-        recent_votes: [],
-        recent_polls: [],
-      } satisfies PersonalAnalytics;
-    }
-    
-    // After mount, use actual store values
     return {
       user_id: userProfileId ?? 'anonymous',
       total_votes: voteEvents.length,
@@ -841,7 +812,6 @@ function StandardPersonalDashboard({ userId: fallbackUserId, className = '' }: P
       recent_polls: recentPolls,
     } satisfies PersonalAnalytics;
   }, [
-    isClientMounted,
     participationScore,
     pollCreatedEvents.length,
     pollsCreatedLast30Days,
@@ -898,6 +868,7 @@ function StandardPersonalDashboard({ userId: fallbackUserId, className = '' }: P
     }
   }, [isAuthenticated]);
 
+  // Display name and title/subtitle - computed from profile/store (safe after mount check)
   const effectiveDisplayName =
     (displayName && displayName !== 'User' ? displayName : undefined) ??
     ((profileRecord?.display_name as string | undefined) ??
@@ -916,15 +887,10 @@ function StandardPersonalDashboard({ userId: fallbackUserId, className = '' }: P
       : tRef.current('dashboard.personal.header.subtitleDefault');
   }, [profileRecord?.bio]);
 
-  const isLoading = isClientMounted
-    ? (isUserLoading || profileLoading || isPollsLoading || analyticsLoading)
-    : false; // Always false during SSR
+  // Loading and error states - computed from store values (safe after mount check)
+  const isLoading = isUserLoading || profileLoading || isPollsLoading || analyticsLoading;
 
   const errorMessage = useMemo(() => {
-    // During SSR, always return null to prevent hydration mismatch
-    if (!isClientMounted) {
-      return null;
-    }
     return (
       profileError ??
       pollsError ??
@@ -933,7 +899,7 @@ function StandardPersonalDashboard({ userId: fallbackUserId, className = '' }: P
       representativeError ??
       (hasAnyError ? tRef.current('dashboard.personal.errors.generic') : null)
     );
-  }, [isClientMounted, profileError, pollsError, analyticsError, hashtagError, representativeError, hasAnyError]);
+  }, [profileError, pollsError, analyticsError, hashtagError, representativeError, hasAnyError]);
 
   const quickActions = useMemo(
     () => [
@@ -1040,24 +1006,20 @@ function StandardPersonalDashboard({ userId: fallbackUserId, className = '' }: P
   // If we're rendering this component, user is authenticated (page wrapper checked)
   // This matches the pattern used by feed and polls pages which work correctly
 
-  // CRITICAL: Only show loading/error states after mount to prevent hydration mismatch
-  // During SSR/initial render, always render the same structure (dashboard content)
-  // After mount, isLoading/errorMessage changes are handled via normal React state updates
-  const [isMountedForRender, setIsMountedForRender] = useState(false);
+  // CRITICAL: Follow feed/polls pattern - return loading skeleton during SSR/initial render
+  // This ensures consistent server/client rendering structure, preventing hydration mismatches
+  // After mount, render actual content (matches feed/polls page pattern)
+  const [isMounted, setIsMounted] = useState(false);
 
   useEffect(() => {
-    setIsMountedForRender(true);
-    if (process.env.NODE_ENV === 'development' || (typeof window !== 'undefined' && window.localStorage.getItem('e2e-dashboard-bypass') === '1')) {
-      logger.debug('[PersonalDashboard] isMountedForRender set to true');
-    }
+    setIsMounted(true);
   }, []);
 
-  if (isMountedForRender && isLoading) {
-    if (process.env.NODE_ENV === 'development' || (typeof window !== 'undefined' && window.localStorage.getItem('e2e-dashboard-bypass') === '1')) {
-      logger.debug('[PersonalDashboard] Rendering loading skeleton (mounted check passed)', { isLoading });
-    }
+  // During SSR/initial render, always return loading skeleton (same structure on server and client)
+  // This matches the pattern used by feed and polls pages which don't have hydration issues
+  if (!isMounted) {
     return (
-      <div className={`space-y-6 ${className}`}>
+      <div className={`space-y-6 ${className}`} data-testid='personal-dashboard'>
         <div className='grid grid-cols-1 gap-6 lg:grid-cols-3'>
           <div className='space-y-6 lg:col-span-2'>
             <Skeleton className='h-32 w-full' />
@@ -1072,12 +1034,27 @@ function StandardPersonalDashboard({ userId: fallbackUserId, className = '' }: P
     );
   }
 
-  if (isMountedForRender && errorMessage) {
-    if (process.env.NODE_ENV === 'development' || (typeof window !== 'undefined' && window.localStorage.getItem('e2e-dashboard-bypass') === '1')) {
-      logger.debug('[PersonalDashboard] Rendering error message (mounted check passed)', { errorMessage });
-    }
+  // After mount, check for loading/error states
+  if (isLoading) {
     return (
-      <div className={`space-y-6 ${className}`}>
+      <div className={`space-y-6 ${className}`} data-testid='personal-dashboard'>
+        <div className='grid grid-cols-1 gap-6 lg:grid-cols-3'>
+          <div className='space-y-6 lg:col-span-2'>
+            <Skeleton className='h-32 w-full' />
+            <Skeleton className='h-48 w-full' />
+          </div>
+          <div className='space-y-6'>
+            <Skeleton className='h-32 w-full' />
+            <Skeleton className='h-48 w-full' />
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  if (errorMessage) {
+    return (
+      <div className={`space-y-6 ${className}`} data-testid='personal-dashboard'>
         <Card>
           <CardContent className='space-y-4 p-6 text-center'>
             <div className='mx-auto mb-2 text-red-500'>
