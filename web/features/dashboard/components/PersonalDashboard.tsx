@@ -616,23 +616,27 @@ function StandardPersonalDashboard({ userId: fallbackUserId, className = '' }: P
   const representativeError = useRepresentativeError();
   const getUserRepresentatives = useGetUserRepresentatives(); // This is a hook, not a selector
 
-  const resolvedDashboardPreferences = useMemo(() => {
+  // CRITICAL: Initialize preferences with consistent defaults to prevent hydration mismatch
+  // Zustand persist storage may not be available during SSR, causing different initial values
+  // Use DEFAULT_DASHBOARD_PREFERENCES as initial state, then update after mount when store has hydrated
+  const [preferences, setPreferences] = useState<DashboardPreferences>(DEFAULT_DASHBOARD_PREFERENCES);
+  const preferencesRef = useRef<DashboardPreferences>(DEFAULT_DASHBOARD_PREFERENCES);
+
+  // Update preferences from store after mount (when store has hydrated)
+  useEffect(() => {
+    if (!isMounted) {
+      return; // Don't update until after mount
+    }
     const stored = profilePreferences?.dashboard;
-    return {
+    const resolved: DashboardPreferences = {
       showElectedOfficials: stored?.showElectedOfficials ?? DEFAULT_DASHBOARD_PREFERENCES.showElectedOfficials,
       showQuickActions: stored?.showQuickActions ?? DEFAULT_DASHBOARD_PREFERENCES.showQuickActions,
       showRecentActivity: stored?.showRecentActivity ?? DEFAULT_DASHBOARD_PREFERENCES.showRecentActivity,
       showEngagementScore: stored?.showEngagementScore ?? DEFAULT_DASHBOARD_PREFERENCES.showEngagementScore,
-    } satisfies DashboardPreferences;
-  }, [profilePreferences]);
-
-  const [preferences, setPreferences] = useState<DashboardPreferences>(resolvedDashboardPreferences);
-  const preferencesRef = useRef(resolvedDashboardPreferences);
-
-  useEffect(() => {
-    setPreferences(resolvedDashboardPreferences);
-    preferencesRef.current = resolvedDashboardPreferences;
-  }, [resolvedDashboardPreferences]);
+    };
+    setPreferences(resolved);
+    preferencesRef.current = resolved;
+  }, [isMounted, profilePreferences]);
 
   const { showQuickActions, showElectedOfficials, showRecentActivity, showEngagementScore } = preferences;
 
