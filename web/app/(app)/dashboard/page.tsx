@@ -813,7 +813,7 @@ export default function DashboardPage() {
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* Show admin dashboard link for admin users */}
-        {isAdmin === true && (
+        {isMounted && isAdmin === true && (
           <div className="mb-6 p-4 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-3">
