@@ -1,5 +1,5 @@
 import { Loader2, CalendarClock, AlertTriangle } from 'lucide-react';
-import React, { useMemo } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 
 import { Badge } from '@/components/ui/badge';
 
@@ -63,6 +63,13 @@ export function ElectionCountdownBadge({
   errorMessage
 }: ElectionCountdownBadgeProps) {
   const { t, currentLanguage } = useI18n();
+  // CRITICAL: Only use formatElectionDate after mount to prevent hydration mismatch
+  // toLocaleDateString can produce different output on server vs client
+  const [isMounted, setIsMounted] = useState(false);
+
+  useEffect(() => {
+    setIsMounted(true);
+  }, []);
   const resolvedLoadingMessage =
     loadingMessage ?? t('civics.countdown.badge.loading');
   const resolvedErrorMessage =
@@ -146,7 +153,9 @@ export function ElectionCountdownBadge({
       )}
       {showDate && nextElection?.election_day && (
         <span className="text-blue-600/80">
-          · {formatElectionDate(nextElection.election_day, currentLanguage)}
+          · {isMounted
+              ? formatElectionDate(nextElection.election_day, currentLanguage)
+              : nextElection.election_day.split('T')[0]}
         </span>
       )}
       {additionalCount && (

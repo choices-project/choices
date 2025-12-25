@@ -4,7 +4,7 @@ import {
   Clock3,
   Loader2
 } from 'lucide-react';
-import React, { useMemo } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 
 import { cn } from '@/lib/utils';
 
@@ -50,6 +50,13 @@ export function ElectionCountdownCard({
   ariaLabel
 }: ElectionCountdownCardProps) {
   const { t, currentLanguage } = useI18n();
+  // CRITICAL: Only use formatElectionDate after mount to prevent hydration mismatch
+  // toLocaleDateString can produce different output on server vs client
+  const [isMounted, setIsMounted] = useState(false);
+
+  useEffect(() => {
+    setIsMounted(true);
+  }, []);
   const resolvedTitle = title ?? t('civics.countdown.card.title');
   const resolvedDescription = description ?? t('civics.countdown.card.description');
   const resolvedEmptyMessage = emptyMessage ?? t('civics.countdown.card.empty');
@@ -124,7 +131,9 @@ export function ElectionCountdownCard({
                     {election.name}
                   </span>
                   <span className="text-xs text-blue-600 dark:text-blue-200/80">
-                    {formatElectionDate(election.election_day, currentLanguage)}
+                    {isMounted
+                      ? formatElectionDate(election.election_day, currentLanguage)
+                      : election.election_day?.split('T')[0] ?? ''}
                   </span>
                 </div>
               </li>

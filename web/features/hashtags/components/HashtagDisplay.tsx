@@ -34,6 +34,12 @@ export function HashtagDisplay({
   onFollow: _onFollow,
   onUnfollow: _onUnfollow
 }: HashtagDisplayProps) {
+  // CRITICAL: Only use toLocaleString after mount to prevent hydration mismatch
+  const [isMounted, setIsMounted] = React.useState(false);
+
+  React.useEffect(() => {
+    setIsMounted(true);
+  }, []);
   const displayHashtags = hashtags.slice(0, maxDisplay);
   const remainingCount = hashtags.length - maxDisplay;
 
@@ -93,11 +99,11 @@ export function HashtagDisplay({
             <div className="flex items-center space-x-4 text-sm text-gray-500">
               <div className="flex items-center space-x-1">
                 <Users className="h-4 w-4" />
-                <span>{(hashtag.follower_count ?? 0).toLocaleString()}</span>
+                <span>{isMounted ? (hashtag.follower_count ?? 0).toLocaleString() : String(hashtag.follower_count ?? 0)}</span>
               </div>
               <div className="flex items-center space-x-1">
                 <MessageSquare className="h-4 w-4" />
-                <span>{hashtag.usage_count.toLocaleString()}</span>
+                <span>{isMounted ? hashtag.usage_count.toLocaleString() : String(hashtag.usage_count)}</span>
               </div>
               {hashtag.is_trending && (
                 <div className="flex items-center space-x-1 text-orange-500">
@@ -136,6 +142,13 @@ export function TrendingHashtagDisplay({
   className = "",
   onHashtagClick
 }: TrendingHashtagDisplayProps) {
+  // CRITICAL: Only use toLocaleString after mount to prevent hydration mismatch
+  const [isMounted, setIsMounted] = React.useState(false);
+
+  React.useEffect(() => {
+    setIsMounted(true);
+  }, []);
+
   const displayHashtags = trendingHashtags.slice(0, maxDisplay);
 
   return (
@@ -166,8 +179,8 @@ export function TrendingHashtagDisplay({
                 </span>
               </div>
               <div className="flex items-center space-x-4 mt-1 text-sm text-gray-600">
-                <span>{trending.hashtag.usage_count.toLocaleString()} uses</span>
-                <span>{(trending.hashtag.follower_count ?? 0).toLocaleString()} followers</span>
+                <span>{isMounted ? trending.hashtag.usage_count.toLocaleString() : String(trending.hashtag.usage_count)} uses</span>
+                <span>{isMounted ? (trending.hashtag.follower_count ?? 0).toLocaleString() : String(trending.hashtag.follower_count ?? 0)} followers</span>
               </div>
             </div>
           </div>
