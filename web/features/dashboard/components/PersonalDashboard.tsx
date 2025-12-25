@@ -715,10 +715,8 @@ function StandardPersonalDashboard({ userId: fallbackUserId, className = '' }: P
   // All events will pass the filter (createdAt >= 0), then after mount we update to actual timestamp
   // This prevents hydration mismatch while still allowing accurate filtering after hydration
   const [thirtyDaysAgo, setThirtyDaysAgo] = useState(0);
-  const [isMountedForDate, setIsMountedForDate] = useState(false);
 
   useEffect(() => {
-    setIsMountedForDate(true);
     setThirtyDaysAgo(Date.now() - THIRTY_DAYS_MS);
   }, []);
 
@@ -1001,7 +999,16 @@ function StandardPersonalDashboard({ userId: fallbackUserId, className = '' }: P
   // If we're rendering this component, user is authenticated (page wrapper checked)
   // This matches the pattern used by feed and polls pages which work correctly
 
-  if (isLoading) {
+  // CRITICAL: Only show loading/error states after mount to prevent hydration mismatch
+  // During SSR/initial render, always render the same structure (dashboard content)
+  // After mount, isLoading/errorMessage changes are handled via normal React state updates
+  const [isMountedForRender, setIsMountedForRender] = useState(false);
+  
+  useEffect(() => {
+    setIsMountedForRender(true);
+  }, []);
+
+  if (isMountedForRender && isLoading) {
     return (
       <div className={`space-y-6 ${className}`}>
         <div className='grid grid-cols-1 gap-6 lg:grid-cols-3'>
@@ -1018,7 +1025,7 @@ function StandardPersonalDashboard({ userId: fallbackUserId, className = '' }: P
     );
   }
 
-  if (errorMessage) {
+  if (isMountedForRender && errorMessage) {
     return (
       <div className={`space-y-6 ${className}`}>
         <Card>
