@@ -121,31 +121,70 @@ test.describe('Production Hydration Check', () => {
     console.log('\n=== PAGE DIAGNOSTICS (after network idle) ===');
     console.log(JSON.stringify(pageDiagnosticsAfterLoad, null, 2));
 
+    // Wait a bit longer for any async operations to complete
+    await page.waitForTimeout(2000);
+
+    // Capture console errors before waiting for selector
+    console.log('\n=== CONSOLE ERRORS CAPTURED SO FAR ===');
+    console.log(`Total console errors: ${consoleErrors.length}`);
+    console.log(`React/hydration errors: ${reactErrors.length}`);
+    if (consoleErrors.length > 0) {
+      console.log('\n--- First 10 Console Errors ---');
+      consoleErrors.slice(0, 10).forEach((err, idx) => {
+        console.log(`${idx + 1}. ${err.substring(0, 500)}`);
+      });
+    }
+    if (reactErrors.length > 0) {
+      console.log('\n--- React/Hydration Errors ---');
+      reactErrors.forEach((err, idx) => {
+        console.log(`${idx + 1}. ${err.substring(0, 1000)}`);
+      });
+    }
+
     // Wait for dashboard to fully render (with longer timeout and better error handling)
     try {
       await page.waitForSelector('[data-testid="personal-dashboard"]', { timeout: 30000 });
       console.log('Dashboard element found');
     } catch (error) {
-      // Enhanced error diagnostics
-      const finalDiagnostics = await page.evaluate(() => {
-        return {
-          url: window.location.href,
-          pathname: window.location.pathname,
-          hasPersonalDashboard: !!document.querySelector('[data-testid="personal-dashboard"]'),
-          hasDashboardPageContent: !!document.querySelector('[data-testid="dashboard-page-content"]'),
-          hasLoadingSkeleton: !!document.querySelector('[aria-label="Loading dashboard"]'),
-          hasAccessDenied: document.body.innerText.includes('Access denied'),
-          hasAuthRedirect: window.location.pathname === '/auth',
-          bodyText: document.body.innerText.substring(0, 1000),
-          allTestIds: Array.from(document.querySelectorAll('[data-testid]')).map(el => el.getAttribute('data-testid')),
-          htmlSnippet: document.body.innerHTML.substring(0, 2000),
-        };
-      });
-      console.log('\n=== FINAL PAGE DIAGNOSTICS (after timeout) ===');
-      console.log(JSON.stringify(finalDiagnostics, null, 2));
+      // Enhanced error diagnostics - capture before page might close
+      try {
+        const finalDiagnostics = await page.evaluate(() => {
+          return {
+            url: window.location.href,
+            pathname: window.location.pathname,
+            hasPersonalDashboard: !!document.querySelector('[data-testid="personal-dashboard"]'),
+            hasDashboardPageContent: !!document.querySelector('[data-testid="dashboard-page-content"]'),
+            hasLoadingSkeleton: !!document.querySelector('[aria-label="Loading dashboard"]'),
+            hasAccessDenied: document.body.innerText.includes('Access denied'),
+            hasAuthRedirect: window.location.pathname === '/auth',
+            hasErrorBoundary: document.body.innerText.includes('Something went wrong'),
+            hasReactError185: document.body.innerText.includes('React error #185'),
+            bodyText: document.body.innerText.substring(0, 1000),
+            allTestIds: Array.from(document.querySelectorAll('[data-testid]')).map(el => el.getAttribute('data-testid')),
+            htmlSnippet: document.body.innerHTML.substring(0, 2000),
+          };
+        });
+        console.log('\n=== FINAL PAGE DIAGNOSTICS (after timeout) ===');
+        console.log(JSON.stringify(finalDiagnostics, null, 2));
+      } catch (evalError) {
+        console.log('\n=== Could not evaluate page (may have closed) ===');
+        console.log(`Error: ${evalError}`);
+      }
+      
+      // Log all captured errors before throwing
+      console.log('\n=== ALL CAPTURED ERRORS BEFORE FAILURE ===');
+      console.log(`Total console errors: ${consoleErrors.length}`);
+      console.log(`React/hydration errors: ${reactErrors.length}`);
+      if (reactErrors.length > 0) {
+        reactErrors.forEach((err, idx) => {
+          console.log(`\n--- React Error ${idx + 1} ---`);
+          console.log(err.substring(0, 2000));
+        });
+      }
+      
       throw error;
     }
-    
+
     await page.waitForTimeout(5000); // Allow any async rendering to complete
     console.log('Waited 5 seconds for async rendering');
 
@@ -171,7 +210,7 @@ test.describe('Production Hydration Check', () => {
         const allElements = dashboard.querySelectorAll('*');
         allElements.forEach((el, idx) => {
           if (idx < 20) { // Limit to first 20 for performance
-            const hasConditionalClass = el.className && typeof el.className === 'string' && 
+            const hasConditionalClass = el.className && typeof el.className === 'string' &&
               (el.className.includes('animate') || el.className.includes('transition'));
             if (hasConditionalClass) {
               diagnostics.potentialMismatches.push({
@@ -199,7 +238,7 @@ test.describe('Production Hydration Check', () => {
 
     // Check for React error #185 specifically
     const hydrationErrors = reactErrors.filter((err) =>
-      err.toLowerCase().includes('185') || 
+      err.toLowerCase().includes('185') ||
       err.toLowerCase().includes('hydration mismatch') ||
       err.toLowerCase().includes('hydration failed')
     );
@@ -210,7 +249,7 @@ test.describe('Production Hydration Check', () => {
     console.log(`React/hydration errors: ${reactErrors.length}`);
     console.log(`Hydration-specific errors (#185): ${hydrationErrors.length}`);
     console.log(`Total console messages captured: ${consoleMessages.length}`);
-    
+
     if (hydrationErrors.length > 0) {
       console.log('\n--- Hydration Errors (#185) ---');
       hydrationErrors.forEach((err, idx) => {

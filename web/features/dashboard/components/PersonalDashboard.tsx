@@ -619,23 +619,31 @@ function StandardPersonalDashboard({ userId: fallbackUserId, className = '' }: P
   // CRITICAL: Initialize preferences with consistent defaults to prevent hydration mismatch
   // Zustand persist storage may not be available during SSR, causing different initial values
   // Use DEFAULT_DASHBOARD_PREFERENCES as initial state, then update after mount when store has hydrated
+  // Track when preferences have been initialized from store to prevent using stale defaults
   const [preferences, setPreferences] = useState<DashboardPreferences>(DEFAULT_DASHBOARD_PREFERENCES);
+  const [preferencesInitialized, setPreferencesInitialized] = useState(false);
   const preferencesRef = useRef<DashboardPreferences>(DEFAULT_DASHBOARD_PREFERENCES);
 
   // Update preferences from store after mount (when store has hydrated)
+  // This ensures we use store values only after they're available, preventing hydration mismatch
   useEffect(() => {
     if (!isMounted) {
       return; // Don't update until after mount
     }
-    const stored = profilePreferences?.dashboard;
-    const resolved: DashboardPreferences = {
-      showElectedOfficials: stored?.showElectedOfficials ?? DEFAULT_DASHBOARD_PREFERENCES.showElectedOfficials,
-      showQuickActions: stored?.showQuickActions ?? DEFAULT_DASHBOARD_PREFERENCES.showQuickActions,
-      showRecentActivity: stored?.showRecentActivity ?? DEFAULT_DASHBOARD_PREFERENCES.showRecentActivity,
-      showEngagementScore: stored?.showEngagementScore ?? DEFAULT_DASHBOARD_PREFERENCES.showEngagementScore,
-    };
-    setPreferences(resolved);
-    preferencesRef.current = resolved;
+    // Wait a tick to ensure store has had time to hydrate
+    const timeoutId = setTimeout(() => {
+      const stored = profilePreferences?.dashboard;
+      const resolved: DashboardPreferences = {
+        showElectedOfficials: stored?.showElectedOfficials ?? DEFAULT_DASHBOARD_PREFERENCES.showElectedOfficials,
+        showQuickActions: stored?.showQuickActions ?? DEFAULT_DASHBOARD_PREFERENCES.showQuickActions,
+        showRecentActivity: stored?.showRecentActivity ?? DEFAULT_DASHBOARD_PREFERENCES.showRecentActivity,
+        showEngagementScore: stored?.showEngagementScore ?? DEFAULT_DASHBOARD_PREFERENCES.showEngagementScore,
+      };
+      setPreferences(resolved);
+      preferencesRef.current = resolved;
+      setPreferencesInitialized(true);
+    }, 0);
+    return () => clearTimeout(timeoutId);
   }, [isMounted, profilePreferences]);
 
   const { showQuickActions, showElectedOfficials, showRecentActivity, showEngagementScore } = preferences;
@@ -1049,7 +1057,26 @@ function StandardPersonalDashboard({ userId: fallbackUserId, className = '' }: P
     );
   }
 
-  // After mount, check for loading/error states
+  // After mount, wait for preferences to be initialized from store before rendering
+  // This prevents hydration mismatch from using default preferences before store has hydrated
+  if (!preferencesInitialized) {
+    return (
+      <div className={`space-y-6 ${className}`} data-testid='personal-dashboard'>
+        <div className='grid grid-cols-1 gap-6 lg:grid-cols-3'>
+          <div className='space-y-6 lg:col-span-2'>
+            <Skeleton className='h-32 w-full' />
+            <Skeleton className='h-48 w-full' />
+          </div>
+          <div className='space-y-6'>
+            <Skeleton className='h-32 w-full' />
+            <Skeleton className='h-48 w-full' />
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // After mount and preferences initialized, check for loading/error states
   if (isLoading) {
     return (
       <div className={`space-y-6 ${className}`} data-testid='personal-dashboard'>
