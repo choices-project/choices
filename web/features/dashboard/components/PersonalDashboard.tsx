@@ -795,7 +795,37 @@ function StandardPersonalDashboard({ userId: fallbackUserId, className = '' }: P
     return Math.min(100, Math.max(behaviorScore, derivedScore));
   }, [pollCreatedEvents.length, userBehavior?.engagementScore, voteEvents.length]);
 
+  // CRITICAL: Ensure isLoading, errorMessage, and analytics are consistent during SSR
+  // During SSR, always use false/null/empty to prevent hydration mismatch
+  // After mount, use actual store values
+  const [isClientMounted, setIsClientMounted] = useState(false);
+  
+  useEffect(() => {
+    setIsClientMounted(true);
+  }, []);
+
+  // CRITICAL: Ensure analytics is consistent during SSR to prevent hydration mismatch
+  // During SSR, use empty/default values; after mount, use actual store values
   const analytics: PersonalAnalytics = useMemo(() => {
+    // During SSR, return default values to ensure consistent rendering
+    if (!isClientMounted) {
+      return {
+        user_id: 'anonymous',
+        total_votes: 0,
+        total_polls_created: 0,
+        active_polls: 0,
+        total_votes_on_user_polls: 0,
+        participation_score: 0,
+        recent_activity: {
+          votes_last_30_days: 0,
+          polls_created_last_30_days: 0,
+        },
+        recent_votes: [],
+        recent_polls: [],
+      } satisfies PersonalAnalytics;
+    }
+    
+    // After mount, use actual store values
     return {
       user_id: userProfileId ?? 'anonymous',
       total_votes: voteEvents.length,
@@ -811,6 +841,7 @@ function StandardPersonalDashboard({ userId: fallbackUserId, className = '' }: P
       recent_polls: recentPolls,
     } satisfies PersonalAnalytics;
   }, [
+    isClientMounted,
     participationScore,
     pollCreatedEvents.length,
     pollsCreatedLast30Days,
@@ -885,10 +916,15 @@ function StandardPersonalDashboard({ userId: fallbackUserId, className = '' }: P
       : tRef.current('dashboard.personal.header.subtitleDefault');
   }, [profileRecord?.bio]);
 
-  const isLoading =
-    isUserLoading || profileLoading || isPollsLoading || analyticsLoading;
+  const isLoading = isClientMounted
+    ? (isUserLoading || profileLoading || isPollsLoading || analyticsLoading)
+    : false; // Always false during SSR
 
   const errorMessage = useMemo(() => {
+    // During SSR, always return null to prevent hydration mismatch
+    if (!isClientMounted) {
+      return null;
+    }
     return (
       profileError ??
       pollsError ??
@@ -897,7 +933,7 @@ function StandardPersonalDashboard({ userId: fallbackUserId, className = '' }: P
       representativeError ??
       (hasAnyError ? tRef.current('dashboard.personal.errors.generic') : null)
     );
-  }, [profileError, pollsError, analyticsError, hashtagError, representativeError, hasAnyError]);
+  }, [isClientMounted, profileError, pollsError, analyticsError, hashtagError, representativeError, hasAnyError]);
 
   const quickActions = useMemo(
     () => [
