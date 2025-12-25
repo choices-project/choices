@@ -26,7 +26,7 @@ import {
 } from 'lucide-react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 
 import { cn } from '@/lib/utils';
 
@@ -41,6 +41,17 @@ type NavItem = {
 
 export default function DashboardNavigation() {
   const pathname = usePathname();
+  // CRITICAL: Follow feed/polls pattern - ensure pathname is only used after mount
+  // usePathname() can return different values on server vs client, causing hydration mismatches
+  const [isMounted, setIsMounted] = useState(false);
+
+  useEffect(() => {
+    setIsMounted(true);
+  }, []);
+
+  // During SSR/initial render, don't use pathname (render all items as inactive)
+  // This ensures consistent server/client rendering
+  const effectivePathname = isMounted ? pathname : null;
 
   const navItems: NavItem[] = [
     {
@@ -94,7 +105,10 @@ export default function DashboardNavigation() {
         <div className="flex items-center overflow-x-auto">
           {navItems.map((item) => {
             const Icon = item.icon;
-            const isActive = pathname === item.href || pathname.startsWith(item.href + '/');
+            // Only check active state after mount to prevent hydration mismatch
+            const isActive = effectivePathname
+              ? (effectivePathname === item.href || effectivePathname.startsWith(item.href + '/'))
+              : false;
 
             return (
               <Link
@@ -129,6 +143,15 @@ export default function DashboardNavigation() {
  */
 export function MobileDashboardNav() {
   const pathname = usePathname();
+  // CRITICAL: Follow feed/polls pattern - ensure pathname is only used after mount
+  const [isMounted, setIsMounted] = useState(false);
+
+  useEffect(() => {
+    setIsMounted(true);
+  }, []);
+
+  // During SSR/initial render, don't use pathname (render all items as inactive)
+  const effectivePathname = isMounted ? pathname : null;
 
   const mobileNavItems = [
     {
@@ -162,7 +185,10 @@ export function MobileDashboardNav() {
       <div className="flex items-center justify-around">
         {mobileNavItems.map((item) => {
           const Icon = item.icon;
-          const isActive = pathname === item.href || pathname.startsWith(item.href + '/');
+          // Only check active state after mount to prevent hydration mismatch
+          const isActive = effectivePathname
+            ? (effectivePathname === item.href || effectivePathname.startsWith(item.href + '/'))
+            : false;
 
           return (
             <Link
