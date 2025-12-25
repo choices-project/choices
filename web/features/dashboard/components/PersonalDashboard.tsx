@@ -464,7 +464,7 @@ export default function PersonalDashboard(props: PersonalDashboardProps) {
   // This causes hydration mismatch when useHarness changes from false to true
   // Always render StandardPersonalDashboard - it handles both harness and standard modes internally
   // IS_E2E_HARNESS env check is OK because it's constant at build time
-  
+
   if (IS_E2E_HARNESS) {
     return <HarnessPersonalDashboard {...props} />;
   }
@@ -1003,7 +1003,7 @@ function StandardPersonalDashboard({ userId: fallbackUserId, className = '' }: P
   // During SSR/initial render, always render the same structure (dashboard content)
   // After mount, isLoading/errorMessage changes are handled via normal React state updates
   const [isMountedForRender, setIsMountedForRender] = useState(false);
-  
+
   useEffect(() => {
     setIsMountedForRender(true);
   }, []);
