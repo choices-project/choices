@@ -163,7 +163,6 @@ function HarnessPersonalDashboard({ className = '' }: PersonalDashboardProps) {
   useEffect(() => { routerRef.current = router; }, [router]);
   const { t } = useI18n();
   const isAuthenticated = useIsAuthenticated();
-  const isUserLoading = useUserLoading();
   const { signOut: signOutUser } = useUserActions();
   const signOutUserRef = useRef(signOutUser);
   useEffect(() => { signOutUserRef.current = signOutUser; }, [signOutUser]);
@@ -712,11 +711,14 @@ function StandardPersonalDashboard({ userId: fallbackUserId, className = '' }: P
     [analyticsEvents],
   );
 
-  // CRITICAL: Use useState instead of useMemo to prevent hydration mismatch
-  // Date.now() will be different on server vs client, so we need to set it after mount
+  // CRITICAL: Initialize to 0 to ensure consistent filtering during SSR/initial render
+  // All events will pass the filter (createdAt >= 0), then after mount we update to actual timestamp
+  // This prevents hydration mismatch while still allowing accurate filtering after hydration
   const [thirtyDaysAgo, setThirtyDaysAgo] = useState(0);
+  const [isMountedForDate, setIsMountedForDate] = useState(false);
 
   useEffect(() => {
+    setIsMountedForDate(true);
     setThirtyDaysAgo(Date.now() - THIRTY_DAYS_MS);
   }, []);
 
