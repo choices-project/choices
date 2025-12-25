@@ -714,9 +714,14 @@ function StandardPersonalDashboard({ userId: fallbackUserId, className = '' }: P
   // CRITICAL: Initialize to 0 to ensure consistent filtering during SSR/initial render
   // All events will pass the filter (createdAt >= 0), then after mount we update to actual timestamp
   // This prevents hydration mismatch while still allowing accurate filtering after hydration
-  const [thirtyDaysAgo, setThirtyDaysAgo] = useState(0);
+  // CRITICAL: Initialize thirtyDaysAgo to a consistent value to prevent hydration mismatch
+  // Use -1 (no events match) for initial render on both server and client
+  // Then update to actual value after mount via useEffect
+  // This ensures consistent filtering logic during SSR/initial render
+  const [thirtyDaysAgo, setThirtyDaysAgo] = useState(-1);
 
   useEffect(() => {
+    // Update to actual value after mount (client-side only)
     setThirtyDaysAgo(Date.now() - THIRTY_DAYS_MS);
   }, []);
 
