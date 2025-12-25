@@ -1006,9 +1006,15 @@ function StandardPersonalDashboard({ userId: fallbackUserId, className = '' }: P
 
   useEffect(() => {
     setIsMountedForRender(true);
+    if (process.env.NODE_ENV === 'development' || (typeof window !== 'undefined' && window.localStorage.getItem('e2e-dashboard-bypass') === '1')) {
+      logger.debug('[PersonalDashboard] isMountedForRender set to true');
+    }
   }, []);
 
   if (isMountedForRender && isLoading) {
+    if (process.env.NODE_ENV === 'development' || (typeof window !== 'undefined' && window.localStorage.getItem('e2e-dashboard-bypass') === '1')) {
+      logger.debug('[PersonalDashboard] Rendering loading skeleton (mounted check passed)', { isLoading });
+    }
     return (
       <div className={`space-y-6 ${className}`}>
         <div className='grid grid-cols-1 gap-6 lg:grid-cols-3'>
@@ -1026,6 +1032,9 @@ function StandardPersonalDashboard({ userId: fallbackUserId, className = '' }: P
   }
 
   if (isMountedForRender && errorMessage) {
+    if (process.env.NODE_ENV === 'development' || (typeof window !== 'undefined' && window.localStorage.getItem('e2e-dashboard-bypass') === '1')) {
+      logger.debug('[PersonalDashboard] Rendering error message (mounted check passed)', { errorMessage });
+    }
     return (
       <div className={`space-y-6 ${className}`}>
         <Card>

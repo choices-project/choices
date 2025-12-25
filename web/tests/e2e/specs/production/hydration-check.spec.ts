@@ -29,23 +29,39 @@ test.describe('Production Hydration Check', () => {
   });
 
   test('dashboard page renders without hydration errors', async ({ page }) => {
+    const consoleMessages: Array<{ type: string; text: string }> = [];
     const consoleErrors: string[] = [];
     const reactErrors: string[] = [];
+    const allConsoleLogs: string[] = [];
 
+    // Capture ALL console messages for diagnostics
     page.on('console', (msg) => {
-      if (msg.type() === 'error') {
-        const text = msg.text();
+      const text = msg.text();
+      const type = msg.type();
+      consoleMessages.push({ type, text });
+      allConsoleLogs.push(`[${type}] ${text}`);
+
+      if (type === 'error') {
         consoleErrors.push(text);
-        if (text.includes('185') || text.includes('hydration') || text.includes('Hydration')) {
+        if (text.includes('185') || text.includes('hydration') || text.includes('Hydration') || text.includes('React')) {
           reactErrors.push(text);
         }
       }
     });
 
     page.on('pageerror', (error) => {
-      consoleErrors.push(error.message);
-      if (error.message.includes('185') || error.message.includes('hydration')) {
-        reactErrors.push(error.message);
+      const errorMsg = error.message;
+      consoleErrors.push(errorMsg);
+      allConsoleLogs.push(`[pageerror] ${errorMsg}`);
+      if (errorMsg.includes('185') || errorMsg.includes('hydration')) {
+        reactErrors.push(errorMsg);
+      }
+    });
+
+    // Log page navigation events
+    page.on('request', (request) => {
+      if (request.url().includes('/dashboard')) {
+        allConsoleLogs.push(`[request] ${request.method()} ${request.url()}`);
       }
     });
 
@@ -56,12 +72,51 @@ test.describe('Production Hydration Check', () => {
 
     // Wait for dashboard to fully render
     await page.waitForSelector('[data-testid="personal-dashboard"]', { timeout: 30000 });
-    await page.waitForTimeout(2000); // Allow any async rendering to complete
+    await page.waitForTimeout(3000); // Allow any async rendering to complete
 
     // Check for React error #185 specifically
     const hydrationErrors = reactErrors.filter((err) =>
-      err.toLowerCase().includes('185') || err.toLowerCase().includes('hydration mismatch')
+      err.toLowerCase().includes('185') || 
+      err.toLowerCase().includes('hydration mismatch') ||
+      err.toLowerCase().includes('hydration failed')
     );
+
+    // Enhanced diagnostics: Log all hydration-related errors
+    console.log('\n=== HYDRATION DIAGNOSTICS ===');
+    console.log(`Total console errors: ${consoleErrors.length}`);
+    console.log(`React/hydration errors: ${reactErrors.length}`);
+    console.log(`Hydration-specific errors: ${hydrationErrors.length}`);
+    
+    if (hydrationErrors.length > 0) {
+      console.log('\n--- Hydration Errors ---');
+      hydrationErrors.forEach((err, idx) => {
+        console.log(`${idx + 1}. ${err}`);
+      });
+    }
+
+    if (reactErrors.length > 0) {
+      console.log('\n--- All React/Hydration Related Errors ---');
+      reactErrors.forEach((err, idx) => {
+        console.log(`${idx + 1}. ${err}`);
+      });
+    }
+
+    // Log first 20 console messages for context
+    console.log('\n--- First 20 Console Messages ---');
+    allConsoleLogs.slice(0, 20).forEach((msg, idx) => {
+      console.log(`${idx + 1}. ${msg}`);
+    });
+
+    // Check React error messages in the DOM
+    const reactErrorInDOM = await page.evaluate(() => {
+      const bodyText = document.body.innerText;
+      return bodyText.includes('React error #185') || bodyText.includes('hydration');
+    });
+    console.log(`\nReact error visible in DOM: ${reactErrorInDOM}`);
+
+    // Check for error boundaries
+    const errorBoundaryElements = await page.locator('[data-testid*="error"]').count();
+    console.log(`Error boundary elements found: ${errorBoundaryElements}`);
 
     // Only check for hydration errors - other console errors (network, etc.) are acceptable
     expect(hydrationErrors.length).toBe(0);
