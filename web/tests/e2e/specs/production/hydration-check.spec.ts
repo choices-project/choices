@@ -85,19 +85,32 @@ test.describe('Production Hydration Check', () => {
     console.log('\n=== HYDRATION DIAGNOSTICS ===');
     console.log(`Total console errors: ${consoleErrors.length}`);
     console.log(`React/hydration errors: ${reactErrors.length}`);
-    console.log(`Hydration-specific errors: ${hydrationErrors.length}`);
+    console.log(`Hydration-specific errors (#185): ${hydrationErrors.length}`);
     
     if (hydrationErrors.length > 0) {
-      console.log('\n--- Hydration Errors ---');
+      console.log('\n--- Hydration Errors (#185) ---');
       hydrationErrors.forEach((err, idx) => {
-        console.log(`${idx + 1}. ${err}`);
+        console.log(`${idx + 1}. ${err.substring(0, 500)}`); // Limit length
       });
     }
 
     if (reactErrors.length > 0) {
       console.log('\n--- All React/Hydration Related Errors ---');
       reactErrors.forEach((err, idx) => {
-        console.log(`${idx + 1}. ${err}`);
+        console.log(`${idx + 1}. ${err.substring(0, 300)}`);
+      });
+    }
+
+    // Check for error messages in the DOM
+    const errorText = await page.evaluate(() => {
+      const bodyText = document.body.innerText;
+      const errorMatches = bodyText.match(/React error #185[^\n]*/g);
+      return errorMatches || [];
+    });
+    if (errorText.length > 0) {
+      console.log('\n--- Error Text in DOM ---');
+      errorText.forEach((text, idx) => {
+        console.log(`${idx + 1}. ${text}`);
       });
     }
 
