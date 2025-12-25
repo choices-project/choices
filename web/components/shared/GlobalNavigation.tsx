@@ -72,6 +72,15 @@ export default function GlobalNavigation() {
     window.localStorage.getItem('e2e-dashboard-bypass') === '1');
   const isLoading = authLoading && !shouldBypassLoading;
 
+  // CRITICAL: Guard conditional return with mounted check to prevent hydration mismatch
+  // During SSR/initial render, always render the same structure (navigation content)
+  // After mount, the conditional return can safely show loading skeleton via normal React updates
+  const [isMountedForNavRender, setIsMountedForNavRender] = useState(false);
+  
+  useEffect(() => {
+    setIsMountedForNavRender(true);
+  }, []);
+
   // DIAGNOSTIC: Log GlobalNavigation render state for debugging
   useEffect(() => {
     if (process.env.DEBUG_DASHBOARD === '1' || (typeof window !== 'undefined' && window.localStorage.getItem('e2e-dashboard-bypass') === '1')) {
@@ -197,7 +206,8 @@ export default function GlobalNavigation() {
   }
 
   // Show loading state if user data is still loading or if we're not authenticated yet
-  if (isLoading) {
+  // CRITICAL: Guard with isMountedForNavRender to prevent structure changes during hydration
+  if (isMountedForNavRender && isLoading) {
     // DIAGNOSTIC: Log when showing loading skeleton
     if (process.env.DEBUG_DASHBOARD === '1' || (typeof window !== 'undefined' && window.localStorage.getItem('e2e-dashboard-bypass') === '1')) {
       logger.debug('🚨 GlobalNavigation: Showing loading skeleton', {
