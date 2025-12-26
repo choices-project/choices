@@ -756,6 +756,9 @@ export default function DashboardPage() {
   if (!isMounted) {
     return (
       <ErrorBoundary>
+        {/* CRITICAL: Include DashboardNavigation placeholder to match final return structure */}
+        {/* DashboardNavigation will handle its own SSR logic internally */}
+        <DashboardNavigation />
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8" aria-label="Loading dashboard">
           <div className="space-y-6">
             <div className="animate-pulse">
@@ -773,6 +776,9 @@ export default function DashboardPage() {
             </div>
           </div>
         </div>
+        {/* CRITICAL: Include MobileDashboardNav placeholder to match final return structure */}
+        {/* MobileDashboardNav will handle its own SSR logic internally */}
+        <MobileDashboardNav />
       </ErrorBoundary>
     );
   }
@@ -784,6 +790,8 @@ export default function DashboardPage() {
     }
     return (
       <ErrorBoundary>
+        {/* CRITICAL: Include DashboardNavigation to match final return structure */}
+        <DashboardNavigation />
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8" aria-label="Loading dashboard">
           <div className="space-y-6">
             <div className="animate-pulse">
@@ -801,6 +809,8 @@ export default function DashboardPage() {
             </div>
           </div>
         </div>
+        {/* CRITICAL: Include MobileDashboardNav to match final return structure */}
+        <MobileDashboardNav />
       </ErrorBoundary>
     );
   }
@@ -815,6 +825,8 @@ export default function DashboardPage() {
     }
     return (
       <ErrorBoundary>
+        {/* CRITICAL: Include DashboardNavigation to match final return structure */}
+        <DashboardNavigation />
         <div className="flex items-center justify-center min-h-screen px-4">
           <div className="text-center space-y-4 max-w-md">
             <h1 className="text-2xl font-bold text-red-600 dark:text-red-400">Access denied</h1>
@@ -826,6 +838,8 @@ export default function DashboardPage() {
             </p>
           </div>
         </div>
+        {/* CRITICAL: Include MobileDashboardNav to match final return structure */}
+        <MobileDashboardNav />
       </ErrorBoundary>
     );
   }
@@ -837,8 +851,8 @@ export default function DashboardPage() {
         Dashboard content rendering
       </div>
       {/* 🔒 Cohesive Dashboard Navigation */}
-      {/* CRITICAL: Only render DashboardNavigation after mount to prevent hydration mismatch */}
-      {isMounted && <DashboardNavigation />}
+      {/* CRITICAL: Always render DashboardNavigation - it handles its own SSR logic internally */}
+      <DashboardNavigation />
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* CRITICAL: Only show admin banner after mount to prevent hydration mismatch */}
@@ -872,8 +886,8 @@ export default function DashboardPage() {
       </div>
 
       {/* 🔒 Mobile Navigation */}
-      {/* CRITICAL: Only render MobileDashboardNav after mount to prevent hydration mismatch */}
-      {isMounted && <MobileDashboardNav />}
+      {/* CRITICAL: Always render MobileDashboardNav - it handles its own SSR logic internally */}
+      <MobileDashboardNav />
     </ErrorBoundary>
   );
 }
