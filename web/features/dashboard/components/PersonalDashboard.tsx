@@ -704,7 +704,12 @@ function StandardPersonalDashboard({ userId: fallbackUserId, className = '' }: P
       return fallbackUserId;
     })() ?? null;
 
+  // CRITICAL: Guard all store-dependent computations with isMounted to prevent hydration mismatch
+  // Store values may differ between server and client during initial render
   const userPolls = useMemo(() => {
+    if (!isMounted) {
+      return [] as Poll[]; // Consistent default during SSR
+    }
     if (!userProfileId) {
       return [] as Poll[];
     }
@@ -713,25 +718,32 @@ function StandardPersonalDashboard({ userId: fallbackUserId, className = '' }: P
       const createdBy = record.created_by ?? record.createdBy;
       return typeof createdBy === 'string' && createdBy === userProfileId;
     });
-  }, [polls, userProfileId]);
+  }, [isMounted, polls, userProfileId]);
 
   const sortedUserPolls = useMemo(() => {
+    if (!isMounted) {
+      return [] as Poll[]; // Consistent default during SSR
+    }
     return [...userPolls].sort((a, b) => {
       const dateA = new Date((a as Record<string, unknown>).created_at as string ?? 0).getTime();
       const dateB = new Date((b as Record<string, unknown>).created_at as string ?? 0).getTime();
       return dateB - dateA;
     });
-  }, [userPolls]);
+  }, [isMounted, userPolls]);
 
-  const voteEvents = useMemo(
-    () => analyticsEvents.filter((event) => event.event_type === 'poll_voted'),
-    [analyticsEvents],
-  );
+  const voteEvents = useMemo(() => {
+    if (!isMounted) {
+      return []; // Consistent default during SSR
+    }
+    return analyticsEvents.filter((event) => event.event_type === 'poll_voted');
+  }, [isMounted, analyticsEvents]);
 
-  const pollCreatedEvents = useMemo(
-    () => analyticsEvents.filter((event) => event.event_type === 'poll_created'),
-    [analyticsEvents],
-  );
+  const pollCreatedEvents = useMemo(() => {
+    if (!isMounted) {
+      return []; // Consistent default during SSR
+    }
+    return analyticsEvents.filter((event) => event.event_type === 'poll_created');
+  }, [isMounted, analyticsEvents]);
 
   // CRITICAL: Initialize to 0 to ensure consistent filtering during SSR/initial render
   // All events will pass the filter (createdAt >= 0), then after mount we update to actual timestamp
@@ -766,6 +778,9 @@ function StandardPersonalDashboard({ userId: fallbackUserId, className = '' }: P
   );
 
   const recentVotes = useMemo<PersonalAnalytics['recent_votes']>(() => {
+    if (!isMounted) {
+      return []; // Consistent default during SSR
+    }
     return voteEvents
       .slice()
       .sort(
@@ -787,9 +802,12 @@ function StandardPersonalDashboard({ userId: fallbackUserId, className = '' }: P
           created_at: eventTimestamp ?? '1970-01-01T00:00:00.000Z', // Consistent fallback instead of Date.now()
         };
       });
-  }, [voteEvents]);
+  }, [isMounted, voteEvents]);
 
   const recentPolls = useMemo<PersonalAnalytics['recent_polls']>(() => {
+    if (!isMounted) {
+      return []; // Consistent default during SSR
+    }
     return sortedUserPolls.slice(0, 2).map((poll) => {
       const record = poll as Record<string, unknown>;
       // CRITICAL: Use consistent fallback to prevent hydration mismatch
@@ -804,18 +822,23 @@ function StandardPersonalDashboard({ userId: fallbackUserId, className = '' }: P
         status: (record.status as string) ?? 'draft',
       };
     });
-  }, [sortedUserPolls]); // Removed t from deps - using tRef
+  }, [isMounted, sortedUserPolls]); // Removed t from deps - using tRef
 
-  const totalVotesOnUserPolls = useMemo(
-    () => userPolls.reduce((sum, poll) => sum + resolvePollVotes(poll), 0),
-    [userPolls],
-  );
+  const totalVotesOnUserPolls = useMemo(() => {
+    if (!isMounted) {
+      return 0; // Consistent default during SSR
+    }
+    return userPolls.reduce((sum, poll) => sum + resolvePollVotes(poll), 0);
+  }, [isMounted, userPolls]);
 
   const participationScore = useMemo(() => {
+    if (!isMounted) {
+      return 0; // Consistent default during SSR
+    }
     const behaviorScore = userBehavior?.engagementScore ?? 0;
     const derivedScore = voteEvents.length * 5 + pollCreatedEvents.length * 10;
     return Math.min(100, Math.max(behaviorScore, derivedScore));
-  }, [pollCreatedEvents.length, userBehavior?.engagementScore, voteEvents.length]);
+  }, [isMounted, pollCreatedEvents.length, userBehavior?.engagementScore, voteEvents.length]);
 
   // Analytics - computed from store values (safe after mount check)
   // CRITICAL: Only compute analytics after mount to prevent hydration mismatch
@@ -993,14 +1016,26 @@ function StandardPersonalDashboard({ userId: fallbackUserId, className = '' }: P
     [], // Removed t from deps - using tRef
   );
 
-  const representatives = useMemo(
-    () => representativeEntries.map((entry) => entry.representative),
-    [representativeEntries],
-  );
+  // CRITICAL: Guard all representative computations with isMounted to prevent hydration mismatch
+  // Store values may differ between server and client during initial render
+  const representatives = useMemo(() => {
+    if (!isMounted) {
+      return []; // Consistent default during SSR
+    }
+    return representativeEntries.map((entry) => entry.representative);
+  }, [isMounted, representativeEntries]);
 
-  const visibleRepresentatives = useMemo(() => representatives.slice(0, 3), [representatives]);
+  const visibleRepresentatives = useMemo(() => {
+    if (!isMounted) {
+      return []; // Consistent default during SSR
+    }
+    return representatives.slice(0, 3);
+  }, [isMounted, representatives]);
 
   const representativeDivisionIds = useMemo(() => {
+    if (!isMounted) {
+      return []; // Consistent default during SSR
+    }
     const divisions = new Set<string>();
     representativeEntries.forEach((entry) => {
       const candidate =
@@ -1020,21 +1055,26 @@ function StandardPersonalDashboard({ userId: fallbackUserId, className = '' }: P
       });
     });
     return Array.from(divisions);
-  }, [representativeEntries]);
+  }, [isMounted, representativeEntries]);
 
   const representativeNames = useMemo(() => {
+    if (!isMounted) {
+      return []; // Consistent default during SSR
+    }
     return representativeEntries
       .map((entry) => entry.representative?.name?.trim())
       .filter((value): value is string => Boolean(value));
-  }, [representativeEntries]);
+  }, [isMounted, representativeEntries]);
 
+  // CRITICAL: Only call useElectionCountdown after mount to prevent hydration mismatch
+  // This hook depends on representativeDivisionIds and representativeNames which are computed from store values
   const {
     elections: representativeElections,
     nextElection: representativeNextElection,
     daysUntilNextElection: representativeCountdown,
     loading: representativeElectionsLoading,
     error: representativeElectionsError,
-  } = useElectionCountdown(representativeDivisionIds, {
+  } = useElectionCountdown(isMounted ? representativeDivisionIds : [], {
     autoFetch: showElectedOfficials,
     clearOnEmpty: true,
     notify: showElectedOfficials,
