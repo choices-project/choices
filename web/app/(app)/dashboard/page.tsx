@@ -839,7 +839,9 @@ export default function DashboardPage() {
           </div>
         )}
 
-        <PersonalDashboard />
+        {/* CRITICAL: Only render PersonalDashboard after mount to prevent hydration mismatch */}
+        {/* This ensures PersonalDashboard hooks don't run during SSR, preventing hydration errors */}
+        {isMounted && <PersonalDashboard />}
       </div>
 
       {/* 🔒 Mobile Navigation */}
