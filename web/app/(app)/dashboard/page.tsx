@@ -743,8 +743,7 @@ export default function DashboardPage() {
   // This ensures consistent structure during SSR/initial render, preventing hydration mismatches
   if (!isMounted) {
     return (
-      <ErrorBoundary>
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8" aria-label="Loading dashboard">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8" aria-label="Loading dashboard">
         <div className="space-y-6">
           <div className="animate-pulse">
             <div className="h-8 bg-gray-200 rounded w-1/3 dark:bg-gray-700 mb-4" />
@@ -761,7 +760,6 @@ export default function DashboardPage() {
           </div>
         </div>
       </div>
-      </ErrorBoundary>
     );
   }
 
