@@ -818,7 +818,26 @@ function StandardPersonalDashboard({ userId: fallbackUserId, className = '' }: P
   }, [pollCreatedEvents.length, userBehavior?.engagementScore, voteEvents.length]);
 
   // Analytics - computed from store values (safe after mount check)
+  // CRITICAL: Only compute analytics after mount to prevent hydration mismatch
+  // Store values may differ between server and client during initial render
   const analytics: PersonalAnalytics = useMemo(() => {
+    if (!isMounted) {
+      // Return consistent default analytics during SSR to prevent hydration mismatch
+      return {
+        user_id: 'anonymous',
+        total_votes: 0,
+        total_polls_created: 0,
+        active_polls: 0,
+        total_votes_on_user_polls: 0,
+        participation_score: 0,
+        recent_activity: {
+          votes_last_30_days: 0,
+          polls_created_last_30_days: 0,
+        },
+        recent_votes: [],
+        recent_polls: [],
+      } satisfies PersonalAnalytics;
+    }
     return {
       user_id: userProfileId ?? 'anonymous',
       total_votes: voteEvents.length,
@@ -834,6 +853,7 @@ function StandardPersonalDashboard({ userId: fallbackUserId, className = '' }: P
       recent_polls: recentPolls,
     } satisfies PersonalAnalytics;
   }, [
+    isMounted,
     participationScore,
     pollCreatedEvents.length,
     pollsCreatedLast30Days,
@@ -891,23 +911,32 @@ function StandardPersonalDashboard({ userId: fallbackUserId, className = '' }: P
   }, [isAuthenticated]);
 
   // Display name and title/subtitle - computed from profile/store (safe after mount check)
-  const effectiveDisplayName =
-    (displayName && displayName !== 'User' ? displayName : undefined) ??
-    ((profileRecord?.display_name as string | undefined) ??
-      (profileRecord?.fullName as string | undefined) ??
-      (profileRecord?.username as string | undefined));
+  // CRITICAL: Only compute these after mount to prevent hydration mismatch
+  // Store values may differ between server and client during initial render
+  const effectiveDisplayName = isMounted
+    ? ((displayName && displayName !== 'User' ? displayName : undefined) ??
+        ((profileRecord?.display_name as string | undefined) ??
+          (profileRecord?.fullName as string | undefined) ??
+          (profileRecord?.username as string | undefined)))
+    : undefined;
 
   const dashboardTitle = useMemo(() => {
+    if (!isMounted) {
+      return tRef.current('dashboard.personal.header.titleFallback'); // Consistent default during SSR
+    }
     return effectiveDisplayName
       ? tRef.current('dashboard.personal.header.titleWithName', { name: effectiveDisplayName })
       : tRef.current('dashboard.personal.header.titleFallback');
-  }, [effectiveDisplayName]);
+  }, [isMounted, effectiveDisplayName]);
 
   const dashboardSubtitle = useMemo(() => {
+    if (!isMounted) {
+      return tRef.current('dashboard.personal.header.subtitleDefault'); // Consistent default during SSR
+    }
     return profileRecord?.bio
       ? tRef.current('dashboard.personal.header.subtitleWithBio')
       : tRef.current('dashboard.personal.header.subtitleDefault');
-  }, [profileRecord?.bio]);
+  }, [isMounted, profileRecord?.bio]);
 
   // Loading and error states - computed from store values (safe after mount check)
   const isLoading = isUserLoading || profileLoading || isPollsLoading || analyticsLoading;
