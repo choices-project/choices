@@ -1122,7 +1122,10 @@ function StandardPersonalDashboard({ userId: fallbackUserId, className = '' }: P
   }
 
   // After mount, check for loading/error states
-  if (isLoading) {
+  // CRITICAL: Guard conditional returns with isMounted to prevent hydration mismatch
+  // During SSR/initial render, always render the same structure (loading skeleton)
+  // After mount, these conditional returns can safely change structure via normal React updates
+  if (isMounted && isLoading) {
     return (
       <div className={`space-y-6 ${className}`} data-testid='personal-dashboard'>
         <div className='grid grid-cols-1 gap-6 lg:grid-cols-3'>
@@ -1139,7 +1142,8 @@ function StandardPersonalDashboard({ userId: fallbackUserId, className = '' }: P
     );
   }
 
-  if (errorMessage) {
+  // CRITICAL: Guard error message return with isMounted to prevent hydration mismatch
+  if (isMounted && errorMessage) {
     return (
       <div className={`space-y-6 ${className}`} data-testid='personal-dashboard'>
         <Card>

@@ -763,7 +763,7 @@ export default function DashboardPage() {
   }
 
   // After mount, check for loading/error states
-  if (isLoading && !loadingTimeout && !shouldBypassAuth && !isAuthenticated && !isAuthContextLoading) {
+  if (isMounted && isLoading && !loadingTimeout && !shouldBypassAuth && !isAuthenticated && !isAuthContextLoading) {
     return (
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8" aria-label="Loading dashboard">
         <div className="space-y-6">
@@ -786,7 +786,10 @@ export default function DashboardPage() {
   }
 
   // After mount, check for access denied
-  if (!isUserLoading && !isAuthContextLoading && isStoreHydrated && hasCookies === false && !isAuthenticated && !shouldBypassAuth) {
+  if (isMounted && !isUserLoading && !isAuthContextLoading && isStoreHydrated && hasCookies === false && !isAuthenticated && !shouldBypassAuth) {
+    // CRITICAL: Guard this conditional return with isMounted to prevent hydration mismatch
+    // During SSR/initial render, always render dashboard content (it handles auth gracefully)
+    // After mount, this conditional return can safely show access denied via normal React updates
     return (
       <div className="flex items-center justify-center min-h-screen px-4">
         <div className="text-center space-y-4 max-w-md">
@@ -812,7 +815,7 @@ export default function DashboardPage() {
       <DashboardNavigation />
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        {/* Show admin dashboard link for admin users */}
+        {/* CRITICAL: Only show admin banner after mount to prevent hydration mismatch */}
         {isMounted && isAdmin === true && (
           <div className="mb-6 p-4 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg">
             <div className="flex items-center justify-between">
