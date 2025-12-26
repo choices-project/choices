@@ -728,6 +728,18 @@ export default function DashboardPage() {
       }
     }
   }, [shouldBypassAuth, isAuthenticated, profile, isLoading, isAdmin, isUserLoading, isAuthContextLoading, isStoreHydrated, hasCookies]);
+  // CRITICAL: Guard conditional returns with mounted check to prevent hydration mismatch
+  // During SSR/initial render, always render the same structure (dashboard content)
+  // After mount, these conditional returns can safely change structure via normal React updates
+  const [isMountedForPageRender, setIsMountedForPageRender] = useState(false);
+
+  useEffect(() => {
+    setIsMountedForPageRender(true);
+    if (process.env.NODE_ENV === 'development' || checkBypassFlag()) {
+      logger.debug('[Dashboard] isMountedForPageRender set to true');
+    }
+  }, []);
+
   // CRITICAL: Follow feed/polls pattern - return loading skeleton during SSR/initial render
   // This ensures consistent server/client rendering structure, preventing hydration mismatches
   // After mount, render actual content (matches feed/polls page pattern)
@@ -743,66 +755,78 @@ export default function DashboardPage() {
   // This ensures consistent structure during SSR/initial render, preventing hydration mismatches
   if (!isMounted) {
     return (
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8" aria-label="Loading dashboard">
-        <div className="space-y-6">
-          <div className="animate-pulse">
-            <div className="h-8 bg-gray-200 rounded w-1/3 dark:bg-gray-700 mb-4" />
-            <div className="h-4 bg-gray-200 rounded w-1/2 dark:bg-gray-700" />
-          </div>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {[1, 2, 3, 4, 5, 6].map((i) => (
-              <div key={i} className="animate-pulse bg-white dark:bg-gray-800 rounded-lg shadow p-6">
-                <div className="h-6 bg-gray-200 rounded w-3/4 dark:bg-gray-700 mb-4" />
-                <div className="h-4 bg-gray-200 rounded w-full dark:bg-gray-700 mb-2" />
-                <div className="h-4 bg-gray-200 rounded w-5/6 dark:bg-gray-700" />
-              </div>
-            ))}
+      <ErrorBoundary>
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8" aria-label="Loading dashboard">
+          <div className="space-y-6">
+            <div className="animate-pulse">
+              <div className="h-8 bg-gray-200 rounded w-1/3 dark:bg-gray-700 mb-4" />
+              <div className="h-4 bg-gray-200 rounded w-1/2 dark:bg-gray-700" />
+            </div>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              {[1, 2, 3, 4, 5, 6].map((i) => (
+                <div key={i} className="animate-pulse bg-white dark:bg-gray-800 rounded-lg shadow p-6">
+                  <div className="h-6 bg-gray-200 rounded w-3/4 dark:bg-gray-700 mb-4" />
+                  <div className="h-4 bg-gray-200 rounded w-full dark:bg-gray-700 mb-2" />
+                  <div className="h-4 bg-gray-200 rounded w-5/6 dark:bg-gray-700" />
+                </div>
+              ))}
+            </div>
           </div>
         </div>
-      </div>
+      </ErrorBoundary>
     );
   }
 
   // After mount, check for loading/error states
-  if (isMounted && isLoading && !loadingTimeout && !shouldBypassAuth && !isAuthenticated && !isAuthContextLoading) {
+  if (isMountedForPageRender && isLoading && !loadingTimeout && !shouldBypassAuth && !isAuthenticated && !isAuthContextLoading) {
+    if (process.env.NODE_ENV === 'development' || checkBypassFlag()) {
+      logger.debug('[Dashboard] Rendering loading skeleton (mounted check passed)');
+    }
     return (
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8" aria-label="Loading dashboard">
-        <div className="space-y-6">
-          <div className="animate-pulse">
-            <div className="h-8 bg-gray-200 rounded w-1/3 dark:bg-gray-700 mb-4" />
-            <div className="h-4 bg-gray-200 rounded w-1/2 dark:bg-gray-700" />
-          </div>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {[1, 2, 3, 4, 5, 6].map((i) => (
-              <div key={i} className="animate-pulse bg-white dark:bg-gray-800 rounded-lg shadow p-6">
-                <div className="h-6 bg-gray-200 rounded w-3/4 dark:bg-gray-700 mb-4" />
-                <div className="h-4 bg-gray-200 rounded w-full dark:bg-gray-700 mb-2" />
-                <div className="h-4 bg-gray-200 rounded w-5/6 dark:bg-gray-700" />
-              </div>
-            ))}
+      <ErrorBoundary>
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8" aria-label="Loading dashboard">
+          <div className="space-y-6">
+            <div className="animate-pulse">
+              <div className="h-8 bg-gray-200 rounded w-1/3 dark:bg-gray-700 mb-4" />
+              <div className="h-4 bg-gray-200 rounded w-1/2 dark:bg-gray-700" />
+            </div>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              {[1, 2, 3, 4, 5, 6].map((i) => (
+                <div key={i} className="animate-pulse bg-white dark:bg-gray-800 rounded-lg shadow p-6">
+                  <div className="h-6 bg-gray-200 rounded w-3/4 dark:bg-gray-700 mb-4" />
+                  <div className="h-4 bg-gray-200 rounded w-full dark:bg-gray-700 mb-2" />
+                  <div className="h-4 bg-gray-200 rounded w-5/6 dark:bg-gray-700" />
+                </div>
+              ))}
+            </div>
           </div>
         </div>
-      </div>
+      </ErrorBoundary>
     );
   }
 
   // After mount, check for access denied
-  if (isMounted && !isUserLoading && !isAuthContextLoading && isStoreHydrated && hasCookies === false && !isAuthenticated && !shouldBypassAuth) {
-    // CRITICAL: Guard this conditional return with isMounted to prevent hydration mismatch
+  if (isMountedForPageRender && !isUserLoading && !isAuthContextLoading && isStoreHydrated && hasCookies === false && !isAuthenticated && !shouldBypassAuth) {
+    // CRITICAL: Guard this conditional return with isMountedForPageRender to prevent hydration mismatch
     // During SSR/initial render, always render dashboard content (it handles auth gracefully)
     // After mount, this conditional return can safely show access denied via normal React updates
+    if (process.env.NODE_ENV === 'development' || checkBypassFlag()) {
+      logger.debug('[Dashboard] Rendering access denied (mounted check passed)');
+    }
     return (
-      <div className="flex items-center justify-center min-h-screen px-4">
-        <div className="text-center space-y-4 max-w-md">
-          <h1 className="text-2xl font-bold text-red-600 dark:text-red-400">Access denied</h1>
-          <p className="text-gray-600 dark:text-gray-400">
-            You must be logged in to access the dashboard.
-          </p>
-          <p className="text-sm text-gray-500 dark:text-gray-500">
-            Please log in to continue.
-          </p>
+      <ErrorBoundary>
+        <div className="flex items-center justify-center min-h-screen px-4">
+          <div className="text-center space-y-4 max-w-md">
+            <h1 className="text-2xl font-bold text-red-600 dark:text-red-400">Access denied</h1>
+            <p className="text-gray-600 dark:text-gray-400">
+              You must be logged in to access the dashboard.
+            </p>
+            <p className="text-sm text-gray-500 dark:text-gray-500">
+              Please log in to continue.
+            </p>
+          </div>
         </div>
-      </div>
+      </ErrorBoundary>
     );
   }
 
@@ -818,7 +842,7 @@ export default function DashboardPage() {
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* CRITICAL: Only show admin banner after mount to prevent hydration mismatch */}
-        {isMounted && isAdmin === true && (
+        {isMountedForPageRender && isAdmin === true && (
           <div className="mb-6 p-4 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-3">
@@ -841,9 +865,10 @@ export default function DashboardPage() {
           </div>
         )}
 
-        {/* CRITICAL: Only render PersonalDashboard after mount to prevent hydration mismatch */}
-        {/* This ensures PersonalDashboard hooks don't run during SSR, preventing hydration errors */}
-        {isMounted && <PersonalDashboard />}
+        {/* CRITICAL: Always render PersonalDashboard - it handles its own SSR/initial render logic internally */}
+        {/* PersonalDashboard has its own isMounted guard and returns skeleton during SSR/initial render */}
+        {/* This ensures consistent component tree structure and prevents hydration mismatches */}
+        <PersonalDashboard />
       </div>
 
       {/* 🔒 Mobile Navigation */}
