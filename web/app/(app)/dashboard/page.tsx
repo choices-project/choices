@@ -744,7 +744,6 @@ export default function DashboardPage() {
   if (!isMounted) {
     return (
       <ErrorBoundary>
-        <DashboardNavigation />
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8" aria-label="Loading dashboard">
         <div className="space-y-6">
           <div className="animate-pulse">
@@ -762,7 +761,6 @@ export default function DashboardPage() {
           </div>
         </div>
       </div>
-        <MobileDashboardNav />
       </ErrorBoundary>
     );
   }
@@ -817,7 +815,8 @@ export default function DashboardPage() {
         Dashboard content rendering
       </div>
       {/* 🔒 Cohesive Dashboard Navigation */}
-      <DashboardNavigation />
+      {/* CRITICAL: Only render DashboardNavigation after mount to prevent hydration mismatch */}
+      {isMounted && <DashboardNavigation />}
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* CRITICAL: Only show admin banner after mount to prevent hydration mismatch */}
@@ -850,7 +849,8 @@ export default function DashboardPage() {
       </div>
 
       {/* 🔒 Mobile Navigation */}
-      <MobileDashboardNav />
+      {/* CRITICAL: Only render MobileDashboardNav after mount to prevent hydration mismatch */}
+      {isMounted && <MobileDashboardNav />}
     </ErrorBoundary>
   );
 }
