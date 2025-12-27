@@ -612,7 +612,7 @@ function StandardPersonalDashboard({ userId: fallbackUserId, className = '' }: P
 
   // Optimize representative store subscriptions
   const representativeEntries = useUserRepresentativeEntries();
-  const representativeLoading = useRepresentativeGlobalLoading();
+  const _representativeLoading3 = useRepresentativeGlobalLoading();
   const representativeError = useRepresentativeError();
   const getUserRepresentatives = useGetUserRepresentatives(); // This is a hook, not a selector
 
@@ -1068,13 +1068,7 @@ function StandardPersonalDashboard({ userId: fallbackUserId, className = '' }: P
 
   // CRITICAL: Only call useElectionCountdown after mount to prevent hydration mismatch
   // This hook depends on representativeDivisionIds and representativeNames which are computed from store values
-  const {
-    elections: representativeElections,
-    nextElection: representativeNextElection,
-    daysUntilNextElection: representativeCountdown,
-    loading: representativeElectionsLoading,
-    error: representativeElectionsError,
-  } = useElectionCountdown(isMounted ? representativeDivisionIds : [], {
+  const _electionCountdownResult2 = useElectionCountdown(isMounted ? representativeDivisionIds : [], {
     autoFetch: showElectedOfficials,
     clearOnEmpty: true,
     notify: showElectedOfficials,
