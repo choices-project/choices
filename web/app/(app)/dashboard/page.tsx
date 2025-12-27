@@ -7,7 +7,12 @@ import React, { useEffect, useRef, useState } from 'react';
 import { PersonalDashboard } from '@/features/dashboard';
 import { useProfile } from '@/features/profile/hooks/use-profile';
 
-import DashboardNavigation, { MobileDashboardNav } from '@/components/shared/DashboardNavigation';
+import dynamic from 'next/dynamic';
+
+// CRITICAL: Dynamically import navigation components with SSR disabled to prevent hydration mismatches
+// These components use usePathname() which can cause hydration issues during SSR
+const DashboardNavigation = dynamic(() => import('@/components/shared/DashboardNavigation').then(mod => ({ default: mod.default })), { ssr: false });
+const MobileDashboardNav = dynamic(() => import('@/components/shared/DashboardNavigation').then(mod => ({ default: mod.MobileDashboardNav })), { ssr: false });
 import { ErrorBoundary } from '@/components/shared/ErrorBoundary';
 import { Button } from '@/components/ui/button';
 
@@ -751,12 +756,12 @@ export default function DashboardPage() {
 
   // During SSR/initial render, always return loading skeleton with same wrapper structure
   // This matches the pattern used by feed and polls pages which don't have hydration issues
-  // CRITICAL: Always render DashboardNavigation and MobileDashboardNav - they handle their own SSR logic internally
-  // This ensures consistent structure during SSR/initial render, preventing hydration mismatches
+  // CRITICAL: DashboardNavigation and MobileDashboardNav are dynamically imported with ssr: false
+  // They will only render on the client, so we don't need to include them in SSR return
+  // This prevents hydration mismatches while maintaining consistent structure after mount
   if (!isMounted) {
     return (
       <ErrorBoundary>
-        {/* CRITICAL: Always render DashboardNavigation - it handles its own SSR logic internally */}
         <DashboardNavigation />
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8" aria-label="Loading dashboard">
           <div className="space-y-6">
@@ -775,7 +780,6 @@ export default function DashboardPage() {
             </div>
           </div>
         </div>
-        {/* CRITICAL: Always render MobileDashboardNav - it handles its own SSR logic internally */}
         <MobileDashboardNav />
       </ErrorBoundary>
     );
@@ -788,7 +792,6 @@ export default function DashboardPage() {
     }
     return (
       <ErrorBoundary>
-        {/* CRITICAL: Include DashboardNavigation to match final return structure */}
         <DashboardNavigation />
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8" aria-label="Loading dashboard">
           <div className="space-y-6">
@@ -807,7 +810,6 @@ export default function DashboardPage() {
             </div>
           </div>
         </div>
-        {/* CRITICAL: Include MobileDashboardNav to match final return structure */}
         <MobileDashboardNav />
       </ErrorBoundary>
     );
@@ -823,7 +825,6 @@ export default function DashboardPage() {
     }
     return (
       <ErrorBoundary>
-        {/* CRITICAL: Include DashboardNavigation to match final return structure */}
         <DashboardNavigation />
         <div className="flex items-center justify-center min-h-screen px-4">
           <div className="text-center space-y-4 max-w-md">
@@ -836,7 +837,6 @@ export default function DashboardPage() {
             </p>
           </div>
         </div>
-        {/* CRITICAL: Include MobileDashboardNav to match final return structure */}
         <MobileDashboardNav />
       </ErrorBoundary>
     );
