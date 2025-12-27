@@ -778,55 +778,12 @@ export default function DashboardPage() {
   }, []);
 
   // #region agent log
-  console.log('[DEBUG-HYP-A] DashboardPage render - checking isMountedForPageRender', { isMountedForPageRender, typeofWindow: typeof window !== 'undefined', timestamp: Date.now() });
+  console.log('[DEBUG-HYP-A] DashboardPage render - rendering PersonalDashboard via dynamic import', { typeofWindow: typeof window !== 'undefined', timestamp: Date.now() });
   // #endregion
 
-  // CRITICAL: Follow feed/polls page pattern - return early with loading skeleton if !isMounted
-  // This prevents PersonalDashboard hooks (Zustand persist stores) from running during SSR
-  // which causes hydration mismatches when server (memoryStorage) and client (localStorage) differ
-  // Only render PersonalDashboard after mount to ensure consistent hydration
-  // CRITICAL: Component tree structure must be IDENTICAL in both early return and main return
-  // to prevent React from detecting a structure mismatch during hydration
-  if (!isMountedForPageRender) {
-    // #region agent log
-    console.log('[DEBUG-HYP-A] EARLY RETURN PATH - returning loading skeleton (identical structure)', { isMountedForPageRender, typeofWindow: typeof window !== 'undefined', timestamp: Date.now() });
-    // #endregion
-    return (
-      <ErrorBoundary>
-        <DashboardNavigation />
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-          <div
-            className="space-y-6"
-            aria-label="Loading dashboard"
-            aria-busy="true"
-            aria-live="polite"
-            data-testid="dashboard-loading-skeleton"
-            role="status"
-          >
-            <div className="animate-pulse">
-              <div className="h-10 bg-gray-200 dark:bg-gray-700 rounded w-1/3 mb-4" />
-              <div className="h-5 bg-gray-200 dark:bg-gray-700 rounded w-1/2 mb-8" />
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                {[1, 2, 3].map((i) => (
-                  <div key={i} className="bg-gray-100 dark:bg-gray-800 rounded-lg p-6">
-                    <div className="h-6 bg-gray-200 dark:bg-gray-700 rounded w-3/4 mb-4" />
-                    <div className="h-4 bg-gray-200 dark:bg-gray-700 rounded w-full mb-2" />
-                    <div className="h-4 bg-gray-200 dark:bg-gray-700 rounded w-5/6" />
-                  </div>
-                ))}
-              </div>
-            </div>
-          </div>
-        </div>
-        <MobileDashboardNav />
-      </ErrorBoundary>
-    );
-  }
-
-  // #region agent log
-  console.log('[DEBUG-HYP-A] MAIN RETURN PATH - about to render PersonalDashboard', { isMountedForPageRender, typeofWindow: typeof window !== 'undefined', timestamp: Date.now() });
-  // #endregion
-
+  // CRITICAL: PersonalDashboard is loaded via next/dynamic with ssr: false
+  // This prevents it from being included in SSR HTML, eliminating hydration mismatch
+  // The dynamic import handles loading state internally, so we don't need early return
   return (
     <ErrorBoundary>
       <DashboardNavigation />
@@ -856,10 +813,10 @@ export default function DashboardPage() {
           </div>
         )}
 
-        {/* CRITICAL: Only render PersonalDashboard after mount to prevent hydration mismatch */}
-        {/* This ensures Zustand persist store hooks don't run during SSR */}
+        {/* CRITICAL: PersonalDashboard is loaded via next/dynamic with ssr: false */}
+        {/* This prevents it from being included in SSR HTML, eliminating hydration mismatch */}
         {/* #region agent log */}
-        {(() => { console.log('[DEBUG-HYP-B] RENDERING PersonalDashboard component', { isMountedForPageRender, typeofWindow: typeof window !== 'undefined', timestamp: Date.now() }); return null; })()}
+        {(() => { console.log('[DEBUG-HYP-B] RENDERING PersonalDashboard component (dynamic import)', { typeofWindow: typeof window !== 'undefined', timestamp: Date.now() }); return null; })()}
         {/* #endregion */}
         <PersonalDashboard />
       </div>
