@@ -28,11 +28,16 @@ import {
   useIsAuthenticated,
   useUserLoading,
   usePollsActions,
+  usePollsStore,
+  useAnalyticsStore,
 } from '@/lib/stores';
-import { useHashtagActions } from '@/lib/stores/hashtagStore';
+import { useHashtagActions, useHashtagStore, useHashtagLoading, useHashtagError } from '@/lib/stores/hashtagStore';
 import { useProfileStore } from '@/lib/stores/profileStore';
 import {
   useGetUserRepresentatives,
+  useRepresentativeStore,
+  useRepresentativeError,
+  representativeSelectors,
 } from '@/lib/stores/representativeStore';
 
 import type { DashboardPreferences } from '@/types/profile';
@@ -273,20 +278,82 @@ function StandardPersonalDashboard({ userId: _fallbackUserId }: PersonalDashboar
     hasGetUserRepresentatives: !!getUserRepresentatives,
   });
 
-  // PHASE 4.3: Data Hooks - TEMPORARILY COMMENTED OUT TO ISOLATE INFINITE LOOP
-  // These hooks return arrays that may have new references every render
-  // Need to investigate and add useShallow wrappers if needed
-  // const polls = usePolls();
-  // const isPollsLoading = usePollsLoading();
-  // const pollsError = usePollsError();
-  // const lastPollsFetchedAt = usePollLastFetchedAt();
-  // const analyticsEvents = useAnalyticsEvents();
-  // const userBehavior = useAnalyticsBehavior();
-  // const trendingHashtags = useTrendingHashtags();
-  // const hashtagLoadingState = useHashtagLoading();
-  // const hashtagErrorState = useHashtagError();
-  // const representativeEntries = useUserRepresentativeEntries();
-  // const representativeError = useRepresentativeError();
+  // PHASE 4.3: Data Hooks - FIXED with useShallow + useMemo pattern (like useFilteredPollCards)
+  // CRITICAL: Arrays from Zustand stores can have new references even if contents are the same
+  // Solution: Use useShallow to subscribe, then useMemo to stabilize the reference
+
+  // Polls data - use useShallow + useMemo pattern
+  const pollsStoreData = usePollsStore(
+    useShallow((state) => ({
+      polls: state.polls,
+      isLoading: state.isLoading,
+      error: state.error,
+      lastFetchedAt: state.lastFetchedAt,
+    }))
+  );
+  const polls = useMemo(() => pollsStoreData.polls, [pollsStoreData.polls]);
+  const isPollsLoading = pollsStoreData.isLoading;
+  const pollsError = pollsStoreData.error;
+  const lastPollsFetchedAt = pollsStoreData.lastFetchedAt;
+
+  // Analytics data - use useShallow + useMemo pattern
+  const analyticsStoreData = useAnalyticsStore(
+    useShallow((state) => ({
+      events: state.events,
+      userBehavior: state.userBehavior,
+    }))
+  );
+  const analyticsEvents = useMemo(() => analyticsStoreData.events, [analyticsStoreData.events]);
+  const userBehavior = analyticsStoreData.userBehavior;
+
+  // Hashtags data - use useShallow + useMemo pattern
+  const hashtagStoreData = useHashtagStore(
+    useShallow((state) => ({
+      trendingHashtags: state.trendingHashtags,
+      isLoading: state.isLoading,
+      error: state.error,
+    }))
+  );
+  const trendingHashtags = useMemo(() => hashtagStoreData.trendingHashtags, [hashtagStoreData.trendingHashtags]);
+  const hashtagLoadingState = { isLoading: hashtagStoreData.isLoading };
+  const hashtagErrorState = { error: hashtagStoreData.error };
+
+  // Representatives data - use useShallow + useMemo pattern
+  const representativeStoreData = useRepresentativeStore(
+    useShallow((state) => ({
+      entries: representativeSelectors.userRepresentativeEntries(state),
+      error: state.error,
+    }))
+  );
+  const representativeEntries = useMemo(() => representativeStoreData.entries, [representativeStoreData.entries]);
+  const representativeError = representativeStoreData.error;
+
+  // Track data hooks execution for diagnostics
+  diagnostics.trackHookExecution('usePolls', {
+    pollsCount: polls?.length ?? 0,
+    hasError: !!pollsError,
+    lastFetchedAt: lastPollsFetchedAt ?? null,
+  });
+
+  diagnostics.trackHookExecution('usePollsLoading', {
+    isPollsLoading,
+  });
+
+  diagnostics.trackHookExecution('useAnalyticsEvents', {
+    eventsCount: analyticsEvents?.length ?? 0,
+    hasUserBehavior: !!userBehavior,
+  });
+
+  diagnostics.trackHookExecution('useTrendingHashtags', {
+    hashtagsCount: trendingHashtags?.length ?? 0,
+    isLoading: hashtagLoadingState?.isLoading ?? false,
+    hasError: !!hashtagErrorState?.error,
+  });
+
+  diagnostics.trackHookExecution('useUserRepresentativeEntries', {
+    representativesCount: representativeEntries?.length ?? 0,
+    hasError: !!representativeError,
+  });
 
   // CRITICAL FIX: Extract preferences.dashboard with stable reference using useMemo
   // This prevents new object reference every render, which was causing infinite loops
@@ -368,7 +435,7 @@ function StandardPersonalDashboard({ userId: _fallbackUserId }: PersonalDashboar
             <span className='font-medium ml-2'>Loading:</span> {String(profileLoading)}
           </p>
           <p className='text-xs text-gray-500 dark:text-gray-500 mt-2 pt-2 border-t border-gray-200 dark:border-gray-700'>
-            ✅ Diagnostic tracking enabled | Phase 4.2 complete | Data hooks temporarily disabled to isolate render loop
+            ✅ Diagnostic tracking enabled | Phase 4.3 FIXED | Data hooks use useShallow + useMemo pattern | Polls: {polls?.length ?? 0} | Events: {analyticsEvents?.length ?? 0}
           </p>
           </div>
         </div>
