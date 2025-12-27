@@ -277,11 +277,11 @@ function StandardPersonalDashboard({ userId: _fallbackUserId }: PersonalDashboar
     hasGetUserRepresentatives: !!getUserRepresentatives,
   });
 
-  // PHASE 4.3: Data Hooks - FIXED with useShallow + useMemo pattern (like useFilteredPollCards)
-  // CRITICAL: Arrays from Zustand stores can have new references even if contents are the same
-  // Solution: Use useShallow to subscribe, then useMemo to stabilize the reference
+  // PHASE 4.3: Data Hooks - FIXED with useShallow pattern (like useFilteredPollCards)
+  // CRITICAL: useShallow ensures stable object references - arrays come from stable object
+  // Pattern matches useFilteredPollCards: useShallow for subscription, useMemo only if computation needed
 
-  // Polls data - use useShallow + useMemo pattern
+  // Polls data - useShallow pattern (useShallow handles array reference stability)
   const pollsStoreData = usePollsStore(
     useShallow((state) => ({
       polls: state.polls,
@@ -290,22 +290,22 @@ function StandardPersonalDashboard({ userId: _fallbackUserId }: PersonalDashboar
       lastFetchedAt: state.lastFetchedAt,
     }))
   );
-  const polls = useMemo(() => pollsStoreData.polls, [pollsStoreData.polls]);
+  const polls = pollsStoreData.polls; // useShallow ensures stable reference
   const isPollsLoading = pollsStoreData.isLoading;
   const pollsError = pollsStoreData.error;
   const lastPollsFetchedAt = pollsStoreData.lastFetchedAt;
 
-  // Analytics data - use useShallow + useMemo pattern
+  // Analytics data - useShallow pattern
   const analyticsStoreData = useAnalyticsStore(
     useShallow((state) => ({
       events: state.events,
       userBehavior: state.userBehavior,
     }))
   );
-  const analyticsEvents = useMemo(() => analyticsStoreData.events, [analyticsStoreData.events]);
+  const analyticsEvents = analyticsStoreData.events; // useShallow ensures stable reference
   const userBehavior = analyticsStoreData.userBehavior;
 
-  // Hashtags data - use useShallow + useMemo pattern
+  // Hashtags data - useShallow pattern
   const hashtagStoreData = useHashtagStore(
     useShallow((state) => ({
       trendingHashtags: state.trendingHashtags,
@@ -313,18 +313,18 @@ function StandardPersonalDashboard({ userId: _fallbackUserId }: PersonalDashboar
       error: state.error,
     }))
   );
-  const trendingHashtags = useMemo(() => hashtagStoreData.trendingHashtags, [hashtagStoreData.trendingHashtags]);
+  const trendingHashtags = hashtagStoreData.trendingHashtags; // useShallow ensures stable reference
   const hashtagLoadingState = { isLoading: hashtagStoreData.isLoading };
   const hashtagErrorState = { error: hashtagStoreData.error };
 
-  // Representatives data - use useShallow + useMemo pattern
+  // Representatives data - useShallow pattern
   const representativeStoreData = useRepresentativeStore(
     useShallow((state) => ({
       entries: representativeSelectors.userRepresentativeEntries(state),
       error: state.error,
     }))
   );
-  const representativeEntries = useMemo(() => representativeStoreData.entries, [representativeStoreData.entries]);
+  const representativeEntries = representativeStoreData.entries; // useShallow ensures stable reference
   const representativeError = representativeStoreData.error;
 
   // Track data hooks execution for diagnostics
