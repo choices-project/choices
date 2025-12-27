@@ -1097,72 +1097,14 @@ function StandardPersonalDashboard({ userId: fallbackUserId, className = '' }: P
   // If we're rendering this component, user is authenticated (page wrapper checked)
   // This matches the pattern used by feed and polls pages which work correctly
 
-  // CRITICAL: Follow feed/polls pattern - return loading skeleton during SSR/initial render
-  // This ensures consistent server/client rendering structure, preventing hydration mismatches
-  // After mount, render actual content (matches feed/polls page pattern)
-  // isMounted is already declared above for formatters
+  // CRITICAL: Always render the same component structure to prevent hydration mismatches
+  // Never use conditional returns - always render the same tree structure
+  // Use conditional rendering inside JSX instead
+  // This ensures component tree structure is always consistent between SSR and client render
 
-  // During SSR/initial render, always return loading skeleton (same structure on server and client)
-  // This matches the pattern used by feed and polls pages which don't have hydration issues
-  if (!isMounted) {
-    return (
-      <div className={`space-y-6 ${className}`} data-testid='personal-dashboard'>
-        <div className='grid grid-cols-1 gap-6 lg:grid-cols-3'>
-          <div className='space-y-6 lg:col-span-2'>
-            <Skeleton className='h-32 w-full' />
-            <Skeleton className='h-48 w-full' />
-          </div>
-          <div className='space-y-6'>
-            <Skeleton className='h-32 w-full' />
-            <Skeleton className='h-48 w-full' />
-          </div>
-        </div>
-      </div>
-    );
-  }
-
-  // After mount, check for loading/error states
-  // CRITICAL: Guard conditional returns with isMounted to prevent hydration mismatch
-  // During SSR/initial render, always render the same structure (loading skeleton)
-  // After mount, these conditional returns can safely change structure via normal React updates
-  if (isMounted && isLoading) {
-    return (
-      <div className={`space-y-6 ${className}`} data-testid='personal-dashboard'>
-        <div className='grid grid-cols-1 gap-6 lg:grid-cols-3'>
-          <div className='space-y-6 lg:col-span-2'>
-            <Skeleton className='h-32 w-full' />
-            <Skeleton className='h-48 w-full' />
-          </div>
-          <div className='space-y-6'>
-            <Skeleton className='h-32 w-full' />
-            <Skeleton className='h-48 w-full' />
-          </div>
-        </div>
-      </div>
-    );
-  }
-
-  // CRITICAL: Guard error message return with isMounted to prevent hydration mismatch
-  if (isMounted && errorMessage) {
-    return (
-      <div className={`space-y-6 ${className}`} data-testid='personal-dashboard'>
-        <Card>
-          <CardContent className='space-y-4 p-6 text-center'>
-            <div className='mx-auto mb-2 text-red-500'>
-              <Activity className='h-12 w-12' />
-            </div>
-            <h3 className='text-lg font-semibold'>
-              {t('dashboard.personal.errors.title')}
-            </h3>
-            <p className='text-gray-600'>{errorMessage}</p>
-            <Button onClick={handleRefresh}>
-              {t('dashboard.personal.errors.retry')}
-            </Button>
-          </CardContent>
-        </Card>
-      </div>
-    );
-  }
+  // Determine what content to show (using conditional rendering inside JSX, not conditional returns)
+  const showLoadingSkeleton = !isMounted || isLoading;
+  const showError = isMounted && errorMessage;
 
   return (
     <div className={`space-y-6 ${className}`} data-testid='personal-dashboard'>
@@ -1676,6 +1618,8 @@ function StandardPersonalDashboard({ userId: fallbackUserId, className = '' }: P
           </div>
         </TabsContent>
       </Tabs>
+        </>
+      )}
     </div>
   );
 }
