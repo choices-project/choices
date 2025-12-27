@@ -22,6 +22,12 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { useShallow } from 'zustand/react/shallow';
 
+import { useProfile, useProfileErrorStates, useProfileLoadingStates } from '@/features/profile/hooks/use-profile';
+
+import {
+  useIsAuthenticated,
+  useUserLoading,
+} from '@/lib/stores';
 import { useProfileStore } from '@/lib/stores/profileStore';
 
 import type { DashboardPreferences } from '@/types/profile';
@@ -184,6 +190,30 @@ function StandardPersonalDashboard({ userId: _fallbackUserId }: PersonalDashboar
     }
   }, [updatePreferences]);
 
+  // PHASE 4.1: Profile Hooks (incremental restoration)
+  // Following established patterns: useShallow for store subscriptions, refs for actions
+  const { profile, isLoading: profileLoading, error: profileError } = useProfile();
+  const { hasAnyError: _hasAnyError } = useProfileErrorStates(); // Phase 4.1: Added but not used yet
+  const { isAnyUpdating: _isProfileUpdating } = useProfileLoadingStates(); // Phase 4.1: Added but not used yet
+  const isAuthenticated = useIsAuthenticated();
+  const isUserLoading = useUserLoading();
+
+  // Track profile hooks execution for diagnostics
+  diagnostics.trackHookExecution('useProfile', {
+    hasProfile: !!profile,
+    isLoading: profileLoading,
+    hasError: !!profileError,
+    profileId: (profile as Record<string, unknown>)?.id ?? null,
+  });
+  
+  diagnostics.trackHookExecution('useIsAuthenticated', {
+    isAuthenticated,
+  });
+  
+  diagnostics.trackHookExecution('useUserLoading', {
+    isUserLoading,
+  });
+
   // CRITICAL FIX: Extract preferences.dashboard with stable reference using useMemo
   // This prevents new object reference every render, which was causing infinite loops
   // The key is to memoize based on the actual nested values, not the parent object
@@ -245,17 +275,28 @@ function StandardPersonalDashboard({ userId: _fallbackUserId }: PersonalDashboar
     }));
   }, [isMounted, dashboardPreferences, profilePreferences]);
 
-  // Simple static return for now to verify the fix works
+  // Phase 4.1: Profile hooks added - Simple return to verify stability before adding more hooks
+  // Next phase will add store action hooks and data hooks
     return (
     <div className="space-y-6" data-testid='personal-dashboard'>
-      <div className='p-4 bg-gray-50 rounded'>
-        <p className='text-gray-600'>Fixed: Using useShallow and memoized dashboardPreferences</p>
-        <p className='text-sm text-gray-500 mt-2'>
-          Render count: {diagnostics.renderCount} | isMounted: {String(isMounted)} | showQuickActions: {String(dashboardPreferences.showQuickActions)}
-        </p>
-        <p className='text-xs text-gray-400 mt-1'>
-          Diagnostic mode: Comprehensive tracking enabled
-        </p>
+      <div className='p-4 bg-gray-50 dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700'>
+        <h2 className='text-lg font-semibold text-gray-900 dark:text-gray-100 mb-2'>
+          Phase 4.1: Profile Hooks Restored
+        </h2>
+        <div className='space-y-1 text-sm text-gray-600 dark:text-gray-400'>
+          <p>
+            <span className='font-medium'>Render count:</span> {diagnostics.renderCount} | 
+            <span className='font-medium ml-2'>Mounted:</span> {String(isMounted)}
+          </p>
+          <p>
+            <span className='font-medium'>Profile:</span> {profile ? `loaded (id: ${(profile as Record<string, unknown>)?.id ?? 'unknown'})` : 'loading'} | 
+            <span className='font-medium ml-2'>Auth:</span> {String(isAuthenticated)} | 
+            <span className='font-medium ml-2'>Loading:</span> {String(profileLoading)}
+          </p>
+          <p className='text-xs text-gray-500 dark:text-gray-500 mt-2 pt-2 border-t border-gray-200 dark:border-gray-700'>
+            ✅ Diagnostic tracking enabled | Phase 4.1 complete | Ready for Phase 4.2 (store actions)
+          </p>
+          </div>
         </div>
       </div>
     );
