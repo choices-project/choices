@@ -1126,6 +1126,6 @@ function StandardPersonalDashboard({ userId: fallbackUserId }: PersonalDashboard
 
   // TEMPORARY: Return completely static content to isolate hydration mismatch
   // No conditionals, no computed values, just a static div
-  // All code below is unreachable due to early return above - kept for reference in comment block above
+  // All code above (in comment block) is unreachable due to early return - kept for reference
   */
 }
