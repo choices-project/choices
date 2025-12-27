@@ -61,7 +61,7 @@
 //   useUserRepresentativeEntries,
 // } from '@/lib/stores/representativeStore';
 
-import React from 'react';
+import React, { useRef, useState } from 'react';
 // TEMPORARILY COMMENTED OUT: unused imports/constants/types while testing infinite loop without hooks
 // import { logger } from '@/lib/utils/logger';
 // import { useI18n } from '@/hooks/useI18n';
@@ -477,22 +477,32 @@ function StandardPersonalDashboard({ userId: _fallbackUserId }: PersonalDashboar
       hasWindow: typeof window !== 'undefined',
     },
     sessionId: 'debug-session',
-    runId: 'hook-isolation-test',
-    hypothesisId: 'H1'
+    runId: 'phase-2-state-hooks',
+    hypothesisId: 'H2'
   }));
   // #endregion
 
-  // HYPOTHESIS H1: Hooks are causing infinite render loop
-  // TEST: Return static content without calling ANY hooks
-  // EXPECTED: If hooks are the cause, render count should stabilize at 1-2 renders
+  // PHASE 2.1: Add basic state hooks (useState, useRef)
+  // TEST: Do basic state hooks cause infinite render loop?
+  // EXPECTED: Render count should remain low (3-5 renders max)
   // ACTUAL: Will be measured in production test
+
+  // Add minimal state hooks
+  const [isMounted, setIsMounted] = useState(false);
+  const testRef = useRef<number>(0);
+  testRef.current += 1; // This should NOT cause re-renders
+
+  // Set mounted flag after first render (does cause one re-render, but that's expected)
+  React.useEffect(() => {
+    setIsMounted(true);
+  }, []);
 
     return (
     <div className="space-y-6" data-testid='personal-dashboard'>
       <div className='p-4 bg-gray-50 rounded'>
-        <p className='text-gray-600'>Static content - no hooks, no conditionals, no computed values</p>
+        <p className='text-gray-600'>Phase 2.1: Testing state hooks (useState, useRef)</p>
         <p className='text-sm text-gray-500 mt-2'>
-          Render count: {renderCount} | Testing if hooks cause infinite render loop
+          Render count: {renderCount} | isMounted: {String(isMounted)} | ref.current: {testRef.current}
         </p>
           </div>
     </div>
