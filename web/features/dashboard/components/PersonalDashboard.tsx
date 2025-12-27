@@ -28,20 +28,11 @@ import {
   useIsAuthenticated,
   useUserLoading,
   usePollsActions,
-  usePolls,
-  usePollsLoading,
-  usePollsError,
-  usePollLastFetchedAt,
-  useAnalyticsEvents,
-  useAnalyticsBehavior,
-  useTrendingHashtags,
 } from '@/lib/stores';
-import { useHashtagActions, useHashtagLoading, useHashtagError } from '@/lib/stores/hashtagStore';
+import { useHashtagActions } from '@/lib/stores/hashtagStore';
 import { useProfileStore } from '@/lib/stores/profileStore';
 import {
   useGetUserRepresentatives,
-  useUserRepresentativeEntries,
-  useRepresentativeError,
 } from '@/lib/stores/representativeStore';
 
 import type { DashboardPreferences } from '@/types/profile';
@@ -282,47 +273,20 @@ function StandardPersonalDashboard({ userId: _fallbackUserId }: PersonalDashboar
     hasGetUserRepresentatives: !!getUserRepresentatives,
   });
 
-  // PHASE 4.3: Data Hooks (incremental restoration)
-  // CRITICAL: All store subscriptions use useShallow pattern (already applied via hooks)
-  // These hooks internally use useShallow, so they should be stable
-  const polls = usePolls();
-  const isPollsLoading = usePollsLoading();
-  const pollsError = usePollsError(); // Phase 4.3: Added for future use
-  const lastPollsFetchedAt = usePollLastFetchedAt(); // Phase 4.3: Added for future use
-  const analyticsEvents = useAnalyticsEvents();
-  const userBehavior = useAnalyticsBehavior(); // Phase 4.3: Added for future use
-  const trendingHashtags = useTrendingHashtags();
-  const hashtagLoadingState = useHashtagLoading(); // Phase 4.3: Added for future use
-  const hashtagErrorState = useHashtagError(); // Phase 4.3: Added for future use
-  const representativeEntries = useUserRepresentativeEntries();
-  const representativeError = useRepresentativeError(); // Phase 4.3: Added for future use
-
-  // Track data hooks execution for diagnostics (using all variables to satisfy TypeScript)
-  diagnostics.trackHookExecution('usePolls', {
-    pollsCount: polls?.length ?? 0,
-    hasError: !!pollsError,
-    lastFetchedAt: lastPollsFetchedAt ?? null,
-  });
-
-  diagnostics.trackHookExecution('usePollsLoading', {
-    isPollsLoading,
-  });
-
-  diagnostics.trackHookExecution('useAnalyticsEvents', {
-    eventsCount: analyticsEvents?.length ?? 0,
-    hasUserBehavior: !!userBehavior,
-  });
-
-  diagnostics.trackHookExecution('useTrendingHashtags', {
-    hashtagsCount: trendingHashtags?.length ?? 0,
-    isLoading: hashtagLoadingState?.isLoading ?? false,
-    hasError: !!hashtagErrorState?.error,
-  });
-
-  diagnostics.trackHookExecution('useUserRepresentativeEntries', {
-    representativesCount: representativeEntries?.length ?? 0,
-    hasError: !!representativeError,
-  });
+  // PHASE 4.3: Data Hooks - TEMPORARILY COMMENTED OUT TO ISOLATE INFINITE LOOP
+  // These hooks return arrays that may have new references every render
+  // Need to investigate and add useShallow wrappers if needed
+  // const polls = usePolls();
+  // const isPollsLoading = usePollsLoading();
+  // const pollsError = usePollsError();
+  // const lastPollsFetchedAt = usePollLastFetchedAt();
+  // const analyticsEvents = useAnalyticsEvents();
+  // const userBehavior = useAnalyticsBehavior();
+  // const trendingHashtags = useTrendingHashtags();
+  // const hashtagLoadingState = useHashtagLoading();
+  // const hashtagErrorState = useHashtagError();
+  // const representativeEntries = useUserRepresentativeEntries();
+  // const representativeError = useRepresentativeError();
 
   // CRITICAL FIX: Extract preferences.dashboard with stable reference using useMemo
   // This prevents new object reference every render, which was causing infinite loops
@@ -404,7 +368,7 @@ function StandardPersonalDashboard({ userId: _fallbackUserId }: PersonalDashboar
             <span className='font-medium ml-2'>Loading:</span> {String(profileLoading)}
           </p>
           <p className='text-xs text-gray-500 dark:text-gray-500 mt-2 pt-2 border-t border-gray-200 dark:border-gray-700'>
-            ✅ Diagnostic tracking enabled | Phase 4.3 complete | Data hooks added | Polls: {polls?.length ?? 0} | Events: {analyticsEvents?.length ?? 0} | Ready for Phase 5 (computed values)
+            ✅ Diagnostic tracking enabled | Phase 4.2 complete | Data hooks temporarily disabled to isolate render loop
           </p>
           </div>
         </div>
