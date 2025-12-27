@@ -14,17 +14,17 @@
 
 import {
   Activity,
+  BarChart3,
+  Download,
+  Flame,
+  MapPin,
+  Plus,
+  Settings,
+  Shield,
   // TEMPORARILY REMOVED: unused in simplified component
   // Award,
-  // BarChart3,
   // Clock,
-  // Download,
-  // Flame,
-  MapPin,
-  // Plus,
   // RefreshCw,
-  Settings,
-  // Shield,
   // Target,
   // Vote,
 } from 'lucide-react';
