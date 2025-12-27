@@ -28,11 +28,20 @@ import {
   useIsAuthenticated,
   useUserLoading,
   usePollsActions,
+  usePolls,
+  usePollsLoading,
+  usePollsError,
+  usePollLastFetchedAt,
+  useAnalyticsEvents,
+  useAnalyticsBehavior,
+  useTrendingHashtags,
 } from '@/lib/stores';
-import { useHashtagActions } from '@/lib/stores/hashtagStore';
+import { useHashtagActions, useHashtagLoading, useHashtagError } from '@/lib/stores/hashtagStore';
 import { useProfileStore } from '@/lib/stores/profileStore';
 import {
   useGetUserRepresentatives,
+  useUserRepresentativeEntries,
+  useRepresentativeError,
 } from '@/lib/stores/representativeStore';
 
 import type { DashboardPreferences } from '@/types/profile';
@@ -273,6 +282,42 @@ function StandardPersonalDashboard({ userId: _fallbackUserId }: PersonalDashboar
     hasGetUserRepresentatives: !!getUserRepresentatives,
   });
 
+  // PHASE 4.3: Data Hooks (incremental restoration)
+  // CRITICAL: All store subscriptions use useShallow pattern (already applied via hooks)
+  // These hooks internally use useShallow, so they should be stable
+  const polls = usePolls();
+  const isPollsLoading = usePollsLoading();
+  const _pollsError = usePollsError(); // Phase 4.3: Added but not used yet
+  const _lastPollsFetchedAt = usePollLastFetchedAt(); // Phase 4.3: Added but not used yet
+  const analyticsEvents = useAnalyticsEvents();
+  const _userBehavior = useAnalyticsBehavior(); // Phase 4.3: Added but not used yet
+  const trendingHashtags = useTrendingHashtags();
+  const _hashtagLoadingState = useHashtagLoading(); // Phase 4.3: Added but not used yet
+  const _hashtagErrorState = useHashtagError(); // Phase 4.3: Added but not used yet
+  const representativeEntries = useUserRepresentativeEntries();
+  const _representativeError = useRepresentativeError(); // Phase 4.3: Added but not used yet
+
+  // Track data hooks execution for diagnostics
+  diagnostics.trackHookExecution('usePolls', {
+    pollsCount: polls?.length ?? 0,
+  });
+
+  diagnostics.trackHookExecution('usePollsLoading', {
+    isPollsLoading,
+  });
+
+  diagnostics.trackHookExecution('useAnalyticsEvents', {
+    eventsCount: analyticsEvents?.length ?? 0,
+  });
+
+  diagnostics.trackHookExecution('useTrendingHashtags', {
+    hashtagsCount: trendingHashtags?.length ?? 0,
+  });
+
+  diagnostics.trackHookExecution('useUserRepresentativeEntries', {
+    representativesCount: representativeEntries?.length ?? 0,
+  });
+
   // CRITICAL FIX: Extract preferences.dashboard with stable reference using useMemo
   // This prevents new object reference every render, which was causing infinite loops
   // The key is to memoize based on the actual nested values, not the parent object
@@ -340,7 +385,7 @@ function StandardPersonalDashboard({ userId: _fallbackUserId }: PersonalDashboar
     <div className="space-y-6" data-testid='personal-dashboard'>
       <div className='p-4 bg-gray-50 dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700'>
         <h2 className='text-lg font-semibold text-gray-900 dark:text-gray-100 mb-2'>
-          Phase 4.2: Profile + Store Action Hooks Restored
+          Phase 4.3: Profile + Actions + Data Hooks Restored
         </h2>
         <div className='space-y-1 text-sm text-gray-600 dark:text-gray-400'>
           <p>
@@ -353,7 +398,7 @@ function StandardPersonalDashboard({ userId: _fallbackUserId }: PersonalDashboar
             <span className='font-medium ml-2'>Loading:</span> {String(profileLoading)}
           </p>
           <p className='text-xs text-gray-500 dark:text-gray-500 mt-2 pt-2 border-t border-gray-200 dark:border-gray-700'>
-            ✅ Diagnostic tracking enabled | Phase 4.2 complete | Actions stored in refs | Ready for Phase 4.3 (data hooks)
+            ✅ Diagnostic tracking enabled | Phase 4.3 complete | Data hooks added | Polls: {polls?.length ?? 0} | Events: {analyticsEvents?.length ?? 0} | Ready for Phase 5 (computed values)
           </p>
           </div>
         </div>
