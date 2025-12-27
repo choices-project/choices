@@ -462,23 +462,39 @@ export default function PersonalDashboard(props: PersonalDashboardProps) {
 }
 
 function StandardPersonalDashboard({ userId: _fallbackUserId }: PersonalDashboardProps) {
-  // #region agent log
-  console.log('[DEBUG-HYP-B] StandardPersonalDashboard function entry - RETURNING IMMEDIATELY', { typeofWindow: typeof window !== 'undefined', timestamp: Date.now() });
+  // #region agent log - Render tracking
+  // Track render count using a module-level counter (persists across renders but resets on reload)
+  if (typeof window !== 'undefined') {
+    (window as any).__dashboardRenderCount = ((window as any).__dashboardRenderCount || 0) + 1;
+  }
+  const renderCount = typeof window !== 'undefined' ? (window as any).__dashboardRenderCount : 0;
+  console.log(JSON.stringify({
+    location: 'PersonalDashboard.tsx:469',
+    message: 'StandardPersonalDashboard render',
+    data: {
+      renderCount,
+      timestamp: Date.now(),
+      hasWindow: typeof window !== 'undefined',
+    },
+    sessionId: 'debug-session',
+    runId: 'hook-isolation-test',
+    hypothesisId: 'H1'
+  }));
   // #endregion
 
-  // TEMPORARY: Return immediately without calling ANY hooks to test if hooks cause infinite render loop
-  // This will help us isolate if the infinite loop is caused by hooks or something else
-  // #region agent log
-  console.log('[DEBUG-HYP-B] StandardPersonalDashboard RETURN - about to return static div (NO HOOKS)', { typeofWindow: typeof window !== 'undefined', timestamp: Date.now() });
-  // #endregion
+  // HYPOTHESIS H1: Hooks are causing infinite render loop
+  // TEST: Return static content without calling ANY hooks
+  // EXPECTED: If hooks are the cause, render count should stabilize at 1-2 renders
+  // ACTUAL: Will be measured in production test
+
     return (
     <div className="space-y-6" data-testid='personal-dashboard'>
       <div className='p-4 bg-gray-50 rounded'>
-        <p className='text-gray-600'>Static content - no hooks called, no conditionals or computed values</p>
-        <p className='text-sm text-gray-500 mt-2'>Testing if hooks cause infinite render loop</p>
-        </div>
-      </div>
-    );
-  // TEMPORARY: All hooks code removed to test if hooks cause infinite render loop
-  // Code will be restored after testing
+        <p className='text-gray-600'>Static content - no hooks, no conditionals, no computed values</p>
+        <p className='text-sm text-gray-500 mt-2'>
+          Render count: {renderCount} | Testing if hooks cause infinite render loop
+        </p>
+          </div>
+    </div>
+  );
 }
