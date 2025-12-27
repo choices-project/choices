@@ -598,14 +598,14 @@ function StandardPersonalDashboard({ userId: fallbackUserId, className = '' }: P
 
   const effectiveIsAuthenticated = isAuthenticated || fallbackAuthenticated;
 
-  const trendingHashtags = useTrendingHashtags();
+  const _trendingHashtags = useTrendingHashtags();
   const hashtagLoadingState = useHashtagLoading();
-  const hashtagLoading = hashtagLoadingState.isLoading;
+  const _hashtagLoading = hashtagLoadingState.isLoading;
   const hashtagErrorState = useHashtagError();
   const hashtagError = hashtagErrorState.error;
   const { getTrendingHashtags } = useHashtagActions();
 
-  const [selectedTab, setSelectedTab] = useState('overview');
+  const [_selectedTab, _setSelectedTab] = useState('overview');
   const [_isRefreshing, setIsRefreshing] = useState(false);
   const hasRequestedTrending = useRef(false);
   const hasRequestedRepresentatives = useRef(false);
