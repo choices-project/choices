@@ -751,13 +751,12 @@ export default function DashboardPage() {
 
   // During SSR/initial render, always return loading skeleton with same wrapper structure
   // This matches the pattern used by feed and polls pages which don't have hydration issues
-  // CRITICAL: Use same wrapper structure (ErrorBoundary, DashboardNavigation, etc.) as final return
+  // CRITICAL: Always render DashboardNavigation and MobileDashboardNav - they handle their own SSR logic internally
   // This ensures consistent structure during SSR/initial render, preventing hydration mismatches
   if (!isMounted) {
     return (
       <ErrorBoundary>
-        {/* CRITICAL: Include DashboardNavigation placeholder to match final return structure */}
-        {/* DashboardNavigation will handle its own SSR logic internally */}
+        {/* CRITICAL: Always render DashboardNavigation - it handles its own SSR logic internally */}
         <DashboardNavigation />
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8" aria-label="Loading dashboard">
           <div className="space-y-6">
@@ -776,8 +775,7 @@ export default function DashboardPage() {
             </div>
           </div>
         </div>
-        {/* CRITICAL: Include MobileDashboardNav placeholder to match final return structure */}
-        {/* MobileDashboardNav will handle its own SSR logic internally */}
+        {/* CRITICAL: Always render MobileDashboardNav - it handles its own SSR logic internally */}
         <MobileDashboardNav />
       </ErrorBoundary>
     );
