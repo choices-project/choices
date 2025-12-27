@@ -729,34 +729,50 @@ export default function DashboardPage() {
     }
   }, []);
 
-  // CRITICAL: Always render the same component structure to prevent hydration mismatches
-  // Never use conditional returns - always render the same tree structure
-  // Use conditional rendering inside JSX instead
-  // Navigation components handle their own SSR logic internally with isMounted guards
-  // PersonalDashboard handles its own SSR/loading state internally
-
-  // CRITICAL: Always render PersonalDashboard - it handles loading/error states internally
-  // Removed conditional rendering (showLoadingSkeleton, showAccessDenied) to prevent hydration mismatch
-  // Ternary operators create different component trees even when conditions are false
-  // PersonalDashboard should handle its own loading/error states
+  // CRITICAL: Follow feed/polls page pattern - return early with loading skeleton if !isMounted
+  // This prevents PersonalDashboard hooks (Zustand persist stores) from running during SSR
+  // which causes hydration mismatches when server (memoryStorage) and client (localStorage) differ
+  // Only render PersonalDashboard after mount to ensure consistent hydration
+  if (!isMountedForPageRender) {
+    return (
+      <ErrorBoundary>
+        <DashboardNavigation />
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+          <div
+            className="space-y-6"
+            aria-label="Loading dashboard"
+            aria-busy="true"
+            aria-live="polite"
+            data-testid="dashboard-loading-skeleton"
+            role="status"
+          >
+            <div className="animate-pulse">
+              <div className="h-10 bg-gray-200 dark:bg-gray-700 rounded w-1/3 mb-4" />
+              <div className="h-5 bg-gray-200 dark:bg-gray-700 rounded w-1/2 mb-8" />
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                {[1, 2, 3].map((i) => (
+                  <div key={i} className="bg-gray-100 dark:bg-gray-800 rounded-lg p-6">
+                    <div className="h-6 bg-gray-200 dark:bg-gray-700 rounded w-3/4 mb-4" />
+                    <div className="h-4 bg-gray-200 dark:bg-gray-700 rounded w-full mb-2" />
+                    <div className="h-4 bg-gray-200 dark:bg-gray-700 rounded w-5/6" />
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+        </div>
+        <MobileDashboardNav />
+      </ErrorBoundary>
+    );
+  }
 
   return (
     <ErrorBoundary>
-      {/* DIAGNOSTIC: Add data attribute for test detection */}
-      <div data-testid="dashboard-page-content" style={{ display: 'none' }}>
-        Dashboard content rendering
-      </div>
-      {/* 🔒 Cohesive Dashboard Navigation */}
-      {/* CRITICAL: Always render DashboardNavigation - it handles its own SSR logic internally */}
       <DashboardNavigation />
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        {/* CRITICAL: Always render the same structure to prevent hydration mismatch */}
-        {/* Always render PersonalDashboard - it handles loading/error states internally */}
-        {/* Conditional rendering with ternary operators causes hydration mismatches even when conditions are false */}
-
         {/* CRITICAL: Only show admin banner after mount to prevent hydration mismatch */}
-        {isMountedForPageRender && isAdmin === true && (
+        {isAdmin === true && (
           <div className="mb-6 p-4 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-3">
@@ -779,14 +795,11 @@ export default function DashboardPage() {
           </div>
         )}
 
-        {/* CRITICAL: Always render PersonalDashboard - it handles its own SSR/initial render logic internally */}
-        {/* PersonalDashboard has its own isMounted guard and returns skeleton during SSR/initial render */}
-        {/* This ensures consistent component tree structure and prevents hydration mismatches */}
+        {/* CRITICAL: Only render PersonalDashboard after mount to prevent hydration mismatch */}
+        {/* This ensures Zustand persist store hooks don't run during SSR */}
         <PersonalDashboard />
       </div>
 
-      {/* 🔒 Mobile Navigation */}
-      {/* CRITICAL: Always render MobileDashboardNav - it handles its own SSR logic internally */}
       <MobileDashboardNav />
     </ErrorBoundary>
   );
