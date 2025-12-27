@@ -170,7 +170,7 @@ async function checkSessionCookies(
 
 export default function DashboardPage() {
   // #region agent log
-  fetch('http://127.0.0.1:7242/ingest/6a732aed-2d72-4883-a63a-f3c892fc1216',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'dashboard/page.tsx:171',message:'DashboardPage function entry',data:{typeofWindow:typeof window !== 'undefined'},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'C'})}).catch(()=>{});
+  console.log('[DEBUG-HYP-C] DashboardPage function entry', { typeofWindow: typeof window !== 'undefined', timestamp: Date.now() });
   // #endregion
   const router = useRouter();
   const routerRef = useRef(router);
