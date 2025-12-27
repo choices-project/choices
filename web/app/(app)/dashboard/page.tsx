@@ -747,8 +747,10 @@ export default function DashboardPage() {
   // PersonalDashboard handles its own SSR/loading state internally
 
   // Determine what content to show (using conditional rendering inside JSX, not conditional returns)
-  const showLoadingSkeleton = isMountedForPageRender && isLoading && !loadingTimeout && !shouldBypassAuth && !isAuthenticated && !isAuthContextLoading;
-  const showAccessDenied = isMountedForPageRender && !isUserLoading && !isAuthContextLoading && isStoreHydrated && hasCookies === false && !isAuthenticated && !shouldBypassAuth;
+  // CRITICAL: Always render PersonalDashboard during SSR/initial render (!isMountedForPageRender) to prevent hydration mismatch
+  // Only show loading/access denied after mount to ensure consistent tree structure
+  const showLoadingSkeleton = !isMountedForPageRender ? false : (isLoading && !loadingTimeout && !shouldBypassAuth && !isAuthenticated && !isAuthContextLoading);
+  const showAccessDenied = !isMountedForPageRender ? false : (!isUserLoading && !isAuthContextLoading && isStoreHydrated && hasCookies === false && !isAuthenticated && !shouldBypassAuth);
 
     return (
     <ErrorBoundary>
