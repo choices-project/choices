@@ -42,9 +42,10 @@ import { FeatureWrapper } from '@/components/shared/FeatureWrapper';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Progress } from '@/components/ui/progress';
 import { Skeleton } from '@/components/ui/skeleton';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+// TEMPORARILY REMOVED: Progress, Tabs components unused in simplified component
+// import { Progress } from '@/components/ui/progress';
+// import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 
 
 import {
@@ -501,6 +502,7 @@ function StandardPersonalDashboard({ userId: fallbackUserId, className = '' }: P
     return new Intl.NumberFormat(currentLanguage ?? undefined);
   }, [isMounted, currentLanguage]);
 
+  // @ts-expect-error - Temporarily unused in simplified component for debugging
   const dateFormatter = useMemo(() => {
     if (!isMounted) return null;
     return new Intl.DateTimeFormat(currentLanguage ?? undefined, {
@@ -510,6 +512,7 @@ function StandardPersonalDashboard({ userId: fallbackUserId, className = '' }: P
     });
   }, [isMounted, currentLanguage]);
 
+  // @ts-expect-error - Temporarily unused in simplified component for debugging
   const formatNumber = useCallback(
     (value: number) => {
       if (!isMounted || !numberFormatter) {
@@ -526,7 +529,6 @@ function StandardPersonalDashboard({ userId: fallbackUserId, className = '' }: P
     error: profileError,
     refetch: refetchProfile,
   } = useProfile();
-  // @ts-expect-error - Temporarily unused in simplified component for debugging
   const { isAnyUpdating: _isAnyUpdating2 } = useProfileLoadingStates();
   const { hasAnyError } = useProfileErrorStates();
 
