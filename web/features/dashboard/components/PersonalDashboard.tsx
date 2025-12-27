@@ -16,6 +16,7 @@
  * - Store actions stored in refs to prevent dependency issues
  * - Client-only logic guarded with isMounted
  * - useEffect dependencies carefully managed
+ * - Memoized dashboardPreferences with specific property dependencies
  */
 
 import React, { useEffect, useMemo, useRef, useState } from 'react';
@@ -37,32 +38,114 @@ type PersonalDashboardProps = {
   className?: string;
 };
 
-// CRITICAL FIX: Use useShallow for all store subscriptions to prevent infinite loops
-// Without useShallow, store subscriptions create new object references every render
-function StandardPersonalDashboard({ userId: _fallbackUserId }: PersonalDashboardProps) {
-  // #region agent log - Render tracking
-    if (typeof window !== 'undefined') {
-    (window as any).__dashboardRenderCount = ((window as any).__dashboardRenderCount || 0) + 1;
+/**
+ * DIAGNOSTIC TRACKING
+ *
+ * Comprehensive instrumentation to understand component behavior:
+ * - Render lifecycle tracking
+ * - Hook execution tracking
+ * - Store subscription changes
+ * - Memoized value recalculations
+ * - Dependency array comparisons
+ */
+function useDiagnosticTracking(componentName: string) {
+  const renderCountRef = useRef(0);
+  const hookExecutionsRef = useRef<Record<string, number>>({});
+  const memoRecalculationsRef = useRef<Record<string, number>>({});
+
+  // Track render count
+  if (typeof window !== 'undefined') {
+    renderCountRef.current += 1;
+    const renderCount = renderCountRef.current;
+
+    // Log render with comprehensive context
+    console.log(JSON.stringify({
+      location: `${componentName}:render`,
+      message: 'Component render',
+      data: {
+        renderCount,
+        timestamp: Date.now(),
+        hasWindow: typeof window !== 'undefined',
+        componentName,
+      },
+      sessionId: 'debug-session',
+      runId: 'final-fix-diagnostic',
+      hypothesisId: 'DIAGNOSTIC'
+    }));
   }
-  const renderCount = typeof window !== 'undefined' ? (window as any).__dashboardRenderCount : 0;
-  console.log(JSON.stringify({
-    location: 'PersonalDashboard.tsx:StandardPersonalDashboard',
-    message: 'StandardPersonalDashboard render',
-    data: { renderCount, timestamp: Date.now() },
-    sessionId: 'debug-session',
-    runId: 'final-fix',
-    hypothesisId: 'FINAL'
-  }));
-  // #endregion
+
+  // Track hook execution
+  const trackHookExecution = (hookName: string, data?: Record<string, unknown>) => {
+    hookExecutionsRef.current[hookName] = (hookExecutionsRef.current[hookName] || 0) + 1;
+    console.log(JSON.stringify({
+      location: `${componentName}:${hookName}`,
+      message: 'Hook execution',
+      data: {
+        hookName,
+        executionCount: hookExecutionsRef.current[hookName],
+        renderCount: renderCountRef.current,
+        ...data,
+      },
+      sessionId: 'debug-session',
+      runId: 'final-fix-diagnostic',
+      hypothesisId: 'DIAGNOSTIC'
+    }));
+  };
+
+  // Track memo recalculation
+  const trackMemoRecalculation = (memoName: string, reason: string, data?: Record<string, unknown>) => {
+    memoRecalculationsRef.current[memoName] = (memoRecalculationsRef.current[memoName] || 0) + 1;
+    console.log(JSON.stringify({
+      location: `${componentName}:useMemo:${memoName}`,
+      message: 'Memo recalculation',
+      data: {
+        memoName,
+        recalculationCount: memoRecalculationsRef.current[memoName],
+        renderCount: renderCountRef.current,
+        reason,
+        ...data,
+      },
+      sessionId: 'debug-session',
+      runId: 'final-fix-diagnostic',
+      hypothesisId: 'DIAGNOSTIC'
+    }));
+  };
+
+  return {
+    renderCount: renderCountRef.current,
+    trackHookExecution,
+    trackMemoRecalculation,
+  };
+}
+
+/**
+ * CRITICAL FIX: Use useShallow for all store subscriptions to prevent infinite loops
+ * Without useShallow, store subscriptions create new object references every render
+ */
+function StandardPersonalDashboard({ userId: _fallbackUserId }: PersonalDashboardProps) {
+  const diagnostics = useDiagnosticTracking('StandardPersonalDashboard');
 
   // CRITICAL: Guard client-only logic with isMounted (like feed/polls pages)
   const [isMounted, setIsMounted] = useState(false);
+  const isMountedPrevRef = useRef(false);
+
+  diagnostics.trackHookExecution('useState:isMounted', {
+    isMounted,
+    prevIsMounted: isMountedPrevRef.current,
+  });
+  isMountedPrevRef.current = isMounted;
+
   useEffect(() => {
+    diagnostics.trackHookExecution('useEffect:setIsMounted', {
+      isMountedBefore: isMounted,
+    });
     setIsMounted(true);
   }, []);
 
   // CRITICAL FIX: Use useShallow for store subscription to prevent new object references
   // This was the root cause - without useShallow, this creates a new object every render
+  const profilePreferencesRef = useRef<unknown>(null);
+
   const { preferences: profilePreferences, updatePreferences } = useProfileStore(
     useShallow((state) => ({
       preferences: state.preferences,
@@ -70,26 +153,69 @@ function StandardPersonalDashboard({ userId: _fallbackUserId }: PersonalDashboar
     })),
   );
 
+  // Track store subscription changes
+  const preferencesChanged = profilePreferences !== profilePreferencesRef.current;
+  if (preferencesChanged) {
+    console.log(JSON.stringify({
+      location: 'StandardPersonalDashboard:useProfileStore',
+      message: 'Store subscription changed',
+      data: {
+        prevPreferences: profilePreferencesRef.current,
+        newPreferences: profilePreferences,
+        preferencesChanged: true,
+        renderCount: diagnostics.renderCount,
+      },
+      sessionId: 'debug-session',
+      runId: 'final-fix-diagnostic',
+      hypothesisId: 'DIAGNOSTIC'
+    }));
+    profilePreferencesRef.current = profilePreferences;
+  }
+
   // CRITICAL FIX: Store actions in refs to prevent dependency issues (like feed/polls pages)
-  const updatePreferencesRef = useRef(updatePreferences);
+  const updatePreferencesRefForCallback = useRef(updatePreferences);
   useEffect(() => {
-    updatePreferencesRef.current = updatePreferences;
+    const changed = updatePreferences !== updatePreferencesRefForCallback.current;
+    if (changed) {
+      diagnostics.trackHookExecution('useEffect:updatePreferencesRef', {
+        updatePreferencesChanged: true,
+      });
+      updatePreferencesRefForCallback.current = updatePreferences;
+    }
   }, [updatePreferences]);
 
   // CRITICAL FIX: Extract preferences.dashboard with stable reference using useMemo
   // This prevents new object reference every render, which was causing infinite loops
-  // The key is to memoize based on the actual nested value, not the parent object
+  // The key is to memoize based on the actual nested values, not the parent object
+  const dashboardPreferencesPrevRef = useRef<DashboardPreferences | null>(null);
   const dashboardPreferences = useMemo(() => {
+    const reason = !profilePreferences?.dashboard
+      ? 'no-profile-preferences'
+      : dashboardPreferencesPrevRef.current === null
+      ? 'first-calculation'
+      : 'dependency-changed';
+
+    diagnostics.trackMemoRecalculation('dashboardPreferences', reason, {
+      hasProfilePreferences: !!profilePreferences?.dashboard,
+      prevValue: dashboardPreferencesPrevRef.current,
+    });
+
     if (!profilePreferences?.dashboard) {
-      return DEFAULT_DASHBOARD_PREFERENCES;
+      const result = DEFAULT_DASHBOARD_PREFERENCES;
+      dashboardPreferencesPrevRef.current = result;
+      return result;
     }
+
     // Return a new object only if the actual values changed
-        return {
+    const result = {
       showElectedOfficials: profilePreferences.dashboard.showElectedOfficials ?? DEFAULT_DASHBOARD_PREFERENCES.showElectedOfficials,
       showQuickActions: profilePreferences.dashboard.showQuickActions ?? DEFAULT_DASHBOARD_PREFERENCES.showQuickActions,
       showRecentActivity: profilePreferences.dashboard.showRecentActivity ?? DEFAULT_DASHBOARD_PREFERENCES.showRecentActivity,
       showEngagementScore: profilePreferences.dashboard.showEngagementScore ?? DEFAULT_DASHBOARD_PREFERENCES.showEngagementScore,
     };
+
+    dashboardPreferencesPrevRef.current = result;
+    return result;
   }, [
     profilePreferences?.dashboard?.showElectedOfficials,
     profilePreferences?.dashboard?.showQuickActions,
@@ -101,13 +227,34 @@ function StandardPersonalDashboard({ userId: _fallbackUserId }: PersonalDashboar
   // This was the root cause - profilePreferences changed reference every render
   // Instead, use the memoized dashboardPreferences directly
 
+  // Diagnostic: Log final render state
+  useEffect(() => {
+    console.log(JSON.stringify({
+      location: 'StandardPersonalDashboard:useEffect:render-summary',
+      message: 'Render summary after mount',
+      data: {
+        renderCount: diagnostics.renderCount,
+        isMounted,
+        hasDashboardPreferences: !!dashboardPreferences,
+        dashboardPreferencesValue: dashboardPreferences,
+        hasProfilePreferences: !!profilePreferences,
+      },
+      sessionId: 'debug-session',
+      runId: 'final-fix-diagnostic',
+      hypothesisId: 'DIAGNOSTIC'
+    }));
+  }, [isMounted, dashboardPreferences, profilePreferences]);
+
   // Simple static return for now to verify the fix works
     return (
     <div className="space-y-6" data-testid='personal-dashboard'>
       <div className='p-4 bg-gray-50 rounded'>
         <p className='text-gray-600'>Fixed: Using useShallow and memoized dashboardPreferences</p>
         <p className='text-sm text-gray-500 mt-2'>
-          Render count: {renderCount} | isMounted: {String(isMounted)} | showQuickActions: {String(dashboardPreferences.showQuickActions)}
+          Render count: {diagnostics.renderCount} | isMounted: {String(isMounted)} | showQuickActions: {String(dashboardPreferences.showQuickActions)}
+        </p>
+        <p className='text-xs text-gray-400 mt-1'>
+          Diagnostic mode: Comprehensive tracking enabled
         </p>
         </div>
       </div>
