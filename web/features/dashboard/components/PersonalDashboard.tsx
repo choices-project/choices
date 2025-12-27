@@ -1108,36 +1108,67 @@ function StandardPersonalDashboard({ userId: fallbackUserId, className = '' }: P
 
   return (
     <div className={`space-y-6 ${className}`} data-testid='personal-dashboard'>
-      <div className='flex items-center justify-between' data-testid='dashboard-header'>
-        <div>
-          <h1 className='text-3xl font-bold text-gray-900' data-testid='dashboard-title'>
-            {dashboardTitle}
-          </h1>
-          <p className='mt-1 text-gray-600'>{dashboardSubtitle}</p>
+      {/* Conditional rendering: Error message */}
+      {showError ? (
+        <Card>
+          <CardContent className='space-y-4 p-6 text-center'>
+            <div className='mx-auto mb-2 text-red-500'>
+              <Activity className='h-12 w-12' />
+            </div>
+            <h3 className='text-lg font-semibold'>
+              {t('dashboard.personal.errors.title')}
+            </h3>
+            <p className='text-gray-600'>{errorMessage}</p>
+            <Button onClick={handleRefresh}>
+              {t('dashboard.personal.errors.retry')}
+            </Button>
+          </CardContent>
+        </Card>
+      ) : showLoadingSkeleton ? (
+        /* Conditional rendering: Loading skeleton */
+        <div className='grid grid-cols-1 gap-6 lg:grid-cols-3'>
+          <div className='space-y-6 lg:col-span-2'>
+            <Skeleton className='h-32 w-full' />
+            <Skeleton className='h-48 w-full' />
+          </div>
+          <div className='space-y-6'>
+            <Skeleton className='h-32 w-full' />
+            <Skeleton className='h-48 w-full' />
+          </div>
         </div>
-        <div className='flex items-center gap-3'>
-          <Button
-            variant='outline'
-            size='sm'
-            onClick={handleRefresh}
-            disabled={isRefreshing || isAnyUpdating}
-            className='flex items-center gap-2'
-          >
-            <RefreshCw className={`h-4 w-4 ${isRefreshing ? 'animate-spin' : ''}`} />
-            {isRefreshing
-              ? t('dashboard.personal.header.refreshing')
-              : t('dashboard.personal.common.refresh')}
-          </Button>
-          <Badge variant='outline' className='flex items-center gap-2' data-testid='participation-score'>
-            <Activity className='h-4 w-4' />
-            {t('dashboard.personal.header.engagementBadge', {
-              score: formatNumber(analytics.participation_score),
-            })}
-          </Badge>
-        </div>
-      </div>
+      ) : (
+        /* Conditional rendering: Normal dashboard content */
+        <>
+          <div className='flex items-center justify-between' data-testid='dashboard-header'>
+            <div>
+              <h1 className='text-3xl font-bold text-gray-900' data-testid='dashboard-title'>
+                {dashboardTitle}
+              </h1>
+              <p className='mt-1 text-gray-600'>{dashboardSubtitle}</p>
+            </div>
+            <div className='flex items-center gap-3'>
+              <Button
+                variant='outline'
+                size='sm'
+                onClick={handleRefresh}
+                disabled={isRefreshing || isAnyUpdating}
+                className='flex items-center gap-2'
+              >
+                <RefreshCw className={`h-4 w-4 ${isRefreshing ? 'animate-spin' : ''}`} />
+                {isRefreshing
+                  ? t('dashboard.personal.header.refreshing')
+                  : t('dashboard.personal.common.refresh')}
+              </Button>
+              <Badge variant='outline' className='flex items-center gap-2' data-testid='participation-score'>
+                <Activity className='h-4 w-4' />
+                {t('dashboard.personal.header.engagementBadge', {
+                  score: formatNumber(analytics.participation_score),
+                })}
+              </Badge>
+            </div>
+          </div>
 
-      <Tabs value={selectedTab} onValueChange={setSelectedTab} className='space-y-6'>
+          <Tabs value={selectedTab} onValueChange={setSelectedTab} className='space-y-6'>
         <TabsList className='grid w-full grid-cols-2' data-testid='dashboard-nav'>
           <TabsTrigger value='overview' data-testid='overview-tab'>
             {t('dashboard.personal.tabs.overview')}
