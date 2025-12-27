@@ -14,18 +14,19 @@
 
 import {
   Activity,
-  Award,
-  BarChart3,
-  Clock,
-  Download,
-  Flame,
+  // TEMPORARILY REMOVED: unused in simplified component
+  // Award,
+  // BarChart3,
+  // Clock,
+  // Download,
+  // Flame,
   MapPin,
-  Plus,
-  RefreshCw,
+  // Plus,
+  // RefreshCw,
   Settings,
-  Shield,
-  Target,
-  // Vote, // TEMPORARILY REMOVED: unused in simplified component
+  // Shield,
+  // Target,
+  // Vote,
 } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
