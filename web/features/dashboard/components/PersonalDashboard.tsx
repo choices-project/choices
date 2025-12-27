@@ -27,8 +27,13 @@ import { useProfile, useProfileErrorStates, useProfileLoadingStates } from '@/fe
 import {
   useIsAuthenticated,
   useUserLoading,
+  usePollsActions,
 } from '@/lib/stores';
+import { useHashtagActions } from '@/lib/stores/hashtagStore';
 import { useProfileStore } from '@/lib/stores/profileStore';
+import {
+  useGetUserRepresentatives,
+} from '@/lib/stores/representativeStore';
 
 import type { DashboardPreferences } from '@/types/profile';
 
@@ -205,13 +210,67 @@ function StandardPersonalDashboard({ userId: _fallbackUserId }: PersonalDashboar
     hasError: !!profileError,
     profileId: (profile as Record<string, unknown>)?.id ?? null,
   });
-  
+
   diagnostics.trackHookExecution('useIsAuthenticated', {
     isAuthenticated,
   });
-  
+
   diagnostics.trackHookExecution('useUserLoading', {
     isUserLoading,
+  });
+
+  // PHASE 4.2: Store Action Hooks (incremental restoration)
+  // CRITICAL: All actions stored in refs to prevent dependency issues (like feed/polls pages)
+  const { loadPolls } = usePollsActions();
+  const { getTrendingHashtags } = useHashtagActions();
+  const getUserRepresentatives = useGetUserRepresentatives();
+
+  // Store all actions in refs (critical pattern from feed/polls pages)
+  const loadPollsRef = useRef(loadPolls);
+  const getTrendingHashtagsRef = useRef(getTrendingHashtags);
+  const getUserRepresentativesRef = useRef(getUserRepresentatives);
+
+  // Update refs individually to prevent unnecessary re-renders
+  useEffect(() => {
+    const changed = loadPolls !== loadPollsRef.current;
+    if (changed) {
+      diagnostics.trackHookExecution('useEffect:loadPollsRef', {
+        actionChanged: true,
+      });
+      loadPollsRef.current = loadPolls;
+    }
+  }, [loadPolls]);
+
+  useEffect(() => {
+    const changed = getTrendingHashtags !== getTrendingHashtagsRef.current;
+    if (changed) {
+      diagnostics.trackHookExecution('useEffect:getTrendingHashtagsRef', {
+        actionChanged: true,
+      });
+      getTrendingHashtagsRef.current = getTrendingHashtags;
+    }
+  }, [getTrendingHashtags]);
+
+  useEffect(() => {
+    const changed = getUserRepresentatives !== getUserRepresentativesRef.current;
+    if (changed) {
+      diagnostics.trackHookExecution('useEffect:getUserRepresentativesRef', {
+        actionChanged: true,
+      });
+      getUserRepresentativesRef.current = getUserRepresentatives;
+    }
+  }, [getUserRepresentatives]);
+
+  diagnostics.trackHookExecution('usePollsActions', {
+    hasLoadPolls: !!loadPolls,
+  });
+
+  diagnostics.trackHookExecution('useHashtagActions', {
+    hasGetTrendingHashtags: !!getTrendingHashtags,
+  });
+
+  diagnostics.trackHookExecution('useGetUserRepresentatives', {
+    hasGetUserRepresentatives: !!getUserRepresentatives,
   });
 
   // CRITICAL FIX: Extract preferences.dashboard with stable reference using useMemo
@@ -281,20 +340,20 @@ function StandardPersonalDashboard({ userId: _fallbackUserId }: PersonalDashboar
     <div className="space-y-6" data-testid='personal-dashboard'>
       <div className='p-4 bg-gray-50 dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700'>
         <h2 className='text-lg font-semibold text-gray-900 dark:text-gray-100 mb-2'>
-          Phase 4.1: Profile Hooks Restored
+          Phase 4.2: Profile + Store Action Hooks Restored
         </h2>
         <div className='space-y-1 text-sm text-gray-600 dark:text-gray-400'>
           <p>
-            <span className='font-medium'>Render count:</span> {diagnostics.renderCount} | 
+            <span className='font-medium'>Render count:</span> {diagnostics.renderCount} |
             <span className='font-medium ml-2'>Mounted:</span> {String(isMounted)}
           </p>
           <p>
-            <span className='font-medium'>Profile:</span> {profile ? `loaded (id: ${(profile as Record<string, unknown>)?.id ?? 'unknown'})` : 'loading'} | 
-            <span className='font-medium ml-2'>Auth:</span> {String(isAuthenticated)} | 
+            <span className='font-medium'>Profile:</span> {profile ? `loaded (id: ${(profile as Record<string, unknown>)?.id ?? 'unknown'})` : 'loading'} |
+            <span className='font-medium ml-2'>Auth:</span> {String(isAuthenticated)} |
             <span className='font-medium ml-2'>Loading:</span> {String(profileLoading)}
           </p>
           <p className='text-xs text-gray-500 dark:text-gray-500 mt-2 pt-2 border-t border-gray-200 dark:border-gray-700'>
-            ✅ Diagnostic tracking enabled | Phase 4.1 complete | Ready for Phase 4.2 (store actions)
+            ✅ Diagnostic tracking enabled | Phase 4.2 complete | Actions stored in refs | Ready for Phase 4.3 (data hooks)
           </p>
           </div>
         </div>
