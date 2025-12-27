@@ -762,20 +762,8 @@ export default function DashboardPage() {
       }
     }
   }, [shouldBypassAuth, isAuthenticated, profile, isLoading, isAdmin, isUserLoading, isAuthContextLoading, isStoreHydrated, hasCookies]);
-  // CRITICAL: Guard conditional returns with mounted check to prevent hydration mismatch
-  // During SSR/initial render, always render the same structure (dashboard content)
-  // After mount, these conditional returns can safely change structure via normal React updates
-  const [isMountedForPageRender, setIsMountedForPageRender] = useState(false);
-
-  useEffect(() => {
-    setIsMountedForPageRender(true);
-    if (process.env.NODE_ENV === 'development' || checkBypassFlag()) {
-      logger.debug('[Dashboard] isMountedForPageRender set to true');
-    }
-    // #region agent log
-    console.log('[DEBUG-HYP-A] isMountedForPageRender set to true', { isMounted: true, typeofWindow: typeof window !== 'undefined', timestamp: Date.now() });
-    // #endregion
-  }, []);
+  // REMOVED: isMountedForPageRender state - no longer needed
+  // PersonalDashboard is loaded via next/dynamic with ssr: false, which handles SSR/client rendering correctly
 
   // #region agent log
   console.log('[DEBUG-HYP-A] DashboardPage render - rendering PersonalDashboard via dynamic import', { typeofWindow: typeof window !== 'undefined', timestamp: Date.now() });
