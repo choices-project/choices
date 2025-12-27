@@ -471,14 +471,14 @@ function StandardPersonalDashboard({ userId: fallbackUserId }: PersonalDashboard
   // #region agent log
   console.log('[DEBUG-HYP-B] StandardPersonalDashboard RETURN - about to return static div (NO HOOKS)', { typeofWindow: typeof window !== 'undefined', timestamp: Date.now() });
   // #endregion
-  return (
+    return (
     <div className="space-y-6" data-testid='personal-dashboard'>
       <div className='p-4 bg-gray-50 rounded'>
         <p className='text-gray-600'>Static content - no hooks called, no conditionals or computed values</p>
         <p className='text-sm text-gray-500 mt-2'>Testing if hooks cause infinite render loop</p>
+        </div>
       </div>
-    </div>
-  );
+    );
   // TEMPORARY: All hooks code removed to test if hooks cause infinite render loop
   // Code will be restored after testing
-  const routerRef = useRef(router);
+}
