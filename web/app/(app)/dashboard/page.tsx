@@ -754,7 +754,7 @@ export default function DashboardPage() {
         {/* CRITICAL: Always render the same structure to prevent hydration mismatch */}
         {/* Always render PersonalDashboard - it handles loading/error states internally */}
         {/* Conditional rendering with ternary operators causes hydration mismatches even when conditions are false */}
-        
+
         {/* CRITICAL: Only show admin banner after mount to prevent hydration mismatch */}
         {isMountedForPageRender && isAdmin === true && (
           <div className="mb-6 p-4 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg">
@@ -779,10 +779,13 @@ export default function DashboardPage() {
           </div>
         )}
 
-        {/* CRITICAL: Always render PersonalDashboard - it handles its own SSR/initial render logic internally */}
-        {/* PersonalDashboard has its own isMounted guard and returns skeleton during SSR/initial render */}
-        {/* This ensures consistent component tree structure and prevents hydration mismatches */}
-        <PersonalDashboard />
+        {/* TEMPORARY: Comment out PersonalDashboard to test if it's causing hydration mismatch */}
+        {/* <PersonalDashboard /> */}
+        <div data-testid="personal-dashboard">
+          <div className="p-4 bg-gray-50 rounded">
+            <p>PersonalDashboard temporarily disabled for debugging</p>
+          </div>
+        </div>
       </div>
 
       {/* 🔒 Mobile Navigation */}
