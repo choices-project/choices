@@ -7,12 +7,12 @@ import React, { useEffect, useRef, useState } from 'react';
 import { PersonalDashboard } from '@/features/dashboard';
 import { useProfile } from '@/features/profile/hooks/use-profile';
 
-import dynamic from 'next/dynamic';
+import dynamicImport from 'next/dynamic';
 
 // CRITICAL: Dynamically import navigation components with SSR disabled to prevent hydration mismatches
 // These components use usePathname() which can cause hydration issues during SSR
-const DashboardNavigation = dynamic(() => import('@/components/shared/DashboardNavigation').then(mod => ({ default: mod.default })), { ssr: false });
-const MobileDashboardNav = dynamic(() => import('@/components/shared/DashboardNavigation').then(mod => ({ default: mod.MobileDashboardNav })), { ssr: false });
+const DashboardNavigation = dynamicImport(() => import('@/components/shared/DashboardNavigation').then(mod => ({ default: mod.default })), { ssr: false });
+const MobileDashboardNav = dynamicImport(() => import('@/components/shared/DashboardNavigation').then(mod => ({ default: mod.MobileDashboardNav })), { ssr: false });
 import { ErrorBoundary } from '@/components/shared/ErrorBoundary';
 import { Button } from '@/components/ui/button';
 
