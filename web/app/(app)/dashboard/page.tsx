@@ -698,19 +698,8 @@ export default function DashboardPage() {
     void checkAdminStatus();
   }, [isAuthenticated, isLoading, shouldBypassAuth]);
 
-  // Add loading timeout to prevent infinite loading state
-  // Allow dashboard to render even if profile is still loading (PersonalDashboard handles loading gracefully)
-  const [loadingTimeout, setLoadingTimeout] = useState(false);
-  useEffect(() => {
-    if (!isLoading) {
-      setLoadingTimeout(false);
-      return;
-    }
-    const timeout = setTimeout(() => {
-      setLoadingTimeout(true);
-    }, 10_000); // 10 second timeout - allow dashboard to render even if profile is slow
-    return () => clearTimeout(timeout);
-  }, [isLoading]);
+  // REMOVED: loadingTimeout - no longer needed since we always render PersonalDashboard
+  // PersonalDashboard handles its own loading states internally
 
   // DIAGNOSTIC: Log when dashboard content is about to render (must be before early returns)
   useEffect(() => {
