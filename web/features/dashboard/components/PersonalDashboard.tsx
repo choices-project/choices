@@ -487,7 +487,7 @@ export default function PersonalDashboard(props: PersonalDashboardProps) {
   return <StandardPersonalDashboard {...props} />;
 }
 
-function StandardPersonalDashboard({ userId: fallbackUserId, className = '' }: PersonalDashboardProps) {
+function StandardPersonalDashboard({ userId: fallbackUserId }: PersonalDashboardProps) {
   // #region agent log
   console.log('[DEBUG-HYP-B] StandardPersonalDashboard function entry', { typeofWindow: typeof window !== 'undefined', timestamp: Date.now() });
   // #endregion
