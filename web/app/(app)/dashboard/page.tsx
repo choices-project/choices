@@ -169,6 +169,9 @@ async function checkSessionCookies(
 }
 
 export default function DashboardPage() {
+  // #region agent log
+  fetch('http://127.0.0.1:7242/ingest/6a732aed-2d72-4883-a63a-f3c892fc1216',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'dashboard/page.tsx:171',message:'DashboardPage function entry',data:{typeofWindow:typeof window !== 'undefined'},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'C'})}).catch(()=>{});
+  // #endregion
   const router = useRouter();
   const routerRef = useRef(router);
   const pathname = usePathname();
@@ -213,11 +216,17 @@ export default function DashboardPage() {
     }
   }, [pathname, searchParams]);
 
+  // #region agent log
+  fetch('http://127.0.0.1:7242/ingest/6a732aed-2d72-4883-a63a-f3c892fc1216',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'dashboard/page.tsx:216',message:'BEFORE calling Zustand hooks',data:{typeofWindow:typeof window !== 'undefined'},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'C'})}).catch(()=>{});
+  // #endregion
   const { profile, isLoading } = useProfile();
   const isAuthenticated = useIsAuthenticated();
   const isUserLoading = useUserLoading();
   const { isLoading: isAuthContextLoading } = useAuth(); // AuthContext loading state
   const { setCurrentRoute, setBreadcrumbs, setSidebarActiveSection } = useAppActions();
+  // #region agent log
+  fetch('http://127.0.0.1:7242/ingest/6a732aed-2d72-4883-a63a-f3c892fc1216',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'dashboard/page.tsx:222',message:'AFTER calling Zustand hooks',data:{typeofWindow:typeof window !== 'undefined',isAuthenticated,isUserLoading},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'C'})}).catch(()=>{});
+  // #endregion
 
   // Refs for stable app store actions
   const setCurrentRouteRef = useRef(setCurrentRoute);
@@ -727,13 +736,23 @@ export default function DashboardPage() {
     if (process.env.NODE_ENV === 'development' || checkBypassFlag()) {
       logger.debug('[Dashboard] isMountedForPageRender set to true');
     }
+    // #region agent log
+    fetch('http://127.0.0.1:7242/ingest/6a732aed-2d72-4883-a63a-f3c892fc1216',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'dashboard/page.tsx:735',message:'isMountedForPageRender set to true',data:{isMounted:true,typeofWindow:typeof window !== 'undefined'},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'A'})}).catch(()=>{});
+    // #endregion
   }, []);
+
+  // #region agent log
+  {(() => {fetch('http://127.0.0.1:7242/ingest/6a732aed-2d72-4883-a63a-f3c892fc1216',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'dashboard/page.tsx:745',message:'DashboardPage render - checking isMountedForPageRender',data:{isMountedForPageRender,typeofWindow:typeof window !== 'undefined'},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'A'})}).catch(()=>{}); return null;})()}
+  // #endregion
 
   // CRITICAL: Follow feed/polls page pattern - return early with loading skeleton if !isMounted
   // This prevents PersonalDashboard hooks (Zustand persist stores) from running during SSR
   // which causes hydration mismatches when server (memoryStorage) and client (localStorage) differ
   // Only render PersonalDashboard after mount to ensure consistent hydration
   if (!isMountedForPageRender) {
+    // #region agent log
+    {(() => {fetch('http://127.0.0.1:7242/ingest/6a732aed-2d72-4883-a63a-f3c892fc1216',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'dashboard/page.tsx:750',message:'EARLY RETURN PATH - returning loading skeleton',data:{isMountedForPageRender,typeofWindow:typeof window !== 'undefined'},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'A'})}).catch(()=>{}); return null;})()}
+    // #endregion
     return (
       <ErrorBoundary>
         <DashboardNavigation />
@@ -766,6 +785,10 @@ export default function DashboardPage() {
     );
   }
 
+  // #region agent log
+  {(() => {fetch('http://127.0.0.1:7242/ingest/6a732aed-2d72-4883-a63a-f3c892fc1216',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'dashboard/page.tsx:778',message:'MAIN RETURN PATH - about to render PersonalDashboard',data:{isMountedForPageRender,typeofWindow:typeof window !== 'undefined'},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'A'})}).catch(()=>{}); return null;})()}
+  // #endregion
+
   return (
     <ErrorBoundary>
       <DashboardNavigation />
@@ -797,6 +820,9 @@ export default function DashboardPage() {
 
         {/* CRITICAL: Only render PersonalDashboard after mount to prevent hydration mismatch */}
         {/* This ensures Zustand persist store hooks don't run during SSR */}
+        {/* #region agent log */}
+        {(() => {fetch('http://127.0.0.1:7242/ingest/6a732aed-2d72-4883-a63a-f3c892fc1216',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'dashboard/page.tsx:809',message:'RENDERING PersonalDashboard component',data:{isMountedForPageRender,typeofWindow:typeof window !== 'undefined'},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'B'})}).catch(()=>{}); return null;})()}
+        {/* #endregion */}
         <PersonalDashboard />
       </div>
 

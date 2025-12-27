@@ -464,21 +464,33 @@ function HarnessPersonalDashboard({ className = '' }: PersonalDashboardProps) {
 }
 
 export default function PersonalDashboard(props: PersonalDashboardProps) {
+  // #region agent log
+  fetch('http://127.0.0.1:7242/ingest/6a732aed-2d72-4883-a63a-f3c892fc1216',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'PersonalDashboard.tsx:466',message:'PersonalDashboard function entry',data:{typeofWindow:typeof window !== 'undefined',isE2EHarness:IS_E2E_HARNESS},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'B'})}).catch(()=>{});
+  // #endregion
   // CRITICAL: Never conditionally render different components based on state that changes after mount
   // This causes hydration mismatch when useHarness changes from false to true
   // Always render StandardPersonalDashboard - it handles both harness and standard modes internally
   // IS_E2E_HARNESS env check is OK because it's constant at build time
 
   if (IS_E2E_HARNESS) {
+    // #region agent log
+    fetch('http://127.0.0.1:7242/ingest/6a732aed-2d72-4883-a63a-f3c892fc1216',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'PersonalDashboard.tsx:473',message:'Returning HarnessPersonalDashboard',data:{typeofWindow:typeof window !== 'undefined'},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'B'})}).catch(()=>{});
+    // #endregion
     return <HarnessPersonalDashboard {...props} />;
   }
 
   // Always render StandardPersonalDashboard - it checks bypass flag internally via shouldBypassAuth
   // This ensures same component structure during hydration
+  // #region agent log
+  fetch('http://127.0.0.1:7242/ingest/6a732aed-2d72-4883-a63a-f3c892fc1216',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'PersonalDashboard.tsx:478',message:'Returning StandardPersonalDashboard',data:{typeofWindow:typeof window !== 'undefined'},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'B'})}).catch(()=>{});
+  // #endregion
   return <StandardPersonalDashboard {...props} />;
 }
 
 function StandardPersonalDashboard({ userId: fallbackUserId, className = '' }: PersonalDashboardProps) {
+  // #region agent log
+  fetch('http://127.0.0.1:7242/ingest/6a732aed-2d72-4883-a63a-f3c892fc1216',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'PersonalDashboard.tsx:481',message:'StandardPersonalDashboard function entry',data:{typeofWindow:typeof window !== 'undefined'},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'B'})}).catch(()=>{});
+  // #endregion
   const router = useRouter();
   const routerRef = useRef(router);
   useEffect(() => { routerRef.current = router; }, [router]);
@@ -539,6 +551,9 @@ function StandardPersonalDashboard({ userId: fallbackUserId, className = '' }: P
   const isUserLoading = useUserLoading();
 
   // Optimize store subscriptions with useShallow
+  // #region agent log
+  {(() => {fetch('http://127.0.0.1:7242/ingest/6a732aed-2d72-4883-a63a-f3c892fc1216',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'PersonalDashboard.tsx:553',message:'BEFORE calling useProfileStore',data:{typeofWindow:typeof window !== 'undefined'},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'B'})}).catch(()=>{}); return null;})()}
+  // #endregion
   const { displayName, profilePreferences, updatePreferences } = useProfileStore(
     useShallow((state) => ({
       displayName: state.getDisplayName(),
@@ -546,6 +561,9 @@ function StandardPersonalDashboard({ userId: fallbackUserId, className = '' }: P
       updatePreferences: state.updatePreferences,
     })),
   );
+  // #region agent log
+  {(() => {fetch('http://127.0.0.1:7242/ingest/6a732aed-2d72-4883-a63a-f3c892fc1216',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'PersonalDashboard.tsx:560',message:'AFTER calling useProfileStore',data:{typeofWindow:typeof window !== 'undefined',hasProfilePreferences:!!profilePreferences},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'B'})}).catch(()=>{}); return null;})()}
+  // #endregion
 
   // Use ref for stable updatePreferences callback
   const updatePreferencesRef = useRef(updatePreferences);
