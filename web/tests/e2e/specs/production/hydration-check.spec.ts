@@ -170,7 +170,7 @@ test.describe('Production Hydration Check', () => {
         console.log('\n=== Could not evaluate page (may have closed) ===');
         console.log(`Error: ${evalError}`);
       }
-      
+
       // Log all captured errors before throwing
       console.log('\n=== ALL CAPTURED ERRORS BEFORE FAILURE ===');
       console.log(`Total console errors: ${consoleErrors.length}`);
@@ -181,7 +181,7 @@ test.describe('Production Hydration Check', () => {
           console.log(err.substring(0, 2000));
         });
       }
-      
+
       throw error;
     }
 
