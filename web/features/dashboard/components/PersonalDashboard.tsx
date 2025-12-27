@@ -953,7 +953,8 @@ function StandardPersonalDashboard({ userId: fallbackUserId, className = '' }: P
           (profileRecord?.username as string | undefined)))
     : undefined;
 
-  const dashboardTitle = useMemo(() => {
+  // @ts-expect-error - Temporarily unused in simplified component for debugging
+  const _dashboardTitle = useMemo(() => {
     if (!isMounted) {
       return tRef.current('dashboard.personal.header.titleFallback'); // Consistent default during SSR
     }
@@ -962,7 +963,8 @@ function StandardPersonalDashboard({ userId: fallbackUserId, className = '' }: P
       : tRef.current('dashboard.personal.header.titleFallback');
   }, [isMounted, effectiveDisplayName]);
 
-  const dashboardSubtitle = useMemo(() => {
+  // @ts-expect-error - Temporarily unused in simplified component for debugging
+  const _dashboardSubtitle = useMemo(() => {
     if (!isMounted) {
       return tRef.current('dashboard.personal.header.subtitleDefault'); // Consistent default during SSR
     }
@@ -1150,19 +1152,20 @@ function StandardPersonalDashboard({ userId: fallbackUserId, className = '' }: P
                       ) : (
         /* Conditional rendering: Normal dashboard content - TEMPORARILY SIMPLIFIED to isolate hydration mismatch */
         <>
-          <div className='flex items-center justify-between' data-testid='dashboard-header'>
+          {/* TEMPORARY: Header removed to test if dashboardTitle/dashboardSubtitle translations cause hydration mismatch */}
+          {/* <div className='flex items-center justify-between' data-testid='dashboard-header'>
                       <div>
               <h1 className='text-3xl font-bold text-gray-900' data-testid='dashboard-title'>
                 {dashboardTitle}
               </h1>
               <p className='mt-1 text-gray-600'>{dashboardSubtitle}</p>
-            </div>
-          </div>
+                        </div>
+          </div> */}
 
           {/* TEMPORARY: Simplified content to isolate hydration issue - will add components back incrementally */}
           <div className='p-4 bg-gray-50 rounded'>
             <p className='text-gray-600'>Dashboard content temporarily simplified for debugging hydration mismatch</p>
-            <p className='text-sm text-gray-500 mt-2'>All complex components (Tabs, Cards, Badges, Buttons) temporarily removed</p>
+            <p className='text-sm text-gray-500 mt-2'>Header with title/subtitle removed to test if translations cause mismatch</p>
                         </div>
         </>
       )}
