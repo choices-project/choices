@@ -741,80 +741,63 @@ export default function DashboardPage() {
   }, []);
 
   // CRITICAL: Always render the same component structure to prevent hydration mismatches
+  // Never use conditional returns - always render the same tree structure
+  // Use conditional rendering inside JSX instead
   // Navigation components handle their own SSR logic internally with isMounted guards
   // PersonalDashboard handles its own SSR/loading state internally
-  // Never use early returns that change structure - always render the same tree
 
-  // After mount, check for loading/error states
-  if (isMountedForPageRender && isLoading && !loadingTimeout && !shouldBypassAuth && !isAuthenticated && !isAuthContextLoading) {
-    if (process.env.NODE_ENV === 'development' || checkBypassFlag()) {
-      logger.debug('[Dashboard] Rendering loading skeleton (mounted check passed)');
-    }
+  // Determine what content to show (using conditional rendering inside JSX, not conditional returns)
+  const showLoadingSkeleton = isMountedForPageRender && isLoading && !loadingTimeout && !shouldBypassAuth && !isAuthenticated && !isAuthContextLoading;
+  const showAccessDenied = isMountedForPageRender && !isUserLoading && !isAuthContextLoading && isStoreHydrated && hasCookies === false && !isAuthenticated && !shouldBypassAuth;
+
     return (
-      <ErrorBoundary>
-        <DashboardNavigation />
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8" aria-label="Loading dashboard">
-          <div className="space-y-6">
-            <div className="animate-pulse">
-              <div className="h-8 bg-gray-200 rounded w-1/3 dark:bg-gray-700 mb-4" />
-              <div className="h-4 bg-gray-200 rounded w-1/2 dark:bg-gray-700" />
-            </div>
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {[1, 2, 3, 4, 5, 6].map((i) => (
-                <div key={i} className="animate-pulse bg-white dark:bg-gray-800 rounded-lg shadow p-6">
-                  <div className="h-6 bg-gray-200 rounded w-3/4 dark:bg-gray-700 mb-4" />
-                  <div className="h-4 bg-gray-200 rounded w-full dark:bg-gray-700 mb-2" />
-                  <div className="h-4 bg-gray-200 rounded w-5/6 dark:bg-gray-700" />
-                </div>
-              ))}
-            </div>
-          </div>
-        </div>
-        <MobileDashboardNav />
-      </ErrorBoundary>
-    );
-  }
-
-  // After mount, check for access denied
-  if (isMountedForPageRender && !isUserLoading && !isAuthContextLoading && isStoreHydrated && hasCookies === false && !isAuthenticated && !shouldBypassAuth) {
-    // CRITICAL: Guard this conditional return with isMountedForPageRender to prevent hydration mismatch
-    // During SSR/initial render, always render dashboard content (it handles auth gracefully)
-    // After mount, this conditional return can safely show access denied via normal React updates
-    if (process.env.NODE_ENV === 'development' || checkBypassFlag()) {
-      logger.debug('[Dashboard] Rendering access denied (mounted check passed)');
-    }
-    return (
-      <ErrorBoundary>
-        <DashboardNavigation />
-        <div className="flex items-center justify-center min-h-screen px-4">
-          <div className="text-center space-y-4 max-w-md">
-            <h1 className="text-2xl font-bold text-red-600 dark:text-red-400">Access denied</h1>
-            <p className="text-gray-600 dark:text-gray-400">
-              You must be logged in to access the dashboard.
-            </p>
-            <p className="text-sm text-gray-500 dark:text-gray-500">
-              Please log in to continue.
-            </p>
-          </div>
-        </div>
-        <MobileDashboardNav />
-      </ErrorBoundary>
-    );
-  }
-
-  return (
     <ErrorBoundary>
       {/* DIAGNOSTIC: Add data attribute for test detection */}
       <div data-testid="dashboard-page-content" style={{ display: 'none' }}>
         Dashboard content rendering
-      </div>
+          </div>
       {/* 🔒 Cohesive Dashboard Navigation */}
       {/* CRITICAL: Always render DashboardNavigation - it handles its own SSR logic internally */}
       <DashboardNavigation />
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        {/* Conditional rendering: Access denied */}
+        {showAccessDenied ? (
+          <div className="flex items-center justify-center min-h-screen px-4">
+            <div className="text-center space-y-4 max-w-md">
+              <h1 className="text-2xl font-bold text-red-600 dark:text-red-400">Access denied</h1>
+              <p className="text-gray-600 dark:text-gray-400">
+                You must be logged in to access the dashboard.
+              </p>
+              <p className="text-sm text-gray-500 dark:text-gray-500">
+                Please log in to continue.
+              </p>
+              </div>
+          </div>
+        ) : showLoadingSkeleton ? (
+          /* Conditional rendering: Loading skeleton */
+          <div aria-label="Loading dashboard">
+        <div className="space-y-6">
+          <div className="animate-pulse">
+            <div className="h-8 bg-gray-200 rounded w-1/3 dark:bg-gray-700 mb-4" />
+            <div className="h-4 bg-gray-200 rounded w-1/2 dark:bg-gray-700" />
+          </div>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {[1, 2, 3, 4, 5, 6].map((i) => (
+              <div key={i} className="animate-pulse bg-white dark:bg-gray-800 rounded-lg shadow p-6">
+                <div className="h-6 bg-gray-200 rounded w-3/4 dark:bg-gray-700 mb-4" />
+                <div className="h-4 bg-gray-200 rounded w-full dark:bg-gray-700 mb-2" />
+                <div className="h-4 bg-gray-200 rounded w-5/6 dark:bg-gray-700" />
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
+        ) : (
+          /* Conditional rendering: Normal dashboard content */
+          <>
         {/* CRITICAL: Only show admin banner after mount to prevent hydration mismatch */}
-        {isMountedForPageRender && isAdmin === true && (
+            {isMountedForPageRender && isAdmin === true && (
           <div className="mb-6 p-4 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-3">
@@ -837,10 +820,12 @@ export default function DashboardPage() {
           </div>
         )}
 
-        {/* CRITICAL: Always render PersonalDashboard - it handles its own SSR/initial render logic internally */}
-        {/* PersonalDashboard has its own isMounted guard and returns skeleton during SSR/initial render */}
-        {/* This ensures consistent component tree structure and prevents hydration mismatches */}
-        <PersonalDashboard />
+            {/* CRITICAL: Always render PersonalDashboard - it handles its own SSR/initial render logic internally */}
+            {/* PersonalDashboard has its own isMounted guard and returns skeleton during SSR/initial render */}
+            {/* This ensures consistent component tree structure and prevents hydration mismatches */}
+            <PersonalDashboard />
+          </>
+        )}
       </div>
 
       {/* 🔒 Mobile Navigation */}
