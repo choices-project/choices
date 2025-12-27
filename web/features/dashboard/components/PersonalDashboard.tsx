@@ -31,12 +31,11 @@ import {
   usePollsStore,
   useAnalyticsStore,
 } from '@/lib/stores';
-import { useHashtagActions, useHashtagStore, useHashtagLoading, useHashtagError } from '@/lib/stores/hashtagStore';
+import { useHashtagActions, useHashtagStore } from '@/lib/stores/hashtagStore';
 import { useProfileStore } from '@/lib/stores/profileStore';
 import {
   useGetUserRepresentatives,
   useRepresentativeStore,
-  useRepresentativeError,
   representativeSelectors,
 } from '@/lib/stores/representativeStore';
 
