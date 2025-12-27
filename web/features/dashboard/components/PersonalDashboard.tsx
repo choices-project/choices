@@ -25,20 +25,21 @@ import {
   Settings,
   Shield,
   Target,
-  Vote,
+  // Vote, // TEMPORARILY REMOVED: unused in simplified component
 } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useShallow } from 'zustand/react/shallow';
 
-import { ElectionCountdownCard } from '@/features/civics/components/countdown/ElectionCountdownCard';
-import { RepresentativeCard } from '@/features/civics/components/representative/RepresentativeCard';
+// TEMPORARILY REMOVED: unused in simplified component
+// import { ElectionCountdownCard } from '@/features/civics/components/countdown/ElectionCountdownCard';
+// import { RepresentativeCard } from '@/features/civics/components/representative/RepresentativeCard';
 import { useElectionCountdown } from '@/features/civics/utils/civicsCountdownUtils';
-import { TrendingHashtagDisplay } from '@/features/hashtags/components/HashtagDisplay';
+// import { TrendingHashtagDisplay } from '@/features/hashtags/components/HashtagDisplay';
 import type { Poll } from '@/features/polls/types';
 import { useProfile, useProfileErrorStates, useProfileLoadingStates } from '@/features/profile/hooks/use-profile';
 
-import { FeatureWrapper } from '@/components/shared/FeatureWrapper';
+// import { FeatureWrapper } from '@/components/shared/FeatureWrapper';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
