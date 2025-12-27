@@ -1104,8 +1104,10 @@ function StandardPersonalDashboard({ userId: fallbackUserId, className = '' }: P
 
   // Determine what content to show (using conditional rendering inside JSX, not conditional returns)
   // CRITICAL: Always show loading skeleton during SSR/initial render (!isMounted) to prevent hydration mismatch
-  // Only check isLoading after mount to ensure consistent structure between SSR and client
-  const showLoadingSkeleton = !isMounted || (isMounted && isLoading);
+  // During SSR and initial client render, isMounted is false, so we always show skeleton
+  // After mount, only show skeleton if still loading
+  // This ensures consistent structure: SSR always renders skeleton, client initial render matches SSR
+  const showLoadingSkeleton = !isMounted ? true : isLoading;
   const showError = isMounted && errorMessage;
 
   return (
