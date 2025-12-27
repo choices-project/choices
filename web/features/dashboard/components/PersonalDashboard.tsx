@@ -1126,14 +1126,6 @@ function StandardPersonalDashboard({ userId: fallbackUserId }: PersonalDashboard
 
   // TEMPORARY: Return completely static content to isolate hydration mismatch
   // No conditionals, no computed values, just a static div
-  // This code is unreachable due to early return above - kept for reference
-    return (
-    <div className="space-y-6" data-testid='personal-dashboard'>
-      <div className='p-4 bg-gray-50 rounded'>
-        <p className='text-gray-600'>Static content - no conditionals or computed values</p>
-        <p className='text-sm text-gray-500 mt-2'>Testing if basic structure causes hydration mismatch</p>
-        </div>
-      </div>
-    );
+  // All code below is unreachable due to early return above - kept for reference in comment block above
   */
 }
