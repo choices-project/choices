@@ -4,9 +4,23 @@ import { Shield } from 'lucide-react';
 import { usePathname, useRouter, useSearchParams } from 'next/navigation';
 import React, { useEffect, useRef, useState } from 'react';
 
-// TEMPORARY: Use minimal version to test if hooks cause hydration mismatch
-import PersonalDashboardMinimal from '@/features/dashboard/components/PersonalDashboardMinimal';
-// import { PersonalDashboard } from '@/features/dashboard';
+import dynamicImport from 'next/dynamic';
+
+// CRITICAL: Use dynamic import with ssr: false to prevent hydration mismatch
+// PersonalDashboard relies heavily on Zustand persist stores which can have different
+// initial values on server (memoryStorage) vs client (localStorage), causing hydration errors
+// This ensures the component only renders on the client after hydration
+const PersonalDashboard = dynamicImport(() => import('@/features/dashboard').then(mod => ({ default: mod.PersonalDashboard })), {
+  ssr: false,
+  loading: () => (
+    <div className="space-y-6" data-testid="personal-dashboard-loading">
+      <div className="p-4 bg-gray-50 rounded animate-pulse">
+        <div className="h-8 bg-gray-200 rounded w-1/3 mb-2"></div>
+        <div className="h-4 bg-gray-200 rounded w-1/2"></div>
+      </div>
+    </div>
+  ),
+});
 import { useProfile } from '@/features/profile/hooks/use-profile';
 
 import DashboardNavigation, { MobileDashboardNav } from '@/components/shared/DashboardNavigation';
@@ -784,7 +798,7 @@ export default function DashboardPage() {
         {/* CRITICAL: Always render PersonalDashboard - it handles its own SSR/initial render logic internally */}
         {/* PersonalDashboard has its own isMounted guard and returns skeleton during SSR/initial render */}
         {/* This ensures consistent component tree structure and prevents hydration mismatches */}
-        <PersonalDashboardMinimal />
+        <PersonalDashboard />
       </div>
 
       {/* 🔒 Mobile Navigation */}
