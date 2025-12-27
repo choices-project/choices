@@ -606,7 +606,7 @@ function StandardPersonalDashboard({ userId: fallbackUserId, className = '' }: P
   const { getTrendingHashtags } = useHashtagActions();
 
   const [selectedTab, setSelectedTab] = useState('overview');
-  const [isRefreshing, setIsRefreshing] = useState(false);
+  const [_isRefreshing, setIsRefreshing] = useState(false);
   const hasRequestedTrending = useRef(false);
   const hasRequestedRepresentatives = useRef(false);
 
@@ -641,7 +641,7 @@ function StandardPersonalDashboard({ userId: fallbackUserId, className = '' }: P
     preferencesRef.current = resolved;
   }, [isMounted, profilePreferences]);
 
-  const { showQuickActions, showElectedOfficials, showRecentActivity, showEngagementScore } = preferences;
+  const { showQuickActions: _showQuickActions, showElectedOfficials, showRecentActivity: _showRecentActivity, showEngagementScore: _showEngagementScore } = preferences;
 
   // Refs for stable action callbacks
   const getTrendingHashtagsRef = useRef(getTrendingHashtags);
@@ -843,7 +843,7 @@ function StandardPersonalDashboard({ userId: fallbackUserId, className = '' }: P
   // Analytics - computed from store values (safe after mount check)
   // CRITICAL: Only compute analytics after mount to prevent hydration mismatch
   // Store values may differ between server and client during initial render
-  const analytics: PersonalAnalytics = useMemo(() => {
+  const _analytics: PersonalAnalytics = useMemo(() => {
     if (!isMounted) {
       // Return consistent default analytics during SSR to prevent hydration mismatch
       return {
@@ -889,7 +889,7 @@ function StandardPersonalDashboard({ userId: fallbackUserId, className = '' }: P
     votesLast30Days,
   ]);
 
-  const preferencesRefresher = useCallback(
+  const _preferencesRefresher = useCallback(
     async (updates: Partial<DashboardPreferences>) => {
       if (!isAuthenticated) {
         logger.warn('Dashboard preferences update skipped for unauthenticated user');
@@ -975,7 +975,7 @@ function StandardPersonalDashboard({ userId: fallbackUserId, className = '' }: P
     );
   }, [profileError, pollsError, analyticsError, hashtagError, representativeError, hasAnyError]);
 
-  const quickActions = useMemo(
+  const _quickActions = useMemo(
     () => [
       {
         id: 'create-poll',
@@ -1025,7 +1025,7 @@ function StandardPersonalDashboard({ userId: fallbackUserId, className = '' }: P
     return representativeEntries.map((entry) => entry.representative);
   }, [isMounted, representativeEntries]);
 
-  const visibleRepresentatives = useMemo(() => {
+  const _visibleRepresentatives = useMemo(() => {
     if (!isMounted) {
       return []; // Consistent default during SSR
     }
@@ -1110,8 +1110,8 @@ function StandardPersonalDashboard({ userId: fallbackUserId, className = '' }: P
   const showLoadingSkeleton = !isMounted ? true : isLoading;
   const showError = isMounted && errorMessage;
 
-  return (
-    <div className={`space-y-6 ${className}`} data-testid='personal-dashboard'>
+    return (
+      <div className={`space-y-6 ${className}`} data-testid='personal-dashboard'>
       {/* Conditional rendering: Error message */}
       {showError ? (
         <Card>
@@ -1130,33 +1130,33 @@ function StandardPersonalDashboard({ userId: fallbackUserId, className = '' }: P
         </Card>
       ) : showLoadingSkeleton ? (
         /* Conditional rendering: Loading skeleton */
-        <div className='grid grid-cols-1 gap-6 lg:grid-cols-3'>
-          <div className='space-y-6 lg:col-span-2'>
+          <div className='grid grid-cols-1 gap-6 lg:grid-cols-3'>
+            <div className='space-y-6 lg:col-span-2'>
             <Skeleton className='h-32 w-full' />
             <Skeleton className='h-48 w-full' />
-          </div>
-          <div className='space-y-6'>
+                      </div>
+            <div className='space-y-6'>
             <Skeleton className='h-32 w-full' />
             <Skeleton className='h-48 w-full' />
-          </div>
-        </div>
-      ) : (
+                          </div>
+                        </div>
+                      ) : (
         /* Conditional rendering: Normal dashboard content - TEMPORARILY SIMPLIFIED to isolate hydration mismatch */
         <>
           <div className='flex items-center justify-between' data-testid='dashboard-header'>
-            <div>
+                      <div>
               <h1 className='text-3xl font-bold text-gray-900' data-testid='dashboard-title'>
                 {dashboardTitle}
               </h1>
               <p className='mt-1 text-gray-600'>{dashboardSubtitle}</p>
             </div>
           </div>
-          
+
           {/* TEMPORARY: Simplified content to isolate hydration issue - will add components back incrementally */}
           <div className='p-4 bg-gray-50 rounded'>
             <p className='text-gray-600'>Dashboard content temporarily simplified for debugging hydration mismatch</p>
             <p className='text-sm text-gray-500 mt-2'>All complex components (Tabs, Cards, Badges, Buttons) temporarily removed</p>
-          </div>
+                        </div>
         </>
       )}
     </div>
