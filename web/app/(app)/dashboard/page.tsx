@@ -7,12 +7,7 @@ import React, { useEffect, useRef, useState } from 'react';
 import { PersonalDashboard } from '@/features/dashboard';
 import { useProfile } from '@/features/profile/hooks/use-profile';
 
-import dynamicImport from 'next/dynamic';
-
-// CRITICAL: Dynamically import navigation components with SSR disabled to prevent hydration mismatches
-// These components use usePathname() which can cause hydration issues during SSR
-const DashboardNavigation = dynamicImport(() => import('@/components/shared/DashboardNavigation').then(mod => ({ default: mod.default })), { ssr: false });
-const MobileDashboardNav = dynamicImport(() => import('@/components/shared/DashboardNavigation').then(mod => ({ default: mod.MobileDashboardNav })), { ssr: false });
+import DashboardNavigation, { MobileDashboardNav } from '@/components/shared/DashboardNavigation';
 import { ErrorBoundary } from '@/components/shared/ErrorBoundary';
 import { Button } from '@/components/ui/button';
 
@@ -745,42 +740,10 @@ export default function DashboardPage() {
     }
   }, []);
 
-  // CRITICAL: Follow feed/polls pattern - return loading skeleton during SSR/initial render
-  // This ensures consistent server/client rendering structure, preventing hydration mismatches
-  // After mount, render actual content (matches feed/polls page pattern)
-  const [isMounted, setIsMounted] = useState(false);
-
-  useEffect(() => {
-    setIsMounted(true);
-  }, []);
-
-  // During SSR/initial render, return loading skeleton WITHOUT navigation components
-  // CRITICAL: DashboardNavigation and MobileDashboardNav are dynamically imported with ssr: false
-  // They won't be in SSR HTML, so we can't include them in the !isMounted return path
-  // This prevents hydration mismatches - navigation components only render after mount
-  if (!isMounted) {
-    return (
-      <ErrorBoundary>
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8" aria-label="Loading dashboard">
-          <div className="space-y-6">
-            <div className="animate-pulse">
-              <div className="h-8 bg-gray-200 rounded w-1/3 dark:bg-gray-700 mb-4" />
-              <div className="h-4 bg-gray-200 rounded w-1/2 dark:bg-gray-700" />
-            </div>
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {[1, 2, 3, 4, 5, 6].map((i) => (
-                <div key={i} className="animate-pulse bg-white dark:bg-gray-800 rounded-lg shadow p-6">
-                  <div className="h-6 bg-gray-200 rounded w-3/4 dark:bg-gray-700 mb-4" />
-                  <div className="h-4 bg-gray-200 rounded w-full dark:bg-gray-700 mb-2" />
-                  <div className="h-4 bg-gray-200 rounded w-5/6 dark:bg-gray-700" />
-                </div>
-              ))}
-            </div>
-          </div>
-        </div>
-      </ErrorBoundary>
-    );
-  }
+  // CRITICAL: Always render the same component structure to prevent hydration mismatches
+  // Navigation components handle their own SSR logic internally with isMounted guards
+  // PersonalDashboard handles its own SSR/loading state internally
+  // Never use early returns that change structure - always render the same tree
 
   // After mount, check for loading/error states
   if (isMountedForPageRender && isLoading && !loadingTimeout && !shouldBypassAuth && !isAuthenticated && !isAuthContextLoading) {
