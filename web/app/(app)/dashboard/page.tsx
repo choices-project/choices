@@ -4,7 +4,8 @@ import { Shield } from 'lucide-react';
 import { usePathname, useRouter, useSearchParams } from 'next/navigation';
 import React, { useEffect, useRef, useState } from 'react';
 
-import { PersonalDashboard } from '@/features/dashboard';
+// TEMPORARILY COMMENTED OUT: Testing if PersonalDashboard component causes hydration mismatch
+// import { PersonalDashboard } from '@/features/dashboard';
 import { useProfile } from '@/features/profile/hooks/use-profile';
 
 import DashboardNavigation, { MobileDashboardNav } from '@/components/shared/DashboardNavigation';
