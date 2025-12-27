@@ -754,15 +754,13 @@ export default function DashboardPage() {
     setIsMounted(true);
   }, []);
 
-  // During SSR/initial render, always return loading skeleton with same wrapper structure
-  // This matches the pattern used by feed and polls pages which don't have hydration issues
+  // During SSR/initial render, return loading skeleton WITHOUT navigation components
   // CRITICAL: DashboardNavigation and MobileDashboardNav are dynamically imported with ssr: false
-  // They will only render on the client, so we don't need to include them in SSR return
-  // This prevents hydration mismatches while maintaining consistent structure after mount
+  // They won't be in SSR HTML, so we can't include them in the !isMounted return path
+  // This prevents hydration mismatches - navigation components only render after mount
   if (!isMounted) {
     return (
       <ErrorBoundary>
-        <DashboardNavigation />
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8" aria-label="Loading dashboard">
           <div className="space-y-6">
             <div className="animate-pulse">
@@ -780,7 +778,6 @@ export default function DashboardPage() {
             </div>
           </div>
         </div>
-        <MobileDashboardNav />
       </ErrorBoundary>
     );
   }
