@@ -1111,64 +1111,13 @@ function StandardPersonalDashboard({ userId: fallbackUserId, className = '' }: P
   // Use conditional rendering inside JSX instead
   // This ensures component tree structure is always consistent between SSR and client render
 
-  // Determine what content to show (using conditional rendering inside JSX, not conditional returns)
-  // CRITICAL: Always show loading skeleton during SSR/initial render (!isMounted) to prevent hydration mismatch
-  // During SSR and initial client render, isMounted is false, so we always show skeleton
-  // After mount, only show skeleton if still loading
-  // This ensures consistent structure: SSR always renders skeleton, client initial render matches SSR
-  const showLoadingSkeleton = !isMounted ? true : isLoading;
-  const showError = isMounted && errorMessage;
-
-    return (
-      <div className={`space-y-6 ${className}`} data-testid='personal-dashboard'>
-      {/* Conditional rendering: Error message */}
-      {showError ? (
-        <Card>
-          <CardContent className='space-y-4 p-6 text-center'>
-            <div className='mx-auto mb-2 text-red-500'>
-              <Activity className='h-12 w-12' />
-            </div>
-            <h3 className='text-lg font-semibold'>
-              {t('dashboard.personal.errors.title')}
-            </h3>
-            <p className='text-gray-600'>{errorMessage}</p>
-            <Button onClick={handleRefresh}>
-              {t('dashboard.personal.errors.retry')}
-            </Button>
-          </CardContent>
-        </Card>
-      ) : showLoadingSkeleton ? (
-        /* Conditional rendering: Loading skeleton */
-          <div className='grid grid-cols-1 gap-6 lg:grid-cols-3'>
-            <div className='space-y-6 lg:col-span-2'>
-            <Skeleton className='h-32 w-full' />
-            <Skeleton className='h-48 w-full' />
-                      </div>
-            <div className='space-y-6'>
-            <Skeleton className='h-32 w-full' />
-            <Skeleton className='h-48 w-full' />
-                          </div>
-                        </div>
-                      ) : (
-        /* Conditional rendering: Normal dashboard content - TEMPORARILY SIMPLIFIED to isolate hydration mismatch */
-        <>
-          {/* TEMPORARY: Header removed to test if dashboardTitle/dashboardSubtitle translations cause hydration mismatch */}
-          {/* <div className='flex items-center justify-between' data-testid='dashboard-header'>
-                      <div>
-              <h1 className='text-3xl font-bold text-gray-900' data-testid='dashboard-title'>
-                {dashboardTitle}
-              </h1>
-              <p className='mt-1 text-gray-600'>{dashboardSubtitle}</p>
-                        </div>
-          </div> */}
-
-          {/* TEMPORARY: Simplified content to isolate hydration issue - will add components back incrementally */}
-          <div className='p-4 bg-gray-50 rounded'>
-            <p className='text-gray-600'>Dashboard content temporarily simplified for debugging hydration mismatch</p>
-            <p className='text-sm text-gray-500 mt-2'>Header with title/subtitle removed to test if translations cause mismatch</p>
-                        </div>
-        </>
-      )}
+  // TEMPORARY: Return completely static content to isolate hydration mismatch
+  // No conditionals, no computed values, just a static div
+  return (
+    <div className={`space-y-6 ${className}`} data-testid='personal-dashboard'>
+      <div className='p-4 bg-gray-50 rounded'>
+        <p className='text-gray-600'>Static content - no conditionals or computed values</p>
+        <p className='text-sm text-gray-500 mt-2'>Testing if basic structure causes hydration mismatch</p>
+      </div>
     </div>
   );
-}
