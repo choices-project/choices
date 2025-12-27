@@ -12,155 +12,142 @@
  * Status: ✅ ACTIVE
  */
 
-import {
-  Activity,
-  BarChart3,
-  Download,
-  Flame,
-  MapPin,
-  Plus,
-  Settings,
-  Shield,
-  // TEMPORARILY REMOVED: unused in simplified component
-  // Award,
-  // Clock,
-  // RefreshCw,
-  // Target,
-  // Vote,
-} from 'lucide-react';
-import { useRouter } from 'next/navigation';
-import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { useShallow } from 'zustand/react/shallow';
+// TEMPORARILY COMMENTED OUT: unused imports while testing infinite loop without hooks
+// import {
+//   Activity,
+//   BarChart3,
+//   Download,
+//   Flame,
+//   MapPin,
+//   Plus,
+//   Settings,
+//   Shield,
+// } from 'lucide-react';
+// import { useRouter } from 'next/navigation';
+// import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+// import { useShallow } from 'zustand/react/shallow';
 
-// TEMPORARILY REMOVED: unused in simplified component
-// import { ElectionCountdownCard } from '@/features/civics/components/countdown/ElectionCountdownCard';
-// import { RepresentativeCard } from '@/features/civics/components/representative/RepresentativeCard';
-import { useElectionCountdown } from '@/features/civics/utils/civicsCountdownUtils';
-// import { TrendingHashtagDisplay } from '@/features/hashtags/components/HashtagDisplay';
-import type { Poll } from '@/features/polls/types';
-import { useProfile, useProfileErrorStates, useProfileLoadingStates } from '@/features/profile/hooks/use-profile';
+// import { useElectionCountdown } from '@/features/civics/utils/civicsCountdownUtils';
+// import type { Poll } from '@/features/polls/types';
+// import { useProfile, useProfileErrorStates, useProfileLoadingStates } from '@/features/profile/hooks/use-profile';
 
-// import { FeatureWrapper } from '@/components/shared/FeatureWrapper';
-import { Badge } from '@/components/ui/badge';
-import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-// TEMPORARILY REMOVED: Skeleton unused in simplified component
-// import { Skeleton } from '@/components/ui/skeleton';
-// TEMPORARILY REMOVED: Progress, Tabs components unused in simplified component
-// import { Progress } from '@/components/ui/progress';
-// import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+// import { Badge } from '@/components/ui/badge';
+// import { Button } from '@/components/ui/button';
+// import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 
+// import {
+//   useAnalyticsBehavior,
+//   useAnalyticsError,
+//   useAnalyticsEvents,
+//   useAnalyticsLoading,
+//   useHashtagActions,
+//   useHashtagError,
+//   useHashtagLoading,
+//   useIsAuthenticated,
+//   usePollLastFetchedAt,
+//   usePolls,
+//   usePollsError,
+//   usePollsLoading,
+//   useTrendingHashtags,
+//   useUserLoading,
+//   usePollsActions,
+//   useUserActions,
+// } from '@/lib/stores';
+// import { useProfileStore } from '@/lib/stores/profileStore';
+// import {
+//   useGetUserRepresentatives,
+//   useRepresentativeError,
+//   useRepresentativeGlobalLoading,
+//   useUserRepresentativeEntries,
+// } from '@/lib/stores/representativeStore';
 
-import {
-  useAnalyticsBehavior,
-  useAnalyticsError,
-  useAnalyticsEvents,
-  useAnalyticsLoading,
-  useHashtagActions,
-  useHashtagError,
-  useHashtagLoading,
-  useIsAuthenticated,
-  usePollLastFetchedAt,
-  usePolls,
-  usePollsError,
-  usePollsLoading,
-  useTrendingHashtags,
-  useUserLoading,
-  usePollsActions,
-  useUserActions,
-} from '@/lib/stores';
-import { useProfileStore } from '@/lib/stores/profileStore';
-import {
-  useGetUserRepresentatives,
-  useRepresentativeError,
-  useRepresentativeGlobalLoading,
-  useUserRepresentativeEntries,
-} from '@/lib/stores/representativeStore';
-import { logger } from '@/lib/utils/logger';
+import React from 'react';
+// TEMPORARILY COMMENTED OUT: unused imports/constants/types while testing infinite loop without hooks
+// import { logger } from '@/lib/utils/logger';
+// import { useI18n } from '@/hooks/useI18n';
+// import type { PersonalAnalytics } from '@/types/features/dashboard';
+// import type { DashboardPreferences, ProfilePreferences } from '@/types/profile';
 
-import { useI18n } from '@/hooks/useI18n';
+// const DEFAULT_DASHBOARD_PREFERENCES: DashboardPreferences = {
+//   showElectedOfficials: false,
+//   showQuickActions: true,
+//   showRecentActivity: true,
+//   showEngagementScore: true,
+// };
 
-import type { PersonalAnalytics } from '@/types/features/dashboard';
-import type { DashboardPreferences, ProfilePreferences } from '@/types/profile';
+// const HARNESS_DEFAULT_DASHBOARD_PREFERENCES: DashboardPreferences = {
+//   ...DEFAULT_DASHBOARD_PREFERENCES,
+//   showElectedOfficials: true,
+// };
 
-const DEFAULT_DASHBOARD_PREFERENCES: DashboardPreferences = {
-  showElectedOfficials: false,
-  showQuickActions: true,
-  showRecentActivity: true,
-  showEngagementScore: true,
-};
+// const THIRTY_DAYS_MS = 30 * 24 * 60 * 60 * 1000;
 
-const HARNESS_DEFAULT_DASHBOARD_PREFERENCES: DashboardPreferences = {
-  ...DEFAULT_DASHBOARD_PREFERENCES,
-  showElectedOfficials: true,
-};
+// const IS_E2E_HARNESS = process.env.NEXT_PUBLIC_ENABLE_E2E_HARNESS === '1';
+// const HARNESS_PREFERENCES_STORAGE_KEY = 'dashboard-harness-preferences';
 
-const THIRTY_DAYS_MS = 30 * 24 * 60 * 60 * 1000;
+// const loadHarnessPreferences = (): DashboardPreferences | null => {
+//   if (typeof window === 'undefined') {
+//     return null;
+//   }
+//   try {
+//     const raw = window.localStorage.getItem(HARNESS_PREFERENCES_STORAGE_KEY);
+//     if (!raw) {
+//       return null;
+//     }
+//     const parsed = JSON.parse(raw) as Partial<DashboardPreferences>;
+//     return { ...HARNESS_DEFAULT_DASHBOARD_PREFERENCES, ...parsed };
+//   } catch (error) {
+//     logger.warn('Failed to load dashboard harness preferences', error);
+//     return null;
+//   }
+// };
 
-const IS_E2E_HARNESS = process.env.NEXT_PUBLIC_ENABLE_E2E_HARNESS === '1';
-const HARNESS_PREFERENCES_STORAGE_KEY = 'dashboard-harness-preferences';
-
-const loadHarnessPreferences = (): DashboardPreferences | null => {
-  if (typeof window === 'undefined') {
-    return null;
-  }
-  try {
-    const raw = window.localStorage.getItem(HARNESS_PREFERENCES_STORAGE_KEY);
-    if (!raw) {
-      return null;
-    }
-    const parsed = JSON.parse(raw) as Partial<DashboardPreferences>;
-    return { ...HARNESS_DEFAULT_DASHBOARD_PREFERENCES, ...parsed };
-  } catch (error) {
-    logger.warn('Failed to load dashboard harness preferences', error);
-    return null;
-  }
-};
-
-const persistHarnessPreferences = (preferences: DashboardPreferences | null) => {
-  if (typeof window === 'undefined' || !preferences) {
-    return;
-  }
-  try {
-    window.localStorage.setItem(
-      HARNESS_PREFERENCES_STORAGE_KEY,
-      JSON.stringify(preferences),
-    );
-  } catch (error) {
-    logger.warn('Failed to persist dashboard harness preferences', error);
-  }
-};
+// const persistHarnessPreferences = (preferences: DashboardPreferences | null) => {
+//   if (typeof window === 'undefined' || !preferences) {
+//     return;
+//   }
+//   try {
+//     window.localStorage.setItem(
+//       HARNESS_PREFERENCES_STORAGE_KEY,
+//       JSON.stringify(preferences),
+//     );
+//   } catch (error) {
+//     logger.warn('Failed to persist dashboard harness preferences', error);
+//   }
+// };
 
 type PersonalDashboardProps = {
   userId?: string;
   className?: string;
 };
 
-const resolvePollTitle = (poll: Poll, fallback: string): string => {
-  const record = poll as Record<string, unknown>;
-  if (typeof record.title === 'string' && record.title.trim().length > 0) {
-    return record.title;
-  }
-  if (typeof record.question === 'string' && record.question.trim().length > 0) {
-    return record.question;
-  }
-  if (typeof record.name === 'string' && record.name.trim().length > 0) {
-    return record.name;
-  }
-  return fallback;
-};
+// const resolvePollTitle = (poll: Poll, fallback: string): string => {
+//   const record = poll as Record<string, unknown>;
+//   if (typeof record.title === 'string' && record.title.trim().length > 0) {
+//     return record.title;
+//   }
+//   if (typeof record.question === 'string' && record.question.trim().length > 0) {
+//     return record.question;
+//   }
+//   if (typeof record.name === 'string' && record.name.trim().length > 0) {
+//     return record.name;
+//   }
+//   return fallback;
+// };
 
-const resolvePollVotes = (poll: Poll): number => {
-  const record = poll as Record<string, unknown>;
-  if (typeof poll.total_votes === 'number') {
-    return poll.total_votes;
-  }
-  if (typeof record.totalVotes === 'number') {
-    return record.totalVotes as number;
-  }
-  return 0;
-};
+// const resolvePollVotes = (poll: Poll): number => {
+//   const record = poll as Record<string, unknown>;
+//   if (typeof poll.total_votes === 'number') {
+//     return poll.total_votes;
+//   }
+//   if (typeof record.totalVotes === 'number') {
+//     return record.totalVotes as number;
+//   }
+//   return 0;
+// };
 
+// TEMPORARILY COMMENTED OUT: HarnessPersonalDashboard while testing infinite loop
+/*
 function HarnessPersonalDashboard({ className = '' }: PersonalDashboardProps) {
   const router = useRouter();
   const routerRef = useRef(router);
@@ -464,23 +451,10 @@ function HarnessPersonalDashboard({ className = '' }: PersonalDashboardProps) {
 }
 
 export default function PersonalDashboard(props: PersonalDashboardProps) {
+  // TEMPORARY: Always render StandardPersonalDashboard while testing infinite loop
   // #region agent log
-  console.log('[DEBUG-HYP-B] PersonalDashboard function entry', { typeofWindow: typeof window !== 'undefined', isE2EHarness: IS_E2E_HARNESS, timestamp: Date.now() });
+  console.log('[DEBUG-HYP-B] PersonalDashboard function entry', { typeofWindow: typeof window !== 'undefined', timestamp: Date.now() });
   // #endregion
-  // CRITICAL: Never conditionally render different components based on state that changes after mount
-  // This causes hydration mismatch when useHarness changes from false to true
-  // Always render StandardPersonalDashboard - it handles both harness and standard modes internally
-  // IS_E2E_HARNESS env check is OK because it's constant at build time
-
-  if (IS_E2E_HARNESS) {
-    // #region agent log
-    console.log('[DEBUG-HYP-B] Returning HarnessPersonalDashboard', { typeofWindow: typeof window !== 'undefined', timestamp: Date.now() });
-    // #endregion
-    return <HarnessPersonalDashboard {...props} />;
-  }
-
-  // Always render StandardPersonalDashboard - it checks bypass flag internally via shouldBypassAuth
-  // This ensures same component structure during hydration
   // #region agent log
   console.log('[DEBUG-HYP-B] Returning StandardPersonalDashboard', { typeofWindow: typeof window !== 'undefined', timestamp: Date.now() });
   // #endregion
@@ -491,7 +465,7 @@ function StandardPersonalDashboard({ userId: fallbackUserId }: PersonalDashboard
   // #region agent log
   console.log('[DEBUG-HYP-B] StandardPersonalDashboard function entry - RETURNING IMMEDIATELY', { typeofWindow: typeof window !== 'undefined', timestamp: Date.now() });
   // #endregion
-  
+
   // TEMPORARY: Return immediately without calling ANY hooks to test if hooks cause infinite render loop
   // This will help us isolate if the infinite loop is caused by hooks or something else
   // #region agent log
@@ -505,7 +479,7 @@ function StandardPersonalDashboard({ userId: fallbackUserId }: PersonalDashboard
       </div>
     </div>
   );
-  
+
   // BELOW CODE IS TEMPORARILY UNREACHABLE - all hooks commented out to test infinite loop
   /*
   const router = useRouter();
