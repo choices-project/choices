@@ -44,7 +44,7 @@ import { useProfile, useProfileErrorStates, useProfileLoadingStates } from '@/fe
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-// @ts-expect-error - Temporarily unused in simplified component for debugging
+// TEMPORARILY REMOVED: Skeleton unused in simplified component
 // import { Skeleton } from '@/components/ui/skeleton';
 // TEMPORARILY REMOVED: Progress, Tabs components unused in simplified component
 // import { Progress } from '@/components/ui/progress';
