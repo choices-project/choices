@@ -4,7 +4,8 @@ import { Shield } from 'lucide-react';
 import { usePathname, useRouter, useSearchParams } from 'next/navigation';
 import React, { useEffect, useRef, useState } from 'react';
 
-// TEMPORARILY COMMENTED OUT: Testing if PersonalDashboard component causes hydration mismatch
+// TEMPORARY: Use minimal version to test if hooks cause hydration mismatch
+import PersonalDashboardMinimal from '@/features/dashboard/components/PersonalDashboardMinimal';
 // import { PersonalDashboard } from '@/features/dashboard';
 import { useProfile } from '@/features/profile/hooks/use-profile';
 
@@ -780,13 +781,10 @@ export default function DashboardPage() {
           </div>
         )}
 
-        {/* TEMPORARY: Comment out PersonalDashboard to test if it's causing hydration mismatch */}
-        {/* <PersonalDashboard /> */}
-        <div data-testid="personal-dashboard">
-          <div className="p-4 bg-gray-50 rounded">
-            <p>PersonalDashboard temporarily disabled for debugging</p>
-          </div>
-        </div>
+        {/* CRITICAL: Always render PersonalDashboard - it handles its own SSR/initial render logic internally */}
+        {/* PersonalDashboard has its own isMounted guard and returns skeleton during SSR/initial render */}
+        {/* This ensures consistent component tree structure and prevents hydration mismatches */}
+        <PersonalDashboardMinimal />
       </div>
 
       {/* 🔒 Mobile Navigation */}
