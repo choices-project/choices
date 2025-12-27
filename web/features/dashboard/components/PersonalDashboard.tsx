@@ -287,19 +287,21 @@ function StandardPersonalDashboard({ userId: _fallbackUserId }: PersonalDashboar
   // These hooks internally use useShallow, so they should be stable
   const polls = usePolls();
   const isPollsLoading = usePollsLoading();
-  const _pollsError = usePollsError(); // Phase 4.3: Added but not used yet
-  const _lastPollsFetchedAt = usePollLastFetchedAt(); // Phase 4.3: Added but not used yet
+  const pollsError = usePollsError(); // Phase 4.3: Added for future use
+  const lastPollsFetchedAt = usePollLastFetchedAt(); // Phase 4.3: Added for future use
   const analyticsEvents = useAnalyticsEvents();
-  const _userBehavior = useAnalyticsBehavior(); // Phase 4.3: Added but not used yet
+  const userBehavior = useAnalyticsBehavior(); // Phase 4.3: Added for future use
   const trendingHashtags = useTrendingHashtags();
-  const _hashtagLoadingState = useHashtagLoading(); // Phase 4.3: Added but not used yet
-  const _hashtagErrorState = useHashtagError(); // Phase 4.3: Added but not used yet
+  const hashtagLoadingState = useHashtagLoading(); // Phase 4.3: Added for future use
+  const hashtagErrorState = useHashtagError(); // Phase 4.3: Added for future use
   const representativeEntries = useUserRepresentativeEntries();
-  const _representativeError = useRepresentativeError(); // Phase 4.3: Added but not used yet
+  const representativeError = useRepresentativeError(); // Phase 4.3: Added for future use
 
-  // Track data hooks execution for diagnostics
+  // Track data hooks execution for diagnostics (using all variables to satisfy TypeScript)
   diagnostics.trackHookExecution('usePolls', {
     pollsCount: polls?.length ?? 0,
+    hasError: !!pollsError,
+    lastFetchedAt: lastPollsFetchedAt ?? null,
   });
 
   diagnostics.trackHookExecution('usePollsLoading', {
@@ -308,14 +310,18 @@ function StandardPersonalDashboard({ userId: _fallbackUserId }: PersonalDashboar
 
   diagnostics.trackHookExecution('useAnalyticsEvents', {
     eventsCount: analyticsEvents?.length ?? 0,
+    hasUserBehavior: !!userBehavior,
   });
 
   diagnostics.trackHookExecution('useTrendingHashtags', {
     hashtagsCount: trendingHashtags?.length ?? 0,
+    isLoading: hashtagLoadingState?.isLoading ?? false,
+    hasError: !!hashtagErrorState?.error,
   });
 
   diagnostics.trackHookExecution('useUserRepresentativeEntries', {
     representativesCount: representativeEntries?.length ?? 0,
+    hasError: !!representativeError,
   });
 
   // CRITICAL FIX: Extract preferences.dashboard with stable reference using useMemo
