@@ -1135,8 +1135,11 @@ function StandardPersonalDashboard({ userId: fallbackUserId, className = '' }: P
 
   // TEMPORARY: Return completely static content to isolate hydration mismatch
   // No conditionals, no computed values, just a static div
+  // #region agent log
+  console.log('[DEBUG-HYP-B] StandardPersonalDashboard RETURN - about to return static div', { typeofWindow: typeof window !== 'undefined', timestamp: Date.now() });
+  // #endregion
   return (
-    <div className={`space-y-6 ${className}`} data-testid='personal-dashboard'>
+    <div className="space-y-6" data-testid='personal-dashboard'>
       <div className='p-4 bg-gray-50 rounded'>
         <p className='text-gray-600'>Static content - no conditionals or computed values</p>
         <p className='text-sm text-gray-500 mt-2'>Testing if basic structure causes hydration mismatch</p>
