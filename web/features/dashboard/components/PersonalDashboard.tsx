@@ -1158,7 +1158,6 @@ function StandardPersonalDashboard({ userId: fallbackUserId, className = '' }: P
             <p className='text-sm text-gray-500 mt-2'>All complex components (Tabs, Cards, Badges, Buttons) temporarily removed</p>
           </div>
         </>
-        </>
       )}
     </div>
   );
