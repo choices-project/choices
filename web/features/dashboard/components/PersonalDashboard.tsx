@@ -489,8 +489,25 @@ export default function PersonalDashboard(props: PersonalDashboardProps) {
 
 function StandardPersonalDashboard({ userId: fallbackUserId }: PersonalDashboardProps) {
   // #region agent log
-  console.log('[DEBUG-HYP-B] StandardPersonalDashboard function entry', { typeofWindow: typeof window !== 'undefined', timestamp: Date.now() });
+  console.log('[DEBUG-HYP-B] StandardPersonalDashboard function entry - RETURNING IMMEDIATELY', { typeofWindow: typeof window !== 'undefined', timestamp: Date.now() });
   // #endregion
+  
+  // TEMPORARY: Return immediately without calling ANY hooks to test if hooks cause infinite render loop
+  // This will help us isolate if the infinite loop is caused by hooks or something else
+  // #region agent log
+  console.log('[DEBUG-HYP-B] StandardPersonalDashboard RETURN - about to return static div (NO HOOKS)', { typeofWindow: typeof window !== 'undefined', timestamp: Date.now() });
+  // #endregion
+  return (
+    <div className="space-y-6" data-testid='personal-dashboard'>
+      <div className='p-4 bg-gray-50 rounded'>
+        <p className='text-gray-600'>Static content - no hooks called, no conditionals or computed values</p>
+        <p className='text-sm text-gray-500 mt-2'>Testing if hooks cause infinite render loop</p>
+      </div>
+    </div>
+  );
+  
+  // BELOW CODE IS TEMPORARILY UNREACHABLE - all hooks commented out to test infinite loop
+  /*
   const router = useRouter();
   const routerRef = useRef(router);
   useEffect(() => { routerRef.current = router; }, [router]);
