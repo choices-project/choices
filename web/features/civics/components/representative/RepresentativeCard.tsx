@@ -21,6 +21,7 @@ import {
   Loader2
 } from 'lucide-react';
 import Image from 'next/image';
+import { useRouter } from 'next/navigation';
 import React from 'react';
 
 import { ElectionCountdownBadge } from '@/features/civics/components/countdown/ElectionCountdownBadge';
@@ -44,6 +45,7 @@ export function RepresentativeCard({
   onClick,
   className = ''
 }: RepresentativeCardProps) {
+  const router = useRouter();
   const { t } = useI18n();
   const { following, loading, error, toggle } = useFollowRepresentative(representative.id);
   const {
@@ -85,7 +87,13 @@ export function RepresentativeCard({
     trackCtaEvent('civics_representative_view_details', {
       ctaLocation: 'representative_card',
     });
-    onClick?.(representative);
+    
+    // If onClick handler is provided, use it; otherwise navigate to detail page
+    if (onClick) {
+      onClick(representative);
+    } else {
+      router.push(`/representatives/${representative.id}`);
+    }
   };
 
   const getPartyColor = (party: string) => {

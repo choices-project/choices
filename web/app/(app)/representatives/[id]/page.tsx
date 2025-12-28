@@ -291,13 +291,15 @@ const daysUntilNextElection = getElectionCountdown(nextElection?.election_day);
   if (!representative || numericRepresentativeId == null) {
     return (
       <div className="container mx-auto px-4 py-8 max-w-4xl">
-        <button
-          onClick={handleBack}
-          className="flex items-center text-blue-600 hover:text-blue-800 mb-6"
-        >
-          <ArrowLeft className="w-5 h-5 mr-2" />
-          Back to Representatives
-        </button>
+      <button
+        onClick={handleBack}
+        className="flex items-center text-blue-600 hover:text-blue-800 mb-6"
+        data-testid="representative-detail-back-button"
+        aria-label="Back to Representatives"
+      >
+        <ArrowLeft className="w-5 h-5 mr-2" />
+        Back to Representatives
+      </button>
         <div className="bg-red-50 border border-red-200 rounded-lg p-6 text-center">
           <p className="text-red-800 font-semibold mb-2">Representative Not Found</p>
           <p className="text-red-600">
