@@ -6,8 +6,10 @@ import type { NextRequest } from 'next/server';
  * Privacy-first configuration for WebAuthn implementation
  */
 
-export const RP_ID = process.env.RP_ID ?? 'choices-platform.vercel.app';
-export const ALLOWED_ORIGINS = (process.env.ALLOWED_ORIGINS ?? 'https://choices-platform.vercel.app,http://localhost:3000')
+// RP_ID should match the actual production domain (without protocol and www subdomain)
+// For www.choices-app.com, use 'choices-app.com' (RP ID should be the registrable domain)
+export const RP_ID = process.env.RP_ID ?? 'choices-app.com';
+export const ALLOWED_ORIGINS = (process.env.ALLOWED_ORIGINS ?? 'https://www.choices-app.com,https://choices-app.com,http://localhost:3000')
   .split(',')
   .map(s => s.trim())
   .filter(Boolean);
@@ -25,10 +27,14 @@ export function getRPIDAndOrigins(req: NextRequest) {
   // Block previews: if host !== rpID and not localhost, disable passkeys
   const host = req.headers.get('x-forwarded-host') ?? req.headers.get('host') ?? '';
   const isLocal = host.startsWith('localhost:') || host === 'localhost';
-  const isProdHost = host === rpID;
+  
+  // RP ID is the registrable domain (e.g., 'choices-app.com'), but host might be 'www.choices-app.com'
+  // So we need to check if host matches rpID or is a subdomain of rpID (like www.rpID)
+  const hostWithoutWww = host.startsWith('www.') ? host.substring(4) : host;
+  const isProdHost = hostWithoutWww === rpID || host === rpID;
   const isPreview = isVercelPreview(host) && !isProdHost;
   
-  // Disable passkeys on previews
+  // Disable passkeys on previews, but allow on production domain and localhost
   const enabled = (isProdHost || isLocal) && !isPreview;
 
   return { enabled, rpID, allowedOrigins };
