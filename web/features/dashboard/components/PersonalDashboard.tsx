@@ -397,6 +397,90 @@ function StandardPersonalDashboard({ userId: _fallbackUserId }: PersonalDashboar
   // This was the root cause - profilePreferences changed reference every render
   // Instead, use the memoized dashboardPreferences directly
 
+  // PHASE 5: Computed Values
+  // CRITICAL: All Intl formatters must be created after mount to prevent hydration mismatches
+
+  // 5.2: Intl Formatters (must be guarded by isMounted)
+  const numberFormatter = useMemo(() => {
+    if (!isMounted) return null;
+    return new Intl.NumberFormat('en-US');
+  }, [isMounted]);
+
+  const dateFormatter = useMemo(() => {
+    if (!isMounted) return null;
+    return new Intl.DateTimeFormat('en-US', {
+      year: 'numeric',
+      month: 'short',
+      day: 'numeric',
+    });
+  }, [isMounted]);
+
+  // 5.1: Basic Computed Values (memoized with isMounted guard)
+  // Filter polls by user (if we have user profile)
+  const _userPolls = useMemo(() => {
+    if (!isMounted || !polls || !profile) return [];
+    const userId = (profile as Record<string, unknown>)?.id as string | undefined;
+    if (!userId) return [];
+    return polls.filter((poll) => {
+      const pollCreatorId = (poll as Record<string, unknown>)?.creator_id as string | undefined;
+      return pollCreatorId === userId;
+    });
+  }, [isMounted, polls, profile]);
+
+  // Filter analytics events by type
+  const voteEvents = useMemo(() => {
+    if (!isMounted || !analyticsEvents) return [];
+    return analyticsEvents.filter((event) => {
+      const eventType = (event as Record<string, unknown>)?.event_type as string | undefined;
+      return eventType === 'poll_voted';
+    });
+  }, [isMounted, analyticsEvents]);
+
+  const pollCreatedEvents = useMemo(() => {
+    if (!isMounted || !analyticsEvents) return [];
+    return analyticsEvents.filter((event) => {
+      const eventType = (event as Record<string, unknown>)?.event_type as string | undefined;
+      return eventType === 'poll_created';
+    });
+  }, [isMounted, analyticsEvents]);
+
+  // Date-based metrics (last 30 days)
+  const thirtyDaysAgo = useMemo(() => {
+    if (!isMounted) return null;
+    const date = new Date();
+    date.setDate(date.getDate() - 30);
+    return date;
+  }, [isMounted]);
+
+  const votesLast30Days = useMemo(() => {
+    if (!isMounted || !voteEvents || !thirtyDaysAgo) return 0;
+    return voteEvents.filter((event) => {
+      const createdAt = (event as Record<string, unknown>)?.created_at as string | undefined;
+      if (!createdAt) return false;
+      return new Date(createdAt) >= thirtyDaysAgo;
+    }).length;
+  }, [isMounted, voteEvents, thirtyDaysAgo]);
+
+  const pollsCreatedLast30Days = useMemo(() => {
+    if (!isMounted || !pollCreatedEvents || !thirtyDaysAgo) return 0;
+    return pollCreatedEvents.filter((event) => {
+      const createdAt = (event as Record<string, unknown>)?.created_at as string | undefined;
+      if (!createdAt) return false;
+      return new Date(createdAt) >= thirtyDaysAgo;
+    }).length;
+  }, [isMounted, pollCreatedEvents, thirtyDaysAgo]);
+
+  // Track computed values for diagnostics (using all Phase 5 values)
+  diagnostics.trackHookExecution('computedValues', {
+    hasNumberFormatter: !!numberFormatter,
+    hasDateFormatter: !!dateFormatter,
+    userPollsCount: _userPolls.length, // Phase 5.1: Used in diagnostics
+    voteEventsCount: voteEvents.length,
+    pollCreatedEventsCount: pollCreatedEvents.length,
+    votesLast30Days,
+    pollsCreatedLast30Days,
+  });
+
   // Diagnostic: Log final render state
   useEffect(() => {
     console.log(JSON.stringify({
@@ -408,20 +492,21 @@ function StandardPersonalDashboard({ userId: _fallbackUserId }: PersonalDashboar
         hasDashboardPreferences: !!dashboardPreferences,
         dashboardPreferencesValue: dashboardPreferences,
         hasProfilePreferences: !!profilePreferences,
+        hasNumberFormatter: !!numberFormatter,
+        hasDateFormatter: !!dateFormatter,
       },
       sessionId: 'debug-session',
       runId: 'final-fix-diagnostic',
       hypothesisId: 'DIAGNOSTIC'
     }));
-  }, [isMounted, dashboardPreferences, profilePreferences]);
+  }, [isMounted, dashboardPreferences, profilePreferences, numberFormatter, dateFormatter, diagnostics]);
 
-  // Phase 4.1: Profile hooks added - Simple return to verify stability before adding more hooks
-  // Next phase will add store action hooks and data hooks
-    return (
+  // Phase 5: Computed values added - Ready for UI restoration
+  return (
     <div className="space-y-6" data-testid='personal-dashboard'>
       <div className='p-4 bg-gray-50 dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700'>
         <h2 className='text-lg font-semibold text-gray-900 dark:text-gray-100 mb-2'>
-          Phase 4.3: Profile + Actions + Data Hooks Restored
+          Phase 5: Computed Values Added
         </h2>
         <div className='space-y-1 text-sm text-gray-600 dark:text-gray-400'>
           <p>
@@ -436,7 +521,7 @@ function StandardPersonalDashboard({ userId: _fallbackUserId }: PersonalDashboar
           <p className='text-xs text-gray-500 dark:text-gray-500 mt-2 pt-2 border-t border-gray-200 dark:border-gray-700'>
             ✅ Diagnostic tracking enabled | Phase 4.3 FIXED | Data hooks use useShallow + useMemo pattern | Polls: {polls?.length ?? 0} | Events: {analyticsEvents?.length ?? 0}
           </p>
-          </div>
+        </div>
         </div>
       </div>
     );
