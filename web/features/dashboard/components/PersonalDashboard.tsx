@@ -19,7 +19,10 @@
  * - Memoized dashboardPreferences with specific property dependencies
  */
 
-import React, { useEffect, useMemo, useRef, useState } from 'react';
+import { BarChart3, TrendingUp, Vote, Users, Settings2, Zap, ArrowRight } from 'lucide-react';
+import Image from 'next/image';
+import Link from 'next/link';
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useShallow } from 'zustand/react/shallow';
 
 import { useProfile, useProfileErrorStates, useProfileLoadingStates } from '@/features/profile/hooks/use-profile';
@@ -39,7 +42,11 @@ import {
   representativeSelectors,
 } from '@/lib/stores/representativeStore';
 
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Label } from '@/components/ui/label';
+import { Separator } from '@/components/ui/separator';
+import { Switch } from '@/components/ui/switch';
 
 import type { DashboardPreferences } from '@/types/profile';
 
@@ -476,21 +483,21 @@ function StandardPersonalDashboard({ userId: _fallbackUserId }: PersonalDashboar
   const recentActivity = useMemo(() => {
     if (!isMounted) return [];
     const activities: Array<{ type: 'vote' | 'poll_created'; event: unknown; createdAt: Date }> = [];
-    
+
     voteEvents.forEach((event) => {
       const createdAt = (event as Record<string, unknown>)?.created_at as string | undefined;
       if (createdAt) {
         activities.push({ type: 'vote', event, createdAt: new Date(createdAt) });
       }
     });
-    
+
     pollCreatedEvents.forEach((event) => {
       const createdAt = (event as Record<string, unknown>)?.created_at as string | undefined;
       if (createdAt) {
         activities.push({ type: 'poll_created', event, createdAt: new Date(createdAt) });
       }
     });
-    
+
     // Sort by date (most recent first)
     return activities.sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime()).slice(0, 10);
   }, [isMounted, voteEvents, pollCreatedEvents]);
@@ -526,7 +533,24 @@ function StandardPersonalDashboard({ userId: _fallbackUserId }: PersonalDashboar
     }));
   }, [isMounted, dashboardPreferences, profilePreferences, numberFormatter, dateFormatter, diagnostics]);
 
-  // PHASE 6.1: Basic Layout - Header and simple metric cards
+  // Handler for preference updates
+  const handlePreferenceChange = useCallback(
+    (key: keyof DashboardPreferences, value: boolean) => {
+      if (!updatePreferencesRefForCallback.current) return;
+      
+      updatePreferencesRefForCallback.current({
+        dashboard: {
+          ...dashboardPreferences,
+          [key]: value,
+        },
+      }).catch((error) => {
+        console.error('Failed to update preference:', error);
+      });
+    },
+    [dashboardPreferences]
+  );
+
+  // PHASE 6: Complete Dashboard UI
     return (
     <div className="space-y-6" data-testid='personal-dashboard'>
       {/* Header */}
@@ -539,95 +563,326 @@ function StandardPersonalDashboard({ userId: _fallbackUserId }: PersonalDashboar
         </p>
       </div>
 
-      {/* Analytics Metrics Cards */}
-      {dashboardPreferences?.showEngagementScore && (
+      {/* Analytics Metrics Cards - Improved UX */}
+      {dashboardPreferences?.showEngagementScore && isMounted && (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-          <Card>
-                <CardHeader>
-              <CardTitle className="text-base font-medium">Votes (30 days)</CardTitle>
+          <Card className="hover:shadow-md transition-shadow">
+            <CardHeader className="pb-3">
+              <div className="flex items-center justify-between">
+                <CardTitle className="text-sm font-medium text-gray-600 dark:text-gray-400">
+                  Votes (30 days)
+                  </CardTitle>
+                <Vote className="h-5 w-5 text-blue-500" />
+              </div>
                 </CardHeader>
                 <CardContent>
-              <div className="text-2xl font-bold">
+              <div className="text-3xl font-bold text-gray-900 dark:text-gray-100">
                 {numberFormatter ? numberFormatter.format(votesLast30Days) : votesLast30Days}
-                  </div>
+                      </div>
+              <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+                Total votes cast this month
+              </p>
                 </CardContent>
               </Card>
 
-                <Card>
-                  <CardHeader>
-              <CardTitle className="text-base font-medium">Polls Created (30 days)</CardTitle>
+          <Card className="hover:shadow-md transition-shadow">
+            <CardHeader className="pb-3">
+              <div className="flex items-center justify-between">
+                <CardTitle className="text-sm font-medium text-gray-600 dark:text-gray-400">
+                  Polls Created (30 days)
+                    </CardTitle>
+                <BarChart3 className="h-5 w-5 text-green-500" />
+              </div>
                   </CardHeader>
                   <CardContent>
-              <div className="text-2xl font-bold">
+              <div className="text-3xl font-bold text-gray-900 dark:text-gray-100">
                 {numberFormatter ? numberFormatter.format(pollsCreatedLast30Days) : pollsCreatedLast30Days}
-                    </div>
+                      </div>
+              <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+                Polls you've created
+              </p>
                   </CardContent>
                 </Card>
 
-          <Card>
-                <CardHeader>
-              <CardTitle className="text-base font-medium">Total Polls</CardTitle>
+          <Card className="hover:shadow-md transition-shadow">
+            <CardHeader className="pb-3">
+              <div className="flex items-center justify-between">
+                <CardTitle className="text-sm font-medium text-gray-600 dark:text-gray-400">
+                  Total Polls
+                  </CardTitle>
+                <TrendingUp className="h-5 w-5 text-purple-500" />
+              </div>
                 </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold">
+              <div className="text-3xl font-bold text-gray-900 dark:text-gray-100">
                 {numberFormatter ? numberFormatter.format(polls?.length ?? 0) : (polls?.length ?? 0)}
-                  </div>
+                    </div>
+              <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+                All available polls
+              </p>
                 </CardContent>
               </Card>
             </div>
       )}
 
-      {/* Recent Activity Section */}
-      {dashboardPreferences?.showRecentActivity && isMounted && (
-        <Card>
-          <CardHeader>
-            <CardTitle className="text-lg font-semibold">Recent Activity</CardTitle>
+      {/* Quick Actions Section */}
+      {dashboardPreferences?.showQuickActions && isMounted && (
+                <Card>
+                  <CardHeader>
+            <div className="flex items-center gap-2">
+              <Zap className="h-5 w-5 text-yellow-500" />
+              <CardTitle className="text-lg font-semibold">Quick Actions</CardTitle>
+                          </div>
+            <CardDescription>Fast access to common tasks</CardDescription>
           </CardHeader>
           <CardContent>
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+              <Link href="/polls/create">
+                <Button variant="outline" className="w-full justify-between group">
+                  <span>Create Poll</span>
+                  <ArrowRight className="h-4 w-4 group-hover:translate-x-1 transition-transform" />
+                        </Button>
+              </Link>
+              <Link href="/polls">
+                <Button variant="outline" className="w-full justify-between group">
+                  <span>Browse Polls</span>
+                  <ArrowRight className="h-4 w-4 group-hover:translate-x-1 transition-transform" />
+                </Button>
+              </Link>
+              <Link href="/representatives">
+                <Button variant="outline" className="w-full justify-between group">
+                  <span>Find Representatives</span>
+                  <ArrowRight className="h-4 w-4 group-hover:translate-x-1 transition-transform" />
+                </Button>
+              </Link>
+            </div>
+                  </CardContent>
+                </Card>
+              )}
+
+      {/* Recent Activity Section - Improved UX */}
+      {dashboardPreferences?.showRecentActivity && isMounted && (
+        <Card>
+                  <CardHeader>
+            <CardTitle className="text-lg font-semibold">Recent Activity</CardTitle>
+            <CardDescription>Your latest civic engagement actions</CardDescription>
+                  </CardHeader>
+          <CardContent>
             {recentActivity.length === 0 ? (
-              <p className="text-sm text-gray-500 dark:text-gray-400">
-                No recent activity to display
-              </p>
-            ) : (
+              <div className="text-center py-8">
+                <p className="text-sm text-gray-500 dark:text-gray-400">
+                  No recent activity to display
+                </p>
+                <p className="text-xs text-gray-400 dark:text-gray-500 mt-1">
+                  Start voting or creating polls to see your activity here
+                </p>
+                        </div>
+                      ) : (
               <div className="space-y-3">
                 {recentActivity.map((activity, index) => {
                   const pollId = (activity.event as Record<string, unknown>)?.poll_id as string | undefined;
                   return (
                     <div
                       key={`activity-${activity.type}-${pollId ?? index}-${activity.createdAt.getTime()}`}
-                      className="flex items-center justify-between py-2 border-b border-gray-200 dark:border-gray-700 last:border-0"
+                      className="flex items-center justify-between p-3 rounded-lg bg-gray-50 dark:bg-gray-800/50 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
                     >
                       <div className="flex items-center gap-3">
                         <div
-                          className={`w-2 h-2 rounded-full ${
+                          className={`w-3 h-3 rounded-full ${
                             activity.type === 'vote' ? 'bg-blue-500' : 'bg-green-500'
                           }`}
-                        ></div>
-                        <span className="text-sm text-gray-900 dark:text-gray-100">
-                          {activity.type === 'vote' ? 'Voted on a poll' : 'Created a poll'}
-                        </span>
-                      </div>
-                      {dateFormatter && (
-                        <span className="text-xs text-gray-500 dark:text-gray-400">
-                          {dateFormatter.format(activity.createdAt)}
-                        </span>
+                        />
+                        <div>
+                          <span className="text-sm font-medium text-gray-900 dark:text-gray-100">
+                            {activity.type === 'vote' ? 'Voted on a poll' : 'Created a poll'}
+                          </span>
+                          {dateFormatter && (
+                            <p className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">
+                              {dateFormatter.format(activity.createdAt)}
+                            </p>
                       )}
                     </div>
+                      </div>
+                      </div>
                   );
                 })}
-              </div>
+                      </div>
+                    )}
+                  </CardContent>
+                </Card>
+              )}
+
+      {/* Representatives Section - Improved UX */}
+      {dashboardPreferences?.showElectedOfficials && isMounted && representativeEntries && representativeEntries.length > 0 && (
+        <Card>
+                  <CardHeader>
+            <div className="flex items-center gap-2">
+              <Users className="h-5 w-5 text-indigo-500" />
+              <CardTitle className="text-lg font-semibold">Your Representatives</CardTitle>
+            </div>
+                    <CardDescription>
+              {numberFormatter ? numberFormatter.format(representativeEntries.length) : representativeEntries.length} 
+              {' '}representative{representativeEntries.length !== 1 ? 's' : ''} you're following
+                    </CardDescription>
+                  </CardHeader>
+                  <CardContent>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+              {representativeEntries.slice(0, 6).map((entry) => {
+                const rep = entry.representative;
+                const name = (rep as Record<string, unknown>)?.name as string | undefined;
+                const office = (rep as Record<string, unknown>)?.office as string | undefined;
+                const photoUrl = (rep as Record<string, unknown>)?.primary_photo_url as string | undefined;
+                const party = (rep as Record<string, unknown>)?.party as string | undefined;
+                const repId = (rep as Record<string, unknown>)?.id as number | undefined;
+                
+                return (
+                  <Link
+                    key={`rep-${repId ?? entry.follow.id}`}
+                    href={repId ? `/representatives/${repId}` : '#'}
+                    className="block"
+                  >
+                    <div className="flex items-center gap-3 p-3 rounded-lg border border-gray-200 dark:border-gray-700 hover:border-indigo-300 dark:hover:border-indigo-600 hover:shadow-md transition-all bg-white dark:bg-gray-800">
+                      {photoUrl ? (
+                        <Image
+                          src={photoUrl}
+                          alt={name ?? 'Representative'}
+                          width={48}
+                          height={48}
+                          className="rounded-full object-cover"
+                        />
+                      ) : (
+                        <div className="w-12 h-12 rounded-full bg-indigo-100 dark:bg-indigo-900 flex items-center justify-center">
+                          <span className="text-indigo-600 dark:text-indigo-300 font-medium text-sm">
+                            {name?.split(' ').map((n) => n[0]).join('').slice(0, 2) ?? '?'}
+                          </span>
+                    </div>
+                      )}
+                      <div className="flex-1 min-w-0">
+                        <p className="font-medium text-gray-900 dark:text-gray-100 truncate">
+                          {name ?? 'Unknown'}
+                        </p>
+                        <p className="text-sm text-gray-600 dark:text-gray-400 truncate">
+                          {office ?? 'Representative'}
+                        </p>
+                        {party && (
+                          <p className="text-xs text-gray-500 dark:text-gray-500 mt-0.5">
+                            {party}
+                          </p>
+                        )}
+                        </div>
+                        </div>
+                  </Link>
+                );
+              })}
+                      </div>
+            {representativeEntries.length > 6 && (
+              <div className="mt-4 text-center">
+                <Link href="/representatives">
+                  <Button variant="outline" className="w-full sm:w-auto">
+                    View All Representatives
+                    <ArrowRight className="ml-2 h-4 w-4" />
+                  </Button>
+                </Link>
+                    </div>
             )}
-          </CardContent>
-        </Card>
+                </CardContent>
+              </Card>
       )}
+
+      {/* Dashboard Preferences Section - Improved UX */}
+      {isMounted && (
+            <Card>
+              <CardHeader>
+            <div className="flex items-center gap-2">
+              <Settings2 className="h-5 w-5 text-gray-500" />
+              <CardTitle className="text-lg font-semibold">Dashboard Preferences</CardTitle>
+            </div>
+            <CardDescription>Customize what appears on your dashboard</CardDescription>
+              </CardHeader>
+              <CardContent>
+            <div className="space-y-4">
+              <div className="flex items-center justify-between py-2">
+                <div className="space-y-0.5 flex-1">
+                  <Label htmlFor="show-engagement-score" className="text-base font-medium cursor-pointer">
+                    Engagement Score
+                  </Label>
+                  <p className="text-sm text-gray-500 dark:text-gray-400">
+                    Show analytics metrics and engagement statistics
+                  </p>
+                        </div>
+                <Switch
+                  id="show-engagement-score"
+                  checked={dashboardPreferences?.showEngagementScore ?? true}
+                  onCheckedChange={(checked) => handlePreferenceChange('showEngagementScore', checked)}
+                />
+                        </div>
+              
+              <Separator />
+              
+              <div className="flex items-center justify-between py-2">
+                <div className="space-y-0.5 flex-1">
+                  <Label htmlFor="show-recent-activity" className="text-base font-medium cursor-pointer">
+                    Recent Activity
+                  </Label>
+                  <p className="text-sm text-gray-500 dark:text-gray-400">
+                    Display your recent votes and poll creations
+                  </p>
+                      </div>
+                <Switch
+                  id="show-recent-activity"
+                  checked={dashboardPreferences?.showRecentActivity ?? true}
+                  onCheckedChange={(checked) => handlePreferenceChange('showRecentActivity', checked)}
+                />
+                    </div>
+              
+              <Separator />
+              
+              <div className="flex items-center justify-between py-2">
+                <div className="space-y-0.5 flex-1">
+                  <Label htmlFor="show-quick-actions" className="text-base font-medium cursor-pointer">
+                    Quick Actions
+                  </Label>
+                  <p className="text-sm text-gray-500 dark:text-gray-400">
+                    Show quick access buttons for common tasks
+                  </p>
+                        </div>
+                <Switch
+                  id="show-quick-actions"
+                  checked={dashboardPreferences?.showQuickActions ?? true}
+                  onCheckedChange={(checked) => handlePreferenceChange('showQuickActions', checked)}
+                />
+                        </div>
+              
+              <Separator />
+              
+              <div className="flex items-center justify-between py-2">
+                <div className="space-y-0.5 flex-1">
+                  <Label htmlFor="show-elected-officials" className="text-base font-medium cursor-pointer">
+                    Elected Officials
+                  </Label>
+                  <p className="text-sm text-gray-500 dark:text-gray-400">
+                    Display representatives you're following
+                  </p>
+                      </div>
+                <Switch
+                  id="show-elected-officials"
+                  data-testid="show-elected-officials-toggle"
+                  checked={dashboardPreferences?.showElectedOfficials ?? false}
+                  onCheckedChange={(checked) => handlePreferenceChange('showElectedOfficials', checked)}
+                />
+                    </div>
+                </div>
+              </CardContent>
+            </Card>
+          )}
 
       {/* Diagnostic info (temporary - will be removed after Phase 7) */}
       {process.env.NODE_ENV === 'development' && (
         <Card className="bg-gray-50 dark:bg-gray-900 border-gray-200 dark:border-gray-800">
-                  <CardHeader>
+                <CardHeader>
             <CardTitle className="text-sm font-medium">Debug Info</CardTitle>
-                  </CardHeader>
-                  <CardContent>
+                </CardHeader>
+                <CardContent>
             <div className='space-y-1 text-xs text-gray-600 dark:text-gray-400'>
               <p>
                 <span className='font-medium'>Render count:</span> {diagnostics.renderCount} |
@@ -638,9 +893,9 @@ function StandardPersonalDashboard({ userId: _fallbackUserId }: PersonalDashboar
                 <span className='font-medium ml-2'>Auth:</span> {String(isAuthenticated)} |
                 <span className='font-medium ml-2'>Events:</span> {analyticsEvents?.length ?? 0}
               </p>
-                </div>
-              </CardContent>
-            </Card>
+                  </div>
+                </CardContent>
+              </Card>
           )}
     </div>
   );
