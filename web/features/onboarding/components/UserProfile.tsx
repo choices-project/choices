@@ -8,6 +8,7 @@ import {
 } from '@heroicons/react/24/outline';
 import Image from 'next/image';
 import React, { useEffect, useRef } from 'react';
+import { useShallow } from 'zustand/react/shallow';
 
 import {
   useUserCurrentAddress,
@@ -65,7 +66,11 @@ export default function UserProfile({ onRepresentativesUpdate, onClose }: UserPr
     setAddressLoading,
     setSavedSuccessfully
   } = useUserActions();
-  const profileLocation = useProfileStore(profileSelectors.location);
+  
+  // CRITICAL FIX: Use useShallow for store subscriptions to prevent infinite render loops
+  const profileLocation = useProfileStore(
+    useShallow((state) => profileSelectors.location(state))
+  );
 
   // Refs for stable store actions
   const setCurrentStateRef = useRef(setCurrentState);

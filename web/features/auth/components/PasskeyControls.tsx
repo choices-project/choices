@@ -3,6 +3,7 @@
 import * as React from 'react';
 
 import { useAccessibleDialog } from '@/lib/accessibility/useAccessibleDialog';
+import { useIsAuthenticated } from '@/lib/stores';
 
 import PasskeyLogin from './PasskeyLogin';
 import PasskeyRegister from './PasskeyRegister';
@@ -12,6 +13,9 @@ import {
 } from '../lib/store';
 
 export function PasskeyControls() {
+  // Check if user is authenticated - registration requires authentication
+  const isAuthenticated = useIsAuthenticated();
+
   const [mode, setMode] = React.useState<
     'idle' | 'register' | 'login' | 'viewing' | 'crossDevice' | 'biometric'
   >('idle');
@@ -206,20 +210,23 @@ export function PasskeyControls() {
     <div className="space-y-4">
       {/* Simplified, cleaner interface */}
       <div className="rounded-lg border border-gray-200 bg-white p-4 shadow-sm">
-        <div className="flex flex-col sm:flex-row gap-3">
-          <button
-            data-testid="webauthn-register"
-            className="flex-1 px-4 py-3 text-sm font-medium text-white bg-blue-600 border border-blue-600 rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition-all duration-200 hover:scale-[1.02] active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed"
-            onClick={handleRegister}
-          >
-            <span className="flex items-center justify-center gap-2">
-              <span>🔐</span>
-              <span>Create Passkey</span>
-            </span>
-          </button>
+        <div className={`flex flex-col ${isAuthenticated ? 'sm:flex-row' : ''} gap-3`}>
+          {/* Only show "Create Passkey" button if user is authenticated */}
+          {isAuthenticated && (
+            <button
+              data-testid="webauthn-register"
+              className="flex-1 px-4 py-3 text-sm font-medium text-white bg-blue-600 border border-blue-600 rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition-all duration-200 hover:scale-[1.02] active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed"
+              onClick={handleRegister}
+            >
+              <span className="flex items-center justify-center gap-2">
+                <span>🔐</span>
+                <span>Create Passkey</span>
+              </span>
+            </button>
+          )}
           <button
             data-testid="webauthn-login"
-            className="flex-1 px-4 py-3 text-sm font-medium text-blue-600 bg-white border border-blue-600 rounded-md hover:bg-blue-50 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition-all duration-200 hover:scale-[1.02] active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed"
+            className={`${isAuthenticated ? 'flex-1' : 'w-full'} px-4 py-3 text-sm font-medium text-blue-600 bg-white border border-blue-600 rounded-md hover:bg-blue-50 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition-all duration-200 hover:scale-[1.02] active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed`}
             onClick={handleLogin}
           >
             <span className="flex items-center justify-center gap-2">

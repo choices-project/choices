@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useEffect, useMemo, useRef, useState } from 'react';
+import { useShallow } from 'zustand/react/shallow';
 
 import {
   useNotificationActions,
@@ -73,7 +74,11 @@ export default function UserOnboarding({ onComplete, onSkip }: UserOnboardingPro
 
   // Notification store for user feedback
   const { addNotification } = useNotificationActions();
-  const profileLocation = useProfileStore(profileSelectors.location);
+  
+  // CRITICAL FIX: Use useShallow for store subscriptions to prevent infinite render loops
+  const profileLocation = useProfileStore(
+    useShallow((state) => profileSelectors.location(state))
+  );
 
   // Refs for stable store actions
   const restartOnboardingRef = useRef(restartOnboarding);

@@ -1,10 +1,23 @@
 'use client';
 
 import { Shield } from 'lucide-react';
+import dynamicImport from 'next/dynamic';
 import { usePathname, useRouter, useSearchParams } from 'next/navigation';
 import React, { useEffect, useRef, useState } from 'react';
 
-import dynamicImport from 'next/dynamic';
+import { useProfile } from '@/features/profile/hooks/use-profile';
+
+import DashboardNavigation, { MobileDashboardNav } from '@/components/shared/DashboardNavigation';
+import { ErrorBoundary } from '@/components/shared/ErrorBoundary';
+import { Button } from '@/components/ui/button';
+
+
+import { useIsAuthenticated, useUserLoading, useUserStore } from '@/lib/stores';
+import { useAppActions } from '@/lib/stores/appStore';
+import { profileSelectors, useProfileStore } from '@/lib/stores/profileStore';
+import { logger } from '@/lib/utils/logger';
+
+import { useAuth } from '@/hooks/useAuth';
 
 // CRITICAL: Load PersonalDashboard only on client to prevent SSR hydration mismatch
 // PersonalDashboard uses Zustand persist stores and other client-only hooks
@@ -41,18 +54,6 @@ const PersonalDashboard = dynamicImport(
     ),
   }
 );
-import { useProfile } from '@/features/profile/hooks/use-profile';
-
-import DashboardNavigation, { MobileDashboardNav } from '@/components/shared/DashboardNavigation';
-import { ErrorBoundary } from '@/components/shared/ErrorBoundary';
-import { Button } from '@/components/ui/button';
-
-import { useIsAuthenticated, useUserLoading, useUserStore } from '@/lib/stores';
-import { useAppActions } from '@/lib/stores/appStore';
-import { profileSelectors, useProfileStore } from '@/lib/stores/profileStore';
-import { logger } from '@/lib/utils/logger';
-
-import { useAuth } from '@/hooks/useAuth';
 
 // Prevent static generation since this requires client-side state
 export const dynamic = 'force-dynamic';
@@ -206,9 +207,6 @@ async function checkSessionCookies(
 }
 
 export default function DashboardPage() {
-  // #region agent log
-  console.log('[DEBUG-HYP-C] DashboardPage function entry', { typeofWindow: typeof window !== 'undefined', timestamp: Date.now() });
-  // #endregion
   const router = useRouter();
   const routerRef = useRef(router);
   const pathname = usePathname();
@@ -253,17 +251,11 @@ export default function DashboardPage() {
     }
   }, [pathname, searchParams]);
 
-  // #region agent log
-  console.log('[DEBUG-HYP-C] BEFORE calling Zustand hooks', { typeofWindow: typeof window !== 'undefined', timestamp: Date.now() });
-  // #endregion
   const { profile, isLoading } = useProfile();
   const isAuthenticated = useIsAuthenticated();
   const isUserLoading = useUserLoading();
   const { isLoading: isAuthContextLoading } = useAuth(); // AuthContext loading state
   const { setCurrentRoute, setBreadcrumbs, setSidebarActiveSection } = useAppActions();
-  // #region agent log
-  console.log('[DEBUG-HYP-C] AFTER calling Zustand hooks', { typeofWindow: typeof window !== 'undefined', isAuthenticated, isUserLoading, timestamp: Date.now() });
-  // #endregion
 
   // Refs for stable app store actions
   const setCurrentRouteRef = useRef(setCurrentRoute);
@@ -644,59 +636,15 @@ export default function DashboardPage() {
     // IMPORTANT: Only redirect if profile has finished loading AND is still null after a delay
     // This prevents redirecting users while profile is still being fetched
     if (!isLoading && isAuthenticated && !profile && !isCheckingAdmin) {
-      // #region agent log
-      console.log(JSON.stringify({
-        location: 'dashboard/page.tsx:redirect-logic-entry',
-        message: 'Redirect logic triggered - no profile detected',
-        data: {
-          isLoading,
-          isAuthenticated,
-          hasProfile: !!profile,
-          isCheckingAdmin,
-          shouldBypassAuth,
-          bypassFlag: checkBypassFlag(),
-          timestamp: Date.now(),
-        },
-        sessionId: 'debug-session',
-        runId: 'onboarding-redirect-debug',
-        hypothesisId: 'H1'
-      }));
-      // #endregion
 
       // Wait a bit longer for profile to load - sometimes it takes a moment
       // Only redirect if profile is truly missing after a reasonable delay
       const checkAdminAndRedirect = async () => {
         if (adminCheckRef.current) {
-          // #region agent log
-          console.log(JSON.stringify({
-            location: 'dashboard/page.tsx:checkAdminAndRedirect:already-checking',
-            message: 'Admin check already in progress - skipping',
-            data: { timestamp: Date.now() },
-            sessionId: 'debug-session',
-            runId: 'onboarding-redirect-debug',
-            hypothesisId: 'H1'
-          }));
-          // #endregion
           return; // Already checking
         }
         adminCheckRef.current = true;
         setIsCheckingAdmin(true);
-
-        // #region agent log
-        console.log(JSON.stringify({
-          location: 'dashboard/page.tsx:checkAdminAndRedirect:start',
-          message: 'Starting 3-second wait before profile re-check',
-          data: {
-            profileAtStart: !!profile,
-            shouldBypassAuth,
-            bypassFlag: checkBypassFlag(),
-            timestamp: Date.now(),
-          },
-          sessionId: 'debug-session',
-          runId: 'onboarding-redirect-debug',
-          hypothesisId: 'H1'
-        }));
-        // #endregion
 
         // Give profile a bit more time to load (3 seconds)
         // This allows the profile fetch to complete
@@ -706,40 +654,9 @@ export default function DashboardPage() {
         // The profile might have loaded during the 3-second wait, but the closure still
         // has the old null value. We need to read the current profile from the store.
         const currentProfileFromStore = profileSelectors.currentProfile(useProfileStore.getState());
-        const isLoadingProfileFromStore = useProfileStore.getState().isProfileLoading;
-
-        // #region agent log
-        console.log(JSON.stringify({
-          location: 'dashboard/page.tsx:checkAdminAndRedirect:after-wait',
-          message: '3-second wait complete - re-checking profile state from store',
-          data: {
-            profileAtStart: !!profile,
-            currentProfileFromStore: !!currentProfileFromStore,
-            isLoadingProfileFromStore,
-            shouldBypassAuth,
-            bypassFlag: checkBypassFlag(),
-            timestamp: Date.now(),
-          },
-          sessionId: 'debug-session',
-          runId: 'onboarding-redirect-debug',
-          hypothesisId: 'H1'
-        }));
-        // #endregion
 
         // If profile loaded during the wait, cancel the redirect
         if (currentProfileFromStore) {
-          // #region agent log
-          console.log(JSON.stringify({
-            location: 'dashboard/page.tsx:checkAdminAndRedirect:profile-loaded',
-            message: 'Profile loaded during wait - canceling redirect',
-            data: {
-              timestamp: Date.now(),
-            },
-            sessionId: 'debug-session',
-            runId: 'onboarding-redirect-debug',
-            hypothesisId: 'H1'
-          }));
-          // #endregion
           setIsCheckingAdmin(false);
           adminCheckRef.current = false;
           return; // Profile loaded, no need to redirect
@@ -754,146 +671,38 @@ export default function DashboardPage() {
             signal: AbortSignal.timeout(5_000), // 5 second timeout
           });
 
-          // #region agent log
-          console.log(JSON.stringify({
-            location: 'dashboard/page.tsx:checkAdminAndRedirect:admin-check-result',
-            message: 'Admin check completed',
-            data: {
-              status: response.status,
-              ok: response.ok,
-              timestamp: Date.now(),
-            },
-            sessionId: 'debug-session',
-            runId: 'onboarding-redirect-debug',
-            hypothesisId: 'H1'
-          }));
-          // #endregion
-
           if (response.ok) {
             // User is admin - allow access to dashboard (they can navigate to admin dashboard)
             logger.debug('🚨 Dashboard: No profile but user is admin - allowing dashboard access');
-            // #region agent log
-            console.log(JSON.stringify({
-              location: 'dashboard/page.tsx:checkAdminAndRedirect:admin-allowed',
-              message: 'User is admin - allowing dashboard access without redirect',
-              data: { timestamp: Date.now() },
-              sessionId: 'debug-session',
-              runId: 'onboarding-redirect-debug',
-              hypothesisId: 'H1'
-            }));
-            // #endregion
             setIsCheckingAdmin(false);
             adminCheckRef.current = false;
             return; // Don't redirect
           } else if (response.status === 401 || response.status === 403) {
             // Not admin or not authenticated - redirect to onboarding
             logger.debug('🚨 Dashboard: User is not admin (401/403) - redirecting to onboarding');
-            // #region agent log
-            console.log(JSON.stringify({
-              location: 'dashboard/page.tsx:checkAdminAndRedirect:not-admin',
-              message: 'User is not admin (401/403) - will check bypass before redirect',
-              data: {
-                status: response.status,
-                timestamp: Date.now(),
-              },
-              sessionId: 'debug-session',
-              runId: 'onboarding-redirect-debug',
-              hypothesisId: 'H1'
-            }));
-            // #endregion
           } else {
             // Other error - log but still redirect to be safe
             logger.warn('🚨 Dashboard: Admin check returned non-OK status:', response.status);
-            // #region agent log
-            console.log(JSON.stringify({
-              location: 'dashboard/page.tsx:checkAdminAndRedirect:admin-check-error',
-              message: 'Admin check returned non-OK status',
-              data: {
-                status: response.status,
-                timestamp: Date.now(),
-              },
-              sessionId: 'debug-session',
-              runId: 'onboarding-redirect-debug',
-              hypothesisId: 'H1'
-            }));
-            // #endregion
           }
         } catch (error) {
           // If admin check fails or times out, assume not admin and redirect
           logger.debug('🚨 Dashboard: Admin check failed or user is not admin - redirecting to onboarding', error);
-          // #region agent log
-          console.log(JSON.stringify({
-            location: 'dashboard/page.tsx:checkAdminAndRedirect:admin-check-exception',
-            message: 'Admin check failed with exception',
-            data: {
-              error: error instanceof Error ? error.message : String(error),
-              timestamp: Date.now(),
-            },
-            sessionId: 'debug-session',
-            runId: 'onboarding-redirect-debug',
-            hypothesisId: 'H1'
-          }));
-          // #endregion
         }
 
         // Not admin or check failed - redirect to onboarding
         // CRITICAL: Skip redirect if bypass flag is set (E2E testing)
         const bypassCheck8 = shouldBypassAuth || checkBypassFlag();
 
-        // #region agent log
-        console.log(JSON.stringify({
-          location: 'dashboard/page.tsx:checkAdminAndRedirect:before-redirect-check',
-          message: 'Checking bypass flag before redirect',
-          data: {
-            shouldBypassAuth,
-            bypassFlagFromFunction: checkBypassFlag(),
-            bypassCheckResult: bypassCheck8,
-            timestamp: Date.now(),
-          },
-          sessionId: 'debug-session',
-          runId: 'onboarding-redirect-debug',
-          hypothesisId: 'H1'
-        }));
-        // #endregion
-
         if (bypassCheck8) {
           logger.debug('🚨 Dashboard: Bypass flag set - skipping onboarding redirect', {
             shouldBypassAuth,
             currentBypassFlag: checkBypassFlag(),
           });
-          // #region agent log
-          console.log(JSON.stringify({
-            location: 'dashboard/page.tsx:checkAdminAndRedirect:bypass-detected',
-            message: 'Bypass flag detected - skipping redirect to onboarding',
-            data: {
-              shouldBypassAuth,
-              bypassFlag: checkBypassFlag(),
-              timestamp: Date.now(),
-            },
-            sessionId: 'debug-session',
-            runId: 'onboarding-redirect-debug',
-            hypothesisId: 'H1'
-          }));
-          // #endregion
           setIsCheckingAdmin(false);
           adminCheckRef.current = false;
           return;
         }
         logger.debug('🚨 Dashboard: No profile found - redirecting to onboarding');
-        // #region agent log
-        console.log(JSON.stringify({
-          location: 'dashboard/page.tsx:checkAdminAndRedirect:redirecting',
-          message: 'Redirecting to onboarding - no profile, not admin, no bypass',
-          data: {
-            shouldBypassAuth,
-            bypassFlag: checkBypassFlag(),
-            timestamp: Date.now(),
-          },
-          sessionId: 'debug-session',
-          runId: 'onboarding-redirect-debug',
-          hypothesisId: 'H1'
-        }));
-        // #endregion
         setIsCheckingAdmin(false);
         adminCheckRef.current = false;
         routerRef.current.replace('/onboarding');
@@ -912,22 +721,6 @@ export default function DashboardPage() {
   const profileRef = useRef(profile);
   useEffect(() => {
     if (profileRef.current !== profile) {
-      // #region agent log
-      console.log(JSON.stringify({
-        location: 'dashboard/page.tsx:profile-state-change',
-        message: 'Profile state changed',
-        data: {
-          previousProfile: !!profileRef.current,
-          currentProfile: !!profile,
-          isLoading,
-          isAuthenticated,
-          timestamp: Date.now(),
-        },
-        sessionId: 'debug-session',
-        runId: 'onboarding-redirect-debug',
-        hypothesisId: 'H2'
-      }));
-      // #endregion
       profileRef.current = profile;
     }
   }, [profile, isLoading, isAuthenticated]);
@@ -984,10 +777,6 @@ export default function DashboardPage() {
   // REMOVED: isMountedForPageRender state - no longer needed
   // PersonalDashboard is loaded via next/dynamic with ssr: false, which handles SSR/client rendering correctly
 
-  // #region agent log
-  console.log('[DEBUG-HYP-A] DashboardPage render - rendering PersonalDashboard via dynamic import', { typeofWindow: typeof window !== 'undefined', timestamp: Date.now() });
-  // #endregion
-
   // CRITICAL: PersonalDashboard is loaded via next/dynamic with ssr: false
   // This prevents it from being included in SSR HTML, eliminating hydration mismatch
   // The dynamic import handles loading state internally, so we don't need early return
@@ -1022,9 +811,6 @@ export default function DashboardPage() {
 
         {/* CRITICAL: PersonalDashboard is loaded via next/dynamic with ssr: false */}
         {/* This prevents it from being included in SSR HTML, eliminating hydration mismatch */}
-        {/* #region agent log */}
-        {(() => { console.log('[DEBUG-HYP-B] RENDERING PersonalDashboard component (dynamic import)', { typeofWindow: typeof window !== 'undefined', timestamp: Date.now() }); return null; })()}
-        {/* #endregion */}
         <PersonalDashboard />
       </div>
 

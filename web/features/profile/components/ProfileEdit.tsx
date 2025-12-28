@@ -23,6 +23,7 @@ import {
   CheckCircle
 } from 'lucide-react';
 import { useEffect, useMemo, useRef, useState } from 'react';
+import { useShallow } from 'zustand/react/shallow';
 
 import { PROFILE_DEFAULTS } from '@/types/profile';
 
@@ -235,8 +236,20 @@ export default function ProfileEdit({
   const { updateProfile, isUpdating, error: updateError } = useProfileUpdate();
   const { uploadAvatar, isUploading: isUploadingAvatar } = useProfileAvatar();
   const { displayName, initials } = useProfileDisplay();
-  const storeProfile = useProfileStore(profileSelectors.currentProfile);
+  
+  // CRITICAL FIX: Use useShallow for store subscriptions to prevent infinite render loops
+  const storeProfile = useProfileStore(
+    useShallow((state) => profileSelectors.currentProfile(state))
+  );
+  
+  // Store actions in refs to prevent dependency issues
   const setUserProfileInStore = useProfileStore((state) => state.setUserProfile);
+  const setUserProfileInStoreRef = useRef(setUserProfileInStore);
+  
+  useEffect(() => {
+    setUserProfileInStoreRef.current = setUserProfileInStore;
+  }, [setUserProfileInStore]);
+  
   const storeProfileId = storeProfile?.id ?? null;
   const effectiveProfile = profile ?? storeProfile;
 
@@ -310,10 +323,10 @@ export default function ProfileEdit({
   );
 
   useEffect(() => {
-    if (profile && storeProfileId !== profile.id) {
-      setUserProfileInStore(profile);
+    if (profile && storeProfileId !== profile.id && setUserProfileInStoreRef.current) {
+      setUserProfileInStoreRef.current(profile);
     }
-  }, [profile, setUserProfileInStore, storeProfileId]);
+  }, [profile, storeProfileId]);
 
   // Use external props if provided, otherwise use hooks
   const finalLoading = externalLoading !== undefined ? externalLoading : isUpdating;

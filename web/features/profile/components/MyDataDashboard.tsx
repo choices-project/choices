@@ -36,7 +36,8 @@ import {
   Loader2,
   Info
 } from 'lucide-react';
-import React, { useCallback, useState } from 'react';
+import React, { useCallback, useEffect, useRef, useState } from 'react';
+import { useShallow } from 'zustand/react/shallow';
 
 import { useProfileDelete, useProfileExport } from '@/features/profile/hooks/use-profile';
 
@@ -75,6 +76,12 @@ export default function MyDataDashboard({
   onPrivacyUpdate,
   isSaving = false
 }: MyDataDashboardProps) {
+  // Client-side mount guard to prevent SSR hydration mismatches
+  const [isMounted, setIsMounted] = useState(false);
+  useEffect(() => {
+    setIsMounted(true);
+  }, []);
+
   const [isDeleting, setIsDeleting] = useState(false);
   const [deleteTarget, setDeleteTarget] = useState<string | null>(null);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
@@ -84,9 +91,28 @@ export default function MyDataDashboard({
   const { exportProfile, isExporting } = useProfileExport();
   const { deleteProfile } = useProfileDelete();
   const { signOut: resetUserStore } = useUserActions();
-  const storePrivacySettings = useProfileStore(profileSelectors.privacySettings);
+  
+  // CRITICAL FIX: Use useShallow for store subscriptions to prevent infinite render loops
+  // This ensures stable object references from Zustand stores
+  const storePrivacySettings = useProfileStore(
+    useShallow((state) => profileSelectors.privacySettings(state))
+  );
+  
+  // Store actions in refs to prevent dependency issues in useCallback/useEffect
   const updatePrivacySettingsAction = useProfileStore((state) => state.updatePrivacySettings);
   const resetProfileState = useProfileStore((state) => state.resetProfile);
+  
+  const updatePrivacySettingsActionRef = useRef(updatePrivacySettingsAction);
+  const resetProfileStateRef = useRef(resetProfileState);
+  
+  useEffect(() => {
+    updatePrivacySettingsActionRef.current = updatePrivacySettingsAction;
+  }, [updatePrivacySettingsAction]);
+  
+  useEffect(() => {
+    resetProfileStateRef.current = resetProfileState;
+  }, [resetProfileState]);
+  
   const effectivePrivacySettings = privacySettings ?? storePrivacySettings;
 
   // Data categories that can be collected
@@ -236,7 +262,9 @@ export default function MyDataDashboard({
 
       logger.info('Account deleted successfully', { userId });
       resetUserStore();
-      resetProfileState();
+      if (resetProfileStateRef.current) {
+        resetProfileStateRef.current();
+      }
       window.location.href = '/';
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : 'Failed to delete account';
@@ -251,6 +279,19 @@ export default function MyDataDashboard({
     setDeleteTarget(dataType);
     setShowDeleteConfirm(true);
   };
+
+  // Don't render until mounted to prevent SSR hydration mismatches
+  if (!isMounted) {
+    return (
+      <div className="max-w-4xl mx-auto space-y-6 p-6">
+        <div className="animate-pulse space-y-4">
+          <div className="h-10 bg-gray-200 dark:bg-gray-700 rounded w-1/3" />
+          <div className="h-32 bg-gray-100 dark:bg-gray-800 rounded" />
+          <div className="h-64 bg-gray-100 dark:bg-gray-800 rounded" />
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="max-w-4xl mx-auto space-y-6 p-6">
@@ -468,8 +509,8 @@ export default function MyDataDashboard({
                               try {
                                 if (onPrivacyUpdate) {
                                   await onPrivacyUpdate({ [category.privacyKey]: checked });
-                                } else {
-                                  await updatePrivacySettingsAction({ [category.privacyKey]: checked });
+                                } else if (updatePrivacySettingsActionRef.current) {
+                                  await updatePrivacySettingsActionRef.current({ [category.privacyKey]: checked });
                                 }
                                 setError(null);
                               } catch (err) {
