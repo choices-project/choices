@@ -372,12 +372,14 @@ test.describe('Civics Integration Tests', () => {
         // Clear any initial render counts
         renderCounts.length = 0;
 
-        // Toggle a preference
+        // Toggle a preference - use force: true to click the hidden input
+        // The Switch component has a visual overlay that intercepts normal clicks
         const engagementToggle = page.locator('[data-testid="show-engagement-score-toggle"]');
         const toggleCount = await engagementToggle.count();
         
         if (toggleCount > 0) {
-          await engagementToggle.first().click();
+          // Use force: true to bypass actionability checks and click the hidden input directly
+          await engagementToggle.first().click({ force: true });
           
           // Wait for state to update
           await page.waitForTimeout(1000);
