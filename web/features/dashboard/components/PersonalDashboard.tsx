@@ -97,7 +97,7 @@ function StandardPersonalDashboard({ userId: _fallbackUserId }: PersonalDashboar
 
   // PHASE 4.1: Profile Hooks (incremental restoration)
   // Following established patterns: useShallow for store subscriptions, refs for actions
-  const { profile } = useProfile();
+  const { profile: _profile } = useProfile();
   const { hasAnyError: _hasAnyError } = useProfileErrorStates(); // Phase 4.1: Added but not used yet
   const { isAnyUpdating: _isProfileUpdating } = useProfileLoadingStates(); // Phase 4.1: Added but not used yet
 
