@@ -537,7 +537,7 @@ function StandardPersonalDashboard({ userId: _fallbackUserId }: PersonalDashboar
   const handlePreferenceChange = useCallback(
     (key: keyof DashboardPreferences, value: boolean) => {
       if (!updatePreferencesRefForCallback.current) return;
-      
+
       updatePreferencesRefForCallback.current({
         dashboard: {
           ...dashboardPreferences,
@@ -721,7 +721,7 @@ function StandardPersonalDashboard({ userId: _fallbackUserId }: PersonalDashboar
               <CardTitle className="text-lg font-semibold">Your Representatives</CardTitle>
             </div>
                     <CardDescription>
-              {numberFormatter ? numberFormatter.format(representativeEntries.length) : representativeEntries.length} 
+              {numberFormatter ? numberFormatter.format(representativeEntries.length) : representativeEntries.length}
               {' '}representative{representativeEntries.length !== 1 ? 's' : ''} you're following
                     </CardDescription>
                   </CardHeader>
@@ -734,7 +734,7 @@ function StandardPersonalDashboard({ userId: _fallbackUserId }: PersonalDashboar
                 const photoUrl = (rep as Record<string, unknown>)?.primary_photo_url as string | undefined;
                 const party = (rep as Record<string, unknown>)?.party as string | undefined;
                 const repId = (rep as Record<string, unknown>)?.id as number | undefined;
-                
+
                 return (
                   <Link
                     key={`rep-${repId ?? entry.follow.id}`}
@@ -816,9 +816,9 @@ function StandardPersonalDashboard({ userId: _fallbackUserId }: PersonalDashboar
                   onCheckedChange={(checked) => handlePreferenceChange('showEngagementScore', checked)}
                 />
                         </div>
-              
+
               <Separator />
-              
+
               <div className="flex items-center justify-between py-2">
                 <div className="space-y-0.5 flex-1">
                   <Label htmlFor="show-recent-activity" className="text-base font-medium cursor-pointer">
@@ -834,9 +834,9 @@ function StandardPersonalDashboard({ userId: _fallbackUserId }: PersonalDashboar
                   onCheckedChange={(checked) => handlePreferenceChange('showRecentActivity', checked)}
                 />
                     </div>
-              
+
               <Separator />
-              
+
               <div className="flex items-center justify-between py-2">
                 <div className="space-y-0.5 flex-1">
                   <Label htmlFor="show-quick-actions" className="text-base font-medium cursor-pointer">
@@ -852,9 +852,9 @@ function StandardPersonalDashboard({ userId: _fallbackUserId }: PersonalDashboar
                   onCheckedChange={(checked) => handlePreferenceChange('showQuickActions', checked)}
                 />
                         </div>
-              
+
               <Separator />
-              
+
               <div className="flex items-center justify-between py-2">
                 <div className="space-y-0.5 flex-1">
                   <Label htmlFor="show-elected-officials" className="text-base font-medium cursor-pointer">

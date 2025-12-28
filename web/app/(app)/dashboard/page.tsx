@@ -49,6 +49,7 @@ import { Button } from '@/components/ui/button';
 
 import { useIsAuthenticated, useUserLoading, useUserStore } from '@/lib/stores';
 import { useAppActions } from '@/lib/stores/appStore';
+import { profileSelectors, useProfileStore } from '@/lib/stores/profileStore';
 import { logger } from '@/lib/utils/logger';
 
 import { useAuth } from '@/hooks/useAuth';
@@ -643,22 +644,108 @@ export default function DashboardPage() {
     // IMPORTANT: Only redirect if profile has finished loading AND is still null after a delay
     // This prevents redirecting users while profile is still being fetched
     if (!isLoading && isAuthenticated && !profile && !isCheckingAdmin) {
+      // #region agent log
+      console.log(JSON.stringify({
+        location: 'dashboard/page.tsx:redirect-logic-entry',
+        message: 'Redirect logic triggered - no profile detected',
+        data: {
+          isLoading,
+          isAuthenticated,
+          hasProfile: !!profile,
+          isCheckingAdmin,
+          shouldBypassAuth,
+          bypassFlag: checkBypassFlag(),
+          timestamp: Date.now(),
+        },
+        sessionId: 'debug-session',
+        runId: 'onboarding-redirect-debug',
+        hypothesisId: 'H1'
+      }));
+      // #endregion
+      
       // Wait a bit longer for profile to load - sometimes it takes a moment
       // Only redirect if profile is truly missing after a reasonable delay
       const checkAdminAndRedirect = async () => {
         if (adminCheckRef.current) {
+          // #region agent log
+          console.log(JSON.stringify({
+            location: 'dashboard/page.tsx:checkAdminAndRedirect:already-checking',
+            message: 'Admin check already in progress - skipping',
+            data: { timestamp: Date.now() },
+            sessionId: 'debug-session',
+            runId: 'onboarding-redirect-debug',
+            hypothesisId: 'H1'
+          }));
+          // #endregion
           return; // Already checking
         }
         adminCheckRef.current = true;
         setIsCheckingAdmin(true);
 
+        // #region agent log
+        console.log(JSON.stringify({
+          location: 'dashboard/page.tsx:checkAdminAndRedirect:start',
+          message: 'Starting 3-second wait before profile re-check',
+          data: {
+            profileAtStart: !!profile,
+            shouldBypassAuth,
+            bypassFlag: checkBypassFlag(),
+            timestamp: Date.now(),
+          },
+          sessionId: 'debug-session',
+          runId: 'onboarding-redirect-debug',
+          hypothesisId: 'H1'
+        }));
+        // #endregion
+
         // Give profile a bit more time to load (3 seconds)
         // This allows the profile fetch to complete
         await new Promise(resolve => setTimeout(resolve, 3_000));
 
-        // Re-check if profile loaded by re-reading from the hook
-        // The profile state might have updated during the wait
-        // We'll check this in the render logic below
+        // CRITICAL FIX: Re-check profile state after the wait from the store directly
+        // The profile might have loaded during the 3-second wait, but the closure still
+        // has the old null value. We need to read the current profile from the store.
+        const currentProfileFromStore = profileSelectors.currentProfile(useProfileStore.getState());
+        const isLoadingProfileFromStore = useProfileStore.getState().isProfileLoading;
+        
+        // #region agent log
+        console.log(JSON.stringify({
+          location: 'dashboard/page.tsx:checkAdminAndRedirect:after-wait',
+          message: '3-second wait complete - re-checking profile state from store',
+          data: {
+            profileAtStart: !!profile,
+            currentProfileFromStore: !!currentProfileFromStore,
+            isLoadingProfileFromStore,
+            shouldBypassAuth,
+            bypassFlag: checkBypassFlag(),
+            timestamp: Date.now(),
+          },
+          sessionId: 'debug-session',
+          runId: 'onboarding-redirect-debug',
+          hypothesisId: 'H1'
+        }));
+        // #endregion
+
+        // If profile loaded during the wait, cancel the redirect
+        if (currentProfileFromStore) {
+          // #region agent log
+          console.log(JSON.stringify({
+            location: 'dashboard/page.tsx:checkAdminAndRedirect:profile-loaded',
+            message: 'Profile loaded during wait - canceling redirect',
+            data: {
+              timestamp: Date.now(),
+            },
+            sessionId: 'debug-session',
+            runId: 'onboarding-redirect-debug',
+            hypothesisId: 'H1'
+          }));
+          // #endregion
+          setIsCheckingAdmin(false);
+          adminCheckRef.current = false;
+          return; // Profile loaded, no need to redirect
+        }
+
+        // Profile still not loaded - continue with admin check
 
         try {
           const response = await fetch('/api/admin/health?type=status', {
@@ -667,38 +754,146 @@ export default function DashboardPage() {
             signal: AbortSignal.timeout(5_000), // 5 second timeout
           });
 
+          // #region agent log
+          console.log(JSON.stringify({
+            location: 'dashboard/page.tsx:checkAdminAndRedirect:admin-check-result',
+            message: 'Admin check completed',
+            data: {
+              status: response.status,
+              ok: response.ok,
+              timestamp: Date.now(),
+            },
+            sessionId: 'debug-session',
+            runId: 'onboarding-redirect-debug',
+            hypothesisId: 'H1'
+          }));
+          // #endregion
+
           if (response.ok) {
             // User is admin - allow access to dashboard (they can navigate to admin dashboard)
             logger.debug('🚨 Dashboard: No profile but user is admin - allowing dashboard access');
+            // #region agent log
+            console.log(JSON.stringify({
+              location: 'dashboard/page.tsx:checkAdminAndRedirect:admin-allowed',
+              message: 'User is admin - allowing dashboard access without redirect',
+              data: { timestamp: Date.now() },
+              sessionId: 'debug-session',
+              runId: 'onboarding-redirect-debug',
+              hypothesisId: 'H1'
+            }));
+            // #endregion
             setIsCheckingAdmin(false);
             adminCheckRef.current = false;
             return; // Don't redirect
           } else if (response.status === 401 || response.status === 403) {
             // Not admin or not authenticated - redirect to onboarding
             logger.debug('🚨 Dashboard: User is not admin (401/403) - redirecting to onboarding');
+            // #region agent log
+            console.log(JSON.stringify({
+              location: 'dashboard/page.tsx:checkAdminAndRedirect:not-admin',
+              message: 'User is not admin (401/403) - will check bypass before redirect',
+              data: {
+                status: response.status,
+                timestamp: Date.now(),
+              },
+              sessionId: 'debug-session',
+              runId: 'onboarding-redirect-debug',
+              hypothesisId: 'H1'
+            }));
+            // #endregion
           } else {
             // Other error - log but still redirect to be safe
             logger.warn('🚨 Dashboard: Admin check returned non-OK status:', response.status);
+            // #region agent log
+            console.log(JSON.stringify({
+              location: 'dashboard/page.tsx:checkAdminAndRedirect:admin-check-error',
+              message: 'Admin check returned non-OK status',
+              data: {
+                status: response.status,
+                timestamp: Date.now(),
+              },
+              sessionId: 'debug-session',
+              runId: 'onboarding-redirect-debug',
+              hypothesisId: 'H1'
+            }));
+            // #endregion
           }
         } catch (error) {
           // If admin check fails or times out, assume not admin and redirect
           logger.debug('🚨 Dashboard: Admin check failed or user is not admin - redirecting to onboarding', error);
+          // #region agent log
+          console.log(JSON.stringify({
+            location: 'dashboard/page.tsx:checkAdminAndRedirect:admin-check-exception',
+            message: 'Admin check failed with exception',
+            data: {
+              error: error instanceof Error ? error.message : String(error),
+              timestamp: Date.now(),
+            },
+            sessionId: 'debug-session',
+            runId: 'onboarding-redirect-debug',
+            hypothesisId: 'H1'
+          }));
+          // #endregion
         }
 
         // Not admin or check failed - redirect to onboarding
         // CRITICAL: Skip redirect if bypass flag is set (E2E testing)
         const bypassCheck8 = shouldBypassAuth || checkBypassFlag();
 
+        // #region agent log
+        console.log(JSON.stringify({
+          location: 'dashboard/page.tsx:checkAdminAndRedirect:before-redirect-check',
+          message: 'Checking bypass flag before redirect',
+          data: {
+            shouldBypassAuth,
+            bypassFlagFromFunction: checkBypassFlag(),
+            bypassCheckResult: bypassCheck8,
+            timestamp: Date.now(),
+          },
+          sessionId: 'debug-session',
+          runId: 'onboarding-redirect-debug',
+          hypothesisId: 'H1'
+        }));
+        // #endregion
+
         if (bypassCheck8) {
           logger.debug('🚨 Dashboard: Bypass flag set - skipping onboarding redirect', {
             shouldBypassAuth,
             currentBypassFlag: checkBypassFlag(),
           });
+          // #region agent log
+          console.log(JSON.stringify({
+            location: 'dashboard/page.tsx:checkAdminAndRedirect:bypass-detected',
+            message: 'Bypass flag detected - skipping redirect to onboarding',
+            data: {
+              shouldBypassAuth,
+              bypassFlag: checkBypassFlag(),
+              timestamp: Date.now(),
+            },
+            sessionId: 'debug-session',
+            runId: 'onboarding-redirect-debug',
+            hypothesisId: 'H1'
+          }));
+          // #endregion
           setIsCheckingAdmin(false);
           adminCheckRef.current = false;
           return;
         }
         logger.debug('🚨 Dashboard: No profile found - redirecting to onboarding');
+        // #region agent log
+        console.log(JSON.stringify({
+          location: 'dashboard/page.tsx:checkAdminAndRedirect:redirecting',
+          message: 'Redirecting to onboarding - no profile, not admin, no bypass',
+          data: {
+            shouldBypassAuth,
+            bypassFlag: checkBypassFlag(),
+            timestamp: Date.now(),
+          },
+          sessionId: 'debug-session',
+          runId: 'onboarding-redirect-debug',
+          hypothesisId: 'H1'
+        }));
+        // #endregion
         setIsCheckingAdmin(false);
         adminCheckRef.current = false;
         routerRef.current.replace('/onboarding');
@@ -712,6 +907,30 @@ export default function DashboardPage() {
       // Cleanup function - no cleanup needed for other cases
     };
   }, [isLoading, isUserLoading, isAuthContextLoading, isAuthenticated, profile, shouldBypassAuth, isCheckingAdmin, hasCookies, isStoreHydrated]); // Added isAuthContextLoading, hasCookies, and isStoreHydrated to dependencies
+
+  // Track profile state changes for debugging
+  const profileRef = useRef(profile);
+  useEffect(() => {
+    if (profileRef.current !== profile) {
+      // #region agent log
+      console.log(JSON.stringify({
+        location: 'dashboard/page.tsx:profile-state-change',
+        message: 'Profile state changed',
+        data: {
+          previousProfile: !!profileRef.current,
+          currentProfile: !!profile,
+          isLoading,
+          isAuthenticated,
+          timestamp: Date.now(),
+        },
+        sessionId: 'debug-session',
+        runId: 'onboarding-redirect-debug',
+        hypothesisId: 'H2'
+      }));
+      // #endregion
+      profileRef.current = profile;
+    }
+  }, [profile, isLoading, isAuthenticated]);
 
   // Check if user is admin when profile is loaded
   useEffect(() => {
