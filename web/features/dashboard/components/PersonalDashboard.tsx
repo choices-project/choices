@@ -519,7 +519,7 @@ function StandardPersonalDashboard({ userId: _fallbackUserId }: PersonalDashboar
             <span className='font-medium ml-2'>Loading:</span> {String(profileLoading)}
           </p>
           <p className='text-xs text-gray-500 dark:text-gray-500 mt-2 pt-2 border-t border-gray-200 dark:border-gray-700'>
-            ✅ Diagnostic tracking enabled | Phase 4.3 FIXED | Data hooks use useShallow + useMemo pattern | Polls: {polls?.length ?? 0} | Events: {analyticsEvents?.length ?? 0}
+            ✅ Diagnostic tracking enabled | Phase 5: Computed values added | Polls: {polls?.length ?? 0} | Events: {analyticsEvents?.length ?? 0} | Votes (30d): {votesLast30Days} | Polls created (30d): {pollsCreatedLast30Days}
           </p>
         </div>
         </div>
