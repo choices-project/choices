@@ -472,6 +472,29 @@ function StandardPersonalDashboard({ userId: _fallbackUserId }: PersonalDashboar
     }).length;
   }, [isMounted, pollCreatedEvents, thirtyDaysAgo]);
 
+  // Combined and sorted recent activity (for display)
+  const recentActivity = useMemo(() => {
+    if (!isMounted) return [];
+    const activities: Array<{ type: 'vote' | 'poll_created'; event: unknown; createdAt: Date }> = [];
+    
+    voteEvents.forEach((event) => {
+      const createdAt = (event as Record<string, unknown>)?.created_at as string | undefined;
+      if (createdAt) {
+        activities.push({ type: 'vote', event, createdAt: new Date(createdAt) });
+      }
+    });
+    
+    pollCreatedEvents.forEach((event) => {
+      const createdAt = (event as Record<string, unknown>)?.created_at as string | undefined;
+      if (createdAt) {
+        activities.push({ type: 'poll_created', event, createdAt: new Date(createdAt) });
+      }
+    });
+    
+    // Sort by date (most recent first)
+    return activities.sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime()).slice(0, 10);
+  }, [isMounted, voteEvents, pollCreatedEvents]);
+
   // Track computed values for diagnostics (using all Phase 5 values)
   diagnostics.trackHookExecution('computedValues', {
     hasNumberFormatter: !!numberFormatter,
@@ -504,7 +527,7 @@ function StandardPersonalDashboard({ userId: _fallbackUserId }: PersonalDashboar
   }, [isMounted, dashboardPreferences, profilePreferences, numberFormatter, dateFormatter, diagnostics]);
 
   // PHASE 6.1: Basic Layout - Header and simple metric cards
-  return (
+    return (
     <div className="space-y-6" data-testid='personal-dashboard'>
       {/* Header */}
         <div>
@@ -541,17 +564,61 @@ function StandardPersonalDashboard({ userId: _fallbackUserId }: PersonalDashboar
                   </CardContent>
                 </Card>
 
-                <Card>
-                  <CardHeader>
+          <Card>
+                <CardHeader>
               <CardTitle className="text-base font-medium">Total Polls</CardTitle>
-                  </CardHeader>
+                </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold">
                 {numberFormatter ? numberFormatter.format(polls?.length ?? 0) : (polls?.length ?? 0)}
-                          </div>
-                  </CardContent>
-                </Card>
-                        </div>
+                  </div>
+                </CardContent>
+              </Card>
+            </div>
+      )}
+
+      {/* Recent Activity Section */}
+      {dashboardPreferences?.showRecentActivity && isMounted && (
+        <Card>
+          <CardHeader>
+            <CardTitle className="text-lg font-semibold">Recent Activity</CardTitle>
+          </CardHeader>
+          <CardContent>
+            {recentActivity.length === 0 ? (
+              <p className="text-sm text-gray-500 dark:text-gray-400">
+                No recent activity to display
+              </p>
+            ) : (
+              <div className="space-y-3">
+                {recentActivity.map((activity, index) => {
+                  const pollId = (activity.event as Record<string, unknown>)?.poll_id as string | undefined;
+                  return (
+                    <div
+                      key={`activity-${activity.type}-${pollId ?? index}-${activity.createdAt.getTime()}`}
+                      className="flex items-center justify-between py-2 border-b border-gray-200 dark:border-gray-700 last:border-0"
+                    >
+                      <div className="flex items-center gap-3">
+                        <div
+                          className={`w-2 h-2 rounded-full ${
+                            activity.type === 'vote' ? 'bg-blue-500' : 'bg-green-500'
+                          }`}
+                        ></div>
+                        <span className="text-sm text-gray-900 dark:text-gray-100">
+                          {activity.type === 'vote' ? 'Voted on a poll' : 'Created a poll'}
+                        </span>
+                      </div>
+                      {dateFormatter && (
+                        <span className="text-xs text-gray-500 dark:text-gray-400">
+                          {dateFormatter.format(activity.createdAt)}
+                        </span>
+                      )}
+                    </div>
+                  );
+                })}
+              </div>
+            )}
+          </CardContent>
+        </Card>
       )}
 
       {/* Diagnostic info (temporary - will be removed after Phase 7) */}

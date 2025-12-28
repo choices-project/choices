@@ -1,6 +1,6 @@
-<testsuites id="" name="" tests="3" failures="1" skipped="0" errors="0" time="26.686918000000002">
-<testsuite name="specs/dashboard/dashboard-stability.spec.ts" timestamp="2025-12-28T01:08:37.529Z" hostname="chromium" tests="3" failures="1" skipped="0" time="36.406" errors="0">
-<testcase name="Dashboard Stability Tests › dashboard renders without infinite loops" classname="specs/dashboard/dashboard-stability.spec.ts" time="11.675">
+<testsuites id="" name="" tests="3" failures="1" skipped="0" errors="0" time="26.581944000000004">
+<testsuite name="specs/dashboard/dashboard-stability.spec.ts" timestamp="2025-12-28T01:41:49.253Z" hostname="chromium" tests="3" failures="1" skipped="0" time="35.524" errors="0">
+<testcase name="Dashboard Stability Tests › dashboard renders without infinite loops" classname="specs/dashboard/dashboard-stability.spec.ts" time="11.144">
 <system-out>
 <![CDATA[[dashboard-stability] E2E bypass cookie set for domain: .choices-app.com
 [dashboard-stability] Bypass cookie verification: {
@@ -54,7 +54,7 @@
   wasRedirected: [33mfalse[39m
 }
 [dashboard-stability] Current URL after navigation: https://www.choices-app.com/dashboard
-[dashboard-stability] Dashboard render time: [33m2972[39m ms
+[dashboard-stability] Dashboard render time: [33m2877[39m ms
 [dashboard-stability] Dashboard elements present: {
   hasHeader: [33mfalse[39m,
   hasTitle: [33mfalse[39m,
@@ -69,26 +69,59 @@ warning: Could not access document.cookie: SecurityError: Failed to read the 'co
     at UtilityScript.evaluate (<anonymous>:292:16)
     at UtilityScript.<anonymous> (<anonymous>:1:44)
 warning: [INFO] [FEATURE_FLAGS] Module loading on client
+error: Failed to fetch RSC payload for https://www.choices-app.com/auth. Falling back to browser navigation. TypeError: Failed to fetch
+    at d (https://www.choices-app.com/_next/static/chunks/next-dist-4497f2ad-d22731f12a9701be.js:1:9944)
+    at https://www.choices-app.com/_next/static/chunks/next-dist-4497f2ad-d22731f12a9701be.js:1:23491
+    at Object.u [as task] (https://www.choices-app.com/_next/static/chunks/next-dist-4c7823de-7cb068d54746d60f.js:1:7750)
+    at l.c (https://www.choices-app.com/_next/static/chunks/next-dist-4c7823de-7cb068d54746d60f.js:1:8455)
+    at l.enqueue (https://www.choices-app.com/_next/static/chunks/next-dist-4c7823de-7cb068d54746d60f.js:1:7880)
+    at i (https://www.choices-app.com/_next/static/chunks/next-dist-4497f2ad-d22731f12a9701be.js:1:23454)
+    at c (https://www.choices-app.com/_next/static/chunks/next-dist-4497f2ad-d22731f12a9701be.js:1:22994)
+    at o (https://www.choices-app.com/_next/static/chunks/next-dist-4497f2ad-d22731f12a9701be.js:1:29813)
+    at d (https://www.choices-app.com/_next/static/chunks/next-dist-4497f2ad-d22731f12a9701be.js:1:39665)
+    at Object.action (https://www.choices-app.com/_next/static/chunks/next-dist-42bbf998-06a8423af53acedf.js:1:61003)
+error: Failed to fetch RSC payload for https://www.choices-app.com/auth?mode=signup. Falling back to browser navigation. TypeError: Failed to fetch
+    at d (https://www.choices-app.com/_next/static/chunks/next-dist-4497f2ad-d22731f12a9701be.js:1:9944)
+    at https://www.choices-app.com/_next/static/chunks/next-dist-4497f2ad-d22731f12a9701be.js:1:23491
+    at Object.u [as task] (https://www.choices-app.com/_next/static/chunks/next-dist-4c7823de-7cb068d54746d60f.js:1:7750)
+    at l.c (https://www.choices-app.com/_next/static/chunks/next-dist-4c7823de-7cb068d54746d60f.js:1:8455)
+    at l.enqueue (https://www.choices-app.com/_next/static/chunks/next-dist-4c7823de-7cb068d54746d60f.js:1:7880)
+    at i (https://www.choices-app.com/_next/static/chunks/next-dist-4497f2ad-d22731f12a9701be.js:1:23454)
+    at c (https://www.choices-app.com/_next/static/chunks/next-dist-4497f2ad-d22731f12a9701be.js:1:22994)
+    at o (https://www.choices-app.com/_next/static/chunks/next-dist-4497f2ad-d22731f12a9701be.js:1:29813)
+    at d (https://www.choices-app.com/_next/static/chunks/next-dist-4497f2ad-d22731f12a9701be.js:1:39665)
+    at Object.action (https://www.choices-app.com/_next/static/chunks/next-dist-42bbf998-06a8423af53acedf.js:1:61003)
+error: Failed to fetch RSC payload for https://www.choices-app.com/. Falling back to browser navigation. TypeError: Failed to fetch
+    at d (https://www.choices-app.com/_next/static/chunks/next-dist-4497f2ad-d22731f12a9701be.js:1:9944)
+    at https://www.choices-app.com/_next/static/chunks/next-dist-4497f2ad-d22731f12a9701be.js:1:23491
+    at Object.u [as task] (https://www.choices-app.com/_next/static/chunks/next-dist-4c7823de-7cb068d54746d60f.js:1:7750)
+    at l.c (https://www.choices-app.com/_next/static/chunks/next-dist-4c7823de-7cb068d54746d60f.js:1:8455)
+    at l.enqueue (https://www.choices-app.com/_next/static/chunks/next-dist-4c7823de-7cb068d54746d60f.js:1:7880)
+    at i (https://www.choices-app.com/_next/static/chunks/next-dist-4497f2ad-d22731f12a9701be.js:1:23454)
+    at c (https://www.choices-app.com/_next/static/chunks/next-dist-4497f2ad-d22731f12a9701be.js:1:22994)
+    at o (https://www.choices-app.com/_next/static/chunks/next-dist-4497f2ad-d22731f12a9701be.js:1:29813)
+    at d (https://www.choices-app.com/_next/static/chunks/next-dist-4497f2ad-d22731f12a9701be.js:1:39665)
+    at Object.action (https://www.choices-app.com/_next/static/chunks/next-dist-42bbf998-06a8423af53acedf.js:1:61003)
 warning: [INFO] [FEATURE_FLAGS] Module loading on client
-log: [DEBUG-HYP-C] DashboardPage function entry {typeofWindow: true, timestamp: 1766884126704}
-log: [DEBUG-HYP-C] BEFORE calling Zustand hooks {typeofWindow: true, timestamp: 1766884126706}
-log: [DEBUG-HYP-C] AFTER calling Zustand hooks {typeofWindow: true, isAuthenticated: false, isUserLoading: false, timestamp: 1766884126706}
-log: [DEBUG-HYP-A] DashboardPage render - rendering PersonalDashboard via dynamic import {typeofWindow: true, timestamp: 1766884126706}
-log: [DEBUG-HYP-B] RENDERING PersonalDashboard component (dynamic import) {typeofWindow: true, timestamp: 1766884126707}
+log: [DEBUG-HYP-C] DashboardPage function entry {typeofWindow: true, timestamp: 1766886118336}
+log: [DEBUG-HYP-C] BEFORE calling Zustand hooks {typeofWindow: true, timestamp: 1766886118337}
+log: [DEBUG-HYP-C] AFTER calling Zustand hooks {typeofWindow: true, isAuthenticated: false, isUserLoading: false, timestamp: 1766886118338}
+log: [DEBUG-HYP-A] DashboardPage render - rendering PersonalDashboard via dynamic import {typeofWindow: true, timestamp: 1766886118338}
+log: [DEBUG-HYP-B] RENDERING PersonalDashboard component (dynamic import) {typeofWindow: true, timestamp: 1766886118338}
 warning: [DIAGNOSTIC] AppShell: Rendering {theme: light, sidebarCollapsed: false, sidebarWidth: 280, sidebarPinned: false, hasNavigation: true}
 warning: [INFO] Skipping service worker registration in automated environment
 warning: [DIAGNOSTIC] AppLayout: Rendering AppShell {IS_E2E_HARNESS: false, bypassFlag: 1, currentUrl: https://www.choices-app.com/dashboard}
-log: [DEBUG-HYP-C] DashboardPage function entry {typeofWindow: true, timestamp: 1766884126729}
-log: [DEBUG-HYP-C] BEFORE calling Zustand hooks {typeofWindow: true, timestamp: 1766884126730}
-log: [DEBUG-HYP-C] AFTER calling Zustand hooks {typeofWindow: true, isAuthenticated: false, isUserLoading: false, timestamp: 1766884126730}
-log: [DEBUG-HYP-A] DashboardPage render - rendering PersonalDashboard via dynamic import {typeofWindow: true, timestamp: 1766884126730}
-log: [DEBUG-HYP-B] RENDERING PersonalDashboard component (dynamic import) {typeofWindow: true, timestamp: 1766884126731}
-log: [DEBUG-HYP-C] DashboardPage function entry {typeofWindow: true, timestamp: 1766884126746}
-log: [DEBUG-HYP-C] BEFORE calling Zustand hooks {typeofWindow: true, timestamp: 1766884126746}
-log: [DEBUG-HYP-C] AFTER calling Zustand hooks {typeofWindow: true, isAuthenticated: false, isUserLoading: false, timestamp: 1766884126746}
-log: [DEBUG-HYP-A] DashboardPage render - rendering PersonalDashboard via dynamic import {typeofWindow: true, timestamp: 1766884126747}
-log: [DEBUG-HYP-B] RENDERING PersonalDashboard component (dynamic import) {typeofWindow: true, timestamp: 1766884126747}
-log: {"location":"StandardPersonalDashboard:render","message":"Component render","data":{"renderCount":1,"timestamp":1766884127214,"hasWindow":true,"componentName":"StandardPersonalDashboard"},"sessionId":"debug-session","runId":"final-fix-diagnostic","hypothesisId":"DIAGNOSTIC"}
+log: [DEBUG-HYP-C] DashboardPage function entry {typeofWindow: true, timestamp: 1766886118361}
+log: [DEBUG-HYP-C] BEFORE calling Zustand hooks {typeofWindow: true, timestamp: 1766886118362}
+log: [DEBUG-HYP-C] AFTER calling Zustand hooks {typeofWindow: true, isAuthenticated: false, isUserLoading: false, timestamp: 1766886118362}
+log: [DEBUG-HYP-A] DashboardPage render - rendering PersonalDashboard via dynamic import {typeofWindow: true, timestamp: 1766886118362}
+log: [DEBUG-HYP-B] RENDERING PersonalDashboard component (dynamic import) {typeofWindow: true, timestamp: 1766886118362}
+log: [DEBUG-HYP-C] DashboardPage function entry {typeofWindow: true, timestamp: 1766886118381}
+log: [DEBUG-HYP-C] BEFORE calling Zustand hooks {typeofWindow: true, timestamp: 1766886118381}
+log: [DEBUG-HYP-C] AFTER calling Zustand hooks {typeofWindow: true, isAuthenticated: false, isUserLoading: false, timestamp: 1766886118381}
+log: [DEBUG-HYP-A] DashboardPage render - rendering PersonalDashboard via dynamic import {typeofWindow: true, timestamp: 1766886118382}
+log: [DEBUG-HYP-B] RENDERING PersonalDashboard component (dynamic import) {typeofWindow: true, timestamp: 1766886118382}
+log: {"location":"StandardPersonalDashboard:render","message":"Component render","data":{"renderCount":1,"timestamp":1766886118788,"hasWindow":true,"componentName":"StandardPersonalDashboard"},"sessionId":"debug-session","runId":"final-fix-diagnostic","hypothesisId":"DIAGNOSTIC"}
 log: {"location":"StandardPersonalDashboard:useState:isMounted","message":"Hook execution","data":{"hookName":"useState:isMounted","executionCount":1,"renderCount":1,"isMounted":false,"prevIsMounted":false},"sessionId":"debug-session","runId":"final-fix-diagnostic","hypothesisId":"DIAGNOSTIC"}
 log: {"location":"StandardPersonalDashboard:useProfile","message":"Hook execution","data":{"hookName":"useProfile","executionCount":1,"renderCount":1,"hasProfile":false,"isLoading":true,"hasError":false,"profileId":null},"sessionId":"debug-session","runId":"final-fix-diagnostic","hypothesisId":"DIAGNOSTIC"}
 log: {"location":"StandardPersonalDashboard:useIsAuthenticated","message":"Hook execution","data":{"hookName":"useIsAuthenticated","executionCount":1,"renderCount":1,"isAuthenticated":false},"sessionId":"debug-session","runId":"final-fix-diagnostic","hypothesisId":"DIAGNOSTIC"}
@@ -105,7 +138,7 @@ log: {"location":"StandardPersonalDashboard:useMemo:dashboardPreferences","messa
 log: {"location":"StandardPersonalDashboard:computedValues","message":"Hook execution","data":{"hookName":"computedValues","executionCount":1,"renderCount":1,"hasNumberFormatter":false,"hasDateFormatter":false,"userPollsCount":0,"voteEventsCount":0,"pollCreatedEventsCount":0,"votesLast30Days":0,"pollsCreatedLast30Days":0},"sessionId":"debug-session","runId":"final-fix-diagnostic","hypothesisId":"DIAGNOSTIC"}
 log: {"location":"StandardPersonalDashboard:useEffect:setIsMounted","message":"Hook execution","data":{"hookName":"useEffect:setIsMounted","executionCount":1,"renderCount":1,"isMountedBefore":false},"sessionId":"debug-session","runId":"final-fix-diagnostic","hypothesisId":"DIAGNOSTIC"}
 log: {"location":"StandardPersonalDashboard:useEffect:render-summary","message":"Render summary after mount","data":{"renderCount":1,"isMounted":false,"hasDashboardPreferences":true,"dashboardPreferencesValue":{"showElectedOfficials":false,"showQuickActions":true,"showRecentActivity":true,"showEngagementScore":true},"hasProfilePreferences":false,"hasNumberFormatter":false,"hasDateFormatter":false},"sessionId":"debug-session","runId":"final-fix-diagnostic","hypothesisId":"DIAGNOSTIC"}
-log: {"location":"StandardPersonalDashboard:render","message":"Component render","data":{"renderCount":2,"timestamp":1766884127221,"hasWindow":true,"componentName":"StandardPersonalDashboard"},"sessionId":"debug-session","runId":"final-fix-diagnostic","hypothesisId":"DIAGNOSTIC"}
+log: {"location":"StandardPersonalDashboard:render","message":"Component render","data":{"renderCount":2,"timestamp":1766886118801,"hasWindow":true,"componentName":"StandardPersonalDashboard"},"sessionId":"debug-session","runId":"final-fix-diagnostic","hypothesisId":"DIAGNOSTIC"}
 log: {"location":"StandardPersonalDashboard:useState:isMounted","message":"Hook execution","data":{"hookName":"useState:isMounted","executionCount":2,"renderCount":2,"isMounted":true,"prevIsMounted":false},"sessionId":"debug-session","runId":"final-fix-diagnostic","hypothesisId":"DIAGNOSTIC"}
 log: {"location":"StandardPersonalDashboard:useProfile","message":"Hook execution","data":{"hookName":"useProfile","executionCount":2,"renderCount":2,"hasProfile":false,"isLoading":true,"hasError":false,"profileId":null},"sessionId":"debug-session","runId":"final-fix-diagnostic","hypothesisId":"DIAGNOSTIC"}
 log: {"location":"StandardPersonalDashboard:useIsAuthenticated","message":"Hook execution","data":{"hookName":"useIsAuthenticated","executionCount":2,"renderCount":2,"isAuthenticated":false},"sessionId":"debug-session","runId":"final-fix-diagnostic","hypothesisId":"DIAGNOSTIC"}
@@ -124,12 +157,12 @@ error: Failed to load resource: the server responded with a status of 401 ()
 error: [ERROR] Error fetching profile: Error: HTTP 401: 
     at A (https://www.choices-app.com/_next/static/chunks/8556-33fa8266ce226eea.js:1:3230)
     at async Object.loadProfile [as current] (https://www.choices-app.com/_next/static/chunks/5630-1e7a480959114722.js:1:4108)
-log: [DEBUG-HYP-C] DashboardPage function entry {typeofWindow: true, timestamp: 1766884127911}
-log: [DEBUG-HYP-C] BEFORE calling Zustand hooks {typeofWindow: true, timestamp: 1766884127911}
-log: [DEBUG-HYP-C] AFTER calling Zustand hooks {typeofWindow: true, isAuthenticated: false, isUserLoading: false, timestamp: 1766884127911}
-log: [DEBUG-HYP-A] DashboardPage render - rendering PersonalDashboard via dynamic import {typeofWindow: true, timestamp: 1766884127912}
-log: [DEBUG-HYP-B] RENDERING PersonalDashboard component (dynamic import) {typeofWindow: true, timestamp: 1766884127912}
-log: {"location":"StandardPersonalDashboard:render","message":"Component render","data":{"renderCount":3,"timestamp":1766884127912,"hasWindow":true,"componentName":"StandardPersonalDashboard"},"sessionId":"debug-session","runId":"final-fix-diagnostic","hypothesisId":"DIAGNOSTIC"}
+log: [DEBUG-HYP-C] DashboardPage function entry {typeofWindow: true, timestamp: 1766886119332}
+log: [DEBUG-HYP-C] BEFORE calling Zustand hooks {typeofWindow: true, timestamp: 1766886119332}
+log: [DEBUG-HYP-C] AFTER calling Zustand hooks {typeofWindow: true, isAuthenticated: false, isUserLoading: false, timestamp: 1766886119332}
+log: [DEBUG-HYP-A] DashboardPage render - rendering PersonalDashboard via dynamic import {typeofWindow: true, timestamp: 1766886119332}
+log: [DEBUG-HYP-B] RENDERING PersonalDashboard component (dynamic import) {typeofWindow: true, timestamp: 1766886119332}
+log: {"location":"StandardPersonalDashboard:render","message":"Component render","data":{"renderCount":3,"timestamp":1766886119333,"hasWindow":true,"componentName":"StandardPersonalDashboard"},"sessionId":"debug-session","runId":"final-fix-diagnostic","hypothesisId":"DIAGNOSTIC"}
 log: {"location":"StandardPersonalDashboard:useState:isMounted","message":"Hook execution","data":{"hookName":"useState:isMounted","executionCount":3,"renderCount":3,"isMounted":true,"prevIsMounted":true},"sessionId":"debug-session","runId":"final-fix-diagnostic","hypothesisId":"DIAGNOSTIC"}
 log: {"location":"StandardPersonalDashboard:useProfile","message":"Hook execution","data":{"hookName":"useProfile","executionCount":3,"renderCount":3,"hasProfile":false,"isLoading":false,"hasError":true,"profileId":null},"sessionId":"debug-session","runId":"final-fix-diagnostic","hypothesisId":"DIAGNOSTIC"}
 log: {"location":"StandardPersonalDashboard:useIsAuthenticated","message":"Hook execution","data":{"hookName":"useIsAuthenticated","executionCount":3,"renderCount":3,"isAuthenticated":false},"sessionId":"debug-session","runId":"final-fix-diagnostic","hypothesisId":"DIAGNOSTIC"}
@@ -145,12 +178,12 @@ log: {"location":"StandardPersonalDashboard:useUserRepresentativeEntries","messa
 log: {"location":"StandardPersonalDashboard:computedValues","message":"Hook execution","data":{"hookName":"computedValues","executionCount":3,"renderCount":3,"hasNumberFormatter":true,"hasDateFormatter":true,"userPollsCount":0,"voteEventsCount":0,"pollCreatedEventsCount":0,"votesLast30Days":0,"pollsCreatedLast30Days":0},"sessionId":"debug-session","runId":"final-fix-diagnostic","hypothesisId":"DIAGNOSTIC"}
 log: {"location":"StandardPersonalDashboard:useEffect:render-summary","message":"Render summary after mount","data":{"renderCount":3,"isMounted":true,"hasDashboardPreferences":true,"dashboardPreferencesValue":{"showElectedOfficials":false,"showQuickActions":true,"showRecentActivity":true,"showEngagementScore":true},"hasProfilePreferences":false,"hasNumberFormatter":true,"hasDateFormatter":true},"sessionId":"debug-session","runId":"final-fix-diagnostic","hypothesisId":"DIAGNOSTIC"}
 error: Failed to load resource: the server responded with a status of 404 ()
-log: [DEBUG-HYP-C] DashboardPage function entry {typeofWindow: true, timestamp: 1766884129534}
-log: [DEBUG-HYP-C] BEFORE calling Zustand hooks {typeofWindow: true, timestamp: 1766884129534}
-log: [DEBUG-HYP-C] AFTER calling Zustand hooks {typeofWindow: true, isAuthenticated: false, isUserLoading: false, timestamp: 1766884129534}
-log: [DEBUG-HYP-A] DashboardPage render - rendering PersonalDashboard via dynamic import {typeofWindow: true, timestamp: 1766884129534}
-log: [DEBUG-HYP-B] RENDERING PersonalDashboard component (dynamic import) {typeofWindow: true, timestamp: 1766884129534}
-log: {"location":"StandardPersonalDashboard:render","message":"Component render","data":{"renderCount":4,"timestamp":1766884129535,"hasWindow":true,"componentName":"StandardPersonalDashboard"},"sessionId":"debug-session","runId":"final-fix-diagnostic","hypothesisId":"DIAGNOSTIC"}
+log: [DEBUG-HYP-C] DashboardPage function entry {typeofWindow: true, timestamp: 1766886121168}
+log: [DEBUG-HYP-C] BEFORE calling Zustand hooks {typeofWindow: true, timestamp: 1766886121168}
+log: [DEBUG-HYP-C] AFTER calling Zustand hooks {typeofWindow: true, isAuthenticated: false, isUserLoading: false, timestamp: 1766886121168}
+log: [DEBUG-HYP-A] DashboardPage render - rendering PersonalDashboard via dynamic import {typeofWindow: true, timestamp: 1766886121169}
+log: [DEBUG-HYP-B] RENDERING PersonalDashboard component (dynamic import) {typeofWindow: true, timestamp: 1766886121169}
+log: {"location":"StandardPersonalDashboard:render","message":"Component render","data":{"renderCount":4,"timestamp":1766886121169,"hasWindow":true,"componentName":"StandardPersonalDashboard"},"sessionId":"debug-session","runId":"final-fix-diagnostic","hypothesisId":"DIAGNOSTIC"}
 log: {"location":"StandardPersonalDashboard:useState:isMounted","message":"Hook execution","data":{"hookName":"useState:isMounted","executionCount":4,"renderCount":4,"isMounted":true,"prevIsMounted":true},"sessionId":"debug-session","runId":"final-fix-diagnostic","hypothesisId":"DIAGNOSTIC"}
 log: {"location":"StandardPersonalDashboard:useProfile","message":"Hook execution","data":{"hookName":"useProfile","executionCount":4,"renderCount":4,"hasProfile":false,"isLoading":false,"hasError":true,"profileId":null},"sessionId":"debug-session","runId":"final-fix-diagnostic","hypothesisId":"DIAGNOSTIC"}
 log: {"location":"StandardPersonalDashboard:useIsAuthenticated","message":"Hook execution","data":{"hookName":"useIsAuthenticated","executionCount":4,"renderCount":4,"isAuthenticated":false},"sessionId":"debug-session","runId":"final-fix-diagnostic","hypothesisId":"DIAGNOSTIC"}
@@ -168,9 +201,44 @@ log: {"location":"StandardPersonalDashboard:useEffect:render-summary","message":
 ]]>
 </system-out>
 </testcase>
-<testcase name="Dashboard Stability Tests › dashboard navigation from global nav works" classname="specs/dashboard/dashboard-stability.spec.ts" time="8.082">
+<testcase name="Dashboard Stability Tests › dashboard navigation from global nav works" classname="specs/dashboard/dashboard-stability.spec.ts" time="7.657">
 <system-out>
 <![CDATA[[dashboard-stability] E2E bypass cookie set for domain: .choices-app.com
+[dashboard-stability] Console errors during page load: [
+  [32m'Failed to fetch RSC payload for https://www.choices-app.com/auth?mode=signup. Falling back to browser navigation. TypeError: Failed to fetch\n'[39m +
+    [32m'    at d (https://www.choices-app.com/_next/static/chunks/next-dist-4497f2ad-d22731f12a9701be.js:1:9944)\n'[39m +
+    [32m'    at https://www.choices-app.com/_next/static/chunks/next-dist-4497f2ad-d22731f12a9701be.js:1:23491\n'[39m +
+    [32m'    at Object.u [as task] (https://www.choices-app.com/_next/static/chunks/next-dist-4c7823de-7cb068d54746d60f.js:1:7750)\n'[39m +
+    [32m'    at l.c (https://www.choices-app.com/_next/static/chunks/next-dist-4c7823de-7cb068d54746d60f.js:1:8455)\n'[39m +
+    [32m'    at l.enqueue (https://www.choices-app.com/_next/static/chunks/next-dist-4c7823de-7cb068d54746d60f.js:1:7880)\n'[39m +
+    [32m'    at i (https://www.choices-app.com/_next/static/chunks/next-dist-4497f2ad-d22731f12a9701be.js:1:23454)\n'[39m +
+    [32m'    at c (https://www.choices-app.com/_next/static/chunks/next-dist-4497f2ad-d22731f12a9701be.js:1:22994)\n'[39m +
+    [32m'    at o (https://www.choices-app.com/_next/static/chunks/next-dist-4497f2ad-d22731f12a9701be.js:1:29813)\n'[39m +
+    [32m'    at d (https://www.choices-app.com/_next/static/chunks/next-dist-4497f2ad-d22731f12a9701be.js:1:39665)\n'[39m +
+    [32m'    at Object.action (https://www.choices-app.com/_next/static/chunks/next-dist-42bbf998-06a8423af53acedf.js:1:61003)'[39m,
+  [32m'Failed to fetch RSC payload for https://www.choices-app.com/auth. Falling back to browser navigation. TypeError: Failed to fetch\n'[39m +
+    [32m'    at d (https://www.choices-app.com/_next/static/chunks/next-dist-4497f2ad-d22731f12a9701be.js:1:9944)\n'[39m +
+    [32m'    at https://www.choices-app.com/_next/static/chunks/next-dist-4497f2ad-d22731f12a9701be.js:1:23491\n'[39m +
+    [32m'    at Object.u [as task] (https://www.choices-app.com/_next/static/chunks/next-dist-4c7823de-7cb068d54746d60f.js:1:7750)\n'[39m +
+    [32m'    at l.c (https://www.choices-app.com/_next/static/chunks/next-dist-4c7823de-7cb068d54746d60f.js:1:8455)\n'[39m +
+    [32m'    at l.enqueue (https://www.choices-app.com/_next/static/chunks/next-dist-4c7823de-7cb068d54746d60f.js:1:7880)\n'[39m +
+    [32m'    at i (https://www.choices-app.com/_next/static/chunks/next-dist-4497f2ad-d22731f12a9701be.js:1:23454)\n'[39m +
+    [32m'    at c (https://www.choices-app.com/_next/static/chunks/next-dist-4497f2ad-d22731f12a9701be.js:1:22994)\n'[39m +
+    [32m'    at o (https://www.choices-app.com/_next/static/chunks/next-dist-4497f2ad-d22731f12a9701be.js:1:29813)\n'[39m +
+    [32m'    at d (https://www.choices-app.com/_next/static/chunks/next-dist-4497f2ad-d22731f12a9701be.js:1:39665)\n'[39m +
+    [32m'    at Object.action (https://www.choices-app.com/_next/static/chunks/next-dist-42bbf998-06a8423af53acedf.js:1:61003)'[39m,
+  [32m'Failed to fetch RSC payload for https://www.choices-app.com/. Falling back to browser navigation. TypeError: Failed to fetch\n'[39m +
+    [32m'    at d (https://www.choices-app.com/_next/static/chunks/next-dist-4497f2ad-d22731f12a9701be.js:1:9944)\n'[39m +
+    [32m'    at https://www.choices-app.com/_next/static/chunks/next-dist-4497f2ad-d22731f12a9701be.js:1:23491\n'[39m +
+    [32m'    at Object.u [as task] (https://www.choices-app.com/_next/static/chunks/next-dist-4c7823de-7cb068d54746d60f.js:1:7750)\n'[39m +
+    [32m'    at l.c (https://www.choices-app.com/_next/static/chunks/next-dist-4c7823de-7cb068d54746d60f.js:1:8455)\n'[39m +
+    [32m'    at l.enqueue (https://www.choices-app.com/_next/static/chunks/next-dist-4c7823de-7cb068d54746d60f.js:1:7880)\n'[39m +
+    [32m'    at i (https://www.choices-app.com/_next/static/chunks/next-dist-4497f2ad-d22731f12a9701be.js:1:23454)\n'[39m +
+    [32m'    at c (https://www.choices-app.com/_next/static/chunks/next-dist-4497f2ad-d22731f12a9701be.js:1:22994)\n'[39m +
+    [32m'    at o (https://www.choices-app.com/_next/static/chunks/next-dist-4497f2ad-d22731f12a9701be.js:1:29813)\n'[39m +
+    [32m'    at d (https://www.choices-app.com/_next/static/chunks/next-dist-4497f2ad-d22731f12a9701be.js:1:39665)\n'[39m +
+    [32m'    at Object.action (https://www.choices-app.com/_next/static/chunks/next-dist-42bbf998-06a8423af53acedf.js:1:61003)'[39m
+]
 [dashboard-stability] Console warnings during page load: [ [32m'[INFO] [FEATURE_FLAGS] Module loading on client'[39m ]
 [dashboard-stability] Current URL after feed load: https://www.choices-app.com/feed
 [dashboard-stability] Current pathname: /feed
@@ -465,7 +533,7 @@ log: {"location":"StandardPersonalDashboard:useEffect:render-summary","message":
 ]]>
 </system-out>
 </testcase>
-<testcase name="Dashboard Stability Tests › dashboard preferences persist and toggle correctly" classname="specs/dashboard/dashboard-stability.spec.ts" time="16.649">
+<testcase name="Dashboard Stability Tests › dashboard preferences persist and toggle correctly" classname="specs/dashboard/dashboard-stability.spec.ts" time="16.723">
 <failure message="dashboard-stability.spec.ts:566:3 dashboard preferences persist and toggle correctly" type="FAILURE">
 <![CDATA[  [chromium] › specs/dashboard/dashboard-stability.spec.ts:566:3 › Dashboard Stability Tests › dashboard preferences persist and toggle correctly 
 
