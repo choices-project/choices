@@ -662,7 +662,7 @@ export default function DashboardPage() {
         hypothesisId: 'H1'
       }));
       // #endregion
-      
+
       // Wait a bit longer for profile to load - sometimes it takes a moment
       // Only redirect if profile is truly missing after a reasonable delay
       const checkAdminAndRedirect = async () => {
@@ -707,7 +707,7 @@ export default function DashboardPage() {
         // has the old null value. We need to read the current profile from the store.
         const currentProfileFromStore = profileSelectors.currentProfile(useProfileStore.getState());
         const isLoadingProfileFromStore = useProfileStore.getState().isProfileLoading;
-        
+
         // #region agent log
         console.log(JSON.stringify({
           location: 'dashboard/page.tsx:checkAdminAndRedirect:after-wait',
