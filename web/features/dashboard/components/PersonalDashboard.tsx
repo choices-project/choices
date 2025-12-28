@@ -39,6 +39,8 @@ import {
   representativeSelectors,
 } from '@/lib/stores/representativeStore';
 
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+
 import type { DashboardPreferences } from '@/types/profile';
 
 const DEFAULT_DASHBOARD_PREFERENCES: DashboardPreferences = {
@@ -501,30 +503,80 @@ function StandardPersonalDashboard({ userId: _fallbackUserId }: PersonalDashboar
     }));
   }, [isMounted, dashboardPreferences, profilePreferences, numberFormatter, dateFormatter, diagnostics]);
 
-  // Phase 5: Computed values added - Ready for UI restoration
+  // PHASE 6.1: Basic Layout - Header and simple metric cards
   return (
     <div className="space-y-6" data-testid='personal-dashboard'>
-      <div className='p-4 bg-gray-50 dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700'>
-        <h2 className='text-lg font-semibold text-gray-900 dark:text-gray-100 mb-2'>
-          Phase 5: Computed Values Added
-        </h2>
-        <div className='space-y-1 text-sm text-gray-600 dark:text-gray-400'>
-          <p>
-            <span className='font-medium'>Render count:</span> {diagnostics.renderCount} |
-            <span className='font-medium ml-2'>Mounted:</span> {String(isMounted)}
-          </p>
-          <p>
-            <span className='font-medium'>Profile:</span> {profile ? `loaded (id: ${(profile as Record<string, unknown>)?.id ?? 'unknown'})` : 'loading'} |
-            <span className='font-medium ml-2'>Auth:</span> {String(isAuthenticated)} |
-            <span className='font-medium ml-2'>Loading:</span> {String(profileLoading)}
-          </p>
-          <p className='text-xs text-gray-500 dark:text-gray-500 mt-2 pt-2 border-t border-gray-200 dark:border-gray-700'>
-            ✅ Diagnostic tracking enabled | Phase 5: Computed values added | Polls: {polls?.length ?? 0} | Events: {analyticsEvents?.length ?? 0} | Votes (30d): {votesLast30Days} | Polls created (30d): {pollsCreatedLast30Days}
-          </p>
-        </div>
-        </div>
+      {/* Header */}
+        <div>
+        <h1 className="text-3xl font-bold text-gray-900 dark:text-gray-100">
+          Dashboard
+          </h1>
+        <p className="mt-2 text-sm text-gray-600 dark:text-gray-400">
+          Your civic engagement overview and activity
+        </p>
       </div>
-    );
+
+      {/* Analytics Metrics Cards */}
+      {dashboardPreferences?.showEngagementScore && (
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+          <Card>
+                <CardHeader>
+              <CardTitle className="text-base font-medium">Votes (30 days)</CardTitle>
+                </CardHeader>
+                <CardContent>
+              <div className="text-2xl font-bold">
+                {numberFormatter ? numberFormatter.format(votesLast30Days) : votesLast30Days}
+                  </div>
+                </CardContent>
+              </Card>
+
+                <Card>
+                  <CardHeader>
+              <CardTitle className="text-base font-medium">Polls Created (30 days)</CardTitle>
+                  </CardHeader>
+                  <CardContent>
+              <div className="text-2xl font-bold">
+                {numberFormatter ? numberFormatter.format(pollsCreatedLast30Days) : pollsCreatedLast30Days}
+                    </div>
+                  </CardContent>
+                </Card>
+
+                <Card>
+                  <CardHeader>
+              <CardTitle className="text-base font-medium">Total Polls</CardTitle>
+                  </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold">
+                {numberFormatter ? numberFormatter.format(polls?.length ?? 0) : (polls?.length ?? 0)}
+                          </div>
+                  </CardContent>
+                </Card>
+                        </div>
+      )}
+
+      {/* Diagnostic info (temporary - will be removed after Phase 7) */}
+      {process.env.NODE_ENV === 'development' && (
+        <Card className="bg-gray-50 dark:bg-gray-900 border-gray-200 dark:border-gray-800">
+                  <CardHeader>
+            <CardTitle className="text-sm font-medium">Debug Info</CardTitle>
+                  </CardHeader>
+                  <CardContent>
+            <div className='space-y-1 text-xs text-gray-600 dark:text-gray-400'>
+              <p>
+                <span className='font-medium'>Render count:</span> {diagnostics.renderCount} |
+                <span className='font-medium ml-2'>Mounted:</span> {String(isMounted)}
+              </p>
+              <p>
+                <span className='font-medium'>Profile:</span> {profile ? `loaded` : 'loading'} |
+                <span className='font-medium ml-2'>Auth:</span> {String(isAuthenticated)} |
+                <span className='font-medium ml-2'>Events:</span> {analyticsEvents?.length ?? 0}
+              </p>
+                </div>
+              </CardContent>
+            </Card>
+          )}
+    </div>
+  );
   }
 
 export default function PersonalDashboard(props: PersonalDashboardProps) {

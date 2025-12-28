@@ -75,11 +75,11 @@
               - img [ref=e85]
               - generic [ref=e88]: Preferences
         - generic [ref=e91]:
-          - 'heading "Phase 4.3: Profile + Actions + Data Hooks Restored" [level=2] [ref=e92]'
+          - 'heading "Phase 5: Computed Values Added" [level=2] [ref=e92]'
           - generic [ref=e93]:
             - paragraph [ref=e94]: "Render count: 4 |Mounted: true"
             - paragraph [ref=e95]: "Profile: loading |Auth: false |Loading: false"
-            - paragraph [ref=e96]: "✅ Diagnostic tracking enabled | Phase 4.3 FIXED | Data hooks use useShallow + useMemo pattern | Polls: 0 | Events: 0"
+            - paragraph [ref=e96]: "✅ Diagnostic tracking enabled | Phase 5: Computed values added | Polls: 0 | Events: 0 | Votes (30d): 0 | Polls created (30d): 0"
       - button "Open feedback" [ref=e97] [cursor=pointer]:
         - img [ref=e98]
   - contentinfo [ref=e100]:
