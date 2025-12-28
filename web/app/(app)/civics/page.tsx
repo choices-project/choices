@@ -246,6 +246,7 @@ export default function Civics2Page() {
                 </div>
                 <div className="sm:w-32">
                   <select
+                    data-testid="state-filter"
                     className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                     value={selectedState}
                     onChange={(e) => setSelectedState(e.target.value)}
@@ -259,6 +260,7 @@ export default function Civics2Page() {
                 </div>
                 <div className="sm:w-32">
                   <select
+                    data-testid="level-filter"
                     className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                     value={selectedLevel}
                     onChange={(e) => setSelectedLevel(e.target.value as 'all' | 'federal' | 'state' | 'local')}

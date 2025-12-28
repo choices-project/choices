@@ -555,6 +555,7 @@ function StandardPersonalDashboard({ userId: _fallbackUserId }: PersonalDashboar
                         </div>
                 <Switch
                   id="show-engagement-score"
+                  data-testid="show-engagement-score-toggle"
                   checked={dashboardPreferences?.showEngagementScore ?? true}
                   onCheckedChange={(checked) => handlePreferenceChange('showEngagementScore', checked)}
                 />
@@ -573,6 +574,7 @@ function StandardPersonalDashboard({ userId: _fallbackUserId }: PersonalDashboar
                       </div>
                 <Switch
                   id="show-recent-activity"
+                  data-testid="show-recent-activity-toggle"
                   checked={dashboardPreferences?.showRecentActivity ?? true}
                   onCheckedChange={(checked) => handlePreferenceChange('showRecentActivity', checked)}
                 />
@@ -591,6 +593,7 @@ function StandardPersonalDashboard({ userId: _fallbackUserId }: PersonalDashboar
                         </div>
                 <Switch
                   id="show-quick-actions"
+                  data-testid="show-quick-actions-toggle"
                   checked={dashboardPreferences?.showQuickActions ?? true}
                   onCheckedChange={(checked) => handlePreferenceChange('showQuickActions', checked)}
                 />
