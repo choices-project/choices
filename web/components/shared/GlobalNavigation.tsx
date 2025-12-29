@@ -257,7 +257,7 @@ export default function GlobalNavigation() {
             {/* Logo and Brand */}
             <div className="flex items-center">
               <Link href="/" className="flex items-center space-x-2" onClick={closeMobileMenu}>
-                <Shield className="h-8 w-8 text-blue-600" />
+                <Shield className="h-8 w-8 text-blue-600 dark:text-blue-400" />
                 <span className="text-xl font-bold text-gray-900 dark:text-gray-100">Choices</span>
               </Link>
             </div>
@@ -354,23 +354,23 @@ export default function GlobalNavigation() {
             </div>
 
             {/* Mobile menu button */}
-            <div className="md:hidden">
+            <div className="md:hidden flex items-center">
               <Button
                 ref={mobileMenuButtonRef}
                 variant="ghost"
                 size="sm"
                 onClick={toggleMobileMenu}
-                className="p-2"
+                className="p-2 text-gray-700 dark:text-gray-300 hover:text-gray-900 dark:hover:text-gray-100 hover:bg-gray-100 dark:hover:bg-gray-800"
                 aria-label={
                   isMobileMenuOpen
                     ? t('navigation.mobileMenu.close')
                     : t('navigation.mobileMenu.open')
                 }
-                data-testid="mobile-menu"
+                data-testid="mobile-menu-button"
                 aria-expanded={isMobileMenuOpen}
                 aria-controls="global-navigation-mobile-menu"
               >
-                {isMobileMenuOpen ? <X className="h-6 w-6" /> : <Menu className="h-6 w-6" />}
+                {isMobileMenuOpen ? <X className="h-6 w-6" aria-hidden="true" /> : <Menu className="h-6 w-6" aria-hidden="true" />}
               </Button>
             </div>
           </div>
@@ -398,8 +398,8 @@ export default function GlobalNavigation() {
                       }
                       className={`flex items-center space-x-2 px-3 py-2 rounded-md text-base font-medium transition-colors ${
                         isActive(item.href)
-                          ? 'text-blue-600 bg-blue-50'
-                          : 'text-gray-700 hover:text-blue-600 hover:bg-gray-50'
+                          ? 'text-blue-600 bg-blue-50 dark:bg-blue-900/20 dark:text-blue-400'
+                          : 'text-gray-700 dark:text-gray-300 hover:text-blue-600 dark:hover:text-blue-400 hover:bg-gray-50 dark:hover:bg-gray-800'
                       }`}
                       ref={index === 0 ? firstMobileNavLinkRef : undefined}
                     >
@@ -409,13 +409,13 @@ export default function GlobalNavigation() {
                   );
                 })}
 
-                <div className="pt-4 border-t border-gray-200 space-y-4">
+                <div className="pt-4 border-t border-gray-200 dark:border-gray-700 space-y-4">
                   <ThemeSelector />
                   <LanguageSelector />
                 </div>
 
                 {/* Mobile Auth Section */}
-                <div className="pt-4 border-t border-gray-200">
+                <div className="pt-4 border-t border-gray-200 dark:border-gray-700">
                   {user && isAuthenticated ? (
                     <div className="space-y-2">
                       <Link
@@ -423,8 +423,8 @@ export default function GlobalNavigation() {
                         onClick={closeMobileMenu}
                         className={`flex items-center space-x-2 px-3 py-2 rounded-md text-base font-medium transition-colors ${
                           isActive('/profile')
-                            ? 'text-blue-600 bg-blue-50'
-                            : 'text-gray-700 hover:text-blue-600 hover:bg-gray-50'
+                            ? 'text-blue-600 bg-blue-50 dark:bg-blue-900/20 dark:text-blue-400'
+                            : 'text-gray-700 dark:text-gray-300 hover:text-blue-600 dark:hover:text-blue-400 hover:bg-gray-50 dark:hover:bg-gray-800'
                         }`}
                       >
                         <User className="h-5 w-5" />

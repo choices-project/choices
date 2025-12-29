@@ -121,15 +121,27 @@ test.describe('Account Export Page Tests', () => {
       test.skip(needsAuth, 'User must be authenticated to test export options');
 
       // Look for export option checkboxes or selection
-      const exportOptions = page.locator('input[type="checkbox"], input[type="radio"], button:has-text(/export/i)');
-      const optionCount = await exportOptions.count();
+      const checkboxOptions = page.locator('input[type="checkbox"]');
+      const radioOptions = page.locator('input[type="radio"]');
+      const exportButtons = page.locator('button').filter({ hasText: /export/i });
+      const optionCount = (await checkboxOptions.count()) + (await radioOptions.count()) + (await exportButtons.count());
 
       // Should have export options OR export button
       expect(optionCount).toBeGreaterThanOrEqual(0);
 
       // Look for format selection (JSON, CSV, PDF)
-      const formatOptions = page.locator('text=/json|csv|pdf|format/i, select, input[type="radio"]');
-      const formatCount = await formatOptions.count();
+      const formatText1 = page.locator('text=/json/i');
+      const formatText2 = page.locator('text=/csv/i');
+      const formatText3 = page.locator('text=/pdf/i');
+      const formatText4 = page.locator('text=/format/i');
+      const formatSelect = page.locator('select');
+      const formatRadio = page.locator('input[type="radio"]');
+      const formatCount = (await formatText1.count()) + 
+                         (await formatText2.count()) + 
+                         (await formatText3.count()) + 
+                         (await formatText4.count()) + 
+                         (await formatSelect.count()) + 
+                         (await formatRadio.count());
 
       // Format selection is optional but recommended
       expect(formatCount).toBeGreaterThanOrEqual(0);
@@ -164,10 +176,23 @@ test.describe('Account Export Page Tests', () => {
       test.skip(needsAuth, 'User must be authenticated to test export request');
 
       // Find export button
-      const exportButton = page.locator('button:has-text(/export|download|generate/i), button[type="submit"]').first();
-      const exportButtonExists = await exportButton.count() > 0;
-
+      const exportButton1 = page.locator('button').filter({ hasText: /export/i });
+      const exportButton2 = page.locator('button').filter({ hasText: /download/i });
+      const exportButton3 = page.locator('button').filter({ hasText: /generate/i });
+      const submitButton = page.locator('button[type="submit"]');
+      const exportButtonExists = (await exportButton1.count() > 0) || 
+                                 (await exportButton2.count() > 0) || 
+                                 (await exportButton3.count() > 0) || 
+                                 (await submitButton.count() > 0);
+      
       test.skip(!exportButtonExists, 'Export button not found');
+      if (!exportButtonExists) return;
+
+      // Get the actual button locator (we know it exists from the check above)
+      const exportButton = (await exportButton1.count() > 0 ? exportButton1.first() :
+                            await exportButton2.count() > 0 ? exportButton2.first() :
+                            await exportButton3.count() > 0 ? exportButton3.first() :
+                            submitButton.first());
 
       // Click export button
       await exportButton.click({ timeout: 10_000 });
@@ -277,10 +302,20 @@ test.describe('Account Export Page Tests', () => {
       test.skip(needsAuth, 'User must be authenticated to test loading states');
 
       // Find export button
-      const exportButton = page.locator('button:has-text(/export|download|generate/i)').first();
-      const exportButtonExists = await exportButton.count() > 0;
-
+      const exportButton1 = page.locator('button').filter({ hasText: /export/i });
+      const exportButton2 = page.locator('button').filter({ hasText: /download/i });
+      const exportButton3 = page.locator('button').filter({ hasText: /generate/i });
+      const exportButtonExists = (await exportButton1.count() > 0) || 
+                                 (await exportButton2.count() > 0) || 
+                                 (await exportButton3.count() > 0);
+      
       test.skip(!exportButtonExists, 'Export button not found');
+      if (!exportButtonExists) return;
+
+      // Get the actual button locator (we know it exists from the check above)
+      const exportButton = (await exportButton1.count() > 0 ? exportButton1.first() :
+                            await exportButton2.count() > 0 ? exportButton2.first() :
+                            exportButton3.first());
 
       // Click export button
       await exportButton.click({ timeout: 10_000 });

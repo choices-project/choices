@@ -315,14 +315,14 @@ function StandardPersonalDashboard({ userId: _fallbackUserId }: PersonalDashboar
                 <CardTitle className="text-sm font-medium text-gray-600 dark:text-gray-400">
                   Votes (30 days)
                   </CardTitle>
-                <Vote className="h-5 w-5 text-blue-500" />
+                <Vote className="h-5 w-5 text-blue-500 dark:text-blue-400" />
               </div>
                 </CardHeader>
                 <CardContent>
               <div className="text-3xl font-bold text-gray-900 dark:text-gray-100">
                 {numberFormatter ? numberFormatter.format(votesLast30Days) : votesLast30Days}
                       </div>
-              <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+              <p className="text-xs text-gray-600 dark:text-gray-400 mt-1">
                 Total votes cast this month
               </p>
                 </CardContent>
@@ -334,14 +334,14 @@ function StandardPersonalDashboard({ userId: _fallbackUserId }: PersonalDashboar
                 <CardTitle className="text-sm font-medium text-gray-600 dark:text-gray-400">
                   Polls Created (30 days)
                     </CardTitle>
-                <BarChart3 className="h-5 w-5 text-green-500" />
+                <BarChart3 className="h-5 w-5 text-green-500 dark:text-green-400" />
               </div>
                   </CardHeader>
                   <CardContent>
               <div className="text-3xl font-bold text-gray-900 dark:text-gray-100">
                 {numberFormatter ? numberFormatter.format(pollsCreatedLast30Days) : pollsCreatedLast30Days}
                       </div>
-              <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+              <p className="text-xs text-gray-600 dark:text-gray-400 mt-1">
                 Polls you&apos;ve created
               </p>
                   </CardContent>
@@ -353,14 +353,14 @@ function StandardPersonalDashboard({ userId: _fallbackUserId }: PersonalDashboar
                 <CardTitle className="text-sm font-medium text-gray-600 dark:text-gray-400">
                   Total Polls
                   </CardTitle>
-                <TrendingUp className="h-5 w-5 text-purple-500" />
+                <TrendingUp className="h-5 w-5 text-purple-500 dark:text-purple-400" />
               </div>
                 </CardHeader>
             <CardContent>
               <div className="text-3xl font-bold text-gray-900 dark:text-gray-100">
                 {numberFormatter ? numberFormatter.format(polls?.length ?? 0) : (polls?.length ?? 0)}
                     </div>
-              <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+              <p className="text-xs text-gray-600 dark:text-gray-400 mt-1">
                 All available polls
               </p>
                 </CardContent>
@@ -373,7 +373,7 @@ function StandardPersonalDashboard({ userId: _fallbackUserId }: PersonalDashboar
                 <Card>
                   <CardHeader>
             <div className="flex items-center gap-2">
-              <Zap className="h-5 w-5 text-yellow-500" />
+              <Zap className="h-5 w-5 text-yellow-500 dark:text-yellow-400" />
               <CardTitle className="text-lg font-semibold">Quick Actions</CardTitle>
                           </div>
             <CardDescription>Fast access to common tasks</CardDescription>
@@ -432,7 +432,7 @@ function StandardPersonalDashboard({ userId: _fallbackUserId }: PersonalDashboar
                       <div className="flex items-center gap-3">
                         <div
                           className={`w-3 h-3 rounded-full ${
-                            activity.type === 'vote' ? 'bg-blue-500' : 'bg-green-500'
+                            activity.type === 'vote' ? 'bg-blue-500 dark:bg-blue-400' : 'bg-green-500 dark:bg-green-400'
                           }`}
                         />
                         <div>
@@ -460,7 +460,7 @@ function StandardPersonalDashboard({ userId: _fallbackUserId }: PersonalDashboar
         <Card>
                   <CardHeader>
             <div className="flex items-center gap-2">
-              <Users className="h-5 w-5 text-indigo-500" />
+              <Users className="h-5 w-5 text-indigo-500 dark:text-indigo-400" />
               <CardTitle className="text-lg font-semibold">Your Representatives</CardTitle>
             </div>
                     <CardDescription>
@@ -508,7 +508,7 @@ function StandardPersonalDashboard({ userId: _fallbackUserId }: PersonalDashboar
                           {office ?? 'Representative'}
                         </p>
                         {party && (
-                          <p className="text-xs text-gray-500 dark:text-gray-500 mt-0.5">
+                          <p className="text-xs text-gray-600 dark:text-gray-400 mt-0.5">
                             {party}
                           </p>
                         )}
@@ -537,7 +537,7 @@ function StandardPersonalDashboard({ userId: _fallbackUserId }: PersonalDashboar
             <Card>
               <CardHeader>
             <div className="flex items-center gap-2">
-              <Settings2 className="h-5 w-5 text-gray-500" />
+              <Settings2 className="h-5 w-5 text-gray-500 dark:text-gray-400" />
               <CardTitle className="text-lg font-semibold">Dashboard Preferences</CardTitle>
             </div>
             <CardDescription>Customize what appears on your dashboard</CardDescription>

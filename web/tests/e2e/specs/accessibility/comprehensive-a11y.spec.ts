@@ -159,15 +159,30 @@ test.describe('Comprehensive Accessibility Tests', () => {
       await page.waitForTimeout(2000);
 
       // Look for modal/dialog triggers
-      const modalTriggers = page.locator('button:has-text(/open|show|view/i), [aria-haspopup="true"], [aria-expanded="false"]');
-      const triggerCount = await modalTriggers.count();
+      const modalTriggers1 = page.locator('button').filter({ hasText: /open/i });
+      const modalTriggers2 = page.locator('button').filter({ hasText: /show/i });
+      const modalTriggers3 = page.locator('button').filter({ hasText: /view/i });
+      const modalTriggers4 = page.locator('[aria-haspopup="true"]');
+      const modalTriggers5 = page.locator('[aria-expanded="false"]');
+      const triggerCount = (await modalTriggers1.count()) + 
+                          (await modalTriggers2.count()) + 
+                          (await modalTriggers3.count()) + 
+                          (await modalTriggers4.count()) + 
+                          (await modalTriggers5.count());
+      
+      const modalTriggers = triggerCount > 0 ? 
+        (await modalTriggers1.count() > 0 ? modalTriggers1.first() :
+         await modalTriggers2.count() > 0 ? modalTriggers2.first() :
+         await modalTriggers3.count() > 0 ? modalTriggers3.first() :
+         await modalTriggers4.count() > 0 ? modalTriggers4.first() :
+         modalTriggers5.first()) : null;
 
       // Modals are optional, so skip if none found
       test.skip(triggerCount === 0, 'No modal triggers found');
+      if (!modalTriggers) return;
 
       // Open first modal/dialog
-      const trigger = modalTriggers.first();
-      await trigger.click({ timeout: 10_000 });
+      await modalTriggers.click({ timeout: 10_000 });
       await page.waitForTimeout(500);
 
       // Check for modal/dialog
@@ -275,7 +290,13 @@ test.describe('Comprehensive Accessibility Tests', () => {
         violation => violation.id === 'color-contrast' || violation.id === 'color-contrast-enhanced'
       );
 
+      // Log violations for diagnostic purposes
+      if (contrastViolations.length > 0) {
+        console.log('Color contrast violations found:', JSON.stringify(contrastViolations, null, 2));
+      }
+
       // Should have no color contrast violations
+      // Note: This test will fail if violations exist - fix the UI code to resolve
       expect(contrastViolations.length).toBe(0);
 
     } finally {

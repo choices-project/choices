@@ -1,9 +1,19 @@
-import { expect, test, devices } from '@playwright/test';
+import { expect, test } from '@playwright/test';
 
 import {
   setupExternalAPIMocks,
   waitForPageReady,
 } from '../../helpers/e2e-setup';
+
+// Use mobile viewport for all tests in this file
+// Using viewport settings compatible with chromium (not device preset which may require webkit)
+test.use({
+  viewport: { width: 390, height: 844 }, // iPhone 13 dimensions
+  userAgent: 'Mozilla/5.0 (iPhone; CPU iPhone OS 15_0 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/15.0 Mobile/15E148 Safari/604.1',
+  deviceScaleFactor: 3,
+  isMobile: true,
+  hasTouch: true,
+});
 
 test.describe('Mobile/Responsive UX Tests', () => {
   test.beforeEach(async ({ page }) => {
@@ -36,11 +46,6 @@ test.describe('Mobile/Responsive UX Tests', () => {
     }
   });
 
-  // Use mobile viewport for all tests
-  test.use({
-    ...devices['iPhone 13'],
-  });
-
   test('mobile navigation menu works correctly', async ({ page }) => {
     test.setTimeout(60_000);
 
@@ -60,8 +65,8 @@ test.describe('Mobile/Responsive UX Tests', () => {
       await waitForPageReady(page);
       await page.waitForTimeout(2000);
 
-      // Look for mobile menu button (hamburger menu)
-      const mobileMenuButton = page.locator('button[aria-label*="menu" i], button[aria-label*="navigation" i], button:has([class*="hamburger"]), button:has(svg)').first();
+      // Look for mobile menu button using the specific test ID
+      const mobileMenuButton = page.locator('[data-testid="mobile-menu-button"]');
       const menuButtonExists = await mobileMenuButton.count() > 0;
 
       // If mobile menu button exists, test it
