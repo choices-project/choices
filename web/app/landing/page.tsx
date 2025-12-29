@@ -1,11 +1,166 @@
 'use client';
 
 import { ArrowRight, Shield, Users, Scale, Lock, Vote, TrendingUp } from 'lucide-react';
+import dynamic from 'next/dynamic';
 import Link from 'next/link';
-
-import EnhancedFeedbackWidget from '@/components/EnhancedFeedbackWidget';
+import { useEffect, useState } from 'react';
 
 import { useI18n } from '@/hooks/useI18n';
+
+// Lazy load feedback widget - not critical for initial page load
+const EnhancedFeedbackWidget = dynamic(
+  () => import('@/components/EnhancedFeedbackWidget'),
+  {
+    ssr: false,
+    loading: () => null, // Don't show loading indicator for widget
+  }
+);
+
+// Trending Polls Component - Lazy loaded to not block TTI
+type TrendingPoll = {
+  id: string;
+  title: string;
+  description: string;
+  category: string;
+  totalVotes: number;
+  options: Array<{ id: string; text: string; votes: number; percentage: number }>;
+};
+
+function TrendingPollsSection() {
+  const { t } = useI18n();
+  const [polls, setPolls] = useState<TrendingPoll[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [shouldLoad, setShouldLoad] = useState(false);
+
+  // Defer loading until after initial render to not block TTI
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setShouldLoad(true);
+    }, 1500); // Load 1.5s after page load
+
+    return () => clearTimeout(timer);
+  }, []);
+
+  // Fetch trending polls
+  useEffect(() => {
+    if (!shouldLoad) return;
+
+    const fetchTrendingPolls = async () => {
+      try {
+        setIsLoading(true);
+        const response = await fetch('/api/polls/trending?limit=3');
+        const data = await response.json();
+
+        if (data.success && Array.isArray(data.polls)) {
+          setPolls(data.polls.slice(0, 3));
+        }
+      } catch (error) {
+        // Silently fail - polls section is nice-to-have, not critical
+        console.warn('Failed to load trending polls:', error);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    fetchTrendingPolls();
+  }, [shouldLoad]);
+
+  // Don't render if not loading yet or if no polls
+  if (!shouldLoad || (isLoading && polls.length === 0)) {
+    return null;
+  }
+
+  if (polls.length === 0) {
+    return null; // Don't show section if no polls
+  }
+
+  return (
+    <section 
+      className="bg-gradient-to-b from-white to-blue-50/30 py-20"
+      aria-labelledby="trending-polls-heading"
+    >
+      <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+        <div className="text-center mb-12">
+          <h2 id="trending-polls-heading" className="text-3xl font-bold text-slate-900 sm:text-4xl">
+            {t('landing.trendingPolls.heading') || 'Trending Polls'}
+          </h2>
+          <p className="mt-4 text-lg text-slate-600">
+            {t('landing.trendingPolls.subheading') || 'See what the community is discussing right now'}
+          </p>
+        </div>
+
+        <div className="grid gap-6 md:grid-cols-3" role="list">
+          {polls.map((poll) => {
+            const topOption = poll.options.reduce((prev, current) => 
+              (current.votes > prev.votes) ? current : prev
+            );
+
+            return (
+              <article
+                key={poll.id}
+                className="group rounded-2xl border border-slate-200 bg-white p-6 shadow-sm hover:shadow-lg transition-all hover:-translate-y-1 focus-within:ring-2 focus-within:ring-blue-600"
+                role="listitem"
+              >
+                <div className="flex items-start justify-between mb-3">
+                  <span className="inline-flex items-center rounded-full bg-blue-100 px-2.5 py-0.5 text-xs font-medium text-blue-800">
+                    {poll.category || 'General'}
+                  </span>
+                  <span className="text-sm text-slate-500">
+                    {poll.totalVotes.toLocaleString()} {poll.totalVotes === 1 ? 'vote' : 'votes'}
+                  </span>
+                </div>
+
+                <h3 className="text-lg font-semibold text-slate-900 mb-2 line-clamp-2">
+                  {poll.title}
+                </h3>
+
+                {poll.description && (
+                  <p className="text-sm text-slate-600 mb-4 line-clamp-2">
+                    {poll.description}
+                  </p>
+                )}
+
+                {poll.options.length > 0 && (
+                  <div className="space-y-2 mb-4">
+                    <div className="flex items-center justify-between text-xs text-slate-600">
+                      <span className="truncate">{topOption.text}</span>
+                      <span className="font-medium">{topOption.percentage}%</span>
+                    </div>
+                    <div className="w-full bg-slate-200 rounded-full h-2">
+                      <div
+                        className="bg-blue-600 h-2 rounded-full transition-all"
+                        style={{ width: `${topOption.percentage}%` }}
+                        aria-label={`${topOption.percentage}% voted for ${topOption.text}`}
+                      />
+                    </div>
+                  </div>
+                )}
+
+                <Link
+                  href={`/polls/${poll.id}`}
+                  className="inline-flex items-center text-sm font-medium text-blue-600 hover:text-blue-700 transition-colors focus:outline-none focus:ring-2 focus:ring-blue-600 focus:ring-offset-2 rounded px-2 py-1"
+                >
+                  View Poll
+                  <ArrowRight className="ml-1 h-4 w-4" aria-hidden="true" />
+                </Link>
+              </article>
+            );
+          })}
+        </div>
+
+        <div className="mt-8 text-center">
+          <Link
+            href="/polls"
+            className="inline-flex items-center justify-center rounded-lg bg-blue-600 px-6 py-3 text-base font-semibold text-white hover:bg-blue-700 transition-all shadow-sm hover:shadow-md focus:outline-none focus:ring-2 focus:ring-blue-600 focus:ring-offset-2"
+          >
+            {t('landing.trendingPolls.viewAll') || 'View All Polls'}
+            <ArrowRight className="ml-2 h-5 w-5" aria-hidden="true" />
+          </Link>
+        </div>
+      </div>
+    </section>
+  );
+}
 
 /**
  * Landing Page Client Component
@@ -30,6 +185,17 @@ import { useI18n } from '@/hooks/useI18n';
  */
 export default function LandingPageClient() {
   const { t } = useI18n();
+  const [showFeedbackWidget, setShowFeedbackWidget] = useState(false);
+
+  // Defer feedback widget loading until after initial render
+  useEffect(() => {
+    // Load feedback widget after page is interactive (1 second delay)
+    const timer = setTimeout(() => {
+      setShowFeedbackWidget(true);
+    }, 1000);
+
+    return () => clearTimeout(timer);
+  }, []);
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-white via-blue-50/30 to-white">
@@ -240,6 +406,9 @@ export default function LandingPageClient() {
         </div>
       </section>
 
+      {/* Trending Polls Section */}
+      <TrendingPollsSection />
+
       {/* CTA Section */}
       <section 
         className="bg-gradient-to-br from-blue-600 to-blue-700 py-16"
@@ -301,7 +470,7 @@ export default function LandingPageClient() {
       </footer>
 
       {/* Feedback Widget - Allow users to provide feedback from landing page */}
-      <EnhancedFeedbackWidget />
+      {showFeedbackWidget && <EnhancedFeedbackWidget />}
     </div>
   );
 }
