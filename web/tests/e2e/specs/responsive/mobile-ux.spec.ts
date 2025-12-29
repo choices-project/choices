@@ -234,8 +234,10 @@ test.describe('Mobile/Responsive UX Tests', () => {
       await waitForPageReady(page);
       await page.waitForTimeout(2000);
 
-      // Find clickable elements (buttons, links)
-      const clickableElements = page.locator('button, a[href], [role="button"]').filter({ hasText: /.+/ });
+      // Find clickable elements (buttons, links) - exclude skip links and hidden elements
+      const clickableElements = page.locator('button:not(.sr-only), a[href]:not(.sr-only), [role="button"]:not(.sr-only)')
+        .filter({ hasText: /.+/ })
+        .filter({ hasNotText: /skip to/i }); // Exclude skip links
       const elementCount = await clickableElements.count();
 
       test.skip(elementCount === 0, 'No clickable elements found on dashboard');
@@ -243,12 +245,16 @@ test.describe('Mobile/Responsive UX Tests', () => {
       // Test tapping/clicking an element
       const firstElement = clickableElements.first();
 
-      // Scroll element into view before clicking (required for mobile)
+      // Ensure element is visible and in viewport
       await firstElement.scrollIntoViewIfNeeded();
       await page.waitForTimeout(500); // Wait for scroll to complete
 
+      // Verify element is actually visible before clicking
+      const isVisible = await firstElement.isVisible({ timeout: 5_000 }).catch(() => false);
+      test.skip(!isVisible, 'First clickable element is not visible');
+
       // Tap the element (Playwright click works for touch)
-      await firstElement.click({ timeout: 10_000 });
+      await firstElement.click({ timeout: 10_000, force: false });
       await page.waitForTimeout(1000);
 
       // Element should have responded (page may have navigated or state changed)

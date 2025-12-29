@@ -22,6 +22,8 @@
     "**/__tests__/**",
     "tests/**",
     "web/tests/archive/**",
+    "web/tests/e2e/specs/_archived/**",
+    "**/_archived/**",
     "**/*.disabled",
     "**/*.disabled.*",
     "**/scripts.disabled/**",
