@@ -609,9 +609,6 @@ test.describe('Comprehensive Mobile/Responsive Tests', () => {
         await waitForPageReady(page);
         await page.waitForTimeout(2000);
 
-        // Get initial scroll position
-        const initialScrollY = await page.evaluate(() => window.scrollY);
-
         // Simulate pull-to-refresh gesture (scroll up from top)
         await page.evaluate(() => {
           window.scrollTo(0, 0);
