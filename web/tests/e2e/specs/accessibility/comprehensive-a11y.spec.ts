@@ -293,6 +293,15 @@ test.describe('Comprehensive Accessibility Tests', () => {
       // Log violations for diagnostic purposes
       if (contrastViolations.length > 0) {
         console.log('Color contrast violations found:', JSON.stringify(contrastViolations, null, 2));
+        // Also log to test output for visibility
+        for (const violation of contrastViolations) {
+          console.log(`Violation: ${violation.id} - ${violation.description}`);
+          console.log(`Nodes affected: ${violation.nodes.length}`);
+          violation.nodes.forEach((node, idx) => {
+            console.log(`  Node ${idx + 1}: ${node.html?.substring(0, 100)}...`);
+            console.log(`  Selector: ${node.target?.join(', ')}`);
+          });
+        }
       }
 
       // Should have no color contrast violations

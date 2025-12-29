@@ -243,6 +243,10 @@ test.describe('Mobile/Responsive UX Tests', () => {
       // Test tapping/clicking an element
       const firstElement = clickableElements.first();
 
+      // Scroll element into view before clicking (required for mobile)
+      await firstElement.scrollIntoViewIfNeeded();
+      await page.waitForTimeout(500); // Wait for scroll to complete
+
       // Tap the element (Playwright click works for touch)
       await firstElement.click({ timeout: 10_000 });
       await page.waitForTimeout(1000);

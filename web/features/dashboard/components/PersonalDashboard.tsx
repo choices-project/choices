@@ -416,7 +416,7 @@ function StandardPersonalDashboard({ userId: _fallbackUserId }: PersonalDashboar
                 <p className="text-sm text-gray-500 dark:text-gray-400">
                   No recent activity to display
                 </p>
-                <p className="text-xs text-gray-400 dark:text-gray-500 mt-1">
+                <p className="text-xs text-gray-600 dark:text-gray-400 mt-1">
                   Start voting or creating polls to see your activity here
                 </p>
                         </div>

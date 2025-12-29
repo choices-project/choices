@@ -160,6 +160,11 @@ test.describe('Production Critical Fixes', () => {
       // Additional wait to ensure React has finished rendering
       await page.waitForTimeout(1_000);
 
+      // Set up navigation wait before clicking logout (logout redirects immediately)
+      const navigationPromise = page.waitForNavigation({ waitUntil: 'domcontentloaded', timeout: 15_000 }).catch(() => {
+        // Navigation might have already happened or page might close
+      });
+
       // Find logout button - try multiple selectors with better waiting
       let logoutButton = page.locator('[data-testid="logout-button"]').first();
       let hasLogoutButton = await logoutButton.isVisible({ timeout: 10_000 }).catch(() => false);
@@ -266,8 +271,13 @@ test.describe('Production Critical Fixes', () => {
         await logoutButton.click({ force: true });
       }
 
-      // Wait for redirect
-      await page.waitForTimeout(2_000);
+      // Wait for navigation (logout redirects immediately)
+      try {
+        await navigationPromise;
+      } catch {
+        // Navigation might have already completed or page closed
+        await page.waitForTimeout(1_000);
+      }
 
       // Should redirect to landing or auth page
       const currentUrl = page.url();
