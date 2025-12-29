@@ -572,6 +572,8 @@ export default [
       'test-results/**',
       'archive/**',
       'tests/archive/**',
+      'tests/e2e/specs/_archived/**',
+      '**/_archived/**',
       'archive-*/**',
       'app/archive-*/**',
       '_reports/**',
