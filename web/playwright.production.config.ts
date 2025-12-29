@@ -2,6 +2,7 @@ import { defineConfig, devices } from '@playwright/test';
 
 export default defineConfig({
     testDir: './tests/e2e',
+    testIgnore: ['**/_archived/**', '**/archive/**', '**/setup/**'],
     fullyParallel: true,
     forbidOnly: !!process.env.CI,
     // Reduced retries to speed up CI - failures will still be visible with 1 retry

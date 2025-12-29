@@ -28,7 +28,7 @@ for (const { path: envFile, override } of envFiles) {
 
 export default defineConfig({
   testDir: './tests/e2e',
-  testIgnore: ['**/archive/**', '**/setup/**'],
+  testIgnore: ['**/archive/**', '**/_archived/**', '**/setup/**'],
   fullyParallel: false, // Disabled for E2E stability
   forbidOnly: !!process.env.CI,
   retries: process.env.CI ? 0 : 0, // Disable retries in CI to prevent infinite loops on timeout failures

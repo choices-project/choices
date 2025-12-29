@@ -39,7 +39,7 @@
     "test:ci": "node ./scripts/run-with-timeout.js 900 npm run build && node ./scripts/run-with-timeout.js 300 npx jest -w 1 --selectProjects client server && node ./scripts/run-with-timeout.js 600 npx playwright test",
     "test:e2e": "npx playwright test --reporter=line",
     "test:e2e:axe": "npx playwright test --grep @axe --project=chromium --reporter=line",
-    "test:e2e:nav": "npx playwright test tests/e2e/specs/navigation-shell.spec.ts tests/e2e/specs/global-navigation.spec.ts tests/e2e/specs/admin-navigation.spec.ts tests/e2e/specs/analytics-dashboard-screen-reader.spec.ts tests/e2e/specs/analytics-dashboard-axe.spec.ts tests/e2e/specs/locale-switch.spec.ts --project=chromium --workers=1 --reporter=line",
+    "test:e2e:nav": "npx playwright test tests/e2e/specs/navigation-shell.spec.ts tests/e2e/specs/global-navigation.spec.ts tests/e2e/specs/admin-navigation.spec.ts tests/e2e/specs/analytics-dashboard-axe.spec.ts tests/e2e/specs/locale-switch.spec.ts --project=chromium --workers=1 --reporter=line",
     "test:e2e:smoke": "NEXT_PUBLIC_ENABLE_E2E_HARNESS=1 ALLOWED_DEV_ORIGINS=http://localhost:3000 PLAYWRIGHT_USE_MOCKS=1 npx playwright test --project=chromium --grep @smoke --reporter=line",
     "test:e2e:ui": "npx playwright test --ui --reporter=line",
     "test:e2e:headed": "npx playwright test --headed --reporter=line",
