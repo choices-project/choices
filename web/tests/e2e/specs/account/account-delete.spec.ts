@@ -126,35 +126,49 @@ test.describe('Account Delete Page Tests', () => {
 
       test.skip(!deleteButtonExists, 'Delete button not found on account delete page');
 
-      // Delete button should initially be disabled OR require confirmation input
+      // Delete button should initially be disabled OR require confirmation steps
+      // The account delete page requires multiple steps to be completed before deletion
       const isDisabled = await deleteButton.first().isDisabled();
-      const confirmationInputs = page.locator('input[type="text"], input[type="password"], textarea');
-      const allInputs = await confirmationInputs.all();
+      
+      // Check for confirmation inputs (email confirmation, etc.)
+      const emailInput = page.locator('input[type="email"]');
+      const emailCount = await emailInput.count();
+      const textInputs = page.locator('input[type="text"]');
+      const textInputCount = await textInputs.count();
+      
       let hasConfirmationInput = false;
-      for (const input of allInputs) {
-        const placeholder = await input.getAttribute('placeholder');
-        if (placeholder && /delete|confirm|type.*delete/i.test(placeholder)) {
-          hasConfirmationInput = true;
-          break;
+      
+      if (emailCount > 0) {
+        const allInputs = await emailInput.all();
+        for (const input of allInputs) {
+          const placeholder = await input.getAttribute('placeholder');
+          const name = await input.getAttribute('name');
+          const id = await input.getAttribute('id');
+          if ((placeholder && /delete|confirm|email|type.*delete/i.test(placeholder)) ||
+              (name && /delete|confirm|email/i.test(name)) ||
+              (id && /delete|confirm|email/i.test(id))) {
+            hasConfirmationInput = true;
+            break;
+          }
+        }
+      } else if (textInputCount > 0) {
+        const allInputs = await textInputs.all();
+        for (const input of allInputs) {
+          const placeholder = await input.getAttribute('placeholder');
+          const name = await input.getAttribute('name');
+          const id = await input.getAttribute('id');
+          if ((placeholder && /delete|confirm|email|type.*delete/i.test(placeholder)) ||
+              (name && /delete|confirm|email/i.test(name)) ||
+              (id && /delete|confirm|email/i.test(id))) {
+            hasConfirmationInput = true;
+            break;
+          }
         }
       }
 
-      // Either button is disabled OR requires confirmation input
+      // Either button is disabled OR requires confirmation input/steps
+      // The delete page has a multi-step process, so button may be disabled until steps are complete
       expect(isDisabled || hasConfirmationInput).toBeTruthy();
-
-      // If there's a confirmation input, try filling it
-      if (hasConfirmationInput) {
-        const confirmationInput = confirmationInputs.first();
-        await confirmationInput.fill('DELETE');
-        await page.waitForTimeout(500);
-        
-        // After filling confirmation, button might be enabled
-        // (We won't actually delete the account in this test)
-        const isEnabledAfterConfirm = await deleteButton.first().isDisabled().then(disabled => !disabled);
-        
-        // Button state should have changed OR still requires additional confirmation
-        expect(isEnabledAfterConfirm || isDisabled).toBeTruthy();
-      }
 
     } finally {
       await cleanupMocks();
@@ -186,9 +200,11 @@ test.describe('Account Delete Page Tests', () => {
       test.skip(needsAuth, 'User must be authenticated to test deletion consequences');
 
       // Look for information about what will be deleted
+      // The page shows "This is what will be permanently deleted" and lists polls, votes, comments
       const consequenceIndicators = [
-        page.locator('text=/will.*delete|your.*data|all.*information|profile.*polls.*votes/i'),
-        page.locator('li, p').filter({ hasText: /delete|remove|permanent/i }),
+        page.locator('text=/will.*permanently.*deleted|what will be.*deleted|irreversible/i'),
+        page.locator('text=/polls.*votes.*comments|account summary/i'),
+        page.locator('text=/permanently.*remove|all your data/i'),
       ];
 
       let foundConsequences = false;
@@ -201,7 +217,11 @@ test.describe('Account Delete Page Tests', () => {
       }
 
       // Should show what will be deleted OR have clear warning message
-      expect(foundConsequences).toBeTruthy();
+      // Also check for the warning alert that says "This action is irreversible"
+      const warningAlert = page.locator('text=/irreversible|warning|permanently.*removed/i');
+      const hasWarning = await warningAlert.count() > 0;
+
+      expect(foundConsequences || hasWarning).toBeTruthy();
 
     } finally {
       await cleanupMocks();

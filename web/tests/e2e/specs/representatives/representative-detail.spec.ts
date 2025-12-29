@@ -336,10 +336,14 @@ test.describe('Representative Detail Page Tests', () => {
 
       // Should have some error state or back button
       // The page should show "Representative Not Found" message and a back button
-      const backButton = page.locator('[data-testid="representative-detail-back-button"], button:has-text("Back"), button:has-text(/back to representatives/i)').first();
-      const backButtonExists = await backButton.count() > 0;
-      const notFoundMessage = page.locator('[data-testid="representative-not-found-message"], text=/representative not found/i');
-      const notFoundExists = await notFoundMessage.count() > 0;
+      const backButton1 = page.locator('[data-testid="representative-detail-back-button"]');
+      const backButton2 = page.locator('button:has-text("Back")');
+      const backButton3 = page.locator('button:has-text(/back to representatives/i)');
+      const backButtonExists = (await backButton1.count() > 0) || (await backButton2.count() > 0) || (await backButton3.count() > 0);
+      
+      const notFoundMessage1 = page.locator('[data-testid="representative-not-found-message"]');
+      const notFoundMessage2 = page.locator('text=/representative not found/i');
+      const notFoundExists = (await notFoundMessage1.count() > 0) || (await notFoundMessage2.count() > 0);
       
       expect(foundErrorState || backButtonExists || notFoundExists).toBeTruthy();
 
