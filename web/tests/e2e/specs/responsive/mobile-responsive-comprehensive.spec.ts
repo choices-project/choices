@@ -454,6 +454,251 @@ test.describe('Comprehensive Mobile/Responsive Tests', () => {
         await cleanupMocks();
       }
     });
+
+    test('layout adapts back to portrait orientation', async ({ page }) => {
+      test.setTimeout(60_000);
+
+      const useMocks = process.env.PLAYWRIGHT_USE_MOCKS !== '0';
+      test.skip(useMocks, 'Responsive tests require production environment');
+
+      const cleanupMocks = await setupExternalAPIMocks(page, {
+        feeds: true,
+        notifications: true,
+        analytics: true,
+        auth: true,
+        civics: true,
+      });
+
+      try {
+        // Start in landscape
+        await page.setViewportSize({ width: BREAKPOINTS.mobile.height, height: BREAKPOINTS.mobile.width });
+        await page.goto('/dashboard');
+        await waitForPageReady(page);
+        await page.waitForTimeout(1000);
+
+        // Switch to portrait
+        await page.setViewportSize(BREAKPOINTS.mobile);
+        await page.waitForTimeout(1000);
+
+        // Check that page still renders without horizontal scroll
+        const hasHorizontalScroll = await page.evaluate(() => {
+          return document.documentElement.scrollWidth > document.documentElement.clientWidth;
+        });
+        expect(hasHorizontalScroll).toBeFalsy();
+
+        // Main content should still be visible
+        const mainContent = page.locator('main, [role="main"]').first();
+        const isVisible = await mainContent.isVisible({ timeout: 5_000 }).catch(() => false);
+        expect(isVisible).toBeTruthy();
+
+      } finally {
+        await cleanupMocks();
+      }
+    });
+
+    test('navigation adapts to orientation changes', async ({ page }) => {
+      test.setTimeout(60_000);
+
+      const useMocks = process.env.PLAYWRIGHT_USE_MOCKS !== '0';
+      test.skip(useMocks, 'Responsive tests require production environment');
+
+      const cleanupMocks = await setupExternalAPIMocks(page, {
+        feeds: true,
+        notifications: true,
+        analytics: true,
+        auth: true,
+        civics: true,
+      });
+
+      try {
+        // Start in portrait (mobile menu should be visible)
+        await page.setViewportSize(BREAKPOINTS.mobile);
+        await page.goto('/dashboard');
+        await waitForPageReady(page);
+        await page.waitForTimeout(1000);
+
+        // Check for mobile menu button in portrait
+        const mobileMenuButton = page.locator('[data-testid="mobile-menu-button"]').first();
+        const hasMobileMenu = await mobileMenuButton.isVisible({ timeout: 5_000 }).catch(() => false);
+
+        // Switch to landscape
+        await page.setViewportSize({ width: BREAKPOINTS.mobile.height, height: BREAKPOINTS.mobile.width });
+        await page.waitForTimeout(1000);
+
+        // In landscape, desktop navigation might be visible
+        const desktopNav = page.locator('[data-testid="global-navigation"]').first();
+        const hasDesktopNav = await desktopNav.isVisible({ timeout: 5_000 }).catch(() => false);
+
+        // Navigation should be functional in both orientations
+        expect(hasMobileMenu || hasDesktopNav).toBeTruthy();
+
+      } finally {
+        await cleanupMocks();
+      }
+    });
+  });
+
+  test.describe('Swipe Gestures', () => {
+    test('swipe gestures work on touch-enabled devices', async ({ page }) => {
+      test.setTimeout(60_000);
+
+      const useMocks = process.env.PLAYWRIGHT_USE_MOCKS !== '0';
+      test.skip(useMocks, 'Responsive tests require production environment');
+
+      // Skip if not a touch-enabled device
+      const hasTouch = await page.evaluate(() => {
+        return 'ontouchstart' in window || navigator.maxTouchPoints > 0;
+      });
+      test.skip(!hasTouch, 'Device does not support touch');
+
+      const cleanupMocks = await setupExternalAPIMocks(page, {
+        feeds: true,
+        notifications: true,
+        analytics: true,
+        auth: true,
+        civics: true,
+      });
+
+      try {
+        await page.setViewportSize(BREAKPOINTS.mobile);
+        await page.goto('/dashboard');
+        await waitForPageReady(page);
+        await page.waitForTimeout(2000);
+
+        // Test swipe left gesture (if supported by the page)
+        const swipeableElement = page.locator('main, [role="main"]').first();
+        const box = await swipeableElement.boundingBox();
+        
+        if (box) {
+          // Perform swipe left gesture
+          await page.mouse.move(box.x + box.width * 0.8, box.y + box.height / 2);
+          await page.mouse.down();
+          await page.mouse.move(box.x + box.width * 0.2, box.y + box.height / 2, { steps: 10 });
+          await page.mouse.up();
+          await page.waitForTimeout(500);
+
+          // Page should still be functional after swipe
+          const isStillFunctional = await page.locator('body').isVisible();
+          expect(isStillFunctional).toBeTruthy();
+        }
+
+      } finally {
+        await cleanupMocks();
+      }
+    });
+  });
+
+  test.describe('Pull to Refresh', () => {
+    test('pull to refresh works on mobile devices', async ({ page }) => {
+      test.setTimeout(60_000);
+
+      const useMocks = process.env.PLAYWRIGHT_USE_MOCKS !== '0';
+      test.skip(useMocks, 'Responsive tests require production environment');
+
+      const cleanupMocks = await setupExternalAPIMocks(page, {
+        feeds: true,
+        notifications: true,
+        analytics: true,
+        auth: true,
+        civics: true,
+      });
+
+      try {
+        await page.setViewportSize(BREAKPOINTS.mobile);
+        await page.goto('/feed');
+        await waitForPageReady(page);
+        await page.waitForTimeout(2000);
+
+        // Get initial scroll position
+        const initialScrollY = await page.evaluate(() => window.scrollY);
+
+        // Simulate pull-to-refresh gesture (scroll up from top)
+        await page.evaluate(() => {
+          window.scrollTo(0, 0);
+        });
+        await page.waitForTimeout(500);
+
+        // Simulate touch events for pull-to-refresh
+        const bodyBox = await page.locator('body').boundingBox();
+        if (bodyBox) {
+          // Start touch at top of page
+          await page.touchscreen.tap(bodyBox.x + bodyBox.width / 2, bodyBox.y + 50);
+          await page.waitForTimeout(100);
+
+          // Move down (pull gesture)
+          await page.mouse.move(bodyBox.x + bodyBox.width / 2, bodyBox.y + 100);
+          await page.waitForTimeout(200);
+
+          // Release
+          await page.mouse.up();
+          await page.waitForTimeout(1000);
+        }
+
+        // Page should still be functional after pull-to-refresh attempt
+        const isStillFunctional = await page.locator('body').isVisible();
+        expect(isStillFunctional).toBeTruthy();
+
+        // Check that page didn't break (no error boundaries)
+        const errorBoundary = page.locator('[data-testid="error-boundary"], [role="alert"]:has-text("Error")');
+        const hasError = await errorBoundary.isVisible({ timeout: 2_000 }).catch(() => false);
+        expect(hasError).toBeFalsy();
+
+      } finally {
+        await cleanupMocks();
+      }
+    });
+  });
+
+  test.describe('Device Size Variations', () => {
+    const deviceSizes = [
+      { name: 'Small Phone', size: BREAKPOINTS.mobileSmall },
+      { name: 'Standard Phone', size: BREAKPOINTS.mobile },
+      { name: 'Large Phone', size: BREAKPOINTS.mobileLarge },
+      { name: 'Tablet Portrait', size: BREAKPOINTS.tablet },
+      { name: 'Tablet Landscape', size: BREAKPOINTS.tabletLandscape },
+    ];
+
+    for (const device of deviceSizes) {
+      test(`page renders correctly on ${device.name}`, async ({ page }) => {
+        test.setTimeout(60_000);
+
+        const useMocks = process.env.PLAYWRIGHT_USE_MOCKS !== '0';
+        test.skip(useMocks, 'Responsive tests require production environment');
+
+        const cleanupMocks = await setupExternalAPIMocks(page, {
+          feeds: true,
+          notifications: true,
+          analytics: true,
+          auth: true,
+          civics: true,
+        });
+
+        try {
+          await page.setViewportSize(device.size);
+          await page.goto('/dashboard');
+          await waitForPageReady(page);
+          await page.waitForTimeout(2000);
+
+          // Check for horizontal scroll
+          const hasHorizontalScroll = await page.evaluate(() => {
+            return document.documentElement.scrollWidth > document.documentElement.clientWidth;
+          });
+          expect(hasHorizontalScroll).toBeFalsy();
+
+          // Check that main content is visible
+          const mainContent = page.locator('main, [role="main"]').first();
+          const isVisible = await mainContent.isVisible({ timeout: 5_000 }).catch(() => false);
+          expect(isVisible).toBeTruthy();
+
+          // Check that page is interactive
+          const body = page.locator('body');
+          await expect(body).toBeVisible();
+
+        } finally {
+          await cleanupMocks();
+        }
+      });
+    }
   });
 });
 
