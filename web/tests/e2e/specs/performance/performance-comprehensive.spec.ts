@@ -295,7 +295,9 @@ test.describe('Comprehensive Performance Tests', () => {
       await waitForPageReady(page);
 
       // Wait for dashboard to be interactive (no spinners, content loaded)
-      await page.waitForSelector('[data-testid="personal-dashboard"]', { timeout: 15_000 }).catch(() => {});
+      await page.waitForSelector('[data-testid="personal-dashboard"]', { timeout: 15_000 }).catch(() => {
+        // Ignore if selector not found - test will continue
+      });
       await page.waitForTimeout(2000);
 
       // Measure time to interactive (when page is ready for user interaction)
