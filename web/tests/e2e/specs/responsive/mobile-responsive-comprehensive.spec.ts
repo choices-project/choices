@@ -372,13 +372,8 @@ test.describe('Comprehensive Mobile/Responsive Tests', () => {
         // Mobile menu button should be visible on mobile
         expect(hasMobileMenu).toBeTruthy();
 
-        // Desktop navigation should be hidden on mobile
-        const desktopNav = page.locator('[data-testid="global-navigation"] nav').first();
-        const desktopNavLinks = desktopNav.locator('a').filter({ hasText: /.+/ });
-        const desktopNavVisible = await desktopNavLinks.first().isVisible({ timeout: 2_000 }).catch(() => false);
-        
-        // Desktop nav links should be hidden on mobile (or in mobile menu)
-        // This is acceptable - they might be in the mobile menu
+        // Desktop navigation should be hidden on mobile (or links in mobile menu)
+        // This is acceptable - desktop nav links might be in the mobile menu on mobile
 
       } finally {
         await cleanupMocks();

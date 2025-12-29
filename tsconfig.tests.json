@@ -23,6 +23,7 @@
     "dist",
     "build",
     ".next",
-    "web/tests/archive/**/*"
+    "web/tests/archive/**/*",
+    "web/tests/e2e/specs/_archived/**/*"
   ]
 }
