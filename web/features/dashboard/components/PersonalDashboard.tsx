@@ -78,9 +78,12 @@ function StandardPersonalDashboard({ userId: _fallbackUserId }: PersonalDashboar
 
   // #region agent log
   const renderCountRef = useRef(0);
+  const selectorCallCountRef = useRef(0);
   renderCountRef.current += 1;
-  if (renderCountRef.current > 10) {
-    fetch('http://127.0.0.1:7242/ingest/6a732aed-2d72-4883-a63a-f3c892fc1216',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'PersonalDashboard.tsx:71',message:'HIGH RENDER COUNT DETECTED',data:{renderCount:renderCountRef.current},timestamp:Date.now(),sessionId:'debug-session',runId:'pre-fix',hypothesisId:'D'})}).catch(()=>{});
+  if (renderCountRef.current > 20) {
+    const logData = {location:'PersonalDashboard.tsx:79',message:'HIGH RENDER COUNT',data:{renderCount:renderCountRef.current,isMounted,selectorCallCount:selectorCallCountRef.current},timestamp:Date.now(),sessionId:'debug-session',runId:'pre-fix',hypothesisId:'O'};
+    console.error('[DEBUG] HIGH RENDER COUNT', logData);
+    fetch('http://127.0.0.1:7242/ingest/6a732aed-2d72-4883-a63a-f3c892fc1216',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(logData)}).catch(()=>{});
   }
   // #endregion
 
