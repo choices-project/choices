@@ -154,25 +154,29 @@ function StandardPersonalDashboard({ userId: _fallbackUserId }: PersonalDashboar
 
   // Analytics data - CRITICAL: Use ref to completely decouple from store subscriptions
   // This prevents infinite loops when analytics API fails
-  // We only read from store once on mount and when explicitly needed, not on every render
+  // We only read from store in useEffect, not during render
   const analyticsEventsRef = useRef<unknown[]>(EMPTY_ANALYTICS_ARRAY);
   
-  // Only subscribe to store in useEffect to prevent render-time subscriptions
+  // Only read from store in useEffect to prevent render-time subscriptions
   useEffect(() => {
-    const unsubscribe = useAnalyticsStore.subscribe(
-      (state) => state.events,
-      (events) => {
-        // Only update ref if we have a valid array with data
-        if (Array.isArray(events) && events.length > 0) {
-          analyticsEventsRef.current = events;
-        }
-      },
-      { equalityFn: (a, b) => a === b } // Only update if reference actually changes
-    );
+    const currentEvents = useAnalyticsStore.getState().events;
+    // Only update ref if we have a valid array with data
+    if (Array.isArray(currentEvents) && currentEvents.length > 0) {
+      analyticsEventsRef.current = currentEvents;
+    }
+    
+    // Subscribe to store changes, but only update ref when events actually change
+    const unsubscribe = useAnalyticsStore.subscribe((state) => {
+      const events = state.events;
+      if (Array.isArray(events) && events.length > 0 && events !== analyticsEventsRef.current) {
+        analyticsEventsRef.current = events;
+      }
+    });
+    
     return unsubscribe;
   }, []);
-  
-  // Use ref value directly - stable reference, no subscriptions
+
+  // Use ref value directly - stable reference, no subscriptions during render
   const analyticsEvents = analyticsEventsRef.current;
 
   // Hashtags data - useShallow pattern (not currently used, but keeping structure for future use)
