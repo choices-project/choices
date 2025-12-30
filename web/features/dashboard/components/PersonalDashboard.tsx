@@ -167,35 +167,42 @@ function StandardPersonalDashboard({ userId: _fallbackUserId }: PersonalDashboar
   const polls = pollsStoreData.polls; // useShallow ensures stable reference
   const pollsError = pollsStoreData.error;
 
-  // Analytics data - useShallow pattern (same as useFilteredPollCards)
-  // CRITICAL: Select events array directly - useShallow ensures stable reference
-  // Pattern: Select directly from store, normalize in useMemo (like useFilteredPollCards does computation)
-  const analyticsStoreEvents = useAnalyticsStore(
-    useShallow((state) => state.events)
-  );
+  // Analytics data - CRITICAL FIX: Use selector that returns stable value based on content, not reference
+  // The issue: Even with useShallow, when store updates (loading/error states), immer creates new draft
+  // and state.events gets new empty [] reference even if contents are same
+  // Solution: Select events.length instead of events array, then get events only when needed
+  const analyticsEventsLength = useAnalyticsStore((state) => state.events.length);
+  const analyticsEventsRef = useRef<AnalyticsEvent[]>(EMPTY_ANALYTICS_ARRAY);
+  const analyticsEventsLengthRef = useRef(0);
 
-  // CRITICAL FIX: Use ref to track last value and only update when contents actually change
-  // This prevents infinite loops when store creates new empty array references on updates
-  // Even with useShallow, immer creates new references when ANY part of state updates
-  const analyticsEventsRef = useRef<typeof analyticsStoreEvents>(EMPTY_ANALYTICS_ARRAY);
+  // Only subscribe to events array when length changes (prevents re-renders from other store updates)
   const analyticsEvents = useMemo(() => {
-    // If empty or invalid, always return stable reference
-    if (!Array.isArray(analyticsStoreEvents) || analyticsStoreEvents.length === 0) {
-      return analyticsEventsRef.current === EMPTY_ANALYTICS_ARRAY
-        ? analyticsEventsRef.current
-        : (analyticsEventsRef.current = EMPTY_ANALYTICS_ARRAY);
+    // If length is 0, always return stable empty array
+    if (analyticsEventsLength === 0) {
+      if (analyticsEventsRef.current !== EMPTY_ANALYTICS_ARRAY) {
+        analyticsEventsRef.current = EMPTY_ANALYTICS_ARRAY;
+        analyticsEventsLengthRef.current = 0;
+      }
+      return EMPTY_ANALYTICS_ARRAY;
     }
 
-    // If store has data, check if it's the same reference (shallow check)
-    // If same reference, return cached value to prevent unnecessary recalculations
-    if (analyticsStoreEvents === analyticsEventsRef.current) {
-      return analyticsEventsRef.current;
+    // If length changed, get fresh events from store
+    if (analyticsEventsLength !== analyticsEventsLengthRef.current) {
+      const storeEvents = useAnalyticsStore.getState().events;
+      if (Array.isArray(storeEvents) && storeEvents.length > 0) {
+        analyticsEventsRef.current = storeEvents;
+        analyticsEventsLengthRef.current = analyticsEventsLength;
+        return storeEvents;
+      }
+      // Fallback to empty if store events are invalid
+      analyticsEventsRef.current = EMPTY_ANALYTICS_ARRAY;
+      analyticsEventsLengthRef.current = 0;
+      return EMPTY_ANALYTICS_ARRAY;
     }
 
-    // New data, update ref and return
-    analyticsEventsRef.current = analyticsStoreEvents;
-    return analyticsStoreEvents;
-  }, [analyticsStoreEvents]);
+    // Length unchanged, return cached value
+    return analyticsEventsRef.current;
+  }, [analyticsEventsLength]);
 
   // Hashtags data - useShallow pattern (not currently used, but keeping structure for future use)
   // const hashtagStoreData = useHashtagStore(...);
