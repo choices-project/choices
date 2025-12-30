@@ -224,8 +224,9 @@ function StandardPersonalDashboard({ userId: _fallbackUserId }: PersonalDashboar
 
   // 5.1: Basic Computed Values (memoized with isMounted guard)
   // Filter analytics events by type
+  // CRITICAL: Defensive checks to prevent infinite loops when analytics API fails
   const voteEvents = useMemo(() => {
-    if (!isMounted || !analyticsEvents) return [];
+    if (!isMounted || !Array.isArray(analyticsEvents) || analyticsEvents.length === 0) return [];
     return analyticsEvents.filter((event) => {
       const eventType = (event as Record<string, unknown>)?.event_type as string | undefined;
       return eventType === 'poll_voted';
@@ -233,7 +234,7 @@ function StandardPersonalDashboard({ userId: _fallbackUserId }: PersonalDashboar
   }, [isMounted, analyticsEvents]);
 
   const pollCreatedEvents = useMemo(() => {
-    if (!isMounted || !analyticsEvents) return [];
+    if (!isMounted || !Array.isArray(analyticsEvents) || analyticsEvents.length === 0) return [];
     return analyticsEvents.filter((event) => {
       const eventType = (event as Record<string, unknown>)?.event_type as string | undefined;
       return eventType === 'poll_created';
