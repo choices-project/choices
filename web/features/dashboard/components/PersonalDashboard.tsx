@@ -291,8 +291,15 @@ function StandardPersonalDashboard({ userId: _fallbackUserId }: PersonalDashboar
   }, [isMounted, pollCreatedEvents, thirtyDaysAgo]);
 
   // Combined and sorted recent activity (for display)
+  // CRITICAL FIX: Return stable empty array when no activities
   const recentActivity = useMemo(() => {
-    if (!isMounted) return [];
+    if (!isMounted) return EMPTY_ANALYTICS_ARRAY;
+    
+    // If both event arrays are empty (stable references), return stable empty array
+    if (voteEvents === EMPTY_ANALYTICS_ARRAY && pollCreatedEvents === EMPTY_ANALYTICS_ARRAY) {
+      return EMPTY_ANALYTICS_ARRAY;
+    }
+    
     const activities: Array<{ type: 'vote' | 'poll_created'; event: unknown; createdAt: Date }> = [];
 
     voteEvents.forEach((event) => {
@@ -308,6 +315,11 @@ function StandardPersonalDashboard({ userId: _fallbackUserId }: PersonalDashboar
         activities.push({ type: 'poll_created', event, createdAt: new Date(createdAt) });
       }
     });
+
+    // If no activities found, return stable empty array
+    if (activities.length === 0) {
+      return EMPTY_ANALYTICS_ARRAY;
+    }
 
     // Sort by date (most recent first)
     return activities.sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime()).slice(0, 10);
