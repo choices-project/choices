@@ -175,19 +175,27 @@ function StandardPersonalDashboard({ userId: _fallbackUserId }: PersonalDashboar
   // This matches the proven pattern from useFilteredPollCards that prevents infinite loops
   // useShallow ensures stable object reference when underlying data hasn't changed
   // CRITICAL FIX: Only select events, not isLoading/error - those change frequently and cause unnecessary re-renders
+  // CRITICAL FIX: Use stable reference check - if events array reference hasn't changed, return previous value
   // #region agent log
+  const analyticsStoreDataPrevRef = useRef<{ events: typeof EMPTY_ANALYTICS_ARRAY } | null>(null);
   const analyticsStoreData = useAnalyticsStore(
     useShallow((state) => {
       selectorCallCountRef.current += 1;
       // Only log when selector is called many times (potential infinite loop)
       if (selectorCallCountRef.current > 10 || selectorCallCountRef.current % 10 === 0) {
-        const logData = {location:'PersonalDashboard.tsx:178',message:'analyticsStoreData selector called',data:{callCount:selectorCallCountRef.current,eventsLength:state.events.length,eventsRef:state.events,isLoading:state.isLoading,error:state.error},timestamp:Date.now(),sessionId:'debug-session',runId:'pre-fix',hypothesisId:'E'};
+        const logData = {location:'PersonalDashboard.tsx:181',message:'analyticsStoreData selector called',data:{callCount:selectorCallCountRef.current,eventsLength:state.events.length,eventsRef:state.events,isLoading:state.isLoading,error:state.error,prevEventsRef:analyticsStoreDataPrevRef.current?.events},timestamp:Date.now(),sessionId:'debug-session',runId:'pre-fix',hypothesisId:'E'};
         console.warn('[DEBUG] Selector called', selectorCallCountRef.current, 'times', logData);
         fetch('http://127.0.0.1:7242/ingest/6a732aed-2d72-4883-a63a-f3c892fc1216',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(logData)}).catch(()=>{});
       }
       // CRITICAL: Only return events - don't include isLoading/error as they change on every API call
       // This prevents the selector from being called on every store update (e.g., when setError/setLoading is called)
-      return { events: state.events };
+      const result = { events: state.events };
+      // CRITICAL: If events array reference is the same, return previous object to prevent unnecessary re-renders
+      if (analyticsStoreDataPrevRef.current && analyticsStoreDataPrevRef.current.events === state.events) {
+        return analyticsStoreDataPrevRef.current;
+      }
+      analyticsStoreDataPrevRef.current = result;
+      return result;
     })
   );
   // #endregion
