@@ -14,7 +14,7 @@ import { WifiOff, Wifi, AlertCircle, CheckCircle } from 'lucide-react'
 import React, { useEffect } from 'react';
 
 import { useIsOnline, useDeviceActions } from '@/lib/stores/deviceStore';
-import { usePWAOffline, usePWAPreferences, usePWAActions } from '@/lib/stores/pwaStore'
+import { usePWAOffline, usePWAActions } from '@/lib/stores/pwaStore'
 
 type OfflineIndicatorProps = {
   /** Whether to show detailed status information */
