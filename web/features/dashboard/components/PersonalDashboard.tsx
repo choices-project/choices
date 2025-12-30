@@ -149,17 +149,14 @@ function StandardPersonalDashboard({ userId: _fallbackUserId }: PersonalDashboar
   const pollsError = pollsStoreData.error;
 
   // Analytics data - useShallow pattern
-  // CRITICAL: Use useMemo to ensure analyticsEvents reference is stable even if store updates
-  // This prevents infinite loops when analytics API fails
-  const analyticsStoreData = useAnalyticsStore(
-    useShallow((state) => ({
-      events: state.events ?? [],
-    }))
+  // CRITICAL: Select events array directly with useShallow to ensure stable reference
+  // useShallow will only update if the array reference changes, not if array contents change
+  const analyticsEvents = useAnalyticsStore(
+    useShallow((state) => {
+      // Always return an array, never undefined
+      return Array.isArray(state.events) ? state.events : [];
+    })
   );
-  const analyticsEvents = useMemo(() => {
-    // Ensure we always return an array, never undefined
-    return Array.isArray(analyticsStoreData.events) ? analyticsStoreData.events : [];
-  }, [analyticsStoreData.events]);
 
   // Hashtags data - useShallow pattern (not currently used, but keeping structure for future use)
   // const hashtagStoreData = useHashtagStore(...);
