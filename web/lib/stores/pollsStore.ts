@@ -764,7 +764,7 @@ export const createPollsActions = (
         throw new Error(`Failed to load polls: ${response.status} ${response.statusText}`);
       }
 
-      const payload = (await response.json()) as {
+      let payload: {
         success?: boolean;
         data?: { polls?: PollRow[] };
         metadata?: {
@@ -775,6 +775,16 @@ export const createPollsActions = (
           };
         };
       };
+      
+      try {
+        payload = (await response.json()) as typeof payload;
+      } catch (jsonError) {
+        const errorMessage = jsonError instanceof Error 
+          ? jsonError.message 
+          : 'Failed to parse JSON response';
+        logger.error('Failed to parse polls API JSON response', { error: jsonError, url: apiUrl });
+        throw new Error(`Invalid response format: ${errorMessage}`);
+      }
 
       const polls = payload?.data?.polls ?? [];
       const paginationMeta = payload?.metadata?.pagination;
@@ -846,7 +856,18 @@ export const createPollsActions = (
         throw new Error('Failed to load poll');
       }
 
-      const payload = (await response.json()) as { success?: boolean; data?: PollRow };
+      let payload: { success?: boolean; data?: PollRow };
+      
+      try {
+        payload = (await response.json()) as typeof payload;
+      } catch (jsonError) {
+        const errorMessage = jsonError instanceof Error 
+          ? jsonError.message 
+          : 'Failed to parse JSON response';
+        logger.error('Failed to parse poll API JSON response', { error: jsonError, pollId: id });
+        throw new Error(`Invalid response format: ${errorMessage}`);
+      }
+      
       const poll = payload?.data;
 
       if (!poll) {
