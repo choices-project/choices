@@ -55,6 +55,13 @@ const DEFAULT_DASHBOARD_PREFERENCES: DashboardPreferences = {
   showEngagementScore: true,
 };
 
+// CRITICAL: Module-level stable empty array reference to prevent infinite loops
+// This ensures the same reference is used across all component instances and renders
+// When analytics events are empty, we must use this stable reference, not create new arrays
+type RecentActivityItem = { type: 'vote' | 'poll_created'; event: unknown; createdAt: Date };
+const EMPTY_ANALYTICS_ARRAY: unknown[] = [];
+const EMPTY_RECENT_ACTIVITY_ARRAY: RecentActivityItem[] = [];
+
 type PersonalDashboardProps = {
   userId?: string;
   className?: string;
@@ -81,8 +88,7 @@ function StandardPersonalDashboard({ userId: _fallbackUserId }: PersonalDashboar
   }, []);
 
   // CRITICAL: Stable empty array reference to prevent infinite loops
-  // When analytics events are undefined, we must use a stable reference, not create new arrays
-  const EMPTY_ANALYTICS_ARRAY = useMemo(() => [], []);
+  // Defined as module-level constant to ensure same reference across all renders and instances
 
   // CRITICAL FIX: Use useShallow for store subscription to prevent new object references
   // This was the root cause - without useShallow, this creates a new object every render
@@ -167,15 +173,26 @@ function StandardPersonalDashboard({ userId: _fallbackUserId }: PersonalDashboar
     useShallow((state) => state.events)
   );
 
-  // CRITICAL FIX: Always return stable empty array when empty, regardless of reference
-  // useShallow compares by reference, so new empty [] from store triggers updates even if contents are same
-  // By always returning EMPTY_ANALYTICS_ARRAY when empty, we break the loop
+  // CRITICAL FIX: Use ref to track last value and only update when contents actually change
+  // This prevents infinite loops when store creates new empty array references on updates
+  // Even with useShallow, immer creates new references when ANY part of state updates
+  const analyticsEventsRef = useRef<typeof analyticsStoreEvents>(EMPTY_ANALYTICS_ARRAY);
   const analyticsEvents = useMemo(() => {
     // If empty or invalid, always return stable reference
     if (!Array.isArray(analyticsStoreEvents) || analyticsStoreEvents.length === 0) {
-      return EMPTY_ANALYTICS_ARRAY;
+      return analyticsEventsRef.current === EMPTY_ANALYTICS_ARRAY
+        ? analyticsEventsRef.current
+        : (analyticsEventsRef.current = EMPTY_ANALYTICS_ARRAY);
     }
-    // Only return store events if it has actual data
+
+    // If store has data, check if it's the same reference (shallow check)
+    // If same reference, return cached value to prevent unnecessary recalculations
+    if (analyticsStoreEvents === analyticsEventsRef.current) {
+      return analyticsEventsRef.current;
+    }
+
+    // New data, update ref and return
+    analyticsEventsRef.current = analyticsStoreEvents;
     return analyticsStoreEvents;
   }, [analyticsStoreEvents]);
 
@@ -292,15 +309,15 @@ function StandardPersonalDashboard({ userId: _fallbackUserId }: PersonalDashboar
 
   // Combined and sorted recent activity (for display)
   // CRITICAL FIX: Return stable empty array when no activities
-  const recentActivity = useMemo(() => {
-    if (!isMounted) return EMPTY_ANALYTICS_ARRAY;
-    
+  const recentActivity = useMemo((): RecentActivityItem[] => {
+    if (!isMounted) return EMPTY_RECENT_ACTIVITY_ARRAY;
+
     // If both event arrays are empty (stable references), return stable empty array
     if (voteEvents === EMPTY_ANALYTICS_ARRAY && pollCreatedEvents === EMPTY_ANALYTICS_ARRAY) {
-      return EMPTY_ANALYTICS_ARRAY;
+      return EMPTY_RECENT_ACTIVITY_ARRAY;
     }
-    
-    const activities: Array<{ type: 'vote' | 'poll_created'; event: unknown; createdAt: Date }> = [];
+
+    const activities: RecentActivityItem[] = [];
 
     voteEvents.forEach((event) => {
       const createdAt = (event as Record<string, unknown>)?.created_at as string | undefined;
@@ -318,7 +335,7 @@ function StandardPersonalDashboard({ userId: _fallbackUserId }: PersonalDashboar
 
     // If no activities found, return stable empty array
     if (activities.length === 0) {
-      return EMPTY_ANALYTICS_ARRAY;
+      return EMPTY_RECENT_ACTIVITY_ARRAY;
     }
 
     // Sort by date (most recent first)
