@@ -174,7 +174,9 @@ function StandardPersonalDashboard({ userId: _fallbackUserId }: PersonalDashboar
   // #region agent log
   const analyticsStoreData = useAnalyticsStore(
     useShallow((state) => {
-      fetch('http://127.0.0.1:7242/ingest/6a732aed-2d72-4883-a63a-f3c892fc1216',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'PersonalDashboard.tsx:175',message:'analyticsStoreData selector called',data:{eventsLength:state.events.length,eventsRef:state.events,isLoading:state.isLoading,error:state.error},timestamp:Date.now(),sessionId:'debug-session',runId:'pre-fix',hypothesisId:'E'})}).catch(()=>{});
+      const logData = {location:'PersonalDashboard.tsx:175',message:'analyticsStoreData selector called',data:{eventsLength:state.events.length,eventsRef:state.events,isLoading:state.isLoading,error:state.error},timestamp:Date.now(),sessionId:'debug-session',runId:'pre-fix',hypothesisId:'E'};
+      console.log('[DEBUG]', logData);
+      fetch('http://127.0.0.1:7242/ingest/6a732aed-2d72-4883-a63a-f3c892fc1216',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(logData)}).catch(()=>{});
       return { events: state.events };
     })
   );
