@@ -316,7 +316,12 @@ function StandardPersonalDashboard({ userId: _fallbackUserId }: PersonalDashboar
 
       {/* Error Handling UI - Show when API calls fail */}
       {isMounted && pollsError && (
-        <Card className="border-red-200 bg-red-50 dark:bg-red-900/20 dark:border-red-800">
+        <Card 
+          className="border-red-200 bg-red-50 dark:bg-red-900/20 dark:border-red-800"
+          role="alert"
+          aria-live="polite"
+          data-testid="error-boundary"
+        >
           <CardContent className="pt-6">
             <div className="flex items-start gap-3">
               <AlertCircle className="h-5 w-5 text-red-600 dark:text-red-400 flex-shrink-0 mt-0.5" />
