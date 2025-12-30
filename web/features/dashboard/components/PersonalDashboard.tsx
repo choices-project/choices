@@ -67,7 +67,7 @@ type PersonalDashboardProps = {
 function StandardPersonalDashboard({ userId: _fallbackUserId }: PersonalDashboardProps) {
   // CRITICAL: Guard client-only logic with isMounted (like feed/polls pages)
   const [isMounted, setIsMounted] = useState(false);
-  
+
   // #region agent log
   const renderCountRef = useRef(0);
   renderCountRef.current += 1;
@@ -160,26 +160,20 @@ function StandardPersonalDashboard({ userId: _fallbackUserId }: PersonalDashboar
   const polls = pollsStoreData.polls; // useShallow ensures stable reference
   const pollsError = pollsStoreData.error;
 
-  // Analytics data - useShallow pattern (same as useFilteredPollCards and usePollSearch)
+  // Analytics data - useShallow pattern (same as useFilteredPollCards)
   // CRITICAL: Select events array directly - useShallow ensures stable reference
-  // CRITICAL FIX: Always return stable empty array reference when array is empty
-  // This prevents infinite loops when store creates new empty array references on updates
-  // #region agent log
-  const analyticsEvents = useAnalyticsStore(
-    useShallow((state) => {
-      fetch('http://127.0.0.1:7242/ingest/6a732aed-2d72-4883-a63a-f3c892fc1216',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'PersonalDashboard.tsx:162',message:'analyticsEvents selector called',data:{eventsIsArray:Array.isArray(state.events),eventsLength:Array.isArray(state.events)?state.events.length:'N/A',eventsRef:state.events},timestamp:Date.now(),sessionId:'debug-session',runId:'pre-fix',hypothesisId:'A'})}).catch(()=>{});
-      // If events is undefined or empty array, return stable reference
-      // This prevents new array references from triggering re-renders
-      if (!Array.isArray(state.events) || state.events.length === 0) {
-        fetch('http://127.0.0.1:7242/ingest/6a732aed-2d72-4883-a63a-f3c892fc1216',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'PersonalDashboard.tsx:167',message:'returning EMPTY_ANALYTICS_ARRAY',data:{},timestamp:Date.now(),sessionId:'debug-session',runId:'pre-fix',hypothesisId:'A'})}).catch(()=>{});
-        return EMPTY_ANALYTICS_ARRAY;
-      }
-      // Only return state.events if it has data - useShallow will handle reference stability
-      fetch('http://127.0.0.1:7242/ingest/6a732aed-2d72-4883-a63a-f3c892fc1216',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'PersonalDashboard.tsx:171',message:'returning state.events',data:{eventsLength:state.events.length},timestamp:Date.now(),sessionId:'debug-session',runId:'pre-fix',hypothesisId:'A'})}).catch(()=>{});
-      return state.events;
-    })
+  // Pattern: Select directly from store, normalize in useMemo (like useFilteredPollCards does computation)
+  const analyticsStoreEvents = useAnalyticsStore(
+    useShallow((state) => state.events)
   );
-  // #endregion
+  
+  // Normalize to stable empty array in useMemo (prevents new array references from triggering loops)
+  // This matches the pattern where useShallow selects, useMemo computes/normalizes
+  const analyticsEvents = useMemo(() => {
+    return Array.isArray(analyticsStoreEvents) && analyticsStoreEvents.length > 0
+      ? analyticsStoreEvents
+      : EMPTY_ANALYTICS_ARRAY;
+  }, [analyticsStoreEvents]);
 
   // Hashtags data - useShallow pattern (not currently used, but keeping structure for future use)
   // const hashtagStoreData = useHashtagStore(...);
