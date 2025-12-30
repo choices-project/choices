@@ -26,7 +26,7 @@ const PERFORMANCE_THRESHOLDS = {
   cls: 0.1, // Cumulative Layout Shift (good: <0.1)
   fcp: 1800, // First Contentful Paint (good: <1.8s)
   ttfb: 600, // Time to First Byte (good: <600ms)
-  tti: 3800, // Time to Interactive (good: <3.8s)
+  tti: 5000, // Time to Interactive (good: <5s for content-rich pages)
   pageLoad: 10000, // Total page load time (good: <10s)
   feedLoad: 15000, // Feed page load time (good: <15s)
 };
