@@ -243,16 +243,30 @@ test.describe('Error Recovery Tests', () => {
 
       // Should not crash the entire page
       const consoleErrors: string[] = [];
+      const consoleLogs: string[] = [];
       page.on('console', (msg) => {
+        const text = msg.text();
         if (msg.type() === 'error') {
-          const text = msg.text();
           if (text.includes('React error') || text.includes('Uncaught')) {
             consoleErrors.push(text);
           }
         }
+        // Capture all [DEBUG] logs
+        if (text.includes('[DEBUG]')) {
+          consoleLogs.push(text);
+        }
       });
 
       await page.waitForTimeout(2_000);
+      
+      // Log all debug messages for analysis
+      if (consoleLogs.length > 0) {
+        console.log('=== DEBUG LOGS ===');
+        consoleLogs.forEach((log, i) => {
+          console.log(`[${i}]`, log);
+        });
+        console.log('=== END DEBUG LOGS ===');
+      }
 
       const criticalErrors = consoleErrors.filter(err => 
         err.includes('React error #185') || 
