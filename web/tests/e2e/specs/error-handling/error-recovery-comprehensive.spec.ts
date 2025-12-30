@@ -244,26 +244,38 @@ test.describe('Error Recovery Tests', () => {
       // Should not crash the entire page
       const consoleErrors: string[] = [];
       const consoleLogs: string[] = [];
+      const consoleWarnings: string[] = [];
       page.on('console', (msg) => {
         const text = msg.text();
-        if (msg.type() === 'error') {
+        const type = msg.type();
+        // Log all console messages to test output
+        console.log(`[CONSOLE ${type}]`, text);
+        
+        if (type === 'error') {
           if (text.includes('React error') || text.includes('Uncaught')) {
             consoleErrors.push(text);
           }
         }
-        // Capture all [DEBUG] logs
-        if (text.includes('[DEBUG]')) {
-          consoleLogs.push(text);
+        // Capture all [DEBUG] logs and warnings
+        if (text.includes('[DEBUG]') || text.includes('Selector called') || text.includes('HIGH RENDER')) {
+          if (type === 'warning' || type === 'error') {
+            consoleWarnings.push(text);
+          } else {
+            consoleLogs.push(text);
+          }
         }
       });
 
       await page.waitForTimeout(2_000);
       
       // Log all debug messages for analysis
-      if (consoleLogs.length > 0) {
+      if (consoleLogs.length > 0 || consoleWarnings.length > 0) {
         console.log('=== DEBUG LOGS ===');
         consoleLogs.forEach((log, i) => {
-          console.log(`[${i}]`, log);
+          console.log(`[LOG ${i}]`, log);
+        });
+        consoleWarnings.forEach((log, i) => {
+          console.log(`[WARN ${i}]`, log);
         });
         console.log('=== END DEBUG LOGS ===');
       }
