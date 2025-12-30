@@ -38,6 +38,7 @@ import {
   usePollsStore,
   useAnalyticsStore,
 } from '@/lib/stores';
+import type { AnalyticsEvent } from '@/lib/stores/analyticsStore';
 import { useHashtagActions } from '@/lib/stores/hashtagStore';
 import { useProfileStore } from '@/lib/stores/profileStore';
 import {
@@ -59,7 +60,7 @@ const DEFAULT_DASHBOARD_PREFERENCES: DashboardPreferences = {
 // This ensures the same reference is used across all component instances and renders
 // When analytics events are empty, we must use this stable reference, not create new arrays
 type RecentActivityItem = { type: 'vote' | 'poll_created'; event: unknown; createdAt: Date };
-const EMPTY_ANALYTICS_ARRAY: unknown[] = [];
+const EMPTY_ANALYTICS_ARRAY: AnalyticsEvent[] = [];
 const EMPTY_RECENT_ACTIVITY_ARRAY: RecentActivityItem[] = [];
 
 type PersonalDashboardProps = {
