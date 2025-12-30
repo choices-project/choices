@@ -152,17 +152,27 @@ function StandardPersonalDashboard({ userId: _fallbackUserId }: PersonalDashboar
   const polls = pollsStoreData.polls; // useShallow ensures stable reference
   const pollsError = pollsStoreData.error;
 
-  // Analytics data - useShallow pattern
-  // CRITICAL: Use ref to track previous events array reference to prevent infinite loops
-  // When analytics API fails, we want to use the last known good value, not trigger re-renders
+  // Analytics data - CRITICAL: Use ref to completely decouple from store subscriptions
+  // This prevents infinite loops when analytics API fails
+  // We only read from store once on mount and when explicitly needed, not on every render
   const analyticsEventsRef = useRef<unknown[]>(EMPTY_ANALYTICS_ARRAY);
-  const analyticsStoreEvents = useAnalyticsStore((state) => state.events);
-
-  // Only update ref if we have a valid array, otherwise keep previous value
-  if (Array.isArray(analyticsStoreEvents) && analyticsStoreEvents.length > 0) {
-    analyticsEventsRef.current = analyticsStoreEvents;
-  }
-
+  
+  // Only subscribe to store in useEffect to prevent render-time subscriptions
+  useEffect(() => {
+    const unsubscribe = useAnalyticsStore.subscribe(
+      (state) => state.events,
+      (events) => {
+        // Only update ref if we have a valid array with data
+        if (Array.isArray(events) && events.length > 0) {
+          analyticsEventsRef.current = events;
+        }
+      },
+      { equalityFn: (a, b) => a === b } // Only update if reference actually changes
+    );
+    return unsubscribe;
+  }, []);
+  
+  // Use ref value directly - stable reference, no subscriptions
   const analyticsEvents = analyticsEventsRef.current;
 
   // Hashtags data - useShallow pattern (not currently used, but keeping structure for future use)
