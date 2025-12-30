@@ -63,6 +63,44 @@ const envFlagEnabled = (value: string | undefined, defaultEnabled: boolean): boo
 
 export const SHOULD_USE_MOCKS = envFlagEnabled(process.env.PLAYWRIGHT_USE_MOCKS, true);
 
+/**
+ * Get E2E test user credentials from environment variables
+ * @returns TestUser credentials or null if not available
+ */
+export function getE2EUserCredentials(): TestUser | null {
+  const email = process.env.E2E_USER_EMAIL;
+  const password = process.env.E2E_USER_PASSWORD;
+
+  if (!email || !password) {
+    return null;
+  }
+
+  return {
+    email,
+    password,
+    username: email.split('@')[0] ?? 'e2e-user',
+  };
+}
+
+/**
+ * Get E2E admin credentials from environment variables
+ * @returns TestUser credentials or null if not available
+ */
+export function getE2EAdminCredentials(): TestUser | null {
+  const email = process.env.E2E_ADMIN_EMAIL;
+  const password = process.env.E2E_ADMIN_PASSWORD;
+
+  if (!email || !password) {
+    return null;
+  }
+
+  return {
+    email,
+    password,
+    username: email.split('@')[0] ?? 'e2e-admin',
+  };
+}
+
 export type ExternalMockOptions = {
   civics: boolean;
   analytics: boolean;
@@ -250,7 +288,7 @@ export async function loginTestUser(page: Page, user: TestUser): Promise<void> {
   if (!currentUrl.includes('/auth')) {
     await page.goto('/auth', { waitUntil: 'domcontentloaded', timeout: 60_000 });
   }
-  
+
   await page.waitForSelector('[data-testid="auth-hydrated"]', { state: 'attached', timeout: 60_000 });
   await waitForPageReady(page);
 
@@ -327,17 +365,17 @@ export async function loginTestUser(page: Page, user: TestUser): Promise<void> {
       const emailInput = document.querySelector('[data-testid="login-email"]') as HTMLInputElement;
       const passwordInput = document.querySelector('[data-testid="login-password"]') as HTMLInputElement;
       const submitButton = document.querySelector('[data-testid="login-submit"]') as HTMLButtonElement;
-      
+
       // Check DOM values match
       const domValuesMatch = emailInput?.value === expectedEmail && passwordInput?.value === expectedPassword;
-      
+
       // Check if React state has updated (button enabled when form is valid)
       // Email valid: contains @, Password valid: length >= 6
       const emailValid = expectedEmail.includes('@');
       const passwordValid = expectedPassword.length >= 6;
       const shouldBeEnabled = emailValid && passwordValid;
       const isEnabled = !submitButton?.disabled;
-      
+
       // Return true only when DOM values match AND React state has synced (button state matches expected)
       return domValuesMatch && (shouldBeEnabled === isEnabled);
     },
@@ -362,7 +400,7 @@ export async function loginTestUser(page: Page, user: TestUser): Promise<void> {
 
   const submitButton = page.getByTestId('login-submit');
   await submitButton.waitFor({ state: 'visible', timeout: 5_000 });
-  
+
   // Try to directly update React state if button is still disabled
   // This is a workaround for React controlled inputs not updating
   const isDisabled = await submitButton.isDisabled();
@@ -450,7 +488,7 @@ export async function loginTestUser(page: Page, user: TestUser): Promise<void> {
       await page.keyboard.press('End');
       await page.keyboard.press('Backspace');
       await page.keyboard.type(email.slice(-1), { delay: 10 });
-      
+
       await passwordInput.first().focus();
       await page.keyboard.press('End');
       await page.keyboard.press('Backspace');
@@ -497,21 +535,21 @@ export async function loginTestUser(page: Page, user: TestUser): Promise<void> {
       );
     }
   }
-  
+
   // Set up network request interception BEFORE clicking
   type LoginResponse = { status: number; body: any };
-  
+
   // Increase timeout for production server which may be slower
   const isCI = process.env.CI === 'true' || process.env.CI === '1';
   const isProductionServer = process.env.BASE_URL?.includes('127.0.0.1') || process.env.BASE_URL?.includes('localhost');
   const apiTimeout = (isCI || isProductionServer) ? 60_000 : 30_000; // 60s for CI/production server, 30s for local
-  
+
   // Set up request promise to verify the request is actually being made
   const requestPromise = page.waitForRequest(
     (req) => req.url().includes('/api/auth/login') && req.method() === 'POST',
     { timeout: 10_000 } // Shorter timeout for request - should happen quickly after click
   ).catch(() => null);
-  
+
   // Set up response promise BEFORE clicking
   let loginResponse: LoginResponse | null = null;
   let apiError: string | null = null;
@@ -522,10 +560,10 @@ export async function loginTestUser(page: Page, user: TestUser): Promise<void> {
   if (!isButtonEnabledFinal) {
     throw new Error('Submit button is not enabled. React state may not be synchronized.');
   }
-  
+
   // Click submit
   await submitButton.click();
-  
+
   // Wait for request to be made (this verifies the form submission is working)
   const requestMade = await requestPromise;
   if (!requestMade) {
@@ -568,7 +606,7 @@ export async function loginTestUser(page: Page, user: TestUser): Promise<void> {
 
     throw new Error('Login form submission failed - API request was not made. Check if form is properly configured.');
   }
-  
+
   // Now wait for the response
   try {
     const response = await page.waitForResponse(
@@ -618,7 +656,7 @@ export async function loginTestUser(page: Page, user: TestUser): Promise<void> {
   // Use longer timeout in CI or when BASE_URL is localhost (production server mode)
   // Reuse isCI and isProductionServer from above
   const authTimeout = (isCI || isProductionServer) ? 90_000 : 15_000; // 90s for CI/production server, 15s for local
-  
+
   try {
     // Wait for navigation or cookies/tokens
     // Accept dashboard, onboarding, feed, or admin routes (feed is the new default for authenticated users)
@@ -650,17 +688,17 @@ export async function loginTestUser(page: Page, user: TestUser): Promise<void> {
       const token = localStorage.getItem('supabase.auth.token');
       return token !== null && token !== 'null';
     }).catch(() => false);
-    
+
     // Check for any error messages on the page
     const pageText = await page.textContent('body').catch(() => '') ?? '';
     const hasError = pageText.includes('error') || pageText.includes('Error') || pageText.includes('failed');
-    
-    const apiResponseInfo = loginResponse 
+
+    const apiResponseInfo = loginResponse
       ? `status: ${loginResponse.status}, body: ${JSON.stringify(loginResponse.body).substring(0, 200)}`
-      : apiError 
+      : apiError
         ? `timeout/error: ${apiError}`
         : 'none (timeout waiting for response)';
-    
+
     throw new Error(
       `Authentication timeout after ${authTimeout}ms. ` +
       `Current URL: ${currentUrl}, ` +
@@ -671,22 +709,22 @@ export async function loginTestUser(page: Page, user: TestUser): Promise<void> {
       `Original error: ${error instanceof Error ? error.message : String(error)}`
     );
   }
-  
+
   // Give a moment for any post-auth processing
   await page.waitForTimeout(1_000);
-  
+
   // Verify Supabase auth cookies are actually present before proceeding
   // This ensures cookies are set and will be sent with subsequent requests
   // Middleware now uses standard Supabase SSR (createServerClient + getUser())
   // which automatically detects Supabase auth cookies set by @supabase/ssr
   const allCookies = await page.context().cookies();
-  
+
   // Check for Supabase auth cookies that middleware will detect:
   // 1. sb-access-token (if set)
   // 2. sb-<project-ref>-auth-token (Supabase standard, set by @supabase/ssr)
   // 3. Any sb- cookie with 'auth', 'session', or 'access' in the name
   const hasAccessToken = allCookies.some(c => c.name === 'sb-access-token' && c.value && c.value.length > 0);
-  
+
   // Extract project ref from NEXT_PUBLIC_SUPABASE_URL if available
   const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
   let hasProjectAuthToken = false;
@@ -695,22 +733,22 @@ export async function loginTestUser(page: Page, user: TestUser): Promise<void> {
     const urlMatch = supabaseUrl.match(/https?:\/\/([^.]+)\.supabase\.(co|io)/);
     if (urlMatch && urlMatch[1]) {
       projectRef = urlMatch[1];
-      hasProjectAuthToken = allCookies.some(c => 
+      hasProjectAuthToken = allCookies.some(c =>
         c.name === `sb-${projectRef}-auth-token` && c.value && c.value.length > 0
       );
     }
   }
-  
+
   // Check for any sb- cookie with auth-related keywords
   const hasAnySupabaseAuthCookie = allCookies.some(cookie => {
     if (!cookie.name.startsWith('sb-') || !cookie.value || cookie.value.length === 0) {
       return false;
     }
-    return cookie.name.includes('auth') || 
-           cookie.name.includes('session') || 
+    return cookie.name.includes('auth') ||
+           cookie.name.includes('session') ||
            cookie.name.includes('access');
   });
-  
+
   if (!hasAccessToken && !hasProjectAuthToken && !hasAnySupabaseAuthCookie) {
     // Log available cookies for debugging
     const cookieNames = allCookies.map(c => `${c.name}=${c.value.substring(0, 20)}...`).join(', ');
@@ -721,7 +759,7 @@ export async function loginTestUser(page: Page, user: TestUser): Promise<void> {
       `This may indicate a login failure or cookie setting issue.`
     );
   }
-  
+
   // Additional wait to ensure cookies are fully propagated to browser context
   await page.waitForTimeout(500);
 }

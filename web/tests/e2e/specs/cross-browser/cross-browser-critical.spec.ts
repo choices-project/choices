@@ -1,5 +1,5 @@
 import { expect, test } from '@playwright/test';
-import { ensureLoggedOut, loginTestUser, waitForPageReady, SHOULD_USE_MOCKS } from '../../helpers/e2e-setup';
+import { ensureLoggedOut, getE2EUserCredentials, loginTestUser, waitForPageReady, SHOULD_USE_MOCKS } from '../../helpers/e2e-setup';
 
 /**
  * Cross-Browser Critical Flow Tests
@@ -16,9 +16,6 @@ import { ensureLoggedOut, loginTestUser, waitForPageReady, SHOULD_USE_MOCKS } fr
 const PRODUCTION_URL = process.env.PRODUCTION_URL || 'https://www.choices-app.com';
 const BASE_URL = process.env.BASE_URL || PRODUCTION_URL;
 
-const regularEmail = process.env.E2E_USER_EMAIL;
-const regularPassword = process.env.E2E_USER_PASSWORD;
-
 test.describe('Cross-Browser Critical Flows', () => {
   test.skip(SHOULD_USE_MOCKS, 'Cross-browser tests require real backend (set PLAYWRIGHT_USE_MOCKS=0)');
 
@@ -26,7 +23,8 @@ test.describe('Cross-Browser Critical Flows', () => {
     test('user can authenticate and access protected pages', async ({ page, browserName }) => {
       test.setTimeout(120_000);
 
-      if (!regularEmail || !regularPassword) {
+      const userCredentials = getE2EUserCredentials();
+      if (!userCredentials) {
         test.skip(true, 'E2E_USER_EMAIL and E2E_USER_PASSWORD are required');
         return;
       }
@@ -44,11 +42,7 @@ test.describe('Cross-Browser Critical Flows', () => {
       await expect(authContent).toBeVisible({ timeout: 10_000 });
 
       // Log in
-      await loginTestUser(page, {
-        email: regularEmail,
-        password: regularPassword,
-        username: regularEmail.split('@')[0] ?? 'e2e-user',
-      });
+      await loginTestUser(page, userCredentials);
       await waitForPageReady(page);
 
       // Verify authentication succeeded
@@ -104,7 +98,8 @@ test.describe('Cross-Browser Critical Flows', () => {
     test('dashboard loads correctly across browsers', async ({ page, browserName }) => {
       test.setTimeout(120_000);
 
-      if (!regularEmail || !regularPassword) {
+      const userCredentials = getE2EUserCredentials();
+      if (!userCredentials) {
         test.skip(true, 'E2E_USER_EMAIL and E2E_USER_PASSWORD are required');
         return;
       }
@@ -114,11 +109,7 @@ test.describe('Cross-Browser Critical Flows', () => {
 
       await ensureLoggedOut(page);
       await page.goto(`${BASE_URL}/auth`, { waitUntil: 'domcontentloaded', timeout: 30_000 });
-      await loginTestUser(page, {
-        email: regularEmail,
-        password: regularPassword,
-        username: regularEmail.split('@')[0] ?? 'e2e-user',
-      });
+      await loginTestUser(page, userCredentials);
       await waitForPageReady(page);
 
       // Navigate to dashboard
@@ -161,7 +152,8 @@ test.describe('Cross-Browser Critical Flows', () => {
     test('polls page loads and displays content', async ({ page, browserName }) => {
       test.setTimeout(120_000);
 
-      if (!regularEmail || !regularPassword) {
+      const userCredentials = getE2EUserCredentials();
+      if (!userCredentials) {
         test.skip(true, 'E2E_USER_EMAIL and E2E_USER_PASSWORD are required');
         return;
       }
@@ -171,11 +163,7 @@ test.describe('Cross-Browser Critical Flows', () => {
 
       await ensureLoggedOut(page);
       await page.goto(`${BASE_URL}/auth`, { waitUntil: 'domcontentloaded', timeout: 30_000 });
-      await loginTestUser(page, {
-        email: regularEmail,
-        password: regularPassword,
-        username: regularEmail.split('@')[0] ?? 'e2e-user',
-      });
+      await loginTestUser(page, userCredentials);
       await waitForPageReady(page);
 
       // Navigate to polls page
@@ -202,7 +190,8 @@ test.describe('Cross-Browser Critical Flows', () => {
     test('navigation works correctly across browsers', async ({ page, browserName }) => {
       test.setTimeout(120_000);
 
-      if (!regularEmail || !regularPassword) {
+      const userCredentials = getE2EUserCredentials();
+      if (!userCredentials) {
         test.skip(true, 'E2E_USER_EMAIL and E2E_USER_PASSWORD are required');
         return;
       }
@@ -212,11 +201,7 @@ test.describe('Cross-Browser Critical Flows', () => {
 
       await ensureLoggedOut(page);
       await page.goto(`${BASE_URL}/auth`, { waitUntil: 'domcontentloaded', timeout: 30_000 });
-      await loginTestUser(page, {
-        email: regularEmail,
-        password: regularPassword,
-        username: regularEmail.split('@')[0] ?? 'e2e-user',
-      });
+      await loginTestUser(page, userCredentials);
       await waitForPageReady(page);
 
       // Test navigation between pages

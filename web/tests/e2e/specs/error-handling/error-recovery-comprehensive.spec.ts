@@ -2,6 +2,7 @@ import { expect, test } from '@playwright/test';
 
 import {
   ensureLoggedOut,
+  getE2EUserCredentials,
   loginTestUser,
   waitForPageReady,
   SHOULD_USE_MOCKS,
@@ -23,9 +24,6 @@ import {
 const PRODUCTION_URL = process.env.PRODUCTION_URL || 'https://www.choices-app.com';
 const BASE_URL = process.env.BASE_URL || PRODUCTION_URL;
 
-const regularEmail = process.env.E2E_USER_EMAIL;
-const regularPassword = process.env.E2E_USER_PASSWORD;
-
 test.describe('Error Recovery Tests', () => {
   test.skip(SHOULD_USE_MOCKS, 'Error recovery tests require real backend (set PLAYWRIGHT_USE_MOCKS=0)');
 
@@ -33,18 +31,15 @@ test.describe('Error Recovery Tests', () => {
     test('application handles network timeout gracefully', async ({ page, context }) => {
       test.setTimeout(120_000);
 
-      if (!regularEmail || !regularPassword) {
+      const userCredentials = getE2EUserCredentials();
+      if (!userCredentials) {
         test.skip(true, 'E2E_USER_EMAIL and E2E_USER_PASSWORD are required');
         return;
       }
 
       await ensureLoggedOut(page);
       await page.goto(`${BASE_URL}/auth`, { waitUntil: 'domcontentloaded', timeout: 30_000 });
-      await loginTestUser(page, {
-        email: regularEmail,
-        password: regularPassword,
-        username: regularEmail.split('@')[0] ?? 'e2e-user',
-      });
+      await loginTestUser(page, userCredentials);
       await waitForPageReady(page);
 
       // Intercept API requests and add delay to simulate timeout
@@ -88,18 +83,15 @@ test.describe('Error Recovery Tests', () => {
     test('application handles connection errors gracefully', async ({ page, context }) => {
       test.setTimeout(120_000);
 
-      if (!regularEmail || !regularPassword) {
+      const userCredentials = getE2EUserCredentials();
+      if (!userCredentials) {
         test.skip(true, 'E2E_USER_EMAIL and E2E_USER_PASSWORD are required');
         return;
       }
 
       await ensureLoggedOut(page);
       await page.goto(`${BASE_URL}/auth`, { waitUntil: 'domcontentloaded', timeout: 30_000 });
-      await loginTestUser(page, {
-        email: regularEmail,
-        password: regularPassword,
-        username: regularEmail.split('@')[0] ?? 'e2e-user',
-      });
+      await loginTestUser(page, userCredentials);
       await waitForPageReady(page);
 
       // Intercept API requests and simulate connection failure
@@ -148,18 +140,15 @@ test.describe('Error Recovery Tests', () => {
     test('application handles API timeout with retry option', async ({ page, context }) => {
       test.setTimeout(120_000);
 
-      if (!regularEmail || !regularPassword) {
+      const userCredentials = getE2EUserCredentials();
+      if (!userCredentials) {
         test.skip(true, 'E2E_USER_EMAIL and E2E_USER_PASSWORD are required');
         return;
       }
 
       await ensureLoggedOut(page);
       await page.goto(`${BASE_URL}/auth`, { waitUntil: 'domcontentloaded', timeout: 30_000 });
-      await loginTestUser(page, {
-        email: regularEmail,
-        password: regularPassword,
-        username: regularEmail.split('@')[0] ?? 'e2e-user',
-      });
+      await loginTestUser(page, userCredentials);
       await waitForPageReady(page);
 
       // Intercept specific API endpoint and timeout
@@ -185,18 +174,15 @@ test.describe('Error Recovery Tests', () => {
     test('application handles slow API responses', async ({ page, context }) => {
       test.setTimeout(120_000);
 
-      if (!regularEmail || !regularPassword) {
+      const userCredentials = getE2EUserCredentials();
+      if (!userCredentials) {
         test.skip(true, 'E2E_USER_EMAIL and E2E_USER_PASSWORD are required');
         return;
       }
 
       await ensureLoggedOut(page);
       await page.goto(`${BASE_URL}/auth`, { waitUntil: 'domcontentloaded', timeout: 30_000 });
-      await loginTestUser(page, {
-        email: regularEmail,
-        password: regularPassword,
-        username: regularEmail.split('@')[0] ?? 'e2e-user',
-      });
+      await loginTestUser(page, userCredentials);
       await waitForPageReady(page);
 
       // Intercept API requests and add delay
@@ -224,18 +210,15 @@ test.describe('Error Recovery Tests', () => {
     test('application handles malformed JSON responses', async ({ page, context }) => {
       test.setTimeout(120_000);
 
-      if (!regularEmail || !regularPassword) {
+      const userCredentials = getE2EUserCredentials();
+      if (!userCredentials) {
         test.skip(true, 'E2E_USER_EMAIL and E2E_USER_PASSWORD are required');
         return;
       }
 
       await ensureLoggedOut(page);
       await page.goto(`${BASE_URL}/auth`, { waitUntil: 'domcontentloaded', timeout: 30_000 });
-      await loginTestUser(page, {
-        email: regularEmail,
-        password: regularPassword,
-        username: regularEmail.split('@')[0] ?? 'e2e-user',
-      });
+      await loginTestUser(page, userCredentials);
       await waitForPageReady(page);
 
       // Intercept API requests and return malformed JSON
@@ -278,18 +261,15 @@ test.describe('Error Recovery Tests', () => {
     test('application handles empty API responses', async ({ page, context }) => {
       test.setTimeout(120_000);
 
-      if (!regularEmail || !regularPassword) {
+      const userCredentials = getE2EUserCredentials();
+      if (!userCredentials) {
         test.skip(true, 'E2E_USER_EMAIL and E2E_USER_PASSWORD are required');
         return;
       }
 
       await ensureLoggedOut(page);
       await page.goto(`${BASE_URL}/auth`, { waitUntil: 'domcontentloaded', timeout: 30_000 });
-      await loginTestUser(page, {
-        email: regularEmail,
-        password: regularPassword,
-        username: regularEmail.split('@')[0] ?? 'e2e-user',
-      });
+      await loginTestUser(page, userCredentials);
       await waitForPageReady(page);
 
       // Intercept API requests and return empty response
@@ -317,18 +297,15 @@ test.describe('Error Recovery Tests', () => {
     test('application handles 500 server errors', async ({ page, context }) => {
       test.setTimeout(120_000);
 
-      if (!regularEmail || !regularPassword) {
+      const userCredentials = getE2EUserCredentials();
+      if (!userCredentials) {
         test.skip(true, 'E2E_USER_EMAIL and E2E_USER_PASSWORD are required');
         return;
       }
 
       await ensureLoggedOut(page);
       await page.goto(`${BASE_URL}/auth`, { waitUntil: 'domcontentloaded', timeout: 30_000 });
-      await loginTestUser(page, {
-        email: regularEmail,
-        password: regularPassword,
-        username: regularEmail.split('@')[0] ?? 'e2e-user',
-      });
+      await loginTestUser(page, userCredentials);
       await waitForPageReady(page);
 
       // Intercept API requests and return 500 error
@@ -372,18 +349,15 @@ test.describe('Error Recovery Tests', () => {
     test('application handles offline mode gracefully', async ({ page, context }) => {
       test.setTimeout(120_000);
 
-      if (!regularEmail || !regularPassword) {
+      const userCredentials = getE2EUserCredentials();
+      if (!userCredentials) {
         test.skip(true, 'E2E_USER_EMAIL and E2E_USER_PASSWORD are required');
         return;
       }
 
       await ensureLoggedOut(page);
       await page.goto(`${BASE_URL}/auth`, { waitUntil: 'domcontentloaded', timeout: 30_000 });
-      await loginTestUser(page, {
-        email: regularEmail,
-        password: regularPassword,
-        username: regularEmail.split('@')[0] ?? 'e2e-user',
-      });
+      await loginTestUser(page, userCredentials);
       await waitForPageReady(page);
 
       // Go offline
@@ -422,18 +396,15 @@ test.describe('Error Recovery Tests', () => {
     test('application recovers when coming back online', async ({ page, context }) => {
       test.setTimeout(120_000);
 
-      if (!regularEmail || !regularPassword) {
+      const userCredentials = getE2EUserCredentials();
+      if (!userCredentials) {
         test.skip(true, 'E2E_USER_EMAIL and E2E_USER_PASSWORD are required');
         return;
       }
 
       await ensureLoggedOut(page);
       await page.goto(`${BASE_URL}/auth`, { waitUntil: 'domcontentloaded', timeout: 30_000 });
-      await loginTestUser(page, {
-        email: regularEmail,
-        password: regularPassword,
-        username: regularEmail.split('@')[0] ?? 'e2e-user',
-      });
+      await loginTestUser(page, userCredentials);
       await waitForPageReady(page);
 
       // Go offline
@@ -474,18 +445,15 @@ test.describe('Error Recovery Tests', () => {
     test('application handles partial API failures', async ({ page, context }) => {
       test.setTimeout(120_000);
 
-      if (!regularEmail || !regularPassword) {
+      const userCredentials = getE2EUserCredentials();
+      if (!userCredentials) {
         test.skip(true, 'E2E_USER_EMAIL and E2E_USER_PASSWORD are required');
         return;
       }
 
       await ensureLoggedOut(page);
       await page.goto(`${BASE_URL}/auth`, { waitUntil: 'domcontentloaded', timeout: 30_000 });
-      await loginTestUser(page, {
-        email: regularEmail,
-        password: regularPassword,
-        username: regularEmail.split('@')[0] ?? 'e2e-user',
-      });
+      await loginTestUser(page, userCredentials);
       await waitForPageReady(page);
 
       // Intercept some API endpoints and fail them, while others succeed

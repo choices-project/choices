@@ -1,5 +1,5 @@
 import { expect, test } from '@playwright/test';
-import { ensureLoggedOut, loginTestUser, waitForPageReady, SHOULD_USE_MOCKS } from '../../helpers/e2e-setup';
+import { ensureLoggedOut, getE2EUserCredentials, loginTestUser, waitForPageReady, SHOULD_USE_MOCKS } from '../../helpers/e2e-setup';
 
 /**
  * Comprehensive Performance Tests
@@ -16,8 +16,7 @@ import { ensureLoggedOut, loginTestUser, waitForPageReady, SHOULD_USE_MOCKS } fr
 const PRODUCTION_URL = process.env.PRODUCTION_URL || 'https://www.choices-app.com';
 const BASE_URL = process.env.BASE_URL || PRODUCTION_URL;
 
-const regularEmail = process.env.E2E_USER_EMAIL;
-const regularPassword = process.env.E2E_USER_PASSWORD;
+// Get credentials from helper function
 
 // Performance thresholds (in milliseconds or scores)
 const PERFORMANCE_THRESHOLDS = {
@@ -136,18 +135,15 @@ test.describe('Comprehensive Performance Tests', () => {
     test('feed page meets Core Web Vitals thresholds', async ({ page }) => {
       test.setTimeout(120_000);
 
-      if (!regularEmail || !regularPassword) {
+      const userCredentials = getE2EUserCredentials();
+      if (!userCredentials) {
         test.skip(true, 'E2E_USER_EMAIL and E2E_USER_PASSWORD are required');
         return;
       }
 
       await ensureLoggedOut(page);
       await page.goto(`${BASE_URL}/auth`, { waitUntil: 'domcontentloaded', timeout: 30_000 });
-      await loginTestUser(page, {
-        email: regularEmail,
-        password: regularPassword,
-        username: regularEmail.split('@')[0] ?? 'e2e-user',
-      });
+      await loginTestUser(page, userCredentials);
       await waitForPageReady(page);
 
       // Measure feed page performance
@@ -233,7 +229,6 @@ test.describe('Comprehensive Performance Tests', () => {
     test('landing page becomes interactive quickly', async ({ page }) => {
       test.setTimeout(60_000);
 
-      const navigationStart = Date.now();
       await page.goto(BASE_URL, { waitUntil: 'load', timeout: 30_000 });
 
       // Measure Time to Interactive using Performance API
@@ -268,18 +263,15 @@ test.describe('Comprehensive Performance Tests', () => {
     test('dashboard page becomes interactive quickly', async ({ page }) => {
       test.setTimeout(120_000);
 
-      if (!regularEmail || !regularPassword) {
+      const userCredentials = getE2EUserCredentials();
+      if (!userCredentials) {
         test.skip(true, 'E2E_USER_EMAIL and E2E_USER_PASSWORD are required');
         return;
       }
 
       await ensureLoggedOut(page);
       await page.goto(`${BASE_URL}/auth`, { waitUntil: 'domcontentloaded', timeout: 30_000 });
-      await loginTestUser(page, {
-        email: regularEmail,
-        password: regularPassword,
-        username: regularEmail.split('@')[0] ?? 'e2e-user',
-      });
+      await loginTestUser(page, userCredentials);
       await waitForPageReady(page);
 
       const startTime = Date.now();
