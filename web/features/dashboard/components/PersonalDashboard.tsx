@@ -38,6 +38,7 @@ import {
   usePollsStore,
   useAnalyticsStore,
 } from '@/lib/stores';
+import type { AnalyticsEvent } from '@/lib/stores/analyticsStore';
 import { useHashtagActions } from '@/lib/stores/hashtagStore';
 import { useProfileStore } from '@/lib/stores/profileStore';
 import {
@@ -166,13 +167,17 @@ function StandardPersonalDashboard({ userId: _fallbackUserId }: PersonalDashboar
   const analyticsStoreEvents = useAnalyticsStore(
     useShallow((state) => state.events)
   );
-  
-  // Normalize to stable empty array in useMemo (prevents new array references from triggering loops)
-  // This matches the pattern where useShallow selects, useMemo computes/normalizes
+
+  // CRITICAL FIX: Always return stable empty array when empty, regardless of reference
+  // useShallow compares by reference, so new empty [] from store triggers updates even if contents are same
+  // By always returning EMPTY_ANALYTICS_ARRAY when empty, we break the loop
   const analyticsEvents = useMemo(() => {
-    return Array.isArray(analyticsStoreEvents) && analyticsStoreEvents.length > 0
-      ? analyticsStoreEvents
-      : EMPTY_ANALYTICS_ARRAY;
+    // If empty or invalid, always return stable reference
+    if (!Array.isArray(analyticsStoreEvents) || analyticsStoreEvents.length === 0) {
+      return EMPTY_ANALYTICS_ARRAY;
+    }
+    // Only return store events if it has actual data
+    return analyticsStoreEvents;
   }, [analyticsStoreEvents]);
 
   // Hashtags data - useShallow pattern (not currently used, but keeping structure for future use)
