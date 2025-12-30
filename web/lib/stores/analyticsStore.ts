@@ -244,6 +244,11 @@ type AnalyticsStoreCreator = StateCreator<
 
 const MAX_EVENTS = 1000;
 
+// CRITICAL: Stable empty array reference for initial state
+// This ensures the same array reference is used across all store instances
+// Prevents infinite loops when components subscribe to empty events array
+const EMPTY_EVENTS_ARRAY: AnalyticsEvent[] = [];
+
 const createEventId = () =>
   `event_${Date.now()}_${Math.random().toString(36).slice(2, 11)}`;
 
@@ -307,7 +312,7 @@ const applyChartState = (draft: AnalyticsState, config: ChartConfig | null) => {
 // ---------------------------------------------------------------------------
 
 export const createInitialAnalyticsState = (): AnalyticsState => ({
-  events: [],
+  events: EMPTY_EVENTS_ARRAY,
   performanceMetrics: null,
   userBehavior: null,
   dashboard: null,
