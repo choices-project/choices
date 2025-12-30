@@ -517,7 +517,14 @@ export const createAnalyticsActions = (
       setState((draft) => {
         // CRITICAL: Use splice to clear array in-place to maintain reference stability
         // This prevents immer from creating new empty array references
+        // If array is already empty, no-op to avoid unnecessary updates
+        if (draft.events.length === 0) return;
         draft.events.splice(0, draft.events.length);
+        // After clearing, ensure we use stable empty array reference
+        if (draft.events !== EMPTY_EVENTS_ARRAY && draft.events.length === 0) {
+          // Replace with stable reference (immer allows this in draft)
+          (draft as { events: AnalyticsEvent[] }).events = EMPTY_EVENTS_ARRAY;
+        }
       });
     },
 
