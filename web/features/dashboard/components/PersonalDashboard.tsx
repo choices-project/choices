@@ -167,15 +167,20 @@ function StandardPersonalDashboard({ userId: _fallbackUserId }: PersonalDashboar
   const polls = pollsStoreData.polls; // useShallow ensures stable reference
   const pollsError = pollsStoreData.error;
 
-  // Analytics data - CRITICAL FIX: Use selector that returns stable value based on content, not reference
+  // Analytics data - CRITICAL FIX: Don't subscribe to analytics events at all when empty
   // The issue: Even with useShallow, when store updates (loading/error states), immer creates new draft
-  // and state.events gets new empty [] reference even if contents are same
-  // Solution: Select events.length instead of events array, then get events only when needed
+  // and state.events gets new empty [] reference even if contents are same, triggering infinite loops
+  // Solution: Use a custom selector that only subscribes when events.length > 0, otherwise return stable empty array
   const analyticsEventsLength = useAnalyticsStore((state) => state.events.length);
   const analyticsEventsRef = useRef<AnalyticsEvent[]>(EMPTY_ANALYTICS_ARRAY);
   const analyticsEventsLengthRef = useRef(0);
 
-  // Only subscribe to events array when length changes (prevents re-renders from other store updates)
+  // Subscribe to events array only when length > 0, using useShallow for stability
+  const analyticsStoreEvents = useAnalyticsStore(
+    useShallow((state) => (state.events.length > 0 ? state.events : EMPTY_ANALYTICS_ARRAY))
+  );
+
+  // Normalize to stable empty array when empty
   const analyticsEvents = useMemo(() => {
     // If length is 0, always return stable empty array
     if (analyticsEventsLength === 0) {
@@ -186,13 +191,12 @@ function StandardPersonalDashboard({ userId: _fallbackUserId }: PersonalDashboar
       return EMPTY_ANALYTICS_ARRAY;
     }
 
-    // If length changed, get fresh events from store
+    // If length changed and we have events, update ref
     if (analyticsEventsLength !== analyticsEventsLengthRef.current) {
-      const storeEvents = useAnalyticsStore.getState().events;
-      if (Array.isArray(storeEvents) && storeEvents.length > 0) {
-        analyticsEventsRef.current = storeEvents;
+      if (Array.isArray(analyticsStoreEvents) && analyticsStoreEvents.length > 0) {
+        analyticsEventsRef.current = analyticsStoreEvents;
         analyticsEventsLengthRef.current = analyticsEventsLength;
-        return storeEvents;
+        return analyticsStoreEvents;
       }
       // Fallback to empty if store events are invalid
       analyticsEventsRef.current = EMPTY_ANALYTICS_ARRAY;
@@ -202,7 +206,7 @@ function StandardPersonalDashboard({ userId: _fallbackUserId }: PersonalDashboar
 
     // Length unchanged, return cached value
     return analyticsEventsRef.current;
-  }, [analyticsEventsLength]);
+  }, [analyticsEventsLength, analyticsStoreEvents]);
 
   // Hashtags data - useShallow pattern (not currently used, but keeping structure for future use)
   // const hashtagStoreData = useHashtagStore(...);
