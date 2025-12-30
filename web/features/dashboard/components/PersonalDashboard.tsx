@@ -72,6 +72,10 @@ function StandardPersonalDashboard({ userId: _fallbackUserId }: PersonalDashboar
     setIsMounted(true);
   }, []);
 
+  // CRITICAL: Stable empty array reference to prevent infinite loops
+  // When analytics events are undefined, we must use a stable reference, not create new arrays
+  const EMPTY_ANALYTICS_ARRAY = useMemo(() => [], []);
+
   // CRITICAL FIX: Use useShallow for store subscription to prevent new object references
   // This was the root cause - without useShallow, this creates a new object every render
   const profilePreferencesRef = useRef<unknown>(null);
@@ -151,10 +155,11 @@ function StandardPersonalDashboard({ userId: _fallbackUserId }: PersonalDashboar
   // Analytics data - useShallow pattern
   // CRITICAL: Select events array directly with useShallow to ensure stable reference
   // useShallow will only update if the array reference changes, not if array contents change
+  // CRITICAL FIX: Use stable empty array reference to prevent infinite loops when events is undefined
   const analyticsEvents = useAnalyticsStore(
     useShallow((state) => {
-      // Always return an array, never undefined
-      return Array.isArray(state.events) ? state.events : [];
+      // Always return an array, never undefined - but use stable reference for empty case
+      return Array.isArray(state.events) ? state.events : EMPTY_ANALYTICS_ARRAY;
     })
   );
 
