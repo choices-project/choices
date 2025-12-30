@@ -38,7 +38,6 @@ import {
   usePollsStore,
   useAnalyticsStore,
 } from '@/lib/stores';
-import type { AnalyticsEvent } from '@/lib/stores/analyticsStore';
 import { useHashtagActions } from '@/lib/stores/hashtagStore';
 import { useProfileStore } from '@/lib/stores/profileStore';
 import {
