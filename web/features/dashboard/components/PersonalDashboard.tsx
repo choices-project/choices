@@ -243,27 +243,26 @@ function StandardPersonalDashboard({ userId: _fallbackUserId }: PersonalDashboar
   // 5.1: Basic Computed Values (memoized with isMounted guard)
   // Filter analytics events by type
   // CRITICAL: Defensive checks to prevent infinite loops when analytics API fails
-  // #region agent log
+  // CRITICAL FIX: Return stable empty array references, not new arrays
   const voteEvents = useMemo(() => {
-    fetch('http://127.0.0.1:7242/ingest/6a732aed-2d72-4883-a63a-f3c892fc1216',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'PersonalDashboard.tsx:232',message:'voteEvents useMemo called',data:{isMounted,analyticsEventsIsArray:Array.isArray(analyticsEvents),analyticsEventsLength:Array.isArray(analyticsEvents)?analyticsEvents.length:'N/A',analyticsEventsRef:analyticsEvents},timestamp:Date.now(),sessionId:'debug-session',runId:'pre-fix',hypothesisId:'B'})}).catch(()=>{});
-    if (!isMounted || !Array.isArray(analyticsEvents) || analyticsEvents.length === 0) return [];
+    if (!isMounted || !Array.isArray(analyticsEvents) || analyticsEvents.length === 0) {
+      return EMPTY_ANALYTICS_ARRAY; // Return stable reference, not new []
+    }
     return analyticsEvents.filter((event) => {
       const eventType = (event as Record<string, unknown>)?.event_type as string | undefined;
       return eventType === 'poll_voted';
     });
   }, [isMounted, analyticsEvents]);
-  // #endregion
 
-  // #region agent log
   const pollCreatedEvents = useMemo(() => {
-    fetch('http://127.0.0.1:7242/ingest/6a732aed-2d72-4883-a63a-f3c892fc1216',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'PersonalDashboard.tsx:241',message:'pollCreatedEvents useMemo called',data:{isMounted,analyticsEventsIsArray:Array.isArray(analyticsEvents),analyticsEventsLength:Array.isArray(analyticsEvents)?analyticsEvents.length:'N/A',analyticsEventsRef:analyticsEvents},timestamp:Date.now(),sessionId:'debug-session',runId:'pre-fix',hypothesisId:'C'})}).catch(()=>{});
-    if (!isMounted || !Array.isArray(analyticsEvents) || analyticsEvents.length === 0) return [];
+    if (!isMounted || !Array.isArray(analyticsEvents) || analyticsEvents.length === 0) {
+      return EMPTY_ANALYTICS_ARRAY; // Return stable reference, not new []
+    }
     return analyticsEvents.filter((event) => {
       const eventType = (event as Record<string, unknown>)?.event_type as string | undefined;
       return eventType === 'poll_created';
     });
   }, [isMounted, analyticsEvents]);
-  // #endregion
 
   // Date-based metrics (last 30 days)
   const thirtyDaysAgo = useMemo(() => {
