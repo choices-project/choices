@@ -152,32 +152,17 @@ function StandardPersonalDashboard({ userId: _fallbackUserId }: PersonalDashboar
   const polls = pollsStoreData.polls; // useShallow ensures stable reference
   const pollsError = pollsStoreData.error;
 
-  // Analytics data - CRITICAL: Use ref to completely decouple from store subscriptions
-  // This prevents infinite loops when analytics API fails
-  // We only read from store in useEffect, not during render
-  const analyticsEventsRef = useRef<unknown[]>(EMPTY_ANALYTICS_ARRAY);
+  // Analytics data - useShallow pattern (same as useFilteredPollCards and usePollSearch)
+  // CRITICAL: Select events array directly - useShallow ensures stable reference
+  // If events is undefined, useMemo will normalize it to empty array with stable reference
+  const analyticsStoreEvents = useAnalyticsStore(
+    useShallow((state) => state.events)
+  );
   
-  // Only read from store in useEffect to prevent render-time subscriptions
-  useEffect(() => {
-    const currentEvents = useAnalyticsStore.getState().events;
-    // Only update ref if we have a valid array with data
-    if (Array.isArray(currentEvents) && currentEvents.length > 0) {
-      analyticsEventsRef.current = currentEvents;
-    }
-    
-    // Subscribe to store changes, but only update ref when events actually change
-    const unsubscribe = useAnalyticsStore.subscribe((state) => {
-      const events = state.events;
-      if (Array.isArray(events) && events.length > 0 && events !== analyticsEventsRef.current) {
-        analyticsEventsRef.current = events;
-      }
-    });
-    
-    return unsubscribe;
-  }, []);
-
-  // Use ref value directly - stable reference, no subscriptions during render
-  const analyticsEvents = analyticsEventsRef.current;
+  // Normalize to always be an array with stable reference (pattern from usePollSearch)
+  const analyticsEvents = useMemo(() => {
+    return Array.isArray(analyticsStoreEvents) ? analyticsStoreEvents : EMPTY_ANALYTICS_ARRAY;
+  }, [analyticsStoreEvents]);
 
   // Hashtags data - useShallow pattern (not currently used, but keeping structure for future use)
   // const hashtagStoreData = useHashtagStore(...);
