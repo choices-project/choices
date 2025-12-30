@@ -39,7 +39,6 @@ export default function OfflineIndicator({ showDetails = false, className = '' }
   
   // Use PWA store for offline data management
   const offline = usePWAOffline();
-  const preferences = usePWAPreferences();
   const { setOnlineStatus } = usePWAActions();
 
   const offlineVotes = offline.offlineData.queuedActions.length;
@@ -74,7 +73,7 @@ export default function OfflineIndicator({ showDetails = false, className = '' }
     if (isOnline) {
       return 'You\'re back online'
     }
-    return 'You\'re offline'
+    return 'No connection - You\'re offline'
   }
 
   const getStatusColor = () => {
