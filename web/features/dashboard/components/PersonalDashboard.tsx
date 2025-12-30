@@ -171,19 +171,25 @@ function StandardPersonalDashboard({ userId: _fallbackUserId }: PersonalDashboar
   // CRITICAL: Select object with events array inside, not array directly
   // This matches the proven pattern from useFilteredPollCards that prevents infinite loops
   // useShallow ensures stable object reference when underlying data hasn't changed
+  // #region agent log
   const analyticsStoreData = useAnalyticsStore(
-    useShallow((state) => ({
-      events: state.events,
-    }))
+    useShallow((state) => {
+      fetch('http://127.0.0.1:7242/ingest/6a732aed-2d72-4883-a63a-f3c892fc1216',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'PersonalDashboard.tsx:175',message:'analyticsStoreData selector called',data:{eventsLength:state.events.length,eventsRef:state.events,isLoading:state.isLoading,error:state.error},timestamp:Date.now(),sessionId:'debug-session',runId:'pre-fix',hypothesisId:'E'})}).catch(()=>{});
+      return { events: state.events };
+    })
   );
+  // #endregion
 
   // Normalize to stable empty array when empty (like useFilteredPollCards normalizes in useMemo)
+  // #region agent log
   const analyticsEvents = useMemo(() => {
+    fetch('http://127.0.0.1:7242/ingest/6a732aed-2d72-4883-a63a-f3c892fc1216',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'PersonalDashboard.tsx:183',message:'analyticsEvents useMemo called',data:{storeDataEventsLength:analyticsStoreData.events.length,storeDataEventsRef:analyticsStoreData.events,storeDataRef:analyticsStoreData},timestamp:Date.now(),sessionId:'debug-session',runId:'pre-fix',hypothesisId:'F'})}).catch(()=>{});
     if (!Array.isArray(analyticsStoreData.events) || analyticsStoreData.events.length === 0) {
       return EMPTY_ANALYTICS_ARRAY;
     }
     return analyticsStoreData.events;
   }, [analyticsStoreData.events]);
+  // #endregion
 
   // Hashtags data - useShallow pattern (not currently used, but keeping structure for future use)
   // const hashtagStoreData = useHashtagStore(...);
