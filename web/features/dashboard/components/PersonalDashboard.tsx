@@ -171,12 +171,16 @@ function StandardPersonalDashboard({ userId: _fallbackUserId }: PersonalDashboar
   // CRITICAL: Select object with events array inside, not array directly
   // This matches the proven pattern from useFilteredPollCards that prevents infinite loops
   // useShallow ensures stable object reference when underlying data hasn't changed
+  // CRITICAL FIX: Only select events, not isLoading/error - those change frequently and cause unnecessary re-renders
   // #region agent log
   const analyticsStoreData = useAnalyticsStore(
     useShallow((state) => {
+      // Only log when events array reference actually changes (not on every store update)
       const logData = {location:'PersonalDashboard.tsx:175',message:'analyticsStoreData selector called',data:{eventsLength:state.events.length,eventsRef:state.events,isLoading:state.isLoading,error:state.error},timestamp:Date.now(),sessionId:'debug-session',runId:'pre-fix',hypothesisId:'E'};
       console.log('[DEBUG]', logData);
       fetch('http://127.0.0.1:7242/ingest/6a732aed-2d72-4883-a63a-f3c892fc1216',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(logData)}).catch(()=>{});
+      // CRITICAL: Only return events - don't include isLoading/error as they change on every API call
+      // This prevents the selector from being called on every store update (e.g., when setError/setLoading is called)
       return { events: state.events };
     })
   );
