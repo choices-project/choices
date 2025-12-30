@@ -491,7 +491,9 @@ export const createAnalyticsActions = (
 
     setEvents: (events) => {
       setState((draft) => {
-        draft.events = [...events];
+        // CRITICAL: Use splice to replace array in-place to maintain reference stability
+        // This prevents immer from creating new array references when array is empty
+        draft.events.splice(0, draft.events.length, ...events);
       });
     },
 
@@ -506,7 +508,9 @@ export const createAnalyticsActions = (
 
     clearEvents: () => {
       setState((draft) => {
-        draft.events = [];
+        // CRITICAL: Use splice to clear array in-place to maintain reference stability
+        // This prevents immer from creating new empty array references
+        draft.events.splice(0, draft.events.length);
       });
     },
 

@@ -176,7 +176,14 @@ function StandardPersonalDashboard({ userId: _fallbackUserId }: PersonalDashboar
       events: state.events,
     }))
   );
-  const analyticsEvents = analyticsStoreData.events; // useShallow ensures stable reference
+
+  // Normalize to stable empty array when empty (like useFilteredPollCards normalizes in useMemo)
+  const analyticsEvents = useMemo(() => {
+    if (!Array.isArray(analyticsStoreData.events) || analyticsStoreData.events.length === 0) {
+      return EMPTY_ANALYTICS_ARRAY;
+    }
+    return analyticsStoreData.events;
+  }, [analyticsStoreData.events]);
 
   // Hashtags data - useShallow pattern (not currently used, but keeping structure for future use)
   // const hashtagStoreData = useHashtagStore(...);
