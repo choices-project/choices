@@ -500,7 +500,18 @@ export const createAnalyticsActions = (
         // This prevents immer from creating new array references when array is empty
         // If setting to empty array and already empty, no-op to avoid unnecessary updates
         if (events.length === 0 && draft.events.length === 0) return;
-        draft.events.splice(0, draft.events.length, ...events);
+        
+        if (events.length === 0) {
+          // Setting to empty - use stable reference
+          if (draft.events.length > 0) {
+            draft.events.splice(0, draft.events.length);
+          }
+          // Replace with stable empty array reference
+          (draft as { events: AnalyticsEvent[] }).events = EMPTY_EVENTS_ARRAY;
+        } else {
+          // Setting to non-empty array - use splice
+          draft.events.splice(0, draft.events.length, ...events);
+        }
       });
     },
 
