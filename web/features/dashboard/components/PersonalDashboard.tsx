@@ -195,11 +195,16 @@ function StandardPersonalDashboard({ userId: _fallbackUserId }: PersonalDashboar
   // const hashtagStoreData = useHashtagStore(...);
 
   // Representatives data - useShallow pattern
+  // #region agent log
   const representativeStoreData = useRepresentativeStore(
-    useShallow((state) => ({
-      entries: representativeSelectors.userRepresentativeEntries(state),
-    }))
+    useShallow((state) => {
+      fetch('http://127.0.0.1:7242/ingest/6a732aed-2d72-4883-a63a-f3c892fc1216',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'PersonalDashboard.tsx:198',message:'representativeStoreData selector called',data:{entriesLength:representativeSelectors.userRepresentativeEntries(state).length},timestamp:Date.now(),sessionId:'debug-session',runId:'pre-fix',hypothesisId:'M'})}).catch(()=>{});
+      return {
+        entries: representativeSelectors.userRepresentativeEntries(state),
+      };
+    })
   );
+  // #endregion
   const representativeEntries = representativeStoreData.entries; // useShallow ensures stable reference
 
   // CRITICAL FIX: Extract preferences.dashboard with stable reference using useMemo
@@ -256,7 +261,9 @@ function StandardPersonalDashboard({ userId: _fallbackUserId }: PersonalDashboar
   // Filter analytics events by type
   // CRITICAL: Defensive checks to prevent infinite loops when analytics API fails
   // CRITICAL FIX: Return stable empty array references, not new arrays
+  // #region agent log
   const voteEvents = useMemo(() => {
+    fetch('http://127.0.0.1:7242/ingest/6a732aed-2d72-4883-a63a-f3c892fc1216',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'PersonalDashboard.tsx:259',message:'voteEvents useMemo called',data:{isMounted,analyticsEventsLength:analyticsEvents.length,analyticsEventsRef:analyticsEvents},timestamp:Date.now(),sessionId:'debug-session',runId:'pre-fix',hypothesisId:'G'})}).catch(()=>{});
     if (!isMounted || !Array.isArray(analyticsEvents) || analyticsEvents.length === 0) {
       return EMPTY_ANALYTICS_ARRAY; // Return stable reference, not new []
     }
@@ -265,8 +272,11 @@ function StandardPersonalDashboard({ userId: _fallbackUserId }: PersonalDashboar
       return eventType === 'poll_voted';
     });
   }, [isMounted, analyticsEvents]);
+  // #endregion
 
+  // #region agent log
   const pollCreatedEvents = useMemo(() => {
+    fetch('http://127.0.0.1:7242/ingest/6a732aed-2d72-4883-a63a-f3c892fc1216',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'PersonalDashboard.tsx:269',message:'pollCreatedEvents useMemo called',data:{isMounted,analyticsEventsLength:analyticsEvents.length,analyticsEventsRef:analyticsEvents},timestamp:Date.now(),sessionId:'debug-session',runId:'pre-fix',hypothesisId:'H'})}).catch(()=>{});
     if (!isMounted || !Array.isArray(analyticsEvents) || analyticsEvents.length === 0) {
       return EMPTY_ANALYTICS_ARRAY; // Return stable reference, not new []
     }
@@ -275,6 +285,7 @@ function StandardPersonalDashboard({ userId: _fallbackUserId }: PersonalDashboar
       return eventType === 'poll_created';
     });
   }, [isMounted, analyticsEvents]);
+  // #endregion
 
   // Date-based metrics (last 30 days)
   const thirtyDaysAgo = useMemo(() => {
