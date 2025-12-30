@@ -153,15 +153,17 @@ function StandardPersonalDashboard({ userId: _fallbackUserId }: PersonalDashboar
   const pollsError = pollsStoreData.error;
 
   // Analytics data - useShallow pattern
-  // CRITICAL: Select events array directly with useShallow to ensure stable reference
-  // useShallow will only update if the array reference changes, not if array contents change
-  // CRITICAL FIX: Use stable empty array reference to prevent infinite loops when events is undefined
-  const analyticsEvents = useAnalyticsStore(
-    useShallow((state) => {
-      // Always return an array, never undefined - but use stable reference for empty case
-      return Array.isArray(state.events) ? state.events : EMPTY_ANALYTICS_ARRAY;
-    })
-  );
+  // CRITICAL: Use ref to track previous events array reference to prevent infinite loops
+  // When analytics API fails, we want to use the last known good value, not trigger re-renders
+  const analyticsEventsRef = useRef<unknown[]>(EMPTY_ANALYTICS_ARRAY);
+  const analyticsStoreEvents = useAnalyticsStore((state) => state.events);
+
+  // Only update ref if we have a valid array, otherwise keep previous value
+  if (Array.isArray(analyticsStoreEvents) && analyticsStoreEvents.length > 0) {
+    analyticsEventsRef.current = analyticsStoreEvents;
+  }
+
+  const analyticsEvents = analyticsEventsRef.current;
 
   // Hashtags data - useShallow pattern (not currently used, but keeping structure for future use)
   // const hashtagStoreData = useHashtagStore(...);
@@ -320,11 +322,11 @@ function StandardPersonalDashboard({ userId: _fallbackUserId }: PersonalDashboar
         <p className="mt-2 text-sm text-gray-600 dark:text-gray-400">
           Your civic engagement overview and activity
         </p>
-      </div>
+        </div>
 
       {/* Error Handling UI - Show when API calls fail */}
       {isMounted && pollsError && (
-        <Card 
+        <Card
           className="border-red-200 bg-red-50 dark:bg-red-900/20 dark:border-red-800"
           role="alert"
           aria-live="polite"
@@ -338,11 +340,11 @@ function StandardPersonalDashboard({ userId: _fallbackUserId }: PersonalDashboar
                   Unable to load data
                 </h3>
                 <p className="text-sm text-red-700 dark:text-red-300 mb-3">
-                  {typeof pollsError === 'string' 
-                    ? pollsError 
+                  {typeof pollsError === 'string'
+                    ? pollsError
                     : 'Error: Failed to load dashboard data. Please check your connection and try again.'}
                 </p>
-                <Button
+          <Button
                   variant="outline"
                   size="sm"
                   onClick={() => {
@@ -354,9 +356,9 @@ function StandardPersonalDashboard({ userId: _fallbackUserId }: PersonalDashboar
                 >
                   <RefreshCw className="h-4 w-4 mr-2" />
                   Try Again
-                </Button>
-              </div>
-            </div>
+          </Button>
+        </div>
+      </div>
           </CardContent>
         </Card>
       )}
