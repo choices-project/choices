@@ -315,7 +315,9 @@ function StandardPersonalDashboard({ userId: _fallbackUserId }: PersonalDashboar
 
   // Combined and sorted recent activity (for display)
   // CRITICAL FIX: Return stable empty array when no activities
+  // #region agent log
   const recentActivity = useMemo((): RecentActivityItem[] => {
+    fetch('http://127.0.0.1:7242/ingest/6a732aed-2d72-4883-a63a-f3c892fc1216',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'PersonalDashboard.tsx:318',message:'recentActivity useMemo called',data:{isMounted,voteEventsRef:voteEvents,voteEventsLength:voteEvents.length,pollCreatedEventsRef:pollCreatedEvents,pollCreatedEventsLength:pollCreatedEvents.length},timestamp:Date.now(),sessionId:'debug-session',runId:'pre-fix',hypothesisId:'N'})}).catch(()=>{});
     if (!isMounted) return EMPTY_RECENT_ACTIVITY_ARRAY;
 
     // If both event arrays are empty (stable references), return stable empty array
