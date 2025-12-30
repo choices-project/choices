@@ -125,6 +125,13 @@ function StandardPersonalDashboard({ userId: _fallbackUserId }: PersonalDashboar
     getUserRepresentativesRef.current = getUserRepresentatives;
   }, [getUserRepresentatives]);
 
+  // Load polls on mount to ensure data is available
+  useEffect(() => {
+    if (isMounted && loadPollsRef.current) {
+      loadPollsRef.current();
+    }
+  }, [isMounted]);
+
   // PHASE 4.3: Data Hooks - FIXED with useShallow pattern (like useFilteredPollCards)
   // CRITICAL: useShallow ensures stable object references - arrays come from stable object
   // Pattern matches useFilteredPollCards: useShallow for subscription, useMemo only if computation needed
@@ -318,7 +325,9 @@ function StandardPersonalDashboard({ userId: _fallbackUserId }: PersonalDashboar
                   Unable to load data
                 </h3>
                 <p className="text-sm text-red-700 dark:text-red-300 mb-3">
-                  {typeof pollsError === 'string' ? pollsError : 'Failed to load dashboard data. Please check your connection and try again.'}
+                  {typeof pollsError === 'string' 
+                    ? pollsError 
+                    : 'Error: Failed to load dashboard data. Please check your connection and try again.'}
                 </p>
                 <Button
                   variant="outline"
