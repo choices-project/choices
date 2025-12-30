@@ -57,12 +57,8 @@ export default function OfflineIndicator({ showDetails = false, className = '' }
     }
   }, [isOnline, updateDeviceInfo]);
 
-  // Don't show if PWA is not enabled
-  if (!preferences.offlineMode) {
-    return null
-  }
-
-  // Don't show if online
+  // Always show offline indicator when offline (even if PWA offline mode is disabled)
+  // This provides basic network status feedback to users
   if (isOnline && !showDetails) {
     return null
   }

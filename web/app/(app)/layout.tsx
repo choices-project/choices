@@ -15,6 +15,9 @@ import FontProvider from '@/components/shared/FontProvider';
 import GlobalNavigation from '@/components/shared/GlobalNavigation';
 import SiteMessages from '@/components/SiteMessages';
 
+import OfflineIndicator from '@/features/pwa/components/OfflineIndicator';
+import PWABackground from '@/features/pwa/components/PWABackground';
+
 import { UserStoreProvider } from '@/lib/providers/UserStoreProvider';
 
 const DISABLE_FEEDBACK_WIDGET = process.env.NEXT_PUBLIC_DISABLE_FEEDBACK_WIDGET === '1';
@@ -97,6 +100,9 @@ export default function AppLayout({
                 <ErrorBoundary>
                   {children}
                 </ErrorBoundary>
+                {/* Offline and network status indicators */}
+                <PWABackground />
+                <OfflineIndicator />
               </AppShell>
             </ServiceWorkerProvider>
           </UserStoreProvider>

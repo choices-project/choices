@@ -19,7 +19,7 @@
  * - Memoized dashboardPreferences with specific property dependencies
  */
 
-import { BarChart3, TrendingUp, Vote, Users, Settings2, Zap, ArrowRight } from 'lucide-react';
+import { BarChart3, TrendingUp, Vote, Users, Settings2, Zap, ArrowRight, AlertCircle, RefreshCw } from 'lucide-react';
 import Image from 'next/image';
 import Link from 'next/link';
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
@@ -139,6 +139,7 @@ function StandardPersonalDashboard({ userId: _fallbackUserId }: PersonalDashboar
     }))
   );
   const polls = pollsStoreData.polls; // useShallow ensures stable reference
+  const pollsError = pollsStoreData.error;
 
   // Analytics data - useShallow pattern
   const analyticsStoreData = useAnalyticsStore(
@@ -305,6 +306,38 @@ function StandardPersonalDashboard({ userId: _fallbackUserId }: PersonalDashboar
           Your civic engagement overview and activity
         </p>
       </div>
+
+      {/* Error Handling UI - Show when API calls fail */}
+      {isMounted && pollsError && (
+        <Card className="border-red-200 bg-red-50 dark:bg-red-900/20 dark:border-red-800">
+          <CardContent className="pt-6">
+            <div className="flex items-start gap-3">
+              <AlertCircle className="h-5 w-5 text-red-600 dark:text-red-400 flex-shrink-0 mt-0.5" />
+              <div className="flex-1">
+                <h3 className="text-sm font-semibold text-red-900 dark:text-red-200 mb-1">
+                  Unable to load data
+                </h3>
+                <p className="text-sm text-red-700 dark:text-red-300 mb-3">
+                  {typeof pollsError === 'string' ? pollsError : 'Failed to load dashboard data. Please check your connection and try again.'}
+                </p>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => {
+                    if (loadPollsRef.current) {
+                      loadPollsRef.current();
+                    }
+                  }}
+                  className="border-red-300 text-red-700 hover:bg-red-100 dark:border-red-700 dark:text-red-300 dark:hover:bg-red-900/30"
+                >
+                  <RefreshCw className="h-4 w-4 mr-2" />
+                  Try Again
+                </Button>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      )}
 
       {/* Analytics Metrics Cards - Improved UX */}
       {dashboardPreferences?.showEngagementScore && isMounted && (
