@@ -717,8 +717,19 @@ export const createAnalyticsActions = (
     exportAnalytics: async () => [...get().events],
 
     importAnalytics: (events) => {
+      // #region agent log
+      fetch('http://127.0.0.1:7242/ingest/6a732aed-2d72-4883-a63a-f3c892fc1216',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'analyticsStore.ts:importAnalytics',message:'importAnalytics called',data:{eventsLength:events.length,currentEventsLength:get().events.length},timestamp:Date.now(),sessionId:'debug-session',runId:'pre-fix',hypothesisId:'P'})}).catch(()=>{});
+      // #endregion
       setState((draft) => {
-        draft.events = [...events];
+        // CRITICAL: Use splice to replace array in-place to maintain reference stability
+        if (events.length === 0) {
+          if (draft.events.length > 0) {
+            draft.events.splice(0, draft.events.length);
+          }
+          (draft as { events: AnalyticsEvent[] }).events = EMPTY_EVENTS_ARRAY;
+        } else {
+          draft.events.splice(0, draft.events.length, ...events);
+        }
       });
     },
 
