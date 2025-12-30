@@ -185,7 +185,9 @@ function StandardPersonalDashboard({ userId: _fallbackUserId }: PersonalDashboar
   // Normalize to stable empty array when empty (like useFilteredPollCards normalizes in useMemo)
   // #region agent log
   const analyticsEvents = useMemo(() => {
-    fetch('http://127.0.0.1:7242/ingest/6a732aed-2d72-4883-a63a-f3c892fc1216',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'PersonalDashboard.tsx:183',message:'analyticsEvents useMemo called',data:{storeDataEventsLength:analyticsStoreData.events.length,storeDataEventsRef:analyticsStoreData.events,storeDataRef:analyticsStoreData},timestamp:Date.now(),sessionId:'debug-session',runId:'pre-fix',hypothesisId:'F'})}).catch(()=>{});
+    const logData = {location:'PersonalDashboard.tsx:187',message:'analyticsEvents useMemo called',data:{storeDataEventsLength:analyticsStoreData.events.length,storeDataEventsRef:analyticsStoreData.events,storeDataRef:analyticsStoreData},timestamp:Date.now(),sessionId:'debug-session',runId:'pre-fix',hypothesisId:'F'};
+    console.log('[DEBUG]', logData);
+    fetch('http://127.0.0.1:7242/ingest/6a732aed-2d72-4883-a63a-f3c892fc1216',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(logData)}).catch(()=>{});
     if (!Array.isArray(analyticsStoreData.events) || analyticsStoreData.events.length === 0) {
       return EMPTY_ANALYTICS_ARRAY;
     }
