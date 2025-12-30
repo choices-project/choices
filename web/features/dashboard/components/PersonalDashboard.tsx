@@ -154,14 +154,17 @@ function StandardPersonalDashboard({ userId: _fallbackUserId }: PersonalDashboar
 
   // Analytics data - useShallow pattern (same as useFilteredPollCards and usePollSearch)
   // CRITICAL: Select events array directly - useShallow ensures stable reference
-  // Pattern matches useFilteredPollCards: useShallow for subscription, useMemo only if computation needed
-  // CRITICAL FIX: Don't normalize in useMemo - useShallow already handles reference stability
-  // Only normalize if we need to ensure it's always an array for downstream useMemo hooks
+  // CRITICAL FIX: Always return stable empty array reference when array is empty
+  // This prevents infinite loops when store creates new empty array references on updates
   const analyticsEvents = useAnalyticsStore(
     useShallow((state) => {
-      // Return the events array directly - useShallow ensures stable reference
-      // If undefined, return stable empty array reference
-      return Array.isArray(state.events) ? state.events : EMPTY_ANALYTICS_ARRAY;
+      // If events is undefined or empty array, return stable reference
+      // This prevents new array references from triggering re-renders
+      if (!Array.isArray(state.events) || state.events.length === 0) {
+        return EMPTY_ANALYTICS_ARRAY;
+      }
+      // Only return state.events if it has data - useShallow will handle reference stability
+      return state.events;
     })
   );
 
