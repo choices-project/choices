@@ -158,17 +158,22 @@ function StandardPersonalDashboard({ userId: _fallbackUserId }: PersonalDashboar
   // CRITICAL: useShallow ensures stable object references - arrays come from stable object
   // Pattern matches useFilteredPollCards: useShallow for subscription, useMemo only if computation needed
 
-  // Polls data - useShallow pattern (useShallow handles array reference stability)
+  // Polls data - useShallow pattern (EXACTLY like useFilteredPollCards)
+  // CRITICAL FIX: Only select data properties, NOT loading/error states
+  // Loading/error states change frequently and cause unnecessary re-renders
+  // Pattern matches useFilteredPollCards: select only data, access error separately if needed
   const pollsStoreData = usePollsStore(
     useShallow((state) => ({
       polls: state.polls,
-      isLoading: state.isLoading,
-      error: state.error,
-      lastFetchedAt: state.lastFetchedAt,
+      // Don't include isLoading, error, lastFetchedAt - these change frequently
+      // Access error separately if needed (but prefer not subscribing to it)
     }))
   );
   const polls = pollsStoreData.polls; // useShallow ensures stable reference
-  const pollsError = pollsStoreData.error;
+
+  // Access error separately - only subscribe if we actually need to render it
+  // CRITICAL: This selector runs independently and won't cause unnecessary re-renders of the main component
+  const pollsError = usePollsStore((state) => state.error);
 
   // Analytics data - useShallow pattern (EXACTLY like useFilteredPollCards)
   // CRITICAL: Select object with events array inside, not array directly
@@ -185,14 +190,10 @@ function StandardPersonalDashboard({ userId: _fallbackUserId }: PersonalDashboar
   // #region agent log
   const analyticsStoreData = useAnalyticsStore(
     useShallow((state) => {
-      // Don't access store during SSR or before mount - this can cause hydration mismatches
-      if (typeof window === 'undefined') {
-        return { events: EMPTY_ANALYTICS_ARRAY };
-      }
       selectorCallCountRef.current += 1;
       // Only log when selector is called many times (potential infinite loop)
       if (selectorCallCountRef.current > 10 || selectorCallCountRef.current % 10 === 0) {
-        const logData = {location:'PersonalDashboard.tsx:184',message:'analyticsStoreData selector called',data:{callCount:selectorCallCountRef.current,eventsLength:state.events.length,eventsRef:state.events,isLoading:state.isLoading,error:state.error},timestamp:Date.now(),sessionId:'debug-session',runId:'pre-fix',hypothesisId:'E'};
+        const logData = {location:'PersonalDashboard.tsx:187',message:'analyticsStoreData selector called',data:{callCount:selectorCallCountRef.current,eventsLength:state.events.length,eventsRef:state.events,isLoading:state.isLoading,error:state.error},timestamp:Date.now(),sessionId:'debug-session',runId:'pre-fix',hypothesisId:'E'};
         console.warn('[DEBUG] Selector called', selectorCallCountRef.current, 'times', logData);
         fetch('http://127.0.0.1:7242/ingest/6a732aed-2d72-4883-a63a-f3c892fc1216',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(logData)}).catch(()=>{});
       }
