@@ -76,7 +76,6 @@ function StandardPersonalDashboard({ userId: _fallbackUserId }: PersonalDashboar
   // CRITICAL: Guard client-only logic with isMounted (like feed/polls pages)
   const [isMounted, setIsMounted] = useState(false);
 
-
   useEffect(() => {
     setIsMounted(true);
   }, []);
@@ -178,21 +177,36 @@ function StandardPersonalDashboard({ userId: _fallbackUserId }: PersonalDashboar
   // useShallow ensures stable object reference when underlying data hasn't changed
   // CRITICAL FIX: Only select events, not isLoading/error - those change frequently and cause unnecessary re-renders
   // CRITICAL FIX: Don't access store until mounted to prevent hydration mismatches
+  // CRITICAL FIX: Wrap in try-catch to prevent errors from causing infinite loops
   const analyticsStoreData = useAnalyticsStore(
     useShallow((state) => {
-      // CRITICAL: Only return events - don't include isLoading/error as they change on every API call
-      // This prevents the selector from being called on every store update (e.g., when setError/setLoading is called)
-      return { events: state.events };
+      try {
+        // CRITICAL: Only return events - don't include isLoading/error as they change on every API call
+        // This prevents the selector from being called on every store update (e.g., when setError/setLoading is called)
+        return { events: state.events ?? EMPTY_ANALYTICS_ARRAY };
+      } catch (error) {
+        // If store access fails, return empty array to prevent infinite loops
+        console.error('Analytics store access error:', error);
+        return { events: EMPTY_ANALYTICS_ARRAY };
+      }
     })
   );
 
   // Normalize to stable empty array when empty (like useFilteredPollCards normalizes in useMemo)
+  // CRITICAL: Wrap in try-catch to prevent errors from causing infinite loops
   const analyticsEvents = useMemo(() => {
-    if (!Array.isArray(analyticsStoreData.events) || analyticsStoreData.events.length === 0) {
+    try {
+      if (!isMounted) return EMPTY_ANALYTICS_ARRAY;
+      if (!Array.isArray(analyticsStoreData?.events) || analyticsStoreData.events.length === 0) {
+        return EMPTY_ANALYTICS_ARRAY;
+      }
+      return analyticsStoreData.events;
+    } catch (error) {
+      // If processing fails, return empty array to prevent infinite loops
+      console.error('Analytics events processing error:', error);
       return EMPTY_ANALYTICS_ARRAY;
     }
-    return analyticsStoreData.events;
-  }, [analyticsStoreData.events]);
+  }, [isMounted, analyticsStoreData?.events]);
 
   // Hashtags data - useShallow pattern (not currently used, but keeping structure for future use)
   // const hashtagStoreData = useHashtagStore(...);
