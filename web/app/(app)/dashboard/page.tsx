@@ -783,7 +783,11 @@ export default function DashboardPage() {
   // The dynamic import handles loading state internally, so we don't need early return
   return (
     <ErrorBoundary>
-      <DashboardNavigation />
+      {/* CRITICAL: Wrap DashboardNavigation in ClientOnly to prevent hydration mismatches */}
+      {/* usePathname() can return different values on server vs client */}
+      <ClientOnly fallback={<div className="h-16 bg-white border-b" />}>
+        <DashboardNavigation />
+      </ClientOnly>
 
       {/* CRITICAL: Wrap entire dashboard content in ClientOnly to prevent hydration mismatches */}
       {/* This ensures nothing renders until after client mount, preventing React error #185 */}
@@ -840,7 +844,10 @@ export default function DashboardPage() {
         </div>
       </ClientOnly>
 
-      <MobileDashboardNav />
+      {/* CRITICAL: Wrap MobileDashboardNav in ClientOnly to prevent hydration mismatches */}
+      <ClientOnly fallback={null}>
+        <MobileDashboardNav />
+      </ClientOnly>
     </ErrorBoundary>
   );
 }
