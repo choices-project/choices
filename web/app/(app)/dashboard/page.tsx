@@ -10,6 +10,7 @@ import { useProfile } from '@/features/profile/hooks/use-profile';
 import DashboardNavigation, { MobileDashboardNav } from '@/components/shared/DashboardNavigation';
 import { ErrorBoundary } from '@/components/shared/ErrorBoundary';
 import { Button } from '@/components/ui/button';
+import ClientOnly from '@/components/ClientOnly';
 
 
 import { useIsAuthenticated, useUserLoading, useUserStore } from '@/lib/stores';
@@ -784,38 +785,60 @@ export default function DashboardPage() {
     <ErrorBoundary>
       <DashboardNavigation />
 
-      {/* CRITICAL: Wrap content in suppressHydrationWarning to prevent React error #185 */}
-      {/* This prevents hydration mismatches from triggering infinite render loops */}
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8" suppressHydrationWarning>
-        {/* CRITICAL: Only show admin banner after mount to prevent hydration mismatch */}
-        {/* Use isClient to ensure this only renders on client, preventing hydration mismatch */}
-        {isClient && isAdmin === true && (
-          <div className="mb-6 p-4 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg" suppressHydrationWarning>
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-3">
-                <Shield className="h-5 w-5 text-blue-600 dark:text-blue-400" />
-                <div>
-                  <h3 className="font-semibold text-blue-900 dark:text-blue-100">Admin Access Available</h3>
-                  <p className="text-sm text-blue-700 dark:text-blue-300">
-                    You have admin privileges. Access the admin dashboard for system management.
-                  </p>
+      {/* CRITICAL: Wrap entire dashboard content in ClientOnly to prevent hydration mismatches */}
+      {/* This ensures nothing renders until after client mount, preventing React error #185 */}
+      <ClientOnly
+        fallback={
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+            <div className="space-y-6" aria-label="Loading dashboard" aria-busy="true" aria-live="polite" data-testid="dashboard-loading-skeleton" role="status">
+              <div className="animate-pulse">
+                <div className="h-10 bg-gray-200 dark:bg-gray-700 rounded w-1/3 mb-4" />
+                <div className="h-5 bg-gray-200 dark:bg-gray-700 rounded w-1/2 mb-8" />
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                  {[1, 2, 3].map((i) => (
+                    <div key={i} className="bg-gray-100 dark:bg-gray-800 rounded-lg p-6">
+                      <div className="h-6 bg-gray-200 dark:bg-gray-700 rounded w-3/4 mb-4" />
+                      <div className="h-4 bg-gray-200 dark:bg-gray-700 rounded w-full mb-2" />
+                      <div className="h-4 bg-gray-200 dark:bg-gray-700 rounded w-5/6" />
+                    </div>
+                  ))}
                 </div>
               </div>
-              <Button
-                onClick={() => routerRef.current.push('/admin/dashboard')}
-                className="bg-blue-600 hover:bg-blue-700 text-white"
-              >
-                <Shield className="h-4 w-4 mr-2" />
-                Go to Admin Dashboard
-              </Button>
             </div>
           </div>
-        )}
+        }
+      >
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+          {/* CRITICAL: Only show admin banner after mount to prevent hydration mismatch */}
+          {/* Use isClient to ensure this only renders on client, preventing hydration mismatch */}
+          {isClient && isAdmin === true && (
+            <div className="mb-6 p-4 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-3">
+                  <Shield className="h-5 w-5 text-blue-600 dark:text-blue-400" />
+                  <div>
+                    <h3 className="font-semibold text-blue-900 dark:text-blue-100">Admin Access Available</h3>
+                    <p className="text-sm text-blue-700 dark:text-blue-300">
+                      You have admin privileges. Access the admin dashboard for system management.
+                    </p>
+                  </div>
+                </div>
+                <Button
+                  onClick={() => routerRef.current.push('/admin/dashboard')}
+                  className="bg-blue-600 hover:bg-blue-700 text-white"
+                >
+                  <Shield className="h-4 w-4 mr-2" />
+                  Go to Admin Dashboard
+                </Button>
+              </div>
+            </div>
+          )}
 
-        {/* CRITICAL: PersonalDashboard is loaded via next/dynamic with ssr: false */}
-        {/* This prevents it from being included in SSR HTML, eliminating hydration mismatch */}
-        <PersonalDashboard />
-      </div>
+          {/* CRITICAL: PersonalDashboard is loaded via next/dynamic with ssr: false */}
+          {/* This prevents it from being included in SSR HTML, eliminating hydration mismatch */}
+          <PersonalDashboard />
+        </div>
+      </ClientOnly>
 
       <MobileDashboardNav />
     </ErrorBoundary>
