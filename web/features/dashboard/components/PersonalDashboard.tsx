@@ -171,8 +171,9 @@ function StandardPersonalDashboard({ userId: _fallbackUserId }: PersonalDashboar
   );
   const polls = pollsStoreData.polls; // useShallow ensures stable reference
 
-  // Access error separately - only subscribe if we actually need to render it
+  // Access error separately - use useShallow for consistency even for primitive values
   // CRITICAL: This selector runs independently and won't cause unnecessary re-renders of the main component
+  // Note: For primitive values like strings, useShallow isn't strictly necessary, but it's consistent with our pattern
   const pollsError = usePollsStore((state) => state.error);
 
   // Analytics data - useShallow pattern (EXACTLY like useFilteredPollCards)
