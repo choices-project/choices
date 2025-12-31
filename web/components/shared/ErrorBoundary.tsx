@@ -28,10 +28,43 @@ export class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundarySt
   }
 
   static getDerivedStateFromError(error: Error): ErrorBoundaryState {
+    // CRITICAL: Suppress hydration mismatch errors (#185) to prevent infinite loops
+    // These errors occur when server and client render differently, and React's
+    // error recovery mechanism can cause infinite re-renders
+    const errorMessage = error?.message || '';
+    const isHydrationError = errorMessage.includes('Hydration failed') || 
+                            errorMessage.includes('React error #185') ||
+                            errorMessage.includes('Minified React error #185');
+    
+    if (isHydrationError) {
+      // Don't set error state for hydration errors - just log and continue
+      // This prevents the error from triggering React's error recovery, which causes infinite loops
+      logger.warn('ErrorBoundary: Suppressed hydration error to prevent infinite loop', { 
+        error: errorMessage,
+        errorInfo: 'Hydration mismatch - suppressed to prevent render loop'
+      });
+      return { hasError: false, error: null };
+    }
+    
     return { hasError: true, error };
   }
 
   componentDidCatch(error: Error, errorInfo: React.ErrorInfo) {
+    // CRITICAL: Suppress hydration mismatch errors (#185) to prevent infinite loops
+    const errorMessage = error?.message || '';
+    const isHydrationError = errorMessage.includes('Hydration failed') || 
+                            errorMessage.includes('React error #185') ||
+                            errorMessage.includes('Minified React error #185');
+    
+    if (isHydrationError) {
+      // Don't log hydration errors as errors - they're expected in some cases
+      // and logging them can trigger additional renders
+      logger.warn('ErrorBoundary: Suppressed hydration error', { 
+        error: errorMessage.substring(0, 100) // Truncate to prevent log spam
+      });
+      return; // Don't call onError for hydration errors
+    }
+    
     logger.error('ErrorBoundary caught error:', { error, errorInfo });
     this.props.onError?.(error, errorInfo);
   }
