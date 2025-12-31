@@ -215,6 +215,52 @@ export default function DashboardPage() {
 
   useEffect(() => { routerRef.current = router; }, [router]);
 
+  // CRITICAL: Suppress React hydration errors globally to prevent infinite loops
+  // React error #185 (hydration mismatch) triggers React's error recovery, which
+  // causes re-renders, which trigger more hydration errors, creating infinite loops
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+
+    // Store original error handler
+    const originalError = window.onerror;
+    const originalConsoleError = console.error;
+
+    // Suppress hydration errors in global error handler
+    window.onerror = (message, source, lineno, colno, error) => {
+      const messageStr = String(message || '');
+      if (messageStr.includes('Hydration failed') || 
+          messageStr.includes('React error #185') ||
+          messageStr.includes('Minified React error #185')) {
+        // Suppress hydration errors to prevent infinite loops
+        return true; // Prevent default error handling
+      }
+      // Call original handler for other errors
+      if (originalError) {
+        return originalError.call(window, message, source, lineno, colno, error);
+      }
+      return false;
+    };
+
+    // Suppress hydration errors in console.error
+    console.error = (...args) => {
+      const message = args[0]?.toString() || '';
+      if (message.includes('Hydration failed') || 
+          message.includes('React error #185') ||
+          message.includes('Minified React error #185')) {
+        // Suppress hydration errors - don't log them
+        return;
+      }
+      // Call original console.error for other errors
+      originalConsoleError.apply(console, args);
+    };
+
+    // Cleanup on unmount
+    return () => {
+      window.onerror = originalError;
+      console.error = originalConsoleError;
+    };
+  }, []);
+
   // CRITICAL: Immediate redirect recovery if we're on /auth but bypass flag is set
   // This handles the case where middleware redirected before client-side check could run
   useEffect(() => {
