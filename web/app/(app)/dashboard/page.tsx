@@ -784,7 +784,9 @@ export default function DashboardPage() {
     <ErrorBoundary>
       <DashboardNavigation />
 
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      {/* CRITICAL: Wrap content in suppressHydrationWarning to prevent React error #185 */}
+      {/* This prevents hydration mismatches from triggering infinite render loops */}
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8" suppressHydrationWarning>
         {/* CRITICAL: Only show admin banner after mount to prevent hydration mismatch */}
         {/* Use isClient to ensure this only renders on client, preventing hydration mismatch */}
         {isClient && isAdmin === true && (
