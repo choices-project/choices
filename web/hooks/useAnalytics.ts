@@ -112,7 +112,16 @@ export function useAnalytics(options: UseAnalyticsOptions = {}): UseAnalyticsRet
         throw new Error(`HTTP error! status: ${response.status}`);
       }
 
-      const result = await response.json();
+      // CRITICAL: Explicitly handle JSON parsing errors to prevent infinite loops
+      let result;
+      try {
+        result = await response.json();
+      } catch (jsonError) {
+        const jsonErrorMessage = jsonError instanceof SyntaxError
+          ? 'Invalid JSON response from analytics API'
+          : jsonError instanceof Error ? jsonError.message : 'Failed to parse analytics data';
+        throw new Error(jsonErrorMessage);
+      }
       
       // The API returns the data directly, not wrapped in a success/error structure
       setData(result);

@@ -69,7 +69,16 @@ export default function AnalyticsPanel({
         throw new Error(`HTTP error! status: ${response.status}`);
       }
 
-      const data = await response.json();
+      // CRITICAL: Explicitly handle JSON parsing errors to prevent infinite loops
+      let data;
+      try {
+        data = await response.json();
+      } catch (jsonError) {
+        const jsonErrorMessage = jsonError instanceof SyntaxError
+          ? 'Invalid JSON response from analytics API'
+          : jsonError instanceof Error ? jsonError.message : 'Failed to parse analytics data';
+        throw new Error(jsonErrorMessage);
+      }
 
       if (data.dashboard) {
         setDashboardRef.current(data.dashboard);

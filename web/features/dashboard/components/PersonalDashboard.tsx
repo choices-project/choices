@@ -76,16 +76,6 @@ function StandardPersonalDashboard({ userId: _fallbackUserId }: PersonalDashboar
   // CRITICAL: Guard client-only logic with isMounted (like feed/polls pages)
   const [isMounted, setIsMounted] = useState(false);
 
-  // #region agent log
-  const renderCountRef = useRef(0);
-  const selectorCallCountRef = useRef(0);
-  renderCountRef.current += 1;
-  if (renderCountRef.current > 20) {
-    const logData = {location:'PersonalDashboard.tsx:79',message:'HIGH RENDER COUNT',data:{renderCount:renderCountRef.current,isMounted,selectorCallCount:selectorCallCountRef.current},timestamp:Date.now(),sessionId:'debug-session',runId:'pre-fix',hypothesisId:'O'};
-    console.error('[DEBUG] HIGH RENDER COUNT', logData);
-    fetch('http://127.0.0.1:7242/ingest/6a732aed-2d72-4883-a63a-f3c892fc1216',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(logData)}).catch(()=>{});
-  }
-  // #endregion
 
   useEffect(() => {
     setIsMounted(true);
@@ -188,50 +178,33 @@ function StandardPersonalDashboard({ userId: _fallbackUserId }: PersonalDashboar
   // useShallow ensures stable object reference when underlying data hasn't changed
   // CRITICAL FIX: Only select events, not isLoading/error - those change frequently and cause unnecessary re-renders
   // CRITICAL FIX: Don't access store until mounted to prevent hydration mismatches
-  // #region agent log
   const analyticsStoreData = useAnalyticsStore(
     useShallow((state) => {
-      selectorCallCountRef.current += 1;
-      // Only log when selector is called many times (potential infinite loop)
-      if (selectorCallCountRef.current > 10 || selectorCallCountRef.current % 10 === 0) {
-        const logData = {location:'PersonalDashboard.tsx:187',message:'analyticsStoreData selector called',data:{callCount:selectorCallCountRef.current,eventsLength:state.events.length,eventsRef:state.events,isLoading:state.isLoading,error:state.error},timestamp:Date.now(),sessionId:'debug-session',runId:'pre-fix',hypothesisId:'E'};
-        console.warn('[DEBUG] Selector called', selectorCallCountRef.current, 'times', logData);
-        fetch('http://127.0.0.1:7242/ingest/6a732aed-2d72-4883-a63a-f3c892fc1216',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(logData)}).catch(()=>{});
-      }
       // CRITICAL: Only return events - don't include isLoading/error as they change on every API call
       // This prevents the selector from being called on every store update (e.g., when setError/setLoading is called)
       return { events: state.events };
     })
   );
-  // #endregion
 
   // Normalize to stable empty array when empty (like useFilteredPollCards normalizes in useMemo)
-  // #region agent log
   const analyticsEvents = useMemo(() => {
-    const logData = {location:'PersonalDashboard.tsx:187',message:'analyticsEvents useMemo called',data:{storeDataEventsLength:analyticsStoreData.events.length,storeDataEventsRef:analyticsStoreData.events,storeDataRef:analyticsStoreData},timestamp:Date.now(),sessionId:'debug-session',runId:'pre-fix',hypothesisId:'F'};
-    console.log('[DEBUG]', logData);
-    fetch('http://127.0.0.1:7242/ingest/6a732aed-2d72-4883-a63a-f3c892fc1216',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(logData)}).catch(()=>{});
     if (!Array.isArray(analyticsStoreData.events) || analyticsStoreData.events.length === 0) {
       return EMPTY_ANALYTICS_ARRAY;
     }
     return analyticsStoreData.events;
   }, [analyticsStoreData.events]);
-  // #endregion
 
   // Hashtags data - useShallow pattern (not currently used, but keeping structure for future use)
   // const hashtagStoreData = useHashtagStore(...);
 
   // Representatives data - useShallow pattern
-  // #region agent log
   const representativeStoreData = useRepresentativeStore(
     useShallow((state) => {
-      fetch('http://127.0.0.1:7242/ingest/6a732aed-2d72-4883-a63a-f3c892fc1216',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'PersonalDashboard.tsx:198',message:'representativeStoreData selector called',data:{entriesLength:representativeSelectors.userRepresentativeEntries(state).length},timestamp:Date.now(),sessionId:'debug-session',runId:'pre-fix',hypothesisId:'M'})}).catch(()=>{});
       return {
         entries: representativeSelectors.userRepresentativeEntries(state),
       };
     })
   );
-  // #endregion
   const representativeEntries = representativeStoreData.entries; // useShallow ensures stable reference
 
   // CRITICAL FIX: Extract preferences.dashboard with stable reference using useMemo
@@ -255,6 +228,9 @@ function StandardPersonalDashboard({ userId: _fallbackUserId }: PersonalDashboar
 
     dashboardPreferencesPrevRef.current = result;
     return result;
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    // CRITICAL: Using specific property dependencies instead of profilePreferences.dashboard
+    // to prevent re-renders when the parent object reference changes but values haven't
   }, [
     profilePreferences?.dashboard?.showElectedOfficials,
     profilePreferences?.dashboard?.showQuickActions,
@@ -288,9 +264,7 @@ function StandardPersonalDashboard({ userId: _fallbackUserId }: PersonalDashboar
   // Filter analytics events by type
   // CRITICAL: Defensive checks to prevent infinite loops when analytics API fails
   // CRITICAL FIX: Return stable empty array references, not new arrays
-  // #region agent log
   const voteEvents = useMemo(() => {
-    fetch('http://127.0.0.1:7242/ingest/6a732aed-2d72-4883-a63a-f3c892fc1216',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'PersonalDashboard.tsx:259',message:'voteEvents useMemo called',data:{isMounted,analyticsEventsLength:analyticsEvents.length,analyticsEventsRef:analyticsEvents},timestamp:Date.now(),sessionId:'debug-session',runId:'pre-fix',hypothesisId:'G'})}).catch(()=>{});
     if (!isMounted || !Array.isArray(analyticsEvents) || analyticsEvents.length === 0) {
       return EMPTY_ANALYTICS_ARRAY; // Return stable reference, not new []
     }
@@ -299,11 +273,8 @@ function StandardPersonalDashboard({ userId: _fallbackUserId }: PersonalDashboar
       return eventType === 'poll_voted';
     });
   }, [isMounted, analyticsEvents]);
-  // #endregion
 
-  // #region agent log
   const pollCreatedEvents = useMemo(() => {
-    fetch('http://127.0.0.1:7242/ingest/6a732aed-2d72-4883-a63a-f3c892fc1216',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'PersonalDashboard.tsx:269',message:'pollCreatedEvents useMemo called',data:{isMounted,analyticsEventsLength:analyticsEvents.length,analyticsEventsRef:analyticsEvents},timestamp:Date.now(),sessionId:'debug-session',runId:'pre-fix',hypothesisId:'H'})}).catch(()=>{});
     if (!isMounted || !Array.isArray(analyticsEvents) || analyticsEvents.length === 0) {
       return EMPTY_ANALYTICS_ARRAY; // Return stable reference, not new []
     }
@@ -312,7 +283,6 @@ function StandardPersonalDashboard({ userId: _fallbackUserId }: PersonalDashboar
       return eventType === 'poll_created';
     });
   }, [isMounted, analyticsEvents]);
-  // #endregion
 
   // Date-based metrics (last 30 days)
   const thirtyDaysAgo = useMemo(() => {
@@ -342,9 +312,7 @@ function StandardPersonalDashboard({ userId: _fallbackUserId }: PersonalDashboar
 
   // Combined and sorted recent activity (for display)
   // CRITICAL FIX: Return stable empty array when no activities
-  // #region agent log
   const recentActivity = useMemo((): RecentActivityItem[] => {
-    fetch('http://127.0.0.1:7242/ingest/6a732aed-2d72-4883-a63a-f3c892fc1216',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'PersonalDashboard.tsx:318',message:'recentActivity useMemo called',data:{isMounted,voteEventsRef:voteEvents,voteEventsLength:voteEvents.length,pollCreatedEventsRef:pollCreatedEvents,pollCreatedEventsLength:pollCreatedEvents.length},timestamp:Date.now(),sessionId:'debug-session',runId:'pre-fix',hypothesisId:'N'})}).catch(()=>{});
     if (!isMounted) return EMPTY_RECENT_ACTIVITY_ARRAY;
 
     // If both event arrays are empty (stable references), return stable empty array

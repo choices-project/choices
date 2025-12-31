@@ -495,9 +495,6 @@ export const createAnalyticsActions = (
     },
 
     setEvents: (events) => {
-      // #region agent log
-      fetch('http://127.0.0.1:7242/ingest/6a732aed-2d72-4883-a63a-f3c892fc1216',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'analyticsStore.ts:setEvents',message:'setEvents called',data:{eventsLength:events.length,currentEventsLength:get().events.length},timestamp:Date.now(),sessionId:'debug-session',runId:'pre-fix',hypothesisId:'J'})}).catch(()=>{});
-      // #endregion
       setState((draft) => {
         // CRITICAL: Use splice to replace array in-place to maintain reference stability
         // This prevents immer from creating new array references when array is empty
@@ -528,9 +525,6 @@ export const createAnalyticsActions = (
     },
 
     clearEvents: () => {
-      // #region agent log
-      fetch('http://127.0.0.1:7242/ingest/6a732aed-2d72-4883-a63a-f3c892fc1216',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'analyticsStore.ts:clearEvents',message:'clearEvents called',data:{currentEventsLength:get().events.length},timestamp:Date.now(),sessionId:'debug-session',runId:'pre-fix',hypothesisId:'K'})}).catch(()=>{});
-      // #endregion
       setState((draft) => {
         // CRITICAL: Use splice to clear array in-place to maintain reference stability
         // This prevents immer from creating new empty array references
@@ -717,9 +711,6 @@ export const createAnalyticsActions = (
     exportAnalytics: async () => [...get().events],
 
     importAnalytics: (events) => {
-      // #region agent log
-      fetch('http://127.0.0.1:7242/ingest/6a732aed-2d72-4883-a63a-f3c892fc1216',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'analyticsStore.ts:importAnalytics',message:'importAnalytics called',data:{eventsLength:events.length,currentEventsLength:get().events.length},timestamp:Date.now(),sessionId:'debug-session',runId:'pre-fix',hypothesisId:'P'})}).catch(()=>{});
-      // #endregion
       setState((draft) => {
         // CRITICAL: Use splice to replace array in-place to maintain reference stability
         if (events.length === 0) {

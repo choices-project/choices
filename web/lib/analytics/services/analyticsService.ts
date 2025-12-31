@@ -75,7 +75,18 @@ export async function generateAnalyticsReport(
       };
     }
 
-    const dashboard = (await response.json()) as AnalyticsDashboard;
+    // CRITICAL: Explicitly handle JSON parsing errors to prevent infinite loops
+    let dashboard: AnalyticsDashboard;
+    try {
+      dashboard = (await response.json()) as AnalyticsDashboard;
+    } catch (jsonError) {
+      return {
+        success: false,
+        error: jsonError instanceof SyntaxError
+          ? 'Invalid JSON response from analytics API'
+          : buildUnknownError(jsonError, 'Failed to parse analytics report'),
+      };
+    }
     return { success: true, data: dashboard };
   } catch (error) {
     return {
@@ -95,7 +106,19 @@ export async function fetchAnalyticsDemographics(): Promise<ServiceResult<Demogr
       };
     }
 
-    const result = (await response.json()) as DemographicsData;
+    // CRITICAL: Explicitly handle JSON parsing errors to prevent infinite loops
+    let result: DemographicsData;
+    try {
+      result = (await response.json()) as DemographicsData;
+    } catch (jsonError) {
+      return {
+        success: false,
+        error: jsonError instanceof SyntaxError
+          ? 'Invalid JSON response from demographics API'
+          : buildUnknownError(jsonError, 'Failed to parse demographics data'),
+      };
+    }
+
     if (!result.ok) {
       return {
         success: false,
@@ -126,7 +149,19 @@ export async function fetchAnalyticsTrends(
       };
     }
 
-    const result = (await response.json()) as { ok?: boolean; trends?: TrendDataPoint[] };
+    // CRITICAL: Explicitly handle JSON parsing errors to prevent infinite loops
+    let result: { ok?: boolean; trends?: TrendDataPoint[] };
+    try {
+      result = (await response.json()) as { ok?: boolean; trends?: TrendDataPoint[] };
+    } catch (jsonError) {
+      return {
+        success: false,
+        error: jsonError instanceof SyntaxError
+          ? 'Invalid JSON response from trends API'
+          : buildUnknownError(jsonError, 'Failed to parse trends data'),
+      };
+    }
+
     if (!result.ok || !Array.isArray(result.trends)) {
       return {
         success: false,
@@ -157,7 +192,19 @@ export async function fetchAnalyticsTemporal(
       };
     }
 
-    const result = (await response.json()) as TemporalAnalyticsData;
+    // CRITICAL: Explicitly handle JSON parsing errors to prevent infinite loops
+    let result: TemporalAnalyticsData;
+    try {
+      result = (await response.json()) as TemporalAnalyticsData;
+    } catch (jsonError) {
+      return {
+        success: false,
+        error: jsonError instanceof SyntaxError
+          ? 'Invalid JSON response from temporal analytics API'
+          : buildUnknownError(jsonError, 'Failed to parse temporal analytics'),
+      };
+    }
+
     if (!result.ok) {
       return {
         success: false,
@@ -192,7 +239,19 @@ export async function fetchAnalyticsPollHeatmap(
       };
     }
 
-    const result = (await response.json()) as { ok?: boolean; polls?: PollHeatmapEntry[] };
+    // CRITICAL: Explicitly handle JSON parsing errors to prevent infinite loops
+    let result: { ok?: boolean; polls?: PollHeatmapEntry[] };
+    try {
+      result = (await response.json()) as { ok?: boolean; polls?: PollHeatmapEntry[] };
+    } catch (jsonError) {
+      return {
+        success: false,
+        error: jsonError instanceof SyntaxError
+          ? 'Invalid JSON response from poll heatmap API'
+          : buildUnknownError(jsonError, 'Failed to parse poll heatmap'),
+      };
+    }
+
     if (!result.ok || !Array.isArray(result.polls)) {
       return {
         success: false,
@@ -219,7 +278,19 @@ export async function fetchAnalyticsTrustTiers(): Promise<ServiceResult<TrustTie
       };
     }
 
-    const result = (await response.json()) as TrustTierComparisonData;
+    // CRITICAL: Explicitly handle JSON parsing errors to prevent infinite loops
+    let result: TrustTierComparisonData;
+    try {
+      result = (await response.json()) as TrustTierComparisonData;
+    } catch (jsonError) {
+      return {
+        success: false,
+        error: jsonError instanceof SyntaxError
+          ? 'Invalid JSON response from trust tier analytics API'
+          : buildUnknownError(jsonError, 'Failed to parse trust tier analytics'),
+      };
+    }
+
     if (!result.ok) {
       return {
         success: false,

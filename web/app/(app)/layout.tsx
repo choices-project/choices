@@ -6,6 +6,8 @@ import React, { Suspense, useState } from 'react';
 import { AuthProvider } from '@/contexts/AuthContext';
 
 import { usePollCreatedListener } from '@/features/polls/hooks/usePollCreatedListener';
+import OfflineIndicator from '@/features/pwa/components/OfflineIndicator';
+import PWABackground from '@/features/pwa/components/PWABackground';
 import { ServiceWorkerProvider } from '@/features/pwa/components/ServiceWorkerProvider';
 
 import EnhancedFeedbackWidget from '@/components/EnhancedFeedbackWidget';
@@ -15,8 +17,6 @@ import FontProvider from '@/components/shared/FontProvider';
 import GlobalNavigation from '@/components/shared/GlobalNavigation';
 import SiteMessages from '@/components/SiteMessages';
 
-import OfflineIndicator from '@/features/pwa/components/OfflineIndicator';
-import PWABackground from '@/features/pwa/components/PWABackground';
 
 import { UserStoreProvider } from '@/lib/providers/UserStoreProvider';
 
