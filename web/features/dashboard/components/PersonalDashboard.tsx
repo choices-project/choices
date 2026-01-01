@@ -379,12 +379,12 @@ function StandardPersonalDashboard({ userId: _fallbackUserId }: PersonalDashboar
   // PHASE 6: Complete Dashboard UI
     return (
     <div className="space-y-6" data-testid='personal-dashboard'>
-      {/* Header */}
-        <div>
-        <h1 className="text-3xl font-bold text-gray-900 dark:text-gray-100">
+      {/* Header - Enhanced with better visual hierarchy */}
+        <div className="border-b border-gray-200 dark:border-gray-700 pb-6">
+        <h1 className="text-3xl font-bold text-gray-900 dark:text-gray-100 mb-2">
           Dashboard
           </h1>
-        <p className="mt-2 text-sm text-gray-600 dark:text-gray-400">
+        <p className="text-sm text-gray-600 dark:text-gray-400">
           Your civic engagement overview and activity
         </p>
         </div>
@@ -552,22 +552,24 @@ function StandardPersonalDashboard({ userId: _fallbackUserId }: PersonalDashboar
                 </Link>
                         </div>
                       ) : (
-              <div className="space-y-3">
+              <div className="space-y-2" role="list" aria-label="Recent activity items">
                 {recentActivity.map((activity, index) => {
                   const pollId = (activity.event as Record<string, unknown>)?.poll_id as string | undefined;
                   return (
                     <div
                       key={`activity-${activity.type}-${pollId ?? index}-${activity.createdAt.getTime()}`}
-                      className="flex items-center justify-between p-3 rounded-lg bg-gray-50 dark:bg-gray-800/50 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
+                      className="flex items-center justify-between p-3 rounded-lg bg-gray-50 dark:bg-gray-800/50 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors border border-transparent hover:border-gray-200 dark:hover:border-gray-700"
+                      role="listitem"
                     >
-                      <div className="flex items-center gap-3">
+                      <div className="flex items-center gap-3 flex-1 min-w-0">
                         <div
-                          className={`w-3 h-3 rounded-full ${
+                          className={`w-3 h-3 rounded-full flex-shrink-0 ${
                             activity.type === 'vote' ? 'bg-blue-500 dark:bg-blue-400' : 'bg-green-500 dark:bg-green-400'
                           }`}
+                          aria-hidden="true"
                         />
-                        <div>
-                          <span className="text-sm font-medium text-gray-900 dark:text-gray-100">
+                        <div className="flex-1 min-w-0">
+                          <span className="text-sm font-medium text-gray-900 dark:text-gray-100 block truncate">
                             {activity.type === 'vote' ? 'Voted on a poll' : 'Created a poll'}
                           </span>
                           {dateFormatter && (
