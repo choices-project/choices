@@ -781,41 +781,41 @@ export default function DashboardPage() {
   // CRITICAL: PersonalDashboard is loaded via next/dynamic with ssr: false
   // This prevents it from being included in SSR HTML, eliminating hydration mismatch
   // The dynamic import handles loading state internally, so we don't need early return
-  return (
-    <ErrorBoundary>
-      {/* CRITICAL: Wrap DashboardNavigation in ClientOnly to prevent hydration mismatches */}
-      {/* usePathname() can return different values on server vs client */}
-      <ClientOnly fallback={<div className="h-16 bg-white border-b" />}>
-        <DashboardNavigation />
-      </ClientOnly>
-
-      {/* CRITICAL: Wrap entire dashboard content in ClientOnly to prevent hydration mismatches */}
-      {/* This ensures nothing renders until after client mount, preventing React error #185 */}
-      <ClientOnly
-        fallback={
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-            <div className="space-y-6" aria-label="Loading dashboard" aria-busy="true" aria-live="polite" data-testid="dashboard-loading-skeleton" role="status">
-              <div className="animate-pulse">
-                <div className="h-10 bg-gray-200 dark:bg-gray-700 rounded w-1/3 mb-4" />
-                <div className="h-5 bg-gray-200 dark:bg-gray-700 rounded w-1/2 mb-8" />
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                  {[1, 2, 3].map((i) => (
-                    <div key={i} className="bg-gray-100 dark:bg-gray-800 rounded-lg p-6">
-                      <div className="h-6 bg-gray-200 dark:bg-gray-700 rounded w-3/4 mb-4" />
-                      <div className="h-4 bg-gray-200 dark:bg-gray-700 rounded w-full mb-2" />
-                      <div className="h-4 bg-gray-200 dark:bg-gray-700 rounded w-5/6" />
-                    </div>
-                  ))}
-                </div>
+  
+  // CRITICAL: Wrap entire page content in ClientOnly to prevent ALL server-side rendering
+  // This ensures zero hydration mismatches by rendering nothing on the server
+  const loadingFallback = (
+    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      <div className="space-y-6" aria-label="Loading dashboard" aria-busy="true" aria-live="polite" data-testid="dashboard-loading-skeleton" role="status">
+        <div className="animate-pulse">
+          <div className="h-10 bg-gray-200 dark:bg-gray-700 rounded w-1/3 mb-4" />
+          <div className="h-5 bg-gray-200 dark:bg-gray-700 rounded w-1/2 mb-8" />
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {[1, 2, 3].map((i) => (
+              <div key={i} className="bg-gray-100 dark:bg-gray-800 rounded-lg p-6">
+                <div className="h-6 bg-gray-200 dark:bg-gray-700 rounded w-3/4 mb-4" />
+                <div className="h-4 bg-gray-200 dark:bg-gray-700 rounded w-full mb-2" />
+                <div className="h-4 bg-gray-200 dark:bg-gray-700 rounded w-5/6" />
               </div>
-            </div>
+            ))}
           </div>
-        }
-      >
+        </div>
+      </div>
+    </div>
+  );
+
+  return (
+    <ClientOnly fallback={loadingFallback}>
+      <ErrorBoundary>
+        {/* CRITICAL: Wrap DashboardNavigation in ClientOnly to prevent hydration mismatches */}
+        {/* usePathname() can return different values on server vs client */}
+        <ClientOnly fallback={<div className="h-16 bg-white border-b" />}>
+          <DashboardNavigation />
+        </ClientOnly>
+
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
           {/* CRITICAL: Only show admin banner after mount to prevent hydration mismatch */}
           {/* Use isClient to ensure this only renders on client, preventing hydration mismatch */}
-          {/* suppressHydrationWarning prevents React from complaining about server/client mismatch */}
           {isClient && isAdmin === true && (
             <div className="mb-6 p-4 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg" suppressHydrationWarning>
               <div className="flex items-center justify-between">
@@ -843,12 +843,12 @@ export default function DashboardPage() {
           {/* This prevents it from being included in SSR HTML, eliminating hydration mismatch */}
           <PersonalDashboard />
         </div>
-      </ClientOnly>
 
-      {/* CRITICAL: Wrap MobileDashboardNav in ClientOnly to prevent hydration mismatches */}
-      <ClientOnly fallback={null}>
-        <MobileDashboardNav />
-      </ClientOnly>
-    </ErrorBoundary>
+        {/* CRITICAL: Wrap MobileDashboardNav in ClientOnly to prevent hydration mismatches */}
+        <ClientOnly fallback={null}>
+          <MobileDashboardNav />
+        </ClientOnly>
+      </ErrorBoundary>
+    </ClientOnly>
   );
 }
