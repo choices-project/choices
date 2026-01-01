@@ -428,7 +428,7 @@ function StandardPersonalDashboard({ userId: _fallbackUserId }: PersonalDashboar
         </Card>
       )}
 
-      {/* Analytics Metrics Cards - Improved UX */}
+      {/* Analytics Metrics Cards - Improved UX with graceful error handling */}
       {dashboardPreferences?.showEngagementScore && isMounted && (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
           <Card className="hover:shadow-md transition-shadow">

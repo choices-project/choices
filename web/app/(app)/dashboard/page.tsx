@@ -781,7 +781,7 @@ export default function DashboardPage() {
   // CRITICAL: PersonalDashboard is loaded via next/dynamic with ssr: false
   // This prevents it from being included in SSR HTML, eliminating hydration mismatch
   // The dynamic import handles loading state internally, so we don't need early return
-  
+
   // CRITICAL: Wrap entire page content in ClientOnly to prevent ALL server-side rendering
   // This ensures zero hydration mismatches by rendering nothing on the server
   const loadingFallback = (
