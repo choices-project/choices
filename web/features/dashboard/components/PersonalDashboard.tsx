@@ -431,13 +431,15 @@ function StandardPersonalDashboard({ userId: _fallbackUserId }: PersonalDashboar
       {/* Analytics Metrics Cards - Improved UX with graceful error handling */}
       {dashboardPreferences?.showEngagementScore && isMounted && (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4" role="region" aria-label="Engagement metrics">
-          <Card className="hover:shadow-md transition-shadow" role="article" aria-label="Votes in the last 30 days">
+          <Card className="hover:shadow-lg transition-all duration-200 border-gray-200 dark:border-gray-700" role="article" aria-label="Votes in the last 30 days">
             <CardHeader className="pb-3">
               <div className="flex items-center justify-between">
                 <CardTitle className="text-sm font-medium text-gray-600 dark:text-gray-400">
                   Votes (30 days)
                   </CardTitle>
-                <Vote className="h-5 w-5 text-blue-500 dark:text-blue-400" aria-hidden="true" />
+                <div className="p-2 rounded-lg bg-blue-50 dark:bg-blue-900/20">
+                  <Vote className="h-5 w-5 text-blue-500 dark:text-blue-400" aria-hidden="true" />
+                </div>
               </div>
                 </CardHeader>
                 <CardContent>
@@ -450,13 +452,15 @@ function StandardPersonalDashboard({ userId: _fallbackUserId }: PersonalDashboar
                 </CardContent>
               </Card>
 
-          <Card className="hover:shadow-md transition-shadow" role="article" aria-label="Polls created in the last 30 days">
+          <Card className="hover:shadow-lg transition-all duration-200 border-gray-200 dark:border-gray-700" role="article" aria-label="Polls created in the last 30 days">
             <CardHeader className="pb-3">
               <div className="flex items-center justify-between">
                 <CardTitle className="text-sm font-medium text-gray-600 dark:text-gray-400">
                   Polls Created (30 days)
                     </CardTitle>
-                <BarChart3 className="h-5 w-5 text-green-500 dark:text-green-400" aria-hidden="true" />
+                <div className="p-2 rounded-lg bg-green-50 dark:bg-green-900/20">
+                  <BarChart3 className="h-5 w-5 text-green-500 dark:text-green-400" aria-hidden="true" />
+                </div>
               </div>
                   </CardHeader>
                   <CardContent>
@@ -469,13 +473,15 @@ function StandardPersonalDashboard({ userId: _fallbackUserId }: PersonalDashboar
                   </CardContent>
                 </Card>
 
-          <Card className="hover:shadow-md transition-shadow" role="article" aria-label="Total polls available">
+          <Card className="hover:shadow-lg transition-all duration-200 border-gray-200 dark:border-gray-700" role="article" aria-label="Total polls available">
             <CardHeader className="pb-3">
               <div className="flex items-center justify-between">
                 <CardTitle className="text-sm font-medium text-gray-600 dark:text-gray-400">
                   Total Polls
                   </CardTitle>
-                <TrendingUp className="h-5 w-5 text-purple-500 dark:text-purple-400" aria-hidden="true" />
+                <div className="p-2 rounded-lg bg-purple-50 dark:bg-purple-900/20">
+                  <TrendingUp className="h-5 w-5 text-purple-500 dark:text-purple-400" aria-hidden="true" />
+                </div>
               </div>
                 </CardHeader>
             <CardContent>
