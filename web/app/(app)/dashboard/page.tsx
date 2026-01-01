@@ -7,10 +7,10 @@ import React, { useEffect, useRef, useState } from 'react';
 
 import { useProfile } from '@/features/profile/hooks/use-profile';
 
+import ClientOnly from '@/components/ClientOnly';
 import DashboardNavigation, { MobileDashboardNav } from '@/components/shared/DashboardNavigation';
 import { ErrorBoundary } from '@/components/shared/ErrorBoundary';
 import { Button } from '@/components/ui/button';
-import ClientOnly from '@/components/ClientOnly';
 
 
 import { useIsAuthenticated, useUserLoading, useUserStore } from '@/lib/stores';
@@ -437,7 +437,7 @@ export default function DashboardPage() {
     return () => {
       cookieCheckRef.current = null;
     };
-  }, [shouldBypassAuth]);
+  }, [shouldBypassAuth, isClient]);
 
   useEffect(() => {
     // In E2E harness mode or when bypassing auth, skip all redirect checks (authentication is mocked)

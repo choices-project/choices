@@ -242,7 +242,7 @@ function StandardPersonalDashboard({ userId: _fallbackUserId }: PersonalDashboar
 
     dashboardPreferencesPrevRef.current = result;
     return result;
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+     
     // CRITICAL: Using specific property dependencies instead of profilePreferences.dashboard
     // to prevent re-renders when the parent object reference changes but values haven't
   }, [
