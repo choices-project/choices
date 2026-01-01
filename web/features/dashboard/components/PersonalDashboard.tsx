@@ -389,27 +389,32 @@ function StandardPersonalDashboard({ userId: _fallbackUserId }: PersonalDashboar
         </p>
         </div>
 
-      {/* Error Handling UI - Show when API calls fail */}
+      {/* Error Handling UI - Show when API calls fail - Enhanced UX */}
       {isMounted && pollsError && (
         <Card
-          className="border-red-200 bg-red-50 dark:bg-red-900/20 dark:border-red-800"
+          className="border-red-200 bg-red-50 dark:bg-red-900/20 dark:border-red-800 shadow-sm"
           role="alert"
-          aria-live="polite"
+          aria-live="assertive"
+          aria-atomic="true"
           data-testid="error-boundary"
         >
           <CardContent className="pt-6">
-            <div className="flex items-start gap-3">
-              <AlertCircle className="h-5 w-5 text-red-600 dark:text-red-400 flex-shrink-0 mt-0.5" />
-              <div className="flex-1">
+            <div className="flex items-start gap-4">
+              <div className="flex-shrink-0">
+                <div className="p-2 rounded-full bg-red-100 dark:bg-red-900/40">
+                  <AlertCircle className="h-5 w-5 text-red-600 dark:text-red-400" aria-hidden="true" />
+                </div>
+              </div>
+              <div className="flex-1 min-w-0">
                 <h3 className="text-sm font-semibold text-red-900 dark:text-red-200 mb-1">
                   Unable to load data
                 </h3>
-                <p className="text-sm text-red-700 dark:text-red-300 mb-3">
+                <p className="text-sm text-red-700 dark:text-red-300 mb-4">
                   {typeof pollsError === 'string'
                     ? pollsError
-                    : 'Error: Failed to load dashboard data. Please check your connection and try again.'}
+                    : 'Failed to load dashboard data. Please check your connection and try again.'}
                 </p>
-          <Button
+                <Button
                   variant="outline"
                   size="sm"
                   onClick={() => {
@@ -417,13 +422,14 @@ function StandardPersonalDashboard({ userId: _fallbackUserId }: PersonalDashboar
                       loadPollsRef.current();
                     }
                   }}
-                  className="border-red-300 text-red-700 hover:bg-red-100 dark:border-red-700 dark:text-red-300 dark:hover:bg-red-900/30"
+                  className="border-red-300 text-red-700 hover:bg-red-100 dark:border-red-700 dark:text-red-300 dark:hover:bg-red-900/30 transition-colors"
+                  aria-label="Retry loading dashboard data"
                 >
-                  <RefreshCw className="h-4 w-4 mr-2" />
+                  <RefreshCw className="h-4 w-4 mr-2" aria-hidden="true" />
                   Try Again
-          </Button>
-        </div>
-      </div>
+                </Button>
+              </div>
+            </div>
           </CardContent>
         </Card>
       )}
