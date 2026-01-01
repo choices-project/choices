@@ -120,8 +120,49 @@ export default function SiteMessages({
       const response = await fetch('/api/site-messages');
 
       if (response.ok) {
-        const data = await response.json();
-        setMessages(data.messages ?? []);
+        const result = await response.json();
+        // API returns { success: true, data: { messages: [...], count: ..., timestamp: ... } }
+        const apiMessages = result?.data?.messages ?? [];
+        
+        // Map database fields to component type
+        const mappedMessages: SiteMessage[] = apiMessages.map((msg: any) => {
+          // Map database type values to component type values
+          let messageType: SiteMessage['type'] = 'info';
+          if (msg.type === 'security' || msg.type === 'error') {
+            messageType = 'error';
+          } else if (msg.type === 'warning' || msg.type === 'maintenance') {
+            messageType = 'warning';
+          } else if (msg.type === 'success' || msg.type === 'feature') {
+            messageType = 'success';
+          } else if (msg.type === 'feedback' || msg.type === 'announcement') {
+            messageType = msg.type === 'feedback' ? 'feedback' : 'info';
+          }
+          
+          // Map database priority values to component priority values
+          let messagePriority: SiteMessage['priority'] = 'medium';
+          if (msg.priority === 'critical' || msg.priority === 'urgent') {
+            messagePriority = 'critical';
+          } else if (msg.priority === 'high') {
+            messagePriority = 'high';
+          } else if (msg.priority === 'medium') {
+            messagePriority = 'medium';
+          } else if (msg.priority === 'low') {
+            messagePriority = 'low';
+          }
+          
+          return {
+            id: msg.id,
+            title: msg.title || 'Untitled message',
+            message: msg.message || '',
+            type: messageType,
+            priority: messagePriority,
+            created_at: msg.created_at || new Date().toISOString(),
+            updated_at: msg.updated_at || msg.created_at || new Date().toISOString(),
+            expires_at: msg.end_date || undefined,
+          };
+        });
+        
+        setMessages(mappedMessages);
       } else {
         setError('We could not load site messages right now.');
       }
