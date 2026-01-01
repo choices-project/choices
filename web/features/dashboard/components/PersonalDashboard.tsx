@@ -430,18 +430,18 @@ function StandardPersonalDashboard({ userId: _fallbackUserId }: PersonalDashboar
 
       {/* Analytics Metrics Cards - Improved UX with graceful error handling */}
       {dashboardPreferences?.showEngagementScore && isMounted && (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-          <Card className="hover:shadow-md transition-shadow">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4" role="region" aria-label="Engagement metrics">
+          <Card className="hover:shadow-md transition-shadow" role="article" aria-label="Votes in the last 30 days">
             <CardHeader className="pb-3">
               <div className="flex items-center justify-between">
                 <CardTitle className="text-sm font-medium text-gray-600 dark:text-gray-400">
                   Votes (30 days)
                   </CardTitle>
-                <Vote className="h-5 w-5 text-blue-500 dark:text-blue-400" />
+                <Vote className="h-5 w-5 text-blue-500 dark:text-blue-400" aria-hidden="true" />
               </div>
                 </CardHeader>
                 <CardContent>
-              <div className="text-3xl font-bold text-gray-900 dark:text-gray-100">
+              <div className="text-3xl font-bold text-gray-900 dark:text-gray-100" aria-live="polite">
                 {numberFormatter ? numberFormatter.format(votesLast30Days) : votesLast30Days}
                       </div>
               <p className="text-xs text-gray-600 dark:text-gray-400 mt-1">
@@ -450,17 +450,17 @@ function StandardPersonalDashboard({ userId: _fallbackUserId }: PersonalDashboar
                 </CardContent>
               </Card>
 
-          <Card className="hover:shadow-md transition-shadow">
+          <Card className="hover:shadow-md transition-shadow" role="article" aria-label="Polls created in the last 30 days">
             <CardHeader className="pb-3">
               <div className="flex items-center justify-between">
                 <CardTitle className="text-sm font-medium text-gray-600 dark:text-gray-400">
                   Polls Created (30 days)
                     </CardTitle>
-                <BarChart3 className="h-5 w-5 text-green-500 dark:text-green-400" />
+                <BarChart3 className="h-5 w-5 text-green-500 dark:text-green-400" aria-hidden="true" />
               </div>
                   </CardHeader>
                   <CardContent>
-              <div className="text-3xl font-bold text-gray-900 dark:text-gray-100">
+              <div className="text-3xl font-bold text-gray-900 dark:text-gray-100" aria-live="polite">
                 {numberFormatter ? numberFormatter.format(pollsCreatedLast30Days) : pollsCreatedLast30Days}
                       </div>
               <p className="text-xs text-gray-600 dark:text-gray-400 mt-1">
@@ -469,17 +469,17 @@ function StandardPersonalDashboard({ userId: _fallbackUserId }: PersonalDashboar
                   </CardContent>
                 </Card>
 
-          <Card className="hover:shadow-md transition-shadow">
+          <Card className="hover:shadow-md transition-shadow" role="article" aria-label="Total polls available">
             <CardHeader className="pb-3">
               <div className="flex items-center justify-between">
                 <CardTitle className="text-sm font-medium text-gray-600 dark:text-gray-400">
                   Total Polls
                   </CardTitle>
-                <TrendingUp className="h-5 w-5 text-purple-500 dark:text-purple-400" />
+                <TrendingUp className="h-5 w-5 text-purple-500 dark:text-purple-400" aria-hidden="true" />
               </div>
                 </CardHeader>
             <CardContent>
-              <div className="text-3xl font-bold text-gray-900 dark:text-gray-100">
+              <div className="text-3xl font-bold text-gray-900 dark:text-gray-100" aria-live="polite">
                 {numberFormatter ? numberFormatter.format(polls?.length ?? 0) : (polls?.length ?? 0)}
                     </div>
               <p className="text-xs text-gray-600 dark:text-gray-400 mt-1">
@@ -492,12 +492,12 @@ function StandardPersonalDashboard({ userId: _fallbackUserId }: PersonalDashboar
 
       {/* Quick Actions Section */}
       {dashboardPreferences?.showQuickActions && isMounted && (
-                <Card>
+                <Card role="region" aria-label="Quick actions">
                   <CardHeader>
             <div className="flex items-center gap-2">
-              <Zap className="h-5 w-5 text-yellow-500 dark:text-yellow-400" />
+              <Zap className="h-5 w-5 text-yellow-500 dark:text-yellow-400" aria-hidden="true" />
               <CardTitle className="text-lg font-semibold">Quick Actions</CardTitle>
-                          </div>
+            </div>
             <CardDescription>Fast access to common tasks</CardDescription>
           </CardHeader>
           <CardContent>
@@ -527,7 +527,7 @@ function StandardPersonalDashboard({ userId: _fallbackUserId }: PersonalDashboar
 
       {/* Recent Activity Section - Improved UX */}
       {dashboardPreferences?.showRecentActivity && isMounted && (
-        <Card>
+        <Card role="region" aria-label="Recent activity">
                   <CardHeader>
             <CardTitle className="text-lg font-semibold">Recent Activity</CardTitle>
             <CardDescription>Your latest civic engagement actions</CardDescription>
@@ -588,10 +588,10 @@ function StandardPersonalDashboard({ userId: _fallbackUserId }: PersonalDashboar
 
       {/* Representatives Section - Improved UX */}
       {dashboardPreferences?.showElectedOfficials && isMounted && representativeEntries && representativeEntries.length > 0 && (
-        <Card>
+        <Card role="region" aria-label="Your representatives">
                   <CardHeader>
             <div className="flex items-center gap-2">
-              <Users className="h-5 w-5 text-indigo-500 dark:text-indigo-400" />
+              <Users className="h-5 w-5 text-indigo-500 dark:text-indigo-400" aria-hidden="true" />
               <CardTitle className="text-lg font-semibold">Your Representatives</CardTitle>
             </div>
                     <CardDescription>
@@ -665,10 +665,10 @@ function StandardPersonalDashboard({ userId: _fallbackUserId }: PersonalDashboar
 
       {/* Dashboard Preferences Section - Improved UX */}
       {isMounted && (
-            <Card>
+            <Card role="region" aria-label="Dashboard preferences">
               <CardHeader>
             <div className="flex items-center gap-2">
-              <Settings2 className="h-5 w-5 text-gray-500 dark:text-gray-400" />
+              <Settings2 className="h-5 w-5 text-gray-500 dark:text-gray-400" aria-hidden="true" />
               <CardTitle className="text-lg font-semibold">Dashboard Preferences</CardTitle>
             </div>
             <CardDescription>Customize what appears on your dashboard</CardDescription>

@@ -794,7 +794,7 @@ export default function DashboardPage() {
             <div className="h-8 bg-gray-200 dark:bg-gray-700 rounded w-1/4 mb-3" />
             <div className="h-4 bg-gray-200 dark:bg-gray-700 rounded w-1/2" />
           </div>
-          
+
           {/* Metrics cards skeleton */}
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mb-6">
             {[1, 2, 3].map((i) => (
@@ -805,7 +805,7 @@ export default function DashboardPage() {
               </div>
             ))}
           </div>
-          
+
           {/* Content cards skeleton */}
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
             {[1, 2].map((i) => (
