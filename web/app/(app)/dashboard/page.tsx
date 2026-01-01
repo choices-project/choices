@@ -784,18 +784,38 @@ export default function DashboardPage() {
 
   // CRITICAL: Wrap entire page content in ClientOnly to prevent ALL server-side rendering
   // This ensures zero hydration mismatches by rendering nothing on the server
+  // Enhanced loading skeleton with better UX
   const loadingFallback = (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
       <div className="space-y-6" aria-label="Loading dashboard" aria-busy="true" aria-live="polite" data-testid="dashboard-loading-skeleton" role="status">
         <div className="animate-pulse">
-          <div className="h-10 bg-gray-200 dark:bg-gray-700 rounded w-1/3 mb-4" />
-          <div className="h-5 bg-gray-200 dark:bg-gray-700 rounded w-1/2 mb-8" />
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          {/* Header skeleton */}
+          <div className="mb-8">
+            <div className="h-8 bg-gray-200 dark:bg-gray-700 rounded w-1/4 mb-3" />
+            <div className="h-4 bg-gray-200 dark:bg-gray-700 rounded w-1/2" />
+          </div>
+          
+          {/* Metrics cards skeleton */}
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mb-6">
             {[1, 2, 3].map((i) => (
-              <div key={i} className="bg-gray-100 dark:bg-gray-800 rounded-lg p-6">
-                <div className="h-6 bg-gray-200 dark:bg-gray-700 rounded w-3/4 mb-4" />
-                <div className="h-4 bg-gray-200 dark:bg-gray-700 rounded w-full mb-2" />
-                <div className="h-4 bg-gray-200 dark:bg-gray-700 rounded w-5/6" />
+              <div key={i} className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-6 shadow-sm">
+                <div className="h-4 bg-gray-200 dark:bg-gray-700 rounded w-1/2 mb-4" />
+                <div className="h-8 bg-gray-200 dark:bg-gray-700 rounded w-1/3 mb-2" />
+                <div className="h-3 bg-gray-200 dark:bg-gray-700 rounded w-2/3" />
+              </div>
+            ))}
+          </div>
+          
+          {/* Content cards skeleton */}
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            {[1, 2].map((i) => (
+              <div key={i} className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-6 shadow-sm">
+                <div className="h-5 bg-gray-200 dark:bg-gray-700 rounded w-1/3 mb-4" />
+                <div className="space-y-3">
+                  <div className="h-4 bg-gray-200 dark:bg-gray-700 rounded w-full" />
+                  <div className="h-4 bg-gray-200 dark:bg-gray-700 rounded w-5/6" />
+                  <div className="h-4 bg-gray-200 dark:bg-gray-700 rounded w-4/5" />
+                </div>
               </div>
             ))}
           </div>

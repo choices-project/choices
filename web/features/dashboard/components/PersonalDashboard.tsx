@@ -242,7 +242,7 @@ function StandardPersonalDashboard({ userId: _fallbackUserId }: PersonalDashboar
 
     dashboardPreferencesPrevRef.current = result;
     return result;
-     
+
     // CRITICAL: Using specific property dependencies instead of profilePreferences.dashboard
     // to prevent re-renders when the parent object reference changes but values haven't
   }, [
@@ -534,13 +534,22 @@ function StandardPersonalDashboard({ userId: _fallbackUserId }: PersonalDashboar
                   </CardHeader>
           <CardContent>
             {recentActivity.length === 0 ? (
-              <div className="text-center py-8">
-                <p className="text-sm text-gray-500 dark:text-gray-400">
-                  No recent activity to display
+              <div className="text-center py-12">
+                <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-gray-100 dark:bg-gray-800 mb-4">
+                  <Vote className="h-8 w-8 text-gray-400 dark:text-gray-500" />
+                </div>
+                <p className="text-sm font-medium text-gray-900 dark:text-gray-100 mb-1">
+                  No recent activity
                 </p>
-                <p className="text-xs text-gray-600 dark:text-gray-400 mt-1">
+                <p className="text-xs text-gray-500 dark:text-gray-400 mb-4">
                   Start voting or creating polls to see your activity here
                 </p>
+                <Link href="/polls">
+                  <Button variant="outline" size="sm">
+                    Browse Polls
+                    <ArrowRight className="ml-2 h-4 w-4" />
+                  </Button>
+                </Link>
                         </div>
                       ) : (
               <div className="space-y-3">
