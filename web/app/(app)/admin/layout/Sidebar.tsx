@@ -78,6 +78,14 @@ export const Sidebar: React.FC = () => {
   const { toggleSidebar } = useAdminActions();
   const { data: metrics } = useSystemMetrics();
   const sidebarNavigationId = 'admin-sidebar-navigation';
+  
+  // CRITICAL: Guard usePathname() usage to prevent hydration mismatch
+  // usePathname() can return different values on server vs client
+  const [isMounted, setIsMounted] = React.useState(false);
+  
+  React.useEffect(() => {
+    setIsMounted(true);
+  }, []);
 
   return (
     <>
@@ -130,7 +138,8 @@ export const Sidebar: React.FC = () => {
               const matchesSection = activeSection && item.section
                 ? item.section === activeSection
                 : false;
-              const isActive = matchesSection || pathname === item.href;
+              // Only check pathname after mount to prevent hydration mismatch
+              const isActive = matchesSection || (isMounted && pathname === item.href);
               return (
                 <li key={item.name}>
                   <Link
