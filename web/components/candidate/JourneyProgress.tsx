@@ -61,8 +61,12 @@ export function JourneyProgress({ platformId, className = '' }: JourneyProgressP
   if (loading) {
     return (
       <Card className={className}>
-        <CardContent className="py-8 text-center">
-          <div className="text-gray-500">Loading your journey progress...</div>
+        <CardContent className="py-8">
+          <div className="flex flex-col items-center justify-center space-y-3" role="status" aria-live="polite" aria-busy="true">
+            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 dark:border-blue-400" aria-hidden="true" />
+            <div className="text-sm font-medium text-gray-700 dark:text-gray-300">Loading your journey progress...</div>
+            <div className="text-xs text-gray-500 dark:text-gray-400">Please wait while we fetch your progress</div>
+          </div>
         </CardContent>
       </Card>
     )
