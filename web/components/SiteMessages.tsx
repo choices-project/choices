@@ -44,18 +44,18 @@ const typeToIcon: Record<SiteMessage['type'], React.ReactNode> = {
 };
 
 const typeToColor: Record<SiteMessage['type'], string> = {
-  info: 'bg-blue-50 border-blue-200 text-blue-800',
-  warning: 'bg-yellow-50 border-yellow-200 text-yellow-800',
-  success: 'bg-green-50 border-green-200 text-green-800',
-  error: 'bg-red-50 border-red-200 text-red-800',
-  feedback: 'bg-purple-50 border-purple-200 text-purple-800',
+  info: 'bg-blue-50 dark:bg-blue-900/20 border-blue-200 dark:border-blue-800 text-blue-800 dark:text-blue-200',
+  warning: 'bg-yellow-50 dark:bg-yellow-900/20 border-yellow-200 dark:border-yellow-800 text-yellow-800 dark:text-yellow-200',
+  success: 'bg-green-50 dark:bg-green-900/20 border-green-200 dark:border-green-800 text-green-800 dark:text-green-200',
+  error: 'bg-red-50 dark:bg-red-900/20 border-red-200 dark:border-red-800 text-red-800 dark:text-red-200',
+  feedback: 'bg-purple-50 dark:bg-purple-900/20 border-purple-200 dark:border-purple-800 text-purple-800 dark:text-purple-200',
 };
 
 const priorityToBadge: Record<SiteMessage['priority'], string> = {
-  critical: 'bg-red-100 text-red-800',
-  high: 'bg-orange-100 text-orange-800',
-  medium: 'bg-yellow-100 text-yellow-800',
-  low: 'bg-green-100 text-green-800',
+  critical: 'bg-red-100 dark:bg-red-900/40 text-red-800 dark:text-red-200',
+  high: 'bg-orange-100 dark:bg-orange-900/40 text-orange-800 dark:text-orange-200',
+  medium: 'bg-yellow-100 dark:bg-yellow-900/40 text-yellow-800 dark:text-yellow-200',
+  low: 'bg-green-100 dark:bg-green-900/40 text-green-800 dark:text-green-200',
 };
 
 const liveRegionForMessage = (message: SiteMessage) => {
@@ -123,7 +123,7 @@ export default function SiteMessages({
         const result = await response.json();
         // API returns { success: true, data: { messages: [...], count: ..., timestamp: ... } }
         const apiMessages = result?.data?.messages ?? [];
-        
+
         // Map database fields to component type
         const mappedMessages: SiteMessage[] = apiMessages.map((msg: any) => {
           // Map database type values to component type values
@@ -137,7 +137,7 @@ export default function SiteMessages({
           } else if (msg.type === 'feedback' || msg.type === 'announcement') {
             messageType = msg.type === 'feedback' ? 'feedback' : 'info';
           }
-          
+
           // Map database priority values to component priority values
           let messagePriority: SiteMessage['priority'] = 'medium';
           if (msg.priority === 'critical' || msg.priority === 'urgent') {
@@ -149,7 +149,7 @@ export default function SiteMessages({
           } else if (msg.priority === 'low') {
             messagePriority = 'low';
           }
-          
+
           return {
             id: msg.id,
             title: msg.title || 'Untitled message',
@@ -161,7 +161,7 @@ export default function SiteMessages({
             expires_at: msg.end_date || undefined,
           };
         });
-        
+
         setMessages(mappedMessages);
       } else {
         setError('We could not load site messages right now.');
@@ -268,23 +268,25 @@ export default function SiteMessages({
         return (
           <article
             key={message.id}
-            className={`relative rounded-lg border p-4 transition-all duration-200 ${typeToColor[message.type]}`}
+            className={`relative rounded-lg border shadow-sm hover:shadow-md transition-all duration-200 p-4 ${typeToColor[message.type]}`}
             {...liveRegion}
             aria-atomic="true"
           >
             <div className="flex items-start space-x-3">
-              <div className="mt-0.5 flex-shrink-0">{typeToIcon[message.type]}</div>
+              <div className="mt-0.5 flex-shrink-0 p-1.5 rounded-full bg-white dark:bg-gray-800/50">
+                {typeToIcon[message.type]}
+              </div>
               <div className="min-w-0 flex-1">
-                <div className="flex items-start justify-between">
-                  <h3 className="text-sm font-semibold leading-5">{message.title}</h3>
-                  <div className="ml-2 flex items-center space-x-2">
-                    <span className={`px-2 py-1 text-xs font-medium uppercase tracking-wide ${priorityToBadge[message.priority]}`}>
+                <div className="flex items-start justify-between gap-2">
+                  <h3 className="text-sm font-semibold leading-5 flex-1">{message.title}</h3>
+                  <div className="flex items-center space-x-2 flex-shrink-0">
+                    <span className={`px-2 py-0.5 text-xs font-medium uppercase tracking-wide rounded ${priorityToBadge[message.priority]}`}>
                       {message.priority}
                     </span>
                     {showDismiss && (
                       <button
                         onClick={() => handleDismiss(message.id, message.title)}
-                        className="flex-shrink-0 rounded p-1 text-gray-500 transition-colors hover:text-gray-700 focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500"
+                        className="flex-shrink-0 rounded p-1 text-gray-500 dark:text-gray-400 transition-colors hover:text-gray-700 dark:hover:text-gray-200 hover:bg-white/50 dark:hover:bg-gray-800/50 focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2"
                         aria-label={`Dismiss message titled ${message.title}`}
                       >
                         <X className="h-4 w-4" aria-hidden="true" />
@@ -294,7 +296,7 @@ export default function SiteMessages({
                 </div>
 
                 <div className="mt-2">
-                  <p className="text-sm leading-5" id={`site-message-${message.id}-body`}>
+                  <p className="text-sm leading-6" id={`site-message-${message.id}-body`}>
                     {isExpanded ? message.message : message.message.slice(0, MAX_PREVIEW_LENGTH)}
                     {showToggle && !isExpanded && message.message.length > MAX_PREVIEW_LENGTH && '…'}
                   </p>
@@ -302,7 +304,7 @@ export default function SiteMessages({
                   {showToggle && (
                     <button
                       onClick={() => handleToggleExpand(message.id, !isExpanded)}
-                      className="mt-2 flex items-center space-x-1 text-xs font-medium text-blue-700 transition hover:text-blue-900 focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500"
+                      className="mt-2 flex items-center space-x-1 text-xs font-medium text-blue-700 dark:text-blue-400 transition hover:text-blue-900 dark:hover:text-blue-300 focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2 rounded px-1 py-0.5"
                       aria-expanded={isExpanded}
                       aria-controls={`site-message-${message.id}-body`}
                     >
@@ -321,13 +323,17 @@ export default function SiteMessages({
                   )}
                 </div>
 
-                <div className="mt-2 flex items-center justify-between text-xs text-gray-600">
-                  <time dateTime={message.created_at}>
-                    Posted {new Date(message.created_at).toLocaleString()}
+                <div className="mt-3 flex items-center justify-between text-xs text-gray-600 dark:text-gray-400 pt-2 border-t border-current/10">
+                  <time dateTime={message.created_at} className="flex items-center gap-1">
+                    <span>Posted</span>
+                    <span className="font-medium">{new Date(message.created_at).toLocaleDateString()}</span>
                   </time>
 
                   {message.expires_at && (
-                    <span>Expires {new Date(message.expires_at).toLocaleString()}</span>
+                    <span className="flex items-center gap-1">
+                      <span>Expires</span>
+                      <span className="font-medium">{new Date(message.expires_at).toLocaleDateString()}</span>
+                    </span>
                   )}
                 </div>
               </div>
