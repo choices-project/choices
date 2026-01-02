@@ -100,8 +100,12 @@ export function FilingAssistant({
         if (electionDate) params.append('electionDate', electionDate)
 
         const response = await fetch(`/api/filing/requirements?${params.toString()}`)
-        const data = await response.json()
-        const payload = (data?.data ?? data) as FilingRequirement
+        if (!response.ok) {
+          throw new Error(`Failed to fetch filing requirements: ${response.statusText}`)
+        }
+        const result = await response.json()
+        // API returns { success: true, data: {...} } structure
+        const payload = (result?.success && result?.data ? result.data : result) as FilingRequirement
         setRequirements(payload)
       } catch (error) {
         logger.error('Failed to fetch filing requirements:', error)

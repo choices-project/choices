@@ -34,9 +34,14 @@ export function JourneyProgress({ platformId, className = '' }: JourneyProgressP
       setLoading(true)
       try {
         const response = await fetch(`/api/candidate/journey/progress?platformId=${platformId}`)
-        const data = await response.json()
+        if (!response.ok) {
+          throw new Error(`Failed to fetch journey progress: ${response.statusText}`)
+        }
+        const result = await response.json()
+        // API returns { success: true, data: { progress, checklist, nextAction, ... } } structure
+        const data = result?.success && result?.data ? result.data : result
         
-        if (data.progress) {
+        if (data?.progress) {
           setProgress(data.progress)
           setChecklist(data.checklist ?? [])
           setNextAction(data.nextAction)
