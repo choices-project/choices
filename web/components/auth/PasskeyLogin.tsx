@@ -78,11 +78,21 @@ export function PasskeyLogin({
       });
 
       if (!response.ok) {
-        const errorData = await response.json();
+        let errorData;
+        try {
+          errorData = await response.json();
+        } catch {
+          throw new Error('Invalid JSON response from authentication endpoint');
+        }
         throw new Error(errorData.error || 'Failed to start authentication');
       }
 
-      const credentialOptions = await response.json();
+      let credentialOptions;
+      try {
+        credentialOptions = await response.json();
+      } catch {
+        throw new Error('Invalid JSON response from authentication endpoint');
+      }
 
       // Get credential
       const credential = await navigator.credentials.get({
@@ -125,11 +135,21 @@ export function PasskeyLogin({
       });
 
       if (!completeResponse.ok) {
-        const errorData = await completeResponse.json();
+        let errorData;
+        try {
+          errorData = await completeResponse.json();
+        } catch {
+          throw new Error('Invalid JSON response from authentication completion endpoint');
+        }
         throw new Error(errorData.error || 'Authentication failed');
       }
 
-      const result = await completeResponse.json();
+      let result;
+      try {
+        result = await completeResponse.json();
+      } catch {
+        throw new Error('Invalid JSON response from authentication completion endpoint');
+      }
       setSuccess(true);
       onSuccess?.(result);
 
@@ -156,10 +176,10 @@ export function PasskeyLogin({
       <Card className={className}>
         <CardHeader>
           <CardTitle className="flex items-center space-x-2">
-            <AlertCircle className="h-5 w-5 text-red-500" />
+            <AlertCircle className="h-5 w-5 text-red-500 dark:text-red-400" aria-hidden="true" />
             <span>WebAuthn Not Supported</span>
           </CardTitle>
-          <CardDescription>
+          <CardDescription className="text-gray-600 dark:text-gray-400">
             Your browser does not support WebAuthn. Please use a modern browser or try a different authentication method.
           </CardDescription>
         </CardHeader>
@@ -171,21 +191,21 @@ export function PasskeyLogin({
     <Card className={className}>
       <CardHeader>
         <CardTitle className="flex items-center space-x-2">
-          <Fingerprint className="h-5 w-5 text-blue-600" />
+          <Fingerprint className="h-5 w-5 text-blue-600 dark:text-blue-400" aria-hidden="true" />
           <span>Sign In with Passkey</span>
         </CardTitle>
-        <CardDescription>
+        <CardDescription className="text-gray-600 dark:text-gray-400">
           Use your registered passkey to sign in securely
         </CardDescription>
       </CardHeader>
 
       <CardContent className="space-y-4">
         {success ? (
-          <div className="text-center space-y-4">
-            <CheckCircle className="h-12 w-12 text-green-500 mx-auto" />
+          <div className="text-center space-y-4" role="status" aria-live="polite">
+            <CheckCircle className="h-12 w-12 text-green-500 dark:text-green-400 mx-auto" aria-hidden="true" />
             <div>
-              <h3 className="text-lg font-semibold text-green-700">Authentication Successful!</h3>
-              <p className="text-gray-600">
+              <h3 className="text-lg font-semibold text-green-700 dark:text-green-300">Authentication Successful!</h3>
+              <p className="text-gray-600 dark:text-gray-400">
                 You have been signed in successfully.
               </p>
             </div>
@@ -216,8 +236,8 @@ export function PasskeyLogin({
 
             {/* Error Display */}
             {error && (
-              <Alert variant="destructive">
-                <AlertCircle className="h-4 w-4" />
+              <Alert variant="destructive" role="alert" aria-live="assertive">
+                <AlertCircle className="h-4 w-4" aria-hidden="true" />
                 <AlertDescription>{error}</AlertDescription>
               </Alert>
             )}
@@ -226,8 +246,10 @@ export function PasskeyLogin({
             <Button
               onClick={handleLogin}
               disabled={isAuthenticating}
-              className="w-full"
+              className="w-full focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
               size="lg"
+              aria-label="Sign in with passkey"
+              aria-busy={isAuthenticating}
             >
               {isAuthenticating ? (
                 <>

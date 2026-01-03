@@ -57,6 +57,7 @@ export type PollWizardSubmitOptions = {
 
 // Type definitions for PollWizardActions - these are type signatures, not implementations
 // The actual implementations are provided below in createPollWizardActions
+// Note: Empty function signatures in types are intentional - implementations are provided elsewhere
 
 export type PollWizardActions = {
   setLoading: (loading: boolean) => void;
@@ -98,7 +99,6 @@ export type PollWizardActions = {
 
   submitPoll: (options?: PollWizardSubmitOptions) => Promise<PollWizardSubmissionResult>;
 };
-/* eslint-enable @typescript-eslint/no-empty-function */
 
 export type PollWizardStore = PollWizardState & PollWizardActions;
 

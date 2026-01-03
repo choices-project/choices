@@ -8,12 +8,15 @@ import {
   DollarSign,
   AlertCircle,
   ExternalLink,
-  Save
+  Save,
+  Loader2
 } from 'lucide-react'
 import React, { useState, useEffect } from 'react'
 
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
+
+import { logger } from '@/lib/utils/logger'
 
 type GuideStep = {
   id: string
@@ -80,22 +83,32 @@ export function FilingGuideWizard({
   
   // Fetch requirements to enhance guide content
   const [requirements, setRequirements] = useState<any>(null)
-  const [_loadingRequirements, setLoadingRequirements] = useState(false)
+  const [loadingRequirements, setLoadingRequirements] = useState(false)
+  const [requirementsError, setRequirementsError] = useState<string | null>(null)
   
   useEffect(() => {
     const fetchRequirements = async () => {
       setLoadingRequirements(true)
+      setRequirementsError(null)
       try {
         const params = new URLSearchParams({ level, office })
         if (state) params.append('state', state)
         const response = await fetch(`/api/filing/requirements?${params.toString()}`)
-        const data = await response.json()
-        const payload = data?.data ?? data
+        
+        if (!response.ok) {
+          throw new Error(`Failed to load filing requirements: ${response.statusText}`)
+        }
+        
+        const result = await response.json()
+        // Handle successResponse wrapper
+        const payload = result?.success && result?.data ? result.data : result
         if (payload?.found) {
           setRequirements(payload.requirement)
         }
-      } catch {
-        // Ignore errors
+      } catch (err) {
+        const errorMessage = err instanceof Error ? err.message : 'Failed to load filing requirements'
+        setRequirementsError(errorMessage)
+        logger.error('Error fetching filing requirements:', err)
       } finally {
         setLoadingRequirements(false)
       }
@@ -115,8 +128,30 @@ export function FilingGuideWizard({
             Before filing, it{`'`}s important to understand the specific requirements for your office and jurisdiction.
           </p>
           
+          {/* Loading state for requirements */}
+          {loadingRequirements && (
+            <div className="flex items-center justify-center p-6 bg-gray-50 rounded-lg border border-gray-200" role="status" aria-live="polite" aria-busy="true">
+              <Loader2 className="w-5 h-5 mr-2 animate-spin text-blue-600" aria-hidden="true" />
+              <span className="text-sm text-gray-600">Loading filing requirements...</span>
+            </div>
+          )}
+          
+          {/* Error state for requirements */}
+          {requirementsError && !loadingRequirements && (
+            <div className="bg-red-50 border border-red-200 rounded-lg p-4" role="alert" aria-live="assertive">
+              <div className="flex items-start">
+                <AlertCircle className="w-5 h-5 text-red-600 mr-2 mt-0.5 flex-shrink-0" aria-hidden="true" />
+                <div className="flex-1">
+                  <p className="text-sm font-medium text-red-800 mb-1">Unable to load filing requirements</p>
+                  <p className="text-xs text-red-600">{requirementsError}</p>
+                  <p className="text-xs text-red-500 mt-2">You can still proceed with the general filing guide below.</p>
+                </div>
+              </div>
+            </div>
+          )}
+          
           {/* Show actual requirements if available */}
-          {requirements && (
+          {requirements && !loadingRequirements && !requirementsError && (
             <div className="space-y-3">
               {requirements.eligibility && (
                 <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">

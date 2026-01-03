@@ -653,11 +653,19 @@ export default function PollClient({ poll }: PollClientProps) {
   }, []);
 
   const formatDate = (dateString: string) => {
-    return new Date(dateString).toLocaleDateString('en-US', {
-      year: 'numeric',
-      month: 'long',
-      day: 'numeric'
-    });
+    // Guard with isMounted to prevent hydration mismatches from locale differences
+    if (!isMounted) {
+      return dateString; // Return raw string during SSR
+    }
+    try {
+      return new Date(dateString).toLocaleDateString('en-US', {
+        year: 'numeric',
+        month: 'long',
+        day: 'numeric'
+      });
+    } catch {
+      return dateString;
+    }
   };
 
   const VOTING_LABELS: Record<string, string> = {

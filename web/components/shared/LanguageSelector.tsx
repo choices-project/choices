@@ -183,17 +183,17 @@ export default function LanguageSelector({
             id={`${menuId}-menu`}
             role="listbox"
             aria-label={t('settings.language')}
-            className="absolute right-0 mt-2 w-48 bg-white rounded-lg shadow-lg border border-gray-200 z-50"
+            className="absolute right-0 mt-2 w-48 bg-white dark:bg-gray-800 rounded-lg shadow-lg border border-gray-200 dark:border-gray-700 z-50"
           >
             <div className="py-1">
               {SUPPORTED_LANGUAGE_OPTIONS.map((lang) => (
                 <button
                   key={lang.code}
                   onClick={() => handleLanguageChange(lang.code)}
-                  className={`w-full text-left px-4 py-2 text-sm transition-colors ${
+                  className={`w-full text-left px-4 py-2 text-sm transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 ${
                     currentLanguage === lang.code
-                      ? 'bg-blue-50 text-blue-700'
-                      : 'text-gray-700 hover:bg-gray-50'
+                      ? 'bg-blue-50 dark:bg-blue-900/20 text-blue-700 dark:text-blue-300'
+                      : 'text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700'
                   }`}
                   role="option"
                   aria-selected={currentLanguage === lang.code}
@@ -202,7 +202,7 @@ export default function LanguageSelector({
                   <div className="flex items-center justify-between">
                     <span>{showNativeNames ? lang.native : lang.name}</span>
                     {currentLanguage === lang.code && (
-                      <span className="text-blue-600">✓</span>
+                      <span className="text-blue-600 dark:text-blue-400" aria-hidden="true">✓</span>
                     )}
                   </div>
                 </button>
@@ -245,17 +245,17 @@ export default function LanguageSelector({
               id={`${menuId}-menu`}
               role="listbox"
               aria-label={t('settings.language')}
-              className="absolute z-50 w-full mt-1 bg-white border border-gray-300 rounded-lg shadow-lg"
+              className="absolute z-50 w-full mt-1 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg shadow-lg"
             >
             <div className="py-1">
               {SUPPORTED_LANGUAGE_OPTIONS.map((lang) => (
                 <button
                   key={lang.code}
                   onClick={() => handleLanguageChange(lang.code)}
-                  className={`w-full text-left px-4 py-2 text-sm transition-colors ${
+                  className={`w-full text-left px-4 py-2 text-sm transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 ${
                     currentLanguage === lang.code
-                      ? 'bg-blue-50 text-blue-700'
-                      : 'text-gray-700 hover:bg-gray-50'
+                      ? 'bg-blue-50 dark:bg-blue-900/20 text-blue-700 dark:text-blue-300'
+                      : 'text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700'
                   }`}
                     role="option"
                     aria-selected={currentLanguage === lang.code}
@@ -267,13 +267,13 @@ export default function LanguageSelector({
                         {showNativeNames ? lang.native : lang.name}
                       </div>
                       {showNativeNames && (
-                        <div className="text-xs text-gray-500">
+                        <div className="text-xs text-gray-500 dark:text-gray-400">
                           {lang.name}
                         </div>
                       )}
                     </div>
                     {currentLanguage === lang.code && (
-                      <span className="text-blue-600">✓</span>
+                      <span className="text-blue-600 dark:text-blue-400" aria-hidden="true">✓</span>
                     )}
                   </div>
                 </button>

@@ -32,7 +32,7 @@
     "test:watch": "npx jest --watch",
     "test:coverage": "npx jest --coverage --coverageReporters=html --coverageReporters=lcov --coverageReporters=text --coverageReporters=json-summary",
     "test:coverage:ci": "node ./scripts/run-with-timeout.js 600 npx jest --coverage --coverageReporters=lcov --coverageReporters=text",
-    "test:unit": "npx jest tests/unit",
+    "test:unit": "node ./scripts/run-with-timeout.js 300 npx jest tests/unit --forceExit",
     "test:unit:watch": "npx jest tests/unit --watch",
     "test:integration": "npx jest tests/integration --passWithNoTests",
     "test:contracts": "npx jest tests/contracts",

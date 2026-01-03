@@ -156,6 +156,10 @@ const EnhancedFeedbackWidget: React.FC = () => {
   const titleFieldId = useId()
   const descriptionFieldId = useId()
 
+  // Check for reduced motion preference (must be defined early)
+  const prefersReducedMotion = typeof window !== 'undefined' &&
+    window.matchMedia('(prefers-reduced-motion: reduce)').matches
+
   // Get analytics store state and actions with proper memoization
   const { trackEvent, trackUserAction, setLoading: setAnalyticsLoading, setError: setAnalyticsError } = useAnalyticsActions()
   const isLoadingAnalytics = useAnalyticsLoading()
@@ -218,6 +222,20 @@ const EnhancedFeedbackWidget: React.FC = () => {
     })
   }, [feedbackTracker]) // Only depend on feedbackTracker, not setFeedback
 
+  const handleClose = () => {
+    setIsOpen(false)
+    setStep('closed')
+    setFeedback({
+      type: 'general',
+      title: '',
+      description: '',
+      sentiment: 'neutral',
+      userJourney: createDefaultUserJourney()
+    })
+    triggerRef.current?.focus()
+  }
+
+  // Focus management and keyboard navigation
   useEffect(() => {
     if (!isOpen) {
       return
@@ -235,6 +253,127 @@ const EnhancedFeedbackWidget: React.FC = () => {
     } else if (step === 'sentiment') {
       focusNextFrame(sentimentButtonRefs.current[0])
     }
+  }, [isOpen, step])
+
+  // Focus trap for modal - keep focus within dialog
+  useEffect(() => {
+    if (!isOpen) return
+
+    const dialog = document.getElementById(dialogId)
+    if (!dialog) return
+
+    const focusableElements = dialog.querySelectorAll<HTMLElement>(
+      'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])'
+    )
+    const firstElement = focusableElements[0] as HTMLElement | null
+    const lastElement = focusableElements[focusableElements.length - 1] as HTMLElement | null
+
+    const handleTabKey = (e: KeyboardEvent) => {
+      if (e.key !== 'Tab') return
+
+      if (e.shiftKey) {
+        // Shift + Tab
+        if (document.activeElement === firstElement) {
+          e.preventDefault()
+          lastElement?.focus()
+        }
+      } else {
+        // Tab
+        if (document.activeElement === lastElement) {
+          e.preventDefault()
+          firstElement?.focus()
+        }
+      }
+    }
+
+    const handleEscape = (e: KeyboardEvent) => {
+      if (e.key === 'Escape' && step !== 'success') {
+        e.preventDefault()
+        handleClose()
+      }
+    }
+
+    document.addEventListener('keydown', handleTabKey)
+    document.addEventListener('keydown', handleEscape)
+
+    return () => {
+      document.removeEventListener('keydown', handleTabKey)
+      document.removeEventListener('keydown', handleEscape)
+    }
+  }, [isOpen, step, dialogId])
+
+  // Keyboard navigation for type buttons (arrow keys)
+  useEffect(() => {
+    if (!isOpen || step !== 'type') return
+
+    const handleArrowKeys = (e: KeyboardEvent) => {
+      const buttons = typeButtonRefs.current.filter(Boolean) as HTMLElement[]
+      const currentIndex = buttons.findIndex(btn => btn === document.activeElement)
+
+      if (currentIndex === -1) return
+
+      let nextIndex = currentIndex
+
+      switch (e.key) {
+        case 'ArrowRight':
+          nextIndex = (currentIndex + 1) % buttons.length
+          break
+        case 'ArrowLeft':
+          nextIndex = (currentIndex - 1 + buttons.length) % buttons.length
+          break
+        case 'ArrowDown':
+          nextIndex = currentIndex < buttons.length - 2 ? currentIndex + 2 : currentIndex
+          break
+        case 'ArrowUp':
+          nextIndex = currentIndex >= 2 ? currentIndex - 2 : currentIndex
+          break
+        default:
+          return
+      }
+
+      e.preventDefault()
+      buttons[nextIndex]?.focus()
+    }
+
+    document.addEventListener('keydown', handleArrowKeys)
+    return () => document.removeEventListener('keydown', handleArrowKeys)
+  }, [isOpen, step])
+
+  // Keyboard navigation for sentiment buttons (arrow keys)
+  useEffect(() => {
+    if (!isOpen || step !== 'sentiment') return
+
+    const handleArrowKeys = (e: KeyboardEvent) => {
+      const buttons = sentimentButtonRefs.current.filter(Boolean) as HTMLElement[]
+      const currentIndex = buttons.findIndex(btn => btn === document.activeElement)
+
+      if (currentIndex === -1) return
+
+      let nextIndex = currentIndex
+
+      switch (e.key) {
+        case 'ArrowRight':
+          nextIndex = (currentIndex + 1) % buttons.length
+          break
+        case 'ArrowLeft':
+          nextIndex = (currentIndex - 1 + buttons.length) % buttons.length
+          break
+        case 'ArrowDown':
+          nextIndex = currentIndex < buttons.length - 2 ? currentIndex + 2 : currentIndex
+          break
+        case 'ArrowUp':
+          nextIndex = currentIndex >= 2 ? currentIndex - 2 : currentIndex
+          break
+        default:
+          return
+      }
+
+      e.preventDefault()
+      buttons[nextIndex]?.focus()
+    }
+
+    document.addEventListener('keydown', handleArrowKeys)
+    return () => document.removeEventListener('keydown', handleArrowKeys)
   }, [isOpen, step])
 
   // In harness mode (E2E testing), always render the widget regardless of feature flag
@@ -297,18 +436,6 @@ const EnhancedFeedbackWidget: React.FC = () => {
     })
   }
 
-  const handleClose = () => {
-    setIsOpen(false)
-    setStep('closed')
-    setFeedback({
-      type: 'general',
-      title: '',
-      description: '',
-      sentiment: 'neutral',
-      userJourney: createDefaultUserJourney()
-    })
-    triggerRef.current?.focus()
-  }
 
   const handleTypeSelect = (type: FeedbackData['type']) => {
     setFeedback(prev => ({ ...prev, type }))
@@ -535,11 +662,11 @@ const EnhancedFeedbackWidget: React.FC = () => {
         aria-haspopup="dialog"
         aria-expanded={isOpen}
         aria-controls={isOpen ? dialogId : undefined}
-        whileHover={{ scale: 1.1 }}
-        whileTap={{ scale: 0.9 }}
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ delay: 0 }}
+        whileHover={prefersReducedMotion ? {} : { scale: 1.1 }}
+        whileTap={prefersReducedMotion ? {} : { scale: 0.9 }}
+        initial={prefersReducedMotion ? { opacity: 1 } : { opacity: 0, y: 20 }}
+        animate={prefersReducedMotion ? { opacity: 1 } : { opacity: 1, y: 0 }}
+        transition={prefersReducedMotion ? { duration: 0 } : { delay: 0 }}
       >
         <MessageCircle className="w-6 h-6" />
       </motion.button>
@@ -549,10 +676,16 @@ const EnhancedFeedbackWidget: React.FC = () => {
         {isOpen && (
           <motion.div
             className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black bg-opacity-50"
-            initial={{ opacity: 0 }}
+            initial={prefersReducedMotion ? { opacity: 1 } : { opacity: 0 }}
             animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
+            exit={prefersReducedMotion ? { opacity: 1 } : { opacity: 0 }}
+            transition={prefersReducedMotion ? { duration: 0 } : {}}
             onClick={handleClose}
+            onKeyDown={(e) => {
+              if (e.key === 'Escape' && step !== 'success') {
+                handleClose()
+              }
+            }}
           >
             <motion.div
               id={dialogId}
@@ -560,33 +693,34 @@ const EnhancedFeedbackWidget: React.FC = () => {
               aria-modal="true"
               aria-labelledby={dialogTitleId}
               aria-describedby={dialogDescriptionId}
-              className="bg-white rounded-2xl shadow-2xl max-w-md w-full max-h-[90vh] overflow-hidden"
-              initial={{ scale: 0.8, opacity: 0 }}
+              className="bg-white dark:bg-gray-800 rounded-2xl shadow-2xl max-w-md w-full max-h-[90vh] overflow-hidden"
+              initial={prefersReducedMotion ? { scale: 1, opacity: 1 } : { scale: 0.8, opacity: 0 }}
               animate={{ scale: 1, opacity: 1 }}
-              exit={{ scale: 0.8, opacity: 0 }}
+              exit={prefersReducedMotion ? { scale: 1, opacity: 1 } : { scale: 0.8, opacity: 0 }}
+              transition={prefersReducedMotion ? { duration: 0 } : {}}
               onClick={(e: React.MouseEvent) => e.stopPropagation()}
             >
               {/* Header */}
-              <div className="flex items-center justify-between p-6 border-b border-gray-100">
+              <div className="flex items-center justify-between p-6 border-b border-gray-100 dark:border-gray-700">
                 <div className="flex items-center gap-3">
-                  <div className="p-2 bg-blue-100 rounded-lg">
-                    <MessageCircle className="w-5 h-5 text-blue-600" />
+                  <div className="p-2 bg-blue-100 dark:bg-blue-900/20 rounded-lg">
+                    <MessageCircle className="w-5 h-5 text-blue-600 dark:text-blue-400" aria-hidden="true" />
                   </div>
                   <div>
-                    <h3 id={dialogTitleId} className="text-lg font-semibold text-gray-900">Enhanced Feedback</h3>
-                    <p id={dialogDescriptionId} className="text-sm text-gray-500">Help us improve with detailed context</p>
+                    <h3 id={dialogTitleId} className="text-lg font-semibold text-gray-900 dark:text-gray-100">Enhanced Feedback</h3>
+                    <p id={dialogDescriptionId} className="text-sm text-gray-500 dark:text-gray-400">Help us improve with detailed context</p>
                   </div>
                 </div>
                 <button
                   type="button"
                   onClick={handleClose}
-                  className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
+                  className="p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
                   aria-label="Dismiss feedback form"
                   aria-hidden={step === 'success'}
                   tabIndex={step === 'success' ? -1 : 0}
                   disabled={step === 'success'}
                 >
-                  <X className="w-5 h-5 text-gray-500" />
+                  <X className="w-5 h-5 text-gray-500 dark:text-gray-400" aria-hidden="true" />
                 </button>
               </div>
 
@@ -596,13 +730,14 @@ const EnhancedFeedbackWidget: React.FC = () => {
                   {step === 'type' && (
                     <motion.div
                       key="type"
-                      initial={{ opacity: 0, x: 20 }}
+                      initial={prefersReducedMotion ? { opacity: 1, x: 0 } : { opacity: 0, x: 20 }}
                       animate={{ opacity: 1, x: 0 }}
-                      exit={{ opacity: 0, x: -20 }}
+                      exit={prefersReducedMotion ? { opacity: 1, x: 0 } : { opacity: 0, x: -20 }}
+                      transition={prefersReducedMotion ? { duration: 0 } : {}}
                       className="space-y-4"
                     >
-                      <h4 className="text-lg font-semibold text-gray-900">What type of feedback?</h4>
-                      <div className="grid grid-cols-2 gap-3">
+                      <h4 className="text-lg font-semibold text-gray-900 dark:text-gray-100">What type of feedback?</h4>
+                      <div className="grid grid-cols-2 gap-3" role="group" aria-label="Feedback type selection">
                         {feedbackTypes.map(({ key, label, icon: Icon, color, bgColor }, index) => (
                           <button
                             key={key}
@@ -611,11 +746,12 @@ const EnhancedFeedbackWidget: React.FC = () => {
                               typeButtonRefs.current[index] = el
                             }}
                             onClick={() => handleTypeSelect(key as FeedbackData['type'])}
-                            className={`p-4 rounded-lg border-2 border-transparent hover:border-blue-300 transition-all ${bgColor}`}
+                            className={`p-4 rounded-lg border-2 border-transparent hover:border-blue-300 dark:hover:border-blue-600 transition-all focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 ${bgColor} dark:bg-opacity-20`}
                             aria-pressed={feedback.type === key}
+                            aria-label={`${label} feedback type`}
                           >
-                            <Icon className={`w-6 h-6 mx-auto mb-2 ${color}`} />
-                            <span className="text-sm font-medium text-gray-700">{label}</span>
+                            <Icon className={`w-6 h-6 mx-auto mb-2 ${color}`} aria-hidden="true" />
+                            <span className="text-sm font-medium text-gray-700 dark:text-gray-300">{label}</span>
                           </button>
                         ))}
                       </div>
@@ -625,14 +761,15 @@ const EnhancedFeedbackWidget: React.FC = () => {
                   {step === 'details' && (
                     <motion.div
                       key="details"
-                      initial={{ opacity: 0, x: 20 }}
+                      initial={prefersReducedMotion ? { opacity: 1, x: 0 } : { opacity: 0, x: 20 }}
                       animate={{ opacity: 1, x: 0 }}
-                      exit={{ opacity: 0, x: -20 }}
+                      exit={prefersReducedMotion ? { opacity: 1, x: 0 } : { opacity: 0, x: -20 }}
+                      transition={prefersReducedMotion ? { duration: 0 } : {}}
                       className="space-y-4"
                     >
-                      <h4 className="text-lg font-semibold text-gray-900">Tell us more</h4>
+                      <h4 className="text-lg font-semibold text-gray-900 dark:text-gray-100">Tell us more</h4>
                       <div className="space-y-3">
-                        <label htmlFor={titleFieldId} className="text-sm font-medium text-gray-700">
+                        <label htmlFor={titleFieldId} className="text-sm font-medium text-gray-700 dark:text-gray-300">
                           Brief title
                         </label>
                         <input
@@ -642,10 +779,11 @@ const EnhancedFeedbackWidget: React.FC = () => {
                           placeholder="Brief title"
                           value={feedback.title}
                           onChange={(e) => setFeedback(prev => ({ ...prev, title: e.target.value }))}
-                          className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                          className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                           aria-required="true"
+                          aria-label="Feedback title"
                         />
-                        <label htmlFor={descriptionFieldId} className="text-sm font-medium text-gray-700">
+                        <label htmlFor={descriptionFieldId} className="text-sm font-medium text-gray-700 dark:text-gray-300">
                           Detailed description
                         </label>
                         <textarea
@@ -655,8 +793,9 @@ const EnhancedFeedbackWidget: React.FC = () => {
                           value={feedback.description}
                           onChange={(e) => setFeedback(prev => ({ ...prev, description: e.target.value }))}
                           rows={4}
-                          className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none"
+                          className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none"
                           aria-required="true"
+                          aria-label="Feedback description"
                         />
                       </div>
                       <div className="flex justify-end">
@@ -664,7 +803,8 @@ const EnhancedFeedbackWidget: React.FC = () => {
                           type="button"
                           onClick={() => setStep('sentiment')}
                           disabled={!feedback.title.trim() || !feedback.description.trim()}
-                          className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed"
+                          className="px-4 py-2 bg-blue-600 dark:bg-blue-500 text-white rounded-lg hover:bg-blue-700 dark:hover:bg-blue-600 disabled:opacity-50 disabled:cursor-not-allowed focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition-colors"
+                          aria-label="Continue to sentiment selection"
                         >
                           Next
                         </button>
@@ -675,13 +815,14 @@ const EnhancedFeedbackWidget: React.FC = () => {
                   {step === 'sentiment' && (
                     <motion.div
                       key="sentiment"
-                      initial={{ opacity: 0, x: 20 }}
+                      initial={prefersReducedMotion ? { opacity: 1, x: 0 } : { opacity: 0, x: 20 }}
                       animate={{ opacity: 1, x: 0 }}
-                      exit={{ opacity: 0, x: -20 }}
+                      exit={prefersReducedMotion ? { opacity: 1, x: 0 } : { opacity: 0, x: -20 }}
+                      transition={prefersReducedMotion ? { duration: 0 } : {}}
                       className="space-y-4"
                     >
-                      <h4 className="text-lg font-semibold text-gray-900">How do you feel?</h4>
-                      <div className="grid grid-cols-2 gap-3">
+                      <h4 className="text-lg font-semibold text-gray-900 dark:text-gray-100">How do you feel?</h4>
+                      <div className="grid grid-cols-2 gap-3" role="group" aria-label="Sentiment selection">
                         {sentimentOptions.map(({ key, label, icon: Icon, color, bgColor }, index) => (
                           <button
                             key={key}
@@ -690,11 +831,12 @@ const EnhancedFeedbackWidget: React.FC = () => {
                               sentimentButtonRefs.current[index] = el
                             }}
                             onClick={() => handleSentimentSelect(key as FeedbackData['sentiment'])}
-                            className={`p-4 rounded-lg border-2 border-transparent hover:border-blue-300 transition-all ${bgColor}`}
+                            className={`p-4 rounded-lg border-2 border-transparent hover:border-blue-300 dark:hover:border-blue-600 transition-all focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 ${bgColor} dark:bg-opacity-20`}
                             aria-pressed={feedback.sentiment === key}
+                            aria-label={`${label} sentiment`}
                           >
-                            <Icon className={`w-6 h-6 mx-auto mb-2 ${color}`} />
-                            <span className="text-sm font-medium text-gray-700">{label}</span>
+                            <Icon className={`w-6 h-6 mx-auto mb-2 ${color}`} aria-hidden="true" />
+                            <span className="text-sm font-medium text-gray-700 dark:text-gray-300">{label}</span>
                           </button>
                         ))}
                       </div>
@@ -734,10 +876,11 @@ const EnhancedFeedbackWidget: React.FC = () => {
                           type="button"
                           onClick={handleScreenshotCapture}
                           disabled={capturingScreenshot}
-                          className="w-full p-4 border-2 border-dashed border-gray-300 rounded-lg hover:border-blue-400 transition-colors"
+                          className="w-full p-4 border-2 border-dashed border-gray-300 dark:border-gray-600 rounded-lg hover:border-blue-400 dark:hover:border-blue-500 transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
+                          aria-label="Capture screenshot"
                         >
-                          <Camera className="w-8 h-8 mx-auto mb-2 text-gray-400" />
-                          <span className="text-sm text-gray-600">
+                          <Camera className="w-8 h-8 mx-auto mb-2 text-gray-400 dark:text-gray-500" aria-hidden="true" />
+                          <span className="text-sm text-gray-600 dark:text-gray-400">
                             {capturingScreenshot ? 'Capturing...' : 'Capture Screenshot'}
                           </span>
                         </button>
@@ -745,10 +888,11 @@ const EnhancedFeedbackWidget: React.FC = () => {
                         <button
                           type="button"
                           onClick={handleFileUpload}
-                          className="w-full p-4 border-2 border-dashed border-gray-300 rounded-lg hover:border-blue-400 transition-colors"
+                          className="w-full p-4 border-2 border-dashed border-gray-300 dark:border-gray-600 rounded-lg hover:border-blue-400 dark:hover:border-blue-500 transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
+                          aria-label="Upload screenshot file"
                         >
-                          <Upload className="w-8 h-8 mx-auto mb-2 text-gray-400" />
-                          <span className="text-sm text-gray-600">Upload Screenshot</span>
+                          <Upload className="w-8 h-8 mx-auto mb-2 text-gray-400 dark:text-gray-500" aria-hidden="true" />
+                          <span className="text-sm text-gray-600 dark:text-gray-400">Upload Screenshot</span>
                         </button>
 
                         <input
@@ -774,53 +918,57 @@ const EnhancedFeedbackWidget: React.FC = () => {
                   {step === 'success' && (
                     <motion.div
                       key="success"
-                      initial={{ opacity: 0, scale: 0.8 }}
+                      initial={prefersReducedMotion ? { opacity: 1, scale: 1 } : { opacity: 0, scale: 0.8 }}
                       animate={{ opacity: 1, scale: 1 }}
+                      transition={prefersReducedMotion ? { duration: 0 } : {}}
                       className="text-center py-8"
                     >
                       {showSuccess && (
                         <motion.div
                           role="status"
                           aria-live="polite"
-                          initial={{ opacity: 0, y: 10 }}
+                          initial={prefersReducedMotion ? { opacity: 1, y: 0 } : { opacity: 0, y: 10 }}
                           animate={{ opacity: 1, y: 0 }}
-                          className="mb-4 p-3 bg-green-50 border border-green-200 rounded-lg"
+                          transition={prefersReducedMotion ? { duration: 0 } : {}}
+                          className="mb-4 p-3 bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 rounded-lg"
                         >
-                          <div className="flex items-center justify-center gap-2 text-green-700">
-                            <CheckCircle className="w-4 h-4" />
+                          <div className="flex items-center justify-center gap-2 text-green-700 dark:text-green-300">
+                            <CheckCircle className="w-4 h-4" aria-hidden="true" />
                             <span className="text-sm font-medium">Feedback submitted successfully!</span>
                           </div>
                         </motion.div>
                       )}
                       <motion.div
-                        initial={{ scale: 0 }}
+                        initial={prefersReducedMotion ? { scale: 1 } : { scale: 0 }}
                         animate={{ scale: 1 }}
-                        transition={{ delay: 0.2, type: "spring", stiffness: 200 }}
-                        className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4"
+                        transition={prefersReducedMotion ? { duration: 0 } : { delay: 0.2, type: "spring", stiffness: 200 }}
+                        className="w-16 h-16 bg-green-100 dark:bg-green-900/20 rounded-full flex items-center justify-center mx-auto mb-4"
+                        aria-hidden="true"
                       >
-                        <CheckCircle className="w-8 h-8 text-green-600" />
+                        <CheckCircle className="w-8 h-8 text-green-600 dark:text-green-400" />
                       </motion.div>
 
-                      <h4 className="text-xl font-semibold text-gray-900 mb-2">
+                      <h4 className="text-xl font-semibold text-gray-900 dark:text-gray-100 mb-2">
                         Thank You! 🎉
                       </h4>
-                      <p className="text-gray-600 mb-4">
+                      <p className="text-gray-600 dark:text-gray-400 mb-4">
                         Your detailed feedback has been captured with full context. We&apos;ll analyze it and get back to you soon!
                       </p>
 
-                      <div className="flex items-center justify-center gap-1 text-yellow-500">
+                      <div className="flex items-center justify-center gap-1 text-yellow-500 dark:text-yellow-400" aria-hidden="true">
                         {[1, 2, 3, 4, 5].map((star: number) => (
                           <Star key={star} className="w-5 h-5 fill-current" />
                         ))}
                       </div>
-                      <p className="text-sm text-gray-500 mt-2">
+                      <p className="text-sm text-gray-500 dark:text-gray-400 mt-2">
                         Your feedback helps us create something amazing!
                       </p>
 
                       <button
                         type="button"
                         onClick={handleClose}
-                        className="mt-4 px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
+                        className="mt-4 px-6 py-2 bg-blue-600 dark:bg-blue-500 text-white rounded-lg hover:bg-blue-700 dark:hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition-colors"
+                        aria-label="Close feedback widget"
                       >
                         Close
                       </button>

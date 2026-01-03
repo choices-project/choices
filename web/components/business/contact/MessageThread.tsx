@@ -188,9 +188,17 @@ export function MessageThread({
       setError(null);
 
       const response = await fetch(`/api/contact/messages?threadId=${threadId}`);
+      
+      if (!response.ok) {
+        throw new Error(`Failed to load messages: ${response.statusText}`);
+      }
+      
       const result = await response.json();
-
-      if (result.success) {
+      
+      // Handle successResponse wrapper
+      if (result?.success && result?.data) {
+        setMessages(result.data.messages || result.data || []);
+      } else if (result?.success) {
         setMessages(result.messages || []);
       } else {
         setError(result.error || 'Failed to load messages');
@@ -286,64 +294,82 @@ export function MessageThread({
     return unsubscribe;
   }, [threadId]);
 
-  if (isLoading) {
-    return (
-      <div className={`flex items-center justify-center h-64 ${className}`}>
-        <div className="flex items-center space-x-2 text-gray-500">
-          <div className="w-4 h-4 border-2 border-gray-300 border-t-blue-600 rounded-full animate-spin" />
-          <span>Loading messages...</span>
-        </div>
-      </div>
-    );
-  }
-
   return (
     <div className={`flex flex-col h-full ${className}`}>
       {/* Thread Header */}
-      <div className="border-b border-gray-200 p-4 bg-gray-50">
+      <div className="border-b border-gray-200 dark:border-gray-700 p-4 bg-gray-50 dark:bg-gray-800">
         <div className="flex items-center justify-between">
           <div>
-            <h3 className="text-lg font-semibold text-gray-900">
+            <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100">
               {representative.name}
             </h3>
-            <p className="text-sm text-gray-600">
+            <p className="text-sm text-gray-600 dark:text-gray-400">
               {representative.office} • {representative.party}
             </p>
           </div>
-          <div className="text-sm text-gray-500">
-            {messages.length} message{messages.length !== 1 ? 's' : ''}
-          </div>
+          {!isLoading && (
+            <div className="text-sm text-gray-500 dark:text-gray-400">
+              {messages.length} message{messages.length !== 1 ? 's' : ''}
+            </div>
+          )}
         </div>
       </div>
 
       {/* Messages */}
-      <div className="flex-1 overflow-y-auto p-4 space-y-4">
-        {error && (
-          <div className="flex items-center space-x-2 text-red-600 bg-red-50 px-3 py-2 rounded-lg">
-            <AlertCircle className="w-4 h-4" />
-            <span className="text-sm">{error}</span>
+      <div className="flex-1 overflow-y-auto p-4 space-y-4" role="log" aria-label="Message thread">
+        {/* Loading state */}
+        {isLoading && (
+          <div className="flex items-center justify-center h-32" role="status" aria-live="polite" aria-busy="true">
+            <div className="text-center">
+              <div className="w-8 h-8 mx-auto mb-2 border-2 border-blue-600 border-t-transparent rounded-full animate-spin" aria-hidden="true" />
+              <p className="text-sm text-gray-600 dark:text-gray-400">Loading messages...</p>
+            </div>
+          </div>
+        )}
+        
+        {/* Error state */}
+        {error && !isLoading && (
+          <div className="flex items-start space-x-2 text-red-600 dark:text-red-400 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 px-4 py-3 rounded-lg" role="alert" aria-live="assertive">
+            <AlertCircle className="w-5 h-5 mt-0.5 flex-shrink-0" aria-hidden="true" />
+            <div className="flex-1">
+              <p className="text-sm font-medium mb-1">Unable to load messages</p>
+              <p className="text-xs">{error}</p>
+              <button
+                onClick={loadMessages}
+                className="mt-2 text-xs underline hover:no-underline focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2 rounded"
+                aria-label="Retry loading messages"
+              >
+                Try again
+              </button>
+            </div>
           </div>
         )}
 
-        {messages.length === 0 ? (
-          <div className="flex items-center justify-center h-32 text-gray-500">
+        {/* Empty state */}
+        {!isLoading && !error && messages.length === 0 && (
+          <div className="flex items-center justify-center h-32 text-gray-500 dark:text-gray-400" role="status">
             <div className="text-center">
-              <div className="w-12 h-12 mx-auto mb-2 bg-gray-100 rounded-full flex items-center justify-center">
-                <User className="w-6 h-6 text-gray-400" />
+              <div className="w-12 h-12 mx-auto mb-2 bg-gray-100 dark:bg-gray-800 rounded-full flex items-center justify-center">
+                <User className="w-6 h-6 text-gray-400 dark:text-gray-500" aria-hidden="true" />
               </div>
-              <p className="text-sm">No messages yet</p>
-              <p className="text-xs text-gray-400">Start the conversation below</p>
+              <p className="text-sm font-medium">No messages yet</p>
+              <p className="text-xs text-gray-400 dark:text-gray-500 mt-1">Start the conversation below</p>
             </div>
           </div>
-        ) : (
-          messages.map((message) => (
-            <MessageBubble
-              key={message.id}
-              message={message}
-              isCurrentUser={message.senderId === currentUserId}
-              representative={representative}
-            />
-          ))
+        )}
+        
+        {/* Messages list */}
+        {!isLoading && !error && messages.length > 0 && (
+          <>
+            {messages.map((message) => (
+              <MessageBubble
+                key={message.id}
+                message={message}
+                isCurrentUser={message.senderId === currentUserId}
+                representative={representative}
+              />
+            ))}
+          </>
         )}
 
         <div ref={messagesEndRef} />

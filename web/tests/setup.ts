@@ -40,15 +40,20 @@ beforeAll(async () => {
     console.error('Failed to import ./msw/server in tests/setup. MSW handlers are required: ', (err as Error)?.message ?? err);
     throw err; // ensure CI/test run fails loudly so you can fix missing file/config
   }
-});
+}, 10000); // 10 second timeout for MSW server setup
 
-afterAll(() => {
+afterAll(async () => {
   try {
-    authServer?.close?.();
+    if (typeof authServer?.close === 'function') {
+      await Promise.race([
+        Promise.resolve(authServer.close()),
+        new Promise((resolve) => setTimeout(resolve, 5000)), // 5 second timeout for cleanup
+      ]);
+    }
   } catch (_e) {
     // Ignore errors during cleanup
   }
-});
+}, 10000); // 10 second timeout for cleanup
 
 afterEach(() => {
   try {

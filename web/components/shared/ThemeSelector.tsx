@@ -189,7 +189,7 @@ export default function ThemeSelector({
                 <button
                   key={option.value}
                   onClick={() => handleThemeChange(option.value)}
-                  className={`w-full flex items-center space-x-3 text-left px-4 py-2 text-sm transition-colors ${
+                  className={`w-full flex items-center space-x-3 text-left px-4 py-2 text-sm transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 ${
                     theme === option.value
                       ? 'bg-blue-50 dark:bg-blue-900/20 text-blue-700 dark:text-blue-300'
                       : 'text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700'
@@ -198,11 +198,11 @@ export default function ThemeSelector({
                   aria-selected={theme === option.value}
                   data-theme-option={option.value}
                 >
-                  <span className="flex-shrink-0">{option.icon}</span>
+                  <span className="flex-shrink-0" aria-hidden="true">{option.icon}</span>
                   <div className="flex-1 flex items-center justify-between">
                     <span>{option.label}</span>
                     {theme === option.value && (
-                      <span className="text-blue-600 dark:text-blue-400">✓</span>
+                      <span className="text-blue-600 dark:text-blue-400" aria-hidden="true">✓</span>
                     )}
                   </div>
                 </button>
@@ -257,7 +257,7 @@ export default function ThemeSelector({
                 <button
                   key={option.value}
                   onClick={() => handleThemeChange(option.value)}
-                  className={`w-full flex items-center space-x-3 text-left px-4 py-2 text-sm transition-colors ${
+                  className={`w-full flex items-center space-x-3 text-left px-4 py-2 text-sm transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 ${
                     theme === option.value
                       ? 'bg-blue-50 dark:bg-blue-900/20 text-blue-700 dark:text-blue-300'
                       : 'text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700'
@@ -266,7 +266,7 @@ export default function ThemeSelector({
                   aria-selected={theme === option.value}
                   data-theme-option={option.value}
                 >
-                  <span className="flex-shrink-0">{option.icon}</span>
+                  <span className="flex-shrink-0" aria-hidden="true">{option.icon}</span>
                   <div className="flex-1">
                     <div className="font-medium">{option.label}</div>
                     <div className="text-xs text-gray-500 dark:text-gray-400">
@@ -274,7 +274,7 @@ export default function ThemeSelector({
                     </div>
                   </div>
                   {theme === option.value && (
-                    <span className="text-blue-600 dark:text-blue-400">✓</span>
+                    <span className="text-blue-600 dark:text-blue-400" aria-hidden="true">✓</span>
                   )}
                 </button>
               ))}

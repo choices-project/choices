@@ -84,11 +84,21 @@ export function PasskeyRegister({
       });
 
       if (!response.ok) {
-        const errorData = await response.json();
+        let errorData;
+        try {
+          errorData = await response.json();
+        } catch {
+          throw new Error('Invalid JSON response from registration endpoint');
+        }
         throw new Error(errorData.error || 'Failed to start registration');
       }
 
-      const credentialOptions = await response.json();
+      let credentialOptions;
+      try {
+        credentialOptions = await response.json();
+      } catch {
+        throw new Error('Invalid JSON response from registration endpoint');
+      }
 
       // Create credential
       const publicKeyOptions = {
@@ -128,11 +138,21 @@ export function PasskeyRegister({
       });
 
       if (!completeResponse.ok) {
-        const errorData = await completeResponse.json();
+        let errorData;
+        try {
+          errorData = await completeResponse.json();
+        } catch {
+          throw new Error('Invalid JSON response from registration completion endpoint');
+        }
         throw new Error(errorData.error || 'Failed to complete registration');
       }
 
-      const result = await completeResponse.json();
+      let result;
+      try {
+        result = await completeResponse.json();
+      } catch {
+        throw new Error('Invalid JSON response from registration completion endpoint');
+      }
       setSuccess(true);
       onSuccess?.(result);
 
@@ -159,10 +179,10 @@ export function PasskeyRegister({
       <Card className={className}>
         <CardHeader>
           <CardTitle className="flex items-center space-x-2">
-            <AlertCircle className="h-5 w-5 text-red-500" />
+            <AlertCircle className="h-5 w-5 text-red-500 dark:text-red-400" aria-hidden="true" />
             <span>WebAuthn Not Supported</span>
           </CardTitle>
-          <CardDescription>
+          <CardDescription className="text-gray-600 dark:text-gray-400">
             Your browser does not support WebAuthn. Please use a modern browser or try a different authentication method.
           </CardDescription>
         </CardHeader>
@@ -174,21 +194,21 @@ export function PasskeyRegister({
     <Card className={className}>
       <CardHeader>
         <CardTitle className="flex items-center space-x-2">
-          <Fingerprint className="h-5 w-5 text-blue-600" />
+          <Fingerprint className="h-5 w-5 text-blue-600 dark:text-blue-400" aria-hidden="true" />
           <span>Register Passkey</span>
         </CardTitle>
-        <CardDescription>
+        <CardDescription className="text-gray-600 dark:text-gray-400">
           Create a secure passkey using your device&apos;s biometric authentication or security key
         </CardDescription>
       </CardHeader>
 
       <CardContent className="space-y-4">
         {success ? (
-          <div className="text-center space-y-4">
-            <CheckCircle className="h-12 w-12 text-green-500 mx-auto" />
+          <div className="text-center space-y-4" role="status" aria-live="polite">
+            <CheckCircle className="h-12 w-12 text-green-500 dark:text-green-400 mx-auto" aria-hidden="true" />
             <div>
-              <h3 className="text-lg font-semibold text-green-700">Registration Successful!</h3>
-              <p className="text-gray-600">
+              <h3 className="text-lg font-semibold text-green-700 dark:text-green-300">Registration Successful!</h3>
+              <p className="text-gray-600 dark:text-gray-400">
                 Your passkey has been created and you can now use it to sign in.
               </p>
             </div>
@@ -241,11 +261,11 @@ export function PasskeyRegister({
             </div>
 
             {/* Device Information */}
-            <div className="flex items-center space-x-3 p-3 bg-blue-50 rounded-lg">
+            <div className="flex items-center space-x-3 p-3 bg-blue-50 dark:bg-blue-900/20 rounded-lg">
               {getAuthenticatorIcon()}
               <div className="flex-1">
-                <p className="text-sm font-medium text-blue-900">Device Authentication</p>
-                <p className="text-xs text-blue-700">
+                <p className="text-sm font-medium text-blue-900 dark:text-blue-100">Device Authentication</p>
+                <p className="text-xs text-blue-700 dark:text-blue-300">
                   Your device will prompt you to use biometric authentication or enter your device passcode
                 </p>
               </div>
@@ -253,8 +273,8 @@ export function PasskeyRegister({
 
             {/* Error Display */}
             {error && (
-              <Alert variant="destructive">
-                <AlertCircle className="h-4 w-4" />
+              <Alert variant="destructive" role="alert" aria-live="assertive">
+                <AlertCircle className="h-4 w-4" aria-hidden="true" />
                 <AlertDescription>{error}</AlertDescription>
               </Alert>
             )}
@@ -263,8 +283,10 @@ export function PasskeyRegister({
             <Button
               onClick={handleRegister}
               disabled={isRegistering}
-              className="w-full"
+              className="w-full focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
               size="lg"
+              aria-label="Create passkey"
+              aria-busy={isRegistering}
             >
               {isRegistering ? (
                 <>
@@ -280,7 +302,7 @@ export function PasskeyRegister({
             </Button>
 
             {/* Security Information */}
-            <div className="text-xs text-gray-500 space-y-1">
+            <div className="text-xs text-gray-500 dark:text-gray-400 space-y-1">
               <p>• Your passkey is stored securely on your device</p>
               <p>• No passwords are transmitted or stored</p>
               <p>• Works with Touch ID, Face ID, Windows Hello, and security keys</p>

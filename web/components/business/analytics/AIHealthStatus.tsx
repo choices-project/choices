@@ -32,10 +32,12 @@ export function AIHealthStatus({ className = '' }: AIHealthStatusProps) {
     try {
       const response = await fetch('/api/analytics/unified/health?methods=comprehensive&ai-provider=colab');
       if (!response.ok) {
-        throw new Error('Health check failed');
+        throw new Error(`Health check failed: ${response.statusText}`);
       }
       
-      const data = await response.json();
+      const result = await response.json();
+      // Handle successResponse wrapper
+      const data = result?.success && result?.data ? result.data : result;
       setHealth(data);
       setError(null);
     } catch (err) {

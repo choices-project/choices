@@ -4,8 +4,6 @@ import {
   getE2EUserCredentials,
   loginTestUser,
   waitForPageReady,
-  setupExternalAPIMocks,
-  type ExternalMockOptions,
 } from '../../helpers/e2e-setup';
 
 /**
@@ -453,7 +451,6 @@ test.describe('Critical Fixes Validation', () => {
 
   test.describe('Candidate Components API Response Handling', () => {
     test('FilingAssistant handles successResponse structure correctly', async ({ page, context }) => {
-      const platformId = 'test-platform-123';
 
       // Mock filing requirements API
       await context.route(`**/api/candidate/filing-requirements**`, async (route) => {
@@ -502,7 +499,6 @@ test.describe('Critical Fixes Validation', () => {
     });
 
     test('JourneyProgress handles successResponse structure correctly', async ({ page, context }) => {
-      const platformId = 'test-platform-123';
 
       // Mock journey progress API
       await context.route(`**/api/candidate/journey/progress**`, async (route) => {
