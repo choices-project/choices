@@ -413,7 +413,7 @@ export default function PollClient({ poll }: PollClientProps) {
   const shareUrl = isMounted && typeof window !== 'undefined' ? `${window.location.origin}/polls/${poll.id}` : '';
 
   const handlePrintSummary = () => {
-    if (typeof window === 'undefined') return;
+    if (!isMounted || typeof window === 'undefined') return;
     recordPollEvent('detail_print_summary', {
       label: poll.id,
       value: totalRecordedVotes,
