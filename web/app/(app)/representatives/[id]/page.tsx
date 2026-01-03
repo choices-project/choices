@@ -514,7 +514,7 @@ function RepresentativeDetailPageContent() {
                       <p className="text-sm font-semibold text-blue-900">{election.name}</p>
                       <p className="text-xs text-blue-700">
                         {formatElectionDate(election.election_day, isClient)}
-                        {(() => {
+                        {isClient && (() => {
                           const countdown = getElectionCountdown(election.election_day);
                           if (countdown == null || countdown > 90) {
                             return null;
