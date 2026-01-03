@@ -39,6 +39,14 @@ import type { StateCreator } from 'zustand';
 
 const DETAIL_CACHE_TTL = REPRESENTATIVE_CONSTANTS.CACHE_DURATION;
 
+// Stable empty array references to prevent unnecessary re-renders
+const EMPTY_REPRESENTATIVES_ARRAY: Representative[] = [];
+const EMPTY_NUMBER_ARRAY: number[] = [];
+const EMPTY_STRING_ARRAY: string[] = [];
+const EMPTY_USER_REPRESENTATIVES_ARRAY: UserRepresentative[] = [];
+const EMPTY_USER_REPRESENTATIVE_ENTRIES_ARRAY: UserRepresentativeEntry[] = [];
+const EMPTY_SUBSCRIPTIONS_ARRAY: RepresentativeSubscription[] = [];
+
  
 
 export type RepresentativeFollowRecord = {
@@ -123,7 +131,7 @@ type RepresentativeStoreCreator = StateCreator<
 >;
 
 export const createInitialRepresentativeState = (): RepresentativeState => ({
-  representatives: [],
+  representatives: EMPTY_REPRESENTATIVES_ARRAY,
   currentRepresentativeId: null,
   currentRepresentative: null,
 
@@ -131,13 +139,13 @@ export const createInitialRepresentativeState = (): RepresentativeState => ({
   searchQuery: null,
   lastSearchAt: null,
 
-  locationRepresentatives: [],
+  locationRepresentatives: EMPTY_REPRESENTATIVES_ARRAY,
   representativeDivisions: {},
-  userDivisionIds: [],
+  userDivisionIds: EMPTY_STRING_ARRAY,
 
-  followedRepresentatives: [],
-  userRepresentatives: [],
-  userRepresentativeEntries: [],
+  followedRepresentatives: EMPTY_NUMBER_ARRAY,
+  userRepresentatives: EMPTY_USER_REPRESENTATIVES_ARRAY,
+  userRepresentativeEntries: EMPTY_USER_REPRESENTATIVE_ENTRIES_ARRAY,
   userRepresentativesTotal: 0,
   userRepresentativesHasMore: false,
   subscriptions: [],
@@ -248,7 +256,12 @@ export const createRepresentativeActions = (
           const divisionSet = new Set<string>();
 
           setState((state) => {
-            state.locationRepresentatives = result.data.representatives;
+            // Use splice to replace array contents in-place
+            if (result.data.representatives.length === 0) {
+              (state as { locationRepresentatives: Representative[] }).locationRepresentatives = EMPTY_REPRESENTATIVES_ARRAY;
+            } else {
+              state.locationRepresentatives.splice(0, state.locationRepresentatives.length, ...result.data.representatives);
+            }
             result.data.representatives.forEach((representative) => {
               const divisions = getRepresentativeDivisionIds(representative);
               representative.ocdDivisionIds = divisions;
@@ -365,9 +378,14 @@ export const createRepresentativeActions = (
         }
 
         setState((state) => {
-          state.followedRepresentatives = state.followedRepresentatives.filter(
-            (idValue) => idValue !== representativeId
-          );
+          const index = state.followedRepresentatives.indexOf(representativeId);
+          if (index !== -1) {
+            state.followedRepresentatives.splice(index, 1);
+            // If array is now empty, use stable empty reference
+            if (state.followedRepresentatives.length === 0) {
+              (state as { followedRepresentatives: number[] }).followedRepresentatives = EMPTY_NUMBER_ARRAY;
+            }
+          }
         });
 
         return true;
@@ -394,9 +412,10 @@ export const createRepresentativeActions = (
           // This prevents pages from crashing when the representatives feature isn't fully set up
           if (response.status === 401) {
             setState((state) => {
-              state.userRepresentativeEntries = [];
-              state.userRepresentatives = [];
-              state.followedRepresentatives = [];
+              // Use stable empty array references
+              (state as { userRepresentativeEntries: UserRepresentativeEntry[] }).userRepresentativeEntries = EMPTY_USER_REPRESENTATIVE_ENTRIES_ARRAY;
+              (state as { userRepresentatives: UserRepresentative[] }).userRepresentatives = EMPTY_USER_REPRESENTATIVES_ARRAY;
+              (state as { followedRepresentatives: number[] }).followedRepresentatives = EMPTY_NUMBER_ARRAY;
               state.userRepresentativesTotal = 0;
               state.userRepresentativesHasMore = false;
             });
@@ -455,9 +474,17 @@ export const createRepresentativeActions = (
         }));
 
         setState((state) => {
-          state.userRepresentativeEntries = entries;
-          state.userRepresentatives = normalised;
-          state.followedRepresentatives = normalised.map((item) => item.representative_id);
+          // Use splice to replace array contents in-place
+          if (entries.length === 0) {
+            (state as { userRepresentativeEntries: UserRepresentativeEntry[] }).userRepresentativeEntries = EMPTY_USER_REPRESENTATIVE_ENTRIES_ARRAY;
+            (state as { userRepresentatives: UserRepresentative[] }).userRepresentatives = EMPTY_USER_REPRESENTATIVES_ARRAY;
+            (state as { followedRepresentatives: number[] }).followedRepresentatives = EMPTY_NUMBER_ARRAY;
+          } else {
+            state.userRepresentativeEntries.splice(0, state.userRepresentativeEntries.length, ...entries);
+            state.userRepresentatives.splice(0, state.userRepresentatives.length, ...normalised);
+            const followedIds = normalised.map((item) => item.representative_id);
+            state.followedRepresentatives.splice(0, state.followedRepresentatives.length, ...followedIds);
+          }
           state.userRepresentativesTotal = data.data?.total ?? normalised.length;
           state.userRepresentativesHasMore = data.data?.hasMore ?? false;
         });
@@ -530,16 +557,28 @@ export const createRepresentativeActions = (
       setState((state) => {
         state.searchResults = null;
         state.searchQuery = null;
-        state.representatives = [];
+        // Use stable empty array references
+        if (state.representatives.length > 0) {
+          state.representatives.splice(0, state.representatives.length);
+        }
+        (state as { representatives: Representative[] }).representatives = EMPTY_REPRESENTATIVES_ARRAY;
         state.lastSearchAt = null;
-        state.userDivisionIds = [];
+        if (state.userDivisionIds.length > 0) {
+          state.userDivisionIds.splice(0, state.userDivisionIds.length);
+        }
+        (state as { userDivisionIds: string[] }).userDivisionIds = EMPTY_STRING_ARRAY;
       });
       clearError();
     },
 
     setUserDivisionIds: (divisions: string[]) => {
       setState((state) => {
-        state.userDivisionIds = divisions;
+        // Use splice to replace array contents in-place
+        if (divisions.length === 0) {
+          (state as { userDivisionIds: string[] }).userDivisionIds = EMPTY_STRING_ARRAY;
+        } else {
+          state.userDivisionIds.splice(0, state.userDivisionIds.length, ...divisions);
+        }
       });
     },
 

@@ -18,6 +18,11 @@ import { createSafeStorage } from './storage';
 import type { BaseStore, FeatureFlag } from './types';
 import type { StateCreator } from 'zustand';
 
+// Stable empty array references to prevent unnecessary re-renders
+const EMPTY_MODAL_STACK_ARRAY: AppModalEntry[] = [];
+const EMPTY_BREADCRUMBS_ARRAY: AppBreadcrumb[] = [];
+const EMPTY_FEATURE_FLAGS_ARRAY: FeatureFlag[] = [];
+
 export type ThemePreference = 'light' | 'dark' | 'system';
 export type SystemTheme = 'light' | 'dark';
 export type ScreenSize = 'xs' | 'sm' | 'md' | 'lg' | 'xl' | '2xl';
@@ -169,7 +174,7 @@ export const createInitialAppState = (): AppState => ({
 
   activeModal: null,
   modalData: null,
-  modalStack: [],
+  modalStack: EMPTY_MODAL_STACK_ARRAY,
 
   isMobile: false,
   isTablet: false,
@@ -178,7 +183,7 @@ export const createInitialAppState = (): AppState => ({
   orientation: 'landscape',
 
   features: {},
-  featureFlags: [],
+  featureFlags: EMPTY_FEATURE_FLAGS_ARRAY,
 
   settings: createDefaultPreferences(),
   i18n: {
@@ -189,7 +194,7 @@ export const createInitialAppState = (): AppState => ({
 
   currentRoute: '/',
   previousRoute: '',
-  breadcrumbs: [],
+  breadcrumbs: EMPTY_BREADCRUMBS_ARRAY,
 
   isLoading: false,
   isInitializing: false,
@@ -313,7 +318,14 @@ export const createAppActions = (
     }),
 
     closeModal: () => setState((state) => {
-      state.modalStack.pop();
+      // Use splice instead of pop for immer compatibility
+      if (state.modalStack.length > 0) {
+        state.modalStack.splice(state.modalStack.length - 1, 1);
+        // If array is now empty, use stable empty reference
+        if (state.modalStack.length === 0) {
+          (state as { modalStack: AppModalEntry[] }).modalStack = EMPTY_MODAL_STACK_ARRAY;
+        }
+      }
       const previous = state.modalStack[state.modalStack.length - 1];
       if (previous) {
         state.activeModal = previous.id;
@@ -340,7 +352,14 @@ export const createAppActions = (
       if (state.modalStack.length === 0) {
         return;
       }
-      state.modalStack.pop();
+      // Use splice instead of pop for immer compatibility
+      if (state.modalStack.length > 0) {
+        state.modalStack.splice(state.modalStack.length - 1, 1);
+        // If array is now empty, use stable empty reference
+        if (state.modalStack.length === 0) {
+          (state as { modalStack: AppModalEntry[] }).modalStack = EMPTY_MODAL_STACK_ARRAY;
+        }
+      }
       const previous = state.modalStack[state.modalStack.length - 1];
       if (previous) {
         state.activeModal = previous.id;

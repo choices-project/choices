@@ -233,7 +233,7 @@ export const createInitialUserState = (): UserState => ({
   // Address and representatives
   currentAddress: '',
   currentState: '',
-  representatives: [],
+  representatives: EMPTY_REPRESENTATIVES_ARRAY,
   showAddressForm: false,
   newAddress: '',
   addressLoading: false,

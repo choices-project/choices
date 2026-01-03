@@ -40,6 +40,10 @@ import type { StateCreator } from 'zustand';
 export type { PollFilters, PollPreferences } from '@/lib/polls/types';
 export type { PollCardView } from '@/lib/polls/transformers';
 
+// Stable empty array references to prevent unnecessary re-renders
+const EMPTY_POLLS_ARRAY: PollRow[] = [];
+const EMPTY_STRING_ARRAY: string[] = [];
+
 export type PollVoteHistoryEntry = {
   hasVoted: boolean;
   optionId: string | null;
@@ -162,22 +166,22 @@ const createDefaultPreferences = (): PollPreferences => createDefaultPollPrefere
 
 const createDefaultSearch = (): PollSearch => ({
   query: '',
-  results: [],
+  results: EMPTY_POLLS_ARRAY,
   totalResults: 0,
   currentPage: 1,
   totalPages: 1,
-  suggestions: [],
-  recentSearches: [],
+  suggestions: EMPTY_STRING_ARRAY,
+  recentSearches: EMPTY_STRING_ARRAY,
 });
 
 const createDefaultUIState = (): PollUIState => ({
   selectedPollId: null,
-  expandedPollIds: [],
-  votingInProgress: [],
+  expandedPollIds: EMPTY_STRING_ARRAY,
+  votingInProgress: EMPTY_STRING_ARRAY,
 });
 
 export const initialPollsState: PollsState = {
-  polls: [],
+  polls: EMPTY_POLLS_ARRAY,
   uiState: createDefaultUIState(),
   filters: createDefaultFilters(),
   preferences: createDefaultPreferences(),
@@ -261,7 +265,8 @@ export const createPollsActions = (
 
   const resetPollsState = () =>
     setState((state) => {
-      state.polls = [];
+      // Use stable empty array references
+      (state as { polls: PollRow[] }).polls = EMPTY_POLLS_ARRAY;
       state.uiState = createDefaultUIState();
       state.filters = createDefaultFilters();
       state.preferences = createDefaultPreferences();
@@ -397,12 +402,19 @@ export const createPollsActions = (
 
   const setPolls = (polls: PollRow[]) =>
     setState((state) => {
-      state.polls = polls.map((poll) => {
-        const next = { ...poll };
-        normalizePollStatus(next);
-        syncVoteHistoryFromPoll(state, next);
-        return next;
-      });
+      // If setting to empty array, use stable reference
+      if (polls.length === 0) {
+        (state as { polls: PollRow[] }).polls = EMPTY_POLLS_ARRAY;
+      } else {
+        // Use splice to replace array contents in-place
+        const mapped = polls.map((poll) => {
+          const next = { ...poll };
+          normalizePollStatus(next);
+          syncVoteHistoryFromPoll(state, next);
+          return next;
+        });
+        state.polls.splice(0, state.polls.length, ...mapped);
+      }
       state.lastFetchedAt = new Date().toISOString();
     });
 
@@ -411,7 +423,8 @@ export const createPollsActions = (
       const next = { ...poll };
       normalizePollStatus(next);
       syncVoteHistoryFromPoll(state, next);
-      state.polls.unshift(next);
+      // Use splice instead of unshift for immer compatibility
+      state.polls.splice(0, 0, next);
     });
 
   const updatePoll = (id: string, updates: PollUpdate) =>
@@ -426,7 +439,15 @@ export const createPollsActions = (
 
   const removePoll = (id: string) =>
     setState((state) => {
-      state.polls = state.polls.filter((poll) => poll.id !== id);
+      const index = state.polls.findIndex((poll) => poll.id === id);
+      if (index !== -1) {
+        // Use splice for in-place removal with immer
+        state.polls.splice(index, 1);
+        // If array is now empty, use stable empty reference
+        if (state.polls.length === 0) {
+          (state as { polls: PollRow[] }).polls = EMPTY_POLLS_ARRAY;
+        }
+      }
       if (state.voteHistory[id]) {
         delete state.voteHistory[id];
       }
@@ -466,7 +487,8 @@ export const createPollsActions = (
 
     setState((state) => {
       if (!state.uiState.votingInProgress.includes(pollId)) {
-        state.uiState.votingInProgress.push(pollId);
+        // Use splice instead of push for immer compatibility
+        state.uiState.votingInProgress.splice(state.uiState.votingInProgress.length, 0, pollId);
       }
     });
 
@@ -530,7 +552,14 @@ export const createPollsActions = (
     } finally {
       setVoting(false);
       setState((state) => {
-        state.uiState.votingInProgress = state.uiState.votingInProgress.filter((id) => id !== pollId);
+        const index = state.uiState.votingInProgress.indexOf(pollId);
+        if (index !== -1) {
+          state.uiState.votingInProgress.splice(index, 1);
+          // If array is now empty, use stable empty reference
+          if (state.uiState.votingInProgress.length === 0) {
+            (state.uiState as { votingInProgress: string[] }).votingInProgress = EMPTY_STRING_ARRAY;
+          }
+        }
       });
     }
   };
@@ -541,7 +570,8 @@ export const createPollsActions = (
 
     setState((state) => {
       if (!state.uiState.votingInProgress.includes(pollId)) {
-        state.uiState.votingInProgress.push(pollId);
+        // Use splice instead of push for immer compatibility
+        state.uiState.votingInProgress.splice(state.uiState.votingInProgress.length, 0, pollId);
       }
     });
 
@@ -596,7 +626,14 @@ export const createPollsActions = (
     } finally {
       setVoting(false);
       setState((state) => {
-        state.uiState.votingInProgress = state.uiState.votingInProgress.filter((id) => id !== pollId);
+        const index = state.uiState.votingInProgress.indexOf(pollId);
+        if (index !== -1) {
+          state.uiState.votingInProgress.splice(index, 1);
+          // If array is now empty, use stable empty reference
+          if (state.uiState.votingInProgress.length === 0) {
+            (state.uiState as { votingInProgress: string[] }).votingInProgress = EMPTY_STRING_ARRAY;
+          }
+        }
       });
     }
   };
@@ -656,10 +693,17 @@ export const createPollsActions = (
   const togglePollExpanded = (pollId: string) =>
     setState((state) => {
       const expanded = state.uiState.expandedPollIds;
-      if (expanded.includes(pollId)) {
-        state.uiState.expandedPollIds = expanded.filter((id) => id !== pollId);
+      const index = expanded.indexOf(pollId);
+      if (index !== -1) {
+        // Remove from array using splice
+        state.uiState.expandedPollIds.splice(index, 1);
+        // If array is now empty, use stable empty reference
+        if (state.uiState.expandedPollIds.length === 0) {
+          (state.uiState as { expandedPollIds: string[] }).expandedPollIds = EMPTY_STRING_ARRAY;
+        }
       } else {
-        state.uiState.expandedPollIds.push(pollId);
+        // Add to array using splice
+        state.uiState.expandedPollIds.splice(state.uiState.expandedPollIds.length, 0, pollId);
       }
     });
 
@@ -881,7 +925,8 @@ export const createPollsActions = (
         if (existing >= 0) {
           state.polls[existing] = next;
         } else {
-          state.polls.unshift(next);
+          // Use splice instead of unshift for immer compatibility
+          state.polls.splice(0, 0, next);
         }
         syncVoteHistoryFromPoll(state, next);
       });

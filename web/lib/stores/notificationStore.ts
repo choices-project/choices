@@ -25,6 +25,10 @@ import { createSafeStorage } from './storage';
 import type { BaseStore, Notification, ElectionNotificationContext } from './types';
 import type { StateCreator } from 'zustand';
 
+// Stable empty array references to prevent unnecessary re-renders
+const EMPTY_NOTIFICATIONS_ARRAY: Notification[] = [];
+const EMPTY_ADMIN_NOTIFICATIONS_ARRAY: AdminNotification[] = [];
+
 export type NotificationSettings = {
   position: 'top-right' | 'top-left' | 'bottom-right' | 'bottom-left';
   duration: number;
@@ -282,9 +286,9 @@ const scheduleAdminNotificationEffects = (
 };
 
 export const initialNotificationState: NotificationState = {
-  notifications: [],
+  notifications: EMPTY_NOTIFICATIONS_ARRAY,
   unreadCount: 0,
-  adminNotifications: [],
+  adminNotifications: EMPTY_ADMIN_NOTIFICATIONS_ARRAY,
   adminUnreadCount: 0,
   settings: { ...defaultNotificationSettings },
   isLoading: false,
@@ -294,9 +298,9 @@ export const initialNotificationState: NotificationState = {
 };
 
 export const createInitialNotificationState = (): NotificationState => ({
-  notifications: [],
+  notifications: EMPTY_NOTIFICATIONS_ARRAY,
   unreadCount: 0,
-  adminNotifications: [],
+  adminNotifications: EMPTY_ADMIN_NOTIFICATIONS_ARRAY,
   adminUnreadCount: 0,
   settings: { ...defaultNotificationSettings },
   isLoading: false,
@@ -376,11 +380,17 @@ export const createNotificationActions = (
           }
         }
 
-        const nextQueue = state.settings.enableStacking
-          ? [notification, ...state.notifications]
-          : [notification];
-
-        state.notifications = nextQueue.slice(0, state.settings.maxNotifications);
+        // Use splice to add notification at the beginning
+        if (state.settings.enableStacking) {
+          state.notifications.splice(0, 0, notification);
+          // Trim to maxNotifications if needed
+          if (state.notifications.length > state.settings.maxNotifications) {
+            state.notifications.splice(state.settings.maxNotifications);
+          }
+        } else {
+          // Replace all notifications with just this one
+          state.notifications.splice(0, state.notifications.length, notification);
+        }
         state.unreadCount = calculateUnread(state.notifications);
         analyticsTargetId = notification.id;
       });
@@ -404,9 +414,13 @@ export const createNotificationActions = (
 
     removeNotification: (id) => {
       setState((state) => {
-        const nextNotifications = state.notifications.filter((notification) => notification.id !== id);
-        if (nextNotifications.length !== state.notifications.length) {
-          state.notifications = nextNotifications;
+        const index = state.notifications.findIndex((notification) => notification.id === id);
+        if (index !== -1) {
+          state.notifications.splice(index, 1);
+          // If array is now empty, use stable empty reference
+          if (state.notifications.length === 0) {
+            (state as { notifications: Notification[] }).notifications = EMPTY_NOTIFICATIONS_ARRAY;
+          }
           state.unreadCount = calculateUnread(state.notifications);
         }
       });
@@ -465,7 +479,11 @@ export const createNotificationActions = (
 
     clearAll: () => {
       setState((state) => {
-        state.notifications = [];
+        // Use splice to clear array in-place, then use stable empty reference
+        if (state.notifications.length > 0) {
+          state.notifications.splice(0, state.notifications.length);
+        }
+        (state as { notifications: Notification[] }).notifications = EMPTY_NOTIFICATIONS_ARRAY;
         state.unreadCount = 0;
       });
     },
@@ -473,7 +491,16 @@ export const createNotificationActions = (
     clearByType: (type) => {
       setState((state) => {
         const beforeCount = state.notifications.length;
-        state.notifications = state.notifications.filter((notification) => notification.type !== type);
+        // Remove items from end to beginning to avoid index shifting issues
+        for (let i = state.notifications.length - 1; i >= 0; i--) {
+          if (state.notifications[i]?.type === type) {
+            state.notifications.splice(i, 1);
+          }
+        }
+        // If array is now empty, use stable empty reference
+        if (state.notifications.length === 0) {
+          (state as { notifications: Notification[] }).notifications = EMPTY_NOTIFICATIONS_ARRAY;
+        }
         state.unreadCount = calculateUnread(state.notifications);
 
         const removed = beforeCount - state.notifications.length;
@@ -487,11 +514,17 @@ export const createNotificationActions = (
       const notification = buildAdminNotification(payload);
 
       setState((state) => {
-        const nextQueue = state.settings.enableStacking
-          ? [notification, ...state.adminNotifications]
-          : [notification];
-
-        state.adminNotifications = nextQueue.slice(0, state.settings.maxNotifications);
+        // Use splice to add admin notification at the beginning
+        if (state.settings.enableStacking) {
+          state.adminNotifications.splice(0, 0, notification);
+          // Trim to maxNotifications if needed
+          if (state.adminNotifications.length > state.settings.maxNotifications) {
+            state.adminNotifications.splice(state.settings.maxNotifications);
+          }
+        } else {
+          // Replace all admin notifications with just this one
+          state.adminNotifications.splice(0, state.adminNotifications.length, notification);
+        }
         state.adminUnreadCount = calculateAdminUnread(state.adminNotifications);
       });
 
@@ -502,11 +535,13 @@ export const createNotificationActions = (
 
     removeAdminNotification: (id) => {
       setState((state) => {
-        const nextNotifications = state.adminNotifications.filter(
-          (notification) => notification.id !== id
-        );
-        if (nextNotifications.length !== state.adminNotifications.length) {
-          state.adminNotifications = nextNotifications;
+        const index = state.adminNotifications.findIndex((notification) => notification.id === id);
+        if (index !== -1) {
+          state.adminNotifications.splice(index, 1);
+          // If array is now empty, use stable empty reference
+          if (state.adminNotifications.length === 0) {
+            (state as { adminNotifications: AdminNotification[] }).adminNotifications = EMPTY_ADMIN_NOTIFICATIONS_ARRAY;
+          }
           state.adminUnreadCount = calculateAdminUnread(state.adminNotifications);
         }
       });

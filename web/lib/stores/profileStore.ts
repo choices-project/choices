@@ -116,7 +116,7 @@ export const createInitialProfileState = (): ProfileState => ({
   isProfileLoaded: false,
   isProfileComplete: false,
   profileCompleteness: 0,
-  missingFields: [],
+  missingFields: EMPTY_STRING_ARRAY,
   isLoading: false,
   isProfileLoading: false,
   isUpdating: false,

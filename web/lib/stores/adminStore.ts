@@ -631,7 +631,8 @@ export const createAdminActions = (
           const newNotification = buildAdminNotification(notification);
 
       setState((state) => {
-        state.notifications.unshift(newNotification);
+        // Use splice instead of unshift for immer compatibility
+        state.notifications.splice(0, 0, newNotification);
         if (state.notifications.length > 10) {
           state.notifications.length = 10;
         }
