@@ -57,7 +57,7 @@ export type PollWizardSubmitOptions = {
 
 // Type definitions for PollWizardActions - these are type signatures, not implementations
 // The actual implementations are provided below in createPollWizardActions
-/* eslint-disable @typescript-eslint/no-empty-function */
+ 
 export type PollWizardActions = {
   setLoading: (loading: boolean) => void;
   // Step navigation
