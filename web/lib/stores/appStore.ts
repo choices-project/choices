@@ -314,7 +314,8 @@ export const createAppActions = (
     openModal: (id, data) => setState((state) => {
       state.activeModal = id;
       state.modalData = data ?? null;
-      state.modalStack.push({ id, data: data ?? {} });
+      // Use splice instead of push for immer compatibility
+      state.modalStack.splice(state.modalStack.length, 0, { id, data: data ?? {} });
     }),
 
     closeModal: () => setState((state) => {
@@ -339,11 +340,16 @@ export const createAppActions = (
     closeAllModals: () => setState((state) => {
       state.activeModal = null;
       state.modalData = null;
-      state.modalStack = [];
+      // Use splice to clear array in-place, then use stable empty reference
+      if (state.modalStack.length > 0) {
+        state.modalStack.splice(0, state.modalStack.length);
+      }
+      (state as { modalStack: AppModalEntry[] }).modalStack = EMPTY_MODAL_STACK_ARRAY;
     }),
 
     pushModal: (id, data) => setState((state) => {
-      state.modalStack.push({ id, data: data ?? {} });
+      // Use splice instead of push for immer compatibility
+      state.modalStack.splice(state.modalStack.length, 0, { id, data: data ?? {} });
       state.activeModal = id;
       state.modalData = data ?? null;
     }),
@@ -453,7 +459,12 @@ export const createAppActions = (
     },
 
     setBreadcrumbs: (breadcrumbs) => setState((state) => {
-      state.breadcrumbs = breadcrumbs;
+      // Use splice to replace array contents in-place
+      if (breadcrumbs.length === 0) {
+        (state as { breadcrumbs: AppBreadcrumb[] }).breadcrumbs = EMPTY_BREADCRUMBS_ARRAY;
+      } else {
+        state.breadcrumbs.splice(0, state.breadcrumbs.length, ...breadcrumbs);
+      }
     }),
 
     addBreadcrumb: (breadcrumb) => setState((state) => {

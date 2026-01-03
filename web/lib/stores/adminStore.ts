@@ -1188,7 +1188,8 @@ export const createAdminActions = (
     selectUser: (userId) => {
       setState((state) => {
           if (!state.userFilters.selectedUsers.includes(userId)) {
-          state.userFilters.selectedUsers.push(userId);
+          // Use splice instead of push for immer compatibility
+          state.userFilters.selectedUsers.splice(state.userFilters.selectedUsers.length, 0, userId);
           state.userFilters.showBulkActions = true;
           }
       });
@@ -1418,7 +1419,8 @@ export const createAdminActions = (
 
     addReimportLog: (message) => {
       setState((state) => {
-        state.reimportLogs.push(message);
+        // Use splice instead of push for immer compatibility
+        state.reimportLogs.splice(state.reimportLogs.length, 0, message);
       });
     },
 
@@ -1466,9 +1468,11 @@ export const createAdminActions = (
             };
 
       setState((state) => {
-        state.activityItems.unshift(entry);
+        // Use splice instead of unshift for immer compatibility
+        state.activityItems.splice(0, 0, entry);
+        // Trim to max 100 items
         if (state.activityItems.length > 100) {
-          state.activityItems.length = 100;
+          state.activityItems.splice(100);
         }
       });
     },
@@ -1482,9 +1486,11 @@ export const createAdminActions = (
 
     addAdminNotification: (notification) => {
       setState((state) => {
-        state.adminNotifications.unshift(notification);
+        // Use splice instead of unshift for immer compatibility
+        state.adminNotifications.splice(0, 0, notification);
+        // Trim to max 25 items
         if (state.adminNotifications.length > 25) {
-          state.adminNotifications.length = 25;
+          state.adminNotifications.splice(25);
         }
       });
     },
