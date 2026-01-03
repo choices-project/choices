@@ -86,10 +86,10 @@ export default function PollClient({ poll }: PollClientProps) {
   const router = useRouter();
   const { addNotification } = useNotificationActions();
   const { setCurrentRoute, setSidebarActiveSection, setBreadcrumbs } = useAppActions();
-  
+
   // Track if component is mounted to prevent hydration mismatches from date formatting
   const [isMounted, setIsMounted] = useState(false);
-  
+
   useEffect(() => {
     setIsMounted(true);
   }, []);

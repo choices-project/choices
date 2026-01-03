@@ -95,10 +95,10 @@ function RepresentativeDetailPageContent() {
   const { trackEvent } = useAnalyticsActions();
   const params = useParams();
   const router = useRouter();
-  
+
   // Track if component is mounted on client to prevent hydration mismatches
   const [isClient, setIsClient] = React.useState(false);
-  
+
   React.useEffect(() => {
     setIsClient(true);
   }, []);
