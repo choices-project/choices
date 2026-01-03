@@ -27,10 +27,9 @@ import {
   AlertTriangle,
   Loader2,
 } from 'lucide-react';
+import dynamicImport from 'next/dynamic';
 import { useParams, useRouter } from 'next/navigation';
 import React, { useCallback, useEffect, useMemo } from 'react';
-
-import ClientOnly from '@/components/ClientOnly';
 
 import {
   trackCivicsRepresentativeEvent,
@@ -92,20 +91,14 @@ const getElectionCountdown = (isoDate: string | undefined) => {
   return diffDays;
 };
 
-export default function RepresentativeDetailPage() {
+// Internal component - will be dynamically imported with ssr: false
+function RepresentativeDetailPageContent() {
   const { trackEvent } = useAnalyticsActions();
   const params = useParams();
   const router = useRouter();
   
-  // CRITICAL: Guard useParams() usage to prevent hydration mismatch
-  // useParams() can return different values on server vs client
-  const [isMounted, setIsMounted] = React.useState(false);
-  
-  React.useEffect(() => {
-    setIsMounted(true);
-  }, []);
-  // Only use params after mount to prevent hydration mismatch
-  const representativeIdParam = isMounted ? (params?.id as string | undefined) : undefined;
+  // useParams() is safe here because component only renders on client (ssr: false)
+  const representativeIdParam = params?.id as string | undefined;
   const numericRepresentativeId = useMemo(() => {
     if (!representativeIdParam) return null;
     const parsed = Number.parseInt(representativeIdParam, 10);
@@ -287,7 +280,7 @@ const daysUntilNextElection = getElectionCountdown(nextElection?.election_day);
     ]
   );
 
-  // Loading state - can render on server
+  // Loading state
   if (loading) {
     return (
       <div className="container mx-auto px-4 py-8 max-w-4xl">
@@ -300,27 +293,19 @@ const daysUntilNextElection = getElectionCountdown(nextElection?.election_day);
     );
   }
 
-  // Error state - can render on server
+  // Error state
   if (!representative || numericRepresentativeId == null) {
     return (
       <div className="container mx-auto px-4 py-8 max-w-4xl">
-        <ClientOnly
-          fallback={
-            <div className="animate-pulse">
-              <div className="h-8 bg-gray-200 dark:bg-gray-700 rounded w-1/4 mb-6" />
-            </div>
-          }
+        <button
+          onClick={handleBack}
+          className="flex items-center text-blue-600 hover:text-blue-800 mb-6 transition-colors"
+          data-testid="representative-detail-back-button"
+          aria-label="Back to Representatives"
         >
-          <button
-            onClick={handleBack}
-            className="flex items-center text-blue-600 hover:text-blue-800 mb-6 transition-colors"
-            data-testid="representative-detail-back-button"
-            aria-label="Back to Representatives"
-          >
-            <ArrowLeft className="w-5 h-5 mr-2" />
-            Back to Representatives
-          </button>
-        </ClientOnly>
+          <ArrowLeft className="w-5 h-5 mr-2" />
+          Back to Representatives
+        </button>
         <div className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg p-6 text-center">
           <p className="text-red-800 dark:text-red-200 font-semibold mb-2">Representative Not Found</p>
           <p className="text-red-600 dark:text-red-300">
@@ -331,19 +316,8 @@ const daysUntilNextElection = getElectionCountdown(nextElection?.election_day);
     );
   }
 
-  // Main content - wrap in ClientOnly to prevent hydration errors
+  // Main content
   return (
-    <ClientOnly
-      fallback={
-        <div className="container mx-auto px-4 py-8 max-w-4xl">
-          <div className="animate-pulse" role="status" aria-live="polite" aria-busy="true">
-            <div className="h-8 bg-gray-200 dark:bg-gray-700 rounded w-1/4 mb-6" />
-            <div className="h-64 bg-gray-200 dark:bg-gray-700 rounded mb-4" />
-            <div className="h-32 bg-gray-200 dark:bg-gray-700 rounded" />
-          </div>
-        </div>
-      }
-    >
     <div className="container mx-auto px-4 py-8 max-w-4xl">
       {/* Back Button */}
       <button
@@ -574,6 +548,25 @@ const daysUntilNextElection = getElectionCountdown(nextElection?.election_day);
         </div>
       </div>
     </div>
-    </ClientOnly>
   );
 }
+
+// CRITICAL: Load RepresentativeDetailPageContent only on client to prevent SSR hydration mismatch
+// This component uses useParams() and other client-only hooks that cause React Error #185 when rendered during SSR
+const RepresentativeDetailPage = dynamicImport(
+  () => Promise.resolve({ default: RepresentativeDetailPageContent }),
+  {
+    ssr: false,
+    loading: () => (
+      <div className="container mx-auto px-4 py-8 max-w-4xl">
+        <div className="animate-pulse" role="status" aria-live="polite" aria-busy="true">
+          <div className="h-8 bg-gray-200 dark:bg-gray-700 rounded w-1/4 mb-6" />
+          <div className="h-64 bg-gray-200 dark:bg-gray-700 rounded mb-4" />
+          <div className="h-32 bg-gray-200 dark:bg-gray-700 rounded" />
+        </div>
+      </div>
+    ),
+  }
+);
+
+export default RepresentativeDetailPage;

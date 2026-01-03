@@ -84,12 +84,25 @@ test.describe('Critical Fixes Validation', () => {
       await waitForPageReady(page);
 
       // Wait for site messages to load
-      await page.waitForTimeout(2000);
+      await page.waitForTimeout(3000);
 
-      // Verify messages are displayed (check for message content)
-      const messageText = await page.textContent('body');
-      expect(messageText).toContain('Test Message');
-      expect(messageText).toContain('Security Alert');
+      // Verify messages are displayed using test IDs
+      const siteMessagesContainer = page.locator('[data-testid="site-messages"]');
+      await expect(siteMessagesContainer).toBeVisible({ timeout: 5000 });
+
+      // Check for specific message titles using test IDs
+      const testMessage = page.locator('[data-testid="site-message-test-msg-1-title"]');
+      const securityMessage = page.locator('[data-testid="site-message-test-msg-2-title"]');
+      
+      await expect(testMessage).toBeVisible({ timeout: 5000 });
+      await expect(securityMessage).toBeVisible({ timeout: 5000 });
+      
+      // Verify message content
+      const testMessageText = await testMessage.textContent();
+      const securityMessageText = await securityMessage.textContent();
+      
+      expect(testMessageText).toContain('Test Message');
+      expect(securityMessageText).toContain('Security Alert');
 
       // Verify no hydration errors
       const consoleErrors: string[] = [];
@@ -182,10 +195,16 @@ test.describe('Critical Fixes Validation', () => {
 
       await page.goto(`${BASE_URL}/dashboard`, { waitUntil: 'domcontentloaded', timeout: 30_000 });
       await waitForPageReady(page);
-      await page.waitForTimeout(2000);
+      await page.waitForTimeout(3000);
 
-      // Message should be displayed (type 'security' should map to 'error', priority 'urgent' to 'critical')
-      const messageText = await page.textContent('body');
+      // Message should be displayed using test ID (type 'security' should map to 'error', priority 'urgent' to 'critical')
+      const siteMessagesContainer = page.locator('[data-testid="site-messages"]');
+      await expect(siteMessagesContainer).toBeVisible({ timeout: 5000 });
+      
+      const securityMessage = page.locator('[data-testid="site-message-test-msg-1-title"]');
+      await expect(securityMessage).toBeVisible({ timeout: 5000 });
+      
+      const messageText = await securityMessage.textContent();
       expect(messageText).toContain('Security Message');
     });
   });

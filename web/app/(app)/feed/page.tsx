@@ -67,6 +67,7 @@ function FeedContent() {
   }, [isMounted]);
 
   // Prevent hydration mismatch by only rendering content after mount
+  // Note: This is a fallback - ClientOnly wrapper below handles most cases
   if (!isMounted) {
     return (
       <div className="container mx-auto px-4 py-8">
