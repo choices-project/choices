@@ -45,7 +45,6 @@ const EMPTY_NUMBER_ARRAY: number[] = [];
 const EMPTY_STRING_ARRAY: string[] = [];
 const EMPTY_USER_REPRESENTATIVES_ARRAY: UserRepresentative[] = [];
 const EMPTY_USER_REPRESENTATIVE_ENTRIES_ARRAY: UserRepresentativeEntry[] = [];
-const EMPTY_SUBSCRIPTIONS_ARRAY: RepresentativeSubscription[] = [];
 
  
 
