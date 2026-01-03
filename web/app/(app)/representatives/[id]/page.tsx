@@ -162,13 +162,15 @@ function RepresentativeDetailPageContent() {
     if (!Array.isArray(elections) || elections.length === 0) {
       return [];
     }
+    // Sort elections - this is safe as it only uses date strings, not locale-dependent formatting
     return [...elections].sort(
       (a, b) => new Date(a.election_day).getTime() - new Date(b.election_day).getTime(),
     );
   }, [elections]);
 
   const nextElection = upcomingElections[0];
-  const daysUntilNextElection = getElectionCountdown(nextElection?.election_day);
+  // Only calculate countdown on client to prevent hydration mismatch
+  const daysUntilNextElection = isClient ? getElectionCountdown(nextElection?.election_day) : null;
 
   const loading = detailLoading || globalLoading;
   const isFollowing =
