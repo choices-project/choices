@@ -55,30 +55,45 @@ export type PollWizardSubmitOptions = {
   request?: (payload: Parameters<typeof createPollRequest>[0], signal?: AbortSignal) => Promise<PollCreateRequestResult>;
 };
 
+// Type definitions for PollWizardActions - these are type signatures, not implementations
+// eslint-disable-next-line @typescript-eslint/no-empty-function
 export type PollWizardActions = {
   setLoading: (loading: boolean) => void;
   // Step navigation
+  // eslint-disable-next-line @typescript-eslint/no-empty-function
   nextStep: () => void;
+  // eslint-disable-next-line @typescript-eslint/no-empty-function
   prevStep: () => void;
+  // eslint-disable-next-line @typescript-eslint/no-empty-function
   goToStep: (step: number) => void;
+  // eslint-disable-next-line @typescript-eslint/no-empty-function
   resetWizard: () => void;
 
   // Data updates
+  // eslint-disable-next-line @typescript-eslint/no-empty-function
   updateData: (updates: Partial<PollWizardData>) => void;
+  // eslint-disable-next-line @typescript-eslint/no-empty-function
   updateSettings: (settings: Partial<PollWizardSettings>) => void;
 
   // Options management
+  // eslint-disable-next-line @typescript-eslint/no-empty-function
   addOption: () => void;
+  // eslint-disable-next-line @typescript-eslint/no-empty-function
   removeOption: (index: number) => void;
+  // eslint-disable-next-line @typescript-eslint/no-empty-function
   updateOption: (index: number, value: string) => void;
 
   // Tags management
+  // eslint-disable-next-line @typescript-eslint/no-empty-function
   addTag: (tag: string) => void;
+  // eslint-disable-next-line @typescript-eslint/no-empty-function
   removeTag: (tag: string) => void;
+  // eslint-disable-next-line @typescript-eslint/no-empty-function
   updateTags: (tags: string[]) => void;
 
   // Validation
   validateStep: (step: number, data: PollWizardData) => Record<string, string>;
+  // eslint-disable-next-line @typescript-eslint/no-empty-function
   validateCurrentStep: () => void;
 
   // Error handling
