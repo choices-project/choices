@@ -245,6 +245,7 @@ function StandardPersonalDashboard({ userId: _fallbackUserId }: PersonalDashboar
 
     // CRITICAL: Using specific property dependencies instead of profilePreferences.dashboard
     // to prevent re-renders when the parent object reference changes but values haven't
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [
     profilePreferences?.dashboard?.showElectedOfficials,
     profilePreferences?.dashboard?.showQuickActions,

@@ -110,7 +110,9 @@ test.describe('Error Recovery Tests', () => {
       await page.goto(`${BASE_URL}/dashboard`, { waitUntil: 'domcontentloaded', timeout: 30_000 });
       
       // Wait for dashboard to load and attempt API calls
-      await page.waitForSelector('[data-testid="personal-dashboard"]', { timeout: 30_000 }).catch(() => {});
+      await page.waitForSelector('[data-testid="personal-dashboard"]', { timeout: 30_000 }).catch(() => {
+        // Selector may not appear if dashboard fails to load, which is expected in this test
+      });
       await page.waitForTimeout(5_000); // Give time for API calls to fail and error UI to appear
 
       // Page should still be functional

@@ -209,7 +209,7 @@ export default function SiteMessages({
 
   // Track if component is mounted to prevent hydration mismatches from Date()
   const [isMounted, setIsMounted] = useState(false);
-  
+
   useEffect(() => {
     setIsMounted(true);
   }, []);
@@ -222,7 +222,7 @@ export default function SiteMessages({
         .filter((message) => !dismissedMessages.has(message.id))
         .slice(0, maxMessages);
     }
-    
+
     const now = new Date();
     return messages
       .filter((message) => !dismissedMessages.has(message.id))

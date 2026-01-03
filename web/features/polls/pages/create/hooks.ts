@@ -98,13 +98,13 @@ export const usePollCreateController = () => {
   const goToNextStep = useCallback(() => {
     validateCurrentStep();
     if (canProceedToNextStep(currentStep)) {
-      nextStep();
+      nextStep(); // Implementation provided by usePollCreateController
     }
   }, [canProceedToNextStep, currentStep, nextStep, validateCurrentStep]);
 
   const goToPreviousStep = useCallback(() => {
     if (canGoBack) {
-      prevStep();
+      prevStep(); // Implementation provided by usePollCreateController
     }
   }, [canGoBack, prevStep]);
 
@@ -121,7 +121,7 @@ export const usePollCreateController = () => {
 
       if (!result.success) {
         if (result.reason !== 'cancelled') {
-          clearAllErrors();
+          clearAllErrors(); // Implementation provided by usePollCreateController
           if (result.fieldErrors) {
             Object.entries(result.fieldErrors).forEach(([field, message]) => {
               setFieldError(field, message);

@@ -86,6 +86,13 @@ export default function PollClient({ poll }: PollClientProps) {
   const router = useRouter();
   const { addNotification } = useNotificationActions();
   const { setCurrentRoute, setSidebarActiveSection, setBreadcrumbs } = useAppActions();
+  
+  // Track if component is mounted to prevent hydration mismatches from date formatting
+  const [isMounted, setIsMounted] = useState(false);
+  
+  useEffect(() => {
+    setIsMounted(true);
+  }, []);
 
   const PRIVACY_LABELS: Record<string, string> = useMemo(() => ({
     public: t('polls.view.privacy.public'),
@@ -765,7 +772,13 @@ export default function PollClient({ poll }: PollClientProps) {
         {poll.createdAt && (
           <>
             <span>•</span>
-            <span>{t('polls.view.created', { date: new Date(poll.createdAt).toLocaleString() })}</span>
+            <span>
+              {t('polls.view.created', {
+                date: isMounted
+                  ? new Date(poll.createdAt).toLocaleString()
+                  : new Date(poll.createdAt).toISOString().split('T')[0] // Stable format during SSR
+              })}
+            </span>
           </>
         )}
       </div>

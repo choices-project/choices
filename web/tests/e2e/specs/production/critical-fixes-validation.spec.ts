@@ -87,7 +87,9 @@ test.describe('Critical Fixes Validation', () => {
       await page.waitForResponse(response => 
         response.url().includes('/api/site-messages') && response.status() === 200,
         { timeout: 10000 }
-      ).catch(() => {}); // Don't fail if response already happened
+      ).catch(() => {
+        // Response may have already completed, which is fine
+      });
 
       // Wait for site messages to render
       await page.waitForTimeout(2000);
@@ -229,7 +231,9 @@ test.describe('Critical Fixes Validation', () => {
       await page.waitForResponse(response => 
         response.url().includes('/api/site-messages') && response.status() === 200,
         { timeout: 10000 }
-      ).catch(() => {}); // Don't fail if response already happened
+      ).catch(() => {
+        // Response may have already completed, which is fine
+      });
 
       // Wait for component to process messages
       await page.waitForTimeout(3000);
@@ -247,7 +251,9 @@ test.describe('Critical Fixes Validation', () => {
       await page.waitForResponse(response => 
         response.url().includes('/api/site-messages') && response.status() === 200,
         { timeout: 10000 }
-      ).catch(() => {});
+      ).catch(() => {
+        // Response may have already completed, which is fine
+      });
 
       await page.waitForTimeout(2000);
 
@@ -587,10 +593,9 @@ test.describe('Critical Fixes Validation', () => {
       await waitForPageReady(page);
       await page.waitForTimeout(2000);
 
-      // Verify hydration errors are minimal (2 or fewer is acceptable)
-      // Some hydration errors may come from third-party libraries or browser extensions
-      // The important thing is that the page functions correctly, which we verify below
-      expect(hydrationErrors.length).toBeLessThanOrEqual(2);
+      // Verify no hydration errors
+      // All hydration issues should be fixed with dynamic import and ClientOnly wrappers
+      expect(hydrationErrors.length).toBe(0);
 
       // Page should load
       const body = page.locator('body');
@@ -633,10 +638,9 @@ test.describe('Critical Fixes Validation', () => {
       await waitForPageReady(page);
       await page.waitForTimeout(2000);
 
-      // Verify hydration errors are minimal (2 or fewer is acceptable)
-      // Some hydration errors may come from third-party libraries or browser extensions
-      // The important thing is that the page functions correctly, which we verify below
-      expect(hydrationErrors.length).toBeLessThanOrEqual(2);
+      // Verify no hydration errors
+      // All hydration issues should be fixed with dynamic import and ClientOnly wrappers
+      expect(hydrationErrors.length).toBe(0);
 
       // Page should load
       const body = page.locator('body');

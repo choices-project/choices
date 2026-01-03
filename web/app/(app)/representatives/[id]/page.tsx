@@ -88,22 +88,7 @@ const formatElectionDate = (isoDate: string | undefined, isClient: boolean = fal
   }
 };
 
-const getElectionCountdown = (isoDate: string | undefined) => {
-  if (!isoDate) {
-    return null;
-  }
-  const now = new Date();
-  const target = new Date(isoDate);
-  if (Number.isNaN(target.getTime())) {
-    return null;
-  }
-  const diffMs = target.getTime() - now.getTime();
-  const diffDays = Math.ceil(diffMs / (1000 * 60 * 60 * 24));
-  if (diffDays < 0) {
-    return null;
-  }
-  return diffDays;
-};
+// getElectionCountdown will be defined inside component to use isClient guard
 
 // Internal component - will be dynamically imported with ssr: false
 function RepresentativeDetailPageContent() {
@@ -117,7 +102,25 @@ function RepresentativeDetailPageContent() {
   React.useEffect(() => {
     setIsClient(true);
   }, []);
-  
+
+  // getElectionCountdown - only calculate on client to prevent hydration mismatch
+  const getElectionCountdown = React.useCallback((isoDate: string | undefined) => {
+    if (!isoDate || !isClient) {
+      return null;
+    }
+    const now = new Date();
+    const target = new Date(isoDate);
+    if (Number.isNaN(target.getTime())) {
+      return null;
+    }
+    const diffMs = target.getTime() - now.getTime();
+    const diffDays = Math.ceil(diffMs / (1000 * 60 * 60 * 24));
+    if (diffDays < 0) {
+      return null;
+    }
+    return diffDays;
+  }, [isClient]);
+
   // useParams() is safe here because component only renders on client (ssr: false)
   const representativeIdParam = params?.id as string | undefined;
   const numericRepresentativeId = useMemo(() => {
@@ -162,8 +165,8 @@ function RepresentativeDetailPageContent() {
     );
   }, [elections]);
 
-const nextElection = upcomingElections[0];
-const daysUntilNextElection = getElectionCountdown(nextElection?.election_day);
+  const nextElection = upcomingElections[0];
+  const daysUntilNextElection = getElectionCountdown(nextElection?.election_day);
 
   const loading = detailLoading || globalLoading;
   const isFollowing =

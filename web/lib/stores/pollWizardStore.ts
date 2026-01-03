@@ -82,8 +82,11 @@ export type PollWizardActions = {
   validateCurrentStep: () => void;
 
   // Error handling
+  // eslint-disable-next-line @typescript-eslint/no-empty-function
   setFieldError: (field: string, error: string) => void;
+  // eslint-disable-next-line @typescript-eslint/no-empty-function
   clearFieldError: (field: string) => void;
+  // eslint-disable-next-line @typescript-eslint/no-empty-function
   clearAllErrors: () => void;
 
   // Utilities
