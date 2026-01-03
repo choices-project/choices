@@ -562,6 +562,7 @@ test.describe('Critical Fixes Validation', () => {
           consoleErrors.push(text);
           if (text.includes('185') || text.includes('hydration') || text.includes('Hydration')) {
             hydrationErrors.push(text);
+            console.log('[HYDRATION ERROR]', text);
           }
         }
       });
@@ -570,6 +571,7 @@ test.describe('Critical Fixes Validation', () => {
         const errorMsg = error.message;
         if (errorMsg.includes('185') || errorMsg.includes('hydration')) {
           hydrationErrors.push(errorMsg);
+          console.log('[HYDRATION PAGE ERROR]', errorMsg);
         }
       });
 
@@ -588,6 +590,14 @@ test.describe('Critical Fixes Validation', () => {
       await page.goto(`${BASE_URL}/representatives/1`, { waitUntil: 'domcontentloaded', timeout: 30_000 });
       await waitForPageReady(page);
       await page.waitForTimeout(2000);
+
+      // Log all hydration errors for debugging
+      if (hydrationErrors.length > 0) {
+        console.log(`[TEST DEBUG] Found ${hydrationErrors.length} hydration errors:`);
+        hydrationErrors.forEach((err, idx) => {
+          console.log(`[TEST DEBUG] Error ${idx + 1}:`, err);
+        });
+      }
 
       // Verify no hydration errors
       // All hydration issues should be fixed with dynamic import and ClientOnly wrappers
@@ -608,6 +618,7 @@ test.describe('Critical Fixes Validation', () => {
           consoleErrors.push(text);
           if (text.includes('185') || text.includes('hydration') || text.includes('Hydration')) {
             hydrationErrors.push(text);
+            console.log('[HYDRATION ERROR]', text);
           }
         }
       });
@@ -616,6 +627,7 @@ test.describe('Critical Fixes Validation', () => {
         const errorMsg = error.message;
         if (errorMsg.includes('185') || errorMsg.includes('hydration')) {
           hydrationErrors.push(errorMsg);
+          console.log('[HYDRATION PAGE ERROR]', errorMsg);
         }
       });
 
@@ -633,6 +645,14 @@ test.describe('Critical Fixes Validation', () => {
       await page.goto(`${BASE_URL}/polls/test-poll-id`, { waitUntil: 'domcontentloaded', timeout: 30_000 });
       await waitForPageReady(page);
       await page.waitForTimeout(2000);
+
+      // Log all hydration errors for debugging
+      if (hydrationErrors.length > 0) {
+        console.log(`[TEST DEBUG] Found ${hydrationErrors.length} hydration errors:`);
+        hydrationErrors.forEach((err, idx) => {
+          console.log(`[TEST DEBUG] Error ${idx + 1}:`, err);
+        });
+      }
 
       // Verify no hydration errors
       // All hydration issues should be fixed with dynamic import and ClientOnly wrappers
