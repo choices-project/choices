@@ -61,16 +61,18 @@ import { logger } from '@/lib/utils/logger';
 
 // Format election date - only format on client to prevent hydration mismatch
 // toLocaleDateString() can produce different results on server vs client
+// Use a stable format that doesn't rely on locale during SSR
 const formatElectionDate = (isoDate: string | undefined, isClient: boolean = false) => {
   if (!isoDate) {
     return '';
   }
-  // During SSR, return a stable format to prevent hydration mismatch
+  // During SSR, return a stable format that doesn't use locale-dependent functions
   if (!isClient) {
     try {
       const date = new Date(isoDate);
       const year = date.getFullYear();
-      const month = date.toLocaleString('en-US', { month: 'short' });
+      const monthNames = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+      const month = monthNames[date.getMonth()];
       const day = date.getDate();
       return `${month} ${day}, ${year}`;
     } catch {

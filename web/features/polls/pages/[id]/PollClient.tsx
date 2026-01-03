@@ -511,7 +511,7 @@ export default function PollClient({ poll }: PollClientProps) {
       const voteId =
         typeof resultData.voteId === 'string'
           ? resultData.voteId
-          : `vote-${poll.id}-${Date.now().toString(36)}`;
+          : `vote-${poll.id}-${isMounted ? Date.now().toString(36) : 'pending'}`;
 
       addVotingRecord(
         createVotingRecordFromPollSubmission({
@@ -670,7 +670,7 @@ export default function PollClient({ poll }: PollClientProps) {
             </p>
           ) : (
             <p className="mt-2 text-sm text-muted-foreground">
-              {t('polls.view.milestones.tracking', { milestones: enabledMilestones.map((milestone) => milestone.toLocaleString()).join(', ') })}
+              {t('polls.view.milestones.tracking', { milestones: enabledMilestones.map((milestone) => isMounted ? milestone.toLocaleString() : milestone.toString()).join(', ') })}
             </p>
           )}
           {nextMilestone && (
