@@ -1426,7 +1426,11 @@ export const createAdminActions = (
 
     clearReimportLogs: () => {
       setState((state) => {
-        state.reimportLogs = [];
+        // Use splice to clear array in-place, then use stable empty reference
+        if (state.reimportLogs.length > 0) {
+          state.reimportLogs.splice(0, state.reimportLogs.length);
+        }
+        (state as { reimportLogs: string[] }).reimportLogs = [];
       });
     },
 

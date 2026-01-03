@@ -449,9 +449,10 @@ export const createRepresentativeActions = (
 
         if (!data.success || !data.data?.representatives) {
           setState((state) => {
-            state.userRepresentatives = [];
-            state.userRepresentativeEntries = [];
-            state.followedRepresentatives = [];
+            // Use stable empty array references
+            (state as { userRepresentatives: UserRepresentative[] }).userRepresentatives = EMPTY_USER_REPRESENTATIVES_ARRAY;
+            (state as { userRepresentativeEntries: UserRepresentativeEntry[] }).userRepresentativeEntries = EMPTY_USER_REPRESENTATIVE_ENTRIES_ARRAY;
+            (state as { followedRepresentatives: number[] }).followedRepresentatives = EMPTY_NUMBER_ARRAY;
             state.userRepresentativesTotal = 0;
             state.userRepresentativesHasMore = false;
           });

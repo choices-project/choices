@@ -32,6 +32,9 @@ import type { Database } from '@/types/supabase';
 import type { User, Session } from '@supabase/supabase-js';
 import type { StateCreator } from 'zustand';
 
+// Stable empty array references to prevent unnecessary re-renders
+const EMPTY_REPRESENTATIVES_ARRAY: Representative[] = [];
+
 // Re-export types for convenience
 export type ProfileUpdateData = ProfileUpdateDataType;
 export type ProfileEditDraft = ProfileUpdateData;
