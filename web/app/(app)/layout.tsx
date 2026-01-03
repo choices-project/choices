@@ -114,8 +114,26 @@ export default function AppLayout({
                     <GlobalNavigation />
                   </ClientOnly>
                 }
-                siteMessages={<SiteMessages />}
-                feedback={!DISABLE_FEEDBACK_WIDGET ? <EnhancedFeedbackWidget /> : null}
+                siteMessages={
+                  <ClientOnly
+                    fallback={
+                      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-2">
+                        <div className="rounded-lg border border-gray-200 bg-gray-50 p-4 text-sm text-gray-600">
+                          Loading site messages…
+                        </div>
+                      </div>
+                    }
+                  >
+                    <SiteMessages />
+                  </ClientOnly>
+                }
+                feedback={
+                  !DISABLE_FEEDBACK_WIDGET ? (
+                    <ClientOnly fallback={null}>
+                      <EnhancedFeedbackWidget />
+                    </ClientOnly>
+                  ) : null
+                }
               >
                 <ErrorBoundary>
                   {children}

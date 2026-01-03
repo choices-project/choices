@@ -207,7 +207,22 @@ export default function SiteMessages({
     });
   };
 
+  // Track if component is mounted to prevent hydration mismatches from Date()
+  const [isMounted, setIsMounted] = useState(false);
+  
+  useEffect(() => {
+    setIsMounted(true);
+  }, []);
+
   const activeMessages = useMemo(() => {
+    // Only filter by expiration date after mount to prevent hydration mismatch
+    // During SSR, show all non-dismissed messages
+    if (!isMounted) {
+      return messages
+        .filter((message) => !dismissedMessages.has(message.id))
+        .slice(0, maxMessages);
+    }
+    
     const now = new Date();
     return messages
       .filter((message) => !dismissedMessages.has(message.id))
@@ -218,7 +233,7 @@ export default function SiteMessages({
         return new Date(message.expires_at) > now;
       })
       .slice(0, maxMessages);
-  }, [dismissedMessages, maxMessages, messages]);
+  }, [dismissedMessages, maxMessages, messages, isMounted]);
 
   useEffect(() => {
     // Announce any new active messages once
