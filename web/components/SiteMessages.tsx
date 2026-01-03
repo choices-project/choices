@@ -255,6 +255,8 @@ export default function SiteMessages({
   }
 
   if (activeMessages.length === 0) {
+    // Return null when no active messages (filtered out, expired, or dismissed)
+    // This is expected behavior - component should not render anything
     return null;
   }
 
