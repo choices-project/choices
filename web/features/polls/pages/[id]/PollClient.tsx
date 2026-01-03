@@ -409,7 +409,8 @@ export default function PollClient({ poll }: PollClientProps) {
   const [selectedOption, setSelectedOption] = useState<string | null>(poll.userVote ?? null);
   const [hasVoted, setHasVoted] = useState(Boolean(poll.userVote));
 
-  const shareUrl = typeof window !== 'undefined' ? `${window.location.origin}/polls/${poll.id}` : '';
+  // Guard window access to prevent hydration mismatch
+  const shareUrl = isMounted && typeof window !== 'undefined' ? `${window.location.origin}/polls/${poll.id}` : '';
 
   const handlePrintSummary = () => {
     if (typeof window === 'undefined') return;
