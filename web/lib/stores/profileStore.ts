@@ -36,6 +36,9 @@ import type {
 } from '@/types/profile';
 import type { StateCreator } from 'zustand';
 
+// Stable empty array references to prevent unnecessary re-renders
+const EMPTY_STRING_ARRAY: string[] = [];
+
 export type ProfileCompleteness = {
   isComplete: boolean;
   percentage: number;
