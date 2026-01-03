@@ -59,9 +59,23 @@ import {
 } from '@/lib/stores/representativeStore';
 import { logger } from '@/lib/utils/logger';
 
-const formatElectionDate = (isoDate: string | undefined) => {
+// Format election date - only format on client to prevent hydration mismatch
+// toLocaleDateString() can produce different results on server vs client
+const formatElectionDate = (isoDate: string | undefined, isClient: boolean = false) => {
   if (!isoDate) {
     return '';
+  }
+  // During SSR, return a stable format to prevent hydration mismatch
+  if (!isClient) {
+    try {
+      const date = new Date(isoDate);
+      const year = date.getFullYear();
+      const month = date.toLocaleString('en-US', { month: 'short' });
+      const day = date.getDate();
+      return `${month} ${day}, ${year}`;
+    } catch {
+      return isoDate;
+    }
   }
   try {
     return new Date(isoDate).toLocaleDateString(undefined, {
@@ -96,6 +110,13 @@ function RepresentativeDetailPageContent() {
   const { trackEvent } = useAnalyticsActions();
   const params = useParams();
   const router = useRouter();
+  
+  // Track if component is mounted on client to prevent hydration mismatches
+  const [isClient, setIsClient] = React.useState(false);
+  
+  React.useEffect(() => {
+    setIsClient(true);
+  }, []);
   
   // useParams() is safe here because component only renders on client (ssr: false)
   const representativeIdParam = params?.id as string | undefined;
@@ -376,7 +397,7 @@ const daysUntilNextElection = getElectionCountdown(nextElection?.election_day);
                       <CalendarClock className="w-3 h-3" />
                       <span className="truncate max-w-[220px]">{nextElection.name}</span>
                       <span className="text-blue-100">
-                        · {formatElectionDate(nextElection.election_day)}
+                        · {formatElectionDate(nextElection.election_day, isClient)}
                       </span>
                       {upcomingElections.length > 1 && (
                         <span className="text-blue-100/80">
@@ -485,7 +506,7 @@ const daysUntilNextElection = getElectionCountdown(nextElection?.election_day);
                     <div>
                       <p className="text-sm font-semibold text-blue-900">{election.name}</p>
                       <p className="text-xs text-blue-700">
-                        {formatElectionDate(election.election_day)}
+                        {formatElectionDate(election.election_day, isClient)}
                         {(() => {
                           const countdown = getElectionCountdown(election.election_day);
                           if (countdown == null || countdown > 90) {
