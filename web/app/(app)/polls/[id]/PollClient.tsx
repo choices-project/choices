@@ -15,6 +15,7 @@ import type { PollBallotContext } from '@/features/voting/lib/pollAdapters';
 import { useVotingActions, useVotingError, useVotingIsVoting } from '@/features/voting/lib/store';
 
 import { AccessibleResultsChart } from '@/components/accessible/AccessibleResultsChart';
+import ClientOnly from '@/components/ClientOnly';
 import ModeSwitch from '@/components/shared/ModeSwitch';
 import type { ResultsMode } from '@/components/shared/ModeSwitch';
 import { Alert, AlertDescription } from '@/components/ui/alert';
@@ -755,7 +756,21 @@ export default function PollClient({ poll }: PollClientProps) {
     }
   }, [rankedChartData, results, standardChartData]);
 
+  // Wrap in ClientOnly to prevent hydration errors from useParams
   return (
+    <ClientOnly
+      fallback={
+        <div className="min-h-screen bg-gray-50">
+          <div className="container mx-auto px-4 py-8">
+            <div className="animate-pulse" role="status" aria-live="polite" aria-busy="true">
+              <div className="h-8 bg-gray-200 dark:bg-gray-700 rounded w-1/4 mb-6" />
+              <div className="h-64 bg-gray-200 dark:bg-gray-700 rounded mb-4" />
+              <div className="h-32 bg-gray-200 dark:bg-gray-700 rounded" />
+            </div>
+          </div>
+        </div>
+      }
+    >
     <div className="min-h-screen bg-gray-50">
       <div className="container mx-auto px-4 py-8" data-testid="poll-details">
         {/* Back Button */}
@@ -1027,5 +1042,6 @@ export default function PollClient({ poll }: PollClientProps) {
         )}
       </div>
     </div>
+    </ClientOnly>
   );
 }

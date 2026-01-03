@@ -246,7 +246,7 @@ export default function SiteMessages({
 
   if (error && messages.length === 0) {
     return (
-      <div className={`space-y-3 ${className}`} role="status" aria-live="assertive">
+      <div className={`space-y-3 ${className}`} role="status" aria-live="assertive" data-testid="site-messages-error">
         <div className="rounded-lg border border-yellow-200 bg-yellow-50 p-4 text-sm text-yellow-800">
           {error}
         </div>
@@ -259,7 +259,7 @@ export default function SiteMessages({
   }
 
   return (
-    <div className={`space-y-3 ${className}`} role="region" aria-label="Site messages and alerts">
+    <div className={`space-y-3 ${className}`} role="region" aria-label="Site messages and alerts" data-testid="site-messages">
       {activeMessages.map((message) => {
         const isExpanded = expandedMessages.has(message.id);
         const liveRegion = liveRegionForMessage(message);
@@ -268,6 +268,7 @@ export default function SiteMessages({
         return (
           <article
             key={message.id}
+            data-testid={`site-message-${message.id}`}
             className={`relative rounded-lg border shadow-sm hover:shadow-md transition-all duration-200 p-4 ${typeToColor[message.type]}`}
             {...liveRegion}
             aria-atomic="true"
@@ -278,7 +279,7 @@ export default function SiteMessages({
               </div>
               <div className="min-w-0 flex-1">
                 <div className="flex items-start justify-between gap-2">
-                  <h3 className="text-sm font-semibold leading-5 flex-1">{message.title}</h3>
+                  <h3 className="text-sm font-semibold leading-5 flex-1" data-testid={`site-message-${message.id}-title`}>{message.title}</h3>
                   <div className="flex items-center space-x-2 flex-shrink-0">
                     <span className={`px-2 py-0.5 text-xs font-medium uppercase tracking-wide rounded ${priorityToBadge[message.priority]}`}>
                       {message.priority}
@@ -296,7 +297,7 @@ export default function SiteMessages({
                 </div>
 
                 <div className="mt-2">
-                  <p className="text-sm leading-6" id={`site-message-${message.id}-body`}>
+                  <p className="text-sm leading-6" id={`site-message-${message.id}-body`} data-testid={`site-message-${message.id}-message`}>
                     {isExpanded ? message.message : message.message.slice(0, MAX_PREVIEW_LENGTH)}
                     {showToggle && !isExpanded && message.message.length > MAX_PREVIEW_LENGTH && '…'}
                   </p>
