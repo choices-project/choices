@@ -98,6 +98,7 @@ export type PollWizardActions = {
 
   submitPoll: (options?: PollWizardSubmitOptions) => Promise<PollWizardSubmissionResult>;
 };
+/* eslint-enable @typescript-eslint/no-empty-function */
 
 export type PollWizardStore = PollWizardState & PollWizardActions;
 
