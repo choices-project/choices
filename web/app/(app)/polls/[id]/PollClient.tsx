@@ -93,7 +93,17 @@ type PollClientProps = {
 export default function PollClient({ poll }: PollClientProps) {
   const router = useRouter();
   const params = useParams();
-  const pollId = params.id as string;
+  
+  // CRITICAL: Guard useParams() usage to prevent hydration mismatch
+  // useParams() can return different values on server vs client
+  const [isMounted, setIsMounted] = React.useState(false);
+  
+  React.useEffect(() => {
+    setIsMounted(true);
+  }, []);
+  
+  // Only use params after mount to prevent hydration mismatch
+  const pollId = isMounted ? (params.id as string) : poll?.id || '';
 
   const {
     setBallots,

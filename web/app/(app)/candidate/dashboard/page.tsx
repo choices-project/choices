@@ -30,10 +30,20 @@ export default function CandidateDashboardPage() {
     }
 
     fetch('/api/candidate/platform')
-      .then(res => res.json())
-      .then(data => {
-        if (data.success) {
-          setPlatforms(data.platforms || [])
+      .then(res => {
+        if (!res.ok) {
+          throw new Error(`Failed to fetch platforms: ${res.statusText}`)
+        }
+        return res.json()
+      })
+      .then(result => {
+        // API returns { success: true, data: { platforms: [...] } } structure
+        const data = result?.success && result?.data ? result.data : result
+        if (data?.platforms) {
+          setPlatforms(data.platforms)
+        } else if (Array.isArray(data)) {
+          // Fallback: if data is directly an array
+          setPlatforms(data)
         }
       })
       .catch((error) => {

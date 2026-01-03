@@ -42,8 +42,26 @@ export function PollResults({ pollId, trustTiers }: PollResultsProps) {
         throw new Error('Failed to fetch results');
       }
       
-      const data = await response.json();
-      setResults(data.results || []);
+      const result = await response.json();
+      // API returns { success: true, data: { poll_id, voting_method, results: [...] } } structure
+      // OR for ranked: { success: true, data: { poll_id, voting_method, rounds, option_stats, ... } }
+      const data = result?.success && result?.data ? result.data : result;
+      
+      // Handle different response structures
+      if (data?.results && Array.isArray(data.results)) {
+        setResults(data.results);
+      } else if (data?.option_stats && Array.isArray(data.option_stats)) {
+        // Convert ranked results format to standard format
+        const convertedResults = data.option_stats.map((stat: any) => ({
+          option_id: stat.option_id || stat.option_index?.toString(),
+          option_text: stat.text || `Option ${stat.option_index + 1}`,
+          vote_count: stat.first_choice_votes || 0,
+          percentage: stat.first_choice_percentage || 0,
+        }));
+        setResults(convertedResults);
+      } else {
+        setResults([]);
+      }
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to load results');
     } finally {
