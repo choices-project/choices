@@ -28,7 +28,7 @@ import {
   Loader2,
 } from 'lucide-react';
 import { useParams, useRouter } from 'next/navigation';
-import { useCallback, useEffect, useMemo } from 'react';
+import React, { useCallback, useEffect, useMemo } from 'react';
 
 import {
   trackCivicsRepresentativeEvent,
@@ -94,7 +94,16 @@ export default function RepresentativeDetailPage() {
   const { trackEvent } = useAnalyticsActions();
   const params = useParams();
   const router = useRouter();
-  const representativeIdParam = params?.id as string | undefined;
+  
+  // CRITICAL: Guard useParams() usage to prevent hydration mismatch
+  // useParams() can return different values on server vs client
+  const [isMounted, setIsMounted] = React.useState(false);
+  
+  React.useEffect(() => {
+    setIsMounted(true);
+  }, []);
+  // Only use params after mount to prevent hydration mismatch
+  const representativeIdParam = isMounted ? (params?.id as string | undefined) : undefined;
   const numericRepresentativeId = useMemo(() => {
     if (!representativeIdParam) return null;
     const parsed = Number.parseInt(representativeIdParam, 10);
