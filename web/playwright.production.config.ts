@@ -1,4 +1,30 @@
+import { dirname, resolve } from 'path';
+import { fileURLToPath } from 'url';
+
 import { defineConfig, devices } from '@playwright/test';
+import { config as loadDotenv } from 'dotenv';
+
+// Get __dirname equivalent for ES modules
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = dirname(__filename);
+
+// Load environment variables from .env files
+// Priority order (highest to lowest): .env.local > .env.test.local > .env.test > .env
+// .env.local has the highest priority as it contains all variables for local development
+const envFiles = [
+  { path: resolve(__dirname, '.env'), override: false },
+  { path: resolve(__dirname, '.env.test'), override: false },
+  { path: resolve(__dirname, '.env.test.local'), override: false },
+  { path: resolve(__dirname, '.env.local'), override: true }, // Highest priority - can override everything
+];
+
+for (const { path: envFile, override } of envFiles) {
+  try {
+    loadDotenv({ path: envFile, override });
+  } catch {
+    // Ignore errors if file doesn't exist
+  }
+}
 
 export default defineConfig({
     testDir: './tests/e2e',
