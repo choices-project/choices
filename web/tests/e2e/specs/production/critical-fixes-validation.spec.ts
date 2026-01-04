@@ -599,12 +599,9 @@ test.describe('Critical Fixes Validation', () => {
         });
       }
 
-      // Verify hydration errors are minimal
-      // We've implemented ThemeScript and suppressHydrationWarning, but React may still log
-      // hydration warnings from third-party libraries or edge cases. 2 errors is acceptable
-      // if the app functions correctly (which it does - pages load and work fine).
-      // The critical fixes (ThemeScript, dynamic imports, ClientOnly wrappers) are in place.
-      expect(hydrationErrors.length).toBeLessThanOrEqual(2);
+      // Verify no hydration errors
+      // All hydration issues should be fixed with dynamic import and ClientOnly wrappers
+      expect(hydrationErrors.length).toBe(0);
 
       // Page should load
       const body = page.locator('body');
@@ -657,12 +654,9 @@ test.describe('Critical Fixes Validation', () => {
         });
       }
 
-      // Verify hydration errors are minimal
-      // We've implemented ThemeScript and suppressHydrationWarning, but React may still log
-      // hydration warnings from third-party libraries or edge cases. 2 errors is acceptable
-      // if the app functions correctly (which it does - pages load and work fine).
-      // The critical fixes (ThemeScript, dynamic imports, ClientOnly wrappers) are in place.
-      expect(hydrationErrors.length).toBeLessThanOrEqual(2);
+      // Verify no hydration errors
+      // All hydration issues should be fixed with dynamic import and ClientOnly wrappers
+      expect(hydrationErrors.length).toBe(0);
 
       // Page should load
       const body = page.locator('body');

@@ -25,7 +25,7 @@ export function ThemeScript() {
             let sidebarCollapsed = false;
             let sidebarWidth = 280;
             let sidebarPinned = false;
-
+            
             try {
               // Read app state from localStorage (same key as Zustand persist)
               const stored = localStorage.getItem('app-store');
@@ -47,7 +47,7 @@ export function ThemeScript() {
               // If localStorage read fails, use defaults (matches server)
               // Values already set above
             }
-
+            
             // ALWAYS set attributes (ensures consistency)
             if (theme === 'dark') {
               document.documentElement.classList.add('dark');
@@ -58,7 +58,7 @@ export function ThemeScript() {
               document.documentElement.setAttribute('data-theme', 'light');
               document.documentElement.style.colorScheme = 'light';
             }
-
+            
             document.documentElement.setAttribute('data-sidebar-collapsed', String(sidebarCollapsed));
             document.documentElement.setAttribute('data-sidebar-width', String(sidebarWidth));
             document.documentElement.setAttribute('data-sidebar-pinned', String(sidebarPinned));
