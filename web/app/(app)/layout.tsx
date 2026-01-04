@@ -1,6 +1,7 @@
 'use client';
 
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+import dynamicImport from 'next/dynamic';
 import React, { Suspense, useState } from 'react';
 
 import { AuthProvider } from '@/contexts/AuthContext';
@@ -10,12 +11,35 @@ import OfflineIndicator from '@/features/pwa/components/OfflineIndicator';
 import PWABackground from '@/features/pwa/components/PWABackground';
 import { ServiceWorkerProvider } from '@/features/pwa/components/ServiceWorkerProvider';
 
-import EnhancedFeedbackWidget from '@/components/EnhancedFeedbackWidget';
 import { AppShell } from '@/components/shared/AppShell';
 import { ErrorBoundary } from '@/components/shared/ErrorBoundary';
 import FontProvider from '@/components/shared/FontProvider';
-import GlobalNavigation from '@/components/shared/GlobalNavigation';
 import SiteMessages from '@/components/SiteMessages';
+
+// Dynamically import components that use usePathname() to prevent hydration errors
+// ssr: false ensures they only render on the client
+const GlobalNavigation = dynamicImport(() => import('@/components/shared/GlobalNavigation'), {
+  ssr: false,
+  loading: () => (
+    <nav className="bg-white dark:bg-gray-900 shadow-sm border-b border-gray-200 dark:border-gray-700" data-testid="global-nav-loading">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="flex justify-between h-16">
+          <div className="flex items-center">
+            <div className="h-8 w-8 bg-gray-200 animate-pulse rounded" />
+          </div>
+          <div className="flex items-center space-x-4">
+            <div className="h-8 w-20 bg-gray-200 animate-pulse rounded" />
+          </div>
+        </div>
+      </div>
+    </nav>
+  ),
+});
+
+const EnhancedFeedbackWidget = dynamicImport(() => import('@/components/EnhancedFeedbackWidget'), {
+  ssr: false,
+  loading: () => null,
+});
 
 
 import { UserStoreProvider } from '@/lib/providers/UserStoreProvider';
