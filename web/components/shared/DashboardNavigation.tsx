@@ -40,14 +40,17 @@ type NavItem = {
 };
 
 export default function DashboardNavigation() {
-  const pathname = usePathname();
-  // CRITICAL: Follow feed/polls pattern - ensure pathname is only used after mount
-  // usePathname() can return different values on server vs client, causing hydration mismatches
+  // CRITICAL: Store pathname in state to prevent hydration mismatch
+  // usePathname() can return different values during SSR vs client hydration
+  // Store in state and only update after mount to ensure stable initial value
   const [isMounted, setIsMounted] = useState(false);
+  const [pathname, setPathname] = useState<string>('');
+  const pathnameFromHook = usePathname();
 
   useEffect(() => {
     setIsMounted(true);
-  }, []);
+    setPathname(pathnameFromHook);
+  }, [pathnameFromHook]);
 
   // During SSR/initial render, don't use pathname (render all items as inactive)
   // This ensures consistent server/client rendering
@@ -142,13 +145,17 @@ export default function DashboardNavigation() {
  * Mobile Dashboard Navigation (Bottom Nav)
  */
 export function MobileDashboardNav() {
-  const pathname = usePathname();
-  // CRITICAL: Follow feed/polls pattern - ensure pathname is only used after mount
+  // CRITICAL: Store pathname in state to prevent hydration mismatch
+  // usePathname() can return different values during SSR vs client hydration
+  // Store in state and only update after mount to ensure stable initial value
   const [isMounted, setIsMounted] = useState(false);
+  const [pathname, setPathname] = useState<string>('');
+  const pathnameFromHook = usePathname();
 
   useEffect(() => {
     setIsMounted(true);
-  }, []);
+    setPathname(pathnameFromHook);
+  }, [pathnameFromHook]);
 
   // During SSR/initial render, don't use pathname (render all items as inactive)
   const effectivePathname = isMounted ? pathname : null;
