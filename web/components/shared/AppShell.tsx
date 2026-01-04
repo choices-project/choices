@@ -1,10 +1,10 @@
 'use client';
 
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef, useState } from 'react';
 
 import {
   appStoreUtils,
-  useAppTheme,
+  useResolvedTheme,
   useSidebarCollapsed,
   useSidebarPinned,
   useSidebarWidth,
@@ -28,10 +28,27 @@ type AppShellProps = {
  * surfaces can rely on the modernized selectors without direct store access.
  */
 export function AppShell({ navigation, siteMessages, feedback, children }: AppShellProps) {
-  const theme = useAppTheme();
+  const resolvedTheme = useResolvedTheme();
   const sidebarCollapsed = useSidebarCollapsed();
   const sidebarWidth = useSidebarWidth();
   const sidebarPinned = useSidebarPinned();
+  
+  // CRITICAL: Guard theme and sidebar state to prevent hydration mismatch
+  // These values are persisted in localStorage, so server default may differ from client
+  // Store in state and only update after mount to ensure stable initial value
+  const [isMounted, setIsMounted] = useState(false);
+  const [theme, setTheme] = useState<'light' | 'dark'>('light');
+  const [collapsed, setCollapsed] = useState(false);
+  const [width, setWidth] = useState(280);
+  const [pinned, setPinned] = useState(false);
+  
+  useEffect(() => {
+    setIsMounted(true);
+    setTheme(resolvedTheme);
+    setCollapsed(sidebarCollapsed);
+    setWidth(sidebarWidth);
+    setPinned(sidebarPinned);
+  }, [resolvedTheme, sidebarCollapsed, sidebarWidth, sidebarPinned]);
   // Get initialize directly from store for stable reference
   const initializeDevice = useDeviceStore((state) => state.initialize);
   const initRef = useRef(false);
@@ -53,7 +70,7 @@ export function AppShell({ navigation, siteMessages, feedback, children }: AppSh
   useSystemThemeSync();
 
   useEffect(() => {
-    if (typeof document === 'undefined') {
+    if (typeof document === 'undefined' || !isMounted) {
       return;
     }
 
@@ -63,16 +80,16 @@ export function AppShell({ navigation, siteMessages, feedback, children }: AppSh
     } else {
       document.documentElement.classList.remove('dark');
     }
-  }, [theme]);
+  }, [theme, isMounted]);
 
   // DIAGNOSTIC: Log when AppShell renders
   useEffect(() => {
     if (process.env.DEBUG_DASHBOARD === '1' || (typeof window !== 'undefined' && window.localStorage.getItem('e2e-dashboard-bypass') === '1')) {
       console.warn('[DIAGNOSTIC] AppShell: Rendering', {
         theme,
-        sidebarCollapsed,
-        sidebarWidth,
-        sidebarPinned,
+        sidebarCollapsed: collapsed,
+        sidebarWidth: width,
+        sidebarPinned: pinned,
         hasNavigation: !!navigation,
         hasSiteMessages: !!siteMessages,
         hasFeedback: !!feedback,
@@ -81,16 +98,16 @@ export function AppShell({ navigation, siteMessages, feedback, children }: AppSh
         bypassFlag: typeof window !== 'undefined' ? window.localStorage.getItem('e2e-dashboard-bypass') : 'SSR',
       });
     }
-  }, [theme, sidebarCollapsed, sidebarWidth, sidebarPinned, navigation, siteMessages, feedback, children]);
+  }, [theme, collapsed, width, pinned, navigation, siteMessages, feedback, children]);
 
   return (
     <div
       className="min-h-screen bg-slate-50 dark:bg-gray-900"
       data-testid="app-shell"
-      data-theme={theme}
-      data-sidebar-collapsed={String(sidebarCollapsed)}
-      data-sidebar-width={String(sidebarWidth)}
-      data-sidebar-pinned={String(sidebarPinned)}
+      data-theme={isMounted ? theme : 'light'}
+      data-sidebar-collapsed={isMounted ? String(collapsed) : 'false'}
+      data-sidebar-width={isMounted ? String(width) : '280'}
+      data-sidebar-pinned={isMounted ? String(pinned) : 'false'}
     >
       <header>{navigation}</header>
 
