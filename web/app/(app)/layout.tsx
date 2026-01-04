@@ -14,7 +14,6 @@ import { ServiceWorkerProvider } from '@/features/pwa/components/ServiceWorkerPr
 import { AppShell } from '@/components/shared/AppShell';
 import { ErrorBoundary } from '@/components/shared/ErrorBoundary';
 import FontProvider from '@/components/shared/FontProvider';
-import SiteMessages from '@/components/SiteMessages';
 
 // Dynamically import components that use usePathname() to prevent hydration errors
 // ssr: false ensures they only render on the client
@@ -37,6 +36,11 @@ const GlobalNavigation = dynamicImport(() => import('@/components/shared/GlobalN
 });
 
 const EnhancedFeedbackWidget = dynamicImport(() => import('@/components/EnhancedFeedbackWidget'), {
+  ssr: false,
+  loading: () => null,
+});
+
+const SiteMessages = dynamicImport(() => import('@/components/SiteMessages'), {
   ssr: false,
   loading: () => null,
 });
