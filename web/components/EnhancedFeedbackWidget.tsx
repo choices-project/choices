@@ -144,7 +144,15 @@ const EnhancedFeedbackWidget: React.FC = () => {
   const fileInputRef = useRef<HTMLInputElement>(null)
   const [feedbackTracker, setFeedbackTracker] = useState<ReturnType<typeof getFeedbackTracker> | null>(null)
 
-  const pathname = usePathname()
+  // CRITICAL: Store pathname in state to prevent hydration mismatch
+  // usePathname() can return different values during SSR vs client hydration
+  // Store in state and only update after mount to ensure stable initial value
+  const [pathname, setPathname] = useState<string>('')
+  const pathnameFromHook = usePathname()
+
+  useEffect(() => {
+    setPathname(pathnameFromHook)
+  }, [pathnameFromHook])
   const dialogId = useId()
   const dialogTitleId = useId()
   const dialogDescriptionId = useId()
