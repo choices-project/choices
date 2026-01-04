@@ -344,13 +344,21 @@ export default function SiteMessages({
                 <div className="mt-3 flex items-center justify-between text-xs text-gray-600 dark:text-gray-400 pt-2 border-t border-current/10">
                   <time dateTime={message.created_at} className="flex items-center gap-1">
                     <span>Posted</span>
-                    <span className="font-medium">{new Date(message.created_at).toLocaleDateString()}</span>
+                    <span className="font-medium">
+                      {isMounted
+                        ? new Date(message.created_at).toLocaleDateString()
+                        : new Date(message.created_at).toISOString().split('T')[0]}
+                    </span>
                   </time>
 
                   {message.expires_at && (
                     <span className="flex items-center gap-1">
                       <span>Expires</span>
-                      <span className="font-medium">{new Date(message.expires_at).toLocaleDateString()}</span>
+                      <span className="font-medium">
+                        {isMounted
+                          ? new Date(message.expires_at).toLocaleDateString()
+                          : new Date(message.expires_at).toISOString().split('T')[0]}
+                      </span>
                     </span>
                   )}
                 </div>
