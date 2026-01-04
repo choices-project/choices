@@ -33,17 +33,34 @@ export function AppShell({ navigation, siteMessages, feedback, children }: AppSh
   const sidebarWidth = useSidebarWidth();
   const sidebarPinned = useSidebarPinned();
   
-  // CRITICAL: Guard theme and sidebar state to prevent hydration mismatch
-  // These values are persisted in localStorage, so server default may differ from client
-  // Store in state and only update after mount to ensure stable initial value
+  // CRITICAL: Read initial values from ThemeScript-set attributes to prevent hydration mismatch
+  // ThemeScript runs before React hydrates and sets data attributes on documentElement
+  // This ensures server and client HTML match from the start
   const [isMounted, setIsMounted] = useState(false);
-  const [theme, setTheme] = useState<'light' | 'dark'>('light');
-  const [collapsed, setCollapsed] = useState(false);
-  const [width, setWidth] = useState(280);
-  const [pinned, setPinned] = useState(false);
+  const [theme, setTheme] = useState<'light' | 'dark'>(() => {
+    if (typeof document === 'undefined') return 'light';
+    const scriptTheme = document.documentElement.getAttribute('data-theme');
+    return (scriptTheme === 'dark' ? 'dark' : 'light') as 'light' | 'dark';
+  });
+  const [collapsed, setCollapsed] = useState(() => {
+    if (typeof document === 'undefined') return false;
+    const scriptCollapsed = document.documentElement.getAttribute('data-sidebar-collapsed');
+    return scriptCollapsed === 'true';
+  });
+  const [width, setWidth] = useState(() => {
+    if (typeof document === 'undefined') return 280;
+    const scriptWidth = document.documentElement.getAttribute('data-sidebar-width');
+    return scriptWidth ? Number.parseInt(scriptWidth, 10) : 280;
+  });
+  const [pinned, setPinned] = useState(() => {
+    if (typeof document === 'undefined') return false;
+    const scriptPinned = document.documentElement.getAttribute('data-sidebar-pinned');
+    return scriptPinned === 'true';
+  });
   
   useEffect(() => {
     setIsMounted(true);
+    // After mount, sync with store (which may have updated)
     setTheme(resolvedTheme);
     setCollapsed(sidebarCollapsed);
     setWidth(sidebarWidth);
@@ -104,10 +121,10 @@ export function AppShell({ navigation, siteMessages, feedback, children }: AppSh
     <div
       className="min-h-screen bg-slate-50 dark:bg-gray-900"
       data-testid="app-shell"
-      data-theme={isMounted ? theme : 'light'}
-      data-sidebar-collapsed={isMounted ? String(collapsed) : 'false'}
-      data-sidebar-width={isMounted ? String(width) : '280'}
-      data-sidebar-pinned={isMounted ? String(pinned) : 'false'}
+      data-theme={theme}
+      data-sidebar-collapsed={String(collapsed)}
+      data-sidebar-width={String(width)}
+      data-sidebar-pinned={String(pinned)}
     >
       <header>{navigation}</header>
 
