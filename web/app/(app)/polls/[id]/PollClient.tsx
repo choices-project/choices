@@ -93,26 +93,18 @@ type PollClientProps = {
 
 export default function PollClient({ poll }: PollClientProps) {
   const router = useRouter();
+  const params = useParams();
   
-  // CRITICAL: Guard useParams() usage to prevent hydration mismatch
-  // useParams() can return different values on server vs client
-  // Access params from window.location instead to prevent hydration mismatch
-  const [isMounted, setIsMounted] = React.useState(false);
-  const params = React.useMemo(() => {
-    if (typeof window === 'undefined') {
-      return { id: undefined };
-    }
-    // Access params from window.location for initial render
-    const pathMatch = window.location.pathname.match(/\/polls\/([^/]+)/);
-    return { id: pathMatch?.[1] };
-  }, []);
+  // Track if component is mounted to prevent hydration mismatches from date formatting
+  const [isMounted, setIsMounted] = useState(false);
   
-  React.useEffect(() => {
+  useEffect(() => {
     setIsMounted(true);
   }, []);
   
-  // Only use params after mount to prevent hydration mismatch
-  const pollId = isMounted ? (params.id as string) : poll?.id || '';
+  // useParams() is safe here because this component is dynamically imported with ssr: false
+  // With ssr: false, the component never renders on the server, so useParams() is safe
+  const pollId = (params?.id as string) || poll?.id || '';
 
   const {
     setBallots,
