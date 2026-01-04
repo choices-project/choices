@@ -50,12 +50,15 @@ export default function GlobalNavigation() {
   // CRITICAL: Guard usePathname() usage with isMounted to prevent hydration mismatch
   // usePathname() can return different values on server vs client
   // We must call the hook at the top level, but guard its usage in isActive()
+  // Store pathname in state to ensure it's only used after mount
   const [isMountedForNavRender, setIsMountedForNavRender] = useState(false);
-  const pathname = usePathname();
+  const [pathname, setPathname] = useState<string>('');
+  const pathnameFromHook = usePathname();
   
   useEffect(() => {
     setIsMountedForNavRender(true);
-  }, []);
+    setPathname(pathnameFromHook);
+  }, [pathnameFromHook]);
 
   // Auth integration via context
   // Note: useAuth will throw if not within AuthProvider, but that's expected
