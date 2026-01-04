@@ -591,6 +591,29 @@ test.describe('Critical Fixes Validation', () => {
       await waitForPageReady(page);
       await page.waitForTimeout(2000);
 
+      // Enhanced debugging: Check if ThemeScript executed
+      const themeScriptExecuted = await page.evaluate(() => {
+        return {
+          hasThemeAttribute: document.documentElement.hasAttribute('data-theme'),
+          themeAttribute: document.documentElement.getAttribute('data-theme'),
+          hasSidebarAttributes: document.documentElement.hasAttribute('data-sidebar-collapsed'),
+        };
+      });
+      console.log('[TEST DEBUG] ThemeScript status:', themeScriptExecuted);
+
+      // Enhanced debugging: Check AppShell attributes
+      const appShellAttrs = await page.evaluate(() => {
+        const appShell = document.querySelector('[data-testid="app-shell"]');
+        if (!appShell) return null;
+        return {
+          'data-theme': appShell.getAttribute('data-theme'),
+          'data-sidebar-collapsed': appShell.getAttribute('data-sidebar-collapsed'),
+          'data-sidebar-width': appShell.getAttribute('data-sidebar-width'),
+          'data-sidebar-pinned': appShell.getAttribute('data-sidebar-pinned'),
+        };
+      });
+      console.log('[TEST DEBUG] AppShell attributes:', appShellAttrs);
+
       // Log all hydration errors for debugging
       if (hydrationErrors.length > 0) {
         console.log(`[TEST DEBUG] Found ${hydrationErrors.length} hydration errors:`);
@@ -645,6 +668,29 @@ test.describe('Critical Fixes Validation', () => {
       await page.goto(`${BASE_URL}/polls/test-poll-id`, { waitUntil: 'domcontentloaded', timeout: 30_000 });
       await waitForPageReady(page);
       await page.waitForTimeout(2000);
+
+      // Enhanced debugging: Check if ThemeScript executed
+      const themeScriptExecuted = await page.evaluate(() => {
+        return {
+          hasThemeAttribute: document.documentElement.hasAttribute('data-theme'),
+          themeAttribute: document.documentElement.getAttribute('data-theme'),
+          hasSidebarAttributes: document.documentElement.hasAttribute('data-sidebar-collapsed'),
+        };
+      });
+      console.log('[TEST DEBUG] ThemeScript status:', themeScriptExecuted);
+
+      // Enhanced debugging: Check AppShell attributes
+      const appShellAttrs = await page.evaluate(() => {
+        const appShell = document.querySelector('[data-testid="app-shell"]');
+        if (!appShell) return null;
+        return {
+          'data-theme': appShell.getAttribute('data-theme'),
+          'data-sidebar-collapsed': appShell.getAttribute('data-sidebar-collapsed'),
+          'data-sidebar-width': appShell.getAttribute('data-sidebar-width'),
+          'data-sidebar-pinned': appShell.getAttribute('data-sidebar-pinned'),
+        };
+      });
+      console.log('[TEST DEBUG] AppShell attributes:', appShellAttrs);
 
       // Log all hydration errors for debugging
       if (hydrationErrors.length > 0) {

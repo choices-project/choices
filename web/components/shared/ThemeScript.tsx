@@ -62,6 +62,22 @@ export function ThemeScript() {
             document.documentElement.setAttribute('data-sidebar-collapsed', String(sidebarCollapsed));
             document.documentElement.setAttribute('data-sidebar-width', String(sidebarWidth));
             document.documentElement.setAttribute('data-sidebar-pinned', String(sidebarPinned));
+            
+            // Debug: Log that script executed (only in development or when explicitly enabled)
+            if (window.location.hostname === 'localhost' || window.localStorage.getItem('debug-theme-script') === '1') {
+              console.log('[ThemeScript] Executed', {
+                theme,
+                sidebarCollapsed,
+                sidebarWidth,
+                sidebarPinned,
+                attributesSet: {
+                  'data-theme': document.documentElement.getAttribute('data-theme'),
+                  'data-sidebar-collapsed': document.documentElement.getAttribute('data-sidebar-collapsed'),
+                  'data-sidebar-width': document.documentElement.getAttribute('data-sidebar-width'),
+                  'data-sidebar-pinned': document.documentElement.getAttribute('data-sidebar-pinned'),
+                }
+              });
+            }
           })();
         `,
       }}
