@@ -176,8 +176,10 @@ const EnhancedFeedbackWidget: React.FC = () => {
   // Use loading state to show loading indicator (combine analytics and submission loading)
   const isProcessing = isLoadingAnalytics || isSubmitting
 
+  // Guard pathname usage to prevent hydration mismatch
+  // pathname is empty string during initial render, so check after mount
   const isHarnessMode =
-    process.env.NEXT_PUBLIC_ENABLE_E2E_HARNESS === '1' || (pathname?.startsWith('/e2e/') ?? false)
+    process.env.NEXT_PUBLIC_ENABLE_E2E_HARNESS === '1' || (pathname && pathname.startsWith('/e2e/'))
 
   const trackerOptions = useMemo<FeedbackTrackerOptions | undefined>(() => {
     if (typeof navigator === 'undefined' || isHarnessMode) {
