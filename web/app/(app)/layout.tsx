@@ -10,7 +10,6 @@ import OfflineIndicator from '@/features/pwa/components/OfflineIndicator';
 import PWABackground from '@/features/pwa/components/PWABackground';
 import { ServiceWorkerProvider } from '@/features/pwa/components/ServiceWorkerProvider';
 
-import ClientOnly from '@/components/ClientOnly';
 import EnhancedFeedbackWidget from '@/components/EnhancedFeedbackWidget';
 import { AppShell } from '@/components/shared/AppShell';
 import { ErrorBoundary } from '@/components/shared/ErrorBoundary';
@@ -94,45 +93,10 @@ export default function AppLayout({
           <UserStoreProvider>
             <ServiceWorkerProvider debug={process.env.NODE_ENV === 'development'}>
               <AppShell
-                navigation={
-                  <ClientOnly
-                    fallback={
-                      <nav className="bg-white dark:bg-gray-900 shadow-sm border-b border-gray-200 dark:border-gray-700" data-testid="global-nav-loading">
-                        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-                          <div className="flex justify-between h-16">
-                            <div className="flex items-center">
-                              <div className="h-8 w-8 bg-gray-200 animate-pulse rounded" />
-                            </div>
-                            <div className="flex items-center space-x-4">
-                              <div className="h-8 w-20 bg-gray-200 animate-pulse rounded" />
-                            </div>
-                          </div>
-                        </div>
-                      </nav>
-                    }
-                  >
-                    <GlobalNavigation />
-                  </ClientOnly>
-                }
-                siteMessages={
-                  <ClientOnly
-                    fallback={
-                      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-2">
-                        <div className="rounded-lg border border-gray-200 bg-gray-50 p-4 text-sm text-gray-600">
-                          Loading site messages…
-                        </div>
-                      </div>
-                    }
-                  >
-                    <SiteMessages />
-                  </ClientOnly>
-                }
+                navigation={<GlobalNavigation />}
+                siteMessages={<SiteMessages />}
                 feedback={
-                  !DISABLE_FEEDBACK_WIDGET ? (
-                    <ClientOnly fallback={null}>
-                      <EnhancedFeedbackWidget />
-                    </ClientOnly>
-                  ) : null
+                  !DISABLE_FEEDBACK_WIDGET ? <EnhancedFeedbackWidget /> : null
                 }
               >
                 <ErrorBoundary>
