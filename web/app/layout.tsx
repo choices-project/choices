@@ -4,6 +4,7 @@ import React from 'react';
 
 import { SkipNavLink, SkipNavTarget } from '@/components/accessibility/SkipNavLink';
 import SiteFooter from '@/components/layout/SiteFooter';
+import { ThemeScript } from '@/components/shared/ThemeScript';
 
 import {
   DEFAULT_LOCALE,
@@ -127,6 +128,9 @@ export default async function RootLayout({
   return (
     <html lang={locale ?? DEFAULT_LOCALE}>
       <head>
+        {/* CRITICAL: Set theme before React hydrates to prevent hydration mismatch */}
+        <ThemeScript />
+        
         {/* PWA Manifest - no preload needed as it's loaded via rel="manifest" */}
         <link rel="manifest" href="/manifest.json" crossOrigin="use-credentials" />
 
