@@ -1,6 +1,6 @@
 import dynamicImport from 'next/dynamic';
 import { cookies, headers } from 'next/headers';
-import React from 'react';
+import React, { Suspense } from 'react';
 
 import logger from '@/lib/utils/logger';
 
@@ -12,6 +12,9 @@ import type { Metadata } from 'next';
  * This is the canonical implementation that should be used by the app route.
  * Provides SSR-safe poll loading with proper error handling.
  */
+
+// Force dynamic rendering to prevent static generation and hydration mismatches
+export const dynamic = 'force-dynamic';
 
 // Dynamically import PollClient to prevent hydration errors
 // This must be at module level, not inside the component
@@ -179,7 +182,21 @@ export default async function PollPage({ params }: { params: { id: string } }) {
       throw new Error('Malformed poll response');
     }
 
-    return <PollClient poll={payload.data} />;
+    return (
+      <Suspense fallback={
+        <div className="flex min-h-screen items-center justify-center px-4">
+          <div className="text-center space-y-4 max-w-md">
+            <div className="animate-pulse" role="status" aria-live="polite" aria-busy="true">
+              <div className="h-8 bg-gray-200 dark:bg-gray-700 rounded w-3/4 mx-auto mb-4" />
+              <div className="h-4 bg-gray-200 dark:bg-gray-700 rounded w-full mb-2" />
+              <div className="h-4 bg-gray-200 dark:bg-gray-700 rounded w-5/6 mx-auto" />
+            </div>
+          </div>
+        </div>
+      }>
+        <PollClient poll={payload.data} />
+      </Suspense>
+    );
   } catch (error) {
     logger.error('Failed to render poll page', { error, pollId: id });
     return (
