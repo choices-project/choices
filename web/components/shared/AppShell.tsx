@@ -33,34 +33,33 @@ export function AppShell({ navigation, siteMessages, feedback, children }: AppSh
   const sidebarWidth = useSidebarWidth();
   const sidebarPinned = useSidebarPinned();
   
-  // CRITICAL: Read initial values from ThemeScript-set attributes to prevent hydration mismatch
-  // ThemeScript runs before React hydrates and sets data attributes on documentElement
-  // This ensures server and client HTML match from the start
+  // CRITICAL: Use stable defaults that match server render
+  // ThemeScript sets attributes on documentElement before React hydrates
+  // But we use defaults here to ensure server and client initial render match
+  // After mount, we sync with the store (which reads from script-set attributes)
   const [isMounted, setIsMounted] = useState(false);
-  const [theme, setTheme] = useState<'light' | 'dark'>(() => {
-    if (typeof document === 'undefined') return 'light';
-    const scriptTheme = document.documentElement.getAttribute('data-theme');
-    return (scriptTheme === 'dark' ? 'dark' : 'light') as 'light' | 'dark';
-  });
-  const [collapsed, setCollapsed] = useState(() => {
-    if (typeof document === 'undefined') return false;
-    const scriptCollapsed = document.documentElement.getAttribute('data-sidebar-collapsed');
-    return scriptCollapsed === 'true';
-  });
-  const [width, setWidth] = useState(() => {
-    if (typeof document === 'undefined') return 280;
-    const scriptWidth = document.documentElement.getAttribute('data-sidebar-width');
-    return scriptWidth ? Number.parseInt(scriptWidth, 10) : 280;
-  });
-  const [pinned, setPinned] = useState(() => {
-    if (typeof document === 'undefined') return false;
-    const scriptPinned = document.documentElement.getAttribute('data-sidebar-pinned');
-    return scriptPinned === 'true';
-  });
+  const [theme, setTheme] = useState<'light' | 'dark'>('light');
+  const [collapsed, setCollapsed] = useState(false);
+  const [width, setWidth] = useState(280);
+  const [pinned, setPinned] = useState(false);
   
   useEffect(() => {
     setIsMounted(true);
-    // After mount, sync with store (which may have updated)
+    // After mount, read from script-set attributes (ThemeScript already set them)
+    // This ensures we use the actual persisted values, not defaults
+    if (typeof document !== 'undefined') {
+      const scriptTheme = document.documentElement.getAttribute('data-theme');
+      const scriptCollapsed = document.documentElement.getAttribute('data-sidebar-collapsed');
+      const scriptWidth = document.documentElement.getAttribute('data-sidebar-width');
+      const scriptPinned = document.documentElement.getAttribute('data-sidebar-pinned');
+      
+      if (scriptTheme) setTheme(scriptTheme === 'dark' ? 'dark' : 'light');
+      if (scriptCollapsed) setCollapsed(scriptCollapsed === 'true');
+      if (scriptWidth) setWidth(Number.parseInt(scriptWidth, 10));
+      if (scriptPinned) setPinned(scriptPinned === 'true');
+    }
+    
+    // Also sync with store (for future updates)
     setTheme(resolvedTheme);
     setCollapsed(sidebarCollapsed);
     setWidth(sidebarWidth);
