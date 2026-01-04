@@ -95,14 +95,18 @@ const formatElectionDate = (isoDate: string | undefined, isClient: boolean = fal
 // Internal component - will be dynamically imported with ssr: false
 function RepresentativeDetailPageContent() {
   const { trackEvent } = useAnalyticsActions();
-  const params = useParams();
   const router = useRouter();
 
   // Track if component is mounted on client to prevent hydration mismatches
   const [isClient, setIsClient] = React.useState(false);
+  const [params, setParams] = React.useState<{ id?: string } | null>(null);
 
   React.useEffect(() => {
     setIsClient(true);
+    // Only access useParams after mount to prevent hydration mismatch
+    // eslint-disable-next-line react-hooks/rules-of-hooks
+    const nextParams = useParams();
+    setParams(nextParams);
   }, []);
 
   // getElectionCountdown - only calculate on client to prevent hydration mismatch

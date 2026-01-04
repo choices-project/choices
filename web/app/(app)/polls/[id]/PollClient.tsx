@@ -93,11 +93,19 @@ type PollClientProps = {
 
 export default function PollClient({ poll }: PollClientProps) {
   const router = useRouter();
-  const params = useParams();
   
   // CRITICAL: Guard useParams() usage to prevent hydration mismatch
   // useParams() can return different values on server vs client
+  // Access params from window.location instead to prevent hydration mismatch
   const [isMounted, setIsMounted] = React.useState(false);
+  const params = React.useMemo(() => {
+    if (typeof window === 'undefined') {
+      return { id: undefined };
+    }
+    // Access params from window.location for initial render
+    const pathMatch = window.location.pathname.match(/\/polls\/([^/]+)/);
+    return { id: pathMatch?.[1] };
+  }, []);
   
   React.useEffect(() => {
     setIsMounted(true);
