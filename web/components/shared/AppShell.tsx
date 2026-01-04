@@ -104,6 +104,7 @@ export function AppShell({ navigation, siteMessages, feedback, children }: AppSh
     <div
       className="min-h-screen bg-slate-50 dark:bg-gray-900"
       data-testid="app-shell"
+      suppressHydrationWarning
       data-theme={isMounted ? theme : 'light'}
       data-sidebar-collapsed={isMounted ? String(collapsed) : 'false'}
       data-sidebar-width={isMounted ? String(width) : '280'}
