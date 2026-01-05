@@ -354,6 +354,32 @@ export default function FeedCore({
         <div className="flex gap-2">
           {/* Always render button to maintain consistent DOM structure */}
           {/* Hide until client-side to prevent hydration mismatch */}
+          {/* #region agent log */}
+          {(() => {
+            const log = (message, data, hypothesisId) => {
+              const logData = {
+                location: 'FeedCore.tsx:render:darkModeButton',
+                message: message,
+                data: data,
+                timestamp: Date.now(),
+                sessionId: 'debug-session',
+                runId: 'run1',
+                hypothesisId: hypothesisId
+              };
+              if (typeof window !== 'undefined' && window.localStorage.getItem('debug-feed-core') === '1') {
+                console.log('[DEBUG]', JSON.stringify(logData));
+              }
+              // Always try to send to logging server
+              fetch('http://127.0.0.1:7242/ingest/6a732aed-2d72-4883-a63a-f3c892fc1216', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(logData)
+              }).catch(() => {});
+            };
+            log('FeedCore render darkModeButton', { isClient, isDarkMode, visibility: isClient ? 'visible' : 'hidden' }, 'B');
+            return null;
+          })()}
+          {/* #endregion */}
           <Button
             variant="outline"
             size="icon"
