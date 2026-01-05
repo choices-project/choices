@@ -571,40 +571,65 @@ test.describe('Critical Fixes Validation', () => {
             if (firstHydrationErrorTime === null) {
               firstHydrationErrorTime = Date.now();
               console.log('[TEST DEBUG] First hydration error detected at', firstHydrationErrorTime);
-              // Capture DOM state immediately when first hydration error occurs
-              // Return data instead of console.log so we can log it in the test
-              page.evaluate(() => {
-                try {
-                  return {
-                    timestamp: Date.now(),
-                    url: window.location.href,
-                    pathname: window.location.pathname,
-                    htmlAttributes: {
-                      'data-theme': document.documentElement.getAttribute('data-theme'),
-                      'data-sidebar-collapsed': document.documentElement.getAttribute('data-sidebar-collapsed'),
-                      'data-sidebar-width': document.documentElement.getAttribute('data-sidebar-width'),
-                      'data-sidebar-pinned': document.documentElement.getAttribute('data-sidebar-pinned'),
-                    },
-                    bodyClasses: Array.from(document.body.classList),
-                    appShell: document.querySelector('[data-testid="app-shell"]') ? {
-                      'data-theme': document.querySelector('[data-testid="app-shell"]')?.getAttribute('data-theme'),
-                      'data-sidebar-collapsed': document.querySelector('[data-testid="app-shell"]')?.getAttribute('data-sidebar-collapsed'),
-                    } : null,
-                    representativeDetail: document.querySelector('[data-testid="representative-detail"]') ? 'exists' : null,
-                    globalNav: document.querySelector('[data-testid="global-nav-loading"]') ? 'loading' : document.querySelector('nav') ? 'rendered' : 'none',
-                    allNavs: Array.from(document.querySelectorAll('nav')).map(nav => ({
-                      testId: nav.getAttribute('data-testid'),
-                      className: nav.className.substring(0, 50),
-                    })),
-                  };
-                } catch (e) {
-                  return { error: e?.message || String(e) };
-                }
-              }).then((errorInfo) => {
-                console.log('[HYDRATION ERROR STATE]', JSON.stringify(errorInfo, null, 2));
-              }).catch((err) => {
-                console.log('[HYDRATION ERROR STATE] Failed to capture:', err?.message || String(err));
-              });
+        // Capture DOM state immediately when first hydration error occurs
+        // Return data instead of console.log so we can log it in the test
+        page.evaluate(() => {
+          try {
+            // Get all elements with data attributes that might differ
+            const allDataAttributes = Array.from(document.querySelectorAll('[data-theme], [data-sidebar-collapsed], [data-sidebar-width], [data-sidebar-pinned], [data-sw-registered]')).map(el => ({
+              tag: el.tagName,
+              testId: el.getAttribute('data-testid'),
+              'data-theme': el.getAttribute('data-theme'),
+              'data-sidebar-collapsed': el.getAttribute('data-sidebar-collapsed'),
+              'data-sidebar-width': el.getAttribute('data-sidebar-width'),
+              'data-sidebar-pinned': el.getAttribute('data-sidebar-pinned'),
+              'data-sw-registered': el.getAttribute('data-sw-registered'),
+              className: el.className.substring(0, 100),
+            }));
+            
+            // Get all conditional renders that might differ
+            const conditionalElements = Array.from(document.querySelectorAll('[style*="display"]')).map(el => ({
+              tag: el.tagName,
+              style: el.getAttribute('style'),
+              className: el.className.substring(0, 100),
+            }));
+            
+            return {
+              timestamp: Date.now(),
+              url: window.location.href,
+              pathname: window.location.pathname,
+              htmlAttributes: {
+                'data-theme': document.documentElement.getAttribute('data-theme'),
+                'data-sidebar-collapsed': document.documentElement.getAttribute('data-sidebar-collapsed'),
+                'data-sidebar-width': document.documentElement.getAttribute('data-sidebar-width'),
+                'data-sidebar-pinned': document.documentElement.getAttribute('data-sidebar-pinned'),
+                'data-sw-registered': document.documentElement.getAttribute('data-sw-registered'),
+              },
+              bodyClasses: Array.from(document.body.classList),
+              appShell: document.querySelector('[data-testid="app-shell"]') ? {
+                'data-theme': document.querySelector('[data-testid="app-shell"]')?.getAttribute('data-theme'),
+                'data-sidebar-collapsed': document.querySelector('[data-testid="app-shell"]')?.getAttribute('data-sidebar-collapsed'),
+                'data-sidebar-width': document.querySelector('[data-testid="app-shell"]')?.getAttribute('data-sidebar-width'),
+                'data-sidebar-pinned': document.querySelector('[data-testid="app-shell"]')?.getAttribute('data-sidebar-pinned'),
+              } : null,
+              representativeDetail: document.querySelector('[data-testid="representative-detail"]') ? 'exists' : null,
+              globalNav: document.querySelector('[data-testid="global-nav-loading"]') ? 'loading' : document.querySelector('nav') ? 'rendered' : 'none',
+              allNavs: Array.from(document.querySelectorAll('nav')).map(nav => ({
+                testId: nav.getAttribute('data-testid'),
+                className: nav.className.substring(0, 50),
+              })),
+              allDataAttributes,
+              conditionalElements: conditionalElements.slice(0, 10), // Limit to first 10
+              feedContent: document.querySelector('[data-testid="feed-loading-skeleton"]') ? 'loading' : document.querySelector('[data-testid="unified-feed"]') ? 'rendered' : 'none',
+            };
+          } catch (e) {
+            return { error: e?.message || String(e) };
+          }
+        }).then((errorInfo) => {
+          console.log('[HYDRATION ERROR STATE]', JSON.stringify(errorInfo, null, 2));
+        }).catch((err) => {
+          console.log('[HYDRATION ERROR STATE] Failed to capture:', err?.message || String(err));
+        });
             }
             hydrationErrors.push(text);
             console.log('[HYDRATION ERROR]', text, 'at', Date.now());
