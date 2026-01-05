@@ -15,7 +15,7 @@
 'use client';
 
 import { X } from 'lucide-react';
-import { useEffect, useState } from 'react';
+import { useEffect, useLayoutEffect, useState } from 'react';
 
 import { logger } from '@/lib/utils/logger';
 
@@ -77,12 +77,13 @@ export function ServiceWorkerProvider({
   // CRITICAL: Use stable defaults that match server render
   // Server always renders as online, no updates, not registered
   // Client checks actual state after mount to prevent hydration mismatch
-  const [isUpdateAvailable, setIsUpdateAvailable] = useState(false);
-  const [isOffline, setIsOffline] = useState(false);
-  const [isRegistered, setIsRegistered] = useState(false);
-  const [isMounted, setIsMounted] = useState(false);
+  // Use function initializer and useLayoutEffect to ensure stable initial state
+  const [isUpdateAvailable, setIsUpdateAvailable] = useState(() => false);
+  const [isOffline, setIsOffline] = useState(() => false);
+  const [isRegistered, setIsRegistered] = useState(() => false);
+  const [isMounted, setIsMounted] = useState(() => false);
 
-  useEffect(() => {
+  useLayoutEffect(() => {
     setIsMounted(true);
   }, []);
 
@@ -207,51 +208,49 @@ export function ServiceWorkerProvider({
     <>
       {children}
 
-      {/* Update Available Banner - Only show after mount to prevent hydration mismatch */}
-      {isMounted && showUpdateBanner && isUpdateAvailable && (
-        <div
-          className="fixed bottom-0 left-0 right-0 bg-blue-600 text-white p-4 shadow-lg z-50"
-          role="alert"
-          aria-live="polite"
-        >
-          <div className="max-w-7xl mx-auto flex items-center justify-between gap-4">
-            <div className="flex-1">
-              <p className="font-semibold">App Update Available</p>
-              <p className="text-sm text-blue-100">
-                A new version of Choices is ready. Update now for the latest features and improvements.
-              </p>
-            </div>
+      {/* Update Available Banner - Always render container to prevent hydration mismatch */}
+      <div
+        className="fixed bottom-0 left-0 right-0 bg-blue-600 text-white p-4 shadow-lg z-50"
+        role="alert"
+        aria-live="polite"
+        style={{ display: isMounted && showUpdateBanner && isUpdateAvailable ? 'block' : 'none' }}
+      >
+        <div className="max-w-7xl mx-auto flex items-center justify-between gap-4">
+          <div className="flex-1">
+            <p className="font-semibold">App Update Available</p>
+            <p className="text-sm text-blue-100">
+              A new version of Choices is ready. Update now for the latest features and improvements.
+            </p>
+          </div>
 
-            <div className="flex items-center gap-2">
-              <button
-                onClick={handleUpdate}
-                className="bg-white text-blue-600 px-4 py-2 rounded-md font-semibold hover:bg-blue-50 transition-colors"
-              >
-                Update Now
-              </button>
+          <div className="flex items-center gap-2">
+            <button
+              onClick={handleUpdate}
+              className="bg-white text-blue-600 px-4 py-2 rounded-md font-semibold hover:bg-blue-50 transition-colors"
+            >
+              Update Now
+            </button>
 
-              <button
-                onClick={dismissUpdate}
-                className="p-2 hover:bg-blue-700 rounded-md transition-colors"
-                aria-label="Dismiss update notification"
-              >
-                <X className="w-5 h-5" />
-              </button>
-            </div>
+            <button
+              onClick={dismissUpdate}
+              className="p-2 hover:bg-blue-700 rounded-md transition-colors"
+              aria-label="Dismiss update notification"
+            >
+              <X className="w-5 h-5" />
+            </button>
           </div>
         </div>
-      )}
+      </div>
 
-      {/* Offline Indicator - Only show after mount to prevent hydration mismatch */}
-      {isMounted && isOffline && (
-        <div
-          className="fixed top-0 left-0 right-0 bg-yellow-500 text-yellow-900 px-4 py-2 text-center text-sm font-medium z-50"
-          role="alert"
-          aria-live="polite"
-        >
-          📡 You&apos;re offline. Some features may be limited.
-        </div>
-      )}
+      {/* Offline Indicator - Always render container to prevent hydration mismatch */}
+      <div
+        className="fixed top-0 left-0 right-0 bg-yellow-500 text-yellow-900 px-4 py-2 text-center text-sm font-medium z-50"
+        role="alert"
+        aria-live="polite"
+        style={{ display: isMounted && isOffline ? 'block' : 'none' }}
+      >
+        📡 You&apos;re offline. Some features may be limited.
+      </div>
     </>
   );
 }
