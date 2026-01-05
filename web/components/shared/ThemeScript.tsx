@@ -16,10 +16,17 @@
  */
 'use client';
 
-import { useEffect } from 'react';
+import React from 'react';
 
 export function ThemeScript() {
-  useEffect(() => {
+  // CRITICAL: Run synchronously during render, not in useEffect
+  // This ensures attributes are set before React hydrates the rest of the tree
+  // We use a ref to ensure this only runs once
+  const hasRunRef = React.useRef(false);
+  
+  if (typeof window !== 'undefined' && !hasRunRef.current) {
+    hasRunRef.current = true;
+    
     // CRITICAL: Always set attributes, even if localStorage is empty
     // This ensures server and client HTML match from the start
     let theme = 'light';
@@ -79,7 +86,7 @@ export function ThemeScript() {
         }
       });
     }
-  }, []); // Empty deps - run once on mount
+  }
 
   return null; // This component doesn't render anything
 }
