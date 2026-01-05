@@ -572,10 +572,10 @@ test.describe('Critical Fixes Validation', () => {
               firstHydrationErrorTime = Date.now();
               console.log('[TEST DEBUG] First hydration error detected at', firstHydrationErrorTime);
               // Capture DOM state immediately when first hydration error occurs
-              // Use void to fire-and-forget but ensure it executes
-              void page.evaluate(() => {
+              // Return data instead of console.log so we can log it in the test
+              page.evaluate(() => {
                 try {
-                  const errorInfo = {
+                  return {
                     timestamp: Date.now(),
                     url: window.location.href,
                     pathname: window.location.pathname,
@@ -597,10 +597,13 @@ test.describe('Critical Fixes Validation', () => {
                       className: nav.className.substring(0, 50),
                     })),
                   };
-                  console.log('[HYDRATION ERROR STATE]', JSON.stringify(errorInfo));
                 } catch (e) {
-                  console.log('[HYDRATION ERROR STATE] Failed to capture:', e?.message || String(e));
+                  return { error: e?.message || String(e) };
                 }
+              }).then((errorInfo) => {
+                console.log('[HYDRATION ERROR STATE]', JSON.stringify(errorInfo, null, 2));
+              }).catch((err) => {
+                console.log('[HYDRATION ERROR STATE] Failed to capture:', err?.message || String(err));
               });
             }
             hydrationErrors.push(text);
