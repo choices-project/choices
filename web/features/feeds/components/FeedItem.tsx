@@ -193,9 +193,12 @@ const FeedItem = memo(({
   }, [isExpanded, handleLike, handleShare]);
 
   // Track if component is mounted to prevent hydration mismatch from date formatting
-  const [isMounted, setIsMounted] = useState(false);
+  // CRITICAL: Use function initializer to ensure stable initial state
+  const [isMounted, setIsMounted] = useState(() => false);
   
-  useEffect(() => {
+  // Use useLayoutEffect to ensure state update happens after initial render
+  // This prevents hydration mismatches by ensuring the initial render always matches
+  useLayoutEffect(() => {
     setIsMounted(true);
   }, []);
 
