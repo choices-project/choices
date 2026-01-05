@@ -680,6 +680,14 @@ test.describe('Critical Fixes Validation', () => {
       });
       console.log('[TEST DEBUG] DOM structure:', JSON.stringify(domDebug, null, 2));
 
+      // Log all debug logs for analysis
+      if (debugLogs.length > 0) {
+        console.log(`[TEST DEBUG] Found ${debugLogs.length} debug logs:`);
+        debugLogs.forEach((log, idx) => {
+          console.log(`[TEST DEBUG] Log ${idx + 1}:`, log);
+        });
+      }
+
       // Log all hydration errors for debugging
       if (hydrationErrors.length > 0) {
         console.log(`[TEST DEBUG] Found ${hydrationErrors.length} hydration errors:`);
@@ -700,10 +708,16 @@ test.describe('Critical Fixes Validation', () => {
     test('poll detail page uses hydration guard correctly', async ({ page }) => {
       const consoleErrors: string[] = [];
       const hydrationErrors: string[] = [];
+      const debugLogs: string[] = [];
 
       page.on('console', (msg) => {
+        const text = msg.text();
+        // Capture all [DEBUG] logs for analysis
+        if (text.includes('[DEBUG]')) {
+          debugLogs.push(text);
+          console.log('[TEST DEBUG LOG]', text);
+        }
         if (msg.type() === 'error') {
-          const text = msg.text();
           consoleErrors.push(text);
           if (text.includes('185') || text.includes('hydration') || text.includes('Hydration')) {
             hydrationErrors.push(text);
@@ -785,6 +799,14 @@ test.describe('Critical Fixes Validation', () => {
         };
       });
       console.log('[TEST DEBUG] DOM structure:', JSON.stringify(domDebug, null, 2));
+
+      // Log all debug logs for analysis
+      if (debugLogs.length > 0) {
+        console.log(`[TEST DEBUG] Found ${debugLogs.length} debug logs:`);
+        debugLogs.forEach((log, idx) => {
+          console.log(`[TEST DEBUG] Log ${idx + 1}:`, log);
+        });
+      }
 
       // Log all hydration errors for debugging
       if (hydrationErrors.length > 0) {
