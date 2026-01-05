@@ -18,7 +18,7 @@
  * Fixed: January 2025 - Replaced custom ErrorBoundary with shared ErrorBoundary that handles hydration errors
  */
 
-import React, { useEffect, useState, useRef, Suspense } from 'react';
+import React, { useEffect, useRef, Suspense } from 'react';
 
 import { UnifiedFeedRefactored } from '@/features/feeds';
 import { useFormattedDistrict } from '@/features/profile/hooks/useUserDistrict';
@@ -36,7 +36,6 @@ function FeedContent() {
   const user = useUser();
   const userDistrict = useFormattedDistrict();
   const { setCurrentRoute, setSidebarActiveSection, setBreadcrumbs } = useAppActions();
-  const [isMounted, setIsMounted] = useState(false);
 
   // Refs for stable app store actions
   const setCurrentRouteRef = useRef(setCurrentRoute);
@@ -46,13 +45,10 @@ function FeedContent() {
   const setBreadcrumbsRef = useRef(setBreadcrumbs);
   useEffect(() => { setBreadcrumbsRef.current = setBreadcrumbs; }, [setBreadcrumbs]);
 
+  // CRITICAL: Remove isMounted check - ClientOnly wrapper handles client-side rendering
+  // The isMounted check was causing hydration mismatches because it conditionally rendered
+  // different content on server vs client, even though ClientOnly should prevent SSR
   useEffect(() => {
-    setIsMounted(true);
-  }, []);
-
-  useEffect(() => {
-    if (!isMounted) return;
-
     setCurrentRouteRef.current('/feed');
     setSidebarActiveSectionRef.current('feed');
     setBreadcrumbsRef.current([
@@ -64,34 +60,7 @@ function FeedContent() {
       setSidebarActiveSectionRef.current(null);
       setBreadcrumbsRef.current([]);
     };
-  }, [isMounted]);
-
-  // Prevent hydration mismatch by only rendering content after mount
-  // Note: This is a fallback - ClientOnly wrapper below handles most cases
-  if (!isMounted) {
-    return (
-      <div className="container mx-auto px-4 py-8">
-        <div
-          className="space-y-4"
-          aria-label="Loading feeds"
-          aria-busy="true"
-          aria-live="polite"
-          data-testid="feed-loading-skeleton"
-          role="status"
-        >
-          {[1, 2, 3].map((i) => (
-            <div key={i} className="animate-pulse" aria-hidden="true">
-              <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-6">
-                <div className="h-6 bg-gray-200 dark:bg-gray-700 rounded w-3/4 mb-4" />
-                <div className="h-4 bg-gray-200 dark:bg-gray-700 rounded w-full mb-2" />
-                <div className="h-4 bg-gray-200 dark:bg-gray-700 rounded w-5/6" />
-              </div>
-            </div>
-          ))}
-        </div>
-      </div>
-    );
-  }
+  }, []);
 
   const loadingFallback = (
     <div className="container mx-auto px-4 py-8">
