@@ -102,6 +102,11 @@ function RepresentativeDetailPageContent() {
   const [isClient, setIsClient] = React.useState(false);
 
   React.useEffect(() => {
+    // #region agent log
+    const logData={location:'representatives/[id]/page.tsx:105',message:'isClient set to true',data:{timestamp:Date.now(),hasDocument:typeof document!=='undefined'},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'C'};
+    console.log('[DEBUG]',JSON.stringify(logData));
+    fetch('http://127.0.0.1:7242/ingest/6a732aed-2d72-4883-a63a-f3c892fc1216',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(logData)}).catch(()=>{});
+    // #endregion
     setIsClient(true);
   }, []);
 
@@ -420,13 +425,13 @@ function RepresentativeDetailPageContent() {
                   )}
                 </div>
               )}
-              {daysUntilNextElection != null && daysUntilNextElection <= 90 && (
-                <div className="mt-2 text-xs text-blue-100">
-                  {daysUntilNextElection === 0
-                    ? 'Election is today'
-                    : `Election in ${daysUntilNextElection} day${daysUntilNextElection === 1 ? '' : 's'}`}
-                </div>
-              )}
+                  {daysUntilNextElection != null && daysUntilNextElection <= 90 && (
+                    <div className="mt-2 text-xs text-blue-100" suppressHydrationWarning>
+                      {daysUntilNextElection === 0
+                        ? 'Election is today'
+                        : `Election in ${daysUntilNextElection} day${daysUntilNextElection === 1 ? '' : 's'}`}
+                    </div>
+                  )}
             </div>
 
             <button
@@ -513,16 +518,16 @@ function RepresentativeDetailPageContent() {
                   >
                     <div>
                       <p className="text-sm font-semibold text-blue-900">{election.name}</p>
-                      <p className="text-xs text-blue-700">
-                        {formatElectionDate(election.election_day, isClient)}
-                        {isClient && (() => {
-                          const countdown = getElectionCountdown(election.election_day);
-                          if (countdown == null || countdown > 90) {
-                            return null;
-                          }
-                          return ` · ${countdown === 0 ? 'Today' : `In ${countdown} day${countdown === 1 ? '' : 's'}`}`;
-                        })()}
-                      </p>
+                          <p className="text-xs text-blue-700" suppressHydrationWarning>
+                            {formatElectionDate(election.election_day, isClient)}
+                            {isClient && (() => {
+                              const countdown = getElectionCountdown(election.election_day);
+                              if (countdown == null || countdown > 90) {
+                                return null;
+                              }
+                              return ` · ${countdown === 0 ? 'Today' : `In ${countdown} day${countdown === 1 ? '' : 's'}`}`;
+                            })()}
+                          </p>
                     </div>
                     <Badge className="bg-blue-600 text-white text-xs">
                       {election.ocd_division_id}
