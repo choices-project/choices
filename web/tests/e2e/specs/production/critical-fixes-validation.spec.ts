@@ -572,30 +572,36 @@ test.describe('Critical Fixes Validation', () => {
               firstHydrationErrorTime = Date.now();
               console.log('[TEST DEBUG] First hydration error detected at', firstHydrationErrorTime);
               // Capture DOM state immediately when first hydration error occurs
-              page.evaluate(() => {
-                const errorInfo = {
-                  timestamp: Date.now(),
-                  url: window.location.href,
-                  htmlAttributes: {
-                    'data-theme': document.documentElement.getAttribute('data-theme'),
-                    'data-sidebar-collapsed': document.documentElement.getAttribute('data-sidebar-collapsed'),
-                    'data-sidebar-width': document.documentElement.getAttribute('data-sidebar-width'),
-                    'data-sidebar-pinned': document.documentElement.getAttribute('data-sidebar-pinned'),
-                  },
-                  bodyClasses: Array.from(document.body.classList),
-                  appShell: document.querySelector('[data-testid="app-shell"]') ? {
-                    'data-theme': document.querySelector('[data-testid="app-shell"]')?.getAttribute('data-theme'),
-                    'data-sidebar-collapsed': document.querySelector('[data-testid="app-shell"]')?.getAttribute('data-sidebar-collapsed'),
-                  } : null,
-                  representativeDetail: document.querySelector('[data-testid="representative-detail"]') ? 'exists' : null,
-                  globalNav: document.querySelector('[data-testid="global-nav-loading"]') ? 'loading' : document.querySelector('nav') ? 'rendered' : 'none',
-                  allNavs: Array.from(document.querySelectorAll('nav')).map(nav => ({
-                    testId: nav.getAttribute('data-testid'),
-                    className: nav.className.substring(0, 50),
-                  })),
-                };
-                console.log('[HYDRATION ERROR STATE]', JSON.stringify(errorInfo));
-              }).catch(() => {});
+              // Use void to fire-and-forget but ensure it executes
+              void page.evaluate(() => {
+                try {
+                  const errorInfo = {
+                    timestamp: Date.now(),
+                    url: window.location.href,
+                    pathname: window.location.pathname,
+                    htmlAttributes: {
+                      'data-theme': document.documentElement.getAttribute('data-theme'),
+                      'data-sidebar-collapsed': document.documentElement.getAttribute('data-sidebar-collapsed'),
+                      'data-sidebar-width': document.documentElement.getAttribute('data-sidebar-width'),
+                      'data-sidebar-pinned': document.documentElement.getAttribute('data-sidebar-pinned'),
+                    },
+                    bodyClasses: Array.from(document.body.classList),
+                    appShell: document.querySelector('[data-testid="app-shell"]') ? {
+                      'data-theme': document.querySelector('[data-testid="app-shell"]')?.getAttribute('data-theme'),
+                      'data-sidebar-collapsed': document.querySelector('[data-testid="app-shell"]')?.getAttribute('data-sidebar-collapsed'),
+                    } : null,
+                    representativeDetail: document.querySelector('[data-testid="representative-detail"]') ? 'exists' : null,
+                    globalNav: document.querySelector('[data-testid="global-nav-loading"]') ? 'loading' : document.querySelector('nav') ? 'rendered' : 'none',
+                    allNavs: Array.from(document.querySelectorAll('nav')).map(nav => ({
+                      testId: nav.getAttribute('data-testid'),
+                      className: nav.className.substring(0, 50),
+                    })),
+                  };
+                  console.log('[HYDRATION ERROR STATE]', JSON.stringify(errorInfo));
+                } catch (e) {
+                  console.log('[HYDRATION ERROR STATE] Failed to capture:', e?.message || String(e));
+                }
+              });
             }
             hydrationErrors.push(text);
             console.log('[HYDRATION ERROR]', text, 'at', Date.now());
