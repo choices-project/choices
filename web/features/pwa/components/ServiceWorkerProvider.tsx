@@ -74,13 +74,21 @@ export function ServiceWorkerProvider({
   debug = false,
   showUpdateBanner = true
 }: ServiceWorkerProviderProps) {
+  // CRITICAL: Use stable defaults that match server render
+  // Server always renders as online, no updates, not registered
+  // Client checks actual state after mount to prevent hydration mismatch
   const [isUpdateAvailable, setIsUpdateAvailable] = useState(false);
   const [isOffline, setIsOffline] = useState(false);
   const [isRegistered, setIsRegistered] = useState(false);
+  const [isMounted, setIsMounted] = useState(false);
 
   useEffect(() => {
-    // Only run in browser
-    if (typeof window === 'undefined') return;
+    setIsMounted(true);
+  }, []);
+
+  useEffect(() => {
+    // Only run in browser and after mount to prevent hydration mismatch
+    if (typeof window === 'undefined' || !isMounted) return;
 
     const isAutomationEnvironment =
       typeof navigator !== 'undefined' &&
@@ -147,22 +155,32 @@ export function ServiceWorkerProvider({
       window.removeEventListener('online', handleOnline);
       window.removeEventListener('offline', handleOffline);
     };
-  }, [debug]);
+  }, [debug, isMounted]);
 
   useEffect(() => {
-    if (typeof document === 'undefined') {
+    // CRITICAL: Only set attributes after mount to prevent hydration mismatch
+    // Setting attributes on documentElement during render causes React to see
+    // different HTML between server and client
+    if (typeof document === 'undefined' || typeof window === 'undefined') {
       return;
     }
 
-    if (isRegistered) {
-      document.documentElement.setAttribute('data-sw-registered', 'true');
-      return () => {
+    // Use a small delay to ensure this runs after React has hydrated
+    // This prevents hydration mismatches while still setting the attribute
+    const timeoutId = setTimeout(() => {
+      if (isRegistered) {
+        document.documentElement.setAttribute('data-sw-registered', 'true');
+      } else {
         document.documentElement.removeAttribute('data-sw-registered');
-      };
-    }
+      }
+    }, 0);
 
-    document.documentElement.removeAttribute('data-sw-registered');
-    return undefined;
+    return () => {
+      clearTimeout(timeoutId);
+      if (typeof document !== 'undefined') {
+        document.documentElement.removeAttribute('data-sw-registered');
+      }
+    };
   }, [isRegistered]);
 
   /**
@@ -189,8 +207,8 @@ export function ServiceWorkerProvider({
     <>
       {children}
 
-      {/* Update Available Banner */}
-      {showUpdateBanner && isUpdateAvailable && (
+      {/* Update Available Banner - Only show after mount to prevent hydration mismatch */}
+      {isMounted && showUpdateBanner && isUpdateAvailable && (
         <div
           className="fixed bottom-0 left-0 right-0 bg-blue-600 text-white p-4 shadow-lg z-50"
           role="alert"
@@ -224,8 +242,8 @@ export function ServiceWorkerProvider({
         </div>
       )}
 
-      {/* Offline Indicator */}
-      {isOffline && (
+      {/* Offline Indicator - Only show after mount to prevent hydration mismatch */}
+      {isMounted && isOffline && (
         <div
           className="fixed top-0 left-0 right-0 bg-yellow-500 text-yellow-900 px-4 py-2 text-center text-sm font-medium z-50"
           role="alert"
