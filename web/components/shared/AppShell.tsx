@@ -162,15 +162,19 @@ export function AppShell({ navigation, siteMessages, feedback, children }: AppSh
     >
       <header>{navigation}</header>
 
-      {siteMessages ? (
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-2">{siteMessages}</div>
-      ) : null}
+      {/* Always render container to maintain consistent DOM structure */}
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-2">
+        {siteMessages}
+      </div>
 
       <main id="main-content" className="min-h-[60vh]">
         {children}
       </main>
 
-      {feedback ? <footer className="mt-8">{feedback}</footer> : null}
+      {/* Always render footer container to maintain consistent DOM structure */}
+      <footer className="mt-8">
+        {feedback}
+      </footer>
     </div>
   );
 }
