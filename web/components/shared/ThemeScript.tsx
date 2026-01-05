@@ -5,6 +5,9 @@
  * before React hydrates. It reads the theme and sidebar state from localStorage and
  * applies them immediately, ensuring the server-rendered HTML matches the client's initial render.
  *
+ * CRITICAL: This must be a Server Component (no 'use client') because Script with
+ * strategy="beforeInteractive" only works in Server Components.
+ *
  * This is the RECOMMENDED Next.js approach for theme handling.
  *
  * Why this is needed:
@@ -13,8 +16,6 @@
  * - Without this script, React sees mismatched HTML → hydration error #185
  * - This script ensures server and client HTML match from the start
  */
-'use client';
-
 import Script from 'next/script';
 
 export function ThemeScript() {
