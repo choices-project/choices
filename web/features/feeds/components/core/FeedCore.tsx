@@ -354,23 +354,22 @@ export default function FeedCore({
       <div className="flex justify-between items-center mb-6">
         <h1 className="text-3xl font-bold text-gray-900 dark:text-gray-100">{t('feeds.core.header.title')}</h1>
         <div className="flex gap-2">
-          {/* Always render button with stable props to prevent hydration mismatch */}
-          {/* CRITICAL: Use isClient state to conditionally apply className, but ensure initial render matches */}
-          {/* isClient starts as false on both server and client, so initial render matches */}
-          <Button
-            variant="outline"
-            size="icon"
-            onClick={toggleDarkMode}
-            aria-label={
-              isDarkMode
-                ? t('feeds.core.themeToggle.light')
-                : t('feeds.core.themeToggle.dark')
-            }
-            className={isClient ? '' : 'invisible'}
-            disabled={!isClient}
-          >
-            {isDarkMode ? <SunIcon className="h-5 w-5" /> : <MoonIcon className="h-5 w-5" />}
-          </Button>
+          {/* CRITICAL: Only render dark mode button on client to prevent hydration mismatch */}
+          {/* This component is already wrapped in ClientOnly, but we need to ensure button doesn't cause issues */}
+          {isClient && (
+            <Button
+              variant="outline"
+              size="icon"
+              onClick={toggleDarkMode}
+              aria-label={
+                isDarkMode
+                  ? t('feeds.core.themeToggle.light')
+                  : t('feeds.core.themeToggle.dark')
+              }
+            >
+              {isDarkMode ? <SunIcon className="h-5 w-5" /> : <MoonIcon className="h-5 w-5" />}
+            </Button>
+          )}
           <Button onClick={onRefresh} disabled={isLoading}>
             {isLoading ? t('feeds.core.header.refreshing') : t('feeds.core.header.refresh')}
           </Button>
