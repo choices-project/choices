@@ -128,6 +128,10 @@ export default async function RootLayout({
   return (
     <html lang={locale ?? DEFAULT_LOCALE}>
       <head>
+        {/* CRITICAL: Set theme before React hydrates to prevent hydration mismatch */}
+        {/* ThemeScript runs immediately when HTML is parsed, before React even starts */}
+        <ThemeScript />
+        
         {/* PWA Manifest - no preload needed as it's loaded via rel="manifest" */}
         <link rel="manifest" href="/manifest.json" crossOrigin="use-credentials" />
 
@@ -161,9 +165,6 @@ export default async function RootLayout({
         <meta name="format-detection" content="telephone=no" />
       </head>
       <body className="bg-slate-50 text-gray-900">
-        {/* CRITICAL: Set theme before React hydrates to prevent hydration mismatch */}
-        {/* ThemeScript runs immediately on mount, before React hydrates the rest */}
-        <ThemeScript />
         
         <SkipNavLink />
         <Providers locale={locale} messages={messages}>
