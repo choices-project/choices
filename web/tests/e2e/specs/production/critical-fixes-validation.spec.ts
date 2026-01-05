@@ -591,15 +591,23 @@ test.describe('Critical Fixes Validation', () => {
       await waitForPageReady(page);
       await page.waitForTimeout(2000);
 
-      // Enhanced debugging: Check if ThemeScript executed
-      const themeScriptExecuted = await page.evaluate(() => {
+      // Enhanced debugging: Check if ThemeScript script tag exists and if it executed
+      const themeScriptDebug = await page.evaluate(() => {
+        const scriptTag = document.querySelector('script#theme-script');
         return {
+          scriptTagExists: !!scriptTag,
+          scriptTagContent: scriptTag?.textContent?.substring(0, 100) || null,
           hasThemeAttribute: document.documentElement.hasAttribute('data-theme'),
           themeAttribute: document.documentElement.getAttribute('data-theme'),
           hasSidebarAttributes: document.documentElement.hasAttribute('data-sidebar-collapsed'),
+          allScripts: Array.from(document.querySelectorAll('script')).map(s => ({
+            id: s.id || 'no-id',
+            src: s.src || 'inline',
+            hasContent: !!s.textContent,
+          })),
         };
       });
-      console.log('[TEST DEBUG] ThemeScript status:', themeScriptExecuted);
+      console.log('[TEST DEBUG] ThemeScript debug:', JSON.stringify(themeScriptDebug, null, 2));
 
       // Enhanced debugging: Check AppShell attributes
       const appShellAttrs = await page.evaluate(() => {
@@ -669,15 +677,23 @@ test.describe('Critical Fixes Validation', () => {
       await waitForPageReady(page);
       await page.waitForTimeout(2000);
 
-      // Enhanced debugging: Check if ThemeScript executed
-      const themeScriptExecuted = await page.evaluate(() => {
+      // Enhanced debugging: Check if ThemeScript script tag exists and if it executed
+      const themeScriptDebug = await page.evaluate(() => {
+        const scriptTag = document.querySelector('script#theme-script');
         return {
+          scriptTagExists: !!scriptTag,
+          scriptTagContent: scriptTag?.textContent?.substring(0, 100) || null,
           hasThemeAttribute: document.documentElement.hasAttribute('data-theme'),
           themeAttribute: document.documentElement.getAttribute('data-theme'),
           hasSidebarAttributes: document.documentElement.hasAttribute('data-sidebar-collapsed'),
+          allScripts: Array.from(document.querySelectorAll('script')).map(s => ({
+            id: s.id || 'no-id',
+            src: s.src || 'inline',
+            hasContent: !!s.textContent,
+          })),
         };
       });
-      console.log('[TEST DEBUG] ThemeScript status:', themeScriptExecuted);
+      console.log('[TEST DEBUG] ThemeScript debug:', JSON.stringify(themeScriptDebug, null, 2));
 
       // Enhanced debugging: Check AppShell attributes
       const appShellAttrs = await page.evaluate(() => {
