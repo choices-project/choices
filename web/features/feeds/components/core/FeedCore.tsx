@@ -355,8 +355,8 @@ export default function FeedCore({
         <h1 className="text-3xl font-bold text-gray-900 dark:text-gray-100">{t('feeds.core.header.title')}</h1>
         <div className="flex gap-2">
           {/* Always render button with stable props to prevent hydration mismatch */}
-          {/* CRITICAL: Always use 'invisible' className and disabled={true} to match server render */}
-          {/* After mount, useEffect updates the DOM directly to enable the button */}
+          {/* CRITICAL: Use isClient state to conditionally apply className, but ensure initial render matches */}
+          {/* isClient starts as false on both server and client, so initial render matches */}
           <Button
             variant="outline"
             size="icon"
@@ -366,9 +366,8 @@ export default function FeedCore({
                 ? t('feeds.core.themeToggle.light')
                 : t('feeds.core.themeToggle.dark')
             }
-            className="invisible"
-            disabled={true}
-            data-testid="dark-mode-toggle"
+            className={isClient ? '' : 'invisible'}
+            disabled={!isClient}
           >
             {isDarkMode ? <SunIcon className="h-5 w-5" /> : <MoonIcon className="h-5 w-5" />}
           </Button>
