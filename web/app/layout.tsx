@@ -164,6 +164,10 @@ export default async function RootLayout({
         <meta name="format-detection" content="telephone=no" />
       </head>
       <body className="bg-slate-50 text-gray-900">
+        {/* CRITICAL: Set theme before React hydrates to prevent hydration mismatch */}
+        {/* Script with beforeInteractive runs before React hydrates, even in body */}
+        <ThemeScript />
+        
         <SkipNavLink />
         <Providers locale={locale} messages={messages}>
           <SkipNavTarget>

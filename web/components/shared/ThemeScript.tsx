@@ -1,9 +1,9 @@
 /**
  * Theme Script - Prevents hydration mismatch by setting theme and sidebar state before React hydrates
  *
- * This script runs synchronously in the <head> before React hydrates.
- * It reads the theme and sidebar state from localStorage and applies them immediately, ensuring
- * the server-rendered HTML matches the client's initial render.
+ * This script uses Next.js Script component with strategy="beforeInteractive" to run
+ * before React hydrates. It reads the theme and sidebar state from localStorage and
+ * applies them immediately, ensuring the server-rendered HTML matches the client's initial render.
  *
  * This is the RECOMMENDED Next.js approach for theme handling.
  *
@@ -13,9 +13,15 @@
  * - Without this script, React sees mismatched HTML → hydration error #185
  * - This script ensures server and client HTML match from the start
  */
+'use client';
+
+import Script from 'next/script';
+
 export function ThemeScript() {
   return (
-    <script
+    <Script
+      id="theme-script"
+      strategy="beforeInteractive"
       dangerouslySetInnerHTML={{
         __html: `
           (function() {
@@ -25,7 +31,7 @@ export function ThemeScript() {
             let sidebarCollapsed = false;
             let sidebarWidth = 280;
             let sidebarPinned = false;
-            
+
             try {
               // Read app state from localStorage (same key as Zustand persist)
               const stored = localStorage.getItem('app-store');
@@ -47,7 +53,7 @@ export function ThemeScript() {
               // If localStorage read fails, use defaults (matches server)
               // Values already set above
             }
-            
+
             // ALWAYS set attributes (ensures consistency)
             if (theme === 'dark') {
               document.documentElement.classList.add('dark');
@@ -58,11 +64,11 @@ export function ThemeScript() {
               document.documentElement.setAttribute('data-theme', 'light');
               document.documentElement.style.colorScheme = 'light';
             }
-            
+
             document.documentElement.setAttribute('data-sidebar-collapsed', String(sidebarCollapsed));
             document.documentElement.setAttribute('data-sidebar-width', String(sidebarWidth));
             document.documentElement.setAttribute('data-sidebar-pinned', String(sidebarPinned));
-            
+
             // Debug: Log that script executed (only in development or when explicitly enabled)
             if (window.location.hostname === 'localhost' || window.localStorage.getItem('debug-theme-script') === '1') {
               console.log('[ThemeScript] Executed', {
