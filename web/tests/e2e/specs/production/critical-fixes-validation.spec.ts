@@ -557,9 +557,15 @@ test.describe('Critical Fixes Validation', () => {
       const hydrationErrors: string[] = [];
       let firstHydrationErrorTime: number | null = null;
 
+      const debugLogs: string[] = [];
       page.on('console', (msg) => {
+        const text = msg.text();
+        // Capture all [DEBUG] logs for analysis
+        if (text.includes('[DEBUG]')) {
+          debugLogs.push(text);
+          console.log('[TEST DEBUG LOG]', text);
+        }
         if (msg.type() === 'error') {
-          const text = msg.text();
           consoleErrors.push(text);
           if (text.includes('185') || text.includes('hydration') || text.includes('Hydration')) {
             if (firstHydrationErrorTime === null) {

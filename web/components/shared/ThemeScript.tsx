@@ -22,6 +22,11 @@ export function ThemeScript() {
   // It must be a Server Component (no 'use client') to use Script with beforeInteractive
   const scriptContent = `
 (function() {
+  // #region agent log
+  const logData={location:'ThemeScript.tsx:24',message:'ThemeScript execution started',data:{timestamp:Date.now(),hasDocument:typeof document!=='undefined',hasDocumentElement:typeof document!=='undefined'&&!!document.documentElement},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'A'};
+  console.log('[DEBUG]',JSON.stringify(logData));
+  fetch('http://127.0.0.1:7242/ingest/6a732aed-2d72-4883-a63a-f3c892fc1216',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(logData)}).catch(()=>{});
+  // #endregion
   try {
     // CRITICAL: Always set attributes, even if localStorage is empty
     // This ensures server and client HTML match from the start
@@ -30,9 +35,21 @@ export function ThemeScript() {
     let sidebarWidth = 280;
     let sidebarPinned = false;
 
+    // #region agent log
+    const beforeLocalStorage=Date.now();
+    const logData1={location:'ThemeScript.tsx:33',message:'Before localStorage read',data:{hasLocalStorage:typeof localStorage!=='undefined',defaultTheme:theme,defaultCollapsed:sidebarCollapsed},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'A'};
+    console.log('[DEBUG]',JSON.stringify(logData1));
+    fetch('http://127.0.0.1:7242/ingest/6a732aed-2d72-4883-a63a-f3c892fc1216',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(logData1)}).catch(()=>{});
+    // #endregion
+
     try {
       // Read app state from localStorage (same key as Zustand persist)
       const stored = localStorage.getItem('app-store');
+      // #region agent log
+      const logData2={location:'ThemeScript.tsx:38',message:'localStorage read result',data:{hasStored:!!stored,storedLength:stored?stored.length:0},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'A'};
+      console.log('[DEBUG]',JSON.stringify(logData2));
+      fetch('http://127.0.0.1:7242/ingest/6a732aed-2d72-4883-a63a-f3c892fc1216',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(logData2)}).catch(()=>{});
+      // #endregion
       if (stored) {
         const parsed = JSON.parse(stored);
         const state = parsed?.state || {};
@@ -46,11 +63,29 @@ export function ThemeScript() {
         sidebarCollapsed = state.sidebarCollapsed || false;
         sidebarWidth = state.sidebarWidth || 280;
         sidebarPinned = state.sidebarPinned || false;
+        // #region agent log
+        const logData3={location:'ThemeScript.tsx:49',message:'After parsing localStorage',data:{theme,sidebarCollapsed,sidebarWidth,sidebarPinned},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'A'};
+        console.log('[DEBUG]',JSON.stringify(logData3));
+        fetch('http://127.0.0.1:7242/ingest/6a732aed-2d72-4883-a63a-f3c892fc1216',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(logData3)}).catch(()=>{});
+        // #endregion
       }
     } catch (e) {
+      // #region agent log
+      const logData4={location:'ThemeScript.tsx:52',message:'localStorage read error',data:{error:e?.message||String(e)},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'D'};
+      console.log('[DEBUG]',JSON.stringify(logData4));
+      fetch('http://127.0.0.1:7242/ingest/6a732aed-2d72-4883-a63a-f3c892fc1216',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(logData4)}).catch(()=>{});
+      // #endregion
       // If localStorage read fails, use defaults (matches server)
       // Values already set above
     }
+
+    // #region agent log
+    const beforeSetAttrs=Date.now();
+    const beforeAttrs={theme:document.documentElement.getAttribute('data-theme'),collapsed:document.documentElement.getAttribute('data-sidebar-collapsed'),width:document.documentElement.getAttribute('data-sidebar-width'),pinned:document.documentElement.getAttribute('data-sidebar-pinned')};
+    const logData5={location:'ThemeScript.tsx:58',message:'Before setting attributes',data:{beforeAttrs,valuesToSet:{theme,sidebarCollapsed,sidebarWidth,sidebarPinned}},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'B'};
+    console.log('[DEBUG]',JSON.stringify(logData5));
+    fetch('http://127.0.0.1:7242/ingest/6a732aed-2d72-4883-a63a-f3c892fc1216',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(logData5)}).catch(()=>{});
+    // #endregion
 
     // ALWAYS set attributes (ensures consistency)
     if (theme === 'dark') {
@@ -66,6 +101,13 @@ export function ThemeScript() {
     document.documentElement.setAttribute('data-sidebar-collapsed', String(sidebarCollapsed));
     document.documentElement.setAttribute('data-sidebar-width', String(sidebarWidth));
     document.documentElement.setAttribute('data-sidebar-pinned', String(sidebarPinned));
+
+    // #region agent log
+    const afterAttrs={theme:document.documentElement.getAttribute('data-theme'),collapsed:document.documentElement.getAttribute('data-sidebar-collapsed'),width:document.documentElement.getAttribute('data-sidebar-width'),pinned:document.documentElement.getAttribute('data-sidebar-pinned')};
+    const logData6={location:'ThemeScript.tsx:73',message:'After setting attributes',data:{afterAttrs,timeSinceStart:Date.now()-beforeSetAttrs},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'A'};
+    console.log('[DEBUG]',JSON.stringify(logData6));
+    fetch('http://127.0.0.1:7242/ingest/6a732aed-2d72-4883-a63a-f3c892fc1216',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(logData6)}).catch(()=>{});
+    // #endregion
 
     // Debug: Log that script executed (only in development or when explicitly enabled)
     if (window.location.hostname === 'localhost' || window.localStorage.getItem('debug-theme-script') === '1') {
@@ -83,6 +125,11 @@ export function ThemeScript() {
       });
     }
   } catch (e) {
+    // #region agent log
+    const logData7={location:'ThemeScript.tsx:87',message:'ThemeScript execution error',data:{error:e?.message||String(e),stack:e?.stack},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'D'};
+    console.log('[DEBUG]',JSON.stringify(logData7));
+    fetch('http://127.0.0.1:7242/ingest/6a732aed-2d72-4883-a63a-f3c892fc1216',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(logData7)}).catch(()=>{});
+    // #endregion
     // Silently fail - defaults will be used
   }
 })();
