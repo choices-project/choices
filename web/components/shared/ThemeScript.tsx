@@ -1,12 +1,12 @@
 /**
  * Theme Script - Prevents hydration mismatch by setting theme and sidebar state before React hydrates
  *
- * This component injects a script tag that executes immediately when the component mounts.
- * It reads the theme and sidebar state from localStorage and applies them immediately,
- * ensuring the server-rendered HTML matches the client's initial render.
+ * This component injects a script tag that executes immediately when the HTML is parsed,
+ * before React even starts hydrating. It reads the theme and sidebar state from localStorage
+ * and applies them immediately, ensuring the server-rendered HTML matches the client's initial render.
  *
- * CRITICAL: This is a Client Component that uses useEffect to inject the script synchronously.
- * The script runs immediately on mount, before React hydrates the rest of the tree.
+ * CRITICAL: This is a Server Component that injects a raw <script> tag into the HTML.
+ * The script runs synchronously during HTML parsing, before React hydrates.
  *
  * Why this is needed:
  * - Theme and sidebar state are persisted in localStorage
@@ -14,19 +14,12 @@
  * - Without this script, React sees mismatched HTML → hydration error #185
  * - This script ensures server and client HTML match from the start
  */
-'use client';
-
-import React from 'react';
-
 export function ThemeScript() {
-  // CRITICAL: Run synchronously during render, not in useEffect
-  // This ensures attributes are set before React hydrates the rest of the tree
-  // We use a ref to ensure this only runs once
-  const hasRunRef = React.useRef(false);
-  
-  if (typeof window !== 'undefined' && !hasRunRef.current) {
-    hasRunRef.current = true;
-    
+  // CRITICAL: This script runs immediately when HTML is parsed, before React hydrates
+  // It must be a Server Component (no 'use client') to inject the script into the HTML
+  const scriptContent = `
+(function() {
+  try {
     // CRITICAL: Always set attributes, even if localStorage is empty
     // This ensures server and client HTML match from the start
     let theme = 'light';
@@ -74,10 +67,10 @@ export function ThemeScript() {
     // Debug: Log that script executed (only in development or when explicitly enabled)
     if (window.location.hostname === 'localhost' || window.localStorage.getItem('debug-theme-script') === '1') {
       console.log('[ThemeScript] Executed', {
-        theme,
-        sidebarCollapsed,
-        sidebarWidth,
-        sidebarPinned,
+        theme: theme,
+        sidebarCollapsed: sidebarCollapsed,
+        sidebarWidth: sidebarWidth,
+        sidebarPinned: sidebarPinned,
         attributesSet: {
           'data-theme': document.documentElement.getAttribute('data-theme'),
           'data-sidebar-collapsed': document.documentElement.getAttribute('data-sidebar-collapsed'),
@@ -86,8 +79,17 @@ export function ThemeScript() {
         }
       });
     }
+  } catch (e) {
+    // Silently fail - defaults will be used
   }
+})();
+`;
 
-  return null; // This component doesn't render anything
+  return (
+    <script
+      id="theme-script"
+      dangerouslySetInnerHTML={{ __html: scriptContent }}
+    />
+  );
 }
 
