@@ -555,12 +555,16 @@ test.describe('Critical Fixes Validation', () => {
     test('representatives detail page uses hydration guard correctly', async ({ page }) => {
       const consoleErrors: string[] = [];
       const hydrationErrors: string[] = [];
+      let firstHydrationErrorTime: number | null = null;
 
       page.on('console', (msg) => {
         if (msg.type() === 'error') {
           const text = msg.text();
           consoleErrors.push(text);
           if (text.includes('185') || text.includes('hydration') || text.includes('Hydration')) {
+            if (firstHydrationErrorTime === null) {
+              firstHydrationErrorTime = Date.now();
+            }
             hydrationErrors.push(text);
             console.log('[HYDRATION ERROR]', text);
           }
@@ -570,6 +574,9 @@ test.describe('Critical Fixes Validation', () => {
       page.on('pageerror', (error) => {
         const errorMsg = error.message;
         if (errorMsg.includes('185') || errorMsg.includes('hydration')) {
+          if (firstHydrationErrorTime === null) {
+            firstHydrationErrorTime = Date.now();
+          }
           hydrationErrors.push(errorMsg);
           console.log('[HYDRATION PAGE ERROR]', errorMsg);
         }
@@ -589,7 +596,32 @@ test.describe('Critical Fixes Validation', () => {
       // For now, just verify navigation doesn't cause hydration errors
       await page.goto(`${BASE_URL}/representatives/1`, { waitUntil: 'domcontentloaded', timeout: 30_000 });
       await waitForPageReady(page);
-      await page.waitForTimeout(2000);
+      
+      // Capture DOM state immediately when first hydration error occurs
+      let domStateAtError: any = null;
+      if (firstHydrationErrorTime !== null) {
+        // Wait a bit for the error to propagate, then capture DOM
+        await page.waitForTimeout(100);
+        domStateAtError = await page.evaluate(() => {
+          return {
+            bodyHTML: document.body.innerHTML.substring(0, 500),
+            hasAppShell: !!document.querySelector('[data-testid="app-shell"]'),
+            hasErrorBoundary: !!document.querySelector('[data-testid="error-boundary"]'),
+            allTestIds: Array.from(document.querySelectorAll('[data-testid]')).map(el => ({
+              testId: el.getAttribute('data-testid'),
+              tagName: el.tagName,
+            })),
+          };
+        });
+        console.log('[TEST DEBUG] DOM state when hydration error occurred:', JSON.stringify(domStateAtError, null, 2));
+      }
+
+      // Wait for AppShell to render (it might be delayed due to dynamic imports)
+      await page.waitForSelector('[data-testid="app-shell"]', { timeout: 10_000 }).catch(() => {
+        console.log('[TEST DEBUG] AppShell not found after 10 seconds');
+      });
+      
+      await page.waitForTimeout(3000); // Give extra time for all components to hydrate
 
       // Enhanced debugging: Check if ThemeScript script tag exists and if it executed
       const themeScriptDebug = await page.evaluate(() => {
