@@ -147,15 +147,18 @@ export function AppShell({ navigation, siteMessages, feedback, children }: AppSh
     }
   }, [theme, collapsed, width, pinned, navigation, siteMessages, feedback, children]);
 
+  // CRITICAL: Always use stable defaults for data attributes to prevent hydration mismatch
+  // Don't use suppressHydrationWarning - ensure server and client initial render match exactly
+  // ThemeScript sets attributes on documentElement, but we use stable defaults here
+  // to ensure the initial HTML matches between server and client
   return (
     <div
       className="min-h-screen bg-slate-50 dark:bg-gray-900"
       data-testid="app-shell"
-      suppressHydrationWarning
-      data-theme={theme}
-      data-sidebar-collapsed={String(collapsed)}
-      data-sidebar-width={String(width)}
-      data-sidebar-pinned={String(pinned)}
+      data-theme="light"
+      data-sidebar-collapsed="false"
+      data-sidebar-width="280"
+      data-sidebar-pinned="false"
     >
       <header>{navigation}</header>
 
