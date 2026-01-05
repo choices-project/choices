@@ -1,11 +1,12 @@
 /**
  * Theme Script - Prevents hydration mismatch by setting theme and sidebar state before React hydrates
  *
- * This component injects a script tag that executes immediately when the HTML is parsed,
- * before React even starts hydrating. It reads the theme and sidebar state from localStorage
- * and applies them immediately, ensuring the server-rendered HTML matches the client's initial render.
+ * This component uses Next.js Script with beforeInteractive strategy to inject a script
+ * that executes immediately when the HTML is parsed, before React even starts hydrating.
+ * It reads the theme and sidebar state from localStorage and applies them immediately,
+ * ensuring the server-rendered HTML matches the client's initial render.
  *
- * CRITICAL: This is a Server Component that injects a raw <script> tag into the HTML.
+ * CRITICAL: This is a Server Component that uses Next.js Script component.
  * The script runs synchronously during HTML parsing, before React hydrates.
  *
  * Why this is needed:
@@ -14,9 +15,11 @@
  * - Without this script, React sees mismatched HTML → hydration error #185
  * - This script ensures server and client HTML match from the start
  */
+import Script from 'next/script';
+
 export function ThemeScript() {
   // CRITICAL: This script runs immediately when HTML is parsed, before React hydrates
-  // It must be a Server Component (no 'use client') to inject the script into the HTML
+  // It must be a Server Component (no 'use client') to use Script with beforeInteractive
   const scriptContent = `
 (function() {
   try {
@@ -86,8 +89,9 @@ export function ThemeScript() {
 `;
 
   return (
-    <script
+    <Script
       id="theme-script"
+      strategy="beforeInteractive"
       dangerouslySetInnerHTML={{ __html: scriptContent }}
     />
   );
