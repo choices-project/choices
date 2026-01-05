@@ -87,7 +87,9 @@ export function ThemeScript() {
     fetch('http://127.0.0.1:7242/ingest/6a732aed-2d72-4883-a63a-f3c892fc1216',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(logData5)}).catch(()=>{});
     // #endregion
 
-    // ALWAYS set attributes (ensures consistency)
+    // CRITICAL: Always set attributes, even if they match defaults
+    // This ensures attributes exist when React hydrates, preventing null vs value mismatches
+    // The root layout sets defaults, but we need to ensure they're set before React starts
     if (theme === 'dark') {
       document.documentElement.classList.add('dark');
       document.documentElement.setAttribute('data-theme', 'dark');
@@ -98,9 +100,15 @@ export function ThemeScript() {
       document.documentElement.style.colorScheme = 'light';
     }
 
+    // Always set sidebar attributes (even if they match defaults from root layout)
+    // This prevents hydration mismatches from null vs string value differences
     document.documentElement.setAttribute('data-sidebar-collapsed', String(sidebarCollapsed));
     document.documentElement.setAttribute('data-sidebar-width', String(sidebarWidth));
     document.documentElement.setAttribute('data-sidebar-pinned', String(sidebarPinned));
+    
+    // CRITICAL: Ensure attributes are set synchronously before any async operations
+    // Force a synchronous reflow to ensure attributes are visible to React
+    void document.documentElement.offsetHeight;
 
     // #region agent log
     const afterAttrs={theme:document.documentElement.getAttribute('data-theme'),collapsed:document.documentElement.getAttribute('data-sidebar-collapsed'),width:document.documentElement.getAttribute('data-sidebar-width'),pinned:document.documentElement.getAttribute('data-sidebar-pinned')};
@@ -135,23 +143,14 @@ export function ThemeScript() {
 })();
 `;
 
-  // CRITICAL: Use dangerouslySetInnerHTML directly in head to ensure script executes immediately
-  // Next.js Script with beforeInteractive should work, but we need to ensure it's in the right place
-  // For maximum compatibility, we'll use both approaches
+  // CRITICAL: Script with beforeInteractive executes immediately when HTML is parsed
+  // This must execute before React hydrates to prevent hydration mismatches
   return (
-    <>
-      {/* Inline script that executes immediately - this is the primary method */}
-      <script
-        id="theme-script"
-        dangerouslySetInnerHTML={{ __html: scriptContent }}
-      />
-      {/* Also use Next.js Script as fallback */}
-      <Script
-        id="theme-script-fallback"
-        strategy="beforeInteractive"
-        dangerouslySetInnerHTML={{ __html: scriptContent }}
-      />
-    </>
+    <Script
+      id="theme-script"
+      strategy="beforeInteractive"
+      dangerouslySetInnerHTML={{ __html: scriptContent }}
+    />
   );
 }
 
