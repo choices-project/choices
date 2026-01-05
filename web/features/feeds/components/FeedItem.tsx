@@ -203,7 +203,7 @@ const FeedItem = memo(({
   // CRITICAL: Guard toLocaleDateString() to prevent hydration mismatch
   const formatDate = (date: Date | string | null | undefined) => {
     // #region agent log
-    const log = (message, data, hypothesisId) => {
+    const log = (message: string, data: Record<string, unknown>, hypothesisId: string) => {
       const logData = {
         location: 'FeedItem.tsx:formatDate',
         message: message,

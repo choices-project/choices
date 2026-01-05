@@ -111,7 +111,7 @@ export default function FeedCore({
   // Client-side hydration
   useEffect(() => {
     // #region agent log
-    const log = (message, data, hypothesisId) => {
+    const log = (message: string, data: Record<string, unknown>, hypothesisId: string) => {
       const logData = {
         location: 'FeedCore.tsx:useEffect:setIsClient',
         message: message,
@@ -356,7 +356,7 @@ export default function FeedCore({
           {/* Hide until client-side to prevent hydration mismatch */}
           {/* #region agent log */}
           {(() => {
-            const log = (message, data, hypothesisId) => {
+            const log = (message: string, data: Record<string, unknown>, hypothesisId: string) => {
               const logData = {
                 location: 'FeedCore.tsx:render:darkModeButton',
                 message: message,
