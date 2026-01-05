@@ -609,18 +609,38 @@ test.describe('Critical Fixes Validation', () => {
       });
       console.log('[TEST DEBUG] ThemeScript debug:', JSON.stringify(themeScriptDebug, null, 2));
 
-      // Enhanced debugging: Check AppShell attributes
-      const appShellAttrs = await page.evaluate(() => {
+      // Enhanced debugging: Check AppShell and DOM structure
+      const domDebug = await page.evaluate(() => {
         const appShell = document.querySelector('[data-testid="app-shell"]');
-        if (!appShell) return null;
+        const body = document.body;
+        const html = document.documentElement;
+        
         return {
-          'data-theme': appShell.getAttribute('data-theme'),
-          'data-sidebar-collapsed': appShell.getAttribute('data-sidebar-collapsed'),
-          'data-sidebar-width': appShell.getAttribute('data-sidebar-width'),
-          'data-sidebar-pinned': appShell.getAttribute('data-sidebar-pinned'),
+          appShell: appShell ? {
+            exists: true,
+            'data-theme': appShell.getAttribute('data-theme'),
+            'data-sidebar-collapsed': appShell.getAttribute('data-sidebar-collapsed'),
+            'data-sidebar-width': appShell.getAttribute('data-sidebar-width'),
+            'data-sidebar-pinned': appShell.getAttribute('data-sidebar-pinned'),
+            className: appShell.className,
+            innerHTML: appShell.innerHTML.substring(0, 200), // First 200 chars
+          } : null,
+          body: {
+            className: body.className,
+            hasFontInter: body.classList.contains('font-inter'),
+          },
+          html: {
+            'data-theme': html.getAttribute('data-theme'),
+            'data-sidebar-collapsed': html.getAttribute('data-sidebar-collapsed'),
+            'data-sw-registered': html.getAttribute('data-sw-registered'),
+            className: html.className,
+          },
+          allDataAttributes: Array.from(html.attributes)
+            .filter(attr => attr.name.startsWith('data-'))
+            .map(attr => ({ name: attr.name, value: attr.value })),
         };
       });
-      console.log('[TEST DEBUG] AppShell attributes:', appShellAttrs);
+      console.log('[TEST DEBUG] DOM structure:', JSON.stringify(domDebug, null, 2));
 
       // Log all hydration errors for debugging
       if (hydrationErrors.length > 0) {
@@ -695,18 +715,38 @@ test.describe('Critical Fixes Validation', () => {
       });
       console.log('[TEST DEBUG] ThemeScript debug:', JSON.stringify(themeScriptDebug, null, 2));
 
-      // Enhanced debugging: Check AppShell attributes
-      const appShellAttrs = await page.evaluate(() => {
+      // Enhanced debugging: Check AppShell and DOM structure
+      const domDebug = await page.evaluate(() => {
         const appShell = document.querySelector('[data-testid="app-shell"]');
-        if (!appShell) return null;
+        const body = document.body;
+        const html = document.documentElement;
+        
         return {
-          'data-theme': appShell.getAttribute('data-theme'),
-          'data-sidebar-collapsed': appShell.getAttribute('data-sidebar-collapsed'),
-          'data-sidebar-width': appShell.getAttribute('data-sidebar-width'),
-          'data-sidebar-pinned': appShell.getAttribute('data-sidebar-pinned'),
+          appShell: appShell ? {
+            exists: true,
+            'data-theme': appShell.getAttribute('data-theme'),
+            'data-sidebar-collapsed': appShell.getAttribute('data-sidebar-collapsed'),
+            'data-sidebar-width': appShell.getAttribute('data-sidebar-width'),
+            'data-sidebar-pinned': appShell.getAttribute('data-sidebar-pinned'),
+            className: appShell.className,
+            innerHTML: appShell.innerHTML.substring(0, 200), // First 200 chars
+          } : null,
+          body: {
+            className: body.className,
+            hasFontInter: body.classList.contains('font-inter'),
+          },
+          html: {
+            'data-theme': html.getAttribute('data-theme'),
+            'data-sidebar-collapsed': html.getAttribute('data-sidebar-collapsed'),
+            'data-sw-registered': html.getAttribute('data-sw-registered'),
+            className: html.className,
+          },
+          allDataAttributes: Array.from(html.attributes)
+            .filter(attr => attr.name.startsWith('data-'))
+            .map(attr => ({ name: attr.name, value: attr.value })),
         };
       });
-      console.log('[TEST DEBUG] AppShell attributes:', appShellAttrs);
+      console.log('[TEST DEBUG] DOM structure:', JSON.stringify(domDebug, null, 2));
 
       // Log all hydration errors for debugging
       if (hydrationErrors.length > 0) {
