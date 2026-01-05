@@ -28,7 +28,7 @@ import {
   BookmarkIcon as BookmarkSolidIcon
 } from '@heroicons/react/24/solid';
 import Image from 'next/image';
-import React, { useState, useRef, useCallback, memo, useEffect, useLayoutEffect } from 'react';
+import React, { useState, useRef, useCallback, memo, useLayoutEffect } from 'react';
 
 import type { FeedItemData } from '@/features/civics/lib/types/civics-types';
 
