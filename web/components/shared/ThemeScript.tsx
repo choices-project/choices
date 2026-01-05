@@ -1,14 +1,12 @@
 /**
  * Theme Script - Prevents hydration mismatch by setting theme and sidebar state before React hydrates
  *
- * This script uses Next.js Script component with strategy="beforeInteractive" to run
- * before React hydrates. It reads the theme and sidebar state from localStorage and
- * applies them immediately, ensuring the server-rendered HTML matches the client's initial render.
+ * This component injects a script tag that executes immediately when the component mounts.
+ * It reads the theme and sidebar state from localStorage and applies them immediately,
+ * ensuring the server-rendered HTML matches the client's initial render.
  *
- * CRITICAL: This must be a Server Component (no 'use client') because Script with
- * strategy="beforeInteractive" only works in Server Components.
- *
- * This is the RECOMMENDED Next.js approach for theme handling.
+ * CRITICAL: This is a Client Component that uses useEffect to inject the script synchronously.
+ * The script runs immediately on mount, before React hydrates the rest of the tree.
  *
  * Why this is needed:
  * - Theme and sidebar state are persisted in localStorage
@@ -16,79 +14,73 @@
  * - Without this script, React sees mismatched HTML → hydration error #185
  * - This script ensures server and client HTML match from the start
  */
-import Script from 'next/script';
+'use client';
+
+import { useEffect } from 'react';
 
 export function ThemeScript() {
-  return (
-    <Script
-      id="theme-script"
-      strategy="beforeInteractive"
-      dangerouslySetInnerHTML={{
-        __html: `
-          (function() {
-            // CRITICAL: Always set attributes, even if localStorage is empty
-            // This ensures server and client HTML match from the start
-            let theme = 'light';
-            let sidebarCollapsed = false;
-            let sidebarWidth = 280;
-            let sidebarPinned = false;
+  useEffect(() => {
+    // CRITICAL: Always set attributes, even if localStorage is empty
+    // This ensures server and client HTML match from the start
+    let theme = 'light';
+    let sidebarCollapsed = false;
+    let sidebarWidth = 280;
+    let sidebarPinned = false;
 
-            try {
-              // Read app state from localStorage (same key as Zustand persist)
-              const stored = localStorage.getItem('app-store');
-              if (stored) {
-                const parsed = JSON.parse(stored);
-                const state = parsed?.state || {};
+    try {
+      // Read app state from localStorage (same key as Zustand persist)
+      const stored = localStorage.getItem('app-store');
+      if (stored) {
+        const parsed = JSON.parse(stored);
+        const state = parsed?.state || {};
 
-                // Handle theme
-                const themePreference = state.theme || 'system';
-                const systemTheme = state.systemTheme || 'light';
-                theme = themePreference === 'system' ? systemTheme : themePreference;
+        // Handle theme
+        const themePreference = state.theme || 'system';
+        const systemTheme = state.systemTheme || 'light';
+        theme = themePreference === 'system' ? systemTheme : themePreference;
 
-                // Handle sidebar state
-                sidebarCollapsed = state.sidebarCollapsed || false;
-                sidebarWidth = state.sidebarWidth || 280;
-                sidebarPinned = state.sidebarPinned || false;
-              }
-            } catch (e) {
-              // If localStorage read fails, use defaults (matches server)
-              // Values already set above
-            }
+        // Handle sidebar state
+        sidebarCollapsed = state.sidebarCollapsed || false;
+        sidebarWidth = state.sidebarWidth || 280;
+        sidebarPinned = state.sidebarPinned || false;
+      }
+    } catch (e) {
+      // If localStorage read fails, use defaults (matches server)
+      // Values already set above
+    }
 
-            // ALWAYS set attributes (ensures consistency)
-            if (theme === 'dark') {
-              document.documentElement.classList.add('dark');
-              document.documentElement.setAttribute('data-theme', 'dark');
-              document.documentElement.style.colorScheme = 'dark';
-            } else {
-              document.documentElement.classList.remove('dark');
-              document.documentElement.setAttribute('data-theme', 'light');
-              document.documentElement.style.colorScheme = 'light';
-            }
+    // ALWAYS set attributes (ensures consistency)
+    if (theme === 'dark') {
+      document.documentElement.classList.add('dark');
+      document.documentElement.setAttribute('data-theme', 'dark');
+      document.documentElement.style.colorScheme = 'dark';
+    } else {
+      document.documentElement.classList.remove('dark');
+      document.documentElement.setAttribute('data-theme', 'light');
+      document.documentElement.style.colorScheme = 'light';
+    }
 
-            document.documentElement.setAttribute('data-sidebar-collapsed', String(sidebarCollapsed));
-            document.documentElement.setAttribute('data-sidebar-width', String(sidebarWidth));
-            document.documentElement.setAttribute('data-sidebar-pinned', String(sidebarPinned));
+    document.documentElement.setAttribute('data-sidebar-collapsed', String(sidebarCollapsed));
+    document.documentElement.setAttribute('data-sidebar-width', String(sidebarWidth));
+    document.documentElement.setAttribute('data-sidebar-pinned', String(sidebarPinned));
 
-            // Debug: Log that script executed (only in development or when explicitly enabled)
-            if (window.location.hostname === 'localhost' || window.localStorage.getItem('debug-theme-script') === '1') {
-              console.log('[ThemeScript] Executed', {
-                theme,
-                sidebarCollapsed,
-                sidebarWidth,
-                sidebarPinned,
-                attributesSet: {
-                  'data-theme': document.documentElement.getAttribute('data-theme'),
-                  'data-sidebar-collapsed': document.documentElement.getAttribute('data-sidebar-collapsed'),
-                  'data-sidebar-width': document.documentElement.getAttribute('data-sidebar-width'),
-                  'data-sidebar-pinned': document.documentElement.getAttribute('data-sidebar-pinned'),
-                }
-              });
-            }
-          })();
-        `,
-      }}
-    />
-  );
+    // Debug: Log that script executed (only in development or when explicitly enabled)
+    if (window.location.hostname === 'localhost' || window.localStorage.getItem('debug-theme-script') === '1') {
+      console.log('[ThemeScript] Executed', {
+        theme,
+        sidebarCollapsed,
+        sidebarWidth,
+        sidebarPinned,
+        attributesSet: {
+          'data-theme': document.documentElement.getAttribute('data-theme'),
+          'data-sidebar-collapsed': document.documentElement.getAttribute('data-sidebar-collapsed'),
+          'data-sidebar-width': document.documentElement.getAttribute('data-sidebar-width'),
+          'data-sidebar-pinned': document.documentElement.getAttribute('data-sidebar-pinned'),
+        }
+      });
+    }
+  }, []); // Empty deps - run once on mount
+
+  return null; // This component doesn't render anything
 }
 
