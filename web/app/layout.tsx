@@ -126,7 +126,13 @@ export default async function RootLayout({
   const messages = await loadMessages(locale);
 
   return (
-    <html lang={locale ?? DEFAULT_LOCALE}>
+    <html 
+      lang={locale ?? DEFAULT_LOCALE}
+      data-theme="light"
+      data-sidebar-collapsed="false"
+      data-sidebar-width="280"
+      data-sidebar-pinned="false"
+    >
       <head>
         {/* CRITICAL: Set theme before React hydrates to prevent hydration mismatch */}
         {/* ThemeScript runs immediately when HTML is parsed, before React even starts */}
