@@ -15,23 +15,28 @@ import React, { useEffect, useState } from 'react';
  * No UI clutter - just functional PWA features
  */
 export default function PWABackground() {
+  // CRITICAL: Use stable default that matches server render
+  // Server always renders as online (no navigator), client checks after mount
   const [isOnline, setIsOnline] = useState(true);
 
   useEffect(() => {
-    // Check online status
-    setIsOnline(navigator.onLine);
-    
-    // Set up event listeners
-    const handleOnline = () => setIsOnline(true);
-    const handleOffline = () => setIsOnline(false);
-    
-    window.addEventListener('online', handleOnline);
-    window.addEventListener('offline', handleOffline);
-    
-    return () => {
-      window.removeEventListener('online', handleOnline);
-      window.removeEventListener('offline', handleOffline);
-    };
+    // Check online status only after mount to prevent hydration mismatch
+    if (typeof window !== 'undefined' && typeof navigator !== 'undefined') {
+      setIsOnline(navigator.onLine);
+      
+      // Set up event listeners
+      const handleOnline = () => setIsOnline(true);
+      const handleOffline = () => setIsOnline(false);
+      
+      window.addEventListener('online', handleOnline);
+      window.addEventListener('offline', handleOffline);
+      
+      return () => {
+        window.removeEventListener('online', handleOnline);
+        window.removeEventListener('offline', handleOffline);
+      };
+    }
+    return undefined;
   }, []);
 
   // Only show offline indicator when actually offline
