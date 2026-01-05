@@ -175,8 +175,16 @@ function RepresentativeDetailPageContent() {
   }, [elections]);
 
   const nextElection = upcomingElections[0];
-  // Only calculate countdown on client to prevent hydration mismatch
-  const daysUntilNextElection = isClient ? getElectionCountdown(nextElection?.election_day) : null;
+  // CRITICAL: Calculate countdown but use null initially to match server render
+  // After mount, update to actual value - but render structure must remain consistent
+  const [daysUntilNextElection, setDaysUntilNextElection] = React.useState<number | null>(null);
+  
+  React.useEffect(() => {
+    if (isClient && nextElection?.election_day) {
+      const countdown = getElectionCountdown(nextElection.election_day);
+      setDaysUntilNextElection(countdown);
+    }
+  }, [isClient, nextElection?.election_day, getElectionCountdown]);
 
   const loading = detailLoading || globalLoading;
   const isFollowing =
@@ -425,13 +433,14 @@ function RepresentativeDetailPageContent() {
                   )}
                 </div>
               )}
-                  {daysUntilNextElection != null && daysUntilNextElection <= 90 && (
-                    <div className="mt-2 text-xs text-blue-100" suppressHydrationWarning>
-                      {daysUntilNextElection === 0
-                        ? 'Election is today'
-                        : `Election in ${daysUntilNextElection} day${daysUntilNextElection === 1 ? '' : 's'}`}
-                    </div>
-                  )}
+              {/* Always render the container to maintain consistent DOM structure */}
+              <div className="mt-2 text-xs text-blue-100">
+                {daysUntilNextElection != null && daysUntilNextElection <= 90 && (
+                  daysUntilNextElection === 0
+                    ? 'Election is today'
+                    : `Election in ${daysUntilNextElection} day${daysUntilNextElection === 1 ? '' : 's'}`
+                )}
+              </div>
             </div>
 
             <button
@@ -518,16 +527,17 @@ function RepresentativeDetailPageContent() {
                   >
                     <div>
                       <p className="text-sm font-semibold text-blue-900">{election.name}</p>
-                          <p className="text-xs text-blue-700" suppressHydrationWarning>
-                            {formatElectionDate(election.election_day, isClient)}
-                            {isClient && (() => {
-                              const countdown = getElectionCountdown(election.election_day);
-                              if (countdown == null || countdown > 90) {
-                                return null;
-                              }
-                              return ` · ${countdown === 0 ? 'Today' : `In ${countdown} day${countdown === 1 ? '' : 's'}`}`;
-                            })()}
-                          </p>
+                      <p className="text-xs text-blue-700">
+                        {formatElectionDate(election.election_day, isClient)}
+                        {/* Calculate countdown only after mount to prevent hydration mismatch */}
+                        {isClient && (() => {
+                          const countdown = getElectionCountdown(election.election_day);
+                          if (countdown == null || countdown > 90) {
+                            return null;
+                          }
+                          return ` · ${countdown === 0 ? 'Today' : `In ${countdown} day${countdown === 1 ? '' : 's'}`}`;
+                        })()}
+                      </p>
                     </div>
                     <Badge className="bg-blue-600 text-white text-xs">
                       {election.ocd_division_id}
