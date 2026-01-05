@@ -570,6 +570,26 @@ test.describe('Critical Fixes Validation', () => {
           if (text.includes('185') || text.includes('hydration') || text.includes('Hydration')) {
             if (firstHydrationErrorTime === null) {
               firstHydrationErrorTime = Date.now();
+              // Capture DOM state immediately when first hydration error occurs
+              page.evaluate(() => {
+                const errorInfo = {
+                  timestamp: Date.now(),
+                  url: window.location.href,
+                  htmlAttributes: {
+                    'data-theme': document.documentElement.getAttribute('data-theme'),
+                    'data-sidebar-collapsed': document.documentElement.getAttribute('data-sidebar-collapsed'),
+                    'data-sidebar-width': document.documentElement.getAttribute('data-sidebar-width'),
+                    'data-sidebar-pinned': document.documentElement.getAttribute('data-sidebar-pinned'),
+                  },
+                  bodyClasses: Array.from(document.body.classList),
+                  appShell: document.querySelector('[data-testid="app-shell"]') ? {
+                    'data-theme': document.querySelector('[data-testid="app-shell"]')?.getAttribute('data-theme'),
+                    'data-sidebar-collapsed': document.querySelector('[data-testid="app-shell"]')?.getAttribute('data-sidebar-collapsed'),
+                  } : null,
+                  representativeDetail: document.querySelector('[data-testid="representative-detail"]') ? 'exists' : null,
+                };
+                console.log('[HYDRATION ERROR STATE]', JSON.stringify(errorInfo));
+              }).catch(() => {});
             }
             hydrationErrors.push(text);
             console.log('[HYDRATION ERROR]', text);

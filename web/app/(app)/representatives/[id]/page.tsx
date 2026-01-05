@@ -611,16 +611,19 @@ function RepresentativeDetailPageContent() {
 
 // CRITICAL: Load RepresentativeDetailPageContent only on client to prevent SSR hydration mismatch
 // This component uses useParams() and other client-only hooks that cause React Error #185 when rendered during SSR
+// IMPORTANT: The loading state must match the component's initial loading state exactly to prevent hydration mismatch
 const RepresentativeDetailPage = dynamicImport(
   () => Promise.resolve({ default: RepresentativeDetailPageContent }),
   {
     ssr: false,
     loading: () => (
-      <div className="container mx-auto px-4 py-8 max-w-4xl">
-        <div className="animate-pulse" role="status" aria-live="polite" aria-busy="true">
-          <div className="h-8 bg-gray-200 dark:bg-gray-700 rounded w-1/4 mb-6" />
-          <div className="h-64 bg-gray-200 dark:bg-gray-700 rounded mb-4" />
-          <div className="h-32 bg-gray-200 dark:bg-gray-700 rounded" />
+      <div className="min-h-screen bg-gray-50 dark:bg-gray-900 text-gray-900 dark:text-gray-100">
+        <div className="container mx-auto px-4 py-8 max-w-4xl">
+          <div className="animate-pulse" role="status" aria-live="polite" aria-busy="true">
+            <div className="h-8 bg-gray-200 dark:bg-gray-700 rounded w-1/4 mb-6" />
+            <div className="h-64 bg-gray-200 dark:bg-gray-700 rounded mb-4" />
+            <div className="h-32 bg-gray-200 dark:bg-gray-700 rounded" />
+          </div>
         </div>
       </div>
     ),
