@@ -179,10 +179,20 @@ function RepresentativeDetailPageContent() {
   // After mount, update to actual value - but render structure must remain consistent
   const [daysUntilNextElection, setDaysUntilNextElection] = React.useState<number | null>(null);
   
+  // CRITICAL: Use state for formatted date to prevent hydration mismatch
+  // formatElectionDate with isClient=false uses stable format, isClient=true uses locale format
+  // This causes hydration mismatch, so we use state to keep it stable initially
+  const [formattedNextElectionDate, setFormattedNextElectionDate] = React.useState<string>('');
+  
   React.useEffect(() => {
     if (isClient && nextElection?.election_day) {
       const countdown = getElectionCountdown(nextElection.election_day);
       setDaysUntilNextElection(countdown);
+      // Update formatted date after mount to use locale format
+      setFormattedNextElectionDate(formatElectionDate(nextElection.election_day, true));
+    } else if (nextElection?.election_day) {
+      // Initial render: use stable format
+      setFormattedNextElectionDate(formatElectionDate(nextElection.election_day, false));
     }
   }, [isClient, nextElection?.election_day, getElectionCountdown]);
 
@@ -418,7 +428,7 @@ function RepresentativeDetailPageContent() {
                       <CalendarClock className="w-3 h-3" />
                       <span className="truncate max-w-[220px]">{nextElection.name}</span>
                       <span className="text-blue-100">
-                        · {formatElectionDate(nextElection.election_day, isClient)}
+                        · {formattedNextElectionDate || formatElectionDate(nextElection.election_day, false)}
                       </span>
                       {upcomingElections.length > 1 && (
                         <span className="text-blue-100/80">
@@ -528,7 +538,11 @@ function RepresentativeDetailPageContent() {
                     <div>
                       <p className="text-sm font-semibold text-blue-900">{election.name}</p>
                       <p className="text-xs text-blue-700">
-                        {formatElectionDate(election.election_day, isClient)}
+                        {/* Use stable format initially, update after mount to prevent hydration mismatch */}
+                        {isClient 
+                          ? formatElectionDate(election.election_day, true)
+                          : formatElectionDate(election.election_day, false)
+                        }
                         {/* Calculate countdown only after mount to prevent hydration mismatch */}
                         {isClient && (() => {
                           const countdown = getElectionCountdown(election.election_day);
