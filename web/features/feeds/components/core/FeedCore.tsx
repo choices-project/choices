@@ -99,6 +99,8 @@ export default function FeedCore({
   const [hashtagInput, setHashtagInput] = useState('');
   const [activeTab, setActiveTab] = useState('feed');
   const [isDarkMode, setIsDarkMode] = useState(false);
+  // CRITICAL: isClient must start as false on both server and client to prevent hydration mismatch
+  // Only update after mount to ensure consistent initial render
   const [isClient, setIsClient] = useState(false);
   const [isPulling, setIsPulling] = useState(false);
   const [pullDistance, setPullDistance] = useState(0);
@@ -132,11 +134,11 @@ export default function FeedCore({
       }).catch(() => {});
     };
     // #endregion
-    
+
     log('FeedCore setIsClient: before', { isClient: false }, 'B');
     setIsClient(true);
     log('FeedCore setIsClient: after', { isClient: true }, 'B');
-    
+
     if (typeof window !== 'undefined') {
       const stored = localStorage.getItem('darkMode');
       const systemPrefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
@@ -352,8 +354,9 @@ export default function FeedCore({
       <div className="flex justify-between items-center mb-6">
         <h1 className="text-3xl font-bold text-gray-900 dark:text-gray-100">{t('feeds.core.header.title')}</h1>
         <div className="flex gap-2">
-          {/* Always render button to maintain consistent DOM structure */}
-          {/* Use CSS class instead of inline style to prevent hydration mismatch */}
+          {/* Always render button with stable props to prevent hydration mismatch */}
+          {/* CRITICAL: Always use 'invisible' className and disabled={true} to match server render */}
+          {/* After mount, useEffect updates the DOM directly to enable the button */}
           <Button
             variant="outline"
             size="icon"
@@ -363,8 +366,9 @@ export default function FeedCore({
                 ? t('feeds.core.themeToggle.light')
                 : t('feeds.core.themeToggle.dark')
             }
-            className={isClient ? '' : 'invisible'}
-            disabled={!isClient}
+            className="invisible"
+            disabled={true}
+            data-testid="dark-mode-toggle"
           >
             {isDarkMode ? <SunIcon className="h-5 w-5" /> : <MoonIcon className="h-5 w-5" />}
           </Button>
