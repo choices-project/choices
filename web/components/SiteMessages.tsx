@@ -9,7 +9,7 @@ import {
   MessageSquare,
   X,
 } from 'lucide-react';
-import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import React, { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
 
 import ScreenReaderSupport from '@/lib/accessibility/screen-reader';
 import { logger } from '@/lib/utils/logger';
@@ -208,9 +208,10 @@ export default function SiteMessages({
   };
 
   // Track if component is mounted to prevent hydration mismatches from Date()
-  const [isMounted, setIsMounted] = useState(false);
+  // CRITICAL: Use function initializer and useLayoutEffect to ensure stable initial state
+  const [isMounted, setIsMounted] = useState(() => false);
 
-  useEffect(() => {
+  useLayoutEffect(() => {
     setIsMounted(true);
   }, []);
 
