@@ -135,12 +135,23 @@ export function ThemeScript() {
 })();
 `;
 
+  // CRITICAL: Use dangerouslySetInnerHTML directly in head to ensure script executes immediately
+  // Next.js Script with beforeInteractive should work, but we need to ensure it's in the right place
+  // For maximum compatibility, we'll use both approaches
   return (
-    <Script
-      id="theme-script"
-      strategy="beforeInteractive"
-      dangerouslySetInnerHTML={{ __html: scriptContent }}
-    />
+    <>
+      {/* Inline script that executes immediately - this is the primary method */}
+      <script
+        id="theme-script"
+        dangerouslySetInnerHTML={{ __html: scriptContent }}
+      />
+      {/* Also use Next.js Script as fallback */}
+      <Script
+        id="theme-script-fallback"
+        strategy="beforeInteractive"
+        dangerouslySetInnerHTML={{ __html: scriptContent }}
+      />
+    </>
   );
 }
 
