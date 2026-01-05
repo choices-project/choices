@@ -570,6 +570,7 @@ test.describe('Critical Fixes Validation', () => {
           if (text.includes('185') || text.includes('hydration') || text.includes('Hydration')) {
             if (firstHydrationErrorTime === null) {
               firstHydrationErrorTime = Date.now();
+              console.log('[TEST DEBUG] First hydration error detected at', firstHydrationErrorTime);
               // Capture DOM state immediately when first hydration error occurs
               page.evaluate(() => {
                 const errorInfo = {
@@ -587,12 +588,17 @@ test.describe('Critical Fixes Validation', () => {
                     'data-sidebar-collapsed': document.querySelector('[data-testid="app-shell"]')?.getAttribute('data-sidebar-collapsed'),
                   } : null,
                   representativeDetail: document.querySelector('[data-testid="representative-detail"]') ? 'exists' : null,
+                  globalNav: document.querySelector('[data-testid="global-nav-loading"]') ? 'loading' : document.querySelector('nav') ? 'rendered' : 'none',
+                  allNavs: Array.from(document.querySelectorAll('nav')).map(nav => ({
+                    testId: nav.getAttribute('data-testid'),
+                    className: nav.className.substring(0, 50),
+                  })),
                 };
                 console.log('[HYDRATION ERROR STATE]', JSON.stringify(errorInfo));
               }).catch(() => {});
             }
             hydrationErrors.push(text);
-            console.log('[HYDRATION ERROR]', text);
+            console.log('[HYDRATION ERROR]', text, 'at', Date.now());
           }
         }
       });
@@ -618,10 +624,21 @@ test.describe('Critical Fixes Validation', () => {
       await loginTestUser(page, userCredentials);
       await waitForPageReady(page);
 
+      // Track navigation timing
+      const navigationStartTime = Date.now();
+      console.log('[TEST DEBUG] Starting navigation to representatives/1 at', navigationStartTime);
+
       // Navigate to a representative detail page (use a known ID or create one)
       // For now, just verify navigation doesn't cause hydration errors
       await page.goto(`${BASE_URL}/representatives/1`, { waitUntil: 'domcontentloaded', timeout: 30_000 });
+      
+      const navigationEndTime = Date.now();
+      console.log('[TEST DEBUG] Navigation completed at', navigationEndTime, 'duration:', navigationEndTime - navigationStartTime);
+      
       await waitForPageReady(page);
+      
+      const pageReadyTime = Date.now();
+      console.log('[TEST DEBUG] Page ready at', pageReadyTime, 'total duration:', pageReadyTime - navigationStartTime);
       
       // Capture DOM state immediately when first hydration error occurs
       let domStateAtError: any = null;
