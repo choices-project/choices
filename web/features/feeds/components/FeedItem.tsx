@@ -202,21 +202,51 @@ const FeedItem = memo(({
   // Format date - handle both Date objects and date strings with null safety
   // CRITICAL: Guard toLocaleDateString() to prevent hydration mismatch
   const formatDate = (date: Date | string | null | undefined) => {
-    if (!date) return 'Unknown date';
+    // #region agent log
+    const log = (message, data, hypothesisId) => {
+      const logData = {
+        location: 'FeedItem.tsx:formatDate',
+        message: message,
+        data: data,
+        timestamp: Date.now(),
+        sessionId: 'debug-session',
+        runId: 'run1',
+        hypothesisId: hypothesisId
+      };
+      if (typeof window !== 'undefined' && window.localStorage.getItem('debug-feed-item') === '1') {
+        console.log('[DEBUG]', JSON.stringify(logData));
+      }
+      // Always try to send to logging server
+      fetch('http://127.0.0.1:7242/ingest/6a732aed-2d72-4883-a63a-f3c892fc1216', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(logData)
+      }).catch(() => {});
+    };
+    // #endregion
+    
+    if (!date) {
+      log('formatDate: no date', { date, isMounted }, 'A');
+      return 'Unknown date';
+    }
     
     // During SSR/initial render, use stable format
     if (!isMounted) {
       try {
         const dateObj = typeof date === 'string' ? new Date(date) : date;
         if (!dateObj || isNaN(dateObj.getTime())) {
+          log('formatDate: invalid date', { date, isMounted }, 'A');
           return 'Invalid date';
         }
         // Use stable format that doesn't depend on locale
         const year = dateObj.getFullYear();
         const month = dateObj.getMonth() + 1;
         const day = dateObj.getDate();
-        return `${month}/${day}/${year}`;
-      } catch {
+        const formatted = `${month}/${day}/${year}`;
+        log('formatDate: SSR/initial format', { date, formatted, isMounted }, 'A');
+        return formatted;
+      } catch (e) {
+        log('formatDate: SSR error', { date, error: e instanceof Error ? e.message : String(e), isMounted }, 'A');
         return 'Invalid date';
       }
     }
@@ -226,15 +256,28 @@ const FeedItem = memo(({
     
     // Check if dateObj is valid
     if (!dateObj || isNaN(dateObj.getTime())) {
+      log('formatDate: invalid dateObj', { date, isMounted }, 'A');
       return 'Invalid date';
     }
     
     const diffInHours = Math.floor((now.getTime() - dateObj.getTime()) / (1000 * 60 * 60));
     
-    if (diffInHours < 1) return 'Just now';
-    if (diffInHours < 24) return `${diffInHours}h ago`;
-    if (diffInHours < 48) return 'Yesterday';
-    return new Date(date).toLocaleDateString();
+    if (diffInHours < 1) {
+      log('formatDate: Just now', { date, diffInHours, isMounted }, 'A');
+      return 'Just now';
+    }
+    if (diffInHours < 24) {
+      const formatted = `${diffInHours}h ago`;
+      log('formatDate: hours ago', { date, diffInHours, formatted, isMounted }, 'A');
+      return formatted;
+    }
+    if (diffInHours < 48) {
+      log('formatDate: Yesterday', { date, diffInHours, isMounted }, 'A');
+      return 'Yesterday';
+    }
+    const formatted = new Date(date).toLocaleDateString();
+    log('formatDate: toLocaleDateString', { date, formatted, isMounted }, 'A');
+    return formatted;
   };
 
   // Get content type icon
