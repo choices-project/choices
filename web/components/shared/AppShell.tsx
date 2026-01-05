@@ -109,8 +109,9 @@ export function AppShell({ navigation, siteMessages, feedback, children }: AppSh
       return;
     }
     // #region agent log
+    const currentPath = typeof window !== 'undefined' ? window.location.pathname : 'SSR';
     const beforeAttrs={theme:document.documentElement.getAttribute('data-theme'),collapsed:document.documentElement.getAttribute('data-sidebar-collapsed')};
-    const logData11={location:'AppShell.tsx:92',message:'AppShell setting documentElement attributes',data:{beforeAttrs,settingTheme:theme,isMounted},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'B'};
+    const logData11={location:'AppShell.tsx:112',message:'AppShell setting documentElement attributes',data:{beforeAttrs,settingTheme:theme,isMounted,currentPath},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'B'};
     console.log('[DEBUG]',JSON.stringify(logData11));
     fetch('http://127.0.0.1:7242/ingest/6a732aed-2d72-4883-a63a-f3c892fc1216',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(logData11)}).catch(()=>{});
     // #endregion
@@ -122,12 +123,13 @@ export function AppShell({ navigation, siteMessages, feedback, children }: AppSh
       document.documentElement.classList.remove('dark');
     }
     // #region agent log
+    const currentPath2 = typeof window !== 'undefined' ? window.location.pathname : 'SSR';
     const afterAttrs={theme:document.documentElement.getAttribute('data-theme'),collapsed:document.documentElement.getAttribute('data-sidebar-collapsed')};
-    const logData12={location:'AppShell.tsx:103',message:'AppShell after setting attributes',data:{afterAttrs},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'B'};
+    const logData12={location:'AppShell.tsx:125',message:'AppShell after setting attributes',data:{afterAttrs,currentPath:currentPath2},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'B'};
     console.log('[DEBUG]',JSON.stringify(logData12));
     fetch('http://127.0.0.1:7242/ingest/6a732aed-2d72-4883-a63a-f3c892fc1216',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(logData12)}).catch(()=>{});
     // #endregion
-  }, [theme, isMounted]);
+  }, [theme, isMounted, collapsed, width, pinned]);
 
   // DIAGNOSTIC: Log when AppShell renders
   useEffect(() => {

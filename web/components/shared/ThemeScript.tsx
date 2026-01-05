@@ -111,8 +111,9 @@ export function ThemeScript() {
     void document.documentElement.offsetHeight;
 
     // #region agent log
+    const currentPath = typeof window !== 'undefined' ? window.location.pathname : 'SSR';
     const afterAttrs={theme:document.documentElement.getAttribute('data-theme'),collapsed:document.documentElement.getAttribute('data-sidebar-collapsed'),width:document.documentElement.getAttribute('data-sidebar-width'),pinned:document.documentElement.getAttribute('data-sidebar-pinned')};
-    const logData6={location:'ThemeScript.tsx:73',message:'After setting attributes',data:{afterAttrs,timeSinceStart:Date.now()-beforeSetAttrs},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'A'};
+    const logData6={location:'ThemeScript.tsx:115',message:'After setting attributes',data:{afterAttrs,timeSinceStart:Date.now()-beforeSetAttrs,currentPath},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'A'};
     console.log('[DEBUG]',JSON.stringify(logData6));
     fetch('http://127.0.0.1:7242/ingest/6a732aed-2d72-4883-a63a-f3c892fc1216',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(logData6)}).catch(()=>{});
     // #endregion
