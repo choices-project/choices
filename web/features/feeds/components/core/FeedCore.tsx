@@ -325,20 +325,22 @@ export default function FeedCore({
       <div className="flex justify-between items-center mb-6">
         <h1 className="text-3xl font-bold text-gray-900 dark:text-gray-100">{t('feeds.core.header.title')}</h1>
         <div className="flex gap-2">
-          {isClient && (
-            <Button
-              variant="outline"
-              size="icon"
-              onClick={toggleDarkMode}
-              aria-label={
-                isDarkMode
-                  ? t('feeds.core.themeToggle.light')
-                  : t('feeds.core.themeToggle.dark')
-              }
-            >
-              {isDarkMode ? <SunIcon className="h-5 w-5" /> : <MoonIcon className="h-5 w-5" />}
-            </Button>
-          )}
+          {/* Always render button to maintain consistent DOM structure */}
+          {/* Hide until client-side to prevent hydration mismatch */}
+          <Button
+            variant="outline"
+            size="icon"
+            onClick={toggleDarkMode}
+            aria-label={
+              isDarkMode
+                ? t('feeds.core.themeToggle.light')
+                : t('feeds.core.themeToggle.dark')
+            }
+            style={{ visibility: isClient ? 'visible' : 'hidden' }}
+            disabled={!isClient}
+          >
+            {isDarkMode ? <SunIcon className="h-5 w-5" /> : <MoonIcon className="h-5 w-5" />}
+          </Button>
           <Button onClick={onRefresh} disabled={isLoading}>
             {isLoading ? t('feeds.core.header.refreshing') : t('feeds.core.header.refresh')}
           </Button>

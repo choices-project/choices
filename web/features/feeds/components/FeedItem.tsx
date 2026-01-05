@@ -28,7 +28,7 @@ import {
   BookmarkIcon as BookmarkSolidIcon
 } from '@heroicons/react/24/solid';
 import Image from 'next/image';
-import React, { useState, useRef, useCallback, memo } from 'react';
+import React, { useState, useRef, useCallback, memo, useEffect } from 'react';
 
 import type { FeedItemData } from '@/features/civics/lib/types/civics-types';
 
@@ -192,9 +192,34 @@ const FeedItem = memo(({
     touchStartRef.current = null;
   }, [isExpanded, handleLike, handleShare]);
 
+  // Track if component is mounted to prevent hydration mismatch from date formatting
+  const [isMounted, setIsMounted] = useState(false);
+  
+  useEffect(() => {
+    setIsMounted(true);
+  }, []);
+
   // Format date - handle both Date objects and date strings with null safety
+  // CRITICAL: Guard toLocaleDateString() to prevent hydration mismatch
   const formatDate = (date: Date | string | null | undefined) => {
     if (!date) return 'Unknown date';
+    
+    // During SSR/initial render, use stable format
+    if (!isMounted) {
+      try {
+        const dateObj = typeof date === 'string' ? new Date(date) : date;
+        if (!dateObj || isNaN(dateObj.getTime())) {
+          return 'Invalid date';
+        }
+        // Use stable format that doesn't depend on locale
+        const year = dateObj.getFullYear();
+        const month = dateObj.getMonth() + 1;
+        const day = dateObj.getDate();
+        return `${month}/${day}/${year}`;
+      } catch {
+        return 'Invalid date';
+      }
+    }
     
     const now = new Date();
     const dateObj = typeof date === 'string' ? new Date(date) : date;
