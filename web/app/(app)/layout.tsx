@@ -5,6 +5,7 @@ import dynamicImport from 'next/dynamic';
 import React, { Suspense, useState } from 'react';
 
 import { AuthProvider } from '@/contexts/AuthContext';
+import { markReactHydrationStarted } from '@/lib/stores/appStore';
 
 import { usePollCreatedListener } from '@/features/polls/hooks/usePollCreatedListener';
 import OfflineIndicator from '@/features/pwa/components/OfflineIndicator';
@@ -153,11 +154,10 @@ export default function AppLayout({
     const logHydrationStart={location:'AppLayout.tsx:hydrationStart',message:'React hydration starting',data:{pathname:window.location.pathname,timestamp:hydrationStartTime,htmlAttrs:{theme:document.documentElement.getAttribute('data-theme'),collapsed:document.documentElement.getAttribute('data-sidebar-collapsed'),width:document.documentElement.getAttribute('data-sidebar-width'),pinned:document.documentElement.getAttribute('data-sidebar-pinned')}},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'H3'};
     console.log('[DEBUG]',JSON.stringify(logHydrationStart));
     
-    // CRITICAL: Mark React hydration as started in appStore
+    // CRITICAL: Mark React hydration as started in appStore (synchronous call)
     // This allows appStore to know when React is actually hydrating, not just when timer completes
-    import('@/lib/stores/appStore').then(({ markReactHydrationStarted }) => {
-      markReactHydrationStarted();
-    });
+    // Must be synchronous to ensure it's called before any theme mutations
+    markReactHydrationStarted();
     
     const originalError = console.error;
     console.error = (...args: unknown[]) => {
