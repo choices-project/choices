@@ -334,9 +334,17 @@ export const createAppActions = (
         state.resolvedTheme = resolveTheme(state.theme, systemTheme);
       });
 
-      if (get().theme === 'system') {
-        // CRITICAL: applyThemeToDocument now checks isReactHydrating internally
+      // CRITICAL: Only apply theme to document if not during hydration
+      // applyThemeToDocument checks isReactHydrating internally, but we also check here
+      // to prevent any theme changes during the critical hydration window
+      // This is especially important because useSystemThemeSync can trigger during hydration
+      if (get().theme === 'system' && !isReactHydrating) {
         applyThemeToDocument(get().resolvedTheme);
+      } else if (get().theme === 'system' && isReactHydrating) {
+        // #region agent log
+        const logData2={location:'appStore.ts:updateSystemTheme',message:'Skipping theme application during hydration',data:{systemTheme,resolvedTheme:get().resolvedTheme,isHydrating:isReactHydrating},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'H11'};
+        console.log('[DEBUG]',JSON.stringify(logData2));
+        // #endregion
       }
     },
 
