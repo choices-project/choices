@@ -124,10 +124,30 @@ export default function AppLayout({
 
   usePollCreatedListener();
 
-  // #region agent log - Capture hydration errors with timing
+  // #region agent log - Capture hydration errors with timing and DOM mutation tracking
   React.useEffect(() => {
     if (typeof window === 'undefined') return;
     
+    // Track DOM mutations to identify what's changing during hydration
+    const mutationObserver = new MutationObserver((mutations) => {
+      mutations.forEach((mutation) => {
+        if (mutation.target === document.documentElement && mutation.type === 'attributes') {
+          const attrName = mutation.attributeName;
+          const oldValue = mutation.oldValue;
+          const newValue = document.documentElement.getAttribute(attrName || '');
+          const logData={location:'AppLayout.tsx:mutationObserver',message:'DOM attribute changed during hydration',data:{attribute:attrName,oldValue,newValue,pathname:window.location.pathname,timestamp:Date.now()},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'H12'};
+          console.log('[DEBUG]',JSON.stringify(logData));
+        }
+      });
+    });
+
+    // Start observing documentElement for attribute changes
+    mutationObserver.observe(document.documentElement, {
+      attributes: true,
+      attributeFilter: ['data-theme', 'data-sidebar-collapsed', 'data-sidebar-width', 'data-sidebar-pinned'],
+      attributeOldValue: true,
+    });
+
     // Track when React starts hydrating
     const hydrationStartTime = Date.now();
     const logHydrationStart={location:'AppLayout.tsx:hydrationStart',message:'React hydration starting',data:{pathname:window.location.pathname,timestamp:hydrationStartTime,htmlAttrs:{theme:document.documentElement.getAttribute('data-theme'),collapsed:document.documentElement.getAttribute('data-sidebar-collapsed'),width:document.documentElement.getAttribute('data-sidebar-width'),pinned:document.documentElement.getAttribute('data-sidebar-pinned')}},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'H3'};
@@ -196,6 +216,7 @@ export default function AppLayout({
 
     return () => {
       console.error = originalError;
+      mutationObserver.disconnect();
     };
   }, []);
   // #endregion

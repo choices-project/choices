@@ -14,16 +14,44 @@ import { useAppActions } from '@/lib/stores/appStore';
 // The parent page uses dynamic import with ssr: false, which prevents SSR
 
 export default function FeedContent() {
+  // #region agent log - Track FeedContent render
+  const renderTime = Date.now();
+  const isClient = typeof window !== 'undefined';
+  const htmlAttrsAtRender = isClient ? {
+    theme: document.documentElement.getAttribute('data-theme'),
+    collapsed: document.documentElement.getAttribute('data-sidebar-collapsed'),
+    width: document.documentElement.getAttribute('data-sidebar-width'),
+    pinned: document.documentElement.getAttribute('data-sidebar-pinned'),
+  } : null;
+  console.log('[DEBUG FeedContent] Component rendering', {
+    pathname: isClient ? window.location.pathname : 'SSR',
+    timestamp: renderTime,
+    isClient,
+    htmlAttrs: htmlAttrsAtRender,
+    hasDocument: typeof document !== 'undefined',
+  });
+  // #endregion
+
   const user = useUser();
   const userDistrict = useFormattedDistrict();
 
   // #region agent log - Track FeedContent hydration
   React.useEffect(() => {
+    const mountTime = Date.now();
+    const htmlAttrsAtMount = typeof document !== 'undefined' ? {
+      theme: document.documentElement.getAttribute('data-theme'),
+      collapsed: document.documentElement.getAttribute('data-sidebar-collapsed'),
+      width: document.documentElement.getAttribute('data-sidebar-width'),
+      pinned: document.documentElement.getAttribute('data-sidebar-pinned'),
+    } : null;
     console.log('[DEBUG FeedContent] Component mounted/hydrated', {
       pathname: typeof window !== 'undefined' ? window.location.pathname : 'SSR',
-      timestamp: Date.now(),
+      timestamp: mountTime,
+      timeSinceRender: mountTime - renderTime,
       hasUser: !!user,
       userDistrict,
+      htmlAttrsAtMount,
+      htmlAttrsAtRender,
     });
   }, [user, userDistrict]);
   // #endregion
