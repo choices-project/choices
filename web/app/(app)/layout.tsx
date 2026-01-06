@@ -17,21 +17,25 @@ import FontProvider from '@/components/shared/FontProvider';
 
 // Dynamically import components that use usePathname() to prevent hydration errors
 // ssr: false ensures they only render on the client
+// CRITICAL: Loading fallback must match the actual component structure to prevent hydration mismatches
+// GlobalNavigation renders a <div> wrapper with <nav> inside, so loading fallback must match
 const GlobalNavigation = dynamicImport(() => import('@/components/shared/GlobalNavigation'), {
   ssr: false,
   loading: () => (
-    <nav className="bg-white dark:bg-gray-900 shadow-sm border-b border-gray-200 dark:border-gray-700" data-testid="global-nav-loading">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="flex justify-between h-16">
-          <div className="flex items-center">
-            <div className="h-8 w-8 bg-gray-200 animate-pulse rounded" />
-          </div>
-          <div className="flex items-center space-x-4">
-            <div className="h-8 w-20 bg-gray-200 animate-pulse rounded" />
+    <div className="sticky top-0 z-50 bg-white dark:bg-gray-900 shadow-sm border-b border-gray-200 dark:border-gray-700" data-testid="global-nav-loading">
+      <nav className="bg-white dark:bg-gray-900" aria-label="Primary navigation">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="flex items-center justify-between h-16">
+            <div className="flex items-center">
+              <div className="h-8 w-8 bg-gray-200 animate-pulse rounded" />
+            </div>
+            <div className="flex items-center space-x-4">
+              <div className="h-8 w-20 bg-gray-200 animate-pulse rounded" />
+            </div>
           </div>
         </div>
-      </div>
-    </nav>
+      </nav>
+    </div>
   ),
 });
 
@@ -77,6 +81,50 @@ export default function AppLayout({
   );
 
   usePollCreatedListener();
+
+  // #region agent log - Capture hydration errors
+  React.useEffect(() => {
+    if (typeof window === 'undefined') return;
+    
+    const originalError = console.error;
+    console.error = (...args: unknown[]) => {
+      const errorStr = args.map(a => String(a)).join(' ');
+      if (errorStr.includes('185') || errorStr.includes('hydration') || errorStr.includes('Hydration')) {
+        const logData = {
+          location: 'AppLayout.tsx:useEffect',
+          message: 'Hydration error detected in console',
+          data: {
+            error: errorStr,
+            pathname: window.location.pathname,
+            timestamp: Date.now(),
+            domState: {
+              htmlAttrs: {
+                'data-theme': document.documentElement.getAttribute('data-theme'),
+                'data-sidebar-collapsed': document.documentElement.getAttribute('data-sidebar-collapsed'),
+              },
+              appShell: document.querySelector('[data-testid="app-shell"]') ? {
+                className: document.querySelector('[data-testid="app-shell"]')?.className,
+                children: document.querySelector('[data-testid="app-shell"]')?.children.length,
+              } : null,
+              globalNav: document.querySelector('[data-testid="global-nav-loading"]') ? 'loading' : document.querySelector('nav') ? 'rendered' : 'none',
+            }
+          },
+          timestamp: Date.now(),
+          sessionId: 'debug-session',
+          runId: 'run1',
+          hypothesisId: 'E'
+        };
+        console.log('[DEBUG]', JSON.stringify(logData));
+        fetch('http://127.0.0.1:7242/ingest/6a732aed-2d72-4883-a63a-f3c892fc1216',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(logData)}).catch(()=>{});
+      }
+      originalError.apply(console, args);
+    };
+
+    return () => {
+      console.error = originalError;
+    };
+  }, []);
+  // #endregion
 
   // DIAGNOSTIC: Log when AppLayout renders AppShell (must be before early returns)
   React.useEffect(() => {
