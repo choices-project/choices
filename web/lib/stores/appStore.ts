@@ -208,8 +208,46 @@ const clampSidebarWidth = (width: number) => Math.max(200, Math.min(400, width))
 const resolveTheme = (theme: ThemePreference, systemTheme: SystemTheme): SystemTheme =>
   theme === 'system' ? systemTheme : theme;
 
+// CRITICAL: Track if React is currently hydrating to prevent DOM mutations during hydration
+// This prevents React error #185 (hydration mismatch)
+let isReactHydrating = true;
+let hydrationCompleteTimeout: ReturnType<typeof setTimeout> | null = null;
+
+// Mark hydration as complete after a delay to ensure React has finished
+// This only runs on the client (window is undefined during SSR)
+if (typeof window !== 'undefined') {
+  // Use requestIdleCallback if available, otherwise setTimeout
+  // This ensures we wait until React has finished hydrating before allowing DOM mutations
+  const markHydrationComplete = () => {
+    isReactHydrating = false;
+    if (hydrationCompleteTimeout) {
+      clearTimeout(hydrationCompleteTimeout);
+      hydrationCompleteTimeout = null;
+    }
+  };
+
+  // Wait for React to finish hydrating before allowing theme updates
+  // React hydration typically completes within 100-200ms
+  if (window.requestIdleCallback) {
+    window.requestIdleCallback(markHydrationComplete, { timeout: 300 });
+  } else {
+    hydrationCompleteTimeout = setTimeout(markHydrationComplete, 300);
+  }
+}
+
 const applyThemeToDocument = (theme: SystemTheme) => {
   if (typeof document === 'undefined') {
+    return;
+  }
+
+  // CRITICAL: Don't mutate DOM during React hydration
+  // This causes React error #185 (hydration mismatch)
+  // ThemeScript has already set the correct theme before React hydrates
+  if (isReactHydrating) {
+    // #region agent log
+    const logData={location:'appStore.ts:applyThemeToDocument',message:'Skipping theme application during hydration',data:{theme,currentTheme:document.documentElement.getAttribute('data-theme'),isHydrating:isReactHydrating},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'H11'};
+    console.log('[DEBUG]',JSON.stringify(logData));
+    // #endregion
     return;
   }
 
@@ -275,12 +313,18 @@ export const createAppActions = (
     },
 
     updateSystemTheme: (systemTheme) => {
+      // #region agent log
+      const logData={location:'appStore.ts:updateSystemTheme',message:'updateSystemTheme called',data:{systemTheme,currentTheme:get().theme,isHydrating:isReactHydrating},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'H11'};
+      console.log('[DEBUG]',JSON.stringify(logData));
+      // #endregion
+      
       setState((state) => {
         state.systemTheme = systemTheme;
         state.resolvedTheme = resolveTheme(state.theme, systemTheme);
       });
 
       if (get().theme === 'system') {
+        // CRITICAL: applyThemeToDocument now checks isReactHydrating internally
         applyThemeToDocument(get().resolvedTheme);
       }
     },
@@ -673,6 +717,13 @@ export const appStoreUtils = {
 
   initialize: () => {
     const state = useAppStore.getState();
+    // #region agent log
+    const logData={location:'appStore.ts:initialize',message:'App store initialize called',data:{theme:state.theme,resolvedTheme:state.resolvedTheme,isHydrating:isReactHydrating},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'H11'};
+    console.log('[DEBUG]',JSON.stringify(logData));
+    // #endregion
+    
+    // CRITICAL: applyThemeToDocument now checks isReactHydrating internally
+    // It will skip during hydration to prevent React error #185
     applyThemeToDocument(resolveTheme(state.theme, state.systemTheme));
     logger.debug('App store initialized');
   },
