@@ -10,12 +10,23 @@ import { ErrorBoundary } from '@/components/shared/ErrorBoundary';
 import { useUser } from '@/lib/stores';
 import { useAppActions } from '@/lib/stores/appStore';
 
-// Prevent static generation since this requires client-side state
-export const dynamic = 'force-dynamic';
+// NOTE: This is a client component ('use client'), so we don't need 'export const dynamic'
+// The parent page uses dynamic import with ssr: false, which prevents SSR
 
 export default function FeedContent() {
   const user = useUser();
   const userDistrict = useFormattedDistrict();
+
+  // #region agent log - Track FeedContent hydration
+  React.useEffect(() => {
+    console.log('[DEBUG FeedContent] Component mounted/hydrated', {
+      pathname: typeof window !== 'undefined' ? window.location.pathname : 'SSR',
+      timestamp: Date.now(),
+      hasUser: !!user,
+      userDistrict,
+    });
+  }, [user, userDistrict]);
+  // #endregion
   const { setCurrentRoute, setSidebarActiveSection, setBreadcrumbs } = useAppActions();
 
   // Refs for stable app store actions

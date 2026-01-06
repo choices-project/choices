@@ -219,12 +219,6 @@ const FeedItem = memo(({
       if (typeof window !== 'undefined' && window.localStorage.getItem('debug-feed-item') === '1') {
         console.log('[DEBUG]', JSON.stringify(logData));
       }
-      // Always try to send to logging server
-      fetch('http://127.0.0.1:7242/ingest/6a732aed-2d72-4883-a63a-f3c892fc1216', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(logData)
-      }).catch(() => {});
     };
     // #endregion
     
