@@ -213,12 +213,16 @@ const resolveTheme = (theme: ThemePreference, systemTheme: SystemTheme): SystemT
 let isReactHydrating = true;
 let hydrationCompleteTimeout: ReturnType<typeof setTimeout> | null = null;
 
-// Mark hydration as complete after a delay to ensure React has finished
-// This only runs on the client (window is undefined during SSR)
-if (typeof window !== 'undefined') {
-  // Use requestIdleCallback if available, otherwise setTimeout
-  // This ensures we wait until React has finished hydrating before allowing DOM mutations
+  // Mark hydration as complete after a delay to ensure React has finished
+  // This only runs on the client (window is undefined during SSR)
+  if (typeof window !== 'undefined') {
+    // Use requestIdleCallback if available, otherwise setTimeout
+    // This ensures we wait until React has finished hydrating before allowing DOM mutations
   const markHydrationComplete = () => {
+    // #region agent log
+    const logData={location:'appStore.ts:markHydrationComplete',message:'Marking hydration as complete',data:{timestamp:Date.now()},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'H11'};
+    console.log('[DEBUG]',JSON.stringify(logData));
+    // #endregion
     isReactHydrating = false;
     if (hydrationCompleteTimeout) {
       clearTimeout(hydrationCompleteTimeout);
@@ -228,6 +232,10 @@ if (typeof window !== 'undefined') {
 
   // Wait for React to finish hydrating before allowing theme updates
   // React hydration typically completes within 100-200ms
+  // #region agent log
+  const logData={location:'appStore.ts:hydrationTrackingInit',message:'Initializing hydration tracking',data:{hasRequestIdleCallback:typeof window.requestIdleCallback !== 'undefined',timestamp:Date.now()},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'H11'};
+  console.log('[DEBUG]',JSON.stringify(logData));
+  // #endregion
   if (window.requestIdleCallback) {
     window.requestIdleCallback(markHydrationComplete, { timeout: 300 });
   } else {
