@@ -136,20 +136,43 @@ export default function AppLayout({
       if (errorStr.includes('185') || errorStr.includes('hydration') || errorStr.includes('Hydration')) {
         const hydrationErrorTime = Date.now();
         const timeSinceStart = hydrationErrorTime - hydrationStartTime;
+        
+        // Capture the full error details including stack trace
+        const errorDetails = args.map(arg => {
+          if (arg instanceof Error) {
+            return {
+              message: arg.message,
+              stack: arg.stack,
+              name: arg.name,
+            };
+          }
+          return String(arg);
+        });
+        
+        // Check if attributes exist RIGHT NOW (synchronously)
+        const attrsNow = {
+          'data-theme': document.documentElement.getAttribute('data-theme'),
+          'data-sidebar-collapsed': document.documentElement.getAttribute('data-sidebar-collapsed'),
+          'data-sidebar-width': document.documentElement.getAttribute('data-sidebar-width'),
+          'data-sidebar-pinned': document.documentElement.getAttribute('data-sidebar-pinned'),
+        };
+        
         const logData = {
           location: 'AppLayout.tsx:useEffect',
           message: 'Hydration error detected in console',
           data: {
             error: errorStr,
+            errorDetails: errorDetails,
             pathname: window.location.pathname,
             timestamp: hydrationErrorTime,
             timeSinceHydrationStart: timeSinceStart,
             domState: {
-              htmlAttrs: {
-                'data-theme': document.documentElement.getAttribute('data-theme'),
-                'data-sidebar-collapsed': document.documentElement.getAttribute('data-sidebar-collapsed'),
-                'data-sidebar-width': document.documentElement.getAttribute('data-sidebar-width'),
-                'data-sidebar-pinned': document.documentElement.getAttribute('data-sidebar-pinned'),
+              htmlAttrs: attrsNow,
+              htmlAttrsAtHydrationStart: {
+                'data-theme': 'light', // From hydrationStart log
+                'data-sidebar-collapsed': 'false',
+                'data-sidebar-width': '280',
+                'data-sidebar-pinned': 'false',
               },
               appShell: document.querySelector('[data-testid="app-shell"]') ? {
                 className: document.querySelector('[data-testid="app-shell"]')?.className,
@@ -161,7 +184,7 @@ export default function AppLayout({
           timestamp: Date.now(),
           sessionId: 'debug-session',
           runId: 'run1',
-          hypothesisId: 'H3'
+          hypothesisId: 'H8'
         };
         console.log('[DEBUG]', JSON.stringify(logData));
         fetch('http://127.0.0.1:7242/ingest/6a732aed-2d72-4883-a63a-f3c892fc1216',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(logData)}).catch(()=>{});
