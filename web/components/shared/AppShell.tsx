@@ -47,35 +47,48 @@ export function AppShell({ navigation, siteMessages, feedback, children }: AppSh
   const [width, setWidth] = useState(280);
   const [pinned, setPinned] = useState(false);
 
-  // CRITICAL: Set attributes SYNCHRONOUSLY on first render if missing
-  // This ensures they exist before children hydrate
-  // We use a ref to track if we've set them, and set them immediately if not
+  // CRITICAL: Set attributes SYNCHRONOUSLY on EVERY render to ensure they exist before children hydrate
+  // This is necessary because:
+  // 1. On client-side navigation, ThemeScript doesn't run (beforeInteractive only runs on initial load)
+  // 2. React hydrates children during render phase, before useEffect/useLayoutEffect run
+  // 3. We must ensure attributes exist synchronously during render, not in effects
+  // We use a ref to track if we've set them this render cycle, but we ALWAYS set them to ensure they exist
   if (typeof document !== 'undefined' && !attributesSetRef.current) {
     const currentTheme = document.documentElement.getAttribute('data-theme');
     const currentCollapsed = document.documentElement.getAttribute('data-sidebar-collapsed');
     const currentWidth = document.documentElement.getAttribute('data-sidebar-width');
     const currentPinned = document.documentElement.getAttribute('data-sidebar-pinned');
     
-    // If any attribute is missing, set defaults immediately
-    if (!currentTheme || !currentCollapsed || !currentWidth || !currentPinned) {
-      document.documentElement.setAttribute('data-theme', 'light');
-      document.documentElement.setAttribute('data-sidebar-collapsed', 'false');
-      document.documentElement.setAttribute('data-sidebar-width', '280');
-      document.documentElement.setAttribute('data-sidebar-pinned', 'false');
+    // ALWAYS set attributes during render to ensure they exist before children hydrate
+    // Even if they're already set, we ensure they're present synchronously
+    // This prevents hydration mismatches on client-side navigation
+    const themeToSet = currentTheme || 'light';
+    const collapsedToSet = currentCollapsed !== null ? currentCollapsed : 'false';
+    const widthToSet = currentWidth || '280';
+    const pinnedToSet = currentPinned !== null ? currentPinned : 'false';
+    
+    document.documentElement.setAttribute('data-theme', themeToSet);
+    document.documentElement.setAttribute('data-sidebar-collapsed', collapsedToSet);
+    document.documentElement.setAttribute('data-sidebar-width', widthToSet);
+    document.documentElement.setAttribute('data-sidebar-pinned', pinnedToSet);
+    
+    if (themeToSet === 'dark') {
+      document.documentElement.classList.add('dark');
+      document.documentElement.style.colorScheme = 'dark';
+    } else {
       document.documentElement.classList.remove('dark');
       document.documentElement.style.colorScheme = 'light';
-      // Force synchronous reflow
-      void document.documentElement.offsetHeight;
-      attributesSetRef.current = true;
-      
-      // #region agent log
-      const logDataSync={location:'AppShell.tsx:syncInit',message:'AppShell synchronously set missing attributes during render',data:{wasMissing:{theme:!currentTheme,collapsed:!currentCollapsed,width:!currentWidth,pinned:!currentPinned}},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'H6'};
-      console.log('[DEBUG]',JSON.stringify(logDataSync));
-      fetch('http://127.0.0.1:7242/ingest/6a732aed-2d72-4883-a63a-f3c892fc1216',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(logDataSync)}).catch(()=>{});
-      // #endregion
-    } else {
-      attributesSetRef.current = true;
     }
+    
+    // Force synchronous reflow to ensure attributes are committed before React hydrates
+    void document.documentElement.offsetHeight;
+    attributesSetRef.current = true;
+    
+    // #region agent log
+    const logDataSync={location:'AppShell.tsx:syncInit',message:'AppShell synchronously ensured attributes exist during render',data:{wasMissing:{theme:!currentTheme,collapsed:!currentCollapsed,width:!currentWidth,pinned:!currentPinned},set:{theme:themeToSet,collapsed:collapsedToSet,width:widthToSet,pinned:pinnedToSet}},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'H7'};
+    console.log('[DEBUG]',JSON.stringify(logDataSync));
+    fetch('http://127.0.0.1:7242/ingest/6a732aed-2d72-4883-a63a-f3c892fc1216',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(logDataSync)}).catch(()=>{});
+    // #endregion
   }
 
   useEffect(() => {
