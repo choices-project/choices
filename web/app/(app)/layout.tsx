@@ -63,6 +63,41 @@ export default function AppLayout({
 }: {
   children: React.ReactNode;
 }) {
+  // CRITICAL: Set attributes SYNCHRONOUSLY before any children render
+  // This ensures attributes exist before React hydrates children
+  // We use a ref to ensure this only runs once per component instance
+  const attributesSetRef = React.useRef(false);
+  if (typeof document !== 'undefined' && !attributesSetRef.current) {
+    const currentTheme = document.documentElement.getAttribute('data-theme');
+    const currentCollapsed = document.documentElement.getAttribute('data-sidebar-collapsed');
+    const currentWidth = document.documentElement.getAttribute('data-sidebar-width');
+    const currentPinned = document.documentElement.getAttribute('data-sidebar-pinned');
+    
+    // Always ensure attributes exist - even if ThemeScript set them, we ensure they're present
+    // This is critical for client-side navigation where ThemeScript doesn't run
+    const themeToSet = currentTheme || 'light';
+    const collapsedToSet = currentCollapsed !== null ? currentCollapsed : 'false';
+    const widthToSet = currentWidth || '280';
+    const pinnedToSet = currentPinned !== null ? currentPinned : 'false';
+    
+    document.documentElement.setAttribute('data-theme', themeToSet);
+    document.documentElement.setAttribute('data-sidebar-collapsed', collapsedToSet);
+    document.documentElement.setAttribute('data-sidebar-width', widthToSet);
+    document.documentElement.setAttribute('data-sidebar-pinned', pinnedToSet);
+    
+    if (themeToSet === 'dark') {
+      document.documentElement.classList.add('dark');
+      document.documentElement.style.colorScheme = 'dark';
+    } else {
+      document.documentElement.classList.remove('dark');
+      document.documentElement.style.colorScheme = 'light';
+    }
+    
+    // Force synchronous reflow
+    void document.documentElement.offsetHeight;
+    attributesSetRef.current = true;
+  }
+
   // Create QueryClient instance for TanStack Query with memory optimization
   const [queryClient] = useState(
     () =>
@@ -85,25 +120,36 @@ export default function AppLayout({
 
   usePollCreatedListener();
 
-  // #region agent log - Capture hydration errors
+  // #region agent log - Capture hydration errors with timing
   React.useEffect(() => {
     if (typeof window === 'undefined') return;
+    
+    // Track when React starts hydrating
+    const hydrationStartTime = Date.now();
+    const logHydrationStart={location:'AppLayout.tsx:hydrationStart',message:'React hydration starting',data:{pathname:window.location.pathname,timestamp:hydrationStartTime,htmlAttrs:{theme:document.documentElement.getAttribute('data-theme'),collapsed:document.documentElement.getAttribute('data-sidebar-collapsed'),width:document.documentElement.getAttribute('data-sidebar-width'),pinned:document.documentElement.getAttribute('data-sidebar-pinned')}},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'H3'};
+    console.log('[DEBUG]',JSON.stringify(logHydrationStart));
+    fetch('http://127.0.0.1:7242/ingest/6a732aed-2d72-4883-a63a-f3c892fc1216',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(logHydrationStart)}).catch(()=>{});
     
     const originalError = console.error;
     console.error = (...args: unknown[]) => {
       const errorStr = args.map(a => String(a)).join(' ');
       if (errorStr.includes('185') || errorStr.includes('hydration') || errorStr.includes('Hydration')) {
+        const hydrationErrorTime = Date.now();
+        const timeSinceStart = hydrationErrorTime - hydrationStartTime;
         const logData = {
           location: 'AppLayout.tsx:useEffect',
           message: 'Hydration error detected in console',
           data: {
             error: errorStr,
             pathname: window.location.pathname,
-            timestamp: Date.now(),
+            timestamp: hydrationErrorTime,
+            timeSinceHydrationStart: timeSinceStart,
             domState: {
               htmlAttrs: {
                 'data-theme': document.documentElement.getAttribute('data-theme'),
                 'data-sidebar-collapsed': document.documentElement.getAttribute('data-sidebar-collapsed'),
+                'data-sidebar-width': document.documentElement.getAttribute('data-sidebar-width'),
+                'data-sidebar-pinned': document.documentElement.getAttribute('data-sidebar-pinned'),
               },
               appShell: document.querySelector('[data-testid="app-shell"]') ? {
                 className: document.querySelector('[data-testid="app-shell"]')?.className,
@@ -115,7 +161,7 @@ export default function AppLayout({
           timestamp: Date.now(),
           sessionId: 'debug-session',
           runId: 'run1',
-          hypothesisId: 'E'
+          hypothesisId: 'H3'
         };
         console.log('[DEBUG]', JSON.stringify(logData));
         fetch('http://127.0.0.1:7242/ingest/6a732aed-2d72-4883-a63a-f3c892fc1216',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(logData)}).catch(()=>{});
