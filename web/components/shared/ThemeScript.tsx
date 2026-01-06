@@ -94,17 +94,51 @@ export function ThemeScript() {
     fetch('http://127.0.0.1:7242/ingest/6a732aed-2d72-4883-a63a-f3c892fc1216',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(logData5)}).catch(()=>{});
     // #endregion
 
-    // CRITICAL: Only update attributes if they differ from root layout defaults
-    // Root layout sets defaults, so server and client HTML match initially
-    // Only update AFTER React hydrates to prevent seeing attribute changes during hydration
-    // Handle null values (if attributes aren't set yet, they should match defaults)
-    const needsUpdate = 
-      (currentTheme ?? 'light') !== theme ||
-      (currentCollapsed ?? 'false') !== String(sidebarCollapsed) ||
-      (currentWidth ?? '280') !== String(sidebarWidth) ||
-      (currentPinned ?? 'false') !== String(sidebarPinned);
+    // CRITICAL: Always ensure attributes are set, even if they match defaults
+    // On client-side navigation, ThemeScript doesn't run again, so attributes might be missing
+    // We must set them synchronously to ensure React sees them during hydration
+    // Only delay updates if values differ from what's already set
+    const currentThemeValue = currentTheme ?? 'light';
+    const currentCollapsedValue = currentCollapsed ?? 'false';
+    const currentWidthValue = currentWidth ?? '280';
+    const currentPinnedValue = currentPinned ?? 'false';
     
-    if (needsUpdate) {
+    const needsUpdate = 
+      currentThemeValue !== theme ||
+      currentCollapsedValue !== String(sidebarCollapsed) ||
+      currentWidthValue !== String(sidebarWidth) ||
+      currentPinnedValue !== String(sidebarPinned);
+    
+    // CRITICAL: If attributes are missing (null), set them immediately (synchronously)
+    // This ensures React sees them during hydration
+    // Only delay if attributes exist and need to change
+    const attributesMissing = !currentTheme || !currentCollapsed || !currentWidth || !currentPinned;
+    
+    if (attributesMissing) {
+      // Attributes are missing - set them immediately to prevent hydration mismatch
+      // This happens on client-side navigation where ThemeScript doesn't run
+      if (theme === 'dark') {
+        document.documentElement.classList.add('dark');
+        document.documentElement.setAttribute('data-theme', 'dark');
+        document.documentElement.style.colorScheme = 'dark';
+      } else {
+        document.documentElement.classList.remove('dark');
+        document.documentElement.setAttribute('data-theme', 'light');
+        document.documentElement.style.colorScheme = 'light';
+      }
+      document.documentElement.setAttribute('data-sidebar-collapsed', String(sidebarCollapsed));
+      document.documentElement.setAttribute('data-sidebar-width', String(sidebarWidth));
+      document.documentElement.setAttribute('data-sidebar-pinned', String(sidebarPinned));
+      
+      // Force synchronous reflow
+      void document.documentElement.offsetHeight;
+      
+      // #region agent log
+      const logDataSync={location:'ThemeScript.tsx:syncSet',message:'ThemeScript synchronously set missing attributes',data:{theme,sidebarCollapsed,sidebarWidth,sidebarPinned,wasMissing:true},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'G'};
+      console.log('[DEBUG]',JSON.stringify(logDataSync));
+      fetch('http://127.0.0.1:7242/ingest/6a732aed-2d72-4883-a63a-f3c892fc1216',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(logDataSync)}).catch(()=>{});
+      // #endregion
+    } else if (needsUpdate) {
       // #region agent log
       const logDataUpdate={location:'ThemeScript.tsx:needsUpdate',message:'ThemeScript will update attributes after hydration',data:{currentTheme,currentCollapsed,currentWidth,currentPinned,newTheme:theme,newCollapsed:sidebarCollapsed,newWidth:sidebarWidth,newPinned:sidebarPinned},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'F'};
       console.log('[DEBUG]',JSON.stringify(logDataUpdate));
