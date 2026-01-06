@@ -214,15 +214,32 @@ const resolveTheme = (theme: ThemePreference, systemTheme: SystemTheme): SystemT
 // and system theme detection happens during the hydration window
 let isReactHydrating = true;
 let hydrationCompleteTimeout: ReturnType<typeof setTimeout> | null = null;
+let hydrationStartTime: number | null = null;
 
 // Mark hydration as complete after a delay to ensure React has finished
 // This only runs on the client (window is undefined during SSR)
 if (typeof window !== 'undefined') {
+  hydrationStartTime = Date.now();
+  
   // Use requestIdleCallback if available, otherwise setTimeout
   // This ensures we wait until React has finished hydrating before allowing DOM mutations
   const markHydrationComplete = () => {
+    const elapsed = hydrationStartTime ? Date.now() - hydrationStartTime : 0;
+    // CRITICAL: Ensure minimum delay of 500ms, even if browser is idle
+    // requestIdleCallback can fire early if browser is idle, but we need to wait
+    // for React to actually start and complete hydration
+    if (elapsed < 500) {
+      const remaining = 500 - elapsed;
+      // #region agent log
+      const logData={location:'appStore.ts:markHydrationComplete',message:'Hydration tracking fired early, extending delay',data:{elapsed,remaining,timestamp:Date.now()},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'H11'};
+      console.log('[DEBUG]',JSON.stringify(logData));
+      // #endregion
+      hydrationCompleteTimeout = setTimeout(markHydrationComplete, remaining);
+      return;
+    }
+    
     // #region agent log
-    const logData={location:'appStore.ts:markHydrationComplete',message:'Marking hydration as complete',data:{timestamp:Date.now()},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'H11'};
+    const logData={location:'appStore.ts:markHydrationComplete',message:'Marking hydration as complete',data:{elapsed,timestamp:Date.now()},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'H11'};
     console.log('[DEBUG]',JSON.stringify(logData));
     // #endregion
     isReactHydrating = false;
@@ -232,11 +249,12 @@ if (typeof window !== 'undefined') {
     }
   };
 
-  // CRITICAL: Use a longer delay (500ms) to ensure React has fully hydrated
+  // CRITICAL: Use a longer delay (500ms minimum) to ensure React has fully hydrated
   // System theme detection (useSystemThemeSync) can trigger during hydration,
   // so we need to wait longer to prevent DOM mutations during the critical window
+  // requestIdleCallback can fire early, so we ensure minimum delay
   // #region agent log
-  const logData={location:'appStore.ts:hydrationTrackingInit',message:'Initializing hydration tracking',data:{hasRequestIdleCallback:typeof window.requestIdleCallback !== 'undefined',delay:500,timestamp:Date.now()},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'H11'};
+  const logData={location:'appStore.ts:hydrationTrackingInit',message:'Initializing hydration tracking',data:{hasRequestIdleCallback:typeof window.requestIdleCallback !== 'undefined',minDelay:500,timestamp:Date.now()},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'H11'};
   console.log('[DEBUG]',JSON.stringify(logData));
   // #endregion
   if (window.requestIdleCallback) {
