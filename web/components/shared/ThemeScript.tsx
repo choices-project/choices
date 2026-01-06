@@ -105,9 +105,22 @@ export function ThemeScript() {
       (currentPinned ?? 'false') !== String(sidebarPinned);
     
     if (needsUpdate) {
+      // #region agent log
+      const logDataUpdate={location:'ThemeScript.tsx:needsUpdate',message:'ThemeScript will update attributes after hydration',data:{currentTheme,currentCollapsed,currentWidth,currentPinned,newTheme:theme,newCollapsed:sidebarCollapsed,newWidth:sidebarWidth,newPinned:sidebarPinned},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'F'};
+      console.log('[DEBUG]',JSON.stringify(logDataUpdate));
+      fetch('http://127.0.0.1:7242/ingest/6a732aed-2d72-4883-a63a-f3c892fc1216',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(logDataUpdate)}).catch(()=>{});
+      // #endregion
+      
       // Update attributes after React hydrates to prevent mismatch
-      // Use requestIdleCallback for non-blocking update, fallback to setTimeout
+      // Use a longer delay to ensure React has finished hydrating
+      // React hydration typically completes within 100-200ms, so 300ms is safe
       const updateAttributes = () => {
+        // #region agent log
+        const logDataExec={location:'ThemeScript.tsx:updateAttributes',message:'ThemeScript executing delayed attribute update',data:{theme,sidebarCollapsed,sidebarWidth,sidebarPinned},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'F'};
+        console.log('[DEBUG]',JSON.stringify(logDataExec));
+        fetch('http://127.0.0.1:7242/ingest/6a732aed-2d72-4883-a63a-f3c892fc1216',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(logDataExec)}).catch(()=>{});
+        // #endregion
+        
         if (theme === 'dark') {
           document.documentElement.classList.add('dark');
           document.documentElement.setAttribute('data-theme', 'dark');
@@ -123,11 +136,14 @@ export function ThemeScript() {
       };
       
       // Wait for React to finish hydrating before updating
-      if (typeof requestIdleCallback !== 'undefined') {
-        requestIdleCallback(updateAttributes, { timeout: 100 });
-      } else {
-        setTimeout(updateAttributes, 0);
-      }
+      // Use a longer delay to be safe - React hydration can take 100-200ms
+      setTimeout(updateAttributes, 300);
+    } else {
+      // #region agent log
+      const logDataNoUpdate={location:'ThemeScript.tsx:noUpdate',message:'ThemeScript attributes match defaults, no update needed',data:{currentTheme,currentCollapsed,currentWidth,currentPinned,theme,sidebarCollapsed,sidebarWidth,sidebarPinned},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'F'};
+      console.log('[DEBUG]',JSON.stringify(logDataNoUpdate));
+      fetch('http://127.0.0.1:7242/ingest/6a732aed-2d72-4883-a63a-f3c892fc1216',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(logDataNoUpdate)}).catch(()=>{});
+      // #endregion
     }
 
     // #region agent log
