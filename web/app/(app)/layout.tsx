@@ -39,14 +39,17 @@ const GlobalNavigation = dynamicImport(() => import('@/components/shared/GlobalN
   ),
 });
 
+// CRITICAL: These components use ssr: false, but their containers in AppShell are server-rendered
+// The loading fallback must be consistent to prevent hydration mismatches
+// Using empty divs instead of null to maintain consistent DOM structure
 const EnhancedFeedbackWidget = dynamicImport(() => import('@/components/EnhancedFeedbackWidget'), {
   ssr: false,
-  loading: () => null,
+  loading: () => <div style={{ display: 'none' }} aria-hidden="true" />,
 });
 
 const SiteMessages = dynamicImport(() => import('@/components/SiteMessages'), {
   ssr: false,
-  loading: () => null,
+  loading: () => <div style={{ display: 'none' }} aria-hidden="true" />,
 });
 
 
