@@ -145,41 +145,87 @@ export function AppShell({ navigation, siteMessages, feedback, children }: AppSh
   // Sync system theme preference
   useSystemThemeSync();
 
-  // CRITICAL: Use useLayoutEffect to set attributes SYNCHRONOUSLY before React paints
-  // This ensures attributes exist during hydration, preventing mismatch errors
-  // useEffect runs AFTER React hydrates, but useLayoutEffect runs BEFORE paint
+  // CRITICAL: Track if this is the initial hydration to prevent attribute changes during hydration
+  // React hydration happens synchronously, and changing attributes during hydration causes error #185
+  const isHydratingRef = useRef(true);
+  const hydrationCompleteRef = useRef(false);
+
+  // Mark hydration as complete after first paint
+  useEffect(() => {
+    // Use requestIdleCallback to ensure this runs after React has finished hydrating
+    if (typeof window !== 'undefined' && window.requestIdleCallback) {
+      window.requestIdleCallback(() => {
+        isHydratingRef.current = false;
+        hydrationCompleteRef.current = true;
+      }, { timeout: 100 });
+    } else {
+      // Fallback for browsers without requestIdleCallback
+      setTimeout(() => {
+        isHydratingRef.current = false;
+        hydrationCompleteRef.current = true;
+      }, 100);
+    }
+  }, []);
+
+  // CRITICAL: Only update attributes AFTER hydration completes
+  // During hydration, ThemeScript has already set the correct attributes
+  // Changing them during hydration causes React error #185
   useLayoutEffect(() => {
     if (typeof document === 'undefined') {
       return;
     }
+
+    // CRITICAL: Don't update attributes during initial hydration
+    // ThemeScript has already set them correctly, and changing them causes mismatch
+    if (isHydratingRef.current && !hydrationCompleteRef.current) {
+      // #region agent log
+      const currentPath = typeof window !== 'undefined' ? window.location.pathname : 'SSR';
+      const currentAttrs={theme:document.documentElement.getAttribute('data-theme'),collapsed:document.documentElement.getAttribute('data-sidebar-collapsed'),width:document.documentElement.getAttribute('data-sidebar-width'),pinned:document.documentElement.getAttribute('data-sidebar-pinned')};
+      const logDataSkip={location:'AppShell.tsx:useLayoutEffect-skip',message:'AppShell skipping attribute update during hydration',data:{currentAttrs,wouldSet:{theme,collapsed,width,pinned},currentPath},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'H10'};
+      console.log('[DEBUG]',JSON.stringify(logDataSkip));
+      // #endregion
+      return;
+    }
+
     // #region agent log
     const currentPath = typeof window !== 'undefined' ? window.location.pathname : 'SSR';
     const beforeAttrs={theme:document.documentElement.getAttribute('data-theme'),collapsed:document.documentElement.getAttribute('data-sidebar-collapsed'),width:document.documentElement.getAttribute('data-sidebar-width'),pinned:document.documentElement.getAttribute('data-sidebar-pinned')};
-    const logData11={location:'AppShell.tsx:useLayoutEffect',message:'AppShell setting documentElement attributes SYNCHRONOUSLY',data:{beforeAttrs,settingTheme:theme,settingCollapsed:collapsed,settingWidth:width,settingPinned:pinned,currentPath},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'H5'};
+    const logData11={location:'AppShell.tsx:useLayoutEffect',message:'AppShell setting documentElement attributes AFTER hydration',data:{beforeAttrs,settingTheme:theme,settingCollapsed:collapsed,settingWidth:width,settingPinned:pinned,currentPath,hydrationComplete:hydrationCompleteRef.current},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'H10'};
     console.log('[DEBUG]',JSON.stringify(logData11));
     // #endregion
 
-    // Set all attributes synchronously - this runs before React paints
-    document.documentElement.setAttribute('data-theme', theme);
-    document.documentElement.setAttribute('data-sidebar-collapsed', String(collapsed));
-    document.documentElement.setAttribute('data-sidebar-width', String(width));
-    document.documentElement.setAttribute('data-sidebar-pinned', String(pinned));
-    
-    if (theme === 'dark') {
-      document.documentElement.classList.add('dark');
-      document.documentElement.style.colorScheme = 'dark';
-    } else {
-      document.documentElement.classList.remove('dark');
-      document.documentElement.style.colorScheme = 'light';
+    // Only update if values actually differ to prevent unnecessary DOM mutations
+    const currentThemeAttr = document.documentElement.getAttribute('data-theme');
+    if (currentThemeAttr !== theme) {
+      document.documentElement.setAttribute('data-theme', theme);
+      if (theme === 'dark') {
+        document.documentElement.classList.add('dark');
+        document.documentElement.style.colorScheme = 'dark';
+      } else {
+        document.documentElement.classList.remove('dark');
+        document.documentElement.style.colorScheme = 'light';
+      }
     }
-    
-    // Force synchronous reflow to ensure attributes are committed
-    void document.documentElement.offsetHeight;
+
+    const currentCollapsedAttr = document.documentElement.getAttribute('data-sidebar-collapsed');
+    if (currentCollapsedAttr !== String(collapsed)) {
+      document.documentElement.setAttribute('data-sidebar-collapsed', String(collapsed));
+    }
+
+    const currentWidthAttr = document.documentElement.getAttribute('data-sidebar-width');
+    if (currentWidthAttr !== String(width)) {
+      document.documentElement.setAttribute('data-sidebar-width', String(width));
+    }
+
+    const currentPinnedAttr = document.documentElement.getAttribute('data-sidebar-pinned');
+    if (currentPinnedAttr !== String(pinned)) {
+      document.documentElement.setAttribute('data-sidebar-pinned', String(pinned));
+    }
     
     // #region agent log
     const currentPath2 = typeof window !== 'undefined' ? window.location.pathname : 'SSR';
     const afterAttrs={theme:document.documentElement.getAttribute('data-theme'),collapsed:document.documentElement.getAttribute('data-sidebar-collapsed'),width:document.documentElement.getAttribute('data-sidebar-width'),pinned:document.documentElement.getAttribute('data-sidebar-pinned')};
-    const logData12={location:'AppShell.tsx:useLayoutEffect-after',message:'AppShell after setting attributes SYNCHRONOUSLY',data:{afterAttrs,currentPath:currentPath2},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'H5'};
+    const logData12={location:'AppShell.tsx:useLayoutEffect-after',message:'AppShell after setting attributes',data:{afterAttrs,currentPath:currentPath2},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'H10'};
     console.log('[DEBUG]',JSON.stringify(logData12));
     // #endregion
   }, [theme, collapsed, width, pinned]);

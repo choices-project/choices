@@ -226,12 +226,12 @@ export default function FeedCore({
     // The app store will update ThemeScript/AppShell which will update the DOM
     const newMode = !isDarkMode;
     setIsDarkMode(newMode);
-    
+
     // Update app store theme (this will trigger ThemeScript/AppShell to update DOM)
     // For now, just update localStorage - ThemeScript will read it on next page load
     // TODO: Integrate with app store theme actions for immediate update
     localStorage.setItem('darkMode', String(newMode));
-    
+
     // Trigger a page reload to apply theme change via ThemeScript
     // This ensures ThemeScript/AppShell handle the theme change consistently
     window.location.reload();
