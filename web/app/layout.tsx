@@ -132,17 +132,18 @@ export default async function RootLayout({
     // This is just for reference - actual logging happens client-side
   }
   // #endregion
-  // CRITICAL: Do NOT set data-* attributes on <html> tag here
-  // ThemeScript is the single source of truth for these attributes
-  // Setting them here causes hydration mismatches because:
-  // 1. Server renders with these defaults
-  // 2. ThemeScript updates them from localStorage before React hydrates
-  // 3. React compares server HTML (with defaults) to client HTML (with ThemeScript values)
-  // 4. Even with beforeInteractive, there can be timing issues
-  // Solution: Let ThemeScript set ALL attributes, don't set defaults in HTML
+  // CRITICAL: Set default attributes that match ThemeScript defaults
+  // This ensures server and client HTML match initially
+  // ThemeScript will update them if localStorage has different values,
+  // but only AFTER React hydrates (to prevent mismatch)
+  // The key is that both server and client start with the same defaults
   return (
     <html 
       lang={locale ?? DEFAULT_LOCALE}
+      data-theme="light"
+      data-sidebar-collapsed="false"
+      data-sidebar-width="280"
+      data-sidebar-pinned="false"
     >
       <head>
         {/* CRITICAL: Set theme before React hydrates to prevent hydration mismatch */}

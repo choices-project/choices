@@ -28,12 +28,19 @@ export function ThemeScript() {
   fetch('http://127.0.0.1:7242/ingest/6a732aed-2d72-4883-a63a-f3c892fc1216',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(logData)}).catch(()=>{});
   // #endregion
   try {
-    // CRITICAL: Always set attributes, even if localStorage is empty
-    // This ensures server and client HTML match from the start
+    // CRITICAL: Use defaults that match root layout
+    // Root layout sets these defaults, so server and client HTML match initially
+    // Only update if localStorage has different values (after React hydrates)
     let theme = 'light';
     let sidebarCollapsed = false;
     let sidebarWidth = 280;
     let sidebarPinned = false;
+    
+    // Check current attributes (set by root layout)
+    const currentTheme = document.documentElement.getAttribute('data-theme');
+    const currentCollapsed = document.documentElement.getAttribute('data-sidebar-collapsed');
+    const currentWidth = document.documentElement.getAttribute('data-sidebar-width');
+    const currentPinned = document.documentElement.getAttribute('data-sidebar-pinned');
 
     // #region agent log
     const beforeLocalStorage=Date.now();
@@ -87,28 +94,41 @@ export function ThemeScript() {
     fetch('http://127.0.0.1:7242/ingest/6a732aed-2d72-4883-a63a-f3c892fc1216',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(logData5)}).catch(()=>{});
     // #endregion
 
-    // CRITICAL: Always set attributes, even if they match defaults
-    // This ensures attributes exist when React hydrates, preventing null vs value mismatches
-    // The root layout sets defaults, but we need to ensure they're set before React starts
-    if (theme === 'dark') {
-      document.documentElement.classList.add('dark');
-      document.documentElement.setAttribute('data-theme', 'dark');
-      document.documentElement.style.colorScheme = 'dark';
-    } else {
-      document.documentElement.classList.remove('dark');
-      document.documentElement.setAttribute('data-theme', 'light');
-      document.documentElement.style.colorScheme = 'light';
-    }
-
-    // Always set sidebar attributes (even if they match defaults from root layout)
-    // This prevents hydration mismatches from null vs string value differences
-    document.documentElement.setAttribute('data-sidebar-collapsed', String(sidebarCollapsed));
-    document.documentElement.setAttribute('data-sidebar-width', String(sidebarWidth));
-    document.documentElement.setAttribute('data-sidebar-pinned', String(sidebarPinned));
+    // CRITICAL: Only update attributes if they differ from root layout defaults
+    // Root layout sets defaults, so server and client HTML match initially
+    // Only update AFTER React hydrates to prevent seeing attribute changes during hydration
+    // Handle null values (if attributes aren't set yet, they should match defaults)
+    const needsUpdate = 
+      (currentTheme ?? 'light') !== theme ||
+      (currentCollapsed ?? 'false') !== String(sidebarCollapsed) ||
+      (currentWidth ?? '280') !== String(sidebarWidth) ||
+      (currentPinned ?? 'false') !== String(sidebarPinned);
     
-    // CRITICAL: Ensure attributes are set synchronously before any async operations
-    // Force a synchronous reflow to ensure attributes are visible to React
-    void document.documentElement.offsetHeight;
+    if (needsUpdate) {
+      // Update attributes after React hydrates to prevent mismatch
+      // Use requestIdleCallback for non-blocking update, fallback to setTimeout
+      const updateAttributes = () => {
+        if (theme === 'dark') {
+          document.documentElement.classList.add('dark');
+          document.documentElement.setAttribute('data-theme', 'dark');
+          document.documentElement.style.colorScheme = 'dark';
+        } else {
+          document.documentElement.classList.remove('dark');
+          document.documentElement.setAttribute('data-theme', 'light');
+          document.documentElement.style.colorScheme = 'light';
+        }
+        document.documentElement.setAttribute('data-sidebar-collapsed', String(sidebarCollapsed));
+        document.documentElement.setAttribute('data-sidebar-width', String(sidebarWidth));
+        document.documentElement.setAttribute('data-sidebar-pinned', String(sidebarPinned));
+      };
+      
+      // Wait for React to finish hydrating before updating
+      if (typeof requestIdleCallback !== 'undefined') {
+        requestIdleCallback(updateAttributes, { timeout: 100 });
+      } else {
+        setTimeout(updateAttributes, 0);
+      }
+    }
 
     // #region agent log
     const currentPath = typeof window !== 'undefined' ? window.location.pathname : 'SSR';
