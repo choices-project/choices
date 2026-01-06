@@ -215,6 +215,18 @@ const resolveTheme = (theme: ThemePreference, systemTheme: SystemTheme): SystemT
 let isReactHydrating = true;
 let hydrationCompleteTimeout: ReturnType<typeof setTimeout> | null = null;
 let hydrationStartTime: number | null = null;
+let reactHydrationStarted = false;
+
+// Export function to mark React hydration as started (called from AppLayout)
+export function markReactHydrationStarted() {
+  if (!reactHydrationStarted) {
+    reactHydrationStarted = true;
+    // #region agent log
+    const logData={location:'appStore.ts:markReactHydrationStarted',message:'React hydration actually started',data:{timestamp:Date.now()},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'H13'};
+    console.log('[DEBUG]',JSON.stringify(logData));
+    // #endregion
+  }
+}
 
 // Mark hydration as complete after a delay to ensure React has finished
 // This only runs on the client (window is undefined during SSR)
@@ -352,18 +364,17 @@ export const createAppActions = (
         state.resolvedTheme = resolveTheme(state.theme, systemTheme);
       });
 
-      // CRITICAL: Only apply theme to document if not during hydration
-      // applyThemeToDocument checks isReactHydrating internally, but we also check here
-      // to prevent any theme changes during the critical hydration window
-      // This is especially important because useSystemThemeSync can trigger during hydration
-      if (get().theme === 'system' && !isReactHydrating) {
-        applyThemeToDocument(get().resolvedTheme);
-      } else if (get().theme === 'system' && isReactHydrating) {
-        // #region agent log
-        const logData2={location:'appStore.ts:updateSystemTheme',message:'Skipping theme application during hydration',data:{systemTheme,resolvedTheme:get().resolvedTheme,isHydrating:isReactHydrating},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'H11'};
-        console.log('[DEBUG]',JSON.stringify(logData2));
-        // #endregion
-      }
+  // CRITICAL: Only apply theme to document if React has actually started hydrating
+  // We check both isReactHydrating (timer-based) AND reactHydrationStarted (actual React state)
+  // This prevents theme changes during the critical hydration window even if timer completed early
+  if (get().theme === 'system' && !isReactHydrating && reactHydrationStarted) {
+    applyThemeToDocument(get().resolvedTheme);
+  } else {
+    // #region agent log
+    const logData2={location:'appStore.ts:updateSystemTheme',message:'Skipping theme application - waiting for React hydration',data:{systemTheme,resolvedTheme:get().resolvedTheme,isHydrating:isReactHydrating,reactHydrationStarted},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'H13'};
+    console.log('[DEBUG]',JSON.stringify(logData2));
+    // #endregion
+  }
     },
 
     toggleSidebar: () => {

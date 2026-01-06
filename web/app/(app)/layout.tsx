@@ -153,6 +153,12 @@ export default function AppLayout({
     const logHydrationStart={location:'AppLayout.tsx:hydrationStart',message:'React hydration starting',data:{pathname:window.location.pathname,timestamp:hydrationStartTime,htmlAttrs:{theme:document.documentElement.getAttribute('data-theme'),collapsed:document.documentElement.getAttribute('data-sidebar-collapsed'),width:document.documentElement.getAttribute('data-sidebar-width'),pinned:document.documentElement.getAttribute('data-sidebar-pinned')}},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'H3'};
     console.log('[DEBUG]',JSON.stringify(logHydrationStart));
     
+    // CRITICAL: Mark React hydration as started in appStore
+    // This allows appStore to know when React is actually hydrating, not just when timer completes
+    import('@/lib/stores/appStore').then(({ markReactHydrationStarted }) => {
+      markReactHydrationStarted();
+    });
+    
     const originalError = console.error;
     console.error = (...args: unknown[]) => {
       const errorStr = args.map(a => String(a)).join(' ');
