@@ -153,14 +153,14 @@ export function AppShell({ navigation, siteMessages, feedback, children }: AppSh
   // Don't use suppressHydrationWarning - ensure server and client initial render match exactly
   // ThemeScript sets attributes on documentElement, but we use stable defaults here
   // to ensure the initial HTML matches between server and client
+  // 
+  // HYPOTHESIS: The hardcoded data-* attributes on this div might be causing hydration mismatches
+  // if React compares them during hydration. We should remove them and only use them for styling
+  // via CSS selectors that read from documentElement, not from this div's attributes.
   return (
     <div
       className="min-h-screen bg-slate-50 dark:bg-gray-900"
       data-testid="app-shell"
-      data-theme="light"
-      data-sidebar-collapsed="false"
-      data-sidebar-width="280"
-      data-sidebar-pinned="false"
     >
       <header>{navigation}</header>
 
