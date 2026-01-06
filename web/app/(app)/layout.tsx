@@ -2,7 +2,7 @@
 
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import dynamicImport from 'next/dynamic';
-import React, { Suspense, useLayoutEffect, useState } from 'react';
+import React, { Suspense, useState } from 'react';
 
 import { AuthProvider } from '@/contexts/AuthContext';
 
