@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useLayoutEffect, useRef, useState } from 'react';
 
 import {
   appStoreUtils,
@@ -38,6 +38,7 @@ export function AppShell({ navigation, siteMessages, feedback, children }: AppSh
   // On client, ThemeScript should set attributes before React hydrates
   // But we use defaults here to ensure server and client initial render match
   const [isMounted, setIsMounted] = useState(false);
+  const attributesSetRef = useRef(false);
 
   // Always use defaults for initial state to match server render
   // ThemeScript sets attributes on documentElement, but we don't read them here
@@ -47,9 +48,42 @@ export function AppShell({ navigation, siteMessages, feedback, children }: AppSh
   const [width, setWidth] = useState(280);
   const [pinned, setPinned] = useState(false);
 
+  // CRITICAL: Set attributes SYNCHRONOUSLY on first render if missing
+  // This ensures they exist before children hydrate
+  // We use a ref to track if we've set them, and set them immediately if not
+  if (typeof document !== 'undefined' && !attributesSetRef.current) {
+    const currentTheme = document.documentElement.getAttribute('data-theme');
+    const currentCollapsed = document.documentElement.getAttribute('data-sidebar-collapsed');
+    const currentWidth = document.documentElement.getAttribute('data-sidebar-width');
+    const currentPinned = document.documentElement.getAttribute('data-sidebar-pinned');
+    
+    // If any attribute is missing, set defaults immediately
+    if (!currentTheme || !currentCollapsed || !currentWidth || !currentPinned) {
+      document.documentElement.setAttribute('data-theme', 'light');
+      document.documentElement.setAttribute('data-sidebar-collapsed', 'false');
+      document.documentElement.setAttribute('data-sidebar-width', '280');
+      document.documentElement.setAttribute('data-sidebar-pinned', 'false');
+      document.documentElement.classList.remove('dark');
+      document.documentElement.style.colorScheme = 'light';
+      // Force synchronous reflow
+      void document.documentElement.offsetHeight;
+      attributesSetRef.current = true;
+      
+      // #region agent log
+      const logDataSync={location:'AppShell.tsx:syncInit',message:'AppShell synchronously set missing attributes during render',data:{wasMissing:{theme:!currentTheme,collapsed:!currentCollapsed,width:!currentWidth,pinned:!currentPinned}},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'H6'};
+      console.log('[DEBUG]',JSON.stringify(logDataSync));
+      fetch('http://127.0.0.1:7242/ingest/6a732aed-2d72-4883-a63a-f3c892fc1216',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(logDataSync)}).catch(()=>{});
+      // #endregion
+    } else {
+      attributesSetRef.current = true;
+    }
+  }
+
   useEffect(() => {
-    // #region agent log
-    const logData8={location:'AppShell.tsx:50',message:'AppShell useEffect mount started',data:{hasDocument:typeof document!=='undefined'},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'B'};
+    // #region agent log - Track AppShell mount timing
+    const appShellMountTime = Date.now();
+    const htmlAttrsAtMount={theme:typeof document!=='undefined'?document.documentElement.getAttribute('data-theme'):null,collapsed:typeof document!=='undefined'?document.documentElement.getAttribute('data-sidebar-collapsed'):null,width:typeof document!=='undefined'?document.documentElement.getAttribute('data-sidebar-width'):null,pinned:typeof document!=='undefined'?document.documentElement.getAttribute('data-sidebar-pinned'):null};
+    const logData8={location:'AppShell.tsx:50',message:'AppShell useEffect mount started',data:{hasDocument:typeof document!=='undefined',htmlAttrsAtMount,timestamp:appShellMountTime},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'H4'};
     console.log('[DEBUG]',JSON.stringify(logData8));
     fetch('http://127.0.0.1:7242/ingest/6a732aed-2d72-4883-a63a-f3c892fc1216',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(logData8)}).catch(()=>{});
     // #endregion
@@ -104,32 +138,46 @@ export function AppShell({ navigation, siteMessages, feedback, children }: AppSh
   // Sync system theme preference
   useSystemThemeSync();
 
-  useEffect(() => {
-    if (typeof document === 'undefined' || !isMounted) {
+  // CRITICAL: Use useLayoutEffect to set attributes SYNCHRONOUSLY before React paints
+  // This ensures attributes exist during hydration, preventing mismatch errors
+  // useEffect runs AFTER React hydrates, but useLayoutEffect runs BEFORE paint
+  useLayoutEffect(() => {
+    if (typeof document === 'undefined') {
       return;
     }
     // #region agent log
     const currentPath = typeof window !== 'undefined' ? window.location.pathname : 'SSR';
-    const beforeAttrs={theme:document.documentElement.getAttribute('data-theme'),collapsed:document.documentElement.getAttribute('data-sidebar-collapsed')};
-    const logData11={location:'AppShell.tsx:112',message:'AppShell setting documentElement attributes',data:{beforeAttrs,settingTheme:theme,isMounted,currentPath},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'B'};
+    const beforeAttrs={theme:document.documentElement.getAttribute('data-theme'),collapsed:document.documentElement.getAttribute('data-sidebar-collapsed'),width:document.documentElement.getAttribute('data-sidebar-width'),pinned:document.documentElement.getAttribute('data-sidebar-pinned')};
+    const logData11={location:'AppShell.tsx:useLayoutEffect',message:'AppShell setting documentElement attributes SYNCHRONOUSLY',data:{beforeAttrs,settingTheme:theme,settingCollapsed:collapsed,settingWidth:width,settingPinned:pinned,currentPath},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'H5'};
     console.log('[DEBUG]',JSON.stringify(logData11));
     fetch('http://127.0.0.1:7242/ingest/6a732aed-2d72-4883-a63a-f3c892fc1216',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(logData11)}).catch(()=>{});
     // #endregion
 
+    // Set all attributes synchronously - this runs before React paints
     document.documentElement.setAttribute('data-theme', theme);
+    document.documentElement.setAttribute('data-sidebar-collapsed', String(collapsed));
+    document.documentElement.setAttribute('data-sidebar-width', String(width));
+    document.documentElement.setAttribute('data-sidebar-pinned', String(pinned));
+    
     if (theme === 'dark') {
       document.documentElement.classList.add('dark');
+      document.documentElement.style.colorScheme = 'dark';
     } else {
       document.documentElement.classList.remove('dark');
+      document.documentElement.style.colorScheme = 'light';
     }
+    
+    // Force synchronous reflow to ensure attributes are committed
+    void document.documentElement.offsetHeight;
+    
     // #region agent log
     const currentPath2 = typeof window !== 'undefined' ? window.location.pathname : 'SSR';
-    const afterAttrs={theme:document.documentElement.getAttribute('data-theme'),collapsed:document.documentElement.getAttribute('data-sidebar-collapsed')};
-    const logData12={location:'AppShell.tsx:125',message:'AppShell after setting attributes',data:{afterAttrs,currentPath:currentPath2},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'B'};
+    const afterAttrs={theme:document.documentElement.getAttribute('data-theme'),collapsed:document.documentElement.getAttribute('data-sidebar-collapsed'),width:document.documentElement.getAttribute('data-sidebar-width'),pinned:document.documentElement.getAttribute('data-sidebar-pinned')};
+    const logData12={location:'AppShell.tsx:useLayoutEffect-after',message:'AppShell after setting attributes SYNCHRONOUSLY',data:{afterAttrs,currentPath:currentPath2},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'H5'};
     console.log('[DEBUG]',JSON.stringify(logData12));
     fetch('http://127.0.0.1:7242/ingest/6a732aed-2d72-4883-a63a-f3c892fc1216',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(logData12)}).catch(()=>{});
     // #endregion
-  }, [theme, isMounted, collapsed, width, pinned]);
+  }, [theme, collapsed, width, pinned]);
 
   // DIAGNOSTIC: Log when AppShell renders
   useEffect(() => {
