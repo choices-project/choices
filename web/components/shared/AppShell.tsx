@@ -37,7 +37,6 @@ export function AppShell({ navigation, siteMessages, feedback, children }: AppSh
   // During SSR, document is undefined, so we use defaults
   // On client, ThemeScript should set attributes before React hydrates
   // But we use defaults here to ensure server and client initial render match
-  const [isMounted, setIsMounted] = useState(false);
   const attributesSetRef = useRef(false);
 
   // Always use defaults for initial state to match server render
@@ -87,7 +86,6 @@ export function AppShell({ navigation, siteMessages, feedback, children }: AppSh
     console.log('[DEBUG]',JSON.stringify(logData8));
     fetch('http://127.0.0.1:7242/ingest/6a732aed-2d72-4883-a63a-f3c892fc1216',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(logData8)}).catch(()=>{});
     // #endregion
-    setIsMounted(true);
     // After mount, read from script-set attributes (ThemeScript should have set them)
     // This ensures we use the actual persisted values, not defaults
     if (typeof document !== 'undefined') {
