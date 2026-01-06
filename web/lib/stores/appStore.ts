@@ -210,14 +210,16 @@ const resolveTheme = (theme: ThemePreference, systemTheme: SystemTheme): SystemT
 
 // CRITICAL: Track if React is currently hydrating to prevent DOM mutations during hydration
 // This prevents React error #185 (hydration mismatch)
+// We need a longer delay because React hydration can take longer than expected,
+// and system theme detection happens during the hydration window
 let isReactHydrating = true;
 let hydrationCompleteTimeout: ReturnType<typeof setTimeout> | null = null;
 
-  // Mark hydration as complete after a delay to ensure React has finished
-  // This only runs on the client (window is undefined during SSR)
-  if (typeof window !== 'undefined') {
-    // Use requestIdleCallback if available, otherwise setTimeout
-    // This ensures we wait until React has finished hydrating before allowing DOM mutations
+// Mark hydration as complete after a delay to ensure React has finished
+// This only runs on the client (window is undefined during SSR)
+if (typeof window !== 'undefined') {
+  // Use requestIdleCallback if available, otherwise setTimeout
+  // This ensures we wait until React has finished hydrating before allowing DOM mutations
   const markHydrationComplete = () => {
     // #region agent log
     const logData={location:'appStore.ts:markHydrationComplete',message:'Marking hydration as complete',data:{timestamp:Date.now()},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'H11'};
@@ -230,16 +232,17 @@ let hydrationCompleteTimeout: ReturnType<typeof setTimeout> | null = null;
     }
   };
 
-  // Wait for React to finish hydrating before allowing theme updates
-  // React hydration typically completes within 100-200ms
+  // CRITICAL: Use a longer delay (500ms) to ensure React has fully hydrated
+  // System theme detection (useSystemThemeSync) can trigger during hydration,
+  // so we need to wait longer to prevent DOM mutations during the critical window
   // #region agent log
-  const logData={location:'appStore.ts:hydrationTrackingInit',message:'Initializing hydration tracking',data:{hasRequestIdleCallback:typeof window.requestIdleCallback !== 'undefined',timestamp:Date.now()},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'H11'};
+  const logData={location:'appStore.ts:hydrationTrackingInit',message:'Initializing hydration tracking',data:{hasRequestIdleCallback:typeof window.requestIdleCallback !== 'undefined',delay:500,timestamp:Date.now()},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'H11'};
   console.log('[DEBUG]',JSON.stringify(logData));
   // #endregion
   if (window.requestIdleCallback) {
-    window.requestIdleCallback(markHydrationComplete, { timeout: 300 });
+    window.requestIdleCallback(markHydrationComplete, { timeout: 500 });
   } else {
-    hydrationCompleteTimeout = setTimeout(markHydrationComplete, 300);
+    hydrationCompleteTimeout = setTimeout(markHydrationComplete, 500);
   }
 }
 
