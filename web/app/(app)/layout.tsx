@@ -2,7 +2,7 @@
 
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import dynamicImport from 'next/dynamic';
-import React, { Suspense, useState } from 'react';
+import React, { Suspense, useLayoutEffect, useState } from 'react';
 
 import { AuthProvider } from '@/contexts/AuthContext';
 
@@ -63,11 +63,15 @@ export default function AppLayout({
 }: {
   children: React.ReactNode;
 }) {
-  // CRITICAL: Set attributes SYNCHRONOUSLY before any children render
-  // This ensures attributes exist before React hydrates children
+  // CRITICAL: Set attributes in useLayoutEffect to ensure they exist before React paints
+  // This runs synchronously after render but before browser paints
   // We use a ref to ensure this only runs once per component instance
   const attributesSetRef = React.useRef(false);
-  if (typeof document !== 'undefined' && !attributesSetRef.current) {
+  React.useLayoutEffect(() => {
+    if (typeof document === 'undefined' || attributesSetRef.current) {
+      return;
+    }
+    
     const currentTheme = document.documentElement.getAttribute('data-theme');
     const currentCollapsed = document.documentElement.getAttribute('data-sidebar-collapsed');
     const currentWidth = document.documentElement.getAttribute('data-sidebar-width');
@@ -96,7 +100,7 @@ export default function AppLayout({
     // Force synchronous reflow
     void document.documentElement.offsetHeight;
     attributesSetRef.current = true;
-  }
+  }, []);
 
   // Create QueryClient instance for TanStack Query with memory optimization
   const [queryClient] = useState(
