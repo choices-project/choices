@@ -125,6 +125,13 @@ export default async function RootLayout({
 
   const messages = await loadMessages(locale);
 
+  // #region agent log
+  // Server-side: log that we're rendering with default attributes
+  if (typeof window === 'undefined') {
+    // Server component - can't use fetch, but we can log via console in dev
+    // This is just for reference - actual logging happens client-side
+  }
+  // #endregion
   return (
     <html 
       lang={locale ?? DEFAULT_LOCALE}
@@ -132,6 +139,7 @@ export default async function RootLayout({
       data-sidebar-collapsed="false"
       data-sidebar-width="280"
       data-sidebar-pinned="false"
+      suppressHydrationWarning
     >
       <head>
         {/* CRITICAL: Set theme before React hydrates to prevent hydration mismatch */}
