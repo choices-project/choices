@@ -132,7 +132,6 @@ export default function AppLayout({
     const hydrationStartTime = Date.now();
     const logHydrationStart={location:'AppLayout.tsx:hydrationStart',message:'React hydration starting',data:{pathname:window.location.pathname,timestamp:hydrationStartTime,htmlAttrs:{theme:document.documentElement.getAttribute('data-theme'),collapsed:document.documentElement.getAttribute('data-sidebar-collapsed'),width:document.documentElement.getAttribute('data-sidebar-width'),pinned:document.documentElement.getAttribute('data-sidebar-pinned')}},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'H3'};
     console.log('[DEBUG]',JSON.stringify(logHydrationStart));
-    fetch('http://127.0.0.1:7242/ingest/6a732aed-2d72-4883-a63a-f3c892fc1216',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(logHydrationStart)}).catch(()=>{});
     
     const originalError = console.error;
     console.error = (...args: unknown[]) => {
@@ -191,7 +190,6 @@ export default function AppLayout({
           hypothesisId: 'H8'
         };
         console.log('[DEBUG]', JSON.stringify(logData));
-        fetch('http://127.0.0.1:7242/ingest/6a732aed-2d72-4883-a63a-f3c892fc1216',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(logData)}).catch(()=>{});
       }
       originalError.apply(console, args);
     };

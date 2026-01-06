@@ -138,7 +138,7 @@ export default async function RootLayout({
   // but only AFTER React hydrates (to prevent mismatch)
   // The key is that both server and client start with the same defaults
   return (
-    <html 
+    <html
       lang={locale ?? DEFAULT_LOCALE}
       data-theme="light"
       data-sidebar-collapsed="false"
@@ -149,7 +149,7 @@ export default async function RootLayout({
         {/* CRITICAL: Set theme before React hydrates to prevent hydration mismatch */}
         {/* ThemeScript runs immediately when HTML is parsed, before React even starts */}
         <ThemeScript />
-        
+
         {/* PWA Manifest - no preload needed as it's loaded via rel="manifest" */}
         <link rel="manifest" href="/manifest.json" crossOrigin="use-credentials" />
 
@@ -183,7 +183,7 @@ export default async function RootLayout({
         <meta name="format-detection" content="telephone=no" />
       </head>
       <body className="bg-slate-50 text-gray-900">
-        
+
         <SkipNavLink />
         <Providers locale={locale} messages={messages}>
           <SkipNavTarget>

@@ -87,7 +87,6 @@ export function AppShell({ navigation, siteMessages, feedback, children }: AppSh
     // #region agent log
     const logDataSync={location:'AppShell.tsx:useLayoutEffect-init',message:'AppShell ensured attributes exist in useLayoutEffect',data:{wasMissing:{theme:!currentTheme,collapsed:!currentCollapsed,width:!currentWidth,pinned:!currentPinned},set:{theme:themeToSet,collapsed:collapsedToSet,width:widthToSet,pinned:pinnedToSet}},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'H9'};
     console.log('[DEBUG]',JSON.stringify(logDataSync));
-    fetch('http://127.0.0.1:7242/ingest/6a732aed-2d72-4883-a63a-f3c892fc1216',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(logDataSync)}).catch(()=>{});
     // #endregion
   }, []);
 
@@ -97,7 +96,6 @@ export function AppShell({ navigation, siteMessages, feedback, children }: AppSh
     const htmlAttrsAtMount={theme:typeof document!=='undefined'?document.documentElement.getAttribute('data-theme'):null,collapsed:typeof document!=='undefined'?document.documentElement.getAttribute('data-sidebar-collapsed'):null,width:typeof document!=='undefined'?document.documentElement.getAttribute('data-sidebar-width'):null,pinned:typeof document!=='undefined'?document.documentElement.getAttribute('data-sidebar-pinned'):null};
     const logData8={location:'AppShell.tsx:50',message:'AppShell useEffect mount started',data:{hasDocument:typeof document!=='undefined',htmlAttrsAtMount,timestamp:appShellMountTime},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'H4'};
     console.log('[DEBUG]',JSON.stringify(logData8));
-    fetch('http://127.0.0.1:7242/ingest/6a732aed-2d72-4883-a63a-f3c892fc1216',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(logData8)}).catch(()=>{});
     // #endregion
     // After mount, read from script-set attributes (ThemeScript should have set them)
     // This ensures we use the actual persisted values, not defaults
@@ -109,7 +107,6 @@ export function AppShell({ navigation, siteMessages, feedback, children }: AppSh
       // #region agent log
       const logData9={location:'AppShell.tsx:58',message:'AppShell read script attributes',data:{scriptTheme,scriptCollapsed,scriptWidth,scriptPinned,storeTheme:resolvedTheme,storeCollapsed:sidebarCollapsed,storeWidth:sidebarWidth,storePinned:sidebarPinned},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'B'};
       console.log('[DEBUG]',JSON.stringify(logData9));
-      fetch('http://127.0.0.1:7242/ingest/6a732aed-2d72-4883-a63a-f3c892fc1216',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(logData9)}).catch(()=>{});
       // #endregion
 
       if (scriptTheme) setTheme(scriptTheme === 'dark' ? 'dark' : 'light');
@@ -126,7 +123,6 @@ export function AppShell({ navigation, siteMessages, feedback, children }: AppSh
     // #region agent log
     const logData10={location:'AppShell.tsx:71',message:'AppShell state set',data:{finalTheme:resolvedTheme,finalCollapsed:sidebarCollapsed,finalWidth:sidebarWidth,finalPinned:sidebarPinned},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'B'};
     console.log('[DEBUG]',JSON.stringify(logData10));
-    fetch('http://127.0.0.1:7242/ingest/6a732aed-2d72-4883-a63a-f3c892fc1216',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(logData10)}).catch(()=>{});
     // #endregion
   }, [resolvedTheme, sidebarCollapsed, sidebarWidth, sidebarPinned]);
   // Get initialize directly from store for stable reference
@@ -161,7 +157,6 @@ export function AppShell({ navigation, siteMessages, feedback, children }: AppSh
     const beforeAttrs={theme:document.documentElement.getAttribute('data-theme'),collapsed:document.documentElement.getAttribute('data-sidebar-collapsed'),width:document.documentElement.getAttribute('data-sidebar-width'),pinned:document.documentElement.getAttribute('data-sidebar-pinned')};
     const logData11={location:'AppShell.tsx:useLayoutEffect',message:'AppShell setting documentElement attributes SYNCHRONOUSLY',data:{beforeAttrs,settingTheme:theme,settingCollapsed:collapsed,settingWidth:width,settingPinned:pinned,currentPath},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'H5'};
     console.log('[DEBUG]',JSON.stringify(logData11));
-    fetch('http://127.0.0.1:7242/ingest/6a732aed-2d72-4883-a63a-f3c892fc1216',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(logData11)}).catch(()=>{});
     // #endregion
 
     // Set all attributes synchronously - this runs before React paints
@@ -186,7 +181,6 @@ export function AppShell({ navigation, siteMessages, feedback, children }: AppSh
     const afterAttrs={theme:document.documentElement.getAttribute('data-theme'),collapsed:document.documentElement.getAttribute('data-sidebar-collapsed'),width:document.documentElement.getAttribute('data-sidebar-width'),pinned:document.documentElement.getAttribute('data-sidebar-pinned')};
     const logData12={location:'AppShell.tsx:useLayoutEffect-after',message:'AppShell after setting attributes SYNCHRONOUSLY',data:{afterAttrs,currentPath:currentPath2},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'H5'};
     console.log('[DEBUG]',JSON.stringify(logData12));
-    fetch('http://127.0.0.1:7242/ingest/6a732aed-2d72-4883-a63a-f3c892fc1216',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(logData12)}).catch(()=>{});
     // #endregion
   }, [theme, collapsed, width, pinned]);
 
