@@ -105,7 +105,6 @@ function RepresentativeDetailPageContent() {
     // #region agent log
     const logData={location:'representatives/[id]/page.tsx:105',message:'isClient set to true',data:{timestamp:Date.now(),hasDocument:typeof document!=='undefined'},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'C'};
     console.log('[DEBUG]',JSON.stringify(logData));
-    fetch('http://127.0.0.1:7242/ingest/6a732aed-2d72-4883-a63a-f3c892fc1216',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(logData)}).catch(()=>{});
     // #endregion
     setIsClient(true);
   }, []);

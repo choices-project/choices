@@ -126,12 +126,6 @@ export default function FeedCore({
       if (typeof window !== 'undefined' && window.localStorage.getItem('debug-feed-core') === '1') {
         console.log('[DEBUG]', JSON.stringify(logData));
       }
-      // Always try to send to logging server
-      fetch('http://127.0.0.1:7242/ingest/6a732aed-2d72-4883-a63a-f3c892fc1216', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(logData)
-      }).catch(() => {});
     };
     // #endregion
 
@@ -140,17 +134,13 @@ export default function FeedCore({
     log('FeedCore setIsClient: after', { isClient: true }, 'B');
 
     if (typeof window !== 'undefined') {
-      const stored = localStorage.getItem('darkMode');
-      const systemPrefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
-      const shouldBeDark = stored ? stored === 'true' : systemPrefersDark;
-      log('FeedCore dark mode', { stored, systemPrefersDark, shouldBeDark }, 'B');
-      setIsDarkMode(shouldBeDark);
-
-      if (shouldBeDark) {
-        document.documentElement.classList.add('dark');
-      } else {
-        document.documentElement.classList.remove('dark');
-      }
+      // CRITICAL: Don't manipulate document.documentElement.classList directly
+      // ThemeScript and AppShell handle theme management globally
+      // We only read the current theme state for the button display
+      const currentTheme = document.documentElement.getAttribute('data-theme');
+      const isDark = currentTheme === 'dark' || document.documentElement.classList.contains('dark');
+      log('FeedCore dark mode', { currentTheme, isDark }, 'B');
+      setIsDarkMode(isDark);
     }
   }, []);
 
@@ -231,15 +221,20 @@ export default function FeedCore({
   const toggleDarkMode = useCallback(() => {
     if (typeof window === 'undefined') return;
 
+    // CRITICAL: Don't manipulate document.documentElement directly
+    // Use the app store's theme actions instead to ensure consistency
+    // The app store will update ThemeScript/AppShell which will update the DOM
     const newMode = !isDarkMode;
     setIsDarkMode(newMode);
+    
+    // Update app store theme (this will trigger ThemeScript/AppShell to update DOM)
+    // For now, just update localStorage - ThemeScript will read it on next page load
+    // TODO: Integrate with app store theme actions for immediate update
     localStorage.setItem('darkMode', String(newMode));
-
-    if (newMode) {
-      document.documentElement.classList.add('dark');
-    } else {
-      document.documentElement.classList.remove('dark');
-    }
+    
+    // Trigger a page reload to apply theme change via ThemeScript
+    // This ensures ThemeScript/AppShell handle the theme change consistently
+    window.location.reload();
   }, [isDarkMode]);
 
 
@@ -354,22 +349,22 @@ export default function FeedCore({
       <div className="flex justify-between items-center mb-6">
         <h1 className="text-3xl font-bold text-gray-900 dark:text-gray-100">{t('feeds.core.header.title')}</h1>
         <div className="flex gap-2">
-          {/* CRITICAL: Only render dark mode button on client to prevent hydration mismatch */}
-          {/* This component is already wrapped in ClientOnly, but we need to ensure button doesn't cause issues */}
-          {isClient && (
-            <Button
-              variant="outline"
-              size="icon"
-              onClick={toggleDarkMode}
-              aria-label={
-                isDarkMode
-                  ? t('feeds.core.themeToggle.light')
-                  : t('feeds.core.themeToggle.dark')
-              }
-            >
-              {isDarkMode ? <SunIcon className="h-5 w-5" /> : <MoonIcon className="h-5 w-5" />}
-            </Button>
-          )}
+          {/* CRITICAL: Always render button to prevent DOM structure mismatch
+              Disable it until client-side hydration completes */}
+          <Button
+            variant="outline"
+            size="icon"
+            onClick={toggleDarkMode}
+            disabled={!isClient}
+            className={!isClient ? 'invisible' : ''}
+            aria-label={
+              isDarkMode
+                ? t('feeds.core.themeToggle.light')
+                : t('feeds.core.themeToggle.dark')
+            }
+          >
+            {isDarkMode ? <SunIcon className="h-5 w-5" /> : <MoonIcon className="h-5 w-5" />}
+          </Button>
           <Button onClick={onRefresh} disabled={isLoading}>
             {isLoading ? t('feeds.core.header.refreshing') : t('feeds.core.header.refresh')}
           </Button>
