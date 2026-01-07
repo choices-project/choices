@@ -1,5 +1,3 @@
-'use client';
-
 /**
  * Dashboard Page - Uses Client-Only DashboardContent Component
  *
@@ -8,6 +6,11 @@
  *
  * Fixed: January 2025 - Extracted page logic to DashboardContent with dynamic import
  * This prevents hydration mismatches by ensuring the component never renders on the server
+ * 
+ * CRITICAL: This is a Server Component (no 'use client'), similar to feed page.
+ * The page component itself doesn't need to be a Client Component since DashboardContent
+ * is dynamically imported with ssr: false. Making this a Server Component prevents
+ * the page component from being included in the client bundle, reducing hydration complexity.
  */
 
 import dynamicImport from 'next/dynamic';
