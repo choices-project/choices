@@ -30,54 +30,54 @@ export class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundarySt
   static getDerivedStateFromError(error: Error): ErrorBoundaryState {
     // #region agent log - Track all errors to diagnose root causes
     const errorMessage = error?.message || '';
-    const isHydrationError = errorMessage.includes('Hydration failed') || 
+    const isHydrationError = errorMessage.includes('Hydration failed') ||
                             errorMessage.includes('React error #185') ||
                             errorMessage.includes('Minified React error #185');
-    
+
     if (isHydrationError) {
       // CRITICAL: Log hydration errors with full context for diagnosis
       // We need to FIX the hydration mismatch, not suppress it
       // Logging helps us identify what's causing the mismatch
-      logger.error('ErrorBoundary: Hydration mismatch detected - THIS NEEDS TO BE FIXED', { 
+      logger.error('ErrorBoundary: Hydration mismatch detected - THIS NEEDS TO BE FIXED', {
         error: errorMessage,
         errorInfo: 'Hydration mismatch - server and client HTML differ',
         stack: error?.stack,
         // Don't set error state to prevent infinite loop, but log it as an error
         // so we know it needs to be fixed
       });
-      
+
       // Still return no error state to prevent infinite loop, but we've logged it
       // The goal is to fix the root cause so this error doesn't occur
       return { hasError: false, error: null };
     }
     // #endregion
-    
+
     return { hasError: true, error };
   }
 
   componentDidCatch(error: Error, errorInfo: React.ErrorInfo) {
     // #region agent log - Track all errors to diagnose root causes
     const errorMessage = error?.message || '';
-    const isHydrationError = errorMessage.includes('Hydration failed') || 
+    const isHydrationError = errorMessage.includes('Hydration failed') ||
                             errorMessage.includes('React error #185') ||
                             errorMessage.includes('Minified React error #185');
-    
+
     if (isHydrationError) {
       // CRITICAL: Log hydration errors with full context for diagnosis
       // We need to FIX the hydration mismatch, not suppress it
-      logger.error('ErrorBoundary: Hydration mismatch - ROOT CAUSE NEEDS FIXING', { 
+      logger.error('ErrorBoundary: Hydration mismatch - ROOT CAUSE NEEDS FIXING', {
         error: errorMessage,
         errorInfo: errorInfo.componentStack,
         stack: error?.stack,
         // Log full error info to help diagnose what's causing the mismatch
       });
-      
+
       // Still don't call onError to prevent infinite loop, but we've logged it as an error
       // The goal is to identify and fix the root cause
       return;
     }
     // #endregion
-    
+
     logger.error('ErrorBoundary caught error:', { error, errorInfo });
     this.props.onError?.(error, errorInfo);
   }

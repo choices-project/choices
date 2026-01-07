@@ -276,6 +276,29 @@ export default function DashboardPage() {
   // Set client flag and check bypass immediately after mount to prevent hydration mismatch
   // Check bypass flag synchronously on first client render to avoid delays
   useEffect(() => {
+    // #region agent log - Track client mount and state changes
+    const mountLogData = {
+      location: 'DashboardPage.tsx:useEffect:mount',
+      message: 'Client mount - state changes that could cause hydration mismatch',
+      data: {
+        isClientBefore: isClient,
+        shouldBypassAuthBefore: shouldBypassAuth,
+        bypassFlagValue: typeof window !== 'undefined' ? checkBypassFlag() : 'SSR',
+        timestamp: Date.now(),
+      },
+      timestamp: Date.now(),
+      sessionId: 'debug-session',
+      runId: 'run1',
+      hypothesisId: 'F',
+    };
+    console.log('[DEBUG DashboardPage] Client mount effect:', JSON.stringify(mountLogData));
+    fetch('http://127.0.0.1:7242/ingest/6a732aed-2d72-4883-a63a-f3c892fc1216', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(mountLogData),
+    }).catch(() => {});
+    // #endregion
+
     setIsClient(true);
 
     // Check bypass flag immediately
@@ -823,6 +846,37 @@ export default function DashboardPage() {
       </div>
     </div>
   );
+
+  // #region agent log - Track hydration mismatch causes
+  const hydrationLogData = {
+    location: 'DashboardPage.tsx:render',
+    message: 'DashboardPage render - tracking state for hydration mismatch diagnosis',
+    data: {
+      isClient,
+      shouldBypassAuth,
+      hasCookies,
+      isStoreHydrated,
+      isAdmin,
+      isAuthenticated,
+      isUserLoading,
+      isAuthContextLoading,
+      hasMounted: typeof window !== 'undefined',
+      timestamp: Date.now(),
+    },
+    timestamp: Date.now(),
+    sessionId: 'debug-session',
+    runId: 'run1',
+    hypothesisId: 'F', // New hypothesis: ClientOnly wrapper causing hydration mismatch
+  };
+  if (typeof window !== 'undefined') {
+    console.log('[DEBUG DashboardPage] Render state:', JSON.stringify(hydrationLogData));
+    fetch('http://127.0.0.1:7242/ingest/6a732aed-2d72-4883-a63a-f3c892fc1216', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(hydrationLogData),
+    }).catch(() => {});
+  }
+  // #endregion
 
   return (
     <ClientOnly fallback={loadingFallback}>
