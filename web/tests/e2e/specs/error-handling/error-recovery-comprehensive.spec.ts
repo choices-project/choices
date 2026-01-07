@@ -258,8 +258,8 @@ test.describe('Error Recovery Tests', () => {
             consoleErrors.push(text);
           }
         }
-        // Capture all [DEBUG] logs and warnings
-        if (text.includes('[DEBUG]') || text.includes('Selector called') || text.includes('HIGH RENDER')) {
+        // Capture all [DEBUG] logs and warnings (including PersonalDashboard instrumentation)
+        if (text.includes('[DEBUG]') || text.includes('[DEBUG PersonalDashboard]') || text.includes('[DEBUG pollsStoreData]') || text.includes('[DEBUG analyticsStoreData]') || text.includes('Selector called') || text.includes('HIGH RENDER') || text.includes('render count')) {
           if (type === 'warning' || type === 'error') {
             consoleWarnings.push(text);
           } else {

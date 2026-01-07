@@ -73,6 +73,10 @@ type PersonalDashboardProps = {
  * Without useShallow, store subscriptions create new object references every render
  */
 function StandardPersonalDashboard({ userId: _fallbackUserId }: PersonalDashboardProps) {
+  // #region agent log - Component entry verification
+  console.log('[DEBUG PersonalDashboard] Component ENTRY - StandardPersonalDashboard rendering');
+  // #endregion
+  
   // CRITICAL: Guard client-only logic with isMounted (like feed/polls pages)
   const [isMounted, setIsMounted] = useState(false);
   
