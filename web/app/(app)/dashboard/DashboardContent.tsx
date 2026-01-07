@@ -789,6 +789,12 @@ export default function DashboardContent() {
       isUserLoading,
       isAuthContextLoading,
       hasMounted: typeof window !== 'undefined',
+      htmlAttrs: typeof window !== 'undefined' ? {
+        theme: document.documentElement.getAttribute('data-theme'),
+        collapsed: document.documentElement.getAttribute('data-sidebar-collapsed'),
+        width: document.documentElement.getAttribute('data-sidebar-width'),
+        pinned: document.documentElement.getAttribute('data-sidebar-pinned'),
+      } : null,
       timestamp: Date.now(),
     },
     timestamp: Date.now(),
@@ -804,6 +810,33 @@ export default function DashboardContent() {
       body: JSON.stringify(hydrationLogData),
     }).catch(() => {});
   }
+  
+  // Track when component actually mounts/hydrates
+  useEffect(() => {
+    const mountLogData = {
+      location: 'DashboardContent.tsx:useEffect:mount',
+      message: 'DashboardContent mounted/hydrated',
+      data: {
+        htmlAttrs: typeof window !== 'undefined' ? {
+          theme: document.documentElement.getAttribute('data-theme'),
+          collapsed: document.documentElement.getAttribute('data-sidebar-collapsed'),
+          width: document.documentElement.getAttribute('data-sidebar-width'),
+          pinned: document.documentElement.getAttribute('data-sidebar-pinned'),
+        } : null,
+        timestamp: Date.now(),
+      },
+      timestamp: Date.now(),
+      sessionId: 'debug-session',
+      runId: 'run1',
+      hypothesisId: 'G',
+    };
+    console.log('[DEBUG DashboardContent] Mount effect:', JSON.stringify(mountLogData));
+    fetch('http://127.0.0.1:7242/ingest/6a732aed-2d72-4883-a63a-f3c892fc1216', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(mountLogData),
+    }).catch(() => {});
+  }, []);
   // #endregion
 
   return (
