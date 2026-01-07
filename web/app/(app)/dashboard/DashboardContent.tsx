@@ -902,8 +902,10 @@ export default function DashboardContent() {
   // CRITICAL: Do NOT wrap in ErrorBoundary here - AppLayout already wraps children in ErrorBoundary
   // Double ErrorBoundary wrapping can cause hydration mismatches
   // FeedContent also doesn't have double ErrorBoundary (it has its own, but AppLayout doesn't wrap feed children)
+  // CRITICAL: Return structure must match loading fallback exactly
+  // Loading fallback uses <div> wrapper, so DashboardContent must also use <div> wrapper (not fragment)
   return (
-    <>
+    <div>
       {/* CRITICAL: DashboardNavigation is dynamically imported with ssr: false */}
       {/* This prevents hydration mismatches since it uses usePathname() */}
       <DashboardNavigation />
@@ -942,7 +944,7 @@ export default function DashboardContent() {
 
       {/* MobileDashboardNav is client-only component */}
       <MobileDashboardNav />
-    </>
+    </div>
   );
 }
 
