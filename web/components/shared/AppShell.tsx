@@ -256,28 +256,30 @@ export function AppShell({ navigation, siteMessages, feedback, children }: AppSh
   // HYPOTHESIS: The hardcoded data-* attributes on this div might be causing hydration mismatches
   // if React compares them during hydration. We should remove them and only use them for styling
   // via CSS selectors that read from documentElement, not from this div's attributes.
-  // #region agent log - H17: Track AppShell render structure
+  // #region agent log - H18: Track AppShell render structure (post-fix verification)
   useEffect(() => {
     if (typeof window !== 'undefined') {
-      const headerElement = document.querySelector('[data-testid="app-shell"] > header');
-      const navigationElement = headerElement?.firstElementChild;
+      const appShell = document.querySelector('[data-testid="app-shell"]');
+      const navigationElement = appShell?.firstElementChild;
+      const bailoutTemplate = appShell?.querySelector('template[data-dgst="BAILOUT_TO_CLIENT_SIDE_RENDERING"]');
       const logData = {
         location: 'AppShell.tsx:render-structure',
-        message: 'AppShell render structure check',
+        message: 'AppShell render structure check (post-fix: no header wrapper)',
         data: {
-          hasHeader: Boolean(headerElement),
-          headerChildrenCount: headerElement?.children.length ?? 0,
+          hasAppShell: Boolean(appShell),
+          appShellFirstChildTag: navigationElement?.tagName,
           hasNavigation: Boolean(navigationElement),
           navigationDataTestId: navigationElement?.getAttribute('data-testid'),
           navigationTagName: navigationElement?.tagName,
           navigationClasses: navigationElement?.className,
-          hasBailoutTemplate: Boolean(headerElement?.querySelector('template[data-dgst="BAILOUT_TO_CLIENT_SIDE_RENDERING"]')),
+          hasBailoutTemplate: Boolean(bailoutTemplate),
+          bailoutTemplateParent: bailoutTemplate?.parentElement?.tagName,
           timestamp: Date.now(),
         },
         timestamp: Date.now(),
         sessionId: 'debug-session',
         runId: 'run1',
-        hypothesisId: 'H17',
+        hypothesisId: 'H18',
       };
       console.log('[DEBUG]', JSON.stringify(logData));
       fetch('http://127.0.0.1:7242/ingest/6a732aed-2d72-4883-a63a-f3c892fc1216', {
@@ -294,7 +296,12 @@ export function AppShell({ navigation, siteMessages, feedback, children }: AppSh
       className="min-h-screen bg-slate-50 dark:bg-gray-900"
       data-testid="app-shell"
     >
-      <header>{navigation}</header>
+      {/* CRITICAL: Do NOT wrap navigation in <header> - causes BAILOUT_TO_CLIENT_SIDE_RENDERING template mismatch
+          GlobalNavigation already returns a <div> with proper semantic structure.
+          Wrapping in <header> causes Next.js to insert a bailout template as first child,
+          which React doesn't expect during hydration, causing React error #185.
+          H18 CONFIRMED: BAILOUT template is the root cause of hydration mismatch */}
+      {navigation}
 
       {/* Always render container to maintain consistent DOM structure */}
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-2">
