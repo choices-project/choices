@@ -98,6 +98,12 @@ export default function AppLayout({
     // CRITICAL: Don't update attributes during initial hydration
     // ThemeScript has already set them correctly, and changing them causes mismatch
     if (isHydratingRef.current && !hydrationCompleteRef.current) {
+      // #region agent log
+      const currentPath = typeof window !== 'undefined' ? window.location.pathname : 'SSR';
+      const currentAttrs={theme:document.documentElement.getAttribute('data-theme'),collapsed:document.documentElement.getAttribute('data-sidebar-collapsed'),width:document.documentElement.getAttribute('data-sidebar-width'),pinned:document.documentElement.getAttribute('data-sidebar-pinned')};
+      const logDataSkip={location:'AppLayout.tsx:useLayoutEffect-skip',message:'AppLayout skipping attribute update during hydration',data:{currentAttrs,currentPath},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'H14'};
+      console.log('[DEBUG]',JSON.stringify(logDataSkip));
+      // #endregion
       // Skip during hydration - ThemeScript already set attributes correctly
       return;
     }
