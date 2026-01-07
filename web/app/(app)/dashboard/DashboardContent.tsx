@@ -868,8 +868,11 @@ export default function DashboardContent() {
   }, []);
   // #endregion
 
+  // CRITICAL: Do NOT wrap in ErrorBoundary here - AppLayout already wraps children in ErrorBoundary
+  // Double ErrorBoundary wrapping can cause hydration mismatches
+  // FeedContent also doesn't have double ErrorBoundary (it has its own, but AppLayout doesn't wrap feed children)
   return (
-    <ErrorBoundary>
+    <>
       {/* CRITICAL: DashboardNavigation is dynamically imported with ssr: false */}
       {/* This prevents hydration mismatches since it uses usePathname() */}
       <DashboardNavigation />
@@ -908,7 +911,7 @@ export default function DashboardContent() {
 
       {/* MobileDashboardNav is client-only component */}
       <MobileDashboardNav />
-    </ErrorBoundary>
+    </>
   );
 }
 
