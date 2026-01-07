@@ -257,7 +257,7 @@ export function AppShell({ navigation, siteMessages, feedback, children }: AppSh
   // if React compares them during hydration. We should remove them and only use them for styling
   // via CSS selectors that read from documentElement, not from this div's attributes.
   // #region agent log - H17: Track AppShell render structure
-  React.useEffect(() => {
+  useEffect(() => {
     if (typeof window !== 'undefined') {
       const headerElement = document.querySelector('[data-testid="app-shell"] > header');
       const navigationElement = headerElement?.firstElementChild;
