@@ -268,9 +268,12 @@ export function AppShell({ navigation, siteMessages, feedback, children }: AppSh
         {siteMessages}
       </div>
 
-      <main id="main-content" className="min-h-[60vh]">
+      {/* CRITICAL: Use div instead of main to prevent nested <main> tags */}
+      {/* Root layout already provides <main> tag, so AppShell should use <div> */}
+      {/* Nested <main> tags are invalid HTML and cause React hydration error #185 */}
+      <div id="main-content" className="min-h-[60vh]">
         {children}
-      </main>
+      </div>
 
       {/* Always render footer container to maintain consistent DOM structure */}
       <footer className="mt-8">
