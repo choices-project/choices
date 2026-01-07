@@ -7,7 +7,6 @@ import React, { useEffect, useRef, useState } from 'react';
 
 import { useProfile } from '@/features/profile/hooks/use-profile';
 
-import ClientOnly from '@/components/ClientOnly';
 import DashboardNavigation, { MobileDashboardNav } from '@/components/shared/DashboardNavigation';
 import { ErrorBoundary } from '@/components/shared/ErrorBoundary';
 import { Button } from '@/components/ui/button';
@@ -879,67 +878,45 @@ export default function DashboardPage() {
   // #endregion
 
   return (
-    <ClientOnly fallback={loadingFallback}>
-      {/* #region agent log */}
-      {(() => {
-        if (typeof window !== 'undefined') {
-          console.log('[DEBUG DashboardPage] ClientOnly wrapper rendering, isClient:', isClient);
-        }
-        return null;
-      })()}
-      {/* #endregion */}
-      <ErrorBoundary>
-        {/* CRITICAL: Wrap DashboardNavigation in ClientOnly to prevent hydration mismatches */}
-        {/* usePathname() can return different values on server vs client */}
-        <ClientOnly fallback={<div className="h-16 bg-white border-b" />}>
-          <DashboardNavigation />
-        </ClientOnly>
+    <ErrorBoundary>
+      {/* CRITICAL: DashboardNavigation uses usePathname() which can cause hydration mismatches */}
+      {/* But it's wrapped in dynamic import in AppLayout, so it should be safe */}
+      <DashboardNavigation />
 
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-          {/* CRITICAL: Only show admin banner after mount to prevent hydration mismatch */}
-          {/* Since we're inside ClientOnly, we don't need isClient check - we're already client-only */}
-          {/* Use suppressHydrationWarning because isAdmin may change after mount */}
-          {isAdmin === true && (
-            <div className="mb-6 p-4 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg" suppressHydrationWarning>
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-3">
-                  <Shield className="h-5 w-5 text-blue-600 dark:text-blue-400" />
-                  <div>
-                    <h3 className="font-semibold text-blue-900 dark:text-blue-100">Admin Access Available</h3>
-                    <p className="text-sm text-blue-700 dark:text-blue-300">
-                      You have admin privileges. Access the admin dashboard for system management.
-                    </p>
-                  </div>
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        {/* CRITICAL: Only show admin banner after mount to prevent hydration mismatch */}
+        {/* Use suppressHydrationWarning because isAdmin may change after mount */}
+        {isAdmin === true && (
+          <div className="mb-6 p-4 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg" suppressHydrationWarning>
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-3">
+                <Shield className="h-5 w-5 text-blue-600 dark:text-blue-400" />
+                <div>
+                  <h3 className="font-semibold text-blue-900 dark:text-blue-100">Admin Access Available</h3>
+                  <p className="text-sm text-blue-700 dark:text-blue-300">
+                    You have admin privileges. Access the admin dashboard for system management.
+                  </p>
                 </div>
-                <Button
-                  onClick={() => routerRef.current.push('/admin/dashboard')}
-                  className="bg-blue-600 hover:bg-blue-700 text-white"
-                >
-                  <Shield className="h-4 w-4 mr-2" />
-                  Go to Admin Dashboard
-                </Button>
               </div>
+              <Button
+                onClick={() => routerRef.current.push('/admin/dashboard')}
+                className="bg-blue-600 hover:bg-blue-700 text-white"
+              >
+                <Shield className="h-4 w-4 mr-2" />
+                Go to Admin Dashboard
+              </Button>
             </div>
-          )}
+          </div>
+        )}
 
-          {/* CRITICAL: PersonalDashboard is loaded via next/dynamic with ssr: false */}
-          {/* This prevents it from being included in SSR HTML, eliminating hydration mismatch */}
-          {/* #region agent log */}
-          {(() => {
-            if (typeof window !== 'undefined') {
-              console.log('[DEBUG DashboardPage] About to render PersonalDashboard component, isClient:', isClient);
-            }
-            return null;
-          })()}
-          {/* #endregion */}
-          <PersonalDashboard />
-        </div>
+        {/* CRITICAL: PersonalDashboard is loaded via next/dynamic with ssr: false */}
+        {/* This prevents it from being included in SSR HTML, eliminating hydration mismatch */}
+        {/* The dynamic import handles loading state internally */}
+        <PersonalDashboard />
+      </div>
 
-        {/* CRITICAL: Wrap MobileDashboardNav in ClientOnly to prevent hydration mismatches */}
-        <ClientOnly fallback={null}>
-          <MobileDashboardNav />
-        </ClientOnly>
-      </ErrorBoundary>
-    </ClientOnly>
+      {/* MobileDashboardNav is client-only component */}
+      <MobileDashboardNav />
+    </ErrorBoundary>
   );
 }
