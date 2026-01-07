@@ -64,12 +64,41 @@ export default function AppLayout({
 }: {
   children: React.ReactNode;
 }) {
-  // CRITICAL: Set attributes in useLayoutEffect to ensure they exist before React paints
-  // This runs synchronously after render but before browser paints
-  // We use a ref to ensure this only runs once per component instance
+  // CRITICAL: Track if this is the initial hydration to prevent attribute changes during hydration
+  // React hydration happens synchronously, and changing attributes during hydration causes error #185
+  const isHydratingRef = React.useRef(true);
+  const hydrationCompleteRef = React.useRef(false);
   const attributesSetRef = React.useRef(false);
+
+  // Mark hydration as complete after first paint
+  React.useEffect(() => {
+    // Use requestIdleCallback to ensure this runs after React has finished hydrating
+    if (typeof window !== 'undefined' && window.requestIdleCallback) {
+      window.requestIdleCallback(() => {
+        isHydratingRef.current = false;
+        hydrationCompleteRef.current = true;
+      }, { timeout: 100 });
+    } else {
+      // Fallback for browsers without requestIdleCallback
+      setTimeout(() => {
+        isHydratingRef.current = false;
+        hydrationCompleteRef.current = true;
+      }, 100);
+    }
+  }, []);
+
+  // CRITICAL: Set attributes in useLayoutEffect, but SKIP during initial hydration
+  // ThemeScript has already set attributes before React hydrates
+  // Changing them during hydration causes React error #185
   React.useLayoutEffect(() => {
     if (typeof document === 'undefined' || attributesSetRef.current) {
+      return;
+    }
+    
+    // CRITICAL: Don't update attributes during initial hydration
+    // ThemeScript has already set them correctly, and changing them causes mismatch
+    if (isHydratingRef.current && !hydrationCompleteRef.current) {
+      // Skip during hydration - ThemeScript already set attributes correctly
       return;
     }
     

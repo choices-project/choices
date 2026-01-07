@@ -2,7 +2,7 @@
 
 /**
  * Dashboard Content Component
- * 
+ *
  * Client-only component containing all dashboard page logic.
  * This prevents hydration mismatches by ensuring it never renders on the server.
  */
@@ -345,7 +345,7 @@ export default function DashboardContent() {
       clearTimeout(timeout);
     };
   }, [shouldBypassAuth]);
-  
+
   const [isCheckingAdmin, setIsCheckingAdmin] = useState(false);
   const adminCheckRef = useRef<boolean>(false);
   const [isAdmin, setIsAdmin] = useState<boolean | null>(null);
@@ -810,7 +810,7 @@ export default function DashboardContent() {
       body: JSON.stringify(hydrationLogData),
     }).catch(() => {});
   }
-  
+
   // Track when component actually mounts/hydrates
   useEffect(() => {
     const mountLogData = {
