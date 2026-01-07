@@ -28,42 +28,55 @@ export class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundarySt
   }
 
   static getDerivedStateFromError(error: Error): ErrorBoundaryState {
-    // CRITICAL: Suppress hydration mismatch errors (#185) to prevent infinite loops
-    // These errors occur when server and client render differently, and React's
-    // error recovery mechanism can cause infinite re-renders
+    // #region agent log - Track all errors to diagnose root causes
     const errorMessage = error?.message || '';
     const isHydrationError = errorMessage.includes('Hydration failed') || 
                             errorMessage.includes('React error #185') ||
                             errorMessage.includes('Minified React error #185');
     
     if (isHydrationError) {
-      // Don't set error state for hydration errors - just log and continue
-      // This prevents the error from triggering React's error recovery, which causes infinite loops
-      logger.warn('ErrorBoundary: Suppressed hydration error to prevent infinite loop', { 
+      // CRITICAL: Log hydration errors with full context for diagnosis
+      // We need to FIX the hydration mismatch, not suppress it
+      // Logging helps us identify what's causing the mismatch
+      logger.error('ErrorBoundary: Hydration mismatch detected - THIS NEEDS TO BE FIXED', { 
         error: errorMessage,
-        errorInfo: 'Hydration mismatch - suppressed to prevent render loop'
+        errorInfo: 'Hydration mismatch - server and client HTML differ',
+        stack: error?.stack,
+        // Don't set error state to prevent infinite loop, but log it as an error
+        // so we know it needs to be fixed
       });
+      
+      // Still return no error state to prevent infinite loop, but we've logged it
+      // The goal is to fix the root cause so this error doesn't occur
       return { hasError: false, error: null };
     }
+    // #endregion
     
     return { hasError: true, error };
   }
 
   componentDidCatch(error: Error, errorInfo: React.ErrorInfo) {
-    // CRITICAL: Suppress hydration mismatch errors (#185) to prevent infinite loops
+    // #region agent log - Track all errors to diagnose root causes
     const errorMessage = error?.message || '';
     const isHydrationError = errorMessage.includes('Hydration failed') || 
                             errorMessage.includes('React error #185') ||
                             errorMessage.includes('Minified React error #185');
     
     if (isHydrationError) {
-      // Don't log hydration errors as errors - they're expected in some cases
-      // and logging them can trigger additional renders
-      logger.warn('ErrorBoundary: Suppressed hydration error', { 
-        error: errorMessage.substring(0, 100) // Truncate to prevent log spam
+      // CRITICAL: Log hydration errors with full context for diagnosis
+      // We need to FIX the hydration mismatch, not suppress it
+      logger.error('ErrorBoundary: Hydration mismatch - ROOT CAUSE NEEDS FIXING', { 
+        error: errorMessage,
+        errorInfo: errorInfo.componentStack,
+        stack: error?.stack,
+        // Log full error info to help diagnose what's causing the mismatch
       });
-      return; // Don't call onError for hydration errors
+      
+      // Still don't call onError to prevent infinite loop, but we've logged it as an error
+      // The goal is to identify and fix the root cause
+      return;
     }
+    // #endregion
     
     logger.error('ErrorBoundary caught error:', { error, errorInfo });
     this.props.onError?.(error, errorInfo);
