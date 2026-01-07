@@ -826,6 +826,14 @@ export default function DashboardPage() {
 
   return (
     <ClientOnly fallback={loadingFallback}>
+      {/* #region agent log */}
+      {(() => {
+        if (typeof window !== 'undefined') {
+          console.log('[DEBUG DashboardPage] ClientOnly wrapper rendering, isClient:', isClient);
+        }
+        return null;
+      })()}
+      {/* #endregion */}
       <ErrorBoundary>
         {/* CRITICAL: Wrap DashboardNavigation in ClientOnly to prevent hydration mismatches */}
         {/* usePathname() can return different values on server vs client */}
@@ -861,6 +869,14 @@ export default function DashboardPage() {
 
           {/* CRITICAL: PersonalDashboard is loaded via next/dynamic with ssr: false */}
           {/* This prevents it from being included in SSR HTML, eliminating hydration mismatch */}
+          {/* #region agent log */}
+          {(() => {
+            if (typeof window !== 'undefined') {
+              console.log('[DEBUG DashboardPage] About to render PersonalDashboard component, isClient:', isClient);
+            }
+            return null;
+          })()}
+          {/* #endregion */}
           <PersonalDashboard />
         </div>
 
