@@ -75,6 +75,37 @@ type PersonalDashboardProps = {
 function StandardPersonalDashboard({ userId: _fallbackUserId }: PersonalDashboardProps) {
   // CRITICAL: Guard client-only logic with isMounted (like feed/polls pages)
   const [isMounted, setIsMounted] = useState(false);
+  
+  // #region agent log
+  const renderCountRef = useRef(0);
+  renderCountRef.current += 1;
+  const renderCount = renderCountRef.current;
+  
+  // Always log to console for visibility, also try to send to debug server
+  if (renderCount <= 5 || renderCount % 10 === 0 || renderCount > 20) {
+    const logData = {
+      location: 'PersonalDashboard.tsx:render',
+      message: 'PersonalDashboard render',
+      data: { renderCount, isMounted },
+      timestamp: Date.now(),
+      sessionId: 'debug-session',
+      runId: 'run1',
+      hypothesisId: 'E'
+    };
+    console.log('[DEBUG PersonalDashboard]', JSON.stringify(logData));
+    fetch('http://127.0.0.1:7242/ingest/6a732aed-2d72-4883-a63a-f3c892fc1216', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(logData)
+    }).catch((err) => {
+      console.warn('[DEBUG PersonalDashboard] Failed to send log:', err);
+    });
+  }
+  
+  if (renderCount > 20) {
+    console.warn('[DEBUG] PersonalDashboard render count exceeded 20:', renderCount);
+  }
+  // #endregion
 
   useEffect(() => {
     setIsMounted(true);
@@ -151,12 +182,53 @@ function StandardPersonalDashboard({ userId: _fallbackUserId }: PersonalDashboar
   // CRITICAL FIX: Only select data properties, NOT loading/error states
   // Loading/error states change frequently and cause unnecessary re-renders
   // Pattern matches useFilteredPollCards: select only data, access error separately if needed
+  // #region agent log
+  const pollsStoreDataPrevRef = useRef<{ polls: unknown[] } | null>(null);
+  const pollsStoreDataCallCountRef = useRef(0);
+  // #endregion
   const pollsStoreData = usePollsStore(
-    useShallow((state) => ({
-      polls: state.polls,
-      // Don't include isLoading, error, lastFetchedAt - these change frequently
-      // Access error separately if needed (but prefer not subscribing to it)
-    }))
+    useShallow((state) => {
+      // #region agent log
+      pollsStoreDataCallCountRef.current += 1;
+      const callCount = pollsStoreDataCallCountRef.current;
+      const prevData = pollsStoreDataPrevRef.current;
+      const newData = { polls: state.polls };
+      const pollsRefChanged = prevData?.polls !== newData.polls;
+      const objectRefChanged = prevData !== newData;
+      
+      if (callCount <= 10 || pollsRefChanged || objectRefChanged) {
+        const logData = {
+          location: 'PersonalDashboard.tsx:pollsStoreData:selector',
+          message: 'pollsStoreData selector called',
+          data: {
+            callCount,
+            pollsRefChanged,
+            objectRefChanged,
+            pollsLength: Array.isArray(state.polls) ? state.polls.length : 'not-array',
+            prevPollsLength: Array.isArray(prevData?.polls) ? prevData.polls.length : 'not-array',
+          },
+          timestamp: Date.now(),
+          sessionId: 'debug-session',
+          runId: 'run1',
+          hypothesisId: 'A'
+        };
+        console.log('[DEBUG pollsStoreData]', JSON.stringify(logData));
+        fetch('http://127.0.0.1:7242/ingest/6a732aed-2d72-4883-a63a-f3c892fc1216', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(logData)
+        }).catch((err) => {
+          console.warn('[DEBUG pollsStoreData] Failed to send log:', err);
+        });
+      }
+      pollsStoreDataPrevRef.current = newData;
+      // #endregion
+      return {
+        polls: state.polls,
+        // Don't include isLoading, error, lastFetchedAt - these change frequently
+        // Access error separately if needed (but prefer not subscribing to it)
+      };
+    })
   );
   const polls = pollsStoreData.polls; // useShallow ensures stable reference
 
@@ -178,12 +250,53 @@ function StandardPersonalDashboard({ userId: _fallbackUserId }: PersonalDashboar
   // CRITICAL FIX: Only select events, not isLoading/error - those change frequently and cause unnecessary re-renders
   // CRITICAL FIX: Don't access store until mounted to prevent hydration mismatches
   // CRITICAL FIX: Wrap in try-catch to prevent errors from causing infinite loops
+  // #region agent log
+  const analyticsStoreDataPrevRef = useRef<{ events: AnalyticsEvent[] } | null>(null);
+  const analyticsStoreDataCallCountRef = useRef(0);
+  // #endregion
   const analyticsStoreData = useAnalyticsStore(
     useShallow((state) => {
+      // #region agent log
+      analyticsStoreDataCallCountRef.current += 1;
+      const callCount = analyticsStoreDataCallCountRef.current;
+      const prevData = analyticsStoreDataPrevRef.current;
+      const events = state.events ?? EMPTY_ANALYTICS_ARRAY;
+      const newData = { events };
+      const eventsRefChanged = prevData?.events !== newData.events;
+      const objectRefChanged = prevData !== newData;
+      
+      if (callCount <= 10 || eventsRefChanged || objectRefChanged) {
+        const logData = {
+          location: 'PersonalDashboard.tsx:analyticsStoreData:selector',
+          message: 'analyticsStoreData selector called',
+          data: {
+            callCount,
+            eventsRefChanged,
+            objectRefChanged,
+            eventsLength: Array.isArray(events) ? events.length : 'not-array',
+            prevEventsLength: Array.isArray(prevData?.events) ? prevData.events.length : 'not-array',
+            isUsingEmptyArray: events === EMPTY_ANALYTICS_ARRAY,
+          },
+          timestamp: Date.now(),
+          sessionId: 'debug-session',
+          runId: 'run1',
+          hypothesisId: 'A'
+        };
+        console.log('[DEBUG analyticsStoreData]', JSON.stringify(logData));
+        fetch('http://127.0.0.1:7242/ingest/6a732aed-2d72-4883-a63a-f3c892fc1216', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(logData)
+        }).catch((err) => {
+          console.warn('[DEBUG analyticsStoreData] Failed to send log:', err);
+        });
+      }
+      analyticsStoreDataPrevRef.current = newData;
+      // #endregion
       try {
         // CRITICAL: Only return events - don't include isLoading/error as they change on every API call
         // This prevents the selector from being called on every store update (e.g., when setError/setLoading is called)
-        return { events: state.events ?? EMPTY_ANALYTICS_ARRAY };
+        return { events };
       } catch (error) {
         // If store access fails, return empty array to prevent infinite loops
         console.error('Analytics store access error:', error);
@@ -194,16 +307,109 @@ function StandardPersonalDashboard({ userId: _fallbackUserId }: PersonalDashboar
 
   // Normalize to stable empty array when empty (like useFilteredPollCards normalizes in useMemo)
   // CRITICAL: Wrap in try-catch to prevent errors from causing infinite loops
+  // #region agent log
+  const analyticsEventsPrevRef = useRef<AnalyticsEvent[] | null>(null);
+  const analyticsEventsCallCountRef = useRef(0);
+  // #endregion
   const analyticsEvents = useMemo(() => {
+    // #region agent log
+    analyticsEventsCallCountRef.current += 1;
+    const callCount = analyticsEventsCallCountRef.current;
+    const prevEvents = analyticsEventsPrevRef.current;
+    // #endregion
     try {
-      if (!isMounted) return EMPTY_ANALYTICS_ARRAY;
-      if (!Array.isArray(analyticsStoreData?.events) || analyticsStoreData.events.length === 0) {
+      if (!isMounted) {
+        // #region agent log
+        if (callCount <= 5) {
+          fetch('http://127.0.0.1:7242/ingest/6a732aed-2d72-4883-a63a-f3c892fc1216', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              location: 'PersonalDashboard.tsx:analyticsEvents:useMemo',
+              message: 'analyticsEvents useMemo called - not mounted',
+              data: { callCount, isMounted: false },
+              timestamp: Date.now(),
+              sessionId: 'debug-session',
+              runId: 'run1',
+              hypothesisId: 'C'
+            })
+          }).catch(() => {});
+        }
+        // #endregion
         return EMPTY_ANALYTICS_ARRAY;
       }
-      return analyticsStoreData.events;
+      if (!Array.isArray(analyticsStoreData?.events) || analyticsStoreData.events.length === 0) {
+        // #region agent log
+        if (callCount <= 5 || prevEvents !== EMPTY_ANALYTICS_ARRAY) {
+          fetch('http://127.0.0.1:7242/ingest/6a732aed-2d72-4883-a63a-f3c892fc1216', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              location: 'PersonalDashboard.tsx:analyticsEvents:useMemo',
+              message: 'analyticsEvents useMemo called - returning empty array',
+              data: {
+                callCount,
+                isMounted: true,
+                eventsLength: Array.isArray(analyticsStoreData?.events) ? analyticsStoreData.events.length : 'not-array',
+                prevWasEmpty: prevEvents === EMPTY_ANALYTICS_ARRAY,
+              },
+              timestamp: Date.now(),
+              sessionId: 'debug-session',
+              runId: 'run1',
+              hypothesisId: 'C'
+            })
+          }).catch(() => {});
+        }
+        // #endregion
+        const result = EMPTY_ANALYTICS_ARRAY;
+        analyticsEventsPrevRef.current = result;
+        return result;
+      }
+      // #region agent log
+      const eventsRefChanged = prevEvents !== analyticsStoreData.events;
+      if (callCount <= 5 || eventsRefChanged) {
+        fetch('http://127.0.0.1:7242/ingest/6a732aed-2d72-4883-a63a-f3c892fc1216', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            location: 'PersonalDashboard.tsx:analyticsEvents:useMemo',
+            message: 'analyticsEvents useMemo called - returning events',
+            data: {
+              callCount,
+              isMounted: true,
+              eventsLength: analyticsStoreData.events.length,
+              eventsRefChanged,
+              prevEventsLength: Array.isArray(prevEvents) ? prevEvents.length : 'not-array',
+            },
+            timestamp: Date.now(),
+            sessionId: 'debug-session',
+            runId: 'run1',
+            hypothesisId: 'C'
+          })
+        }).catch(() => {});
+      }
+      // #endregion
+      const result = analyticsStoreData.events;
+      analyticsEventsPrevRef.current = result;
+      return result;
     } catch (error) {
       // If processing fails, return empty array to prevent infinite loops
       console.error('Analytics events processing error:', error);
+      // #region agent log
+      fetch('http://127.0.0.1:7242/ingest/6a732aed-2d72-4883-a63a-f3c892fc1216', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          location: 'PersonalDashboard.tsx:analyticsEvents:useMemo',
+          message: 'analyticsEvents useMemo error',
+          data: { callCount, error: String(error) },
+          timestamp: Date.now(),
+          sessionId: 'debug-session',
+          runId: 'run1',
+          hypothesisId: 'C'
+        })
+      }).catch(() => {});
+      // #endregion
       return EMPTY_ANALYTICS_ARRAY;
     }
   }, [isMounted, analyticsStoreData?.events]);
@@ -279,7 +485,34 @@ function StandardPersonalDashboard({ userId: _fallbackUserId }: PersonalDashboar
   // Filter analytics events by type
   // CRITICAL: Defensive checks to prevent infinite loops when analytics API fails
   // CRITICAL FIX: Return stable empty array references, not new arrays
+  // #region agent log
+  const voteEventsCallCountRef = useRef(0);
+  // #endregion
   const voteEvents = useMemo(() => {
+    // #region agent log
+    voteEventsCallCountRef.current += 1;
+    const callCount = voteEventsCallCountRef.current;
+    if (callCount <= 5 || callCount % 10 === 0) {
+      fetch('http://127.0.0.1:7242/ingest/6a732aed-2d72-4883-a63a-f3c892fc1216', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          location: 'PersonalDashboard.tsx:voteEvents:useMemo',
+          message: 'voteEvents useMemo called',
+          data: {
+            callCount,
+            isMounted,
+            analyticsEventsLength: Array.isArray(analyticsEvents) ? analyticsEvents.length : 'not-array',
+            analyticsEventsRef: analyticsEvents === EMPTY_ANALYTICS_ARRAY ? 'EMPTY_ARRAY' : 'other',
+          },
+          timestamp: Date.now(),
+          sessionId: 'debug-session',
+          runId: 'run1',
+          hypothesisId: 'C'
+        })
+      }).catch(() => {});
+    }
+    // #endregion
     if (!isMounted || !Array.isArray(analyticsEvents) || analyticsEvents.length === 0) {
       return EMPTY_ANALYTICS_ARRAY; // Return stable reference, not new []
     }
@@ -388,7 +621,7 @@ function StandardPersonalDashboard({ userId: _fallbackUserId }: PersonalDashboar
         <p className="text-sm text-gray-600 dark:text-gray-400">
           Your civic engagement overview and activity
         </p>
-        </div>
+          </div>
 
       {/* Error Handling UI - Show when API calls fail - Enhanced UX */}
       {isMounted && pollsError && (
@@ -404,8 +637,8 @@ function StandardPersonalDashboard({ userId: _fallbackUserId }: PersonalDashboar
               <div className="flex-shrink-0">
                 <div className="p-2 rounded-full bg-red-100 dark:bg-red-900/40">
                   <AlertCircle className="h-5 w-5 text-red-600 dark:text-red-400" aria-hidden="true" />
-                </div>
-              </div>
+            </div>
+      </div>
               <div className="flex-1 min-w-0">
                 <h3 className="text-sm font-semibold text-red-900 dark:text-red-200 mb-1">
                   Unable to load data
@@ -415,7 +648,7 @@ function StandardPersonalDashboard({ userId: _fallbackUserId }: PersonalDashboar
                     ? pollsError
                     : 'Failed to load dashboard data. Please check your connection and try again.'}
                 </p>
-                <Button
+          <Button
                   variant="outline"
                   size="sm"
                   onClick={() => {
@@ -428,9 +661,9 @@ function StandardPersonalDashboard({ userId: _fallbackUserId }: PersonalDashboar
                 >
                   <RefreshCw className="h-4 w-4 mr-2" aria-hidden="true" />
                   Try Again
-                </Button>
-              </div>
-            </div>
+          </Button>
+        </div>
+      </div>
           </CardContent>
         </Card>
       )}
@@ -488,8 +721,8 @@ function StandardPersonalDashboard({ userId: _fallbackUserId }: PersonalDashboar
                   </CardTitle>
                 <div className="p-2 rounded-lg bg-purple-50 dark:bg-purple-900/20">
                   <TrendingUp className="h-5 w-5 text-purple-500 dark:text-purple-400" aria-hidden="true" />
-                </div>
-              </div>
+                    </div>
+                    </div>
                 </CardHeader>
             <CardContent>
               <div className="text-3xl font-bold text-gray-900 dark:text-gray-100" aria-live="polite">
@@ -510,7 +743,7 @@ function StandardPersonalDashboard({ userId: _fallbackUserId }: PersonalDashboar
             <div className="flex items-center gap-2">
               <Zap className="h-5 w-5 text-yellow-500 dark:text-yellow-400" aria-hidden="true" />
               <CardTitle className="text-lg font-semibold">Quick Actions</CardTitle>
-            </div>
+                          </div>
             <CardDescription>Fast access to common tasks</CardDescription>
           </CardHeader>
           <CardContent>
