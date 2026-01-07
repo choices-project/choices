@@ -238,6 +238,38 @@ async function checkSessionCookies(
 }
 
 export default function DashboardContent() {
+  // #region agent log - Track DashboardContent render timing
+  const renderTime = Date.now();
+  const isClient = typeof window !== 'undefined';
+  const htmlAttrsAtRender = isClient ? {
+    theme: document.documentElement.getAttribute('data-theme'),
+    collapsed: document.documentElement.getAttribute('data-sidebar-collapsed'),
+    width: document.documentElement.getAttribute('data-sidebar-width'),
+    pinned: document.documentElement.getAttribute('data-sidebar-pinned'),
+  } : null;
+  const logDataRender = {
+    location: 'DashboardContent.tsx:render',
+    message: 'DashboardContent rendering',
+    data: {
+      isClient,
+      pathname: isClient ? window.location.pathname : 'SSR',
+      timestamp: renderTime,
+      htmlAttrs: htmlAttrsAtRender,
+      timeSincePageLoad: isClient ? Date.now() - performance.timing.navigationStart : null,
+    },
+    timestamp: Date.now(),
+    sessionId: 'debug-session',
+    runId: 'run1',
+    hypothesisId: 'H15',
+  };
+  console.log('[DEBUG DashboardContent] Render:', JSON.stringify(logDataRender));
+  fetch('http://127.0.0.1:7242/ingest/6a732aed-2d72-4883-a63a-f3c892fc1216', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(logDataRender),
+  }).catch(() => {});
+  // #endregion
+  
   const router = useRouter();
   const routerRef = useRef(router);
   const pathname = usePathname();

@@ -92,5 +92,35 @@ export default function DashboardPage() {
   // CRITICAL: This page component is now minimal and just imports DashboardContent
   // DashboardContent is dynamically imported with ssr: false, so it never renders on the server
   // This prevents hydration mismatches by ensuring server and client render the same (just the loading fallback)
+  
+  // #region agent log - Track server vs client rendering
+  if (typeof window !== 'undefined') {
+    const logData = {
+      location: 'dashboard/page.tsx:render',
+      message: 'DashboardPage rendering on CLIENT',
+      data: {
+        isServer: false,
+        timestamp: Date.now(),
+        htmlAttrs: {
+          theme: document.documentElement.getAttribute('data-theme'),
+          collapsed: document.documentElement.getAttribute('data-sidebar-collapsed'),
+          width: document.documentElement.getAttribute('data-sidebar-width'),
+          pinned: document.documentElement.getAttribute('data-sidebar-pinned'),
+        },
+      },
+      timestamp: Date.now(),
+      sessionId: 'debug-session',
+      runId: 'run1',
+      hypothesisId: 'H15',
+    };
+    console.log('[DEBUG]', JSON.stringify(logData));
+    fetch('http://127.0.0.1:7242/ingest/6a732aed-2d72-4883-a63a-f3c892fc1216', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(logData),
+    }).catch(() => {});
+  }
+  // #endregion
+  
   return <DashboardContent />;
 }
