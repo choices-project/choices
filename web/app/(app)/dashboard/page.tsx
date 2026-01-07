@@ -23,10 +23,10 @@ const DashboardContent = dynamicImport(
   {
     ssr: false,
     loading: () => (
-      <>
+      <div>
         {/* CRITICAL: Loading fallback must match DashboardContent structure exactly */}
         {/* DashboardContent renders DashboardNavigation first, then content */}
-        {/* This ensures server-rendered HTML matches what React expects during hydration */}
+        {/* Wrapped in single div (not fragment) to match feed page pattern and prevent hydration mismatch */}
         <nav className="bg-white dark:bg-gray-900 border-b border-gray-200 dark:border-gray-700" data-testid="dashboard-nav-loading">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div className="flex items-center justify-between h-16">
@@ -60,9 +60,9 @@ const DashboardContent = dynamicImport(
                     <div className="h-4 bg-gray-200 dark:bg-gray-700 rounded w-1/2 mb-4" />
                     <div className="h-8 bg-gray-200 dark:bg-gray-700 rounded w-1/3 mb-2" />
                     <div className="h-3 bg-gray-200 dark:bg-gray-700 rounded w-2/3" />
-                  </div>
-                ))}
               </div>
+            ))}
+          </div>
 
               {/* Content cards skeleton */}
               <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
@@ -73,14 +73,14 @@ const DashboardContent = dynamicImport(
                       <div className="h-4 bg-gray-200 dark:bg-gray-700 rounded w-full" />
                       <div className="h-4 bg-gray-200 dark:bg-gray-700 rounded w-5/6" />
                       <div className="h-4 bg-gray-200 dark:bg-gray-700 rounded w-4/5" />
-                    </div>
-                  </div>
+        </div>
+      </div>
                 ))}
               </div>
             </div>
           </div>
         </div>
-      </>
+      </div>
     ),
   }
 );

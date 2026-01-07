@@ -269,7 +269,7 @@ export default function DashboardContent() {
     body: JSON.stringify(logDataRender),
   }).catch(() => {});
   // #endregion
-  
+
   const router = useRouter();
   const routerRef = useRef(router);
   const pathname = usePathname();
