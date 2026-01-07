@@ -187,9 +187,11 @@ export default async function RootLayout({
         <SkipNavLink />
         <Providers locale={locale} messages={messages}>
           <SkipNavTarget>
-            <main className="min-h-screen bg-slate-50">
-              {children}
-            </main>
+            {/* CRITICAL: Don't wrap in <main> here - AppShell already provides the main content structure */}
+            {/* Wrapping in <main> creates nested structure that causes hydration mismatch */}
+            {/* Root layout is Server Component, AppLayout is Client Component */}
+            {/* The mismatch between Server and Client component structures causes React error #185 */}
+            {children}
           </SkipNavTarget>
           <SiteFooter />
         </Providers>
