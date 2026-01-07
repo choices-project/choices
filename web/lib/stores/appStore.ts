@@ -243,15 +243,26 @@ if (typeof window !== 'undefined') {
     if (elapsed < 500) {
       const remaining = 500 - elapsed;
       // #region agent log
-      const logData={location:'appStore.ts:markHydrationComplete',message:'Hydration tracking fired early, extending delay',data:{elapsed,remaining,timestamp:Date.now()},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'H11'};
+      const logData={location:'appStore.ts:markHydrationComplete',message:'Hydration tracking fired early, extending delay',data:{elapsed,remaining,reactHydrationStarted,timestamp:Date.now()},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'H11'};
       console.log('[DEBUG]',JSON.stringify(logData));
       // #endregion
       hydrationCompleteTimeout = setTimeout(markHydrationComplete, remaining);
       return;
     }
     
+    // CRITICAL: Only mark complete if React has actually started hydrating
+    // If React hasn't started yet, wait a bit more
+    if (!reactHydrationStarted) {
+      // #region agent log
+      const logData={location:'appStore.ts:markHydrationComplete',message:'React not started yet, waiting more',data:{elapsed,reactHydrationStarted,timestamp:Date.now()},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'H13'};
+      console.log('[DEBUG]',JSON.stringify(logData));
+      // #endregion
+      hydrationCompleteTimeout = setTimeout(markHydrationComplete, 100);
+      return;
+    }
+    
     // #region agent log
-    const logData={location:'appStore.ts:markHydrationComplete',message:'Marking hydration as complete',data:{elapsed,timestamp:Date.now()},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'H11'};
+    const logData={location:'appStore.ts:markHydrationComplete',message:'Marking hydration as complete',data:{elapsed,reactHydrationStarted,timestamp:Date.now()},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'H11'};
     console.log('[DEBUG]',JSON.stringify(logData));
     // #endregion
     isReactHydrating = false;
