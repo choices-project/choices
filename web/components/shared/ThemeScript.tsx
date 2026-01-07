@@ -108,16 +108,17 @@ export function ThemeScript() {
       currentWidthValue !== String(sidebarWidth) ||
       currentPinnedValue !== String(sidebarPinned);
     
-    // CRITICAL: If attributes are missing (null), set them immediately (synchronously)
-    // This ensures React sees them during hydration
-    // Only delay if attributes exist and need to change
+    // CRITICAL: Always set attributes synchronously BEFORE React hydrates
+    // This prevents hydration mismatch by ensuring HTML matches localStorage from the start
+    // ThemeScript runs with beforeInteractive, so it executes before React hydrates
+    // We must set attributes immediately, not delay them, to prevent React error #185
     const attributesMissing = !currentTheme || !currentCollapsed || !currentWidth || !currentPinned;
     
-    if (attributesMissing) {
-      // Attributes are missing - set them immediately to prevent hydration mismatch
-      // This happens on client-side navigation where ThemeScript doesn't run
+    if (attributesMissing || needsUpdate) {
+      // Attributes are missing OR need updating - set them immediately (synchronously)
+      // This ensures React sees correct values during hydration, preventing mismatch
       // #region agent log - Track BEFORE setting
-      const logDataBeforeSet={location:'ThemeScript.tsx:beforeSyncSet',message:'ThemeScript about to set missing attributes',data:{theme,sidebarCollapsed,sidebarWidth,sidebarPinned,currentTheme,currentCollapsed,currentWidth,currentPinned},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'H2'};
+      const logDataBeforeSet={location:'ThemeScript.tsx:beforeSyncSet',message:'ThemeScript about to set attributes synchronously',data:{theme,sidebarCollapsed,sidebarWidth,sidebarPinned,currentTheme,currentCollapsed,currentWidth,currentPinned,attributesMissing,needsUpdate},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'H2'};
       console.log('[DEBUG]',JSON.stringify(logDataBeforeSet));
       // #endregion
       
@@ -134,46 +135,14 @@ export function ThemeScript() {
       document.documentElement.setAttribute('data-sidebar-width', String(sidebarWidth));
       document.documentElement.setAttribute('data-sidebar-pinned', String(sidebarPinned));
       
-      // Force synchronous reflow
+      // Force synchronous reflow to ensure attributes are committed before React hydrates
       void document.documentElement.offsetHeight;
       
       // #region agent log - Track AFTER setting
       const afterAttrs={theme:document.documentElement.getAttribute('data-theme'),collapsed:document.documentElement.getAttribute('data-sidebar-collapsed'),width:document.documentElement.getAttribute('data-sidebar-width'),pinned:document.documentElement.getAttribute('data-sidebar-pinned')};
-      const logDataSync={location:'ThemeScript.tsx:syncSet',message:'ThemeScript synchronously set missing attributes',data:{theme,sidebarCollapsed,sidebarWidth,sidebarPinned,wasMissing:true,afterAttrs},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'H2'};
+      const logDataSync={location:'ThemeScript.tsx:syncSet',message:'ThemeScript synchronously set attributes',data:{theme,sidebarCollapsed,sidebarWidth,sidebarPinned,wasMissing:attributesMissing,wasUpdated:needsUpdate,afterAttrs},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'H2'};
       console.log('[DEBUG]',JSON.stringify(logDataSync));
       // #endregion
-    } else if (needsUpdate) {
-      // #region agent log
-      const logDataUpdate={location:'ThemeScript.tsx:needsUpdate',message:'ThemeScript will update attributes after hydration',data:{currentTheme,currentCollapsed,currentWidth,currentPinned,newTheme:theme,newCollapsed:sidebarCollapsed,newWidth:sidebarWidth,newPinned:sidebarPinned},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'F'};
-      console.log('[DEBUG]',JSON.stringify(logDataUpdate));
-      // #endregion
-      
-      // Update attributes after React hydrates to prevent mismatch
-      // Use a longer delay to ensure React has finished hydrating
-      // React hydration typically completes within 100-200ms, so 300ms is safe
-      const updateAttributes = () => {
-        // #region agent log
-        const logDataExec={location:'ThemeScript.tsx:updateAttributes',message:'ThemeScript executing delayed attribute update',data:{theme,sidebarCollapsed,sidebarWidth,sidebarPinned},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'F'};
-        console.log('[DEBUG]',JSON.stringify(logDataExec));
-        // #endregion
-        
-        if (theme === 'dark') {
-          document.documentElement.classList.add('dark');
-          document.documentElement.setAttribute('data-theme', 'dark');
-          document.documentElement.style.colorScheme = 'dark';
-        } else {
-          document.documentElement.classList.remove('dark');
-          document.documentElement.setAttribute('data-theme', 'light');
-          document.documentElement.style.colorScheme = 'light';
-        }
-        document.documentElement.setAttribute('data-sidebar-collapsed', String(sidebarCollapsed));
-        document.documentElement.setAttribute('data-sidebar-width', String(sidebarWidth));
-        document.documentElement.setAttribute('data-sidebar-pinned', String(sidebarPinned));
-      };
-      
-      // Wait for React to finish hydrating before updating
-      // Use a longer delay to be safe - React hydration can take 100-200ms
-      setTimeout(updateAttributes, 300);
     } else {
       // #region agent log
       const logDataNoUpdate={location:'ThemeScript.tsx:noUpdate',message:'ThemeScript attributes match defaults, no update needed',data:{currentTheme,currentCollapsed,currentWidth,currentPinned,theme,sidebarCollapsed,sidebarWidth,sidebarPinned},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'F'};
