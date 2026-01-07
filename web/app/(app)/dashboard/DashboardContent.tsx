@@ -44,7 +44,6 @@ const MobileDashboardNav = dynamicImport(
   }
 );
 
-import { ErrorBoundary } from '@/components/shared/ErrorBoundary';
 import { Button } from '@/components/ui/button';
 
 import { useIsAuthenticated, useUserLoading, useUserStore } from '@/lib/stores';
