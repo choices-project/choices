@@ -188,6 +188,37 @@ export default function AppLayout({
     const hydrationStartTime = Date.now();
     const logHydrationStart={location:'AppLayout.tsx:hydrationStart',message:'React hydration starting',data:{pathname:window.location.pathname,timestamp:hydrationStartTime,htmlAttrs:{theme:document.documentElement.getAttribute('data-theme'),collapsed:document.documentElement.getAttribute('data-sidebar-collapsed'),width:document.documentElement.getAttribute('data-sidebar-width'),pinned:document.documentElement.getAttribute('data-sidebar-pinned')}},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'H3'};
     console.log('[DEBUG]',JSON.stringify(logHydrationStart));
+
+    // #region agent log - Snapshot DOM at hydration start (structural mismatch diagnosis)
+    // Hypothesis H16: server HTML (what React hydrates) does not include the same root/page skeleton nodes as client expects.
+    try {
+      const bodyHtml = typeof document !== 'undefined' ? (document.body?.innerHTML ?? '') : '';
+      const logDomAtHydrationStart = {
+        location: 'AppLayout.tsx:hydrationStartDom',
+        message: 'DOM snapshot at hydration start',
+        data: {
+          pathname: window.location.pathname,
+          timestamp: Date.now(),
+          bodyHtmlPrefix: bodyHtml.slice(0, 800),
+          bodyHtmlLength: bodyHtml.length,
+          hasAppShell: Boolean(document.querySelector('[data-testid="app-shell"]')),
+          hasGlobalNavLoading: Boolean(document.querySelector('[data-testid="global-nav-loading"]')),
+          hasAnyNav: Boolean(document.querySelector('nav')),
+          hasDashboardLoadingSkeleton: Boolean(document.querySelector('[data-testid="dashboard-loading-skeleton"]')),
+          hasDashboardNavLoading: Boolean(document.querySelector('[data-testid="dashboard-nav-loading"]')),
+          hasFeedLoadingSkeleton: Boolean(document.querySelector('[data-testid="feed-loading-skeleton"]')),
+          rootChildrenCount: document.body?.children?.length ?? null,
+        },
+        timestamp: Date.now(),
+        sessionId: 'debug-session',
+        runId: 'run1',
+        hypothesisId: 'H16',
+      };
+      console.log('[DEBUG]', JSON.stringify(logDomAtHydrationStart));
+    } catch {
+      // ignore
+    }
+    // #endregion
     
     // CRITICAL: Mark React hydration as started in appStore (synchronous call)
     // This allows appStore to know when React is actually hydrating, not just when timer completes
@@ -251,6 +282,38 @@ export default function AppLayout({
           hypothesisId: 'H8'
         };
         console.log('[DEBUG]', JSON.stringify(logData));
+
+        // #region agent log - Snapshot DOM at hydration error (structural mismatch diagnosis)
+        // Hypothesis H16: a specific node mismatch (missing/extra wrapper) causes React to abort hydration.
+        try {
+          const bodyHtml = typeof document !== 'undefined' ? (document.body?.innerHTML ?? '') : '';
+          const logDomAtHydrationError = {
+            location: 'AppLayout.tsx:hydrationErrorDom',
+            message: 'DOM snapshot at hydration error',
+            data: {
+              pathname: window.location.pathname,
+              timestamp: Date.now(),
+              timeSinceHydrationStart: timeSinceStart,
+              bodyHtmlPrefix: bodyHtml.slice(0, 800),
+              bodyHtmlLength: bodyHtml.length,
+              hasAppShell: Boolean(document.querySelector('[data-testid="app-shell"]')),
+              hasGlobalNavLoading: Boolean(document.querySelector('[data-testid="global-nav-loading"]')),
+              hasAnyNav: Boolean(document.querySelector('nav')),
+              hasDashboardLoadingSkeleton: Boolean(document.querySelector('[data-testid="dashboard-loading-skeleton"]')),
+              hasDashboardNavLoading: Boolean(document.querySelector('[data-testid="dashboard-nav-loading"]')),
+              hasFeedLoadingSkeleton: Boolean(document.querySelector('[data-testid="feed-loading-skeleton"]')),
+              rootChildrenCount: document.body?.children?.length ?? null,
+            },
+            timestamp: Date.now(),
+            sessionId: 'debug-session',
+            runId: 'run1',
+            hypothesisId: 'H16',
+          };
+          console.log('[DEBUG]', JSON.stringify(logDomAtHydrationError));
+        } catch {
+          // ignore
+        }
+        // #endregion
       }
       originalError.apply(console, args);
     };
