@@ -190,9 +190,15 @@ export default function AppLayout({
     console.log('[DEBUG]',JSON.stringify(logHydrationStart));
 
     // #region agent log - Snapshot DOM at hydration start (structural mismatch diagnosis)
-    // Hypothesis H16: server HTML (what React hydrates) does not include the same root/page skeleton nodes as client expects.
+    // Hypothesis H16/H17/H18: server HTML (what React hydrates) does not include the same root/page skeleton nodes as client expects.
+    // H17: AppShell header wrapper structure mismatch
+    // H18: BAILOUT_TO_CLIENT_SIDE_RENDERING template causing mismatch
     try {
       const bodyHtml = typeof document !== 'undefined' ? (document.body?.innerHTML ?? '') : '';
+      const appShell = document.querySelector('[data-testid="app-shell"]');
+      const header = appShell?.querySelector('header');
+      const navigation = header?.firstElementChild;
+      const bailoutTemplate = header?.querySelector('template[data-dgst="BAILOUT_TO_CLIENT_SIDE_RENDERING"]');
       const logDomAtHydrationStart = {
         location: 'AppLayout.tsx:hydrationStartDom',
         message: 'DOM snapshot at hydration start',
@@ -201,7 +207,14 @@ export default function AppLayout({
           timestamp: Date.now(),
           bodyHtmlPrefix: bodyHtml.slice(0, 800),
           bodyHtmlLength: bodyHtml.length,
-          hasAppShell: Boolean(document.querySelector('[data-testid="app-shell"]')),
+          hasAppShell: Boolean(appShell),
+          hasHeader: Boolean(header),
+          headerChildrenCount: header?.children.length ?? 0,
+          hasNavigation: Boolean(navigation),
+          navigationDataTestId: navigation?.getAttribute('data-testid'),
+          navigationTagName: navigation?.tagName,
+          hasBailoutTemplate: Boolean(bailoutTemplate),
+          bailoutTemplateParent: bailoutTemplate?.parentElement?.tagName,
           hasGlobalNavLoading: Boolean(document.querySelector('[data-testid="global-nav-loading"]')),
           hasAnyNav: Boolean(document.querySelector('nav')),
           hasDashboardLoadingSkeleton: Boolean(document.querySelector('[data-testid="dashboard-loading-skeleton"]')),
@@ -212,7 +225,7 @@ export default function AppLayout({
         timestamp: Date.now(),
         sessionId: 'debug-session',
         runId: 'run1',
-        hypothesisId: 'H16',
+        hypothesisId: 'H18',
       };
       console.log('[DEBUG]', JSON.stringify(logDomAtHydrationStart));
     } catch {
@@ -284,9 +297,15 @@ export default function AppLayout({
         console.log('[DEBUG]', JSON.stringify(logData));
 
         // #region agent log - Snapshot DOM at hydration error (structural mismatch diagnosis)
-        // Hypothesis H16: a specific node mismatch (missing/extra wrapper) causes React to abort hydration.
+        // Hypothesis H16/H17/H18: a specific node mismatch (missing/extra wrapper) causes React to abort hydration.
+        // H17: AppShell header wrapper structure mismatch
+        // H18: BAILOUT_TO_CLIENT_SIDE_RENDERING template causing mismatch
         try {
           const bodyHtml = typeof document !== 'undefined' ? (document.body?.innerHTML ?? '') : '';
+          const appShell = document.querySelector('[data-testid="app-shell"]');
+          const header = appShell?.querySelector('header');
+          const navigation = header?.firstElementChild;
+          const bailoutTemplate = header?.querySelector('template[data-dgst="BAILOUT_TO_CLIENT_SIDE_RENDERING"]');
           const logDomAtHydrationError = {
             location: 'AppLayout.tsx:hydrationErrorDom',
             message: 'DOM snapshot at hydration error',
@@ -296,7 +315,14 @@ export default function AppLayout({
               timeSinceHydrationStart: timeSinceStart,
               bodyHtmlPrefix: bodyHtml.slice(0, 800),
               bodyHtmlLength: bodyHtml.length,
-              hasAppShell: Boolean(document.querySelector('[data-testid="app-shell"]')),
+              hasAppShell: Boolean(appShell),
+              hasHeader: Boolean(header),
+              headerChildrenCount: header?.children.length ?? 0,
+              hasNavigation: Boolean(navigation),
+              navigationDataTestId: navigation?.getAttribute('data-testid'),
+              navigationTagName: navigation?.tagName,
+              hasBailoutTemplate: Boolean(bailoutTemplate),
+              bailoutTemplateParent: bailoutTemplate?.parentElement?.tagName,
               hasGlobalNavLoading: Boolean(document.querySelector('[data-testid="global-nav-loading"]')),
               hasAnyNav: Boolean(document.querySelector('nav')),
               hasDashboardLoadingSkeleton: Boolean(document.querySelector('[data-testid="dashboard-loading-skeleton"]')),
@@ -307,7 +333,7 @@ export default function AppLayout({
             timestamp: Date.now(),
             sessionId: 'debug-session',
             runId: 'run1',
-            hypothesisId: 'H16',
+            hypothesisId: 'H18',
           };
           console.log('[DEBUG]', JSON.stringify(logDomAtHydrationError));
         } catch {

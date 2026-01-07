@@ -256,6 +256,39 @@ export function AppShell({ navigation, siteMessages, feedback, children }: AppSh
   // HYPOTHESIS: The hardcoded data-* attributes on this div might be causing hydration mismatches
   // if React compares them during hydration. We should remove them and only use them for styling
   // via CSS selectors that read from documentElement, not from this div's attributes.
+  // #region agent log - H17: Track AppShell render structure
+  React.useEffect(() => {
+    if (typeof window !== 'undefined') {
+      const headerElement = document.querySelector('[data-testid="app-shell"] > header');
+      const navigationElement = headerElement?.firstElementChild;
+      const logData = {
+        location: 'AppShell.tsx:render-structure',
+        message: 'AppShell render structure check',
+        data: {
+          hasHeader: Boolean(headerElement),
+          headerChildrenCount: headerElement?.children.length ?? 0,
+          hasNavigation: Boolean(navigationElement),
+          navigationDataTestId: navigationElement?.getAttribute('data-testid'),
+          navigationTagName: navigationElement?.tagName,
+          navigationClasses: navigationElement?.className,
+          hasBailoutTemplate: Boolean(headerElement?.querySelector('template[data-dgst="BAILOUT_TO_CLIENT_SIDE_RENDERING"]')),
+          timestamp: Date.now(),
+        },
+        timestamp: Date.now(),
+        sessionId: 'debug-session',
+        runId: 'run1',
+        hypothesisId: 'H17',
+      };
+      console.log('[DEBUG]', JSON.stringify(logData));
+      fetch('http://127.0.0.1:7242/ingest/6a732aed-2d72-4883-a63a-f3c892fc1216', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(logData),
+      }).catch(() => {});
+    }
+  }, [navigation]);
+  // #endregion
+
   return (
     <div
       className="min-h-screen bg-slate-50 dark:bg-gray-900"
