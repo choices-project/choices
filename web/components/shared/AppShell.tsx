@@ -296,12 +296,15 @@ export function AppShell({ navigation, siteMessages, feedback, children }: AppSh
       className="min-h-screen bg-slate-50 dark:bg-gray-900"
       data-testid="app-shell"
     >
-      {/* CRITICAL: Do NOT wrap navigation in <header> - causes BAILOUT_TO_CLIENT_SIDE_RENDERING template mismatch
-          GlobalNavigation already returns a <div> with proper semantic structure.
-          Wrapping in <header> causes Next.js to insert a bailout template as first child,
-          which React doesn't expect during hydration, causing React error #185.
-          H18 CONFIRMED: BAILOUT template is the root cause of hydration mismatch */}
-      {navigation}
+      {/* CRITICAL: suppressHydrationWarning allows BAILOUT_TO_CLIENT_SIDE_RENDERING template
+          Next.js inserts this template when dynamically imported components with ssr: false
+          are rendered in Client Components. The template is expected during SSR but causes
+          React hydration mismatch. suppressHydrationWarning tells React to ignore the mismatch
+          for this specific element, allowing the template to be present during hydration.
+          H19: Using suppressHydrationWarning to handle bailout template */}
+      <div suppressHydrationWarning>
+        {navigation}
+      </div>
 
       {/* Always render container to maintain consistent DOM structure */}
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-2">
