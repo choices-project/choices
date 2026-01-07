@@ -269,9 +269,9 @@ export function AppShell({ navigation, siteMessages, feedback, children }: AppSh
       </div>
 
       {/* CRITICAL: Use div instead of main to prevent nested <main> tags */}
-      {/* Root layout already provides <main> tag, so AppShell should use <div> */}
-      {/* Nested <main> tags are invalid HTML and cause React hydration error #185 */}
-      <div id="main-content" className="min-h-[60vh]">
+      {/* SkipNavTarget in root layout already provides <div id="main-content"> */}
+      {/* Don't duplicate id="main-content" here - duplicate IDs are invalid HTML and cause hydration mismatch */}
+      <div className="min-h-[60vh]">
         {children}
       </div>
 
