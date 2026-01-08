@@ -40,6 +40,7 @@ const GlobalNavigation = dynamicImport(() => import('@/components/shared/GlobalN
 });
 
 type AppShellProps = {
+  navigation?: ReactNode;
   siteMessages?: ReactNode;
   feedback?: ReactNode;
   children: ReactNode;
