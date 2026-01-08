@@ -9,7 +9,7 @@
 
 import { Shield } from 'lucide-react';
 import { usePathname, useRouter, useSearchParams } from 'next/navigation';
-import React, { useEffect, useRef, useState } from 'react';
+import React, { Suspense, useEffect, useRef, useState } from 'react';
 
 import { useProfile } from '@/features/profile/hooks/use-profile';
 
@@ -888,8 +888,17 @@ export default function DashboardContent() {
 
         {/* CRITICAL: PersonalDashboard is loaded via next/dynamic with ssr: false */}
         {/* This prevents it from being included in SSR HTML, eliminating hydration mismatch */}
-        {/* The dynamic import handles loading state internally */}
-        <PersonalDashboard />
+        {/* H35: Wrap PersonalDashboard in Suspense to match feed pattern - may help with bailout template hydration */}
+        <Suspense fallback={
+          <div className="space-y-6" aria-label="Loading dashboard" aria-busy="true" aria-live="polite" data-testid="personal-dashboard-loading">
+            <div className="animate-pulse">
+              <div className="h-8 bg-gray-200 dark:bg-gray-700 rounded w-1/4 mb-3" />
+              <div className="h-4 bg-gray-200 dark:bg-gray-700 rounded w-1/2" />
+            </div>
+          </div>
+        }>
+          <PersonalDashboard />
+        </Suspense>
       </div>
 
       {/* MobileDashboardNav is client-only component */}
