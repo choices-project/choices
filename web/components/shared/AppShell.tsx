@@ -342,7 +342,10 @@ export function AppShell({ navigation, siteMessages, feedback, children }: AppSh
       {/* CRITICAL: Use div instead of main to prevent nested <main> tags */}
       {/* SkipNavTarget in root layout already provides <div id="main-content"> */}
       {/* Don't duplicate id="main-content" here - duplicate IDs are invalid HTML and cause hydration mismatch */}
-      <div className="min-h-[60vh]">
+      {/* H31: Add suppressHydrationWarning to children container to suppress bailout template from DashboardContent */}
+      {/* DashboardContent is dynamically imported with ssr: false, causing Next.js to insert bailout template */}
+      {/* suppressHydrationWarning on AppShell root doesn't suppress children's bailout templates */}
+      <div className="min-h-[60vh]" suppressHydrationWarning>
         {children}
       </div>
 
