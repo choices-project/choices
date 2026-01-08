@@ -10,7 +10,6 @@
 import { Shield } from 'lucide-react';
 import { usePathname, useRouter, useSearchParams } from 'next/navigation';
 import React, { useEffect, useRef, useState } from 'react';
-import dynamicImport from 'next/dynamic';
 
 import { useProfile } from '@/features/profile/hooks/use-profile';
 
