@@ -852,10 +852,10 @@ export default function DashboardContent() {
   // FeedContent also doesn't have double ErrorBoundary (it has its own, but AppLayout doesn't wrap feed children)
   // CRITICAL: Return structure must match loading fallback exactly
   // Loading fallback uses <div> wrapper, so DashboardContent must also use <div> wrapper (not fragment)
-  // H27: Add suppressHydrationWarning to DashboardContent wrapper to allow bailout templates
-  // from dynamically imported children (DashboardNavigation, PersonalDashboard, MobileDashboardNav)
+  // H34: Remove suppressHydrationWarning - it doesn't suppress bailout template structural mismatches
+  // FeedContent doesn't use suppressHydrationWarning and works fine
   return (
-    <div suppressHydrationWarning>
+    <div>
       {/* CRITICAL: DashboardNavigation is dynamically imported with ssr: false */}
       {/* This prevents hydration mismatches since it uses usePathname() */}
       <DashboardNavigation />
