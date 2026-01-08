@@ -14,35 +14,13 @@ import dynamicImport from 'next/dynamic';
 
 import { useProfile } from '@/features/profile/hooks/use-profile';
 
-// CRITICAL: Dynamically import DashboardNavigation and MobileDashboardNav with ssr: false
-// These components use usePathname() which can cause hydration mismatches
-// Similar to how GlobalNavigation is handled in AppLayout
-const DashboardNavigation = dynamicImport(
-  () => import('@/components/shared/DashboardNavigation').then((mod) => ({ default: mod.default })),
-  {
-    ssr: false,
-    loading: () => (
-      <nav className="bg-white dark:bg-gray-900 border-b border-gray-200 dark:border-gray-700" data-testid="dashboard-nav-loading">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex items-center justify-between h-16">
-            <div className="flex items-center space-x-4">
-              <div className="h-8 w-8 bg-gray-200 dark:bg-gray-700 animate-pulse rounded" />
-              <div className="h-6 w-24 bg-gray-200 dark:bg-gray-700 animate-pulse rounded" />
-            </div>
-          </div>
-        </div>
-      </nav>
-    ),
-  }
-);
-
-const MobileDashboardNav = dynamicImport(
-  () => import('@/components/shared/DashboardNavigation').then((mod) => ({ default: mod.MobileDashboardNav })),
-  {
-    ssr: false,
-    loading: () => null, // Mobile nav is hidden on desktop, so null is fine
-  }
-);
+// CRITICAL: Import DashboardNavigation and MobileDashboardNav directly without dynamic import
+// DashboardNavigation already guards usePathname() usage to prevent hydration mismatches
+// Using dynamic import with ssr: false causes Next.js to insert bailout template
+// which triggers React hydration error #185 (structural mismatch)
+// By importing directly, we avoid the bailout template entirely
+// H28: Remove dynamic import with ssr: false to prevent bailout template insertion
+import DashboardNavigation, { MobileDashboardNav } from '@/components/shared/DashboardNavigation';
 
 import { Button } from '@/components/ui/button';
 
