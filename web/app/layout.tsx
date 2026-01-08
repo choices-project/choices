@@ -125,13 +125,6 @@ export default async function RootLayout({
 
   const messages = await loadMessages(locale);
 
-  // #region agent log
-  // Server-side: log that we're rendering with default attributes
-  if (typeof window === 'undefined') {
-    // Server component - can't use fetch, but we can log via console in dev
-    // This is just for reference - actual logging happens client-side
-  }
-  // #endregion
   // CRITICAL: Set default attributes that match ThemeScript defaults
   // This ensures server and client HTML match initially
   // ThemeScript will update them if localStorage has different values,
