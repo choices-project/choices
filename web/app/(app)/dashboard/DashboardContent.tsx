@@ -11,6 +11,8 @@ import { Shield } from 'lucide-react';
 import { usePathname, useRouter, useSearchParams } from 'next/navigation';
 import React, { Suspense, useEffect, useRef, useState } from 'react';
 
+import { ErrorBoundary } from '@/components/shared/ErrorBoundary';
+
 import { useProfile } from '@/features/profile/hooks/use-profile';
 
 // CRITICAL: Import DashboardNavigation and MobileDashboardNav directly without dynamic import
@@ -847,19 +849,17 @@ export default function DashboardContent() {
   }, []);
   // #endregion
 
-  // CRITICAL: Do NOT wrap in ErrorBoundary here - AppLayout already wraps children in ErrorBoundary
-  // Double ErrorBoundary wrapping can cause hydration mismatches
-  // FeedContent also doesn't have double ErrorBoundary (it has its own, but AppLayout doesn't wrap feed children)
+  // H39: Wrap DashboardContent in ErrorBoundary like FeedContent does
+  // FeedContent has its own ErrorBoundary and works fine
+  // DashboardContent relies on AppLayout's ErrorBoundary, but that might not catch hydration errors early enough
+  // Having ErrorBoundary at DashboardContent level might prevent the error from propagating and causing page crash
   // CRITICAL: Return structure must match loading fallback exactly
   // Loading fallback uses <div> wrapper, so DashboardContent must also use <div> wrapper (not fragment)
-  // H34: Remove suppressHydrationWarning - it doesn't suppress bailout template structural mismatches
-  // FeedContent doesn't use suppressHydrationWarning and works fine
-  // H37: Add instrumentation to track when DashboardContent renders
-  // #region agent log
+  // #region agent log - H39: Track DashboardContent render with ErrorBoundary
   if (typeof window !== 'undefined') {
     const renderLogData = {
       location: 'DashboardContent.tsx:render',
-      message: 'DashboardContent rendering (client-side)',
+      message: 'DashboardContent rendering (client-side) - H39: with ErrorBoundary',
       data: {
         timestamp: Date.now(),
         pathname: window.location.pathname,
@@ -874,14 +874,45 @@ export default function DashboardContent() {
       timestamp: Date.now(),
       sessionId: 'debug-session',
       runId: 'run1',
-      hypothesisId: 'H37',
+      hypothesisId: 'H39',
     };
     console.log('[DEBUG DashboardContent] Render:', JSON.stringify(renderLogData));
-    // Note: Can't use fetch in production due to CSP, but console.log will appear in test output
+    fetch('http://127.0.0.1:7242/ingest/6a732aed-2d72-4883-a63a-f3c892fc1216', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(renderLogData),
+    }).catch(() => {});
   }
   // #endregion
+
   return (
-    <div>
+    <ErrorBoundary
+      fallback={
+        <div
+          className="flex items-center justify-center min-h-[400px] px-4"
+          data-testid="dashboard-error-boundary"
+          role="alert"
+        >
+          <div className="text-center max-w-md">
+            <h2 className="text-xl font-semibold text-red-600 dark:text-red-400 mb-2">
+              Unable to load dashboard
+            </h2>
+            <p className="text-gray-600 dark:text-gray-400 mb-4">
+              We encountered an error while loading your dashboard. Please try again.
+            </p>
+            <button
+              onClick={() => window.location.reload()}
+              className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition-colors"
+              aria-label="Try again to load dashboard"
+              data-testid="dashboard-error-boundary-retry"
+            >
+              Try again
+            </button>
+          </div>
+        </div>
+      }
+    >
+      <div>
       {/* CRITICAL: DashboardNavigation is dynamically imported with ssr: false */}
       {/* This prevents hydration mismatches since it uses usePathname() */}
       <DashboardNavigation />
@@ -929,7 +960,8 @@ export default function DashboardContent() {
 
       {/* MobileDashboardNav is client-only component */}
       <MobileDashboardNav />
-    </div>
+      </div>
+    </ErrorBoundary>
   );
 }
 
