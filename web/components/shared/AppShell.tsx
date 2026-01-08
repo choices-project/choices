@@ -295,12 +295,14 @@ export function AppShell({ navigation, siteMessages, feedback, children }: AppSh
     <div
       className="min-h-screen bg-slate-50 dark:bg-gray-900"
       data-testid="app-shell"
+      suppressHydrationWarning
     >
-      {/* CRITICAL: Render navigation directly - dynamic import loading fallback handles SSR/client transition
-          The GlobalNavigation component is dynamically imported with ssr: false in AppLayout,
-          and its loading fallback is defined there. We just render the navigation prop here.
-          Next.js will handle the transition from loading fallback to actual component.
-          H21: Direct render - let Next.js dynamic import handle the transition */}
+      {/* CRITICAL: suppressHydrationWarning on AppShell root div
+          Next.js inserts BAILOUT_TO_CLIENT_SIDE_RENDERING template when dynamically imported
+          components with ssr: false are rendered. This template causes React hydration mismatch.
+          suppressHydrationWarning tells React to ignore hydration mismatches for this element
+          and its children, allowing the bailout template to be present without error.
+          H22: Suppress hydration warning on root div to allow bailout template */}
       {navigation}
 
       {/* Always render container to maintain consistent DOM structure */}
