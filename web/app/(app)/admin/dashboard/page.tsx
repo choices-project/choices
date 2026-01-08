@@ -8,8 +8,6 @@ import { ErrorBoundary } from '@/components/shared/ErrorBoundary';
 
 import { useAppActions } from '@/lib/stores/appStore';
 
-import { AdminLayout } from '../layout/AdminLayout';
-
 // Prevent static generation since this requires client-side state
 export const dynamic = 'force-dynamic';
 
@@ -38,13 +36,13 @@ export default function AdminDashboardPage() {
     };
   }, []);  
 
+  // CRITICAL FIX: Remove AdminLayout wrapper - parent layout.tsx already provides it
+  // Double wrapping causes duplicate sidebar and header rendering
   return (
-    <AdminLayout>
-      <ErrorBoundary>
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-          <ComprehensiveAdminDashboard />
-        </div>
-      </ErrorBoundary>
-    </AdminLayout>
+    <ErrorBoundary>
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <ComprehensiveAdminDashboard />
+      </div>
+    </ErrorBoundary>
   );
 }
