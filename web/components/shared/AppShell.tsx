@@ -50,7 +50,10 @@ type AppShellProps = {
  * Applies persisted theme + sidebar state data attributes so navigation
  * surfaces can rely on the modernized selectors without direct store access.
  */
-export function AppShell({ siteMessages, feedback, children }: AppShellProps) {
+export function AppShell({ navigation, siteMessages, feedback, children }: AppShellProps) {
+  // Use navigation prop if provided, otherwise use GlobalNavigation
+  const navComponent = navigation ?? <GlobalNavigation />;
+  
   const resolvedTheme = useResolvedTheme();
   const sidebarCollapsed = useSidebarCollapsed();
   const sidebarWidth = useSidebarWidth();
