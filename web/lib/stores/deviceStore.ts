@@ -579,9 +579,6 @@ export const deviceStoreCreator: DeviceStoreCreator = (set, get) => {
   return Object.assign(createInitialDeviceState(), createDeviceActions(set, get, environment));
 };
 
-// H38: Cache initial state for getServerSnapshot to avoid infinite loop in React 18.3.1
-const cachedInitialDeviceState = createInitialDeviceState();
-
 export const useDeviceStore = create<DeviceStore>()(
   devtools(
     persist(
@@ -598,9 +595,6 @@ export const useDeviceStore = create<DeviceStore>()(
           browser: state.browser,
           os: state.os,
         }),
-        // H38: Add cached getServerSnapshot to prevent infinite loop in React 18.3.1
-        // React 18.3.1 requires getServerSnapshot to return a stable/cached value
-        getServerSnapshot: () => cachedInitialDeviceState,
       },
     ),
     { name: 'device-store' },

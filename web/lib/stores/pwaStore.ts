@@ -893,10 +893,6 @@ export const pwaStoreCreator: PWAStoreCreator = (set, get) => {
   );
 };
 
-// H38: Cache initial state for getServerSnapshot to avoid infinite loop in React 18.3.1
-// Create a stable environment for initial state (SSR-safe)
-const cachedInitialPWAState = createInitialPWAState(createPWAEnvironment());
-
 export const usePWAStore = create<PWAStore>()(
   devtools(
     persist(
@@ -912,9 +908,6 @@ export const usePWAStore = create<PWAStore>()(
           preferences: state.preferences,
           performance: state.performance,
         }),
-        // H38: Add cached getServerSnapshot to prevent infinite loop in React 18.3.1
-        // React 18.3.1 requires getServerSnapshot to return a stable/cached value
-        getServerSnapshot: () => cachedInitialPWAState,
       },
     ),
     { name: 'pwa-store' },
