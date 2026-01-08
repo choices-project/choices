@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useLayoutEffect, useRef, useState } from 'react';
+import dynamicImport from 'next/dynamic';
 
 import {
   appStoreUtils,
@@ -15,8 +16,30 @@ import { useSystemThemeSync } from '@/hooks/useSystemThemeSync';
 
 import type { ReactNode } from 'react';
 
+// CRITICAL: Move GlobalNavigation dynamic import here to prevent bailout template insertion
+// When passed as a prop from AppLayout, Next.js wraps it in a bailout template causing hydration mismatch
+// By importing it directly in AppShell, the bailout happens at AppShell level where suppressHydrationWarning is set
+const GlobalNavigation = dynamicImport(() => import('@/components/shared/GlobalNavigation'), {
+  ssr: false,
+  loading: () => (
+    <div className="sticky top-0 z-50 bg-white dark:bg-gray-900 shadow-sm border-b border-gray-200 dark:border-gray-700" data-testid="global-nav-loading">
+      <nav className="bg-white dark:bg-gray-900" aria-label="Primary navigation">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="flex items-center justify-between h-16">
+            <div className="flex items-center">
+              <div className="h-8 w-8 bg-gray-200 animate-pulse rounded" />
+            </div>
+            <div className="flex items-center space-x-4">
+              <div className="h-8 w-20 bg-gray-200 animate-pulse rounded" />
+            </div>
+          </div>
+        </div>
+      </nav>
+    </div>
+  ),
+});
+
 type AppShellProps = {
-  navigation: ReactNode;
   siteMessages?: ReactNode;
   feedback?: ReactNode;
   children: ReactNode;
@@ -27,7 +50,7 @@ type AppShellProps = {
  * Applies persisted theme + sidebar state data attributes so navigation
  * surfaces can rely on the modernized selectors without direct store access.
  */
-export function AppShell({ navigation, siteMessages, feedback, children }: AppShellProps) {
+export function AppShell({ siteMessages, feedback, children }: AppShellProps) {
   const resolvedTheme = useResolvedTheme();
   const sidebarCollapsed = useSidebarCollapsed();
   const sidebarWidth = useSidebarWidth();
@@ -304,6 +327,31 @@ export function AppShell({ navigation, siteMessages, feedback, children }: AppSh
           and its children, allowing the bailout template to be present without error.
           H22: Suppress hydration warning on root div to allow bailout template */}
       {navigation}
+
+      {/* Always render container to maintain consistent DOM structure */}
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-2">
+        {siteMessages}
+      </div>
+
+      {/* CRITICAL: Use div instead of main to prevent nested <main> tags */}
+      {/* SkipNavTarget in root layout already provides <div id="main-content"> */}
+      {/* Don't duplicate id="main-content" here - duplicate IDs are invalid HTML and cause hydration mismatch */}
+      <div className="min-h-[60vh]">
+        {children}
+      </div>
+
+      {/* Always render footer container to maintain consistent DOM structure */}
+      <footer className="mt-8">
+        {feedback}
+      </footer>
+    </div>
+  );
+}
+
+
+
+        {navigation}
+      </div>
 
       {/* Always render container to maintain consistent DOM structure */}
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-2">
