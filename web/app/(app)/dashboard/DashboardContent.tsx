@@ -854,6 +854,32 @@ export default function DashboardContent() {
   // Loading fallback uses <div> wrapper, so DashboardContent must also use <div> wrapper (not fragment)
   // H34: Remove suppressHydrationWarning - it doesn't suppress bailout template structural mismatches
   // FeedContent doesn't use suppressHydrationWarning and works fine
+  // H37: Add instrumentation to track when DashboardContent renders
+  // #region agent log
+  if (typeof window !== 'undefined') {
+    const renderLogData = {
+      location: 'DashboardContent.tsx:render',
+      message: 'DashboardContent rendering (client-side)',
+      data: {
+        timestamp: Date.now(),
+        pathname: window.location.pathname,
+        hasDocument: typeof document !== 'undefined',
+        htmlAttrs: typeof document !== 'undefined' ? {
+          theme: document.documentElement.getAttribute('data-theme'),
+          collapsed: document.documentElement.getAttribute('data-sidebar-collapsed'),
+          width: document.documentElement.getAttribute('data-sidebar-width'),
+          pinned: document.documentElement.getAttribute('data-sidebar-pinned'),
+        } : null,
+      },
+      timestamp: Date.now(),
+      sessionId: 'debug-session',
+      runId: 'run1',
+      hypothesisId: 'H37',
+    };
+    console.log('[DEBUG DashboardContent] Render:', JSON.stringify(renderLogData));
+    // Note: Can't use fetch in production due to CSP, but console.log will appear in test output
+  }
+  // #endregion
   return (
     <div>
       {/* CRITICAL: DashboardNavigation is dynamically imported with ssr: false */}
