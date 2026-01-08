@@ -23,75 +23,51 @@ const DashboardContent = dynamicImport(
   {
     ssr: false,
     loading: () => (
-      <div>
-        {/* CRITICAL: Loading fallback must match DashboardContent structure exactly */}
-        {/* DashboardContent renders DashboardNavigation first, then content */}
-        {/* Wrapped in single div (not fragment) to match feed page pattern and prevent hydration mismatch */}
-        <nav className="bg-white dark:bg-gray-900 border-b border-gray-200 dark:border-gray-700" data-testid="dashboard-nav-loading">
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div className="flex items-center justify-between h-16">
-              <div className="flex items-center space-x-4">
-                <div className="h-8 w-8 bg-gray-200 dark:bg-gray-700 animate-pulse rounded" />
-                <div className="h-6 w-24 bg-gray-200 dark:bg-gray-700 animate-pulse rounded" />
-              </div>
+      // H36: Simplify loading fallback to match feed pattern - complex structure may cause bailout template issues
+      // Feed uses simple div structure and works fine
+      // Dashboard's complex nav+content+nav structure may be incompatible with bailout template
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <div
+          className="space-y-6"
+          aria-label="Loading dashboard"
+          aria-busy="true"
+          aria-live="polite"
+          data-testid="dashboard-loading-skeleton"
+          role="status"
+        >
+          <div className="animate-pulse">
+            {/* Header skeleton */}
+            <div className="mb-8">
+              <div className="h-8 bg-gray-200 dark:bg-gray-700 rounded w-1/4 mb-3" />
+              <div className="h-4 bg-gray-200 dark:bg-gray-700 rounded w-1/2" />
             </div>
-          </div>
-        </nav>
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-          <div
-            className="space-y-6"
-            aria-label="Loading dashboard"
-            aria-busy="true"
-            aria-live="polite"
-            data-testid="dashboard-loading-skeleton"
-            role="status"
-          >
-            <div className="animate-pulse">
-              {/* Header skeleton */}
-              <div className="mb-8">
-                <div className="h-8 bg-gray-200 dark:bg-gray-700 rounded w-1/4 mb-3" />
-                <div className="h-4 bg-gray-200 dark:bg-gray-700 rounded w-1/2" />
-              </div>
 
-              {/* Metrics cards skeleton */}
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mb-6">
-                {[1, 2, 3].map((i) => (
-                  <div key={i} className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-6 shadow-sm">
-                    <div className="h-4 bg-gray-200 dark:bg-gray-700 rounded w-1/2 mb-4" />
-                    <div className="h-8 bg-gray-200 dark:bg-gray-700 rounded w-1/3 mb-2" />
-                    <div className="h-3 bg-gray-200 dark:bg-gray-700 rounded w-2/3" />
-              </div>
-            ))}
-          </div>
+            {/* Metrics cards skeleton */}
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mb-6">
+              {[1, 2, 3].map((i) => (
+                <div key={i} className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-6 shadow-sm">
+                  <div className="h-4 bg-gray-200 dark:bg-gray-700 rounded w-1/2 mb-4" />
+                  <div className="h-8 bg-gray-200 dark:bg-gray-700 rounded w-1/3 mb-2" />
+                  <div className="h-3 bg-gray-200 dark:bg-gray-700 rounded w-2/3" />
+                </div>
+              ))}
+            </div>
 
-              {/* Content cards skeleton */}
-              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                {[1, 2].map((i) => (
-                  <div key={i} className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-6 shadow-sm">
-                    <div className="h-5 bg-gray-200 dark:bg-gray-700 rounded w-1/3 mb-4" />
-                    <div className="space-y-3">
-                      <div className="h-4 bg-gray-200 dark:bg-gray-700 rounded w-full" />
-                      <div className="h-4 bg-gray-200 dark:bg-gray-700 rounded w-5/6" />
-                      <div className="h-4 bg-gray-200 dark:bg-gray-700 rounded w-4/5" />
-        </div>
-      </div>
-                ))}
-              </div>
+            {/* Content cards skeleton */}
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+              {[1, 2].map((i) => (
+                <div key={i} className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-6 shadow-sm">
+                  <div className="h-5 bg-gray-200 dark:bg-gray-700 rounded w-1/3 mb-4" />
+                  <div className="space-y-3">
+                    <div className="h-4 bg-gray-200 dark:bg-gray-700 rounded w-full" />
+                    <div className="h-4 bg-gray-200 dark:bg-gray-700 rounded w-5/6" />
+                    <div className="h-4 bg-gray-200 dark:bg-gray-700 rounded w-4/5" />
+                  </div>
+                </div>
+              ))}
             </div>
           </div>
         </div>
-        {/* CRITICAL: MobileDashboardNav must be included in loading fallback to match DashboardContent structure */}
-        {/* MobileDashboardNav renders a fixed bottom nav, so we include a placeholder */}
-        <nav className="fixed bottom-0 left-0 right-0 bg-white border-t md:hidden z-50" data-testid="mobile-dashboard-nav-loading" aria-hidden="true">
-          <div className="flex items-center justify-around">
-            {[1, 2, 3, 4].map((i) => (
-              <div key={i} className="flex flex-col items-center gap-1 py-3 px-4 flex-1">
-                <div className="h-5 w-5 bg-gray-200 dark:bg-gray-700 animate-pulse rounded" />
-                <div className="h-3 w-12 bg-gray-200 dark:bg-gray-700 animate-pulse rounded" />
-              </div>
-            ))}
-          </div>
-        </nav>
       </div>
     ),
   }
