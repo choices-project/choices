@@ -22,7 +22,12 @@ export function SkipNavLink({
 
 export function SkipNavTarget({ children }: PropsWithChildren) {
   return (
-    <div id="main-content" tabIndex={-1} className="outline-none focus-visible:ring-2 focus-visible:ring-blue-500">
+    <div 
+      id="main-content" 
+      tabIndex={-1} 
+      className="outline-none focus-visible:ring-2 focus-visible:ring-blue-500"
+      suppressHydrationWarning
+    >
       {children}
     </div>
   );
