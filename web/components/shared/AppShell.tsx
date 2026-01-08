@@ -261,7 +261,7 @@ export function AppShell({ siteMessages, feedback, children }: AppShellProps) {
         sidebarCollapsed: collapsed,
         sidebarWidth: width,
         sidebarPinned: pinned,
-        hasNavigation: !!navigation,
+        hasNavigation: true,
         hasSiteMessages: !!siteMessages,
         hasFeedback: !!feedback,
         hasChildren: !!children,
@@ -320,37 +320,14 @@ export function AppShell({ siteMessages, feedback, children }: AppShellProps) {
       data-testid="app-shell"
       suppressHydrationWarning
     >
-      {/* CRITICAL: suppressHydrationWarning on AppShell root div
-          Next.js inserts BAILOUT_TO_CLIENT_SIDE_RENDERING template when dynamically imported
-          components with ssr: false are rendered. This template causes React hydration mismatch.
-          suppressHydrationWarning tells React to ignore hydration mismatches for this element
-          and its children, allowing the bailout template to be present without error.
-          H22: Suppress hydration warning on root div to allow bailout template */}
-      {navigation}
-
-      {/* Always render container to maintain consistent DOM structure */}
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-2">
-        {siteMessages}
-      </div>
-
-      {/* CRITICAL: Use div instead of main to prevent nested <main> tags */}
-      {/* SkipNavTarget in root layout already provides <div id="main-content"> */}
-      {/* Don't duplicate id="main-content" here - duplicate IDs are invalid HTML and cause hydration mismatch */}
-      <div className="min-h-[60vh]">
-        {children}
-      </div>
-
-      {/* Always render footer container to maintain consistent DOM structure */}
-      <footer className="mt-8">
-        {feedback}
-      </footer>
-    </div>
-  );
-}
-
-
-
-        {navigation}
+      {/* CRITICAL: Wrap navigation in div with suppressHydrationWarning
+          Next.js inserts BAILOUT_TO_CLIENT_SIDE_RENDERING template as first child when
+          dynamically imported components with ssr: false are rendered. This template
+          causes React hydration mismatch. Wrapping in a div with suppressHydrationWarning
+          allows React to ignore the structural mismatch (template element).
+          H24: Wrap navigation to allow bailout template without hydration error */}
+      <div suppressHydrationWarning>
+        {navComponent}
       </div>
 
       {/* Always render container to maintain consistent DOM structure */}

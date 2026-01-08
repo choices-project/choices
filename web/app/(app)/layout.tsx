@@ -16,29 +16,9 @@ import { AppShell } from '@/components/shared/AppShell';
 import { ErrorBoundary } from '@/components/shared/ErrorBoundary';
 import FontProvider from '@/components/shared/FontProvider';
 
-// Dynamically import components that use usePathname() to prevent hydration errors
-// ssr: false ensures they only render on the client
-// CRITICAL: Loading fallback must match the actual component structure to prevent hydration mismatches
-// GlobalNavigation renders a <div> wrapper with <nav> inside, so loading fallback must match
-const GlobalNavigation = dynamicImport(() => import('@/components/shared/GlobalNavigation'), {
-  ssr: false,
-  loading: () => (
-    <div className="sticky top-0 z-50 bg-white dark:bg-gray-900 shadow-sm border-b border-gray-200 dark:border-gray-700" data-testid="global-nav-loading">
-      <nav className="bg-white dark:bg-gray-900" aria-label="Primary navigation">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex items-center justify-between h-16">
-            <div className="flex items-center">
-              <div className="h-8 w-8 bg-gray-200 animate-pulse rounded" />
-            </div>
-            <div className="flex items-center space-x-4">
-              <div className="h-8 w-20 bg-gray-200 animate-pulse rounded" />
-            </div>
-          </div>
-        </div>
-      </nav>
-    </div>
-  ),
-});
+// CRITICAL: GlobalNavigation is now dynamically imported directly in AppShell
+// This prevents Next.js from wrapping it in a bailout template when passed as a prop
+// The dynamic import happens at AppShell level where suppressHydrationWarning is set
 
 // CRITICAL: These components use ssr: false, but their containers in AppShell are server-rendered
 // The loading fallback must be consistent to prevent hydration mismatches
@@ -394,7 +374,6 @@ export default function AppLayout({
           <UserStoreProvider>
             <ServiceWorkerProvider debug={process.env.NODE_ENV === 'development'}>
               <AppShell
-                navigation={<GlobalNavigation />}
                 siteMessages={<SiteMessages />}
                 feedback={
                   !DISABLE_FEEDBACK_WIDGET ? <EnhancedFeedbackWidget /> : null
