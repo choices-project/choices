@@ -31,41 +31,12 @@ import { logger } from '@/lib/utils/logger';
 
 import { useAuth } from '@/hooks/useAuth';
 
-// CRITICAL: Load PersonalDashboard only on client to prevent SSR hydration mismatch
-// PersonalDashboard uses Zustand persist stores and other client-only hooks
-// that cause React Error #185 when rendered during SSR
-const PersonalDashboard = dynamicImport(
-  () => import('@/features/dashboard').then((mod) => ({ default: mod.PersonalDashboard })),
-  {
-    ssr: false,
-    loading: () => (
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        <div
-          className="space-y-6"
-          aria-label="Loading dashboard"
-          aria-busy="true"
-          aria-live="polite"
-          data-testid="dashboard-loading-skeleton"
-          role="status"
-        >
-          <div className="animate-pulse">
-            <div className="h-10 bg-gray-200 dark:bg-gray-700 rounded w-1/3 mb-4" />
-            <div className="h-5 bg-gray-200 dark:bg-gray-700 rounded w-1/2 mb-8" />
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {[1, 2, 3].map((i) => (
-                <div key={i} className="bg-gray-100 dark:bg-gray-800 rounded-lg p-6">
-                  <div className="h-6 bg-gray-200 dark:bg-gray-700 rounded w-3/4 mb-4" />
-                  <div className="h-4 bg-gray-200 dark:bg-gray-700 rounded w-full mb-2" />
-                  <div className="h-4 bg-gray-200 dark:bg-gray-700 rounded w-5/6" />
-                </div>
-              ))}
-            </div>
-          </div>
-        </div>
-      </div>
-    ),
-  }
-);
+// CRITICAL: Import PersonalDashboard directly without dynamic import
+// DashboardContent is dynamically imported with ssr: false, so it never renders during SSR
+// This means PersonalDashboard also won't render during SSR, so no need for dynamic import
+// Removing nested dynamic import eliminates nested bailout templates that cause hydration mismatch
+// H29: Remove nested dynamic import to prevent bailout template structural mismatch
+import { PersonalDashboard } from '@/features/dashboard';
 
 /**
  * Helper function to check bypass flag from localStorage
