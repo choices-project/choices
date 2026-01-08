@@ -8,8 +8,16 @@ import { AuthProvider } from '@/contexts/AuthContext';
 import { markReactHydrationStarted } from '@/lib/stores/appStore';
 
 import { usePollCreatedListener } from '@/features/polls/hooks/usePollCreatedListener';
-import OfflineIndicator from '@/features/pwa/components/OfflineIndicator';
 import PWABackground from '@/features/pwa/components/PWABackground';
+
+// H40: Make OfflineIndicator client-only to prevent getServerSnapshot infinite loop
+// OfflineIndicator uses Zustand stores with persist middleware, which internally uses useSyncExternalStore
+// React 18.3.1 requires getServerSnapshot to return a cached value, but Zustand's internal implementation
+// may not cache it properly during SSR. Making it client-only prevents SSR rendering, eliminating the issue.
+const OfflineIndicator = dynamicImport(() => import('@/features/pwa/components/OfflineIndicator'), {
+  ssr: false,
+  loading: () => null, // No loading state needed for offline indicator
+});
 import { ServiceWorkerProvider } from '@/features/pwa/components/ServiceWorkerProvider';
 
 import { AppShell } from '@/components/shared/AppShell';
