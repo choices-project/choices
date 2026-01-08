@@ -13,7 +13,7 @@ export const dynamic = 'force-dynamic';
 
 export default function AdminDashboardPage() {
   const { setCurrentRoute, setSidebarActiveSection, setBreadcrumbs } = useAppActions();
-  
+
   // Refs for stable app store actions
   const setCurrentRouteRef = useRef(setCurrentRoute);
   useEffect(() => { setCurrentRouteRef.current = setCurrentRoute; }, [setCurrentRoute]);
@@ -33,7 +33,7 @@ export default function AdminDashboardPage() {
       setSidebarActiveSectionRef.current(null);
       setBreadcrumbsRef.current([]);
     };
-  }, []);  
+  }, []);
 
   // CRITICAL FIX: Remove AdminLayout wrapper - parent layout.tsx already provides it
   // Double wrapping causes duplicate sidebar and header rendering

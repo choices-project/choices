@@ -86,7 +86,7 @@ export default defineConfig({
     command: process.env.CI
       ? 'bash -c "NEXT_PUBLIC_ENABLE_E2E_HARNESS=1 PLAYWRIGHT_USE_MOCKS=1 npm run dev"'
       : 'npm run dev',
-    url: `${process.env.BASE_URL ?? 'http://localhost:3000'}/api/health`, // Use health endpoint for more reliable readiness check
+    url: `${process.env.BASE_URL ?? 'http://localhost:3000'}`, // Use root URL for readiness check (more reliable than /api/health)
     reuseExistingServer: !process.env.CI,
     timeout: 300_000, // Increased to 5 minutes for CI environments
     env: {

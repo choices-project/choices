@@ -36,6 +36,14 @@ export async function isAdmin(): Promise<boolean> {
 
 /** Non-throwing: great for APIs and guards */
 export async function getAdminUser(): Promise<{ id: string; email?: string } | null> {
+  // E2E harness bypass: In test mode with harness enabled, return mock admin user
+  if (process.env.NEXT_PUBLIC_ENABLE_E2E_HARNESS === '1' && process.env.NODE_ENV !== 'production') {
+    return {
+      id: 'e2e-admin-user-id',
+      email: 'admin@test.com',
+    };
+  }
+
   const supabase = await getSupabaseServerClient();
   const { data: { user }, error: authError } = await supabase.auth.getUser();
   
