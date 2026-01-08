@@ -272,10 +272,20 @@ export function AppShell({ navigation, siteMessages, feedback, children }: AppSh
     if (typeof window !== 'undefined') {
       const appShell = document.querySelector('[data-testid="app-shell"]');
       const navigationElement = appShell?.firstElementChild;
-      const bailoutTemplate = appShell?.querySelector('template[data-dgst="BAILOUT_TO_CLIENT_SIDE_RENDERING"]');
+      // H30: Improved bailout template detection - find ALL bailout templates and their exact locations
+      const bailoutTemplates = appShell?.querySelectorAll('template[data-dgst="BAILOUT_TO_CLIENT_SIDE_RENDERING"]') ?? [];
+      const bailoutTemplateLocations = Array.from(bailoutTemplates).map((template, index) => ({
+        index,
+        parentTag: template.parentElement?.tagName,
+        parentId: template.parentElement?.id,
+        parentClass: template.parentElement?.className,
+        parentDataTestId: template.parentElement?.getAttribute('data-testid'),
+        nextSiblingTag: template.nextElementSibling?.tagName,
+        previousSiblingTag: template.previousElementSibling?.tagName,
+      }));
       const logData = {
         location: 'AppShell.tsx:render-structure',
-        message: 'AppShell render structure check (post-fix: no header wrapper)',
+        message: 'AppShell render structure check (H30: improved bailout template detection)',
         data: {
           hasAppShell: Boolean(appShell),
           appShellFirstChildTag: navigationElement?.tagName,
@@ -283,8 +293,16 @@ export function AppShell({ navigation, siteMessages, feedback, children }: AppSh
           navigationDataTestId: navigationElement?.getAttribute('data-testid'),
           navigationTagName: navigationElement?.tagName,
           navigationClasses: navigationElement?.className,
-          hasBailoutTemplate: Boolean(bailoutTemplate),
-          bailoutTemplateParent: bailoutTemplate?.parentElement?.tagName,
+          bailoutTemplateCount: bailoutTemplates.length,
+          bailoutTemplateLocations,
+          appShellChildren: Array.from(appShell?.children ?? []).map((child, idx) => ({
+            index: idx,
+            tag: child.tagName,
+            id: child.id,
+            className: child.className,
+            dataTestId: child.getAttribute('data-testid'),
+            hasBailoutTemplate: child.querySelector('template[data-dgst="BAILOUT_TO_CLIENT_SIDE_RENDERING"]') !== null,
+          })),
           timestamp: Date.now(),
         },
         timestamp: Date.now(),
