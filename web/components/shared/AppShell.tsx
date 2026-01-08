@@ -54,24 +54,24 @@ export function AppShell({ navigation, siteMessages, feedback, children }: AppSh
     if (typeof document === 'undefined' || attributesSetRef.current) {
       return;
     }
-    
+
     const currentTheme = document.documentElement.getAttribute('data-theme');
     const currentCollapsed = document.documentElement.getAttribute('data-sidebar-collapsed');
     const currentWidth = document.documentElement.getAttribute('data-sidebar-width');
     const currentPinned = document.documentElement.getAttribute('data-sidebar-pinned');
-    
+
     // Always ensure attributes exist - even if ThemeScript set them, we ensure they're present
     // This is critical for client-side navigation where ThemeScript doesn't run
     const themeToSet = currentTheme || 'light';
     const collapsedToSet = currentCollapsed !== null ? currentCollapsed : 'false';
     const widthToSet = currentWidth || '280';
     const pinnedToSet = currentPinned !== null ? currentPinned : 'false';
-    
+
     document.documentElement.setAttribute('data-theme', themeToSet);
     document.documentElement.setAttribute('data-sidebar-collapsed', collapsedToSet);
     document.documentElement.setAttribute('data-sidebar-width', widthToSet);
     document.documentElement.setAttribute('data-sidebar-pinned', pinnedToSet);
-    
+
     if (themeToSet === 'dark') {
       document.documentElement.classList.add('dark');
       document.documentElement.style.colorScheme = 'dark';
@@ -79,11 +79,11 @@ export function AppShell({ navigation, siteMessages, feedback, children }: AppSh
       document.documentElement.classList.remove('dark');
       document.documentElement.style.colorScheme = 'light';
     }
-    
+
     // Force synchronous reflow to ensure attributes are committed
     void document.documentElement.offsetHeight;
     attributesSetRef.current = true;
-    
+
     // #region agent log
     const logDataSync={location:'AppShell.tsx:useLayoutEffect-init',message:'AppShell ensured attributes exist in useLayoutEffect',data:{wasMissing:{theme:!currentTheme,collapsed:!currentCollapsed,width:!currentWidth,pinned:!currentPinned},set:{theme:themeToSet,collapsed:collapsedToSet,width:widthToSet,pinned:pinnedToSet}},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'H9'};
     console.log('[DEBUG]',JSON.stringify(logDataSync));
@@ -221,7 +221,7 @@ export function AppShell({ navigation, siteMessages, feedback, children }: AppSh
     if (currentPinnedAttr !== String(pinned)) {
       document.documentElement.setAttribute('data-sidebar-pinned', String(pinned));
     }
-    
+
     // #region agent log
     const currentPath2 = typeof window !== 'undefined' ? window.location.pathname : 'SSR';
     const afterAttrs={theme:document.documentElement.getAttribute('data-theme'),collapsed:document.documentElement.getAttribute('data-sidebar-collapsed'),width:document.documentElement.getAttribute('data-sidebar-width'),pinned:document.documentElement.getAttribute('data-sidebar-pinned')};
@@ -252,7 +252,7 @@ export function AppShell({ navigation, siteMessages, feedback, children }: AppSh
   // Don't use suppressHydrationWarning - ensure server and client initial render match exactly
   // ThemeScript sets attributes on documentElement, but we use stable defaults here
   // to ensure the initial HTML matches between server and client
-  // 
+  //
   // HYPOTHESIS: The hardcoded data-* attributes on this div might be causing hydration mismatches
   // if React compares them during hydration. We should remove them and only use them for styling
   // via CSS selectors that read from documentElement, not from this div's attributes.
@@ -291,20 +291,59 @@ export function AppShell({ navigation, siteMessages, feedback, children }: AppSh
   }, [navigation]);
   // #endregion
 
+  // #region agent log - H20: Render navigation only after mount to avoid bailout template
+  // H20: Conditionally render navigation after mount to prevent BAILOUT template during SSR
+  // The bailout template is inserted when dynamically imported components with ssr: false
+  // are rendered in Client Components during SSR. By rendering navigation only after mount,
+  // we avoid the bailout template insertion and prevent React hydration mismatch.
+  const [hasMounted, setHasMounted] = useState(false);
+  
+  useEffect(() => {
+    setHasMounted(true);
+    // #region agent log
+    const logData = {
+      location: 'AppShell.tsx:useEffect:mount',
+      message: 'AppShell mounted - navigation will render now',
+      data: {
+        hasMounted,
+        timestamp: Date.now(),
+      },
+      timestamp: Date.now(),
+      sessionId: 'debug-session',
+      runId: 'run1',
+      hypothesisId: 'H20',
+    };
+    console.log('[DEBUG]', JSON.stringify(logData));
+    // #endregion
+  }, []);
+  // #endregion
+
   return (
     <div
       className="min-h-screen bg-slate-50 dark:bg-gray-900"
       data-testid="app-shell"
     >
-      {/* CRITICAL: suppressHydrationWarning allows BAILOUT_TO_CLIENT_SIDE_RENDERING template
-          Next.js inserts this template when dynamically imported components with ssr: false
-          are rendered in Client Components. The template is expected during SSR but causes
-          React hydration mismatch. suppressHydrationWarning tells React to ignore the mismatch
-          for this specific element, allowing the template to be present during hydration.
-          H19: Using suppressHydrationWarning to handle bailout template */}
-      <div suppressHydrationWarning>
-        {navigation}
-      </div>
+      {/* CRITICAL: Render navigation only after mount to prevent BAILOUT template insertion
+          During SSR, if we render a dynamically imported component with ssr: false, Next.js
+          inserts a BAILOUT_TO_CLIENT_SIDE_RENDERING template, causing React hydration mismatch.
+          By rendering navigation only after mount (client-side), we avoid the template insertion.
+          H20: Conditional render after mount to prevent bailout template */}
+      {hasMounted ? navigation : (
+        <div className="sticky top-0 z-50 bg-white dark:bg-gray-900 shadow-sm border-b border-gray-200 dark:border-gray-700" data-testid="global-nav-loading">
+          <nav className="bg-white dark:bg-gray-900" aria-label="Primary navigation">
+            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+              <div className="flex items-center justify-between h-16">
+                <div className="flex items-center">
+                  <div className="h-8 w-8 bg-gray-200 animate-pulse rounded" />
+                </div>
+                <div className="flex items-center space-x-4">
+                  <div className="h-8 w-20 bg-gray-200 animate-pulse rounded" />
+                </div>
+              </div>
+            </div>
+          </nav>
+        </div>
+      )}
 
       {/* Always render container to maintain consistent DOM structure */}
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-2">
