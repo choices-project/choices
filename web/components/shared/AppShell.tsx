@@ -54,7 +54,7 @@ type AppShellProps = {
 export function AppShell({ navigation, siteMessages, feedback, children }: AppShellProps) {
   // Use navigation prop if provided, otherwise use GlobalNavigation
   const navComponent = navigation ?? <GlobalNavigation />;
-  
+
   const resolvedTheme = useResolvedTheme();
   const sidebarCollapsed = useSidebarCollapsed();
   const sidebarWidth = useSidebarWidth();
@@ -324,15 +324,13 @@ export function AppShell({ navigation, siteMessages, feedback, children }: AppSh
       data-testid="app-shell"
       suppressHydrationWarning
     >
-      {/* CRITICAL: Wrap navigation in div with suppressHydrationWarning
-          Next.js inserts BAILOUT_TO_CLIENT_SIDE_RENDERING template as first child when
-          dynamically imported components with ssr: false are rendered. This template
-          causes React hydration mismatch. Wrapping in a div with suppressHydrationWarning
-          allows React to ignore the structural mismatch (template element).
-          H24: Wrap navigation to allow bailout template without hydration error */}
-      <div suppressHydrationWarning>
-        {navComponent}
-      </div>
+      {/* CRITICAL: GlobalNavigation is dynamically imported with ssr: false
+          Next.js inserts BAILOUT_TO_CLIENT_SIDE_RENDERING template when dynamically imported
+          components with ssr: false are rendered. This template causes React hydration mismatch.
+          suppressHydrationWarning on AppShell root div tells React to ignore hydration mismatches
+          for this element and all children, allowing the bailout template to be present without error.
+          H25: Render GlobalNavigation directly (no wrapper) - suppressHydrationWarning on parent should handle it */}
+      <GlobalNavigation />
 
       {/* Always render container to maintain consistent DOM structure */}
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-2">
