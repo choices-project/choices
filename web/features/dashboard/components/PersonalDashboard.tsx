@@ -619,7 +619,7 @@ function StandardPersonalDashboard({ userId: _fallbackUserId }: PersonalDashboar
     <div className="space-y-6" data-testid='personal-dashboard'>
       {/* Header - Enhanced with better visual hierarchy */}
         <div className="border-b border-gray-200 dark:border-gray-700 pb-6">
-        <h1 className="text-3xl font-bold text-gray-900 dark:text-gray-100 mb-2">
+        <h1 className="text-3xl font-bold text-gray-900 dark:text-gray-100 mb-2" data-testid="dashboard-title">
           Dashboard
           </h1>
         <p className="text-sm text-gray-600 dark:text-gray-400">

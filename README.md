@@ -1,7 +1,7 @@
 # Choices - Participatory Democracy Platform
 
-**Status**: ✅ **100% Complete - Production Ready**  
-**Last Updated**: November 6, 2025
+**Status**: ✅ **MVP Complete - Production Ready**  
+**Last Updated**: January 2026
 
 ---
 
@@ -46,20 +46,22 @@ See **[DEPLOYMENT_READY.md](./DEPLOYMENT_READY.md)** for complete guide.
 ## 📚 Documentation
 
 ### Essential Reading
-- **[DEPLOYMENT_READY.md](./DEPLOYMENT_READY.md)** - Deployment guide
-- **[docs/FEATURES.md](./docs/FEATURES.md)** - Complete feature list
-- **[docs/CURRENT_STATUS.md](./docs/CURRENT_STATUS.md)** - Current status
-- **[docs/WIDGET_SYSTEM.md](./docs/WIDGET_SYSTEM.md)** - Widget dashboard docs
-- **[docs/API_CHANGES.md](./docs/API_CHANGES.md)** - API consolidation
- - **Single Source Roadmap**: [docs/ROADMAP_SINGLE_SOURCE.md](./docs/ROADMAP_SINGLE_SOURCE.md)
- - **Operations**:
-   - Email & Verification (freemium/domain): [docs/OPERATIONS/email-and-verification-setup.md](./docs/OPERATIONS/email-and-verification-setup.md)
-   - LLC & Compliance Checklist: [docs/OPERATIONS/llc-and-compliance-checklist.md](./docs/OPERATIONS/llc-and-compliance-checklist.md)
+- **[docs/GETTING_STARTED.md](./docs/GETTING_STARTED.md)** - Quick start guide for new developers
+- **[docs/VISION.md](./docs/VISION.md)** - Project vision and roadmap
+- **[docs/CURRENT_STATUS.md](./docs/CURRENT_STATUS.md)** - Current status and active work
+- **[docs/DEPLOYMENT.md](./docs/DEPLOYMENT.md)** - Deployment guide
+- **[docs/FEATURE_STATUS.md](./docs/FEATURE_STATUS.md)** - Feature flags and status
 
 ### For Developers
-- **[docs/DEVELOPMENT.md](./docs/DEVELOPMENT.md)** - Setup and development
+- **[docs/GETTING_STARTED.md](./docs/GETTING_STARTED.md)** - Quick start (5 minutes)
+- **[docs/DEVELOPMENT.md](./docs/DEVELOPMENT.md)** - Detailed setup and development
 - **[docs/ARCHITECTURE.md](./docs/ARCHITECTURE.md)** - System architecture
+- **[docs/CODEBASE_NAVIGATION.md](./docs/CODEBASE_NAVIGATION.md)** - Codebase structure guide
+- **[docs/CONTRIBUTING.md](./CONTRIBUTING.md)** - Contribution workflow
+- **[docs/TESTING.md](./docs/TESTING.md)** - Testing strategies
+- **[docs/STATE_MANAGEMENT.md](./docs/STATE_MANAGEMENT.md)** - State management patterns
 - **[docs/DATABASE_SCHEMA.md](./docs/DATABASE_SCHEMA.md)** - Database schema
+- **[docs/API/README.md](./docs/API/README.md)** - API documentation
 
 ### For Compliance
 - **[docs/PRIVACY_POLICY.md](./docs/PRIVACY_POLICY.md)** - Privacy policy
@@ -215,18 +217,21 @@ This platform is built with care for democracy and transparency.
 
 ## 🎉 Status
 
-**The Choices platform is 100% complete and ready for production deployment!**
+**The Choices platform MVP is complete and ready for production deployment!**
 
-- ✅ All features implemented
-- ✅ Zero errors
+- ✅ All MVP features implemented and tested
+- ✅ Zero TypeScript/linter errors
 - ✅ Comprehensive documentation
 - ✅ Production tested
 - ✅ Ready to deploy
 
+For current status and ongoing work, see [`docs/CURRENT_STATUS.md`](docs/CURRENT_STATUS.md).  
+For project vision and roadmap, see [`docs/VISION.md`](docs/VISION.md).
+
 ---
 
 **Built with** ❤️ **for participatory democracy**  
-**Last Updated**: November 6, 2025  
-**Version**: 1.0.0 (Production Ready)
+**Last Updated**: January 2026  
+**Version**: 1.0.0 (MVP Complete)
 
 🚀 **DEPLOY NOW!**
