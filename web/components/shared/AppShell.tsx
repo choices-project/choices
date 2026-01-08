@@ -291,59 +291,17 @@ export function AppShell({ navigation, siteMessages, feedback, children }: AppSh
   }, [navigation]);
   // #endregion
 
-  // #region agent log - H20: Render navigation only after mount to avoid bailout template
-  // H20: Conditionally render navigation after mount to prevent BAILOUT template during SSR
-  // The bailout template is inserted when dynamically imported components with ssr: false
-  // are rendered in Client Components during SSR. By rendering navigation only after mount,
-  // we avoid the bailout template insertion and prevent React hydration mismatch.
-  const [hasMounted, setHasMounted] = useState(false);
-  
-  useEffect(() => {
-    setHasMounted(true);
-    // #region agent log
-    const logData = {
-      location: 'AppShell.tsx:useEffect:mount',
-      message: 'AppShell mounted - navigation will render now',
-      data: {
-        hasMounted,
-        timestamp: Date.now(),
-      },
-      timestamp: Date.now(),
-      sessionId: 'debug-session',
-      runId: 'run1',
-      hypothesisId: 'H20',
-    };
-    console.log('[DEBUG]', JSON.stringify(logData));
-    // #endregion
-  }, []);
-  // #endregion
-
   return (
     <div
       className="min-h-screen bg-slate-50 dark:bg-gray-900"
       data-testid="app-shell"
     >
-      {/* CRITICAL: Render navigation only after mount to prevent BAILOUT template insertion
-          During SSR, if we render a dynamically imported component with ssr: false, Next.js
-          inserts a BAILOUT_TO_CLIENT_SIDE_RENDERING template, causing React hydration mismatch.
-          By rendering navigation only after mount (client-side), we avoid the template insertion.
-          H20: Conditional render after mount to prevent bailout template */}
-      {hasMounted ? navigation : (
-        <div className="sticky top-0 z-50 bg-white dark:bg-gray-900 shadow-sm border-b border-gray-200 dark:border-gray-700" data-testid="global-nav-loading">
-          <nav className="bg-white dark:bg-gray-900" aria-label="Primary navigation">
-            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-              <div className="flex items-center justify-between h-16">
-                <div className="flex items-center">
-                  <div className="h-8 w-8 bg-gray-200 animate-pulse rounded" />
-                </div>
-                <div className="flex items-center space-x-4">
-                  <div className="h-8 w-20 bg-gray-200 animate-pulse rounded" />
-                </div>
-              </div>
-            </div>
-          </nav>
-        </div>
-      )}
+      {/* CRITICAL: Render navigation directly - dynamic import loading fallback handles SSR/client transition
+          The GlobalNavigation component is dynamically imported with ssr: false in AppLayout,
+          and its loading fallback is defined there. We just render the navigation prop here.
+          Next.js will handle the transition from loading fallback to actual component.
+          H21: Direct render - let Next.js dynamic import handle the transition */}
+      {navigation}
 
       {/* Always render container to maintain consistent DOM structure */}
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-2">
