@@ -269,7 +269,7 @@ export function AppShell({ siteMessages, feedback, children }: AppShellProps) {
         bypassFlag: typeof window !== 'undefined' ? window.localStorage.getItem('e2e-dashboard-bypass') : 'SSR',
       });
     }
-  }, [theme, collapsed, width, pinned, navigation, siteMessages, feedback, children]);
+  }, [theme, collapsed, width, pinned, siteMessages, feedback, children]);
 
   // CRITICAL: Always use stable defaults for data attributes to prevent hydration mismatch
   // Don't use suppressHydrationWarning - ensure server and client initial render match exactly
@@ -311,7 +311,7 @@ export function AppShell({ siteMessages, feedback, children }: AppShellProps) {
         body: JSON.stringify(logData),
       }).catch(() => {});
     }
-  }, [navigation]);
+  }, [navComponent]);
   // #endregion
 
   return (
