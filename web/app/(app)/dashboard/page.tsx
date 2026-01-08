@@ -80,6 +80,18 @@ const DashboardContent = dynamicImport(
             </div>
           </div>
         </div>
+        {/* CRITICAL: MobileDashboardNav must be included in loading fallback to match DashboardContent structure */}
+        {/* MobileDashboardNav renders a fixed bottom nav, so we include a placeholder */}
+        <nav className="fixed bottom-0 left-0 right-0 bg-white border-t md:hidden z-50" data-testid="mobile-dashboard-nav-loading" aria-hidden="true">
+          <div className="flex items-center justify-around">
+            {[1, 2, 3, 4].map((i) => (
+              <div key={i} className="flex flex-col items-center gap-1 py-3 px-4 flex-1">
+                <div className="h-5 w-5 bg-gray-200 dark:bg-gray-700 animate-pulse rounded" />
+                <div className="h-3 w-12 bg-gray-200 dark:bg-gray-700 animate-pulse rounded" />
+              </div>
+            ))}
+          </div>
+        </nav>
       </div>
     ),
   }
