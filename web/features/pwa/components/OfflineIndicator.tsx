@@ -11,9 +11,9 @@
 'use client'
 
 import { WifiOff, Wifi, AlertCircle, CheckCircle } from 'lucide-react'
-import React, { useEffect } from 'react';
+import React, { useEffect, useMemo, useRef } from 'react';
 
-import { useIsOnline, useDeviceActions } from '@/lib/stores/deviceStore';
+import { useIsOnline } from '@/lib/stores/deviceStore';
 import { usePWAOffline, usePWAActions } from '@/lib/stores/pwaStore'
 
 type OfflineIndicatorProps = {
@@ -35,26 +35,37 @@ type OfflineIndicatorProps = {
 export default function OfflineIndicator({ showDetails = false, className = '' }: OfflineIndicatorProps) {
   // Use deviceStore for network status (modernized pattern)
   const isOnline = useIsOnline();
-  const { updateDeviceInfo } = useDeviceActions();
   
   // Use PWA store for offline data management
+  // H41: Memoize offline data access to prevent getSnapshot infinite loop
+  // Accessing nested properties (offline.offlineData.queuedActions.length) can cause
+  // Zustand's getSnapshot to be called repeatedly if the object reference changes
   const offline = usePWAOffline();
   const { setOnlineStatus } = usePWAActions();
 
-  const offlineVotes = offline.offlineData.queuedActions.length;
-  const hasOfflineData = offlineVotes > 0;
+  // H41: Use ref for setOnlineStatus to prevent infinite loop
+  // usePWAActions() returns a new object on each call, making setOnlineStatus unstable
+  // Using a ref ensures we always call the latest function without causing re-renders
+  const setOnlineStatusRef = useRef(setOnlineStatus);
+  useEffect(() => {
+    setOnlineStatusRef.current = setOnlineStatus;
+  }, [setOnlineStatus]);
 
+  // Memoize offline votes calculation to ensure stable reference
+  const offlineVotes = useMemo(() => offline.offlineData.queuedActions.length, [offline.offlineData.queuedActions.length]);
+  const hasOfflineData = useMemo(() => offlineVotes > 0, [offlineVotes]);
+
+  // H41: Remove updateDeviceInfo from useEffect to prevent infinite loop
+  // updateDeviceInfo() updates state.network, which includes network.online
+  // Calling it when isOnline changes creates a loop: isOnline changes -> updateDeviceInfo() -> network.online updates -> isOnline changes
+  // Device info should only be updated on actual device changes (resize, orientation), not on network status changes
+  // The deviceStore already has event listeners for online/offline events that update network status correctly
+  
   // Sync deviceStore network status with PWA store
+  // H41: Use ref to prevent infinite loop from unstable setOnlineStatus reference
   useEffect(() => {
-    setOnlineStatus(isOnline);
-  }, [isOnline, setOnlineStatus]);
-
-  // Update device info when network status changes (ensures deviceStore stays in sync)
-  useEffect(() => {
-    if (typeof window !== 'undefined') {
-      updateDeviceInfo();
-    }
-  }, [isOnline, updateDeviceInfo]);
+    setOnlineStatusRef.current(isOnline);
+  }, [isOnline]);
 
   // Always show offline indicator when offline (even if PWA offline mode is disabled)
   // This provides basic network status feedback to users

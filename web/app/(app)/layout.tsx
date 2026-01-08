@@ -82,7 +82,7 @@ export default function AppLayout({
     if (typeof document === 'undefined' || attributesSetRef.current) {
       return;
     }
-    
+
     // CRITICAL: Don't update attributes during initial hydration
     // ThemeScript has already set them correctly, and changing them causes mismatch
     if (isHydratingRef.current && !hydrationCompleteRef.current) {
@@ -95,24 +95,24 @@ export default function AppLayout({
       // Skip during hydration - ThemeScript already set attributes correctly
       return;
     }
-    
+
     const currentTheme = document.documentElement.getAttribute('data-theme');
     const currentCollapsed = document.documentElement.getAttribute('data-sidebar-collapsed');
     const currentWidth = document.documentElement.getAttribute('data-sidebar-width');
     const currentPinned = document.documentElement.getAttribute('data-sidebar-pinned');
-    
+
     // Always ensure attributes exist - even if ThemeScript set them, we ensure they're present
     // This is critical for client-side navigation where ThemeScript doesn't run
     const themeToSet = currentTheme || 'light';
     const collapsedToSet = currentCollapsed !== null ? currentCollapsed : 'false';
     const widthToSet = currentWidth || '280';
     const pinnedToSet = currentPinned !== null ? currentPinned : 'false';
-    
+
     document.documentElement.setAttribute('data-theme', themeToSet);
     document.documentElement.setAttribute('data-sidebar-collapsed', collapsedToSet);
     document.documentElement.setAttribute('data-sidebar-width', widthToSet);
     document.documentElement.setAttribute('data-sidebar-pinned', pinnedToSet);
-    
+
     if (themeToSet === 'dark') {
       document.documentElement.classList.add('dark');
       document.documentElement.style.colorScheme = 'dark';
@@ -120,7 +120,7 @@ export default function AppLayout({
       document.documentElement.classList.remove('dark');
       document.documentElement.style.colorScheme = 'light';
     }
-    
+
     // Force synchronous reflow
     void document.documentElement.offsetHeight;
     attributesSetRef.current = true;
@@ -151,7 +151,7 @@ export default function AppLayout({
   // #region agent log - Capture hydration errors with timing and DOM mutation tracking
   React.useEffect(() => {
     if (typeof window === 'undefined') return;
-    
+
     // Track DOM mutations to identify what's changing during hydration
     const mutationObserver = new MutationObserver((mutations) => {
       mutations.forEach((mutation) => {
@@ -220,19 +220,19 @@ export default function AppLayout({
       // ignore
     }
     // #endregion
-    
+
     // CRITICAL: Mark React hydration as started in appStore (synchronous call)
     // This allows appStore to know when React is actually hydrating, not just when timer completes
     // Must be synchronous to ensure it's called before any theme mutations
     markReactHydrationStarted();
-    
+
     const originalError = console.error;
     console.error = (...args: unknown[]) => {
       const errorStr = args.map(a => String(a)).join(' ');
       if (errorStr.includes('185') || errorStr.includes('hydration') || errorStr.includes('Hydration')) {
         const hydrationErrorTime = Date.now();
         const timeSinceStart = hydrationErrorTime - hydrationStartTime;
-        
+
         // Capture the full error details including stack trace
         const errorDetails = args.map(arg => {
           if (arg instanceof Error) {
@@ -244,7 +244,7 @@ export default function AppLayout({
           }
           return String(arg);
         });
-        
+
         // Check if attributes exist RIGHT NOW (synchronously)
         const attrsNow = {
           'data-theme': document.documentElement.getAttribute('data-theme'),
@@ -252,7 +252,7 @@ export default function AppLayout({
           'data-sidebar-width': document.documentElement.getAttribute('data-sidebar-width'),
           'data-sidebar-pinned': document.documentElement.getAttribute('data-sidebar-pinned'),
         };
-        
+
         const logData = {
           location: 'AppLayout.tsx:useEffect',
           message: 'Hydration error detected in console',

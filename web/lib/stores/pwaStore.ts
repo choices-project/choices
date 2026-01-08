@@ -12,6 +12,7 @@
 import { create } from 'zustand';
 import { devtools, persist } from 'zustand/middleware';
 import { immer } from 'zustand/middleware/immer';
+import { useShallow } from 'zustand/react/shallow';
 
 import { logger } from '@/lib/utils/logger';
 
@@ -969,7 +970,10 @@ const selectPWAActions = (state: PWAStore) => ({
   clearError: state.clearError,
 });
 
-export const usePWAActions = () => usePWAStore(selectPWAActions);
+// H41: Use useShallow to ensure stable object reference and prevent getSnapshot infinite loop
+// selectPWAActions returns a new object on each call, which causes Zustand's getSnapshot to be called repeatedly
+// useShallow ensures the object reference is stable if the contents haven't changed
+export const usePWAActions = () => usePWAStore(useShallow(selectPWAActions));
 export const getPWAActions = () => selectPWAActions(usePWAStore.getState());
 
 export const pwaSelectors = {
