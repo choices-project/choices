@@ -6,7 +6,7 @@ import ComprehensiveReimport from '@/features/admin/components/ComprehensiveReim
 
 import { useAppActions } from '@/lib/stores/appStore';
 
-import { AdminLayout } from '../layout/AdminLayout';
+// CRITICAL FIX: AdminLayout is provided by parent layout.tsx - don't import or use it here
 
 export default function ReimportPage() {
   const { setCurrentRoute, setSidebarActiveSection, setBreadcrumbs } = useAppActions();
@@ -25,11 +25,10 @@ export default function ReimportPage() {
     };
   }, [setBreadcrumbs, setCurrentRoute, setSidebarActiveSection]);
 
+  // CRITICAL FIX: Remove AdminLayout wrapper - parent layout.tsx already provides it
   return (
-    <AdminLayout>
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        <ComprehensiveReimport />
-      </div>
-    </AdminLayout>
+    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      <ComprehensiveReimport />
+    </div>
   );
 }

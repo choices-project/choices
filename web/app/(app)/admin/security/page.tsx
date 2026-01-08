@@ -11,7 +11,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 
 import { useAppActions } from '@/lib/stores/appStore';
 
-import { AdminLayout } from '../layout/AdminLayout';
+// CRITICAL FIX: AdminLayout is provided by parent layout.tsx - don't import or use it here
 
 /**
  * Admin Security Dashboard
@@ -119,46 +119,42 @@ export default function AdminSecurityPage() {
     return 'default';
   };
 
+  // CRITICAL FIX: Remove AdminLayout wrapper - parent layout.tsx already provides it
   if (loading && !data) {
     return (
-      <AdminLayout>
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-          <div className="flex items-center justify-center h-64">
-            <RefreshCw className="h-8 w-8 animate-spin" />
-            <span className="ml-2">Loading security data...</span>
-          </div>
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <div className="flex items-center justify-center h-64">
+          <RefreshCw className="h-8 w-8 animate-spin" />
+          <span className="ml-2">Loading security data...</span>
         </div>
-      </AdminLayout>
+      </div>
     );
   }
 
   if (error) {
     return (
-      <AdminLayout>
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-          <Alert variant="destructive">
-            <AlertTriangle className="h-4 w-4" />
-            <AlertDescription>
-              Failed to load security data: {error}
-              <Button 
-                variant="outline" 
-                size="sm" 
-                className="ml-2"
-                onClick={() => void fetchData()}
-              >
-                Retry
-              </Button>
-            </AlertDescription>
-          </Alert>
-        </div>
-      </AdminLayout>
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <Alert variant="destructive">
+          <AlertTriangle className="h-4 w-4" />
+          <AlertDescription>
+            Failed to load security data: {error}
+            <Button 
+              variant="outline" 
+              size="sm" 
+              className="ml-2"
+              onClick={() => void fetchData()}
+            >
+              Retry
+            </Button>
+          </AlertDescription>
+        </Alert>
+      </div>
     );
   }
 
   if (!data) return null;
 
   return (
-    <AdminLayout>
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-6">
       <div className="flex items-center justify-between">
         <div>
@@ -372,6 +368,5 @@ export default function AdminSecurityPage() {
         </CardContent>
       </Card>
     </div>
-    </AdminLayout>
   );
 }

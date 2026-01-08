@@ -6,8 +6,6 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 
 import { useAppActions } from '@/lib/stores/appStore';
 
-import { AdminLayout } from '../layout/AdminLayout';
-
 export default function AdminFeedbackPage() {
   const { setCurrentRoute, setSidebarActiveSection, setBreadcrumbs } = useAppActions();
 
@@ -25,9 +23,10 @@ export default function AdminFeedbackPage() {
     };
   }, [setBreadcrumbs, setCurrentRoute, setSidebarActiveSection]);
 
+  // CRITICAL FIX: Remove AdminLayout wrapper - parent layout.tsx already provides it
+  // Double wrapping causes duplicate sidebar and header rendering
   return (
-    <AdminLayout>
-      <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+    <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
         <Card>
           <CardHeader>
             <CardTitle>Feedback & Insights</CardTitle>
@@ -48,7 +47,6 @@ export default function AdminFeedbackPage() {
           </CardContent>
         </Card>
       </div>
-    </AdminLayout>
   );
 }
 
