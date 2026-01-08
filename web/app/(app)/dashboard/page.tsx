@@ -108,14 +108,7 @@ export default function DashboardPage() {
   // This prevents hydration mismatches by ensuring server and client render the same (just the loading fallback)
   // H32: Removed client-side code from Server Component - Server Components must be pure and cannot access window/document
   // This was causing hydration mismatch because server and client rendered different code paths
-  
-  // H37: Add instrumentation to track when DashboardPage renders (Server Component)
-  // This will help us understand if the page is rendering during SSR
-  if (typeof window === 'undefined') {
-    // Server-side render - this is expected for Server Components
-    // Log via console (will appear in server logs, not browser console)
-    console.log('[DEBUG DashboardPage] Server-side render');
-  }
+  // H37: Loading fallback structure restored to match DashboardContent exactly (div > nav > div > nav)
   
   return <DashboardContent />;
 }
