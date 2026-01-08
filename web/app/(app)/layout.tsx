@@ -277,18 +277,23 @@ export default function AppLayout({
         console.log('[DEBUG]', JSON.stringify(logData));
 
         // #region agent log - Snapshot DOM at hydration error (structural mismatch diagnosis)
-        // Hypothesis H16/H17/H18: a specific node mismatch (missing/extra wrapper) causes React to abort hydration.
-        // H17: AppShell header wrapper structure mismatch
-        // H18: BAILOUT_TO_CLIENT_SIDE_RENDERING template causing mismatch
+        // Hypothesis H27: BAILOUT_TO_CLIENT_SIDE_RENDERING template causing mismatch
+        // H27: Bailout template from dynamically imported components (DashboardContent, DashboardNavigation, etc.)
         try {
           const bodyHtml = typeof document !== 'undefined' ? (document.body?.innerHTML ?? '') : '';
           const appShell = document.querySelector('[data-testid="app-shell"]');
-          const header = appShell?.querySelector('header');
-          const navigation = header?.firstElementChild;
-          const bailoutTemplate = header?.querySelector('template[data-dgst="BAILOUT_TO_CLIENT_SIDE_RENDERING"]');
+          const appShellFirstChild = appShell?.firstElementChild;
+          // Check for bailout template anywhere in AppShell (not just header - we removed header wrapper)
+          const bailoutTemplateInAppShell = appShell?.querySelector('template[data-dgst="BAILOUT_TO_CLIENT_SIDE_RENDERING"]');
+          // Check for bailout template in GlobalNavigation
+          const globalNav = document.querySelector('[data-testid="global-navigation"]');
+          const bailoutTemplateInGlobalNav = globalNav?.querySelector('template[data-dgst="BAILOUT_TO_CLIENT_SIDE_RENDERING"]');
+          // Check for bailout template in DashboardContent
+          const dashboardContent = document.querySelector('[data-testid="dashboard-loading-skeleton"]')?.parentElement;
+          const bailoutTemplateInDashboardContent = dashboardContent?.querySelector('template[data-dgst="BAILOUT_TO_CLIENT_SIDE_RENDERING"]');
           const logDomAtHydrationError = {
             location: 'AppLayout.tsx:hydrationErrorDom',
-            message: 'DOM snapshot at hydration error',
+            message: 'DOM snapshot at hydration error (H27: improved bailout template detection)',
             data: {
               pathname: window.location.pathname,
               timestamp: Date.now(),
@@ -296,13 +301,14 @@ export default function AppLayout({
               bodyHtmlPrefix: bodyHtml.slice(0, 800),
               bodyHtmlLength: bodyHtml.length,
               hasAppShell: Boolean(appShell),
-              hasHeader: Boolean(header),
-              headerChildrenCount: header?.children.length ?? 0,
-              hasNavigation: Boolean(navigation),
-              navigationDataTestId: navigation?.getAttribute('data-testid'),
-              navigationTagName: navigation?.tagName,
-              hasBailoutTemplate: Boolean(bailoutTemplate),
-              bailoutTemplateParent: bailoutTemplate?.parentElement?.tagName,
+              appShellFirstChildTag: appShellFirstChild?.tagName,
+              hasBailoutTemplateInAppShell: Boolean(bailoutTemplateInAppShell),
+              bailoutTemplateInAppShellParent: bailoutTemplateInAppShell?.parentElement?.tagName,
+              hasBailoutTemplateInGlobalNav: Boolean(bailoutTemplateInGlobalNav),
+              bailoutTemplateInGlobalNavParent: bailoutTemplateInGlobalNav?.parentElement?.tagName,
+              hasBailoutTemplateInDashboardContent: Boolean(bailoutTemplateInDashboardContent),
+              bailoutTemplateInDashboardContentParent: bailoutTemplateInDashboardContent?.parentElement?.tagName,
+              hasGlobalNav: Boolean(globalNav),
               hasGlobalNavLoading: Boolean(document.querySelector('[data-testid="global-nav-loading"]')),
               hasAnyNav: Boolean(document.querySelector('nav')),
               hasDashboardLoadingSkeleton: Boolean(document.querySelector('[data-testid="dashboard-loading-skeleton"]')),
