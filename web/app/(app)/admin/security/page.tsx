@@ -15,9 +15,9 @@ import { useAppActions } from '@/lib/stores/appStore';
 
 /**
  * Admin Security Dashboard
- * 
+ *
  * Real-time monitoring of rate limiting and security events
- * 
+ *
  * Created: 2025-10-29
  * Status: In Progress
  */
@@ -138,9 +138,9 @@ export default function AdminSecurityPage() {
           <AlertTriangle className="h-4 w-4" />
           <AlertDescription>
             Failed to load security data: {error}
-            <Button 
-              variant="outline" 
-              size="sm" 
+            <Button
+              variant="outline"
+              size="sm"
               className="ml-2"
               onClick={() => void fetchData()}
             >
@@ -167,9 +167,9 @@ export default function AdminSecurityPage() {
           </p>
         </div>
         <div className="flex items-center gap-2">
-          <Button 
-            variant="outline" 
-            size="sm" 
+          <Button
+            variant="outline"
+            size="sm"
             onClick={() => void fetchData()}
             disabled={loading}
           >
@@ -230,7 +230,7 @@ export default function AdminSecurityPage() {
             <p className="text-xs text-muted-foreground">All time</p>
           </CardContent>
         </Card>
-        
+
         <Card>
           <CardHeader className="pb-2">
             <CardTitle className="text-sm font-medium">Last Hour</CardTitle>
@@ -240,7 +240,7 @@ export default function AdminSecurityPage() {
             <p className="text-xs text-muted-foreground">Recent activity</p>
           </CardContent>
         </Card>
-        
+
         <Card>
           <CardHeader className="pb-2">
             <CardTitle className="text-sm font-medium">Last 24 Hours</CardTitle>
@@ -250,7 +250,7 @@ export default function AdminSecurityPage() {
             <p className="text-xs text-muted-foreground">Daily activity</p>
           </CardContent>
         </Card>
-        
+
         <Card>
           <CardHeader className="pb-2">
             <CardTitle className="text-sm font-medium">Top Violating IPs</CardTitle>
@@ -315,7 +315,7 @@ export default function AdminSecurityPage() {
                       <Badge variant="outline">{violation.endpoint}</Badge>
                     </div>
                     <div className="text-xs text-muted-foreground">
-                      {formatTimestamp(violation.timestamp)} • 
+                      {formatTimestamp(violation.timestamp)} •
                       {violation.count}/{violation.maxRequests} requests
                     </div>
                     {violation.userAgent && (

@@ -4,7 +4,8 @@ import React, { useEffect } from 'react';
 
 import { useAppActions } from '@/lib/stores/appStore';
 
-import { AdminLayout } from '../layout/AdminLayout';
+// CRITICAL FIX: AdminLayout is provided by parent layout.tsx - don't import or use it here
+// AdminMonitoringShell is just a wrapper for setting breadcrumbs/route state
 
 type AdminMonitoringShellProps = {
   children: React.ReactNode;
@@ -27,7 +28,9 @@ export function AdminMonitoringShell({ children }: AdminMonitoringShellProps) {
     };
   }, [setBreadcrumbs, setCurrentRoute, setSidebarActiveSection]);
 
-  return <AdminLayout>{children}</AdminLayout>;
+  // CRITICAL FIX: Remove AdminLayout wrapper - parent layout.tsx already provides it
+  // This shell component is just for setting route state, not layout structure
+  return <>{children}</>;
 }
 
 
