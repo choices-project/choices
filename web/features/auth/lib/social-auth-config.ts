@@ -105,7 +105,11 @@ export const getSocialLoginOption = (provider: string): SocialLoginOption | unde
 
 export const getAvailableProviders = (): SocialLoginOption[] => {
   // Filter based on environment configuration
-  const enabledProviders = process.env.NEXT_PUBLIC_ENABLED_OAUTH_PROVIDERS?.split(',') ?? ['google', 'github']
+  // Default to Google if no env var is set (for production builds where env var wasn't set at build time)
+  const envValue = process.env.NEXT_PUBLIC_ENABLED_OAUTH_PROVIDERS
+  const enabledProviders = envValue && envValue.trim() 
+    ? envValue.split(',').map(p => p.trim()).filter(Boolean)
+    : ['google'] // Default to Google OAuth if env var not set
   
   return socialLoginOptions.filter(option => 
     enabledProviders.includes(option.provider)
