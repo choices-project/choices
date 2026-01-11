@@ -55,7 +55,7 @@ export async function GET(request: Request) {
   if (error) {
     devLog('OAuth error:', { error, errorDescription })
     return NextResponse.redirect(
-      `${origin}/login?error=${encodeURIComponent(errorDescription ?? error)}`
+      `${origin}/auth?error=${encodeURIComponent(errorDescription ?? error)}`
     )
   }
 
@@ -69,7 +69,7 @@ export async function GET(request: Request) {
       if (exchangeError) {
         devLog('Session exchange error:', { error: exchangeError })
         return NextResponse.redirect(
-          `${origin}/login?error=${encodeURIComponent(exchangeError.message)}`
+          `${origin}/auth?error=${encodeURIComponent(exchangeError.message)}`
         )
       }
 
@@ -84,7 +84,7 @@ export async function GET(request: Request) {
       } else {
         devLog('No session returned from code exchange', {})
         return NextResponse.redirect(
-          `${origin}/login?error=${encodeURIComponent('Authentication failed - no session created')}`
+          `${origin}/auth?error=${encodeURIComponent('Authentication failed - no session created')}`
         )
       }
     } catch (error) {
@@ -98,6 +98,6 @@ export async function GET(request: Request) {
   // No code provided
   devLog('No authentication code provided')
   return NextResponse.redirect(
-    `${origin}/login?error=${encodeURIComponent('No authentication code provided')}`
+    `${origin}/auth?error=${encodeURIComponent('No authentication code provided')}`
   )
 }
