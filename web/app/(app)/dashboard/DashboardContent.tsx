@@ -897,7 +897,7 @@ export default function DashboardContent() {
               <div className="flex items-center gap-3">
                 <Shield className="h-5 w-5 text-blue-600 dark:text-blue-400" />
                 <div>
-                  <h3 className="font-semibold text-blue-900 dark:text-blue-100">Admin Access Available</h3>
+                  <h2 className="font-semibold text-blue-900 dark:text-blue-100">Admin Access Available</h2>
                   <p className="text-sm text-blue-700 dark:text-blue-300">
                     You have admin privileges. Access the admin dashboard for system management.
                   </p>

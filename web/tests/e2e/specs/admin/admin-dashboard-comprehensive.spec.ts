@@ -22,6 +22,7 @@ import {
   setupExternalAPIMocks,
   waitForPageReady,
   loginAsAdmin,
+  ensureLoggedOut,
 } from '../../helpers/e2e-setup';
 
 const shouldSkipAdminSuite =
@@ -65,25 +66,17 @@ test.describe('Admin Dashboard - Comprehensive Tests', () => {
   });
 
   test.describe('Authentication & Authorization', () => {
-    test('should require admin authentication to access dashboard', async ({ page, context }) => {
+    test('should require admin authentication to access dashboard', async ({ browser }) => {
       // Skip if E2E harness mode is enabled (bypasses auth)
       test.skip(
         process.env.NEXT_PUBLIC_ENABLE_E2E_HARNESS === '1',
         'Skipping auth test when E2E harness is enabled'
       );
 
-      // Clear authentication
-      await context.clearCookies();
+      const context = await browser.newContext();
+      const page = await context.newPage();
+      await ensureLoggedOut(page);
       await page.goto('/admin', { waitUntil: 'domcontentloaded' });
-      await page.evaluate(() => {
-        try {
-          localStorage.clear();
-          sessionStorage.clear();
-        } catch {
-          // ignore storage clearing errors
-        }
-      });
-      await page.reload({ waitUntil: 'domcontentloaded' });
 
       // Should redirect or show access denied (depending on E2E harness mode)
       const url = page.url();
@@ -91,6 +84,8 @@ test.describe('Admin Dashboard - Comprehensive Tests', () => {
       const hasRedirected = !url.includes('/admin');
 
       expect(hasAccessDenied || hasRedirected).toBeTruthy();
+
+      await context.close();
     });
 
     test('should maintain session across page reloads', async ({ page }) => {

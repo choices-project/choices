@@ -58,7 +58,7 @@ test.describe('Account Delete Page Tests', () => {
     });
 
     try {
-      await page.goto('/account/delete');
+      await page.goto('/account/delete', { waitUntil: 'domcontentloaded', timeout: 30_000 });
       await waitForPageReady(page);
       await page.waitForTimeout(2000);
 
@@ -111,7 +111,7 @@ test.describe('Account Delete Page Tests', () => {
     });
 
     try {
-      await page.goto('/account/delete');
+      await page.goto('/account/delete', { waitUntil: 'domcontentloaded', timeout: 30_000 });
       await waitForPageReady(page);
       await page.waitForTimeout(2000);
 
@@ -192,7 +192,7 @@ test.describe('Account Delete Page Tests', () => {
     });
 
     try {
-      await page.goto('/account/delete');
+      await page.goto('/account/delete', { waitUntil: 'domcontentloaded', timeout: 30_000 });
       await waitForPageReady(page);
       await page.waitForTimeout(2000);
 
