@@ -443,9 +443,9 @@ function StandardPersonalDashboard({ userId: _fallbackUserId }: PersonalDashboar
             </div>
       </div>
               <div className="flex-1 min-w-0">
-                <h3 className="text-sm font-semibold text-red-900 dark:text-red-200 mb-1">
+                <h2 className="text-sm font-semibold text-red-900 dark:text-red-200 mb-1">
                   Unable to load data
-                </h3>
+                </h2>
                 <p className="text-sm text-red-700 dark:text-red-300 mb-4">
                   {typeof pollsError === 'string'
                     ? pollsError

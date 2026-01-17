@@ -292,9 +292,10 @@ export default function FeedCore({
                 />
               </svg>
             </div>
-            <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-2">
+            <h1 className="sr-only">{t('feeds.core.header.title')}</h1>
+            <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-2">
               {t('feeds.core.error.title')}
-            </h3>
+            </h2>
             <p className="text-gray-600 dark:text-gray-400 mb-6">{error}</p>
             <div className="space-y-3">
               <Button
@@ -359,6 +360,8 @@ export default function FeedCore({
           </Button>
         </div>
       </div>
+
+      <h2 className="sr-only">Feed sections</h2>
 
       {/* Filters */}
       <Card className="mb-6">
@@ -457,18 +460,33 @@ export default function FeedCore({
       {/* Tabs */}
       <Tabs value={activeTab} onValueChange={setActiveTab} className="mb-6">
         <TabsList className="grid w-full grid-cols-3">
-          <TabsTrigger value="feed" data-testid="feed-tab">
+          <TabsTrigger
+            id="feed-tab"
+            value="feed"
+            data-testid="feed-tab"
+            aria-controls="feed-panel"
+          >
             {t('feeds.core.tabs.feed')}
           </TabsTrigger>
-          <TabsTrigger value="polls" data-testid="polls-tab">
+          <TabsTrigger
+            id="polls-tab"
+            value="polls"
+            data-testid="polls-tab"
+            aria-controls="polls-panel"
+          >
             {t('feeds.core.tabs.polls')}
           </TabsTrigger>
-          <TabsTrigger value="analytics" data-testid="analytics-tab">
+          <TabsTrigger
+            id="analytics-tab"
+            value="analytics"
+            data-testid="analytics-tab"
+            aria-controls="analytics-panel"
+          >
             {t('feeds.core.tabs.analytics')}
           </TabsTrigger>
         </TabsList>
 
-        <TabsContent value="feed" id="feed-panel" role="tabpanel">
+        <TabsContent value="feed" id="feed-panel" role="tabpanel" aria-labelledby="feed-tab">
           {/* Feed Items */}
           {isLoading && feeds.length === 0 ? (
             <div
@@ -646,7 +664,7 @@ export default function FeedCore({
           )}
         </TabsContent>
 
-        <TabsContent value="polls" id="polls-panel" role="tabpanel">
+        <TabsContent value="polls" id="polls-panel" role="tabpanel" aria-labelledby="polls-tab">
           <div className="text-center py-16 px-4" role="status" aria-live="polite">
             <div className="max-w-md mx-auto">
               <div className="mb-6">
@@ -675,7 +693,7 @@ export default function FeedCore({
           </div>
         </TabsContent>
 
-        <TabsContent value="analytics" id="analytics-panel" role="tabpanel">
+        <TabsContent value="analytics" id="analytics-panel" role="tabpanel" aria-labelledby="analytics-tab">
           <div className="text-center py-16 px-4" role="status" aria-live="polite">
             <div className="max-w-md mx-auto">
               <div className="mb-6">

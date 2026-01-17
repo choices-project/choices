@@ -31,7 +31,7 @@ const shouldSkipAdminSuite =
 test.describe('Admin Dashboard - Comprehensive Tests', () => {
   test.skip(shouldSkipAdminSuite, 'Admin credentials not configured for production tests.');
 
-  test.beforeEach(async ({ page }) => {
+  test.beforeEach(async ({ page }, testInfo) => {
     test.setTimeout(120_000); // Increase timeout for beforeEach
 
     // Set up API mocks
@@ -49,7 +49,7 @@ test.describe('Admin Dashboard - Comprehensive Tests', () => {
     const isHarnessMode = process.env.NEXT_PUBLIC_ENABLE_E2E_HARNESS === '1';
     const hasCredentials = process.env.E2E_ADMIN_EMAIL && process.env.E2E_ADMIN_PASSWORD;
 
-    if (!isHarnessMode && hasCredentials) {
+    if (!isHarnessMode && hasCredentials && !testInfo.title.includes('should require admin authentication')) {
       try {
         await loginAsAdmin(page);
       } catch (err) {
@@ -75,6 +75,15 @@ test.describe('Admin Dashboard - Comprehensive Tests', () => {
       // Clear authentication
       await context.clearCookies();
       await page.goto('/admin', { waitUntil: 'domcontentloaded' });
+      await page.evaluate(() => {
+        try {
+          localStorage.clear();
+          sessionStorage.clear();
+        } catch {
+          // ignore storage clearing errors
+        }
+      });
+      await page.reload({ waitUntil: 'domcontentloaded' });
 
       // Should redirect or show access denied (depending on E2E harness mode)
       const url = page.url();
@@ -314,7 +323,7 @@ test.describe('Admin Dashboard - Comprehensive Tests', () => {
       await page.waitForTimeout(300);
 
       // Menu should be visible
-      const menu = page.locator('ul[aria-label="Account options"]');
+      const menu = page.locator('[role="menu"][aria-label="Account options"]');
       await expect(menu).toBeVisible({ timeout: 5_000 });
 
       // Close menu by clicking the button again (most reliable method)

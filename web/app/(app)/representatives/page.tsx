@@ -76,6 +76,7 @@ export default function RepresentativesPage() {
         <h1 className="text-3xl font-bold text-gray-900 mb-2">
           Find Your Representatives
         </h1>
+        <h2 className="sr-only">Representative search and results</h2>
         <p className="text-gray-600">
           Search and connect with your federal, state, and local representatives.
         </p>
