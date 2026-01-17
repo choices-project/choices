@@ -328,9 +328,18 @@ test.describe('Comprehensive Accessibility Tests', () => {
     });
 
     try {
-      await page.goto('/dashboard');
+      await page.goto('/dashboard', { waitUntil: 'domcontentloaded', timeout: 30_000 });
       await waitForPageReady(page);
       await page.waitForTimeout(2000);
+
+      const authForm = page.locator('[data-testid="login-form"]');
+      const authHeading = page.locator('h1, h2').filter({ hasText: /sign in|log in|login/i });
+      const needsAuth =
+        page.url().includes('/auth') ||
+        page.url().includes('/login') ||
+        (await authForm.count()) > 0 ||
+        (await authHeading.count()) > 0;
+      test.skip(needsAuth, 'Dashboard requires authentication in production.');
 
       // Focus first focusable element
       await page.keyboard.press('Tab');
@@ -375,9 +384,18 @@ test.describe('Comprehensive Accessibility Tests', () => {
     });
 
     try {
-      await page.goto('/polls/create');
+      await page.goto('/polls/create', { waitUntil: 'domcontentloaded', timeout: 30_000 });
       await waitForPageReady(page);
       await page.waitForTimeout(2000);
+
+      const authForm = page.locator('[data-testid="login-form"]');
+      const authHeading = page.locator('h1, h2').filter({ hasText: /sign in|log in|login/i });
+      const needsAuth =
+        page.url().includes('/auth') ||
+        page.url().includes('/login') ||
+        (await authForm.count()) > 0 ||
+        (await authHeading.count()) > 0;
+      test.skip(needsAuth, 'Poll creation requires authentication in production.');
 
       // Find all inputs
       const inputs = page.locator('input:not([type="hidden"]), textarea, select');
@@ -434,9 +452,18 @@ test.describe('Comprehensive Accessibility Tests', () => {
     });
 
     try {
-      await page.goto('/polls/create');
+      await page.goto('/polls/create', { waitUntil: 'domcontentloaded', timeout: 30_000 });
       await waitForPageReady(page);
       await page.waitForTimeout(2000);
+
+      const authForm = page.locator('[data-testid="login-form"]');
+      const authHeading = page.locator('h1, h2').filter({ hasText: /sign in|log in|login/i });
+      const needsAuth =
+        page.url().includes('/auth') ||
+        page.url().includes('/login') ||
+        (await authForm.count()) > 0 ||
+        (await authHeading.count()) > 0;
+      test.skip(needsAuth, 'Poll creation requires authentication in production.');
 
       // Find a required input
       const requiredInput = page.locator('input[required], textarea[required]').first();

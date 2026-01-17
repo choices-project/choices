@@ -65,8 +65,9 @@ export async function getAdminUser(): Promise<{ id: string; email?: string } | n
     };
   }
 
-  const supabase = await getSupabaseServerClient();
-  const { data: { user }, error: authError } = await supabase.auth.getUser();
+  try {
+    const supabase = await getSupabaseServerClient();
+    const { data: { user }, error: authError } = await supabase.auth.getUser();
   
   // Debug logging for CI troubleshooting
   if (process.env.CI === 'true') {
@@ -77,25 +78,29 @@ export async function getAdminUser(): Promise<{ id: string; email?: string } | n
     });
   }
   
-  if (!user) return null;
+    if (!user) return null;
 
-  const { data: profile, error } = await supabase
-    .from('user_profiles')
-    .select('is_admin')
-    .eq('user_id', user.id)
-    .single();
+    const { data: profile, error } = await supabase
+      .from('user_profiles')
+      .select('is_admin')
+      .eq('user_id', user.id)
+      .single();
   
   // Debug logging for CI troubleshooting
-  if (process.env.CI === 'true') {
-    logger.info('[getAdminUser] Profile check:', { 
-      hasProfile: !!profile, 
-      isAdmin: profile?.is_admin,
-      profileError: error?.message 
-    });
+    if (process.env.CI === 'true') {
+      logger.info('[getAdminUser] Profile check:', { 
+        hasProfile: !!profile, 
+        isAdmin: profile?.is_admin,
+        profileError: error?.message 
+      });
+    }
+    
+    if (error || !profile) return null;
+    return profile.is_admin ? user : null;
+  } catch (error) {
+    logger.error('[getAdminUser] Failed to resolve admin user', error);
+    return null;
   }
-  
-  if (error || !profile) return null;
-  return profile.is_admin ? user : null;
 }
 
 /** Throwing variant: great for imperative flows & tests that expect throws */
