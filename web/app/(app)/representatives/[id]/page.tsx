@@ -103,8 +103,9 @@ function RepresentativeDetailPageContent() {
 
   React.useEffect(() => {
     // #region agent log
-    const logData={location:'representatives/[id]/page.tsx:105',message:'isClient set to true',data:{timestamp:Date.now(),hasDocument:typeof document!=='undefined'},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'C'};
-    console.log('[DEBUG]',JSON.stringify(logData));
+    if (process.env.DEBUG_DASHBOARD === '1') {
+      logger.debug('Representative page: isClient set to true', { hasDocument: typeof document !== 'undefined' });
+    }
     // #endregion
     setIsClient(true);
   }, []);

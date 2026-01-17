@@ -204,3 +204,9 @@ For detailed structure, see [`CODEBASE_NAVIGATION.md`](CODEBASE_NAVIGATION.md).
 
 Welcome to the Choices platform! 🎉
 
+## Ownership & Update Cadence
+
+- **Owner:** Core maintainer
+- **Update cadence:** Review on major feature changes and at least monthly
+- **Last verified:** TBD
+

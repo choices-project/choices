@@ -623,7 +623,7 @@ test.describe('Critical Fixes Validation', () => {
               feedContent: document.querySelector('[data-testid="feed-loading-skeleton"]') ? 'loading' : document.querySelector('[data-testid="unified-feed"]') ? 'rendered' : 'none',
             };
           } catch (e) {
-            return { error: e?.message || String(e) };
+            return { error: (e instanceof Error ? e.message : String(e)) || String(e) };
           }
         }).then((errorInfo) => {
           console.log('[HYDRATION ERROR STATE]', JSON.stringify(errorInfo, null, 2));

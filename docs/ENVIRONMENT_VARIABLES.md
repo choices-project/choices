@@ -293,4 +293,9 @@ WEB_PUSH_VAPID_SUBJECT=support@choices.dev
 # Note: WEB_PUSH_VAPID_SUBJECT can be email (support@choices.dev) or mailto: URL (mailto:support@choices.dev)
 ```
 
+## Ownership & Update Cadence
+
+- **Owner:** Core maintainer
+- **Update cadence:** Review on major feature changes and at least monthly
+- **Last verified:** TBD
 

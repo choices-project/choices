@@ -45,8 +45,9 @@ jest.mock('@/lib/rate-limiting/api-rate-limiter', () => ({
 const mockSetup = getMS();
 const { when, client: mockSupabaseClient } = mockSetup;
 
+// Mock getSupabaseServerClient to return the mock client
 jest.mock('@/utils/supabase/server', () => ({
-  getSupabaseServerClient: jest.fn(() => Promise.resolve(mockSupabaseClient))
+  getSupabaseServerClient: jest.fn(async () => mockSupabaseClient)
 }));
 
 describe('VoteValidator', () => {
@@ -61,6 +62,16 @@ describe('VoteValidator', () => {
     mockSetup.resetAllMocks();
     validator = new VoteValidator();
     
+    // Set up default mocks for database queries that might be called
+    // Mock checkExistingVote to return false (no existing vote) by default
+    when().table('votes').op('select').returnsList([]);
+    // Mock getUserTrustTier to return T0 by default
+    when().table('user_profiles').op('select').returnsSingle({ trust_tier: 'T0' });
+    
+    // Use future dates to ensure polls are active during test runs
+    const now = new Date();
+    const futureDate = new Date(now.getTime() + 365 * 24 * 60 * 60 * 1000); // 1 year from now
+    
     mockPoll = {
       id: 'test-poll-123',
       title: 'Test Poll',
@@ -72,11 +83,11 @@ describe('VoteValidator', () => {
         { id: 'option-3', text: 'Option 3' }
       ],
       status: 'active',
-      startTime: new Date('2025-01-01T00:00:00Z'),
-      endTime: new Date('2025-12-31T23:59:59Z'),
+      startTime: new Date(now.getTime() - 24 * 60 * 60 * 1000), // 1 day ago
+      endTime: futureDate,
       createdBy: 'admin-user',
-      createdAt: new Date('2025-01-01T00:00:00Z'),
-      updatedAt: new Date('2025-01-01T00:00:00Z'),
+      createdAt: new Date(now.getTime() - 2 * 24 * 60 * 60 * 1000), // 2 days ago
+      updatedAt: new Date(now.getTime() - 24 * 60 * 60 * 1000), // 1 day ago
       votingConfig: {
         allowMultipleVotes: false,
         maxChoices: 1,
@@ -174,8 +185,9 @@ describe('VoteValidator', () => {
     });
 
     it('should reject vote for expired poll', async () => {
+      const now = new Date();
       const expiredPoll = Object.assign({}, mockPoll, { 
-        endTime: new Date('2024-12-31T23:59:59Z') // Past date
+        endTime: new Date(now.getTime() - 1000) // Ended 1 second ago
       });
       const validation = await validator.validateVote(mockVoteData, expiredPoll, 'user-1');
       
@@ -191,13 +203,24 @@ describe('VoteValidator', () => {
     });
 
     it('should reject vote for locked poll', async () => {
+      const now = new Date();
       const lockedPoll = Object.assign({}, mockPoll, { 
-        lockedAt: new Date('2025-01-01T12:00:00Z') 
+        lockedAt: new Date(now.getTime() - 1000) // Locked 1 second ago
       });
       const validation = await validator.validateVote(mockVoteData, lockedPoll, 'user-1');
       
       expect(validation.isValid).toBe(false);
       expect(validation.error).toBe('Poll is locked');
+    });
+
+    it('should accept vote for poll locked in the future', async () => {
+      const now = new Date();
+      const futureLockedPoll = Object.assign({}, mockPoll, { 
+        lockedAt: new Date(now.getTime() + 24 * 60 * 60 * 1000) // Locked 1 day in future
+      });
+      const validation = await validator.validateVote(mockVoteData, futureLockedPoll, 'user-1');
+      
+      expect(validation.isValid).toBe(true);
     });
   });
 
@@ -510,6 +533,9 @@ describe('VoteValidator', () => {
     });
 
     it('should check trust tier requirements', async () => {
+      // Reset mocks for this test
+      mockSetup.resetAllMocks();
+      
       const highTrustPoll = Object.assign({}, mockPoll, { 
         votingConfig: Object.assign({}, mockPoll.votingConfig, { 
           minTrustTier: 'T2',
@@ -517,10 +543,7 @@ describe('VoteValidator', () => {
         })
       });
       
-      // Mock no existing vote (user can vote)
-      when().table('votes').op('select').eq('poll_id', 'test-poll-123').eq('user_id', 'user-1').returnsList([]);
-      
-      // Mock getUserTrustTier to return T1 (insufficient)
+      // Mock getUserTrustTier to return T1 (insufficient) - use maybeSingle since validator uses maybeSingle()
       when().table('user_profiles').op('select').select('trust_tier').eq('user_id', 'user-1').returnsSingle({ trust_tier: 'T1' });
       
       const validation = await validator.validateVote(mockVoteData, highTrustPoll, 'user-1');
@@ -530,14 +553,17 @@ describe('VoteValidator', () => {
     });
 
     it('should accept vote with sufficient trust tier', async () => {
+      // Reset mocks for this specific test to avoid conflicts
+      mockSetup.resetAllMocks();
+      
       const highTrustPoll = Object.assign({}, mockPoll, { 
         votingConfig: Object.assign({}, mockPoll.votingConfig, { 
           minTrustTier: 'T1',
-          allowMultipleVotes: true // Allow multiple votes to avoid existing vote check
+          allowMultipleVotes: true // Allow multiple votes to skip existing vote check
         })
       });
       
-      // Mock getUserTrustTier to return T2 (sufficient)
+      // Mock getUserTrustTier to return T2 (sufficient) - validator uses maybeSingle() which returns { data, error }
       when().table('user_profiles').op('select').select('trust_tier').eq('user_id', 'user-1').returnsSingle({ trust_tier: 'T2' });
       
       const validation = await validator.validateVote(mockVoteData, highTrustPoll, 'user-1');

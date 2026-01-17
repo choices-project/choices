@@ -19,6 +19,7 @@ import {
 } from 'lucide-react';
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 
+import { useSystemMetrics } from '@/features/admin/lib/hooks';
 import { TrendingHashtagDisplay } from '@/features/hashtags/components/HashtagDisplay';
 
 import { Alert, AlertDescription } from '@/components/ui/alert';
@@ -40,7 +41,6 @@ import {
   useAdminLoading,
   useAdminStats,
   useRecentActivity,
-  useSystemMetrics,
   useHashtagActions,
   useHashtagError,
   useHashtagLoading,
@@ -69,7 +69,7 @@ export default function ComprehensiveAdminDashboard({ className = '' }: Comprehe
   const adminStats = useAdminStats();
   const notifications = useNotificationAdminNotifications();
   const recentActivity = useRecentActivity();
-  const systemMetrics = useSystemMetrics();
+  const { data: systemMetrics, isLoading: systemMetricsLoading } = useSystemMetrics();
   const loading = useAdminLoading();
   const error = useAdminError();
 
@@ -109,6 +109,9 @@ export default function ComprehensiveAdminDashboard({ className = '' }: Comprehe
     is_active: true,
   });
   const [isRefreshing, setIsRefreshing] = useState(false);
+  
+  // Combined loading state for metrics cards (initial load or refresh)
+  const isMetricsLoading = loading || systemMetricsLoading || isRefreshing;
 
   useEffect(() => {
     void refreshDataRef.current();
@@ -185,9 +188,9 @@ export default function ComprehensiveAdminDashboard({ className = '' }: Comprehe
       totalVotes,
       systemHealth: {
         status: systemStatus,
-        uptime,
-        responseTime,
-        errorRate,
+        uptime: typeof uptime === 'number' ? uptime : 0,
+        responseTime: typeof responseTime === 'number' ? responseTime : 0,
+        errorRate: typeof errorRate === 'number' ? errorRate : 0,
       },
       engagement: {
         dailyActiveUsers: recentActivity.length,
@@ -235,10 +238,10 @@ export default function ComprehensiveAdminDashboard({ className = '' }: Comprehe
   }, [notifications]);
 
   if (loading) {
-    return (
-      <>
-        <NotificationContainer />
-        <div className={`space-y-6 ${className}`}>
+  return (
+    <>
+      <NotificationContainer />
+      <div className={`space-y-6 ${className}`} data-testid="comprehensive-admin-dashboard">
         <Skeleton className="h-12 w-1/3" />
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
           {[...Array(3)].map((_, index) => (
@@ -266,11 +269,11 @@ export default function ComprehensiveAdminDashboard({ className = '' }: Comprehe
   return (
     <>
       <NotificationContainer />
-      <div className={`space-y-6 ${className}`}>
+      <div className={`space-y-6 ${className}`} data-testid="comprehensive-admin-dashboard">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-bold">Comprehensive Admin Dashboard</h1>
-          <p className="text-sm text-gray-600 mt-1">
+          <h1 className="text-3xl font-bold text-gray-900 dark:text-gray-100">Comprehensive Admin Dashboard</h1>
+          <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">
             Unified oversight for analytics, messaging, system monitoring, and admin workflows
           </p>
         </div>
@@ -293,66 +296,89 @@ export default function ComprehensiveAdminDashboard({ className = '' }: Comprehe
 
         <TabsContent value="overview" className="space-y-6">
           <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <Users className="h-5 w-5" />
-                  Total Users
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="text-3xl font-bold">{analytics.totalUsers.toLocaleString()}</div>
-                <p className="text-sm text-gray-600 mt-1">Active platform accounts</p>
-              </CardContent>
-            </Card>
+            {isMetricsLoading ? (
+              // Show skeleton loaders while refreshing
+              <>
+                {[1, 2, 3, 4].map((i) => (
+                  <Card key={i}>
+                    <CardHeader>
+                      <CardTitle className="flex items-center gap-2">
+                        <Skeleton className="h-5 w-5" />
+                        <Skeleton className="h-5 w-24" />
+                      </CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                      <Skeleton className="h-9 w-20 mb-2" />
+                      <Skeleton className="h-4 w-32" />
+                    </CardContent>
+                  </Card>
+                ))}
+              </>
+            ) : (
+              // Show actual metrics when loaded
+              <>
+                <Card>
+                  <CardHeader>
+                    <CardTitle className="flex items-center gap-2">
+                      <Users className="h-5 w-5" />
+                      Total Users
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="text-3xl font-bold">{analytics.totalUsers.toLocaleString()}</div>
+                    <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">Active platform accounts</p>
+                  </CardContent>
+                </Card>
 
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <BarChart3 className="h-5 w-5" />
-                  Poll Activity
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="text-3xl font-bold">{analytics.totalPolls}</div>
-                <p className="text-sm text-gray-600 mt-1">Polls currently live</p>
-              </CardContent>
-            </Card>
+                <Card>
+                  <CardHeader>
+                    <CardTitle className="flex items-center gap-2">
+                      <BarChart3 className="h-5 w-5" />
+                      Poll Activity
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="text-3xl font-bold">{analytics.totalPolls}</div>
+                    <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">Polls currently live</p>
+                  </CardContent>
+                </Card>
 
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <MessageSquare className="h-5 w-5" />
-                  Feedback Volume
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="text-3xl font-bold">{notifications.length}</div>
-                <p className="text-sm text-gray-600 mt-1">Admin messages and alerts</p>
-              </CardContent>
-            </Card>
+                <Card>
+                  <CardHeader>
+                    <CardTitle className="flex items-center gap-2">
+                      <MessageSquare className="h-5 w-5" />
+                      Feedback Volume
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="text-3xl font-bold">{notifications.length}</div>
+                    <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">Admin messages and alerts</p>
+                  </CardContent>
+                </Card>
 
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <Activity className="h-5 w-5" />
-                  Engagement
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-2">
-                <div className="flex items-center justify-between text-sm">
-                  <span>Daily active items</span>
-                  <span className="font-medium">{analytics.engagement.dailyActiveUsers}</span>
-                </div>
-                <Progress 
-                  value={analytics.engagement.participationRate}
-                  aria-label={`Participation rate: ${analytics.engagement.participationRate.toFixed(1)}%`}
-                />
-                <p className="text-xs text-gray-500">
-                  Participation rate {analytics.engagement.participationRate.toFixed(1)}%
-                </p>
-              </CardContent>
-            </Card>
+                <Card>
+                  <CardHeader>
+                    <CardTitle className="flex items-center gap-2">
+                      <Activity className="h-5 w-5" />
+                      Engagement
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent className="space-y-2">
+                    <div className="flex items-center justify-between text-sm">
+                      <span>Daily active items</span>
+                      <span className="font-medium">{analytics.engagement.dailyActiveUsers}</span>
+                    </div>
+                    <Progress 
+                      value={analytics.engagement.participationRate}
+                      aria-label={`Participation rate: ${analytics.engagement.participationRate.toFixed(1)}%`}
+                    />
+                    <p className="text-xs text-gray-500 dark:text-gray-400">
+                      Participation rate {analytics.engagement.participationRate.toFixed(1)}%
+                    </p>
+                  </CardContent>
+                </Card>
+              </>
+            )}
           </div>
 
           <Card>
@@ -385,7 +411,7 @@ export default function ComprehensiveAdminDashboard({ className = '' }: Comprehe
                   }
                 />
               ) : (
-                <p className="text-sm text-gray-600">No trending topics detected yet.</p>
+                <p className="text-sm text-gray-600 dark:text-gray-400">No trending topics detected yet.</p>
               )}
               <div className="flex items-center gap-2">
                 <Button variant="outline" className="flex-1" onClick={() => window.open('/feed', '_blank')}>
@@ -407,42 +433,64 @@ export default function ComprehensiveAdminDashboard({ className = '' }: Comprehe
               <CardDescription>Combined from dashboard metrics and system telemetry</CardDescription>
             </CardHeader>
             <CardContent className="grid grid-cols-1 md:grid-cols-3 gap-4">
-              <div className="space-y-2">
-                <div className="flex items-center justify-between text-sm">
-                  <span>Status</span>
-                  <Badge variant={analytics.systemHealth.status === 'healthy' ? 'default' : 'secondary'}>
-                    {analytics.systemHealth.status.toUpperCase()}
-                  </Badge>
-                </div>
-                <div className="flex items-center justify-between text-sm">
-                  <span>Uptime</span>
-                  <span className="font-medium">{analytics.systemHealth.uptime.toFixed(1)}%</span>
-                </div>
-                <Progress 
-                  value={analytics.systemHealth.uptime}
-                  aria-label={`System uptime: ${analytics.systemHealth.uptime.toFixed(1)}%`}
-                />
-              </div>
-              <div className="space-y-2">
-                <div className="flex items-center justify-between text-sm">
-                  <span>Response Time</span>
-                  <span className="font-medium">{analytics.systemHealth.responseTime.toFixed(0)}ms</span>
-                </div>
-                <Progress 
-                  value={Math.max(0, 100 - analytics.systemHealth.responseTime / 10)}
-                  aria-label={`Response time performance: ${Math.max(0, 100 - analytics.systemHealth.responseTime / 10).toFixed(1)}%`}
-                />
-              </div>
-              <div className="space-y-2">
-                <div className="flex items-center justify-between text-sm">
-                  <span>Error Rate</span>
-                  <span className="font-medium">{analytics.systemHealth.errorRate.toFixed(1)}%</span>
-                </div>
-                <Progress 
-                  value={analytics.systemHealth.errorRate}
-                  aria-label={`System error rate: ${analytics.systemHealth.errorRate.toFixed(1)}%`}
-                />
-              </div>
+              {loading || systemMetricsLoading ? (
+                <>
+                  <div className="space-y-2">
+                    <Skeleton className="h-4 w-full" />
+                    <Skeleton className="h-4 w-full" />
+                    <Skeleton className="h-2 w-full" />
+                  </div>
+                  <div className="space-y-2">
+                    <Skeleton className="h-4 w-full" />
+                    <Skeleton className="h-4 w-full" />
+                    <Skeleton className="h-2 w-full" />
+                  </div>
+                  <div className="space-y-2">
+                    <Skeleton className="h-4 w-full" />
+                    <Skeleton className="h-4 w-full" />
+                    <Skeleton className="h-2 w-full" />
+                  </div>
+                </>
+              ) : (
+                <>
+                  <div className="space-y-2">
+                    <div className="flex items-center justify-between text-sm">
+                      <span>Status</span>
+                      <Badge variant={analytics.systemHealth.status === 'healthy' ? 'default' : 'secondary'}>
+                        {analytics.systemHealth.status.toUpperCase()}
+                      </Badge>
+                    </div>
+                    <div className="flex items-center justify-between text-sm">
+                      <span>Uptime</span>
+                      <span className="font-medium">{analytics.systemHealth.uptime.toFixed(1)}%</span>
+                    </div>
+                    <Progress 
+                      value={analytics.systemHealth.uptime}
+                      aria-label={`System uptime: ${analytics.systemHealth.uptime.toFixed(1)}%`}
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <div className="flex items-center justify-between text-sm">
+                      <span>Response Time</span>
+                      <span className="font-medium">{analytics.systemHealth.responseTime.toFixed(0)}ms</span>
+                    </div>
+                    <Progress 
+                      value={Math.max(0, 100 - analytics.systemHealth.responseTime / 10)}
+                      aria-label={`Response time performance: ${Math.max(0, 100 - analytics.systemHealth.responseTime / 10).toFixed(1)}%`}
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <div className="flex items-center justify-between text-sm">
+                      <span>Error Rate</span>
+                      <span className="font-medium">{analytics.systemHealth.errorRate.toFixed(1)}%</span>
+                    </div>
+                    <Progress 
+                      value={analytics.systemHealth.errorRate}
+                      aria-label={`System error rate: ${analytics.systemHealth.errorRate.toFixed(1)}%`}
+                    />
+                  </div>
+                </>
+              )}
             </CardContent>
           </Card>
 
@@ -454,7 +502,7 @@ export default function ComprehensiveAdminDashboard({ className = '' }: Comprehe
           <div className="flex items-center justify-between">
             <div>
               <h3 className="text-lg font-semibold">Site Messages</h3>
-              <p className="text-sm text-gray-600">Manage announcements and broadcast notices</p>
+              <p className="text-sm text-gray-600 dark:text-gray-400">Manage announcements and broadcast notices</p>
             </div>
             <div className="flex items-center gap-2">
               <Button
@@ -596,7 +644,7 @@ export default function ComprehensiveAdminDashboard({ className = '' }: Comprehe
 
           <div className="grid grid-cols-1 gap-4">
             {siteMessages.length === 0 ? (
-              <p className="text-sm text-gray-600">No site messages yet.</p>
+              <p className="text-sm text-gray-600 dark:text-gray-400">No site messages yet.</p>
             ) : (
               siteMessages.map((message) => (
                 <Card key={message.id}>
@@ -611,8 +659,8 @@ export default function ComprehensiveAdminDashboard({ className = '' }: Comprehe
                           <Badge variant="outline">{message.type}</Badge>
                           <Badge variant="outline">{message.priority}</Badge>
                         </div>
-                        <p className="text-sm text-gray-600">{message.message}</p>
-                        <div className="text-xs text-gray-500">
+                        <p className="text-sm text-gray-600 dark:text-gray-400">{message.message}</p>
+                        <div className="text-xs text-gray-500 dark:text-gray-400">
                           Created:{' '}
                           {message.created_at ? new Date(message.created_at).toLocaleString() : '—'}
                           {message.updated_at &&
@@ -671,10 +719,10 @@ export default function ComprehensiveAdminDashboard({ className = '' }: Comprehe
             </CardHeader>
             <CardContent>
               <div className="space-y-4">
-                <p className="text-sm text-gray-600">
+                <p className="text-sm text-gray-600 dark:text-gray-400">
                   Access the dedicated performance dashboard for real-time monitoring.
                 </p>
-                <ul className="list-disc list-inside space-y-2 text-sm text-gray-700 ml-2">
+                <ul className="list-disc list-inside space-y-2 text-sm text-gray-700 dark:text-gray-300 ml-2">
                   <li>Live system metrics and alerts</li>
                   <li>Slowest operations tracking</li>
                   <li>Optimisation recommendations</li>
@@ -705,23 +753,36 @@ export default function ComprehensiveAdminDashboard({ className = '' }: Comprehe
                   Platform Totals
                 </CardTitle>
               </CardHeader>
-              <CardContent className="space-y-2 text-sm text-gray-700">
-                <div className="flex justify-between">
-                  <span>Total topics</span>
-                  <span className="font-medium">{systemMetrics?.total_topics ?? 0}</span>
-                </div>
-                <div className="flex justify-between">
-                  <span>Total polls</span>
-                  <span className="font-medium">{systemMetrics?.total_polls ?? 0}</span>
-                </div>
-                <div className="flex justify-between">
-                  <span>Total votes</span>
-                  <span className="font-medium">{systemMetrics?.total_votes ?? 0}</span>
-                </div>
-                <div className="flex justify-between">
-                  <span>Active sessions</span>
-                  <span className="font-medium">{systemMetrics?.active_sessions ?? 0}</span>
-                </div>
+              <CardContent className="space-y-2 text-sm text-gray-700 dark:text-gray-300">
+                {systemMetricsLoading ? (
+                  <div className="space-y-2">
+                    {[1, 2, 3, 4].map((i) => (
+                      <div key={i} className="flex justify-between">
+                        <Skeleton className="h-4 w-24" />
+                        <Skeleton className="h-4 w-12" />
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <>
+                    <div className="flex justify-between">
+                      <span>Total topics</span>
+                      <span className="font-medium">{systemMetrics?.total_topics ?? 0}</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span>Total polls</span>
+                      <span className="font-medium">{systemMetrics?.total_polls ?? 0}</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span>Total votes</span>
+                      <span className="font-medium">{systemMetrics?.total_votes ?? 0}</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span>Active sessions</span>
+                      <span className="font-medium">{systemMetrics?.active_sessions ?? 0}</span>
+                    </div>
+                  </>
+                )}
               </CardContent>
             </Card>
 
@@ -733,36 +794,52 @@ export default function ComprehensiveAdminDashboard({ className = '' }: Comprehe
                 </CardTitle>
               </CardHeader>
               <CardContent className="space-y-3">
-                <div className="space-y-1">
-                  <div className="flex justify-between text-sm">
-                    <span>CPU</span>
-                    <span className="font-medium">{systemMetrics?.cpu_usage ?? 0}%</span>
+                {systemMetricsLoading ? (
+                  <div className="space-y-3">
+                    {[1, 2, 3].map((i) => (
+                      <div key={i} className="space-y-1">
+                        <div className="flex justify-between">
+                          <Skeleton className="h-4 w-16" />
+                          <Skeleton className="h-4 w-12" />
+                        </div>
+                        <Skeleton className="h-2 w-full" />
+                      </div>
+                    ))}
                   </div>
-                  <Progress 
-                    value={systemMetrics?.cpu_usage ?? 0}
-                    aria-label={`CPU usage: ${systemMetrics?.cpu_usage ?? 0}%`}
-                  />
-                </div>
-                <div className="space-y-1">
-                  <div className="flex justify-between text-sm">
-                    <span>Memory</span>
-                    <span className="font-medium">{systemMetrics?.memory_usage ?? 0}%</span>
-                  </div>
-                  <Progress 
-                    value={systemMetrics?.memory_usage ?? 0}
-                    aria-label={`Memory usage: ${systemMetrics?.memory_usage ?? 0}%`}
-                  />
-                </div>
-                <div className="space-y-1">
-                  <div className="flex justify-between text-sm">
-                    <span>Disk</span>
-                    <span className="font-medium">{systemMetrics?.disk_usage ?? 0}%</span>
-                  </div>
-                  <Progress 
-                    value={systemMetrics?.disk_usage ?? 0}
-                    aria-label={`Disk usage: ${systemMetrics?.disk_usage ?? 0}%`}
-                  />
-                </div>
+                ) : (
+                  <>
+                    <div className="space-y-1">
+                      <div className="flex justify-between text-sm">
+                        <span>CPU</span>
+                        <span className="font-medium">{systemMetrics?.cpu_usage ?? 0}%</span>
+                      </div>
+                      <Progress 
+                        value={systemMetrics?.cpu_usage ?? 0}
+                        aria-label={`CPU usage: ${systemMetrics?.cpu_usage ?? 0}%`}
+                      />
+                    </div>
+                    <div className="space-y-1">
+                      <div className="flex justify-between text-sm">
+                        <span>Memory</span>
+                        <span className="font-medium">{systemMetrics?.memory_usage ?? 0}%</span>
+                      </div>
+                      <Progress 
+                        value={systemMetrics?.memory_usage ?? 0}
+                        aria-label={`Memory usage: ${systemMetrics?.memory_usage ?? 0}%`}
+                      />
+                    </div>
+                    <div className="space-y-1">
+                      <div className="flex justify-between text-sm">
+                        <span>Disk</span>
+                        <span className="font-medium">{systemMetrics?.disk_usage ?? 0}%</span>
+                      </div>
+                      <Progress 
+                        value={systemMetrics?.disk_usage ?? 0}
+                        aria-label={`Disk usage: ${systemMetrics?.disk_usage ?? 0}%`}
+                      />
+                    </div>
+                  </>
+                )}
               </CardContent>
             </Card>
 
@@ -774,36 +851,49 @@ export default function ComprehensiveAdminDashboard({ className = '' }: Comprehe
                 </CardTitle>
               </CardHeader>
               <CardContent className="space-y-3 text-sm text-gray-700">
-                <div className="flex justify-between">
-                  <span>Status</span>
-                  <span className="font-medium">{systemMetrics?.system_health ?? 'unknown'}</span>
-                </div>
-                <div className="flex justify-between">
-                  <span>Response time (avg)</span>
-                  <span className="font-medium">
-                    {systemMetrics?.performance_metrics?.response_time_avg?.toFixed(0) ?? '0'}ms
-                  </span>
-                </div>
-                <div className="flex justify-between">
-                  <span>Error rate</span>
-                  <span className="font-medium">
-                    {systemMetrics?.performance_metrics?.error_rate?.toFixed(1) ?? '0'}%
-                  </span>
-                </div>
-                <div className="flex justify-between">
-                  <span>Throughput</span>
-                  <span className="font-medium">
-                    {systemMetrics?.performance_metrics?.throughput?.toFixed(1) ?? '0'} rps
-                  </span>
-                </div>
-                <div className="flex justify-between">
-                  <span>Last updated</span>
-                  <span className="font-medium">
-                    {systemMetrics?.last_updated
-                      ? new Date(systemMetrics.last_updated).toLocaleString()
-                      : '—'}
-                  </span>
-                </div>
+                {systemMetricsLoading ? (
+                  <div className="space-y-3">
+                    {[1, 2, 3, 4, 5].map((i) => (
+                      <div key={i} className="flex justify-between">
+                        <Skeleton className="h-4 w-32" />
+                        <Skeleton className="h-4 w-24" />
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <>
+                    <div className="flex justify-between">
+                      <span>Status</span>
+                      <span className="font-medium">{systemMetrics?.system_health ?? 'unknown'}</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span>Response time (avg)</span>
+                      <span className="font-medium">
+                        {systemMetrics?.performance_metrics?.response_time_avg?.toFixed(0) ?? '0'}ms
+                      </span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span>Error rate</span>
+                      <span className="font-medium">
+                        {systemMetrics?.performance_metrics?.error_rate?.toFixed(1) ?? '0'}%
+                      </span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span>Throughput</span>
+                      <span className="font-medium">
+                        {systemMetrics?.performance_metrics?.throughput?.toFixed(1) ?? '0'} rps
+                      </span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span>Last updated</span>
+                      <span className="font-medium">
+                        {systemMetrics?.last_updated
+                          ? new Date(systemMetrics.last_updated).toLocaleString()
+                          : '—'}
+                      </span>
+                    </div>
+                  </>
+                )}
               </CardContent>
             </Card>
           </div>
@@ -821,23 +911,23 @@ export default function ComprehensiveAdminDashboard({ className = '' }: Comprehe
             <CardContent className="space-y-4">
               {recentActivity.length ? (
                 recentActivity.map((activity) => (
-                  <div key={activity.id} className="border border-gray-100 rounded-lg p-4">
+                  <div key={activity.id} className="border border-gray-100 dark:border-gray-700 rounded-lg p-4 bg-white dark:bg-gray-900">
                     <div className="flex items-center justify-between">
-                      <div className="flex items-center gap-2 text-sm font-medium text-gray-900">
+                      <div className="flex items-center gap-2 text-sm font-medium text-gray-900 dark:text-gray-100">
                         <span className="h-2 w-2 rounded-full bg-blue-500" />
                         {activity.title ?? activity.type}
                       </div>
-                      <span className="text-xs text-gray-500">
+                      <span className="text-xs text-gray-500 dark:text-gray-400">
                         {activity.timestamp ? new Date(activity.timestamp).toLocaleString() : ''}
                       </span>
                     </div>
                     {activity.description && (
-                      <p className="text-sm text-gray-600 mt-2">{activity.description}</p>
+                      <p className="text-sm text-gray-600 dark:text-gray-400 mt-2">{activity.description}</p>
                     )}
                   </div>
                 ))
               ) : (
-                <p className="text-sm text-gray-600">No recent activity recorded.</p>
+                <p className="text-sm text-gray-600 dark:text-gray-400">No recent activity recorded.</p>
               )}
             </CardContent>
           </Card>

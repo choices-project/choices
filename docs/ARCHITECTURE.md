@@ -93,3 +93,10 @@ Reference material lives in `docs/STATE_MANAGEMENT.md` and `docs/ROADMAP_SINGLE_
 - Complete store modernization for app, admin, polls, feeds, and analytics modules.
 - Replace analytics mocks with Supabase-backed queries and document the privacy pipeline.
 - Expand harness-driven E2E coverage to the remaining critical flows (poll creation, civic engagement, feature flags).
+
+## Ownership & Update Cadence
+
+- **Owner:** Core maintainer
+- **Update cadence:** Review on major feature changes and at least monthly
+- **Last verified:** TBD
+

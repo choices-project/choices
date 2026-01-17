@@ -29,7 +29,7 @@ All MVP features are implemented, tested, and production-ready. The platform is 
 | Store modernization | 🔄 In progress | Notification store complete with integration + E2E coverage; profile/user stores partially migrated; app/admin/polls stores queued. |
 | Documentation | ✅ Current | Core docs refreshed; scratch materials archived; single-source roadmap established. |
 | Testing | 🚧 Needs expansion | Jest suites cover key stores; Playwright harnesses exist for profile + notification stores; analytics and civic flows still lack modern coverage. |
-| Analytics dashboard | ✅ Real data live | Supabase-backed endpoints (`/api/analytics/**`, unified API) with privacy-aware queries, Redis caching, and admin gating; see `docs/ANALYTICS_PIPELINE.md`. |
+| Analytics dashboard | ✅ Real data live | Supabase-backed endpoints (`/api/analytics/**`, unified API) with privacy-aware queries, Redis caching, and admin gating; see `docs/features/analytics.md`. |
 | Admin tooling | ✅ Enhanced | Feature flag UI and notification system now consume shared hooks; audit tooling enhanced with diff functionality, filtering, and comprehensive logging. |
 | Civic/notifications UX | ✅ Stable surface | Poll creation, onboarding, and notifications flows run on refactored APIs but still need ongoing regression coverage. |
 
@@ -74,7 +74,7 @@ All MVP features are implemented, tested, and production-ready. The platform is 
 - Phase 5 — Documentation: High-level ingest summary will be maintained here; detailed runbooks under `services/supabase-operations-guide.md`.
 
 References:
-- Single-source roadmap entries: `scratch/ROADMAP_SINGLE_SOURCE.md` (Section E)
+- Single-source roadmap entries: `docs/ROADMAP_SINGLE_SOURCE.md` (Section E)
 - Backend plan: `services/civics-backend/ROADMAP.md`
 
 ---
@@ -102,9 +102,15 @@ References:
 
 ## References
 
-- Technical roadmap (single source): `scratch/ROADMAP_SINGLE_SOURCE.md`
+- Technical roadmap (single source): `docs/ROADMAP_SINGLE_SOURCE.md`
 - Testing strategy: `docs/TESTING.md`
 - State management standards: `docs/STATE_MANAGEMENT.md`
 
-For ongoing progress updates, track in `scratch/ROADMAP_SINGLE_SOURCE.md`.
+For ongoing progress updates, track in `docs/ROADMAP_SINGLE_SOURCE.md`.
+
+## Ownership & Update Cadence
+
+- **Owner:** Core maintainer
+- **Update cadence:** Review on major feature changes and at least monthly
+- **Last verified:** TBD
 

@@ -95,31 +95,55 @@ const onboardingSchema = z.object({
  * // Returns: { profile: {...}, preferences: {...}, interests: {...}, onboarding: {...} }
  */
 export const GET = withErrorHandling(async (_request: NextRequest) => {
+  // #region agent log
+  fetch('http://127.0.0.1:7242/ingest/6a732aed-2d72-4883-a63a-f3c892fc1216',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'api/profile/route.ts:97',message:'GET /api/profile entry',data:{timestamp:Date.now()},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'A'})}).catch(()=>{});
+  // #endregion
   const supabase = await getSupabaseServerClient();
   if (!supabase) {
+    // #region agent log
+    fetch('http://127.0.0.1:7242/ingest/6a732aed-2d72-4883-a63a-f3c892fc1216',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'api/profile/route.ts:100',message:'Supabase not configured',data:{timestamp:Date.now()},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'A'})}).catch(()=>{});
+    // #endregion
     logger.error('Supabase not configured');
     return errorResponse('Database connection not available', 500);
   }
 
   const { data: { user }, error: authErr } = await supabase.auth.getUser();
+  // #region agent log
+  fetch('http://127.0.0.1:7242/ingest/6a732aed-2d72-4883-a63a-f3c892fc1216',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'api/profile/route.ts:105',message:'Auth check result',data:{hasUser:!!user,hasError:!!authErr,errorCode:authErr?.code,errorMessage:authErr?.message,timestamp:Date.now()},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'B'})}).catch(()=>{});
+  // #endregion
   if (authErr || !user) {
+    // #region agent log
+    fetch('http://127.0.0.1:7242/ingest/6a732aed-2d72-4883-a63a-f3c892fc1216',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'api/profile/route.ts:107',message:'Auth failed - returning error',data:{hasError:!!authErr,errorCode:authErr?.code,timestamp:Date.now()},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'B'})}).catch(()=>{});
+    // #endregion
     logger.warn('User not authenticated or auth error', authErr);
     return authError('Authentication required');
   }
 
     // Fetch profile
+    // #region agent log
+    fetch('http://127.0.0.1:7242/ingest/6a732aed-2d72-4883-a63a-f3c892fc1216',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'api/profile/route.ts:111',message:'Before profile query',data:{userId:user.id,timestamp:Date.now()},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'A'})}).catch(()=>{});
+    // #endregion
     const { data: profile, error: profileError } = await supabase
       .from('user_profiles')
       .select('*')
       .eq('user_id', user.id)
       .single();
 
+    // #region agent log
+    fetch('http://127.0.0.1:7242/ingest/6a732aed-2d72-4883-a63a-f3c892fc1216',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'api/profile/route.ts:117',message:'After profile query',data:{hasProfile:!!profile,hasError:!!profileError,errorCode:profileError?.code,errorMessage:profileError?.message,timestamp:Date.now()},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'A'})}).catch(()=>{});
+    // #endregion
     if (profileError && profileError.code !== 'PGRST116') { // PGRST116 means no rows found
+      // #region agent log
+      fetch('http://127.0.0.1:7242/ingest/6a732aed-2d72-4883-a63a-f3c892fc1216',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'api/profile/route.ts:119',message:'Profile query error',data:{errorCode:profileError.code,errorMessage:profileError.message,timestamp:Date.now()},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'A'})}).catch(()=>{});
+      // #endregion
       logger.error('Error fetching profile', profileError);
       return errorResponse('Error fetching profile', 500, undefined, 'PROFILE_FETCH_FAILED');
     }
 
     const responseData = createProfilePayload(profile);
+    // #region agent log
+    fetch('http://127.0.0.1:7242/ingest/6a732aed-2d72-4883-a63a-f3c892fc1216',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'api/profile/route.ts:123',message:'Before success response',data:{hasResponseData:!!responseData,hasProfile:!!responseData?.profile,timestamp:Date.now()},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'A'})}).catch(()=>{});
+    // #endregion
 
   logger.info('Profile data fetched successfully', { userId: user.id });
   return successResponse(responseData);

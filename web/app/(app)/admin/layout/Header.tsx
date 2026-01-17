@@ -40,6 +40,7 @@ export const Header: React.FC = () => {
   useEffect(() => { markAdminNotificationAsReadRef.current = markAdminNotificationAsRead; }, [markAdminNotificationAsRead]);
   const [isUserMenuOpen, setIsUserMenuOpen] = useState(false);
   const sidebarCollapsed = useAdminSidebarCollapsed();
+  const userMenuRef = useRef<HTMLDivElement>(null);
 
   const handleLogout = useCallback(async () => {
     try {
@@ -53,24 +54,51 @@ export const Header: React.FC = () => {
     }
   }, []);  
 
-  const toggleUserMenu = () => {
+  const toggleUserMenu = useCallback(() => {
     setIsUserMenuOpen((prev) => !prev);
-  };
+  }, []);
 
-  const closeUserMenu = () => {
+  const closeUserMenu = useCallback(() => {
     setIsUserMenuOpen(false);
-  };
+  }, []);
+
+  // Handle click outside and Escape key for accessibility
+  useEffect(() => {
+    if (!isUserMenuOpen) return;
+
+    const handleClickOutside = (event: MouseEvent) => {
+      const target = event.target as Node;
+      if (userMenuRef.current && !userMenuRef.current.contains(target)) {
+        closeUserMenu();
+      }
+    };
+
+    const handleEscape = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') {
+        closeUserMenu();
+      }
+    };
+
+    // Use capture phase to catch events before they bubble
+    document.addEventListener('mousedown', handleClickOutside, true);
+    document.addEventListener('keydown', handleEscape, true);
+
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside, true);
+      document.removeEventListener('keydown', handleEscape, true);
+    };
+  }, [isUserMenuOpen, closeUserMenu]);
 
   return (
     <header
-      className="bg-white border-b border-gray-200 h-16 flex items-center justify-between px-6"
+      className="bg-white dark:bg-gray-900 border-b border-gray-200 dark:border-gray-700 h-16 flex items-center justify-between px-6"
       role="banner"
     >
       {/* Left side */}
       <div className="flex items-center space-x-4">
         <button
           onClick={toggleSidebar}
-          className="lg:hidden p-2 rounded-md text-gray-400 hover:text-gray-600 hover:bg-gray-100"
+          className="lg:hidden p-2 rounded-md text-gray-400 dark:text-gray-500 hover:text-gray-600 dark:hover:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800"
           aria-label="Toggle sidebar navigation"
           aria-expanded={!sidebarCollapsed}
           aria-controls="admin-sidebar-navigation"
@@ -81,11 +109,11 @@ export const Header: React.FC = () => {
         {/* Search */}
         <div className="hidden md:flex items-center space-x-2">
           <div className="relative">
-            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
+            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400 dark:text-gray-500" />
             <input
               type="text"
               placeholder="Search..."
-              className="pl-10 pr-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              className="pl-10 pr-4 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 placeholder-gray-400 dark:placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
             />
           </div>
         </div>
@@ -96,7 +124,7 @@ export const Header: React.FC = () => {
         {/* Notifications */}
         <div className="relative">
           <button
-            className="relative p-2 rounded-md text-gray-400 hover:text-gray-600 hover:bg-gray-100"
+            className="relative p-2 rounded-md text-gray-400 dark:text-gray-500 hover:text-gray-600 dark:hover:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800"
             aria-label={unreadCount > 0 ? `Notifications, ${unreadCount} unread` : 'Notifications'}
             aria-haspopup="true"
             aria-expanded={false}
@@ -111,9 +139,9 @@ export const Header: React.FC = () => {
 
           {/* Notifications dropdown */}
           {notifications.length > 0 && (
-            <div className="absolute right-0 mt-2 w-80 bg-white rounded-md shadow-lg border border-gray-200 z-50">
+            <div className="absolute right-0 mt-2 w-80 bg-white dark:bg-gray-800 rounded-md shadow-lg border border-gray-200 dark:border-gray-700 z-50">
               <div className="p-4">
-                <h3 className="text-sm font-medium text-gray-900 mb-3">Notifications</h3>
+                <h3 className="text-sm font-medium text-gray-900 dark:text-gray-100 mb-3">Notifications</h3>
                 <div className="space-y-2 max-h-64 overflow-y-auto">
                   {notifications.slice(0, 5).map((notification) => (
                     <button
@@ -121,21 +149,21 @@ export const Header: React.FC = () => {
                       type="button"
                       className={`w-full text-left p-3 rounded-md transition-colors ${
                         notification.read
-                          ? 'bg-gray-50 hover:bg-gray-100'
-                          : 'bg-blue-50 hover:bg-blue-100'
+                          ? 'bg-gray-50 dark:bg-gray-700 hover:bg-gray-100 dark:hover:bg-gray-600'
+                          : 'bg-blue-50 dark:bg-blue-900/30 hover:bg-blue-100 dark:hover:bg-blue-900/50'
                       }`}
                       onClick={() => markAdminNotificationAsReadRef.current(notification.id)}
                       aria-label={`Mark notification "${notification.title}" as read`}
                     >
                       <div className="flex items-start justify-between">
                         <div className="flex-1">
-                          <p className="text-sm font-medium text-gray-900">
+                          <p className="text-sm font-medium text-gray-900 dark:text-gray-100">
                             {notification.title}
                           </p>
-                          <p className="text-sm text-gray-600 mt-1">
+                          <p className="text-sm text-gray-600 dark:text-gray-300 mt-1">
                             {notification.message}
                           </p>
-                          <p className="text-xs text-gray-400 mt-2">
+                          <p className="text-xs text-gray-400 dark:text-gray-500 mt-2">
                             {new Date(notification.timestamp).toLocaleString()}
                           </p>
                         </div>
@@ -152,54 +180,58 @@ export const Header: React.FC = () => {
         </div>
 
         {/* User menu */}
-        <div className="relative">
+        <div className="relative" ref={userMenuRef}>
           <button
             onClick={toggleUserMenu}
-            className="flex items-center space-x-2 p-2 rounded-md text-gray-400 hover:text-gray-600 hover:bg-gray-100"
+            className="flex items-center space-x-2 p-2 rounded-md text-gray-400 dark:text-gray-500 hover:text-gray-600 dark:hover:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800"
             aria-label="User menu"
             aria-haspopup="true"
             aria-expanded={isUserMenuOpen}
           >
             <User className="h-5 w-5" aria-hidden="true" />
-            <span className="hidden md:block text-sm font-medium text-gray-700">
+            <span className="hidden md:block text-sm font-medium text-gray-700 dark:text-gray-300">
               {user?.email ?? 'Admin'}
             </span>
           </button>
 
           {isUserMenuOpen && (
-            <ul
-              className="absolute right-0 mt-2 w-48 bg-white rounded-md shadow-lg border border-gray-200 z-50"
+            <div
+              className="absolute right-0 mt-2 w-48 bg-white dark:bg-gray-800 rounded-md shadow-lg border border-gray-200 dark:border-gray-700 z-50"
+              role="menu"
               aria-label="Account options"
             >
-              <li>
+              <div role="none">
                 <button
-                  className="flex w-full items-center px-4 py-2 text-left text-sm text-gray-700 hover:bg-gray-100"
+                  className="flex w-full items-center px-4 py-2 text-left text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700"
                   onClick={closeUserMenu}
+                  role="menuitem"
                 >
                   <User className="h-4 w-4 mr-3" aria-hidden="true" />
                   Profile
                 </button>
-              </li>
-              <li>
+              </div>
+              <div role="none">
                 <button
-                  className="flex w-full items-center px-4 py-2 text-left text-sm text-gray-700 hover:bg-gray-100"
+                  className="flex w-full items-center px-4 py-2 text-left text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700"
                   onClick={closeUserMenu}
+                  role="menuitem"
                 >
                   <Settings className="h-4 w-4 mr-3" aria-hidden="true" />
                   Settings
                 </button>
-              </li>
-              <li role="separator" className="my-1 border-t border-gray-200" />
-              <li>
+              </div>
+              <div role="separator" className="my-1 border-t border-gray-200 dark:border-gray-700" />
+              <div role="none">
                 <button
-                  className="flex w-full items-center px-4 py-2 text-left text-sm text-gray-700 hover:bg-gray-100"
+                  className="flex w-full items-center px-4 py-2 text-left text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700"
                   onClick={handleLogout}
+                  role="menuitem"
                 >
                   <LogOut className="h-4 w-4 mr-3" aria-hidden="true" />
                   Sign out
                 </button>
-              </li>
-            </ul>
+              </div>
+            </div>
           )}
         </div>
       </div>

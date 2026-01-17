@@ -107,7 +107,7 @@ export default function PrivacyPage() {
     }
     const timeout = setTimeout(() => {
       setLoadingTimeout(true);
-    }, 15_000); // 15 second timeout
+    }, 4_000); // 4 second timeout to avoid prolonged spinner
     return () => {
       clearTimeout(timeout);
     };
@@ -146,6 +146,23 @@ export default function PrivacyPage() {
     },
     [privacySettings]  
   );
+
+  if (!user && !profileLoading) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="text-center">
+          <h1 className="text-2xl font-bold text-gray-900 mb-4">Privacy & Data</h1>
+          <p className="text-gray-600 mb-6">Please log in to manage your privacy settings.</p>
+          <a
+            href="/login"
+            className="bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700"
+          >
+            Login
+          </a>
+        </div>
+      </div>
+    );
+  }
 
   if (profileLoading || loadingTimeout) {
     return (

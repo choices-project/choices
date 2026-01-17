@@ -140,6 +140,11 @@ The following legacy paths are blocked and will error in CI:
 1) Add to `@/lib/utils/**` (or a domain‑specific `@/lib/**` folder).  
 2) Consider server/client safety (avoid unguarded DOM usage).  
 3) Export via a local index if useful across features; avoid broad barrel re‑exports if unstable.  
-4) Add short usage to this guide (PR welcome).  
+4) Add short usage to this guide (PR welcome).
 
+## Ownership & Update Cadence
+
+- **Owner:** Core maintainer
+- **Update cadence:** Review on major feature changes and at least monthly
+- **Last verified:** TBD
 

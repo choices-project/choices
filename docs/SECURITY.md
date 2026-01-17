@@ -468,3 +468,10 @@ jobs:
 ---
 
 *Last Updated: 2025-09-17*
+
+## Ownership & Update Cadence
+
+- **Owner:** Core maintainer
+- **Update cadence:** Review on major feature changes and at least monthly
+- **Last verified:** TBD
+

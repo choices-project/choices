@@ -2,6 +2,8 @@
 
 import { useEffect, useLayoutEffect, useRef, useState } from 'react';
 
+import GlobalNavigation from '@/components/shared/GlobalNavigation';
+
 import {
   appStoreUtils,
   useResolvedTheme,
@@ -10,18 +12,13 @@ import {
   useSidebarWidth,
 } from '@/lib/stores/appStore';
 import { useDeviceStore } from '@/lib/stores/deviceStore';
+import { logger } from '@/lib/utils/logger';
 
 import { useSystemThemeSync } from '@/hooks/useSystemThemeSync';
 
 import type { ReactNode } from 'react';
 
-// CRITICAL: Import GlobalNavigation directly without dynamic import
-// GlobalNavigation already guards usePathname() usage to prevent hydration mismatches
-// Using dynamic import with ssr: false causes Next.js to insert bailout template
-// which triggers React hydration error #185 (structural mismatch)
-// By importing directly, we avoid the bailout template entirely
-// H26: Remove dynamic import with ssr: false to prevent bailout template insertion
-import GlobalNavigation from '@/components/shared/GlobalNavigation';
+// CRITICAL: GlobalNavigation is imported directly (see imports above)
 
 type AppShellProps = {
   navigation?: ReactNode;
@@ -95,19 +92,26 @@ export function AppShell({ navigation, siteMessages, feedback, children }: AppSh
     void document.documentElement.offsetHeight;
     attributesSetRef.current = true;
 
-    // #region agent log
-    const logDataSync={location:'AppShell.tsx:useLayoutEffect-init',message:'AppShell ensured attributes exist in useLayoutEffect',data:{wasMissing:{theme:!currentTheme,collapsed:!currentCollapsed,width:!currentWidth,pinned:!currentPinned},set:{theme:themeToSet,collapsed:collapsedToSet,width:widthToSet,pinned:pinnedToSet}},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'H9'};
-    console.log('[DEBUG]',JSON.stringify(logDataSync));
-    // #endregion
+    if (process.env.DEBUG_DASHBOARD === '1') {
+      logger.debug('AppShell ensured attributes exist in useLayoutEffect', {
+        wasMissing: { theme: !currentTheme, collapsed: !currentCollapsed, width: !currentWidth, pinned: !currentPinned },
+        set: { theme: themeToSet, collapsed: collapsedToSet, width: widthToSet, pinned: pinnedToSet }
+      });
+    }
   }, []);
 
   useEffect(() => {
-    // #region agent log - Track AppShell mount timing
-    const appShellMountTime = Date.now();
-    const htmlAttrsAtMount={theme:typeof document!=='undefined'?document.documentElement.getAttribute('data-theme'):null,collapsed:typeof document!=='undefined'?document.documentElement.getAttribute('data-sidebar-collapsed'):null,width:typeof document!=='undefined'?document.documentElement.getAttribute('data-sidebar-width'):null,pinned:typeof document!=='undefined'?document.documentElement.getAttribute('data-sidebar-pinned'):null};
-    const logData8={location:'AppShell.tsx:50',message:'AppShell useEffect mount started',data:{hasDocument:typeof document!=='undefined',htmlAttrsAtMount,timestamp:appShellMountTime},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'H4'};
-    console.log('[DEBUG]',JSON.stringify(logData8));
-    // #endregion
+    if (process.env.DEBUG_DASHBOARD === '1') {
+      logger.debug('AppShell useEffect mount started', {
+        hasDocument: typeof document !== 'undefined',
+        htmlAttrsAtMount: typeof document !== 'undefined' ? {
+          theme: document.documentElement.getAttribute('data-theme'),
+          collapsed: document.documentElement.getAttribute('data-sidebar-collapsed'),
+          width: document.documentElement.getAttribute('data-sidebar-width'),
+          pinned: document.documentElement.getAttribute('data-sidebar-pinned')
+        } : null
+      });
+    }
     // After mount, read from script-set attributes (ThemeScript should have set them)
     // This ensures we use the actual persisted values, not defaults
     if (typeof document !== 'undefined') {
@@ -115,10 +119,13 @@ export function AppShell({ navigation, siteMessages, feedback, children }: AppSh
       const scriptCollapsed = document.documentElement.getAttribute('data-sidebar-collapsed');
       const scriptWidth = document.documentElement.getAttribute('data-sidebar-width');
       const scriptPinned = document.documentElement.getAttribute('data-sidebar-pinned');
-      // #region agent log
-      const logData9={location:'AppShell.tsx:58',message:'AppShell read script attributes',data:{scriptTheme,scriptCollapsed,scriptWidth,scriptPinned,storeTheme:resolvedTheme,storeCollapsed:sidebarCollapsed,storeWidth:sidebarWidth,storePinned:sidebarPinned},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'B'};
-      console.log('[DEBUG]',JSON.stringify(logData9));
-      // #endregion
+      if (process.env.DEBUG_DASHBOARD === '1') {
+        logger.debug('AppShell read script attributes', {
+          scriptTheme, scriptCollapsed, scriptWidth, scriptPinned,
+          storeTheme: resolvedTheme, storeCollapsed: sidebarCollapsed,
+          storeWidth: sidebarWidth, storePinned: sidebarPinned
+        });
+      }
 
       if (scriptTheme) setTheme(scriptTheme === 'dark' ? 'dark' : 'light');
       if (scriptCollapsed) setCollapsed(scriptCollapsed === 'true');
@@ -131,10 +138,12 @@ export function AppShell({ navigation, siteMessages, feedback, children }: AppSh
     setCollapsed(sidebarCollapsed);
     setWidth(sidebarWidth);
     setPinned(sidebarPinned);
-    // #region agent log
-    const logData10={location:'AppShell.tsx:71',message:'AppShell state set',data:{finalTheme:resolvedTheme,finalCollapsed:sidebarCollapsed,finalWidth:sidebarWidth,finalPinned:sidebarPinned},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'B'};
-    console.log('[DEBUG]',JSON.stringify(logData10));
-    // #endregion
+    if (process.env.DEBUG_DASHBOARD === '1') {
+      logger.debug('AppShell state set', {
+        finalTheme: resolvedTheme, finalCollapsed: sidebarCollapsed,
+        finalWidth: sidebarWidth, finalPinned: sidebarPinned
+      });
+    }
   }, [resolvedTheme, sidebarCollapsed, sidebarWidth, sidebarPinned]);
   // Get initialize directly from store for stable reference
   const initializeDevice = useDeviceStore((state) => state.initialize);
@@ -189,21 +198,35 @@ export function AppShell({ navigation, siteMessages, feedback, children }: AppSh
     // CRITICAL: Don't update attributes during initial hydration
     // ThemeScript has already set them correctly, and changing them causes mismatch
     if (isHydratingRef.current && !hydrationCompleteRef.current) {
-      // #region agent log
-      const currentPath = typeof window !== 'undefined' ? window.location.pathname : 'SSR';
-      const currentAttrs={theme:document.documentElement.getAttribute('data-theme'),collapsed:document.documentElement.getAttribute('data-sidebar-collapsed'),width:document.documentElement.getAttribute('data-sidebar-width'),pinned:document.documentElement.getAttribute('data-sidebar-pinned')};
-      const logDataSkip={location:'AppShell.tsx:useLayoutEffect-skip',message:'AppShell skipping attribute update during hydration',data:{currentAttrs,wouldSet:{theme,collapsed,width,pinned},currentPath},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'H10'};
-      console.log('[DEBUG]',JSON.stringify(logDataSkip));
-      // #endregion
+      if (process.env.DEBUG_DASHBOARD === '1') {
+        logger.debug('AppShell skipping attribute update during hydration', {
+          currentAttrs: {
+            theme: document.documentElement.getAttribute('data-theme'),
+            collapsed: document.documentElement.getAttribute('data-sidebar-collapsed'),
+            width: document.documentElement.getAttribute('data-sidebar-width'),
+            pinned: document.documentElement.getAttribute('data-sidebar-pinned')
+          },
+          wouldSet: { theme, collapsed, width, pinned },
+          currentPath: typeof window !== 'undefined' ? window.location.pathname : 'SSR'
+        });
+      }
       return;
     }
 
-    // #region agent log
-    const currentPath = typeof window !== 'undefined' ? window.location.pathname : 'SSR';
-    const beforeAttrs={theme:document.documentElement.getAttribute('data-theme'),collapsed:document.documentElement.getAttribute('data-sidebar-collapsed'),width:document.documentElement.getAttribute('data-sidebar-width'),pinned:document.documentElement.getAttribute('data-sidebar-pinned')};
-    const logData11={location:'AppShell.tsx:useLayoutEffect',message:'AppShell setting documentElement attributes AFTER hydration',data:{beforeAttrs,settingTheme:theme,settingCollapsed:collapsed,settingWidth:width,settingPinned:pinned,currentPath,hydrationComplete:hydrationCompleteRef.current},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'H10'};
-    console.log('[DEBUG]',JSON.stringify(logData11));
-    // #endregion
+    if (process.env.DEBUG_DASHBOARD === '1') {
+      logger.debug('AppShell setting documentElement attributes AFTER hydration', {
+        beforeAttrs: {
+          theme: document.documentElement.getAttribute('data-theme'),
+          collapsed: document.documentElement.getAttribute('data-sidebar-collapsed'),
+          width: document.documentElement.getAttribute('data-sidebar-width'),
+          pinned: document.documentElement.getAttribute('data-sidebar-pinned')
+        },
+        settingTheme: theme, settingCollapsed: collapsed,
+        settingWidth: width, settingPinned: pinned,
+        currentPath: typeof window !== 'undefined' ? window.location.pathname : 'SSR',
+        hydrationComplete: hydrationCompleteRef.current
+      });
+    }
 
     // Only update if values actually differ to prevent unnecessary DOM mutations
     const currentThemeAttr = document.documentElement.getAttribute('data-theme');
@@ -233,12 +256,17 @@ export function AppShell({ navigation, siteMessages, feedback, children }: AppSh
       document.documentElement.setAttribute('data-sidebar-pinned', String(pinned));
     }
 
-    // #region agent log
-    const currentPath2 = typeof window !== 'undefined' ? window.location.pathname : 'SSR';
-    const afterAttrs={theme:document.documentElement.getAttribute('data-theme'),collapsed:document.documentElement.getAttribute('data-sidebar-collapsed'),width:document.documentElement.getAttribute('data-sidebar-width'),pinned:document.documentElement.getAttribute('data-sidebar-pinned')};
-    const logData12={location:'AppShell.tsx:useLayoutEffect-after',message:'AppShell after setting attributes',data:{afterAttrs,currentPath:currentPath2},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'H10'};
-    console.log('[DEBUG]',JSON.stringify(logData12));
-    // #endregion
+    if (process.env.DEBUG_DASHBOARD === '1') {
+      logger.debug('AppShell after setting attributes', {
+        afterAttrs: {
+          theme: document.documentElement.getAttribute('data-theme'),
+          collapsed: document.documentElement.getAttribute('data-sidebar-collapsed'),
+          width: document.documentElement.getAttribute('data-sidebar-width'),
+          pinned: document.documentElement.getAttribute('data-sidebar-pinned')
+        },
+        currentPath: typeof window !== 'undefined' ? window.location.pathname : 'SSR'
+      });
+    }
   }, [theme, collapsed, width, pinned]);
 
   // DIAGNOSTIC: Log when AppShell renders
@@ -310,12 +338,9 @@ export function AppShell({ navigation, siteMessages, feedback, children }: AppSh
         runId: 'run1',
         hypothesisId: 'H18',
       };
-      console.log('[DEBUG]', JSON.stringify(logData));
-      fetch('http://127.0.0.1:7242/ingest/6a732aed-2d72-4883-a63a-f3c892fc1216', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(logData),
-      }).catch(() => {});
+      if (process.env.DEBUG_DASHBOARD === '1') {
+        logger.debug('AppShell render structure check', logData.data);
+      }
     }
   }, [navComponent]);
   // #endregion
@@ -340,8 +365,8 @@ export function AppShell({ navigation, siteMessages, feedback, children }: AppSh
       </div>
 
       {/* CRITICAL: Use div instead of main to prevent nested <main> tags */}
-      {/* SkipNavTarget in root layout already provides <div id="main-content"> */}
-      {/* Don't duplicate id="main-content" here - duplicate IDs are invalid HTML and cause hydration mismatch */}
+      {/* SkipNavTarget in root layout provides <main id="main-content"> */}
+      {/* Don't duplicate id="main-content" here - duplicate IDs are invalid HTML */}
       {/* H31: Add suppressHydrationWarning to children container to suppress bailout template from DashboardContent */}
       {/* DashboardContent is dynamically imported with ssr: false, causing Next.js to insert bailout template */}
       {/* suppressHydrationWarning on AppShell root doesn't suppress children's bailout templates */}

@@ -460,3 +460,9 @@ const { data: actions } = await response.json();
 
 **Last Updated:** January 2025
 
+## Ownership & Update Cadence
+
+- **Owner:** Core maintainer
+- **Update cadence:** Review on major feature changes and at least monthly
+- **Last verified:** TBD
+

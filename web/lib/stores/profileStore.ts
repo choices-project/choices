@@ -363,6 +363,9 @@ export const createProfileActions = (
     },
 
     loadProfile: async () => {
+      // #region agent log
+      fetch('http://127.0.0.1:7242/ingest/6a732aed-2d72-4883-a63a-f3c892fc1216',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'profileStore.ts:365',message:'loadProfile entry',data:{timestamp:Date.now()},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'C'})}).catch(()=>{});
+      // #endregion
       setState((state) => {
         state.isProfileLoading = true;
         state.error = null;
@@ -381,13 +384,22 @@ export const createProfileActions = (
           }, 30_000);
         });
 
+        // #region agent log
+        fetch('http://127.0.0.1:7242/ingest/6a732aed-2d72-4883-a63a-f3c892fc1216',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'profileStore.ts:385',message:'Before Promise.race getCurrentProfile',data:{timestamp:Date.now()},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'A'})}).catch(()=>{});
+        // #endregion
         const result = await Promise.race([
           getCurrentProfile(),
           timeoutPromise,
         ]);
+        // #region agent log
+        fetch('http://127.0.0.1:7242/ingest/6a732aed-2d72-4883-a63a-f3c892fc1216',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'profileStore.ts:389',message:'After Promise.race - result received',data:{success:result.success,hasError:!!result.error,hasData:!!result.data,timestamp:Date.now()},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'C'})}).catch(()=>{});
+        // #endregion
 
         setState((state) => {
           state.isProfileLoading = false;
+          // #region agent log
+          fetch('http://127.0.0.1:7242/ingest/6a732aed-2d72-4883-a63a-f3c892fc1216',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'profileStore.ts:391',message:'Before state update in setState',data:{resultSuccess:result.success,hasResultData:!!result.data,hasResultError:!!result.error,timestamp:Date.now()},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'C'})}).catch(()=>{});
+          // #endregion
           if (result.success && result.data) {
             state.profile = result.data ?? null;
             state.isProfileLoaded = true;
@@ -399,8 +411,14 @@ export const createProfileActions = (
                 state.preferences = result.preferences;
               }
             }
+            // #region agent log
+            fetch('http://127.0.0.1:7242/ingest/6a732aed-2d72-4883-a63a-f3c892fc1216',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'profileStore.ts:401',message:'State updated - success path',data:{hasProfile:!!state.profile,isProfileLoaded:state.isProfileLoaded,timestamp:Date.now()},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'C'})}).catch(()=>{});
+            // #endregion
           } else if (result.error) {
             state.error = result.error;
+            // #region agent log
+            fetch('http://127.0.0.1:7242/ingest/6a732aed-2d72-4883-a63a-f3c892fc1216',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'profileStore.ts:403',message:'State updated - error path',data:{error:result.error,is401:result.error.includes('401') || result.error.includes('Unauthorized'),timestamp:Date.now()},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'B'})}).catch(()=>{});
+            // #endregion
             // If we get a 401 (Unauthorized), mark as loaded to prevent infinite retry loops
             // This prevents the useEffect from continuously retrying when user is not authenticated
             if (result.error.includes('401') || result.error.includes('Unauthorized')) {
@@ -410,6 +428,9 @@ export const createProfileActions = (
             // This allows pages to render with cached data even if refresh fails
           } else {
             state.error = 'Failed to load profile';
+            // #region agent log
+            fetch('http://127.0.0.1:7242/ingest/6a732aed-2d72-4883-a63a-f3c892fc1216',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'profileStore.ts:412',message:'State updated - unknown error path',data:{timestamp:Date.now()},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'C'})}).catch(()=>{});
+            // #endregion
           }
         });
 
@@ -419,6 +440,9 @@ export const createProfileActions = (
 
         return result;
       } catch (error) {
+        // #region agent log
+        fetch('http://127.0.0.1:7242/ingest/6a732aed-2d72-4883-a63a-f3c892fc1216',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'profileStore.ts:422',message:'Exception in loadProfile catch block',data:{errorName:error instanceof Error ? error.name : 'unknown',errorMessage:error instanceof Error ? error.message : String(error),timestamp:Date.now()},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'A'})}).catch(()=>{});
+        // #endregion
         setState((state) => {
           const errorMessage = error instanceof Error ? error.message : 'Failed to load profile';
           state.error = errorMessage;

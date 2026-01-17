@@ -164,36 +164,41 @@ function PollsPageContent() {
   }, [isMounted]);
 
   useEffect(() => {
-    // Diagnostic logging for production debugging
-    // eslint-disable-next-line no-console
-    console.log('[POLLS PAGE] Initialization useEffect', { isMounted, initialized: initializedRef.current });
+    if (process.env.DEBUG_DASHBOARD === '1') {
+      logger.debug('Polls page initialization useEffect', { isMounted, initialized: initializedRef.current });
+    }
     if (!isMounted) {
-      // eslint-disable-next-line no-console
-      console.log('[POLLS PAGE] Not mounted yet, skipping initialization');
+      if (process.env.DEBUG_DASHBOARD === '1') {
+        logger.debug('Polls page not mounted yet, skipping initialization');
+      }
       return;
     }
     if (initializedRef.current) {
-      // eslint-disable-next-line no-console
-      console.log('[POLLS PAGE] Already initialized, skipping');
+      if (process.env.DEBUG_DASHBOARD === '1') {
+        logger.debug('Polls page already initialized, skipping');
+      }
       return;
     }
     initializedRef.current = true;
-    // eslint-disable-next-line no-console
-    console.log('[POLLS PAGE] Starting initialization', { 
+    if (process.env.DEBUG_DASHBOARD === '1') {
+      logger.debug('Polls page starting initialization', { 
       hasLoadPolls: !!loadPollsRef.current,
       hasSetFilters: !!setFiltersRef.current 
     });
+    }
     
     // Use setTimeout to defer store updates until after React has completed the render cycle
     // This prevents store updates from blocking the initial render
     setTimeout(() => {
-      // eslint-disable-next-line no-console
-      console.log('[POLLS PAGE] Executing initialization in setTimeout');
+      if (process.env.DEBUG_DASHBOARD === '1') {
+        logger.debug('Polls page executing initialization in setTimeout');
+      }
       setCurrentPageRef.current(1);
       setTrendingOnlyRef.current(false);
       setFiltersRef.current({ status: [] });
-      // eslint-disable-next-line no-console
-      console.log('[POLLS PAGE] Calling loadPolls');
+      if (process.env.DEBUG_DASHBOARD === '1') {
+        logger.debug('Polls page calling loadPolls');
+      }
       loadPollsRef.current().catch((error) => {
         console.error('[POLLS PAGE] Failed to load polls:', error);
         logger.warn('Failed to load polls (non-critical):', error);
@@ -283,7 +288,7 @@ function PollsPageContent() {
 
   return (
     <ErrorBoundary>
-      <div className="container mx-auto px-4 py-8">
+      <main className="container mx-auto px-4 py-8">
         <div className="mb-8">
           <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4 mb-2">
             <div className="flex-1">
@@ -343,9 +348,9 @@ function PollsPageContent() {
               <div className="text-gray-400 mb-4" aria-hidden="true">
                 <BarChart3 className="h-12 w-12 mx-auto" />
               </div>
-              <h3 className="text-lg font-medium text-gray-900 dark:text-gray-100 mb-2">
+              <h2 className="text-lg font-medium text-gray-900 dark:text-gray-100 mb-2">
                 {tRef.current('polls.page.empty.title')}
-              </h3>
+              </h2>
               <p className="text-gray-600 dark:text-gray-400 mb-4">
                 {((search.query ?? '') || selectedCategory !== 'all' || activeFilter !== 'all')
                   ? tRef.current('polls.page.empty.filters')
@@ -367,9 +372,9 @@ function PollsPageContent() {
                 className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-6 hover:shadow-md transition-shadow"
               >
                 <div className="flex items-start justify-between mb-4">
-                  <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100 line-clamp-2">
+                  <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100 line-clamp-2">
                     {poll.title}
-                  </h3>
+                  </h2>
                   {typeof poll.trendingPosition === 'number' && (
                     <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-orange-100 text-orange-700">
                       <Flame className="h-3 w-3 mr-1" />
@@ -461,7 +466,7 @@ function PollsPageContent() {
             </div>
           </div>
         )}
-      </div>
+      </main>
     </ErrorBoundary>
   );
 }

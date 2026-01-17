@@ -1,8 +1,7 @@
 # Choices – Single Source Roadmap (Outstanding Work Only)
 
 Last updated: 2025‑12‑23  
-**Note:** This file has been moved to `scratch/ROADMAP_SINGLE_SOURCE.md` to better consolidate work.  
-**Canonical location:** `scratch/ROADMAP_SINGLE_SOURCE.md`
+**Canonical location:** `docs/ROADMAP_SINGLE_SOURCE.md`
 
 Quick links: [Recurring Runbooks](#recurring-runbooks) • [Ownership & Updates](#ownership--updates)
 
@@ -114,8 +113,8 @@ Immediate P0/P1 from code/TODO reconciliation:
 ## D) Analytics, Admin, Accessibility & I18N [mixed]
 Sources: `docs/ROADMAP.md`, `docs/qa/i18n-accessibility-playbook.md`, `scratch/gpt5-codex/roadmaps/2025-11-17-outstanding-backlog-roadmap.md`, inclusive archive
 
-- [P1] Analytics real data: ✅ COMPLETE (Jan 2026) — `/api/analytics/**` + unified routes now source Supabase data with `PrivacyAwareQueryBuilder`, Redis cache helpers, and documented pipeline (`docs/ANALYTICS_PIPELINE.md`)
-- [P1] Analytics features backlog (funnels, KPIs, admin flag coverage): ✅ COMPLETE (Jan 2026) — see `docs/ANALYTICS_FEATURES_PLAN.md` for the shipped summary + references
+- [P1] Analytics real data: ✅ COMPLETE (Jan 2026) — `/api/analytics/**` + unified routes now source Supabase data with `PrivacyAwareQueryBuilder`, Redis cache helpers, and documented pipeline (`docs/features/analytics.md`)
+- [P1] Analytics features backlog (funnels, KPIs, admin flag coverage): ✅ COMPLETE (Jan 2026) — see `docs/features/analytics.md` for the shipped summary + references
 - [P1] Admin feature flags + audit logging: expand Playwright coverage for toggles and logging once modernized
 - [P1] Accessibility – Analytics dashboards: textual summaries; axis labels; re‑run NVDA; enable axe gating in CI
 - [P1] Notification alignment: ensure all surfaces use `useNotificationActions`; finalize Playwright specs
@@ -208,4 +207,9 @@ Action for teams: follow canonical paths above for any new code; avoid introduci
   - Owner: @you • Target: YYYY‑MM‑DD • PRs: #1234
 - Close items only with tests/docs updated and links added. If an external doc is updated, ensure this file reflects the change.
 
+## Ownership & Update Cadence
+
+- **Owner:** Core maintainer
+- **Update cadence:** Review on major feature changes and at least monthly
+- **Last verified:** TBD
 

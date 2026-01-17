@@ -54,9 +54,13 @@ export default function AnalyticsPage() {
   }, [setBreadcrumbs, setCurrentRoute, setSidebarActiveSection]);
 
   useEffect(() => {
+    let isMounted = true; // Track if component is still mounted
+    
     const loadPreferences = async () => {
       if (!user?.id) {
-        setIsLoading(false);
+        if (isMounted) {
+          setIsLoading(false);
+        }
         return;
       }
 
@@ -68,19 +72,29 @@ export default function AnalyticsPage() {
           .eq('user_id', user.id)
           .single();
 
-        if (!error && profile?.analytics_dashboard_mode) {
-          setMode(profile.analytics_dashboard_mode as DashboardMode);
+        // Only update state if component is still mounted
+        if (isMounted) {
+          if (!error && profile?.analytics_dashboard_mode) {
+            setMode(profile.analytics_dashboard_mode as DashboardMode);
+          }
+          setIsLoading(false);
         }
       } catch (error) {
         logger.error('Error loading user preferences', { error });
-      } finally {
-        setIsLoading(false);
+        if (isMounted) {
+          setIsLoading(false);
+        }
       }
     };
 
     if (!isUserLoading) {
       void loadPreferences();
     }
+
+    // Cleanup: mark component as unmounted
+    return () => {
+      isMounted = false;
+    };
   }, [isUserLoading, user]);
 
   const handleModeChange = async (newMode: DashboardMode) => {

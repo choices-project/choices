@@ -32,16 +32,18 @@ export const GET = withErrorHandling(async (request: NextRequest) => {
     };
 
     type RepresentativeRow = {
-      id: string;
+      id: number;
       name: string;
       office: string;
       level: 'federal' | 'state' | 'local';
-      jurisdiction: string;
+      state: string;
       district: string | null;
       party: string | null;
-      last_updated: string;
-      person_id: string | null;
-      contact: string | Record<string, unknown> | null;
+      updated_at: string;
+      openstates_id: string | null;
+      primary_email?: string | null;
+      primary_phone?: string | null;
+      primary_website?: string | null;
       representative_divisions?: RepresentativeDivisionRow[] | null;
     };
 
@@ -50,12 +52,14 @@ export const GET = withErrorHandling(async (request: NextRequest) => {
       'name',
       'office',
       'level',
-      'jurisdiction',
+      'state',
       'district',
       'party',
-      'last_updated',
-      'person_id',
-      'contact'
+      'updated_at',
+      'openstates_id',
+      'primary_email',
+      'primary_phone',
+      'primary_website'
     ];
 
     if (includeDivisions) {
@@ -63,18 +67,19 @@ export const GET = withErrorHandling(async (request: NextRequest) => {
     }
 
     let query = supabase
-      .from('civics_representatives' as any)
+      .from('representatives_core')
       .select(selectFields.join(','))
-      .eq('valid_to', 'infinity')
+      .eq('is_active', true)
+      .not('name', 'ilike', '%test%')
       .limit(limit);
 
     // Filter by state
     if (state !== 'US') {
       // For federal reps, check if district contains the state
       if (level === 'federal') {
-        query = query.or(`district.ilike.%${state}%,jurisdiction.ilike.%${state}%`);
+        query = query.or(`district.ilike.%${state}%,state.eq.${state}`);
       } else {
-        query = query.eq('jurisdiction', state);
+        query = query.eq('state', state);
       }
     } else {
       query = query.eq('level', 'federal');
@@ -99,14 +104,14 @@ export const GET = withErrorHandling(async (request: NextRequest) => {
     const processedReps = await Promise.all(
       rows.map(async (rep: RepresentativeRow) => {
         const response: Record<string, unknown> = {
-          id: rep.id,
+          id: String(rep.id),
           name: rep.name,
           office: rep.office,
           level: rep.level,
-          jurisdiction: rep.jurisdiction,
+          jurisdiction: rep.state,
           district: rep.district ?? undefined,
           party: rep.party ?? undefined,
-          last_updated: rep.last_updated
+          last_updated: rep.updated_at
         };
 
         if (includeDivisions && Array.isArray(rep.representative_divisions)) {
@@ -120,77 +125,64 @@ export const GET = withErrorHandling(async (request: NextRequest) => {
         }
 
         // Include FEC data if requested
-        if (include.includes('fec') && rep.person_id) {
+        if (include.includes('fec') && rep.id) {
           const { data: fecData, error: fecError } = await supabase
-            .from('civics_fec_minimal' as any)
-            .select('total_receipts, cash_on_hand, election_cycle, last_updated')
-            .eq('person_id', rep.person_id)
-            .order('election_cycle', { ascending: false })
+            .from('representative_campaign_finance')
+            .select('total_raised, cash_on_hand, cycle, updated_at')
+            .eq('representative_id', rep.id)
+            .order('cycle', { ascending: false })
             .limit(1)
-            .single();
+            .maybeSingle();
 
           if (!fecError && fecData) {
-            const typedFecData = fecData as unknown as {
-              total_receipts: number;
-              cash_on_hand: number;
-              election_cycle: number;
-              last_updated: string;
-            };
             response.fec = {
-              total_receipts: typedFecData.total_receipts,
-              cash_on_hand: typedFecData.cash_on_hand,
-              cycle: typedFecData.election_cycle,
-              last_updated: typedFecData.last_updated
+              total_receipts: fecData.total_raised ?? 0,
+              cash_on_hand: fecData.cash_on_hand ?? 0,
+              cycle: fecData.cycle ?? new Date().getFullYear(),
+              last_updated: fecData.updated_at ?? rep.updated_at
             };
           }
         }
 
-        // Include voting data if requested
-        if (include.includes('votes') && rep.person_id) {
+        // Include voting data if requested (using representative_activity)
+        if (include.includes('votes') && rep.id) {
           const { data: votesData, error: votesError } = await supabase
-            .from('civics_votes_minimal' as any)
-            .select('vote_id, bill_title, vote_date, vote_position, party_position, last_updated')
-            .eq('person_id', rep.person_id)
-            .order('vote_date', { ascending: false })
+            .from('representative_activity')
+            .select('id, title, description, date, metadata, url')
+            .eq('representative_id', rep.id)
+            .eq('type', 'vote')
+            .order('date', { ascending: false })
             .limit(5);
 
           if (!votesError && votesData && Array.isArray(votesData) && votesData.length > 0) {
-            const typedVotesData = votesData as unknown as Array<{
-              vote_id: string;
-              bill_title: string;
-              vote_date: string;
-              vote_position: string;
-              party_position: string;
-              last_updated: string;
-            }>;
-            const partyVotes = typedVotesData.filter(vote => vote.party_position === vote.vote_position);
-            const partyAlignment = partyVotes.length / typedVotesData.length;
-
             response.votes = {
-              last_5: typedVotesData,
-              party_alignment: Math.round(partyAlignment * 100) / 100,
-              last_updated: typedVotesData[0]?.last_updated || new Date().toISOString()
+              last_5: votesData.map(v => {
+                const metadata = v.metadata && typeof v.metadata === 'object' && !Array.isArray(v.metadata)
+                  ? v.metadata as Record<string, unknown>
+                  : {};
+                return {
+                  vote_id: String(v.id),
+                  bill_title: v.title ?? '',
+                  vote_date: v.date ?? '',
+                  vote_position: typeof metadata.vote_position === 'string' ? metadata.vote_position : null,
+                  party_position: null,
+                  last_updated: rep.updated_at
+                };
+              }),
+              party_alignment: null,
+              last_updated: rep.updated_at
             };
           }
         }
 
         // Include contact data if requested
-        if (include.includes('contact') && rep.contact) {
-          const contact =
-            typeof rep.contact === 'string' ? JSON.parse(rep.contact) : rep.contact;
-          if (contact && typeof contact === 'object') {
-            const contactRecord = contact as Record<string, unknown>;
+        if (include.includes('contact')) {
             response.contact = {
-              ...(typeof contactRecord.phone === 'string' ? { phone: contactRecord.phone } : {}),
-              ...(typeof contactRecord.website === 'string'
-                ? { website: contactRecord.website }
-                : {}),
-              ...(typeof contactRecord.twitter_url === 'string'
-                ? { twitter_url: contactRecord.twitter_url }
-                : {}),
-              last_updated: rep.last_updated
+            ...(rep.primary_phone ? { phone: rep.primary_phone } : {}),
+            ...(rep.primary_website ? { website: rep.primary_website } : {}),
+            ...(rep.primary_email ? { email: rep.primary_email } : {}),
+            last_updated: rep.updated_at
             };
-          }
         }
 
         return response;

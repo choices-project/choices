@@ -46,13 +46,7 @@ Complete implementation of OAuth 2.0 Device Authorization Grant (RFC 8628) for t
   - Auto-verification after OAuth callback
 
 ### Documentation
-- ✅ `docs/DEVICE_FLOW_AUTH.md`
-  - Complete technical documentation
-  - API reference
-  - Security considerations
-  - Troubleshooting guide
-
-- ✅ `docs/DEVICE_FLOW_QUICK_START.md`
+- ✅ `docs/features/device-flow.md`
   - Quick integration guide
   - Code examples
   - Usage patterns
@@ -238,10 +232,9 @@ Potential improvements for future iterations:
 
 ## Related Documentation
 
-- [Device Flow Auth Documentation](./DEVICE_FLOW_AUTH.md)
-- [Quick Start Guide](./DEVICE_FLOW_QUICK_START.md)
+- [Device Flow Documentation](../../../features/device-flow.md)
 - [OAuth 2.0 Device Authorization Grant (RFC 8628)](https://tools.ietf.org/html/rfc8628)
-- [Authentication Architecture](./AUTH_ARCHITECTURE.md)
+- [Authentication Architecture](../../../ARCHITECTURE.md)
 
 ## Status
 

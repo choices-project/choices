@@ -122,7 +122,7 @@ See `TESTING.md` for the broader strategy and harness overview.
 - **Shared helpers**: when writing to a store, import selector hooks or `use<Store>Actions` (e.g. `useNotificationActions`) from the store module instead of calling `use<Store>Store(getState)` directly. This keeps consumers aligned with the modernization playbook.
 - **Integration coverage**: add React Testing Library suites that instantiate the creator in isolation. See `tests/unit/stores/notification.integration.test.tsx` for the reference pattern (fake timers + helper stubs).
 - **Playwright harnesses**: expose harness pages under `/app/(app)/e2e/<store>` that register a `window.__<store>Harness` facade. The notification store example lives at `/app/(app)/e2e/notification-store/page.tsx` with its spec in `tests/e2e/specs/notification-store.spec.ts`.
-- **Documentation**: consult `STATE_MANAGEMENT.md` for standards/checklists and track work in `scratch/ROADMAP_SINGLE_SOURCE.md` (canonical location for outstanding work).
+- **Documentation**: consult `STATE_MANAGEMENT.md` for standards/checklists and track work in `docs/ROADMAP_SINGLE_SOURCE.md` (canonical location for outstanding work).
 
 ### Import order hygiene (Admin/E2E harnesses)
 
@@ -174,4 +174,10 @@ mockFrom.mockReturnValue({
 ---
 
 _See `README.md` for documentation index_
+
+## Ownership & Update Cadence
+
+- **Owner:** Core maintainer
+- **Update cadence:** Review on major feature changes and at least monthly
+- **Last verified:** TBD
 

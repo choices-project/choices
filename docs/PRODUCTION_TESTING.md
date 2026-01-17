@@ -318,3 +318,9 @@ Results are available in:
 
 **Remember**: Production tests are your safety net. They catch issues before users do. When they fail, they're telling you something needs to be fixed in the code, not the test.
 
+## Ownership & Update Cadence
+
+- **Owner:** Core maintainer
+- **Update cadence:** Review on major feature changes and at least monthly
+- **Last verified:** TBD
+

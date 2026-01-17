@@ -1,6 +1,8 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useQueryClient } from '@tanstack/react-query';
+import { useState, useCallback } from 'react';
 
 import { isFeatureEnabled } from '@/lib/core/feature-flags';
+import { useAnalytics as useAnalyticsQuery } from '@/lib/hooks/useApi';
 import { devLog } from '@/lib/utils/logger';
 // import { useFeatureFlags } from './useFeatureFlags';
 
@@ -75,10 +77,7 @@ export function useAnalytics(options: UseAnalyticsOptions = {}): UseAnalyticsRet
 
   // const featureFlags = useFeatureFlags();
   const featureFlags: { flags: { analytics?: boolean; aiFeatures?: boolean }; isLoading: boolean } = { flags: {}, isLoading: false };
-  const [data, setData] = useState<AnalyticsData | null>(null);
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-  const [lastUpdated, setLastUpdated] = useState<Date | null>(null);
+  const queryClient = useQueryClient();
   const [autoRefreshEnabled, setAutoRefreshEnabled] = useState(autoRefresh);
   const [filters, setFilters] = useState<AnalyticsFilters>(defaultFilters);
 
@@ -91,76 +90,46 @@ export function useAnalytics(options: UseAnalyticsOptions = {}): UseAnalyticsRet
     devLog('Feature flags loading', { analyticsEnabled, aiFeaturesEnabled });
   }
 
+  // ✅ Use React Query for fetching (with automatic caching and refetching)
+  const { 
+    data, 
+    isLoading: loading, 
+    error: queryError,
+    dataUpdatedAt 
+  } = useAnalyticsQuery(filters, {
+    refetchInterval: autoRefreshEnabled && analyticsEnabled ? refreshInterval : false,
+    enabled: analyticsEnabled,
+  });
+
+  // Convert React Query error to string
+  const error = queryError instanceof Error ? queryError.message : null;
+  const lastUpdated = dataUpdatedAt ? new Date(dataUpdatedAt) : null;
+
+  // Fetch with custom filters (invalidates React Query cache)
   const fetchData = useCallback(async (_type: string = 'overview', customFilters?: AnalyticsFilters) => {
     if (!analyticsEnabled) {
-      setError('Analytics feature is disabled');
       return;
     }
 
-    try {
-      setLoading(true);
-      setError(null);
+    const requestFilters = { ...filters, ...(customFilters ?? {}) };
+    await queryClient.invalidateQueries({ 
+      queryKey: ['analytics', requestFilters] 
+    });
+  }, [analyticsEnabled, filters, queryClient]);
 
-      const requestFilters = { ...filters, ...(customFilters ?? {}) };
-      const queryParams = new URLSearchParams({
-        period: requestFilters.dateRange ?? '7d'
-      });
-
-      const response = await fetch(`/api/analytics?${queryParams}`);
-      
-      if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
-      }
-
-      // CRITICAL: Explicitly handle JSON parsing errors to prevent infinite loops
-      let result;
-      try {
-        result = await response.json();
-      } catch (jsonError) {
-        const jsonErrorMessage = jsonError instanceof SyntaxError
-          ? 'Invalid JSON response from analytics API'
-          : jsonError instanceof Error ? jsonError.message : 'Failed to parse analytics data';
-        throw new Error(jsonErrorMessage);
-      }
-      
-      // The API returns the data directly, not wrapped in a success/error structure
-      setData(result);
-      setLastUpdated(new Date());
-    } catch (err) {
-      const errorMessage = err instanceof Error ? err.message : 'An error occurred';
-      setError(errorMessage);
-      devLog('Analytics fetch error:', err);
-    } finally {
-      setLoading(false);
-    }
-  }, [analyticsEnabled, filters]);
-
+  // Refresh data (uses React Query's refetch)
   const refreshData = useCallback(async () => {
-    await fetchData();
-  }, [fetchData]);
+    await queryClient.invalidateQueries({ 
+      queryKey: ['analytics', filters] 
+    });
+  }, [filters, queryClient]);
 
+  // Clear error (resets React Query error state)
   const clearError = useCallback(() => {
-    setError(null);
-  }, []);
-
-  // Auto-refresh effect
-  useEffect(() => {
-    if (!analyticsEnabled || !autoRefreshEnabled) {
-      return;
-    }
-    
-    fetchData();
-    
-    const interval = setInterval(fetchData, refreshInterval);
-    return () => clearInterval(interval);
-  }, [analyticsEnabled, autoRefreshEnabled, refreshInterval, fetchData]);
-
-  // Initial data fetch
-  useEffect(() => {
-    if (analyticsEnabled && !data) {
-      fetchData();
-    }
-  }, [analyticsEnabled, fetchData, data]);
+    queryClient.resetQueries({ 
+      queryKey: ['analytics', filters] 
+    });
+  }, [filters, queryClient]);
 
   const exportData = useCallback((format: 'json' | 'csv' = 'json') => {
     if (!data) {

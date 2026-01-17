@@ -1,9 +1,9 @@
 /**
  * Vote Validator
- * 
+ *
  * Provides comprehensive validation for votes across all voting methods.
  * Handles business logic validation, security checks, and data integrity.
- * 
+ *
  * Created: September 15, 2025
  * Updated: September 15, 2025
  */
@@ -12,14 +12,14 @@ import { devLog, logger } from '@/lib/utils/logger';
 
 import { getSupabaseServerClient } from '../../utils/supabase/server';
 
-import type { 
-  VoteData, 
-  PollData, 
+import type {
+  VoteData,
+  PollData,
   VoteValidation
 } from './types';
 
 export class VoteValidator {
-  private supabase: ReturnType<typeof getSupabaseServerClient>;
+  private supabase: Promise<Awaited<ReturnType<typeof getSupabaseServerClient>>>;
 
   constructor() {
     this.supabase = getSupabaseServerClient();
@@ -29,8 +29,8 @@ export class VoteValidator {
    * Validate a vote request comprehensively
    */
   async validateVote(
-    voteData: VoteData, 
-    poll: PollData, 
+    voteData: VoteData,
+    poll: PollData,
     userId?: string
   ): Promise<VoteValidation> {
     try {
@@ -150,13 +150,13 @@ export class VoteValidator {
    * Validate business rules
    */
   private async validateBusinessRules(
-    voteData: VoteData, 
-    poll: PollData, 
+    voteData: VoteData,
+    poll: PollData,
     userId?: string
   ): Promise<VoteValidation> {
       // Log vote data context for audit trail
-      const voteChoicesCount = voteData.rankings?.length ?? 
-                                voteData.approvals?.length ?? 
+      const voteChoicesCount = voteData.rankings?.length ??
+                                voteData.approvals?.length ??
                                 (voteData.choice !== undefined ? 1 : 0);
       logger.debug('Validating business rules', {
         pollId: poll.id,
@@ -164,7 +164,7 @@ export class VoteValidator {
         voteChoicesCount,
         pollStatus: poll.status
       });
-    
+
     // Check if poll is active
     if (poll.status !== 'active') {
       return {
@@ -175,24 +175,30 @@ export class VoteValidator {
       };
     }
 
-    // Check poll end time
-    if (poll.endTime && new Date(poll.endTime) < new Date()) {
-      return {
-        isValid: false,
-        error: 'Poll has ended',
-        requiresAuthentication: true,
-        requiresTokens: false
-      };
+    // Check if poll is locked (check before end time for clearer error messaging)
+    if (poll.lockedAt) {
+      const lockedAt = poll.lockedAt instanceof Date ? poll.lockedAt : new Date(poll.lockedAt);
+      if (lockedAt <= new Date()) {
+        return {
+          isValid: false,
+          error: 'Poll is locked',
+          requiresAuthentication: true,
+          requiresTokens: false
+        };
+      }
     }
 
-    // Check if poll is locked
-    if (poll.lockedAt) {
-      return {
-        isValid: false,
-        error: 'Poll is locked',
-        requiresAuthentication: true,
-        requiresTokens: false
-      };
+    // Check poll end time
+    if (poll.endTime) {
+      const endTime = poll.endTime instanceof Date ? poll.endTime : new Date(poll.endTime);
+      if (endTime < new Date()) {
+        return {
+          isValid: false,
+          error: 'Poll has ended',
+          requiresAuthentication: true,
+          requiresTokens: false
+        };
+      }
     }
 
     // Check if user has already voted (if not allowing multiple votes)
@@ -219,8 +225,8 @@ export class VoteValidator {
    * Validate security constraints
    */
   private async validateSecurity(
-    voteData: VoteData, 
-    poll: PollData, 
+    voteData: VoteData,
+    poll: PollData,
     userId?: string
   ): Promise<VoteValidation> {
     // Log vote data context for security audit
@@ -230,7 +236,7 @@ export class VoteValidator {
       hasVoteData: !!voteData,
       requiresVerification: poll.votingConfig.requireVerification
     });
-    
+
     // Check authentication requirements
     if (poll.votingConfig.requireVerification && !userId) {
       return {
@@ -588,14 +594,15 @@ export class VoteValidator {
       const supabaseClient = await this.supabase;
       if (!supabaseClient) return false;
 
-      const { data } = await supabaseClient
+      const { data, error } = await supabaseClient
         .from('votes')
         .select('id')
         .eq('poll_id', pollId)
         .eq('user_id', userId)
-        .single();
+        .maybeSingle();
 
-      return !!data;
+      // Return false if error or no data found (user hasn't voted)
+      return !error && !!data;
     } catch {
       return false;
     }
@@ -609,13 +616,14 @@ export class VoteValidator {
       const supabaseClient = await this.supabase;
       if (!supabaseClient) return 'T0';
 
-      const { data } = await supabaseClient
+      const { data, error } = await supabaseClient
         .from('user_profiles')
         .select('trust_tier')
         .eq('user_id', userId)
-        .single();
+        .maybeSingle();
 
-      return data?.trust_tier ?? 'T0';
+      // Return default tier if error or no data found
+      return (error || !data) ? 'T0' : (data.trust_tier ?? 'T0');
     } catch {
       return 'T0';
     }
@@ -628,7 +636,7 @@ export class VoteValidator {
     const tiers = ['T0', 'T1', 'T2', 'T3'];
     const userIndex = tiers.indexOf(userTier);
     const requiredIndex = tiers.indexOf(requiredTier);
-    
+
     return userIndex >= requiredIndex;
   }
 
@@ -648,7 +656,7 @@ export class VoteValidator {
           windowMs: 15 * 60 * 1000, // 15 minutes
         }
       );
-      
+
       if (!result.allowed) {
         logger.warn('Vote rate limit exceeded', {
           userId,
@@ -657,7 +665,7 @@ export class VoteValidator {
         });
         return true; // Rate limited
       }
-      
+
       return false; // Not rate limited
     } catch (error) {
       // On error, allow the vote (fail open for availability)

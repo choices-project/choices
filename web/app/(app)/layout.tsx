@@ -5,10 +5,18 @@ import dynamicImport from 'next/dynamic';
 import React, { Suspense, useState } from 'react';
 
 import { AuthProvider } from '@/contexts/AuthContext';
-import { markReactHydrationStarted } from '@/lib/stores/appStore';
 
 import { usePollCreatedListener } from '@/features/polls/hooks/usePollCreatedListener';
 import PWABackground from '@/features/pwa/components/PWABackground';
+import { ServiceWorkerProvider } from '@/features/pwa/components/ServiceWorkerProvider';
+
+import { AppShell } from '@/components/shared/AppShell';
+import { ErrorBoundary } from '@/components/shared/ErrorBoundary';
+import FontProvider from '@/components/shared/FontProvider';
+
+import { UserStoreProvider } from '@/lib/providers/UserStoreProvider';
+import { markReactHydrationStarted } from '@/lib/stores/appStore';
+import { logger } from '@/lib/utils/logger';
 
 // H40: Make OfflineIndicator client-only to prevent getServerSnapshot infinite loop
 // OfflineIndicator uses Zustand stores with persist middleware, which internally uses useSyncExternalStore
@@ -18,11 +26,6 @@ const OfflineIndicator = dynamicImport(() => import('@/features/pwa/components/O
   ssr: false,
   loading: () => null, // No loading state needed for offline indicator
 });
-import { ServiceWorkerProvider } from '@/features/pwa/components/ServiceWorkerProvider';
-
-import { AppShell } from '@/components/shared/AppShell';
-import { ErrorBoundary } from '@/components/shared/ErrorBoundary';
-import FontProvider from '@/components/shared/FontProvider';
 
 // CRITICAL: GlobalNavigation is now dynamically imported directly in AppShell
 // This prevents Next.js from wrapping it in a bailout template when passed as a prop
@@ -40,9 +43,6 @@ const SiteMessages = dynamicImport(() => import('@/components/SiteMessages'), {
   ssr: false,
   loading: () => <div style={{ display: 'none' }} aria-hidden="true" />,
 });
-
-
-import { UserStoreProvider } from '@/lib/providers/UserStoreProvider';
 
 const DISABLE_FEEDBACK_WIDGET = process.env.NEXT_PUBLIC_DISABLE_FEEDBACK_WIDGET === '1';
 const IS_E2E_HARNESS = process.env.NEXT_PUBLIC_ENABLE_E2E_HARNESS === '1';
@@ -89,8 +89,10 @@ export default function AppLayout({
       // #region agent log
       const currentPath = typeof window !== 'undefined' ? window.location.pathname : 'SSR';
       const currentAttrs={theme:document.documentElement.getAttribute('data-theme'),collapsed:document.documentElement.getAttribute('data-sidebar-collapsed'),width:document.documentElement.getAttribute('data-sidebar-width'),pinned:document.documentElement.getAttribute('data-sidebar-pinned')};
-      const logDataSkip={location:'AppLayout.tsx:useLayoutEffect-skip',message:'AppLayout skipping attribute update during hydration',data:{currentAttrs,currentPath},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'H14'};
-      console.log('[DEBUG]',JSON.stringify(logDataSkip));
+      // Skip during hydration - ThemeScript already set attributes correctly
+      if (process.env.DEBUG_DASHBOARD === '1') {
+        logger.debug('AppLayout skipping attribute update during hydration', { currentAttrs, currentPath });
+      }
       // #endregion
       // Skip during hydration - ThemeScript already set attributes correctly
       return;
@@ -159,8 +161,9 @@ export default function AppLayout({
           const attrName = mutation.attributeName;
           const oldValue = mutation.oldValue;
           const newValue = document.documentElement.getAttribute(attrName || '');
-          const logData={location:'AppLayout.tsx:mutationObserver',message:'DOM attribute changed during hydration',data:{attribute:attrName,oldValue,newValue,pathname:window.location.pathname,timestamp:Date.now()},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'H12'};
-          console.log('[DEBUG]',JSON.stringify(logData));
+          if (process.env.DEBUG_DASHBOARD === '1') {
+            logger.debug('DOM attribute changed during hydration', { attribute: attrName, oldValue, newValue, pathname: window.location.pathname });
+          }
         }
       });
     });
@@ -174,8 +177,17 @@ export default function AppLayout({
 
     // Track when React starts hydrating
     const hydrationStartTime = Date.now();
-    const logHydrationStart={location:'AppLayout.tsx:hydrationStart',message:'React hydration starting',data:{pathname:window.location.pathname,timestamp:hydrationStartTime,htmlAttrs:{theme:document.documentElement.getAttribute('data-theme'),collapsed:document.documentElement.getAttribute('data-sidebar-collapsed'),width:document.documentElement.getAttribute('data-sidebar-width'),pinned:document.documentElement.getAttribute('data-sidebar-pinned')}},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'H3'};
-    console.log('[DEBUG]',JSON.stringify(logHydrationStart));
+    if (process.env.DEBUG_DASHBOARD === '1') {
+      logger.debug('React hydration starting', {
+        pathname: window.location.pathname,
+        htmlAttrs: {
+          theme: document.documentElement.getAttribute('data-theme'),
+          collapsed: document.documentElement.getAttribute('data-sidebar-collapsed'),
+          width: document.documentElement.getAttribute('data-sidebar-width'),
+          pinned: document.documentElement.getAttribute('data-sidebar-pinned')
+        }
+      });
+    }
 
     // #region agent log - Snapshot DOM at hydration start (structural mismatch diagnosis)
     // Hypothesis H16/H17/H18: server HTML (what React hydrates) does not include the same root/page skeleton nodes as client expects.
@@ -215,7 +227,9 @@ export default function AppLayout({
         runId: 'run1',
         hypothesisId: 'H18',
       };
-      console.log('[DEBUG]', JSON.stringify(logDomAtHydrationStart));
+      if (process.env.DEBUG_DASHBOARD === '1') {
+        logger.debug('DOM snapshot at hydration start', logDomAtHydrationStart.data);
+      }
     } catch {
       // ignore
     }
@@ -282,7 +296,9 @@ export default function AppLayout({
           runId: 'run1',
           hypothesisId: 'H8'
         };
-        console.log('[DEBUG]', JSON.stringify(logData));
+        if (process.env.DEBUG_DASHBOARD === '1') {
+          logger.debug('Hydration error detected', logData.data);
+        }
 
         // #region agent log - Snapshot DOM at hydration error (structural mismatch diagnosis)
         // Hypothesis H27: BAILOUT_TO_CLIENT_SIDE_RENDERING template causing mismatch
@@ -329,7 +345,9 @@ export default function AppLayout({
             runId: 'run1',
             hypothesisId: 'H18',
           };
-          console.log('[DEBUG]', JSON.stringify(logDomAtHydrationError));
+          if (process.env.DEBUG_DASHBOARD === '1') {
+            logger.debug('DOM snapshot at hydration error', logDomAtHydrationError.data);
+          }
         } catch {
           // ignore
         }

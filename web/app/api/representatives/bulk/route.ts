@@ -7,13 +7,14 @@
  * Created: January 10, 2026
  */
 
-import type { NextRequest } from 'next/server';
 
 import { getSupabaseServerClient } from '@/utils/supabase/server';
 
 import { withErrorHandling, successResponse, errorResponse } from '@/lib/api';
 import { apiRateLimiter } from '@/lib/rate-limiting/api-rate-limiter';
 import logger from '@/lib/utils/logger';
+
+import type { NextRequest } from 'next/server';
 
 export const dynamic = 'force-dynamic';
 

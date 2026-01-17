@@ -160,7 +160,7 @@ curl -X POST http://localhost:3000/api/auth/device-flow/verify \
 
 ## Related Documentation
 
-- [Full Device Flow Documentation](./DEVICE_FLOW_AUTH.md)
+- [Device Flow Auth Reference (archive)](../archive/reference/device-flow/device-flow-auth-2025.md)
 - [OAuth 2.0 Device Authorization Grant (RFC 8628)](https://tools.ietf.org/html/rfc8628)
-- [Authentication Architecture](./AUTH_ARCHITECTURE.md)
+- [Authentication Architecture](../ARCHITECTURE.md)
 

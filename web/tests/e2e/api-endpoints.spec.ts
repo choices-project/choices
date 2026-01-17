@@ -88,10 +88,17 @@ const APP_BOOT_TIMEOUT = 90_000;
 
 // Skip these tests when running against production (without mocks)
 // These tests are designed for mock harness mode and create test users that don't exist in production
-const IS_PRODUCTION_WITHOUT_MOCKS = process.env.PLAYWRIGHT_USE_MOCKS === '0' && 
-  (process.env.BASE_URL?.includes('choices-app.com') || process.env.BASE_URL?.includes('production'));
+const baseUrl = process.env.PLAYWRIGHT_BASE_URL ?? process.env.BASE_URL;
+const IS_PRODUCTION_WITHOUT_MOCKS = Boolean(
+  process.env.PLAYWRIGHT_USE_MOCKS === '0' &&
+    (baseUrl?.includes('choices-app.com') || baseUrl?.includes('production')),
+);
 
 test.describe('API endpoints (mock harness)', () => {
+  test.skip(
+    IS_PRODUCTION_WITHOUT_MOCKS,
+    'Mock harness suite is not valid against production.',
+  );
   let seedHandle: SeedHandle;
   let testData: { user: TestUser; poll: TestPoll };
   let authToken: string;
@@ -264,6 +271,15 @@ test.describe('API endpoints (mock harness)', () => {
     });
     expect(byStateResponse.status).toBe(200);
     expect(byStateResponse.body).toHaveProperty('success', true);
+
+    // Verify representatives endpoint queries representatives_core successfully
+    const repsResponse = await apiFetch(page, {
+      url: '/api/representatives?state=IL&limit=5',
+    });
+    expect(repsResponse.status).toBe(200);
+    expect(repsResponse.body).toHaveProperty('success', true);
+    expect(repsResponse.body).toHaveProperty('data.representatives');
+    expect(Array.isArray((repsResponse.body as any)?.data?.representatives)).toBe(true);
 
     authToken = await loginForToken(page, testData.user);
     const dashboardResponse = await apiFetch(page, {
@@ -451,5 +467,6 @@ test.describe('API endpoints (mock harness)', () => {
       }
     });
   });
-});
+  },
+);
 

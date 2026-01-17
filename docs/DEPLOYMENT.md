@@ -105,3 +105,10 @@ Use this list **before** calling a release done. Link back to the relevant evide
 - [ ] **Audit Scheduling** — Upcoming SR + locale audit owners/date confirmed in `scratch/gpt5-codex/archive/inclusive-platform/issues.md`.
 
 Keep this document up to date as the deployment workflow evolves. When processes change, update both the commands above and any linked runbooks.
+
+## Ownership & Update Cadence
+
+- **Owner:** Core maintainer
+- **Update cadence:** Review on major feature changes and at least monthly
+- **Last verified:** TBD
+

@@ -217,10 +217,10 @@ export default function ShareAnalyticsPanel({ refreshInterval = 30000 }: ShareAn
             <CardContent className="pt-6">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-sm font-medium text-gray-600">Total Shares</p>
-                  <p className="text-2xl font-bold text-gray-900">{totalShares.toLocaleString()}</p>
+                  <p className="text-sm font-medium text-gray-600 dark:text-gray-400">Total Shares</p>
+                  <p className="text-2xl font-bold text-gray-900 dark:text-gray-100">{totalShares.toLocaleString()}</p>
                 </div>
-                <Share2 className="h-8 w-8 text-blue-600" />
+                <Share2 className="h-8 w-8 text-blue-600 dark:text-blue-400" />
               </div>
             </CardContent>
           </Card>
@@ -228,10 +228,10 @@ export default function ShareAnalyticsPanel({ refreshInterval = 30000 }: ShareAn
             <CardContent className="pt-6">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-sm font-medium text-gray-600">Platforms</p>
-                  <p className="text-2xl font-bold text-gray-900">{platformEntries.length}</p>
+                  <p className="text-sm font-medium text-gray-600 dark:text-gray-400">Platforms</p>
+                  <p className="text-2xl font-bold text-gray-900 dark:text-gray-100">{platformEntries.length}</p>
                 </div>
-                <BarChart3 className="h-8 w-8 text-green-600" />
+                <BarChart3 className="h-8 w-8 text-green-600 dark:text-green-400" />
               </div>
             </CardContent>
           </Card>
@@ -239,12 +239,12 @@ export default function ShareAnalyticsPanel({ refreshInterval = 30000 }: ShareAn
             <CardContent className="pt-6">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-sm font-medium text-gray-600">Top Polls</p>
-                  <p className="text-2xl font-bold text-gray-900">
+                  <p className="text-sm font-medium text-gray-600 dark:text-gray-400">Top Polls</p>
+                  <p className="text-2xl font-bold text-gray-900 dark:text-gray-100">
                     {analytics?.topPolls.length ?? 0}
                   </p>
                 </div>
-                <TrendingUp className="h-8 w-8 text-purple-600" />
+                <TrendingUp className="h-8 w-8 text-purple-600 dark:text-purple-400" />
               </div>
             </CardContent>
           </Card>
@@ -253,7 +253,7 @@ export default function ShareAnalyticsPanel({ refreshInterval = 30000 }: ShareAn
         {/* Platform Breakdown */}
         {platformEntries.length > 0 && (
           <div>
-            <h3 className="text-lg font-semibold text-gray-900 mb-4">Platform Breakdown</h3>
+            <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-4">Platform Breakdown</h3>
             <div className="space-y-3">
               {platformEntries.map(([platform, count]) => {
                 const percentage = totalShares > 0 ? ((count / totalShares) * 100).toFixed(1) : '0';
@@ -263,18 +263,18 @@ export default function ShareAnalyticsPanel({ refreshInterval = 30000 }: ShareAn
                       <Badge variant="outline" className="capitalize min-w-[100px]">
                         {platform}
                       </Badge>
-                      <div className="flex-1 bg-gray-200 rounded-full h-2">
+                      <div className="flex-1 bg-gray-200 dark:bg-gray-700 rounded-full h-2">
                         <div
-                          className="bg-blue-600 h-2 rounded-full transition-all"
+                          className="bg-blue-600 dark:bg-blue-500 h-2 rounded-full transition-all"
                           style={{ width: `${percentage}%` }}
                         />
                       </div>
                     </div>
                     <div className="text-right min-w-[120px]">
-                      <span className="text-sm font-semibold text-gray-900">
+                      <span className="text-sm font-semibold text-gray-900 dark:text-gray-100">
                         {count.toLocaleString()}
                       </span>
-                      <span className="text-sm text-gray-600 ml-2">({percentage}%)</span>
+                      <span className="text-sm text-gray-600 dark:text-gray-400 ml-2">({percentage}%)</span>
                     </div>
                   </div>
                 );
@@ -286,25 +286,25 @@ export default function ShareAnalyticsPanel({ refreshInterval = 30000 }: ShareAn
         {/* Top Polls */}
         {analytics && analytics.topPolls.length > 0 && (
           <div>
-            <h3 className="text-lg font-semibold text-gray-900 mb-4">Most Shared Polls</h3>
+            <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-4">Most Shared Polls</h3>
             <div className="space-y-2">
               {analytics.topPolls.map(({ pollId, shares }, index) => (
                 <div
                   key={pollId}
-                  className="flex items-center justify-between p-3 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors"
+                  className="flex items-center justify-between p-3 bg-gray-50 dark:bg-gray-800 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors border border-gray-200 dark:border-gray-700"
                 >
                   <div className="flex items-center gap-3">
                     <Badge variant="secondary" className="w-8 h-8 flex items-center justify-center">
                       {index + 1}
                     </Badge>
-                    <span className="text-sm font-mono text-gray-700">{pollId}</span>
+                    <span className="text-sm font-mono text-gray-700 dark:text-gray-300">{pollId}</span>
                   </div>
                   <div className="flex items-center gap-2">
-                    <Share2 className="h-4 w-4 text-gray-500" />
-                    <span className="text-sm font-semibold text-gray-900">
+                    <Share2 className="h-4 w-4 text-gray-500 dark:text-gray-400" />
+                    <span className="text-sm font-semibold text-gray-900 dark:text-gray-100">
                       {shares.toLocaleString()}
                     </span>
-                    <span className="text-xs text-gray-500">shares</span>
+                    <span className="text-xs text-gray-500 dark:text-gray-400">shares</span>
                   </div>
                 </div>
               ))}

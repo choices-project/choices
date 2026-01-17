@@ -49,7 +49,7 @@ export const GET = withErrorHandling(async (
 ) => {
   try {
     const supabase = await getSupabaseServerClient();
-    
+
     if (!supabase) {
       return errorResponse('Supabase client not available', 503);
     }
@@ -70,16 +70,19 @@ export const GET = withErrorHandling(async (
     };
 
     type RepresentativeRow = {
-      id: string;
+      id: number;
       name: string;
       office: string;
       level: 'federal' | 'state' | 'local';
-      jurisdiction: string;
+      state: string;
       district: string | null;
       party: string | null;
-      last_updated: string;
-      person_id: string | null;
-      contact: string | Record<string, unknown> | null;
+      updated_at: string;
+      openstates_id: string | null;
+      primary_email?: string | null;
+      primary_phone?: string | null;
+      primary_website?: string | null;
+      primary_photo_url?: string | null;
       representative_divisions?: RepresentativeDivisionRow[] | null;
     };
 
@@ -88,23 +91,31 @@ export const GET = withErrorHandling(async (
       'name',
       'office',
       'level',
-      'jurisdiction',
+      'state',
       'district',
       'party',
-      'last_updated',
-      'person_id',
-      'contact'
+      'updated_at',
+      'openstates_id',
+      'primary_email',
+      'primary_phone',
+      'primary_website',
+      'primary_photo_url'
     ];
 
     if (includeDivisions) {
       selectFields.push('representative_divisions:representative_divisions(division_id)');
     }
 
+    const repId = parseInt(representativeId, 10);
+    if (isNaN(repId)) {
+      return validationError({ id: 'Invalid representative ID format' });
+    }
+
     const { data: rep, error: repError } = await supabase
-      .from('civics_representatives' as any)
+      .from('representatives_core')
       .select(selectFields.join(','))
-      .eq('id', representativeId)
-      .eq('valid_to', 'infinity')
+      .eq('id', repId)
+      .eq('is_active', true)
       .maybeSingle();
 
     if (repError) {
@@ -118,13 +129,13 @@ export const GET = withErrorHandling(async (
     const representativeRow = rep as unknown as RepresentativeRow;
 
     const response: RepresentativeResponse = {
-      id: representativeRow.id,
+      id: String(representativeRow.id),
       name: representativeRow.name,
       office: representativeRow.office,
       level: representativeRow.level,
-      jurisdiction: representativeRow.jurisdiction,
+      jurisdiction: representativeRow.state,
       attribution: {},
-      last_updated: representativeRow.last_updated
+      last_updated: representativeRow.updated_at
     };
 
     if (representativeRow.district) {
@@ -145,58 +156,54 @@ export const GET = withErrorHandling(async (
     }
 
     // Include FEC data if requested
-    if (include.includes('fec') && representativeRow.person_id) {
+    if (include.includes('fec')) {
+      response.attribution.fec = 'Federal Election Commission';
+
       const { data: fecData, error: fecError } = await supabase
-        .from('civics_fec_minimal' as any)
-        .select('total_receipts, cash_on_hand, election_cycle, last_updated')
-        .eq('person_id', representativeRow.person_id)
-        .order('election_cycle', { ascending: false })
+        .from('representative_campaign_finance')
+        .select('total_raised, cash_on_hand, cycle, updated_at')
+        .eq('representative_id', representativeRow.id)
+        .order('cycle', { ascending: false })
         .limit(1)
-        .single();
+        .maybeSingle();
 
       if (!fecError && fecData) {
-        const typedFecData = fecData as unknown as {
-          total_receipts: number;
-          cash_on_hand: number;
-          election_cycle: number;
-          last_updated: string;
-        };
         response.fec = {
-          total_receipts: typedFecData.total_receipts,
-          cash_on_hand: typedFecData.cash_on_hand,
-          cycle: typedFecData.election_cycle,
-          last_updated: typedFecData.last_updated
+          total_receipts: fecData.total_raised ?? 0,
+          cash_on_hand: fecData.cash_on_hand ?? 0,
+          cycle: fecData.cycle ?? new Date().getFullYear(),
+          last_updated: fecData.updated_at ?? representativeRow.updated_at
         };
-        response.attribution.fec = 'Federal Election Commission';
       }
     }
 
     // Include voting data if requested
-    if (include.includes('votes') && representativeRow.person_id) {
+    if (include.includes('votes')) {
       const { data: votesData, error: votesError } = await supabase
-        .from('civics_votes_minimal' as any)
-        .select('vote_id, bill_title, vote_date, vote_position, party_position, last_updated')
-        .eq('person_id', representativeRow.person_id)
-        .order('vote_date', { ascending: false })
+        .from('representative_activity')
+        .select('id, title, description, date, metadata, url')
+        .eq('representative_id', representativeRow.id)
+        .eq('type', 'vote')
+        .order('date', { ascending: false })
         .limit(5);
 
       if (!votesError && votesData && Array.isArray(votesData) && votesData.length > 0) {
-        const typedVotesData = votesData as unknown as Array<{
-          vote_id: string;
-          bill_title: string;
-          vote_date: string;
-          vote_position: string;
-          party_position: string;
-          last_updated: string;
-        }>;
-        // Calculate party alignment
-        const partyVotes = typedVotesData.filter(vote => vote.party_position === vote.vote_position);
-        const partyAlignment = partyVotes.length / typedVotesData.length;
-
         response.votes = {
-          last_5: typedVotesData,
-          party_alignment: Math.round(partyAlignment * 100) / 100,
-          last_updated: typedVotesData[0]?.last_updated || representativeRow.last_updated
+          last_5: votesData.map(v => {
+            const metadata = v.metadata && typeof v.metadata === 'object' && !Array.isArray(v.metadata)
+              ? v.metadata as Record<string, unknown>
+              : {};
+            return {
+              vote_id: String(v.id),
+              bill_title: v.title ?? '',
+              vote_date: v.date ?? '',
+              vote_position: typeof metadata.vote_position === 'string' ? metadata.vote_position : null,
+              party_position: null,
+              last_updated: representativeRow.updated_at
+            };
+          }),
+          party_alignment: 0,
+          last_updated: representativeRow.updated_at
         };
         response.attribution.votes = 'GovTrack.us';
       }
@@ -204,27 +211,13 @@ export const GET = withErrorHandling(async (
 
     // Include contact data if requested
     if (include.includes('contact')) {
-      // For now, extract from existing contact field
-      if (representativeRow.contact) {
-        const contact =
-          typeof representativeRow.contact === 'string'
-            ? JSON.parse(representativeRow.contact)
-            : representativeRow.contact;
-        if (contact && typeof contact === 'object') {
-          const contactRecord = contact as Record<string, unknown>;
-          response.contact = {
-            ...(typeof contactRecord.phone === 'string' ? { phone: contactRecord.phone } : {}),
-            ...(typeof contactRecord.website === 'string'
-              ? { website: contactRecord.website }
-              : {}),
-            ...(typeof contactRecord.twitter_url === 'string'
-              ? { twitter_url: contactRecord.twitter_url }
-              : {}),
-            last_updated: representativeRow.last_updated
-          };
-          response.attribution.contact = 'ProPublica Congress API';
-        }
-      }
+      response.contact = {
+        ...(representativeRow.primary_phone ? { phone: representativeRow.primary_phone } : {}),
+        ...(representativeRow.primary_website ? { website: representativeRow.primary_website } : {}),
+        ...(representativeRow.primary_email ? { email: representativeRow.primary_email } : {}),
+        last_updated: representativeRow.updated_at
+      };
+      response.attribution.contact = 'ProPublica Congress API';
     }
 
     // Filter fields if requested
@@ -243,7 +236,7 @@ export const GET = withErrorHandling(async (
         }
       );
 
-      responsePayload.headers.set('ETag', `"${representativeRow.id}-${representativeRow.last_updated}"`);
+      responsePayload.headers.set('ETag', `"${representativeRow.id}-${representativeRow.updated_at}"`);
       responsePayload.headers.set('Cache-Control', 'public, max-age=300, stale-while-revalidate=86400');
 
       return responsePayload;
@@ -256,7 +249,7 @@ export const GET = withErrorHandling(async (
       }
     );
 
-    apiResponse.headers.set('ETag', `"${representativeRow.id}-${representativeRow.last_updated}"`);
+    apiResponse.headers.set('ETag', `"${representativeRow.id}-${representativeRow.updated_at}"`);
     apiResponse.headers.set('Cache-Control', 'public, max-age=300, stale-while-revalidate=86400');
 
     return apiResponse;

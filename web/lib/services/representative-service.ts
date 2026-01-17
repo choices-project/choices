@@ -1,9 +1,9 @@
 /**
  * Representative Service
- * 
+ *
  * Core business logic for representative management
  * Handles data fetching, searching, and user interactions
- * 
+ *
  * Created: October 28, 2025
  * Last Updated: November 5, 2025
  * Status: ✅ PRODUCTION - Mock data removed, uses real APIs
@@ -42,7 +42,7 @@ export class RepresentativeService {
   async getRepresentatives(query?: RepresentativeSearchQuery): Promise<RepresentativeListResponse> {
     try {
       logger.info('🔍 Service: getRepresentatives called with query:', query);
-      
+
       // Check cache first using cache key and validation
       const cacheKey = this.getCacheKey(JSON.stringify(query ?? {}));
       const cached = this.cache.get(cacheKey) as { data: RepresentativeListResponse; timestamp: number } | undefined;
@@ -50,26 +50,33 @@ export class RepresentativeService {
         logger.info('✅ Service: Returning cached response');
         return cached.data;
       }
-      
-      // Build query string
+
+      // Build query string - use main /api/representatives endpoint for consistency
       const params = new URLSearchParams();
       if (query?.state) params.append('state', query.state);
       if (query?.party) params.append('party', query.party);
       if (query?.level) params.append('level', query.level);
+      if (query?.district) params.append('district', query.district);
       if (query?.office) params.append('office', query.office);
-      if (query?.query) params.append('query', query.query);
+      if (query?.query) params.append('search', query.query); // Map 'query' to 'search' parameter for API
       if (query?.limit) params.append('limit', query.limit.toString());
+      if (query?.offset !== undefined) params.append('offset', query.offset.toString());
+      // Include divisions and other related data for optimal UX (committees queried separately due to RLS)
       params.append('include', 'divisions');
-      // Note: page is not part of RepresentativeSearchQuery type, using default pagination
-      
-      // Call API route (client-safe)
-      const response = await fetch(`/api/v1/civics/by-state?${params.toString()}`);
+
+      // Use main representatives endpoint which queries representatives_core directly
+      const response = await fetch(`/api/representatives?${params.toString()}`);
       if (!response.ok) {
         throw new Error(`API request failed: ${response.statusText}`);
       }
-      
+
       const apiResult = await response.json();
-      const representatives = (apiResult.data ?? []).map(
+
+      if (!apiResult.success || !apiResult.data) {
+        throw new Error(apiResult.error ?? 'Failed to fetch representatives');
+      }
+
+      const representatives = (apiResult.data.representatives ?? []).map(
         (rep: Representative & { division_ids?: string[]; ocdDivisionIds?: string[] }) => {
           const divisionsSource = Array.isArray(rep.ocdDivisionIds)
             ? rep.ocdDivisionIds
@@ -85,22 +92,22 @@ export class RepresentativeService {
           };
         }
       );
-      
-      logger.info('✅ Service: Returning API response');
+
+      logger.info('✅ Service: Returning API response', { count: representatives.length });
       const result: RepresentativeListResponse = {
         success: true,
         data: {
           representatives,
-          total: apiResult.total ?? 0,
-          page: 1, // API doesn't support pagination in query type
-          limit: query?.limit ?? 20,
-          hasMore: (apiResult.data?.length ?? 0) >= (query?.limit ?? 20)
+          total: apiResult.data.total ?? 0,
+          page: apiResult.data.page ?? 1,
+          limit: apiResult.data.limit ?? (query?.limit ?? 20),
+          hasMore: apiResult.data.hasMore ?? false
         }
       };
-      
+
       // Cache the result
       this.cache.set(cacheKey, { data: result, timestamp: Date.now() });
-      
+
       return result;
     } catch (error) {
       logger.error('RepresentativeService.getRepresentatives error:', error);
@@ -137,7 +144,7 @@ export class RepresentativeService {
       }
 
       const apiResult = await response.json();
-      
+
       const data = (apiResult?.data?.representative ??
         apiResult?.data ??
         apiResult) as Representative & {
@@ -173,44 +180,60 @@ export class RepresentativeService {
    */
   async findByLocation(query: RepresentativeLocationQuery): Promise<RepresentativeListResponse> {
     try {
-      // Call API route (client-safe)
+      // First, get jurisdiction from address using Google API
+      const lookupResponse = await fetch('/api/v1/civics/address-lookup', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ address: query.address })
+      });
+
+      if (!lookupResponse.ok) {
+        throw new Error(`Address lookup failed: ${lookupResponse.statusText}`);
+      }
+
+      const lookupResult = await lookupResponse.json();
+      if (!lookupResult?.success || !lookupResult?.data?.jurisdiction) {
+        throw new Error(lookupResult?.error ?? 'Unable to determine jurisdiction from address');
+      }
+
+      const jurisdiction = lookupResult.data.jurisdiction;
+      const { state, district, ocd_division_id } = jurisdiction;
+
+      // Now query representatives based on jurisdiction
       const params = new URLSearchParams();
-      params.append('address', query.address);
-      params.append('include', 'divisions');
-      
-      const response = await fetch(`/api/v1/civics/by-state?${params.toString()}`);
+      if (state) params.append('state', state);
+      if (district) params.append('district', district);
+      if (ocd_division_id) params.append('ocd_division_id', ocd_division_id);
+      params.append('limit', '50'); // Get more results for better filtering
+
+      // Use the main representatives endpoint which queries representatives_core
+      const response = await fetch(`/api/representatives?${params.toString()}`);
       if (!response.ok) {
         throw new Error(`API request failed: ${response.statusText}`);
       }
-      
-      const apiResult = await response.json();
-      const representativePayload = Array.isArray(apiResult?.data?.representatives)
-        ? apiResult.data.representatives
-        : Array.isArray(apiResult?.data)
-        ? apiResult.data
-        : [];
-      const representatives = representativePayload.map(
-        (rep: Representative & { division_ids?: string[]; ocdDivisionIds?: string[] }) => {
-          const divisionsSource = Array.isArray(rep.ocdDivisionIds)
-            ? rep.ocdDivisionIds
-            : Array.isArray(rep.division_ids)
-            ? rep.division_ids
-            : [];
-          const divisions = divisionsSource.filter((value): value is string => typeof value === 'string');
 
-          return {
-            ...rep,
-            division_ids: divisions,
-            ocdDivisionIds: divisions,
-          };
+      const apiResult = await response.json();
+      const data = apiResult?.data ?? apiResult;
+
+      let representatives = Array.isArray(data?.representatives) ? data.representatives : [];
+
+      // Additional client-side filtering for OCD division ID if API didn't filter
+      if (ocd_division_id && representatives.length > 0) {
+        const filtered = representatives.filter((rep: any) => {
+          const repDivisions = Array.isArray(rep.division_ids) ? rep.division_ids : [];
+          return repDivisions.includes(ocd_division_id);
+        });
+        // Only use filtered results if we found matches
+        if (filtered.length > 0) {
+          representatives = filtered;
         }
-      );
-      
+      }
+
       return {
         success: true,
         data: {
           representatives,
-          total: apiResult?.data?.count ?? apiResult?.metadata?.pagination?.total ?? representatives.length,
+          total: representatives.length,
           page: 1,
           limit: 20,
           hasMore: false
@@ -239,7 +262,7 @@ export class RepresentativeService {
       await this.delay(400);
 
       const result = await this.getRepresentatives(query);
-      
+
       if (!result.success || !result.data) {
         return {
           representatives: [],
@@ -270,9 +293,91 @@ export class RepresentativeService {
   }
 
   /**
+   * Bulk fetch representatives by IDs (Issue #8)
+   * Efficiently fetch multiple representatives in a single request
+   *
+   * @param ids - Array of representative IDs to fetch
+   * @param include - Optional array of related data to include (e.g., ['committees', 'divisions'])
+   * @returns Bulk fetch result with representatives
+   */
+  async getBulkRepresentatives(
+    ids: number[],
+    include: string[] = []
+  ): Promise<RepresentativeListResponse> {
+    try {
+      logger.info('🔍 Service: getBulkRepresentatives called', { idCount: ids.length, include });
+
+      // Validate input
+      if (!Array.isArray(ids) || ids.length === 0) {
+        return {
+          success: false,
+          data: {
+            representatives: [],
+            total: 0,
+            page: 1,
+            limit: ids.length,
+            hasMore: false
+          },
+          error: 'Invalid IDs: must be a non-empty array'
+        };
+      }
+
+      // Limit bulk size to prevent abuse
+      const maxBulkSize = 100;
+      const validIds = ids.slice(0, maxBulkSize);
+
+      // Call bulk endpoint
+      const response = await fetch('/api/representatives/bulk', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ ids: validIds, include })
+      });
+
+      if (!response.ok) {
+        throw new Error(`Bulk API request failed: ${response.statusText}`);
+      }
+
+      const apiResult = await response.json();
+
+      if (!apiResult.success || !apiResult.data) {
+        throw new Error(apiResult.error ?? 'Failed to fetch bulk representatives');
+      }
+
+      logger.info('✅ Service: Bulk representatives fetched', {
+        requested: validIds.length,
+        found: apiResult.data.found
+      });
+
+      return {
+        success: true,
+        data: {
+          representatives: apiResult.data.representatives ?? [],
+          total: apiResult.data.total ?? 0,
+          page: 1,
+          limit: validIds.length,
+          hasMore: false
+        }
+      };
+    } catch (error) {
+      logger.error('RepresentativeService.getBulkRepresentatives error:', error);
+      return {
+        success: false,
+        data: {
+          representatives: [],
+          total: 0,
+          page: 1,
+          limit: ids.length,
+          hasMore: false
+        },
+        error: error instanceof Error ? error.message : 'Unknown error'
+      };
+    }
+  }
+
+  /**
    * Get representatives by committee
    * Calls API to fetch real committee membership data.
-   * 
+   *
    * @param committeeName - Name of committee to search
    * @returns Array of representatives or empty array on error
    */
@@ -280,7 +385,7 @@ export class RepresentativeService {
     try {
       // Call API route for committee members
       const response = await fetch(`/api/civics/committees/${encodeURIComponent(committeeName)}/members`);
-      
+
       if (!response.ok) {
         if (response.status === 404) {
           logger.warn(`Committee not found: ${committeeName}`);
@@ -304,7 +409,7 @@ export class RepresentativeService {
   async followRepresentative(userId: string, representativeId: number): Promise<boolean> {
     try {
       await this.delay(200);
-      
+
       // Mock implementation - later this will save to database
       logger.info(`User ${userId} followed representative ${representativeId}`);
       return true;
@@ -320,7 +425,7 @@ export class RepresentativeService {
   async unfollowRepresentative(userId: string, representativeId: number): Promise<boolean> {
     try {
       await this.delay(200);
-      
+
       // Mock implementation
       logger.info(`User ${userId} unfollowed representative ${representativeId}`);
       return true;
@@ -336,7 +441,7 @@ export class RepresentativeService {
   async getUserRepresentatives(_userId: string): Promise<Representative[]> {
     try {
       await this.delay(300);
-      
+
       // Mock implementation - return empty array for now
       // userId parameter reserved for future database implementation
       return [];

@@ -110,28 +110,28 @@ export const FeedbackDetailModal: React.FC<FeedbackDetailModalProps> = ({
 
   const getTypeColor = (type: string) => {
     switch (type) {
-      case 'bug': return 'bg-red-100 text-red-700';
-      case 'feature': return 'bg-blue-100 text-blue-700';
-      default: return 'bg-green-100 text-green-700';
+      case 'bug': return 'bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-300';
+      case 'feature': return 'bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300';
+      default: return 'bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-300';
     }
   };
 
   const getSentimentIcon = (sentiment: string) => {
     switch (sentiment) {
-      case 'positive': return <Smile className="w-4 h-4 text-green-600" />;
-      case 'negative': return <Frown className="w-4 h-4 text-red-600" />;
-      case 'neutral': return <Meh className="w-4 h-4 text-gray-600" />;
-      default: return <Meh className="w-4 h-4 text-gray-600" />;
+      case 'positive': return <Smile className="w-4 h-4 text-green-600 dark:text-green-400" />;
+      case 'negative': return <Frown className="w-4 h-4 text-red-600 dark:text-red-400" />;
+      case 'neutral': return <Meh className="w-4 h-4 text-gray-600 dark:text-gray-400" />;
+      default: return <Meh className="w-4 h-4 text-gray-600 dark:text-gray-400" />;
     }
   };
 
   const getPriorityColor = (priority: string) => {
     switch (priority) {
-      case 'urgent': return 'bg-red-100 text-red-700';
-      case 'high': return 'bg-orange-100 text-orange-700';
-      case 'medium': return 'bg-yellow-100 text-yellow-700';
-      case 'low': return 'bg-green-100 text-green-700';
-      default: return 'bg-gray-100 text-gray-700';
+      case 'urgent': return 'bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-300';
+      case 'high': return 'bg-orange-100 dark:bg-orange-900/30 text-orange-700 dark:text-orange-300';
+      case 'medium': return 'bg-yellow-100 dark:bg-yellow-900/30 text-yellow-700 dark:text-yellow-300';
+      case 'low': return 'bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-300';
+      default: return 'bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300';
     }
   };
 
@@ -174,22 +174,22 @@ export const FeedbackDetailModal: React.FC<FeedbackDetailModalProps> = ({
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-      <div className="bg-white rounded-lg shadow-xl max-w-4xl w-full max-h-[90vh] overflow-y-auto">
+    <div className="fixed inset-0 bg-black bg-opacity-50 dark:bg-opacity-70 flex items-center justify-center z-50 p-4">
+      <div className="bg-white dark:bg-gray-900 rounded-lg shadow-xl max-w-4xl w-full max-h-[90vh] overflow-y-auto border border-gray-200 dark:border-gray-700">
         {/* Header */}
-        <div className="flex items-center justify-between p-6 border-b border-gray-200">
+        <div className="flex items-center justify-between p-6 border-b border-gray-200 dark:border-gray-700">
           <div className="flex items-center space-x-3">
             <div className={`p-2 rounded-lg ${getTypeColor(feedback.type)}`}>
               {getTypeIcon(feedback.type)}
             </div>
             <div>
-              <h2 className="text-xl font-semibold text-gray-900">{feedback.title}</h2>
-              <p className="text-sm text-gray-500">Feedback #{feedback.id}</p>
+              <h2 className="text-xl font-semibold text-gray-900 dark:text-gray-100">{feedback.title}</h2>
+              <p className="text-sm text-gray-500 dark:text-gray-400">Feedback #{feedback.id}</p>
             </div>
           </div>
           <button
             onClick={onClose}
-            className="text-gray-400 hover:text-gray-600 transition-colors"
+            className="text-gray-400 dark:text-gray-500 hover:text-gray-600 dark:hover:text-gray-300 transition-colors"
           >
             <X className="h-6 w-6" />
           </button>
@@ -199,46 +199,46 @@ export const FeedbackDetailModal: React.FC<FeedbackDetailModalProps> = ({
           {/* Basic Info */}
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
             <div className="flex items-center space-x-2">
-              <Tag className="h-4 w-4 text-gray-400" />
-              <span className="text-sm text-gray-600">Type:</span>
-              <span className="text-sm font-medium capitalize">{feedback.type}</span>
+              <Tag className="h-4 w-4 text-gray-400 dark:text-gray-500" />
+              <span className="text-sm text-gray-600 dark:text-gray-400">Type:</span>
+              <span className="text-sm font-medium capitalize text-gray-900 dark:text-gray-100">{feedback.type}</span>
             </div>
             <div className="flex items-center space-x-2">
-              <Star className="h-4 w-4 text-gray-400" />
-              <span className="text-sm text-gray-600">Priority:</span>
+              <Star className="h-4 w-4 text-gray-400 dark:text-gray-500" />
+              <span className="text-sm text-gray-600 dark:text-gray-400">Priority:</span>
               <span className={`text-sm font-medium px-2 py-1 rounded-full ${getPriorityColor(feedback.priority)}`}>
                 {feedback.priority}
               </span>
             </div>
             <div className="flex items-center space-x-2">
               {getSentimentIcon(feedback.sentiment)}
-              <span className="text-sm text-gray-600">Sentiment:</span>
-              <span className="text-sm font-medium capitalize">{feedback.sentiment}</span>
+              <span className="text-sm text-gray-600 dark:text-gray-400">Sentiment:</span>
+              <span className="text-sm font-medium capitalize text-gray-900 dark:text-gray-100">{feedback.sentiment}</span>
             </div>
             <div className="flex items-center space-x-2">
-              <Calendar className="h-4 w-4 text-gray-400" />
-              <span className="text-sm text-gray-600">Created:</span>
-              <span className="text-sm font-medium">{formatDate(feedback.createdat)}</span>
+              <Calendar className="h-4 w-4 text-gray-400 dark:text-gray-500" />
+              <span className="text-sm text-gray-600 dark:text-gray-400">Created:</span>
+              <span className="text-sm font-medium text-gray-900 dark:text-gray-100">{formatDate(feedback.createdat)}</span>
             </div>
           </div>
 
           {/* Description */}
           <div>
-            <h3 className="text-lg font-medium text-gray-900 mb-2">Description</h3>
-            <div className="bg-gray-50 rounded-lg p-4">
-              <p className="text-gray-700 whitespace-pre-wrap">{feedback.description}</p>
+            <h3 className="text-lg font-medium text-gray-900 dark:text-gray-100 mb-2">Description</h3>
+            <div className="bg-gray-50 dark:bg-gray-800 rounded-lg p-4 border border-gray-200 dark:border-gray-700">
+              <p className="text-gray-700 dark:text-gray-300 whitespace-pre-wrap">{feedback.description}</p>
             </div>
           </div>
 
           {/* Tags */}
           {feedback.tags && feedback.tags.length > 0 && (
             <div>
-              <h3 className="text-lg font-medium text-gray-900 mb-2">Tags</h3>
+              <h3 className="text-lg font-medium text-gray-900 dark:text-gray-100 mb-2">Tags</h3>
               <div className="flex flex-wrap gap-2">
                 {feedback.tags.map((tag) => (
                   <span
                     key={tag}
-                    className="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-blue-100 text-blue-800"
+                    className="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-blue-100 dark:bg-blue-900/30 text-blue-800 dark:text-blue-300"
                   >
                     <Tag className="w-4 h-4 mr-1" />
                     {tag}
@@ -251,9 +251,9 @@ export const FeedbackDetailModal: React.FC<FeedbackDetailModalProps> = ({
           {/* User Journey */}
           {feedback.userjourney && (
             <div>
-              <h3 className="text-lg font-medium text-gray-900 mb-2">User Journey</h3>
-              <div className="bg-gray-50 rounded-lg p-4">
-                <pre className="text-sm text-gray-700 overflow-x-auto">
+              <h3 className="text-lg font-medium text-gray-900 dark:text-gray-100 mb-2">User Journey</h3>
+              <div className="bg-gray-50 dark:bg-gray-800 rounded-lg p-4 border border-gray-200 dark:border-gray-700">
+                <pre className="text-sm text-gray-700 dark:text-gray-300 overflow-x-auto">
                   {JSON.stringify(feedback.userjourney, null, 2)}
                 </pre>
               </div>
@@ -263,12 +263,12 @@ export const FeedbackDetailModal: React.FC<FeedbackDetailModalProps> = ({
           {/* Metadata */}
           {feedback.metadata && (
             <div>
-              <h3 className="text-lg font-medium text-gray-900 mb-2">Technical Details</h3>
+              <h3 className="text-lg font-medium text-gray-900 dark:text-gray-100 mb-2">Technical Details</h3>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 {feedback.userjourney.deviceInfo && (
-                  <div className="bg-gray-50 rounded-lg p-4">
-                    <h4 className="font-medium text-gray-900 mb-2">Device Information</h4>
-                    <div className="space-y-1 text-sm text-gray-600">
+                  <div className="bg-gray-50 dark:bg-gray-800 rounded-lg p-4 border border-gray-200 dark:border-gray-700">
+                    <h4 className="font-medium text-gray-900 dark:text-gray-100 mb-2">Device Information</h4>
+                    <div className="space-y-1 text-sm text-gray-600 dark:text-gray-400">
                       <div className="flex items-center space-x-2">
                         <Monitor className="h-4 w-4" />
                         <span>OS: {feedback.userjourney.deviceInfo.os}</span>
@@ -285,9 +285,9 @@ export const FeedbackDetailModal: React.FC<FeedbackDetailModalProps> = ({
                   </div>
                 )}
                 {feedback.userjourney.performanceMetrics && (
-                  <div className="bg-gray-50 rounded-lg p-4">
-                    <h4 className="font-medium text-gray-900 mb-2">Performance Metrics</h4>
-                    <div className="space-y-1 text-sm text-gray-600">
+                  <div className="bg-gray-50 dark:bg-gray-800 rounded-lg p-4 border border-gray-200 dark:border-gray-700">
+                    <h4 className="font-medium text-gray-900 dark:text-gray-100 mb-2">Performance Metrics</h4>
+                    <div className="space-y-1 text-sm text-gray-600 dark:text-gray-400">
                       <div>CLS: {feedback.userjourney.performanceMetrics.cls}</div>
                       <div>FCP: {feedback.userjourney.performanceMetrics.fcp}ms</div>
                     </div>
@@ -300,9 +300,9 @@ export const FeedbackDetailModal: React.FC<FeedbackDetailModalProps> = ({
           {/* AI Analysis */}
           {feedback.aianalysis && (
             <div>
-              <h3 className="text-lg font-medium text-gray-900 mb-2">AI Analysis</h3>
-              <div className="bg-gray-50 rounded-lg p-4">
-                <pre className="text-sm text-gray-700 overflow-x-auto">
+              <h3 className="text-lg font-medium text-gray-900 dark:text-gray-100 mb-2">AI Analysis</h3>
+              <div className="bg-gray-50 dark:bg-gray-800 rounded-lg p-4 border border-gray-200 dark:border-gray-700">
+                <pre className="text-sm text-gray-700 dark:text-gray-300 overflow-x-auto">
                   {JSON.stringify(feedback.aianalysis, null, 2)}
                 </pre>
               </div>
@@ -311,20 +311,20 @@ export const FeedbackDetailModal: React.FC<FeedbackDetailModalProps> = ({
 
           {/* Admin Response */}
           <div>
-            <h3 className="text-lg font-medium text-gray-900 mb-2">Admin Response</h3>
+            <h3 className="text-lg font-medium text-gray-900 dark:text-gray-100 mb-2">Admin Response</h3>
             <div className="space-y-3">
               <textarea
                 value={adminResponse}
                 onChange={(e) => setAdminResponse(e.target.value)}
                 placeholder="Type your response to the user..."
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none"
+                className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 placeholder-gray-400 dark:placeholder-gray-500 focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none"
                 rows={4}
               />
               <div className="flex justify-between items-center">
                 <select
                   value={feedback.status}
                   onChange={(e) => onStatusUpdate(feedback.id, e.target.value)}
-                  className="px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  className="px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                 >
                   <option value="open">Open</option>
                   <option value="inprogress">In Progress</option>
@@ -334,7 +334,7 @@ export const FeedbackDetailModal: React.FC<FeedbackDetailModalProps> = ({
                 <button
                   onClick={() => void handleSubmitResponse()}
                   disabled={!adminResponse.trim() || isSubmitting}
-                  className="flex items-center px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="flex items-center px-4 py-2 bg-blue-600 dark:bg-blue-700 text-white rounded-lg hover:bg-blue-700 dark:hover:bg-blue-600 disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   <Send className="h-4 w-4 mr-2" />
                   {isSubmitting ? 'Sending...' : 'Send Response'}

@@ -46,14 +46,14 @@ The Choices platform MVP is **complete and production-ready**. All core features
 While the MVP is complete, the platform continues to evolve. Future work is tracked in:
 
 - **Feature Status**: [`FEATURE_STATUS.md`](FEATURE_STATUS.md) - Current feature flags and their states
-- **Roadmap**: `scratch/ROADMAP_SINGLE_SOURCE.md` - Detailed outstanding work items
+- **Roadmap**: `docs/ROADMAP_SINGLE_SOURCE.md` - Detailed outstanding work items
 - **Current Status**: [`CURRENT_STATUS.md`](CURRENT_STATUS.md) - Active workstreams and known gaps
 
 ### Planned Enhancements (Not Blocking MVP)
 
 **Beta Features (In Progress):**
-- 🔄 Push Notifications - Client opt-in + delivery guarantees (see [`PUSH_NOTIFICATIONS_AUDIT.md`](PUSH_NOTIFICATIONS_AUDIT.md))
-- 🔄 Device Flow Auth - OAuth 2.0 Device Authorization (see [`DEVICE_FLOW_QUICK_START.md`](DEVICE_FLOW_QUICK_START.md))
+- 🔄 Push Notifications - Client opt-in + delivery guarantees (see [`docs/archive/reference/push-notifications/push-notifications-audit-2025.md`](archive/reference/push-notifications/push-notifications-audit-2025.md))
+- 🔄 Device Flow Auth - OAuth 2.0 Device Authorization (see [`docs/archive/reference/device-flow/device-flow-auth-2025.md`](archive/reference/device-flow/device-flow-auth-2025.md))
 - 🔄 Internationalization - Expand locale coverage beyond en/es
 - 🔄 Contact Information System - Complete ingestion + notification flows
 
@@ -132,4 +132,10 @@ For detailed current status, see [`CURRENT_STATUS.md`](CURRENT_STATUS.md).
 ---
 
 **Built with** ❤️ **for participatory democracy**
+
+## Ownership & Update Cadence
+
+- **Owner:** Core maintainer
+- **Update cadence:** Review on major feature changes and at least monthly
+- **Last verified:** TBD
 

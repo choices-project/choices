@@ -73,43 +73,11 @@ type PersonalDashboardProps = {
  * Without useShallow, store subscriptions create new object references every render
  */
 function StandardPersonalDashboard({ userId: _fallbackUserId }: PersonalDashboardProps) {
-  // #region agent log - Component entry verification
-  console.log('[DEBUG PersonalDashboard] Component ENTRY - StandardPersonalDashboard rendering');
-  // #endregion
-  
+
   // CRITICAL: Guard client-only logic with isMounted (like feed/polls pages)
   const [isMounted, setIsMounted] = useState(false);
-  
-  // #region agent log
-  const renderCountRef = useRef(0);
-  renderCountRef.current += 1;
-  const renderCount = renderCountRef.current;
-  
-  // Always log to console for visibility, also try to send to debug server
-  if (renderCount <= 5 || renderCount % 10 === 0 || renderCount > 20) {
-    const logData = {
-      location: 'PersonalDashboard.tsx:render',
-      message: 'PersonalDashboard render',
-      data: { renderCount, isMounted },
-      timestamp: Date.now(),
-      sessionId: 'debug-session',
-      runId: 'run1',
-      hypothesisId: 'E'
-    };
-    console.log('[DEBUG PersonalDashboard]', JSON.stringify(logData));
-    fetch('http://127.0.0.1:7242/ingest/6a732aed-2d72-4883-a63a-f3c892fc1216', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(logData)
-    }).catch((err) => {
-      console.warn('[DEBUG PersonalDashboard] Failed to send log:', err);
-    });
-  }
-  
-  if (renderCount > 20) {
-    console.warn('[DEBUG] PersonalDashboard render count exceeded 20:', renderCount);
-  }
-  // #endregion
+
+  // Debug logging removed for production - use logger.debug if needed with DEBUG_DASHBOARD flag
 
   useEffect(() => {
     setIsMounted(true);
@@ -194,38 +162,7 @@ function StandardPersonalDashboard({ userId: _fallbackUserId }: PersonalDashboar
     useShallow((state) => {
       // #region agent log
       pollsStoreDataCallCountRef.current += 1;
-      const callCount = pollsStoreDataCallCountRef.current;
-      const prevData = pollsStoreDataPrevRef.current;
-      const newData = { polls: state.polls };
-      const pollsRefChanged = prevData?.polls !== newData.polls;
-      const objectRefChanged = prevData !== newData;
-      
-      if (callCount <= 10 || pollsRefChanged || objectRefChanged) {
-        const logData = {
-          location: 'PersonalDashboard.tsx:pollsStoreData:selector',
-          message: 'pollsStoreData selector called',
-          data: {
-            callCount,
-            pollsRefChanged,
-            objectRefChanged,
-            pollsLength: Array.isArray(state.polls) ? state.polls.length : 'not-array',
-            prevPollsLength: Array.isArray(prevData?.polls) ? prevData.polls.length : 'not-array',
-          },
-          timestamp: Date.now(),
-          sessionId: 'debug-session',
-          runId: 'run1',
-          hypothesisId: 'A'
-        };
-        console.log('[DEBUG pollsStoreData]', JSON.stringify(logData));
-        fetch('http://127.0.0.1:7242/ingest/6a732aed-2d72-4883-a63a-f3c892fc1216', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(logData)
-        }).catch((err) => {
-          console.warn('[DEBUG pollsStoreData] Failed to send log:', err);
-        });
-      }
-      pollsStoreDataPrevRef.current = newData;
+      pollsStoreDataPrevRef.current = { polls: state.polls };
       // #endregion
       return {
         polls: state.polls,
@@ -262,40 +199,8 @@ function StandardPersonalDashboard({ userId: _fallbackUserId }: PersonalDashboar
     useShallow((state) => {
       // #region agent log
       analyticsStoreDataCallCountRef.current += 1;
-      const callCount = analyticsStoreDataCallCountRef.current;
-      const prevData = analyticsStoreDataPrevRef.current;
       const events = state.events ?? EMPTY_ANALYTICS_ARRAY;
-      const newData = { events };
-      const eventsRefChanged = prevData?.events !== newData.events;
-      const objectRefChanged = prevData !== newData;
-      
-      if (callCount <= 10 || eventsRefChanged || objectRefChanged) {
-        const logData = {
-          location: 'PersonalDashboard.tsx:analyticsStoreData:selector',
-          message: 'analyticsStoreData selector called',
-          data: {
-            callCount,
-            eventsRefChanged,
-            objectRefChanged,
-            eventsLength: Array.isArray(events) ? events.length : 'not-array',
-            prevEventsLength: Array.isArray(prevData?.events) ? prevData.events.length : 'not-array',
-            isUsingEmptyArray: events === EMPTY_ANALYTICS_ARRAY,
-          },
-          timestamp: Date.now(),
-          sessionId: 'debug-session',
-          runId: 'run1',
-          hypothesisId: 'A'
-        };
-        console.log('[DEBUG analyticsStoreData]', JSON.stringify(logData));
-        fetch('http://127.0.0.1:7242/ingest/6a732aed-2d72-4883-a63a-f3c892fc1216', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(logData)
-        }).catch((err) => {
-          console.warn('[DEBUG analyticsStoreData] Failed to send log:', err);
-        });
-      }
-      analyticsStoreDataPrevRef.current = newData;
+      analyticsStoreDataPrevRef.current = { events };
       // #endregion
       try {
         // CRITICAL: Only return events - don't include isLoading/error as they change on every API call
@@ -318,102 +223,22 @@ function StandardPersonalDashboard({ userId: _fallbackUserId }: PersonalDashboar
   const analyticsEvents = useMemo(() => {
     // #region agent log
     analyticsEventsCallCountRef.current += 1;
-    const callCount = analyticsEventsCallCountRef.current;
-    const prevEvents = analyticsEventsPrevRef.current;
     // #endregion
     try {
       if (!isMounted) {
-        // #region agent log
-        if (callCount <= 5) {
-          fetch('http://127.0.0.1:7242/ingest/6a732aed-2d72-4883-a63a-f3c892fc1216', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-              location: 'PersonalDashboard.tsx:analyticsEvents:useMemo',
-              message: 'analyticsEvents useMemo called - not mounted',
-              data: { callCount, isMounted: false },
-              timestamp: Date.now(),
-              sessionId: 'debug-session',
-              runId: 'run1',
-              hypothesisId: 'C'
-            })
-          }).catch(() => {});
-        }
-        // #endregion
         return EMPTY_ANALYTICS_ARRAY;
       }
       if (!Array.isArray(analyticsStoreData?.events) || analyticsStoreData.events.length === 0) {
-        // #region agent log
-        if (callCount <= 5 || prevEvents !== EMPTY_ANALYTICS_ARRAY) {
-          fetch('http://127.0.0.1:7242/ingest/6a732aed-2d72-4883-a63a-f3c892fc1216', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-              location: 'PersonalDashboard.tsx:analyticsEvents:useMemo',
-              message: 'analyticsEvents useMemo called - returning empty array',
-              data: {
-                callCount,
-                isMounted: true,
-                eventsLength: Array.isArray(analyticsStoreData?.events) ? analyticsStoreData.events.length : 'not-array',
-                prevWasEmpty: prevEvents === EMPTY_ANALYTICS_ARRAY,
-              },
-              timestamp: Date.now(),
-              sessionId: 'debug-session',
-              runId: 'run1',
-              hypothesisId: 'C'
-            })
-          }).catch(() => {});
-        }
-        // #endregion
         const result = EMPTY_ANALYTICS_ARRAY;
         analyticsEventsPrevRef.current = result;
         return result;
       }
-      // #region agent log
-      const eventsRefChanged = prevEvents !== analyticsStoreData.events;
-      if (callCount <= 5 || eventsRefChanged) {
-        fetch('http://127.0.0.1:7242/ingest/6a732aed-2d72-4883-a63a-f3c892fc1216', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            location: 'PersonalDashboard.tsx:analyticsEvents:useMemo',
-            message: 'analyticsEvents useMemo called - returning events',
-            data: {
-              callCount,
-              isMounted: true,
-              eventsLength: analyticsStoreData.events.length,
-              eventsRefChanged,
-              prevEventsLength: Array.isArray(prevEvents) ? prevEvents.length : 'not-array',
-            },
-            timestamp: Date.now(),
-            sessionId: 'debug-session',
-            runId: 'run1',
-            hypothesisId: 'C'
-          })
-        }).catch(() => {});
-      }
-      // #endregion
       const result = analyticsStoreData.events;
       analyticsEventsPrevRef.current = result;
       return result;
-    } catch (error) {
+    } catch {
       // If processing fails, return empty array to prevent infinite loops
-      console.error('Analytics events processing error:', error);
-      // #region agent log
-      fetch('http://127.0.0.1:7242/ingest/6a732aed-2d72-4883-a63a-f3c892fc1216', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          location: 'PersonalDashboard.tsx:analyticsEvents:useMemo',
-          message: 'analyticsEvents useMemo error',
-          data: { callCount, error: String(error) },
-          timestamp: Date.now(),
-          sessionId: 'debug-session',
-          runId: 'run1',
-          hypothesisId: 'C'
-        })
-      }).catch(() => {});
-      // #endregion
+      // Error logged via logger if DEBUG_DASHBOARD flag is set
       return EMPTY_ANALYTICS_ARRAY;
     }
   }, [isMounted, analyticsStoreData?.events]);
@@ -489,34 +314,8 @@ function StandardPersonalDashboard({ userId: _fallbackUserId }: PersonalDashboar
   // Filter analytics events by type
   // CRITICAL: Defensive checks to prevent infinite loops when analytics API fails
   // CRITICAL FIX: Return stable empty array references, not new arrays
-  // #region agent log
-  const voteEventsCallCountRef = useRef(0);
-  // #endregion
   const voteEvents = useMemo(() => {
-    // #region agent log
-    voteEventsCallCountRef.current += 1;
-    const callCount = voteEventsCallCountRef.current;
-    if (callCount <= 5 || callCount % 10 === 0) {
-      fetch('http://127.0.0.1:7242/ingest/6a732aed-2d72-4883-a63a-f3c892fc1216', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          location: 'PersonalDashboard.tsx:voteEvents:useMemo',
-          message: 'voteEvents useMemo called',
-          data: {
-            callCount,
-            isMounted,
-            analyticsEventsLength: Array.isArray(analyticsEvents) ? analyticsEvents.length : 'not-array',
-            analyticsEventsRef: analyticsEvents === EMPTY_ANALYTICS_ARRAY ? 'EMPTY_ARRAY' : 'other',
-          },
-          timestamp: Date.now(),
-          sessionId: 'debug-session',
-          runId: 'run1',
-          hypothesisId: 'C'
-        })
-      }).catch(() => {});
-    }
-    // #endregion
+    // Debug logging removed for production
     if (!isMounted || !Array.isArray(analyticsEvents) || analyticsEvents.length === 0) {
       return EMPTY_ANALYTICS_ARRAY; // Return stable reference, not new []
     }

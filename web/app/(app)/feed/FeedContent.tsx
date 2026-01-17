@@ -9,6 +9,7 @@ import { ErrorBoundary } from '@/components/shared/ErrorBoundary';
 
 import { useUser } from '@/lib/stores';
 import { useAppActions } from '@/lib/stores/appStore';
+import { logger } from '@/lib/utils/logger';
 
 // NOTE: This is a client component ('use client'), so we don't need 'export const dynamic'
 // The parent page uses dynamic import with ssr: false, which prevents SSR
@@ -23,13 +24,13 @@ export default function FeedContent() {
     width: document.documentElement.getAttribute('data-sidebar-width'),
     pinned: document.documentElement.getAttribute('data-sidebar-pinned'),
   } : null;
-  console.log('[DEBUG FeedContent] Component rendering', {
-    pathname: isClient ? window.location.pathname : 'SSR',
-    timestamp: renderTime,
-    isClient,
-    htmlAttrs: htmlAttrsAtRender,
-    hasDocument: typeof document !== 'undefined',
-  });
+  if (process.env.DEBUG_DASHBOARD === '1') {
+    logger.debug('FeedContent component rendering', {
+      pathname: isClient ? window.location.pathname : 'SSR',
+      isClient,
+      htmlAttrs: htmlAttrsAtRender,
+    });
+  }
   // #endregion
 
   const user = useUser();
@@ -44,15 +45,16 @@ export default function FeedContent() {
       width: document.documentElement.getAttribute('data-sidebar-width'),
       pinned: document.documentElement.getAttribute('data-sidebar-pinned'),
     } : null;
-    console.log('[DEBUG FeedContent] Component mounted/hydrated', {
-      pathname: typeof window !== 'undefined' ? window.location.pathname : 'SSR',
-      timestamp: mountTime,
-      timeSinceRender: mountTime - renderTime,
-      hasUser: !!user,
-      userDistrict,
-      htmlAttrsAtMount,
-      htmlAttrsAtRender,
-    });
+    if (process.env.DEBUG_DASHBOARD === '1') {
+      logger.debug('FeedContent component mounted/hydrated', {
+        pathname: typeof window !== 'undefined' ? window.location.pathname : 'SSR',
+        timeSinceRender: mountTime - renderTime,
+        hasUser: !!user,
+        userDistrict,
+        htmlAttrsAtMount,
+        htmlAttrsAtRender,
+      });
+    }
   }, [user, userDistrict]);
   // #endregion
   const { setCurrentRoute, setSidebarActiveSection, setBreadcrumbs } = useAppActions();
@@ -129,7 +131,7 @@ export default function FeedContent() {
         </div>
       }
     >
-      <div className="container mx-auto px-4 py-8 bg-white dark:bg-gray-900 min-h-screen">
+      <main className="container mx-auto px-4 py-8 bg-white dark:bg-gray-900 min-h-screen">
         <Suspense fallback={loadingFallback}>
           <UnifiedFeedRefactored
             {...{
@@ -140,7 +142,7 @@ export default function FeedContent() {
             }}
           />
         </Suspense>
-      </div>
+      </main>
     </ErrorBoundary>
   );
 }

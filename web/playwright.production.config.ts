@@ -26,6 +26,10 @@ for (const { path: envFile, override } of envFiles) {
   }
 }
 
+// Force production defaults regardless of local .env overrides.
+process.env.BASE_URL = 'https://www.choices-app.com';
+process.env.PLAYWRIGHT_USE_MOCKS = '0';
+
 export default defineConfig({
     testDir: './tests/e2e',
     testIgnore: ['**/_archived/**', '**/archive/**', '**/setup/**'],

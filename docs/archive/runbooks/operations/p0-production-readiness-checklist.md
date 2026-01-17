@@ -332,5 +332,5 @@ logger.debug('Request', {
 - Infrastructure Verification: `docs/archive/runbooks/operations/infrastructure-verification.md`
 - Email Deliverability: `docs/archive/runbooks/operations/email-deliverability-setup.md`
 - Rate Limit Verification: `docs/archive/runbooks/operations/rate-limit-production-verification.md`
-- Roadmap: `scratch/ROADMAP_SINGLE_SOURCE.md`
+- Roadmap: `docs/ROADMAP_SINGLE_SOURCE.md`
 

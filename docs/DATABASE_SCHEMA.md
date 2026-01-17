@@ -1840,3 +1840,9 @@ See detailed section above. Uniqueness: `(representative_id, source_name, source
 - `sent_at` timestamptz | null
 - `created_at` timestamptz | null
 
+## Ownership & Update Cadence
+
+- **Owner:** Core maintainer
+- **Update cadence:** Review on major feature changes and at least monthly
+- **Last verified:** TBD
+

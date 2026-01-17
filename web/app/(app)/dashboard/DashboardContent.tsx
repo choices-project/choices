@@ -11,18 +11,11 @@ import { Shield } from 'lucide-react';
 import { usePathname, useRouter, useSearchParams } from 'next/navigation';
 import React, { Suspense, useEffect, useRef, useState } from 'react';
 
-import { ErrorBoundary } from '@/components/shared/ErrorBoundary';
-
+import { PersonalDashboard } from '@/features/dashboard';
 import { useProfile } from '@/features/profile/hooks/use-profile';
 
-// CRITICAL: Import DashboardNavigation and MobileDashboardNav directly without dynamic import
-// DashboardNavigation already guards usePathname() usage to prevent hydration mismatches
-// Using dynamic import with ssr: false causes Next.js to insert bailout template
-// which triggers React hydration error #185 (structural mismatch)
-// By importing directly, we avoid the bailout template entirely
-// H28: Remove dynamic import with ssr: false to prevent bailout template insertion
 import DashboardNavigation, { MobileDashboardNav } from '@/components/shared/DashboardNavigation';
-
+import { ErrorBoundary } from '@/components/shared/ErrorBoundary';
 import { Button } from '@/components/ui/button';
 
 import { useIsAuthenticated, useUserLoading, useUserStore } from '@/lib/stores';
@@ -31,13 +24,6 @@ import { profileSelectors, useProfileStore } from '@/lib/stores/profileStore';
 import { logger } from '@/lib/utils/logger';
 
 import { useAuth } from '@/hooks/useAuth';
-
-// CRITICAL: Import PersonalDashboard directly without dynamic import
-// DashboardContent is dynamically imported with ssr: false, so it never renders during SSR
-// This means PersonalDashboard also won't render during SSR, so no need for dynamic import
-// Removing nested dynamic import eliminates nested bailout templates that cause hydration mismatch
-// H29: Remove nested dynamic import to prevent bailout template structural mismatch
-import { PersonalDashboard } from '@/features/dashboard';
 
 /**
  * Helper function to check bypass flag from localStorage
@@ -212,12 +198,9 @@ export default function DashboardContent() {
     runId: 'run1',
     hypothesisId: 'H15',
   };
-  console.log('[DEBUG DashboardContent] Render:', JSON.stringify(logDataRender));
-  fetch('http://127.0.0.1:7242/ingest/6a732aed-2d72-4883-a63a-f3c892fc1216', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify(logDataRender),
-  }).catch(() => {});
+  if (process.env.DEBUG_DASHBOARD === '1') {
+    logger.debug('DashboardContent rendering', logDataRender.data);
+  }
   // #endregion
 
   const router = useRouter();
@@ -299,12 +282,9 @@ export default function DashboardContent() {
       runId: 'run1',
       hypothesisId: 'G', // New hypothesis: Extract to client-only component
     };
-    console.log('[DEBUG DashboardContent] Client mount effect:', JSON.stringify(mountLogData));
-    fetch('http://127.0.0.1:7242/ingest/6a732aed-2d72-4883-a63a-f3c892fc1216', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(mountLogData),
-    }).catch(() => {});
+    if (process.env.DEBUG_DASHBOARD === '1') {
+      logger.debug('DashboardContent mount - checking bypass flag', mountLogData.data);
+    }
     // #endregion
 
     // Check bypass flag immediately
@@ -813,12 +793,9 @@ export default function DashboardContent() {
     hypothesisId: 'G', // New hypothesis: Extract to client-only component
   };
   if (typeof window !== 'undefined') {
-    console.log('[DEBUG DashboardContent] Render state:', JSON.stringify(hydrationLogData));
-    fetch('http://127.0.0.1:7242/ingest/6a732aed-2d72-4883-a63a-f3c892fc1216', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(hydrationLogData),
-    }).catch(() => {});
+    if (process.env.DEBUG_DASHBOARD === '1') {
+      logger.debug('DashboardContent render state', hydrationLogData.data);
+    }
   }
 
   // Track when component actually mounts/hydrates
@@ -840,12 +817,9 @@ export default function DashboardContent() {
       runId: 'run1',
       hypothesisId: 'G',
     };
-    console.log('[DEBUG DashboardContent] Mount effect:', JSON.stringify(mountLogData));
-    fetch('http://127.0.0.1:7242/ingest/6a732aed-2d72-4883-a63a-f3c892fc1216', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(mountLogData),
-    }).catch(() => {});
+    if (process.env.DEBUG_DASHBOARD === '1') {
+      logger.debug('DashboardContent mount effect', mountLogData.data);
+    }
   }, []);
   // #endregion
 
@@ -876,12 +850,9 @@ export default function DashboardContent() {
       runId: 'run1',
       hypothesisId: 'H39',
     };
-    console.log('[DEBUG DashboardContent] Render:', JSON.stringify(renderLogData));
-    fetch('http://127.0.0.1:7242/ingest/6a732aed-2d72-4883-a63a-f3c892fc1216', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(renderLogData),
-    }).catch(() => {});
+    if (process.env.DEBUG_DASHBOARD === '1') {
+      logger.debug('DashboardContent render', renderLogData.data);
+    }
   }
   // #endregion
 
@@ -917,7 +888,7 @@ export default function DashboardContent() {
       {/* This prevents hydration mismatches since it uses usePathname() */}
       <DashboardNavigation />
 
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* CRITICAL: Only show admin banner after mount to prevent hydration mismatch */}
         {/* Use suppressHydrationWarning because isAdmin may change after mount */}
         {isAdmin === true && (
@@ -956,7 +927,7 @@ export default function DashboardContent() {
         }>
           <PersonalDashboard />
         </Suspense>
-      </div>
+      </main>
 
       {/* MobileDashboardNav is client-only component */}
       <MobileDashboardNav />

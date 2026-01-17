@@ -149,7 +149,7 @@ features/[feature-name]/
 **API endpoints?**
 - Routes: `app/api/`
 - Contracts: [`docs/API/contracts.md`](API/contracts.md)
-- Endpoints: [`docs/API/endpoints.md`](API/endpoints.md) (when created)
+- API overview: [`docs/API/README.md`](API/README.md)
 
 **Testing utilities?**
 - Helpers: `tests/e2e/helpers/`
@@ -188,7 +188,7 @@ features/[feature-name]/
 1. Create route: `app/api/[endpoint]/route.ts`
 2. Use helpers: Import from `@/lib/api` (`withErrorHandling`, `successResponse`, etc.)
 3. Add authentication: Use `requireAuth()` or `requireAdminOr401()`
-4. Document: Update [`docs/API/endpoints.md`](API/endpoints.md)
+4. Document: Update [`docs/API/README.md`](API/README.md)
 5. Add tests: `tests/unit/api/[endpoint]/` or `tests/contracts/`
 
 ### Adding a New Store
@@ -251,4 +251,10 @@ import type { Database } from '@/types/database';
 - Read [`DEVELOPMENT.md`](DEVELOPMENT.md) for development patterns
 - See [`TESTING.md`](TESTING.md) for testing patterns
 - Review [`STATE_MANAGEMENT.md`](STATE_MANAGEMENT.md) for state patterns
+
+## Ownership & Update Cadence
+
+- **Owner:** Core maintainer
+- **Update cadence:** Review on major feature changes and at least monthly
+- **Last verified:** TBD
 

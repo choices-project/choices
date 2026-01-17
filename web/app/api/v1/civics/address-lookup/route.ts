@@ -156,6 +156,7 @@ async function lookupJurisdictionFromExternalAPI(address: string): Promise<Juris
     note: 'This is the only external API call in the web application'
   });
 
+  // Load API key from environment variable (never hardcoded)
   const apiKey = process.env.GOOGLE_CIVIC_API_KEY;
   if (!apiKey) {
     logger.error('GOOGLE_CIVIC_API_KEY not configured for address lookup');
@@ -163,22 +164,28 @@ async function lookupJurisdictionFromExternalAPI(address: string): Promise<Juris
   }
 
   try {
+    // Build URL with API key (key is never logged or exposed in error messages)
+    // Security: The full URL with key is never logged - only endpoint and status
+    const apiUrl = new URL('https://www.googleapis.com/civicinfo/v2/representatives');
+    apiUrl.searchParams.set('address', address);
+    apiUrl.searchParams.set('key', apiKey);
+
     // Call Google Civic Information API for jurisdiction resolution
     // This is the correct approach for address → jurisdiction mapping
-    const response = await fetch(
-      `https://www.googleapis.com/civicinfo/v2/representatives?address=${encodeURIComponent(address)}&key=${apiKey}`,
-      {
-        method: 'GET',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-      }
-    );
+    const response = await fetch(apiUrl.toString(), {
+      method: 'GET',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+    });
 
     if (!response.ok) {
+      // Security: Only log status and statusText - NEVER log the full URL with API key
       logger.error('Google Civic API error', {
         status: response.status,
-        statusText: response.statusText
+        statusText: response.statusText,
+        endpoint: '/representatives'
+        // Intentionally NOT logging: apiUrl, apiKey, or full URL
       });
       throw new Error(`External API error: ${response.status}`);
     }

@@ -390,10 +390,10 @@ E2E tests will verify:
 
 ## Related Documentation
 
-- [SECURITY.md](./SECURITY.md) - Security model and RLS policies
-- [ENVIRONMENT_VARIABLES.md](./ENVIRONMENT_VARIABLES.md) - Environment variable reference
-- [LANDING_PAGE.md](./LANDING_PAGE.md) - Landing page implementation
-- [API_REFERENCE.md](./API_REFERENCE.md) - API endpoint documentation
+- [SECURITY.md](../../SECURITY.md) - Security model and RLS policies
+- [ENVIRONMENT_VARIABLES.md](../../ENVIRONMENT_VARIABLES.md) - Environment variable reference
+- [Landing Page Implementation](../../features/landing-page.md)
+- [API Documentation](../../API/README.md)
 
 ---
 

@@ -221,10 +221,6 @@ let reactHydrationStarted = false;
 export function markReactHydrationStarted() {
   if (!reactHydrationStarted) {
     reactHydrationStarted = true;
-    // #region agent log
-    const logData={location:'appStore.ts:markReactHydrationStarted',message:'React hydration actually started',data:{timestamp:Date.now()},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'H13'};
-    console.log('[DEBUG]',JSON.stringify(logData));
-    // #endregion
   }
 }
 
@@ -242,10 +238,6 @@ if (typeof window !== 'undefined') {
     // for React to actually start and complete hydration
     if (elapsed < 500) {
       const remaining = 500 - elapsed;
-      // #region agent log
-      const logData={location:'appStore.ts:markHydrationComplete',message:'Hydration tracking fired early, extending delay',data:{elapsed,remaining,reactHydrationStarted,timestamp:Date.now()},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'H11'};
-      console.log('[DEBUG]',JSON.stringify(logData));
-      // #endregion
       hydrationCompleteTimeout = setTimeout(markHydrationComplete, remaining);
       return;
     }
@@ -253,18 +245,10 @@ if (typeof window !== 'undefined') {
     // CRITICAL: Only mark complete if React has actually started hydrating
     // If React hasn't started yet, wait a bit more
     if (!reactHydrationStarted) {
-      // #region agent log
-      const logData={location:'appStore.ts:markHydrationComplete',message:'React not started yet, waiting more',data:{elapsed,reactHydrationStarted,timestamp:Date.now()},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'H13'};
-      console.log('[DEBUG]',JSON.stringify(logData));
-      // #endregion
       hydrationCompleteTimeout = setTimeout(markHydrationComplete, 100);
       return;
     }
     
-    // #region agent log
-    const logData={location:'appStore.ts:markHydrationComplete',message:'Marking hydration as complete',data:{elapsed,reactHydrationStarted,timestamp:Date.now()},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'H11'};
-    console.log('[DEBUG]',JSON.stringify(logData));
-    // #endregion
     isReactHydrating = false;
     if (hydrationCompleteTimeout) {
       clearTimeout(hydrationCompleteTimeout);
@@ -276,10 +260,6 @@ if (typeof window !== 'undefined') {
   // System theme detection (useSystemThemeSync) can trigger during hydration,
   // so we need to wait longer to prevent DOM mutations during the critical window
   // requestIdleCallback can fire early, so we ensure minimum delay
-  // #region agent log
-  const logData={location:'appStore.ts:hydrationTrackingInit',message:'Initializing hydration tracking',data:{hasRequestIdleCallback:typeof window.requestIdleCallback !== 'undefined',minDelay:500,timestamp:Date.now()},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'H11'};
-  console.log('[DEBUG]',JSON.stringify(logData));
-  // #endregion
   if (window.requestIdleCallback) {
     window.requestIdleCallback(markHydrationComplete, { timeout: 500 });
   } else {
@@ -296,10 +276,6 @@ const applyThemeToDocument = (theme: SystemTheme) => {
   // This causes React error #185 (hydration mismatch)
   // ThemeScript has already set the correct theme before React hydrates
   if (isReactHydrating) {
-    // #region agent log
-    const logData={location:'appStore.ts:applyThemeToDocument',message:'Skipping theme application during hydration',data:{theme,currentTheme:document.documentElement.getAttribute('data-theme'),isHydrating:isReactHydrating},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'H11'};
-    console.log('[DEBUG]',JSON.stringify(logData));
-    // #endregion
     return;
   }
 
@@ -365,11 +341,6 @@ export const createAppActions = (
     },
 
     updateSystemTheme: (systemTheme) => {
-      // #region agent log
-      const logData={location:'appStore.ts:updateSystemTheme',message:'updateSystemTheme called',data:{systemTheme,currentTheme:get().theme,isHydrating:isReactHydrating},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'H11'};
-      console.log('[DEBUG]',JSON.stringify(logData));
-      // #endregion
-      
       setState((state) => {
         state.systemTheme = systemTheme;
         state.resolvedTheme = resolveTheme(state.theme, systemTheme);
@@ -383,11 +354,6 @@ export const createAppActions = (
       
       if (get().theme === 'system' && !shouldSkip) {
         applyThemeToDocument(get().resolvedTheme);
-      } else if (get().theme === 'system') {
-        // #region agent log
-        const logData2={location:'appStore.ts:updateSystemTheme',message:'Skipping theme application - waiting for React hydration',data:{systemTheme,resolvedTheme:get().resolvedTheme,isHydrating:isReactHydrating,reactHydrationStarted,shouldSkip},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'H13'};
-        console.log('[DEBUG]',JSON.stringify(logData2));
-        // #endregion
       }
     },
 
@@ -779,10 +745,6 @@ export const appStoreUtils = {
 
   initialize: () => {
     const state = useAppStore.getState();
-    // #region agent log
-    const logData={location:'appStore.ts:initialize',message:'App store initialize called',data:{theme:state.theme,resolvedTheme:state.resolvedTheme,isHydrating:isReactHydrating},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'H11'};
-    console.log('[DEBUG]',JSON.stringify(logData));
-    // #endregion
     
     // CRITICAL: applyThemeToDocument now checks isReactHydrating internally
     // It will skip during hydration to prevent React error #185

@@ -259,11 +259,11 @@ See [`STATE_MANAGEMENT.md`](STATE_MANAGEMENT.md) for patterns.
 
 ### Feed and Feedback Issues
 
-See [`TROUBLESHOOTING_FEED_AND_FEEDBACK.md`](TROUBLESHOOTING_FEED_AND_FEEDBACK.md) for feed and feedback-specific troubleshooting.
+See [`docs/archive/reference/troubleshooting-feed-and-feedback-2025.md`](archive/reference/troubleshooting-feed-and-feedback-2025.md) for historical feed and feedback troubleshooting.
 
 ### Push Notification Issues
 
-See [`PUSH_NOTIFICATIONS.md`](PUSH_NOTIFICATIONS.md) and [`PUSH_NOTIFICATIONS_VAPID_SETUP.md`](PUSH_NOTIFICATIONS_VAPID_SETUP.md) for push notification troubleshooting.
+See [`docs/archive/reference/push-notifications/push-notifications-testing-2025.md`](archive/reference/push-notifications/push-notifications-testing-2025.md) and [`docs/archive/reference/push-notifications/push-notifications-vapid-setup-2025.md`](archive/reference/push-notifications/push-notifications-vapid-setup-2025.md) for historical push notification troubleshooting.
 
 ### Analytics Dashboard Issues
 
@@ -318,4 +318,10 @@ If you can't resolve the issue:
 ---
 
 **Still stuck?** Check the [documentation index](README.md) or create an issue on GitHub.
+
+## Ownership & Update Cadence
+
+- **Owner:** Core maintainer
+- **Update cadence:** Review on major feature changes and at least monthly
+- **Last verified:** TBD
 

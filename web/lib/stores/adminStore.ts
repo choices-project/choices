@@ -676,49 +676,38 @@ export const createAdminActions = (
           clearErrorState();
           
           try {
-            const supabase = await getSupabaseBrowserClient();
-            if (!supabase) {
-              throw new Error('Database connection not available');
+            // Use API endpoint instead of direct Supabase query to respect RLS and admin auth
+            const response = await fetch('/api/admin/users');
+            
+            if (!response.ok) {
+              const errorData = await response.json().catch(() => ({ error: response.statusText }));
+              throw new Error(errorData.error || `Failed to fetch users: ${response.statusText}`);
             }
 
-            const { data: users, error } = await supabase
-              .from('user_profiles')
-          .select(
-            `
-                id,
-                user_id,
-                email,
-                display_name,
-                is_admin,
-                is_active,
-                created_at,
-                updated_at
-          `
-          )
-              .order('created_at', { ascending: false });
+            const data = await response.json();
+            
+            // Handle API response structure from paginatedResponse:
+            // { success: true, data: [...users], metadata: { pagination: { total, limit, offset, ... } } }
+            const users = Array.isArray(data.data) ? data.data : [];
+            const total = data.metadata?.pagination?.total || 0;
 
-            if (error) {
-              throw new Error(`Failed to fetch users: ${error.message}`);
-            }
-
-        const adminUsers: AdminUser[] =
-          users?.map((user) => {
+            const adminUsers: AdminUser[] = users.map((user: any) => {
               const base: Record<string, unknown> = {
-              id: user.id ?? user.user_id,
+                id: user.user_id || user.id,
                 email: user.email,
-                name: user.display_name ?? 'Unknown User',
+                name: user.username || user.display_name || 'Unknown User',
                 role: user.is_admin ? 'admin' : 'user',
-                status: user.is_active ? 'active' : 'inactive',
+                status: user.is_active !== false ? 'active' : 'inactive',
                 is_admin: user.is_admin ?? false,
-                created_at: user.created_at ?? '',
+                created_at: user.created_at || '',
               };
 
-            if (user.updated_at) {
-              base.last_login = user.updated_at;
-            }
+              if (user.last_login_at || user.updated_at) {
+                base.last_login = user.last_login_at || user.updated_at;
+              }
 
               return base as AdminUser;
-            }) ?? [];
+            });
 
         setState((state) => {
           state.users = adminUsers;
@@ -726,6 +715,7 @@ export const createAdminActions = (
 
             logger.info('Users loaded successfully', {
           userCount: adminUsers.length,
+          total,
             });
           } catch (error) {
         const message = error instanceof Error ? error.message : 'Unknown error';

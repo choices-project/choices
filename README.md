@@ -22,7 +22,7 @@ cd supabase && supabase db push
 cd web && vercel deploy --prod
 ```
 
-See **[DEPLOYMENT_READY.md](./DEPLOYMENT_READY.md)** for complete guide.
+See **[docs/DEPLOYMENT.md](./docs/DEPLOYMENT.md)** for the complete guide.
 
 ---
 

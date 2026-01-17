@@ -11,7 +11,6 @@ The Choices API is a RESTful API built on Next.js API routes. All endpoints retu
 ## Quick Links
 
 - **[API Contracts](contracts.md)** - Response formats, error codes, and standards
-- **[API Endpoints](endpoints.md)** - Complete endpoint reference (when created)
 - **[Civic Actions API](civic-actions.md)** - Civic engagement endpoints
 
 ## Base URL
@@ -137,7 +136,7 @@ Exceeding rate limits returns `429 Too Many Requests` with error code `RATE_LIMI
 - `POST /api/civic-actions` - Create civic action
 - `GET /api/civic-actions/[id]` - Get civic action
 
-For complete endpoint documentation, see [API Endpoints](endpoints.md) (when created).
+For endpoint conventions and examples, see [API Contracts](contracts.md).
 
 ## Versioning
 
@@ -163,4 +162,10 @@ See [`docs/TESTING.md`](../TESTING.md) for testing guidelines.
 - **Documentation**: See [`docs/README.md`](../README.md)
 - **Issues**: Create an issue on GitHub
 - **Security**: See [`docs/SECURITY.md`](../SECURITY.md) for vulnerability reporting
+
+## Ownership & Update Cadence
+
+- **Owner:** Core maintainer
+- **Update cadence:** Review on major feature changes and at least monthly
+- **Last verified:** TBD
 

@@ -155,11 +155,19 @@ const toPrivacySettings = (value: unknown): Partial<PrivacySettings> | null => {
 const toJsonValue = (value: unknown): Json | null => (isJsonValue(value) ? (value as Json) : null);
 
 const pickProfilePayload = (envelope: ProfileApiEnvelope): ProfileApiRecord | null => {
+  // Handle direct profile field
   if (isRecord(envelope.profile)) {
     return envelope.profile;
   }
+  // Handle nested structure: { success: true, data: { profile: {...}, preferences: {...}, ... } }
   if (isRecord(envelope.data)) {
-    return envelope.data;
+    const data = envelope.data as Record<string, unknown>;
+    // Check if data contains a profile field (new API response format)
+    if (isRecord(data.profile)) {
+      return data.profile as ProfileApiRecord;
+    }
+    // Fallback: use data directly (old API response format)
+    return data as ProfileApiRecord;
   }
   return null;
 };
@@ -354,11 +362,17 @@ export function transformProfileUpdateToApi(data: ProfileUpdateData): Record<str
  * Fetches profile data from API endpoint
  */
 export async function getCurrentProfile(): Promise<ProfileActionResult> {
+  // #region agent log
+  fetch('http://127.0.0.1:7242/ingest/6a732aed-2d72-4883-a63a-f3c892fc1216',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'profile-service.ts:356',message:'getCurrentProfile entry',data:{timestamp:Date.now()},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'A'})}).catch(()=>{});
+  // #endregion
   // Add timeout to prevent hanging requests
   const controller = new AbortController();
   const timeoutId = setTimeout(() => controller.abort(), 30_000); // 30 second timeout
 
   try {
+    // #region agent log
+    fetch('http://127.0.0.1:7242/ingest/6a732aed-2d72-4883-a63a-f3c892fc1216',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'profile-service.ts:362',message:'Before fetch /api/profile',data:{timestamp:Date.now()},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'A'})}).catch(()=>{});
+    // #endregion
     const response = await fetch('/api/profile', {
       signal: controller.signal,
       method: 'GET',
@@ -368,14 +382,29 @@ export async function getCurrentProfile(): Promise<ProfileActionResult> {
       },
     });
 
+    // #region agent log
+    fetch('http://127.0.0.1:7242/ingest/6a732aed-2d72-4883-a63a-f3c892fc1216',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'profile-service.ts:371',message:'After fetch - response status',data:{status:response.status,statusText:response.statusText,ok:response.ok,timestamp:Date.now()},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'A'})}).catch(()=>{});
+    // #endregion
     if (!response.ok) {
+      // #region agent log
+      fetch('http://127.0.0.1:7242/ingest/6a732aed-2d72-4883-a63a-f3c892fc1216',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'profile-service.ts:373',message:'Response not OK - throwing error',data:{status:response.status,statusText:response.statusText,timestamp:Date.now()},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'A'})}).catch(()=>{});
+      // #endregion
       throw new Error(`HTTP ${response.status}: ${response.statusText}`);
     }
 
     const apiData = await response.json();
+    // #region agent log
+    fetch('http://127.0.0.1:7242/ingest/6a732aed-2d72-4883-a63a-f3c892fc1216',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'profile-service.ts:375',message:'API response received',data:{hasApiData:!!apiData,hasSuccess:!!(apiData as any)?.success,hasProfile:!!(apiData as any)?.profile,timestamp:Date.now()},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'E'})}).catch(()=>{});
+    // #endregion
     const profile = transformApiResponseToProfile(apiData);
+    // #region agent log
+    fetch('http://127.0.0.1:7242/ingest/6a732aed-2d72-4883-a63a-f3c892fc1216',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'profile-service.ts:376',message:'After transformApiResponseToProfile',data:{hasProfile:!!profile,timestamp:Date.now()},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'E'})}).catch(()=>{});
+    // #endregion
 
     if (!profile) {
+      // #region agent log
+      fetch('http://127.0.0.1:7242/ingest/6a732aed-2d72-4883-a63a-f3c892fc1216',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'profile-service.ts:379',message:'Profile transform returned null',data:{timestamp:Date.now()},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'E'})}).catch(()=>{});
+      // #endregion
       clearTimeout(timeoutId);
       return {
         success: false,
@@ -384,9 +413,17 @@ export async function getCurrentProfile(): Promise<ProfileActionResult> {
     }
 
     // Extract preferences from API response if available
-    const preferences = (apiData as { preferences?: unknown })?.preferences ?? null;
+    // Handle both nested structure { data: { preferences: {...} } } and flat structure { preferences: {...} }
+    const preferences = (
+      (apiData as { data?: { preferences?: unknown } })?.data?.preferences ??
+      (apiData as { preferences?: unknown })?.preferences ??
+      null
+    );
 
     clearTimeout(timeoutId);
+    // #region agent log
+    fetch('http://127.0.0.1:7242/ingest/6a732aed-2d72-4883-a63a-f3c892fc1216',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'profile-service.ts:390',message:'Returning success result',data:{hasProfile:!!profile,hasPreferences:!!preferences,timestamp:Date.now()},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'A'})}).catch(()=>{});
+    // #endregion
     return {
       success: true,
       data: profile,
@@ -395,6 +432,9 @@ export async function getCurrentProfile(): Promise<ProfileActionResult> {
 
   } catch (error) {
     clearTimeout(timeoutId);
+    // #region agent log
+    fetch('http://127.0.0.1:7242/ingest/6a732aed-2d72-4883-a63a-f3c892fc1216',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'profile-service.ts:397',message:'Error in getCurrentProfile',data:{errorName:error instanceof Error ? error.name : 'unknown',errorMessage:error instanceof Error ? error.message : String(error),timestamp:Date.now()},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'A'})}).catch(()=>{});
+    // #endregion
     
     // Handle AbortError specifically (timeout or manual abort)
     if (error instanceof Error && error.name === 'AbortError') {

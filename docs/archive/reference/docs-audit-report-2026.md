@@ -5,7 +5,7 @@ _Status: ✅ Completed - January 2026_
 
 This report identified documentation files that should be archived, consolidated, or updated. The audit has been completed and actions taken.
 
-**Note:** This document is kept for reference. See the current documentation structure in [`README.md`](README.md).
+**Note:** This document is kept for reference. See the current documentation structure in [`docs/README.md`](../../README.md).
 
 ## Files to Archive (Historical/Completed Work)
 

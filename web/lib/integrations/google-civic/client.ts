@@ -176,7 +176,7 @@ export class GoogleCivicClient {
   private async makeRequest<T = unknown>(endpoint: string, params: Record<string, unknown> = {}): Promise<T> {
     const url = new URL(`${this.config.baseUrl}${endpoint}`);
 
-    // Add API key
+    // Add API key (security: key is never logged or exposed)
     url.searchParams.set('key', this.config.apiKey);
 
     // Add other parameters
@@ -194,6 +194,7 @@ export class GoogleCivicClient {
     const timeoutId = setTimeout(() => controller.abort(), this.config.timeout);
 
     try {
+      // Security: url.toString() is only used for the fetch call, never logged
       const response = await fetch(url.toString(), {
         method: 'GET',
         headers: {
@@ -207,6 +208,13 @@ export class GoogleCivicClient {
 
       if (!response.ok) {
         const errorData = await response.json().catch(() => ({}));
+        // Security: Only log endpoint and status - NEVER log full URL with API key
+        logger.error('Google Civic API request failed', {
+          endpoint,
+          status: response.status,
+          statusText: response.statusText
+          // Intentionally NOT logging: url.toString(), this.config.apiKey, or full URL
+        });
         throw new GoogleCivicApiError(
           `Google Civic API error: ${response.status} ${response.statusText}`,
           response.status,
@@ -217,10 +225,12 @@ export class GoogleCivicClient {
       const data = await response.json();
       this.requestCount++;
 
+      // Security: Only log endpoint - NEVER log URL or API key
       logger.debug('Google Civic API request successful', {
         endpoint,
         status: response.status,
         requestCount: this.requestCount
+        // Intentionally NOT logging: url.toString() or this.config.apiKey
       });
 
       return data;
@@ -234,6 +244,13 @@ export class GoogleCivicClient {
       if (error instanceof Error && error.name === 'AbortError') {
         throw new GoogleCivicApiError('Request timeout', 408);
       }
+
+      // Security: Only log error message - NEVER log URL or API key
+      logger.error('Google Civic API request failed', {
+        endpoint,
+        error: error instanceof Error ? error.message : 'Unknown error'
+        // Intentionally NOT logging: url.toString(), this.config.apiKey, or full URL
+      });
 
       throw new GoogleCivicApiError(
         `Request failed: ${error instanceof Error ? error.message : 'Unknown error'}`,

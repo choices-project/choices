@@ -161,3 +161,9 @@ When modifying API handlers:
 2. Update contract tests in `web/tests/contracts/`
 3. Update either `docs/archive/reference/testing/TESTING/api-contract-plan.md` or `docs/archive/release-notes/CHANGELOG.md`
 
+## Ownership & Update Cadence
+
+- **Owner:** Core maintainer
+- **Update cadence:** Review on major feature changes and at least monthly
+- **Last verified:** TBD
+

@@ -180,10 +180,8 @@ export default async function RootLayout({
         <SkipNavLink />
         <Providers locale={locale} messages={messages}>
           <SkipNavTarget>
-            {/* CRITICAL: Don't wrap in <main> here - AppShell already provides the main content structure */}
-            {/* Wrapping in <main> creates nested structure that causes hydration mismatch */}
-            {/* Root layout is Server Component, AppLayout is Client Component */}
-            {/* The mismatch between Server and Client component structures causes React error #185 */}
+            {/* SkipNavTarget provides the main landmark for accessibility. */}
+            {/* Avoid adding another <main> in downstream layouts to prevent nesting. */}
             {children}
           </SkipNavTarget>
           <SiteFooter />

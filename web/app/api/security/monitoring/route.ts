@@ -9,7 +9,8 @@
  */
 
 
-import { authError, successResponse, withErrorHandling } from '@/lib/api';
+import { requireAdminOr401 } from '@/lib/admin-auth';
+import { successResponse, withErrorHandling } from '@/lib/api';
 import { getSecurityConfig } from '@/lib/core/security/config';
 import { upstashRateLimiter } from '@/lib/rate-limiting/upstash-rate-limiter';
 import { logger } from '@/lib/utils/logger';
@@ -20,13 +21,11 @@ export const dynamic = 'force-dynamic';
 export const runtime = 'nodejs';
 export const revalidate = 0;
 
-export const GET = withErrorHandling(async (request: NextRequest) => {
-  const adminKey = process.env.ADMIN_MONITORING_KEY ?? 'dev-admin-key';
-  const isAdmin = request.headers.get('x-admin-key') === adminKey;
-  
-  if (!isAdmin) {
-    return authError('Admin authentication required');
-  }
+export const GET = withErrorHandling(async (_request: NextRequest) => {
+  // Check session-based authentication (supports client-side React Query hooks)
+  // Uses standard admin auth helper consistent with other admin APIs
+  const authGate = await requireAdminOr401();
+  if (authGate) return authGate;
 
     // Get metrics from Upstash-backed rate limiter
     const metrics = await upstashRateLimiter.getMetrics();

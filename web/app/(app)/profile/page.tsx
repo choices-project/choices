@@ -146,6 +146,12 @@ function ProfilePageContent() {
     };
   }, [profileLoading, profile, profileError]);
 
+  // #region agent log
+  React.useEffect(() => {
+    fetch('http://127.0.0.1:7242/ingest/6a732aed-2d72-4883-a63a-f3c892fc1216',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'profile/page.tsx:150',message:'ProfilePageContent render check',data:{isMounted,isUserLoading,profileLoading,isAuthenticated,hasProfile:!!profile,hasProfileError:!!profileError,shouldShowLoading:!isMounted || isUserLoading || profileLoading,timestamp:Date.now()},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'C'})}).catch(()=>{});
+  }, [isMounted, isUserLoading, profileLoading, isAuthenticated, profile, profileError]);
+  // #endregion
+
   // Show loading state until component is mounted or while loading
   if (!isMounted || isUserLoading || profileLoading) {
     return (
@@ -259,7 +265,7 @@ function ProfilePageContent() {
 
   return (
     <ErrorBoundary>
-      <div className="container mx-auto px-4 py-8">
+      <main className="container mx-auto px-4 py-8">
       <div className="max-w-4xl mx-auto">
         {/* Profile Header */}
         <Card className="mb-8">
@@ -431,7 +437,7 @@ function ProfilePageContent() {
           </CardContent>
         </Card>
       </div>
-      </div>
+      </main>
     </ErrorBoundary>
   );
 }

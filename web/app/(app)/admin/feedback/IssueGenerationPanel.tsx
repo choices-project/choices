@@ -87,7 +87,7 @@ export const IssueGenerationPanel: React.FC<IssueGenerationPanelProps> = ({
   );
 
   const handleSelectFeedback = (feedbackId: string) => {
-    setSelectedFeedback(prev => 
+    setSelectedFeedback(prev =>
       prev.includes(feedbackId)
         ? prev.filter(id => id !== feedbackId)
         : [...prev, feedbackId]
@@ -156,11 +156,11 @@ export const IssueGenerationPanel: React.FC<IssueGenerationPanelProps> = ({
 
   const getPriorityColor = (priority: string) => {
     switch (priority) {
-      case 'urgent': return 'bg-red-100 text-red-700';
-      case 'high': return 'bg-orange-100 text-orange-700';
-      case 'medium': return 'bg-yellow-100 text-yellow-700';
-      case 'low': return 'bg-green-100 text-green-700';
-      default: return 'bg-gray-100 text-gray-700';
+      case 'urgent': return 'bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-300';
+      case 'high': return 'bg-orange-100 dark:bg-orange-900/30 text-orange-700 dark:text-orange-300';
+      case 'medium': return 'bg-yellow-100 dark:bg-yellow-900/30 text-yellow-700 dark:text-yellow-300';
+      case 'low': return 'bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-300';
+      default: return 'bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300';
     }
   };
 
@@ -178,10 +178,10 @@ export const IssueGenerationPanel: React.FC<IssueGenerationPanelProps> = ({
       {/* Header */}
       <div className="flex items-center justify-between">
         <div className="flex items-center space-x-3">
-          <Github className="h-6 w-6 text-gray-600" />
+          <Github className="h-6 w-6 text-gray-600 dark:text-gray-400" />
           <div>
-            <h2 className="text-lg font-semibold text-gray-900">GitHub Issue Generation</h2>
-            <p className="text-sm text-gray-600">Transform feedback into actionable development tasks</p>
+            <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100">GitHub Issue Generation</h2>
+            <p className="text-sm text-gray-600 dark:text-gray-400">Transform feedback into actionable development tasks</p>
           </div>
         </div>
         <div className="flex items-center space-x-2">
@@ -196,26 +196,26 @@ export const IssueGenerationPanel: React.FC<IssueGenerationPanelProps> = ({
 
       {/* Stats Cards */}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-        <div className="bg-white rounded-lg shadow p-4">
+        <div className="bg-white dark:bg-gray-900 rounded-lg shadow p-4 border border-gray-200 dark:border-gray-700">
           <div className="flex items-center">
-            <div className="p-2 rounded-lg bg-blue-50">
-              <Zap className="h-5 w-5 text-blue-600" />
+            <div className="p-2 rounded-lg bg-blue-50 dark:bg-blue-900/30">
+              <Zap className="h-5 w-5 text-blue-600 dark:text-blue-400" />
             </div>
             <div className="ml-3">
-              <p className="text-sm font-medium text-gray-600">Ready to Generate</p>
-              <p className="text-2xl font-bold text-gray-900">{feedbackWithoutIssues.length}</p>
+              <p className="text-sm font-medium text-gray-600 dark:text-gray-400">Ready to Generate</p>
+              <p className="text-2xl font-bold text-gray-900 dark:text-gray-100">{feedbackWithoutIssues.length}</p>
             </div>
           </div>
         </div>
 
-        <div className="bg-white rounded-lg shadow p-4">
+        <div className="bg-white dark:bg-gray-900 rounded-lg shadow p-4 border border-gray-200 dark:border-gray-700">
           <div className="flex items-center">
-            <div className="p-2 rounded-lg bg-green-50">
-              <CheckCircle className="h-5 w-5 text-green-600" />
+            <div className="p-2 rounded-lg bg-green-50 dark:bg-green-900/30">
+              <CheckCircle className="h-5 w-5 text-green-600 dark:text-green-400" />
             </div>
             <div className="ml-3">
-              <p className="text-sm font-medium text-gray-600">Issues Created</p>
-              <p className="text-2xl font-bold text-gray-900">{feedbackWithIssues.length}</p>
+              <p className="text-sm font-medium text-gray-600 dark:text-gray-400">Issues Created</p>
+              <p className="text-2xl font-bold text-gray-900 dark:text-gray-100">{feedbackWithIssues.length}</p>
             </div>
           </div>
         </div>

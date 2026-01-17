@@ -28,7 +28,7 @@ export const BasicLineChart: React.FC<BasicLineChartProps> = ({
 }) => {
   return (
     <div className="w-full">
-      <h3 className="text-lg font-semibold mb-4">{title}</h3>
+      <h3 className="text-lg font-semibold mb-4 text-gray-900 dark:text-gray-100">{title}</h3>
       <Line 
         data={data} 
         dataKey={dataKey} 
@@ -57,7 +57,7 @@ export const BasicBarChart: React.FC<BasicBarChartProps> = ({
 }) => {
   return (
     <div className="w-full">
-      <h3 className="text-lg font-semibold mb-4">{title}</h3>
+      <h3 className="text-lg font-semibold mb-4 text-gray-900 dark:text-gray-100">{title}</h3>
       <Bar 
         data={data} 
         dataKey={dataKey} 
@@ -82,7 +82,7 @@ export const BasicPieChart: React.FC<BasicPieChartProps> = ({
 }) => {
   return (
     <div className="w-full">
-      <h3 className="text-lg font-semibold mb-4">{title}</h3>
+      <h3 className="text-lg font-semibold mb-4 text-gray-900 dark:text-gray-100">{title}</h3>
       <Pie 
         data={data} 
         dataKey="value"
@@ -163,7 +163,7 @@ export const ChartWrapper: React.FC<ChartWrapperProps> = ({
 }) => {
   return (
     <div className={`bg-white rounded-lg border shadow-sm p-6 ${className}`}>
-      <h3 className="text-lg font-semibold mb-4">{title}</h3>
+      <h3 className="text-lg font-semibold mb-4 text-gray-900 dark:text-gray-100">{title}</h3>
       {children}
     </div>
   );

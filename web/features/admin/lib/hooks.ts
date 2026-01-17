@@ -35,46 +35,40 @@ const emptySystemMetrics: SystemMetrics = {
 
 /**
  * Fetches trending topics for admin review.
- * Returns empty array on error instead of throwing.
+ * Throws errors so React Query can retry for premier UX.
  *
- * @returns Trending topics or empty array if API fails
+ * @returns Trending topics or empty array if API returns no data
  */
 const fetchTrendingTopics = async (): Promise<TrendingTopic[]> => {
-  try {
-    const response = await fetch('/api/admin/trending-topics');
-    if (!response.ok) {
-      throw new Error(`HTTP error! status: ${response.status}`);
-    }
-    const data = await response.json();
-    devLog('Fetched trending topics from API', { count: data.topics?.length || 0 });
-    return data.topics || emptyTrendingTopics;
-  } catch (error) {
-    devLog('Error fetching trending topics - API unavailable', { error });
-    logger.warn('⚠️ Admin API: Trending topics endpoint failed. Showing empty state.');
-    return emptyTrendingTopics;
+  const response = await fetch('/api/admin/trending-topics');
+  if (!response.ok) {
+    // Throw error so React Query can retry
+    throw new Error(`HTTP error! status: ${response.status}`);
   }
+  const data = await response.json();
+  devLog('Fetched trending topics from API', { count: data.topics?.length || 0 });
+  // Return empty array if API returns no data (graceful degradation)
+  // But throw on HTTP errors so React Query can retry
+  return data.topics || emptyTrendingTopics;
 };
 
 /**
  * Fetches AI-generated polls awaiting admin approval.
- * Returns empty array on error instead of throwing.
+ * Throws errors so React Query can retry for premier UX.
  *
- * @returns Generated polls or empty array if API fails
+ * @returns Generated polls or empty array if API returns no data
  */
 const fetchGeneratedPolls = async (): Promise<GeneratedPoll[]> => {
-  try {
-    const response = await fetch('/api/admin/generated-polls');
-    if (!response.ok) {
-      throw new Error(`HTTP error! status: ${response.status}`);
-    }
-    const data = await response.json();
-    devLog('Fetched generated polls from API', { count: data.polls?.length || 0 });
-    return data.polls || emptyGeneratedPolls;
-  } catch (error) {
-    devLog('Error fetching generated polls - API unavailable', { error });
-    logger.warn('⚠️ Admin API: Generated polls endpoint failed. Showing empty state.');
-    return emptyGeneratedPolls;
+  const response = await fetch('/api/admin/generated-polls');
+  if (!response.ok) {
+    // Throw error so React Query can retry
+    throw new Error(`HTTP error! status: ${response.status}`);
   }
+  const data = await response.json();
+  devLog('Fetched generated polls from API', { count: data.polls?.length || 0 });
+  // Return empty array if API returns no data (graceful degradation)
+  // But throw on HTTP errors so React Query can retry
+  return data.polls || emptyGeneratedPolls;
 };
 
 /**
@@ -84,19 +78,16 @@ const fetchGeneratedPolls = async (): Promise<GeneratedPoll[]> => {
  * @returns System metrics or empty object if API fails
  */
 const fetchSystemMetrics = async (): Promise<SystemMetrics> => {
-  try {
-    const response = await fetch('/api/admin/health?type=metrics');
-    if (!response.ok) {
-      throw new Error(`HTTP error! status: ${response.status}`);
-    }
-    const data = await response.json();
-    devLog('Fetched system metrics from API', { metrics: data.metrics });
-    return data.metrics || emptySystemMetrics;
-  } catch (error) {
-    devLog('Error fetching system metrics - API unavailable', { error });
-    logger.warn('⚠️ Admin API: System metrics endpoint failed. Showing empty state.');
-    return emptySystemMetrics;
+  const response = await fetch('/api/admin/health?type=metrics');
+  if (!response.ok) {
+    // Throw error so React Query can retry
+    throw new Error(`HTTP error! status: ${response.status}`);
   }
+  const data = await response.json();
+  devLog('Fetched system metrics from API', { metrics: data.metrics });
+  // Return empty metrics if API returns no data (graceful degradation)
+  // But throw on HTTP errors so React Query can retry
+  return data.metrics || emptySystemMetrics;
 };
 
 const approveTopic = async (topicId: string): Promise<void> => {
@@ -146,18 +137,16 @@ const analyzeTrendingTopics = async (): Promise<void> => {
 
 // Breaking News API functions
 const fetchBreakingNews = async (): Promise<BreakingNewsStory[]> => {
-  try {
-    const response = await fetch('/api/admin/breaking-news');
-    if (!response.ok) {
-      throw new Error(`HTTP error! status: ${response.status}`);
-    }
-    const data = await response.json();
-    devLog('Fetched breaking news from API', { count: data.stories?.length || 0 });
-    return data.stories || [];
-  } catch (error) {
-    devLog('Error fetching breaking news, using empty array', { error });
-    return [];
+  const response = await fetch('/api/admin/breaking-news');
+  if (!response.ok) {
+    // Throw error so React Query can retry
+    throw new Error(`HTTP error! status: ${response.status}`);
   }
+  const data = await response.json();
+  devLog('Fetched breaking news from API', { count: data.stories?.length || 0 });
+  // Return empty array if API returns no data (graceful degradation)
+  // But throw on HTTP errors so React Query can retry
+  return data.stories || [];
 };
 
 const createBreakingNews = async (story: Omit<BreakingNewsStory, 'id' | 'createdAt' | 'updatedAt'>): Promise<BreakingNewsStory> => {
@@ -194,7 +183,17 @@ export const useTrendingTopics = () => {
   const query = useQuery({
     queryKey: ['trending-topics'],
     queryFn: fetchTrendingTopics,
+    staleTime: 30000, // Consider data fresh for 30 seconds
+    gcTime: 5 * 60 * 1000, // Keep in cache for 5 minutes (formerly cacheTime)
     refetchInterval: 30000, // 30 seconds
+    retry: (failureCount, error) => {
+      // Only retry on actual network/server errors
+      if (error instanceof Error && error.message.includes('HTTP error')) {
+        return failureCount < 2; // Retry up to 2 times
+      }
+      return false; // Don't retry for other errors
+    },
+    retryDelay: (attemptIndex) => Math.min(1000 * 2 ** attemptIndex, 30000),
   });
 
   React.useEffect(() => {
@@ -219,7 +218,17 @@ export const useGeneratedPolls = () => {
   const query = useQuery({
     queryKey: ['generated-polls'],
     queryFn: fetchGeneratedPolls,
+    staleTime: 30000, // Consider data fresh for 30 seconds
+    gcTime: 5 * 60 * 1000, // Keep in cache for 5 minutes (formerly cacheTime)
     refetchInterval: 30000, // 30 seconds
+    retry: (failureCount, error) => {
+      // Only retry on actual network/server errors
+      if (error instanceof Error && error.message.includes('HTTP error')) {
+        return failureCount < 2; // Retry up to 2 times
+      }
+      return false; // Don't retry for other errors
+    },
+    retryDelay: (attemptIndex) => Math.min(1000 * 2 ** attemptIndex, 30000),
   });
 
   React.useEffect(() => {
@@ -240,7 +249,18 @@ export const useSystemMetrics = () => {
   const query = useQuery({
     queryKey: ['system-metrics'],
     queryFn: fetchSystemMetrics,
+    staleTime: 60000, // Consider data fresh for 1 minute
+    gcTime: 10 * 60 * 1000, // Keep in cache for 10 minutes (formerly cacheTime)
     refetchInterval: 60000, // 1 minute
+    retry: (failureCount, error) => {
+      // Don't retry if we got empty metrics (graceful degradation)
+      // Only retry on actual network/server errors
+      if (error instanceof Error && error.message.includes('HTTP error')) {
+        return failureCount < 2; // Retry up to 2 times
+      }
+      return false; // Don't retry for other errors
+    },
+    retryDelay: (attemptIndex) => Math.min(1000 * 2 ** attemptIndex, 30000),
   });
 
   React.useEffect(() => {
@@ -387,7 +407,17 @@ export const useBreakingNews = () => {
   const query = useQuery({
     queryKey: ['breaking-news'],
     queryFn: fetchBreakingNews,
+    staleTime: 30000, // Consider data fresh for 30 seconds
+    gcTime: 5 * 60 * 1000, // Keep in cache for 5 minutes (formerly cacheTime)
     refetchInterval: 30000, // 30 seconds
+    retry: (failureCount, error) => {
+      // Only retry on actual network/server errors
+      if (error instanceof Error && error.message.includes('HTTP error')) {
+        return failureCount < 2; // Retry up to 2 times
+      }
+      return false; // Don't retry for other errors
+    },
+    retryDelay: (attemptIndex) => Math.min(1000 * 2 ** attemptIndex, 30000),
   });
 
   // Invalidate related queries when breaking news updates

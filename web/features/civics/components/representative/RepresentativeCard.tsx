@@ -122,8 +122,10 @@ export function RepresentativeCard({
 
   return (
     <Card
-      className={`w-full max-w-md mx-auto cursor-pointer hover:shadow-lg transition-shadow ${className}`}
+      className={`w-full max-w-md mx-auto cursor-pointer transition-all duration-200 ease-in-out hover:shadow-lg hover:-translate-y-1 focus-within:ring-2 focus-within:ring-blue-500 focus-within:ring-offset-2 ${className}`}
       onClick={handleCardClick}
+      role="article"
+      aria-label={`Representative ${representative.name}`}
     >
       <CardHeader className="pb-3">
         <div className="flex items-start space-x-4">

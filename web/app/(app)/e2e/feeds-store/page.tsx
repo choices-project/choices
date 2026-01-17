@@ -74,9 +74,12 @@ function FeedsStoreHarnessView() {
 
   // Use useLayoutEffect for synchronous setup to avoid hydration flakes
   useEffect(() => {
-    if (process.env.NODE_ENV !== 'production') {
-      // eslint-disable-next-line no-console
-      console.info('[E2E] Initializing feeds store harness');
+    // E2E harness initialization - only log in development
+    if (process.env.NODE_ENV !== 'production' && process.env.DEBUG_DASHBOARD === '1') {
+      // Using logger instead of console for consistency
+      // eslint-disable-next-line @typescript-eslint/no-var-requires
+      const { logger } = require('@/lib/utils/logger');
+      logger.debug('[E2E] Initializing feeds store harness');
     }
 
     const harness: FeedsStoreHarness = {

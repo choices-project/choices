@@ -77,12 +77,12 @@ const DashboardContent = dynamicImport(
                       <div className="h-4 bg-gray-200 dark:bg-gray-700 rounded w-5/6" />
                       <div className="h-4 bg-gray-200 dark:bg-gray-700 rounded w-4/5" />
                     </div>
-                  </div>
-                ))}
               </div>
-            </div>
+            ))}
           </div>
         </div>
+      </div>
+          </div>
         {/* MobileDashboardNav placeholder */}
         <nav className="fixed bottom-0 left-0 right-0 bg-white border-t md:hidden z-50" data-testid="mobile-dashboard-nav-loading" aria-hidden="true">
           <div className="flex items-center justify-around">

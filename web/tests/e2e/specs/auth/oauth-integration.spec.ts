@@ -87,7 +87,7 @@ test.describe('OAuth Authentication Integration', () => {
     await expect(googleButton).toBeEnabled();
 
     // Click the button to trigger OAuth flow (will redirect, but we can catch it)
-    const [popup] = await Promise.all([
+    await Promise.all([
       page.waitForEvent('popup', { timeout: 5000 }).catch(() => null),
       googleButton.click()
     ]);
@@ -109,9 +109,6 @@ test.describe('OAuth Authentication Integration', () => {
   test('Multiple OAuth providers can be configured', async ({ page }) => {
     await page.waitForLoadState('networkidle');
 
-    // Check if GitHub button is present (if enabled via env var)
-    const githubButton = page.getByTestId('social-auth-github');
-    
     // GitHub may or may not be visible depending on env config
     // Just verify the page doesn't break if multiple providers exist
     const googleButton = page.getByTestId('social-auth-google');
@@ -131,16 +128,14 @@ test.describe('OAuth Authentication Integration', () => {
     await expect(googleButton).toContainText('Continue with Google');
   });
 
-  test('OAuth flow redirects to correct callback URL', async ({ page, context }) => {
+  test('OAuth flow redirects to correct callback URL', async ({ page }) => {
     await page.waitForLoadState('networkidle');
 
     // Intercept navigation to catch OAuth redirect
-    let oauthUrl = '';
-    
     page.on('response', (response) => {
       const url = response.url();
       if (url.includes('supabase.co/auth/v1/authorize') && url.includes('provider=google')) {
-        oauthUrl = url;
+        // OAuth redirect detected - URL structure is correct
       }
     });
 

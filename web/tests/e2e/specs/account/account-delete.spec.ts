@@ -86,7 +86,7 @@ test.describe('Account Delete Page Tests', () => {
       }
 
       // Should have warning message OR authentication required message
-      const authRequired = page.locator('text=/sign in|logged in|authentication required/i');
+      const authRequired = page.locator('text=/sign in|log in|login|logged in|authentication required/i');
       const needsAuth = await authRequired.count() > 0;
       
       expect(foundWarning || needsAuth).toBeTruthy();
@@ -116,12 +116,14 @@ test.describe('Account Delete Page Tests', () => {
       await page.waitForTimeout(2000);
 
       // Check if authenticated
-      const authRequired = page.locator('text=/sign in|logged in|authentication required/i');
+      const authRequired = page.locator('text=/sign in|log in|login|logged in|authentication required/i');
       const needsAuth = await authRequired.count() > 0;
       test.skip(needsAuth, 'User must be authenticated to test deletion confirmation');
 
       // Look for delete button
-      const deleteButton = page.locator('button:has-text(/delete.*account/i), button:has-text(/confirm.*delete/i), button[type="submit"]').filter({ hasText: /delete/i });
+      const deleteButton = page
+        .locator('button', { hasText: /delete/i })
+        .or(page.locator('button[type="submit"]', { hasText: /delete/i }));
       const deleteButtonExists = await deleteButton.count() > 0;
 
       test.skip(!deleteButtonExists, 'Delete button not found on account delete page');
@@ -195,7 +197,7 @@ test.describe('Account Delete Page Tests', () => {
       await page.waitForTimeout(2000);
 
       // Check if authenticated
-      const authRequired = page.locator('text=/sign in|logged in|authentication required/i');
+      const authRequired = page.locator('text=/sign in|log in|login|logged in|authentication required/i');
       const needsAuth = await authRequired.count() > 0;
       test.skip(needsAuth, 'User must be authenticated to test deletion consequences');
 

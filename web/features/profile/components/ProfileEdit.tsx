@@ -27,6 +27,12 @@ import { useShallow } from 'zustand/react/shallow';
 
 import { PROFILE_DEFAULTS } from '@/types/profile';
 
+import {
+  validateBio,
+  validateDisplayName,
+  validateUsername,
+} from '@/features/profile/utils/profile-validation';
+
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
@@ -46,7 +52,6 @@ import type {
   PrivacySettingKey,
   PrivacySettingValue,
 } from '@/lib/stores/userStore';
-
 
 import {
   useProfileUpdate,
@@ -226,6 +231,32 @@ const buildProfileUpdatePayload = (draft: ProfileEditDraft): ProfileUpdateData =
   return payload;
 };
 
+type FormFieldErrors = Partial<Record<'display_name' | 'username' | 'bio', string>>;
+
+const validateDraft = (draft: ProfileEditDraft): FormFieldErrors => {
+  const errors: FormFieldErrors = {};
+
+  const displayName = draft.display_name ?? '';
+  const displayNameCheck = validateDisplayName(displayName);
+  if (!displayNameCheck.isValid && displayNameCheck.error) {
+    errors.display_name = displayNameCheck.error;
+  }
+
+  const username = draft.username ?? '';
+  const usernameCheck = validateUsername(username);
+  if (!usernameCheck.isValid && usernameCheck.error) {
+    errors.username = usernameCheck.error;
+  }
+
+  const bio = draft.bio ?? '';
+  const bioCheck = validateBio(bio);
+  if (!bioCheck.isValid && bioCheck.error) {
+    errors.bio = bioCheck.error;
+  }
+
+  return errors;
+};
+
 export default function ProfileEdit({
   profile,
   onSave,
@@ -236,20 +267,20 @@ export default function ProfileEdit({
   const { updateProfile, isUpdating, error: updateError } = useProfileUpdate();
   const { uploadAvatar, isUploading: isUploadingAvatar } = useProfileAvatar();
   const { displayName, initials } = useProfileDisplay();
-  
+
   // CRITICAL FIX: Use useShallow for store subscriptions to prevent infinite render loops
   const storeProfile = useProfileStore(
     useShallow((state) => profileSelectors.currentProfile(state))
   );
-  
+
   // Store actions in refs to prevent dependency issues
   const setUserProfileInStore = useProfileStore((state) => state.setUserProfile);
   const setUserProfileInStoreRef = useRef(setUserProfileInStore);
-  
+
   useEffect(() => {
     setUserProfileInStoreRef.current = setUserProfileInStore;
   }, [setUserProfileInStore]);
-  
+
   const storeProfileId = storeProfile?.id ?? null;
   const effectiveProfile = profile ?? storeProfile;
 
@@ -276,6 +307,7 @@ export default function ProfileEdit({
   // Local UI state (not in store)
   const [formError, setFormError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
+  const [fieldErrors, setFieldErrors] = useState<FormFieldErrors>({});
 
   const fallbackDraft = useMemo(
     () => buildInitialFormData(effectiveProfile),
@@ -344,6 +376,9 @@ export default function ProfileEdit({
     setDraftField(field, value);
     clearFieldError(field as ProfileEditErrorKey);
     resetUiFeedback();
+    if (field === 'display_name' || field === 'username' || field === 'bio') {
+      setFieldErrors((prev) => ({ ...prev, [field]: undefined }));
+    }
   };
 
   const handleArrayFieldChange = (field: 'primary_concerns' | 'community_focus', value: string) => {
@@ -400,6 +435,13 @@ export default function ProfileEdit({
     resetUiFeedback();
 
     try {
+      const validationErrors = validateDraft(draft);
+      if (Object.keys(validationErrors).length > 0) {
+        setFieldErrors(validationErrors);
+        setFormError('Please fix the highlighted fields.');
+        return;
+      }
+
       const profileUpdateData = buildProfileUpdatePayload(draft);
       const result = await updateProfile(profileUpdateData);
       if (result.success) {
@@ -408,6 +450,7 @@ export default function ProfileEdit({
           initializeDraft(buildInitialFormData(result.data));
         }
         await onSave?.(profileUpdateData);
+        setFieldErrors({});
       } else {
         setFormError(result.error ?? 'Failed to update profile');
       }
@@ -540,7 +583,14 @@ export default function ProfileEdit({
                   onChange={(e) => handleFieldChange('display_name', e.target.value)}
                   placeholder="Enter your display name"
                   maxLength={100}
+                  aria-invalid={Boolean(fieldErrors.display_name)}
+                  aria-describedby={fieldErrors.display_name ? 'display_name-error' : undefined}
                 />
+                {fieldErrors.display_name && (
+                  <p id="display_name-error" className="mt-1 text-sm text-red-600">
+                    {fieldErrors.display_name}
+                  </p>
+                )}
               </div>
               <div>
                 <Label htmlFor="username">Username</Label>
@@ -550,7 +600,14 @@ export default function ProfileEdit({
                   onChange={(e) => handleFieldChange('username', e.target.value)}
                   placeholder="Enter your username"
                   maxLength={50}
+                  aria-invalid={Boolean(fieldErrors.username)}
+                  aria-describedby={fieldErrors.username ? 'username-error' : undefined}
                 />
+                {fieldErrors.username && (
+                  <p id="username-error" className="mt-1 text-sm text-red-600">
+                    {fieldErrors.username}
+                  </p>
+                )}
               </div>
             </div>
             <div>
@@ -562,7 +619,14 @@ export default function ProfileEdit({
                 placeholder="Tell us about yourself"
                 maxLength={500}
                 rows={3}
+                aria-invalid={Boolean(fieldErrors.bio)}
+                aria-describedby={fieldErrors.bio ? 'bio-error' : undefined}
               />
+              {fieldErrors.bio && (
+                <p id="bio-error" className="mt-1 text-sm text-red-600">
+                  {fieldErrors.bio}
+                </p>
+              )}
               <p className="text-sm text-gray-500 mt-1">
                 {draft.bio?.length ?? 0}/500 characters
               </p>

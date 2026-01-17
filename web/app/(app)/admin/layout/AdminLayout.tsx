@@ -15,7 +15,7 @@ export const AdminLayout: React.FC<AdminLayoutProps> = ({ children }) => {
 
   return (
     <QueryClientProvider client={queryClient}>
-      <div className="relative min-h-screen bg-gray-50">
+      <div className="relative min-h-screen bg-gray-50 dark:bg-gray-950">
         <a
           href="#admin-main"
           className="sr-only focus:not-sr-only focus:absolute focus:z-50 focus:rounded focus:bg-blue-600 focus:px-4 focus:py-2 focus:text-white"

@@ -206,19 +206,8 @@ const FeedItem = memo(({
   // CRITICAL: Guard toLocaleDateString() to prevent hydration mismatch
   const formatDate = (date: Date | string | null | undefined) => {
     // #region agent log
-    const log = (message: string, data: Record<string, unknown>, hypothesisId: string) => {
-      const logData = {
-        location: 'FeedItem.tsx:formatDate',
-        message: message,
-        data: data,
-        timestamp: Date.now(),
-        sessionId: 'debug-session',
-        runId: 'run1',
-        hypothesisId: hypothesisId
-      };
-      if (typeof window !== 'undefined' && window.localStorage.getItem('debug-feed-item') === '1') {
-        console.log('[DEBUG]', JSON.stringify(logData));
-      }
+    const log = (_message: string, _data: Record<string, unknown>, _hypothesisId: string) => {
+      // Debug logging removed for production
     };
     // #endregion
     

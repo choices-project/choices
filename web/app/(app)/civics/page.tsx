@@ -226,16 +226,20 @@ export default function Civics2Page() {
       </div>
 
       {/* Main Content */}
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {activeTab === 'representatives' && (
           <div className="space-y-6">
             {/* Search and Filters */}
             <div className="bg-white rounded-2xl shadow-sm border border-gray-200 p-6">
               <div className="flex flex-col sm:flex-row gap-4">
                 <div className="flex-1">
+                  <label className="sr-only" htmlFor="civics-search">
+                    Search representatives
+                  </label>
                   <div className="relative">
                     <MagnifyingGlassIcon className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
                     <input
+                      id="civics-search"
                       type="text"
                       placeholder="Search representatives..."
                       className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
@@ -245,7 +249,11 @@ export default function Civics2Page() {
                   </div>
                 </div>
                 <div className="sm:w-32">
+                  <label className="sr-only" htmlFor="civics-state-filter">
+                    Filter by state
+                  </label>
                   <select
+                    id="civics-state-filter"
                     data-testid="state-filter"
                     className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                     value={selectedState}
@@ -259,7 +267,11 @@ export default function Civics2Page() {
                   </select>
                 </div>
                 <div className="sm:w-32">
+                  <label className="sr-only" htmlFor="civics-level-filter">
+                    Filter by level
+                  </label>
                   <select
+                    id="civics-level-filter"
                     data-testid="level-filter"
                     className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                     value={selectedLevel}
@@ -271,17 +283,21 @@ export default function Civics2Page() {
                     <option value="local">Local</option>
                   </select>
                 </div>
-                  <div className="sm:w-32">
-                    <select
+                <div className="sm:w-32">
+                  <label className="sr-only" htmlFor="civics-card-variant">
+                    Card display density
+                  </label>
+                  <select
+                    id="civics-card-variant"
                     className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                      value={cardVariant}
-                      onChange={(e) => setCardVariant(e.target.value as 'default' | 'compact' | 'detailed')}
-                    >
-                      <option value="default">Default</option>
-                      <option value="compact">Compact</option>
-                      <option value="detailed">Detailed</option>
-                    </select>
-                  </div>
+                    value={cardVariant}
+                    onChange={(e) => setCardVariant(e.target.value as 'default' | 'compact' | 'detailed')}
+                  >
+                    <option value="default">Default</option>
+                    <option value="compact">Compact</option>
+                    <option value="detailed">Detailed</option>
+                  </select>
+                </div>
               </div>
             </div>
 
@@ -302,7 +318,7 @@ export default function Civics2Page() {
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 0 0 9.288 0M15 7a3 3 0 1 1-6 0 3 3 0 0 1 6 0zm6 3a2 2 0 1 1-4 0 2 2 0 0 1 4 0Zm-13.5 0a2 2 0 1 1-4.5 0 2 2 0 0 1 4.5 0Z" />
                     </svg>
                   </div>
-                  <h3 className="text-xl font-semibold text-gray-900 mb-3">No representatives found</h3>
+                  <h2 className="text-xl font-semibold text-gray-900 mb-3">No representatives found</h2>
                   <p className="text-gray-600 mb-6">Try adjusting your search criteria or check back later for updated information.</p>
                   <button
                     onClick={() => window.location.reload()}
@@ -462,7 +478,7 @@ export default function Civics2Page() {
             <UnifiedFeed userId="test-user" />
           </div>
         )}
-      </div>
+      </main>
 
       {/* Footer */}
       <div className="bg-white border-t border-gray-200 mt-12">

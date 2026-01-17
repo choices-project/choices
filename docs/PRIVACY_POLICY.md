@@ -561,4 +561,9 @@ At Choices, we believe privacy is not a luxury—it's a right. We've designed ou
 **Questions?** privacy@choices.app  
 **Ready to adjust your privacy?** My Data Dashboard
 
+## Ownership & Update Cadence
+
+- **Owner:** Core maintainer
+- **Update cadence:** Review on major feature changes and at least monthly
+- **Last verified:** TBD
 

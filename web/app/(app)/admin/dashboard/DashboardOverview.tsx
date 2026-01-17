@@ -17,8 +17,11 @@ import { useTrendingTopics, useGeneratedPolls, useSystemMetrics, useRealTimeSubs
 import { mockChartData } from '@/features/admin/lib/mock-data';
 import type { ActivityItem } from '@/features/admin/types';
 
+import { Skeleton } from '@/components/ui/skeleton';
+
 import { useActivityFeed } from '@/lib/stores';
 import { devLog } from '@/lib/utils/logger';
+
 
 import { MetricCard, BasicLineChart, BasicBarChart, ChartWrapper, ChartSkeleton } from '../charts/BasicCharts';
 
@@ -31,7 +34,10 @@ export const DashboardOverview: React.FC = () => {
   // Fetch data using admin hooks
   const { data: topics, isLoading: topicsLoading } = useTrendingTopics();
   const { data: polls } = useGeneratedPolls();
-  const { data: metrics } = useSystemMetrics();
+  const { data: metrics, isLoading: metricsLoading } = useSystemMetrics();
+  
+  // Combined loading state for metrics
+  const isMetricsLoading = metricsLoading || !metrics;
 
   // Debug logging
   devLog('DashboardOverview - Data loaded:', {
@@ -81,48 +87,64 @@ export const DashboardOverview: React.FC = () => {
       {/* Page Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900">Dashboard Overview</h1>
-          <p className="text-gray-600 mt-1">
+          <h1 className="text-2xl font-bold text-gray-900 dark:text-gray-100">Dashboard Overview</h1>
+          <p className="text-gray-600 dark:text-gray-400 mt-1">
             Monitor your automated polls system and trending topics
           </p>
         </div>
-        <div className="text-sm text-gray-500">
+        <div className="text-sm text-gray-500 dark:text-gray-400">
           Last updated: {new Date().toLocaleString()}
         </div>
       </div>
 
       {/* Metrics Cards */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-        <MetricCard
-          title="Total Topics"
-          value={metrics?.total_topics ?? 0}
-          trend="+12%"
-          trendValue={12}
-          icon={<TrendingUp className="h-6 w-6" />}
-          color="blue"
-        />
-        <MetricCard
-          title="Generated Polls"
-          value={metrics?.total_polls ?? 0}
-          trend="+8%"
-          trendValue={8}
-          icon={<BarChart3 className="h-6 w-6" />}
-          color="green"
-        />
-        <MetricCard
-          title="Active Polls"
-          value={metrics?.active_polls ?? 0}
-          trend="+5%"
-          trendValue={5}
-          icon={<Activity className="h-6 w-6" />}
-          color="yellow"
-        />
-        <MetricCard
-          title="System Health"
-          value={metrics?.system_health ?? 'healthy'}
-          icon={getSystemHealthIcon(metrics?.system_health ?? 'healthy')}
-          color={getSystemHealthColor(metrics?.system_health ?? 'healthy')}
-        />
+        {isMetricsLoading ? (
+          // Show skeleton loaders while metrics are loading
+          <>
+            {[1, 2, 3, 4].map((i) => (
+              <div key={i} className="p-6 rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 shadow-sm">
+                <Skeleton className="h-4 w-24 mb-2" />
+                <Skeleton className="h-8 w-16 mb-2" />
+                <Skeleton className="h-3 w-20" />
+              </div>
+            ))}
+          </>
+        ) : (
+          // Show actual metrics when loaded
+          <>
+            <MetricCard
+              title="Total Topics"
+              value={metrics?.total_topics ?? 0}
+              trend="+12%"
+              trendValue={12}
+              icon={<TrendingUp className="h-6 w-6" />}
+              color="blue"
+            />
+            <MetricCard
+              title="Generated Polls"
+              value={metrics?.total_polls ?? 0}
+              trend="+8%"
+              trendValue={8}
+              icon={<BarChart3 className="h-6 w-6" />}
+              color="green"
+            />
+            <MetricCard
+              title="Active Polls"
+              value={metrics?.active_polls ?? 0}
+              trend="+5%"
+              trendValue={5}
+              icon={<Activity className="h-6 w-6" />}
+              color="yellow"
+            />
+            <MetricCard
+              title="System Health"
+              value={metrics?.system_health ?? 'healthy'}
+              icon={getSystemHealthIcon(metrics?.system_health ?? 'healthy')}
+              color={getSystemHealthColor(metrics?.system_health ?? 'healthy')}
+            />
+          </>
+        )}
       </div>
 
       {/* Charts Grid */}
@@ -162,7 +184,7 @@ export const DashboardOverview: React.FC = () => {
       <ChartWrapper title="Recent Activity Feed">
         <div className="space-y-4">
           {activityFeed.length === 0 ? (
-            <div className="text-center py-8 text-gray-500">
+            <div className="text-center py-8 text-gray-500 dark:text-gray-400">
               <Clock className="h-12 w-12 mx-auto mb-4 opacity-50" />
               <p>No recent activity</p>
               <p className="text-sm">Activity will appear here as you use the system</p>
@@ -171,30 +193,30 @@ export const DashboardOverview: React.FC = () => {
             activityFeed.slice(0, 10).map((activity: ActivityItem) => (
               <div
                 key={activity.id}
-                className="flex items-start space-x-3 p-4 bg-gray-50 rounded-lg"
+                className="flex items-start space-x-3 p-4 bg-gray-50 dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700"
               >
                 <div className="flex-shrink-0">
                   {activity.type === 'topic_created' && (
-                    <TrendingUp className="h-5 w-5 text-blue-600" />
+                    <TrendingUp className="h-5 w-5 text-blue-600 dark:text-blue-400" />
                   )}
                   {activity.type === 'poll_created' && (
-                    <BarChart3 className="h-5 w-5 text-green-600" />
+                    <BarChart3 className="h-5 w-5 text-green-600 dark:text-green-400" />
                   )}
                   {activity.type === 'poll_updated' && (
-                    <CheckCircle className="h-5 w-5 text-green-600" />
+                    <CheckCircle className="h-5 w-5 text-green-600 dark:text-green-400" />
                   )}
                   {activity.type === 'system_alert' && (
-                    <AlertTriangle className="h-5 w-5 text-yellow-600" />
+                    <AlertTriangle className="h-5 w-5 text-yellow-600 dark:text-yellow-400" />
                   )}
                 </div>
                 <div className="flex-1 min-w-0">
-                  <p className="text-sm font-medium text-gray-900">
+                  <p className="text-sm font-medium text-gray-900 dark:text-gray-100">
                     {activity.title}
                   </p>
-                  <p className="text-sm text-gray-600 mt-1">
+                  <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">
                     {activity.description}
                   </p>
-                  <p className="text-xs text-gray-400 mt-2">
+                  <p className="text-xs text-gray-400 dark:text-gray-500 mt-2">
                     {new Date(activity.timestamp).toLocaleString()}
                   </p>
                 </div>

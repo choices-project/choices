@@ -293,6 +293,6 @@ See `tests/unit/auth/device-flow.test.ts` for unit tests and `tests/e2e/device-f
 ## Related Documentation
 
 - [OAuth 2.0 Device Authorization Grant (RFC 8628)](https://tools.ietf.org/html/rfc8628)
-- [Authentication Architecture](./AUTH_ARCHITECTURE.md)
-- [Rate Limiting Policies](./RATE_LIMITING.md)
+- [Authentication Architecture](../../../ARCHITECTURE.md)
+- [Security & Rate Limiting](../../../SECURITY.md)
 

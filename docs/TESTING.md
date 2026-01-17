@@ -324,3 +324,10 @@ The `validationError()` function from `@/lib/api` returns responses with this st
 - Specific field errors are in `data.details[fieldName]`
 
 These conventions are enforced by the repo ESLint configuration and should keep test suites lint‑clean and consistent.
+
+## Ownership & Update Cadence
+
+- **Owner:** Core maintainer
+- **Update cadence:** Review on major feature changes and at least monthly
+- **Last verified:** TBD
+

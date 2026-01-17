@@ -209,7 +209,7 @@ export default function PerformanceDashboard() {
             <span className={`px-3 py-1 rounded-full text-sm font-medium ${performanceStatus.bgColor} ${performanceStatus.color}`}>
               {performanceStatus.status}
             </span>
-            <span className="text-sm text-gray-600">
+            <span className="text-sm text-gray-600 dark:text-gray-400">
               Last updated: {lastRefresh?.toLocaleTimeString() ?? 'Never'}
             </span>
           </div>
@@ -234,31 +234,31 @@ export default function PerformanceDashboard() {
 
       {/* Cache Statistics */}
       {cacheStats && (
-        <div className="bg-white border border-gray-200 rounded-lg p-6">
-          <h3 className="text-lg font-semibold text-gray-900 mb-4">Cache Statistics</h3>
+        <div className="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg p-6">
+          <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-4">Cache Statistics</h3>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             <div>
-              <p className="text-sm font-medium text-gray-500">Cache Size</p>
-              <p className="text-xl font-semibold text-gray-900">{cacheStats.size} items</p>
+              <p className="text-sm font-medium text-gray-500 dark:text-gray-400">Cache Size</p>
+              <p className="text-xl font-semibold text-gray-900 dark:text-gray-100">{cacheStats.size} items</p>
             </div>
             <div>
-              <p className="text-sm font-medium text-gray-500">Cache Keys</p>
-              <p className="text-xl font-semibold text-gray-900">{cacheStats.keys.length}</p>
+              <p className="text-sm font-medium text-gray-500 dark:text-gray-400">Cache Keys</p>
+              <p className="text-xl font-semibold text-gray-900 dark:text-gray-100">{cacheStats.keys.length}</p>
             </div>
             <div>
-              <p className="text-sm font-medium text-gray-500">Memory Usage</p>
-              <p className="text-xl font-semibold text-gray-900">
+              <p className="text-sm font-medium text-gray-500 dark:text-gray-400">Memory Usage</p>
+              <p className="text-xl font-semibold text-gray-900 dark:text-gray-100">
                 {(cacheStats.memoryUsage / 1024).toFixed(2)} KB
               </p>
             </div>
           </div>
           {cacheStats.keys.length > 0 && (
             <div className="mt-4">
-              <p className="text-sm font-medium text-gray-500 mb-2">Recent Cache Keys:</p>
-              <div className="bg-gray-50 rounded-lg p-3">
+              <p className="text-sm font-medium text-gray-500 dark:text-gray-400 mb-2">Recent Cache Keys:</p>
+              <div className="bg-gray-50 dark:bg-gray-800 rounded-lg p-3 border border-gray-200 dark:border-gray-700">
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
                   {cacheStats.keys.slice(0, 10).map((key: string, index: number) => (
-                    <div key={index} className="text-xs font-mono text-gray-600 truncate">
+                    <div key={index} className="text-xs font-mono text-gray-600 dark:text-gray-400 truncate">
                       {key}
                     </div>
                   ))}

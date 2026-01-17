@@ -440,10 +440,8 @@ It **does emphasize**:
 
 ## 📚 Related Documentation
 
-- [Internationalization Guide](/docs/I18N.md)
-- [Accessibility Standards](/docs/ACCESSIBILITY.md)
-- [SEO Best Practices](/docs/SEO.md)
-- [User Journey Testing](/docs/archive/reference/testing/USER_JOURNEYS.md)
+- [Internationalization Guide](../INTERNATIONALIZATION.md)
+- [Architecture](../ARCHITECTURE.md)
 
 ---
 

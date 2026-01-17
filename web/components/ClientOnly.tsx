@@ -25,7 +25,6 @@ export default function ClientOnly({ children, fallback = null }: ClientOnlyProp
       runId: 'run1',
       hypothesisId: 'F',
     };
-    console.log('[DEBUG ClientOnly] Mount effect:', JSON.stringify(mountLogData));
     fetch('http://127.0.0.1:7242/ingest/6a732aed-2d72-4883-a63a-f3c892fc1216', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -51,7 +50,6 @@ export default function ClientOnly({ children, fallback = null }: ClientOnlyProp
       runId: 'run1',
       hypothesisId: 'F',
     };
-    console.log('[DEBUG ClientOnly] Rendering fallback:', JSON.stringify(renderLogData));
     fetch('http://127.0.0.1:7242/ingest/6a732aed-2d72-4883-a63a-f3c892fc1216', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },

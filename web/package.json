@@ -49,7 +49,7 @@
     "test:e2e:check": "tsx tests/e2e/setup/check-env.ts",
     "cache:report": "tsx scripts/cache/report.ts",
     "test:e2e:staging": "node ./scripts/run-with-timeout.js 600 npx playwright test --config=playwright.staging.config.ts --reporter=line",
-    "test:e2e:production": "node ./scripts/run-with-timeout.js 600 npx playwright test --config=playwright.production.config.ts --reporter=line",
+    "test:e2e:production": "PLAYWRIGHT_USE_MOCKS=0 BASE_URL=https://www.choices-app.com node ./scripts/run-with-timeout.js 600 npx playwright test --config=playwright.production.config.ts --reporter=line",
     "test:performance": "node ./scripts/run-with-timeout.js 600 npx playwright test --config=playwright.monitoring.config.ts --grep=performance --reporter=line",
     "test:load": "node ./scripts/run-with-timeout.js 600 npx playwright test --config=playwright.monitoring.config.ts --grep=load --reporter=line",
     "test:schema": "npx jest --testPathPattern=schema",

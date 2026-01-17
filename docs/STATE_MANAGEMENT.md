@@ -403,3 +403,10 @@ function MyComponent() {
   - Treat scratch documents as archived references. Do not add new roadmap items under `scratch/` going forward.
 
 For questions, drop a note in `#web-platform` or annotate the relevant checklist in `/scratch`.
+
+## Ownership & Update Cadence
+
+- **Owner:** Core maintainer
+- **Update cadence:** Review on major feature changes and at least monthly
+- **Last verified:** TBD
+

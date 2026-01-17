@@ -2,7 +2,7 @@
 
 _Last updated: January 2026_
 
-This index lists the active documentation set. Historical fix summaries, completed work documentation, and outdated status files have been archived to `docs/archive/reference/`. The files below reflect the current, essential documentation.
+This index lists the canonical documentation set. Historical fix summaries, completed work documentation, and outdated status files are archived under `docs/archive/`. The files below reflect the current, essential documentation.
 
 ---
 
@@ -32,22 +32,13 @@ This index lists the active documentation set. Historical fix summaries, complet
 - [`DATABASE_SCHEMA.md`](DATABASE_SCHEMA.md) — Table & function summary.
 - [`SECURITY.md`](SECURITY.md) / [`PRIVACY_POLICY.md`](PRIVACY_POLICY.md) — Compliance references.
 - [`TROUBLESHOOTING.md`](TROUBLESHOOTING.md) — General troubleshooting guide.
-- [`TROUBLESHOOTING_FEED_AND_FEEDBACK.md`](TROUBLESHOOTING_FEED_AND_FEEDBACK.md) — Feed and feedback-specific troubleshooting.
+- `docs/archive/` contains legacy or feature-specific troubleshooting notes as needed.
 
 ---
 
-## Feature-Specific Guides
+## Feature Notes
 
-- [`INTERNATIONALIZATION.md`](INTERNATIONALIZATION.md) — i18n implementation guide.
-- [`ANALYTICS_PIPELINE.md`](ANALYTICS_PIPELINE.md) — Analytics architecture and data pipeline.
-- [`ANALYTICS_FEATURES_PLAN.md`](ANALYTICS_FEATURES_PLAN.md) — Analytics features summary.
-- [`CIVICS_ADDRESS_LOOKUP.md`](CIVICS_ADDRESS_LOOKUP.md) — Address lookup API reference.
-- [`DEVICE_FLOW_QUICK_START.md`](DEVICE_FLOW_QUICK_START.md) — OAuth 2.0 device flow guide.
-- [`PUSH_NOTIFICATIONS.md`](PUSH_NOTIFICATIONS.md) — Push notifications overview.
-- [`PUSH_NOTIFICATIONS_VAPID_SETUP.md`](PUSH_NOTIFICATIONS_VAPID_SETUP.md) — VAPID keys configuration.
-- [`PUSH_NOTIFICATIONS_AUDIT.md`](PUSH_NOTIFICATIONS_AUDIT.md) — Implementation status and deployment readiness.
-- [`FEEDS_STORE_TELEMETRY.md`](FEEDS_STORE_TELEMETRY.md) — Feeds store telemetry reference.
-- [`LANDING_PAGE.md`](LANDING_PAGE.md) — Landing page status.
+Feature-specific docs should be added only when they are actively maintained and referenced by the core docs. Otherwise, keep them in `docs/archive/`.
 
 ## API Documentation
 
@@ -56,7 +47,7 @@ This index lists the active documentation set. Historical fix summaries, complet
 - [`API/civic-actions.md`](API/civic-actions.md) — Civic actions API reference.
 
 ## Technical Highlights
-Archived in `docs/archive/reference/technical/`. See archive index below if you need historical context.
+Archived in `docs/archive/reference/technical/` if historical context is needed.
 
 ---
 
@@ -64,7 +55,7 @@ Archived in `docs/archive/reference/technical/`. See archive index below if you 
 
 Out-of-date, historical, or completed work documentation lives under `docs/archive/`. Use these when you need additional context, but treat the files above as the current source of truth.
 
-Note: `docs/ROADMAP.md` is archived-in-place to preserve inbound links and now points to `ROADMAP_SINGLE_SOURCE.md`. Do not add new items there.
+Note: `docs/ROADMAP.md` is archived-in-place to preserve inbound links and points to `docs/ROADMAP_SINGLE_SOURCE.md`. Do not add new items there.
 
 ```
 docs/archive/
@@ -94,20 +85,15 @@ Outdated or superseded documents live under the archive tree above, including th
 
 - Update this README whenever new core docs are added or archived.
 - Keep summary tables in `CURRENT_STATUS.md` and `FEATURE_STATUS.md` realistic—avoid "perfect completion" phrasing.
-- The single source roadmap is `scratch/ROADMAP_SINGLE_SOURCE.md` (moved from docs to consolidate work).
+- The single source roadmap is `docs/ROADMAP_SINGLE_SOURCE.md`.
 - Archive completed work summaries (fix summaries, implementation status) quarterly to keep active docs focused.
-- See [`DOCS_AUDIT_REPORT.md`](DOCS_AUDIT_REPORT.md) for the January 2026 audit and consolidation rationale (completed).
+- Keep the canonical set aligned with `DOCS_MANIFEST.md`.
 
-## Recent Updates (January 2026)
+For questions or missing documentation, open an issue or add a note in the relevant doc.
 
-- ✅ Created [`GETTING_STARTED.md`](GETTING_STARTED.md) - Quick start guide for new developers
-- ✅ Created [`VISION.md`](VISION.md) - Project vision and MVP status
-- ✅ Created [`CODEBASE_NAVIGATION.md`](CODEBASE_NAVIGATION.md) - Codebase structure guide
-- ✅ Created [`TROUBLESHOOTING.md`](TROUBLESHOOTING.md) - General troubleshooting guide
-- ✅ Created [`API/README.md`](API/README.md) - API documentation overview
-- ✅ Enhanced [`CONTRIBUTING.md`](../CONTRIBUTING.md) - Full contribution workflow
-- ✅ Updated root [`README.md`](../README.md) - Accurate MVP status
-- ✅ Updated [`CURRENT_STATUS.md`](CURRENT_STATUS.md) - Reflect MVP complete status
-- ✅ Archived historical summaries and completed work docs
+## Ownership & Update Cadence
 
-For questions or missing documentation, see the ownership notes in each doc and raise in `#web-platform`.
+- **Owner:** Core maintainer
+- **Update cadence:** Review on major feature changes and at least monthly
+- **Last verified:** TBD
+
