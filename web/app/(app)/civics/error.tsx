@@ -29,7 +29,7 @@ export default function CivicsError({
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z" />
             </svg>
             <div className="flex-1">
-              <h2 className="text-xl font-semibold text-red-900 mb-2">Civics Error</h2>
+              <h1 className="text-xl font-semibold text-red-900 mb-2">Civics Error</h1>
               <p className="text-red-700 mb-4">
                 {error.message || 'An error occurred while loading civics data. Please try again.'}
               </p>

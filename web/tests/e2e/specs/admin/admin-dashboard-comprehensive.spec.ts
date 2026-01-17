@@ -80,7 +80,14 @@ test.describe('Admin Dashboard - Comprehensive Tests', () => {
 
       // Should redirect or show access denied (depending on E2E harness mode)
       const url = page.url();
-      const hasAccessDenied = await page.locator('text=/access denied|unauthorized/i').isVisible().catch(() => false);
+      const accessDeniedLocator = page.locator(
+        '[data-testid="admin-access-denied"], text=/access denied|unauthorized/i'
+      );
+      const hasAccessDenied = await accessDeniedLocator
+        .first()
+        .waitFor({ state: 'visible', timeout: 10_000 })
+        .then(() => true)
+        .catch(() => false);
       const hasRedirected = !url.includes('/admin');
 
       expect(hasAccessDenied || hasRedirected).toBeTruthy();
