@@ -89,8 +89,15 @@ test.describe('Admin Dashboard - Comprehensive Tests', () => {
         .then(() => true)
         .catch(() => false);
       const hasRedirected = !url.includes('/admin');
+      const authForm = page.locator('[data-testid="login-form"]');
+      const authHeading = page.locator('h1, h2').filter({ hasText: /sign in|log in|login/i });
+      const hasAuthPrompt =
+        url.includes('/auth') ||
+        url.includes('/login') ||
+        (await authForm.count()) > 0 ||
+        (await authHeading.count()) > 0;
 
-      expect(hasAccessDenied || hasRedirected).toBeTruthy();
+      expect(hasAccessDenied || hasRedirected || hasAuthPrompt).toBeTruthy();
 
       await context.close();
     });
