@@ -20,12 +20,14 @@ export function SiteFooter() {
         >
           <Link
             href="/terms"
+            prefetch={false}
             className="font-medium transition-colors hover:text-blue-700 focus-visible:underline"
           >
             Terms of Service
           </Link>
           <Link
             href="/privacy"
+            prefetch={false}
             className="font-medium transition-colors hover:text-blue-700 focus-visible:underline"
           >
             Privacy Policy

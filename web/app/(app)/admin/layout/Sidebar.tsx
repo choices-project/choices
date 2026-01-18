@@ -144,6 +144,7 @@ export const Sidebar: React.FC = () => {
                 <li key={item.name}>
                   <Link
                     href={item.href}
+                    prefetch={false}
                     className={`flex items-center px-3 py-2 text-sm font-medium rounded-md transition-colors ${
                       isActive
                         ? 'bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300'
