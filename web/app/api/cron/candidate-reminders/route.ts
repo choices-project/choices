@@ -18,10 +18,13 @@ export const revalidate = 0;
 
 export const GET = withErrorHandling(async (request: NextRequest) => {
   const authHeader = request.headers.get('authorization')
-  if (authHeader !== `Bearer ${process.env.CRON_SECRET}`) {
-    if (process.env.CRON_SECRET) {
-      return authError('Unauthorized - Invalid cron secret');
-    }
+  const cronSecret = process.env.CRON_SECRET ?? ''
+  const hasSecret = cronSecret.length > 0
+  if (!hasSecret && process.env.NODE_ENV === 'production') {
+    return authError('Cron secret not configured')
+  }
+  if (hasSecret && authHeader !== `Bearer ${cronSecret}`) {
+    return authError('Unauthorized - Invalid cron secret')
   }
 
   const supabase = await getSupabaseServerClient()

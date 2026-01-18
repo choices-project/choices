@@ -43,6 +43,7 @@ function shouldBypassForE2E(req: NextRequest): boolean {
   const E2E_COOKIE = 'E2E';
 
   // Environment-based bypass
+  const isDev = process.env.NODE_ENV !== 'production';
   const bypass = process.env.NODE_ENV === 'test' || process.env.E2E === '1'
 
   // Multiple bypass methods for browser compatibility
@@ -51,7 +52,7 @@ function shouldBypassForE2E(req: NextRequest): boolean {
   const byCookie = req.cookies.get(E2E_COOKIE)?.value === '1';
 
   // Local development bypass
-  const isLocal = req.ip === '127.0.0.1' || req.ip === '::1' || req.ip?.endsWith(':127.0.0.1')
+  const isLocal = isDev || req.ip === '127.0.0.1' || req.ip === '::1' || req.ip?.endsWith(':127.0.0.1')
   const isLocalAuth = isLocal && (req.nextUrl.pathname.startsWith('/login') || req.nextUrl.pathname.startsWith('/register'))
 
   const rateLimitEnabled = Boolean(SECURITY_CONFIG.rateLimit.enabled)
@@ -499,7 +500,24 @@ export async function middleware(request: NextRequest) {
   }
 
   // Define protected routes that require authentication
-  const protectedRoutes = ['/feed', '/dashboard', '/profile', '/settings', '/onboarding'];
+  const protectedRoutes = [
+    '/feed',
+    '/dashboard',
+    '/profile',
+    '/settings',
+    '/onboarding',
+    '/admin',
+    '/analytics',
+    '/account',
+    '/candidate',
+    '/contact',
+    '/polls/analytics',
+    '/polls/create',
+    '/polls/templates',
+    '/representatives/my',
+    '/representatives/self',
+    '/e2e',
+  ];
   const isProtectedRoute = protectedRoutes.some(route => pathname.startsWith(route));
   const isAuthRoute = pathname.startsWith('/auth') || pathname.startsWith('/login') || pathname.startsWith('/register');
 

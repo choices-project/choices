@@ -20,6 +20,16 @@ import {
   waitForPageReady,
 } from '../../helpers/e2e-setup';
 
+const isVercelChallenge = (status: number, headers: Record<string, string>): boolean => {
+  if (status !== 403) {
+    return false;
+  }
+  return headers['x-vercel-mitigated'] === 'challenge' || Boolean(headers['x-vercel-challenge-token']);
+};
+
+const isJsonResponse = (headers: Record<string, string>): boolean =>
+  (headers['content-type'] ?? '').includes('application/json');
+
 test.describe('Representatives UX Comprehensive Tests', () => {
   test.beforeEach(async ({ page }) => {
     await page.addInitScript(() => {
@@ -162,18 +172,23 @@ test.describe('Representatives UX Comprehensive Tests', () => {
       });
 
       try {
-        await page.goto('/civics');
+        await page.goto('/representatives');
         await waitForPageReady(page);
         await page.waitForTimeout(2000);
 
         // Find search input
-        const searchInput = page.locator('input[type="text"], input[placeholder*="search" i], input[placeholder*="name" i]').first();
-        const inputVisible = await searchInput.isVisible({ timeout: 5000 }).catch(() => false);
+        const searchInput = page.getByPlaceholder(/search/i).first();
+        const fallbackInput = page.locator('input[placeholder*="name" i]').first();
+        const hasSearchInput = await searchInput.isVisible({ timeout: 5000 }).catch(() => false);
+        const hasFallback = hasSearchInput
+          ? false
+          : await fallbackInput.isVisible({ timeout: 3000 }).catch(() => false);
+        const activeInput = hasSearchInput ? searchInput : fallbackInput;
 
-        if (inputVisible) {
+        if (hasSearchInput || hasFallback) {
           // Test keyboard accessibility
-          await searchInput.focus();
-          await searchInput.fill('Nancy');
+          await activeInput.focus();
+          await activeInput.fill('Nancy');
           
           // Should trigger search or show suggestions
           await page.waitForTimeout(1000);
@@ -197,17 +212,22 @@ test.describe('Representatives UX Comprehensive Tests', () => {
       });
 
       try {
-        await page.goto('/civics');
+        await page.goto('/representatives');
         await waitForPageReady(page);
         await page.waitForTimeout(3000);
 
         // Find and interact with search
-        const searchInput = page.locator('input[type="text"], input[placeholder*="search" i]').first();
-        const inputVisible = await searchInput.isVisible({ timeout: 5000 }).catch(() => false);
+        const searchInput = page.getByPlaceholder(/search/i).first();
+        const fallbackInput = page.locator('input[placeholder*="name" i]').first();
+        const hasSearchInput = await searchInput.isVisible({ timeout: 5000 }).catch(() => false);
+        const hasFallback = hasSearchInput
+          ? false
+          : await fallbackInput.isVisible({ timeout: 3000 }).catch(() => false);
+        const activeInput = hasSearchInput ? searchInput : fallbackInput;
 
-        if (inputVisible) {
-          await searchInput.fill('Smith');
-          await searchInput.press('Enter');
+        if (hasSearchInput || hasFallback) {
+          await activeInput.fill('Smith');
+          await activeInput.press('Enter');
 
           // Wait for search results
           await page.waitForTimeout(2000);
@@ -231,7 +251,7 @@ test.describe('Representatives UX Comprehensive Tests', () => {
       });
 
       try {
-        await page.goto('/civics');
+        await page.goto('/representatives');
         await waitForPageReady(page);
         await page.waitForTimeout(3000);
 
@@ -274,7 +294,7 @@ test.describe('Representatives UX Comprehensive Tests', () => {
       });
 
       try {
-        await page.goto('/civics');
+        await page.goto('/representatives');
         await waitForPageReady(page);
         await page.waitForTimeout(3000);
 
@@ -314,7 +334,7 @@ test.describe('Representatives UX Comprehensive Tests', () => {
       });
 
       try {
-        await page.goto('/civics');
+        await page.goto('/representatives');
         await waitForPageReady(page);
         await page.waitForTimeout(3000);
 
@@ -472,13 +492,25 @@ test.describe('Representatives UX Comprehensive Tests', () => {
         // Navigate to a representative detail page
         const baseUrl = process.env.BASE_URL || process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000';
         const listResponse = await page.request.get(`${baseUrl}/api/representatives?limit=1`);
+        const listHeaders = listResponse.headers();
+        if (!listResponse.ok()) {
+          if (isVercelChallenge(listResponse.status(), listHeaders)) {
+            test.skip(true, 'Vercel bot mitigation blocked /api/representatives');
+            return;
+          }
+          throw new Error(`Failed to fetch representatives: ${listResponse.status()}`);
+        }
+        if (!isJsonResponse(listHeaders)) {
+          test.skip(true, 'Unexpected HTML response from /api/representatives (bot mitigation)');
+          return;
+        }
         const listData = await listResponse.json();
 
         if (listData.success && listData.data.representatives.length > 0) {
           const repId = listData.data.representatives[0].id;
-          await page.goto(`/representatives/${repId}`);
-          await waitForPageReady(page);
-          await page.waitForTimeout(3000);
+          await page.goto(`/representatives/${repId}`, { waitUntil: 'domcontentloaded' });
+          await page.waitForLoadState('domcontentloaded');
+          await page.waitForSelector('text=Contact Information', { timeout: 20000 }).catch(() => undefined);
 
           // Look for contact information
           const contactIndicators = [
@@ -519,6 +551,18 @@ test.describe('Representatives UX Comprehensive Tests', () => {
       try {
         const baseUrl = process.env.BASE_URL || process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000';
         const listResponse = await page.request.get(`${baseUrl}/api/representatives?limit=1`);
+        const listHeaders = listResponse.headers();
+        if (!listResponse.ok()) {
+          if (isVercelChallenge(listResponse.status(), listHeaders)) {
+            test.skip(true, 'Vercel bot mitigation blocked /api/representatives');
+            return;
+          }
+          throw new Error(`Failed to fetch representatives: ${listResponse.status()}`);
+        }
+        if (!isJsonResponse(listHeaders)) {
+          test.skip(true, 'Unexpected HTML response from /api/representatives (bot mitigation)');
+          return;
+        }
         const listData = await listResponse.json();
 
         if (listData.success && listData.data.representatives.length > 0) {

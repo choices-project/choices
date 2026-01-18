@@ -8,6 +8,13 @@ import {
   waitForPageReady,
 } from '../../helpers/e2e-setup';
 
+const isVercelChallenge = (status: number, headers: Record<string, string>): boolean => {
+  if (status !== 403) {
+    return false;
+  }
+  return headers['x-vercel-mitigated'] === 'challenge' || Boolean(headers['x-vercel-challenge-token']);
+};
+
 // PRODUCTION_URL is available via process.env if needed
 const BASE_URL = process.env.BASE_URL || 'http://127.0.0.1:3000';
 const regularEmail = process.env.E2E_USER_EMAIL;
@@ -38,7 +45,13 @@ test.describe('Auth – real backend', () => {
     }
 
     // Navigate to auth page on the correct base URL
-    await page.goto(`${BASE_URL}/auth`, { waitUntil: 'domcontentloaded', timeout: 30_000 });
+    const response = await page.goto(`${BASE_URL}/auth`, { waitUntil: 'domcontentloaded', timeout: 30_000 });
+    const status = response?.status() ?? 0;
+    const headers = response?.headers() ?? {};
+    if (isVercelChallenge(status, headers)) {
+      test.skip(true, 'Vercel bot mitigation blocked /auth in headless browser');
+      return;
+    }
 
     // loginTestUser will handle navigation and waiting for auth
     // It uses relative paths, so ensure we're on the right base URL first
@@ -93,7 +106,13 @@ test.describe('Auth – real backend', () => {
     }
 
     // Navigate to auth page on the correct base URL
-    await page.goto(`${BASE_URL}/auth`, { waitUntil: 'domcontentloaded', timeout: 30_000 });
+    const response = await page.goto(`${BASE_URL}/auth`, { waitUntil: 'domcontentloaded', timeout: 30_000 });
+    const status = response?.status() ?? 0;
+    const headers = response?.headers() ?? {};
+    if (isVercelChallenge(status, headers)) {
+      test.skip(true, 'Vercel bot mitigation blocked /auth in headless browser');
+      return;
+    }
 
     await loginAsAdmin(page, {
       email: adminEmail,

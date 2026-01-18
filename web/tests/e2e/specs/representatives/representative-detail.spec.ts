@@ -5,6 +5,13 @@ import {
   waitForPageReady,
 } from '../../helpers/e2e-setup';
 
+const isVercelChallenge = (status: number, headers: Record<string, string>): boolean => {
+  if (status !== 403) {
+    return false;
+  }
+  return headers['x-vercel-mitigated'] === 'challenge' || Boolean(headers['x-vercel-challenge-token']);
+};
+
 test.describe('Representative Detail Page Tests', () => {
   test.beforeEach(async ({ page }) => {
     // Set up E2E bypass for auth
@@ -312,7 +319,13 @@ test.describe('Representative Detail Page Tests', () => {
 
     try {
       // Navigate to invalid representative ID
-      await page.goto('/representatives/999999999');
+      const response = await page.goto('/representatives/999999999', { waitUntil: 'domcontentloaded' });
+      const status = response?.status() ?? 0;
+      const headers = response?.headers() ?? {};
+      if (isVercelChallenge(status, headers)) {
+        test.skip(true, 'Vercel bot mitigation blocked invalid representative route');
+        return;
+      }
       await waitForPageReady(page);
 
       // Wait for error state or "not found" message
@@ -322,6 +335,7 @@ test.describe('Representative Detail Page Tests', () => {
       const errorIndicators = [
         page.locator('text=/not found|could not find|error loading/i'),
         page.locator('text=/back to representatives/i'),
+        page.getByRole('button', { name: /back to representatives/i }),
         page.locator('button:has-text("Back")'),
       ];
 
@@ -338,7 +352,7 @@ test.describe('Representative Detail Page Tests', () => {
       // The page should show "Representative Not Found" message and a back button
       const backButton1 = page.locator('[data-testid="representative-detail-back-button"]');
       const backButton2 = page.locator('button:has-text("Back")');
-      const backButton3 = page.locator('button:has-text(/back to representatives/i)');
+      const backButton3 = page.getByRole('button', { name: /back to representatives/i });
       const backButtonExists = (await backButton1.count() > 0) || (await backButton2.count() > 0) || (await backButton3.count() > 0);
       
       const notFoundMessage1 = page.locator('[data-testid="representative-not-found-message"]');

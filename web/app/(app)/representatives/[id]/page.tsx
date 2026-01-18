@@ -178,12 +178,12 @@ function RepresentativeDetailPageContent() {
   // CRITICAL: Calculate countdown but use null initially to match server render
   // After mount, update to actual value - but render structure must remain consistent
   const [daysUntilNextElection, setDaysUntilNextElection] = React.useState<number | null>(null);
-  
+
   // CRITICAL: Use state for formatted date to prevent hydration mismatch
   // formatElectionDate with isClient=false uses stable format, isClient=true uses locale format
   // This causes hydration mismatch, so we use state to keep it stable initially
   const [formattedNextElectionDate, setFormattedNextElectionDate] = React.useState<string>('');
-  
+
   React.useEffect(() => {
     if (isClient && nextElection?.election_day) {
       const countdown = getElectionCountdown(nextElection.election_day);
@@ -363,6 +363,11 @@ function RepresentativeDetailPageContent() {
           <p className="text-red-600 dark:text-red-300">
             {error ?? 'The representative you are looking for does not exist.'}
           </p>
+          {error?.includes('Security challenge') && (
+            <p className="text-red-600 dark:text-red-300 text-sm mt-2">
+              Please refresh the page. If the issue continues, your network or security settings may be blocking access.
+            </p>
+          )}
         </div>
       </div>
     );
@@ -539,7 +544,7 @@ function RepresentativeDetailPageContent() {
                       <p className="text-sm font-semibold text-blue-900">{election.name}</p>
                       <p className="text-xs text-blue-700">
                         {/* Use stable format initially, update after mount to prevent hydration mismatch */}
-                        {isClient 
+                        {isClient
                           ? formatElectionDate(election.election_day, true)
                           : formatElectionDate(election.election_day, false)
                         }

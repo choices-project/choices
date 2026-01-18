@@ -11,6 +11,7 @@
 
 import { getSupabaseServerClient, getSupabaseAdminClient } from '@/utils/supabase/server';
 
+import { requireAdminOr401 } from '@/lib/admin-auth';
 import { withErrorHandling, successResponse } from '@/lib/api';
 import { logger } from '@/lib/utils/logger';
 
@@ -19,6 +20,11 @@ import type { NextRequest } from 'next/server';
 export const dynamic = 'force-dynamic';
 
 export const GET = withErrorHandling(async (_request: NextRequest) => {
+  if (process.env.NODE_ENV === 'production') {
+    const authGate = await requireAdminOr401();
+    if (authGate) return authGate;
+  }
+
   const diagnostics: Record<string, any> = {
     timestamp: new Date().toISOString(),
     environment: process.env.NODE_ENV,

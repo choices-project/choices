@@ -133,7 +133,14 @@ export default function RepresentativesPage() {
             <Alert variant="destructive" className="mb-6">
               <AlertDescription>
                 <div className="flex items-center justify-between gap-4">
-                  <span>{errorMessage || 'We could not load representatives right now.'}</span>
+                  <div className="space-y-1">
+                    <div>{errorMessage || 'We could not load representatives right now.'}</div>
+                    {errorMessage.includes('Security challenge') && (
+                      <div className="text-xs text-red-700">
+                        Please refresh the page and try again. If the issue persists, check your network or security settings.
+                      </div>
+                    )}
+                  </div>
                   <Button variant="outline" size="sm" onClick={() => searchRepresentatives({ limit: 50 })}>
                     Retry
                   </Button>

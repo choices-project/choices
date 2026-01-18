@@ -35,6 +35,31 @@ export class RepresentativeService {
   private cache: Map<string, unknown> = new Map();
   private cacheTimeout = CACHE_DURATIONS.MEDIUM; // 5 minutes
 
+  private isChallengeResponse(response: Response): boolean {
+    const mitigated = response.headers.get('x-vercel-mitigated');
+    const challenge = response.headers.get('x-vercel-challenge-token');
+    return response.status === 403 && (mitigated === 'challenge' || Boolean(challenge));
+  }
+
+  private async readJsonResponse<T>(response: Response): Promise<T> {
+    const contentType = response.headers.get('content-type') ?? '';
+    if (!contentType.includes('application/json')) {
+      const isChallenge = this.isChallengeResponse(response);
+      if (isChallenge) {
+        throw new Error('Security challenge blocked the request. Please refresh and try again.');
+      }
+      throw new Error('Unexpected response from server. Please try again.');
+    }
+    return response.json() as Promise<T>;
+  }
+
+  private buildFetchError(response: Response): Error {
+    if (this.isChallengeResponse(response)) {
+      return new Error('Security challenge blocked the request. Please refresh and try again.');
+    }
+    return new Error(`API request failed: ${response.statusText}`);
+  }
+
   /**
    * Get all representatives with optional filtering
    * Uses API route instead of direct server calls (client-safe)
@@ -67,10 +92,10 @@ export class RepresentativeService {
       // Use main representatives endpoint which queries representatives_core directly
       const response = await fetch(`/api/representatives?${params.toString()}`);
       if (!response.ok) {
-        throw new Error(`API request failed: ${response.statusText}`);
+        throw this.buildFetchError(response);
       }
 
-      const apiResult = await response.json();
+      const apiResult = await this.readJsonResponse<RepresentativeListResponse>(response);
 
       if (!apiResult.success || !apiResult.data) {
         throw new Error(apiResult.error ?? 'Failed to fetch representatives');
@@ -140,28 +165,29 @@ export class RepresentativeService {
             error: 'Representative not found'
           };
         }
-        throw new Error(`API request failed: ${response.statusText}`);
+        throw this.buildFetchError(response);
       }
 
-      const apiResult = await response.json();
-
-      const data = (apiResult?.data?.representative ??
-        apiResult?.data ??
-        apiResult) as Representative & {
+      const apiResult = await this.readJsonResponse<unknown>(response);
+      const apiPayload = apiResult as { data?: unknown } | undefined;
+      const data = (apiPayload?.data as { representative?: unknown } | undefined)?.representative ??
+        apiPayload?.data ??
+        apiResult;
+      const representative = data as Representative & {
         division_ids?: string[];
         ocdDivisionIds?: string[];
       };
-      const divisionsSource = Array.isArray(data.ocdDivisionIds)
-        ? data.ocdDivisionIds
-        : Array.isArray(data.division_ids)
-        ? data.division_ids
+      const divisionsSource = Array.isArray(representative.ocdDivisionIds)
+        ? representative.ocdDivisionIds
+        : Array.isArray(representative.division_ids)
+        ? representative.division_ids
         : [];
       const divisions = divisionsSource.filter((value): value is string => typeof value === 'string');
 
       return {
         success: true,
         data: {
-          ...data,
+          ...representative,
           division_ids: divisions,
           ocdDivisionIds: divisions,
         }
@@ -188,10 +214,14 @@ export class RepresentativeService {
       });
 
       if (!lookupResponse.ok) {
-        throw new Error(`Address lookup failed: ${lookupResponse.statusText}`);
+        throw this.buildFetchError(lookupResponse);
       }
 
-      const lookupResult = await lookupResponse.json();
+      const lookupResult = await this.readJsonResponse<{
+        success?: boolean;
+        data?: { jurisdiction?: { state?: string; district?: string; ocd_division_id?: string } };
+        error?: string;
+      }>(lookupResponse);
       if (!lookupResult?.success || !lookupResult?.data?.jurisdiction) {
         throw new Error(lookupResult?.error ?? 'Unable to determine jurisdiction from address');
       }
@@ -210,10 +240,10 @@ export class RepresentativeService {
       // Use the main representatives endpoint which queries representatives_core
       const response = await fetch(`/api/representatives?${params.toString()}`);
       if (!response.ok) {
-        throw new Error(`API request failed: ${response.statusText}`);
+        throw this.buildFetchError(response);
       }
 
-      const apiResult = await response.json();
+      const apiResult = await this.readJsonResponse<RepresentativeListResponse>(response);
       const data = apiResult?.data ?? apiResult;
 
       let representatives = Array.isArray(data?.representatives) ? data.representatives : [];

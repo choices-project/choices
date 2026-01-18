@@ -6,7 +6,10 @@ import { logger } from '@/lib/utils/logger';
 import type { NextRequest } from 'next/server';
 
 export const POST = withErrorHandling(async (request: NextRequest) => {
-  const adminKey = process.env.ADMIN_MONITORING_KEY ?? 'dev-admin-key';
+  const adminKey = process.env.ADMIN_MONITORING_KEY ?? '';
+  if (!adminKey) {
+    return authError('Admin monitoring key not configured');
+  }
   const isAdmin = request.headers.get('x-admin-key') === adminKey;
   if (!isAdmin) {
     return authError('Admin authentication required');

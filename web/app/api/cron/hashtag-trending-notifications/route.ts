@@ -11,9 +11,15 @@ export const dynamic = 'force-dynamic';
 
 export const GET = withErrorHandling(async (request: NextRequest) => {
   const authHeader = request.headers.get('authorization');
-  const cronSecret = process.env.CRON_SECRET;
+  const cronSecret = process.env.CRON_SECRET ?? '';
+  const hasSecret = cronSecret.length > 0;
 
-  if (cronSecret && authHeader !== `Bearer ${cronSecret}`) {
+  if (!hasSecret && process.env.NODE_ENV === 'production') {
+    logger.warn('Unauthorized cron attempt: CRON_SECRET not configured');
+    return authError('Cron secret not configured');
+  }
+
+  if (hasSecret && authHeader !== `Bearer ${cronSecret}`) {
     logger.warn('Unauthorized cron attempt for hashtag notifications');
     return authError('Unauthorized');
   }

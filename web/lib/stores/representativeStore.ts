@@ -772,9 +772,9 @@ export const useRepresentativeFilters = () => {
 export const useRepresentativeDivisions = (representativeId: number | null) =>
   useRepresentativeStore((state) => {
     if (representativeId == null) {
-      return [];
+      return EMPTY_STRING_ARRAY;
     }
-    return state.representativeDivisions[representativeId] ?? [];
+    return state.representativeDivisions[representativeId] ?? EMPTY_STRING_ARRAY;
   });
 export const useUserDivisionIds = () =>
   useRepresentativeStore(representativeSelectors.userDivisionIds);

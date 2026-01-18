@@ -14,17 +14,20 @@ export async function getSupabaseBrowserClient(): Promise<SupabaseClient<Databas
   if (!client) {
     const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
     const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
-    
+
     if (!supabaseUrl || !supabaseKey) {
       throw new Error('Missing Supabase environment variables')
     }
-    
-    // Use dynamic import to avoid SSR issues
-    const { createBrowserClient } = await import('@supabase/ssr')
-    client = createBrowserClient<Database>(
-      supabaseUrl,
-      supabaseKey,
-    )
+
+    // Use supabase-js in the browser to persist sessions in localStorage
+    const { createClient } = await import('@supabase/supabase-js')
+    client = createClient<Database>(supabaseUrl, supabaseKey, {
+      auth: {
+        persistSession: true,
+        autoRefreshToken: true,
+        detectSessionInUrl: true,
+      },
+    })
   }
   return client
 }

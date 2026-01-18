@@ -8,6 +8,8 @@
  * Status: ✅ FOUNDATION
  */
 
+'use client';
+
 import {
   Mail,
   Phone,

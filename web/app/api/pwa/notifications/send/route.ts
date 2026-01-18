@@ -9,6 +9,7 @@ import webPush from 'web-push';
 
 import { getSupabaseServerClient } from '@/utils/supabase/server';
 
+import { requireAdminOr401 } from '@/features/auth/lib/admin-auth';
 import {
   withErrorHandling,
   successResponse,
@@ -329,6 +330,9 @@ const getNotificationHistory = async (
 };
 
 export const POST = withErrorHandling(async (request: NextRequest) => {
+  const authGate = await requireAdminOr401();
+  if (authGate) return authGate;
+
   if (!isFeatureEnabled('PWA')) {
     return forbiddenError('PWA feature is disabled');
   }
@@ -403,6 +407,9 @@ export const POST = withErrorHandling(async (request: NextRequest) => {
 });
 
 export const GET = withErrorHandling(async (request: NextRequest) => {
+  const authGate = await requireAdminOr401();
+  if (authGate) return authGate;
+
   if (!isFeatureEnabled('PWA')) {
     return forbiddenError('PWA feature is disabled');
   }

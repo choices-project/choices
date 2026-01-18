@@ -63,10 +63,12 @@ const nextConfig = {
     dangerouslyAllowSVG: true,
     contentSecurityPolicy: "default-src 'self'; script-src 'none'; sandbox;",
     remotePatterns: [
-      {
-        protocol: 'https',
-        hostname: '**'
-      }
+      { protocol: 'https', hostname: '**.gov' },
+      { protocol: 'http', hostname: '**.gov' },
+      { protocol: 'https', hostname: '**.us' },
+      { protocol: 'http', hostname: '**.us' },
+      { protocol: 'https', hostname: 'storage.googleapis.com' },
+      { protocol: 'https', hostname: '**.googleusercontent.com' }
     ]
   },
 

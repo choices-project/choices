@@ -70,16 +70,57 @@ export default function PollAnalyticsPage() {
   const [isLoading, setIsLoading] = useState(true)
   const [isRefreshing, setIsRefreshing] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  const [accessMessage, setAccessMessage] = useState<string | null>(null)
+  const [serverAuthChecked, setServerAuthChecked] = useState(false)
+  const [serverAuth, setServerAuth] = useState(false)
+  const [hasLocalToken, setHasLocalToken] = useState(false)
+
+  useEffect(() => {
+    let isMounted = true
+    const checkServerAuth = async () => {
+      try {
+        const localToken = typeof window !== 'undefined' && Object.keys(window.localStorage).some(
+          (key) => key.startsWith('sb-') && key.endsWith('auth-token'),
+        )
+        const cookieToken = typeof document !== 'undefined' && document.cookie.includes('sb-')
+        const hasClientAuthSignal = localToken || cookieToken
+        setHasLocalToken(hasClientAuthSignal)
+        const response = await fetch('/api/user/get-id')
+        if (!isMounted) return
+        if (response.ok) {
+          setServerAuth(true)
+        } else if (hasClientAuthSignal) {
+          // Fallback for environments where cookie-based auth checks are blocked
+          setServerAuth(true)
+        } else {
+          setServerAuth(false)
+        }
+      } catch {
+        if (!isMounted) return
+        setServerAuth(false)
+      } finally {
+        if (isMounted) {
+          setServerAuthChecked(true)
+        }
+      }
+    }
+    void checkServerAuth()
+    return () => {
+      isMounted = false
+    }
+  }, [])
 
   const loadAnalytics = useCallback(async () => {
     // Don't block - allow page to render even if user is loading
-    if (!user) {
-      return; // Early return - will be handled by loading state above
+    if (!user && !serverAuth && !hasLocalToken) {
+      setIsLoading(false);
+      return; // Early return - handled by auth gate
     }
 
     try {
       setIsLoading(true)
       setError(null)
+      setAccessMessage(null)
 
       const queryParams = new URLSearchParams({
         timeRange: filters.timeRange,
@@ -89,6 +130,17 @@ export default function PollAnalyticsPage() {
 
       const response = await fetch(`/api/analytics?type=poll&${queryParams}`)
       if (!response.ok) {
+        if ([401, 403].includes(response.status)) {
+          setAccessMessage('Poll analytics are currently available to admins only.')
+          setAnalytics([])
+          setSelectedPoll('')
+          return
+        }
+        if ([400, 404].includes(response.status)) {
+          setAnalytics([])
+          setSelectedPoll('')
+          return
+        }
         throw new Error('Failed to load analytics data')
       }
 
@@ -104,7 +156,7 @@ export default function PollAnalyticsPage() {
     } finally {
       setIsLoading(false)
     }
-  }, [user, filters, selectedPoll])
+  }, [user, serverAuth, hasLocalToken, filters, selectedPoll])
 
   const refreshAnalytics = useCallback(async () => {
     setIsRefreshing(true)
@@ -171,10 +223,13 @@ export default function PollAnalyticsPage() {
   }, [setBreadcrumbs, setCurrentRoute, setSidebarActiveSection]);
 
   useEffect(() => {
-    loadAnalytics()
-  }, [loadAnalytics])
+    if (!serverAuthChecked) {
+      return
+    }
+    void loadAnalytics()
+  }, [serverAuthChecked, loadAnalytics])
 
-  if (!user) {
+  if (!user && serverAuthChecked && !serverAuth && !hasLocalToken) {
     return (
       <div className="min-h-screen bg-gray-50">
         <div className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
@@ -213,6 +268,21 @@ export default function PollAnalyticsPage() {
           <Alert>
             <AlertCircle className="h-4 w-4" />
             <AlertDescription>{error}</AlertDescription>
+          </Alert>
+        </div>
+      </div>
+    )
+  }
+
+  if (analytics.length === 0) {
+    return (
+      <div className="min-h-screen bg-gray-50">
+        <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+          <Alert>
+            <AlertCircle className="h-4 w-4" />
+            <AlertDescription>
+              {accessMessage ?? 'No analytics data available yet.'}
+            </AlertDescription>
           </Alert>
         </div>
       </div>

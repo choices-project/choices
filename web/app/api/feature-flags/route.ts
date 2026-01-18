@@ -10,6 +10,7 @@
  */
 
 
+import { requireAdminOr401 } from '@/features/auth/lib/admin-auth';
 import { withErrorHandling, successResponse, validationError, errorResponse } from '@/lib/api';
 import { featureFlagManager } from '@/lib/core/feature-flags';
 import { logger } from '@/lib/utils/logger';
@@ -17,6 +18,11 @@ import { logger } from '@/lib/utils/logger';
 import type { NextRequest } from 'next/server';
 
 export const GET = withErrorHandling(async (_request: NextRequest) => {
+  if (process.env.NODE_ENV === 'production') {
+    const authGate = await requireAdminOr401();
+    if (authGate) return authGate;
+  }
+
   // Get all feature flags
   const allFlags = featureFlagManager.getAllFlags();
   const enabledFlags = featureFlagManager.getEnabledFlags();
@@ -43,6 +49,11 @@ export const GET = withErrorHandling(async (_request: NextRequest) => {
 });
 
 export const PATCH = withErrorHandling(async (request: NextRequest) => {
+  if (process.env.NODE_ENV === 'production') {
+    const authGate = await requireAdminOr401();
+    if (authGate) return authGate;
+  }
+
   const body = await request.json();
   const { flagId, enabled } = body ?? {};
 

@@ -161,7 +161,7 @@ export async function register(
       const { error: profileError } = await serviceRoleClient
         .from('user_profiles')
         .insert({
-          id: crypto.randomUUID(),
+          id: authUser.id,
           user_id: authUser.id,
           username: data.username.toLowerCase(),
           email: data.email.toLowerCase(),
@@ -178,27 +178,42 @@ export async function register(
 
       logger.info('✅ User profile created successfully');
 
-      // Create user role
-      // Note: user_roles table type not in Database type definition
-      const { error: roleError } = await (serviceRoleClient as unknown as {
-        from: (table: string) => {
-          insert: (data: Record<string, unknown>) => Promise<{ error: { message: string } | null }>
+      // Create user role (best-effort; do not fail registration)
+      try {
+        const { data: roleRecord, error: roleLookupError } = await serviceRoleClient
+          .from('roles')
+          .select('id')
+          .eq('name', 'user')
+          .single();
+
+        if (roleLookupError || !roleRecord) {
+          logger.warn('User role lookup failed - skipping role assignment', {
+            error: roleLookupError?.message,
+            userId: authUser.id
+          });
+        } else {
+          const { error: roleError } = await serviceRoleClient
+            .from('user_roles')
+            .insert({
+              user_id: authUser.id,
+              role_id: roleRecord.id
+            });
+
+          if (roleError) {
+            logger.warn('Failed to create user role - continuing', {
+              error: roleError.message,
+              userId: authUser.id
+            });
+          } else {
+            logger.info('✅ User role created successfully');
+          }
         }
-      })
-        .from('user_roles')
-        .insert({
-          user_id: authUser.id,
-          role: 'user',
-          is_active: true
+      } catch (error) {
+        logger.warn('User role assignment failed - continuing', {
+          userId: authUser.id,
+          error: error instanceof Error ? error.message : String(error)
         });
-
-      if (roleError) {
-        logger.error('Failed to create user role', new Error(roleError.message));
-        logger.error('Role error details:', roleError);
-        return { ok: false, error: `Failed to create user role: ${roleError.message}` };
       }
-
-      logger.info('✅ User role created successfully');
 
       return { ok: true, userId: authUser.id };
     } else {
@@ -271,7 +286,7 @@ export async function register(
       const { error: profileError } = await serviceRoleClient
         .from('user_profiles')
         .insert({
-          id: crypto.randomUUID(),
+          id: authUser.id,
           user_id: authUser.id,
           username: data.username.toLowerCase(),
           email: data.email.toLowerCase(),
@@ -288,27 +303,42 @@ export async function register(
 
       logger.info('✅ User profile created successfully');
 
-      // Create user role
-      // Note: user_roles table type not in Database type definition
-      const { error: roleError } = await (serviceRoleClient as unknown as {
-        from: (table: string) => {
-          insert: (data: Record<string, unknown>) => Promise<{ error: { message: string } | null }>
+      // Create user role (best-effort; do not fail registration)
+      try {
+        const { data: roleRecord, error: roleLookupError } = await serviceRoleClient
+          .from('roles')
+          .select('id')
+          .eq('name', 'user')
+          .single();
+
+        if (roleLookupError || !roleRecord) {
+          logger.warn('User role lookup failed - skipping role assignment', {
+            error: roleLookupError?.message,
+            userId: authUser.id
+          });
+        } else {
+          const { error: roleError } = await serviceRoleClient
+            .from('user_roles')
+            .insert({
+              user_id: authUser.id,
+              role_id: roleRecord.id
+            });
+
+          if (roleError) {
+            logger.warn('Failed to create user role - continuing', {
+              error: roleError.message,
+              userId: authUser.id
+            });
+          } else {
+            logger.info('✅ User role created successfully');
+          }
         }
-      })
-        .from('user_roles')
-        .insert({
-          user_id: authUser.id,
-          role: 'user',
-          is_active: true
+      } catch (error) {
+        logger.warn('User role assignment failed - continuing', {
+          userId: authUser.id,
+          error: error instanceof Error ? error.message : String(error)
         });
-
-      if (roleError) {
-        logger.error('Failed to create user role', new Error(roleError.message));
-        logger.error('Role error details:', roleError);
-        return { ok: false, error: `Failed to create user role: ${roleError.message}` };
       }
-
-      logger.info('✅ User role created successfully');
 
       return { ok: true, userId: authUser.id };
     }

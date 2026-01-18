@@ -42,6 +42,12 @@ export default function AuthPage() {
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [message, setMessage] = useState<string | null>(null);
   const [isRateLimited, setIsRateLimited] = useState(false);
+  const emailRef = React.useRef<HTMLInputElement | null>(null);
+  const passwordRef = React.useRef<HTMLInputElement | null>(null);
+  const displayNameRef = React.useRef<HTMLInputElement | null>(null);
+  const confirmPasswordRef = React.useRef<HTMLInputElement | null>(null);
+  const formRef = React.useRef<HTMLFormElement | null>(null);
+  const submitInFlightRef = React.useRef(false);
   const userError = useUserError();
   const isLoading = useUserLoading();
   const {
@@ -235,7 +241,11 @@ export default function AuthPage() {
   }, [initializeAuth, setSessionAndDerived]);
 
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent | React.KeyboardEvent | React.MouseEvent | Event) => {
+    if (submitInFlightRef.current) {
+      return;
+    }
+    submitInFlightRef.current = true;
     e.preventDefault();
     clearAuthError();
     setMessage(null);
@@ -251,21 +261,27 @@ export default function AuthPage() {
     // This ensures users see loading state even if validation fails
     setAuthLoading(true);
 
+    const effectiveEmail = formData.email || emailRef.current?.value || '';
+    const effectivePassword = formData.password || passwordRef.current?.value || '';
+    const effectiveDisplayName = formData.displayName || displayNameRef.current?.value || '';
+    const effectiveConfirmPassword =
+      formData.confirmPassword || confirmPasswordRef.current?.value || '';
+
     // Client-side validation
-    if (!formData.email) {
+    if (!effectiveEmail) {
       applyError('emailRequired');
       return;
     }
-    if (!formData.password) {
+    if (!effectivePassword) {
       applyError('passwordRequired');
       return;
     }
     if (isSignUp) {
-      if (!formData.displayName) {
+      if (!effectiveDisplayName) {
         applyError('displayNameRequired');
         return;
       }
-      if (formData.password !== formData.confirmPassword) {
+      if (effectivePassword !== effectiveConfirmPassword) {
         applyError('passwordsMismatch');
         return;
       }
@@ -277,9 +293,9 @@ export default function AuthPage() {
         // Note: registerUser API doesn't currently accept ServerActionContext
         // Security context (IP, user agent) is handled server-side via headers
         const result = await registerUser({
-          email: formData.email,
-          username: formData.displayName.toLowerCase().replace(/\s+/g, '_'),
-          password: formData.password,
+          email: effectiveEmail,
+          username: effectiveDisplayName.toLowerCase().replace(/\s+/g, '_'),
+          password: effectivePassword,
         });
         if (result.ok) {
           await syncSupabaseSession();
@@ -301,10 +317,10 @@ export default function AuthPage() {
       } else {
         // Create FormData for login
         try {
-          const loginResult = await loginWithPassword({
-            email: formData.email,
-            password: formData.password,
-          });
+        const loginResult = await loginWithPassword({
+          email: effectiveEmail,
+          password: effectivePassword,
+        });
 
           // Set the session in the browser's Supabase client
           // This is needed because our httpOnly cookies can't be read by JS
@@ -354,7 +370,15 @@ export default function AuthPage() {
     }
     finally {
       setAuthLoading(false);
+      submitInFlightRef.current = false;
     }
+  };
+
+  const handleKeySubmit = (event: React.KeyboardEvent) => {
+    if (event.key !== 'Enter') {
+      return;
+    }
+    handleSubmit(event);
   };
 
   return (
@@ -390,7 +414,12 @@ export default function AuthPage() {
           </button>
         </div>
 
-          <form onSubmit={handleSubmit} className="mt-6 space-y-5 transition-all duration-300 ease-in-out" data-testid="login-form">
+          <form
+            ref={formRef}
+            onSubmit={handleSubmit}
+            className="mt-6 space-y-5 transition-all duration-300 ease-in-out"
+            data-testid="login-form"
+          >
           {/* CSRF Token */}
           <input type="hidden" name="csrf-token" value="test-csrf-token" data-testid="csrf-token" />
               {userError && (
@@ -470,8 +499,11 @@ export default function AuthPage() {
                         type="text"
                         id="displayName"
                         name="displayName"
+                        ref={displayNameRef}
                         value={formData.displayName}
                         onChange={(e) => setFormData((prev) => ({ ...prev, displayName: e.target.value }))}
+                        onInput={(e) => setFormData((prev) => ({ ...prev, displayName: e.currentTarget.value }))}
+                        onKeyDown={handleKeySubmit}
                         required={isSignUp}
                         className="w-full pl-10 pr-3 py-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500 focus-visible:ring-2 focus-visible:ring-blue-500"
                         placeholder={t('auth.form.displayNamePlaceholder')}
@@ -502,8 +534,11 @@ export default function AuthPage() {
                   type="email"
                   id="email"
                   name="email"
+                  ref={emailRef}
                   value={formData.email}
                   onChange={(e) => setFormData((prev) => ({ ...prev, email: e.target.value }))}
+                  onInput={(e) => setFormData((prev) => ({ ...prev, email: e.currentTarget.value }))}
+                  onKeyDown={handleKeySubmit}
                   required
                   className={`w-full pl-10 pr-3 py-2 border rounded-md focus:ring-blue-500 focus:border-blue-500 focus-visible:ring-2 focus-visible:ring-blue-500 transition-colors ${
                     formData.email && !formData.email.includes('@')
@@ -549,8 +584,11 @@ export default function AuthPage() {
                   type={showPassword ? 'text' : 'password'}
                   id="password"
                   name="password"
+                  ref={passwordRef}
                   value={formData.password}
                   onChange={(e) => setFormData((prev) => ({ ...prev, password: e.target.value }))}
+                  onInput={(e) => setFormData((prev) => ({ ...prev, password: e.currentTarget.value }))}
+                  onKeyDown={handleKeySubmit}
                   required
                   className={`w-full pl-10 pr-10 py-2 border rounded-md focus:ring-blue-500 focus:border-blue-500 focus-visible:ring-2 focus-visible:ring-blue-500 transition-colors ${
                     formData.password && formData.password.length < 6
@@ -607,8 +645,11 @@ export default function AuthPage() {
                     type={showConfirmPassword ? 'text' : 'password'}
                     id="confirmPassword"
                     name="confirmPassword"
+                    ref={confirmPasswordRef}
                     value={formData.confirmPassword}
                     onChange={(e) => setFormData((prev) => ({ ...prev, confirmPassword: e.target.value }))}
+                    onInput={(e) => setFormData((prev) => ({ ...prev, confirmPassword: e.currentTarget.value }))}
+                    onKeyDown={handleKeySubmit}
                     required={isSignUp}
                     className="w-full pl-10 pr-10 py-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500 focus-visible:ring-2 focus-visible:ring-blue-500"
                     placeholder={t('auth.form.passwordPlaceholder')}
@@ -641,20 +682,16 @@ export default function AuthPage() {
           {/* Submit Button */}
           {/* Disable button if form is invalid or loading */}
           {(() => {
-            const isEmailValid = formData.email && formData.email.includes('@');
-            const isPasswordValid = formData.password && formData.password.length >= 6;
-            const isFormValid = isEmailValid && isPasswordValid &&
-              (!isSignUp || (formData.displayName && formData.password === formData.confirmPassword));
-            const isDisabled = isLoading || !isFormValid;
+            const isDisabled = isLoading;
 
             return (
               <button
-                type="submit"
+                type="button"
                 className="w-full bg-blue-600 text-white py-2 px-4 rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition duration-150 ease-in-out disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
                 data-testid="login-submit"
                 aria-busy={isLoading}
                 disabled={isDisabled}
-                aria-describedby={!isFormValid && !isLoading ? 'form-validation-hint' : undefined}
+                onClick={(event) => handleSubmit(event)}
               >
                 {isLoading && <Loader2 className="h-4 w-4 animate-spin" aria-hidden="true" />}
                 <span>{isLoading ? t('auth.form.working') : isSignUp ? t('auth.form.submit.signUp') : t('auth.form.submit.signIn')}</span>

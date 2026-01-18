@@ -11,6 +11,7 @@
 import { useCallback, useState, useEffect, useMemo } from 'react';
 
 import { logger } from '@/lib/utils/logger';
+import { useIsAuthenticated } from '@/lib/stores';
 
 export type FollowStatus = {
   following: boolean;
@@ -31,6 +32,7 @@ export type FollowPreferences = {
  * Hook for managing representative follow state
  */
 export function useFollowRepresentative(representativeId: number | null) {
+  const isAuthenticated = useIsAuthenticated();
   const [status, setStatus] = useState<FollowStatus>({
     following: false,
     loading: true,
@@ -39,7 +41,7 @@ export function useFollowRepresentative(representativeId: number | null) {
 
   // Check initial follow status
   useEffect(() => {
-    if (!representativeId) {
+    if (!representativeId || !isAuthenticated) {
       setStatus({ following: false, loading: false, error: null });
       return;
     }
@@ -77,7 +79,7 @@ export function useFollowRepresentative(representativeId: number | null) {
     };
 
     void checkFollowStatus();
-  }, [representativeId]);
+  }, [representativeId, isAuthenticated]);
 
   const follow = useCallback(async (preferences?: FollowPreferences) => {
     if (!representativeId) {

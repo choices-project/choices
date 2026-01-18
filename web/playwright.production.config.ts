@@ -49,6 +49,7 @@ export default defineConfig({
     trace: 'on-first-retry',
     screenshot: 'only-on-failure',
     video: 'retain-on-failure',
+    userAgent: 'ChoicesE2E/1.0 (+playwright)',
     // Do NOT set x-e2e-bypass header for production tests
     // This header bypasses authentication checks, but production tests need to test real auth flow
     // extraHTTPHeaders: { 'x-e2e-bypass': '1' },
@@ -57,16 +58,16 @@ export default defineConfig({
   projects: [
     // Only run chromium in production CI for speed - firefox/webkit tested in local dev
     // This reduces test time by 66% (3 browsers -> 1 browser)
-    { 
-      name: 'chromium', 
-      use: { 
+    {
+      name: 'chromium',
+      use: {
         ...devices['Desktop Chrome'],
         // Disable service workers to speed up tests - they intercept network requests and slow execution
         // Service workers can cause delays in test execution as they handle network interception
         launchOptions: {
           args: ['--disable-service-worker-registration']
         },
-      } 
+      }
     },
     // Uncomment below to test other browsers (slower but more comprehensive)
     // { name: 'firefox', use: { ...devices['Desktop Firefox'] } },

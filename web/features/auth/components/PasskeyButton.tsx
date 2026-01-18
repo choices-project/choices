@@ -134,6 +134,12 @@ export function PasskeyButton({
     ? 'bg-blue-600 text-white hover:bg-blue-700'
     : 'bg-white text-gray-700 border border-gray-300 hover:bg-gray-50';
 
+  const buttonTestId =
+    mode === 'register'
+      ? T?.WEBAUTHN?.WEBAUTHN_REGISTER ?? 'webauthn-register'
+      : T?.WEBAUTHN?.WEBAUTHN_AUTHENTICATE ?? 'webauthn-authenticate';
+  const promptTestId = T?.WEBAUTHN?.authPrompt ?? 'webauthn-auth-prompt';
+
   if (!mounted || isSupported === null) {
     return null;
   }
@@ -145,9 +151,7 @@ export function PasskeyButton({
   return (
     <div className={className}>
       <button
-        data-testid={
-          mode === 'register' ? T.WEBAUTHN.WEBAUTHN_REGISTER : T.WEBAUTHN.WEBAUTHN_AUTHENTICATE
-        }
+        data-testid={buttonTestId}
         onClick={handleClick}
         disabled={loading || disabled}
         className={`
@@ -174,7 +178,7 @@ export function PasskeyButton({
       )}
 
       {showPrompt && (
-        <div className="mt-4" data-testid={T.WEBAUTHN.authPrompt}>
+        <div className="mt-4" data-testid={promptTestId}>
           <WebAuthnPrompt
             mode={mode}
             onComplete={handlePromptComplete}

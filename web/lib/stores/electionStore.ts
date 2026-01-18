@@ -112,6 +112,8 @@ export const useElectionStore = create<ElectionStore>()(
   devtools(immer(electionStoreCreator), { name: 'election-store' })
 );
 
+const EMPTY_ELECTIONS: CivicElection[] = [];
+
 export const electionSelectors = {
   electionsByKey: (state: ElectionStore) => state.electionsByKey,
   isLoading: (state: ElectionStore) => state.isLoading,
@@ -121,7 +123,7 @@ export const electionSelectors = {
 export const useElectionsForDivisions = (divisions: string[]): CivicElection[] => {
   const key = buildKey(divisions);
   return useElectionStore((state) =>
-    key ? state.electionsByKey[key] ?? [] : []
+    key ? state.electionsByKey[key] ?? EMPTY_ELECTIONS : EMPTY_ELECTIONS
   );
 };
 
