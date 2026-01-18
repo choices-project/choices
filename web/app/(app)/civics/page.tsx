@@ -121,7 +121,11 @@ export default function Civics2Page() {
     logger.info('🔄 Loading representatives...', { state: selectedState, level: selectedLevel });
 
     try {
-      const response = await fetch(`/api/v1/civics/by-state?state=${selectedState}&level=${selectedLevel}&limit=20`);
+      const params = new URLSearchParams({ state: selectedState, limit: '20', include: 'photos,divisions' });
+      if (selectedLevel !== 'all') {
+        params.set('level', selectedLevel);
+      }
+      const response = await fetch(`/api/representatives?${params.toString()}`);
       logger.info('📡 Response status', { status: response.status });
 
       if (!response.ok) {
@@ -129,9 +133,71 @@ export default function Civics2Page() {
       }
 
       const data = await response.json();
-      logger.info('✅ API Response:', data);
-      logger.info('📊 Setting representatives:', data.data?.length ?? 0);
-      setRepresentatives(data.data ?? []);
+      const apiRepresentatives: Representative[] = Array.isArray(data?.data?.representatives)
+        ? data.data.representatives
+        : [];
+      const mapped = apiRepresentatives.map((rep) => {
+        const photoUrl =
+          rep.primary_photo_url ??
+          rep.photos?.find((photo) => photo.is_primary)?.url ??
+          rep.photos?.[0]?.url ??
+          undefined;
+        const enhancedContacts = [
+          rep.primary_email
+            ? {
+                type: 'email',
+                value: rep.primary_email,
+                source: 'primary',
+                isPrimary: true,
+                isVerified: true,
+              }
+            : null,
+          rep.primary_phone
+            ? {
+                type: 'phone',
+                value: rep.primary_phone,
+                source: 'primary',
+                isPrimary: true,
+                isVerified: true,
+              }
+            : null,
+          rep.primary_website
+            ? {
+                type: 'website',
+                value: rep.primary_website,
+                source: 'primary',
+                isPrimary: true,
+                isVerified: true,
+              }
+            : null,
+        ].filter(Boolean) as SuperiorRepresentativeData['enhancedContacts'];
+
+        const verificationStatus: SuperiorRepresentativeData['verificationStatus'] =
+          rep.verification_status === 'failed'
+            ? 'unverified'
+            : rep.verification_status ?? 'unverified';
+
+        return {
+          id: String(rep.id),
+          name: rep.name,
+          office: rep.office,
+          level: rep.level,
+          state: rep.state,
+          party: rep.party ?? 'Independent',
+          district: rep.district ?? undefined,
+          photoUrl,
+          enhancedContacts,
+          dataQualityScore: rep.data_quality_score,
+          dataSource: rep.data_sources ?? [],
+          lastVerified: rep.last_verified ?? undefined,
+          verificationStatus,
+          metadata: {
+            division_ids: rep.division_ids ?? [],
+          },
+        };
+      });
+      logger.info('📊 Setting representatives:', mapped.length);
+      setRepresentatives(mapped);
       logger.info('🎯 Representatives state updated');
     } catch (error) {
       logger.error('❌ Error loading representatives:', error);
@@ -505,6 +571,8 @@ export default function Civics2Page() {
                     office: representative.office,
                     level: representative.level,
                     state: representative.state,
+                    division_ids: representative.metadata?.division_ids ?? [],
+                    ocdDivisionIds: representative.metadata?.division_ids ?? [],
                     data_quality_score: representative.dataQualityScore ?? 0,
                     verification_status: representative.verificationStatus === 'verified' ? 'verified' :
                                         representative.verificationStatus === 'pending' ? 'pending' : 'failed',
