@@ -21,6 +21,7 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Alert, AlertDescription } from '@/components/ui/alert';
 
 import {
   useRepresentativeSearchResults,
@@ -44,6 +45,7 @@ export default function RepresentativesPage() {
   const locationRepresentatives = useLocationRepresentatives();
   const searchRepresentatives = useSearchRepresentatives();
   const findByLocation = useFindByLocation();
+  const [hasAttemptedLocationLookup, setHasAttemptedLocationLookup] = React.useState(false);
 
   // Load initial data
   useEffect(() => {
@@ -59,6 +61,7 @@ export default function RepresentativesPage() {
 
   const handleLocationSearch = React.useCallback(
     (address: string) => {
+      setHasAttemptedLocationLookup(true);
       void findByLocation({ address });
     },
     [findByLocation]
@@ -104,6 +107,18 @@ export default function RepresentativesPage() {
 
         {/* Results Area */}
         <div className="lg:col-span-3">
+          {error && (
+            <Alert variant="destructive" className="mb-6">
+              <AlertDescription>
+                <div className="flex items-center justify-between gap-4">
+                  <span>{error?.message ?? 'We could not load representatives right now.'}</span>
+                  <Button variant="outline" size="sm" onClick={() => searchRepresentatives({ limit: 50 })}>
+                    Retry
+                  </Button>
+                </div>
+              </AlertDescription>
+            </Alert>
+          )}
           <Tabs defaultValue="search" className="w-full">
             <TabsList className="grid w-full grid-cols-2">
               <TabsTrigger value="search" className="flex items-center space-x-2">
@@ -173,10 +188,19 @@ export default function RepresentativesPage() {
                       onRepresentativeClick={handleRepresentativeClick}
                     />
                   ) : (
-                    <div className="text-center py-8 text-gray-500">
-                      {allLoading
-                        ? 'Looking up representatives for your location...'
-                        : 'Location-based representatives not available'}
+                    <div className="text-center py-8 text-gray-500 space-y-3">
+                      <p>
+                        {allLoading
+                          ? 'Looking up representatives for your location...'
+                          : hasAttemptedLocationLookup
+                            ? 'No representatives found for that address.'
+                            : 'Enter your address on the left to find local representatives.'}
+                      </p>
+                      {!allLoading && (
+                        <Button variant="outline" size="sm" onClick={() => setHasAttemptedLocationLookup(false)}>
+                          Clear location search
+                        </Button>
+                      )}
                     </div>
                   )}
                 </CardContent>
