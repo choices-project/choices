@@ -335,25 +335,9 @@ export async function loginTestUser(page: Page, user: TestUser): Promise<void> {
     // Hydration marker might not exist, continue anyway
   });
 
-  // Clear inputs and ensure they're focused
-  await emailInput.first().click(); // Click to focus
-  await emailInput.first().clear({ timeout: 2_000 });
-  await passwordInput.first().click(); // Click to focus
-  await passwordInput.first().clear({ timeout: 2_000 });
-
-  // Wait a moment for React to process the clear
-  await page.waitForTimeout(100);
-
-  // For CI reliability, use keyboard.type() which simulates real user input
-  // This is slower but more reliable for React controlled inputs
-  // First clear the input, then type the value character by character
-  await emailInput.first().click();
-  await emailInput.first().clear({ timeout: 2_000 });
-  await page.keyboard.type(email, { delay: 10 }); // Small delay for React to process
-
-  await passwordInput.first().click();
-  await passwordInput.first().clear({ timeout: 2_000 });
-  await page.keyboard.type(password, { delay: 10 }); // Small delay for React to process
+  // Fill inputs directly to avoid focus loss during per-character typing
+  await emailInput.first().fill(email, { timeout: 10_000 });
+  await passwordInput.first().fill(password, { timeout: 10_000 });
 
   // Wait for React to process the events and update state
   await page.waitForTimeout(500);
