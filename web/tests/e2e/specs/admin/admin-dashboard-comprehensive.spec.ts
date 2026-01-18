@@ -109,7 +109,7 @@ test.describe('Admin Dashboard - Comprehensive Tests', () => {
     // When harness mode is enabled, we rely on server-side auth bypass - no login needed
   });
 
-  test.afterEach(async ({}, testInfo) => {
+  test.afterEach(async (_testArgs, testInfo) => {
     const record = rscByTest.get(testInfo.title);
     if (!record) return;
     if (record.failures.length > 0 || record.badResponses.length > 0) {

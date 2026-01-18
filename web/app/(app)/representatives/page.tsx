@@ -17,11 +17,11 @@ import React, { useEffect } from 'react';
 import { RepresentativeList  } from '@/features/civics/components/representative/RepresentativeList';
 import { RepresentativeSearch } from '@/features/civics/components/representative/RepresentativeSearch';
 
+import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Alert, AlertDescription } from '@/components/ui/alert';
 
 import {
   useRepresentativeSearchResults,
@@ -46,6 +46,14 @@ export default function RepresentativesPage() {
   const searchRepresentatives = useSearchRepresentatives();
   const findByLocation = useFindByLocation();
   const [hasAttemptedLocationLookup, setHasAttemptedLocationLookup] = React.useState(false);
+  const errorMessage = React.useMemo(() => {
+    if (!error) return '';
+    if (typeof error === 'string') return error;
+    if (typeof error === 'object' && 'message' in error) {
+      return String((error as { message?: string }).message ?? '');
+    }
+    return '';
+  }, [error]);
 
   // Load initial data
   useEffect(() => {
@@ -111,7 +119,7 @@ export default function RepresentativesPage() {
             <Alert variant="destructive" className="mb-6">
               <AlertDescription>
                 <div className="flex items-center justify-between gap-4">
-                  <span>{error?.message ?? 'We could not load representatives right now.'}</span>
+                  <span>{errorMessage || 'We could not load representatives right now.'}</span>
                   <Button variant="outline" size="sm" onClick={() => searchRepresentatives({ limit: 50 })}>
                     Retry
                   </Button>
