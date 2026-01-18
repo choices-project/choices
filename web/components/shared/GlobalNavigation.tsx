@@ -259,7 +259,11 @@ export default function GlobalNavigation() {
           <div className="flex items-center justify-between h-16">
             {/* Logo and Brand */}
             <div className="flex items-center">
-              <Link href="/" className="flex items-center space-x-2" onClick={closeMobileMenu}>
+              <Link
+                href={isAuthenticated ? '/feed' : '/'}
+                className="flex items-center space-x-2"
+                onClick={closeMobileMenu}
+              >
                 <Shield className="h-8 w-8 text-blue-600 dark:text-blue-400" />
                 <span className="text-xl font-bold text-gray-900 dark:text-gray-100">Choices</span>
               </Link>
@@ -351,10 +355,10 @@ export default function GlobalNavigation() {
               ) : (
                 <div className="flex items-center space-x-4">
                   <Button asChild variant="outline" size="sm">
-                    <Link href="/login">{t('navigation.login')}</Link>
+                    <Link href="/login" prefetch={false}>{t('navigation.login')}</Link>
                   </Button>
                   <Button asChild size="sm">
-                    <Link href="/register">{t('navigation.register')}</Link>
+                    <Link href="/register" prefetch={false}>{t('navigation.register')}</Link>
                   </Button>
                 </div>
               )}
