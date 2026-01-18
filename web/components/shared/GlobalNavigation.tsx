@@ -261,6 +261,7 @@ export default function GlobalNavigation() {
             <div className="flex items-center">
               <Link
                 href={isAuthenticated ? '/feed' : '/'}
+                prefetch={false}
                 className="flex items-center space-x-2"
                 onClick={closeMobileMenu}
               >
@@ -457,12 +458,12 @@ export default function GlobalNavigation() {
                   ) : (
                     <div className="space-y-2">
                       <Button asChild variant="outline" size="sm" className="w-full">
-                        <Link href="/login" onClick={closeMobileMenu}>
+                        <Link href="/login" prefetch={false} onClick={closeMobileMenu}>
                           {t('navigation.login')}
                         </Link>
                       </Button>
                       <Button asChild size="sm" className="w-full">
-                        <Link href="/register" onClick={closeMobileMenu}>
+                        <Link href="/register" prefetch={false} onClick={closeMobileMenu}>
                           {t('navigation.register')}
                         </Link>
                       </Button>
