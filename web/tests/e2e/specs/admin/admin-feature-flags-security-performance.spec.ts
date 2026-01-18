@@ -13,6 +13,7 @@ import { test, expect } from '@playwright/test';
 import {
   setupExternalAPIMocks,
   waitForPageReady,
+  loginAsAdmin,
 } from '../../helpers/e2e-setup';
 
 test.describe('Admin Feature Flags, Security & Performance', () => {
@@ -33,6 +34,20 @@ test.describe('Admin Feature Flags, Security & Performance', () => {
       civics: true,
       admin: true,
     });
+
+    const isHarnessMode = process.env.NEXT_PUBLIC_ENABLE_E2E_HARNESS === '1';
+    const hasCredentials = process.env.E2E_ADMIN_EMAIL && process.env.E2E_ADMIN_PASSWORD;
+
+    if (!isHarnessMode && hasCredentials) {
+      try {
+        await loginAsAdmin(page);
+      } catch (err) {
+        console.warn('Admin login failed:', err instanceof Error ? err.message : String(err));
+        if (!(err instanceof Error) || !err.message.includes('closed')) {
+          throw err;
+        }
+      }
+    }
   });
 
   test.describe('Feature Flags Page', () => {
