@@ -16,6 +16,12 @@ import {
 } from '../../helpers/e2e-setup';
 
 test.describe('Admin Feature Flags, Security & Performance', () => {
+  const shouldSkipAdminSuite =
+    process.env.NEXT_PUBLIC_ENABLE_E2E_HARNESS !== '1' &&
+    (!process.env.E2E_ADMIN_EMAIL || !process.env.E2E_ADMIN_PASSWORD);
+
+  test.skip(shouldSkipAdminSuite, 'Admin credentials not configured for production tests.');
+
   test.beforeEach(async ({ page }) => {
     test.setTimeout(120_000);
 

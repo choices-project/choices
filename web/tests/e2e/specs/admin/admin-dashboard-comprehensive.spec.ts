@@ -77,17 +77,16 @@ test.describe('Admin Dashboard - Comprehensive Tests', () => {
       const page = await context.newPage();
       await ensureLoggedOut(page);
       await page.goto('/admin', { waitUntil: 'domcontentloaded' });
+      await waitForPageReady(page);
+      await page.waitForLoadState('networkidle', { timeout: 30_000 }).catch(() => undefined);
 
       // Should redirect or show access denied (depending on E2E harness mode)
       const url = page.url();
-      const accessDeniedLocator = page.locator(
-        '[data-testid="admin-access-denied"], text=/access denied|unauthorized/i'
-      );
-      const hasAccessDenied = await accessDeniedLocator
-        .first()
-        .waitFor({ state: 'visible', timeout: 10_000 })
-        .then(() => true)
-        .catch(() => false);
+      const accessDeniedTestId = page.getByTestId('admin-access-denied');
+      const accessDeniedHeading = page.locator('h1, h2').filter({ hasText: /access denied/i });
+      const hasAccessDenied =
+        (await accessDeniedTestId.count()) > 0 ||
+        (await accessDeniedHeading.count()) > 0;
       const hasRedirected = !url.includes('/admin');
       const authForm = page.locator('[data-testid="login-form"]');
       const authHeading = page.locator('h1, h2').filter({ hasText: /sign in|log in|login/i });
