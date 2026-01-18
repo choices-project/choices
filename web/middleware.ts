@@ -125,6 +125,18 @@ function getClientIP(request: NextRequest): string {
 /**
  * Validate and sanitize request
  */
+function isNextInternalRequest(request: NextRequest): boolean {
+  const headers = request.headers;
+  return (
+    headers.get('RSC') === '1' ||
+    headers.has('Next-Router-State-Tree') ||
+    headers.has('Next-Action') ||
+    headers.has('Next-Url') ||
+    headers.has('x-nextjs-data') ||
+    (headers.get('accept') ?? '').includes('text/x-component')
+  );
+}
+
 function validateRequest(request: NextRequest): { valid: boolean; reason?: string } {
   const url = request.nextUrl
   const method = request.method
@@ -138,9 +150,10 @@ function validateRequest(request: NextRequest): { valid: boolean; reason?: strin
   // Block suspicious requests
   if (method === 'POST' || method === 'PUT' || method === 'DELETE') {
     const contentType = request.headers.get('content-type')
+    const isNextInternal = isNextInternalRequest(request)
 
     // Require proper content type for POST requests
-    if (method === 'POST' && !SECURITY_CONFIG.validation.allowedContentTypes.some(type =>
+    if (method === 'POST' && !isNextInternal && !SECURITY_CONFIG.validation.allowedContentTypes.some(type =>
         contentType?.includes(type))) {
       return { valid: false, reason: 'Invalid content type' }
     }

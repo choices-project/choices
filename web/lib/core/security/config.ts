@@ -171,6 +171,8 @@ export const PRODUCTION_SECURITY_CONFIG: SecurityConfig = {
       'application/json',
       'application/x-www-form-urlencoded',
       'multipart/form-data',
+      'text/plain',
+      'text/x-component',
     ],
     suspiciousPatterns: [
       /<script\b[^<]*(?:(?!<\/script>)<[^<]*)*<\/script>/gi, // Script tags
