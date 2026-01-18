@@ -121,7 +121,30 @@ export default function Civics2Page() {
     logger.info('🔄 Loading representatives...', { state: selectedState, level: selectedLevel });
 
     try {
-      const params = new URLSearchParams({ state: selectedState, limit: '20', include: 'photos,divisions' });
+      const params = new URLSearchParams({
+        state: selectedState,
+        limit: '20',
+        include: 'photos,divisions',
+        fields: [
+          'id',
+          'name',
+          'office',
+          'level',
+          'state',
+          'district',
+          'party',
+          'primary_email',
+          'primary_phone',
+          'primary_website',
+          'primary_photo_url',
+          'photos',
+          'division_ids',
+          'data_quality_score',
+          'data_sources',
+          'last_verified',
+          'verification_status',
+        ].join(','),
+      });
       if (selectedLevel !== 'all') {
         params.set('level', selectedLevel);
       }
