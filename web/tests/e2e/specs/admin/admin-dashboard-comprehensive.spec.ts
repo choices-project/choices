@@ -32,8 +32,52 @@ const shouldSkipAdminSuite =
 test.describe('Admin Dashboard - Comprehensive Tests', () => {
   test.skip(shouldSkipAdminSuite, 'Admin credentials not configured for production tests.');
 
+  const rscByTest = new Map<
+    string,
+    {
+      failures: Array<{ url: string; method: string; error: string }>;
+      badResponses: Array<{ url: string; status: number }>;
+    }
+  >();
+
   test.beforeEach(async ({ page }, testInfo) => {
     test.setTimeout(120_000); // Increase timeout for beforeEach
+
+    const record = {
+      failures: [] as Array<{ url: string; method: string; error: string }>,
+      badResponses: [] as Array<{ url: string; status: number }>,
+    };
+    rscByTest.set(testInfo.title, record);
+
+    const isRscRequest = (headers: Record<string, string>) =>
+      headers['rsc'] === '1' ||
+      headers['next-router-state-tree'] !== undefined ||
+      headers['next-action'] !== undefined ||
+      headers['next-url'] !== undefined ||
+      (headers['accept'] ?? '').includes('text/x-component');
+
+    page.on('requestfailed', (request) => {
+      const headers = request.headers();
+      if (!isRscRequest(headers)) return;
+      const failure = request.failure();
+      record.failures.push({
+        url: request.url(),
+        method: request.method(),
+        error: failure?.errorText ?? 'unknown',
+      });
+    });
+
+    page.on('response', (response) => {
+      const request = response.request();
+      const headers = request.headers();
+      if (!isRscRequest(headers)) return;
+      if (!response.ok()) {
+        record.badResponses.push({
+          url: request.url(),
+          status: response.status(),
+        });
+      }
+    });
 
     // Set up API mocks
     await setupExternalAPIMocks(page, {
@@ -63,6 +107,16 @@ test.describe('Admin Dashboard - Comprehensive Tests', () => {
       }
     }
     // When harness mode is enabled, we rely on server-side auth bypass - no login needed
+  });
+
+  test.afterEach(async ({}, testInfo) => {
+    const record = rscByTest.get(testInfo.title);
+    if (!record) return;
+    if (record.failures.length > 0 || record.badResponses.length > 0) {
+      console.warn('[RSC] Failed requests:', record.failures);
+      console.warn('[RSC] Non-OK responses:', record.badResponses);
+    }
+    rscByTest.delete(testInfo.title);
   });
 
   test.describe('Authentication & Authorization', () => {

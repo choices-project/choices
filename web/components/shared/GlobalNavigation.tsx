@@ -42,7 +42,7 @@ export default function GlobalNavigation() {
   const previouslyFocusedElementRef = useRef<HTMLElement | null>(null);
   const mobileMenuId = 'global-navigation-mobile-menu';
   const { t } = useI18n();
-  
+
   // Use ref for stable t function
   const tRef = useRef(t);
   useEffect(() => { tRef.current = t; }, [t]);
@@ -54,7 +54,7 @@ export default function GlobalNavigation() {
   const [isMountedForNavRender, setIsMountedForNavRender] = useState(false);
   const [pathname, setPathname] = useState<string>('');
   const pathnameFromHook = usePathname();
-  
+
   useEffect(() => {
     setIsMountedForNavRender(true);
     setPathname(pathnameFromHook);
@@ -66,7 +66,7 @@ export default function GlobalNavigation() {
   const { user, isLoading: authLoading, logout: authSignOut } = useAuth();
   const isAuthenticated = Boolean(user);
   const [loadingTimeout, setLoadingTimeout] = useState(false);
-  
+
   // Add timeout fallback to prevent infinite loading state
   useEffect(() => {
     if (!authLoading) {
@@ -78,9 +78,9 @@ export default function GlobalNavigation() {
     }, 5000); // 5 second timeout - allow navigation to render even if auth is slow
     return () => clearTimeout(timeout);
   }, [authLoading]);
-  
+
   // Don't block on loading if timeout has passed or if bypass flag is set
-  const shouldBypassLoading = loadingTimeout || (typeof window !== 'undefined' && 
+  const shouldBypassLoading = loadingTimeout || (typeof window !== 'undefined' &&
     window.localStorage.getItem('e2e-dashboard-bypass') === '1');
   const isLoading = authLoading && !shouldBypassLoading;
 
@@ -177,7 +177,7 @@ export default function GlobalNavigation() {
       previouslyFocusedElementRef.current.focus();
       previouslyFocusedElementRef.current = null;
     }
-    
+
     return undefined;
   }, [isMobileMenuOpen]);
 
