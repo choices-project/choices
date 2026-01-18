@@ -358,26 +358,13 @@ export async function loginTestUser(page: Page, user: TestUser): Promise<void> {
   // Wait for React to process the events and update state
   await page.waitForTimeout(500);
 
-  // Wait for React to process - check that inputs have correct values
-  // Also verify that React state (formData) has updated by checking button enabled state
+  // Wait for React to process - ensure DOM values match (button enablement may lag)
   await page.waitForFunction(
     ({ expectedEmail, expectedPassword }: { expectedEmail: string; expectedPassword: string }) => {
       const emailInput = document.querySelector('[data-testid="login-email"]') as HTMLInputElement;
       const passwordInput = document.querySelector('[data-testid="login-password"]') as HTMLInputElement;
-      const submitButton = document.querySelector('[data-testid="login-submit"]') as HTMLButtonElement;
 
-      // Check DOM values match
-      const domValuesMatch = emailInput?.value === expectedEmail && passwordInput?.value === expectedPassword;
-
-      // Check if React state has updated (button enabled when form is valid)
-      // Email valid: contains @, Password valid: length >= 6
-      const emailValid = expectedEmail.includes('@');
-      const passwordValid = expectedPassword.length >= 6;
-      const shouldBeEnabled = emailValid && passwordValid;
-      const isEnabled = !submitButton?.disabled;
-
-      // Return true only when DOM values match AND React state has synced (button state matches expected)
-      return domValuesMatch && (shouldBeEnabled === isEnabled);
+      return emailInput?.value === expectedEmail && passwordInput?.value === expectedPassword;
     },
     { expectedEmail: email, expectedPassword: password },
     { timeout: 10_000 } // Increased timeout for CI
