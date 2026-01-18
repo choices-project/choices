@@ -61,8 +61,8 @@ export class RepresentativeService {
       if (query?.query) params.append('search', query.query); // Map 'query' to 'search' parameter for API
       if (query?.limit) params.append('limit', query.limit.toString());
       if (query?.offset !== undefined) params.append('offset', query.offset.toString());
-      // Include divisions and other related data for optimal UX (committees queried separately due to RLS)
-      params.append('include', 'divisions');
+      // Include divisions and photos for UI and election CTA context
+      params.append('include', 'divisions,photos');
 
       // Use main representatives endpoint which queries representatives_core directly
       const response = await fetch(`/api/representatives?${params.toString()}`);
@@ -132,7 +132,7 @@ export class RepresentativeService {
   async getRepresentativeById(id: number): Promise<RepresentativeApiResponse> {
     try {
       // Call API route (client-safe)
-      const response = await fetch(`/api/v1/civics/representative/${id}?include=divisions`);
+      const response = await fetch(`/api/v1/civics/representative/${id}?include=divisions,photos`);
       if (!response.ok) {
         if (response.status === 404) {
           return {
@@ -205,6 +205,7 @@ export class RepresentativeService {
       if (district) params.append('district', district);
       if (ocd_division_id) params.append('ocd_division_id', ocd_division_id);
       params.append('limit', '50'); // Get more results for better filtering
+      params.append('include', 'divisions,photos');
 
       // Use the main representatives endpoint which queries representatives_core
       const response = await fetch(`/api/representatives?${params.toString()}`);

@@ -209,8 +209,8 @@ test.describe('Civics Integration Tests', () => {
           (await authHeading.count()) > 0;
         test.skip(needsAuth, 'Civics page requires authentication in production.');
 
-        // Check for civics page header
-        const header = page.locator('h1:has-text("Civics")');
+        // Check for civics page header (allow multiple h1 variants)
+        const header = page.getByRole('heading', { name: 'Civics', level: 1 }).first();
         await expect(header).toBeVisible({ timeout: 30_000 });
 
         // Check for representatives tab
@@ -253,13 +253,13 @@ test.describe('Civics Integration Tests', () => {
         // Wait for page to load
         await page.waitForSelector('h1:has-text("Civics")', { timeout: 30_000 });
 
-        // Wait for the representatives tab content to be visible (filters are in the representatives tab)
-        await page.waitForSelector('[data-testid="representative-feed"]', { timeout: 30_000 }).catch(() => {
-          // If representative-feed doesn't exist, wait for the main content area instead
-        });
+        // Ensure representatives tab is active (filters are only shown there)
+        const representativesTab = page.locator('[data-testid="civics-tab-representatives"]');
+        await expect(representativesTab).toBeVisible({ timeout: 10_000 });
+        await representativesTab.click();
 
-        // Wait a bit for filters to render (they're in the representatives tab which is active by default)
-        await page.waitForTimeout(1000);
+        // Wait for filters to render
+        await page.waitForSelector('[data-testid="state-filter"]', { timeout: 30_000 });
 
         // Check for state filter - there are two state filters, check both locations
         const stateFilter = page.locator('[data-testid="state-filter"]');

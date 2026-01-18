@@ -888,7 +888,7 @@ export default function DashboardContent() {
       {/* This prevents hydration mismatches since it uses usePathname() */}
       <DashboardNavigation />
 
-      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* CRITICAL: Only show admin banner after mount to prevent hydration mismatch */}
         {/* Use suppressHydrationWarning because isAdmin may change after mount */}
         {isAdmin === true && (
@@ -927,7 +927,7 @@ export default function DashboardContent() {
         }>
           <PersonalDashboard />
         </Suspense>
-      </main>
+      </div>
 
       {/* MobileDashboardNav is client-only component */}
       <MobileDashboardNav />

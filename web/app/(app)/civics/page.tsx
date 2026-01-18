@@ -317,7 +317,7 @@ export default function Civics2Page() {
       </div>
 
       {/* Main Content */}
-      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <h2 className="sr-only">Civics content</h2>
         {activeTab === 'representatives' && (
           <div id="civics-representatives-panel" role="tabpanel" className="space-y-6">
@@ -546,7 +546,7 @@ export default function Civics2Page() {
             <UnifiedFeed userId="test-user" />
           </div>
         )}
-      </main>
+      </div>
 
       {/* Footer */}
       <div className="bg-white border-t border-gray-200 mt-12">

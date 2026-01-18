@@ -46,7 +46,7 @@ const EMPTY_STRING_ARRAY: string[] = [];
 const EMPTY_USER_REPRESENTATIVES_ARRAY: UserRepresentative[] = [];
 const EMPTY_USER_REPRESENTATIVE_ENTRIES_ARRAY: UserRepresentativeEntry[] = [];
 
- 
+
 
 export type RepresentativeFollowRecord = {
   id: string;
@@ -215,16 +215,45 @@ export const createRepresentativeActions = (
         const result = await representativeService.getRepresentatives(query);
 
         if (result.success && result.data) {
+          const normalizedRepresentatives = result.data.representatives.map((representative) => {
+            const divisions = getRepresentativeDivisionIds(representative);
+            return {
+              ...representative,
+              ocdDivisionIds: divisions,
+              division_ids: divisions,
+            };
+          });
+          const shouldAppend = typeof query?.offset === 'number' && query.offset > 0;
           setState((state) => {
-            state.searchResults = result;
-            state.representatives = result.data.representatives;
+            const hasPrevious = state.searchResults?.data?.representatives?.length;
+            const previousQuery = state.searchQuery ?? {};
+            const isSameBaseQuery = Object.keys({ ...previousQuery, ...query })
+              .filter((key) => key !== 'offset')
+              .every((key) => previousQuery[key as keyof RepresentativeSearchQuery] === query[key as keyof RepresentativeSearchQuery]);
+
+            const shouldMerge = shouldAppend && hasPrevious && isSameBaseQuery;
+            const representatives = shouldMerge
+              ? (() => {
+                  const merged = new Map<number, Representative>();
+                  state.searchResults?.data?.representatives?.forEach((rep) => merged.set(rep.id, rep));
+                  normalizedRepresentatives.forEach((rep) => merged.set(rep.id, rep));
+                  return Array.from(merged.values());
+                })()
+              : normalizedRepresentatives;
+
+            state.searchResults = {
+              ...result,
+              data: {
+                ...result.data,
+                representatives,
+              },
+            };
+            state.representatives = representatives;
             state.searchQuery = query;
             state.lastSearchAt = Date.now();
-            result.data.representatives.forEach((representative) => {
+            representatives.forEach((representative) => {
               const divisions = getRepresentativeDivisionIds(representative);
               state.representativeDivisions[representative.id] = divisions;
-              representative.ocdDivisionIds = divisions;
-              representative.division_ids = divisions;
             });
           });
           return result;
@@ -253,20 +282,25 @@ export const createRepresentativeActions = (
 
         if (result.success && result.data) {
           const divisionSet = new Set<string>();
+          const normalizedRepresentatives = result.data.representatives.map((representative) => {
+            const divisions = getRepresentativeDivisionIds(representative);
+            divisions.forEach((division) => divisionSet.add(division));
+            return {
+              ...representative,
+              ocdDivisionIds: divisions,
+              division_ids: divisions,
+            };
+          });
 
           setState((state) => {
             // Use splice to replace array contents in-place
-            if (result.data.representatives.length === 0) {
+            if (normalizedRepresentatives.length === 0) {
               (state as { locationRepresentatives: Representative[] }).locationRepresentatives = EMPTY_REPRESENTATIVES_ARRAY;
             } else {
-              state.locationRepresentatives.splice(0, state.locationRepresentatives.length, ...result.data.representatives);
+              state.locationRepresentatives.splice(0, state.locationRepresentatives.length, ...normalizedRepresentatives);
             }
-            result.data.representatives.forEach((representative) => {
-              const divisions = getRepresentativeDivisionIds(representative);
-              representative.ocdDivisionIds = divisions;
-              representative.division_ids = divisions;
-              state.representativeDivisions[representative.id] = divisions;
-              divisions.forEach((division) => divisionSet.add(division));
+            normalizedRepresentatives.forEach((representative) => {
+              state.representativeDivisions[representative.id] = representative.ocdDivisionIds ?? [];
             });
             if (divisionSet.size > 0) {
               state.userDivisionIds = Array.from(divisionSet);
@@ -311,14 +345,17 @@ export const createRepresentativeActions = (
 
         if (response.success && response.data) {
           const representative = response.data as Representative;
-          updateDetailCache(representative);
+          const divisions = getRepresentativeDivisionIds(representative) ?? [];
+          const normalizedRepresentative = {
+            ...representative,
+            ocdDivisionIds: divisions,
+            division_ids: divisions,
+          };
+          updateDetailCache(normalizedRepresentative);
           setState((state) => {
-            const divisions = getRepresentativeDivisionIds(representative) ?? [];
-            representative.ocdDivisionIds = divisions;
-            representative.division_ids = divisions;
-            state.representativeDivisions[representative.id] = Array.isArray(divisions) ? divisions : [];
+            state.representativeDivisions[normalizedRepresentative.id] = Array.isArray(divisions) ? divisions : [];
           });
-          return representative;
+          return normalizedRepresentative;
         }
 
         const message = response.error ?? 'Representative not found';

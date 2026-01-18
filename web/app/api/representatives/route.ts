@@ -48,7 +48,7 @@ export const GET = withErrorHandling(async (request: NextRequest) => {
     return errorResponse(
       'Too many requests. Please wait a moment before trying again.',
       429,
-      { 
+      {
         retryAfter: rateLimitResult.retryAfter,
         suggestion: 'Please wait a few moments and try your search again.',
         limit: '100 requests per 15 minutes'
@@ -73,7 +73,7 @@ export const GET = withErrorHandling(async (request: NextRequest) => {
     const response = errorResponse(
       'Service temporarily unavailable. Please try again in a moment.',
       503,
-      { 
+      {
         retryAfter: 60,
         suggestion: 'If this problem persists, please refresh the page.',
         timestamp: new Date().toISOString()
@@ -93,7 +93,7 @@ export const GET = withErrorHandling(async (request: NextRequest) => {
     const response = errorResponse(
       'Database connection is not available. Please try again shortly.',
       503,
-      { 
+      {
         retryAfter: 60,
         suggestion: 'If this problem persists, please refresh the page or try again later.',
         timestamp: new Date().toISOString()
@@ -294,7 +294,7 @@ export const GET = withErrorHandling(async (request: NextRequest) => {
     return errorResponse(
       'Unable to load representatives at this time. Please try again or refine your search.',
       502,
-      { 
+      {
         reason: error.message,
         suggestion: 'Try refreshing the page or adjusting your filters.',
         retryAfter: 30
@@ -362,6 +362,19 @@ export const GET = withErrorHandling(async (request: NextRequest) => {
     const committees = committeesByRepId.get(rep.id) ?? [];
 
     // Build full representative object
+    const photos = includePhotos
+      ? (rep.representative_photos ?? []).map((photo: any) => ({
+          id: photo.id,
+          url: photo.url,
+          source: photo.source,
+          is_primary: photo.is_primary,
+          alt_text: photo.alt_text,
+          attribution: photo.attribution
+        }))
+      : [];
+    const primaryPhotoFromSet =
+      photos.find((photo: any) => photo.is_primary)?.url ?? photos[0]?.url ?? null;
+
     const fullRep: Record<string, any> = {
       id: rep.id,
       name: rep.name,
@@ -373,7 +386,7 @@ export const GET = withErrorHandling(async (request: NextRequest) => {
       primary_email: rep.primary_email,
       primary_phone: rep.primary_phone,
       primary_website: rep.primary_website,
-      primary_photo_url: rep.primary_photo_url,
+      primary_photo_url: rep.primary_photo_url ?? primaryPhotoFromSet,
       twitter_handle: rep.twitter_handle,
       facebook_url: rep.facebook_url,
       instagram_handle: rep.instagram_handle,
@@ -381,14 +394,7 @@ export const GET = withErrorHandling(async (request: NextRequest) => {
       linkedin_url: rep.linkedin_url,
       // Include related data only if requested or if no include parameter (default behavior)
       ...(includePhotos ? {
-        photos: (rep.representative_photos ?? []).map((photo: any) => ({
-          id: photo.id,
-          url: photo.url,
-          source: photo.source,
-          is_primary: photo.is_primary,
-          alt_text: photo.alt_text,
-          attribution: photo.attribution
-        }))
+        photos
       } : {}),
       ...(includeContacts ? {
         contacts: (rep.representative_contacts ?? []).map((contact: any) => ({
@@ -575,7 +581,7 @@ export const GET = withErrorHandling(async (request: NextRequest) => {
       }
     } catch (error) {
       // Silently fail - performance tracking is optional and should not break the API
-      logger.debug('Performance tracking not available', { 
+      logger.debug('Performance tracking not available', {
         error: error instanceof Error ? error.message : 'Unknown',
         note: 'Performance tracking is optional'
       });

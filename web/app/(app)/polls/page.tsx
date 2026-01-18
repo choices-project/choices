@@ -181,12 +181,12 @@ function PollsPageContent() {
     }
     initializedRef.current = true;
     if (process.env.DEBUG_DASHBOARD === '1') {
-      logger.debug('Polls page starting initialization', { 
+      logger.debug('Polls page starting initialization', {
       hasLoadPolls: !!loadPollsRef.current,
-      hasSetFilters: !!setFiltersRef.current 
+      hasSetFilters: !!setFiltersRef.current
     });
     }
-    
+
     // Use setTimeout to defer store updates until after React has completed the render cycle
     // This prevents store updates from blocking the initial render
     setTimeout(() => {
@@ -288,7 +288,7 @@ function PollsPageContent() {
 
   return (
     <ErrorBoundary>
-      <main className="container mx-auto px-4 py-8">
+      <div className="container mx-auto px-4 py-8">
         <div className="mb-8">
           <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4 mb-2">
             <div className="flex-1">
@@ -311,7 +311,7 @@ function PollsPageContent() {
         </div>
 
         {error && (
-          <div 
+          <div
             className="mb-6 rounded-lg border border-red-200 dark:border-red-800 bg-red-50 dark:bg-red-900/20 p-4 text-sm text-red-700 dark:text-red-400"
             role="alert"
             aria-live="assertive"
@@ -466,7 +466,7 @@ function PollsPageContent() {
             </div>
           </div>
         )}
-      </main>
+      </div>
     </ErrorBoundary>
   );
 }

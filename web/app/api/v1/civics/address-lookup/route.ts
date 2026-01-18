@@ -164,14 +164,14 @@ async function lookupJurisdictionFromExternalAPI(address: string): Promise<Juris
   }
 
   try {
-    // Build URL with API key (key is never logged or exposed in error messages)
-    // Security: The full URL with key is never logged - only endpoint and status
-    const apiUrl = new URL('https://www.googleapis.com/civicinfo/v2/representatives');
+  // Build URL with API key (key is never logged or exposed in error messages)
+  // Security: The full URL with key is never logged - only endpoint and status
+  const apiUrl = new URL('https://www.googleapis.com/civicinfo/v2/divisionsByAddress');
     apiUrl.searchParams.set('address', address);
     apiUrl.searchParams.set('key', apiKey);
 
     // Call Google Civic Information API for jurisdiction resolution
-    // This is the correct approach for address → jurisdiction mapping
+    // Use divisionsByAddress to avoid deprecated representatives lookup
     const response = await fetch(apiUrl.toString(), {
       method: 'GET',
       headers: {
@@ -184,7 +184,7 @@ async function lookupJurisdictionFromExternalAPI(address: string): Promise<Juris
       logger.error('Google Civic API error', {
         status: response.status,
         statusText: response.statusText,
-        endpoint: '/representatives'
+        endpoint: '/divisionsByAddress'
         // Intentionally NOT logging: apiUrl, apiKey, or full URL
       });
       throw new Error(`External API error: ${response.status}`);

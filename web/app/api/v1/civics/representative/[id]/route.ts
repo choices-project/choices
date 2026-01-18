@@ -15,9 +15,19 @@ type RepresentativeResponse = {
   office: string;
   level: 'federal' | 'state' | 'local';
   jurisdiction: string;
+  state?: string;
   district?: string;
   party?: string;
   division_ids?: string[];
+  primary_photo_url?: string;
+  photos?: Array<{
+    id: number;
+    url: string;
+    source: string;
+    is_primary: boolean;
+    alt_text?: string | null;
+    attribution?: string | null;
+  }>;
   fec?: {
     total_receipts: number;
     cash_on_hand: number;
@@ -58,6 +68,7 @@ export const GET = withErrorHandling(async (
     const fields = searchParams.get('fields')?.split(',') ?? [];
     const include = searchParams.get('include')?.split(',') ?? [];
     const includeDivisions = include.includes('divisions');
+    const includePhotos = include.includes('photos');
 
     const representativeId = params.id?.trim();
     if (!representativeId) {
@@ -84,6 +95,14 @@ export const GET = withErrorHandling(async (
       primary_website?: string | null;
       primary_photo_url?: string | null;
       representative_divisions?: RepresentativeDivisionRow[] | null;
+      representative_photos?: Array<{
+        id: number;
+        url: string;
+        source: string;
+        is_primary: boolean;
+        alt_text?: string | null;
+        attribution?: string | null;
+      }> | null;
     };
 
     const selectFields = [
@@ -104,6 +123,9 @@ export const GET = withErrorHandling(async (
 
     if (includeDivisions) {
       selectFields.push('representative_divisions:representative_divisions(division_id)');
+    }
+    if (includePhotos) {
+      selectFields.push('representative_photos(id,url,source,is_primary,alt_text,attribution)');
     }
 
     const repId = parseInt(representativeId, 10);
@@ -127,6 +149,11 @@ export const GET = withErrorHandling(async (
     }
 
     const representativeRow = rep as unknown as RepresentativeRow;
+    const photos = includePhotos && Array.isArray(representativeRow.representative_photos)
+      ? representativeRow.representative_photos
+      : [];
+    const primaryPhotoFromSet =
+      photos.find((photo) => photo.is_primary)?.url ?? photos[0]?.url ?? null;
 
     const response: RepresentativeResponse = {
       id: String(representativeRow.id),
@@ -134,6 +161,7 @@ export const GET = withErrorHandling(async (
       office: representativeRow.office,
       level: representativeRow.level,
       jurisdiction: representativeRow.state,
+      state: representativeRow.state,
       attribution: {},
       last_updated: representativeRow.updated_at
     };
@@ -144,6 +172,13 @@ export const GET = withErrorHandling(async (
 
     if (representativeRow.party) {
       response.party = representativeRow.party;
+    }
+
+    if (representativeRow.primary_photo_url || primaryPhotoFromSet) {
+      response.primary_photo_url = representativeRow.primary_photo_url ?? primaryPhotoFromSet ?? undefined;
+    }
+    if (includePhotos && photos.length > 0) {
+      response.photos = photos;
     }
 
     if (includeDivisions && Array.isArray(representativeRow.representative_divisions)) {

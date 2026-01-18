@@ -30,7 +30,8 @@ import {
   useSearchRepresentatives,
   useFindByLocation,
   useLocationRepresentatives,
-  useRepresentativeGlobalLoading
+  useRepresentativeGlobalLoading,
+  useRepresentativeFilters
 } from '@/lib/stores/representativeStore';
 import { logger } from '@/lib/utils/logger';
 
@@ -45,6 +46,7 @@ export default function RepresentativesPage() {
   const locationRepresentatives = useLocationRepresentatives();
   const searchRepresentatives = useSearchRepresentatives();
   const findByLocation = useFindByLocation();
+  const { query: lastSearchQuery } = useRepresentativeFilters();
   const [hasAttemptedLocationLookup, setHasAttemptedLocationLookup] = React.useState(false);
   const errorMessage = React.useMemo(() => {
     if (!error) return '';
@@ -75,13 +77,25 @@ export default function RepresentativesPage() {
     [findByLocation]
   );
 
+  const handleLoadMore = React.useCallback(async () => {
+    if (!searchResults?.data?.hasMore) return;
+    const currentCount = searchResults?.data?.representatives?.length ?? 0;
+    const limit = searchResults?.data?.limit ?? lastSearchQuery?.limit ?? 50;
+    const baseQuery = lastSearchQuery ?? {};
+    await searchRepresentatives({
+      ...baseQuery,
+      limit,
+      offset: currentCount,
+    });
+  }, [lastSearchQuery, searchRepresentatives, searchResults]);
+
   const handleRepresentativeClick = (representative: any) => {
     logger.debug('Navigating to representative:', representative.name);
     router.push(`/representatives/${representative.id}`);
   };
 
   return (
-    <main className="container mx-auto px-4 py-8 max-w-7xl">
+    <div className="container mx-auto px-4 py-8 max-w-7xl">
       {/* Header */}
       <div className="mb-8">
         <h1 className="text-3xl font-bold text-gray-900 mb-2">
@@ -158,7 +172,12 @@ export default function RepresentativesPage() {
                           {searchResults?.data?.total} total
                         </Badge>
                         {searchResults?.data?.hasMore && (
-                          <Button variant="outline" size="sm">
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={handleLoadMore}
+                            disabled={loading}
+                          >
                             Load More
                           </Button>
                         )}
@@ -252,6 +271,6 @@ export default function RepresentativesPage() {
           </div>
         </CardContent>
       </Card>
-    </main>
+    </div>
   );
 }

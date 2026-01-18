@@ -26,14 +26,13 @@ export const AdminLayout: React.FC<AdminLayoutProps> = ({ children }) => {
           <Sidebar />
           <div className="flex-1 flex flex-col">
             <Header />
-            <main
+            <div
               id="admin-main"
               className="flex-1 p-6"
               aria-label="Admin content"
-              role="main"
             >
               {children}
-            </main>
+            </div>
           </div>
         </div>
       </div>

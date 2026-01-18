@@ -59,7 +59,7 @@ export default function PollAnalyticsPage() {
   const router = useRouter()
   const user = useUser()
   const { setCurrentRoute, setSidebarActiveSection, setBreadcrumbs } = useAppActions();
-  
+
   const [analytics, setAnalytics] = useState<PollAnalytics[]>([])
   const [selectedPoll, setSelectedPoll] = useState<string>('')
   const [filters, setFilters] = useState<AnalyticsFilters>({
@@ -94,7 +94,7 @@ export default function PollAnalyticsPage() {
 
       const data = await response.json()
       setAnalytics(data.data || [])
-      
+
       if (data.data && data.data.length > 0 && !selectedPoll) {
         setSelectedPoll(data.data[0].pollid)
       }
@@ -173,6 +173,27 @@ export default function PollAnalyticsPage() {
   useEffect(() => {
     loadAnalytics()
   }, [loadAnalytics])
+
+  if (!user) {
+    return (
+      <div className="min-h-screen bg-gray-50">
+        <div className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+          <Alert>
+            <AlertCircle className="h-4 w-4" />
+            <AlertDescription>Please log in to view poll analytics.</AlertDescription>
+          </Alert>
+          <div className="mt-6 flex flex-wrap gap-3">
+            <Button onClick={() => router.push('/auth?redirectTo=/polls/analytics')}>
+              Log in
+            </Button>
+            <Button variant="outline" onClick={() => router.push('/register')}>
+              Create account
+            </Button>
+          </div>
+        </div>
+      </div>
+    )
+  }
 
   if (isLoading) {
     return (
@@ -332,8 +353,8 @@ export default function PollAnalyticsPage() {
                         <h4 className="font-medium text-sm mb-1">{poll.title}</h4>
                         <div className="flex items-center justify-between text-xs text-gray-600">
                           <span>{poll.totalvotes} votes</span>
-                          <Badge 
-                            variant="secondary" 
+                          <Badge
+                            variant="secondary"
                             className={cn("text-xs", getEngagementColor(poll.engagementscore))}
                           >
                             {getEngagementLabel(poll.engagementscore)}
@@ -417,7 +438,7 @@ export default function PollAnalyticsPage() {
                             </span>
                           </div>
                           <div className="w-full bg-gray-200 rounded-full h-2">
-                            <div 
+                            <div
                               className="bg-blue-600 h-2 rounded-full transition-all duration-300"
                               style={{ width: `${option.percentage}%` }}
                              />
