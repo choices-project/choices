@@ -37,6 +37,7 @@ export default function AuthPage() {
   const router = useRouter();
   const { t } = useI18n();
   const [isSignUp, setIsSignUp] = useState(false);
+  const [hydrated, setHydrated] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [message, setMessage] = useState<string | null>(null);
@@ -104,6 +105,11 @@ export default function AuthPage() {
       logger.debug('Auth page load time', { loadTime });
     }, 100);
     return () => clearTimeout(timer);
+  }, []);
+
+  // Hydration marker for E2E tests - only render after hydration completes
+  React.useEffect(() => {
+    setHydrated(true);
   }, []);
 
   // Sync DOM values with React state for E2E test compatibility
@@ -355,7 +361,7 @@ export default function AuthPage() {
     <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50 flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8">
       <div className="max-w-md w-full space-y-6">
         {/* Hydration sentinel for E2E tests */}
-        <div data-testid="auth-hydrated" hidden>{'1'}</div>
+        {hydrated ? <div data-testid="auth-hydrated" hidden>{'1'}</div> : null}
 
         <div className="text-center">
           <h1 className="text-3xl font-bold text-gray-900">
