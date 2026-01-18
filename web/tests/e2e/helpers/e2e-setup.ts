@@ -331,8 +331,9 @@ export async function loginTestUser(page: Page, user: TestUser): Promise<void> {
   }
 
   // Wait for form to be fully hydrated and ready
-  await page.waitForSelector('[data-testid="auth-hydrated"]', { timeout: 10_000 }).catch(() => {
-    // Hydration marker might not exist, continue anyway
+  await page.waitForSelector('[data-testid="auth-hydrated"]', {
+    state: 'attached',
+    timeout: 30_000,
   });
 
   // Fill inputs directly to avoid focus loss during per-character typing
