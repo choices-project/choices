@@ -340,6 +340,26 @@ export async function loginTestUser(page: Page, user: TestUser): Promise<void> {
   await emailInput.first().fill(email, { timeout: 10_000 });
   await passwordInput.first().fill(password, { timeout: 10_000 });
 
+  // Ensure React-controlled inputs see the values (handles aggressive re-renders)
+  await page.evaluate(
+    ({ expectedEmail, expectedPassword }: { expectedEmail: string; expectedPassword: string }) => {
+      const emailInput = document.querySelector('[data-testid="login-email"]') as HTMLInputElement | null;
+      const passwordInput = document.querySelector('[data-testid="login-password"]') as HTMLInputElement | null;
+
+      const setNativeValue = (input: HTMLInputElement | null, value: string) => {
+        if (!input) return;
+        const setter = Object.getOwnPropertyDescriptor(HTMLInputElement.prototype, 'value')?.set;
+        setter?.call(input, value);
+        input.dispatchEvent(new Event('input', { bubbles: true }));
+        input.dispatchEvent(new Event('change', { bubbles: true }));
+      };
+
+      setNativeValue(emailInput, expectedEmail);
+      setNativeValue(passwordInput, expectedPassword);
+    },
+    { expectedEmail: email, expectedPassword: password }
+  );
+
   // Wait for React to process the events and update state
   await page.waitForTimeout(500);
 
