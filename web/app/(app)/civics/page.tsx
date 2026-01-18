@@ -16,7 +16,7 @@ import {
   HeartIcon
 } from '@heroicons/react/24/outline';
 import dynamic from 'next/dynamic';
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useMemo, useState, useEffect, useCallback } from 'react';
 
 import type { SuperiorRepresentativeData } from '@/features/civics/lib/types/superior-types';
 
@@ -44,13 +44,67 @@ const UnifiedFeed = dynamic(() => import('@/features/feeds').then(mod => ({ defa
   ssr: false
 });
 
+const CIVICS_STATES = [
+  { code: 'AL', name: 'Alabama' },
+  { code: 'AK', name: 'Alaska' },
+  { code: 'AZ', name: 'Arizona' },
+  { code: 'AR', name: 'Arkansas' },
+  { code: 'CA', name: 'California' },
+  { code: 'CO', name: 'Colorado' },
+  { code: 'CT', name: 'Connecticut' },
+  { code: 'DE', name: 'Delaware' },
+  { code: 'DC', name: 'District of Columbia' },
+  { code: 'FL', name: 'Florida' },
+  { code: 'GA', name: 'Georgia' },
+  { code: 'HI', name: 'Hawaii' },
+  { code: 'ID', name: 'Idaho' },
+  { code: 'IL', name: 'Illinois' },
+  { code: 'IN', name: 'Indiana' },
+  { code: 'IA', name: 'Iowa' },
+  { code: 'KS', name: 'Kansas' },
+  { code: 'KY', name: 'Kentucky' },
+  { code: 'LA', name: 'Louisiana' },
+  { code: 'ME', name: 'Maine' },
+  { code: 'MD', name: 'Maryland' },
+  { code: 'MA', name: 'Massachusetts' },
+  { code: 'MI', name: 'Michigan' },
+  { code: 'MN', name: 'Minnesota' },
+  { code: 'MS', name: 'Mississippi' },
+  { code: 'MO', name: 'Missouri' },
+  { code: 'MT', name: 'Montana' },
+  { code: 'NE', name: 'Nebraska' },
+  { code: 'NV', name: 'Nevada' },
+  { code: 'NH', name: 'New Hampshire' },
+  { code: 'NJ', name: 'New Jersey' },
+  { code: 'NM', name: 'New Mexico' },
+  { code: 'NY', name: 'New York' },
+  { code: 'NC', name: 'North Carolina' },
+  { code: 'ND', name: 'North Dakota' },
+  { code: 'OH', name: 'Ohio' },
+  { code: 'OK', name: 'Oklahoma' },
+  { code: 'OR', name: 'Oregon' },
+  { code: 'PA', name: 'Pennsylvania' },
+  { code: 'RI', name: 'Rhode Island' },
+  { code: 'SC', name: 'South Carolina' },
+  { code: 'SD', name: 'South Dakota' },
+  { code: 'TN', name: 'Tennessee' },
+  { code: 'TX', name: 'Texas' },
+  { code: 'UT', name: 'Utah' },
+  { code: 'VT', name: 'Vermont' },
+  { code: 'VA', name: 'Virginia' },
+  { code: 'WA', name: 'Washington' },
+  { code: 'WV', name: 'West Virginia' },
+  { code: 'WI', name: 'Wisconsin' },
+  { code: 'WY', name: 'Wyoming' },
+];
+
 export default function Civics2Page() {
   // UI state (local)
   const [activeTab, setActiveTab] = useState<'representatives' | 'feed'>('representatives');
   const [searchQuery, setSearchQuery] = useState('');
   const debouncedSearchQuery = useDebounce(searchQuery, 300);
   const [selectedState, setSelectedState] = useState<string>('CA');
-  const [selectedLevel, setSelectedLevel] = useState<'all' | 'federal' | 'state' | 'local'>('federal');
+  const [selectedLevel, setSelectedLevel] = useState<'all' | 'federal' | 'state' | 'local'>('all');
   const [_followedRepresentatives, setFollowedRepresentatives] = useState<Set<string>>(new Set());
   const [cardVariant, setCardVariant] = useState<'default' | 'compact' | 'detailed'>('default');
 
@@ -59,9 +113,11 @@ export default function Civics2Page() {
   const isMobile = useIsMobile();
   const { setCurrentRoute, setSidebarActiveSection, setBreadcrumbs } = useAppActions();
   const [isLoading, setIsLoading] = useState(true);
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
   const loadRepresentatives = useCallback(async () => {
     setIsLoading(true);
+    setErrorMessage(null);
     logger.info('🔄 Loading representatives...', { state: selectedState, level: selectedLevel });
 
     try {
@@ -79,6 +135,7 @@ export default function Civics2Page() {
       logger.info('🎯 Representatives state updated');
     } catch (error) {
       logger.error('❌ Error loading representatives:', error);
+      setErrorMessage('We could not load representatives right now. Please try again.');
     } finally {
       setIsLoading(false);
     }
@@ -140,6 +197,32 @@ export default function Civics2Page() {
            (rep.party ?? '').toLowerCase().includes(debouncedSearchQuery.toLowerCase());
   });
 
+  const qualityStats = useMemo(() => {
+    if (!filteredRepresentatives.length) {
+      return { averageScore: null, dataSourcesCount: 0 };
+    }
+    const scores = filteredRepresentatives
+      .map((rep) => rep.dataQualityScore ?? 0)
+      .filter((score) => score > 0);
+    const averageScore = scores.length
+      ? Math.round(scores.reduce((sum, score) => sum + score, 0) / scores.length)
+      : null;
+    const dataSources = new Set<string>();
+    filteredRepresentatives.forEach((rep) => {
+      const sources = Array.isArray(rep.dataSource)
+        ? rep.dataSource
+        : rep.dataSource
+          ? [rep.dataSource]
+          : [];
+      sources.forEach((source) => dataSources.add(source));
+    });
+    return { averageScore, dataSourcesCount: dataSources.size };
+  }, [filteredRepresentatives]);
+
+  const selectedStateName = useMemo(() => {
+    return CIVICS_STATES.find((state) => state.code === selectedState)?.name ?? selectedState;
+  }, [selectedState]);
+
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -176,7 +259,7 @@ export default function Civics2Page() {
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
                 </svg>
                 <div>
-                  <p className="text-sm font-medium">{selectedState}</p>
+                  <p className="text-sm font-medium">{selectedStateName}</p>
                   <p className="text-xs text-blue-200">Your State</p>
                 </div>
               </div>
@@ -188,10 +271,13 @@ export default function Civics2Page() {
       {/* Beautiful Navigation Tabs */}
       <div className="bg-white border-b border-gray-200 shadow-sm">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex space-x-8">
+          <div className="flex space-x-8" role="tablist" aria-label="Civics sections">
             <button
               onClick={() => setActiveTab('representatives')}
               data-testid="civics-tab-representatives"
+              role="tab"
+              aria-selected={activeTab === 'representatives'}
+              aria-controls="civics-representatives-panel"
               className={`py-4 px-1 border-b-3 font-semibold text-sm transition-all duration-200 ${
                 activeTab === 'representatives'
                   ? 'border-blue-500 text-blue-600 bg-blue-50'
@@ -212,6 +298,9 @@ export default function Civics2Page() {
             <button
               onClick={() => setActiveTab('feed')}
               data-testid="civics-tab-feed"
+              role="tab"
+              aria-selected={activeTab === 'feed'}
+              aria-controls="civics-feed-panel"
               className={`py-4 px-1 border-b-3 font-semibold text-sm transition-all duration-200 ${
                 activeTab === 'feed'
                   ? 'border-blue-500 text-blue-600 bg-blue-50'
@@ -229,9 +318,9 @@ export default function Civics2Page() {
 
       {/* Main Content */}
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        <h1 className="sr-only">Civics</h1>
+        <h2 className="sr-only">Civics content</h2>
         {activeTab === 'representatives' && (
-          <div className="space-y-6">
+          <div id="civics-representatives-panel" role="tabpanel" className="space-y-6">
             {/* Search and Filters */}
             <div className="bg-white rounded-2xl shadow-sm border border-gray-200 p-6">
               <div className="flex flex-col sm:flex-row gap-4">
@@ -262,11 +351,11 @@ export default function Civics2Page() {
                     value={selectedState}
                     onChange={(e) => setSelectedState(e.target.value)}
                   >
-                    <option value="CA">California</option>
-                    <option value="NY">New York</option>
-                    <option value="TX">Texas</option>
-                    <option value="FL">Florida</option>
-                    <option value="IL">Illinois</option>
+                    {CIVICS_STATES.map((state) => (
+                      <option key={state.code} value={state.code}>
+                        {state.name}
+                      </option>
+                    ))}
                   </select>
                 </div>
                 <div className="sm:w-32">
@@ -313,6 +402,19 @@ export default function Civics2Page() {
                   <p className="text-sm text-gray-500 mt-2">Gathering the most current information</p>
                 </div>
               </div>
+            ) : errorMessage ? (
+              <div className="flex items-center justify-center py-12">
+                <div className="bg-white rounded-2xl border border-red-200 p-6 max-w-lg text-center">
+                  <h2 className="text-lg font-semibold text-red-700 mb-2">We hit a snag</h2>
+                  <p className="text-sm text-red-600 mb-4">{errorMessage}</p>
+                  <button
+                    onClick={() => void loadRepresentatives()}
+                    className="bg-red-600 text-white px-4 py-2 rounded-lg hover:bg-red-700 transition-colors"
+                  >
+                    Try again
+                  </button>
+                </div>
+              </div>
             ) : filteredRepresentatives.length === 0 ? (
               <div className="flex items-center justify-center py-16">
                 <div className="text-center max-w-md">
@@ -323,12 +425,20 @@ export default function Civics2Page() {
                   </div>
                   <h2 className="text-xl font-semibold text-gray-900 mb-3">No representatives found</h2>
                   <p className="text-gray-600 mb-6">Try adjusting your search criteria or check back later for updated information.</p>
-                  <button
-                    onClick={() => window.location.reload()}
-                    className="bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700 transition-colors"
-                  >
-                    Refresh
-                  </button>
+                  <div className="flex flex-col sm:flex-row gap-3 justify-center">
+                    <button
+                      onClick={() => setSearchQuery('')}
+                      className="bg-white border border-gray-300 text-gray-700 px-6 py-2 rounded-lg hover:bg-gray-50 transition-colors"
+                    >
+                      Clear search
+                    </button>
+                    <button
+                      onClick={() => void loadRepresentatives()}
+                      className="bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700 transition-colors"
+                    >
+                      Try again
+                    </button>
+                  </div>
                 </div>
               </div>
             ) : (
@@ -336,7 +446,7 @@ export default function Civics2Page() {
                 {/* Results Header */}
                 <div className="text-center">
                   <h2 className="text-2xl font-bold text-gray-900 mb-2">
-                    Your {selectedState} Representatives
+                    Your {selectedStateName} Representatives
                   </h2>
                   <p className="text-gray-600">
                     Current elected officials serving your community
@@ -350,63 +460,18 @@ export default function Civics2Page() {
                     <h3 className="text-lg font-semibold text-gray-900 mb-2">Data Quality Overview</h3>
                     <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                       <div className="text-center">
-                        <div className="text-2xl font-bold text-green-600">95%</div>
-                        <div className="text-sm text-gray-600">Data Accuracy</div>
+                        <div className="text-2xl font-bold text-green-600">
+                          {qualityStats.averageScore !== null ? `${qualityStats.averageScore}%` : 'N/A'}
+                        </div>
+                        <div className="text-sm text-gray-600">Average Quality</div>
                       </div>
                       <div className="text-center">
                         <div className="text-2xl font-bold text-blue-600">{filteredRepresentatives.length}</div>
                         <div className="text-sm text-gray-600">Current Representatives</div>
                       </div>
                       <div className="text-center">
-                        <div className="text-2xl font-bold text-purple-600">5</div>
+                        <div className="text-2xl font-bold text-purple-600">{qualityStats.dataSourcesCount}</div>
                         <div className="text-sm text-gray-600">Data Sources</div>
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* Filtering Options */}
-                  <div className="bg-white rounded-lg p-4 border border-gray-200">
-                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                      <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-2">State Filter</label>
-                        <select
-                          data-testid="state-filter"
-                          className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                          value={selectedState}
-                          onChange={(e) => setSelectedState(e.target.value)}
-                        >
-                          <option value="CA">California</option>
-                          <option value="NY">New York</option>
-                          <option value="TX">Texas</option>
-                          <option value="FL">Florida</option>
-                          <option value="IL">Illinois</option>
-                        </select>
-                      </div>
-                      <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-2">Level Filter</label>
-                        <select
-                          data-testid="level-filter"
-                          className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                          value={selectedLevel}
-                          onChange={(e) => setSelectedLevel(e.target.value as 'all' | 'federal' | 'state' | 'local')}
-                        >
-                          <option value="all">All Levels</option>
-                          <option value="federal">Federal</option>
-                          <option value="state">State</option>
-                          <option value="local">Local</option>
-                        </select>
-                      </div>
-                      <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-2">Quality Filter</label>
-                        <select
-                          data-testid="quality-filter"
-                          className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                        >
-                          <option value="all">All Quality</option>
-                          <option value="high">High Quality (90%+)</option>
-                          <option value="medium">Medium Quality (70-89%)</option>
-                          <option value="low">Low Quality (&lt;70%)</option>
-                        </select>
                       </div>
                     </div>
                   </div>
@@ -477,7 +542,7 @@ export default function Civics2Page() {
         )}
 
         {activeTab === 'feed' && (
-          <div data-testid="mobile-feed">
+          <div id="civics-feed-panel" role="tabpanel" data-testid="mobile-feed">
             <UnifiedFeed userId="test-user" />
           </div>
         )}
