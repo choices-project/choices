@@ -364,16 +364,45 @@ export async function loginTestUser(page: Page, user: TestUser): Promise<void> {
   await page.waitForTimeout(500);
 
   // Wait for React to process - ensure DOM values match (button enablement may lag)
-  await page.waitForFunction(
-    ({ expectedEmail, expectedPassword }: { expectedEmail: string; expectedPassword: string }) => {
-      const emailInput = document.querySelector('[data-testid="login-email"]') as HTMLInputElement;
-      const passwordInput = document.querySelector('[data-testid="login-password"]') as HTMLInputElement;
+  const maxSyncAttempts = 2;
+  for (let attempt = 0; attempt < maxSyncAttempts; attempt++) {
+    try {
+      await page.waitForFunction(
+        ({ expectedEmail, expectedPassword }: { expectedEmail: string; expectedPassword: string }) => {
+          const emailInput = document.querySelector('[data-testid="login-email"]') as HTMLInputElement;
+          const passwordInput = document.querySelector('[data-testid="login-password"]') as HTMLInputElement;
 
-      return emailInput?.value === expectedEmail && passwordInput?.value === expectedPassword;
-    },
-    { expectedEmail: email, expectedPassword: password },
-    { timeout: 10_000 } // Increased timeout for CI
-  );
+          return emailInput?.value === expectedEmail && passwordInput?.value === expectedPassword;
+        },
+        { expectedEmail: email, expectedPassword: password },
+        { timeout: 10_000 } // Increased timeout for CI
+      );
+      break;
+    } catch (error) {
+      if (attempt === maxSyncAttempts - 1) {
+        throw error;
+      }
+      await page.evaluate(
+        ({ expectedEmail, expectedPassword }: { expectedEmail: string; expectedPassword: string }) => {
+          const emailInput = document.querySelector('[data-testid="login-email"]') as HTMLInputElement | null;
+          const passwordInput = document.querySelector('[data-testid="login-password"]') as HTMLInputElement | null;
+
+          const setNativeValue = (input: HTMLInputElement | null, value: string) => {
+            if (!input) return;
+            const setter = Object.getOwnPropertyDescriptor(HTMLInputElement.prototype, 'value')?.set;
+            setter?.call(input, value);
+            input.dispatchEvent(new Event('input', { bubbles: true }));
+            input.dispatchEvent(new Event('change', { bubbles: true }));
+          };
+
+          setNativeValue(emailInput, expectedEmail);
+          setNativeValue(passwordInput, expectedPassword);
+        },
+        { expectedEmail: email, expectedPassword: password }
+      );
+      await page.waitForTimeout(500);
+    }
+  }
 
   // Wait a bit more for React state to fully update
   await page.waitForTimeout(500);
