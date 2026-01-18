@@ -108,7 +108,8 @@ test.describe('Auth – real backend', () => {
     await expect
       .poll(
         async () => {
-          const hasCookie = await page.evaluate(() => document.cookie.includes('sb-'));
+          const cookies = await page.context().cookies();
+          const hasHttpOnlyCookie = cookies.some((cookie) => cookie.name.startsWith('sb-'));
           const hasToken = await page.evaluate(() => {
             const token = localStorage.getItem('supabase.auth.token');
             return token !== null && token !== 'null';
@@ -122,7 +123,7 @@ test.describe('Auth – real backend', () => {
               return false;
             }
           });
-          return hasCookie || hasToken || hasSessionToken;
+          return hasHttpOnlyCookie || hasToken || hasSessionToken;
         },
         { timeout: 60_000, intervals: [2_000] }, // Check every 2 seconds, 60s timeout for production
       )

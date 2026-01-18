@@ -191,6 +191,7 @@ export default function Civics2Page() {
           <div className="flex space-x-8">
             <button
               onClick={() => setActiveTab('representatives')}
+              data-testid="civics-tab-representatives"
               className={`py-4 px-1 border-b-3 font-semibold text-sm transition-all duration-200 ${
                 activeTab === 'representatives'
                   ? 'border-blue-500 text-blue-600 bg-blue-50'
@@ -210,6 +211,7 @@ export default function Civics2Page() {
 
             <button
               onClick={() => setActiveTab('feed')}
+              data-testid="civics-tab-feed"
               className={`py-4 px-1 border-b-3 font-semibold text-sm transition-all duration-200 ${
                 activeTab === 'feed'
                   ? 'border-blue-500 text-blue-600 bg-blue-50'

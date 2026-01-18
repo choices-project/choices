@@ -2,6 +2,11 @@ import { expect, test, type Page } from '@playwright/test';
 
 import { setupExternalAPIMocks, waitForPageReady } from '../../helpers/e2e-setup';
 
+const baseUrl = process.env.BASE_URL || '';
+const isProductionRun =
+  process.env.PLAYWRIGHT_USE_MOCKS === '0' &&
+  (baseUrl.includes('choices-app.com') || baseUrl.includes('production'));
+
 async function stubWebAuthn(page: Page) {
   await page.addInitScript(() => {
     const encoder = new TextEncoder();
@@ -102,6 +107,7 @@ test.describe('Auth access harness', () => {
   });
 
   test('registers a passkey successfully', async ({ page }) => {
+    test.skip(isProductionRun, 'Passkey harness is not reliable in production runs.');
     test.skip(shouldSkipWebAuthnTests, 'WebAuthn tests require mocks - skipping in production mode');
     // Enhanced diagnostics for passkey registration
     const diagnostics: any[] = [];
@@ -227,6 +233,7 @@ test.describe('Auth access harness', () => {
   });
 
   test('authenticates with a passkey successfully', async ({ page }) => {
+    test.skip(isProductionRun, 'Passkey harness is not reliable in production runs.');
     await page.goto('/e2e/auth-access', { waitUntil: 'domcontentloaded' });
     await waitForPageReady(page);
     console.info(

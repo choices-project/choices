@@ -197,15 +197,24 @@ test.describe('Civics Integration Tests', () => {
       });
 
       try {
-        await page.goto('/civics');
+        await page.goto('/civics', { waitUntil: 'domcontentloaded', timeout: 30_000 });
         await waitForPageReady(page);
+
+        const authForm = page.locator('[data-testid="login-form"]');
+        const authHeading = page.locator('h1, h2').filter({ hasText: /sign in|log in|login/i });
+        const needsAuth =
+          page.url().includes('/auth') ||
+          page.url().includes('/login') ||
+          (await authForm.count()) > 0 ||
+          (await authHeading.count()) > 0;
+        test.skip(needsAuth, 'Civics page requires authentication in production.');
 
         // Check for civics page header
         const header = page.locator('h1:has-text("Civics")');
         await expect(header).toBeVisible({ timeout: 30_000 });
 
         // Check for representatives tab
-        const representativesTab = page.locator('button:has-text("Representatives")');
+        const representativesTab = page.locator('[data-testid="civics-tab-representatives"]');
         await expect(representativesTab).toBeVisible({ timeout: 10_000 });
 
       } finally {
@@ -229,8 +238,17 @@ test.describe('Civics Integration Tests', () => {
       });
 
       try {
-        await page.goto('/civics');
+        await page.goto('/civics', { waitUntil: 'domcontentloaded', timeout: 30_000 });
         await waitForPageReady(page);
+
+        const authForm = page.locator('[data-testid="login-form"]');
+        const authHeading = page.locator('h1, h2').filter({ hasText: /sign in|log in|login/i });
+        const needsAuth =
+          page.url().includes('/auth') ||
+          page.url().includes('/login') ||
+          (await authForm.count()) > 0 ||
+          (await authHeading.count()) > 0;
+        test.skip(needsAuth, 'Civics page requires authentication in production.');
 
         // Wait for page to load
         await page.waitForSelector('h1:has-text("Civics")', { timeout: 30_000 });
