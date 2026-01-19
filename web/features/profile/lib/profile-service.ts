@@ -471,8 +471,8 @@ export async function updateProfile(updates: ProfileUpdateData): Promise<Profile
     // Transform data for API
     const apiData = transformProfileUpdateToApi(updates);
 
-    const response = await fetch('/api/profile?action=update', {
-      method: 'PUT',
+    const response = await fetch('/api/profile', {
+      method: 'PATCH',
       credentials: 'include',
       headers: {
         'Content-Type': 'application/json',

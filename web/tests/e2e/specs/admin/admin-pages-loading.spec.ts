@@ -42,13 +42,14 @@ test.describe('Admin Pages Loading', () => {
     await waitForPageReady(page);
 
     // Wait for sidebar to be visible (AdminLayout provides it)
-    // Sidebar might be hidden on mobile, so check for desktop view
-    await page.waitForSelector('nav[aria-label="Admin navigation"]', { state: 'visible', timeout: 30_000 });
-    await expect(page.locator('nav[aria-label="Admin navigation"]')).toBeVisible({ timeout: 30_000 });
+    // Sidebar might render as navigation role rather than <nav>
+    const adminNav = page.locator('[aria-label="Admin navigation"]');
+    await adminNav.waitFor({ state: 'visible', timeout: 30_000 });
+    await expect(adminNav).toBeVisible({ timeout: 30_000 });
 
     // Wait for main content area - it might take time for React to hydrate
     // Check for either the main element or the dashboard content
-    const mainContent = page.locator('main[id="admin-main"]');
+    const mainContent = page.locator('#admin-main');
     const dashboardContent = page.locator('[data-testid="comprehensive-admin-dashboard"], h1:has-text("Comprehensive Admin Dashboard")');
     
     // Wait for either main content or dashboard to be visible
@@ -97,10 +98,10 @@ test.describe('Admin Pages Loading', () => {
     await waitForPageReady(page);
 
     // Verify sidebar is visible
-    await expect(page.locator('nav[aria-label="Admin navigation"]')).toBeVisible({ timeout: 30_000 });
+    await expect(page.locator('[aria-label="Admin navigation"]')).toBeVisible({ timeout: 30_000 });
 
     // Verify main content area is visible
-    await expect(page.locator('main[id="admin-main"]')).toBeVisible({ timeout: 30_000 });
+    await expect(page.locator('#admin-main')).toBeVisible({ timeout: 30_000 });
 
     // Verify page content loads (check for users management content)
     await expect(page.locator('main')).toBeVisible({ timeout: 30_000 });
@@ -111,10 +112,10 @@ test.describe('Admin Pages Loading', () => {
     await waitForPageReady(page);
 
     // Verify sidebar is visible
-    await expect(page.locator('nav[aria-label="Admin navigation"]')).toBeVisible({ timeout: 30_000 });
+    await expect(page.locator('[aria-label="Admin navigation"]')).toBeVisible({ timeout: 30_000 });
 
     // Verify main content area is visible
-    await expect(page.locator('main[id="admin-main"]')).toBeVisible({ timeout: 30_000 });
+    await expect(page.locator('#admin-main')).toBeVisible({ timeout: 30_000 });
   });
 
   test('admin analytics page loads', async ({ page }) => {
@@ -122,10 +123,10 @@ test.describe('Admin Pages Loading', () => {
     await waitForPageReady(page);
 
     // Verify sidebar is visible
-    await expect(page.locator('nav[aria-label="Admin navigation"]')).toBeVisible({ timeout: 30_000 });
+    await expect(page.locator('[aria-label="Admin navigation"]')).toBeVisible({ timeout: 30_000 });
 
     // Verify main content area is visible
-    await expect(page.locator('main[id="admin-main"]')).toBeVisible({ timeout: 30_000 });
+    await expect(page.locator('#admin-main')).toBeVisible({ timeout: 30_000 });
 
     // Verify analytics content loads
     await expect(page.locator('h1:has-text("Analytics")')).toBeVisible({ timeout: 10000 });
@@ -136,10 +137,10 @@ test.describe('Admin Pages Loading', () => {
     await waitForPageReady(page);
 
     // Verify sidebar is visible
-    await expect(page.locator('nav[aria-label="Admin navigation"]')).toBeVisible({ timeout: 30_000 });
+    await expect(page.locator('[aria-label="Admin navigation"]')).toBeVisible({ timeout: 30_000 });
 
     // Verify main content area is visible
-    await expect(page.locator('main[id="admin-main"]')).toBeVisible({ timeout: 30_000 });
+    await expect(page.locator('#admin-main')).toBeVisible({ timeout: 30_000 });
   });
 
   test('admin system page loads', async ({ page }) => {
@@ -147,10 +148,10 @@ test.describe('Admin Pages Loading', () => {
     await waitForPageReady(page);
 
     // Verify sidebar is visible
-    await expect(page.locator('nav[aria-label="Admin navigation"]')).toBeVisible({ timeout: 30_000 });
+    await expect(page.locator('[aria-label="Admin navigation"]')).toBeVisible({ timeout: 30_000 });
 
     // Verify main content area is visible
-    await expect(page.locator('main[id="admin-main"]')).toBeVisible({ timeout: 30_000 });
+    await expect(page.locator('#admin-main')).toBeVisible({ timeout: 30_000 });
   });
 
   test('admin site-messages page loads', async ({ page }) => {
@@ -158,10 +159,10 @@ test.describe('Admin Pages Loading', () => {
     await waitForPageReady(page);
 
     // Verify sidebar is visible
-    await expect(page.locator('nav[aria-label="Admin navigation"]')).toBeVisible({ timeout: 30_000 });
+    await expect(page.locator('[aria-label="Admin navigation"]')).toBeVisible({ timeout: 30_000 });
 
     // Verify main content area is visible
-    await expect(page.locator('main[id="admin-main"]')).toBeVisible({ timeout: 30_000 });
+    await expect(page.locator('#admin-main')).toBeVisible({ timeout: 30_000 });
   });
 
   test('admin feature-flags page loads', async ({ page }) => {
@@ -169,10 +170,10 @@ test.describe('Admin Pages Loading', () => {
     await waitForPageReady(page);
 
     // Verify sidebar is visible
-    await expect(page.locator('nav[aria-label="Admin navigation"]')).toBeVisible({ timeout: 30_000 });
+    await expect(page.locator('[aria-label="Admin navigation"]')).toBeVisible({ timeout: 30_000 });
 
     // Verify main content area is visible
-    await expect(page.locator('main[id="admin-main"]')).toBeVisible({ timeout: 30_000 });
+    await expect(page.locator('#admin-main')).toBeVisible({ timeout: 30_000 });
   });
 
   test('admin monitoring page loads', async ({ page }) => {
@@ -184,7 +185,7 @@ test.describe('Admin Pages Loading', () => {
     await expect(page.locator('nav[aria-label="Admin navigation"]')).toBeVisible({ timeout: 30_000 });
 
     // Verify main content area is visible
-    await expect(page.locator('main[id="admin-main"]')).toBeVisible({ timeout: 30_000 });
+    await expect(page.locator('#admin-main')).toBeVisible({ timeout: 30_000 });
   });
 
   test('sidebar navigation works for all pages', async ({ page }) => {
@@ -215,7 +216,7 @@ test.describe('Admin Pages Loading', () => {
       }
 
       // Wait for sidebar link to be visible and clickable
-      const linkLocator = page.locator(`nav[aria-label="Admin navigation"] a[href="${link.href}"]`);
+      const linkLocator = page.locator(`[aria-label="Admin navigation"] a[href="${link.href}"]`);
       await expect(linkLocator).toBeVisible({ timeout: 10_000 });
 
       // Click sidebar link
@@ -226,10 +227,10 @@ test.describe('Admin Pages Loading', () => {
       await waitForPageReady(page);
 
       // Verify sidebar is still visible (AdminLayout persists)
-      await expect(page.locator('nav[aria-label="Admin navigation"]')).toBeVisible({ timeout: 10_000 });
+      await expect(page.locator('[aria-label="Admin navigation"]')).toBeVisible({ timeout: 10_000 });
 
       // Verify main content area is visible (with flexible check)
-      const mainContent = page.locator('main[id="admin-main"]');
+      const mainContent = page.locator('#admin-main');
       const hasMain = await mainContent.isVisible().catch(() => false);
       
       // If main not visible immediately, wait a bit for React to hydrate
