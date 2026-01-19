@@ -292,6 +292,15 @@ export async function loginTestUser(page: Page, user: TestUser): Promise<void> {
   await page.waitForSelector('[data-testid="auth-hydrated"]', { state: 'attached', timeout: 60_000 });
   await waitForPageReady(page);
 
+  const authErrorBanner = page.locator('text=/Application error: a client-side exception/i');
+  if (await authErrorBanner.isVisible({ timeout: 2_000 }).catch(() => false)) {
+    const pageErrors = (page as unknown as { __authPageErrors?: string[] }).__authPageErrors ?? [];
+    const consoleErrors = (page as unknown as { __authConsoleErrors?: string[] }).__authConsoleErrors ?? [];
+    throw new Error(
+      `Auth page crashed during login. Page errors: ${pageErrors.join(' | ') || 'none'}. Console errors: ${consoleErrors.join(' | ') || 'none'}.`
+    );
+  }
+
   const toggle = page.locator('[data-testid="auth-toggle"]');
   const toggleText = await toggle.textContent().catch(() => null);
   if (toggleText?.includes('Already have an account')) {
@@ -338,7 +347,20 @@ export async function loginTestUser(page: Page, user: TestUser): Promise<void> {
 
   // Fill inputs directly to avoid focus loss during per-character typing
   await emailInput.first().fill(email, { timeout: 10_000 });
-  await passwordInput.first().fill(password, { timeout: 10_000 });
+  try {
+    await passwordInput.first().fill(password, { timeout: 10_000 });
+  } catch (error) {
+    const authErrorBanner = page.locator('text=/Application error: a client-side exception/i');
+    const hasAppError = await authErrorBanner.isVisible({ timeout: 2_000 }).catch(() => false);
+    if (hasAppError) {
+      const pageErrors = (page as unknown as { __authPageErrors?: string[] }).__authPageErrors ?? [];
+      const consoleErrors = (page as unknown as { __authConsoleErrors?: string[] }).__authConsoleErrors ?? [];
+      throw new Error(
+        `Auth page crashed during input. Page errors: ${pageErrors.join(' | ') || 'none'}. Console errors: ${consoleErrors.join(' | ') || 'none'}.`
+      );
+    }
+    throw error;
+  }
 
   // Ensure React-controlled inputs see the values (handles aggressive re-renders)
   await page.evaluate(

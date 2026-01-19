@@ -102,6 +102,13 @@ export default function AuthPage() {
     displayName: ''
   });
 
+  const readInputValue = (
+    event: React.ChangeEvent<HTMLInputElement> | React.FormEvent<HTMLInputElement>
+  ) => {
+    const target = (event.currentTarget ?? event.target) as HTMLInputElement | null;
+    return target?.value ?? null;
+  };
+
   // Performance tracking - properly implemented
   React.useEffect(() => {
     const startTime = performance.now();
@@ -501,8 +508,16 @@ export default function AuthPage() {
                         name="displayName"
                         ref={displayNameRef}
                         value={formData.displayName}
-                        onChange={(e) => setFormData((prev) => ({ ...prev, displayName: e.target.value }))}
-                        onInput={(e) => setFormData((prev) => ({ ...prev, displayName: e.currentTarget.value }))}
+                        onChange={(e) => {
+                          const value = readInputValue(e);
+                          if (value === null) return;
+                          setFormData((prev) => ({ ...prev, displayName: value }));
+                        }}
+                        onInput={(e) => {
+                          const value = readInputValue(e);
+                          if (value === null) return;
+                          setFormData((prev) => ({ ...prev, displayName: value }));
+                        }}
                         onKeyDown={handleKeySubmit}
                         required={isSignUp}
                         className="w-full pl-10 pr-3 py-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500 focus-visible:ring-2 focus-visible:ring-blue-500"
@@ -536,8 +551,16 @@ export default function AuthPage() {
                   name="email"
                   ref={emailRef}
                   value={formData.email}
-                  onChange={(e) => setFormData((prev) => ({ ...prev, email: e.target.value }))}
-                  onInput={(e) => setFormData((prev) => ({ ...prev, email: e.currentTarget.value }))}
+                  onChange={(e) => {
+                    const value = readInputValue(e);
+                    if (value === null) return;
+                    setFormData((prev) => ({ ...prev, email: value }));
+                  }}
+                  onInput={(e) => {
+                    const value = readInputValue(e);
+                    if (value === null) return;
+                    setFormData((prev) => ({ ...prev, email: value }));
+                  }}
                   onKeyDown={handleKeySubmit}
                   required
                   className={`w-full pl-10 pr-3 py-2 border rounded-md focus:ring-blue-500 focus:border-blue-500 focus-visible:ring-2 focus-visible:ring-blue-500 transition-colors ${
@@ -586,8 +609,16 @@ export default function AuthPage() {
                   name="password"
                   ref={passwordRef}
                   value={formData.password}
-                  onChange={(e) => setFormData((prev) => ({ ...prev, password: e.target.value }))}
-                  onInput={(e) => setFormData((prev) => ({ ...prev, password: e.currentTarget.value }))}
+                  onChange={(e) => {
+                    const value = readInputValue(e);
+                    if (value === null) return;
+                    setFormData((prev) => ({ ...prev, password: value }));
+                  }}
+                  onInput={(e) => {
+                    const value = readInputValue(e);
+                    if (value === null) return;
+                    setFormData((prev) => ({ ...prev, password: value }));
+                  }}
                   onKeyDown={handleKeySubmit}
                   required
                   className={`w-full pl-10 pr-10 py-2 border rounded-md focus:ring-blue-500 focus:border-blue-500 focus-visible:ring-2 focus-visible:ring-blue-500 transition-colors ${
@@ -647,8 +678,16 @@ export default function AuthPage() {
                     name="confirmPassword"
                     ref={confirmPasswordRef}
                     value={formData.confirmPassword}
-                    onChange={(e) => setFormData((prev) => ({ ...prev, confirmPassword: e.target.value }))}
-                    onInput={(e) => setFormData((prev) => ({ ...prev, confirmPassword: e.currentTarget.value }))}
+                    onChange={(e) => {
+                      const value = readInputValue(e);
+                      if (value === null) return;
+                      setFormData((prev) => ({ ...prev, confirmPassword: value }));
+                    }}
+                    onInput={(e) => {
+                      const value = readInputValue(e);
+                      if (value === null) return;
+                      setFormData((prev) => ({ ...prev, confirmPassword: value }));
+                    }}
                     onKeyDown={handleKeySubmit}
                     required={isSignUp}
                     className="w-full pl-10 pr-10 py-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500 focus-visible:ring-2 focus-visible:ring-blue-500"

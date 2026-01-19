@@ -33,6 +33,18 @@ test.describe('Auth – real backend', () => {
   test.skip(!hasCredentials, 'E2E credentials (E2E_USER_EMAIL, E2E_USER_PASSWORD, E2E_ADMIN_EMAIL, E2E_ADMIN_PASSWORD) are required');
 
   test.beforeEach(async ({ page }) => {
+    const consoleErrors: string[] = [];
+    const pageErrors: string[] = [];
+    page.on('console', (msg) => {
+      if (msg.type() === 'error') {
+        consoleErrors.push(msg.text());
+      }
+    });
+    page.on('pageerror', (err) => {
+      pageErrors.push(err.message);
+    });
+    (page as unknown as { __authConsoleErrors?: string[] }).__authConsoleErrors = consoleErrors;
+    (page as unknown as { __authPageErrors?: string[] }).__authPageErrors = pageErrors;
     await ensureLoggedOut(page);
   });
 
@@ -46,6 +58,12 @@ test.describe('Auth – real backend', () => {
 
     // Navigate to auth page on the correct base URL
     const response = await page.goto(`${BASE_URL}/auth`, { waitUntil: 'domcontentloaded', timeout: 30_000 });
+    const consoleErrors = (page as unknown as { __authConsoleErrors?: string[] }).__authConsoleErrors ?? [];
+    const pageErrors = (page as unknown as { __authPageErrors?: string[] }).__authPageErrors ?? [];
+    const errorBanner = page.locator('text=/Application error: a client-side exception/i');
+    if (await errorBanner.isVisible({ timeout: 2_000 }).catch(() => false)) {
+      throw new Error(`Auth page crashed. Page errors: ${pageErrors.join(' | ') || 'none'}. Console errors: ${consoleErrors.join(' | ') || 'none'}.`);
+    }
     const status = response?.status() ?? 0;
     const headers = response?.headers() ?? {};
     if (isVercelChallenge(status, headers)) {
@@ -107,6 +125,12 @@ test.describe('Auth – real backend', () => {
 
     // Navigate to auth page on the correct base URL
     const response = await page.goto(`${BASE_URL}/auth`, { waitUntil: 'domcontentloaded', timeout: 30_000 });
+    const consoleErrors = (page as unknown as { __authConsoleErrors?: string[] }).__authConsoleErrors ?? [];
+    const pageErrors = (page as unknown as { __authPageErrors?: string[] }).__authPageErrors ?? [];
+    const errorBanner = page.locator('text=/Application error: a client-side exception/i');
+    if (await errorBanner.isVisible({ timeout: 2_000 }).catch(() => false)) {
+      throw new Error(`Auth page crashed. Page errors: ${pageErrors.join(' | ') || 'none'}. Console errors: ${consoleErrors.join(' | ') || 'none'}.`);
+    }
     const status = response?.status() ?? 0;
     const headers = response?.headers() ?? {};
     if (isVercelChallenge(status, headers)) {
