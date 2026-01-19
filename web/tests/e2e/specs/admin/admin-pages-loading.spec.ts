@@ -10,6 +10,8 @@ import { test, expect } from '@playwright/test';
 import {
   setupExternalAPIMocks,
   waitForPageReady,
+  loginAsAdmin,
+  SHOULD_USE_MOCKS,
 } from '../../helpers/e2e-setup';
 
 test.describe('Admin Pages Loading', () => {
@@ -23,6 +25,12 @@ test.describe('Admin Pages Loading', () => {
       civics: true,
       admin: true,
     });
+
+    if (!SHOULD_USE_MOCKS) {
+      const hasAdminCreds = Boolean(process.env.E2E_ADMIN_EMAIL && process.env.E2E_ADMIN_PASSWORD);
+      test.skip(!hasAdminCreds, 'E2E admin credentials are required for production admin pages');
+      await loginAsAdmin(page);
+    }
   });
 
   test('admin dashboard page loads', async ({ page }) => {
