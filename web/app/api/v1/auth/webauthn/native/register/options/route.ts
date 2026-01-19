@@ -11,7 +11,7 @@
 import { getSupabaseServerClient } from '@/utils/supabase/server';
 
 import { getRPIDAndOrigins, CHALLENGE_TTL_MS } from '@/features/auth/lib/webauthn/config';
-import { generateRegistrationOptions } from '@/features/auth/lib/webauthn/native/server';
+import { arrayBufferToBase64URL, generateRegistrationOptions } from '@/features/auth/lib/webauthn/native/server';
 
 import { withErrorHandling, successResponse, authError, forbiddenError, errorResponse } from '@/lib/api';
 import { stripUndefinedDeep } from '@/lib/util/clean';
@@ -58,13 +58,13 @@ export const POST = withErrorHandling(async (req: NextRequest) => {
 
     // Persist challenge
     const expiresAt = new Date(Date.now() + CHALLENGE_TTL_MS).toISOString();
-    const challengeArray = new Uint8Array(options.challenge);
+    const challengeBase64Url = arrayBufferToBase64URL(options.challenge);
     
     const { error: chalErr } = await supabase.from('webauthn_challenges').insert(stripUndefinedDeep({
       user_id: user.id,
       rp_id: rpID,
       kind: 'registration',
-      challenge: Buffer.from(challengeArray).toString('base64'),
+      challenge: challengeBase64Url,
       expires_at: expiresAt,
     }));
 

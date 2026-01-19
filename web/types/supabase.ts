@@ -4130,27 +4130,33 @@ export type Database = {
           created_at: string | null
           expires_at: string
           id: string
+          kind: string | null
           metadata: Json | null
+          rp_id: string | null
           used_at: string | null
-          user_id: string
+          user_id: string | null
         }
         Insert: {
           challenge: string
           created_at?: string | null
           expires_at: string
           id?: string
+          kind?: string | null
           metadata?: Json | null
+          rp_id?: string | null
           used_at?: string | null
-          user_id: string
+          user_id?: string | null
         }
         Update: {
           challenge?: string
           created_at?: string | null
           expires_at?: string
           id?: string
+          kind?: string | null
           metadata?: Json | null
+          rp_id?: string | null
           used_at?: string | null
-          user_id?: string
+          user_id?: string | null
         }
         Relationships: []
       }

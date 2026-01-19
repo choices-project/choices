@@ -388,7 +388,12 @@ export async function beginAuthenticate(
       }),
     }).then(r => r.json());
 
-    const opts = extractApiData<any>(rawOptions);
+    const payload = extractApiData<any>(rawOptions);
+    const challengeId = payload?.challengeId;
+    if (!challengeId) {
+      throw new Error('Missing authentication challenge');
+    }
+    const opts = payload?.options ?? payload;
 
     // Convert server options to native WebAuthn options
     const nativeOptions: PublicKeyCredentialRequestOptions = {
@@ -411,7 +416,7 @@ export async function beginAuthenticate(
       headers: {
         'Content-Type': 'application/json',
       },
-      body: JSON.stringify(assertion),
+      body: JSON.stringify({ ...assertion, challengeId }),
     }).then(r => r.json());
 
     const verifyResult = extractApiResult<any>(verifyPayload);

@@ -48,6 +48,7 @@ import ScreenReaderSupport from '@/lib/accessibility/screen-reader';
 import { canAccessAnalytics, logAnalyticsAccess, UnauthorizedAccess } from '@/lib/auth/adminGuard';
 import { useIsMobile, useIsTablet } from '@/lib/hooks/useMediaQuery';
 import { useUser } from '@/lib/stores';
+import { useProfileActions, useProfileDisplay, useProfileStats } from '@/lib/stores/profileStore';
 import { logger } from '@/lib/utils/logger';
 
 import { useI18n } from '@/hooks/useI18n';
@@ -105,12 +106,21 @@ export const EnhancedAnalyticsDashboard: React.FC<EnhancedAnalyticsDashboardProp
 
   // Access Control - Admin Only
   const currentUser = useUser();
-  const hasAccess = canAccessAnalytics(currentUser, false);
+  const { isAdmin: isProfileAdmin } = useProfileDisplay();
+  const { isProfileLoaded } = useProfileStats();
+  const { loadProfile } = useProfileActions();
+  const hasAccess = isProfileAdmin || canAccessAnalytics(currentUser, false);
 
   // Log access attempt
   useEffect(() => {
     logAnalyticsAccess(currentUser, 'enhanced-analytics-dashboard', hasAccess);
   }, [currentUser, hasAccess]);
+
+  useEffect(() => {
+    if (currentUser?.id && !isProfileLoaded) {
+      void loadProfile();
+    }
+  }, [currentUser?.id, isProfileLoaded, loadProfile]);
 
   const {
     data,
@@ -451,6 +461,19 @@ export const EnhancedAnalyticsDashboard: React.FC<EnhancedAnalyticsDashboardProp
   }, [activeTab, data, tabLabels, t]);
 
   // Block unauthorized users
+  if (!skipAccessGuard && currentUser && !isProfileLoaded) {
+    return (
+      <section
+        className={`flex items-center justify-center min-h-screen ${className}`}
+        aria-labelledby={headingId}
+        role="status"
+      >
+        <Loader2 className="h-8 w-8 animate-spin text-primary" aria-hidden="true" />
+        <span className="ml-2 text-lg">{t('analytics.status.loading')}</span>
+      </section>
+    );
+  }
+
   if (!skipAccessGuard && !hasAccess) {
     return <UnauthorizedAccess />;
   }

@@ -8,12 +8,13 @@
  * Status: ✅ Production-ready (Native implementation)
  */
 
-import { getSupabaseServerClient } from '@/utils/supabase/server';
+import { getSupabaseAdminClient, getSupabaseServerClient } from '@/utils/supabase/server';
+import { getSupabaseApiRouteClient } from '@/utils/supabase/api-route';
 
 import { getRPIDAndOrigins } from '@/features/auth/lib/webauthn/config';
 import { verifyAuthenticationResponse } from '@/features/auth/lib/webauthn/native/server';
 
-import { withErrorHandling, authError, forbiddenError, errorResponse, validationError, successResponse } from '@/lib/api';
+import { withErrorHandling, forbiddenError, errorResponse, validationError, successResponse } from '@/lib/api';
 import { logger } from '@/lib/utils/logger';
 
 import type { NextRequest } from 'next/server';
@@ -32,22 +33,21 @@ export const POST = withErrorHandling(async (req: NextRequest) => {
       return validationError({ enabled: 'Passkeys disabled on preview' });
     }
 
-    const supabase = await getSupabaseServerClient();
-    const { data: { user }, error } = await supabase.auth.getUser();
-    if (error || !user) {
-      return authError('Authentication required');
+    const body = await req.json();
+    const challengeId = body?.challengeId as string | undefined;
+    if (!challengeId) {
+      return validationError({ challengeId: 'Challenge ID is required' });
     }
 
-    const body = await req.json();
+    const supabase = await getSupabaseServerClient();
 
     // Get challenge from database
     const { data: chalRows } = await supabase
       .from('webauthn_challenges')
       .select('*')
-      .eq('user_id', user.id)
+      .eq('id', challengeId)
       .eq('kind', 'authentication')
       .is('used_at', null)
-      .order('created_at', { ascending: false })
       .limit(1);
 
     if (!chalRows?.length) {
@@ -73,7 +73,7 @@ export const POST = withErrorHandling(async (req: NextRequest) => {
       logger.warn('WebAuthn authentication attempt from unauthorized origin', {
         origin: currentOrigin,
         allowedOrigins,
-        userId: user.id
+        challengeId
       });
       return forbiddenError('Unauthorized origin');
     }
@@ -83,7 +83,6 @@ export const POST = withErrorHandling(async (req: NextRequest) => {
     const { data: creds, error: credsErr } = await supabase
       .from('webauthn_credentials')
       .select('*')
-      .eq('user_id', user.id)
       .eq('rp_id', rpID)
       .eq('credential_id', Buffer.from(credIdBuf).toString('base64'))
       .limit(1);
@@ -97,10 +96,18 @@ export const POST = withErrorHandling(async (req: NextRequest) => {
       return validationError({ credential: 'Credential not found' });
     }
 
+    const normalizeChallenge = (value: string) => {
+      if (!value) return value;
+      if (value.includes('+') || value.includes('/') || value.includes('=')) {
+        return value.replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/g, '');
+      }
+      return value;
+    };
+
     // Verify authentication using native implementation
     const verificationResult = await verifyAuthenticationResponse(
       body,
-      chal.challenge,
+      normalizeChallenge(chal.challenge),
       currentOrigin,
       rpID,
       {
@@ -141,7 +148,7 @@ export const POST = withErrorHandling(async (req: NextRequest) => {
     // Update counter
     await supabase
       .from('webauthn_credentials')
-      .update({ counter: newCounter })
+      .update({ counter: newCounter, last_used_at: new Date().toISOString() })
       .eq('id', cred.id);
 
     // Mark challenge as used
@@ -150,14 +157,48 @@ export const POST = withErrorHandling(async (req: NextRequest) => {
       .update({ used_at: new Date().toISOString() })
       .eq('id', chal.id);
 
-    logger.info('WebAuthn authentication verified (native)', { userId: user.id });
+    const adminClient = await getSupabaseAdminClient();
+    const { data: adminUser, error: adminUserError } = await adminClient.auth.admin.getUserById(
+      cred.user_id
+    );
+    if (adminUserError || !adminUser?.user) {
+      return errorResponse('Failed to load user for session', 500, undefined, 'WEBAUTHN_USER_LOOKUP_FAILED');
+    }
 
-    return successResponse({
+    const { data: linkData, error: linkError } = await adminClient.auth.admin.generateLink({
+      type: 'magiclink',
+      email: adminUser.user.email ?? '',
+    });
+    if (linkError || !linkData?.properties?.hashed_token) {
+      logger.error('Failed to generate login link for passkey session', { error: linkError });
+      return errorResponse('Failed to establish session', 500, undefined, 'WEBAUTHN_SESSION_LINK_FAILED');
+    }
+
+    const { data: sessionData, error: sessionError } = await adminClient.auth.verifyOtp({
+      type: 'email',
+      token_hash: linkData.properties.hashed_token,
+    });
+    if (sessionError || !sessionData?.session) {
+      logger.error('Failed to verify login link for passkey session', { error: sessionError });
+      return errorResponse('Failed to establish session', 500, undefined, 'WEBAUTHN_SESSION_VERIFY_FAILED');
+    }
+
+    logger.info('WebAuthn authentication verified (native)', { userId: cred.user_id });
+
+    const response = successResponse({
       verified: true,
       credential: {
         id: cred.credential_id,
         counter: newCounter
-      }
+      },
+      session: sessionData.session,
     });
+    const apiClient = await getSupabaseApiRouteClient(req, response);
+    await apiClient.auth.setSession({
+      access_token: sessionData.session.access_token,
+      refresh_token: sessionData.session.refresh_token,
+    });
+    response.headers.set('cache-control', 'no-store');
+    return response;
 });
 

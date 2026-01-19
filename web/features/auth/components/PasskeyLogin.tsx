@@ -17,6 +17,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 
 import logger from '@/lib/utils/logger';
+import { getSupabaseBrowserClient } from '@/utils/supabase/client';
 
 import {
   useBiometricSupported,
@@ -91,6 +92,20 @@ export function PasskeyLogin({
       if (!result.success) {
         throw new Error(result.error || 'Authentication failed');
       }
+
+      const session = result?.data?.session;
+      if (!session) {
+        throw new Error('Missing session data after passkey authentication');
+      }
+
+      const supabase = await getSupabaseBrowserClient();
+      if (!supabase) {
+        throw new Error('Unable to initialize auth session');
+      }
+      await supabase.auth.setSession({
+        access_token: session.access_token,
+        refresh_token: session.refresh_token,
+      });
 
       // Set success state immediately and ensure it persists
       setSuccess(true);

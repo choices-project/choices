@@ -256,10 +256,14 @@ Stores WebAuthn/Passkey credentials for passwordless authentication.
 ### `webauthn_challenges`
 Temporary challenges for WebAuthn authentication flows.
 
-**Columns** (6):
+**Columns** (9):
 - `id` UUID PRIMARY KEY
 - `challenge` TEXT UNIQUE
-- `user_id` UUID
+- `user_id` UUID (nullable for unauthenticated login challenges)
+- `rp_id` TEXT
+- `kind` TEXT (registration | authentication)
+- `used_at` TIMESTAMPTZ
+- `metadata` JSONB
 - `expires_at` TIMESTAMPTZ
 - `created_at` TIMESTAMPTZ
 
