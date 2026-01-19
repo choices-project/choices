@@ -4,8 +4,8 @@ import { act, render, screen, waitFor } from '@testing-library/react';
 import React from 'react';
 
 import FeedDataProvider from '@/features/feeds/components/providers/FeedDataProvider';
-import type { FeedItem } from '@/lib/stores/feedsStore';
 import { useFeedsStore } from '@/lib/stores/feedsStore';
+import type { GenericFeedItem } from '@/lib/stores/types/feeds';
 
 jest.mock('@/lib/stores', () => {
   const actual = jest.requireActual('@/lib/stores');
@@ -20,8 +20,9 @@ jest.mock('@/lib/stores', () => {
 });
 
 type RenderProps = React.ComponentProps<typeof FeedDataProvider>['children'];
+type ArticleFeedItem = GenericFeedItem & { type: 'article' };
 
-const createFeed = (overrides: Partial<FeedItem> = {}): FeedItem => ({
+const createFeed = (overrides: Partial<GenericFeedItem> = {}): ArticleFeedItem => ({
   id: 'feed-1',
   title: 'Feed Title 1',
   content: 'Feed content',
@@ -29,16 +30,13 @@ const createFeed = (overrides: Partial<FeedItem> = {}): FeedItem => ({
   author: {
     id: 'author-1',
     name: 'Author',
-    avatar: undefined,
     verified: true,
   },
   category: 'civics',
   tags: ['civics'],
-  type: 'article',
   source: {
     name: 'Source',
     url: 'https://example.com',
-    logo: undefined,
     verified: true,
   },
   publishedAt: new Date('2025-01-01T00:00:00Z').toISOString(),
@@ -48,6 +46,7 @@ const createFeed = (overrides: Partial<FeedItem> = {}): FeedItem => ({
     likes: 0,
     shares: 0,
     comments: 0,
+    bookmarks: 0,
     views: 0,
   },
   userInteraction: {
@@ -62,6 +61,7 @@ const createFeed = (overrides: Partial<FeedItem> = {}): FeedItem => ({
   },
   district: null,
   ...overrides,
+  type: 'article',
 });
 
 const FeedConsumer: React.FC<{ children: RenderProps }> = ({ children }) => (

@@ -14,7 +14,6 @@ import { describe, it, expect, beforeEach, jest } from '@jest/globals';
 
 import {
   usePollWizardStore,
-  createInitialPollWizardState,
 } from '@/lib/stores/pollWizardStore';
 
 // Mock localStorage for persistence testing
@@ -140,12 +139,12 @@ describe('Poll Wizard Store Persistence', () => {
     
     store.updateSettings({
       allowComments: true,
-      isPublic: false,
+      privacyLevel: 'private',
     });
 
     const settings = store.data.settings;
     expect(settings?.allowComments).toBe(true);
-    expect(settings?.isPublic).toBe(false);
+    expect(settings?.privacyLevel).toBe('private');
 
     // Navigate
     store.nextStep();
@@ -153,7 +152,7 @@ describe('Poll Wizard Store Persistence', () => {
     // Settings should persist
     const settingsAfterNav = store.data.settings;
     expect(settingsAfterNav?.allowComments).toBe(true);
-    expect(settingsAfterNav?.isPublic).toBe(false);
+    expect(settingsAfterNav?.privacyLevel).toBe('private');
   });
 });
 

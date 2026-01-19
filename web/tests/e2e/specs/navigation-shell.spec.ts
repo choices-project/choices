@@ -11,7 +11,9 @@ test.describe('App/Admin navigation shell', () => {
     const setRoute = async (route: string, label: string) => {
       await page.evaluate(
         ([nextRoute, nextLabel]) =>
-          window.__navigationShellHarness?.setRoute(nextRoute, nextLabel),
+          nextRoute && nextLabel
+            ? window.__navigationShellHarness?.setRoute(nextRoute, nextLabel)
+            : undefined,
         [route, label],
       );
       const shell = page.locator('[data-testid="app-shell"]');
@@ -29,7 +31,7 @@ test.describe('App/Admin navigation shell', () => {
     const assertAdminSection = async (section: string, text: string) => {
       await page.evaluate(
         ([nextSection]) =>
-          window.__navigationShellHarness?.setAdminSection(nextSection),
+          nextSection ? window.__navigationShellHarness?.setAdminSection(nextSection) : undefined,
         [section],
       );
       await expect(

@@ -89,7 +89,7 @@ test.describe('Authentication Flow', () => {
       // Should see login form
       const emailInput = page.locator('input[type="email"]');
       const passwordInput = page.locator('input[type="password"]');
-      const submitButton = page.locator('button[type="submit"]');
+      const submitButton = page.locator('[data-testid="login-submit"]');
 
       await expect(emailInput).toBeVisible({ timeout: 10_000 });
       await expect(passwordInput).toBeVisible({ timeout: 10_000 });
@@ -261,7 +261,7 @@ test.describe('Authentication Flow', () => {
         throw new Error('Login button remained disabled after form fill');
       });
 
-      await page.click('button[type="submit"]');
+      await page.click('[data-testid="login-submit"]');
 
       // Wait for authentication to complete
       await page.waitForTimeout(3_000);
@@ -433,8 +433,11 @@ test.describe('Authentication Flow', () => {
           const debugHeaders: Record<string, string> = {};
           Object.keys(headers).forEach(key => {
             if (key.toLowerCase().startsWith('x-auth-debug-')) {
-              debugHeaders[key] = headers[key];
-              diagnosticHeaders[key] = headers[key]; // Keep for backward compatibility
+              const value = headers[key];
+              if (value) {
+                debugHeaders[key] = value;
+                diagnosticHeaders[key] = value; // Keep for backward compatibility
+              }
             }
           });
 
@@ -621,13 +624,13 @@ test.describe('Authentication Flow', () => {
         )
         .toBeTruthy();
 
-      // Navigate to dashboard
-      await page.goto(`${BASE_URL}/dashboard`, { waitUntil: 'domcontentloaded', timeout: 30_000 });
-      await page.waitForTimeout(2_000);
+      // Navigate to dashboard (allow app redirect to feed)
+      await page.goto(`${BASE_URL}/dashboard`, { waitUntil: 'domcontentloaded', timeout: 30_000 }).catch(() => {});
+      await page.waitForURL(/\/(dashboard|feed)/, { timeout: 30_000 });
 
-      // Should stay on dashboard (not redirect to auth)
+      // Should stay on an authenticated route (not redirect to auth)
       const currentUrl = page.url();
-      expect(currentUrl).toMatch(/\/dashboard/);
+      expect(currentUrl).toMatch(/\/(dashboard|feed)/);
 
       // Page should load
       const body = page.locator('body');

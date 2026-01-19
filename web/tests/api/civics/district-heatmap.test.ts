@@ -34,6 +34,7 @@ const mockCanAccessAnalytics = jest.fn<(request: NextRequest, skipAudit?: boolea
 const mockLogAnalyticsAccess = jest.fn<(request: NextRequest, resource: string, granted: boolean) => Promise<void>>();
 jest.mock('@/lib/auth/adminGuard', () => ({
   canAccessAnalytics: mockCanAccessAnalytics,
+  fetchAccessProfile: jest.fn(async () => ({ is_admin: true, trust_tier: 'T3' })),
   logAnalyticsAccess: mockLogAnalyticsAccess,
 }));
 

@@ -57,6 +57,9 @@ const setNavigationShellState = async (
 ) => {
   await page.evaluate(
     ([route, label, section]) => {
+      if (!route || !label || !section) {
+        return;
+      }
       window.__navigationShellHarness?.setRoute(route, label);
       window.__navigationShellHarness?.setAdminSection(section);
     },

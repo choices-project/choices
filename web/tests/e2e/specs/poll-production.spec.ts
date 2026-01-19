@@ -6,6 +6,10 @@ test.describe('Production poll journey', () => {
   test('author completes accessible wizard and sees share dialog', async ({ page }) => {
     const pollTitle = `E2E Production Poll ${Date.now()}`;
     const pollOptions = ['Invest in infrastructure', 'Expand social programs'];
+    const [firstOption, secondOption] = pollOptions;
+    if (!firstOption || !secondOption) {
+      throw new Error('Expected two poll options for production test');
+    }
     const pollId = `poll-${Date.now()}`;
     let recordedPayload: Record<string, unknown> | null = null;
 
@@ -55,9 +59,9 @@ test.describe('Production poll journey', () => {
     await nextButton.click();
 
     const optionInputs = page.locator('input[id^="poll-option-"]');
-    await optionInputs.nth(0).fill(pollOptions[0]);
+    await optionInputs.nth(0).fill(firstOption);
     await expect(nextButton).toBeDisabled();
-    await optionInputs.nth(1).fill(pollOptions[1]);
+    await optionInputs.nth(1).fill(secondOption);
     await expect(nextButton).toBeEnabled();
     await nextButton.click();
 
@@ -91,8 +95,8 @@ test.describe('Production poll journey', () => {
     });
     expect((recordedPayload as { options?: Array<{ text: string }> } | null)?.options).toEqual(
       expect.arrayContaining([
-        expect.objectContaining({ text: pollOptions[0] }),
-        expect.objectContaining({ text: pollOptions[1] }),
+        expect.objectContaining({ text: firstOption }),
+        expect.objectContaining({ text: secondOption }),
       ]),
     );
 

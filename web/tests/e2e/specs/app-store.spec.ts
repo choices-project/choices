@@ -259,7 +259,7 @@ test.describe('App Store E2E', () => {
 
     expect(snapshot?.currentRoute).toBe('/test/route');
     expect(snapshot?.breadcrumbs).toHaveLength(3);
-    expect(snapshot?.breadcrumbs[0].label).toBe('Home');
+    expect(snapshot?.breadcrumbs?.[0]?.label).toBe('Home');
   });
 
   test('resets app state', async ({ page }) => {

@@ -477,7 +477,7 @@ const createSupabaseResponse = (
       return {
         data: list,
         error: null,
-        count: Array.isArray(list) ? list.length : undefined
+        ...(Array.isArray(list) ? { count: list.length } : {})
       };
     }
     case 'error': {

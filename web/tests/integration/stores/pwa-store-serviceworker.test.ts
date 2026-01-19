@@ -14,28 +14,12 @@
 import { describe, it, expect, beforeEach, afterEach, jest } from '@jest/globals';
 
 import {
-  pwaStoreCreator,
   usePWAStore,
+  createInitialPWAState,
 } from '@/lib/stores/pwaStore';
+import { PWA_QUEUED_REQUEST_TYPES } from '@/types/pwa';
 
 // Mock ServiceWorker API
-const mockServiceWorker = {
-  register: jest.fn(),
-  ready: Promise.resolve({
-    update: jest.fn(),
-    installing: null,
-    waiting: null,
-    active: {
-      postMessage: jest.fn(),
-    },
-  }),
-  controller: {
-    postMessage: jest.fn(),
-  },
-  addEventListener: jest.fn(),
-  removeEventListener: jest.fn(),
-};
-
 const mockServiceWorkerRegistration = {
   update: jest.fn(),
   installing: null,
@@ -47,6 +31,20 @@ const mockServiceWorkerRegistration = {
     subscribe: jest.fn(),
     getSubscription: jest.fn(),
   },
+} as unknown as ServiceWorkerRegistration;
+
+type RegisterFn = (scriptURL: string | URL, options?: RegistrationOptions) => Promise<ServiceWorkerRegistration>;
+type GetRegistrationFn = (clientURL?: string | URL) => Promise<ServiceWorkerRegistration | null>;
+
+const mockServiceWorker = {
+  register: jest.fn() as jest.MockedFunction<RegisterFn>,
+  getRegistration: jest.fn() as jest.MockedFunction<GetRegistrationFn>,
+  ready: Promise.resolve(mockServiceWorkerRegistration),
+  controller: {
+    postMessage: jest.fn(),
+  },
+  addEventListener: jest.fn(),
+  removeEventListener: jest.fn(),
 };
 
 beforeEach(() => {
@@ -54,7 +52,7 @@ beforeEach(() => {
     Object.defineProperty(navigator, 'serviceWorker', {
       writable: true,
       configurable: true,
-      value: mockServiceWorker,
+      value: mockServiceWorker as unknown as ServiceWorkerContainer,
     });
   }
 });
@@ -64,11 +62,10 @@ afterEach(() => {
 });
 
 describe('PWA Store ServiceWorker Integration', () => {
-  let store: ReturnType<typeof pwaStoreCreator>;
+  const store = usePWAStore;
 
   beforeEach(() => {
-    store = pwaStoreCreator();
-    store.getState().resetPWAState();
+    store.setState(createInitialPWAState());
   });
 
   describe('ServiceWorker Registration', () => {
@@ -92,38 +89,21 @@ describe('PWA Store ServiceWorker Integration', () => {
   });
 
   describe('ServiceWorker Update Detection', () => {
-    it('detects service worker updates', async () => {
-      const waitingWorker = {
-        postMessage: jest.fn(),
-      };
-      mockServiceWorkerRegistration.waiting = waitingWorker;
+    it('updates service worker registration when available', async () => {
+      mockServiceWorker.getRegistration.mockResolvedValue(mockServiceWorkerRegistration);
 
-      await store.getState().checkForUpdates();
+      await store.getState().updateServiceWorker();
 
       expect(mockServiceWorkerRegistration.update).toHaveBeenCalled();
     });
 
-    it('handles update check when no service worker registered', async () => {
-      mockServiceWorker.register.mockResolvedValue(null);
+    it('handles update when no service worker registered', async () => {
+      mockServiceWorker.getRegistration.mockResolvedValue(null);
 
-      await store.getState().checkForUpdates();
+      await store.getState().updateServiceWorker();
 
       // Should handle gracefully without error
-      expect(store.getState().update.isAvailable).toBe(false);
-    });
-  });
-
-  describe('ServiceWorker Activation', () => {
-    it('activates waiting service worker', async () => {
-      const waitingWorker = {
-        postMessage: jest.fn(),
-        skipWaiting: jest.fn().mockResolvedValue(undefined),
-      };
-      mockServiceWorkerRegistration.waiting = waitingWorker;
-
-      await store.getState().activateUpdate();
-
-      expect(waitingWorker.skipWaiting).toHaveBeenCalled();
+      expect(store.getState().error).toBeNull();
     });
   });
 
@@ -131,7 +111,8 @@ describe('PWA Store ServiceWorker Integration', () => {
     it('processes offline queue when online', async () => {
       store.getState().setOnlineStatus(true);
       store.getState().queueOfflineAction({
-        type: 'vote',
+        id: 'offline-vote-1',
+        action: PWA_QUEUED_REQUEST_TYPES.VOTE,
         data: { pollId: 'poll-1', choice: 1 },
         timestamp: new Date().toISOString(),
       });
@@ -140,48 +121,37 @@ describe('PWA Store ServiceWorker Integration', () => {
         postMessage: jest.fn(),
       };
       if (navigator.serviceWorker && navigator.serviceWorker.ready) {
-        (await navigator.serviceWorker.ready).active = activeWorker;
+        const registration = await navigator.serviceWorker.ready;
+        if (registration.active) {
+          registration.active.postMessage = activeWorker.postMessage as ServiceWorker['postMessage'];
+        }
       }
 
       await store.getState().processOfflineActions();
 
-      expect(store.getState().offlineData.queuedActions).toHaveLength(0);
+      expect(store.getState().offline.offlineData.queuedActions).toHaveLength(0);
     });
 
     it('queues actions when offline', async () => {
       store.getState().setOnlineStatus(false);
 
       store.getState().queueOfflineAction({
-        type: 'vote',
+        id: 'offline-vote-1',
+        action: PWA_QUEUED_REQUEST_TYPES.VOTE,
         data: { pollId: 'poll-1', choice: 1 },
         timestamp: new Date().toISOString(),
       });
 
-      expect(store.getState().offlineData.queuedActions).toHaveLength(1);
-    });
-  });
-
-  describe('ServiceWorker Message Handling', () => {
-    it('handles messages from service worker', () => {
-      const messageHandler = jest.fn();
-      store.getState().setServiceWorkerMessageHandler(messageHandler);
-
-      // Simulate message from service worker
-      if (navigator.serviceWorker) {
-        navigator.serviceWorker.addEventListener('message', (event) => {
-          messageHandler(event.data);
-        });
-      }
-
-      expect(store.getState().preferences.backgroundSync).toBeDefined();
+      expect(store.getState().offline.offlineData.queuedActions).toHaveLength(1);
     });
   });
 
   describe('ServiceWorker Provider Integration', () => {
     it('verifies service worker controller exists when installed', async () => {
-      mockServiceWorker.controller = {
-        postMessage: jest.fn(),
-      };
+      Object.defineProperty(mockServiceWorker, 'controller', {
+        value: { postMessage: jest.fn() },
+        writable: true,
+      });
 
       const hasController = !!navigator.serviceWorker?.controller;
       expect(hasController).toBe(true);

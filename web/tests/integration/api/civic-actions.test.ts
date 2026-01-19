@@ -15,6 +15,7 @@ import { GET, POST } from '@/app/api/civic-actions/route';
 import { GET as GET_ID, PATCH, DELETE } from '@/app/api/civic-actions/[id]/route';
 import { POST as POST_SIGN } from '@/app/api/civic-actions/[id]/sign/route';
 import { createNextRequest } from '@/tests/contracts/helpers/request';
+import type { getSupabaseServerClient } from '@/utils/supabase/server';
 
 // Mock dependencies
 jest.mock('@/lib/core/feature-flags', () => ({
@@ -41,7 +42,7 @@ jest.mock('@/lib/utils/logger', () => ({
 }));
 
 const mockSupabase = jest.requireMock('@/utils/supabase/server') as {
-  getSupabaseServerClient: jest.Mock;
+  getSupabaseServerClient: jest.MockedFunction<typeof getSupabaseServerClient>;
 };
 
 const createMockSupabaseClient = () => {
@@ -54,10 +55,10 @@ const createMockSupabaseClient = () => {
     eq: jest.fn(() => mockClient),
     contains: jest.fn(() => mockClient),
     order: jest.fn(() => mockClient),
-    range: jest.fn(() => mockClient),
+    range: jest.fn() as jest.MockedFunction<(...args: any[]) => Promise<any>>,
     single: jest.fn(),
     auth: {
-      getUser: jest.fn(),
+      getUser: jest.fn() as jest.MockedFunction<(...args: any[]) => Promise<any>>,
     },
   };
   return mockClient;
@@ -69,14 +70,17 @@ const createRequest = (
   body?: unknown,
   headers: Record<string, string> = {}
 ): NextRequest => {
-  return createNextRequest(url, {
+  const init: RequestInit = {
     method,
     headers: {
       'Content-Type': 'application/json',
       ...headers,
     },
-    body: body ? JSON.stringify(body) : undefined,
-  });
+  };
+  if (body !== undefined) {
+    init.body = JSON.stringify(body);
+  }
+  return createNextRequest(url, init);
 };
 
 describe('Civic Actions API', () => {
@@ -102,15 +106,15 @@ describe('Civic Actions API', () => {
         },
       ];
 
-      (mockSupabaseClient.select as jest.Mock).mockReturnValue(mockSupabaseClient);
-      (mockSupabaseClient.eq as jest.Mock).mockReturnValue(mockSupabaseClient);
-      (mockSupabaseClient.order as jest.Mock).mockReturnValue(mockSupabaseClient);
-      (mockSupabaseClient.range as jest.Mock).mockResolvedValue({
+      mockSupabaseClient.select.mockReturnValue(mockSupabaseClient);
+      mockSupabaseClient.eq.mockReturnValue(mockSupabaseClient);
+      mockSupabaseClient.order.mockReturnValue(mockSupabaseClient);
+      mockSupabaseClient.range.mockResolvedValue({
         data: mockActions,
         error: null,
         count: 1,
       });
-      (mockSupabaseClient.auth.getUser as jest.Mock).mockResolvedValue({
+      mockSupabaseClient.auth.getUser.mockResolvedValue({
         data: { user: null },
         error: null,
       });

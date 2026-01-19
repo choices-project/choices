@@ -142,8 +142,13 @@ test.describe('Critical Pages Accessibility (WCAG 2.1 AA)', () => {
         // Verify no skipped heading levels
         if (headingLevels.length > 1) {
           for (let i = 1; i < headingLevels.length; i++) {
-            const currentLevel = headingLevels[i].level;
-            const previousLevel = headingLevels[i - 1].level;
+            const current = headingLevels[i];
+            const previous = headingLevels[i - 1];
+            if (!current || !previous) {
+              continue;
+            }
+            const currentLevel = current.level;
+            const previousLevel = previous.level;
             // Allow h1 -> h2, h2 -> h3, etc., but not h1 -> h3
             expect(currentLevel - previousLevel).toBeLessThanOrEqual(1);
           }

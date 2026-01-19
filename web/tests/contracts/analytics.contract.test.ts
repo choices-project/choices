@@ -29,6 +29,7 @@ jest.mock('@/features/analytics/lib/privacyFilters', () => ({
 
 jest.mock('@/lib/auth/adminGuard', () => ({
   canAccessAnalytics: jest.fn(() => true),
+  fetchAccessProfile: jest.fn(async () => ({ is_admin: true, trust_tier: 'T3' })),
   logAnalyticsAccess: jest.fn(),
   logAnalyticsAccessToDatabase: jest.fn(async () => {}),
 }));

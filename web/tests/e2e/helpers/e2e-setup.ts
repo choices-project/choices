@@ -217,7 +217,7 @@ export async function waitForPageReady(page: Page, timeoutMs = DEFAULT_TIMEOUTS.
 }
 
 export async function loginWithPassword(page: Page, credentials: TestUser, options: LoginOptions = {}): Promise<void> {
-  const { path = '/login', timeoutMs = 15_000, expectRedirect, expectSessionCookie } = options;
+  const { path = '/auth', timeoutMs = 15_000, expectRedirect, expectSessionCookie } = options;
   await page.goto(path, { waitUntil: 'domcontentloaded', timeout: timeoutMs });
   await waitForPageReady(page, timeoutMs);
 

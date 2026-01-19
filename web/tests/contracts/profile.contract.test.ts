@@ -20,15 +20,6 @@ const mockLogger = {
   debug: jest.fn(),
 };
 
-const _expectSuccessEnvelope = (body: any) => {
-  expect(body.success).toBe(true);
-  expect(body.metadata).toEqual(
-    expect.objectContaining({
-      timestamp: expect.any(String),
-    }),
-  );
-};
-
 const expectErrorEnvelope = (body: any, options?: { code?: string }) => {
   expect(body.success).toBe(false);
   expect(body.metadata).toEqual(

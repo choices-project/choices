@@ -35,7 +35,7 @@ export const GET = withErrorHandling(async (request: NextRequest) => {
     }
 
     // Get trending polls (most votes in last 7 days)
-    const { data: polls, error } = await supabase
+  const { data: polls, error } = await supabase
       .from('polls')
       .select(`
         id,
@@ -45,13 +45,13 @@ export const GET = withErrorHandling(async (request: NextRequest) => {
         created_at,
         end_date,
         total_votes,
-        options (
-          id,
-          text,
-          votes
-        )
+      poll_options:poll_options (
+        id,
+        option_text,
+        vote_count
+      )
       `)
-      .eq('is_active', true)
+    .eq('status', 'active')
       .gte('created_at', new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString())
       .order('total_votes', { ascending: false })
       .limit(limit)
@@ -62,7 +62,7 @@ export const GET = withErrorHandling(async (request: NextRequest) => {
   }
     
     // Transform data for frontend
-    const transformedPolls = polls.map(poll => ({
+  const transformedPolls = polls.map(poll => ({
       id: poll.id,
       title: poll.title,
       description: poll.description,
@@ -70,11 +70,11 @@ export const GET = withErrorHandling(async (request: NextRequest) => {
       totalVotes: poll.total_votes ?? 0,
       timeRemaining: getTimeRemaining(poll.end_date),
       isActive: true,
-      options: (poll as any).options?.map((option: { id: string; text: string; votes?: number }) => ({
-        id: option.id,
-        text: option.text,
-        votes: option.votes ?? 0,
-        percentage: (poll.total_votes ?? 0) > 0 ? Math.round((option.votes ?? 0) / (poll.total_votes ?? 1) * 100) : 0
+    options: (poll as any).poll_options?.map((option: { id: string; option_text?: string | null; vote_count?: number | null }) => ({
+      id: option.id,
+      text: option.option_text ?? '',
+      votes: option.vote_count ?? 0,
+      percentage: (poll.total_votes ?? 0) > 0 ? Math.round((option.vote_count ?? 0) / (poll.total_votes ?? 1) * 100) : 0
       })) ?? []
     })) ?? []
     

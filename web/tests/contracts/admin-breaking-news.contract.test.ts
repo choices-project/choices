@@ -19,7 +19,7 @@ const mockAuditService = {
   logAdminAction: jest.fn(),
 };
 
-jest.mock('@/lib/admin-auth', () => ({
+jest.mock('@/features/auth/lib/admin-auth', () => ({
   requireAdminOr401: jest.fn(async () => null),
 }));
 

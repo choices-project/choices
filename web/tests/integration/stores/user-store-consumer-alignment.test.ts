@@ -7,10 +7,9 @@
  * Created: January 2025
  */
 
-import { describe, it, expect, jest } from '@jest/globals';
+import { describe, it, expect } from '@jest/globals';
 
 import {
-  useUserStore,
   useUser,
   useUserProfile,
   useUserLoading,
@@ -44,7 +43,7 @@ describe('User Store Consumer Alignment', () => {
     expect(actions).toBeDefined();
     expect(typeof actions.updateProfile).toBe('function');
     expect(typeof actions.signOut).toBe('function');
-    expect(typeof actions.clearUserState).toBe('function');
+    expect(typeof actions.clearUser).toBe('function');
   });
 
   it('ensures selectors are stable across renders', () => {

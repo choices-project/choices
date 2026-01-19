@@ -8,10 +8,9 @@
  * Created: January 2025
  */
 
-import { describe, it, expect, jest } from '@jest/globals';
+import { describe, it, expect } from '@jest/globals';
 
 import {
-  useAppStore,
   useTheme,
   useResolvedTheme,
   useSidebarCollapsed,
