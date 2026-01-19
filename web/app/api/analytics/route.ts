@@ -136,10 +136,6 @@ export const GET = withErrorHandling(async (request: NextRequest) => {
 
     // Poll-specific analytics (requires admin auth)
     if (type === 'poll') {
-      if (!id) {
-        return validationError({ pollId: 'Poll ID is required for poll analytics' });
-      }
-
       try {
         // Check for admin authentication
         const supabase = await getSupabaseServerClient();
@@ -160,6 +156,10 @@ export const GET = withErrorHandling(async (request: NextRequest) => {
 
         if (!isAdmin) {
           return forbiddenError('Admin access required for poll analytics');
+        }
+
+        if (!id) {
+          return validationError({ pollId: 'Poll ID is required for poll analytics' });
         }
 
         const analyticsService = AnalyticsService.getInstance();
@@ -184,10 +184,6 @@ export const GET = withErrorHandling(async (request: NextRequest) => {
 
     // User-specific analytics (requires admin auth)
     if (type === 'user') {
-      if (!id) {
-        return validationError({ userId: 'User ID is required for user analytics' });
-      }
-
       try {
         // Check for admin authentication
         const supabase = await getSupabaseServerClient();
@@ -208,6 +204,10 @@ export const GET = withErrorHandling(async (request: NextRequest) => {
 
         if (!isAdmin) {
           return forbiddenError('Admin access required for user analytics');
+        }
+
+        if (!id) {
+          return validationError({ userId: 'User ID is required for user analytics' });
         }
 
         const analyticsService = AnalyticsService.getInstance();
