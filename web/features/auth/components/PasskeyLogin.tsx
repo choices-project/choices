@@ -12,12 +12,13 @@ import {
 } from 'lucide-react';
 import React from 'react';
 
+import { getSupabaseBrowserClient } from '@/utils/supabase/client';
+
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 
 import logger from '@/lib/utils/logger';
-import { getSupabaseBrowserClient } from '@/utils/supabase/client';
 
 import {
   useBiometricSupported,
@@ -30,6 +31,16 @@ type PasskeyLoginProps = {
   onSuccess?: (session: any) => void;
   onError?: (error: string) => void;
   className?: string;
+};
+
+const hasSessionTokens = (
+  value: unknown
+): value is { access_token: string; refresh_token: string } => {
+  if (!value || typeof value !== 'object') {
+    return false;
+  }
+  const session = value as { access_token?: unknown; refresh_token?: unknown };
+  return typeof session.access_token === 'string' && typeof session.refresh_token === 'string';
 };
 
 export function PasskeyLogin({
@@ -94,7 +105,7 @@ export function PasskeyLogin({
       }
 
       const session = result?.data?.session;
-      if (!session) {
+      if (!hasSessionTokens(session)) {
         throw new Error('Missing session data after passkey authentication');
       }
 

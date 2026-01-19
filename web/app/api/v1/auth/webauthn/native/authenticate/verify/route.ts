@@ -8,8 +8,8 @@
  * Status: ✅ Production-ready (Native implementation)
  */
 
-import { getSupabaseAdminClient, getSupabaseServerClient } from '@/utils/supabase/server';
 import { getSupabaseApiRouteClient } from '@/utils/supabase/api-route';
+import { getSupabaseAdminClient, getSupabaseServerClient } from '@/utils/supabase/server';
 
 import { getRPIDAndOrigins } from '@/features/auth/lib/webauthn/config';
 import { verifyAuthenticationResponse } from '@/features/auth/lib/webauthn/native/server';

@@ -10,8 +10,8 @@
 
 import { useCallback, useState, useEffect, useMemo } from 'react';
 
-import { logger } from '@/lib/utils/logger';
 import { useIsAuthenticated } from '@/lib/stores';
+import { logger } from '@/lib/utils/logger';
 
 export type FollowStatus = {
   following: boolean;
