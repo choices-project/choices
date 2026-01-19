@@ -9,7 +9,7 @@
  */
 
 import { getSupabaseApiRouteClient } from '@/utils/supabase/api-route';
-import { getSupabaseAdminClient, getSupabaseServerClient } from '@/utils/supabase/server';
+import { getSupabaseAdminClient } from '@/utils/supabase/server';
 
 import { getRPIDAndOrigins } from '@/features/auth/lib/webauthn/config';
 import { verifyAuthenticationResponse } from '@/features/auth/lib/webauthn/native/server';
@@ -39,7 +39,7 @@ export const POST = withErrorHandling(async (req: NextRequest) => {
       return validationError({ challengeId: 'Challenge ID is required' });
     }
 
-    const supabase = await getSupabaseServerClient();
+    const supabase = await getSupabaseAdminClient();
 
     // Get challenge from database
     const { data: chalRows } = await supabase
@@ -62,6 +62,9 @@ export const POST = withErrorHandling(async (req: NextRequest) => {
     // Check challenge expiry
     if (new Date(chal.expires_at).getTime() < Date.now()) {
       return validationError({ challenge: 'Challenge expired' });
+    }
+    if (chal.rp_id && chal.rp_id !== rpID) {
+      return forbiddenError('Invalid relying party');
     }
 
     // Get current request origin
@@ -157,15 +160,14 @@ export const POST = withErrorHandling(async (req: NextRequest) => {
       .update({ used_at: new Date().toISOString() })
       .eq('id', chal.id);
 
-    const adminClient = await getSupabaseAdminClient();
-    const { data: adminUser, error: adminUserError } = await adminClient.auth.admin.getUserById(
+    const { data: adminUser, error: adminUserError } = await supabase.auth.admin.getUserById(
       cred.user_id
     );
     if (adminUserError || !adminUser?.user) {
       return errorResponse('Failed to load user for session', 500, undefined, 'WEBAUTHN_USER_LOOKUP_FAILED');
     }
 
-    const { data: linkData, error: linkError } = await adminClient.auth.admin.generateLink({
+    const { data: linkData, error: linkError } = await supabase.auth.admin.generateLink({
       type: 'magiclink',
       email: adminUser.user.email ?? '',
     });
@@ -174,7 +176,7 @@ export const POST = withErrorHandling(async (req: NextRequest) => {
       return errorResponse('Failed to establish session', 500, undefined, 'WEBAUTHN_SESSION_LINK_FAILED');
     }
 
-    const { data: sessionData, error: sessionError } = await adminClient.auth.verifyOtp({
+    const { data: sessionData, error: sessionError } = await supabase.auth.verifyOtp({
       type: 'email',
       token_hash: linkData.properties.hashed_token,
     });

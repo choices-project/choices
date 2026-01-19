@@ -5,7 +5,7 @@
  * Replaces @simplewebauthn/server with native implementation
  */
 
-import { getSupabaseServerClient } from '@/utils/supabase/server';
+import { getSupabaseAdminClient } from '@/utils/supabase/server';
 
 import { getRPIDAndOrigins, CHALLENGE_TTL_MS } from '@/features/auth/lib/webauthn/config';
 import {
@@ -28,7 +28,7 @@ export const POST = withErrorHandling(async (req: NextRequest) => {
     return forbiddenError('Passkeys disabled on preview');
   }
 
-  const supabase = await getSupabaseServerClient();
+  const supabase = await getSupabaseAdminClient();
 
     // Generate native authentication options
     const options = generateAuthenticationOptions(rpID);
