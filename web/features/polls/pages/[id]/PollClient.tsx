@@ -153,6 +153,12 @@ export default function PollClient({ poll }: PollClientProps) {
   useEffect(() => { setSidebarActiveSectionRef.current = setSidebarActiveSection; }, [setSidebarActiveSection]);
   const setBreadcrumbsRef = useRef(setBreadcrumbs);
   useEffect(() => { setBreadcrumbsRef.current = setBreadcrumbs; }, [setBreadcrumbs]);
+  const setVotingLoadingRef = useRef(setVotingLoading);
+  useEffect(() => { setVotingLoadingRef.current = setVotingLoading; }, [setVotingLoading]);
+  const setVotingErrorRef = useRef(setVotingError);
+  useEffect(() => { setVotingErrorRef.current = setVotingError; }, [setVotingError]);
+  const clearVotingErrorRef = useRef(clearVotingError);
+  useEffect(() => { clearVotingErrorRef.current = clearVotingError; }, [clearVotingError]);
 
   // Use ref for stable translation function
   const tRef = useRef(t);
@@ -230,12 +236,12 @@ export default function PollClient({ poll }: PollClientProps) {
 
   const fetchPollData = useCallback(async () => {
     try {
-      const generalError = t('polls.view.errors.loadResultsFailed');
+      const generalError = tRef.current('polls.view.errors.loadResultsFailed');
 
       setLoading(true);
-      setVotingLoading(true);
+      setVotingLoadingRef.current(true);
       setError(null);
-      clearVotingError();
+      clearVotingErrorRef.current();
 
       const resultsResponse = await fetch(`/api/polls/${pollId}/results`, {
         cache: 'no-store',
@@ -246,7 +252,7 @@ export default function PollClient({ poll }: PollClientProps) {
         setResults(null);
         if (resultsResponse.status >= 500) {
           setError(generalError);
-          setVotingError(generalError);
+          setVotingErrorRef.current(generalError);
         }
         return;
       }
@@ -254,21 +260,21 @@ export default function PollClient({ poll }: PollClientProps) {
       const payload = await resultsResponse.json();
       if (payload?.success) {
         setResults(payload.data as PollResultsResponse);
-        clearVotingError();
+        clearVotingErrorRef.current();
       } else {
         setResults(null);
-        clearVotingError();
+        clearVotingErrorRef.current();
       }
     } catch (err) {
-      const errorMessage = err instanceof Error ? err.message : t('polls.view.errors.loadDataFailed');
+      const errorMessage = err instanceof Error ? err.message : tRef.current('polls.view.errors.loadDataFailed');
       setResults(null);
       setError(errorMessage);
-      setVotingError(errorMessage);
+      setVotingErrorRef.current(errorMessage);
     } finally {
       setLoading(false);
-      setVotingLoading(false);
+      setVotingLoadingRef.current(false);
     }
-  }, [pollId, clearVotingError, setVotingError, setVotingLoading, t]);
+  }, [pollId]);
 
   useEffect(() => {
     void fetchPollData();

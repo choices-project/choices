@@ -50,6 +50,7 @@ export function RepresentativeCard({
   const router = useRouter();
   const { t } = useI18n();
   const { following, loading, error, toggle } = useFollowRepresentative(representative.id);
+  const [photoError, setPhotoError] = React.useState(false);
   const {
     divisionIds,
     elections: upcomingElections,
@@ -122,6 +123,10 @@ export function RepresentativeCard({
     return 'bg-gray-100 text-gray-800 border-gray-200';
   };
 
+  React.useEffect(() => {
+    setPhotoError(false);
+  }, [representative.id, representative.primary_photo_url]);
+
   return (
     <Card
       className={`w-full max-w-md mx-auto cursor-pointer transition-all duration-200 ease-in-out hover:shadow-lg hover:-translate-y-1 focus-within:ring-2 focus-within:ring-blue-500 focus-within:ring-offset-2 ${className}`}
@@ -133,13 +138,14 @@ export function RepresentativeCard({
         <div className="flex items-start space-x-4">
           {/* Representative Photo */}
           <div className="relative w-16 h-16 rounded-full overflow-hidden bg-gray-200">
-            {representative.primary_photo_url ? (
+            {representative.primary_photo_url && !photoError ? (
               <Image
                 src={representative.primary_photo_url}
                 alt={representative.name}
                 fill
                 className="object-cover"
                 sizes="64px"
+                onError={() => setPhotoError(true)}
               />
             ) : (
               <div className="w-full h-full bg-gray-300 flex items-center justify-center text-gray-600 text-sm font-medium">

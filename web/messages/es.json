@@ -3605,6 +3605,64 @@
         }
       },
       "created": "Creado {date}"
+    },
+    "page": {
+      "title": "Encuestas",
+      "subtitle": "Explora lo que la comunidad está votando",
+      "descriptionFallback": "Sin descripción.",
+      "trendingBadge": "Tendencia #{position}",
+      "cta": {
+        "create": "Crear",
+        "view": "Ver",
+        "results": "Resultados"
+      },
+      "empty": {
+        "title": "No se encontraron encuestas",
+        "filters": "Intenta ajustar tu búsqueda o filtros.",
+        "ctaMessage": "Sé la primera persona en crear una encuesta."
+      },
+      "metadata": {
+        "created": "Creada el {date}",
+        "votes": "{formattedCount} votos"
+      },
+      "breadcrumbs": {
+        "home": "Inicio",
+        "dashboard": "Panel",
+        "polls": "Encuestas"
+      },
+      "pagination": {
+        "showing": "Mostrando {start}-{end} de {total}",
+        "pageLabel": "Página {current} de {total}",
+        "previous": "Anterior",
+        "next": "Siguiente"
+      }
+    },
+    "filters": {
+      "search": {
+        "placeholder": "Buscar encuestas...",
+        "ariaLabel": "Buscar encuestas"
+      },
+      "hashtags": {
+        "label": "Hashtags",
+        "remove": "Quitar {hashtag}",
+        "addPlaceholder": "Agregar hashtag",
+        "addAria": "Agregar hashtag"
+      },
+      "status": {
+        "all": "Todas",
+        "active": "Activas",
+        "trending": "Tendencias",
+        "closed": "Cerradas"
+      },
+      "categories": {
+        "label": "Categorías",
+        "all": "Todas"
+      },
+      "trending": {
+        "heading": "Hashtags en tendencia",
+        "headingWithCount": "Hashtags en tendencia ({count})",
+        "count": "{formattedCount} hashtags en tendencia"
+      }
     }
   },
   "harness": {

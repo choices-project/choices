@@ -71,7 +71,8 @@ const nextConfig = {
       { protocol: 'https', hostname: 'upload.wikimedia.org' },
       { protocol: 'https', hostname: 'www.joincalifornia.com' },
       { protocol: 'https', hostname: 's3.amazonaws.com' },
-      { protocol: 'https', hostname: 'www.assembly.ca.gov' }
+      { protocol: 'https', hostname: 'www.assembly.ca.gov' },
+      { protocol: 'https', hostname: 'unitedstates.github.io' }
     ]
   },
 

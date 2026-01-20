@@ -43,19 +43,24 @@ export const POST = withErrorHandling(async (
     return notFoundError('Representative not found');
   }
 
-    // Check if already following
-    const { data: existing } = await (adminSupabase as any)
-      .from('representative_follows')
-      .select('id')
-      .eq('user_id', user.id)
-      .eq('representative_id', representativeId)
-      .single();
+  // Check if already following (avoid single() to prevent multi-row errors)
+  const { data: existing, error: existingError } = await (adminSupabase as any)
+    .from('representative_follows')
+    .select('id')
+    .eq('user_id', user.id)
+    .eq('representative_id', representativeId)
+    .limit(1);
 
-  if (existing) {
+  if (existingError) {
+    logger.error('Error checking existing follow record:', existingError);
+    return errorResponse('Failed to check follow status', 500);
+  }
+
+  if (Array.isArray(existing) && existing.length > 0) {
     return successResponse({
       message: 'Already following this representative',
       following: true,
-      follow: existing
+      follow: existing[0]
     });
   }
 
@@ -159,22 +164,23 @@ export const GET = withErrorHandling(async (
     return authError('Authentication required');
   }
 
-    // Check if following
-    const { data: followData, error: followError } = await (adminSupabase as any)
-      .from('representative_follows')
-      .select('*')
-      .eq('user_id', user.id)
-      .eq('representative_id', representativeId)
-      .single();
+  // Check if following (avoid single() to prevent multi-row errors)
+  const { data: followRows, error: followError } = await (adminSupabase as any)
+    .from('representative_follows')
+    .select('*')
+    .eq('user_id', user.id)
+    .eq('representative_id', representativeId)
+    .order('created_at', { ascending: false })
+    .limit(1);
 
-  if (followError && followError.code !== 'PGRST116') {
+  if (followError) {
     logger.error('Error checking follow status:', followError);
     return errorResponse('Failed to check follow status', 500);
   }
 
   return successResponse({
-    following: !!followData,
-    follow: followData ?? null
+    following: Array.isArray(followRows) && followRows.length > 0,
+    follow: Array.isArray(followRows) && followRows.length > 0 ? followRows[0] : null
   });
 });
 

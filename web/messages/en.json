@@ -3700,6 +3700,64 @@
         }
       },
       "created": "Created {date}"
+    },
+    "page": {
+      "title": "Polls",
+      "subtitle": "Explore what the community is voting on",
+      "descriptionFallback": "No description provided.",
+      "trendingBadge": "Trending #{position}",
+      "cta": {
+        "create": "Create",
+        "view": "View",
+        "results": "Results"
+      },
+      "empty": {
+        "title": "No polls found",
+        "filters": "Try adjusting your search or filters.",
+        "ctaMessage": "Be the first to create a poll."
+      },
+      "metadata": {
+        "created": "Created {date}",
+        "votes": "{formattedCount} votes"
+      },
+      "breadcrumbs": {
+        "home": "Home",
+        "dashboard": "Dashboard",
+        "polls": "Polls"
+      },
+      "pagination": {
+        "showing": "Showing {start}-{end} of {total}",
+        "pageLabel": "Page {current} of {total}",
+        "previous": "Previous",
+        "next": "Next"
+      }
+    },
+    "filters": {
+      "search": {
+        "placeholder": "Search polls...",
+        "ariaLabel": "Search polls"
+      },
+      "hashtags": {
+        "label": "Hashtags",
+        "remove": "Remove {hashtag}",
+        "addPlaceholder": "Add hashtag",
+        "addAria": "Add hashtag"
+      },
+      "status": {
+        "all": "All",
+        "active": "Active",
+        "trending": "Trending",
+        "closed": "Closed"
+      },
+      "categories": {
+        "label": "Categories",
+        "all": "All"
+      },
+      "trending": {
+        "heading": "Trending hashtags",
+        "headingWithCount": "Trending hashtags ({count})",
+        "count": "{formattedCount} trending hashtags"
+      }
     }
   },
   "harness": {
