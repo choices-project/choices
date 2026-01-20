@@ -5,7 +5,7 @@
  * It's loaded only when needed to reduce initial bundle size.
  */
 
-import React, { useEffect } from 'react';
+import React, { useEffect, useRef } from 'react';
 
 import type { AdminUser } from '@/features/admin/types';
 
@@ -51,26 +51,38 @@ export default function UserManagement({ onUserUpdate, onUserDelete }: UserManag
   } = useAdminUserActions();
 
   const { loadUsers, setError } = useAdminActions();
+  const loadUsersRef = useRef(loadUsers);
+  const setErrorRef = useRef(setError);
+  const hasLoadedRef = useRef(false);
 
   useEffect(() => {
+    loadUsersRef.current = loadUsers;
+    setErrorRef.current = setError;
+  }, [loadUsers, setError]);
+
+  useEffect(() => {
+    if (hasLoadedRef.current) {
+      return;
+    }
+    hasLoadedRef.current = true;
     const startTime = performance.now();
 
     const loadUsersData = async () => {
       try {
-        await loadUsers();
+        await loadUsersRef.current();
 
         const loadTime = performance.now() - startTime;
         performanceMetrics.addMetric('user-management-load', loadTime);
       } catch (err) {
         const errorMessage = err instanceof Error ? err.message : 'Failed to load users';
-        setError(errorMessage);
+        setErrorRef.current(errorMessage);
         performanceMetrics.addMetric('user-management-error', 1);
         logger.error('User management load error:', err);
       }
     };
 
     loadUsersData();
-  }, [loadUsers, setError]);
+  }, []);
 
   const handleUserSelect = (userId: string) => {
     const alreadySelected = selectedUsers.includes(userId);
