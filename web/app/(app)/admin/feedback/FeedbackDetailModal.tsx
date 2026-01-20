@@ -1,12 +1,12 @@
 'use client';
 
-import { 
-  X, 
-  MessageSquare, 
-  Bug, 
-  Lightbulb, 
-  Smile, 
-  Frown, 
+import {
+  X,
+  MessageSquare,
+  Bug,
+  Lightbulb,
+  Smile,
+  Frown,
   Meh,
   Star,
   Tag,
@@ -28,6 +28,9 @@ type Feedback = {
   description: string;
   sentiment: string;
   screenshot: string | null;
+  adminresponse?: string | null;
+  adminresponseat?: string | null;
+  adminresponseby?: string | null;
   userjourney: {
     currentPage: string;
     currentPath: string;
@@ -99,6 +102,15 @@ export const FeedbackDetailModal: React.FC<FeedbackDetailModalProps> = ({
 }) => {
   const [adminResponse, setAdminResponse] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [submitError, setSubmitError] = useState<string | null>(null);
+  const [responseSentAt, setResponseSentAt] = useState<string | null>(null);
+  const [responseSentText, setResponseSentText] = useState<string | null>(null);
+
+  React.useEffect(() => {
+    setResponseSentAt(feedback.adminresponseat ?? null);
+    setResponseSentText(feedback.adminresponse ?? null);
+    setSubmitError(null);
+  }, [feedback.adminresponse, feedback.adminresponseat, feedback.id]);
 
   const getTypeIcon = (type: string) => {
     switch (type) {
@@ -149,6 +161,7 @@ export const FeedbackDetailModal: React.FC<FeedbackDetailModalProps> = ({
     if (!adminResponse.trim()) return;
 
     setIsSubmitting(true);
+    setSubmitError(null);
     try {
       const response = await fetch(`/api/admin/feedback/${feedback.id}/respond`, {
         method: 'POST',
@@ -157,15 +170,22 @@ export const FeedbackDetailModal: React.FC<FeedbackDetailModalProps> = ({
       });
 
       if (!response.ok) {
-        throw new Error('Failed to submit response');
+        const text = await response.text().catch(() => '');
+        throw new Error(text || 'Failed to submit response');
       }
 
+      const data = await response.json().catch(() => ({}));
+      const respondedAt = data?.data?.respondedAt ?? new Date().toISOString();
+
       setAdminResponse('');
+      setResponseSentText(data?.data?.response ?? adminResponse.trim());
+      setResponseSentAt(respondedAt);
       // You could add a success notification here
     } catch (error) {
       // narrow 'unknown' → Error
       const err = error instanceof Error ? error : new Error(String(error));
       logger.error('Error submitting response', err);
+      setSubmitError(err.message);
     } finally {
       setIsSubmitting(false);
     }
@@ -309,9 +329,29 @@ export const FeedbackDetailModal: React.FC<FeedbackDetailModalProps> = ({
             </div>
           )}
 
-          {/* Admin Response */}
+          {(responseSentText || responseSentAt) && (
+            <div>
+              <h3 className="text-lg font-medium text-gray-900 dark:text-gray-100 mb-2">Admin Response</h3>
+              <div className="bg-blue-50 dark:bg-blue-900/20 rounded-lg p-4 border border-blue-100 dark:border-blue-800">
+                {responseSentAt && (
+                  <p className="text-xs text-blue-700 dark:text-blue-200 mb-2">
+                    Sent {formatDate(responseSentAt)}
+                  </p>
+                )}
+                {responseSentText ? (
+                  <p className="text-blue-900 dark:text-blue-100 whitespace-pre-wrap">{responseSentText}</p>
+                ) : (
+                  <p className="text-blue-700 dark:text-blue-200">Response recorded.</p>
+                )}
+              </div>
+            </div>
+          )}
+
+          {/* Admin Response Composer */}
           <div>
-            <h3 className="text-lg font-medium text-gray-900 dark:text-gray-100 mb-2">Admin Response</h3>
+            <h3 className="text-lg font-medium text-gray-900 dark:text-gray-100 mb-2">
+              Respond to User
+            </h3>
             <div className="space-y-3">
               <textarea
                 value={adminResponse}
@@ -340,6 +380,9 @@ export const FeedbackDetailModal: React.FC<FeedbackDetailModalProps> = ({
                   {isSubmitting ? 'Sending...' : 'Send Response'}
                 </button>
               </div>
+              {submitError && (
+                <p className="text-sm text-red-600 dark:text-red-400">{submitError}</p>
+              )}
             </div>
           </div>
         </div>

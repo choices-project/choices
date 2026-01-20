@@ -1,9 +1,9 @@
 /**
  * Privacy Guard Utilities
- * 
+ *
  * Ensures ALL user data collection respects user privacy choices.
  * NO data collection without explicit consent.
- * 
+ *
  * Created: November 5, 2025
  * Priority: 🔒 CRITICAL - PARAMOUNT
  * Status: ✅ ACTIVE
@@ -25,12 +25,14 @@ export enum PrivacyDataType {
   FEED_ACTIVITY = 'trackFeedActivity',
   ANALYTICS = 'collectAnalytics',
   REPRESENTATIVE_INTERACTIONS = 'trackRepresentativeInteractions',
-  SEARCH_HISTORY = 'retainSearchHistory'
+  SEARCH_HISTORY = 'retainSearchHistory',
+  INTEGRITY_SIGNALS = 'collectIntegritySignals',
+  INTEGRITY_ADVANCED = 'collectIntegrityAdvancedSignals',
 }
 
 /**
  * Check if user has consented to data collection
- * 
+ *
  * @param privacySettings - User's privacy settings
  * @param dataType - Type of data to collect
  * @returns true if user has consented, false otherwise
@@ -47,7 +49,7 @@ export function hasPrivacyConsent(
 
   // Check specific consent
   const hasConsent = privacySettings[dataType as keyof PrivacySettings] === true;
-  
+
   if (!hasConsent) {
     logger.debug('Privacy check: User has not consented', { dataType });
   }
@@ -57,7 +59,7 @@ export function hasPrivacyConsent(
 
 /**
  * Execute function only if user has consented
- * 
+ *
  * @param privacySettings - User's privacy settings
  * @param dataType - Type of data to collect
  * @param collectFn - Function to execute if consent given
@@ -154,20 +156,22 @@ export function getDefaultPrivacySettings(): PrivacySettings {
     trackFeedActivity: false,
     collectAnalytics: false,
     trackRepresentativeInteractions: false,
-    
+    collectIntegritySignals: false,
+    collectIntegrityAdvancedSignals: false,
+
     // Visibility Controls - DEFAULT OFF (user privacy)
     showReadHistory: false,
     showBookmarks: false,
     showLikes: false,
     shareActivity: false,
-    
+
     // Trust & Biometric - DEFAULT OFF (opt-in)
     participateInTrustTier: false,
-    
+
     // Personalization - DEFAULT OFF (opt-in)
     personalizeFeeds: false,
     personalizeRecommendations: false,
-    
+
     // Data Retention - DEFAULT OFF (don't retain)
     retainVotingHistory: false,
     retainSearchHistory: false,
@@ -198,7 +202,9 @@ export function validatePrivacySettings(
     'personalizeRecommendations',
     'retainVotingHistory',
     'retainSearchHistory',
-    'retainLocationHistory'
+    'retainLocationHistory',
+    'collectIntegritySignals',
+    'collectIntegrityAdvancedSignals'
   ];
 
   return required.every(field => typeof settings[field] === 'boolean');
@@ -212,7 +218,7 @@ export function mergePrivacySettings(
   current: Partial<PrivacySettings> | null | undefined
 ): PrivacySettings {
   const defaults = getDefaultPrivacySettings();
-  
+
   if (!current) {
     return defaults;
   }

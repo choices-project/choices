@@ -43,7 +43,7 @@ export const GET = withErrorHandling(async (request: NextRequest) => {
   // Build query
   let query = supabase
     .from('feedback')
-    .select('id, user_id, feedback_type, title, description, sentiment, status, priority, created_at, updated_at, tags, user_journey, ai_analysis, metadata')
+    .select('id, user_id, feedback_type, title, description, sentiment, status, priority, created_at, updated_at, tags, user_journey, ai_analysis, metadata, admin_response, admin_response_at, admin_response_by')
     .order('created_at', { ascending: false });
 
   // Apply filters

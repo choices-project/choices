@@ -222,7 +222,7 @@ export const createProfileActions = (
         }
 
         const result = await response.json();
-        
+
         if (result.success !== false) {
           // Update local store state with merged preferences
           setState((state) => {
@@ -373,7 +373,7 @@ export const createProfileActions = (
 
       try {
         const { getCurrentProfile } = await import('@/features/profile/lib/profile-service');
-        
+
         // Add timeout wrapper to ensure we don't hang forever
         const timeoutPromise = new Promise<ProfileActionResult>((resolve) => {
           setTimeout(() => {
@@ -644,7 +644,8 @@ export const createProfileActions = (
         T0: 'New User',
         T1: 'Verified User',
         T2: 'Trusted User',
-        T3: 'VIP User'
+        T3: 'Guardian',
+        T4: 'Sentinel',
       };
 
       return tierNames[profile.trust_tier ?? ''] ?? 'Unknown';

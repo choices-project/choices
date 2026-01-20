@@ -1,9 +1,9 @@
 /**
  * Profile Constants
- * 
+ *
  * Constants and configuration for the profile feature
  * Centralized configuration and default values
- * 
+ *
  * Created: December 19, 2024
  * Status: ✅ CONSOLIDATED
  */
@@ -277,6 +277,8 @@ export const DEFAULT_PROFILE = {
     allow_messages: true,
     share_demographics: false,
     allow_analytics: true,
+    collectIntegritySignals: false,
+    collectIntegrityAdvancedSignals: false,
   },
   preferences: {
     theme: 'system',

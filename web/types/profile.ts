@@ -1,9 +1,9 @@
 /**
  * Profile Types
- * 
+ *
  * Type definitions for user profile functionality based on actual database schema
  * Generated from Supabase user_profiles table
- * 
+ *
  * Created: October 26, 2025
  * Status: ✅ ACTIVE
  */
@@ -84,90 +84,96 @@ export type NotificationPreferences = {
 
 /**
  * Comprehensive Privacy Settings
- * 
+ *
  * PRIVACY PARAMOUNT: All data collection requires explicit opt-in
  * Default: ALL settings false (privacy-first approach)
- * 
+ *
  * Updated: November 5, 2025
  */
 export type PrivacySettings = {
   // ===== DATA COLLECTION CONTROLS =====
   // User must explicitly opt-in to any data collection
-  
+
   /** Allow collection of location/address data */
   collectLocationData: boolean;
-  
+
   /** Allow storage of voting history */
   collectVotingHistory: boolean;
-  
+
   /** Allow tracking of hashtag/interest data */
   trackInterests: boolean;
-  
+
   /** Allow tracking of feed interactions (likes, reads, etc.) */
   trackFeedActivity: boolean;
-  
+
   /** Allow collection of analytics/telemetry data */
   collectAnalytics: boolean;
-  
+
   /** Allow tracking of representative interactions */
   trackRepresentativeInteractions: boolean;
-  
+
+  /** Allow integrity signal collection for bot detection */
+  collectIntegritySignals: boolean;
+
+  /** Allow advanced integrity signals (device/network) */
+  collectIntegrityAdvancedSignals: boolean;
+
   // ===== VISIBILITY CONTROLS =====
   // Control what others can see (separate from collection)
-  
+
   /** Show read history to others */
   showReadHistory: boolean;
-  
+
   /** Show bookmarks to others */
   showBookmarks: boolean;
-  
+
   /** Show likes to others */
   showLikes: boolean;
-  
+
   /** Share activity with others */
   shareActivity: boolean;
-  
+
   // ===== TRUST & BIOMETRIC CONTROLS =====
-  
+
   /** Participate in trust tier scoring system */
   participateInTrustTier: boolean;
-  
+
   // ===== PERSONALIZATION CONTROLS =====
-  
+
   /** Allow feed personalization based on interests */
   personalizeFeeds: boolean;
-  
+
   /** Allow personalized recommendations */
   personalizeRecommendations: boolean;
-  
+
   // ===== DATA RETENTION CONTROLS =====
-  
+
   /** Retain voting history long-term */
   retainVotingHistory: boolean;
-  
+
   /** Retain search history */
   retainSearchHistory: boolean;
-  
+
   /** Retain location history */
   retainLocationHistory: boolean;
-  
+
   // ===== LEGACY FIELDS (Deprecated but kept for compatibility) =====
-  
+
   /** @deprecated Use visibility controls instead */
   profile_visibility?: 'public' | 'private' | 'friends';
-  
+
   /** @deprecated Use collectAnalytics instead */
   allow_analytics?: boolean;
-  
+
   /** @deprecated Use shareActivity instead */
   show_activity?: boolean;
-  
+
   /** @deprecated Use separate messaging preferences */
   allow_messages?: boolean;
-  
+
   /** @deprecated Use shareActivity instead */
   share_demographics?: boolean;
-  
+
   /** @deprecated Use separate email preferences */
   show_email?: boolean;
 }
@@ -332,7 +338,7 @@ export const PROFILE_CONSTANTS = {
   MAX_BIO_LENGTH: 500,
   MAX_AVATAR_SIZE: 5 * 1024 * 1024, // 5MB
   ALLOWED_AVATAR_TYPES: ['image/jpeg', 'image/png', 'image/webp'] as const,
-  TRUST_TIERS: ['T0', 'T1', 'T2', 'T3'] as const,
+  TRUST_TIERS: ['T0', 'T1', 'T2', 'T3', 'T4'] as const,
   PARTICIPATION_STYLES: ['observer', 'participant', 'leader', 'organizer'] as const,
   PROFILE_VISIBILITY: ['public', 'private', 'friends'] as const,
 } as const;
@@ -352,5 +358,7 @@ export const PROFILE_DEFAULTS = {
     allow_messages: true,
     share_demographics: false,
     allow_analytics: true,
+    collectIntegritySignals: false,
+    collectIntegrityAdvancedSignals: false,
   } satisfies Partial<PrivacySettings>,
 } as const;

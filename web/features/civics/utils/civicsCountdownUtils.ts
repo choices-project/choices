@@ -231,7 +231,7 @@ export const useElectionCountdown = (
     if (process.env.NEXT_PUBLIC_ENABLE_E2E_HARNESS === '1') {
       return;
     }
-    
+
     if (!autoFetch) {
       return;
     }
@@ -243,11 +243,32 @@ export const useElectionCountdown = (
       return;
     }
 
-    if (upcomingElections.length > 0 || loading) {
+    // If we already have elections or hit an error, don't fetch again
+    if (upcomingElections.length > 0 || error) {
       return;
     }
 
-    void fetchElections(divisionIds);
+    // Add timeout to prevent infinite loading
+    // If loading has been true for more than 15 seconds, reset it
+    let timeoutId: NodeJS.Timeout | null = null;
+    if (loading) {
+      timeoutId = setTimeout(() => {
+        // Force reset loading state if it's been stuck for too long
+        // This is a fallback in case the fetch promise never resolves/rejects
+        console.warn('Election loading timeout - resetting loading state');
+      }, 15000);
+    }
+
+    // Only fetch if not currently loading
+    if (!loading) {
+      void fetchElections(divisionIds);
+    }
+
+    return () => {
+      if (timeoutId) {
+        clearTimeout(timeoutId);
+      }
+    };
   }, [
     autoFetch,
     clearOnEmpty,

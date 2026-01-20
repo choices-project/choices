@@ -1,13 +1,15 @@
 /**
  * Native WebAuthn Client Implementation
- * 
+ *
  * Direct browser WebAuthn API implementation without external dependencies
  * Replaces @simplewebauthn/browser with native browser API
  */
 
+import { startAuthentication, startRegistration } from '@simplewebauthn/browser';
+
 import { logger } from '../../../../../lib/utils/logger';
 
-import type { 
+import type {
   PublicKeyCredentialCreationOptions,
   PublicKeyCredentialRequestOptions,
   RegistrationResponse,
@@ -38,7 +40,7 @@ export function isWebAuthnSupported(): boolean {
   if (typeof window === 'undefined') {
     return false;
   }
-  
+
   return !!(
     window.PublicKeyCredential &&
     window.navigator.credentials &&
@@ -54,7 +56,7 @@ export async function isPlatformAuthenticatorAvailable(): Promise<boolean> {
   if (!isWebAuthnSupported()) {
     return false;
   }
-  
+
   try {
     return await window.PublicKeyCredential.isUserVerifyingPlatformAuthenticatorAvailable();
   } catch (error) {
@@ -70,7 +72,7 @@ export async function isBiometricAvailable(): Promise<boolean> {
   if (!isWebAuthnSupported()) {
     return false;
   }
-  
+
   try {
     // Check if the device supports biometric authentication
     const available = await window.navigator.credentials.get({
@@ -81,7 +83,7 @@ export async function isBiometricAvailable(): Promise<boolean> {
         userVerification: 'required'
       }
     }).catch(() => null);
-    
+
     return available !== null;
   } catch (error) {
     logger.error('Error checking WebAuthn support', error instanceof Error ? error : new Error(String(error)));
@@ -122,15 +124,15 @@ export function base64URLToArrayBuffer(base64URL: string): ArrayBuffer {
   const base64 = base64URL
     .replace(/-/g, '+')
     .replace(/_/g, '/');
-  
+
   const padded = base64.padEnd(base64.length + (4 - base64.length % 4) % 4, '=');
   const binary = atob(padded);
-  
+
   const bytes = new Uint8Array(binary.length);
   for (let i = 0; i < binary.length; i++) {
     bytes[i] = binary.charCodeAt(i);
   }
-  
+
   return bytes.buffer;
 }
 
@@ -195,17 +197,17 @@ export async function createCredential(options: PublicKeyCredentialCreationOptio
     if (!isWebAuthnSupported()) {
       throw new Error('WebAuthn not supported');
     }
-    
+
     const credential = await window.navigator.credentials.create({
       publicKey: options
     }) as PublicKeyCredential;
-    
+
     if (!credential) {
       throw new Error('Failed to create credential');
     }
-    
+
     const response = credential.response as AuthenticatorAttestationResponse;
-    
+
     return {
       id: credential.id,
       rawId: arrayBufferToBase64URL(credential.rawId),
@@ -216,7 +218,7 @@ export async function createCredential(options: PublicKeyCredentialCreationOptio
       type: 'public-key',
       clientExtensionResults: convertClientExtensionResults(credential.getClientExtensionResults())
     };
-    
+
   } catch (error) {
     logger.error('Error creating credential', error instanceof Error ? error : new Error(String(error)));
     throw mapWebAuthnError(error);
@@ -231,17 +233,17 @@ export async function getCredential(options: PublicKeyCredentialRequestOptions):
     if (!isWebAuthnSupported()) {
       throw new Error('WebAuthn not supported');
     }
-    
+
     const credential = await window.navigator.credentials.get({
       publicKey: options
     }) as PublicKeyCredential;
-    
+
     if (!credential) {
       throw new Error('Failed to get credential');
     }
-    
+
     const response = credential.response as AuthenticatorAssertionResponse;
-    
+
     return {
       id: credential.id,
       rawId: arrayBufferToBase64URL(credential.rawId),
@@ -254,7 +256,7 @@ export async function getCredential(options: PublicKeyCredentialRequestOptions):
       type: 'public-key',
       clientExtensionResults: convertClientExtensionResults(credential.getClientExtensionResults())
     };
-    
+
   } catch (error) {
     logger.error('Error getting credential', error instanceof Error ? error : new Error(String(error)));
     throw mapWebAuthnError(error);
@@ -271,11 +273,11 @@ function mapWebAuthnError(error: unknown): WebAuthnError {
       return new Error(errorMessages[errorName]) as WebAuthnError;
     }
   }
-  
+
   if (error && typeof error === 'object' && 'message' in error && typeof error.message === 'string') {
     return new Error(error.message) as WebAuthnError;
   }
-  
+
   return new Error('Something went wrong. Please try again or use email link.') as WebAuthnError;
 }
 
@@ -299,34 +301,18 @@ export async function beginRegister(
     }).then(r => r.json());
 
     const opts = extractApiData<any>(rawOptions);
-
-    // Convert server options to native WebAuthn options
-    const nativeOptions: PublicKeyCredentialCreationOptions = {
-      challenge: base64URLToArrayBuffer(opts.challenge),
-      rp: opts.rp,
-      user: {
-        id: base64URLToArrayBuffer(opts.user.id),
-        name: opts.user.name,
-        displayName: opts.user.displayName
-      },
-      pubKeyCredParams: opts.pubKeyCredParams,
-      timeout: opts.timeout,
-      excludeCredentials: opts.excludeCredentials?.map((cred: any) => ({
-        type: 'public-key',
-        id: base64URLToArrayBuffer(cred.id),
-        transports: cred.transports
-      })),
+    const registrationOptions = {
+      ...opts,
       authenticatorSelection: {
         ...opts.authenticatorSelection,
-        authenticatorAttachment: options?.authenticatorAttachment ?? opts.authenticatorSelection?.authenticatorAttachment,
+        authenticatorAttachment:
+          options?.authenticatorAttachment ?? opts.authenticatorSelection?.authenticatorAttachment,
         userVerification: options?.userVerification ?? opts.authenticatorSelection?.userVerification,
       },
-      attestation: opts.attestation,
-      extensions: opts.extensions
     };
 
-    const credential = await createCredential(nativeOptions);
-    
+    const credential = await startRegistration(registrationOptions);
+
     const verifyPayload = await fetcher('/api/v1/auth/webauthn/native/register/verify', {
       method: 'POST',
       headers: {
@@ -345,7 +331,7 @@ export async function beginRegister(
 
   } catch (error) {
     logger.error('WebAuthn registration error', error instanceof Error ? error : new Error(String(error)));
-    
+
     // Provide more helpful error messages
     let errorMessage = 'Registration failed';
     if (error instanceof Error) {
@@ -361,9 +347,9 @@ export async function beginRegister(
         errorMessage = error.message || 'Registration failed. Please try again or use email/password authentication.';
       }
     }
-    
-    return { 
-      success: false, 
+
+    return {
+      success: false,
       error: errorMessage
     };
   }
@@ -394,23 +380,13 @@ export async function beginAuthenticate(
       throw new Error('Missing authentication challenge');
     }
     const opts = payload?.options ?? payload;
-
-    // Convert server options to native WebAuthn options
-    const nativeOptions: PublicKeyCredentialRequestOptions = {
-      challenge: base64URLToArrayBuffer(opts.challenge),
-      allowCredentials: opts.allowCredentials?.map((cred: any) => ({
-        type: 'public-key',
-        id: base64URLToArrayBuffer(cred.id),
-        transports: cred.transports
-      })),
-      timeout: opts.timeout,
-      rpId: opts.rpId,
+    const authOptions = {
+      ...opts,
       userVerification: options?.userVerification ?? opts.userVerification,
-      extensions: opts.extensions
     };
 
-    const assertion = await getCredential(nativeOptions);
-    
+    const assertion = await startAuthentication(authOptions);
+
     const verifyPayload = await fetcher('/api/v1/auth/webauthn/native/authenticate/verify', {
       method: 'POST',
       headers: {
@@ -429,7 +405,7 @@ export async function beginAuthenticate(
 
   } catch (error) {
     logger.error('WebAuthn authentication error', error instanceof Error ? error : new Error(String(error)));
-    
+
     // Provide more helpful error messages
     let errorMessage = 'Authentication failed';
     if (error instanceof Error) {
@@ -447,9 +423,9 @@ export async function beginAuthenticate(
         errorMessage = error.message || 'Authentication failed. Please try again or use email/password authentication.';
       }
     }
-    
-    return { 
-      success: false, 
+
+    return {
+      success: false,
       error: errorMessage
     };
   }
@@ -474,9 +450,9 @@ export async function registerBiometric(): Promise<{ success: boolean; error?: s
     const result = await beginRegister();
     return result.error ? { success: false, error: result.error } : { success: true };
   } catch (error) {
-    return { 
-      success: false, 
-      error: error instanceof Error ? error.message : 'Biometric registration failed' 
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : 'Biometric registration failed'
     };
   }
 }

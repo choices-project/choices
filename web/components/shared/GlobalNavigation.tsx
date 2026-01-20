@@ -67,7 +67,8 @@ export default function GlobalNavigation() {
   const { user, isLoading: authLoading, logout: authSignOut } = useAuth();
   const storeSession = useSession();
   const storeUser = useUserStore();
-  const isAuthenticated = Boolean(user ?? storeSession?.user ?? storeUser);
+  const authUser = user ?? storeUser ?? storeSession?.user ?? null;
+  const isAuthenticated = Boolean(authUser);
   const [loadingTimeout, setLoadingTimeout] = useState(false);
 
   // Add timeout fallback to prevent infinite loading state
@@ -96,12 +97,12 @@ export default function GlobalNavigation() {
         shouldBypassLoading,
         isLoading,
         isAuthenticated,
-        user: user ? { id: user.id, email: user.email ? `${user.email.split('@')[0]}@***` : null } : null,
+        user: authUser ? { id: authUser.id, email: authUser.email ? `${authUser.email.split('@')[0]}@***` : null } : null,
         pathname,
         bypassFlag: typeof window !== 'undefined' ? window.localStorage.getItem('e2e-dashboard-bypass') : 'SSR',
       });
     }
-  }, [authLoading, loadingTimeout, shouldBypassLoading, isLoading, isAuthenticated, user, pathname]);
+  }, [authLoading, loadingTimeout, shouldBypassLoading, isLoading, isAuthenticated, authUser, pathname]);
 
   // Use ref for stable authSignOut callback
   const authSignOutRef = useRef(authSignOut);
@@ -160,13 +161,13 @@ export default function GlobalNavigation() {
         logger.debug('🚨 GlobalNavigation: Rendering full navigation', {
           navigationItemsCount: navigationItems.length,
           dashboardNavItem: navigationItems.find(item => item.href === '/dashboard'),
-          isAuthenticated,
-          user: user ? { id: user.id, email: user.email } : null,
+        isAuthenticated,
+        user: authUser ? { id: authUser.id, email: authUser.email } : null,
           pathname,
         });
       }
     }
-  }, [isLoading, _hasError, navigationItems, isAuthenticated, user, pathname]);
+  }, [isLoading, _hasError, navigationItems, isAuthenticated, authUser, pathname]);
 
   useEffect(() => {
     if (isMobileMenuOpen) {
@@ -319,7 +320,7 @@ export default function GlobalNavigation() {
             <div className="hidden md:flex md:items-center md:space-x-4">
               <ThemeSelector variant="compact" />
               <LanguageSelector variant="compact" />
-              {user && isAuthenticated ? (
+              {isAuthenticated ? (
                 <div className="flex items-center space-x-4">
                   <Link
                     href="/profile"
@@ -430,7 +431,7 @@ export default function GlobalNavigation() {
 
                 {/* Mobile Auth Section */}
                 <div className="pt-4 border-t border-gray-200 dark:border-gray-700">
-                  {user && isAuthenticated ? (
+              {isAuthenticated ? (
                     <div className="space-y-2">
                       <Link
                         href="/profile"

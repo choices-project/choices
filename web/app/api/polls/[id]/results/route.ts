@@ -2,6 +2,7 @@ import { getSupabaseAdminClient } from '@/utils/supabase/server';
 
 import { withErrorHandling, successResponse, notFoundError, errorResponse, validationError } from '@/lib/api';
 import { logger } from '@/lib/utils/logger';
+import { getIntegrityThreshold } from '@/lib/integrity/vote-integrity';
 import { voteEngine } from '@/lib/vote/engine';
 import type { PollData, VoteData } from '@/lib/vote/types';
 
@@ -24,7 +25,10 @@ export const GET = withErrorHandling(async (
 ) => {
     const url = new URL(request.url);
     const tierParam = url.searchParams.get('tier');
+    const integrityParam = url.searchParams.get('integrity');
     const trustTier = tierParam ? Number.parseInt(tierParam, 10) : null;
+    const includeAllVotes = integrityParam === 'all';
+    const integrityThreshold = getIntegrityThreshold();
 
     if (tierParam && Number.isNaN(trustTier)) {
       return validationError({ tier: 'tier must be a number' });
@@ -77,6 +81,33 @@ export const GET = withErrorHandling(async (
         return errorResponse('Failed to get ranked results', 500);
       }
 
+      let filteredBallots = ballots ?? [];
+      let scoredBallotIds = new Set<string>();
+      let excludedBallots = 0;
+
+      if (!includeAllVotes && filteredBallots.length > 0) {
+        const ballotIds = filteredBallots.map((ballot) => ballot.id);
+        const { data: scoreRows, error: scoreError } = await (supabase as any)
+          .from('vote_integrity_scores')
+          .select('vote_id, score')
+          .eq('poll_id', id)
+          .eq('vote_type', 'ranked')
+          .in('vote_id', ballotIds);
+
+        if (scoreError) {
+          logger.warn('Integrity score lookup failed for ranked ballots', scoreError);
+        } else {
+          scoredBallotIds = new Set(
+            (scoreRows ?? [])
+              .filter((row: { score?: number }) => (row.score ?? 0) >= integrityThreshold)
+              .map((row: { vote_id?: string | null }) => row.vote_id)
+              .filter(Boolean) as string[]
+          );
+          excludedBallots = ballotIds.filter((idValue) => !scoredBallotIds.has(idValue)).length;
+          filteredBallots = filteredBallots.filter((ballot) => scoredBallotIds.has(ballot.id));
+        }
+      }
+
       const pollData: PollData = {
         id,
         title: 'Ranked Poll',
@@ -92,7 +123,7 @@ export const GET = withErrorHandling(async (
         votingConfig: {},
       };
 
-      const voteData: VoteData[] = (ballots ?? []).map((ballot) => {
+      const voteData: VoteData[] = filteredBallots.map((ballot) => {
         const rankingSequence = (ballot.rankings ?? [])
           .map((value) => Number(value))
           .filter((value) => Number.isInteger(value));
@@ -134,78 +165,94 @@ export const GET = withErrorHandling(async (
         rounds: engineResults.results.instantRunoffRounds ?? [],
         winner: engineResults.results.winner ?? null,
         option_stats: optionStats,
+        integrity: {
+          mode: includeAllVotes ? 'all' : 'verified',
+          threshold: integrityThreshold,
+          raw_total_votes: (ballots ?? []).length,
+          excluded_votes: excludedBallots,
+          scored_votes: scoredBallotIds.size,
+          unscored_votes: Math.max((ballots ?? []).length - scoredBallotIds.size, 0),
+        },
       });
     }
 
-    const { data: results, error: resultsError } = await supabase
-      .rpc('get_poll_results_by_trust_tier', {
-        p_poll_id: id,
-        p_trust_tier: trustTier,
-      });
+    const { data: voteRows, error: votesError } = await supabase
+      .from('votes')
+      .select('id, option_id')
+      .eq('poll_id', id);
 
-    let rows: Array<Record<string, unknown>> = [];
+    if (votesError) {
+      logger.error('Results vote query error:', votesError);
+      return errorResponse('Failed to get results', 500);
+    }
 
-    if (resultsError) {
-      const isMissingRpc =
-        resultsError.code === 'PGRST202' ||
-        resultsError.code === '42883' ||
-        resultsError.message?.includes('get_poll_results_by_trust_tier');
+    let filteredVotes = voteRows ?? [];
+    const rawTotalVotes = filteredVotes.length;
 
-      if (isMissingRpc) {
-        const { data: voteRows, error: votesError } = await supabase
-          .from('votes')
-          .select('id, option_id')
-          .eq('poll_id', id);
+    if (trustTier !== null && filteredVotes.length > 0) {
+      const voteIds = filteredVotes.map((vote) => vote.id).filter(Boolean) as string[];
 
-        if (votesError) {
-          logger.error('Results fallback vote query error:', votesError);
-          return errorResponse('Failed to get results', 500);
+      if (voteIds.length > 0) {
+        const { data: trustRows, error: trustError } = await supabase
+          .from('vote_trust_tiers')
+          .select('vote_id, trust_tier')
+          .eq('trust_tier', trustTier)
+          .in('vote_id', voteIds);
+
+        if (trustError) {
+          logger.warn('Results trust tier lookup failed, continuing without tier filter', trustError);
+        } else {
+          const allowedIds = new Set(
+            (trustRows ?? []).map((row) => row.vote_id).filter(Boolean) as string[],
+          );
+          filteredVotes = filteredVotes.filter((vote) => allowedIds.has(vote.id));
         }
-
-        let filteredVotes = voteRows ?? [];
-
-        if (trustTier !== null && filteredVotes.length > 0) {
-          const voteIds = filteredVotes.map((vote) => vote.id).filter(Boolean) as string[];
-
-          if (voteIds.length > 0) {
-            const { data: trustRows, error: trustError } = await supabase
-              .from('vote_trust_tiers')
-              .select('vote_id, trust_tier')
-              .eq('trust_tier', trustTier)
-              .in('vote_id', voteIds);
-
-            if (trustError) {
-              logger.warn('Results fallback trust tier lookup failed, continuing without tier filter', trustError);
-            } else {
-              const allowedIds = new Set(
-                (trustRows ?? []).map((row) => row.vote_id).filter(Boolean) as string[],
-              );
-              filteredVotes = filteredVotes.filter((vote) => allowedIds.has(vote.id));
-            }
-          } else {
-            filteredVotes = [];
-          }
-        }
-
-        const counts = filteredVotes.reduce<Record<string, number>>((acc, vote) => {
-          const optionId = vote.option_id;
-          if (optionId) {
-            acc[optionId] = (acc[optionId] ?? 0) + 1;
-          }
-          return acc;
-        }, {});
-
-        rows = Object.entries(counts).map(([option_id, vote_count]) => ({
-          option_id,
-          vote_count,
-        }));
       } else {
-        logger.error('Results query error:', resultsError);
-        return errorResponse('Failed to get results', 500);
+        filteredVotes = [];
       }
-    } else {
-      rows = Array.isArray(results) ? (results as Array<Record<string, unknown>>) : [];
     }
+
+    let excludedVotes = 0;
+    let scoredVoteIds = new Set<string>();
+
+    if (!includeAllVotes && filteredVotes.length > 0) {
+      const voteIds = filteredVotes.map((vote) => vote.id).filter(Boolean) as string[];
+
+      if (voteIds.length > 0) {
+        const { data: scoreRows, error: scoreError } = await (supabase as any)
+          .from('vote_integrity_scores')
+          .select('vote_id, score')
+          .eq('poll_id', id)
+          .eq('vote_type', 'vote')
+          .in('vote_id', voteIds);
+
+        if (scoreError) {
+          logger.warn('Integrity score lookup failed for votes', scoreError);
+        } else {
+          scoredVoteIds = new Set(
+            (scoreRows ?? [])
+              .filter((row: { score?: number }) => (row.score ?? 0) >= integrityThreshold)
+              .map((row: { vote_id?: string | null }) => row.vote_id)
+              .filter(Boolean) as string[]
+          );
+          excludedVotes = voteIds.filter((idValue) => !scoredVoteIds.has(idValue)).length;
+          filteredVotes = filteredVotes.filter((vote) => scoredVoteIds.has(vote.id));
+        }
+      }
+    }
+
+    const counts = filteredVotes.reduce<Record<string, number>>((acc, vote) => {
+      const optionId = vote.option_id;
+      if (optionId) {
+        acc[optionId] = (acc[optionId] ?? 0) + 1;
+      }
+      return acc;
+    }, {});
+
+    const rows = Object.entries(counts).map(([option_id, vote_count]) => ({
+      option_id,
+      vote_count,
+    }));
 
     const totalVotes = rows.reduce((sum: number, row: any) => sum + (row?.vote_count ?? 0), 0);
 
@@ -223,5 +270,13 @@ export const GET = withErrorHandling(async (
       trust_tier_filter: trustTier,
       results: optionTotals,
       total_votes: totalVotes,
+      integrity: {
+        mode: includeAllVotes ? 'all' : 'verified',
+        threshold: integrityThreshold,
+        raw_total_votes: rawTotalVotes,
+        excluded_votes: excludedVotes,
+        scored_votes: scoredVoteIds.size,
+        unscored_votes: Math.max(rawTotalVotes - scoredVoteIds.size, 0),
+      },
     });
 });

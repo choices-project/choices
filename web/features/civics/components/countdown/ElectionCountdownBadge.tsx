@@ -1,4 +1,4 @@
-import { Loader2, CalendarClock, AlertTriangle } from 'lucide-react';
+import { CalendarClock } from 'lucide-react';
 import React, { useEffect, useMemo, useState } from 'react';
 
 import { Badge } from '@/components/ui/badge';
@@ -58,9 +58,9 @@ export function ElectionCountdownBadge({
   threshold = DEFAULT_THRESHOLD,
   showDate = true,
   showAdditionalCount = true,
-  emptyMessage,
-  loadingMessage,
-  errorMessage
+  emptyMessage: _emptyMessage,
+  loadingMessage: _loadingMessage,
+  errorMessage: _errorMessage
 }: ElectionCountdownBadgeProps) {
   const { t, currentLanguage } = useI18n();
   // CRITICAL: Only use formatElectionDate after mount to prevent hydration mismatch
@@ -70,12 +70,6 @@ export function ElectionCountdownBadge({
   useEffect(() => {
     setIsMounted(true);
   }, []);
-  const resolvedLoadingMessage =
-    loadingMessage ?? t('civics.countdown.badge.loading');
-  const resolvedErrorMessage =
-    errorMessage ?? t('civics.countdown.badge.error');
-  const resolvedEmptyMessage =
-    emptyMessage ?? t('civics.countdown.badge.empty');
   const state = useMemo<'loading' | 'error' | 'empty' | 'active' | 'upcoming'>(() => {
     if (loading) return 'loading';
     if (error) return 'error';
@@ -84,42 +78,8 @@ export function ElectionCountdownBadge({
     return 'upcoming';
   }, [daysUntil, error, loading, nextElection, threshold]);
 
-  if (state === 'loading') {
-    return (
-      <Badge
-        className={cn(
-          'flex items-center gap-1 bg-indigo-50 text-indigo-700 border-indigo-100 dark:bg-indigo-900/40 dark:text-indigo-200 dark:border-indigo-800',
-          className
-        )}
-      >
-        <Loader2 className="h-3 w-3 animate-spin" aria-hidden="true" />
-        {resolvedLoadingMessage}
-      </Badge>
-    );
-  }
-
-  if (state === 'error') {
-    return (
-      <Badge
-        className={cn(
-          'flex items-center gap-1 bg-red-50 text-red-700 border-red-100 dark:bg-red-900/40 dark:text-red-200 dark:border-red-800',
-          className
-        )}
-      >
-        <AlertTriangle className="h-3 w-3" aria-hidden="true" />
-        {resolvedErrorMessage}
-      </Badge>
-    );
-  }
-
-  if (state === 'empty') {
-    return (
-      <Badge
-        className={cn('bg-gray-100 text-gray-600 border-gray-200', className)}
-      >
-        {resolvedEmptyMessage}
-      </Badge>
-    );
+  if (state === 'loading' || state === 'error' || state === 'empty') {
+    return null;
   }
 
   const countdownMessage = getCountdownMessage(daysUntil, t);
@@ -140,7 +100,7 @@ export function ElectionCountdownBadge({
     <Badge
       {...ariaLiveProps}
       className={cn(
-        'flex items-center gap-1 border-blue-100',
+        'flex items-center gap-1 rounded-full border-blue-100 shadow-sm',
         state === 'active'
           ? 'bg-blue-600/10 text-blue-800 border-blue-200 dark:bg-blue-900/40 dark:text-blue-100 dark:border-blue-700'
           : 'bg-blue-50 text-blue-700 dark:bg-blue-900/30 dark:text-blue-100',

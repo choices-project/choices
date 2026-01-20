@@ -2,7 +2,7 @@ import type { NextRequest } from 'next/server';
 
 /**
  * WebAuthn Configuration
- * 
+ *
  * Privacy-first configuration for WebAuthn implementation
  */
 
@@ -21,19 +21,24 @@ export const CHALLENGE_TTL_MS = (isNaN(challengeTtlSeconds) ? 300 : challengeTtl
  */
 export function getRPIDAndOrigins(req: NextRequest) {
   // Production + local dev only
-  const rpID = RP_ID;
+  let rpID = RP_ID;
   const allowedOrigins = ALLOWED_ORIGINS;
 
   // Block previews: if host !== rpID and not localhost, disable passkeys
   const host = req.headers.get('x-forwarded-host') ?? req.headers.get('host') ?? '';
   const isLocal = host.startsWith('localhost:') || host === 'localhost';
-  
+
   // RP ID is the registrable domain (e.g., 'choices-app.com'), but host might be 'www.choices-app.com'
   // So we need to check if host matches rpID or is a subdomain of rpID (like www.rpID)
   const hostWithoutWww = host.startsWith('www.') ? host.substring(4) : host;
   const isProdHost = hostWithoutWww === rpID || host === rpID;
   const isPreview = isVercelPreview(host) && !isProdHost;
-  
+
+  // Ensure local development uses the correct rpID
+  if (isLocal) {
+    rpID = 'localhost';
+  }
+
   // Disable passkeys on previews, but allow on production domain and localhost
   const enabled = (isProdHost || isLocal) && !isPreview;
 

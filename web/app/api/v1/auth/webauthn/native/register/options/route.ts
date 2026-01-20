@@ -1,17 +1,19 @@
 /**
  * Native WebAuthn Registration Options
- * 
+ *
  * Generates registration options using native WebAuthn implementation
  * This is the CORRECT implementation - uses native Web Crypto API
- * 
+ *
  * Created: November 5, 2025
  * Status: ✅ Production-ready (Native implementation)
  */
 
+import { generateRegistrationOptions } from '@simplewebauthn/server';
+import { isoBase64URL } from '@simplewebauthn/server/helpers';
+
 import { getSupabaseServerClient } from '@/utils/supabase/server';
 
 import { getRPIDAndOrigins, CHALLENGE_TTL_MS } from '@/features/auth/lib/webauthn/config';
-import { arrayBufferToBase64URL, generateRegistrationOptions } from '@/features/auth/lib/webauthn/native/server';
 
 import { withErrorHandling, successResponse, authError, forbiddenError, errorResponse } from '@/lib/api';
 import { stripUndefinedDeep } from '@/lib/util/clean';
@@ -38,28 +40,45 @@ export const POST = withErrorHandling(async (req: NextRequest) => {
     return authError('Authentication required');
   }
 
-    // Fetch existing credential IDs to exclude
-    const { data: creds } = await supabase
-      .from('webauthn_credentials')
-      .select('credential_id')
-      .eq('user_id', user.id);
+  const body = await req.json().catch(() => ({}));
+  const username = typeof body?.username === 'string' ? body.username : undefined;
+  const displayName = typeof body?.displayName === 'string' ? body.displayName : undefined;
+  const userVerification = typeof body?.userVerification === 'string' ? body.userVerification : undefined;
+  const authenticatorAttachment =
+    typeof body?.authenticatorAttachment === 'string' ? body.authenticatorAttachment : undefined;
 
-    const excludeCredentials = (creds ?? []).map(c => c.credential_id);
+  // Fetch existing credential IDs to exclude
+  const { data: creds } = await supabase
+    .from('webauthn_credentials')
+    .select('credential_id, metadata')
+    .eq('user_id', user.id);
 
-    // Use native implementation
-    const options = generateRegistrationOptions(
-      user.id,
-      user.email ?? user.id,
-      user.email ?? user.id,
-      rpID,
-      'Choices',
-      excludeCredentials
-    );
+  const excludeCredentials = (creds ?? []).map((cred) => ({
+    id: isoBase64URL.toBuffer(cred.credential_id),
+    type: 'public-key',
+    transports: Array.isArray(cred.metadata?.transports) ? cred.metadata.transports : undefined,
+  }));
+
+  const options = generateRegistrationOptions({
+    rpName: 'Choices',
+    rpID: rpID,
+    userID: user.id,
+    userName: username ?? user.email ?? user.id,
+    userDisplayName: displayName ?? user.email ?? user.id,
+    timeout: 60000,
+    attestationType: 'none',
+    authenticatorSelection: stripUndefinedDeep({
+      authenticatorAttachment,
+      userVerification,
+      residentKey: 'required',
+    }),
+    excludeCredentials,
+  });
 
     // Persist challenge
     const expiresAt = new Date(Date.now() + CHALLENGE_TTL_MS).toISOString();
-    const challengeBase64Url = arrayBufferToBase64URL(options.challenge);
-    
+    const challengeBase64Url = options.challenge;
+
     const { error: chalErr } = await supabase.from('webauthn_challenges').insert(stripUndefinedDeep({
       user_id: user.id,
       rp_id: rpID,
@@ -73,7 +92,7 @@ export const POST = withErrorHandling(async (req: NextRequest) => {
       return errorResponse('Challenge persist failed', 500, undefined, 'WEBAUTHN_CHALLENGE_PERSIST_FAILED');
     }
 
-  logger.info('WebAuthn registration options generated (native)', { userId: user.id });
+  logger.info('WebAuthn registration options generated', { userId: user.id });
 
   return successResponse(options);
 });

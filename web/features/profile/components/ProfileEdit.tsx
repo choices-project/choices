@@ -110,6 +110,8 @@ const basePrivacyDefaults: Partial<PrivacySettings> = {
   trackFeedActivity: false,
   collectAnalytics: false,
   trackRepresentativeInteractions: false,
+  collectIntegritySignals: false,
+  collectIntegrityAdvancedSignals: false,
   showReadHistory: false,
   showBookmarks: false,
   showLikes: false,

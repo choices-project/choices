@@ -27,6 +27,7 @@ import { logger } from '@/lib/utils/logger';
 
 import { useAuth } from '@/hooks/useAuth';
 import { useI18n } from '@/hooks/useI18n';
+import ReportModal from '@/features/moderation/components/ReportModal';
 
 type VotingStatusMessage = {
   title: string;
@@ -51,6 +52,14 @@ type PollResultsResponse = {
     option_text?: string;
     vote_count: number;
   }>;
+  integrity?: {
+    mode: 'all' | 'verified';
+    threshold: number;
+    raw_total_votes: number;
+    excluded_votes: number;
+    scored_votes: number;
+    unscored_votes: number;
+  };
 };
 
 type PollClientProps = {
@@ -146,6 +155,7 @@ export default function PollClient({ poll }: PollClientProps) {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [hasVoteAttempted, setHasVoteAttempted] = useState(false);
+  const [isReportOpen, setIsReportOpen] = useState(false);
 
   // Use refs for stable app store actions to prevent infinite re-renders
   const setCurrentRouteRef = useRef(setCurrentRoute);
@@ -365,6 +375,8 @@ export default function PollClient({ poll }: PollClientProps) {
     }
     return initialVoteTotal;
   }, [poll.totalVotes, poll.totalvotes, results, initialVoteTotal]);
+
+  const integrityInfo = results?.integrity;
 
   const totalRecordedVotes = useMemo(
     () => normalizedOptions.reduce((sum, option) => sum + option.votes, 0),
@@ -621,6 +633,9 @@ export default function PollClient({ poll }: PollClientProps) {
           <Button type="button" variant="ghost" onClick={handlePrintSummary}>
             <Printer className="mr-2 h-4 w-4" /> {t('polls.view.buttons.printSummary')}
           </Button>
+          <Button type="button" variant="ghost" onClick={() => setIsReportOpen(true)}>
+            <AlertCircle className="mr-2 h-4 w-4" /> Report
+          </Button>
         </div>
       </div>
 
@@ -673,6 +688,28 @@ export default function PollClient({ poll }: PollClientProps) {
           </p>
         </div>
       </div>
+
+      {integrityInfo && (
+        <div className="rounded-lg border border-blue-200 bg-blue-50 p-4 shadow-sm">
+          <div className="flex items-start gap-3">
+            <div className="rounded-full bg-blue-100 p-2">
+              <Shield className="h-5 w-5 text-blue-700" />
+            </div>
+            <div>
+              <p className="text-sm font-semibold uppercase text-blue-700">Integrity check applied</p>
+              <p className="text-sm text-blue-800">
+                {integrityInfo.excluded_votes > 0
+                  ? `${integrityInfo.excluded_votes} votes excluded from displayed results.`
+                  : 'No votes excluded from displayed results.'}
+              </p>
+              <p className="text-xs text-blue-700/80">
+                Raw total: {isMounted ? integrityInfo.raw_total_votes.toLocaleString() : integrityInfo.raw_total_votes}
+                {' '}• Scored: {integrityInfo.scored_votes} • Unscored: {integrityInfo.unscored_votes}
+              </p>
+            </div>
+          </div>
+        </div>
+      )}
 
       <div className="grid gap-4 rounded-lg border bg-white p-4 shadow-sm sm:grid-cols-2">
         <div>
@@ -795,6 +832,14 @@ export default function PollClient({ poll }: PollClientProps) {
           </>
         )}
       </div>
+
+      <ReportModal
+        isOpen={isReportOpen}
+        onClose={() => setIsReportOpen(false)}
+        targetType="poll"
+        targetId={pollId}
+        targetLabel={pollTitle}
+      />
     </div>
   );
 }

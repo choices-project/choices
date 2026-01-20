@@ -1,17 +1,15 @@
 /**
  * Native WebAuthn Authentication Options
- * 
+ *
  * Generates authentication options using native WebAuthn API
  * Replaces @simplewebauthn/server with native implementation
  */
 
+import { generateAuthenticationOptions } from '@simplewebauthn/server';
+
 import { getSupabaseAdminClient } from '@/utils/supabase/server';
 
 import { getRPIDAndOrigins, CHALLENGE_TTL_MS } from '@/features/auth/lib/webauthn/config';
-import {
-  arrayBufferToBase64URL,
-  generateAuthenticationOptions,
-} from '@/features/auth/lib/webauthn/native/server';
 
 import { withErrorHandling, successResponse, forbiddenError, errorResponse } from '@/lib/api';
 import { stripUndefinedDeep } from '@/lib/util/clean';
@@ -29,33 +27,19 @@ export const POST = withErrorHandling(async (req: NextRequest) => {
   }
 
   const supabase = await getSupabaseAdminClient();
+  const body = await req.json().catch(() => ({}));
+  const userVerification = typeof body?.userVerification === 'string' ? body.userVerification : undefined;
 
-    // Generate native authentication options
-    const options = generateAuthenticationOptions(rpID);
-
-    // Convert to base64URL for JSON response
-    const challengeBase64 = arrayBufferToBase64URL(options.challenge);
-    
-    const responseOptions = {
-      challenge: challengeBase64,
-      timeout: options.timeout,
-      rpId: options.rpId,
-      userVerification: options.userVerification,
-      ...(options.allowCredentials && options.allowCredentials.length > 0
-        ? {
-            allowCredentials: options.allowCredentials.map((cred) => ({
-              id: arrayBufferToBase64URL(cred.id),
-              type: cred.type,
-              transports: cred.transports,
-            })),
-          }
-        : {}),
-    };
+  const options = generateAuthenticationOptions({
+    rpID: rpID,
+    timeout: 60000,
+    userVerification,
+  });
 
     // Persist challenge
     const expiresAt = new Date(Date.now() + CHALLENGE_TTL_MS).toISOString();
-    const challengeBase64Url = arrayBufferToBase64URL(options.challenge);
-    
+    const challengeBase64Url = options.challenge;
+
     const { data: challengeRow, error: chalErr } = await supabase
       .from('webauthn_challenges')
       .insert(
@@ -77,6 +61,6 @@ export const POST = withErrorHandling(async (req: NextRequest) => {
 
   return successResponse({
     challengeId: challengeRow.id,
-    options: responseOptions,
+    options,
   });
 });

@@ -1,17 +1,19 @@
 /**
  * Native WebAuthn Registration Verification
- * 
+ *
  * Verifies registration response using native WebAuthn implementation
  * This is the CORRECT implementation - uses native Web Crypto API
- * 
+ *
  * Created: November 5, 2025
  * Status: ✅ Production-ready (Native implementation)
  */
 
+import { verifyRegistrationResponse } from '@simplewebauthn/server';
+import { isoBase64URL } from '@simplewebauthn/server/helpers';
+
 import { getSupabaseServerClient } from '@/utils/supabase/server';
 
 import { getRPIDAndOrigins } from '@/features/auth/lib/webauthn/config';
-import { verifyRegistrationResponse } from '@/features/auth/lib/webauthn/native/server';
 
 import { withErrorHandling, authError, forbiddenError, errorResponse, validationError, successResponse } from '@/lib/api';
 import { normalizeTrustTier } from '@/lib/trust/trust-tiers';
@@ -79,44 +81,40 @@ export const POST = withErrorHandling(async (req: NextRequest) => {
       return forbiddenError('Unauthorized origin');
     }
 
-    // Verify registration using native implementation
-    const verificationResult = await verifyRegistrationResponse(
-      body,
-      chal.challenge,
-      currentOrigin,
-      rpID
-    );
+    const { verified, registrationInfo } = await verifyRegistrationResponse({
+      response: body,
+      expectedChallenge: chal.challenge,
+      expectedOrigin: allowedOrigins,
+      expectedRPID: rpID,
+    });
 
-    if (!verificationResult.verified) {
-      const errorMessage = verificationResult.error 
-        ? typeof verificationResult.error === 'string' 
-          ? verificationResult.error 
-          : String(verificationResult.error)
-        : 'Verification failed';
-      return validationError({ 
-        verification: errorMessage
+    if (!verified || !registrationInfo) {
+      return validationError({
+        verification: 'Registration verification failed',
       });
     }
 
-    // Use credential data from verification result
-    const credentialId = verificationResult.credentialId;
-    const publicKey = verificationResult.publicKey;
-
-    // Convert ArrayBuffer to base64 for storage
-    const publicKeyBase64 = Buffer.from(publicKey).toString('base64');
+    const credentialId = isoBase64URL.fromBuffer(registrationInfo.credentialID);
+    const publicKey = isoBase64URL.fromBuffer(registrationInfo.credentialPublicKey);
+    const transports = Array.isArray(body?.response?.transports) ? body.response.transports : undefined;
+    const metadata = stripUndefinedDeep({
+      transports,
+      deviceType: registrationInfo.credentialDeviceType,
+      backedUp: registrationInfo.credentialBackedUp,
+    });
 
     // Store credential
-    const { error: credErr } = await supabase.from('webauthn_credentials').insert(stripUndefinedDeep({
-      user_id: user.id,
-      rp_id: rpID,
-      credential_id: credentialId,
-      public_key: publicKeyBase64,
-      counter: verificationResult.counter,
-      transports: verificationResult.transports ?? [],
-      backup_eligible: verificationResult.backupEligible ?? false,
-      backup_state: verificationResult.backupState ?? false,
-      created_at: new Date().toISOString()
-    }));
+    const { error: credErr } = await supabase.from('webauthn_credentials').insert(
+      stripUndefinedDeep({
+        user_id: user.id,
+        rp_id: rpID,
+        credential_id: credentialId,
+        public_key: publicKey,
+        counter: registrationInfo.counter,
+        metadata,
+        created_at: new Date().toISOString(),
+      })
+    );
 
     if (credErr) {
       logger.error('Failed to store credential', { error: credErr });
@@ -139,7 +137,7 @@ export const POST = withErrorHandling(async (req: NextRequest) => {
       .single();
 
     const currentTier = normalizeTrustTier(profile?.trust_tier ?? 'T0');
-    const tierRank: Record<string, number> = { T0: 0, T1: 1, T2: 2, T3: 3 };
+    const tierRank: Record<string, number> = { T0: 0, T1: 1, T2: 2, T3: 3, T4: 4 };
     const targetRank = tierRank['T2'] ?? 2;
     if (profile && tierRank[currentTier] !== undefined && tierRank[currentTier] < targetRank) {
       await supabase
@@ -151,13 +149,13 @@ export const POST = withErrorHandling(async (req: NextRequest) => {
         .eq('user_id', user.id);
     }
 
-    logger.info('WebAuthn registration verified (native)', { userId: user.id });
+    logger.info('WebAuthn registration verified', { userId: user.id });
 
     return successResponse({
       verified: true,
       credential: {
         id: credentialId,
-        publicKey: publicKeyBase64
+        publicKey
       },
       trustTier: 'T2'
     });

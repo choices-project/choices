@@ -1,18 +1,20 @@
 /**
  * Native WebAuthn Authentication Verification
- * 
+ *
  * Verifies authentication response using native WebAuthn implementation
  * This is the CORRECT implementation - uses native Web Crypto API
- * 
+ *
  * Created: November 5, 2025
  * Status: ✅ Production-ready (Native implementation)
  */
+
+import { verifyAuthenticationResponse } from '@simplewebauthn/server';
+import { isoBase64URL } from '@simplewebauthn/server/helpers';
 
 import { getSupabaseApiRouteClient } from '@/utils/supabase/api-route';
 import { getSupabaseAdminClient } from '@/utils/supabase/server';
 
 import { getRPIDAndOrigins } from '@/features/auth/lib/webauthn/config';
-import { verifyAuthenticationResponse } from '@/features/auth/lib/webauthn/native/server';
 
 import { withErrorHandling, forbiddenError, errorResponse, validationError, successResponse } from '@/lib/api';
 import { logger } from '@/lib/utils/logger';
@@ -85,12 +87,11 @@ export const POST = withErrorHandling(async (req: NextRequest) => {
     }
 
     // Lookup credential
-    const credIdBuf = Buffer.from(body.id, 'base64url');
     const { data: creds, error: credsErr } = await supabase
       .from('webauthn_credentials')
       .select('*')
       .eq('rp_id', rpID)
-      .eq('credential_id', Buffer.from(credIdBuf).toString('base64'))
+      .eq('credential_id', body.id)
       .limit(1);
 
     if (credsErr || !creds?.length) {
@@ -102,44 +103,25 @@ export const POST = withErrorHandling(async (req: NextRequest) => {
       return validationError({ credential: 'Credential not found' });
     }
 
-    const normalizeChallenge = (value: string) => {
-      if (!value) return value;
-      if (value.includes('+') || value.includes('/') || value.includes('=')) {
-        return value.replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/g, '');
-      }
-      return value;
-    };
+    const { verified, authenticationInfo } = await verifyAuthenticationResponse({
+      response: body,
+      expectedChallenge: chal.challenge,
+      expectedOrigin: allowedOrigins,
+      expectedRPID: rpID,
+      authenticator: {
+        credentialID: isoBase64URL.toBuffer(cred.credential_id),
+        credentialPublicKey: isoBase64URL.toBuffer(cred.public_key),
+        counter: Number(cred.counter ?? 0),
+      },
+    });
 
-    // Verify authentication using native implementation
-    const verificationResult = await verifyAuthenticationResponse(
-      body,
-      normalizeChallenge(chal.challenge),
-      currentOrigin,
-      rpID,
-      {
-        id: cred.id,
-        credentialId: cred.credential_id,
-        publicKey: cred.public_key,
-        counter: Number(cred.counter),
-        userId: cred.user_id,
-        rpId: cred.rp_id ?? rpID,
-        createdAt: new Date(cred.created_at ?? Date.now()),
-        userHandle: cred.user_id
-      }
-    );
-
-    if (!verificationResult.verified) {
-      const errorMessage = verificationResult.error 
-        ? typeof verificationResult.error === 'string' 
-          ? verificationResult.error 
-          : String(verificationResult.error)
-        : 'Verification failed';
-      return validationError({ 
-        verification: errorMessage
+    if (!verified || !authenticationInfo) {
+      return validationError({
+        verification: 'Authentication verification failed',
       });
     }
 
-    const newCounter = verificationResult.newCounter ?? 0;
+    const newCounter = authenticationInfo.newCounter ?? 0;
 
     // Security check: Counter should never decrease
     if (newCounter < Number(cred.counter)) {
@@ -191,7 +173,7 @@ export const POST = withErrorHandling(async (req: NextRequest) => {
       return errorResponse('Failed to establish session', 500, undefined, 'WEBAUTHN_SESSION_VERIFY_FAILED');
     }
 
-    logger.info('WebAuthn authentication verified (native)', { userId: cred.user_id });
+    logger.info('WebAuthn authentication verified', { userId: cred.user_id });
 
     const response = successResponse({
       verified: true,

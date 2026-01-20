@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server';
 import { z } from 'zod';
 
-import { getSupabaseServerClient } from '@/utils/supabase/server';
+import { getSupabaseAdminClient, getSupabaseServerClient } from '@/utils/supabase/server';
 
 import {
   withErrorHandling,
@@ -14,6 +14,7 @@ import {
 import { getUser } from '@/lib/core/auth/middleware';
 import { AnalyticsService } from '@/lib/services/analytics';
 import { logger } from '@/lib/utils/logger';
+import { recordIntegrityForVote } from '@/lib/integrity/vote-integrity';
 
 import type { NextRequest } from 'next/server';
 
@@ -103,6 +104,7 @@ export const POST = withErrorHandling(async (request: NextRequest, { params }: {
   }
 
   const supabase = await getSupabaseServerClient();
+  const adminClient = await getSupabaseAdminClient();
   if (!supabase) {
     logger.error('Supabase not configured for poll voting');
     return errorResponse('Database not available', 500);
@@ -116,6 +118,36 @@ export const POST = withErrorHandling(async (request: NextRequest, { params }: {
   if (!user) {
     return authError('Authentication required to vote');
   }
+
+  const { data: moderationActions } = await (adminClient as any)
+    .from('moderation_actions')
+    .select('action, expires_at, status')
+    .eq('target_type', 'user')
+    .eq('target_id', user.id)
+    .eq('status', 'active');
+
+  const activeActions = (moderationActions ?? []).filter((action: { expires_at?: string | null }) => {
+    if (!action.expires_at) {
+      return true;
+    }
+    return new Date(action.expires_at).getTime() > Date.now();
+  });
+
+  const actionFlags = activeActions.map((action: { action?: string }) => action.action).filter(Boolean) as string[];
+  if (actionFlags.includes('suspend')) {
+    return errorResponse('Voting suspended for this account', 403);
+  }
+  if (actionFlags.includes('require_verification')) {
+    return validationError({ verification: 'Account verification required before voting' });
+  }
+  if (actionFlags.includes('throttle')) {
+    return errorResponse('Voting temporarily throttled. Please try again later.', 429);
+  }
+
+  const clientIp = request.headers.get('x-forwarded-for')?.split(',')[0]?.trim()
+    || request.headers.get('x-real-ip')
+    || null;
+  const userAgent = request.headers.get('user-agent');
 
   // Parse and validate request body
   let rawBody: unknown;
@@ -288,6 +320,21 @@ export const POST = withErrorHandling(async (request: NextRequest, { params }: {
     }
 
     await recordAnalyticsSafely();
+    if (insertedBallot?.id) {
+      void recordIntegrityForVote({
+        supabase,
+        adminClient,
+        userId: user.id,
+        pollId,
+        voteId: insertedBallot.id,
+        voteType: 'ranked',
+        ipAddress: clientIp,
+        userAgent,
+        actionFlags,
+      }).catch((error) => {
+        logger.warn('Integrity scoring failed for ranked ballot', error);
+      });
+    }
 
     return successResponse(
       {
@@ -392,6 +439,25 @@ export const POST = withErrorHandling(async (request: NextRequest, { params }: {
     }
 
     await recordAnalyticsSafely();
+    if (insertedVotes && insertedVotes.length > 0) {
+      void Promise.all(
+        insertedVotes.map((vote) =>
+          recordIntegrityForVote({
+            supabase,
+            adminClient,
+            userId: user.id,
+            pollId,
+            voteId: vote.id,
+            voteType: 'vote',
+            ipAddress: clientIp,
+            userAgent,
+          actionFlags,
+          })
+        )
+      ).catch((error) => {
+        logger.warn('Integrity scoring failed for multi-select votes', error);
+      });
+    }
 
     return successResponse(
       {
@@ -458,6 +524,21 @@ export const POST = withErrorHandling(async (request: NextRequest, { params }: {
   }
 
   await recordAnalyticsSafely();
+  if (insertedVote?.id) {
+    void recordIntegrityForVote({
+      supabase,
+      adminClient,
+      userId: user.id,
+      pollId,
+      voteId: insertedVote.id,
+      voteType: 'vote',
+      ipAddress: clientIp,
+      userAgent,
+    actionFlags,
+    }).catch((error) => {
+      logger.warn('Integrity scoring failed for vote', error);
+    });
+  }
 
   const optionIndex = selectedOption.index;
 

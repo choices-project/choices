@@ -502,50 +502,44 @@ export default function BulkContactModal({
             </div>
           </div>
 
-          {(upcomingElections.length > 0 || electionLoading || electionError) && (
+          {upcomingElections.length > 0 && (
             <div className="bg-blue-50 border border-blue-100 rounded-lg p-4 text-sm text-blue-800 space-y-2">
               <p className="font-semibold flex items-center gap-2">
                 <ClockIcon className="h-5 w-5 text-blue-500" />
                 {t('contact.bulkModal.elections.title')}
               </p>
-              {electionLoading && <p>{t('contact.bulkModal.elections.loading')}</p>}
-              {electionError && !electionLoading && (
-                <p className="text-red-600">{t('contact.bulkModal.elections.error')}</p>
-              )}
-              {!electionLoading && !electionError && upcomingElections.length > 0 && (
-                <ul className="space-y-1 text-blue-700">
-                  {upcomingElections.slice(0, 4).map((election) => (
-                    <li key={election.election_id} className="flex items-center gap-2">
-                      <CheckCircleIcon className="h-4 w-4 text-blue-500" />
-                      <span>
-                        <span className="font-medium">{election.name}</span>
-                        <span className="ml-1">
-                          {t('contact.bulkModal.elections.date', {
-                            date: formatElectionDate(election.election_day, currentLanguage),
-                          })}
-                        </span>
+              <ul className="space-y-1 text-blue-700">
+                {upcomingElections.slice(0, 4).map((election) => (
+                  <li key={election.election_id} className="flex items-center gap-2">
+                    <CheckCircleIcon className="h-4 w-4 text-blue-500" />
+                    <span>
+                      <span className="font-medium">{election.name}</span>
+                      <span className="ml-1">
+                        {t('contact.bulkModal.elections.date', {
+                          date: formatElectionDate(election.election_day, currentLanguage),
+                        })}
                       </span>
-                    </li>
-                  ))}
-                  {upcomingElections.length > 4 && (
-                    <li>
-                      {t('contact.bulkModal.elections.more', {
-                        count: numberFormatter.format(upcomingElections.length - 4),
-                      })}
-                    </li>
-                  )}
-                  {daysUntilNextElection != null && (
-                    <li className="text-xs text-blue-700">
-                      {daysUntilNextElection === 0
-                        ? t('contact.bulkModal.elections.countdown.today')
-                        : t('contact.bulkModal.elections.countdown.inDays', {
-                            count: daysUntilNextElection,
-                            formattedCount: numberFormatter.format(daysUntilNextElection),
-                          })}
-                    </li>
-                  )}
-                </ul>
-              )}
+                    </span>
+                  </li>
+                ))}
+                {upcomingElections.length > 4 && (
+                  <li>
+                    {t('contact.bulkModal.elections.more', {
+                      count: numberFormatter.format(upcomingElections.length - 4),
+                    })}
+                  </li>
+                )}
+                {daysUntilNextElection != null && (
+                  <li className="text-xs text-blue-700">
+                    {daysUntilNextElection === 0
+                      ? t('contact.bulkModal.elections.countdown.today')
+                      : t('contact.bulkModal.elections.countdown.inDays', {
+                          count: daysUntilNextElection,
+                          formattedCount: numberFormatter.format(daysUntilNextElection),
+                        })}
+                  </li>
+                )}
+              </ul>
             </div>
           )}
 

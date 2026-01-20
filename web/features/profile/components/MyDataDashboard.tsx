@@ -1,8 +1,8 @@
 /**
  * My Data Dashboard Component
- * 
+ *
  * 🔒 PRIVACY PARAMOUNT: Shows ALL collected data, provides complete control
- * 
+ *
  * Features:
  * - View all collected data by category
  * - Export all data (GDPR/CCPA compliant)
@@ -10,7 +10,7 @@
  * - Delete all data and account
  * - Edit privacy settings
  * - Transparency and user control
- * 
+ *
  * Created: November 5, 2025
  * Status: ✅ ACTIVE
  */
@@ -91,28 +91,28 @@ export default function MyDataDashboard({
   const { exportProfile, isExporting } = useProfileExport();
   const { deleteProfile } = useProfileDelete();
   const { signOut: resetUserStore } = useUserActions();
-  
+
   // CRITICAL FIX: Use useShallow for store subscriptions to prevent infinite render loops
   // This ensures stable object references from Zustand stores
   const storePrivacySettings = useProfileStore(
     useShallow((state) => profileSelectors.privacySettings(state))
   );
-  
+
   // Store actions in refs to prevent dependency issues in useCallback/useEffect
   const updatePrivacySettingsAction = useProfileStore((state) => state.updatePrivacySettings);
   const resetProfileState = useProfileStore((state) => state.resetProfile);
-  
+
   const updatePrivacySettingsActionRef = useRef(updatePrivacySettingsAction);
   const resetProfileStateRef = useRef(resetProfileState);
-  
+
   useEffect(() => {
     updatePrivacySettingsActionRef.current = updatePrivacySettingsAction;
   }, [updatePrivacySettingsAction]);
-  
+
   useEffect(() => {
     resetProfileStateRef.current = resetProfileState;
   }, [resetProfileState]);
-  
+
   const effectivePrivacySettings = privacySettings ?? storePrivacySettings;
 
   // Data categories that can be collected
@@ -155,6 +155,22 @@ export default function MyDataDashboard({
       description: 'Usage patterns and interaction data',
       icon: <BarChart3 className="w-5 h-5" />,
       privacyKey: 'collectAnalytics',
+      canDelete: true
+    },
+    {
+      id: 'integrity-signals',
+      name: 'Integrity Signals',
+      description: 'Behavioral signals used to detect automated voting',
+      icon: <Shield className="w-5 h-5" />,
+      privacyKey: 'collectIntegritySignals',
+      canDelete: true
+    },
+    {
+      id: 'integrity-advanced',
+      name: 'Advanced Integrity Signals',
+      description: 'Device and network signals (opt-in only)',
+      icon: <Shield className="w-5 h-5" />,
+      privacyKey: 'collectIntegrityAdvancedSignals',
       canDelete: true
     },
     {
@@ -401,8 +417,8 @@ export default function MyDataDashboard({
                 key={category.id}
                 className={`
                   p-4 rounded-lg border-2 transition-all
-                  ${isEnabled 
-                    ? 'border-blue-200 bg-blue-50' 
+                  ${isEnabled
+                    ? 'border-blue-200 bg-blue-50'
                     : 'border-gray-200 bg-gray-50 opacity-60'
                   }
                 `}
@@ -419,7 +435,7 @@ export default function MyDataDashboard({
                       <p className="text-sm text-gray-600 mb-2">
                         {category.description}
                       </p>
-                      
+
                       {!isEnabled && (
                         <div className="flex items-center gap-2 text-sm text-gray-500">
                           <Lock className="w-4 h-4" />
@@ -501,7 +517,7 @@ export default function MyDataDashboard({
                       <p className="text-sm text-gray-500">{category.description}</p>
                     </div>
                   </div>
-                  
+
                           <Switch
                             checked={isEnabled}
                             disabled={isSaving}
@@ -560,7 +576,7 @@ export default function MyDataDashboard({
                 Are you sure you want to permanently delete all{' '}
                 <strong>{dataCategories.find(c => c.id === deleteTarget)?.name.toLowerCase()}</strong>?
               </p>
-              
+
               <div className="flex gap-3 justify-end">
                 <Button
                   variant="outline"
@@ -664,7 +680,7 @@ export default function MyDataDashboard({
                 and you can see, export, or delete everything at any time.
               </p>
               <p>
-                Unlike big tech platforms, we&apos;re not here to farm your data. We&apos;re here to 
+                Unlike big tech platforms, we&apos;re not here to farm your data. We&apos;re here to
                 empower civic engagement with complete respect for your privacy.
               </p>
             </div>

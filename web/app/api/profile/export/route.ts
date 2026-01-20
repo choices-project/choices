@@ -1,11 +1,11 @@
 /**
  * Profile Data Export API
- * 
+ *
  * GDPR/CCPA Compliant Data Export
  * Exports ALL user data in comprehensive JSON format
- * 
+ *
  * 🔒 PRIVACY: Only exports data user has opted in to collect
- * 
+ *
  * Created: November 5, 2025
  * Updated: November 6, 2025 - Modernized with standardized responses
  * Status: ✅ ACTIVE - PRODUCTION READY
@@ -24,10 +24,10 @@ export const dynamic = 'force-dynamic';
 
 /**
  * POST /api/profile/export
- * 
+ *
  * Exports comprehensive user data
  * Respects privacy settings - only includes data user opted to collect
- * 
+ *
  * Returns GDPR/CCPA compliant JSON with:
  * - Profile data (always included)
  * - Privacy settings (always included)
@@ -36,17 +36,17 @@ export const dynamic = 'force-dynamic';
 export const POST = withErrorHandling(async (_request: NextRequest) => {
   // Get authenticated user
   const supabase = await getSupabaseServerClient();
-  
+
   if (!supabase) {
     return errorResponse('Supabase not configured', 500);
   }
 
   const { data: { session }, error: sessionError } = await supabase.auth.getSession();
-  
+
   if (sessionError || !session?.user) {
     return authError('User not authenticated');
   }
-    
+
     const user = session.user;
     const userId = user.id;
 
@@ -70,7 +70,7 @@ export const POST = withErrorHandling(async (_request: NextRequest) => {
     const exportData: any = {
       exportDate: new Date().toISOString(),
       userId: userId,
-      
+
       // ALWAYS include: Basic profile information
       profile: {
         id: profile.id,
@@ -89,7 +89,7 @@ export const POST = withErrorHandling(async (_request: NextRequest) => {
         updated_at: profile.updated_at,
         last_sign_in: user.last_sign_in_at,
       },
-      
+
       // ALWAYS include: Privacy settings (so user knows what they opted into)
       privacySettings: privacySettings,
     };
@@ -109,7 +109,7 @@ export const POST = withErrorHandling(async (_request: NextRequest) => {
         .select('*')
         .eq('user_id', userId)
         .order('created_at', { ascending: false });
-      
+
       exportData.votingHistory = votes ?? [];
       logger.debug('Voting history included in export (user consented)', {
         count: votes?.length ?? 0
@@ -131,7 +131,7 @@ export const POST = withErrorHandling(async (_request: NextRequest) => {
           updated_at
         `)
         .eq('user_id', userId);
-      
+
       exportData.hashtagInterests = hashtags ?? [];
       logger.debug('Hashtag interests included in export (user consented)', {
         count: hashtags?.length ?? 0
@@ -145,7 +145,7 @@ export const POST = withErrorHandling(async (_request: NextRequest) => {
         .select('*')
         .eq('user_id', userId)
         .order('created_at', { ascending: false });
-      
+
       exportData.feedInteractions = feedInteractions ?? [];
       logger.debug('Feed interactions included in export (user consented)', {
         count: feedInteractions?.length ?? 0
@@ -160,10 +160,32 @@ export const POST = withErrorHandling(async (_request: NextRequest) => {
         .eq('user_id', userId)
         .order('created_at', { ascending: false })
         .limit(5000); // Limit to prevent huge exports
-      
+
       exportData.analyticsEvents = analytics ?? [];
       logger.debug('Analytics events included in export (user consented)', {
         count: analytics?.length ?? 0
+      });
+    }
+
+    // Integrity signals (if opted in)
+    if (privacySettings?.collectIntegritySignals) {
+      const { data: integritySignals } = await (supabase as any)
+        .from('integrity_signals')
+        .select('*')
+        .eq('user_id', userId)
+        .order('created_at', { ascending: false });
+
+      const { data: integrityScores } = await (supabase as any)
+        .from('vote_integrity_scores')
+        .select('*')
+        .eq('user_id', userId)
+        .order('created_at', { ascending: false });
+
+      exportData.integritySignals = integritySignals ?? [];
+      exportData.integrityScores = integrityScores ?? [];
+      logger.debug('Integrity data included in export (user consented)', {
+        signals: integritySignals?.length ?? 0,
+        scores: integrityScores?.length ?? 0,
       });
     }
 
@@ -175,7 +197,7 @@ export const POST = withErrorHandling(async (_request: NextRequest) => {
         .eq('user_id', userId)
         .eq('event_category', 'representative')
         .order('created_at', { ascending: false });
-      
+
       exportData.representativeInteractions = repInteractions ?? [];
       logger.debug('Representative interactions included in export (user consented)', {
         count: repInteractions?.length ?? 0
@@ -188,7 +210,7 @@ export const POST = withErrorHandling(async (_request: NextRequest) => {
       .select('*')
       .eq('created_by', userId)
       .order('created_at', { ascending: false });
-    
+
     exportData.createdPolls = createdPolls ?? [];
 
     // WebAuthn credentials (metadata only, not actual credentials)
@@ -196,7 +218,7 @@ export const POST = withErrorHandling(async (_request: NextRequest) => {
       .from('webauthn_credentials')
       .select('id, credential_id, public_key, counter, created_at, last_used_at, friendly_name')
       .eq('user_id', userId);
-    
+
     exportData.webauthnCredentials = credentials ?? [];
 
     // User sessions (login history)
@@ -206,7 +228,7 @@ export const POST = withErrorHandling(async (_request: NextRequest) => {
       .eq('user_id', userId)
       .order('created_at', { ascending: false })
       .limit(100); // Last 100 sessions
-    
+
     exportData.sessionHistory = sessions ?? [];
 
     // Contact messages
@@ -215,15 +237,17 @@ export const POST = withErrorHandling(async (_request: NextRequest) => {
       .select('*')
       .eq('user_id', userId)
       .order('created_at', { ascending: false });
-    
+
     exportData.contactMessages = messages ?? [];
 
     // Calculate total data points
-    const totalDataPoints = 
+    const totalDataPoints =
       (exportData.votingHistory?.length ?? 0) +
       (exportData.hashtagInterests?.length ?? 0) +
       (exportData.feedInteractions?.length ?? 0) +
       (exportData.analyticsEvents?.length ?? 0) +
+      (exportData.integritySignals?.length ?? 0) +
+      (exportData.integrityScores?.length ?? 0) +
       (exportData.representativeInteractions?.length ?? 0) +
       (exportData.createdPolls?.length ?? 0) +
       (exportData.webauthnCredentials?.length ?? 0) +

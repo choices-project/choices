@@ -4,6 +4,7 @@ import {
   LayoutDashboard,
   BarChart3,
   Settings,
+  Shield,
   X,
   MessageCircle,
   Activity,
@@ -38,6 +39,12 @@ const navigationItems = [
     href: '/admin/feedback',
     icon: MessageCircle,
     section: 'admin-feedback',
+  },
+  {
+    name: 'Moderation',
+    href: '/admin/moderation',
+    icon: Shield,
+    section: 'admin-moderation',
   },
   {
     name: 'Analytics',
@@ -78,11 +85,11 @@ export const Sidebar: React.FC = () => {
   const { toggleSidebar } = useAdminActions();
   const { data: metrics } = useSystemMetrics();
   const sidebarNavigationId = 'admin-sidebar-navigation';
-  
+
   // CRITICAL: Guard usePathname() usage to prevent hydration mismatch
   // usePathname() can return different values on server vs client
   const [isMounted, setIsMounted] = React.useState(false);
-  
+
   React.useEffect(() => {
     setIsMounted(true);
   }, []);

@@ -1,9 +1,9 @@
 /**
  * Privacy Settings Page Component
- * 
+ *
  * 🔒 PRIVACY: Comprehensive privacy settings management
  * Allows users to modify ALL 16 privacy controls anytime
- * 
+ *
  * Features:
  * - Edit all privacy settings
  * - Grouped by category with explanations
@@ -11,7 +11,7 @@
  * - Clear impact statements
  * - Quick presets
  * - View what data is collected
- * 
+ *
  * Created: November 5, 2025
  * Status: ✅ ACTIVE
  */
@@ -110,6 +110,7 @@ export default function PrivacySettingsPage({
       collectLocationData: true,
       trackInterests: true,
       collectAnalytics: true,
+      collectIntegritySignals: true,
       // Personalization
       personalizeFeeds: true,
       personalizeRecommendations: true,

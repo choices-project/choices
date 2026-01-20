@@ -134,19 +134,38 @@ export function RepresentativeCard({
       return;
     }
     if (detailedRepresentative) {
+      setDetailsLoading(false);
       return;
     }
     let cancelled = false;
     setDetailsLoading(true);
-    getRepresentativeById(representative.id, { forceRefresh: true })
-      .catch(() => undefined)
-      .finally(() => {
+    
+    // Add timeout to prevent infinite loading
+    const timeoutId = setTimeout(() => {
+      if (!cancelled) {
+        setDetailsLoading(false);
+      }
+    }, 10000); // 10 second timeout
+    
+    const fetchDetails = async () => {
+      try {
+        await getRepresentativeById(representative.id, { forceRefresh: true });
+      } catch (error) {
+        // Silently handle errors - user can retry by toggling details
+        console.error('Failed to load representative details:', error);
+      } finally {
+        clearTimeout(timeoutId);
         if (!cancelled) {
           setDetailsLoading(false);
         }
-      });
+      }
+    };
+    
+    void fetchDetails();
+    
     return () => {
       cancelled = true;
+      clearTimeout(timeoutId);
     };
   }, [detailsOpen, detailedRepresentative, getRepresentativeById, representative.id]);
 

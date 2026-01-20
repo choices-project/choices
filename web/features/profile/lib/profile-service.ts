@@ -113,6 +113,8 @@ const PRIVACY_BOOLEAN_KEYS: Array<keyof PrivacySettings> = [
   'trackFeedActivity',
   'collectAnalytics',
   'trackRepresentativeInteractions',
+  'collectIntegritySignals',
+  'collectIntegrityAdvancedSignals',
   'showReadHistory',
   'showBookmarks',
   'showLikes',
@@ -435,7 +437,7 @@ export async function getCurrentProfile(): Promise<ProfileActionResult> {
     // #region agent log
     fetch('http://127.0.0.1:7242/ingest/6a732aed-2d72-4883-a63a-f3c892fc1216',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'profile-service.ts:397',message:'Error in getCurrentProfile',data:{errorName:error instanceof Error ? error.name : 'unknown',errorMessage:error instanceof Error ? error.message : String(error),timestamp:Date.now()},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'A'})}).catch(()=>{});
     // #endregion
-    
+
     // Handle AbortError specifically (timeout or manual abort)
     if (error instanceof Error && error.name === 'AbortError') {
       logger.warn('Profile fetch was aborted (likely timeout)');
@@ -444,7 +446,7 @@ export async function getCurrentProfile(): Promise<ProfileActionResult> {
         error: 'Profile request timed out. Please try again.',
       };
     }
-    
+
     logger.error('Error fetching profile:', error);
     return {
       success: false,
@@ -685,7 +687,8 @@ export function getTrustTierDisplayName(tier: string): string {
     'T0': 'New User',
     'T1': 'Verified User',
     'T2': 'Trusted User',
-    'T3': 'VIP User',
+    'T3': 'Guardian',
+    'T4': 'Sentinel',
   };
   return tierNames[tier] ?? 'Unknown';
 }

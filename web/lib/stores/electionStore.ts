@@ -61,20 +61,33 @@ export const createElectionActions = (
     setLoading(true);
     clearError();
 
+    let timeoutId: NodeJS.Timeout | null = null;
+    const controller = new AbortController();
     try {
+      timeoutId = setTimeout(() => controller.abort(), 10_000);
       const params = new URLSearchParams();
       params.append('divisions', divisions.join(','));
-      const response = await fetch(`/api/v1/civics/elections?${params.toString()}`);
+      const response = await fetch(`/api/v1/civics/elections?${params.toString()}`, {
+        signal: controller.signal,
+      });
 
       if (!response.ok) {
         throw new Error('Failed to fetch elections');
       }
 
       const payload = await response.json() as {
-        data?: CivicElection[];
+        data?: CivicElection[] | { elections?: CivicElection[] };
+        elections?: CivicElection[];
       };
 
-      const elections = payload.data ?? [];
+      const elections =
+        Array.isArray(payload.data)
+          ? payload.data
+          : payload.data && 'elections' in payload.data && Array.isArray(payload.data.elections)
+            ? payload.data.elections
+            : Array.isArray(payload.elections)
+              ? payload.elections
+              : [];
 
       setState((state) => {
         state.electionsByKey[key] = elections;
@@ -82,9 +95,16 @@ export const createElectionActions = (
 
       return elections;
     } catch (error) {
-      setError(error instanceof Error ? error.message : 'Failed to fetch elections');
+      if (error instanceof DOMException && error.name === 'AbortError') {
+        setError('Election lookup timed out');
+      } else {
+        setError(error instanceof Error ? error.message : 'Failed to fetch elections');
+      }
       return [];
     } finally {
+      if (timeoutId) {
+        clearTimeout(timeoutId);
+      }
       setLoading(false);
     }
   };

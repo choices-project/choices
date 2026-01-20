@@ -1,7 +1,7 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import React from 'react';
 
-import { useAdminActions, useNotificationActions } from '@/lib/stores';
+import { useAdminStore, useNotificationActions } from '@/lib/stores';
 import { logger, devLog } from '@/lib/utils/logger';
 
 import { realTimeService } from './real-time-service';
@@ -244,8 +244,13 @@ export const useGeneratedPolls = () => {
 };
 
 export const useSystemMetrics = () => {
-  const { setSystemMetrics } = useAdminActions();
+  const setSystemMetrics = useAdminStore((state) => state.setSystemMetrics);
   const lastMetricsRef = React.useRef<string | null>(null);
+  const setSystemMetricsRef = React.useRef(setSystemMetrics);
+
+  React.useEffect(() => {
+    setSystemMetricsRef.current = setSystemMetrics;
+  }, [setSystemMetrics]);
 
   const query = useQuery({
     queryKey: ['system-metrics'],
@@ -271,8 +276,8 @@ export const useSystemMetrics = () => {
       return;
     }
     lastMetricsRef.current = signature;
-    setSystemMetrics(query.data);
-  }, [query.data, setSystemMetrics]);
+    setSystemMetricsRef.current(query.data);
+  }, [query.data]);
 
   return query;
 };

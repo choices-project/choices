@@ -210,51 +210,45 @@ export default function ContactRepresentativesSection({
       </div>
 
       {/* Upcoming Elections Context */}
-      {(upcomingElections.length > 0 || electionLoading || electionError) && (
+      {upcomingElections.length > 0 && (
         <div className="bg-blue-50 border border-blue-100 rounded-lg p-3 text-sm text-blue-800 flex items-start space-x-3">
           <ClockIcon className="h-5 w-5 flex-shrink-0 mt-0.5" />
           <div>
             <p className="font-medium">
               {t('contact.representatives.elections.title')}
             </p>
-            {electionLoading && <p>{t('contact.representatives.elections.loading')}</p>}
-            {electionError && !electionLoading && (
-              <p className="text-red-600">{t('contact.representatives.elections.error')}</p>
-            )}
-            {!electionLoading && !electionError && upcomingElections.length > 0 && (
-              <ul className="mt-1 space-y-1">
-                {upcomingElections.slice(0, 3).map((election) => (
-                  <li key={election.election_id} className="flex items-center space-x-2">
-                    <CheckCircleIcon className="h-4 w-4 text-blue-500" />
-                    <span className="flex flex-wrap gap-1">
-                      <span className="font-medium">{election.name}</span>
-                      <span className="ml-1 text-blue-700">
-                        {t('contact.representatives.elections.date', {
-                          date: formatElectionDate(election.election_day, currentLanguage),
-                        })}
-                      </span>
+            <ul className="mt-1 space-y-1">
+              {upcomingElections.slice(0, 3).map((election) => (
+                <li key={election.election_id} className="flex items-center space-x-2">
+                  <CheckCircleIcon className="h-4 w-4 text-blue-500" />
+                  <span className="flex flex-wrap gap-1">
+                    <span className="font-medium">{election.name}</span>
+                    <span className="ml-1 text-blue-700">
+                      {t('contact.representatives.elections.date', {
+                        date: formatElectionDate(election.election_day, currentLanguage),
+                      })}
                     </span>
-                  </li>
-                ))}
-                {upcomingElections.length > 3 && (
-                  <li className="text-blue-700">
-                    {t('contact.representatives.elections.more', {
-                      count: numberFormatter.format(upcomingElections.length - 3),
-                    })}
-                  </li>
-                )}
-                {daysUntilNextElection != null && (
-                  <li className="text-blue-700 text-xs">
-                    {daysUntilNextElection === 0
-                      ? t('contact.representatives.elections.countdown.today')
-                      : t('contact.representatives.elections.countdown.inDays', {
-                          count: daysUntilNextElection,
-                          formattedCount: numberFormatter.format(daysUntilNextElection),
-                        })}
-                  </li>
-                )}
-              </ul>
-            )}
+                  </span>
+                </li>
+              ))}
+              {upcomingElections.length > 3 && (
+                <li className="text-blue-700">
+                  {t('contact.representatives.elections.more', {
+                    count: numberFormatter.format(upcomingElections.length - 3),
+                  })}
+                </li>
+              )}
+              {daysUntilNextElection != null && (
+                <li className="text-blue-700 text-xs">
+                  {daysUntilNextElection === 0
+                    ? t('contact.representatives.elections.countdown.today')
+                    : t('contact.representatives.elections.countdown.inDays', {
+                        count: daysUntilNextElection,
+                        formattedCount: numberFormatter.format(daysUntilNextElection),
+                      })}
+                </li>
+              )}
+            </ul>
           </div>
         </div>
       )}

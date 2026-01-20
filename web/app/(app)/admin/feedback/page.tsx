@@ -20,6 +20,9 @@ type Feedback = {
   description: string;
   sentiment: string;
   screenshot: string | null;
+  adminresponse?: string | null;
+  adminresponseat?: string | null;
+  adminresponseby?: string | null;
   userjourney: {
     currentPage: string;
     currentPath: string;
@@ -168,6 +171,9 @@ export default function AdminFeedbackPage() {
           description: item.description || '',
           sentiment: item.sentiment || 'neutral',
           screenshot: item.screenshot || null,
+          adminresponse: item.admin_response ?? null,
+          adminresponseat: item.admin_response_at ?? null,
+          adminresponseby: item.admin_response_by ?? null,
           userjourney: item.user_journey || item.userjourney || {
             currentPage: '',
             currentPath: '',
@@ -237,9 +243,9 @@ export default function AdminFeedbackPage() {
 
   useEffect(() => {
     const isMountedRef = { current: true }; // Track if component is still mounted
-    
+
     void fetchFeedback(isMountedRef);
-    
+
     // Cleanup: mark component as unmounted
     return () => {
       isMountedRef.current = false;

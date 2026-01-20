@@ -71,7 +71,7 @@ export type TrustTierHistoryEntry = {
   verification_methods: string[]
 }
 
-export type TrustTier = 'T0' | 'T1' | 'T2' | 'T3'
+export type TrustTier = 'T0' | 'T1' | 'T2' | 'T3' | 'T4'
 
 export type TrustTierScore = {
   score: number

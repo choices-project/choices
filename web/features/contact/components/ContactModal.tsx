@@ -339,50 +339,44 @@ export default function ContactModal({
             </div>
           </div>
 
-          {(representativeElections.length > 0 || electionLoading || electionError) && (
+          {representativeElections.length > 0 && (
             <div className="bg-blue-50 border border-blue-100 rounded-lg p-4 text-sm text-blue-800 space-y-2">
               <p className="font-semibold flex items-center gap-2">
                 <ClockIcon className="h-5 w-5 text-blue-500" />
                 {t('contact.modal.elections.title')}
               </p>
-              {electionLoading && <p>{t('contact.modal.elections.loading')}</p>}
-              {electionError && !electionLoading && (
-                <p className="text-red-600">{t('contact.modal.elections.error')}</p>
-              )}
-              {!electionLoading && !electionError && representativeElections.length > 0 && (
-                <ul className="space-y-1 text-blue-700">
-                  {representativeElections.slice(0, 3).map((election) => (
-                    <li key={election.election_id} className="flex items-center gap-2">
-                      <CheckCircleIcon className="h-4 w-4 text-blue-500" />
-                      <span>
-                        <span className="font-medium">{election.name}</span>
-                        <span className="ml-1">
-                          {t('contact.modal.elections.date', {
-                            date: formatElectionDate(election.election_day, currentLanguage),
-                          })}
-                        </span>
+              <ul className="space-y-1 text-blue-700">
+                {representativeElections.slice(0, 3).map((election) => (
+                  <li key={election.election_id} className="flex items-center gap-2">
+                    <CheckCircleIcon className="h-4 w-4 text-blue-500" />
+                    <span>
+                      <span className="font-medium">{election.name}</span>
+                      <span className="ml-1">
+                        {t('contact.modal.elections.date', {
+                          date: formatElectionDate(election.election_day, currentLanguage),
+                        })}
                       </span>
-                    </li>
-                  ))}
-                  {representativeElections.length > 3 && (
-                    <li>
-                      {t('contact.modal.elections.more', {
-                        count: numberFormatter.format(representativeElections.length - 3),
-                      })}
-                    </li>
-                  )}
-                  {daysUntilNextElection != null && (
-                    <li className="text-xs text-blue-700">
-                      {daysUntilNextElection === 0
-                        ? t('contact.modal.elections.countdown.today')
-                        : t('contact.modal.elections.countdown.inDays', {
-                            count: daysUntilNextElection,
-                            formattedCount: numberFormatter.format(daysUntilNextElection),
-                          })}
-                    </li>
-                  )}
-                </ul>
-              )}
+                    </span>
+                  </li>
+                ))}
+                {representativeElections.length > 3 && (
+                  <li>
+                    {t('contact.modal.elections.more', {
+                      count: numberFormatter.format(representativeElections.length - 3),
+                    })}
+                  </li>
+                )}
+                {daysUntilNextElection != null && (
+                  <li className="text-xs text-blue-700">
+                    {daysUntilNextElection === 0
+                      ? t('contact.modal.elections.countdown.today')
+                      : t('contact.modal.elections.countdown.inDays', {
+                          count: daysUntilNextElection,
+                          formattedCount: numberFormatter.format(daysUntilNextElection),
+                        })}
+                  </li>
+                )}
+              </ul>
             </div>
           )}
 

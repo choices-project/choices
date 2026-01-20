@@ -1,6 +1,6 @@
 import type { TrustTier } from '@/types/features/analytics';
 
-export const TRUST_TIERS = ['T0', 'T1', 'T2', 'T3'] as const;
+export const TRUST_TIERS = ['T0', 'T1', 'T2', 'T3', 'T4'] as const;
 
 export const LEGACY_TRUST_TIER_ALIASES = [
   'bronze',
@@ -11,14 +11,17 @@ export const LEGACY_TRUST_TIER_ALIASES = [
   'tier_1',
   'tier_2',
   'tier_3',
+  'tier_4',
   'tier-0',
   'tier-1',
   'tier-2',
   'tier-3',
+  'tier-4',
   't0',
   't1',
   't2',
   't3',
+  't4',
 ] as const;
 
 const LEGACY_ALIAS_MAP: Record<string, TrustTier> = {
@@ -30,23 +33,27 @@ const LEGACY_ALIAS_MAP: Record<string, TrustTier> = {
   tier_1: 'T1',
   tier_2: 'T2',
   tier_3: 'T3',
+  tier_4: 'T4',
   'tier-0': 'T0',
   'tier-1': 'T1',
   'tier-2': 'T2',
   'tier-3': 'T3',
+  'tier-4': 'T4',
   t0: 'T0',
   t1: 'T1',
   t2: 'T2',
   t3: 'T3',
+  t4: 'T4',
 };
 
-const TIER_MATCHER = /^TIER[_-]?([0-3])$/i;
+const TIER_MATCHER = /^TIER[_-]?([0-4])$/i;
 
 export const TRUST_TIER_LABELS: Record<TrustTier, { name: string; description: string }> = {
   T0: { name: 'Guest', description: 'Anonymous/shared participant' },
   T1: { name: 'Verified', description: 'Email or social login verified' },
   T2: { name: 'Trusted', description: 'Proof-of-personhood (e.g., WebAuthn)' },
   T3: { name: 'Community Leader', description: 'High-trust, highly engaged member' },
+  T4: { name: 'Sentinel', description: 'Highest integrity tier with verified history' },
 };
 
 export const isTrustTier = (value: unknown): value is TrustTier =>

@@ -24,8 +24,6 @@ import {
   ExternalLink,
   User,
   CalendarClock,
-  AlertTriangle,
-  Loader2,
 } from 'lucide-react';
 import dynamicImport from 'next/dynamic';
 import { useParams, useRouter } from 'next/navigation';
@@ -41,8 +39,6 @@ import { Badge } from '@/components/ui/badge';
 import {
   useElectionsForDivisions,
   useFetchElectionsForDivisions,
-  useElectionLoading,
-  useElectionError,
   useAnalyticsActions,
 } from '@/lib/stores';
 import {
@@ -162,8 +158,6 @@ function RepresentativeDetailPageContent() {
   }, [representative?.ocdDivisionIds, representative?.division_ids]);
 
   const elections = useElectionsForDivisions(divisionIds);
-  const electionLoading = useElectionLoading();
-  const electionError = useElectionError();
   const upcomingElections = useMemo(() => {
     if (!Array.isArray(elections) || elections.length === 0) {
       return [];
@@ -453,36 +447,20 @@ function RepresentativeDetailPageContent() {
                 )}
               </div>
 
-              {divisionIds.length > 0 && (
+              {divisionIds.length > 0 && nextElection && (
                 <div className="mt-4">
-                  {electionLoading ? (
-                    <Badge className="flex items-center gap-2 bg-blue-500/20 text-white border-white/30 text-xs">
-                      <Loader2 className="w-3 h-3 animate-spin" />
-                      Checking elections…
-                    </Badge>
-                  ) : electionError ? (
-                    <Badge className="flex items-center gap-2 bg-red-500/30 text-white border-white/40 text-xs">
-                      <AlertTriangle className="w-3 h-3" />
-                      Election data unavailable
-                    </Badge>
-                  ) : nextElection ? (
-                    <Badge className="flex items-center gap-2 bg-white/15 text-white border-white/40 text-xs">
-                      <CalendarClock className="w-3 h-3" />
-                      <span className="truncate max-w-[220px]">{nextElection.name}</span>
-                      <span className="text-blue-100">
-                        · {formattedNextElectionDate || formatElectionDate(nextElection.election_day, false)}
+                  <Badge className="flex items-center gap-2 bg-white/15 text-white border-white/40 text-xs rounded-full shadow-sm">
+                    <CalendarClock className="w-3 h-3" />
+                    <span className="truncate max-w-[220px]">{nextElection.name}</span>
+                    <span className="text-blue-100">
+                      · {formattedNextElectionDate || formatElectionDate(nextElection.election_day, false)}
+                    </span>
+                    {upcomingElections.length > 1 && (
+                      <span className="text-blue-100/80">
+                        (+{upcomingElections.length - 1})
                       </span>
-                      {upcomingElections.length > 1 && (
-                        <span className="text-blue-100/80">
-                          (+{upcomingElections.length - 1})
-                        </span>
-                      )}
-                    </Badge>
-                  ) : (
-                    <Badge className="bg-white/10 text-white border-white/30 text-xs">
-                      No upcoming elections recorded
-                    </Badge>
-                  )}
+                    )}
+                  </Badge>
                 </div>
               )}
               {/* Always render the container to maintain consistent DOM structure */}
@@ -635,54 +613,41 @@ function RepresentativeDetailPageContent() {
             </div>
           )}
 
-        {divisionIds.length > 0 && (
-          <div className="mb-8">
-            <h3 className="text-lg font-semibold text-gray-900 mb-3">Upcoming Elections</h3>
-            <div className="space-y-3">
-              {electionLoading ? (
-                <div className="flex items-center gap-2 text-sm text-gray-500">
-                  <Loader2 className="w-4 h-4 animate-spin" />
-                  Checking elections for this district…
-                </div>
-              ) : electionError ? (
-                <div className="flex items-center gap-2 text-sm text-red-600">
-                  <AlertTriangle className="w-4 h-4" />
-                  Unable to load election information. Please try again later.
-                </div>
-              ) : upcomingElections.length > 0 ? (
-                upcomingElections.slice(0, 5).map((election) => (
-                  <div
-                    key={election.election_id}
-                    className="flex items-start justify-between bg-blue-50 border border-blue-100 rounded-lg p-3"
-                  >
-                    <div>
-                      <p className="text-sm font-semibold text-blue-900">{election.name}</p>
-                      <p className="text-xs text-blue-700">
-                        {/* Use stable format initially, update after mount to prevent hydration mismatch */}
-                        {isClient
-                          ? formatElectionDate(election.election_day, true)
-                          : formatElectionDate(election.election_day, false)
+        {divisionIds.length > 0 && upcomingElections.length > 0 && (
+          <div className="mb-8 rounded-xl border border-gray-200 bg-white shadow-sm dark:border-gray-700 dark:bg-gray-900">
+            <div className="flex items-center justify-between border-b border-gray-100 px-5 py-4 dark:border-gray-800">
+              <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100">Upcoming Elections</h3>
+              <span className="text-xs text-gray-500 dark:text-gray-400">{upcomingElections.length} listed</span>
+            </div>
+            <div className="space-y-3 px-5 py-4">
+              {upcomingElections.slice(0, 5).map((election) => (
+                <div
+                  key={election.election_id}
+                  className="flex items-start justify-between bg-blue-50 border border-blue-100 rounded-lg p-3 dark:bg-blue-900/30 dark:border-blue-900/40"
+                >
+                  <div>
+                    <p className="text-sm font-semibold text-blue-900 dark:text-blue-100">{election.name}</p>
+                    <p className="text-xs text-blue-700 dark:text-blue-200/80">
+                      {/* Use stable format initially, update after mount to prevent hydration mismatch */}
+                      {isClient
+                        ? formatElectionDate(election.election_day, true)
+                        : formatElectionDate(election.election_day, false)
+                      }
+                      {/* Calculate countdown only after mount to prevent hydration mismatch */}
+                      {isClient && (() => {
+                        const countdown = getElectionCountdown(election.election_day);
+                        if (countdown == null || countdown > 90) {
+                          return null;
                         }
-                        {/* Calculate countdown only after mount to prevent hydration mismatch */}
-                        {isClient && (() => {
-                          const countdown = getElectionCountdown(election.election_day);
-                          if (countdown == null || countdown > 90) {
-                            return null;
-                          }
-                          return ` · ${countdown === 0 ? 'Today' : `In ${countdown} day${countdown === 1 ? '' : 's'}`}`;
-                        })()}
-                      </p>
-                    </div>
-                    <Badge className="bg-blue-600 text-white text-xs">
-                      {election.ocd_division_id}
-                    </Badge>
+                        return ` · ${countdown === 0 ? 'Today' : `In ${countdown} day${countdown === 1 ? '' : 's'}`}`;
+                      })()}
+                    </p>
                   </div>
-                ))
-              ) : (
-                <div className="text-sm text-gray-600">
-                  We don’t have any upcoming elections recorded for this representative’s divisions.
+                  <Badge className="bg-blue-600 text-white text-xs dark:bg-blue-700">
+                    {election.ocd_division_id}
+                  </Badge>
                 </div>
-              )}
+              ))}
             </div>
           </div>
         )}
