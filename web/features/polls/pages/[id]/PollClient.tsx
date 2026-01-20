@@ -145,6 +145,7 @@ export default function PollClient({ poll }: PollClientProps) {
   const [results, setResults] = useState<PollResultsResponse | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [hasVoteAttempted, setHasVoteAttempted] = useState(false);
 
   // Use refs for stable app store actions to prevent infinite re-renders
   const setCurrentRouteRef = useRef(setCurrentRoute);
@@ -207,7 +208,7 @@ export default function PollClient({ poll }: PollClientProps) {
     };
   }, [pollId, pollTitle, pollDescriptionForBallot, pollOptionsForBallot, pollVotingMethodForBallot, pollTotalVotesForBallot, pollEndtimeForBallot, pollStatusForBallot, pollCategoryForBallot, pollCreatedAtForBallot]);
 
-  const combinedError = error ?? votingStoreError ?? null;
+  const combinedError = error ?? (hasVoteAttempted ? votingStoreError : null);
 
   useEffect(() => {
     let cancelled = false;
@@ -474,6 +475,7 @@ export default function PollClient({ poll }: PollClientProps) {
       return;
     }
 
+    setHasVoteAttempted(true);
     setError(null);
     clearVotingError();
     setVoting(true);

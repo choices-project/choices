@@ -179,9 +179,6 @@ export const validatePollWizardStep = (
       if (!data.title.trim()) {
         errors.title = 'Title is required';
       }
-      if (!data.description.trim()) {
-        errors.description = 'Description is required';
-      }
       break;
     }
     case 1: {
@@ -196,9 +193,6 @@ export const validatePollWizardStep = (
       break;
     }
     case 2: {
-      if (data.category === 'general' && data.tags.length === 0) {
-        errors.tags = 'At least one tag is required for general polls';
-      }
       break;
     }
     case 3: {

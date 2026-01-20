@@ -36,6 +36,7 @@
   "navigation": {
     "home": "Home",
     "polls": "Polls",
+    "civics": "Civics",
     "dashboard": "Dashboard",
     "profile": "Profile",
     "settings": "Settings",

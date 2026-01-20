@@ -292,11 +292,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         }
       }
 
-      // Always redirect to landing page, even if API calls fail
+      // Always redirect to auth landing page, even if API calls fail
       if (typeof window !== 'undefined') {
         // Use replace instead of href to prevent back button issues
-        // This ensures users are taken back to the landing page after sign out
-        window.location.replace('/landing');
+        // This ensures users are taken back to the auth landing page after sign out
+        window.location.replace('/auth');
       }
     } catch (error) {
       logger.error('Failed to sign out:', error);
@@ -308,7 +308,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       if (typeof window !== 'undefined') {
         window.localStorage.clear();
         window.sessionStorage.clear();
-        window.location.replace('/landing');
+        window.location.replace('/auth');
       }
     }
   }, []) // Empty deps - uses refs for store actions

@@ -332,6 +332,43 @@ function RepresentativeDetailPageContent() {
     ]
   );
 
+  const extraSocialChannels = useMemo(
+    () =>
+      (representative?.social_media ?? [])
+        .map((channel) => ({
+          label: channel.platform,
+          value: channel.handle,
+          url: channel.url ?? null,
+          followers: channel.followers_count ?? null,
+          verified: channel.is_verified ?? null,
+        }))
+        .filter((channel) => channel.value),
+    [representative?.social_media]
+  );
+
+  const extraContacts = useMemo(
+    () =>
+      (representative?.contacts ?? [])
+        .map((contact) => ({
+          label: contact.contact_type,
+          value: contact.value,
+          href: contact.contact_type === 'email'
+            ? `mailto:${contact.value}`
+            : contact.contact_type === 'phone'
+            ? `tel:${contact.value}`
+            : contact.value.startsWith('http')
+            ? contact.value
+            : null,
+          source: contact.source ?? null,
+        })),
+    [representative?.contacts]
+  );
+
+  const campaignFinance = representative?.campaign_finance ?? null;
+  const dataSources = Array.isArray(representative?.data_sources) ? representative?.data_sources : [];
+  const dataQualityScore = representative?.data_quality_score ?? 0;
+  const verificationStatus = representative?.verification_status ?? null;
+
   // Loading state
   if (loading) {
     return (
@@ -518,7 +555,85 @@ function RepresentativeDetailPageContent() {
                 </div>
               </div>
             )}
+
+            {extraContacts.length > 0 && (
+              <div className="md:col-span-2">
+                <p className="font-semibold text-gray-700 mb-2">Additional Contacts</p>
+                <div className="grid gap-2">
+                  {extraContacts.slice(0, 6).map((contact, index) => (
+                    <div key={`${contact.label}-${index}`} className="flex items-center gap-2 text-sm text-gray-600">
+                      <ExternalLink className="w-4 h-4 text-blue-600" />
+                      {contact.href ? (
+                        <a href={contact.href} className="text-blue-600 hover:underline">
+                          {contact.label}: {contact.value}
+                        </a>
+                      ) : (
+                        <span>{contact.label}: {contact.value}</span>
+                      )}
+                      {contact.source && (
+                        <span className="text-xs text-gray-400">({contact.source})</span>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
           </div>
+
+          <div className="grid md:grid-cols-2 gap-6 mb-8">
+            <div className="p-4 bg-gray-50 rounded-lg">
+              <h3 className="text-lg font-semibold text-gray-900 mb-2">Term Details</h3>
+              <div className="space-y-1 text-sm text-gray-600">
+                <div>Term start: {representative.term_start_date ?? 'Unknown'}</div>
+                <div>Term end: {representative.term_end_date ?? 'Unknown'}</div>
+                <div>Next election: {representative.next_election_date ?? 'Unknown'}</div>
+              </div>
+            </div>
+            <div className="p-4 bg-gray-50 rounded-lg">
+              <h3 className="text-lg font-semibold text-gray-900 mb-2">Data Quality</h3>
+              <div className="space-y-1 text-sm text-gray-600">
+                <div>Score: {Math.round(dataQualityScore)}%</div>
+                {verificationStatus && <div>Status: {verificationStatus}</div>}
+                {representative.last_verified && <div>Last verified: {representative.last_verified}</div>}
+                {dataSources.length > 0 && (
+                  <div>Sources: {dataSources.slice(0, 4).join(', ')}</div>
+                )}
+              </div>
+            </div>
+          </div>
+
+          {representative.committees && representative.committees.length > 0 && (
+            <div className="mb-8">
+              <h3 className="text-lg font-semibold text-gray-900 mb-3">Committees</h3>
+              <div className="grid gap-2">
+                {representative.committees.slice(0, 8).map((committee) => (
+                  <div key={committee.id} className="text-sm text-gray-600">
+                    {committee.committee_name} {committee.role ? `• ${committee.role}` : ''}
+                    {committee.is_current ? ' • Current' : ''}
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {representative.activities && representative.activities.length > 0 && (
+            <div className="mb-8">
+              <h3 className="text-lg font-semibold text-gray-900 mb-3">Recent Activity</h3>
+              <div className="space-y-3">
+                {representative.activities.slice(0, 5).map((activity) => (
+                  <div key={activity.id} className="p-3 border border-gray-200 rounded-lg">
+                    <div className="text-sm font-semibold text-gray-900">{activity.title}</div>
+                    {activity.description && (
+                      <div className="text-sm text-gray-600">{activity.description}</div>
+                    )}
+                    <div className="text-xs text-gray-500">
+                      {activity.type} {activity.date ? `• ${activity.date}` : ''} {activity.source ? `• ${activity.source}` : ''}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
 
         {divisionIds.length > 0 && (
           <div className="mb-8">
@@ -589,7 +704,7 @@ function RepresentativeDetailPageContent() {
           )}
 
           {/* Social Media & Links */}
-          {socialChannels.length > 0 && (
+          {(socialChannels.length > 0 || extraSocialChannels.length > 0) && (
             <div className="mb-8">
               <h3 className="text-lg font-semibold text-gray-900 mb-4">Social Media</h3>
               <div className="flex flex-wrap gap-3">
@@ -605,6 +720,56 @@ function RepresentativeDetailPageContent() {
                     <span>{channel.value}</span>
                   </a>
                 ))}
+                {extraSocialChannels.map((channel, index) => (
+                  <div
+                    key={`${channel.label}-${index}`}
+                    className="flex items-center gap-2 px-4 py-2 bg-gray-50 text-gray-700 rounded-lg"
+                  >
+                    <ExternalLink className="w-4 h-4" />
+                    <span>{channel.label}: {channel.value}</span>
+                    {channel.followers ? (
+                      <span className="text-xs text-gray-500">({channel.followers.toLocaleString()} followers)</span>
+                    ) : null}
+                    {channel.verified ? <span className="text-xs text-green-600">Verified</span> : null}
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
+          <div className="mb-8">
+            <h3 className="text-lg font-semibold text-gray-900 mb-4">External IDs</h3>
+            <div className="grid md:grid-cols-2 gap-2 text-sm text-gray-600">
+              {representative.bioguide_id && <div>Bioguide: {representative.bioguide_id}</div>}
+              {representative.fec_id && <div>FEC: {representative.fec_id}</div>}
+              {representative.google_civic_id && <div>Google Civic: {representative.google_civic_id}</div>}
+              {representative.congress_gov_id && <div>Congress.gov: {representative.congress_gov_id}</div>}
+              {representative.legiscan_id && <div>LegiScan: {representative.legiscan_id}</div>}
+              {representative.govinfo_id && <div>GovInfo: {representative.govinfo_id}</div>}
+              {representative.openstates_id && <div>OpenStates: {representative.openstates_id}</div>}
+              {representative.ballotpedia_url && (
+                <a
+                  href={representative.ballotpedia_url}
+                  className="text-blue-600 hover:underline"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                >
+                  Ballotpedia profile
+                </a>
+              )}
+            </div>
+          </div>
+
+          {campaignFinance && (
+            <div className="mb-8 p-4 bg-gray-50 rounded-lg">
+              <h3 className="text-lg font-semibold text-gray-900 mb-2">Campaign Finance</h3>
+              <div className="grid md:grid-cols-2 gap-2 text-sm text-gray-600">
+                {campaignFinance.cycle && <div>Cycle: {campaignFinance.cycle}</div>}
+                {campaignFinance.total_raised != null && <div>Total raised: ${campaignFinance.total_raised.toLocaleString()}</div>}
+                {campaignFinance.total_spent != null && <div>Total spent: ${campaignFinance.total_spent.toLocaleString()}</div>}
+                {campaignFinance.cash_on_hand != null && <div>Cash on hand: ${campaignFinance.cash_on_hand.toLocaleString()}</div>}
+                {campaignFinance.last_filing_date && <div>Last filing: {campaignFinance.last_filing_date}</div>}
+                {campaignFinance.source && <div>Source: {campaignFinance.source}</div>}
               </div>
             </div>
           )}

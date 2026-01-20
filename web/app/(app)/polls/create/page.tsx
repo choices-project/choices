@@ -2,13 +2,13 @@
 
 import { useEffect } from 'react';
 
-import { AccessiblePollWizard } from '@/features/polls/components/AccessiblePollWizard';
+import PollCreateWizardPage from '@/features/polls/pages/create/page';
 
 import { useAppActions } from '@/lib/stores/appStore';
 
 import { useI18n } from '@/hooks/useI18n';
 
-export default function CreatePollPage() {
+export default function PollsCreatePage() {
   const { t } = useI18n();
   const { setCurrentRoute, setSidebarActiveSection, setBreadcrumbs } = useAppActions();
 
@@ -28,6 +28,6 @@ export default function CreatePollPage() {
     };
   }, [setBreadcrumbs, setCurrentRoute, setSidebarActiveSection, t]);
 
-  return <AccessiblePollWizard />;
+  return <PollCreateWizardPage />;
 }
 

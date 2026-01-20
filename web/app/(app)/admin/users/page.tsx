@@ -1,7 +1,7 @@
 'use client';
 
 import dynamic from 'next/dynamic';
-import React, { Suspense, useEffect } from 'react';
+import React, { Suspense, useEffect, useRef } from 'react';
 
 import { useAppActions } from '@/lib/stores/appStore';
 
@@ -19,20 +19,34 @@ const UserManagement = dynamic(
 
 export default function AdminUsersPage() {
   const { setCurrentRoute, setSidebarActiveSection, setBreadcrumbs } = useAppActions();
+  const setCurrentRouteRef = useRef(setCurrentRoute);
+  const setSidebarActiveSectionRef = useRef(setSidebarActiveSection);
+  const setBreadcrumbsRef = useRef(setBreadcrumbs);
+  const initializedRef = useRef(false);
 
   useEffect(() => {
-    setCurrentRoute('/admin/users');
-    setSidebarActiveSection('admin-users');
-    setBreadcrumbs([
+    setCurrentRouteRef.current = setCurrentRoute;
+    setSidebarActiveSectionRef.current = setSidebarActiveSection;
+    setBreadcrumbsRef.current = setBreadcrumbs;
+  }, [setBreadcrumbs, setCurrentRoute, setSidebarActiveSection]);
+
+  useEffect(() => {
+    if (initializedRef.current) {
+      return;
+    }
+    initializedRef.current = true;
+    setCurrentRouteRef.current('/admin/users');
+    setSidebarActiveSectionRef.current('admin-users');
+    setBreadcrumbsRef.current([
       { label: 'Admin', href: '/admin' },
       { label: 'Users', href: '/admin/users' },
     ]);
 
     return () => {
-      setSidebarActiveSection(null);
-      setBreadcrumbs([]);
+      setSidebarActiveSectionRef.current(null);
+      setBreadcrumbsRef.current([]);
     };
-  }, [setBreadcrumbs, setCurrentRoute, setSidebarActiveSection]);
+  }, []);
 
   // CRITICAL FIX: Remove AdminLayout wrapper - parent layout.tsx already provides it
   // Double wrapping causes duplicate sidebar and header rendering

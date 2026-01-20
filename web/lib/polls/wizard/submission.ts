@@ -57,9 +57,11 @@ const pollWizardSubmissionSchema = z
     title: trimmedString('Title is required')
       .min(3, { message: 'Title must be at least 3 characters' })
       .max(TITLE_CHAR_LIMIT, { message: `Title must be under ${TITLE_CHAR_LIMIT} characters` }),
-    description: trimmedString('Description is required')
-      .min(10, { message: 'Description must be at least 10 characters' })
-      .max(DESCRIPTION_CHAR_LIMIT, { message: `Description must be under ${DESCRIPTION_CHAR_LIMIT} characters` }),
+    description: z
+      .string()
+      .trim()
+      .max(DESCRIPTION_CHAR_LIMIT, { message: `Description must be under ${DESCRIPTION_CHAR_LIMIT} characters` })
+      .optional(),
     category: z.string().trim().min(2, 'Category is required'),
     options: z
       .array(optionSchema)
@@ -81,6 +83,7 @@ const pollWizardSubmissionSchema = z
 
     return {
       ...data,
+      description: data.description?.trim() ?? '',
       tags,
       settings: {
         ...data.settings,

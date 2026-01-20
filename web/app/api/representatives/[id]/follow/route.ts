@@ -23,7 +23,15 @@ export const POST = withErrorHandling(async (
   const adminSupabase = await getSupabaseAdminClient();
 
   if (!supabase || !adminSupabase) {
-    return errorResponse('Database connection not available', 500);
+    logger.warn('Follow status check unavailable: missing database client', {
+      hasSupabase: Boolean(supabase),
+      hasAdminSupabase: Boolean(adminSupabase),
+    });
+    return successResponse({
+      following: false,
+      follow: null,
+      unavailable: true,
+    });
   }
 
   const { data: { user }, error: userError } = await supabase.auth.getUser();
@@ -175,7 +183,11 @@ export const GET = withErrorHandling(async (
 
   if (followError) {
     logger.error('Error checking follow status:', followError);
-    return errorResponse('Failed to check follow status', 500);
+    return successResponse({
+      following: false,
+      follow: null,
+      unavailable: true,
+    });
   }
 
   return successResponse({

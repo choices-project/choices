@@ -157,7 +157,21 @@ export class RepresentativeService {
   async getRepresentativeById(id: number): Promise<RepresentativeApiResponse> {
     try {
       // Call API route (client-safe)
-      const response = await fetch(`/api/v1/civics/representative/${id}?include=divisions,photos`);
+      const response = await fetch(
+        `/api/v1/civics/representative/${id}?include=` +
+        [
+          'divisions',
+          'photos',
+          'contact',
+          'contacts',
+          'social_media',
+          'committees',
+          'activities',
+          'campaign_finance',
+          'fec',
+          'votes'
+        ].join(',')
+      );
       if (!response.ok) {
         if (response.status === 404) {
           return {

@@ -23,6 +23,7 @@ import { Button } from '@/components/ui/button';
 
 import logger from '@/lib/utils/logger';
 
+import { useSession, useUser as useUserStore } from '@/lib/stores';
 import { useAuth } from '@/hooks/useAuth';
 import { useI18n } from '@/hooks/useI18n';
 
@@ -64,7 +65,9 @@ export default function GlobalNavigation() {
   // Note: useAuth will throw if not within AuthProvider, but that's expected
   // and should be caught by ErrorBoundary in the layout
   const { user, isLoading: authLoading, logout: authSignOut } = useAuth();
-  const isAuthenticated = Boolean(user);
+  const storeSession = useSession();
+  const storeUser = useUserStore();
+  const isAuthenticated = Boolean(user ?? storeSession?.user ?? storeUser);
   const [loadingTimeout, setLoadingTimeout] = useState(false);
 
   // Add timeout fallback to prevent infinite loading state
@@ -144,6 +147,7 @@ export default function GlobalNavigation() {
     () => [
       { href: '/feed', label: tRef.current('navigation.home'), icon: Home },
       { href: '/polls', label: tRef.current('navigation.polls'), icon: Vote },
+      { href: '/civics', label: tRef.current('navigation.civics'), icon: Shield },
       { href: '/dashboard', label: tRef.current('navigation.dashboard'), icon: BarChart3 },
     ],
     [], // Empty deps - using tRef
@@ -358,9 +362,6 @@ export default function GlobalNavigation() {
                   <Button asChild variant="outline" size="sm">
                     <Link href="/login" prefetch={false}>{t('navigation.login')}</Link>
                   </Button>
-                  <Button asChild size="sm">
-                    <Link href="/register" prefetch={false}>{t('navigation.register')}</Link>
-                  </Button>
                 </div>
               )}
             </div>
@@ -460,11 +461,6 @@ export default function GlobalNavigation() {
                       <Button asChild variant="outline" size="sm" className="w-full">
                         <Link href="/login" prefetch={false} onClick={closeMobileMenu}>
                           {t('navigation.login')}
-                        </Link>
-                      </Button>
-                      <Button asChild size="sm" className="w-full">
-                        <Link href="/register" prefetch={false} onClick={closeMobileMenu}>
-                          {t('navigation.register')}
                         </Link>
                       </Button>
                     </div>

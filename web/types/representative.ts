@@ -41,6 +41,9 @@ export type Representative = {
   fec_id?: string;
   google_civic_id?: string;
   congress_gov_id?: string;
+  legiscan_id?: string;
+  govinfo_id?: string;
+  ballotpedia_url?: string;
 
   // Additional Info
   primary_photo_url?: string;
@@ -52,17 +55,55 @@ export type Representative = {
   data_quality_score: number;
   verification_status: 'verified' | 'pending' | 'failed';
   data_sources: string[];
+  last_verified?: string;
 
   // Timestamps
   created_at: string;
   updated_at: string;
-  last_verified: string;
 
   // Related Data (populated by service)
   photos?: RepresentativePhoto[];
   activities?: RepresentativeActivity[];
   committees?: RepresentativeCommittee[];
   crosswalk?: RepresentativeCrosswalk[];
+  contacts?: RepresentativeContact[];
+  social_media?: RepresentativeSocialChannel[];
+  campaign_finance?: RepresentativeCampaignFinance;
+}
+
+export type RepresentativeContact = {
+  id: number;
+  representative_id: number;
+  contact_type: string;
+  value: string;
+  source?: string | null;
+  is_primary?: boolean | null;
+  is_verified?: boolean | null;
+  created_at?: string | null;
+  updated_at?: string | null;
+}
+
+export type RepresentativeSocialChannel = {
+  id: number;
+  representative_id: number;
+  platform: string;
+  handle: string;
+  url?: string | null;
+  followers_count?: number | null;
+  is_primary?: boolean | null;
+  is_verified?: boolean | null;
+  created_at?: string | null;
+  updated_at?: string | null;
+}
+
+export type RepresentativeCampaignFinance = {
+  cycle?: number | null;
+  total_raised?: number | null;
+  total_spent?: number | null;
+  cash_on_hand?: number | null;
+  last_filing_date?: string | null;
+  updated_at?: string | null;
+  source?: string | null;
 }
 
 export type RepresentativePhoto = {

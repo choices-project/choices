@@ -18,6 +18,21 @@ type RepresentativeResponse = {
   state?: string;
   district?: string;
   party?: string;
+  openstates_id?: string;
+  bioguide_id?: string;
+  fec_id?: string;
+  google_civic_id?: string;
+  congress_gov_id?: string;
+  legiscan_id?: string;
+  govinfo_id?: string;
+  ballotpedia_url?: string;
+  term_start_date?: string;
+  term_end_date?: string;
+  next_election_date?: string;
+  data_quality_score?: number;
+  verification_status?: string;
+  data_sources?: string[];
+  last_verified?: string;
   division_ids?: string[];
   primary_photo_url?: string;
   photos?: Array<{
@@ -28,6 +43,50 @@ type RepresentativeResponse = {
     alt_text?: string | null;
     attribution?: string | null;
   }>;
+  contacts?: Array<{
+    id: number;
+    contact_type: string;
+    value: string;
+    source?: string | null;
+    is_primary?: boolean | null;
+    is_verified?: boolean | null;
+  }>;
+  social_media?: Array<{
+    id: number;
+    platform: string;
+    handle: string;
+    url?: string | null;
+    followers_count?: number | null;
+    is_primary?: boolean | null;
+    is_verified?: boolean | null;
+  }>;
+  committees?: Array<{
+    id: number;
+    committee_name: string;
+    role?: string | null;
+    is_current?: boolean | null;
+    start_date?: string | null;
+    end_date?: string | null;
+  }>;
+  activities?: Array<{
+    id: number;
+    type: string;
+    title: string;
+    description?: string | null;
+    date?: string | null;
+    source?: string | null;
+    source_url?: string | null;
+    url?: string | null;
+  }>;
+  campaign_finance?: {
+    total_raised?: number | null;
+    total_spent?: number | null;
+    cash_on_hand?: number | null;
+    cycle?: number | null;
+    last_filing_date?: string | null;
+    last_updated?: string | null;
+    source?: string | null;
+  };
   fec?: {
     total_receipts: number;
     cash_on_hand: number;
@@ -69,6 +128,11 @@ export const GET = withErrorHandling(async (
     const include = searchParams.get('include')?.split(',') ?? [];
     const includeDivisions = include.includes('divisions');
     const includePhotos = include.includes('photos');
+    const includeContacts = include.includes('contacts');
+    const includeSocial = include.includes('social') || include.includes('social_media');
+    const includeCommittees = include.includes('committees');
+    const includeActivities = include.includes('activities');
+    const includeCampaignFinance = include.includes('campaign_finance');
 
     const representativeId = params.id?.trim();
     if (!representativeId) {
@@ -90,10 +154,24 @@ export const GET = withErrorHandling(async (
       party: string | null;
       updated_at: string;
       openstates_id: string | null;
+      bioguide_id: string | null;
+      fec_id: string | null;
+      google_civic_id: string | null;
+      congress_gov_id: string | null;
+      legiscan_id: string | null;
+      govinfo_id: string | null;
+      ballotpedia_url: string | null;
       primary_email?: string | null;
       primary_phone?: string | null;
       primary_website?: string | null;
       primary_photo_url?: string | null;
+      term_start_date?: string | null;
+      term_end_date?: string | null;
+      next_election_date?: string | null;
+      data_quality_score?: number | null;
+      verification_status?: string | null;
+      data_sources?: string[] | null;
+      last_verified?: string | null;
       representative_divisions?: RepresentativeDivisionRow[] | null;
       representative_photos?: Array<{
         id: number;
@@ -115,10 +193,24 @@ export const GET = withErrorHandling(async (
       'party',
       'updated_at',
       'openstates_id',
+      'bioguide_id',
+      'fec_id',
+      'google_civic_id',
+      'congress_gov_id',
+      'legiscan_id',
+      'govinfo_id',
+      'ballotpedia_url',
       'primary_email',
       'primary_phone',
       'primary_website',
-      'primary_photo_url'
+      'primary_photo_url',
+      'term_start_date',
+      'term_end_date',
+      'next_election_date',
+      'data_quality_score',
+      'verification_status',
+      'data_sources',
+      'last_verified'
     ];
 
     if (includeDivisions) {
@@ -174,6 +266,24 @@ export const GET = withErrorHandling(async (
       response.party = representativeRow.party;
     }
 
+    response.openstates_id = representativeRow.openstates_id ?? undefined;
+    response.bioguide_id = representativeRow.bioguide_id ?? undefined;
+    response.fec_id = representativeRow.fec_id ?? undefined;
+    response.google_civic_id = representativeRow.google_civic_id ?? undefined;
+    response.congress_gov_id = representativeRow.congress_gov_id ?? undefined;
+    response.legiscan_id = representativeRow.legiscan_id ?? undefined;
+    response.govinfo_id = representativeRow.govinfo_id ?? undefined;
+    response.ballotpedia_url = representativeRow.ballotpedia_url ?? undefined;
+    response.term_start_date = representativeRow.term_start_date ?? undefined;
+    response.term_end_date = representativeRow.term_end_date ?? undefined;
+    response.next_election_date = representativeRow.next_election_date ?? undefined;
+    response.data_quality_score = representativeRow.data_quality_score ?? 0;
+    response.verification_status = representativeRow.verification_status ?? undefined;
+    response.data_sources = Array.isArray(representativeRow.data_sources)
+      ? representativeRow.data_sources.filter((value): value is string => typeof value === 'string')
+      : undefined;
+    response.last_verified = representativeRow.last_verified ?? undefined;
+
     const primaryPhoto = representativeRow.primary_photo_url ?? primaryPhotoFromSet;
     if (primaryPhoto) {
       response.primary_photo_url = primaryPhoto;
@@ -209,6 +319,28 @@ export const GET = withErrorHandling(async (
           cash_on_hand: fecData.cash_on_hand ?? 0,
           cycle: fecData.cycle ?? new Date().getFullYear(),
           last_updated: fecData.updated_at ?? representativeRow.updated_at
+        };
+      }
+    }
+
+    if (includeCampaignFinance) {
+      const { data: financeData, error: financeError } = await supabase
+        .from('representative_campaign_finance')
+        .select('total_raised, total_spent, cash_on_hand, cycle, last_filing_date, updated_at, source')
+        .eq('representative_id', representativeRow.id)
+        .order('cycle', { ascending: false })
+        .limit(1)
+        .maybeSingle();
+
+      if (!financeError && financeData) {
+        response.campaign_finance = {
+          total_raised: financeData.total_raised ?? null,
+          total_spent: financeData.total_spent ?? null,
+          cash_on_hand: financeData.cash_on_hand ?? null,
+          cycle: financeData.cycle ?? null,
+          last_filing_date: financeData.last_filing_date ?? null,
+          last_updated: financeData.updated_at ?? representativeRow.updated_at,
+          source: financeData.source ?? null
         };
       }
     }
@@ -254,6 +386,58 @@ export const GET = withErrorHandling(async (
         last_updated: representativeRow.updated_at
       };
       response.attribution.contact = 'ProPublica Congress API';
+    }
+
+    if (includeContacts) {
+      const { data: contactsData, error: contactsError } = await supabase
+        .from('representative_contacts')
+        .select('id, contact_type, value, source, is_primary, is_verified')
+        .eq('representative_id', representativeRow.id)
+        .order('is_primary', { ascending: false })
+        .order('contact_type', { ascending: true });
+
+      if (!contactsError && Array.isArray(contactsData)) {
+        response.contacts = contactsData;
+      }
+    }
+
+    if (includeSocial) {
+      const { data: socialData, error: socialError } = await supabase
+        .from('representative_social_media')
+        .select('id, platform, handle, url, followers_count, is_primary, is_verified')
+        .eq('representative_id', representativeRow.id)
+        .order('is_primary', { ascending: false })
+        .order('platform', { ascending: true });
+
+      if (!socialError && Array.isArray(socialData)) {
+        response.social_media = socialData;
+      }
+    }
+
+    if (includeCommittees) {
+      const { data: committeesData, error: committeesError } = await supabase
+        .from('representative_committees')
+        .select('id, committee_name, role, is_current, start_date, end_date')
+        .eq('representative_id', representativeRow.id)
+        .order('is_current', { ascending: false })
+        .order('committee_name', { ascending: true });
+
+      if (!committeesError && Array.isArray(committeesData)) {
+        response.committees = committeesData;
+      }
+    }
+
+    if (includeActivities) {
+      const { data: activityData, error: activityError } = await supabase
+        .from('representative_activity')
+        .select('id, type, title, description, date, source, source_url, url')
+        .eq('representative_id', representativeRow.id)
+        .order('date', { ascending: false })
+        .limit(10);
+
+      if (!activityError && Array.isArray(activityData)) {
+        response.activities = activityData;
+      }
     }
 
     // Filter fields if requested
