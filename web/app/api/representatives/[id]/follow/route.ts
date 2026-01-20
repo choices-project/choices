@@ -1,4 +1,4 @@
-import { getSupabaseServerClient } from '@/utils/supabase/server';
+import { getSupabaseAdminClient, getSupabaseServerClient } from '@/utils/supabase/server';
 
 import { withErrorHandling, successResponse, authError, validationError, notFoundError, errorResponse } from '@/lib/api';
 import { logger } from '@/lib/utils/logger';
@@ -20,6 +20,11 @@ export const POST = withErrorHandling(async (
   }
 
   const supabase = await getSupabaseServerClient();
+  const adminSupabase = await getSupabaseAdminClient();
+
+  if (!supabase || !adminSupabase) {
+    return errorResponse('Database connection not available', 500);
+  }
 
   const { data: { user }, error: userError } = await supabase.auth.getUser();
 
@@ -28,7 +33,7 @@ export const POST = withErrorHandling(async (
   }
 
     // Verify representative exists
-    const { data: representative, error: repError } = await supabase
+    const { data: representative, error: repError } = await adminSupabase
       .from('representatives_core')
       .select('id')
       .eq('id', representativeId)
@@ -39,7 +44,7 @@ export const POST = withErrorHandling(async (
   }
 
     // Check if already following
-    const { data: existing } = await (supabase as any)
+    const { data: existing } = await (adminSupabase as any)
       .from('representative_follows')
       .select('id')
       .eq('user_id', user.id)
@@ -55,7 +60,7 @@ export const POST = withErrorHandling(async (
   }
 
     // Insert follow relationship
-    const { data: followData, error: followError } = await (supabase as any)
+    const { data: followData, error: followError } = await (adminSupabase as any)
       .from('representative_follows')
       .insert({
         user_id: user.id,
@@ -96,6 +101,11 @@ export const DELETE = withErrorHandling(async (
   }
 
   const supabase = await getSupabaseServerClient();
+  const adminSupabase = await getSupabaseAdminClient();
+
+  if (!supabase || !adminSupabase) {
+    return errorResponse('Database connection not available', 500);
+  }
 
   const { data: { user }, error: userError } = await supabase.auth.getUser();
 
@@ -104,7 +114,7 @@ export const DELETE = withErrorHandling(async (
   }
 
     // Delete follow relationship
-    const { error: unfollowError } = await (supabase as any)
+    const { error: unfollowError } = await (adminSupabase as any)
       .from('representative_follows')
       .delete()
       .eq('user_id', user.id)
@@ -137,6 +147,11 @@ export const GET = withErrorHandling(async (
   }
 
   const supabase = await getSupabaseServerClient();
+  const adminSupabase = await getSupabaseAdminClient();
+
+  if (!supabase || !adminSupabase) {
+    return errorResponse('Database connection not available', 500);
+  }
 
   const { data: { user }, error: userError } = await supabase.auth.getUser();
 
@@ -145,7 +160,7 @@ export const GET = withErrorHandling(async (
   }
 
     // Check if following
-    const { data: followData, error: followError } = await (supabase as any)
+    const { data: followData, error: followError } = await (adminSupabase as any)
       .from('representative_follows')
       .select('*')
       .eq('user_id', user.id)

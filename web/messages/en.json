@@ -3598,6 +3598,110 @@
       }
     }
   },
+  "polls": {
+    "view": {
+      "privacy": {
+        "public": "Public",
+        "private": "Private",
+        "unlisted": "Unlisted"
+      },
+      "votingMethod": {
+        "single": "Single choice",
+        "multiple": "Multiple choice",
+        "approval": "Approval voting",
+        "ranked": "Ranked choice",
+        "quadratic": "Quadratic voting"
+      },
+      "breadcrumbs": {
+        "home": "Home",
+        "dashboard": "Dashboard",
+        "polls": "Polls",
+        "pollDetail": "Poll details"
+      },
+      "errors": {
+        "loadResultsFailed": "Failed to load poll results. Please try again later.",
+        "loadDataFailed": "Failed to load poll data. Please try again later.",
+        "voteFailed": "Unable to submit your vote."
+      },
+      "loading": "Loading poll details…",
+      "leadingOption": {
+        "label": "Leading option",
+        "votes": "{votes} votes ({percentage}%) out of {total}"
+      },
+      "stats": {
+        "totalVotes": "Total votes",
+        "participation": "Participation",
+        "status": "Status"
+      },
+      "status": {
+        "active": {
+          "label": "Active"
+        },
+        "closed": {
+          "label": "Closed",
+          "title": "Poll closed",
+          "description": "This poll is closed. Results are available below."
+        },
+        "draft": {
+          "label": "Draft"
+        },
+        "notOpen": {
+          "title": "Poll not open",
+          "description": "Voting is not available for this poll yet."
+        },
+        "signInRequired": {
+          "title": "Sign in required",
+          "description": "Please sign in to vote in this poll."
+        },
+        "votingRestricted": {
+          "title": "Voting restricted",
+          "description": "You don’t have permission to vote in this poll."
+        }
+      },
+      "milestones": {
+        "label": "Milestones",
+        "empty": "No milestones selected yet.",
+        "tracking": "Tracking: {milestones}",
+        "nextUp": "Next up: {count} votes",
+        "achieved": "Achieved milestones",
+        "votesBadge": "{count} votes",
+        "itemLabel": "{count} votes",
+        "itemDescription": "Notify me when this poll reaches {count} votes",
+        "toggleAria": "Toggle milestone notifications for {count} votes"
+      },
+      "options": {
+        "fallback": "Option {number}",
+        "voteCount": "{votes} votes • {percentage}%"
+      },
+      "buttons": {
+        "share": "Share",
+        "analytics": "Analytics",
+        "printSummary": "Print summary",
+        "vote": "Vote",
+        "voted": "Voted",
+        "voting": "Voting…"
+      },
+      "notifications": {
+        "voteRecorded": {
+          "title": "Vote recorded",
+          "message": "Thanks for voting! Your response has been counted."
+        },
+        "voteFailed": {
+          "title": "Vote failed",
+          "message": "We couldn’t record your vote. Please try again."
+        },
+        "linkCopied": {
+          "title": "Link copied",
+          "message": "Poll link copied to clipboard."
+        },
+        "copyFailed": {
+          "title": "Copy failed",
+          "message": "Unable to copy the link. Please try again."
+        }
+      },
+      "created": "Created {date}"
+    }
+  },
   "harness": {
     "globalNavigation": {
       "title": "Global Navigation Harness",

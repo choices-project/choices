@@ -53,24 +53,6 @@ const nextConfig = {
       'uuid',
     ],
   },
-  async headers() {
-    if (process.env.NODE_ENV !== 'development') {
-      return [];
-    }
-
-    return [
-      {
-        source: '/_next/static/:path*',
-        headers: [
-          {
-            key: 'Cache-Control',
-            value: 'no-store, must-revalidate',
-          },
-        ],
-      },
-    ];
-  },
-
   // Image optimization
   images: {
     formats: ['image/webp', 'image/avif'],
@@ -85,7 +67,11 @@ const nextConfig = {
       { protocol: 'https', hostname: '**.us' },
       { protocol: 'http', hostname: '**.us' },
       { protocol: 'https', hostname: 'storage.googleapis.com' },
-      { protocol: 'https', hostname: '**.googleusercontent.com' }
+      { protocol: 'https', hostname: '**.googleusercontent.com' },
+      { protocol: 'https', hostname: 'upload.wikimedia.org' },
+      { protocol: 'https', hostname: 'www.joincalifornia.com' },
+      { protocol: 'https', hostname: 's3.amazonaws.com' },
+      { protocol: 'https', hostname: 'www.assembly.ca.gov' }
     ]
   },
 
@@ -498,7 +484,7 @@ const nextConfig = {
       .map(([key, values]) => `${key} ${values.join(' ')}`)
       .join('; ')
 
-    return [
+    const headerRules = [
       {
         source: '/(.*)',
         headers: [
@@ -617,6 +603,20 @@ const nextConfig = {
         ]
       }
     ]
+
+    if (process.env.NODE_ENV === 'development') {
+      headerRules.unshift({
+        source: '/_next/static/:path*',
+        headers: [
+          {
+            key: 'Cache-Control',
+            value: 'no-store, must-revalidate',
+          },
+        ],
+      })
+    }
+
+    return headerRules
   },
 
   // Redirects for performance

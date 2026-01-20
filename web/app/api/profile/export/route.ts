@@ -56,7 +56,7 @@ export const POST = withErrorHandling(async (_request: NextRequest) => {
     const { data: profile, error: profileError } = await supabase
       .from('user_profiles')
       .select('*')
-      .eq('id', userId)
+      .eq('user_id', userId)
       .single();
 
   if (profileError) {

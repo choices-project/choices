@@ -19,6 +19,7 @@ import { useEffect, useLayoutEffect, useState } from 'react';
 
 import { logger } from '@/lib/utils/logger';
 
+import { clearAllCaches } from '../lib/cache-strategies';
 import {
   register,
   unregister,
@@ -26,7 +27,6 @@ import {
   isServiceWorkerSupported,
   isUpdateAvailable as checkUpdateAvailable
 } from '../lib/service-worker-registration';
-import { clearAllCaches } from '../lib/cache-strategies';
 import { DEV_CONFIG } from '../lib/sw-config';
 
 /**

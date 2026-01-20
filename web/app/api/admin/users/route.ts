@@ -1,4 +1,4 @@
-import { getSupabaseServerClient } from '@/utils/supabase/server';
+import { getSupabaseAdminClient, getSupabaseServerClient } from '@/utils/supabase/server';
 
 import { requireAdminOr401 } from '@/features/auth/lib/admin-auth';
 
@@ -22,8 +22,9 @@ export const GET = withErrorHandling(async (request: NextRequest) => {
   if (authGate) return authGate
   
   const supabase = await getSupabaseServerClient();
+  const adminSupabase = await getSupabaseAdminClient();
 
-  if (!supabase) {
+  if (!supabase || !adminSupabase) {
     return errorResponse('Database connection not available', 500);
   }
 
@@ -44,7 +45,7 @@ export const GET = withErrorHandling(async (request: NextRequest) => {
   }
 
   // Build query
-  let query = supabase
+  let query = adminSupabase
     .from('user_profiles')
     .select(
       `
@@ -97,8 +98,9 @@ export const PUT = withErrorHandling(async (request: NextRequest) => {
   if (authGate) return authGate
   
   const supabase = await getSupabaseServerClient();
+  const adminSupabase = await getSupabaseAdminClient();
 
-  if (!supabase) {
+  if (!supabase || !adminSupabase) {
     return errorResponse('Database connection not available', 500);
   }
 
@@ -129,7 +131,7 @@ export const PUT = withErrorHandling(async (request: NextRequest) => {
   }
 
   // Update user profile
-  const { error: updateError } = await supabase
+  const { error: updateError } = await adminSupabase
     .from('user_profiles')
     .update({
       ...validUpdates,

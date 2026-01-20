@@ -44,6 +44,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const storeUser = useUserStore((state) => state.user)
   const storeActions = useUserStore(
     useShallow((state) => ({
+      setLoading: state.setLoading,
       initializeAuth: state.initializeAuth,
       setSessionAndDerived: state.setSessionAndDerived,
       setProfile: state.setProfile,
@@ -63,6 +64,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const setUserErrorRef = useRef(storeActions.setUserError)
   const clearUserErrorRef = useRef(storeActions.clearUserError)
   const storeSignOutRef = useRef(storeActions.storeSignOut)
+  const setStoreLoadingRef = useRef(storeActions.setLoading)
 
   // Keep refs in sync - useShallow ensures the object reference is stable, but actions inside might change
   // Actually, Zustand actions are always stable, so these effects should never run, but we keep them for safety
@@ -73,6 +75,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   useEffect(() => { setUserErrorRef.current = storeActions.setUserError }, [storeActions.setUserError])
   useEffect(() => { clearUserErrorRef.current = storeActions.clearUserError }, [storeActions.clearUserError])
   useEffect(() => { storeSignOutRef.current = storeActions.storeSignOut }, [storeActions.storeSignOut])
+  useEffect(() => { setStoreLoadingRef.current = storeActions.setLoading }, [storeActions.setLoading])
 
   const hydrateProfile = useCallback(
     async (client: Awaited<ReturnType<typeof getSupabaseBrowserClient>>, userId: string) => {
@@ -140,6 +143,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         });
       }
       initializeAuthRef.current(null, null, false)
+      setStoreLoadingRef.current(false)
       setLoading(false)
       return
     }
@@ -155,6 +159,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         });
       }
       try {
+        setStoreLoadingRef.current(true)
         const supabase = await getSupabaseBrowserClient()
 
         if (!mounted) return undefined
@@ -171,6 +176,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           setSession(session)
           setUser(session?.user ?? null)
           await applySession(supabase, session)
+          setStoreLoadingRef.current(false)
           setLoading(false)
         }
 
@@ -186,6 +192,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
               setUser(session?.user ?? null)
               setLoading(false)
               await applySession(supabase, session)
+              setStoreLoadingRef.current(false)
             }
           }
         )
@@ -198,6 +205,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           setLoading(false)
           // Initialize with null session on error
           initializeAuthRef.current(null, null, false)
+          setStoreLoadingRef.current(false)
         }
         return undefined
       }
@@ -218,6 +226,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
     setSession(storeSession)
     setUser(storeUser ?? storeSession.user ?? null)
+    setStoreLoadingRef.current(false)
     setLoading(false)
   }, [session, storeSession, storeUser])
 

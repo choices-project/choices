@@ -3503,6 +3503,110 @@
       }
     }
   },
+  "polls": {
+    "view": {
+      "privacy": {
+        "public": "Público",
+        "private": "Privado",
+        "unlisted": "No listado"
+      },
+      "votingMethod": {
+        "single": "Elección única",
+        "multiple": "Elección múltiple",
+        "approval": "Votación por aprobación",
+        "ranked": "Votación por ranking",
+        "quadratic": "Votación cuadrática"
+      },
+      "breadcrumbs": {
+        "home": "Inicio",
+        "dashboard": "Panel",
+        "polls": "Encuestas",
+        "pollDetail": "Detalles de la encuesta"
+      },
+      "errors": {
+        "loadResultsFailed": "No se pudieron cargar los resultados. Inténtalo de nuevo más tarde.",
+        "loadDataFailed": "No se pudieron cargar los datos de la encuesta. Inténtalo de nuevo más tarde.",
+        "voteFailed": "No se pudo enviar tu voto."
+      },
+      "loading": "Cargando detalles de la encuesta…",
+      "leadingOption": {
+        "label": "Opción líder",
+        "votes": "{votes} votos ({percentage}%) de {total}"
+      },
+      "stats": {
+        "totalVotes": "Votos totales",
+        "participation": "Participación",
+        "status": "Estado"
+      },
+      "status": {
+        "active": {
+          "label": "Activa"
+        },
+        "closed": {
+          "label": "Cerrada",
+          "title": "Encuesta cerrada",
+          "description": "Esta encuesta está cerrada. Los resultados están disponibles abajo."
+        },
+        "draft": {
+          "label": "Borrador"
+        },
+        "notOpen": {
+          "title": "Encuesta no disponible",
+          "description": "La votación aún no está disponible para esta encuesta."
+        },
+        "signInRequired": {
+          "title": "Inicia sesión",
+          "description": "Inicia sesión para votar en esta encuesta."
+        },
+        "votingRestricted": {
+          "title": "Votación restringida",
+          "description": "No tienes permiso para votar en esta encuesta."
+        }
+      },
+      "milestones": {
+        "label": "Hitos",
+        "empty": "Aún no hay hitos seleccionados.",
+        "tracking": "Seguimiento: {milestones}",
+        "nextUp": "Siguiente: {count} votos",
+        "achieved": "Hitos alcanzados",
+        "votesBadge": "{count} votos",
+        "itemLabel": "{count} votos",
+        "itemDescription": "Notifícame cuando esta encuesta llegue a {count} votos",
+        "toggleAria": "Alternar notificaciones para {count} votos"
+      },
+      "options": {
+        "fallback": "Opción {number}",
+        "voteCount": "{votes} votos • {percentage}%"
+      },
+      "buttons": {
+        "share": "Compartir",
+        "analytics": "Analítica",
+        "printSummary": "Imprimir resumen",
+        "vote": "Votar",
+        "voted": "Votado",
+        "voting": "Votando…"
+      },
+      "notifications": {
+        "voteRecorded": {
+          "title": "Voto registrado",
+          "message": "¡Gracias por votar! Tu respuesta fue registrada."
+        },
+        "voteFailed": {
+          "title": "Error al votar",
+          "message": "No pudimos registrar tu voto. Inténtalo de nuevo."
+        },
+        "linkCopied": {
+          "title": "Enlace copiado",
+          "message": "Enlace copiado al portapapeles."
+        },
+        "copyFailed": {
+          "title": "No se pudo copiar",
+          "message": "No se pudo copiar el enlace. Inténtalo de nuevo."
+        }
+      },
+      "created": "Creado {date}"
+    }
+  },
   "harness": {
     "globalNavigation": {
       "title": "Entorno de Navegación Global",
