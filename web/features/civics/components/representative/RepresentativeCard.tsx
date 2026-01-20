@@ -315,140 +315,203 @@ export function RepresentativeCard({
             )}
           </div>
 
-          {/* Committees */}
-          {detailsOpen && displayRepresentative.committees && displayRepresentative.committees.length > 0 && (
-            <div className="mb-4">
-              <h4 className="text-sm font-medium text-gray-700 mb-2">
-                {t('civics.representatives.card.committees.heading')}
-              </h4>
-              <div className="space-y-1">
-                {displayRepresentative.committees.slice(0, 3).map((committee, index) => (
-                  <div key={index} className="text-xs text-gray-600">
-                    {t('civics.representatives.card.committees.item', {
-                      role: committee.role,
-                      name: committee.committee_name,
-                    })}
-                  </div>
-                ))}
-                {displayRepresentative.committees.length > 3 && (
-                  <div className="text-xs text-gray-500">
-                    {t('civics.representatives.card.committees.more', {
-                      count: displayRepresentative.committees.length - 3,
-                    })}
-                  </div>
-                )}
-              </div>
-            </div>
-          )}
-
-          {/* Contact Information */}
-          <div className="space-y-2">
-            {contactItems.map((item) => (
-              <div key={item.label} className="flex items-center space-x-2 text-sm text-gray-600">
-                {item.label === 'Email' ? <Mail className="w-4 h-4" /> : item.label === 'Phone' ? <Phone className="w-4 h-4" /> : <Globe className="w-4 h-4" />}
-                <a
-                  href={item.href}
-                  className="hover:text-blue-600 truncate"
-                  onClick={(event) => event.stopPropagation()}
-                >
-                  {item.value}
-                </a>
-              </div>
-            ))}
-
-            {detailsOpen && extraContacts.length > 0 && (
-              <div className="space-y-1">
-                {extraContacts.slice(0, 3).map((contact, index) => (
-                  <div key={`${contact.label}-${index}`} className="flex items-center space-x-2 text-xs text-gray-500">
-                    <ExternalLink className="w-3 h-3" />
-                    {contact.href ? (
+          {detailsOpen && (
+            <div className="space-y-4">
+              {/* Social Media */}
+              {(socialChannels.length > 0 || extraSocial.length > 0) && (
+                <div>
+                  <h4 className="text-sm font-semibold text-gray-900 dark:text-gray-100 mb-2">Social Media</h4>
+                  <div className="flex flex-wrap gap-2">
+                    {socialChannels.map((channel) => (
                       <a
-                        href={contact.href}
-                        className="hover:text-blue-600 truncate"
+                        key={`${channel.label}-${channel.url}`}
+                        href={channel.url}
+                        className="inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-md bg-gray-100 dark:bg-gray-800 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors"
+                        target="_blank"
+                        rel="noopener noreferrer"
                         onClick={(event) => event.stopPropagation()}
                       >
-                        {contact.label}: {contact.value}
+                        <ExternalLink className="w-3.5 h-3.5" />
+                        <span className="font-medium">{channel.label}</span>
+                        <span className="text-gray-500 dark:text-gray-400">{channel.value}</span>
                       </a>
-                    ) : (
-                      <span className="truncate">{contact.label}: {contact.value}</span>
+                    ))}
+                    {extraSocial.map((channel, index) => (
+                      channel.url ? (
+                        <a
+                          key={`${channel.label}-${index}`}
+                          href={channel.url}
+                          className="inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-md bg-gray-100 dark:bg-gray-800 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors"
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          onClick={(event) => event.stopPropagation()}
+                        >
+                          <ExternalLink className="w-3.5 h-3.5" />
+                          <span className="font-medium">{channel.label}</span>
+                          <span className="text-gray-500 dark:text-gray-400">{channel.value}</span>
+                        </a>
+                      ) : (
+                        <span
+                          key={`${channel.label}-${index}`}
+                          className="inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-md bg-gray-100 dark:bg-gray-800 text-sm text-gray-700 dark:text-gray-300"
+                        >
+                          <span className="font-medium">{channel.label}</span>
+                          <span className="text-gray-500 dark:text-gray-400">{channel.value}</span>
+                        </span>
+                      )
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* Committees */}
+              {displayRepresentative.committees && displayRepresentative.committees.length > 0 && (
+                <div>
+                  <h4 className="text-sm font-semibold text-gray-900 dark:text-gray-100 mb-2">
+                    Committees {displayRepresentative.committees.length > 0 && `(${displayRepresentative.committees.length})`}
+                  </h4>
+                  <div className="space-y-2">
+                    {displayRepresentative.committees.map((committee, index) => (
+                      <div key={index} className="flex items-start gap-2 text-sm">
+                        <div className="flex-1">
+                          <div className="font-medium text-gray-900 dark:text-gray-100">{committee.committee_name}</div>
+                          {committee.role && (
+                            <div className="text-xs text-gray-600 dark:text-gray-400 mt-0.5">{committee.role}</div>
+                          )}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* Contact Information */}
+              {contactItems.length > 0 && (
+                <div>
+                  <h4 className="text-sm font-semibold text-gray-900 dark:text-gray-100 mb-2">Contact</h4>
+                  <div className="space-y-2">
+                    {contactItems.map((item) => (
+                      <div key={item.label} className="flex items-center space-x-2 text-sm">
+                        {item.label === 'Email' ? <Mail className="w-4 h-4 text-gray-500" /> : item.label === 'Phone' ? <Phone className="w-4 h-4 text-gray-500" /> : <Globe className="w-4 h-4 text-gray-500" />}
+                        <a
+                          href={item.href}
+                          className="text-blue-600 dark:text-blue-400 hover:underline truncate"
+                          onClick={(event) => event.stopPropagation()}
+                        >
+                          {item.value}
+                        </a>
+                      </div>
+                    ))}
+                    {extraContacts.length > 0 && (
+                      <div className="space-y-1.5 pt-1">
+                        {extraContacts.map((contact, index) => (
+                          <div key={`${contact.label}-${index}`} className="flex items-center space-x-2 text-xs text-gray-600 dark:text-gray-400">
+                            <ExternalLink className="w-3 h-3" />
+                            {contact.href ? (
+                              <a
+                                href={contact.href}
+                                className="text-blue-600 dark:text-blue-400 hover:underline truncate"
+                                onClick={(event) => event.stopPropagation()}
+                              >
+                                {contact.label}: {contact.value}
+                              </a>
+                            ) : (
+                              <span className="truncate">{contact.label}: {contact.value}</span>
+                            )}
+                          </div>
+                        ))}
+                      </div>
                     )}
                   </div>
-                ))}
-              </div>
-            )}
+                </div>
+              )}
 
-            {detailsOpen && (
-              <div className="text-xs text-gray-500">
-                {displayRepresentative.term_start_date && (
-                  <div>Term start: {formatDate(displayRepresentative.term_start_date)}</div>
-                )}
-                {displayRepresentative.term_end_date && (
-                  <div>Term end: {formatDate(displayRepresentative.term_end_date)}</div>
-                )}
-                {displayRepresentative.next_election_date && (
-                  <div>Next election: {formatDate(displayRepresentative.next_election_date)}</div>
-                )}
-              </div>
-            )}
-          </div>
+              {/* Recent Activity */}
+              {displayRepresentative.activities && displayRepresentative.activities.length > 0 && (
+                <div>
+                  <h4 className="text-sm font-semibold text-gray-900 dark:text-gray-100 mb-2">
+                    Recent Activity ({displayRepresentative.activities.length})
+                  </h4>
+                  <div className="space-y-2">
+                    {displayRepresentative.activities.slice(0, 5).map((activity, index) => (
+                      <div key={index} className="text-sm">
+                        <div className="font-medium text-gray-900 dark:text-gray-100">{activity.title}</div>
+                        {activity.description && (
+                          <div className="text-xs text-gray-600 dark:text-gray-400 mt-0.5">{activity.description}</div>
+                        )}
+                        {activity.type && (
+                          <div className="text-xs text-gray-500 dark:text-gray-500 mt-0.5 capitalize">{activity.type}</div>
+                        )}
+                        {activity.date && (
+                          <div className="text-xs text-gray-500 dark:text-gray-500 mt-0.5">{formatDate(activity.date)}</div>
+                        )}
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
 
-          {detailsOpen && (
-            <div className="mt-4 space-y-2 text-xs text-gray-600">
-              <div>
-                Data quality: {Math.round(displayRepresentative.data_quality_score ?? 0)}%
-                {displayRepresentative.verification_status ? ` • ${displayRepresentative.verification_status}` : ''}
-              </div>
-              {Array.isArray(displayRepresentative.data_sources) && displayRepresentative.data_sources.length > 0 && (
-                <div>Sources: {displayRepresentative.data_sources.slice(0, 3).join(', ')}</div>
+              {/* Campaign Finance */}
+              {displayRepresentative.campaign_finance && (
+                <div>
+                  <h4 className="text-sm font-semibold text-gray-900 dark:text-gray-100 mb-2">Campaign Finance</h4>
+                  <div className="space-y-1.5 text-sm">
+                    {displayRepresentative.campaign_finance.total_raised && (
+                      <div className="flex justify-between">
+                        <span className="text-gray-600 dark:text-gray-400">Total Raised:</span>
+                        <span className="font-medium text-gray-900 dark:text-gray-100">
+                          ${Number(displayRepresentative.campaign_finance.total_raised).toLocaleString()}
+                        </span>
+                      </div>
+                    )}
+                    {displayRepresentative.campaign_finance.total_spent && (
+                      <div className="flex justify-between">
+                        <span className="text-gray-600 dark:text-gray-400">Total Spent:</span>
+                        <span className="font-medium text-gray-900 dark:text-gray-100">
+                          ${Number(displayRepresentative.campaign_finance.total_spent).toLocaleString()}
+                        </span>
+                      </div>
+                    )}
+                    {displayRepresentative.campaign_finance.cash_on_hand && (
+                      <div className="flex justify-between">
+                        <span className="text-gray-600 dark:text-gray-400">Cash on Hand:</span>
+                        <span className="font-medium text-gray-900 dark:text-gray-100">
+                          ${Number(displayRepresentative.campaign_finance.cash_on_hand).toLocaleString()}
+                        </span>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              )}
+
+              {/* Term Information */}
+              {(displayRepresentative.term_start_date || displayRepresentative.term_end_date || displayRepresentative.next_election_date) && (
+                <div>
+                  <h4 className="text-sm font-semibold text-gray-900 dark:text-gray-100 mb-2">Term Information</h4>
+                  <div className="space-y-1 text-sm">
+                    {displayRepresentative.term_start_date && (
+                      <div className="flex justify-between">
+                        <span className="text-gray-600 dark:text-gray-400">Term Start:</span>
+                        <span className="text-gray-900 dark:text-gray-100">{formatDate(displayRepresentative.term_start_date)}</span>
+                      </div>
+                    )}
+                    {displayRepresentative.term_end_date && (
+                      <div className="flex justify-between">
+                        <span className="text-gray-600 dark:text-gray-400">Term End:</span>
+                        <span className="text-gray-900 dark:text-gray-100">{formatDate(displayRepresentative.term_end_date)}</span>
+                      </div>
+                    )}
+                    {displayRepresentative.next_election_date && (
+                      <div className="flex justify-between">
+                        <span className="text-gray-600 dark:text-gray-400">Next Election:</span>
+                        <span className="text-gray-900 dark:text-gray-100">{formatDate(displayRepresentative.next_election_date)}</span>
+                      </div>
+                    )}
+                  </div>
+                </div>
               )}
             </div>
           )}
-
-          {detailsOpen && (socialChannels.length > 0 || extraSocial.length > 0) && (
-            <div className="mt-4">
-              <h4 className="text-sm font-medium text-gray-700 mb-2">Social</h4>
-              <div className="space-y-1">
-                {socialChannels.map((channel) => (
-                  <a
-                    key={`${channel.label}-${channel.url}`}
-                    href={channel.url}
-                    className="flex items-center text-xs text-gray-600 hover:text-blue-600"
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    onClick={(event) => event.stopPropagation()}
-                  >
-                    <ExternalLink className="w-3 h-3 mr-2" />
-                    {channel.label}: {channel.value}
-                  </a>
-                ))}
-                {extraSocial.slice(0, 3).map((channel, index) => (
-                  <span key={`${channel.label}-${index}`} className="flex items-center text-xs text-gray-600">
-                    <ExternalLink className="w-3 h-3 mr-2" />
-                    {channel.label}: {channel.value}
-                  </span>
-                ))}
-              </div>
-            </div>
-          )}
-
-          {/* Data Quality Indicator */}
-          <div className="mt-3 pt-3 border-t border-gray-200">
-            <div className="flex items-center justify-between text-xs text-gray-500">
-              <span>{t('civics.representatives.card.dataQuality.label')}</span>
-              <div className="flex items-center space-x-1">
-                <div className="w-16 h-1 bg-gray-200 rounded-full overflow-hidden">
-                  <div
-                    className={`h-full ${
-                      representative.data_quality_score >= 90 ? 'bg-green-500' :
-                      representative.data_quality_score >= 80 ? 'bg-yellow-500' : 'bg-red-500'
-                    }`}
-                    style={{ width: `${representative.data_quality_score}%` }}
-                  />
-                </div>
-                <span>{representative.data_quality_score}%</span>
-              </div>
-            </div>
-          </div>
         </CardContent>
       )}
 
