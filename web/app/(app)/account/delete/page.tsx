@@ -298,8 +298,9 @@ export default function AccountDeletionPage() {
               <button
                 onClick={() => router.push('/account/privacy')}
                 className="flex items-center text-gray-600 hover:text-gray-900"
+                aria-label="Navigate back to Privacy & Data settings"
               >
-                <ArrowLeft className="h-5 w-5 mr-2" />
+                <ArrowLeft className="h-5 w-5 mr-2" aria-hidden="true" />
                 Back to Privacy & Data
               </button>
               <div>
@@ -428,13 +429,18 @@ export default function AccountDeletionPage() {
 
                         {step.id === 'enter-email' && !step.completed && showConfirmation && (
                           <div className="mt-3">
+                            <label htmlFor="email-confirmation" className="sr-only">
+                              Enter your email address to confirm account deletion
+                            </label>
                             <input
+                              id="email-confirmation"
                               type="email"
                               placeholder="Enter your email address"
                               className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-red-500"
                               onChange={(e) => handleEmailConfirmation(e.target.value)}
+                              aria-describedby="email-confirmation-help"
                             />
-                            <p className="text-xs text-gray-500 mt-1">
+                            <p id="email-confirmation-help" className="text-xs text-gray-500 mt-1">
                               Type your email address to confirm: {user?.email}
                             </p>
                           </div>
@@ -463,11 +469,14 @@ export default function AccountDeletionPage() {
                     onClick={deleteAccount}
                     disabled={profileDeleting || isRedirecting}
                     className="w-full bg-red-600 hover:bg-red-700 text-white"
+                    aria-label={profileDeleting || isRedirecting
+                      ? 'Deleting account, please wait'
+                      : 'Permanently delete account and all associated data'}
                   >
                     {profileDeleting || isRedirecting ? (
-                      <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2" />
+                      <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2" aria-hidden="true" />
                     ) : (
-                      <Trash2 className="h-4 w-4 mr-2" />
+                      <Trash2 className="h-4 w-4 mr-2" aria-hidden="true" />
                     )}
                     {profileDeleting || isRedirecting
                       ? 'Deleting Account...'
