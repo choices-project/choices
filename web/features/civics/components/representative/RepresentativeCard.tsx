@@ -140,14 +140,14 @@ export function RepresentativeCard({
     }
     let cancelled = false;
     setDetailsLoading(true);
-    
+
     // Add timeout to prevent infinite loading
     const timeoutId = setTimeout(() => {
       if (!cancelled) {
         setDetailsLoading(false);
       }
     }, 10000); // 10 second timeout
-    
+
     const fetchDetails = async () => {
       try {
         await getRepresentativeById(representative.id, { forceRefresh: true });
@@ -161,9 +161,9 @@ export function RepresentativeCard({
         }
       }
     };
-    
+
     void fetchDetails();
-    
+
     return () => {
       cancelled = true;
       clearTimeout(timeoutId);

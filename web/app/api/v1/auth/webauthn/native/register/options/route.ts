@@ -59,7 +59,7 @@ export const POST = withErrorHandling(async (req: NextRequest) => {
   const options = await generateRegistrationOptions({
     rpName: 'Choices',
     rpID: rpID,
-    userID: new TextEncoder().encode(user.id),
+    userID: new TextEncoder().encode(user.id) as Uint8Array<ArrayBuffer>,
     userName: username ?? user.email ?? user.id,
     userDisplayName: displayName ?? user.email ?? user.id,
     timeout: 60000,
