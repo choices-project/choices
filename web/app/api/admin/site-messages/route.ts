@@ -1,6 +1,7 @@
-import { getSupabaseServerClient } from '@/utils/supabase/server';
+import { getSupabaseAdminClient, getSupabaseServerClient } from '@/utils/supabase/server';
 
-import { requireAdminOr401 } from '@/lib/admin-auth';
+import { requireAdminOr401 } from '@/features/auth/lib/admin-auth';
+
 import {
   errorResponse,
   successResponse,
@@ -40,8 +41,10 @@ export const GET = withErrorHandling(async (request: NextRequest) => {
     return errorResponse('Authentication required', 401);
   }
 
+  const adminSupabase = await getSupabaseAdminClient();
+
   // Build query for site messages
-  let query = supabase
+  let query = adminSupabase
     .from('site_messages')
     .select('*')
     .order('created_at', { ascending: false })
@@ -99,7 +102,17 @@ export const POST = withErrorHandling(async (request: NextRequest) => {
   }
 
   const parsedBody = await request.json().catch(() => null);
-  const { title, message, priority, status, target_audience, start_date, end_date } = parsedBody ?? {};
+  const {
+    title,
+    message,
+    priority,
+    status,
+    target_audience,
+    start_date,
+    end_date,
+    type,
+    is_active,
+  } = parsedBody ?? {};
 
   if (!title || !message) {
     const errors: Record<string, string> = {};
@@ -112,18 +125,23 @@ export const POST = withErrorHandling(async (request: NextRequest) => {
     return validationError(errors);
   }
 
-  const { data: siteMessage, error } = await supabase
+  const adminSupabase = await getSupabaseAdminClient();
+  const resolvedIsActive =
+    typeof is_active === 'boolean' ? is_active : status ? status === 'active' : true;
+  const resolvedStatus = status ?? (resolvedIsActive ? 'active' : 'inactive');
+
+  const { data: siteMessage, error } = await adminSupabase
     .from('site_messages')
     .insert({
       title,
       message,
       priority: priority ?? 'medium',
-      status: status ?? 'active',
+      status: resolvedStatus,
       target_audience: target_audience ?? null,
       start_date: start_date ?? null,
       end_date: end_date ?? null,
-      type: 'announcement',
-      is_active: true,
+      type: type ?? 'info',
+      is_active: resolvedIsActive,
       created_by: user.id,
     })
     .select()

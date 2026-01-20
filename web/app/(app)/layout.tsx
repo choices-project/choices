@@ -44,7 +44,9 @@ const SiteMessages = dynamicImport(() => import('@/components/SiteMessages'), {
   loading: () => <div style={{ display: 'none' }} aria-hidden="true" />,
 });
 
-const DISABLE_FEEDBACK_WIDGET = process.env.NEXT_PUBLIC_DISABLE_FEEDBACK_WIDGET === '1';
+const DISABLE_FEEDBACK_WIDGET =
+  process.env.NEXT_PUBLIC_DISABLE_FEEDBACK_WIDGET === '1' ||
+  process.env.NODE_ENV !== 'production';
 const IS_E2E_HARNESS = process.env.NEXT_PUBLIC_ENABLE_E2E_HARNESS === '1';
 
 export default function AppLayout({

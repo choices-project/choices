@@ -200,24 +200,38 @@ export default function Civics2Page() {
             ? 'unverified'
             : rep.verification_status ?? 'unverified';
 
-        return {
+        const mapped: SuperiorRepresentativeData = {
           id: String(rep.id),
           name: rep.name,
           office: rep.office,
           level: rep.level,
           state: rep.state,
           party: rep.party ?? 'Independent',
-          district: rep.district ?? undefined,
-          photoUrl,
-          enhancedContacts,
           dataQualityScore: rep.data_quality_score,
           dataSource: rep.data_sources ?? [],
-          lastVerified: rep.last_verified ?? undefined,
           verificationStatus,
           metadata: {
             division_ids: rep.division_ids ?? [],
           },
         };
+
+        if (enhancedContacts?.length) {
+          mapped.enhancedContacts = enhancedContacts;
+        }
+
+        if (rep.district) {
+          mapped.district = rep.district;
+        }
+
+        if (photoUrl) {
+          mapped.photoUrl = photoUrl;
+        }
+
+        if (rep.last_verified) {
+          mapped.lastVerified = rep.last_verified;
+        }
+
+        return mapped;
       });
       logger.info('📊 Setting representatives:', mapped.length);
       setRepresentatives(mapped);
@@ -484,7 +498,7 @@ export default function Civics2Page() {
 
             {/* Representatives Grid */}
             {isLoading ? (
-              <div className="flex items-center justify-center py-16">
+              <div className="flex items-center justify-center py-16" role="status" aria-live="polite" aria-busy="true">
                 <div className="text-center">
                   <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500 mx-auto mb-4" />
                   <p className="text-lg text-gray-600 font-medium">Loading your representatives...</p>
@@ -492,11 +506,12 @@ export default function Civics2Page() {
                 </div>
               </div>
             ) : errorMessage ? (
-              <div className="flex items-center justify-center py-12">
+              <div className="flex items-center justify-center py-12" role="alert" aria-live="assertive">
                 <div className="bg-white rounded-2xl border border-red-200 p-6 max-w-lg text-center">
                   <h2 className="text-lg font-semibold text-red-700 mb-2">We hit a snag</h2>
                   <p className="text-sm text-red-600 mb-4">{errorMessage}</p>
                   <button
+                    type="button"
                     onClick={() => void loadRepresentatives()}
                     className="bg-red-600 text-white px-4 py-2 rounded-lg hover:bg-red-700 transition-colors"
                   >
@@ -505,7 +520,7 @@ export default function Civics2Page() {
                 </div>
               </div>
             ) : filteredRepresentatives.length === 0 ? (
-              <div className="flex items-center justify-center py-16">
+              <div className="flex items-center justify-center py-16" role="status" aria-live="polite">
                 <div className="text-center max-w-md">
                   <div className="w-24 h-24 bg-gradient-to-br from-blue-100 to-indigo-100 rounded-full flex items-center justify-center mx-auto mb-6">
                     <svg className="w-12 h-12 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -516,12 +531,14 @@ export default function Civics2Page() {
                   <p className="text-gray-600 mb-6">Try adjusting your search criteria or check back later for updated information.</p>
                   <div className="flex flex-col sm:flex-row gap-3 justify-center">
                     <button
+                      type="button"
                       onClick={() => setSearchQuery('')}
                       className="bg-white border border-gray-300 text-gray-700 px-6 py-2 rounded-lg hover:bg-gray-50 transition-colors"
                     >
                       Clear search
                     </button>
                     <button
+                      type="button"
                       onClick={() => void loadRepresentatives()}
                       className="bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700 transition-colors"
                     >

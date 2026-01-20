@@ -21,10 +21,13 @@ import { logger } from '@/lib/utils/logger';
 
 import {
   register,
+  unregister,
   activateUpdate,
   isServiceWorkerSupported,
   isUpdateAvailable as checkUpdateAvailable
 } from '../lib/service-worker-registration';
+import { clearAllCaches } from '../lib/cache-strategies';
+import { DEV_CONFIG } from '../lib/sw-config';
 
 /**
  * Service Worker Provider Props
@@ -90,6 +93,21 @@ export function ServiceWorkerProvider({
   useEffect(() => {
     // Only run in browser and after mount to prevent hydration mismatch
     if (typeof window === 'undefined' || !isMounted) return;
+
+    if (process.env.NODE_ENV !== 'production' && !DEV_CONFIG.enableInDev) {
+      logger.info('Skipping service worker registration in development');
+      void unregister()
+        .then(() => clearAllCaches())
+        .then((cleared) => {
+          if (cleared > 0) {
+            logger.info('Cleared service worker caches', { cleared });
+          }
+        })
+        .catch((error) => {
+          logger.warn('Failed to clear service worker state in development', { error });
+        });
+      return;
+    }
 
     const isAutomationEnvironment =
       typeof navigator !== 'undefined' &&

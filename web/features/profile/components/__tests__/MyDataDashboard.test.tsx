@@ -82,8 +82,11 @@ describe('MyDataDashboard', () => {
       />,
     );
 
-    const switches = screen.getAllByRole('switch');
-    await user.click(switches[0]);
+    const firstSwitch = screen.getAllByRole('switch')[0];
+    if (!firstSwitch) {
+      throw new Error('Expected at least one privacy switch');
+    }
+    await user.click(firstSwitch);
 
     await waitFor(() => {
       expect(onPrivacyUpdate).toHaveBeenCalledWith({ collectLocationData: true });
@@ -104,8 +107,11 @@ describe('MyDataDashboard', () => {
       />,
     );
 
-    const switches = screen.getAllByRole('switch');
-    await user.click(switches[0]);
+    const firstSwitch = screen.getAllByRole('switch')[0];
+    if (!firstSwitch) {
+      throw new Error('Expected at least one privacy switch');
+    }
+    await user.click(firstSwitch);
 
     expect(await screen.findByText('update failed')).toBeInTheDocument();
   });

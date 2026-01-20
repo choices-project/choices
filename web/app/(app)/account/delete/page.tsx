@@ -236,6 +236,17 @@ export default function AccountDeletionPage() {
 
   const canDelete = deletionSteps.every(step => step.completed || !step.required)
 
+  if (isUserLoading || isLoading) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center" role="status" aria-live="polite" aria-busy="true">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto" />
+          <p className="mt-4 text-gray-600">Loading your account data...</p>
+        </div>
+      </div>
+    )
+  }
+
   // Handle case where auth context is not available during pre-rendering
   if (!user || !signOut) {
     return (
@@ -244,25 +255,14 @@ export default function AccountDeletionPage() {
           <h1 className="text-2xl font-bold text-gray-900 mb-4">Account Deletion</h1>
           <p className="text-gray-600 mb-6">Please log in to access this page.</p>
           <a 
-            href="/login"
+            href="/auth?redirectTo=/account/delete"
             className="bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700"
           >
-            Login
+            Log in
           </a>
         </div>
       </div>
     );
-  }
-
-  if (isUserLoading || isLoading) {
-    return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto" />
-          <p className="mt-4 text-gray-600">Loading your account data...</p>
-        </div>
-      </div>
-    )
   }
 
   const blockingError = error ?? deleteError ?? exportError;
@@ -275,6 +275,14 @@ export default function AccountDeletionPage() {
             <AlertCircle className="h-4 w-4" />
             <AlertDescription>{blockingError}</AlertDescription>
           </Alert>
+          <div className="mt-6 flex flex-wrap gap-3">
+            <Button onClick={() => window.location.reload()}>
+              Reload
+            </Button>
+            <Button variant="outline" onClick={() => router.push('/dashboard')}>
+              Back to dashboard
+            </Button>
+          </div>
         </div>
       </div>
     )
@@ -288,11 +296,11 @@ export default function AccountDeletionPage() {
           <div className="flex items-center justify-between py-6">
             <div className="flex items-center space-x-4">
               <button
-                onClick={() => router.push('/account-settings')}
+                onClick={() => router.push('/account/privacy')}
                 className="flex items-center text-gray-600 hover:text-gray-900"
               >
                 <ArrowLeft className="h-5 w-5 mr-2" />
-                Back to Account Settings
+                Back to Privacy & Data
               </button>
               <div>
                 <h1 className="text-2xl font-bold text-gray-900">Delete Account</h1>
@@ -516,11 +524,11 @@ export default function AccountDeletionPage() {
               </CardHeader>
               <CardContent className="space-y-3">
                 <Button
-                  onClick={() => router.push('/account-settings')}
+                  onClick={() => router.push('/account/privacy')}
                   variant="outline"
                   className="w-full"
                 >
-                  Update Account Settings
+                  Update Privacy & Data
                 </Button>
                 <Button
                   onClick={() => router.push('/profile/edit')}

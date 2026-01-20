@@ -1,6 +1,7 @@
 'use client'
 
 import { Smartphone, Monitor, Tablet, Laptop, Trash2, Plus, QrCode } from 'lucide-react'
+import Image from 'next/image'
 import QRCode from 'qrcode'
 import React, { useState, useCallback, useMemo, useEffect } from 'react'
 
@@ -322,9 +323,12 @@ export const DeviceList: React.FC<DeviceListProps> = ({
             <div className="bg-gray-100 dark:bg-gray-700 p-4 rounded text-center">
               <div className="w-32 h-32 bg-white dark:bg-gray-800 mx-auto mb-4 flex items-center justify-center" role="img" aria-label={t('common.devices.qrCode')}>
                 {qrCodeDataUrl ? (
-                  <img 
-                    src={qrCodeDataUrl} 
+                  <Image
+                    src={qrCodeDataUrl}
                     alt={t('common.devices.qrCodeAlt')}
+                    width={128}
+                    height={128}
+                    unoptimized
                     className="w-full h-full object-contain"
                   />
                 ) : (

@@ -21,7 +21,7 @@ import { PrivacyAwareQueryBuilder } from '@/features/analytics/lib/privacyFilter
 
 import { applyAnalyticsCacheHeaders } from '@/lib/analytics/cache-headers';
 import { withErrorHandling, forbiddenError, successResponse, errorResponse } from '@/lib/api';
-import { canAccessAnalytics, logAnalyticsAccessToDatabase } from '@/lib/auth/adminGuard';
+import { canAccessAnalytics, fetchAccessProfile, logAnalyticsAccessToDatabase } from '@/lib/auth/adminGuard';
 import { getCached, CACHE_TTL, CACHE_PREFIX, generateCacheKey } from '@/lib/cache/analytics-cache';
 import { logger } from '@/lib/utils/logger';
 
@@ -35,9 +35,10 @@ export const revalidate = 0;
 export const GET = withErrorHandling(async (request: NextRequest) => {
   const supabase = await getSupabaseServerClient();
   const { data: { user } } = await supabase.auth.getUser();
+  const accessProfile = await fetchAccessProfile(supabase, user?.id);
 
   const allowT3 = true;
-  if (!canAccessAnalytics(user, allowT3)) {
+  if (!canAccessAnalytics(user, allowT3, accessProfile)) {
     await logAnalyticsAccessToDatabase(
       supabase,
       user,
@@ -47,7 +48,8 @@ export const GET = withErrorHandling(async (request: NextRequest) => {
         ipAddress: request.headers.get('x-forwarded-for') || undefined,
         userAgent: request.headers.get('user-agent') || undefined,
         metadata: { endpoint: 'trends', access_level: 'admin_or_t3' }
-      }
+      },
+      accessProfile
     );
     return forbiddenError('Unauthorized - Admin or T3 required');
   }
@@ -61,7 +63,8 @@ export const GET = withErrorHandling(async (request: NextRequest) => {
       ipAddress: request.headers.get('x-forwarded-for') || undefined,
       userAgent: request.headers.get('user-agent') || undefined,
       metadata: { endpoint: 'trends', access_level: 'admin_or_t3' }
-    }
+    },
+    accessProfile
   );
 
   try {

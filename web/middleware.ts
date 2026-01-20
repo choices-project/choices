@@ -483,6 +483,12 @@ function checkAuthInMiddleware(
 export async function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl
 
+  if (process.env.NODE_ENV === 'development' && pathname.startsWith('/_next/static/')) {
+    const response = NextResponse.next()
+    response.headers.set('Cache-Control', 'no-store, must-revalidate')
+    return response
+  }
+
   // MAINTENANCE MODE CHECK - This must be first!
   if (process.env.NEXT_PUBLIC_MAINTENANCE === "1") {
     return new NextResponse(
@@ -810,19 +816,7 @@ export async function middleware(request: NextRequest) {
 
 export const config = {
   matcher: [
-    /*
-     * Match all request paths except for the ones starting with:
-     * - api/webhooks (webhook endpoints)
-     * - api/og (OG image generation routes - use Edge Runtime with WASM, incompatible with middleware)
-     * - _next/static (static files)
-     * - _next/image (image optimization files)
-     * - favicon.ico (favicon file)
-     * - manifest.json (PWA manifest)
-     * - sw.js (service worker)
-     * - workbox-* (service worker files)
-     * - icons/ (PWA icons)
-     * - api/health (health check endpoint - must work during maintenance)
-     */
-    '/((?!api/webhooks|api/og|_next/static|_next/image|favicon.ico|manifest.json|sw.js|workbox-|icons/|api/health).*)',
+    '/_next/static/:path*',
+    '/((?!api/webhooks|api/og|_next/image|favicon.ico|manifest.json|sw.js|workbox-|icons/|api/health).*)',
   ],
 }

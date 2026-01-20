@@ -53,6 +53,23 @@ const nextConfig = {
       'uuid',
     ],
   },
+  async headers() {
+    if (process.env.NODE_ENV !== 'development') {
+      return [];
+    }
+
+    return [
+      {
+        source: '/_next/static/:path*',
+        headers: [
+          {
+            key: 'Cache-Control',
+            value: 'no-store, must-revalidate',
+          },
+        ],
+      },
+    ];
+  },
 
   // Image optimization
   images: {
@@ -74,6 +91,7 @@ const nextConfig = {
 
   webpack: (config, { isServer, webpack }) => {
     const isDev = process.env.NODE_ENV === 'development'
+
     // Exclude test files from compilation
     config.module.rules.push({
       test: /\.(test|spec)\.(ts|tsx|js|jsx)$/,

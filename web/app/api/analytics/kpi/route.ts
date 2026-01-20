@@ -15,7 +15,7 @@ import {
   validationError,
   withErrorHandling,
 } from '@/lib/api';
-import { canAccessAnalytics, logAnalyticsAccess } from '@/lib/auth/adminGuard';
+import { canAccessAnalytics, fetchAccessProfile, logAnalyticsAccess } from '@/lib/auth/adminGuard';
 import {
   CACHE_PREFIX,
   CACHE_TTL,
@@ -65,13 +65,14 @@ const KPI_BUILDERS: Record<MetricId, MetricBuilder> = {
 export const GET = withErrorHandling(async (request: NextRequest) => {
   const supabase = await getSupabaseServerClient();
   const { data: { user }, error } = await supabase.auth.getUser();
+  const accessProfile = await fetchAccessProfile(supabase, user?.id);
 
   if (error || !user) {
     return authError('Authentication required for KPI analytics');
   }
 
-  const allowAccess = canAccessAnalytics(user, true);
-  logAnalyticsAccess(user, '/api/analytics/kpi', allowAccess);
+  const allowAccess = canAccessAnalytics(user, true, accessProfile);
+  logAnalyticsAccess(user, '/api/analytics/kpi', allowAccess, accessProfile);
 
   if (!allowAccess) {
     return forbiddenError('Admin access required for KPIs');

@@ -2,12 +2,13 @@ import { z } from 'zod';
 
 import { getSupabaseServerClient } from '@/utils/supabase/server';
 
-import { requireAdminOr401 } from '@/lib/admin-auth';
+import { requireAdminOr401 } from '@/features/auth/lib/admin-auth';
+
 import { withErrorHandling, successResponse, errorResponse, authError, validationError } from '@/lib/api';
 import { RealTimeNewsService } from '@/lib/core/services/real-time-news';
 import { createAuditLogService } from '@/lib/services/audit-log-service';
 
-import type { NextRequest} from 'next/server';
+import type { NextRequest } from 'next/server';
 
 // Validation schema for breaking news creation
 // Note: fullStory and sourceUrl are required by the service, entities must be NewsEntity[]

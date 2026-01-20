@@ -146,7 +146,8 @@ export default function AppStoreHarnessPage() {
       popModal: () => {
         useAppStore.setState((draft) => {
           draft.modalStack.pop();
-          draft.activeModal = draft.modalStack.length > 0 ? draft.modalStack[draft.modalStack.length - 1].id : null;
+          const lastModal = draft.modalStack[draft.modalStack.length - 1];
+          draft.activeModal = lastModal ? lastModal.id : null;
         });
       },
       setCurrentRoute: (route: string) => {

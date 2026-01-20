@@ -7,7 +7,7 @@ import {
   successResponse,
   withErrorHandling,
 } from '@/lib/api';
-import { logAnalyticsAccessToDatabase } from '@/lib/auth/adminGuard';
+import { fetchAccessProfile, logAnalyticsAccessToDatabase } from '@/lib/auth/adminGuard';
 import { getRedisClient } from '@/lib/cache/redis-client';
 import { createAuditLogService } from '@/lib/services/audit-log-service';
 import { logger } from '@/lib/utils/logger';
@@ -118,8 +118,8 @@ export const GET = withErrorHandling(async (request: NextRequest) => {
     return authError('Authentication required');
   }
 
-  const { data: profile } = await supabase.from('user_profiles').select('is_admin').eq('user_id', user.id).single();
-  const isAdmin = profile?.is_admin ?? false;
+  const accessProfile = await fetchAccessProfile(supabase, user.id);
+  const isAdmin = accessProfile?.is_admin ?? false;
 
   if (!isAdmin) {
     await logAnalyticsAccessToDatabase(supabase, user, '/api/admin/dashboard', false, {
@@ -129,7 +129,7 @@ export const GET = withErrorHandling(async (request: NextRequest) => {
         reason: 'not_admin',
         user_email: user.email,
       },
-    });
+    }, accessProfile);
 
     return forbiddenError('Admin access required');
   }
@@ -142,7 +142,7 @@ export const GET = withErrorHandling(async (request: NextRequest) => {
       use_cache: useCache,
       admin_email: user.email,
     },
-  });
+  }, accessProfile);
 
   const cache = await getRedisClient();
   const cacheKey = 'admin:dashboard';

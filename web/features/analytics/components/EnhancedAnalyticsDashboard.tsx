@@ -45,7 +45,7 @@ import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/com
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 
 import ScreenReaderSupport from '@/lib/accessibility/screen-reader';
-import { canAccessAnalytics, logAnalyticsAccess, UnauthorizedAccess } from '@/lib/auth/adminGuard';
+import { logAnalyticsAccess, UnauthorizedAccess } from '@/lib/auth/adminGuard';
 import { useIsMobile, useIsTablet } from '@/lib/hooks/useMediaQuery';
 import { useUser } from '@/lib/stores';
 import { useProfileActions, useProfileDisplay, useProfileStats } from '@/lib/stores/profileStore';
@@ -109,12 +109,14 @@ export const EnhancedAnalyticsDashboard: React.FC<EnhancedAnalyticsDashboardProp
   const { isAdmin: isProfileAdmin } = useProfileDisplay();
   const { isProfileLoaded } = useProfileStats();
   const { loadProfile } = useProfileActions();
-  const hasAccess = isProfileAdmin || canAccessAnalytics(currentUser, false);
+  const hasAccess = isProfileAdmin;
 
   // Log access attempt
   useEffect(() => {
-    logAnalyticsAccess(currentUser, 'enhanced-analytics-dashboard', hasAccess);
-  }, [currentUser, hasAccess]);
+    logAnalyticsAccess(currentUser, 'enhanced-analytics-dashboard', hasAccess, {
+      is_admin: isProfileAdmin,
+    });
+  }, [currentUser, hasAccess, isProfileAdmin]);
 
   useEffect(() => {
     if (currentUser?.id && !isProfileLoaded) {

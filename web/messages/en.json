@@ -737,6 +737,16 @@
           "title": "Data Protection",
           "description": "All data is encrypted, anonymized, and never sold. You can delete your data anytime."
         }
+      },
+      "controls": {
+        "title": "Your Privacy Controls",
+        "location": "Allow location sharing (quantized to state level)",
+        "demographics": "Share demographics for better experience",
+        "analytics": "Share analytics to improve the platform"
+      },
+      "actions": {
+        "back": "Back",
+        "continue": "Continue"
       }
     },
     "demographics": {
@@ -795,6 +805,10 @@
       }
     },
     "profile": {
+      "step": {
+        "title": "Complete Your Profile",
+        "subtitle": "Help us personalize your experience (optional)"
+      },
       "test": {
         "title": "Profile Setup",
         "subtitle": "Set up your profile information"
@@ -846,9 +860,30 @@
           "error": "Display name is required",
           "howWeUse": "**How we use this:** Shows your name when you ask questions to candidates or comment on issues. You can use your real name, a pseudonym, or leave it blank to stay anonymous."
         },
+        "bio": {
+          "label": "Bio (Optional)",
+          "placeholder": "Share a brief description about yourself (optional)"
+        },
         "visibility": {
           "label": "Profile Visibility",
           "howWeUse": "**How we use this:** Controls who can see your profile and activity. Choose what feels comfortable for you - you can always change this later."
+        }
+      },
+      "participation": {
+        "label": "How do you prefer to participate?",
+        "options": {
+          "observer": {
+            "label": "Observer",
+            "description": "I prefer to read and learn"
+          },
+          "contributor": {
+            "label": "Contributor",
+            "description": "I like to share my thoughts"
+          },
+          "leader": {
+            "label": "Leader",
+            "description": "I want to drive discussions"
+          }
         }
       },
       "visibility": {
@@ -955,6 +990,7 @@
         "webauthn": {
           "title": "Passkey",
           "description": "Secure biometric authentication",
+          "recommended": "(Recommended)",
           "bullets": {
             "biometric": "Fingerprint/Face ID",
             "noPassword": "No passwords",
@@ -1009,6 +1045,7 @@
         "github": "GitHub",
         "cardTitle": "Social Authentication",
         "cardDescription": "Choose your preferred social login provider",
+        "helper": "Quick and easy",
         "actions": {
           "continueWithGoogle": "Continue with Google",
           "continueWithGitHub": "Continue with GitHub"
@@ -1047,6 +1084,15 @@
         },
         "actions": {
           "continue": "Continue Anonymously"
+        },
+        "note": "You can start without an account, but with limited features."
+      },
+      "reason": {
+        "title": "Why do we need authentication?",
+        "items": {
+          "save": "Save your preferences and voting history",
+          "personalized": "Show you personalized content",
+          "secure": "Keep your data secure and private"
         }
       },
       "errors": {
@@ -1056,7 +1102,9 @@
       },
       "actions": {
         "continue": "Continue",
-        "back": "Back"
+        "back": "Back",
+        "backToOptions": "Back to options",
+        "skip": "Skip for now"
       }
     },
     "values": {
@@ -1195,6 +1243,24 @@
         "subtitle": "You're all set up and ready to make your voice heard.",
         "celebration": "🎉 Onboarding Complete! +50 points earned"
       },
+      "dashboard": {
+        "title": "Your Personalized Dashboard",
+        "cards": {
+          "representatives": {
+            "title": "Your Representatives",
+            "description": "Based on your location: {state}",
+            "fallback": "Not specified"
+          },
+          "polls": {
+            "title": "Relevant Polls",
+            "description": "Polls matching your interests"
+          },
+          "finance": {
+            "title": "Campaign Finance",
+            "description": "See who funds campaigns"
+          }
+        }
+      },
       "summary": {
         "title": "Your Profile Summary",
         "userFallback": "User",
@@ -1257,7 +1323,10 @@
       "actions": {
         "back": "Back",
         "complete": "Complete Setup",
-        "saving": "Saving your profile..."
+        "saving": "Saving your profile...",
+        "findRepresentatives": "Find My Representatives",
+        "browsePolls": "Browse Current Polls",
+        "exploreFeatures": "Explore All Features"
       }
     }
   },
@@ -3385,6 +3454,7 @@
     }
   },
   "auth": {
+    "loading": "Loading authentication...",
     "loadingOptions": "Loading authentication options...",
     "heading": {
       "signIn": "Sign in to your account",
@@ -3401,11 +3471,14 @@
     "errors": {
       "emailRequired": "Email is required",
       "passwordRequired": "Password is required",
+      "passwordTooShort": "Password must be at least 8 characters",
       "displayNameRequired": "Display name is required",
+      "displayNameInvalid": "Display name must include at least 3 letters or numbers",
       "passwordsMismatch": "Passwords do not match",
       "registrationFailed": "Registration failed",
       "loginFailed": "Login failed",
-      "unexpected": "An unexpected error occurred"
+      "unexpected": "An unexpected error occurred",
+      "serviceUnavailable": "Authentication service not available"
     },
     "success": {
       "accountCreated": "Account created successfully",
@@ -3415,6 +3488,8 @@
       "errorSummaryTitle": "Please fix the following errors:",
       "errorSummaryCount": "{count, plural, one {# error remaining} other {# errors remaining}}",
       "rateLimited": "Too many attempts. Please try again later.",
+      "rateLimitedHelp": "Please wait a moment before trying again. This helps us prevent abuse and ensure service availability for all users.",
+      "completeFields": "Please complete all required fields.",
       "displayNameLabel": "Display Name",
       "displayNamePlaceholder": "Your display name",
       "displayNameAria": "Display name",
@@ -3424,7 +3499,8 @@
       "emailPlaceholder": "your@email.com",
       "emailAria": "Email address",
       "emailValidation": "✓ Valid email format",
-      "emailError": "Email is required",
+      "emailError": "Enter a valid email address",
+      "forgotPassword": "Forgot password?",
       "passwordLabel": "Password",
       "passwordPlaceholder": "••••••••",
       "passwordAria": "Password",
@@ -3432,6 +3508,8 @@
       "showPassword": "Show password",
       "passwordStrength": "Strong",
       "passwordSecurity": "Password is secure",
+      "passwordLengthError": "Password must be at least {length} characters",
+      "passwordValidation": "✓ Password meets minimum length",
       "confirmPasswordLabel": "Confirm Password",
       "confirmPasswordAria": "Confirm password",
       "passwordsMatch": "✓ Passwords match",
@@ -3440,7 +3518,34 @@
         "signUp": "Sign Up",
         "signIn": "Sign In"
       },
-      "altSignInDivider": "Or continue with"
+      "altSignInDivider": "Or continue with",
+      "orContinueWith": "Or continue with"
+    },
+    "reset": {
+      "heading": "Reset your password",
+      "subheading": "We’ll email you a secure reset link.",
+      "emailLabel": "Email address",
+      "emailPlaceholder": "you@example.com",
+      "submit": "Send reset link",
+      "working": "Sending...",
+      "successTitle": "Check your inbox",
+      "successBody": "If an account exists for that email, we sent a reset link.",
+      "error": "We couldn’t send that reset link. Please try again.",
+      "backToSignIn": "Back to sign in",
+      "confirm": {
+        "heading": "Choose a new password",
+        "subheading": "Make sure it’s at least 8 characters.",
+        "newPasswordLabel": "New password",
+        "newPasswordPlaceholder": "Enter a new password",
+        "confirmPasswordLabel": "Confirm new password",
+        "updateButton": "Update password",
+        "working": "Updating...",
+        "loading": "Preparing reset...",
+        "successTitle": "Password updated",
+        "successBody": "You can now sign in with your new password.",
+        "invalidLink": "This reset link is invalid or has expired.",
+        "requestNewLink": "Request a new reset link"
+      }
     }
   },
   "pwa": {

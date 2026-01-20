@@ -245,6 +245,7 @@ export const useGeneratedPolls = () => {
 
 export const useSystemMetrics = () => {
   const { setSystemMetrics } = useAdminActions();
+  const lastMetricsRef = React.useRef<string | null>(null);
 
   const query = useQuery({
     queryKey: ['system-metrics'],
@@ -264,9 +265,13 @@ export const useSystemMetrics = () => {
   });
 
   React.useEffect(() => {
-    if (query.data) {
-      setSystemMetrics(query.data);
+    if (!query.data) return;
+    const signature = JSON.stringify(query.data);
+    if (lastMetricsRef.current === signature) {
+      return;
     }
+    lastMetricsRef.current = signature;
+    setSystemMetrics(query.data);
   }, [query.data, setSystemMetrics]);
 
   return query;

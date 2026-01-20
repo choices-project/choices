@@ -188,7 +188,7 @@ const PrivacyStep: React.FC<{
         </div>
 
         <div className="bg-gray-50 rounded-lg p-6 mb-8">
-          <h3 className="text-lg font-semibold text-gray-900 mb-4">Your Privacy Controls</h3>
+          <h3 className="text-lg font-semibold text-gray-900 mb-4">{t('onboarding.privacy.controls.title')}</h3>
           <div className="space-y-4">
             <label className="flex items-center space-x-3">
               <input
@@ -203,7 +203,7 @@ const PrivacyStep: React.FC<{
                 className="w-5 h-5 text-blue-600 rounded"
               />
               <span className="text-gray-700">
-                Allow location sharing (quantized to state level)
+                {t('onboarding.privacy.controls.location')}
               </span>
             </label>
             <label className="flex items-center space-x-3">
@@ -219,7 +219,7 @@ const PrivacyStep: React.FC<{
                 className="w-5 h-5 text-blue-600 rounded"
               />
               <span className="text-gray-700">
-                Share demographics for better experience
+                {t('onboarding.privacy.controls.demographics')}
               </span>
             </label>
             <label className="flex items-center space-x-3">
@@ -235,7 +235,7 @@ const PrivacyStep: React.FC<{
                 className="w-5 h-5 text-blue-600 rounded"
               />
               <span className="text-gray-700">
-                Share analytics to improve the platform
+                {t('onboarding.privacy.controls.analytics')}
               </span>
             </label>
           </div>
@@ -245,17 +245,17 @@ const PrivacyStep: React.FC<{
           <button
             onClick={onBack}
             className="text-gray-500 hover:text-gray-700 transition-colors"
-            aria-label="Go back to previous step"
+            aria-label={t('onboarding.privacy.actions.back')}
           >
-            ← Back
+            {t('onboarding.privacy.actions.back')}
           </button>
           <button
             onClick={onNext}
             data-testid="privacy-next"
             className="bg-blue-600 text-white py-3 px-6 rounded-lg font-semibold hover:bg-blue-700 transition-colors"
-            aria-label="Continue to next step"
+            aria-label={t('onboarding.privacy.actions.continue')}
           >
-            Continue
+            {t('onboarding.privacy.actions.continue')}
           </button>
         </div>
       </div>
@@ -473,6 +473,7 @@ const AuthStep: React.FC<{
   error?: string | null;
   isLoading?: boolean;
 }> = ({ onNext, onBack, onSkip, error, isLoading }) => {
+  const { t } = useI18n();
   const [authMethod, setAuthMethod] = useState<'email' | 'passkey' | 'google' | null>(null);
   const [success, setSuccess] = useState(false);
 
@@ -521,10 +522,10 @@ const AuthStep: React.FC<{
         <div className="max-w-2xl mx-auto p-8">
           <div className="text-center mb-8">
             <h2 className="text-4xl font-bold text-gray-900 mb-4">
-              Set Up Your Passkey
+              {t('onboarding.auth.webauthn.cardTitle')}
             </h2>
             <p className="text-xl text-gray-600">
-              Create a secure, passwordless way to sign in
+              {t('onboarding.auth.webauthn.cardDescription')}
             </p>
           </div>
 
@@ -533,12 +534,12 @@ const AuthStep: React.FC<{
               <div className="w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-4">
                 <span className="text-3xl">🔐</span>
               </div>
-              <h3 className="text-lg font-semibold text-gray-900 mb-2">Why Passkeys?</h3>
+              <h3 className="text-lg font-semibold text-gray-900 mb-2">{t('onboarding.auth.webauthn.benefits.title')}</h3>
               <ul className="text-gray-600 space-y-2 text-left">
-                <li>• Use your fingerprint, face, or device PIN</li>
-                <li>• No passwords to remember or type</li>
-                <li>• Works across all your devices</li>
-                <li>• Maximum security with privacy</li>
+                <li>• {t('onboarding.auth.webauthn.benefits.biometric')}</li>
+                <li>• {t('onboarding.auth.webauthn.benefits.noPassword')}</li>
+                <li>• {t('onboarding.auth.webauthn.benefits.crossDevice')}</li>
+                <li>• {t('onboarding.auth.webauthn.benefits.maximum')}</li>
               </ul>
             </div>
 
@@ -563,7 +564,7 @@ const AuthStep: React.FC<{
             {success && (
               <div className="mt-4 p-4 bg-green-50 border border-green-200 rounded-lg">
                 <div className="flex items-center gap-2 text-green-800">
-                  <span className="text-sm">✅ Passkey created successfully!</span>
+                  <span className="text-sm">✅ {t('onboarding.auth.webauthn.success.registered')}</span>
                 </div>
               </div>
             )}
@@ -574,7 +575,7 @@ const AuthStep: React.FC<{
               onClick={() => setAuthMethod(null)}
               className="text-gray-500 hover:text-gray-700 transition-colors"
             >
-              ← Back to options
+              {t('onboarding.auth.actions.backToOptions')}
             </button>
 
             <div className="flex space-x-4">
@@ -582,7 +583,7 @@ const AuthStep: React.FC<{
                 onClick={onSkip}
                 className="text-gray-500 hover:text-gray-700 transition-colors"
               >
-                Skip for now
+                {t('onboarding.auth.actions.skip')}
               </button>
             </div>
           </div>
@@ -597,10 +598,10 @@ const AuthStep: React.FC<{
       <div className="max-w-2xl mx-auto p-8">
         <div className="text-center mb-8">
           <h2 className="text-4xl font-bold text-gray-900 mb-4">
-            Create Your Account
+            {t('onboarding.auth.overview.title')}
           </h2>
           <p className="text-xl text-gray-600">
-            Choose how you&apos;d like to sign in
+            {t('onboarding.auth.overview.subtitle')}
           </p>
         </div>
 
@@ -614,8 +615,10 @@ const AuthStep: React.FC<{
             >
               <span className="text-3xl">🔐</span>
               <div className="text-left">
-                <div className="text-lg font-semibold">Passkey (Recommended)</div>
-                <div className="text-gray-500">Passwordless and secure</div>
+                <div className="text-lg font-semibold">
+                  {t('onboarding.auth.options.webauthn.title')} {t('onboarding.auth.options.webauthn.recommended')}
+                </div>
+                <div className="text-gray-500">{t('onboarding.auth.options.webauthn.description')}</div>
               </div>
             </button>
           </FeatureWrapper>
@@ -628,8 +631,8 @@ const AuthStep: React.FC<{
           >
             <span className="text-3xl">📧</span>
             <div className="text-left">
-              <div className="text-lg font-semibold">Email & Password</div>
-              <div className="text-gray-500">Simple and secure</div>
+              <div className="text-lg font-semibold">{t('onboarding.auth.options.email.title')}</div>
+              <div className="text-gray-500">{t('onboarding.auth.options.email.description')}</div>
             </div>
           </button>
 
@@ -641,18 +644,18 @@ const AuthStep: React.FC<{
           >
             <span className="text-3xl">📱</span>
             <div className="text-left">
-              <div className="text-lg font-semibold">Continue with Google</div>
-              <div className="text-gray-500">Quick and easy</div>
+              <div className="text-lg font-semibold">{t('onboarding.auth.social.actions.continueWithGoogle')}</div>
+              <div className="text-gray-500">{t('onboarding.auth.social.helper')}</div>
             </div>
           </button>
         </div>
 
         <div className="bg-gray-50 rounded-lg p-6 mb-8">
-          <h3 className="text-lg font-semibold text-gray-900 mb-2">Why do we need authentication?</h3>
+          <h3 className="text-lg font-semibold text-gray-900 mb-2">{t('onboarding.auth.reason.title')}</h3>
           <ul className="text-gray-600 space-y-2">
-            <li>• Save your preferences and voting history</li>
-            <li>• Show you personalized content</li>
-            <li>• Keep your data secure and private</li>
+            <li>• {t('onboarding.auth.reason.items.save')}</li>
+            <li>• {t('onboarding.auth.reason.items.personalized')}</li>
+            <li>• {t('onboarding.auth.reason.items.secure')}</li>
           </ul>
         </div>
 
@@ -661,7 +664,7 @@ const AuthStep: React.FC<{
             onClick={onBack}
             className="text-gray-500 hover:text-gray-700 transition-colors"
           >
-            ← Back
+            {t('onboarding.auth.actions.back')}
           </button>
 
           <div className="flex space-x-4">
@@ -669,13 +672,13 @@ const AuthStep: React.FC<{
               onClick={onSkip}
               className="text-gray-500 hover:text-gray-700 transition-colors"
             >
-              Continue without account
+              {t('onboarding.auth.anonymous.actions.continue')}
             </button>
           </div>
         </div>
 
         <p className="text-sm text-gray-500 text-center mt-4">
-          You can start without an account, but with limited features
+          {t('onboarding.auth.anonymous.note')}
         </p>
       </div>
     </div>
@@ -690,6 +693,7 @@ const ProfileStep: React.FC<{
   profile: ProfileData;
   onUpdate: (updates: Partial<ProfileData>) => void;
 }> = ({ onNext, onBack, onSkip, profile, onUpdate }) => {
+  const { t } = useI18n();
   const displayName = profile?.displayName ?? '';
   const bio = profile?.bio ?? '';
   const participationStyle = (profile?.participationStyle ?? 'observer') as 'observer' | 'contributor' | 'leader';
@@ -711,9 +715,9 @@ const ProfileStep: React.FC<{
   return (
     <div className="max-w-2xl mx-auto">
       <div className="text-center mb-8">
-        <h2 className="text-3xl font-bold text-gray-900 mb-4">Complete Your Profile</h2>
+        <h2 className="text-3xl font-bold text-gray-900 mb-4">{t('onboarding.profile.step.title')}</h2>
         <p className="text-lg text-gray-600">
-          Help us personalize your experience (optional)
+          {t('onboarding.profile.step.subtitle')}
         </p>
       </div>
 
@@ -721,7 +725,7 @@ const ProfileStep: React.FC<{
         {/* Display Name */}
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-2">
-            Display Name
+            {t('onboarding.profile.fields.displayName.label')}
           </label>
           <input
             type="text"
@@ -731,15 +735,16 @@ const ProfileStep: React.FC<{
                 displayName: e.target.value,
               })
             }
-            placeholder="Enter your display name"
+            placeholder={t('onboarding.profile.fields.displayName.placeholder')}
             className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+            autoComplete="name"
           />
         </div>
 
         {/* Bio */}
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-2">
-            Bio (Optional)
+            {t('onboarding.profile.fields.bio.label')}
           </label>
           <textarea
             value={bio}
@@ -748,7 +753,7 @@ const ProfileStep: React.FC<{
                 bio: e.target.value,
               })
             }
-            placeholder="Share a brief description about yourself (optional)"
+            placeholder={t('onboarding.profile.fields.bio.placeholder')}
             rows={3}
             className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
           />
@@ -757,13 +762,25 @@ const ProfileStep: React.FC<{
         {/* Participation Style */}
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-2">
-            How do you prefer to participate?
+            {t('onboarding.profile.participation.label')}
           </label>
           <div className="space-y-2">
             {[
-              { value: 'observer', label: 'Observer', desc: 'I prefer to read and learn' },
-              { value: 'contributor', label: 'Contributor', desc: 'I like to share my thoughts' },
-              { value: 'leader', label: 'Leader', desc: 'I want to drive discussions' }
+              {
+                value: 'observer',
+                label: t('onboarding.profile.participation.options.observer.label'),
+                desc: t('onboarding.profile.participation.options.observer.description'),
+              },
+              {
+                value: 'contributor',
+                label: t('onboarding.profile.participation.options.contributor.label'),
+                desc: t('onboarding.profile.participation.options.contributor.description'),
+              },
+              {
+                value: 'leader',
+                label: t('onboarding.profile.participation.options.leader.label'),
+                desc: t('onboarding.profile.participation.options.leader.description'),
+              }
             ].map((option) => (
               <label key={option.value} className="flex items-center space-x-3 p-3 border rounded-md cursor-pointer hover:bg-gray-50">
                 <input
@@ -793,20 +810,20 @@ const ProfileStep: React.FC<{
           onClick={onBack}
           className="px-4 py-2 text-gray-600 hover:text-gray-800"
         >
-          ← Back
+          {t('onboarding.profile.actions.back')}
         </button>
         <div className="space-x-3">
           <button
             onClick={handleSkip}
             className="px-4 py-2 text-gray-600 hover:text-gray-800"
           >
-            Skip for now
+            {t('onboarding.profile.actions.skip')}
           </button>
           <button
             onClick={handleNext}
             className="px-6 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700"
           >
-            Complete Profile
+            {t('onboarding.profile.actions.completeSetup')}
           </button>
         </div>
       </div>
@@ -820,6 +837,7 @@ const CompleteStep: React.FC<{
   demographics: UserDemographics;
 }> = ({ onFinish, demographics }) => {
   const router = useRouter();
+  const { t } = useI18n();
 
   const handleFindRepresentatives = () => {
     onFinish();
@@ -844,35 +862,45 @@ const CompleteStep: React.FC<{
             <span className="text-4xl">🎉</span>
           </div>
           <h2 className="text-4xl font-bold text-gray-900 mb-4">
-            You&apos;re All Set!
+            {t('onboarding.complete.success.title')}
           </h2>
           <p className="text-xl text-gray-600">
-            Let&apos;s find your representatives and explore what&apos;s available
+            {t('onboarding.complete.success.subtitle')}
           </p>
         </div>
 
         <div className="bg-white rounded-lg p-6 shadow-sm mb-8">
-          <h3 className="text-lg font-semibold text-gray-900 mb-4">Your Personalized Dashboard</h3>
+          <h3 className="text-lg font-semibold text-gray-900 mb-4">
+            {t('onboarding.complete.dashboard.title')}
+          </h3>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             <div className="text-center p-4 bg-blue-50 rounded-lg">
               <div className="text-2xl mb-2">🏛️</div>
-              <h4 className="font-semibold text-gray-900">Your Representatives</h4>
+              <h4 className="font-semibold text-gray-900">
+                {t('onboarding.complete.dashboard.cards.representatives.title')}
+              </h4>
               <p className="text-sm text-gray-600">
-                Based on your location: {demographics?.location?.state ?? 'Not specified'}
+                {t('onboarding.complete.dashboard.cards.representatives.description', {
+                  state: demographics?.location?.state ?? t('onboarding.complete.dashboard.cards.representatives.fallback'),
+                })}
               </p>
             </div>
             <div className="text-center p-4 bg-green-50 rounded-lg">
               <div className="text-2xl mb-2">🗳️</div>
-              <h4 className="font-semibold text-gray-900">Relevant Polls</h4>
+              <h4 className="font-semibold text-gray-900">
+                {t('onboarding.complete.dashboard.cards.polls.title')}
+              </h4>
               <p className="text-sm text-gray-600">
-                Polls matching your interests
+                {t('onboarding.complete.dashboard.cards.polls.description')}
               </p>
             </div>
             <div className="text-center p-4 bg-purple-50 rounded-lg">
               <div className="text-2xl mb-2">📊</div>
-              <h4 className="font-semibold text-gray-900">Campaign Finance</h4>
+              <h4 className="font-semibold text-gray-900">
+                {t('onboarding.complete.dashboard.cards.finance.title')}
+              </h4>
               <p className="text-sm text-gray-600">
-                See who funds campaigns
+                {t('onboarding.complete.dashboard.cards.finance.description')}
               </p>
             </div>
           </div>
@@ -884,29 +912,31 @@ const CompleteStep: React.FC<{
             data-testid="complete-onboarding"
             className="w-full bg-blue-600 text-white py-4 px-8 rounded-lg font-semibold text-lg hover:bg-blue-700 transition-colors"
           >
-            Find My Representatives
+            {t('onboarding.complete.actions.findRepresentatives')}
           </button>
           <button
             onClick={handleBrowsePolls}
             className="w-full bg-green-600 text-white py-4 px-8 rounded-lg font-semibold text-lg hover:bg-green-700 transition-colors"
           >
-            Browse Current Polls
+            {t('onboarding.complete.actions.browsePolls')}
           </button>
           <button
             onClick={handleExploreFeatures}
             className="w-full bg-purple-600 text-white py-4 px-8 rounded-lg font-semibold text-lg hover:bg-purple-700 transition-colors"
           >
-            Explore All Features
+            {t('onboarding.complete.actions.exploreFeatures')}
           </button>
         </div>
 
         <div className="bg-gray-50 rounded-lg p-6">
-          <h3 className="text-lg font-semibold text-gray-900 mb-4">What&apos;s Next?</h3>
+          <h3 className="text-lg font-semibold text-gray-900 mb-4">
+            {t('onboarding.complete.next.title')}
+          </h3>
           <ul className="text-left text-gray-600 space-y-2">
-            <li>• Vote on polls that interest you</li>
-            <li>• Track how your representatives vote</li>
-            <li>• See campaign finance data</li>
-            <li>• Get notified about important issues</li>
+            <li>• {t('onboarding.complete.next.steps.findCandidates')}</li>
+            <li>• {t('onboarding.complete.next.steps.askQuestions')}</li>
+            <li>• {t('onboarding.complete.next.steps.followMoney')}</li>
+            <li>• {t('onboarding.complete.next.steps.connectVoters')}</li>
           </ul>
         </div>
       </div>
@@ -944,14 +974,14 @@ const BalancedOnboardingFlow: React.FC = () => {
   const isFlowCompleted = onboardingData?.isCompleted ?? false;
   const stepLabels = useMemo(
     () => [
-      tRef.current('onboarding.labels.welcome'),
-      tRef.current('onboarding.labels.privacy'),
-      tRef.current('onboarding.labels.demographics'),
-      tRef.current('onboarding.labels.authentication'),
-      tRef.current('onboarding.labels.profile'),
-      tRef.current('onboarding.labels.complete'),
+      t('onboarding.labels.welcome'),
+      t('onboarding.labels.privacy'),
+      t('onboarding.labels.demographics'),
+      t('onboarding.labels.authentication'),
+      t('onboarding.labels.profile'),
+      t('onboarding.labels.complete'),
     ],
-    [],  
+    [t],
   );
   const totalSteps = stepLabels.length || 6;
   const profileStepData = useMemo<ProfileData>(() => {
@@ -1005,7 +1035,7 @@ const BalancedOnboardingFlow: React.FC = () => {
   const isLoading = useUserLoading();
   const { profile, isLoading: profileLoading, refetch: refetchProfile } = useProfile();
   const { updateProfile } = useProfileUpdate();
-  const mainRegionRef = useRef<HTMLElement | null>(null);
+  const mainRegionRef = useRef<HTMLDivElement | null>(null);
   const previousStepRef = useRef<number>(-1);
   const previousErrorRef = useRef<string | null>(null);
   const [liveAnnouncement, setLiveAnnouncement] = useState('');
@@ -1189,7 +1219,7 @@ const BalancedOnboardingFlow: React.FC = () => {
       <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 flex items-center justify-center">
         <div className="text-center">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4" />
-          <p className="text-gray-600">Loading...</p>
+          <p className="text-gray-600">{t('onboarding.loading')}</p>
         </div>
       </div>
     );
@@ -1215,8 +1245,8 @@ const BalancedOnboardingFlow: React.FC = () => {
         </div>
       </nav>
 
-      <main
-        role="main"
+      <div
+        role="region"
         aria-label="Onboarding flow"
         ref={mainRegionRef}
         tabIndex={-1}
@@ -1265,7 +1295,7 @@ const BalancedOnboardingFlow: React.FC = () => {
           demographics={demographicsData}
         />
       )}
-      </main>
+      </div>
     </div>
   );
 };

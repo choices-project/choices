@@ -152,12 +152,12 @@ export default function AnalyticsStoreHarnessPage() {
 
   if (!isMounted) {
     return (
-      <main data-testid="analytics-store-harness" className="mx-auto flex w_full max-w-5xl flex-col gap-6 p-6">
+      <div data-testid="analytics-store-harness" className="mx-auto flex w_full max-w-5xl flex-col gap-6 p-6">
         <section className="rounded-lg border border-slate-200 bg-white p-4 shadow-sm">
           <h1 className="text-xl font-semibold">Analytics Store Harness</h1>
           <p className="text-sm text-slate-600">Loading harness state…</p>
         </section>
-      </main>
+      </div>
     );
   }
 
@@ -165,7 +165,7 @@ export default function AnalyticsStoreHarnessPage() {
   const latestEvent = totalEvents > 0 ? events[events.length - 1] : null;
 
   return (
-    <main
+    <div
       data-testid="analytics-store-harness"
       className="mx-auto flex w-full max-w-5xl flex-col gap-6 p-6"
     >
@@ -319,7 +319,7 @@ export default function AnalyticsStoreHarnessPage() {
           </div>
         </dl>
       </section>
-    </main>
+    </div>
   );
 }
 

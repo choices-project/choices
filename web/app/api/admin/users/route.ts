@@ -1,6 +1,7 @@
 import { getSupabaseServerClient } from '@/utils/supabase/server';
 
-import { requireAdminOr401 } from '@/lib/admin-auth';
+import { requireAdminOr401 } from '@/features/auth/lib/admin-auth';
+
 import {
   errorResponse,
   paginatedResponse,

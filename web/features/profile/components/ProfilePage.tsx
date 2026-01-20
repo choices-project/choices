@@ -171,13 +171,21 @@ export default function ProfilePage({
             Please sign in to view your profile.
           </AlertDescription>
         </Alert>
+        <div className="mt-4 flex flex-wrap gap-3">
+          <Button onClick={() => router.push('/auth')} variant="default">
+            Sign in
+          </Button>
+          <Button onClick={() => router.push('/')} variant="outline">
+            Back to home
+          </Button>
+        </div>
       </div>
     );
   }
 
   if (finalLoading) {
     return (
-      <div className="flex items-center justify-center min-h-[400px]">
+      <div className="flex items-center justify-center min-h-[400px]" role="status" aria-live="polite" aria-busy="true">
         <div className="flex items-center space-x-2">
           <Loader2 className="h-6 w-6 animate-spin" />
           <span>Loading profile...</span>
@@ -195,6 +203,14 @@ export default function ProfilePage({
             {finalError ?? 'Failed to load profile. Please try again.'}
           </AlertDescription>
         </Alert>
+        <div className="mt-4 flex flex-wrap gap-3">
+          <Button onClick={() => window.location.reload()}>
+            Try again
+          </Button>
+          <Button onClick={() => router.push('/dashboard')} variant="outline">
+            Back to dashboard
+          </Button>
+        </div>
       </div>
     );
   }

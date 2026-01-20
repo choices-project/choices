@@ -181,6 +181,20 @@ export default function ProfilePreferencesPage() {
         <div className="text-center space-y-4">
           <h1 className="text-2xl font-bold">Sign in to manage your preferences</h1>
           <p className="text-gray-600">You need to be logged in to access this page.</p>
+          <div className="flex flex-wrap justify-center gap-3">
+            <button
+              onClick={() => window.location.href = '/auth?redirectTo=/profile/preferences'}
+              className="px-4 py-2 rounded-md bg-blue-600 text-white hover:bg-blue-700"
+            >
+              Log in
+            </button>
+            <button
+              onClick={() => window.location.href = '/auth?redirectTo=/profile/preferences'}
+              className="px-4 py-2 rounded-md border border-gray-300 text-gray-700 hover:bg-gray-50"
+            >
+              Create account
+            </button>
+          </div>
         </div>
       </div>
     );
@@ -192,6 +206,20 @@ export default function ProfilePreferencesPage() {
         <div className="text-center space-y-4">
           <h1 className="text-2xl font-bold">We couldn&apos;t load your profile</h1>
           <p className="text-gray-600">Please refresh the page or try again later.</p>
+          <div className="flex flex-wrap justify-center gap-3">
+            <button
+              onClick={() => window.location.reload()}
+              className="px-4 py-2 rounded-md bg-blue-600 text-white hover:bg-blue-700"
+            >
+              Reload
+            </button>
+            <button
+              onClick={() => window.location.href = '/profile'}
+              className="px-4 py-2 rounded-md border border-gray-300 text-gray-700 hover:bg-gray-50"
+            >
+              Back to profile
+            </button>
+          </div>
         </div>
       </div>
     );

@@ -1,6 +1,7 @@
-import { getSupabaseServerClient } from '@/utils/supabase/server';
+import { getSupabaseAdminClient, getSupabaseServerClient } from '@/utils/supabase/server';
 
-import { requireAdminOr401 } from '@/lib/admin-auth';
+import { requireAdminOr401 } from '@/features/auth/lib/admin-auth';
+
 import {
   errorResponse,
   successResponse,
@@ -61,7 +62,14 @@ export const PATCH = withErrorHandling(async (
   if (start_date !== undefined) updateData.start_date = start_date;
   if (end_date !== undefined) updateData.end_date = end_date;
 
-  const { data: siteMessage, error } = await supabase
+  const adminSupabase = await getSupabaseAdminClient();
+  if (is_active !== undefined && status === undefined) {
+    updateData.status = is_active ? 'active' : 'inactive';
+  } else if (status !== undefined && is_active === undefined) {
+    updateData.is_active = status === 'active';
+  }
+
+  const { data: siteMessage, error } = await adminSupabase
     .from('site_messages')
     .update(updateData)
     .eq('id', id)
@@ -107,7 +115,8 @@ export const DELETE = withErrorHandling(async (
     return errorResponse('Authentication required', 401);
   }
 
-  const { data: siteMessage, error } = await supabase
+  const adminSupabase = await getSupabaseAdminClient();
+  const { data: siteMessage, error } = await adminSupabase
     .from('site_messages')
     .delete()
     .eq('id', id)

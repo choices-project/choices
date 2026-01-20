@@ -101,7 +101,7 @@ export default function OnboardingStoreHarnessPage() {
   }, []);
 
   return (
-    <main data-testid="onboarding-store-harness">
+    <div data-testid="onboarding-store-harness">
       <h1>Onboarding Store Harness</h1>
 
       <section aria-labelledby="onboarding-summary-heading">
@@ -171,7 +171,7 @@ export default function OnboardingStoreHarnessPage() {
           <pre data-testid="onboarding-preferences-data">{preferencesDataJson}</pre>
         </article>
       </section>
-    </main>
+    </div>
   );
 }
 

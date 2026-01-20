@@ -180,6 +180,17 @@ export default function DataExportPage() {
 
   const selectedCount = Object.values(exportOptions).filter(Boolean).length - 2 // Exclude format and dateRange
 
+  if (isLoading) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center" role="status" aria-live="polite" aria-busy="true">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto" />
+          <p className="mt-4 text-gray-600">Loading your data...</p>
+        </div>
+      </div>
+    );
+  }
+
   // Handle case where user is not available during pre-rendering
   if (!user) {
     return (
@@ -188,22 +199,11 @@ export default function DataExportPage() {
           <h1 className="text-2xl font-bold text-gray-900 mb-4">Data Export</h1>
           <p className="text-gray-600 mb-6">Please log in to access this page.</p>
           <a 
-            href="/login"
+            href="/auth?redirectTo=/account/export"
             className="bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700"
           >
-            Login
+            Log in
           </a>
-        </div>
-      </div>
-    );
-  }
-
-  if (isLoading) {
-    return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto" />
-          <p className="mt-4 text-gray-600">Loading your data...</p>
         </div>
       </div>
     );
@@ -217,11 +217,11 @@ export default function DataExportPage() {
           <div className="flex items-center justify-between py-6">
             <div className="flex items-center space-x-4">
               <button
-                onClick={() => router.push('/account-settings')}
+                onClick={() => router.push('/account/privacy')}
                 className="flex items-center text-gray-600 hover:text-gray-900"
               >
                 <ArrowLeft className="h-5 w-5 mr-2" />
-                Back to Account Settings
+                Back to Privacy & Data
               </button>
               <div>
                 <h1 className="text-2xl font-bold text-gray-900">Data Export</h1>

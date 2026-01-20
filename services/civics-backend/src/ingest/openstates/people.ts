@@ -267,8 +267,8 @@ function extractOpenStatesId(raw: Record<string, any>): string | null {
 }
 
 function buildCanonicalKey(
-  raw: Record<string, any>,
-  { openstatesId, stateCode }: { openstatesId: string; stateCode: string },
+  _raw: Record<string, any>,
+  { openstatesId, stateCode: _stateCode }: { openstatesId: string; stateCode: string },
 ): string {
   return `canonical-${openstatesId}`;
 }

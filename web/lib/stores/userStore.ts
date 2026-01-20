@@ -664,8 +664,8 @@ export const useUserStore = create<UserStore>()(
       {
         name: 'user-store',
         storage: createSafeStorage(),
-        // Skip hydration delay in E2E/test environments for faster test execution
-        skipHydration: process.env.NEXT_PUBLIC_ENABLE_E2E_HARNESS === '1' || process.env.PLAYWRIGHT_USE_MOCKS === '1',
+        // Always skip hydration during SSR to prevent mismatches.
+        skipHydration: true,
         partialize: (state) => ({
           profile: state.profile,
           isAuthenticated: state.isAuthenticated,

@@ -16,6 +16,10 @@ const EnhancedFeedbackWidget = dynamic(
   }
 );
 
+const isFeedbackWidgetEnabled =
+  process.env.NEXT_PUBLIC_DISABLE_FEEDBACK_WIDGET !== '1' &&
+  process.env.NODE_ENV === 'production';
+
 // Trending Polls Component - Lazy loaded to not block TTI
 type TrendingPoll = {
   id: string;
@@ -470,7 +474,7 @@ export default function LandingPageClient() {
       </footer>
 
       {/* Feedback Widget - Allow users to provide feedback from landing page */}
-      {showFeedbackWidget && <EnhancedFeedbackWidget />}
+      {showFeedbackWidget && isFeedbackWidgetEnabled && <EnhancedFeedbackWidget />}
     </div>
   );
 }

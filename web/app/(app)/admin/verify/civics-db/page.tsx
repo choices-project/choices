@@ -59,7 +59,7 @@ export default async function AdminVerifyCivicsDbPage() {
   const [result, stats, qa] = await Promise.all([fetchVerification(), fetchStats(), fetchQa()])
   const status = result?.data?.status ?? (result.success ? 'ok' : 'error')
   return (
-    <main role="main" aria-labelledby="civics-db-title" className="container mx-auto px-6 py-8">
+    <div aria-labelledby="civics-db-title" className="container mx-auto px-6 py-8">
       <div className="mb-6">
         <h1 id="civics-db-title" className="text-2xl font-semibold">Admin: Verify Civics Database</h1>
         <p className="text-sm text-muted-foreground mt-1">Samples data from the Supabase civics tables to confirm schema and connectivity.</p>
@@ -149,7 +149,7 @@ export default async function AdminVerifyCivicsDbPage() {
           Timestamp: {result?.data?.timestamp ?? 'n/a'}
         </div>
       </section>
-    </main>
+    </div>
   )
 }
 

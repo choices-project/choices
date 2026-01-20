@@ -99,10 +99,21 @@ export async function getSupabaseApiRouteClient(
         } = {
           // For auth cookies, FORCE secure values regardless of what Supabase SSR passes
           // This ensures cookies are always set with proper security attributes
-          httpOnly: isAuthCookie ? true : (typeof options.httpOnly === 'boolean' ? options.httpOnly : undefined),
-          secure: isAuthCookie ? requireSecure : (typeof options.secure === 'boolean' ? options.secure : undefined),
           sameSite: (typeof options.sameSite === 'string' ? options.sameSite : 'lax') as 'strict' | 'lax' | 'none',
           path: typeof options.path === 'string' ? options.path : '/',
+        }
+
+        const httpOnly =
+          isAuthCookie ? true : (typeof options.httpOnly === 'boolean' ? options.httpOnly : undefined)
+        const secure =
+          isAuthCookie ? requireSecure : (typeof options.secure === 'boolean' ? options.secure : undefined)
+
+        if (typeof httpOnly === 'boolean') {
+          cookieOptions.httpOnly = httpOnly
+        }
+
+        if (typeof secure === 'boolean') {
+          cookieOptions.secure = secure
         }
 
         if (typeof options.maxAge === 'number') {

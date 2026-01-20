@@ -26,11 +26,19 @@ export const POST = withErrorHandling(async (request: NextRequest) => {
   const rateLimitResult = await apiRateLimiter.checkLimit(
     clientIp,
     '/api/representatives/bulk',
-    {
-      maxRequests: 50,
-      windowMs: 15 * 60 * 1000,
-      userAgent: request.headers.get('user-agent') ?? undefined
-    }
+    (() => {
+      const userAgent = request.headers.get('user-agent') ?? '';
+      const options = {
+        maxRequests: 50,
+        windowMs: 15 * 60 * 1000,
+      } as const;
+
+      if (userAgent) {
+        return { ...options, userAgent };
+      }
+
+      return options;
+    })()
   );
 
   if (!rateLimitResult.allowed) {

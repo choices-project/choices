@@ -22,7 +22,7 @@ import { PrivacyAwareQueryBuilder } from '@/features/analytics/lib/privacyFilter
 
 
 import { withErrorHandling, forbiddenError, successResponse, errorResponse } from '@/lib/api';
-import { canAccessAnalytics, logAnalyticsAccess } from '@/lib/auth/adminGuard';
+import { canAccessAnalytics, fetchAccessProfile, logAnalyticsAccess } from '@/lib/auth/adminGuard';
 import { getCached, CACHE_TTL, CACHE_PREFIX, generateCacheKey } from '@/lib/cache/analytics-cache';
 import { logger } from '@/lib/utils/logger';
 
@@ -36,13 +36,14 @@ export const revalidate = 0;
 export const GET = withErrorHandling(async (request: NextRequest): Promise<any> => {
   const supabase = await getSupabaseServerClient();
   const { data: { user } } = await supabase.auth.getUser();
+  const accessProfile = await fetchAccessProfile(supabase, user?.id);
 
-  if (!canAccessAnalytics(user, false)) {
-    logAnalyticsAccess(user, 'poll-heatmap-api', false);
+  if (!canAccessAnalytics(user, false, accessProfile)) {
+    logAnalyticsAccess(user, 'poll-heatmap-api', false, accessProfile);
     return forbiddenError('Unauthorized - Admin access required');
   }
 
-  logAnalyticsAccess(user, 'poll-heatmap-api', true);
+  logAnalyticsAccess(user, 'poll-heatmap-api', true, accessProfile);
 
   try {
     // Get query parameters

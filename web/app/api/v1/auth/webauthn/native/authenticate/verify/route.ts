@@ -38,6 +38,9 @@ export const POST = withErrorHandling(async (req: NextRequest) => {
     if (!challengeId) {
       return validationError({ challengeId: 'Challenge ID is required' });
     }
+    if (!body?.id || typeof body.id !== 'string') {
+      return validationError({ id: 'Credential ID is required' });
+    }
 
     const supabase = await getSupabaseAdminClient();
 
@@ -166,10 +169,13 @@ export const POST = withErrorHandling(async (req: NextRequest) => {
     if (adminUserError || !adminUser?.user) {
       return errorResponse('Failed to load user for session', 500, undefined, 'WEBAUTHN_USER_LOOKUP_FAILED');
     }
+    if (!adminUser.user.email) {
+      return errorResponse('User email missing for session creation', 500, undefined, 'WEBAUTHN_USER_EMAIL_MISSING');
+    }
 
     const { data: linkData, error: linkError } = await supabase.auth.admin.generateLink({
       type: 'magiclink',
-      email: adminUser.user.email ?? '',
+      email: adminUser.user.email,
     });
     if (linkError || !linkData?.properties?.hashed_token) {
       logger.error('Failed to generate login link for passkey session', { error: linkError });
@@ -177,7 +183,7 @@ export const POST = withErrorHandling(async (req: NextRequest) => {
     }
 
     const { data: sessionData, error: sessionError } = await supabase.auth.verifyOtp({
-      type: 'email',
+      type: 'magiclink',
       token_hash: linkData.properties.hashed_token,
     });
     if (sessionError || !sessionData?.session) {

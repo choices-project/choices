@@ -27,6 +27,7 @@ import { Button } from '@/components/ui/button';
 
 import { useUser, useUserLoading } from '@/lib/stores';
 import { useAppActions } from '@/lib/stores/appStore';
+import { useProfileActions, useProfileDisplay, useProfileStats } from '@/lib/stores/profileStore';
 import { logger } from '@/lib/utils/logger';
 
 
@@ -35,6 +36,9 @@ type DashboardMode = 'classic' | 'widget';
 export default function AnalyticsPage() {
   const user = useUser();
   const isUserLoading = useUserLoading();
+  const { isAdmin: isProfileAdmin } = useProfileDisplay();
+  const { isProfileLoaded } = useProfileStats();
+  const { loadProfile } = useProfileActions();
   const [mode, setMode] = useState<DashboardMode>('classic');
   const [isLoading, setIsLoading] = useState(true);
   const { setCurrentRoute, setSidebarActiveSection, setBreadcrumbs } = useAppActions();
@@ -97,6 +101,12 @@ export default function AnalyticsPage() {
     };
   }, [isUserLoading, user]);
 
+  useEffect(() => {
+    if (user?.id && !isProfileLoaded) {
+      void loadProfile();
+    }
+  }, [user?.id, isProfileLoaded, loadProfile]);
+
   const handleModeChange = async (newMode: DashboardMode) => {
     setMode(newMode);
 
@@ -117,7 +127,7 @@ export default function AnalyticsPage() {
     }
   };
 
-  if (isUserLoading || isLoading) {
+  if (isUserLoading || isLoading || (user?.id && !isProfileLoaded)) {
     return (
       <div className="flex items-center justify-center min-h-screen">
         <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-primary" />
@@ -158,9 +168,9 @@ export default function AnalyticsPage() {
 
       {/* Dashboard Renderer */}
       {mode === 'classic' ? (
-        <EnhancedAnalyticsDashboard enableRealTime enableNewSchema />
+        <EnhancedAnalyticsDashboard enableRealTime enableNewSchema skipAccessGuard />
       ) : (
-        user?.id && <WidgetDashboard userId={user.id} isAdmin />
+        user?.id && <WidgetDashboard userId={user.id} isAdmin={true} />
       )}
     </div>
   );

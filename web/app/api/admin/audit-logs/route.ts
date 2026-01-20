@@ -18,7 +18,7 @@
 import { getSupabaseServerClient } from '@/utils/supabase/server';
 
 import { withErrorHandling, authError, errorResponse, forbiddenError, successResponse } from '@/lib/api';
-import { logAnalyticsAccessToDatabase } from '@/lib/auth/adminGuard';
+import { fetchAccessProfile, logAnalyticsAccessToDatabase } from '@/lib/auth/adminGuard';
 import { createAuditLogService, type AuditEventType, type AuditSeverity } from '@/lib/services/audit-log-service';
 
 import type { NextRequest } from 'next/server';
@@ -37,14 +37,8 @@ export const GET = withErrorHandling(async (request: NextRequest) => {
     return authError('Authentication required');
   }
 
-    // Check if user is admin
-    const { data: userRoleData } = await supabase
-      .from('user_roles')
-      .select('role_id, roles(name)')
-      .eq('user_id', user.id)
-      .single();
-
-    const isAdmin = (userRoleData?.roles as any)?.name === 'admin';
+    const accessProfile = await fetchAccessProfile(supabase, user.id);
+    const isAdmin = accessProfile?.is_admin ?? false;
 
     if (!isAdmin) {
       // Log unauthorized access attempt
@@ -57,7 +51,8 @@ export const GET = withErrorHandling(async (request: NextRequest) => {
           ipAddress: request.headers.get('x-forwarded-for') || undefined,
           userAgent: request.headers.get('user-agent') || undefined,
           metadata: { reason: 'not_admin' }
-        }
+        },
+        accessProfile
       );
 
       return forbiddenError('Admin access required');
@@ -73,7 +68,8 @@ export const GET = withErrorHandling(async (request: NextRequest) => {
         ipAddress: request.headers.get('x-forwarded-for') || undefined,
         userAgent: request.headers.get('user-agent') || undefined,
         metadata: { action: 'view_audit_logs' }
-      }
+      },
+      accessProfile
     );
 
     // Get query parameters

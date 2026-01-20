@@ -154,10 +154,10 @@ export default function PrivacyPage() {
           <h1 className="text-2xl font-bold text-gray-900 mb-4">Privacy & Data</h1>
           <p className="text-gray-600 mb-6">Please log in to manage your privacy settings.</p>
           <a
-            href="/login"
+            href="/auth?redirectTo=/account/privacy"
             className="bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700"
           >
-            Login
+            Log in
           </a>
         </div>
       </div>
@@ -166,7 +166,7 @@ export default function PrivacyPage() {
 
   if (profileLoading || loadingTimeout) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center" role="status" aria-live="polite">
         <div className="text-center">
           <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto mb-4" />
           <p className="text-gray-600">
@@ -193,6 +193,20 @@ export default function PrivacyPage() {
         <div className="text-center space-y-4">
           <h1 className="text-2xl font-bold">We couldn&apos;t load your privacy settings</h1>
           <p className="text-gray-600">Please refresh the page or try again later.</p>
+          <div className="flex flex-wrap justify-center gap-3">
+            <button
+              onClick={() => window.location.reload()}
+              className="px-4 py-2 rounded-md bg-blue-600 text-white hover:bg-blue-700"
+            >
+              Reload
+            </button>
+            <a
+              href="/dashboard"
+              className="px-4 py-2 rounded-md border border-gray-300 text-gray-700 hover:bg-gray-50"
+            >
+              Back to dashboard
+            </a>
+          </div>
         </div>
       </div>
     );

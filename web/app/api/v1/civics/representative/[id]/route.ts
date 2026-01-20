@@ -174,8 +174,9 @@ export const GET = withErrorHandling(async (
       response.party = representativeRow.party;
     }
 
-    if (representativeRow.primary_photo_url || primaryPhotoFromSet) {
-      response.primary_photo_url = representativeRow.primary_photo_url ?? primaryPhotoFromSet ?? undefined;
+    const primaryPhoto = representativeRow.primary_photo_url ?? primaryPhotoFromSet;
+    if (primaryPhoto) {
+      response.primary_photo_url = primaryPhoto;
     }
     if (includePhotos && photos.length > 0) {
       response.photos = photos;

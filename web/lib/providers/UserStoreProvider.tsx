@@ -1,6 +1,8 @@
 'use client'
 
-import React, { type ReactNode } from 'react'
+import React, { type ReactNode, useEffect, useRef } from 'react'
+
+import { useUserStore } from '@/lib/stores/userStore'
 
 /**
  * UserStoreProvider
@@ -14,8 +16,17 @@ import React, { type ReactNode } from 'react'
  * Instead, use useUserStore with selectors directly in components.
  */
 export function UserStoreProvider({ children }: { children: ReactNode }) {
-  // Simply render children - the Zustand store is available globally
-  // Consumers should use useUserStore with selectors for performance
+  const hasRehydrated = useRef(false)
+
+  useEffect(() => {
+    if (hasRehydrated.current) {
+      return
+    }
+    hasRehydrated.current = true
+    void useUserStore.persist.rehydrate()
+  }, [])
+
+  // Zustand store is available globally
   return <>{children}</>
 }
 

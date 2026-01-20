@@ -563,7 +563,12 @@ export default function FeedCore({
                           // Explore action: show trending hashtags or navigate to polls
                           if (trendingHashtags.length > 0) {
                             // Add first trending hashtag to explore
-                            onHashtagAdd(trendingHashtags[0]);
+                            const firstTag = trendingHashtags[0];
+                            if (firstTag) {
+                              onHashtagAdd(firstTag);
+                            } else {
+                              onRefresh();
+                            }
                           } else {
                             // Fallback to refresh
                             onRefresh();

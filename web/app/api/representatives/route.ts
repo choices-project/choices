@@ -32,11 +32,19 @@ export const GET = withErrorHandling(async (request: NextRequest) => {
   const rateLimitResult = await apiRateLimiter.checkLimit(
     clientIp,
     '/api/representatives',
-    {
+    (() => {
+      const userAgent = request.headers.get('user-agent') ?? '';
+      const options = {
       maxRequests: 100,
       windowMs: 15 * 60 * 1000, // 15 minutes
-      userAgent: request.headers.get('user-agent') ?? undefined
-    }
+      } as const;
+
+      if (userAgent) {
+        return { ...options, userAgent };
+      }
+
+      return options;
+    })()
   );
 
   if (!rateLimitResult.allowed) {

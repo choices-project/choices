@@ -10,6 +10,7 @@
     "npm": "11.6.1"
   },
   "devDependencies": {
+    "@testing-library/jest-dom": "~6.9.1",
     "@types/jest": "30.0.0",
     "@types/node": "22.10.2",
     "husky": "9.1.7",

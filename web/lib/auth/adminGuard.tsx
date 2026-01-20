@@ -22,33 +22,48 @@ import type { SupabaseClient, User } from '@supabase/supabase-js';
 
 export type UserRole = 'admin' | 'T3' | 'T2' | 'T1' | 'T0' | 'guest';
 
+export type AccessProfile = {
+  is_admin?: boolean | null;
+  trust_tier?: string | null;
+} | null;
+
+export async function fetchAccessProfile(
+  supabase: SupabaseClient,
+  userId?: string | null
+): Promise<AccessProfile> {
+  if (!userId) {
+    return null;
+  }
+
+  const { data } = await supabase
+    .from('user_profiles')
+    .select('is_admin, trust_tier')
+    .eq('user_id', userId)
+    .maybeSingle();
+
+  return data ?? null;
+}
+
 /**
  * Check if user has admin privileges
  */
-export function isAdmin(user: User | null): boolean {
+export function isAdmin(user: User | null, profile?: AccessProfile): boolean {
   if (!user) return false;
 
-  // Check user_metadata or app_metadata for admin flag
-  const isAdminUser =
-    user.user_metadata?.role === 'admin' ||
-    user.app_metadata?.role === 'admin' ||
-    user.email?.endsWith('@choices-admin.com'); // Example: admin email domain
+  if (profile && typeof profile.is_admin === 'boolean') {
+    return profile.is_admin;
+  }
 
-  return Boolean(isAdminUser);
+  return false;
 }
 
 /**
  * Check if user has T3 (Elite) trust tier
  */
-export function isT3User(user: User | null): boolean {
+export function isT3User(user: User | null, profile?: AccessProfile): boolean {
   if (!user) return false;
 
-  // Check for T3 trust tier in metadata
-  const trustTier =
-    user.user_metadata?.trust_tier ??
-    user.app_metadata?.trust_tier;
-
-  return trustTier === 'T3';
+  return profile?.trust_tier === 'T3';
 }
 
 /**
@@ -56,14 +71,18 @@ export function isT3User(user: User | null): boolean {
  * Currently: Admin-only
  * Future: Admin OR T3 users
  */
-export function canAccessAnalytics(user: User | null, allowT3: boolean = false): boolean {
+export function canAccessAnalytics(
+  user: User | null,
+  allowT3: boolean = false,
+  profile?: AccessProfile
+): boolean {
   if (!user) return false;
 
   // Admins always have access
-  if (isAdmin(user)) return true;
+  if (isAdmin(user, profile)) return true;
 
   // T3 users have access if enabled
-  if (allowT3 && isT3User(user)) return true;
+  if (allowT3 && isT3User(user, profile)) return true;
 
   return false;
 }
@@ -71,13 +90,11 @@ export function canAccessAnalytics(user: User | null, allowT3: boolean = false):
 /**
  * Get user's role for display/logging purposes
  */
-export function getUserRole(user: User | null): UserRole {
+export function getUserRole(user: User | null, profile?: AccessProfile): UserRole {
   if (!user) return 'guest';
-  if (isAdmin(user)) return 'admin';
+  if (isAdmin(user, profile)) return 'admin';
 
-  const trustTier =
-    user.user_metadata?.trust_tier ??
-    user.app_metadata?.trust_tier;
+  const trustTier = profile?.trust_tier;
 
   switch (trustTier) {
     case 'T3': return 'T3';
@@ -110,9 +127,10 @@ export function getUserRole(user: User | null): UserRole {
 export function logAnalyticsAccess(
   user: User | null,
   resource: string,
-  granted: boolean
+  granted: boolean,
+  profile?: AccessProfile
 ): void {
-  const role = getUserRole(user);
+  const role = getUserRole(user, profile);
   const userId = user?.id ?? 'anonymous';
 
   logger.info('Analytics access attempt', {
@@ -161,9 +179,10 @@ export async function logAnalyticsAccessToDatabase(
   user: User | null,
   resource: string,
   granted: boolean,
-  options?: AuditLogOptions
+  options?: AuditLogOptions,
+  profile?: AccessProfile
 ): Promise<void> {
-  const role = getUserRole(user);
+  const role = getUserRole(user, profile);
   const userId = user?.id ?? null;
 
   // Create audit log service

@@ -10,7 +10,7 @@ import SiteMessages from '@/components/SiteMessages';
 
 import { useBreadcrumbs, useCurrentRoute, useAppStore } from '@/lib/stores/appStore';
 
-type NavigationShellHarness = {
+export type NavigationShellHarness = {
   setRoute: (route: string, label: string) => void;
   setAdminSection: (section: string) => void;
 };

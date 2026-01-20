@@ -8,10 +8,10 @@
  * Status: ✅ Production diagnostic tool
  */
 
-
 import { getSupabaseServerClient, getSupabaseAdminClient } from '@/utils/supabase/server';
 
-import { requireAdminOr401 } from '@/lib/admin-auth';
+import { requireAdminOr401 } from '@/features/auth/lib/admin-auth';
+
 import { withErrorHandling, successResponse } from '@/lib/api';
 import { logger } from '@/lib/utils/logger';
 

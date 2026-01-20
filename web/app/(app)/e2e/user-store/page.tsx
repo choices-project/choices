@@ -138,7 +138,7 @@ export default function UserStoreHarnessPage() {
   }, []);
 
   return (
-    <main data-testid="user-store-harness" className="mx-auto flex max-w-4xl flex-col gap-6 p-6">
+    <div data-testid="user-store-harness" className="mx-auto flex max-w-4xl flex-col gap-6 p-6">
       <section className="rounded-lg border border-slate-200 bg-white p-4 shadow-sm">
         <h1 className="text-xl font-semibold">User Store Harness</h1>
         <p className="text-sm text-slate-600">
@@ -244,7 +244,7 @@ export default function UserStoreHarnessPage() {
           </div>
         </dl>
       </section>
-    </main>
+    </div>
   );
 }
 

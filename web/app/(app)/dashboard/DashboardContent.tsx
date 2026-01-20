@@ -338,7 +338,7 @@ export default function DashboardContent() {
 
   const [isCheckingAdmin, setIsCheckingAdmin] = useState(false);
   const adminCheckRef = useRef<boolean>(false);
-  const [isAdmin, setIsAdmin] = useState<boolean | null>(null);
+  const isAdmin = useProfileStore(profileSelectors.isAdmin);
   const authRetryTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const [hasCookies, setHasCookies] = useState<boolean | null>(null); // null = checking, true = has cookies, false = no cookies
   const cookieCheckRef = useRef<Promise<boolean> | null>(null);
@@ -736,35 +736,11 @@ export default function DashboardContent() {
     }
   }, [profile, isLoading, isAuthenticated]);
 
-  // Check if user is admin when profile is loaded
   useEffect(() => {
-    if (shouldBypassAuth || checkBypassFlag() || !isAuthenticated || isLoading) {
-      return;
+    if (isAdmin && process.env.DEBUG_DASHBOARD === '1') {
+      logger.debug('🚨 Dashboard: User is admin - showing admin dashboard link');
     }
-
-    // Check admin status if we have a profile or if we're authenticated
-    const checkAdminStatus = async () => {
-      try {
-        const response = await fetch('/api/admin/health?type=status', {
-          headers: { 'Content-Type': 'application/json' },
-          credentials: 'include',
-          signal: AbortSignal.timeout(5_000), // 5 second timeout
-        });
-
-        if (response.ok) {
-          setIsAdmin(true);
-          logger.debug('🚨 Dashboard: User is admin - showing admin dashboard link');
-        } else {
-          setIsAdmin(false);
-        }
-      } catch {
-        // If check fails, assume not admin (don't show admin link)
-        setIsAdmin(false);
-      }
-    };
-
-    void checkAdminStatus();
-  }, [isAuthenticated, isLoading, shouldBypassAuth]);
+  }, [isAdmin]);
 
   // #region agent log - Track hydration mismatch causes
   const hydrationLogData = {

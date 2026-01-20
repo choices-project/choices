@@ -27,7 +27,7 @@ import {
 
 
 import { withErrorHandling, forbiddenError, successResponse, errorResponse } from '@/lib/api';
-import { canAccessAnalytics, logAnalyticsAccess } from '@/lib/auth/adminGuard';
+import { canAccessAnalytics, fetchAccessProfile, logAnalyticsAccess } from '@/lib/auth/adminGuard';
 import { getCached, CACHE_TTL, CACHE_PREFIX, generateCacheKey } from '@/lib/cache/analytics-cache';
 import { logger } from '@/lib/utils/logger';
 
@@ -41,13 +41,14 @@ export const revalidate = 0;
 export const GET = withErrorHandling(async (_request: NextRequest) => {
   const supabase = await getSupabaseServerClient();
   const { data: { user } } = await supabase.auth.getUser();
+  const accessProfile = await fetchAccessProfile(supabase, user?.id);
 
-  if (!canAccessAnalytics(user, false)) {
-    logAnalyticsAccess(user, 'demographics-api', false);
+  if (!canAccessAnalytics(user, false, accessProfile)) {
+    logAnalyticsAccess(user, 'demographics-api', false, accessProfile);
     return forbiddenError('Unauthorized - Admin access required');
   }
 
-  logAnalyticsAccess(user, 'demographics-api', true);
+  logAnalyticsAccess(user, 'demographics-api', true, accessProfile);
 
   try {
     // Generate cache key

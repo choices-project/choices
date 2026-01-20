@@ -8,8 +8,8 @@
  * Status: In Progress
  */
 
+import { requireAdminOr401 } from '@/features/auth/lib/admin-auth';
 
-import { requireAdminOr401 } from '@/lib/admin-auth';
 import { successResponse, withErrorHandling } from '@/lib/api';
 import { getSecurityConfig } from '@/lib/core/security/config';
 import { upstashRateLimiter } from '@/lib/rate-limiting/upstash-rate-limiter';

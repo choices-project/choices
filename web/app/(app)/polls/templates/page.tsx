@@ -260,6 +260,7 @@ export default function PollTemplatesPage() {
   const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('desc');
   const [templates, _setTemplates] = useState<PollTemplate[]>(SAMPLETEMPLATES);
   const { setCurrentRoute, setSidebarActiveSection, setBreadcrumbs } = useAppActions();
+  const hasActiveFilters = searchQuery.trim().length > 0 || selectedCategory !== 'all';
 
   // Refs for stable app store actions
   const setCurrentRouteRef = useRef(setCurrentRoute);
@@ -350,16 +351,25 @@ export default function PollTemplatesPage() {
         <div className="mb-8 space-y-4">
           <div className="flex flex-col sm:flex-row gap-4">
             <div className="flex-1 relative">
+              <label htmlFor="template-search" className="sr-only">
+                Search templates
+              </label>
               <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
               <Input
+                id="template-search"
                 placeholder="Search templates..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 className="pl-10"
+                aria-label="Search templates"
               />
             </div>
             <div className="flex gap-2">
+              <label htmlFor="template-category" className="sr-only">
+                Filter by category
+              </label>
               <select
+                id="template-category"
                 value={selectedCategory === 'all' ? 'all' : selectedCategory.id}
                 onChange={(e) => {
                   const value = e.target.value;
@@ -371,6 +381,7 @@ export default function PollTemplatesPage() {
                   }
                 }}
                 className="px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                aria-label="Filter templates by category"
               >
                 <option value="all">All Categories</option>
                 {TEMPLATECATEGORIES.map((category) => (
@@ -379,10 +390,15 @@ export default function PollTemplatesPage() {
                   </option>
                 ))}
               </select>
+              <label htmlFor="template-sort" className="sr-only">
+                Sort templates
+              </label>
               <select
+                id="template-sort"
                 value={sortBy}
                 onChange={(e) => setSortBy(e.target.value as any)}
                 className="px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                aria-label="Sort templates"
               >
                 <option value="popular">Most Popular</option>
                 <option value="recent">Recently Added</option>
@@ -390,9 +406,11 @@ export default function PollTemplatesPage() {
                 <option value="name">Name A-Z</option>
               </select>
               <Button
+                type="button"
                 variant="outline"
                 onClick={() => setSortOrder(sortOrder === 'desc' ? 'asc' : 'desc')}
                 className="px-3"
+                aria-label={`Sort ${sortOrder === 'desc' ? 'ascending' : 'descending'}`}
               >
                 {sortOrder === 'desc' ? '↓' : '↑'}
               </Button>
@@ -404,17 +422,20 @@ export default function PollTemplatesPage() {
         <div className="mb-8">
           <div className="flex flex-wrap gap-2">
             <button
+              type="button"
               onClick={() => setSelectedCategory('all')}
               className={`px-4 py-2 rounded-full text-sm font-medium transition-colors ${
                 selectedCategory === 'all'
                   ? 'bg-blue-600 text-white'
                   : 'bg-white text-gray-700 hover:bg-gray-100 border border-gray-300'
               }`}
+              aria-pressed={selectedCategory === 'all'}
             >
               All Templates
             </button>
             {TEMPLATECATEGORIES.map((category) => (
               <button
+                type="button"
                 key={category.id}
                 onClick={() => setSelectedCategory(category.id as PollCategory | 'all')}
                 className={`px-4 py-2 rounded-full text-sm font-medium transition-colors ${
@@ -422,6 +443,7 @@ export default function PollTemplatesPage() {
                     ? 'bg-blue-600 text-white'
                     : 'bg-white text-gray-700 hover:bg-gray-100 border border-gray-300'
                 }`}
+                aria-pressed={selectedCategory === category.id}
               >
                 {category.icon} {category.name}
               </button>
@@ -431,9 +453,23 @@ export default function PollTemplatesPage() {
 
         {/* Results Count */}
         <div className="mb-6">
-          <p className="text-gray-600">
-            Showing {sortedTemplates.length} of {templates.length} templates
-          </p>
+          <div className="flex flex-wrap items-center justify-between gap-3">
+            <p className="text-gray-600" role="status" aria-live="polite">
+              Showing {sortedTemplates.length} of {templates.length} templates
+            </p>
+            {hasActiveFilters && (
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => {
+                  setSearchQuery('');
+                  setSelectedCategory('all');
+                }}
+              >
+                Clear filters
+              </Button>
+            )}
+          </div>
         </div>
 
         {/* Templates Grid */}
@@ -502,7 +538,7 @@ export default function PollTemplatesPage() {
 
         {/* Empty State */}
         {sortedTemplates.length === 0 && (
-          <div className="text-center py-12">
+          <div className="text-center py-12" role="status" aria-live="polite">
             <BookOpen className="h-12 w-12 text-gray-400 mx-auto mb-4" />
             <h3 className="text-lg font-medium text-gray-900 mb-2">No templates found</h3>
             <p className="text-gray-600 mb-4">

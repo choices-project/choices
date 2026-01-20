@@ -241,7 +241,7 @@ export default function PollAnalyticsPage() {
             <Button onClick={() => router.push('/auth?redirectTo=/polls/analytics')}>
               Log in
             </Button>
-            <Button variant="outline" onClick={() => router.push('/register')}>
+            <Button variant="outline" onClick={() => router.push('/auth?redirectTo=/polls/analytics')}>
               Create account
             </Button>
           </div>
@@ -252,7 +252,7 @@ export default function PollAnalyticsPage() {
 
   if (isLoading) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center" role="status" aria-live="polite" aria-busy="true">
         <div className="text-center">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto" />
           <p className="mt-4 text-gray-600">Loading analytics data...</p>
@@ -284,6 +284,17 @@ export default function PollAnalyticsPage() {
               {accessMessage ?? 'No analytics data available yet.'}
             </AlertDescription>
           </Alert>
+          <div className="mt-6 flex flex-wrap gap-3">
+            <Button onClick={() => router.push('/polls')}>
+              Browse polls
+            </Button>
+            <Button variant="outline" onClick={() => router.push('/polls/create')}>
+              Create a poll
+            </Button>
+            <Button variant="outline" onClick={refreshAnalytics}>
+              Refresh
+            </Button>
+          </div>
         </div>
       </div>
     )

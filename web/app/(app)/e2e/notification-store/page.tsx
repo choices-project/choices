@@ -420,7 +420,7 @@ export default function NotificationStoreHarnessPage() {
   ]);
 
   return (
-    <main data-testid="notification-store-harness" className="mx-auto flex max-w-4xl flex-col gap-6 p-6">
+    <div data-testid="notification-store-harness" className="mx-auto flex max-w-4xl flex-col gap-6 p-6">
       <section className="rounded-lg border border-slate-200 bg-white p-4 shadow-sm">
         <h1 className="text-xl font-semibold">Notification Store Harness</h1>
         <p className="text-sm text-slate-600">
@@ -539,7 +539,7 @@ export default function NotificationStoreHarnessPage() {
           </ul>
         </div>
       </section>
-    </main>
+    </div>
   );
 }
 

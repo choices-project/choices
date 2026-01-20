@@ -22,7 +22,7 @@ import { PrivacyAwareQueryBuilder, K_ANONYMITY_THRESHOLD } from '@/features/anal
 
 
 import { withErrorHandling, forbiddenError, successResponse } from '@/lib/api';
-import { canAccessAnalytics, logAnalyticsAccess } from '@/lib/auth/adminGuard';
+import { canAccessAnalytics, fetchAccessProfile, logAnalyticsAccess } from '@/lib/auth/adminGuard';
 import { getCached, CACHE_TTL, CACHE_PREFIX, generateCacheKey, type JsonValue } from '@/lib/cache/analytics-cache';
 import { logger } from '@/lib/utils/logger';
 
@@ -36,13 +36,14 @@ export const revalidate = 0;
 export const GET = withErrorHandling(async (request: NextRequest) => {
   const supabase = await getSupabaseServerClient();
   const { data: { user } } = await supabase.auth.getUser();
+  const accessProfile = await fetchAccessProfile(supabase, user?.id);
 
-  if (!canAccessAnalytics(user, false)) {
-    logAnalyticsAccess(user, 'district-heatmap-api', false);
+  if (!canAccessAnalytics(user, false, accessProfile)) {
+    logAnalyticsAccess(user, 'district-heatmap-api', false, accessProfile);
     return forbiddenError('Unauthorized - Admin access required');
   }
 
-  logAnalyticsAccess(user, 'district-heatmap-api', true);
+  logAnalyticsAccess(user, 'district-heatmap-api', true, accessProfile);
 
     // Get query parameters
     const searchParams = request.nextUrl.searchParams;

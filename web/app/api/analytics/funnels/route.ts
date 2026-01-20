@@ -15,7 +15,7 @@ import {
   validationError,
   withErrorHandling,
 } from '@/lib/api';
-import { canAccessAnalytics, logAnalyticsAccess } from '@/lib/auth/adminGuard';
+import { canAccessAnalytics, fetchAccessProfile, logAnalyticsAccess } from '@/lib/auth/adminGuard';
 import {
   CACHE_PREFIX,
   CACHE_TTL,
@@ -93,13 +93,14 @@ export const GET = withErrorHandling(async (request: NextRequest) => {
     data: { user },
     error: authFetchError,
   } = await supabase.auth.getUser();
+  const accessProfile = await fetchAccessProfile(supabase, user?.id);
 
   if (authFetchError || !user) {
     return authError('Authentication required for analytics funnels');
   }
 
-  const allowAccess = canAccessAnalytics(user, true);
-  logAnalyticsAccess(user, '/api/analytics/funnels', allowAccess);
+  const allowAccess = canAccessAnalytics(user, true, accessProfile);
+  logAnalyticsAccess(user, '/api/analytics/funnels', allowAccess, accessProfile);
 
   if (!allowAccess) {
     return forbiddenError('Admin access required for funnels');
