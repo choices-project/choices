@@ -54,8 +54,7 @@ export const GET = withErrorHandling(async (request: NextRequest) => {
         email,
         is_admin,
         created_at,
-        updated_at,
-        last_login_at
+        updated_at
       `,
       { count: 'exact' }
     )
