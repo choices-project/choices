@@ -106,8 +106,6 @@ export default function BulkContactModal({
 
   const {
     elections: upcomingElections,
-    loading: electionLoading,
-    error: electionError,
     daysUntilNextElection,
   } = useElectionCountdown(divisionIds, {
     autoFetch: isOpen,

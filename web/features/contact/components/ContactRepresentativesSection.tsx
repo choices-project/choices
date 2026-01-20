@@ -103,8 +103,6 @@ export default function ContactRepresentativesSection({
   const {
     elections: upcomingElections,
     nextElection: hookNextElection,
-    loading: electionLoading,
-    error: electionError,
     daysUntilNextElection,
   } = useElectionCountdown(divisionIds, {
     analytics: {

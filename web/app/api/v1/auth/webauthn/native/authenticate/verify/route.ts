@@ -108,9 +108,9 @@ export const POST = withErrorHandling(async (req: NextRequest) => {
       expectedChallenge: chal.challenge,
       expectedOrigin: allowedOrigins,
       expectedRPID: rpID,
-      authenticator: {
-        credentialID: isoBase64URL.toBuffer(cred.credential_id),
-        credentialPublicKey: isoBase64URL.toBuffer(cred.public_key),
+      credential: {
+        id: cred.credential_id,
+        publicKey: isoBase64URL.toBuffer(cred.public_key),
         counter: Number(cred.counter ?? 0),
       },
     });

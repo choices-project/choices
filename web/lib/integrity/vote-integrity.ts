@@ -1,8 +1,8 @@
-import type { SupabaseClient } from '@supabase/supabase-js';
-
 import { getTrustTierWeight } from '@/lib/moderation/trust-tiers';
 
 import { buildAdvancedSignals, scoreIntegrity } from './scoring';
+
+import type { SupabaseClient } from '@supabase/supabase-js';
 
 type IntegrityConsent = {
   collectSignals: boolean;
@@ -158,7 +158,10 @@ export const recordIntegrityForVote = async ({
 
   let advancedSignals;
   if (consent.collectAdvanced) {
-    const baseAdvanced = buildAdvancedSignals({ ipAddress, userAgent });
+    const baseAdvanced = buildAdvancedSignals({
+      ...(ipAddress !== undefined ? { ipAddress } : {}),
+      ...(userAgent !== undefined ? { userAgent } : {}),
+    });
     const sharedCounts = await countSharedSignals(adminClient, baseAdvanced.deviceHash, baseAdvanced.ipHash);
     advancedSignals = {
       ...baseAdvanced,
@@ -168,7 +171,7 @@ export const recordIntegrityForVote = async ({
 
   const scoreResult = scoreIntegrity({
     behavior,
-    advanced: advancedSignals,
+    ...(advancedSignals ? { advanced: advancedSignals } : {}),
     trustTier: consent.trustTier,
   });
 

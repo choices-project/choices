@@ -44,8 +44,18 @@ export const TRUST_TIER_DEFINITIONS: TrustTierDefinition[] = [
   },
 ];
 
+const DEFAULT_TRUST_TIER: TrustTierDefinition = {
+  tier: 'T0',
+  label: 'New User',
+  description: 'No verified history yet.',
+  scoreWeight: 0.9,
+  minScore: 0,
+};
+
 export const getTrustTierDefinition = (tier?: string | null) =>
-  TRUST_TIER_DEFINITIONS.find((entry) => entry.tier === tier) ?? TRUST_TIER_DEFINITIONS[0];
+  TRUST_TIER_DEFINITIONS.find((entry) => entry.tier === tier) ??
+  TRUST_TIER_DEFINITIONS[0] ??
+  DEFAULT_TRUST_TIER;
 
 export const getTrustTierWeight = (tier?: string | null) =>
   getTrustTierDefinition(tier).scoreWeight;

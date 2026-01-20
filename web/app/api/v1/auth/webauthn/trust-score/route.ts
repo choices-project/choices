@@ -34,12 +34,23 @@ export const GET = withErrorHandling(async () => {
     return errorResponse('Failed to fetch credentials', 500);
   }
 
-  const trustScore = calculateTrustScore((credentials ?? []).map((credential) => ({
-    ...credential,
-    device_info: credential.metadata ?? null,
-    backup_eligible: credential.metadata?.backedUp ?? false,
-    transports: credential.metadata?.transports ?? [],
-  })));
+    const trustScore = calculateTrustScore(
+      (credentials ?? []).map((credential) => {
+        const metadata =
+          credential.metadata && typeof credential.metadata === 'object' && !Array.isArray(credential.metadata)
+            ? (credential.metadata as Record<string, unknown>)
+            : null;
+        const backedUp = metadata?.backedUp === true;
+        return {
+          ...credential,
+          device_info: metadata ?? null,
+          backup_eligible: backedUp,
+          transports: Array.isArray(metadata?.transports)
+            ? metadata?.transports?.filter((entry): entry is string => typeof entry === 'string')
+            : [],
+        };
+      })
+    );
 
   logger.info('WebAuthn trust score calculated', {
     userId: user.id,

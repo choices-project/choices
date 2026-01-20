@@ -6,7 +6,6 @@ import {
   withErrorHandling,
   successResponse,
   authError,
-  validationError,
   errorResponse,
   parseBody,
 } from '@/lib/api';

@@ -5,6 +5,16 @@ import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
+import LanguageSelector from '@/components/shared/LanguageSelector';
+import ThemeSelector from '@/components/shared/ThemeSelector';
+import { Button } from '@/components/ui/button';
+
+import { useSession, useUser as useUserStore } from '@/lib/stores';
+import logger from '@/lib/utils/logger';
+
+import { useAuth } from '@/hooks/useAuth';
+import { useI18n } from '@/hooks/useI18n';
+
 /**
  * @fileoverview Global Navigation Component
  *
@@ -16,16 +26,6 @@ import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react'
  * @version 2.0.0
  * @since 1.0.0
  */
-
-import LanguageSelector from '@/components/shared/LanguageSelector';
-import ThemeSelector from '@/components/shared/ThemeSelector';
-import { Button } from '@/components/ui/button';
-
-import logger from '@/lib/utils/logger';
-
-import { useSession, useUser as useUserStore } from '@/lib/stores';
-import { useAuth } from '@/hooks/useAuth';
-import { useI18n } from '@/hooks/useI18n';
 
 /**
  * Global Navigation Component

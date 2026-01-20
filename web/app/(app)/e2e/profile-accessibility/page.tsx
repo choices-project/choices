@@ -16,6 +16,8 @@ const HARNESS_PRIVACY: PrivacySettings = {
   trackFeedActivity: true,
   collectAnalytics: true,
   trackRepresentativeInteractions: false,
+  collectIntegritySignals: false,
+  collectIntegrityAdvancedSignals: false,
   showReadHistory: false,
   showBookmarks: false,
   showLikes: false,

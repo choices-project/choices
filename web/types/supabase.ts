@@ -1101,6 +1101,9 @@ export type Database = {
       }
       feedback: {
         Row: {
+          admin_response: string | null
+          admin_response_at: string | null
+          admin_response_by: string | null
           ai_analysis: Json | null
           assigned_to: string | null
           category: string | null
@@ -1127,6 +1130,9 @@ export type Database = {
           user_journey: Json | null
         }
         Insert: {
+          admin_response?: string | null
+          admin_response_at?: string | null
+          admin_response_by?: string | null
           ai_analysis?: Json | null
           assigned_to?: string | null
           category?: string | null
@@ -1153,6 +1159,9 @@ export type Database = {
           user_journey?: Json | null
         }
         Update: {
+          admin_response?: string | null
+          admin_response_at?: string | null
+          admin_response_by?: string | null
           ai_analysis?: Json | null
           assigned_to?: string | null
           category?: string | null

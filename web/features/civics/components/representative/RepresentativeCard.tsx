@@ -30,9 +30,10 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader } from '@/components/ui/card';
 
+import { useGetRepresentativeById, useRepresentativeById } from '@/lib/stores/representativeStore';
+
 import { useFollowRepresentative } from '@/hooks/useFollowRepresentative';
 import { useI18n } from '@/hooks/useI18n';
-import { useGetRepresentativeById, useRepresentativeById } from '@/lib/stores/representativeStore';
 
 import type { RepresentativeCardProps } from '@/types/representative';
 

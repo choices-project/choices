@@ -99,8 +99,6 @@ export default function ContactModal({
   const {
     divisionIds: _representativeDivisionIds,
     elections: representativeElections,
-    loading: electionLoading,
-    error: electionError,
     daysUntilNextElection,
     trackCtaEvent,
   } = useRepresentativeCtaAnalytics(representative, { source: 'contact_modal' });

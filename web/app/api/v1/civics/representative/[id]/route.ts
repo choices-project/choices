@@ -266,23 +266,54 @@ export const GET = withErrorHandling(async (
       response.party = representativeRow.party;
     }
 
-    response.openstates_id = representativeRow.openstates_id ?? undefined;
-    response.bioguide_id = representativeRow.bioguide_id ?? undefined;
-    response.fec_id = representativeRow.fec_id ?? undefined;
-    response.google_civic_id = representativeRow.google_civic_id ?? undefined;
-    response.congress_gov_id = representativeRow.congress_gov_id ?? undefined;
-    response.legiscan_id = representativeRow.legiscan_id ?? undefined;
-    response.govinfo_id = representativeRow.govinfo_id ?? undefined;
-    response.ballotpedia_url = representativeRow.ballotpedia_url ?? undefined;
-    response.term_start_date = representativeRow.term_start_date ?? undefined;
-    response.term_end_date = representativeRow.term_end_date ?? undefined;
-    response.next_election_date = representativeRow.next_election_date ?? undefined;
+    if (representativeRow.openstates_id) {
+      response.openstates_id = representativeRow.openstates_id;
+    }
+    if (representativeRow.bioguide_id) {
+      response.bioguide_id = representativeRow.bioguide_id;
+    }
+    if (representativeRow.fec_id) {
+      response.fec_id = representativeRow.fec_id;
+    }
+    if (representativeRow.google_civic_id) {
+      response.google_civic_id = representativeRow.google_civic_id;
+    }
+    if (representativeRow.congress_gov_id) {
+      response.congress_gov_id = representativeRow.congress_gov_id;
+    }
+    if (representativeRow.legiscan_id) {
+      response.legiscan_id = representativeRow.legiscan_id;
+    }
+    if (representativeRow.govinfo_id) {
+      response.govinfo_id = representativeRow.govinfo_id;
+    }
+    if (representativeRow.ballotpedia_url) {
+      response.ballotpedia_url = representativeRow.ballotpedia_url;
+    }
+    if (representativeRow.term_start_date) {
+      response.term_start_date = representativeRow.term_start_date;
+    }
+    if (representativeRow.term_end_date) {
+      response.term_end_date = representativeRow.term_end_date;
+    }
+    if (representativeRow.next_election_date) {
+      response.next_election_date = representativeRow.next_election_date;
+    }
     response.data_quality_score = representativeRow.data_quality_score ?? 0;
-    response.verification_status = representativeRow.verification_status ?? undefined;
-    response.data_sources = Array.isArray(representativeRow.data_sources)
-      ? representativeRow.data_sources.filter((value): value is string => typeof value === 'string')
-      : undefined;
-    response.last_verified = representativeRow.last_verified ?? undefined;
+    if (representativeRow.verification_status) {
+      response.verification_status = representativeRow.verification_status;
+    }
+    if (Array.isArray(representativeRow.data_sources)) {
+      const sources = representativeRow.data_sources.filter(
+        (value): value is string => typeof value === 'string'
+      );
+      if (sources.length > 0) {
+        response.data_sources = sources;
+      }
+    }
+    if (representativeRow.last_verified) {
+      response.last_verified = representativeRow.last_verified;
+    }
 
     const primaryPhoto = representativeRow.primary_photo_url ?? primaryPhotoFromSet;
     if (primaryPhoto) {

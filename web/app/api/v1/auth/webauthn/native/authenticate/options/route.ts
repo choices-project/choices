@@ -30,7 +30,7 @@ export const POST = withErrorHandling(async (req: NextRequest) => {
   const body = await req.json().catch(() => ({}));
   const userVerification = typeof body?.userVerification === 'string' ? body.userVerification : undefined;
 
-  const options = generateAuthenticationOptions({
+  const options = await generateAuthenticationOptions({
     rpID: rpID,
     timeout: 60000,
     userVerification,

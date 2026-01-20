@@ -12,9 +12,9 @@ import {
   errorResponse,
 } from '@/lib/api';
 import { getUser } from '@/lib/core/auth/middleware';
+import { recordIntegrityForVote } from '@/lib/integrity/vote-integrity';
 import { AnalyticsService } from '@/lib/services/analytics';
 import { logger } from '@/lib/utils/logger';
-import { recordIntegrityForVote } from '@/lib/integrity/vote-integrity';
 
 import type { NextRequest } from 'next/server';
 

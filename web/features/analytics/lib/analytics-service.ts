@@ -592,7 +592,7 @@ export class AnalyticsService {
           acc[tier] = (acc[tier] ?? 0) + 1
         }
         return acc
-      }, { T0: 0, T1: 0, T2: 0, T3: 0 })
+      }, { T0: 0, T1: 0, T2: 0, T3: 0, T4: 0 })
 
       // Get average confidence level
       const { data: confidenceData, error: confidenceError } = await supabase
@@ -691,7 +691,7 @@ export class AnalyticsService {
         .maybeSingle()
 
       if (!preError && precomputed) {
-        const trustTierBreakdown = (precomputed.trust_tier_breakdown ?? { T0: 0, T1: 0, T2: 0, T3: 0 }) as Record<TrustTier, number>
+        const trustTierBreakdown = (precomputed.trust_tier_breakdown ?? { T0: 0, T1: 0, T2: 0, T3: 0, T4: 0 }) as Record<TrustTier, number>
         const demographicInsights: PollDemographicInsights = {
           id: pollData.id,
           poll_id: pollData.id,
@@ -706,7 +706,7 @@ export class AnalyticsService {
           data_quality_distribution: (precomputed.data_quality_distribution ?? {}) as Record<string, number>,
           verification_method_distribution: (precomputed.verification_method_distribution ?? {}) as Record<string, number>,
           trust_tier_by_demographic: (precomputed.trust_tier_by_demographic ?? {}) as Record<string, Record<TrustTier, number>>,
-          demographic_by_trust_tier: (precomputed.demographic_by_trust_tier ?? { T0: {}, T1: {}, T2: {}, T3: {} }) as Record<TrustTier, Record<string, number>>,
+          demographic_by_trust_tier: (precomputed.demographic_by_trust_tier ?? { T0: {}, T1: {}, T2: {}, T3: {}, T4: {} }) as Record<TrustTier, Record<string, number>>,
           created_at: precomputed.created_at ?? pollData.created_at ?? new Date().toISOString(),
           updated_at: precomputed.updated_at ?? new Date().toISOString()
         }
@@ -758,7 +758,8 @@ export class AnalyticsService {
         T0: 0,
         T1: 0,
         T2: 0,
-        T3: 0
+        T3: 0,
+        T4: 0,
       }
 
       voteRows.forEach((vote) => {
@@ -787,7 +788,8 @@ export class AnalyticsService {
           T0: {},
           T1: {},
           T2: {},
-          T3: {}
+          T3: {},
+          T4: {},
         },
         created_at: pollData.created_at ?? new Date().toISOString(),
         updated_at: new Date().toISOString()

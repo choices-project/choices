@@ -94,8 +94,8 @@ export const POST = withErrorHandling(async (req: NextRequest) => {
       });
     }
 
-    const credentialId = isoBase64URL.fromBuffer(registrationInfo.credentialID);
-    const publicKey = isoBase64URL.fromBuffer(registrationInfo.credentialPublicKey);
+    const credentialId = registrationInfo.credential.id;
+    const publicKey = isoBase64URL.fromBuffer(registrationInfo.credential.publicKey);
     const transports = Array.isArray(body?.response?.transports) ? body.response.transports : undefined;
     const metadata = stripUndefinedDeep({
       transports,
@@ -110,7 +110,7 @@ export const POST = withErrorHandling(async (req: NextRequest) => {
         rp_id: rpID,
         credential_id: credentialId,
         public_key: publicKey,
-        counter: registrationInfo.counter,
+        counter: registrationInfo.credential.counter,
         metadata,
         created_at: new Date().toISOString(),
       })

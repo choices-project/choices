@@ -9,7 +9,6 @@
  */
 
 import { generateRegistrationOptions } from '@simplewebauthn/server';
-import { isoBase64URL } from '@simplewebauthn/server/helpers';
 
 import { getSupabaseServerClient } from '@/utils/supabase/server';
 
@@ -54,15 +53,13 @@ export const POST = withErrorHandling(async (req: NextRequest) => {
     .eq('user_id', user.id);
 
   const excludeCredentials = (creds ?? []).map((cred) => ({
-    id: isoBase64URL.toBuffer(cred.credential_id),
-    type: 'public-key',
-    transports: Array.isArray(cred.metadata?.transports) ? cred.metadata.transports : undefined,
+    id: cred.credential_id,
   }));
 
-  const options = generateRegistrationOptions({
+  const options = await generateRegistrationOptions({
     rpName: 'Choices',
     rpID: rpID,
-    userID: user.id,
+    userID: new TextEncoder().encode(user.id),
     userName: username ?? user.email ?? user.id,
     userDisplayName: displayName ?? user.email ?? user.id,
     timeout: 60000,
