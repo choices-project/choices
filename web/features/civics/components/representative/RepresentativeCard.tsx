@@ -92,7 +92,7 @@ export function RepresentativeCard({
     trackCtaEvent('civics_representative_view_details', {
       ctaLocation: 'representative_card',
     });
-    
+
     // If onClick handler is provided, use it; otherwise navigate to detail page
     if (onClick) {
       onClick(representative);
@@ -240,7 +240,7 @@ export function RepresentativeCard({
       <CardHeader className="pb-3">
         <div className="flex items-start space-x-4">
           {/* Representative Photo */}
-          <div className="relative w-16 h-16 rounded-full overflow-hidden bg-gray-200">
+          <div className="relative w-16 h-16 rounded-full overflow-hidden bg-gray-200 dark:bg-gray-700">
             {displayRepresentative.primary_photo_url && !photoError ? (
               <Image
                 src={displayRepresentative.primary_photo_url}
@@ -251,7 +251,7 @@ export function RepresentativeCard({
                 onError={() => setPhotoError(true)}
               />
             ) : (
-              <div className="w-full h-full bg-gray-300 flex items-center justify-center text-gray-600 text-sm font-medium">
+              <div className="w-full h-full bg-gray-300 dark:bg-gray-600 flex items-center justify-center text-gray-700 dark:text-gray-300 text-sm font-medium">
                 {displayRepresentative.name.split(' ').map(n => n[0]).join('')}
               </div>
             )}
@@ -259,18 +259,18 @@ export function RepresentativeCard({
 
           {/* Representative Info */}
           <div className="flex-1 min-w-0">
-            <h3 className="text-lg font-semibold text-gray-900 truncate">
+            <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100 truncate">
               {displayRepresentative.name}
             </h3>
             <div className="flex flex-wrap gap-2 mt-1">
-              <Badge className={`text-xs ${getPartyColor(displayRepresentative.party)}`}>
+              <Badge className={`text-xs ${getPartyColor(displayRepresentative.party)} dark:opacity-90`}>
                 {displayRepresentative.party}
               </Badge>
-              <Badge className={`text-xs ${getOfficeColor(displayRepresentative.office)}`}>
+              <Badge className={`text-xs ${getOfficeColor(displayRepresentative.office)} dark:opacity-90`}>
                 {displayRepresentative.office}
               </Badge>
             </div>
-            <p className="text-sm text-gray-600 mt-1">
+            <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">
               {displayRepresentative.state}
               {displayRepresentative.district &&
                 ` • ${t('civics.representatives.card.district', {
@@ -523,7 +523,7 @@ export function RepresentativeCard({
               size="sm"
               onClick={handleFollow}
               disabled={loading}
-              className="flex-1"
+              className={`flex-1 ${following ? 'text-gray-700 dark:text-gray-300 border-gray-300 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-700' : 'text-white dark:text-gray-100'}`}
             >
               {loading ? (
                 <>

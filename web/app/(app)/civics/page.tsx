@@ -300,27 +300,6 @@ export default function Civics2Page() {
            (rep.party ?? '').toLowerCase().includes(debouncedSearchQuery.toLowerCase());
   });
 
-  const qualityStats = useMemo(() => {
-    if (!filteredRepresentatives.length) {
-      return { averageScore: null, dataSourcesCount: 0 };
-    }
-    const scores = filteredRepresentatives
-      .map((rep) => rep.dataQualityScore ?? 0)
-      .filter((score) => score > 0);
-    const averageScore = scores.length
-      ? Math.round(scores.reduce((sum, score) => sum + score, 0) / scores.length)
-      : null;
-    const dataSources = new Set<string>();
-    filteredRepresentatives.forEach((rep) => {
-      const sources = Array.isArray(rep.dataSource)
-        ? rep.dataSource
-        : rep.dataSource
-          ? [rep.dataSource]
-          : [];
-      sources.forEach((source) => dataSources.add(source));
-    });
-    return { averageScore, dataSourcesCount: dataSources.size };
-  }, [filteredRepresentatives]);
 
   const selectedStateName = useMemo(() => {
     return CIVICS_STATES.find((state) => state.code === selectedState)?.name ?? selectedState;
@@ -328,7 +307,7 @@ export default function Civics2Page() {
 
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
       {/* Beautiful Header */}
       <div className="bg-gradient-to-r from-blue-600 via-blue-700 to-indigo-800 shadow-lg sticky top-0 z-10">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -372,7 +351,7 @@ export default function Civics2Page() {
       </div>
 
       {/* Beautiful Navigation Tabs */}
-      <div className="bg-white border-b border-gray-200 shadow-sm">
+      <div className="bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 shadow-sm">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex space-x-8" role="tablist" aria-label="Civics sections">
             <button
@@ -383,8 +362,8 @@ export default function Civics2Page() {
               aria-controls="civics-representatives-panel"
               className={`py-4 px-1 border-b-3 font-semibold text-sm transition-all duration-200 ${
                 activeTab === 'representatives'
-                  ? 'border-blue-500 text-blue-600 bg-blue-50'
-                  : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300 hover:bg-gray-50'
+                  ? 'border-blue-500 text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-900/30'
+                  : 'border-transparent text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200 hover:border-gray-300 dark:hover:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-700'
               }`}
             >
               <div className="flex items-center space-x-2">
@@ -425,19 +404,19 @@ export default function Civics2Page() {
         {activeTab === 'representatives' && (
           <div id="civics-representatives-panel" role="tabpanel" className="space-y-6">
             {/* Search and Filters */}
-            <div className="bg-white rounded-2xl shadow-sm border border-gray-200 p-6">
+            <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-gray-200 dark:border-gray-700 p-6">
               <div className="flex flex-col sm:flex-row gap-4">
                 <div className="flex-1">
                   <label className="sr-only" htmlFor="civics-search">
                     Search representatives
                   </label>
                   <div className="relative">
-                    <MagnifyingGlassIcon className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
+                    <MagnifyingGlassIcon className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400 dark:text-gray-500" />
                     <input
                       id="civics-search"
                       type="text"
                       placeholder="Search representatives..."
-                      className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                      className="w-full pl-10 pr-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 placeholder-gray-500 dark:placeholder-gray-400 focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 focus:border-transparent"
                       value={searchQuery}
                       onChange={(e) => setSearchQuery(e.target.value)}
                     />
@@ -450,9 +429,13 @@ export default function Civics2Page() {
                   <select
                     id="civics-state-filter"
                     data-testid="state-filter"
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 focus:border-transparent"
                     value={selectedState}
-                    onChange={(e) => setSelectedState(e.target.value)}
+                    onChange={(e) => {
+                      setSelectedState(e.target.value);
+                      setIsLoading(true);
+                    }}
+                    disabled={isLoading}
                   >
                     {CIVICS_STATES.map((state) => (
                       <option key={state.code} value={state.code}>
@@ -468,9 +451,12 @@ export default function Civics2Page() {
                   <select
                     id="civics-level-filter"
                     data-testid="level-filter"
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 focus:border-transparent"
                     value={selectedLevel}
-                    onChange={(e) => setSelectedLevel(e.target.value as 'all' | 'federal' | 'state' | 'local')}
+                    onChange={(e) => {
+                      setSelectedLevel(e.target.value as 'all' | 'federal' | 'state' | 'local');
+                      // Trigger reload when level changes
+                    }}
                   >
                     <option value="all">All Levels</option>
                     <option value="federal">Federal</option>
@@ -484,7 +470,7 @@ export default function Civics2Page() {
                   </label>
                   <select
                     id="civics-card-variant"
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 focus:border-transparent"
                     value={cardVariant}
                     onChange={(e) => setCardVariant(e.target.value as 'default' | 'compact' | 'detailed')}
                   >
@@ -500,20 +486,20 @@ export default function Civics2Page() {
             {isLoading ? (
               <div className="flex items-center justify-center py-16" role="status" aria-live="polite" aria-busy="true">
                 <div className="text-center">
-                  <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500 mx-auto mb-4" />
-                  <p className="text-lg text-gray-600 font-medium">Loading your representatives...</p>
-                  <p className="text-sm text-gray-500 mt-2">Gathering the most current information</p>
+                  <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500 dark:border-blue-400 mx-auto mb-4" />
+                  <p className="text-lg text-gray-600 dark:text-gray-400 font-medium">Loading your representatives...</p>
+                  <p className="text-sm text-gray-500 dark:text-gray-500 mt-2">Gathering the most current information</p>
                 </div>
               </div>
             ) : errorMessage ? (
               <div className="flex items-center justify-center py-12" role="alert" aria-live="assertive">
-                <div className="bg-white rounded-2xl border border-red-200 p-6 max-w-lg text-center">
-                  <h2 className="text-lg font-semibold text-red-700 mb-2">We hit a snag</h2>
-                  <p className="text-sm text-red-600 mb-4">{errorMessage}</p>
+                <div className="bg-white dark:bg-gray-800 rounded-2xl border border-red-200 dark:border-red-800 p-6 max-w-lg text-center">
+                  <h2 className="text-lg font-semibold text-red-700 dark:text-red-400 mb-2">We hit a snag</h2>
+                  <p className="text-sm text-red-600 dark:text-red-400 mb-4">{errorMessage}</p>
                   <button
                     type="button"
                     onClick={() => void loadRepresentatives()}
-                    className="bg-red-600 text-white px-4 py-2 rounded-lg hover:bg-red-700 transition-colors"
+                    className="bg-red-600 dark:bg-red-700 text-white px-4 py-2 rounded-lg hover:bg-red-700 dark:hover:bg-red-600 transition-colors"
                   >
                     Try again
                   </button>
@@ -522,25 +508,25 @@ export default function Civics2Page() {
             ) : filteredRepresentatives.length === 0 ? (
               <div className="flex items-center justify-center py-16" role="status" aria-live="polite">
                 <div className="text-center max-w-md">
-                  <div className="w-24 h-24 bg-gradient-to-br from-blue-100 to-indigo-100 rounded-full flex items-center justify-center mx-auto mb-6">
-                    <svg className="w-12 h-12 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <div className="w-24 h-24 bg-gradient-to-br from-blue-100 to-indigo-100 dark:from-blue-900 dark:to-indigo-900 rounded-full flex items-center justify-center mx-auto mb-6">
+                    <svg className="w-12 h-12 text-blue-500 dark:text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 0 0 9.288 0M15 7a3 3 0 1 1-6 0 3 3 0 0 1 6 0zm6 3a2 2 0 1 1-4 0 2 2 0 0 1 4 0Zm-13.5 0a2 2 0 1 1-4.5 0 2 2 0 0 1 4.5 0Z" />
                     </svg>
                   </div>
-                  <h2 className="text-xl font-semibold text-gray-900 mb-3">No representatives found</h2>
-                  <p className="text-gray-600 mb-6">Try adjusting your search criteria or check back later for updated information.</p>
+                  <h2 className="text-xl font-semibold text-gray-900 dark:text-gray-100 mb-3">No representatives found</h2>
+                  <p className="text-gray-600 dark:text-gray-400 mb-6">Try adjusting your search criteria or check back later for updated information.</p>
                   <div className="flex flex-col sm:flex-row gap-3 justify-center">
                     <button
                       type="button"
                       onClick={() => setSearchQuery('')}
-                      className="bg-white border border-gray-300 text-gray-700 px-6 py-2 rounded-lg hover:bg-gray-50 transition-colors"
+                      className="bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 px-6 py-2 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
                     >
                       Clear search
                     </button>
                     <button
                       type="button"
                       onClick={() => void loadRepresentatives()}
-                      className="bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700 transition-colors"
+                      className="bg-blue-600 dark:bg-blue-700 text-white px-6 py-2 rounded-lg hover:bg-blue-700 dark:hover:bg-blue-600 transition-colors"
                     >
                       Try again
                     </button>
@@ -561,40 +547,6 @@ export default function Civics2Page() {
 
                 {/* Superior Representative Feed */}
                 <div data-testid="representative-feed" className="space-y-6">
-                  {/* Quality Statistics */}
-                  <div data-testid="quality-statistics" className="bg-white rounded-lg p-4 border border-gray-200">
-                    <h3 className="text-lg font-semibold text-gray-900 mb-2">Data Quality Overview</h3>
-                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                      <div className="text-center">
-                        <div className="text-2xl font-bold text-green-600">
-                          {qualityStats.averageScore !== null ? `${qualityStats.averageScore}%` : 'N/A'}
-                        </div>
-                        <div className="text-sm text-gray-600">Average Quality</div>
-                      </div>
-                      <div className="text-center">
-                        <div className="text-2xl font-bold text-blue-600">{filteredRepresentatives.length}</div>
-                        <div className="text-sm text-gray-600">Current Representatives</div>
-                      </div>
-                      <div className="text-center">
-                        <div className="text-2xl font-bold text-purple-600">{qualityStats.dataSourcesCount}</div>
-                        <div className="text-sm text-gray-600">Data Sources</div>
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* System Date Information */}
-                  <div data-testid="system-date-info" className="bg-blue-50 rounded-lg p-4 border border-blue-200">
-                    <div className="flex items-center space-x-2">
-                      <div className="w-2 h-2 bg-blue-500 rounded-full" />
-                      <span className="text-sm font-medium text-blue-800">System Date Verification</span>
-                    </div>
-                    <p className="text-sm text-blue-700 mt-1">
-                      Data filtered using system date: {new Date().toLocaleDateString()}
-                    </p>
-                    <div data-testid="current-electorate-count" className="text-sm text-blue-600 mt-2">
-                      Current Electorate: {filteredRepresentatives.length} active representatives
-                    </div>
-                  </div>
 
                   {/* Comprehensive Candidate Cards */}
                   <div className={`grid gap-8 ${
@@ -638,7 +590,7 @@ export default function Civics2Page() {
                       representative={transformedRep}
                       onFollow={(rep: Representative) => handleFollow(rep.id.toString())}
                       onContact={(rep: Representative) => handleContact(rep.id.toString(), 'email')}
-                      className="group bg-white rounded-2xl shadow-lg hover:shadow-xl transition-all duration-300 overflow-hidden border border-gray-100"
+                      className="group bg-white dark:bg-gray-800 rounded-2xl shadow-lg hover:shadow-xl transition-all duration-300 overflow-hidden border border-gray-100 dark:border-gray-700"
                     />
                   );
                 })}
@@ -657,11 +609,11 @@ export default function Civics2Page() {
       </div>
 
       {/* Footer */}
-      <div className="bg-white border-t border-gray-200 mt-12">
+      <div className="bg-white dark:bg-gray-800 border-t border-gray-200 dark:border-gray-700 mt-12">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
           <div className="text-center">
-            <p className="text-sm text-gray-500">Powered by FREE APIs: Google Civic, OpenStates, Congress.gov, FEC, Wikipedia</p>
-            <p className="text-xs text-gray-400 mt-2">Data updated in real-time • Zero API costs • Open source</p>
+            <p className="text-sm text-gray-500 dark:text-gray-400">Powered by FREE APIs: Google Civic, OpenStates, Congress.gov, FEC, Wikipedia</p>
+            <p className="text-xs text-gray-400 dark:text-gray-500 mt-2">Data updated in real-time • Zero API costs • Open source</p>
           </div>
         </div>
       </div>
