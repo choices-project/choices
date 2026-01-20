@@ -27,7 +27,7 @@ import { Button } from '@/components/ui/button';
 
 import { useUser, useUserLoading } from '@/lib/stores';
 import { useAppActions } from '@/lib/stores/appStore';
-import { useProfileActions, useProfileDisplay, useProfileStats } from '@/lib/stores/profileStore';
+import { useProfileActions, useProfileStats } from '@/lib/stores/profileStore';
 import { logger } from '@/lib/utils/logger';
 
 
@@ -36,7 +36,6 @@ type DashboardMode = 'classic' | 'widget';
 export default function AnalyticsPage() {
   const user = useUser();
   const isUserLoading = useUserLoading();
-  const { isAdmin: isProfileAdmin } = useProfileDisplay();
   const { isProfileLoaded } = useProfileStats();
   const { loadProfile } = useProfileActions();
   const [mode, setMode] = useState<DashboardMode>('classic');
