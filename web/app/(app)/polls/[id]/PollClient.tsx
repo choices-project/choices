@@ -724,47 +724,6 @@ export default function PollClient({ poll }: PollClientProps) {
     }
   }, [isPollCreator, pollId]);
 
-  const [isDeleting, setIsDeleting] = useState(false);
-  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
-
-  const handleDeletePoll = useCallback(async () => {
-    if (!isPollCreator || !pollId) return;
-
-    setIsDeleting(true);
-    try {
-      const response = await fetch(`/api/polls/${pollId}`, {
-        method: 'DELETE',
-      });
-
-      if (!response.ok) {
-        const errorData = await response.json().catch(() => ({}));
-        throw new Error(errorData.error ?? `Failed to delete poll: ${response.status}`);
-      }
-
-      addNotificationRef.current({
-        type: 'success',
-        title: 'Poll deleted',
-        message: 'Your poll has been deleted successfully.',
-        duration: 4000,
-      });
-
-      // Redirect to polls page
-      routerRef.current.push('/polls');
-    } catch (error) {
-      const errorMessage = error instanceof Error ? error.message : 'Failed to delete poll';
-      addNotificationRef.current({
-        type: 'error',
-        title: 'Delete failed',
-        message: errorMessage,
-        duration: 6000,
-      });
-      logger.error('Failed to delete poll:', error);
-    } finally {
-      setIsDeleting(false);
-      setShowDeleteConfirm(false);
-    }
-  }, [isPollCreator, pollId]);
-
   const formatDate = (dateString: string) => {
     // Guard with isMounted to prevent hydration mismatches from locale differences
     if (!isMounted) {
