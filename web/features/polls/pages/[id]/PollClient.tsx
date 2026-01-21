@@ -1,6 +1,6 @@
 'use client';
 
-import { AlertCircle, BarChart3, Printer, Share2, Shield, Trophy } from 'lucide-react';
+import { AlertCircle, BarChart3, Printer, Share2, Shield, Trash2, Trophy } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
@@ -15,6 +15,16 @@ import {
 import { useVotingActions, useVotingError, useVotingIsVoting } from '@/features/voting/lib/store';
 
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from '@/components/ui/alert-dialog';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Separator } from '@/components/ui/separator';
@@ -78,6 +88,7 @@ type PollClientProps = {
     endtime?: string;
     userVote?: string;
     canVote?: boolean;
+    createdBy?: string | null;
   };
 };
 
@@ -155,6 +166,10 @@ export default function PollClient({ poll }: PollClientProps) {
   const [error, setError] = useState<string | null>(null);
   const [hasVoteAttempted, setHasVoteAttempted] = useState(false);
   const [isReportOpen, setIsReportOpen] = useState(false);
+  const [isDeleting, setIsDeleting] = useState(false);
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+
+  const isPollCreator = user?.id && poll.createdBy && user.id === poll.createdBy;
 
   // Use refs for stable app store actions to prevent infinite re-renders
   const setCurrentRouteRef = useRef(setCurrentRoute);
@@ -609,17 +624,60 @@ export default function PollClient({ poll }: PollClientProps) {
     return Math.round((votes / computedTotalVotes) * 100);
   };
 
+  const handleDeletePoll = useCallback(async () => {
+    if (!isPollCreator || !poll.id) return;
+
+    setIsDeleting(true);
+    try {
+      const response = await fetch(`/api/polls/${poll.id}`, {
+        method: 'DELETE',
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}));
+        throw new Error(errorData.error ?? `Failed to delete poll: ${response.status}`);
+      }
+
+      addNotification({
+        type: 'success',
+        title: 'Poll deleted',
+        message: 'Your poll has been deleted successfully.',
+        duration: 4000,
+      });
+
+      recordPollEvent('poll_deleted', {
+        label: poll.id,
+        value: 1,
+      });
+
+      // Redirect to polls page
+      router.push('/polls');
+    } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : 'Failed to delete poll';
+      addNotification({
+        type: 'error',
+        title: 'Delete failed',
+        message: errorMessage,
+        duration: 6000,
+      });
+      logger.error('Failed to delete poll:', error);
+    } finally {
+      setIsDeleting(false);
+      setShowDeleteConfirm(false);
+    }
+  }, [isPollCreator, poll.id, addNotification, recordPollEvent, router]);
+
   return (
     <div className="max-w-4xl mx-auto p-6 space-y-6" aria-busy={loading} data-testid="poll-details">
       <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div>
-          <h1 className="text-3xl font-bold text-gray-900" data-testid="poll-title">
+          <h1 className="text-3xl font-bold text-foreground" data-testid="poll-title">
             {poll.title}
           </h1>
-          <div className="mt-2 flex flex-wrap items-center gap-2 text-sm text-muted-foreground">
-            {poll.category && <Badge variant="outline">{poll.category}</Badge>}
-            <Badge variant="secondary">{privacyLabel}</Badge>
-            <Badge variant="secondary">{votingLabel}</Badge>
+          <div className="mt-2 flex flex-wrap items-center gap-2 text-sm">
+            {poll.category && <Badge variant="outline" className="font-medium">{poll.category}</Badge>}
+            <Badge variant="secondary" className="font-medium">{privacyLabel}</Badge>
+            <Badge variant="secondary" className="font-medium">{votingLabel}</Badge>
           </div>
         </div>
         <div className="flex flex-wrap items-center gap-2">
@@ -635,17 +693,28 @@ export default function PollClient({ poll }: PollClientProps) {
           <Button type="button" variant="ghost" onClick={() => setIsReportOpen(true)}>
             <AlertCircle className="mr-2 h-4 w-4" /> Report
           </Button>
+          {isPollCreator && (
+            <Button
+              type="button"
+              variant="ghost"
+              onClick={() => setShowDeleteConfirm(true)}
+              className="text-destructive hover:text-destructive hover:bg-destructive/10"
+              disabled={isDeleting}
+            >
+              <Trash2 className="mr-2 h-4 w-4" /> Delete
+            </Button>
+          )}
         </div>
       </div>
 
       {loading && (
-        <div className="rounded-lg border border-dashed border-muted-foreground/40 bg-muted/10 p-4 text-sm text-muted-foreground">
+        <div className="rounded-lg border border-dashed border-muted-foreground/40 bg-muted/10 p-4 text-sm font-medium text-foreground">
           {t('polls.view.loading')}
         </div>
       )}
 
       {poll.description && (
-        <p className="text-gray-700 leading-relaxed" data-testid="poll-description">
+        <p className="text-foreground font-medium leading-relaxed" data-testid="poll-description">
           {poll.description}
         </p>
       )}
@@ -669,19 +738,19 @@ export default function PollClient({ poll }: PollClientProps) {
 
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
         <div className="rounded-lg border bg-white p-4 shadow-sm">
-          <p className="text-xs uppercase text-muted-foreground">{t('polls.view.stats.totalVotes')}</p>
+          <p className="text-xs uppercase font-semibold text-foreground/80">{t('polls.view.stats.totalVotes')}</p>
           <p className="mt-2 text-2xl font-semibold text-foreground">
             {isMounted ? computedTotalVotes.toLocaleString() : computedTotalVotes.toString()}
           </p>
         </div>
         <div className="rounded-lg border bg-white p-4 shadow-sm">
-          <p className="text-xs uppercase text-muted-foreground">{t('polls.view.stats.participation')}</p>
+          <p className="text-xs uppercase font-semibold text-foreground/80">{t('polls.view.stats.participation')}</p>
           <p className="mt-2 text-2xl font-semibold text-foreground">
             {isMounted ? participationCount.toLocaleString() : participationCount.toString()}
           </p>
         </div>
         <div className="rounded-lg border bg-white p-4 shadow-sm">
-          <p className="text-xs uppercase text-muted-foreground">{t('polls.view.stats.status')}</p>
+          <p className="text-xs uppercase font-semibold text-foreground/80">{t('polls.view.stats.status')}</p>
           <p className={cn('mt-2 text-2xl font-semibold capitalize', pollStatus === 'closed' ? 'text-red-600' : 'text-emerald-600')}>
             {pollStatus === 'closed' ? t('polls.view.status.closed.label') : pollStatus === 'active' ? t('polls.view.status.active.label') : t('polls.view.status.draft.label')}
           </p>
@@ -710,55 +779,69 @@ export default function PollClient({ poll }: PollClientProps) {
         </div>
       )}
 
-      <div className="grid gap-4 rounded-lg border bg-white p-4 shadow-sm sm:grid-cols-2">
-        <div>
-          <p className="text-xs uppercase text-muted-foreground">{t('polls.view.milestones.label')}</p>
-          {enabledMilestones.length === 0 ? (
-            <p className="mt-2 text-sm text-muted-foreground">
-              {t('polls.view.milestones.empty')}
-            </p>
-          ) : (
-            <p className="mt-2 text-sm text-muted-foreground">
-              {t('polls.view.milestones.tracking', { milestones: enabledMilestones.map((milestone) => isMounted ? milestone.toLocaleString() : milestone.toString()).join(', ') })}
-            </p>
-          )}
-          {nextMilestone && (
-            <p className="mt-3 text-sm text-emerald-700">
-              {t('polls.view.milestones.nextUp', { count: nextMilestone })}
-            </p>
-          )}
-          {reachedMilestones.length > 0 && (
-            <div className="mt-3 text-sm">
-              <p className="font-semibold text-foreground">{t('polls.view.milestones.achieved')}</p>
-              <div className="mt-2 flex flex-wrap gap-2">
-                {reachedMilestones.map((milestone) => (
-                  <Badge key={`reached-${milestone}`} variant="secondary">
-                    {t('polls.view.milestones.votesBadge', { count: milestone })}
-                  </Badge>
-                ))}
-              </div>
+      {/* Milestones - Collapsible and less prominent (collapsed by default) */}
+      <details className="rounded-lg border border-border/40 bg-muted/20" open={false}>
+        <summary className="cursor-pointer p-3 text-sm font-semibold text-foreground hover:bg-muted/30 transition-colors">
+          <div className="flex items-center justify-between">
+            <span>{t('polls.view.milestones.label')}</span>
+            {enabledMilestones.length > 0 && (
+              <span className="text-xs text-foreground/70 font-normal">
+                {t('polls.view.milestones.tracking', { milestones: enabledMilestones.map((milestone) => isMounted ? milestone.toLocaleString() : milestone.toString()).join(', ') })}
+              </span>
+            )}
+          </div>
+        </summary>
+        <div className="border-t border-border/40 p-4">
+          <div className="grid gap-4 sm:grid-cols-2">
+            <div>
+              {enabledMilestones.length === 0 ? (
+                <p className="text-sm font-medium text-foreground/80">
+                  {t('polls.view.milestones.empty')}
+                </p>
+              ) : (
+                <p className="text-sm font-medium text-foreground/80">
+                  {t('polls.view.milestones.tracking', { milestones: enabledMilestones.map((milestone) => isMounted ? milestone.toLocaleString() : milestone.toString()).join(', ') })}
+                </p>
+              )}
+              {nextMilestone && (
+                <p className="mt-3 text-sm font-semibold text-emerald-700">
+                  {t('polls.view.milestones.nextUp', { count: nextMilestone })}
+                </p>
+              )}
+              {reachedMilestones.length > 0 && (
+                <div className="mt-3 text-sm">
+                  <p className="font-semibold text-foreground">{t('polls.view.milestones.achieved')}</p>
+                  <div className="mt-2 flex flex-wrap gap-2">
+                    {reachedMilestones.map((milestone) => (
+                      <Badge key={`reached-${milestone}`} variant="secondary">
+                        {t('polls.view.milestones.votesBadge', { count: milestone })}
+                      </Badge>
+                    ))}
+                  </div>
+                </div>
+              )}
             </div>
-          )}
-        </div>
-        <div className="space-y-3">
-          {POLL_MILESTONES.map((milestone) => (
-            <div
-              key={`milestone-pref-${milestone}`}
-              className="flex items-center justify-between rounded-md border border-border/60 px-3 py-2"
-            >
-              <div>
-                <p className="text-sm font-medium text-foreground">{t('polls.view.milestones.itemLabel', { count: milestone })}</p>
-                <p className="text-xs text-muted-foreground">{t('polls.view.milestones.itemDescription', { count: milestone })}</p>
-              </div>
-              <Switch
-                checked={Boolean(milestonePreferences[milestone])}
-                onCheckedChange={(checked: boolean) => handleMilestoneToggle(milestone, checked)}
-                aria-label={t('polls.view.milestones.toggleAria', { count: milestone })}
-              />
+            <div className="space-y-3">
+              {POLL_MILESTONES.map((milestone) => (
+                <div
+                  key={`milestone-pref-${milestone}`}
+                  className="flex items-center justify-between rounded-md border border-border/40 bg-background/50 px-3 py-2"
+                >
+                  <div>
+                    <p className="text-sm font-semibold text-foreground">{t('polls.view.milestones.itemLabel', { count: milestone })}</p>
+                    <p className="text-xs font-medium text-foreground/70">{t('polls.view.milestones.itemDescription', { count: milestone })}</p>
+                  </div>
+                  <Switch
+                    checked={Boolean(milestonePreferences[milestone])}
+                    onCheckedChange={(checked: boolean) => handleMilestoneToggle(milestone, checked)}
+                    aria-label={t('polls.view.milestones.toggleAria', { count: milestone })}
+                  />
+                </div>
+              ))}
             </div>
-          ))}
+          </div>
         </div>
-      </div>
+      </details>
 
       {votingStatusMessage && (
         <Alert variant="default" className="border border-amber-200 bg-amber-50 text-amber-900">
@@ -782,8 +865,8 @@ export default function PollClient({ poll }: PollClientProps) {
             data-testid={`poll-option-${option.index}`}
           >
             <div className="flex items-center justify-between mb-2">
-              <span className="font-medium text-gray-900">{option.text}</span>
-              <span className="text-sm text-gray-500">
+              <span className="font-semibold text-foreground">{option.text}</span>
+              <span className="text-sm font-medium text-foreground/80">
                 {t('polls.view.options.voteCount', { votes: option.votes, percentage: getVotePercentage(option.votes) })}
               </span>
             </div>
@@ -812,7 +895,7 @@ export default function PollClient({ poll }: PollClientProps) {
 
       <Separator />
 
-      <div className="flex flex-wrap items-center gap-3 text-sm text-muted-foreground">
+      <div className="flex flex-wrap items-center gap-3 text-sm font-medium text-foreground/80">
         <span className="inline-flex items-center gap-1">
           <Shield className="h-4 w-4" /> {privacyLabel}
         </span>
@@ -839,6 +922,28 @@ export default function PollClient({ poll }: PollClientProps) {
         targetId={pollId}
         targetLabel={pollTitle}
       />
+
+      {/* Delete Confirmation Dialog */}
+      <AlertDialog open={showDeleteConfirm} onOpenChange={setShowDeleteConfirm}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Delete Poll</AlertDialogTitle>
+            <AlertDialogDescription>
+              Are you sure you want to delete "{poll.title}"? This action cannot be undone and will permanently remove the poll and all associated votes.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={isDeleting}>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={handleDeletePoll}
+              disabled={isDeleting}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            >
+              {isDeleting ? 'Deleting...' : 'Delete Poll'}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }
