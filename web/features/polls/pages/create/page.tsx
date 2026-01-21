@@ -982,11 +982,8 @@ export default function CreatePollPage() {
             {/* Category Section */}
             <fieldset>
               <Label className="text-base font-semibold">{safeT('polls.create.wizard.audience.category.label', 'Category')}</Label>
-              <p className="mt-1 text-sm text-muted-foreground mb-1">
+              <p className="mt-1 text-sm text-muted-foreground mb-3">
                 {safeT('polls.create.wizard.audience.category.hint', 'Choose a category to help voters find your poll. Categories help organize polls and make them easier to discover.')}
-              </p>
-              <p className="text-xs text-muted-foreground italic">
-                {safeT('polls.create.wizard.audience.category.subHint', 'Click on a category card below to select it.')}
               </p>
               {errors.category && (
                 <p className="mt-2 text-sm text-destructive" id="error-category">
@@ -994,40 +991,44 @@ export default function CreatePollPage() {
                 </p>
               )}
 
-              <div className="mt-4 grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
+              <div className="mt-3 grid grid-cols-2 gap-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5">
                 {categories.map((category) => {
                   const isSelected = data.category === category.id;
                   return (
-                  <button
-                    key={category.id}
-                    type="button"
-                    onClick={(e) => {
-                      e.preventDefault();
-                      e.stopPropagation();
-                      handleDataUpdate({ category: category.id });
-                    }}
+                    <button
+                      key={category.id}
+                      type="button"
+                      onClick={(e) => {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        handleDataUpdate({ category: category.id });
+                      }}
                       className={cn(
-                      "rounded-lg border-2 p-4 text-left transition-all cursor-pointer",
-                      "hover:shadow-md hover:scale-[1.02] active:scale-[0.98]",
-                      isSelected
-                        ? "border-primary bg-primary/10 shadow-md ring-2 ring-primary/20"
-                        : "border-border hover:border-primary/60 bg-card",
+                        "group relative flex flex-col items-center justify-center gap-1.5 rounded-md border p-2.5 text-center transition-all",
+                        "hover:border-primary/60 hover:bg-primary/5 hover:shadow-sm",
+                        "active:scale-[0.97]",
+                        isSelected
+                          ? "border-primary bg-primary/10 shadow-sm ring-1 ring-primary/30"
+                          : "border-border/60 bg-card/50",
                       )}
                       aria-pressed={isSelected}
-                    aria-label={`Select ${category.name} category`}
+                      aria-label={`Select ${category.name} category`}
                     >
-                      <div className="text-2xl mb-2" aria-hidden>
+                      <div className="text-lg leading-none" aria-hidden>
                         {category.icon}
                       </div>
-                      <div className="font-semibold text-base">{category.name}</div>
-                      <p className="mt-1 text-sm text-muted-foreground leading-relaxed">{category.description}</p>
+                      <div className={cn(
+                        "text-xs font-medium leading-tight",
+                        isSelected ? "text-primary" : "text-foreground"
+                      )}>
+                        {category.name}
+                      </div>
                       {isSelected && (
-                        <div className="mt-2 flex items-center gap-1 text-primary text-xs font-medium">
-                          <CheckCircle2 className="h-3 w-3" />
-                          Selected
+                        <div className="absolute -top-1 -right-1 flex h-4 w-4 items-center justify-center rounded-full bg-primary text-primary-foreground shadow-sm">
+                          <CheckCircle2 className="h-2.5 w-2.5" aria-hidden />
                         </div>
                       )}
-                  </button>
+                    </button>
                   );
                 })}
               </div>
@@ -1447,36 +1448,36 @@ export default function CreatePollPage() {
             {/* Milestones - Collapsible and less prominent */}
             <details className="rounded-lg border border-border/40 bg-muted/20">
               <summary className="cursor-pointer p-3 text-sm font-medium text-foreground hover:bg-muted/30 transition-colors">
-                <div className="flex items-center justify-between">
+              <div className="flex items-center justify-between">
                   <span>{safeT('polls.create.share.dialog.milestones.title', 'Vote Milestones')}</span>
                   <span className="text-xs text-muted-foreground font-normal">
                     {safeT('polls.create.share.dialog.milestones.enabled', `${enabledMilestones.length} of ${milestones.length} enabled`, { current: enabledMilestones.length, total: milestones.length })}
-                  </span>
-                </div>
+                </span>
+              </div>
               </summary>
               <div className="border-t border-border/40 p-3">
                 <p className="mb-3 text-xs text-muted-foreground">
                   {safeT('polls.create.share.dialog.milestones.description', 'Get notified when your poll reaches these vote counts.')}
                 </p>
                 <div className="space-y-2">
-                  {milestones.map((milestone) => (
-                    <div
-                      key={`milestone-pref-${milestone}`}
+                {milestones.map((milestone) => (
+                  <div
+                    key={`milestone-pref-${milestone}`}
                       className="flex items-center justify-between gap-3 rounded-md border border-border/40 bg-background/50 p-2"
-                    >
+                  >
                       <Label htmlFor={`milestone-${milestone}`} className="text-xs font-medium cursor-pointer flex-1">
                         {safeT('polls.create.share.dialog.milestones.notifyAt', `${milestone} votes`, { count: milestone })}
                       </Label>
-                      <Switch
-                        id={`milestone-${milestone}`}
-                        checked={Boolean(milestonePreferences[milestone])}
-                        onCheckedChange={(checked) => handleMilestoneToggle(milestone, checked)}
+                    <Switch
+                      id={`milestone-${milestone}`}
+                      checked={Boolean(milestonePreferences[milestone])}
+                      onCheckedChange={(checked) => handleMilestoneToggle(milestone, checked)}
                         className="shrink-0"
-                      />
-                    </div>
-                  ))}
-                </div>
+                    />
+                  </div>
+                ))}
               </div>
+            </div>
             </details>
           </div>
 
