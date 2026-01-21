@@ -126,15 +126,23 @@ export default function RankedChoiceVoting({
     if (e.key === 'ArrowUp' && currentIndex > 0) {
       e.preventDefault();
       const newOrder = [...rankedOrder];
-      [newOrder[currentIndex - 1], newOrder[currentIndex]] = [newOrder[currentIndex], newOrder[currentIndex - 1]];
-      setRankedOrder(newOrder);
-      ScreenReaderSupport.announce(`Moved option up to position ${currentIndex}`, 'polite');
+      const temp = newOrder[currentIndex];
+      if (temp !== undefined) {
+        newOrder[currentIndex] = newOrder[currentIndex - 1] ?? temp;
+        newOrder[currentIndex - 1] = temp;
+        setRankedOrder(newOrder);
+        ScreenReaderSupport.announce(`Moved option up to position ${currentIndex}`, 'polite');
+      }
     } else if (e.key === 'ArrowDown' && currentIndex < rankedOrder.length - 1) {
       e.preventDefault();
       const newOrder = [...rankedOrder];
-      [newOrder[currentIndex], newOrder[currentIndex + 1]] = [newOrder[currentIndex + 1], newOrder[currentIndex]];
-      setRankedOrder(newOrder);
-      ScreenReaderSupport.announce(`Moved option down to position ${currentIndex + 2}`, 'polite');
+      const temp = newOrder[currentIndex];
+      if (temp !== undefined) {
+        newOrder[currentIndex] = newOrder[currentIndex + 1] ?? temp;
+        newOrder[currentIndex + 1] = temp;
+        setRankedOrder(newOrder);
+        ScreenReaderSupport.announce(`Moved option down to position ${currentIndex + 2}`, 'polite');
+      }
     }
   }, [rankedOrder, isDisabled]);
 
