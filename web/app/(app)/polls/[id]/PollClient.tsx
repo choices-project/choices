@@ -1,6 +1,6 @@
 'use client';
 
-import { ArrowLeft, Share2, CheckCircle, AlertCircle } from 'lucide-react';
+import { ArrowLeft, Share2, AlertCircle } from 'lucide-react';
 import { useParams, useRouter } from 'next/navigation';
 import React, { useState, useEffect, useCallback, useRef, useMemo } from 'react';
 
@@ -33,14 +33,21 @@ import VotingInterface, {
 
 type VoteResponse = { ok: boolean; id?: string; error?: string }
 
+type PollOption = {
+  id: string;
+  text: string;
+  order?: number;
+  votes?: number;
+};
+
 type Poll = {
   id: string;
   title: string;
   description: string;
-  options: string[];
+  options: string[] | PollOption[]; // Support both formats for backward compatibility
   votingMethod: string;
   totalvotes: number;
-  endtime: string;
+  endtime?: string;
   status: string;
   category: string;
   privacyLevel: string;
@@ -163,7 +170,9 @@ export default function PollClient({ poll }: PollClientProps) {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [hasVoted, setHasVoted] = useState(false);
-  const [showVotingInterface, setShowVotingInterface] = useState(false);
+  // CRITICAL UX FIX: Show voting interface immediately - no need for extra click
+  // Users should see poll options right away, not hidden behind a button
+  // Removed showVotingInterface state - voting interface always shows when poll is active
   const [resultsMode, setResultsMode] = useState<ResultsMode>('live');
   const [copied, setCopied] = useState(false);
   const [lastVoteId, setLastVoteId] = useState<string | null>(null);
@@ -173,23 +182,38 @@ export default function PollClient({ poll }: PollClientProps) {
   const addNotificationRef = useRef(addNotification);
   React.useEffect(() => { addNotificationRef.current = addNotification; }, [addNotification]);
 
+  // Normalize options to handle both string[] and PollOption[] formats
+  const normalizedOptions = useMemo(() => {
+    if (!poll.options || !Array.isArray(poll.options)) {
+      return [];
+    }
+    return poll.options.map((option, index) => {
+      if (typeof option === 'string') {
+        return { id: index.toString(), text: option, order: index };
+      }
+      // It's a PollOption object
+      return {
+        id: option.id || index.toString(),
+        text: option.text || `Option ${index + 1}`,
+        order: option.order ?? index,
+        votes: option.votes ?? 0,
+      };
+    });
+  }, [poll.options]);
+
   const getOptionLabel = useCallback(
     (optionIndex: number, explicitLabel?: string | null) => {
       if (typeof explicitLabel === 'string' && explicitLabel.trim().length > 0) {
         return explicitLabel.trim();
       }
 
-      if (Number.isFinite(optionIndex) && optionIndex >= 0) {
-        const fallback = poll.options[optionIndex];
-        if (typeof fallback === 'string' && fallback.trim().length > 0) {
-          return fallback;
-        }
-        return `Option ${optionIndex + 1}`;
+      if (Number.isFinite(optionIndex) && optionIndex >= 0 && normalizedOptions[optionIndex]) {
+        return normalizedOptions[optionIndex].text;
       }
 
       return explicitLabel && explicitLabel.trim().length > 0 ? explicitLabel.trim() : 'Unknown option';
     },
-    [poll.options],
+    [normalizedOptions],
   );
 
   const pollDetailsForBallot = useMemo(
@@ -197,15 +221,15 @@ export default function PollClient({ poll }: PollClientProps) {
       id: poll.id,
       title: poll.title,
       description: poll.description,
-      options: [...poll.options],
+      options: normalizedOptions.map(opt => opt.text), // Convert to string array for ballot
       votingMethod: poll.votingMethod,
       totalVotes: poll.totalvotes,
-      endtime: poll.endtime,
+      endtime: poll.endtime ?? null, // Convert undefined to null for exactOptionalPropertyTypes
       status: poll.status,
       category: poll.category,
       createdAt: poll.createdAt,
     }),
-    [poll]
+    [poll, normalizedOptions]
   );
 
   const combinedError = error ?? votingStoreError ?? null;
@@ -420,7 +444,6 @@ export default function PollClient({ poll }: PollClientProps) {
       });
       setHasVoted(false);
       setLastVoteId(null);
-      setShowVotingInterface(true);
       await fetchPollData();
     } catch (err) {
       const message = err instanceof Error ? err.message : 'Failed to undo vote';
@@ -621,14 +644,7 @@ export default function PollClient({ poll }: PollClientProps) {
     }
   };
 
-  const handleStartVoting = useCallback(() => {
-    setShowVotingInterface(true);
-    recordPollEventRef.current('detail_start_voting', {
-      metadata: {
-        context: 'poll_detail',
-      },
-    });
-  }, []);
+  // Removed handleStartVoting - voting interface now shows immediately for better UX
 
   const formatVotingMethod = (method: string) => {
     switch (method) {
@@ -817,8 +833,12 @@ export default function PollClient({ poll }: PollClientProps) {
             </span>
             <span>•</span>
             <span data-testid="voting-method">{formatVotingMethod(poll.votingMethod)}</span>
-            <span>•</span>
-            <span>Ends {formatDate(poll.endtime)}</span>
+            {poll.endtime && (
+              <>
+                <span>•</span>
+                <span>Ends {formatDate(poll.endtime)}</span>
+              </>
+            )}
           </div>
         </div>
 
@@ -860,52 +880,43 @@ export default function PollClient({ poll }: PollClientProps) {
         {/* Voting Interface */}
         {isPollActive && !hasVoted && (
           <Card className="mb-8">
-            {!showVotingInterface ? (
-              <>
-                <CardHeader>
-                  <CardTitle data-testid="voting-section-title">Ready to Vote?</CardTitle>
-                  <CardDescription>Click the button below to start voting</CardDescription>
-                </CardHeader>
-                <CardContent className="text-center">
-                  <Button
-                    onClick={handleStartVoting}
-                    size="lg"
-                    className="px-8 py-3"
-                    data-testid="start-voting-button"
-                  >
-                    <CheckCircle className="w-5 h-5 mr-2" />
-                    Start Voting
-                  </Button>
-                </CardContent>
-              </>
-            ) : (
-              <>
-                <CardHeader>
-                  <CardTitle>Cast Your Vote</CardTitle>
-                  <CardDescription>Select your preferred option below</CardDescription>
-                </CardHeader>
-                <CardContent data-testid="voting-form">
-                  <VotingInterface
-                    poll={{
-                      id: poll.id,
-                      title: poll.title,
-                      description: poll.description,
-                      options: poll.options.map((option: string, index: number) => ({
-                        id: index.toString(),
-                        text: option
-                      })),
-                      votingMethod: poll.votingMethod,
-                      totalVotes: poll.totalvotes,
-                      endtime: poll.endtime
-                    }}
-                    onVote={handleVote}
-                    isVoting={storeIsVoting}
-                    hasVoted={hasVoted}
-                    onAnalyticsEvent={recordPollEvent}
-                  />
-                </CardContent>
-              </>
-            )}
+            <CardHeader>
+              <CardTitle data-testid="voting-section-title">Cast Your Vote</CardTitle>
+              <CardDescription>
+                {poll.options && poll.options.length > 0
+                  ? 'Select your preferred option below'
+                  : 'This poll has no options available'}
+              </CardDescription>
+            </CardHeader>
+            <CardContent data-testid="voting-form">
+              {normalizedOptions && normalizedOptions.length > 0 ? (
+                <VotingInterface
+                  poll={{
+                    id: poll.id,
+                    title: poll.title,
+                    description: poll.description,
+                    options: normalizedOptions.map((option) => ({
+                      id: option.id,
+                      text: option.text
+                    })),
+                    votingMethod: poll.votingMethod,
+                    totalVotes: poll.totalvotes,
+                    endtime: poll.endtime || new Date(Date.now() + 365 * 24 * 60 * 60 * 1000).toISOString() // Default to 1 year from now if no endtime
+                  }}
+                  onVote={handleVote}
+                  isVoting={storeIsVoting}
+                  hasVoted={hasVoted}
+                  onAnalyticsEvent={recordPollEvent}
+                />
+              ) : (
+                <Alert variant="destructive">
+                  <AlertCircle className="h-4 w-4" />
+                  <AlertDescription>
+                    This poll has no voting options configured. Please contact the poll creator.
+                  </AlertDescription>
+                </Alert>
+              )}
+            </CardContent>
           </Card>
         )}
 

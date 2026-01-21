@@ -162,7 +162,7 @@ export default async function PollPage({ params }: { params: { id: string } }) {
     const protocol = process.env.NODE_ENV === 'production' ? 'https' : 'http';
     const host = allHeaders.get('host') ?? 'localhost:3000';
     const baseUrl = `${protocol}://${host}`;
-    
+
     const res = await fetch(`${baseUrl}/api/polls/${id}`, {
       cache: 'no-store',
       headers: {
@@ -204,11 +204,11 @@ export default async function PollPage({ params }: { params: { id: string } }) {
   } catch (error) {
     logger.error('Failed to render poll page', { error, pollId: id });
     const isNotFound = error instanceof Error && (
-      error.message.includes('404') || 
+      error.message.includes('404') ||
       error.message.includes('not found') ||
       error.message.includes('Poll not found')
     );
-    
+
     return (
       <div className="flex min-h-screen items-center justify-center px-4" data-testid="poll-error">
         <div className="text-center space-y-4 max-w-md">
@@ -216,7 +216,7 @@ export default async function PollPage({ params }: { params: { id: string } }) {
             {isNotFound ? 'Poll Not Found' : 'Unable to load poll'}
           </h1>
           <p className="text-gray-600 dark:text-gray-400" role="alert">
-            {isNotFound 
+            {isNotFound
               ? `The poll you're looking for doesn't exist or has been deleted.`
               : `We couldn't find or load this poll. It may have been deleted or you may not have permission to view it.`
             }
