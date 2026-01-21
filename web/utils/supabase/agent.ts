@@ -7,14 +7,8 @@
  * with automatic audit logging, rate limiting, and context management.
  */
 
-import { logger } from '@/lib/utils/logger'
-import { getSupabaseAdminClient, getSupabaseServerClient } from './server'
-import { createAgentContext, validateAgentContext } from '@/lib/core/agent/context'
 import { logAgentOperation } from '@/lib/core/agent/audit'
-import { apiRateLimiter } from '@/lib/rate-limiting/api-rate-limiter'
-
-import type { Database } from '@/types/supabase'
-import type { SupabaseClient } from '@supabase/supabase-js'
+import { createAgentContext, validateAgentContext } from '@/lib/core/agent/context'
 import type {
   AgentClient,
   AgentClientOptions,
@@ -24,6 +18,13 @@ import type {
   OperationType,
   ResultStatus,
 } from '@/lib/core/agent/types'
+import { apiRateLimiter } from '@/lib/rate-limiting/api-rate-limiter'
+import { logger } from '@/lib/utils/logger'
+
+import { getSupabaseAdminClient, getSupabaseServerClient } from './server'
+
+import type { Database } from '@/types/supabase'
+import type { SupabaseClient } from '@supabase/supabase-js'
 
 // Runtime guard to prevent client-side usage
 const assertRunningOnServer = (fnName: string) => {

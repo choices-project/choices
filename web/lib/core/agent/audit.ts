@@ -4,8 +4,9 @@
  * Comprehensive audit logging for all agent operations
  */
 
-import { logger } from '@/lib/utils/logger'
 import { getSupabaseAdminClient } from '@/utils/supabase/server'
+
+import { logger } from '@/lib/utils/logger'
 
 import type {
   AgentContext,
@@ -46,9 +47,10 @@ export async function logAgentOperation(
       duration: result.duration,
     }
 
-    const { error } = await adminClient
-      .from('agent_operations')
-      .insert(logEntry)
+    // Type assertion needed because agent_operations table may not be in generated types yet
+    const { error } = await (adminClient
+      .from('agent_operations' as any)
+      .insert(logEntry as any) as any)
 
     if (error) {
       // Fallback to logger if database insert fails
@@ -104,10 +106,11 @@ export async function queryAgentOperations(
   try {
     const adminClient = await getSupabaseAdminClient()
 
-    let query = adminClient
-      .from('agent_operations')
+    // Type assertion needed because agent_operations table may not be in generated types yet
+    let query = (adminClient
+      .from('agent_operations' as any)
       .select('*')
-      .order('created_at', { ascending: false })
+      .order('created_at', { ascending: false }) as any)
 
     if (filters?.agentId) {
       query = query.eq('agent_id', filters.agentId)
@@ -196,7 +199,7 @@ export async function getAgentOperationStats(
 
     const durations = operations
       .filter((op) => op.duration !== undefined && op.duration !== null)
-      .map((op) => op.duration!)
+      .map((op) => op.duration as number)
 
     if (durations.length > 0) {
       stats.averageDuration =

@@ -329,21 +329,22 @@ function ProfilePageContent() {
               details="We encountered an issue while loading your profile. This might be a temporary network problem."
               tip="Check your internet connection and try again. If the problem persists, the service may be temporarily unavailable."
               canRetry={true}
-            onRetry={() => {
-              void refetchRef.current();
-            }}
-            primaryAction={{
-              label: 'Try Again',
-              onClick: () => {
+              onRetry={() => {
                 void refetchRef.current();
-              },
-              icon: <RefreshCw className="h-4 w-4" />,
-            }}
-            secondaryAction={{
-              label: 'Go to Dashboard',
-              href: '/dashboard',
-            }}
-          />
+              }}
+              primaryAction={{
+                label: 'Try Again',
+                onClick: () => {
+                  void refetchRef.current();
+                },
+                icon: <RefreshCw className="h-4 w-4" />,
+              }}
+              secondaryAction={{
+                label: 'Go to Dashboard',
+                href: '/dashboard',
+              }}
+            />
+          )}
         </div>
       </ErrorBoundary>
     );

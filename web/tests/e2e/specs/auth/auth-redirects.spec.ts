@@ -102,7 +102,7 @@ test.describe('Authentication Redirects', () => {
       const regularPassword = process.env.E2E_USER_PASSWORD;
 
       if (!regularEmail || !regularPassword) {
-        test.skip('E2E credentials not available');
+        test.skip(true, 'E2E credentials not available');
         return;
       }
 
@@ -111,7 +111,7 @@ test.describe('Authentication Redirects', () => {
       await waitForPageReady(page);
 
       // Use the login helper from e2e-setup
-      const { loginTestUser } = await import('../helpers/e2e-setup');
+      const { loginTestUser } = await import('../../helpers/e2e-setup');
       await loginTestUser(page, {
         email: regularEmail,
         password: regularPassword,
@@ -152,7 +152,7 @@ test.describe('Authentication Redirects', () => {
       const regularPassword = process.env.E2E_USER_PASSWORD;
 
       if (!regularEmail || !regularPassword) {
-        test.skip('E2E credentials not available');
+        test.skip(true, 'E2E credentials not available');
         return;
       }
 
@@ -160,7 +160,7 @@ test.describe('Authentication Redirects', () => {
       await page.goto(`${BASE_URL}/auth`, { waitUntil: 'domcontentloaded', timeout: 30_000 });
       await waitForPageReady(page);
 
-      const { loginTestUser } = await import('../helpers/e2e-setup');
+      const { loginTestUser } = await import('../../helpers/e2e-setup');
       await loginTestUser(page, {
         email: regularEmail,
         password: regularPassword,
@@ -178,7 +178,7 @@ test.describe('Authentication Redirects', () => {
       let urlAfterLogin = page.url();
       if (urlAfterLogin.includes('/auth')) {
         // Wait for redirect to complete
-        await page.waitForURL(url => !url.includes('/auth'), { timeout: 10_000 }).catch(() => {});
+        await page.waitForURL((url: URL) => !url.toString().includes('/auth'), { timeout: 10_000 }).catch(() => {});
         await page.waitForTimeout(2_000);
         urlAfterLogin = page.url();
       }
@@ -215,7 +215,7 @@ test.describe('Authentication Redirects', () => {
         // Take screenshot for debugging
         await page.screenshot({ path: 'test-results/logout-button-missing.png' });
         // Check what's actually in the navigation
-        const navContent = await page.locator('[data-testid="global-navigation"]').textContent().catch(() => '');
+        const navContent = await page.locator('[data-testid="global-navigation"]').textContent().catch(() => '') || '';
         throw new Error(`Neither logout button nor profile link visible after login. Navigation content: ${navContent.substring(0, 200)}`);
       }
 
@@ -250,7 +250,7 @@ test.describe('Authentication Redirects', () => {
       const regularPassword = process.env.E2E_USER_PASSWORD;
 
       if (!regularEmail || !regularPassword) {
-        test.skip('E2E credentials not available');
+        test.skip(true, 'E2E credentials not available');
         return;
       }
 
@@ -258,7 +258,7 @@ test.describe('Authentication Redirects', () => {
       await page.goto(`${BASE_URL}/auth`, { waitUntil: 'domcontentloaded', timeout: 30_000 });
       await waitForPageReady(page);
 
-      const { loginTestUser } = await import('../helpers/e2e-setup');
+      const { loginTestUser } = await import('../../helpers/e2e-setup');
       await loginTestUser(page, {
         email: regularEmail,
         password: regularPassword,

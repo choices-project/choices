@@ -4,8 +4,8 @@
  * Type definitions for AI agent operations with Supabase
  */
 
-import type { SupabaseClient } from '@supabase/supabase-js'
 import type { Database } from '@/types/supabase'
+import type { SupabaseClient } from '@supabase/supabase-js'
 
 export type AgentId = string
 export type AgentVersion = string
@@ -20,7 +20,7 @@ export type OperationType =
 
 export type ResultStatus = 'success' | 'error' | 'rate_limited' | 'unauthorized'
 
-export interface AgentContext {
+export type AgentContext = {
   agentId: AgentId
   agentVersion?: AgentVersion
   purpose?: string
@@ -29,7 +29,7 @@ export interface AgentContext {
   metadata?: Record<string, unknown>
 }
 
-export interface AgentOperation {
+export type AgentOperation = {
   operationType: OperationType
   tableName?: string
   functionName?: string
@@ -39,7 +39,7 @@ export interface AgentOperation {
   metadata?: Record<string, unknown>
 }
 
-export interface AgentOperationResult {
+export type AgentOperationResult = {
   status: ResultStatus
   data?: unknown
   error?: string
@@ -47,7 +47,7 @@ export interface AgentOperationResult {
   duration?: number
 }
 
-export interface AgentOperationLog {
+export type AgentOperationLog = {
   id?: string
   agentId: AgentId
   agentVersion?: AgentVersion
@@ -63,7 +63,7 @@ export interface AgentOperationLog {
   createdAt?: string
 }
 
-export interface AgentClientOptions {
+export type AgentClientOptions = {
   agentId: AgentId
   agentVersion?: AgentVersion
   purpose?: string
@@ -76,7 +76,7 @@ export interface AgentClientOptions {
   enableAudit?: boolean
 }
 
-export interface AgentClient {
+export type AgentClient = {
   client: SupabaseClient<Database>
   context: AgentContext
   logOperation: (operation: AgentOperation, result: AgentOperationResult) => Promise<void>

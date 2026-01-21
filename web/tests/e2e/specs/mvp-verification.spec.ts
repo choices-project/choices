@@ -31,7 +31,7 @@ test.describe('MVP Functional Verification', () => {
       test.setTimeout(120_000);
 
       if (!regularEmail || !regularPassword) {
-        test.skip('E2E credentials not available');
+        test.skip(true, 'E2E credentials not available');
         return;
       }
 
@@ -102,13 +102,15 @@ test.describe('MVP Functional Verification', () => {
 
       // If empty state, verify it's helpful
       if (emptyCount > 0) {
-        const emptyText = await (emptyState1.count() > 0 ? emptyState1 : emptyState2).first().textContent();
+        const emptyState = (await emptyState1.count()) > 0 ? emptyState1 : emptyState2;
+        const emptyText = await emptyState.first().textContent();
         expect(emptyText).toBeTruthy();
       }
 
       // If error state, verify it provides recovery options
       if (errorCount > 0) {
-        const errorText = await (errorState1.count() > 0 ? errorState1 : errorState2).first().textContent();
+        const errorState = (await errorState1.count()) > 0 ? errorState1 : errorState2;
+        const errorText = await errorState.first().textContent();
         expect(errorText).toBeTruthy();
 
         // Error should have retry option
@@ -124,7 +126,7 @@ test.describe('MVP Functional Verification', () => {
       test.setTimeout(60_000);
 
       if (!regularEmail || !regularPassword) {
-        test.skip('E2E credentials not available');
+        test.skip(true, 'E2E credentials not available');
         return;
       }
 
@@ -168,7 +170,7 @@ test.describe('MVP Functional Verification', () => {
       test.setTimeout(120_000);
 
       if (!regularEmail || !regularPassword) {
-        test.skip('E2E credentials not available');
+        test.skip(true, 'E2E credentials not available');
         return;
       }
 
@@ -252,7 +254,7 @@ test.describe('MVP Functional Verification', () => {
       test.setTimeout(120_000);
 
       if (!regularEmail || !regularPassword) {
-        test.skip('E2E credentials not available');
+        test.skip(true, 'E2E credentials not available');
         return;
       }
 
