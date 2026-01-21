@@ -165,7 +165,15 @@ export function validationError(
   errors: Record<string, string>,
   message: string = 'Validation failed'
 ): NextResponse<ApiErrorResponse> {
-  return errorResponse(message, 400, errors, 'VALIDATION_ERROR');
+  // Always include validation error details (they're user-facing, not system errors)
+  const payload: ApiErrorResponse = {
+    success: false,
+    error: message,
+    details: errors,
+    code: 'VALIDATION_ERROR',
+    metadata: { timestamp: new Date().toISOString() },
+  };
+  return NextResponse.json(payload, { status: 400 });
 }
 
 /**
