@@ -172,7 +172,7 @@ test.describe('MVP Critical Flows', () => {
         const href = await pollLink.getAttribute('href');
         if (href && href.includes('/polls/')) {
           const pollId = href.split('/polls/')[1]?.split('/')[0]?.split('?')[0];
-          
+
           if (pollId) {
             // Navigate to poll detail page
             await page.goto(`${BASE_URL}/polls/${pollId}`, { waitUntil: 'domcontentloaded', timeout: 30_000 });
@@ -195,7 +195,7 @@ test.describe('MVP Critical Flows', () => {
             if (hasError > 0) {
               const errorText = await errorState.first().textContent();
               expect(errorText).toBeTruthy();
-              
+
               // Should have retry option
               const retryButton = page.locator('button:has-text(/try again|retry|reload/i)');
               const retryCount = await retryButton.count();
@@ -282,14 +282,14 @@ test.describe('MVP Critical Flows', () => {
       // Should see warning information
       const warningText = page.locator('text=/warning/i, text=/permanent/i, text=/cannot.*undo/i');
       const warningCount = await warningText.count();
-      
+
       // Warning should be present
       expect(warningCount).toBeGreaterThan(0);
 
       // Should see delete button (but don't click it)
       const deleteButton = page.locator('button:has-text(/delete.*account/i), button[type="submit"]');
       const deleteButtonCount = await deleteButton.count();
-      
+
       // Delete button should exist (but may be disabled initially)
       if (deleteButtonCount > 0) {
         await expect(deleteButton.first()).toBeVisible({ timeout: 5_000 });
@@ -322,7 +322,7 @@ test.describe('MVP Critical Flows', () => {
       // Look for confirmation input or checkbox
       const confirmInput = page.locator('input[type="text"], input[placeholder*="DELETE"], input[placeholder*="confirm"]');
       const confirmCheckbox = page.locator('input[type="checkbox"]');
-      
+
       const hasConfirmInput = await confirmInput.count();
       const hasConfirmCheckbox = await confirmCheckbox.count();
 
@@ -330,11 +330,11 @@ test.describe('MVP Critical Flows', () => {
       if (hasConfirmInput > 0 || hasConfirmCheckbox > 0) {
         // Verify confirmation is required before delete button is enabled
         const deleteButton = page.locator('button:has-text(/delete.*account/i), button[type="submit"]').first();
-        
+
         if (await deleteButton.count() > 0) {
           // Button should be disabled initially or require confirmation
           const isDisabled = await deleteButton.isDisabled();
-          
+
           // This is acceptable - confirmation may be required
           expect(isDisabled !== undefined).toBeTruthy();
         }

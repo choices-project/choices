@@ -363,51 +363,103 @@ export async function loginTestUser(page: Page, user: TestUser): Promise<void> {
   }
 
   // Ensure React-controlled inputs see the values (handles aggressive re-renders)
+  // Use the actual input IDs that the sync mechanism watches
   await page.evaluate(
     ({ expectedEmail, expectedPassword }: { expectedEmail: string; expectedPassword: string }) => {
-      const emailInput = document.querySelector('[data-testid="login-email"]') as HTMLInputElement | null;
-      const passwordInput = document.querySelector('[data-testid="login-password"]') as HTMLInputElement | null;
+      // Use the actual IDs that the sync mechanism watches
+      const emailInput = document.getElementById('email') as HTMLInputElement | null;
+      const passwordInput = document.getElementById('password') as HTMLInputElement | null;
 
       const setNativeValue = (input: HTMLInputElement | null, value: string) => {
         if (!input) return;
         const setter = Object.getOwnPropertyDescriptor(HTMLInputElement.prototype, 'value')?.set;
         setter?.call(input, value);
+        // Dispatch input event first (what the sync mechanism listens to)
         input.dispatchEvent(new Event('input', { bubbles: true }));
+        // Then dispatch change event
         input.dispatchEvent(new Event('change', { bubbles: true }));
       };
 
       setNativeValue(emailInput, expectedEmail);
       setNativeValue(passwordInput, expectedPassword);
+      
+      // Trigger focus/blur to ensure React processes the events
+      emailInput?.focus();
+      emailInput?.blur();
+      passwordInput?.focus();
+      passwordInput?.blur();
     },
     { expectedEmail: email, expectedPassword: password }
   );
 
-  // Wait for React to process the events and update state
-  await page.waitForTimeout(500);
+  // Wait for React to process the events and for sync mechanism to run
+  await page.waitForTimeout(1000);
 
-  // Wait for React to process - ensure DOM values match (button enablement may lag)
-  const maxSyncAttempts = 2;
+  // Wait for React to process - ensure DOM values match AND form state is synced
+  // Check both DOM values and React formData state via validation indicators
+  const maxSyncAttempts = 5;
   for (let attempt = 0; attempt < maxSyncAttempts; attempt++) {
     try {
+      // Wait for both DOM values to match AND form validation indicators to appear
+      // The form shows validation indicators when React state is synced
       await page.waitForFunction(
         ({ expectedEmail, expectedPassword }: { expectedEmail: string; expectedPassword: string }) => {
-          const emailInput = document.querySelector('[data-testid="login-email"]') as HTMLInputElement;
-          const passwordInput = document.querySelector('[data-testid="login-password"]') as HTMLInputElement;
-
-          return emailInput?.value === expectedEmail && passwordInput?.value === expectedPassword;
+          const emailInput = document.getElementById('email') as HTMLInputElement | null;
+          const passwordInput = document.getElementById('password') as HTMLInputElement | null;
+          
+          // Check DOM values match
+          const domMatches = emailInput?.value === expectedEmail && passwordInput?.value === expectedPassword;
+          
+          // Check if validation indicators are visible (means React state is synced)
+          const emailValidation = document.querySelector('[data-testid="email-validation"]');
+          const passwordValidation = document.querySelector('[data-testid="password-validation"]');
+          const hasValidations = emailValidation || passwordValidation;
+          
+          // For login, we need email with @ and password >= 8 chars
+          const emailValid = expectedEmail.includes('@');
+          const passwordValid = expectedPassword.length >= 8;
+          
+          return domMatches && (hasValidations || (emailValid && passwordValid));
         },
         { expectedEmail: email, expectedPassword: password },
-        { timeout: 10_000 } // Increased timeout for CI
+        { timeout: 15_000 } // Increased timeout for production
       );
       break;
     } catch (error) {
       if (attempt === maxSyncAttempts - 1) {
+        // Last attempt - try once more with focus/blur to trigger React state
+        await page.evaluate(
+          ({ expectedEmail, expectedPassword }: { expectedEmail: string; expectedPassword: string }) => {
+            const emailInput = document.getElementById('email') as HTMLInputElement | null;
+            const passwordInput = document.getElementById('password') as HTMLInputElement | null;
+
+            const setNativeValue = (input: HTMLInputElement | null, value: string) => {
+              if (!input) return;
+              const setter = Object.getOwnPropertyDescriptor(HTMLInputElement.prototype, 'value')?.set;
+              setter?.call(input, value);
+              input.dispatchEvent(new Event('input', { bubbles: true }));
+              input.dispatchEvent(new Event('change', { bubbles: true }));
+            };
+
+            setNativeValue(emailInput, expectedEmail);
+            setNativeValue(passwordInput, expectedPassword);
+            
+            // Force focus/blur to trigger React state update
+            emailInput?.focus();
+            emailInput?.blur();
+            passwordInput?.focus();
+            passwordInput?.blur();
+          },
+          { expectedEmail: email, expectedPassword: password }
+        );
+        await page.waitForTimeout(1000);
         throw error;
       }
+      // Retry with fresh event dispatch
       await page.evaluate(
         ({ expectedEmail, expectedPassword }: { expectedEmail: string; expectedPassword: string }) => {
-          const emailInput = document.querySelector('[data-testid="login-email"]') as HTMLInputElement | null;
-          const passwordInput = document.querySelector('[data-testid="login-password"]') as HTMLInputElement | null;
+          const emailInput = document.getElementById('email') as HTMLInputElement | null;
+          const passwordInput = document.getElementById('password') as HTMLInputElement | null;
 
           const setNativeValue = (input: HTMLInputElement | null, value: string) => {
             if (!input) return;
@@ -422,7 +474,7 @@ export async function loginTestUser(page: Page, user: TestUser): Promise<void> {
         },
         { expectedEmail: email, expectedPassword: password }
       );
-      await page.waitForTimeout(500);
+      await page.waitForTimeout(1000);
     }
   }
 

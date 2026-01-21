@@ -156,55 +156,87 @@ export default function AuthPageClient() {
   // This ensures that when tests use page.fill(), the React state updates
   // Also triggers change events to ensure validation runs
   React.useEffect(() => {
-    const emailInput = document.getElementById('email') as HTMLInputElement;
-    const passwordInput = document.getElementById('password') as HTMLInputElement;
+    // Use both ID and data-testid selectors for maximum compatibility
+    const getEmailInput = (): HTMLInputElement | null => {
+      return (document.getElementById('email') ||
+        document.querySelector('[data-testid="login-email"]')) as HTMLInputElement | null;
+    };
 
-    if (!emailInput || !passwordInput) return;
+    const getPasswordInput = (): HTMLInputElement | null => {
+      return (document.getElementById('password') ||
+        document.querySelector('[data-testid="login-password"]')) as HTMLInputElement | null;
+    };
 
-    const syncEmail = () => {
-      const currentValue = emailInput.value;
-      setFormData(prev => {
-        if (prev.email !== currentValue) {
-          // Trigger change event to ensure validation runs
-          emailInput.dispatchEvent(new Event('change', { bubbles: true }));
-          return { ...prev, email: currentValue };
+    // Wait for inputs to be available (handles hydration delay)
+    const checkInputs = () => {
+      const emailInput = getEmailInput();
+      const passwordInput = getPasswordInput();
+
+      if (!emailInput || !passwordInput) {
+        // Retry after a short delay if inputs aren't ready
+        setTimeout(checkInputs, 100);
+        return;
+      }
+
+      const syncEmail = () => {
+        const currentValue = emailInput.value;
+        if (currentValue && currentValue !== emailInput.getAttribute('data-synced-value')) {
+          emailInput.setAttribute('data-synced-value', currentValue);
+          setFormData(prev => {
+            if (prev.email !== currentValue) {
+              // Trigger both input and change events to ensure React processes them
+              emailInput.dispatchEvent(new Event('input', { bubbles: true, cancelable: true }));
+              emailInput.dispatchEvent(new Event('change', { bubbles: true, cancelable: true }));
+              return { ...prev, email: currentValue };
+            }
+            return prev;
+          });
         }
-        return prev;
-      });
-    };
+      };
 
-    const syncPassword = () => {
-      const currentValue = passwordInput.value;
-      setFormData(prev => {
-        if (prev.password !== currentValue) {
-          // Trigger change event to ensure validation runs
-          passwordInput.dispatchEvent(new Event('change', { bubbles: true }));
-          return { ...prev, password: currentValue };
+      const syncPassword = () => {
+        const currentValue = passwordInput.value;
+        if (currentValue && currentValue !== passwordInput.getAttribute('data-synced-value')) {
+          passwordInput.setAttribute('data-synced-value', currentValue);
+          setFormData(prev => {
+            if (prev.password !== currentValue) {
+              // Trigger both input and change events to ensure React processes them
+              passwordInput.dispatchEvent(new Event('input', { bubbles: true, cancelable: true }));
+              passwordInput.dispatchEvent(new Event('change', { bubbles: true, cancelable: true }));
+              return { ...prev, password: currentValue };
+            }
+            return prev;
+          });
         }
-        return prev;
-      });
+      };
+
+      // Sync on input events (for E2E tests that use page.fill())
+      emailInput.addEventListener('input', syncEmail);
+      passwordInput.addEventListener('input', syncPassword);
+
+      // Also sync periodically to catch any direct DOM manipulation (E2E tests)
+      // Increased frequency and extended duration for better E2E test compatibility
+      // Keep syncing for 30 seconds to handle slower test environments
+      const interval = setInterval(() => {
+        syncEmail();
+        syncPassword();
+      }, 50); // Check every 50ms for faster response
+
+      // Extended to 30 seconds to catch late DOM updates in production/test environments
+      const timeout = setTimeout(() => clearInterval(interval), 30000);
+
+      // Cleanup function
+      return () => {
+        emailInput.removeEventListener('input', syncEmail);
+        passwordInput.removeEventListener('input', syncPassword);
+        clearInterval(interval);
+        clearTimeout(timeout);
+      };
     };
 
-    // Sync on input events (for E2E tests that use page.fill())
-    emailInput.addEventListener('input', syncEmail);
-    passwordInput.addEventListener('input', syncPassword);
-
-    // Also sync periodically to catch any direct DOM manipulation (E2E tests)
-    // Increased frequency and duration for better E2E test compatibility
-    const interval = setInterval(() => {
-      syncEmail();
-      syncPassword();
-    }, 50); // Check every 50ms for faster response
-
-    // Run for 5 seconds to catch late DOM updates
-    const timeout = setTimeout(() => clearInterval(interval), 5000);
-
-    return () => {
-      emailInput.removeEventListener('input', syncEmail);
-      passwordInput.removeEventListener('input', syncPassword);
-      clearInterval(interval);
-      clearTimeout(timeout);
-    };
+    // Start checking for inputs
+    const cleanup = checkInputs();
+    return cleanup;
   }, []); // Empty deps - only run once on mount
 
   // CRITICAL: Redirect recovery for E2E tests - if bypass flag is set and we have redirectTo param, redirect immediately

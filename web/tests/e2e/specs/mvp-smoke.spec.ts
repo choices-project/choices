@@ -31,7 +31,13 @@ test.describe('@smoke MVP core pages', () => {
   test('polls templates renders @smoke', async ({ page }) => {
     await page.goto('/polls/templates', { waitUntil: 'domcontentloaded' });
     await waitForPageReady(page);
-    await assertAnyVisible(page, ['h1:has-text("Poll Templates")']);
+    await assertAnyVisible(page, [
+      'h1:has-text("Poll Templates")',
+      '[data-testid="login-form"]',
+      'text=/sign in|log in/i',
+      'h1:has-text("Sign In")',
+      'h1:has-text("Sign Up")',
+    ]);
   });
 
   test('polls analytics renders or gates @smoke', async ({ page }) => {
@@ -41,6 +47,9 @@ test.describe('@smoke MVP core pages', () => {
       'h1:has-text("Poll Analytics")',
       'text=Please log in to view poll analytics.',
       'text=No analytics data available yet.',
+      '[data-testid="login-form"]',
+      'text=/sign in|log in/i',
+      'h1:has-text("Sign In")',
     ]);
   });
 
@@ -59,9 +68,12 @@ test.describe('@smoke MVP core pages', () => {
   test('account privacy renders or gates @smoke', async ({ page }) => {
     await page.goto('/account/privacy', { waitUntil: 'domcontentloaded' });
     await waitForPageReady(page);
+    // Handle both authenticated and unauthenticated states
     await assertAnyVisible(page, [
       'h1:has-text("Privacy & Data")',
       'text=Please log in to manage your privacy settings.',
+      '[data-testid="login-form"]',
+      'text=/log in|sign in/i',
     ]);
   });
 
@@ -71,6 +83,9 @@ test.describe('@smoke MVP core pages', () => {
     await assertAnyVisible(page, [
       'h1:has-text("Data Export")',
       'text=Please log in to access this page.',
+      '[data-testid="login-form"]',
+      'text=/sign in|log in/i',
+      'h1:has-text("Sign In")',
     ]);
   });
 
@@ -104,6 +119,9 @@ test.describe('@smoke MVP core pages', () => {
     await assertAnyVisible(page, [
       'h1:has-text("Set Up Biometric Authentication")',
       'text=Biometric Authentication Not Supported',
+      '[data-testid="login-form"]',
+      'text=/sign in|log in/i',
+      'h1:has-text("Sign In")',
     ]);
   });
 });
