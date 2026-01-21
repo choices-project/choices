@@ -15,6 +15,8 @@
 
 import dynamicImport from 'next/dynamic';
 
+import { AuthGuard } from '@/components/business/auth/AuthGuard';
+
 // CRITICAL: Load DashboardContent only on client to prevent SSR hydration mismatch
 // This component uses hooks and client-side state that cause React Error #185 when rendered during SSR
 // Similar to how feed page handles it - extract all logic to client-only component
@@ -110,5 +112,9 @@ export default function DashboardPage() {
   // This was causing hydration mismatch because server and client rendered different code paths
   // H37: Loading fallback structure restored to match DashboardContent exactly (div > nav > div > nav)
   
-  return <DashboardContent />;
+  return (
+    <AuthGuard redirectTo="/auth">
+      <DashboardContent />
+    </AuthGuard>
+  );
 }

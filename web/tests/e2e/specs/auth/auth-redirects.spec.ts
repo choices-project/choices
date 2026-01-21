@@ -6,10 +6,10 @@ const BASE_URL = process.env.BASE_URL || 'https://www.choices-app.com';
 
 /**
  * Authentication Redirect Tests
- * 
+ *
  * Verifies that unauthenticated users are properly redirected to /auth
  * when attempting to access protected pages.
- * 
+ *
  * CRITICAL: These tests ensure security by preventing unauthorized access.
  */
 test.describe('Authentication Redirects', () => {
@@ -45,7 +45,7 @@ test.describe('Authentication Redirects', () => {
         // Navigate to protected page
         await page.goto(`${BASE_URL}${pageInfo.path}`, { waitUntil: 'domcontentloaded', timeout: 30_000 });
         await waitForPageReady(page);
-        
+
         // Wait a bit for any redirects to complete
         await page.waitForTimeout(2_000);
 
@@ -56,10 +56,10 @@ test.describe('Authentication Redirects', () => {
         // Should see auth page content
         const authForm = page.locator('[data-testid="login-form"]');
         const authHeading = page.locator('h1:has-text(/sign in|log in/i), h1:has-text(/sign up/i)');
-        
+
         const hasForm = await authForm.count();
         const hasHeading = await authHeading.count();
-        
+
         expect(hasForm + hasHeading).toBeGreaterThan(0);
       });
     }
@@ -120,7 +120,7 @@ test.describe('Authentication Redirects', () => {
 
       // Try accessing protected pages - should NOT redirect to /auth
       const protectedPages = ['/feed', '/dashboard', '/profile'];
-      
+
       for (const path of protectedPages) {
         await page.goto(`${BASE_URL}${path}`, { waitUntil: 'domcontentloaded', timeout: 30_000 });
         await waitForPageReady(page);
@@ -220,10 +220,10 @@ test.describe('Authentication Redirects', () => {
       // Should see login button, not logout button
       const loginLink = page.locator('a[href="/login"], a[href="/auth"], button:has-text(/log in|sign in/i)');
       const logoutButtonAfter = page.locator('[data-testid="logout-button"]');
-      
+
       const hasLogin = await loginLink.count();
       const hasLogout = await logoutButtonAfter.count();
-      
+
       expect(hasLogin).toBeGreaterThan(0);
       expect(hasLogout).toBe(0);
     });

@@ -7,6 +7,7 @@ import React, { useEffect, useState, useCallback, useRef } from 'react';
 import { AddressLookup } from '@/features/profile/components/AddressLookup';
 import { useProfileData, useProfileExport } from '@/features/profile/hooks/use-profile';
 
+import { AuthGuard } from '@/components/business/auth/AuthGuard';
 import { EnhancedErrorDisplay } from '@/components/shared/EnhancedErrorDisplay';
 import { ErrorBoundary } from '@/components/shared/ErrorBoundary';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
@@ -448,5 +449,9 @@ function ProfilePageContent() {
 }
 
 export default function ProfilePage() {
-  return <ProfilePageContent />;
+  return (
+    <AuthGuard redirectTo="/auth">
+      <ProfilePageContent />
+    </AuthGuard>
+  );
 }
