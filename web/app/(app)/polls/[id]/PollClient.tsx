@@ -782,14 +782,14 @@ export default function PollClient({ poll }: PollClientProps) {
   // Component is dynamically imported with ssr: false, so no ClientOnly wrapper needed
   // ClientOnly wrapper was causing hydration mismatches
   return (
-    <div className="min-h-screen bg-gray-50">
-      <div className="container mx-auto px-4 py-8" data-testid="poll-details">
+    <div className="min-h-screen bg-background">
+      <div className="container mx-auto max-w-4xl px-4 py-8" data-testid="poll-details">
         {/* Back Button */}
         <div className="mb-6">
           <Button
             variant="ghost"
             onClick={handleBack}
-            className="flex items-center space-x-2 text-gray-600 hover:text-gray-900"
+            className="flex items-center space-x-2"
           >
             <ArrowLeft className="w-4 h-4" />
             <span>Back to Polls</span>
@@ -797,50 +797,53 @@ export default function PollClient({ poll }: PollClientProps) {
         </div>
 
         {/* Poll Header */}
-        <div className="mb-8">
-          <div className="flex items-start justify-between mb-4">
-            <div className="flex-1">
-              <h1 className="text-3xl font-bold text-gray-900 mb-2" data-testid="poll-title">
-                {poll.title}
-              </h1>
-              {poll.description && (
-                <p className="text-gray-600 text-lg" data-testid="poll-description">{poll.description}</p>
+        <Card className="mb-6">
+          <CardHeader>
+            <div className="flex items-start justify-between gap-4">
+              <div className="flex-1 space-y-2">
+                <CardTitle className="text-3xl font-bold" data-testid="poll-title">
+                  {poll.title}
+                </CardTitle>
+                {poll.description && (
+                  <CardDescription className="text-base" data-testid="poll-description">
+                    {poll.description}
+                  </CardDescription>
+                )}
+              </div>
+              <div className="flex items-center gap-2 shrink-0">
+                <Badge
+                  variant={isPollActive ? "default" : isPollClosed ? "secondary" : "destructive"}
+                  className="text-sm"
+                >
+                  {isPollActive ? 'Active' : isPollClosed ? 'Closed' : isPollLocked ? 'Locked' : 'Unknown'}
+                </Badge>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={handleShare}
+                  className="flex items-center gap-2"
+                >
+                  <Share2 className="w-4 h-4" />
+                  <span>{copied ? 'Copied!' : 'Share'}</span>
+                </Button>
+              </div>
+            </div>
+          </CardHeader>
+          <CardContent>
+            {/* Poll Metadata */}
+            <div className="flex flex-wrap items-center gap-3 text-sm text-muted-foreground">
+              <Badge variant="outline" className="text-xs">
+                {poll.privacyLevel}
+              </Badge>
+              <Badge variant="outline" className="text-xs" data-testid="voting-method">
+                {formatVotingMethod(poll.votingMethod)}
+              </Badge>
+              {poll.endtime && (
+                <span className="text-xs">Ends {formatDate(poll.endtime)}</span>
               )}
             </div>
-            <div className="flex items-center space-x-3">
-              <Badge
-                variant={isPollActive ? "default" : isPollClosed ? "secondary" : "destructive"}
-                className="text-sm"
-              >
-                {isPollActive ? 'Active' : isPollClosed ? 'Closed' : isPollLocked ? 'Locked' : 'Unknown'}
-              </Badge>
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={handleShare}
-                className="flex items-center space-x-2"
-              >
-                <Share2 className="w-4 h-4" />
-                <span>{copied ? 'Copied!' : 'Share'}</span>
-              </Button>
-            </div>
-          </div>
-
-          {/* Poll Metadata */}
-          <div className="flex items-center space-x-4 text-sm text-gray-500">
-            <span className="bg-blue-100 text-blue-800 px-2 py-1 rounded">
-              {poll.privacyLevel}
-            </span>
-            <span>•</span>
-            <span data-testid="voting-method">{formatVotingMethod(poll.votingMethod)}</span>
-            {poll.endtime && (
-              <>
-                <span>•</span>
-                <span>Ends {formatDate(poll.endtime)}</span>
-              </>
-            )}
-          </div>
-        </div>
+          </CardContent>
+        </Card>
 
         {/* Share Section */}
         <div className="mb-8">
@@ -917,12 +920,12 @@ export default function PollClient({ poll }: PollClientProps) {
 
         {/* Voting Interface - Only show for active polls where user hasn't voted */}
         {isPollActive && !hasVoted && normalizedOptions && normalizedOptions.length > 0 && (
-          <Card className="mb-8">
-            <CardHeader>
+          <Card className="mb-6 border-2 border-primary/20">
+            <CardHeader className="bg-primary/5">
               <CardTitle data-testid="voting-section-title">Cast Your Vote</CardTitle>
               <CardDescription>Select your preferred option below</CardDescription>
             </CardHeader>
-            <CardContent data-testid="voting-form">
+            <CardContent className="pt-6" data-testid="voting-form">
               <VotingInterface
                 poll={{
                   id: poll.id,
@@ -973,9 +976,9 @@ export default function PollClient({ poll }: PollClientProps) {
 
         {/* Results */}
         {results && (
-          <Card>
+          <Card className="mb-6">
             <CardHeader>
-              <div className="flex items-center justify-between">
+              <div className="flex items-center justify-between gap-4">
                 <CardTitle>Results</CardTitle>
                 <ModeSwitch
                   mode={resultsMode}
@@ -984,19 +987,19 @@ export default function PollClient({ poll }: PollClientProps) {
               </div>
             </CardHeader>
             <CardContent>
-              <div className="space-y-4">
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                  <div className="text-center p-4 bg-gray-50 rounded-lg">
-                    <div className="text-2xl font-bold text-gray-900">
+              <div className="space-y-6">
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                  <div className="text-center p-4 bg-muted/50 rounded-lg border">
+                    <div className="text-2xl font-bold text-foreground">
                       {results.totalVotes}
                     </div>
-                    <div className="text-sm text-gray-600">Total Votes</div>
+                    <div className="text-sm text-muted-foreground mt-1">Total Votes</div>
                   </div>
-                  <div className="text-center p-4 bg-gray-50 rounded-lg">
-                    <div className="text-2xl font-bold text-gray-900">
+                  <div className="text-center p-4 bg-muted/50 rounded-lg border">
+                    <div className="text-lg font-semibold text-foreground">
                       {VOTING_LABELS[poll.votingMethod] ?? poll.votingMethod}
                     </div>
-                    <div className="text-sm text-gray-600">Voting Method</div>
+                    <div className="text-sm text-muted-foreground mt-1">Voting Method</div>
                   </div>
                   <div className="text-center p-4 bg-gray-50 rounded-lg">
                     <div className="text-2xl font-bold text-gray-900">

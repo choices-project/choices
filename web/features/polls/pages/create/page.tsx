@@ -786,7 +786,7 @@ export default function CreatePollPage() {
               })()}</Label>
               <Textarea
                  id="description"
-                value={data.description}
+                 value={data.description}
                 onChange={(event) => handleDataUpdate({ description: event.target.value })}
                 onInput={(event) => {
                   // Sync DOM value to React state for browser automation compatibility
@@ -859,10 +859,10 @@ export default function CreatePollPage() {
                       <Label htmlFor={`option-${index}`} className="sr-only">
                         Option {index + 1}
                       </Label>
-                      <Input
+                    <Input
                         id={`option-${index}`}
-                        value={option}
-                        onChange={(event) => handleOptionChange(index, event.target.value)}
+                      value={option}
+                      onChange={(event) => handleOptionChange(index, event.target.value)}
                         onInput={(event) => {
                           // Sync DOM value to React state for browser automation compatibility
                           const value = (event.target as HTMLInputElement).value;
@@ -872,7 +872,7 @@ export default function CreatePollPage() {
                         }}
                         placeholder={`Option ${index + 1} (e.g., "Yes", "No", "Maybe")`}
                         aria-label={`Poll option ${index + 1}`}
-                        aria-invalid={Boolean(errors[`option-${index}`])}
+                      aria-invalid={Boolean(errors[`option-${index}`])}
                         className="w-full"
                         maxLength={200}
                       />
@@ -905,16 +905,16 @@ export default function CreatePollPage() {
                 </span>
               </div>
 
-              <Button
-                type="button"
-                variant="outline"
-                className="mt-4"
+                <Button
+                  type="button"
+                  variant="outline"
+                  className="mt-4"
                 onClick={handleAddOption}
                 disabled={data.options.length >= MAX_OPTIONS}
-              >
+                >
                 <Plus className="mr-2 h-4 w-4" />
                 {t('polls.create.wizard.options.add') || 'Add Option'}
-              </Button>
+                </Button>
             </fieldset>
           </div>
         )
@@ -1006,16 +1006,16 @@ export default function CreatePollPage() {
                       e.stopPropagation();
                       handleDataUpdate({ category: category.id });
                     }}
-                    className={cn(
+                      className={cn(
                       "rounded-lg border-2 p-4 text-left transition-all cursor-pointer",
                       "hover:shadow-md hover:scale-[1.02] active:scale-[0.98]",
                       isSelected
                         ? "border-primary bg-primary/10 shadow-md ring-2 ring-primary/20"
                         : "border-border hover:border-primary/60 bg-card",
-                    )}
-                    aria-pressed={isSelected}
+                      )}
+                      aria-pressed={isSelected}
                     aria-label={`Select ${category.name} category`}
-                  >
+                    >
                       <div className="text-2xl mb-2" aria-hidden>
                         {category.icon}
                       </div>
@@ -1100,17 +1100,10 @@ export default function CreatePollPage() {
                 {safeT('polls.create.wizard.audience.settings.description', 'Configure additional options for how your poll works and what voters can do.')}
               </p>
               <SettingToggle
-                id="allow-multiple-votes"
-                label={safeT('polls.create.wizard.audience.settings.allowMultipleVotes.label', 'Allow multiple votes')}
-                description={safeT('polls.create.wizard.audience.settings.allowMultipleVotes.description', 'Let voters cast multiple votes on this poll. When enabled, voters can select more than one option, which is useful for polls where multiple choices are acceptable.')}
-                checked={data.settings.allowMultipleVotes}
-                onCheckedChange={(checked) => actions.updateSettings({ allowMultipleVotes: checked })}
-              />
-              <SettingToggle
                 id="allow-anonymous-votes"
                 label={safeT('polls.create.wizard.audience.settings.allowAnonymousVotes.label', 'Allow anonymous votes')}
                 description={safeT('polls.create.wizard.audience.settings.allowAnonymousVotes.description', 'Allow voters to vote without revealing their identity. This encourages participation but reduces accountability. Results will not show individual voter information.')}
-                checked={data.settings.allowAnonymousVotes}
+                      checked={data.settings.allowAnonymousVotes}
                 onCheckedChange={(checked) => actions.updateSettings({ allowAnonymousVotes: checked })}
               />
               <SettingToggle
@@ -1124,14 +1117,14 @@ export default function CreatePollPage() {
                 id="show-results"
                 label={safeT('polls.create.wizard.audience.settings.showResults.label', 'Show results')}
                 description={safeT('polls.create.wizard.audience.settings.showResults.description', 'Display poll results to voters. When enabled, voters can see current vote counts and percentages. You can choose to show results immediately or after voting.')}
-                checked={data.settings.showResults}
+                      checked={data.settings.showResults}
                 onCheckedChange={(checked) => actions.updateSettings({ showResults: checked })}
               />
               <SettingToggle
                 id="allow-comments"
                 label={safeT('polls.create.wizard.audience.settings.allowComments.label', 'Allow comments')}
                 description={safeT('polls.create.wizard.audience.settings.allowComments.description', 'Let voters comment on this poll. Comments enable discussion and allow voters to share their reasoning, which can enrich the voting experience and provide context for decisions.')}
-                checked={data.settings.allowComments}
+                      checked={data.settings.allowComments}
                 onCheckedChange={(checked) => actions.updateSettings({ allowComments: checked })}
               />
             </fieldset>
@@ -1175,7 +1168,7 @@ export default function CreatePollPage() {
 
                 <section>
                   <h4 className="text-base font-semibold mb-4 text-foreground">{safeT('polls.create.wizard.review.optionsHeading', 'Poll Options')}</h4>
-                  <InteractivePreview 
+                  <InteractivePreview
                     votingMethod={data.settings.votingMethod}
                     options={data.options.filter((option) => option.trim().length > 0)}
                   />
@@ -1451,43 +1444,40 @@ export default function CreatePollPage() {
               </Button>
             </div>
 
-            <div className="space-y-4">
-              <div className="flex items-center justify-between">
-                <div>
-                  <h3 className="text-sm font-semibold text-foreground">{safeT('polls.create.share.dialog.milestones.title', 'Vote Milestones')}</h3>
-                  <p className="text-xs text-muted-foreground">
-                    {safeT('polls.create.share.dialog.milestones.description', 'Get notified when your poll reaches these vote counts.')}
-                  </p>
+            {/* Milestones - Collapsible and less prominent */}
+            <details className="rounded-lg border border-border/40 bg-muted/20">
+              <summary className="cursor-pointer p-3 text-sm font-medium text-foreground hover:bg-muted/30 transition-colors">
+                <div className="flex items-center justify-between">
+                  <span>{safeT('polls.create.share.dialog.milestones.title', 'Vote Milestones')}</span>
+                  <span className="text-xs text-muted-foreground font-normal">
+                    {safeT('polls.create.share.dialog.milestones.enabled', `${enabledMilestones.length} of ${milestones.length} enabled`, { current: enabledMilestones.length, total: milestones.length })}
+                  </span>
                 </div>
-                <span className="text-xs text-muted-foreground">
-                  {safeT('polls.create.share.dialog.milestones.enabled', `${enabledMilestones.length} of ${milestones.length} enabled`, { current: enabledMilestones.length, total: milestones.length })}
-                </span>
-              </div>
-
-              <div className="space-y-3">
-                {milestones.map((milestone) => (
-                  <div
-                    key={`milestone-pref-${milestone}`}
-                    className="flex items-start justify-between gap-4 rounded-md border border-border/60 bg-background p-3"
-                  >
-                    <div>
-                      <Label htmlFor={`milestone-${milestone}`} className="text-sm font-medium">
-                        {safeT('polls.create.share.dialog.milestones.notifyAt', `Notify at ${milestone} votes`, { count: milestone })}
+              </summary>
+              <div className="border-t border-border/40 p-3">
+                <p className="mb-3 text-xs text-muted-foreground">
+                  {safeT('polls.create.share.dialog.milestones.description', 'Get notified when your poll reaches these vote counts.')}
+                </p>
+                <div className="space-y-2">
+                  {milestones.map((milestone) => (
+                    <div
+                      key={`milestone-pref-${milestone}`}
+                      className="flex items-center justify-between gap-3 rounded-md border border-border/40 bg-background/50 p-2"
+                    >
+                      <Label htmlFor={`milestone-${milestone}`} className="text-xs font-medium cursor-pointer flex-1">
+                        {safeT('polls.create.share.dialog.milestones.notifyAt', `${milestone} votes`, { count: milestone })}
                       </Label>
-                      <p id={`milestone-${milestone}-description`} className="text-xs text-muted-foreground">
-                        {safeT('polls.create.share.dialog.milestones.itemDescription', `Get notified when your poll reaches ${milestone} votes.`, { count: milestone })}
-                      </p>
+                      <Switch
+                        id={`milestone-${milestone}`}
+                        checked={Boolean(milestonePreferences[milestone])}
+                        onCheckedChange={(checked) => handleMilestoneToggle(milestone, checked)}
+                        className="shrink-0"
+                      />
                     </div>
-                    <Switch
-                      id={`milestone-${milestone}`}
-                      checked={Boolean(milestonePreferences[milestone])}
-                      onCheckedChange={(checked) => handleMilestoneToggle(milestone, checked)}
-                      aria-describedby={`milestone-${milestone}-description`}
-                    />
-                  </div>
-                ))}
+                  ))}
+                </div>
               </div>
-            </div>
+            </details>
           </div>
 
           <DialogFooter className="pt-4">
@@ -1523,7 +1513,9 @@ const WizardProgress = ({ steps, onStepClick, currentStep }: WizardProgressProps
     <nav aria-label={t('polls.create.wizard.progress.ariaLabel') || 'Poll creation steps'} className="mb-8">
       <ol className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         {steps.map((step, index) => {
-          const isClickable = onStepClick && (step.isCompleted || index <= currentStep);
+          // Allow clicking on any step that's been visited (completed) or is the current step
+          // Also allow clicking on the next step if we're on a valid step
+          const isClickable = onStepClick && (step.isCompleted || index <= currentStep || (index === currentStep + 1 && currentStep >= 0));
           const handleClick = () => {
             if (isClickable && onStepClick) {
               onStepClick(index);
@@ -1531,7 +1523,7 @@ const WizardProgress = ({ steps, onStepClick, currentStep }: WizardProgressProps
           };
 
           return (
-            <li key={step.title} className="flex flex-1 items-center gap-2">
+          <li key={step.title} className="flex flex-1 items-center gap-2">
               <button
                 type="button"
                 onClick={handleClick}
@@ -1544,32 +1536,32 @@ const WizardProgress = ({ steps, onStepClick, currentStep }: WizardProgressProps
                 aria-label={`Go to step ${index + 1}: ${step.title}`}
                 aria-current={step.isCurrent ? 'step' : undefined}
               >
-                <div
-                  className={cn(
-                    'flex h-9 w-9 items-center justify-center rounded-full border text-sm font-medium transition',
-                    step.isCompleted
-                      ? 'border-green-500 bg-green-500 text-white'
-                      : step.isCurrent
-                      ? 'border-primary bg-primary text-primary-foreground'
-                      : 'border-border bg-background text-muted-foreground',
+            <div
+              className={cn(
+                'flex h-9 w-9 items-center justify-center rounded-full border text-sm font-medium transition',
+                step.isCompleted
+                  ? 'border-green-500 bg-green-500 text-white'
+                  : step.isCurrent
+                  ? 'border-primary bg-primary text-primary-foreground'
+                  : 'border-border bg-background text-muted-foreground',
                     isClickable && 'hover:scale-105'
-                  )}
-                >
-                  {step.isCompleted ? (
-                    <CheckCircle2 className="h-5 w-5" aria-hidden />
-                  ) : step.hasError ? (
-                    <AlertCircle className="h-5 w-5" aria-hidden />
-                  ) : (
-                    <span>{index + 1}</span>
-                  )}
-                </div>
-                <div className="text-left">
-                  <p className="text-sm font-semibold text-foreground">{step.title}</p>
-                  <p className="text-xs text-muted-foreground">{step.subtitle}</p>
-                </div>
+              )}
+            >
+              {step.isCompleted ? (
+                <CheckCircle2 className="h-5 w-5" aria-hidden />
+              ) : step.hasError ? (
+                <AlertCircle className="h-5 w-5" aria-hidden />
+              ) : (
+                <span>{index + 1}</span>
+              )}
+            </div>
+            <div className="text-left">
+              <p className="text-sm font-semibold text-foreground">{step.title}</p>
+              <p className="text-xs text-muted-foreground">{step.subtitle}</p>
+            </div>
               </button>
-              {index < steps.length - 1 && <div className="ml-2 hidden h-px flex-1 bg-border sm:block" />}
-            </li>
+            {index < steps.length - 1 && <div className="ml-2 hidden h-px flex-1 bg-border sm:block" />}
+          </li>
           );
         })}
       </ol>
@@ -1592,7 +1584,7 @@ type InteractivePreviewProps = {
 };
 
 const InteractivePreview = ({ votingMethod, options }: InteractivePreviewProps) => {
-  const [rankedOrder, setRankedOrder] = React.useState<string[]>(() => 
+  const [rankedOrder, setRankedOrder] = React.useState<string[]>(() =>
     options.map((_, index) => `option-${index}`)
   );
   const [draggedIndex, setDraggedIndex] = React.useState<number | null>(null);
@@ -1622,16 +1614,16 @@ const InteractivePreview = ({ votingMethod, options }: InteractivePreviewProps) 
   const handleDrop = (e: React.DragEvent, dropIndex: number) => {
     e.preventDefault();
     e.currentTarget.classList.remove('opacity-50');
-    
+
     if (draggedIndex === null) return;
-    
+
     const newOrder = [...rankedOrder];
     const draggedItem = newOrder[draggedIndex];
     if (!draggedItem) return;
-    
+
     newOrder.splice(draggedIndex, 1);
     newOrder.splice(dropIndex, 0, draggedItem);
-    
+
     setRankedOrder(newOrder);
     setDraggedIndex(null);
   };
@@ -1654,7 +1646,7 @@ const InteractivePreview = ({ votingMethod, options }: InteractivePreviewProps) 
             const optionIndex = parseInt(orderKey.replace('option-', ''), 10);
             const option = options[optionIndex];
             if (optionIndex < 0 || optionIndex >= options.length || !option) return null;
-            
+
             return (
               <div
                 key={`preview-ranked-${orderKey}`}
@@ -1816,20 +1808,20 @@ const SettingToggle = ({ id, label, description, checked, onCheckedChange }: Set
       <div className="space-y-1 flex-1">
         <Label htmlFor={id} className="font-semibold text-sm cursor-pointer">
           {displayLabel}
-        </Label>
+      </Label>
         {displayDescription && (
           <p id={`${id}-description`} className="text-xs text-muted-foreground mt-1 leading-relaxed">
             {displayDescription}
-          </p>
+      </p>
         )}
-      </div>
-      <Switch
-        id={id}
-        checked={checked}
-        onCheckedChange={onCheckedChange}
-        aria-describedby={displayDescription ? `${id}-description` : undefined}
-        className="shrink-0"
-      />
     </div>
-  );
+    <Switch
+      id={id}
+      checked={checked}
+      onCheckedChange={onCheckedChange}
+      aria-describedby={displayDescription ? `${id}-description` : undefined}
+      className="shrink-0"
+    />
+  </div>
+);
 };
