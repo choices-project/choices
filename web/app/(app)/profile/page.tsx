@@ -214,7 +214,7 @@ function ProfilePageContent() {
   if (isAuthenticated && !profileLoading && !profile && !profileError) {
     return (
       <ErrorBoundary>
-        <div className="container mx-auto px-4 py-8">
+        <main id="main-content" role="main" className="container mx-auto px-4 py-8">
           <div className="max-w-2xl mx-auto">
             <Card>
               <CardHeader className="text-center">
@@ -251,7 +251,7 @@ function ProfilePageContent() {
               </CardContent>
             </Card>
           </div>
-        </div>
+        </main>
       </ErrorBoundary>
     );
   }
@@ -355,7 +355,7 @@ function ProfilePageContent() {
   return (
     <AuthGuard redirectTo="/auth">
       <ErrorBoundary>
-      <div className="container mx-auto px-4 py-8">
+      <main id="main-content" role="main" className="container mx-auto px-4 py-8">
       <div className="max-w-4xl mx-auto">
         {/* Profile Header */}
         <Card className="mb-8">
@@ -527,7 +527,7 @@ function ProfilePageContent() {
           </CardContent>
         </Card>
       </div>
-      </div>
+      </main>
       </ErrorBoundary>
     </AuthGuard>
   );

@@ -133,7 +133,7 @@ export default function FeedContent() {
           </div>
         }
       >
-        <div className="container mx-auto px-4 py-8 bg-white dark:bg-gray-900 min-h-screen">
+        <main id="main-content" role="main" className="container mx-auto px-4 py-8 bg-white dark:bg-gray-900 min-h-screen">
           <Suspense fallback={loadingFallback}>
             <UnifiedFeedRefactored
               {...{
@@ -144,7 +144,7 @@ export default function FeedContent() {
               }}
             />
           </Suspense>
-        </div>
+        </main>
       </ErrorBoundary>
     </AuthGuard>
   );
