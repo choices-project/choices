@@ -536,34 +536,55 @@ export default function CreatePollPage() {
         return (
           <div className="space-y-6">
             <fieldset>
-              <Label>{t('polls.create.wizard.options.label')}</Label>
-              <p className="mt-1 text-xs text-muted-foreground">
-                {t('polls.create.wizard.options.hint')}
+              <legend className="text-base font-semibold mb-2">
+                {t('polls.create.wizard.options.label') || 'Poll Options'}
+              </legend>
+              <p className="mt-1 text-sm text-muted-foreground mb-4">
+                {t('polls.create.wizard.options.hint') || 'Provide clear, distinct choices for voters to select from.'}
               </p>
               {errors.options && (
-                <p className="mt-2 text-sm text-destructive" id="error-options">
-                  {errors.options}
-                </p>
+                <Alert variant="destructive" className="mt-2 mb-4">
+                  <AlertCircle className="h-4 w-4" />
+                  <AlertDescription id="error-options">{errors.options}</AlertDescription>
+                </Alert>
               )}
 
               <div className="mt-4 space-y-3" role="group" aria-labelledby="poll-options">
                 {data.options.map((option, index) => (
-                  <div key={`option-${index}`} className="flex items-start gap-2">
-                    <Input
-                      value={option}
-                      onChange={(event) => handleOptionChange(index, event.target.value)}
-                      placeholder={t('polls.create.wizard.options.optionPlaceholder', { number: index + 1 })}
-                      aria-label={t('polls.create.wizard.options.optionAria', { number: index + 1 })}
-                      aria-invalid={Boolean(errors[`option-${index}`])}
-                    />
+                  <div key={`option-${index}`} className="flex items-start gap-3">
+                    <div className="flex-shrink-0 pt-2">
+                      <span className="inline-flex items-center justify-center w-6 h-6 rounded-full bg-primary/10 text-primary text-sm font-semibold">
+                        {index + 1}
+                      </span>
+                    </div>
+                    <div className="flex-1">
+                      <Label htmlFor={`option-${index}`} className="sr-only">
+                        Option {index + 1}
+                      </Label>
+                      <Input
+                        id={`option-${index}`}
+                        value={option}
+                        onChange={(event) => handleOptionChange(index, event.target.value)}
+                        placeholder={`Option ${index + 1} (e.g., "Yes", "No", "Maybe")`}
+                        aria-label={`Poll option ${index + 1}`}
+                        aria-invalid={Boolean(errors[`option-${index}`])}
+                        className="w-full"
+                        maxLength={200}
+                      />
+                      {errors[`option-${index}`] && (
+                        <p className="mt-1 text-sm text-destructive" role="alert">
+                          {errors[`option-${index}`]}
+                        </p>
+                      )}
+                    </div>
                     {data.options.length > 2 && (
                       <Button
                         type="button"
                         size="icon"
                         variant="ghost"
-                        className="mt-1 text-muted-foreground hover:text-destructive"
+                        className="mt-1 text-muted-foreground hover:text-destructive shrink-0"
                         onClick={() => handleRemoveOption(index)}
-                        aria-label={t('polls.create.wizard.options.removeAria', { number: index + 1 })}
+                        aria-label={`Remove option ${index + 1}`}
                       >
                         <X className="h-4 w-4" />
                       </Button>
@@ -573,22 +594,22 @@ export default function CreatePollPage() {
               </div>
 
               <div className="mt-4 flex items-center justify-between text-xs text-muted-foreground">
-                <span>{t('polls.create.wizard.options.maxHint', { max: MAX_OPTIONS })}</span>
-                <span>
+                <span>{t('polls.create.wizard.options.maxHint', { max: MAX_OPTIONS }) || `You can add up to ${MAX_OPTIONS} options.`}</span>
+                <span className="font-medium">
                   {data.options.length}/{MAX_OPTIONS}
                 </span>
               </div>
 
-                <Button
-                  type="button"
-                  variant="outline"
-                  className="mt-4"
+              <Button
+                type="button"
+                variant="outline"
+                className="mt-4"
                 onClick={handleAddOption}
                 disabled={data.options.length >= MAX_OPTIONS}
-                >
+              >
                 <Plus className="mr-2 h-4 w-4" />
-                {t('polls.create.wizard.options.add')}
-                </Button>
+                {t('polls.create.wizard.options.add') || 'Add Option'}
+              </Button>
             </fieldset>
           </div>
         )
@@ -596,6 +617,64 @@ export default function CreatePollPage() {
       case "audience":
         return (
           <div className="space-y-8">
+            {/* Voting & Privacy Settings Section */}
+            <div className="space-y-6">
+              <div>
+                <h3 className="text-base font-semibold mb-1 flex items-center gap-2">
+                  <Lightbulb className="h-4 w-4 text-primary" />
+                  Voting & privacy settings
+                </h3>
+                <p className="text-sm text-muted-foreground mb-4">
+                  Decide how people participate and what they can see.
+                </p>
+              </div>
+
+              <fieldset className="grid gap-6 md:grid-cols-2">
+                <div>
+                  <Label htmlFor="privacy-level">{t('polls.create.wizard.audience.privacy.label') || 'Privacy level'}</Label>
+                  <select
+                    id="privacy-level"
+                    className="mt-2 w-full rounded-md border px-3 py-2 text-sm bg-background"
+                    value={data.settings.privacyLevel}
+                    onChange={(event) => handleChangePrivacy(event.target.value)}
+                    aria-describedby="privacy-help"
+                  >
+                    {Object.entries(PRIVACY_LABELS).map(([value, label]) => (
+                      <option key={value} value={value}>
+                        {label}
+                      </option>
+                    ))}
+                  </select>
+                  <p id="privacy-help" className="mt-2 text-xs text-muted-foreground">
+                    {t('polls.create.wizard.audience.privacy.hint') || 'Control who can find and access your poll.'}
+                  </p>
+                </div>
+
+                <div>
+                  <Label htmlFor="voting-method">{t('polls.create.wizard.audience.votingMethod.label') || 'Voting method'}</Label>
+                  <select
+                    id="voting-method"
+                    className="mt-2 w-full rounded-md border px-3 py-2 text-sm bg-background"
+                    value={data.settings.votingMethod}
+                    onChange={(event) =>
+                      actions.updateSettings({ votingMethod: event.target.value as typeof data.settings.votingMethod })
+                    }
+                    aria-describedby="voting-method-help"
+                  >
+                    {Object.entries(VOTING_METHOD_LABELS).map(([value, label]) => (
+                      <option key={value} value={value}>
+                        {label}
+                      </option>
+                    ))}
+                  </select>
+                  <p id="voting-method-help" className="mt-2 text-xs text-muted-foreground">
+                    {t('polls.create.wizard.audience.votingMethod.hint') || 'Choose how votes are counted and ranked.'}
+                  </p>
+                </div>
+              </fieldset>
+            </div>
+
+            {/* Category Section */}
             <fieldset>
               <Label>{t('polls.create.wizard.audience.category.label')}</Label>
               <p className="mt-1 text-xs text-muted-foreground">{t('polls.create.wizard.audience.category.hint')}</p>
@@ -719,49 +798,6 @@ export default function CreatePollPage() {
               />
             </fieldset>
 
-            <fieldset className="grid gap-6 md:grid-cols-2">
-                  <div>
-                <Label htmlFor="privacy-level">{t('polls.create.wizard.audience.privacy.label')}</Label>
-                    <select
-                  id="privacy-level"
-                  className="mt-2 w-full rounded-md border px-3 py-2 text-sm"
-                      value={data.settings.privacyLevel}
-                  onChange={(event) => handleChangePrivacy(event.target.value)}
-                  aria-describedby="privacy-help"
-                >
-                  {Object.entries(PRIVACY_LABELS).map(([value, label]) => (
-                    <option key={value} value={value}>
-                      {label}
-                    </option>
-                  ))}
-                    </select>
-                <p id="privacy-help" className="mt-2 text-xs text-muted-foreground">
-                  {t('polls.create.wizard.audience.privacy.hint')}
-                </p>
-                  </div>
-
-                  <div>
-                <Label htmlFor="voting-method">{t('polls.create.wizard.audience.votingMethod.label')}</Label>
-                    <select
-                  id="voting-method"
-                  className="mt-2 w-full rounded-md border px-3 py-2 text-sm"
-                      value={data.settings.votingMethod}
-                  onChange={(event) =>
-                    actions.updateSettings({ votingMethod: event.target.value as typeof data.settings.votingMethod })
-                  }
-                  aria-describedby="voting-method-help"
-                >
-                  {Object.entries(VOTING_METHOD_LABELS).map(([value, label]) => (
-                    <option key={value} value={value}>
-                      {label}
-                    </option>
-                  ))}
-                    </select>
-                <p id="voting-method-help" className="mt-2 text-xs text-muted-foreground">
-                  {t('polls.create.wizard.audience.votingMethod.hint')}
-                </p>
-                  </div>
-            </fieldset>
           </div>
         )
 
@@ -769,33 +805,46 @@ export default function CreatePollPage() {
       default:
         return (
           <div className="space-y-6">
+            {/* Preview Section */}
+            <div className="mb-6">
+              <h3 className="text-base font-semibold mb-1">Preview</h3>
+              <p className="text-sm text-muted-foreground mb-4">
+                This is what voters will see.
+              </p>
+            </div>
+
             <Card>
               <CardHeader>
-                <CardTitle className="text-lg">{t('polls.create.wizard.review.title')}</CardTitle>
-                <CardDescription>{t('polls.create.wizard.review.description')}</CardDescription>
+                <CardTitle className="text-lg">{t('polls.create.wizard.review.title') || 'Review Your Poll'}</CardTitle>
+                <CardDescription>{t('polls.create.wizard.review.description') || 'Double-check everything before publishing.'}</CardDescription>
               </CardHeader>
               <CardContent className="space-y-5">
                 <section>
-                  <h3 className="text-lg font-semibold">{data.title || t('polls.create.wizard.review.untitled')}</h3>
+                  <h3 className="text-lg font-semibold">{data.title || t('polls.create.wizard.review.untitled') || 'Untitled Poll'}</h3>
                   <p className="mt-1 text-sm text-muted-foreground">
-                    {data.description || t('polls.create.wizard.review.noDescription')}
+                    {data.description || t('polls.create.wizard.review.noDescription') || 'No description provided.'}
                   </p>
                 </section>
 
                   <Separator />
 
                 <section>
-                  <h4 className="text-sm font-semibold">{t('polls.create.wizard.review.optionsHeading')}</h4>
-                  <ul className="mt-2 space-y-2">
+                  <h4 className="text-sm font-semibold mb-3">{t('polls.create.wizard.review.optionsHeading') || 'Poll Options'}</h4>
+                  <div className="space-y-2">
                     {data.options
                       .filter((option) => option.trim().length > 0)
                       .map((option, index) => (
-                        <li key={`preview-option-${index}`} className="flex items-center gap-2 text-sm">
-                          <span className="flex h-4 w-4 items-center justify-center rounded-full border" aria-hidden />
-                          <span>{option}</span>
-                        </li>
+                        <div key={`preview-option-${index}`} className="flex items-center gap-3 p-3 rounded-lg border bg-muted/30">
+                          <span className="flex h-6 w-6 items-center justify-center rounded-full border-2 border-primary text-primary text-sm font-semibold shrink-0" aria-hidden>
+                            {index + 1}
+                          </span>
+                          <span className="text-sm font-medium">{option || `Option ${index + 1}`}</span>
+                        </div>
                       ))}
-                  </ul>
+                    {data.options.filter((option) => option.trim().length > 0).length === 0 && (
+                      <p className="text-sm text-muted-foreground italic">No options added yet.</p>
+                    )}
+                  </div>
                 </section>
 
                   <Separator />
