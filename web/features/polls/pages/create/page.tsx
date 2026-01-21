@@ -343,107 +343,107 @@ export default function CreatePollPage() {
       const syncTitle = () => {
         const currentInput = getTitleInput();
         if (!currentInput) return;
+        
+        // CRITICAL: Only sync if input is NOT focused (programmatic changes from E2E tests)
+        // If user is actively typing, React's controlled input handles it naturally
+        if (document.activeElement === currentInput) {
+          return;
+        }
+        
         const currentValue = currentInput.value;
         const syncedValue = currentInput.getAttribute('data-synced-value');
         // Sync if value exists and is different from what we last synced
         // Also sync if value is empty but we had a value before (reset case)
-        if (currentValue !== syncedValue) {
+        if (currentValue !== syncedValue && data.title !== currentValue) {
           currentInput.setAttribute('data-synced-value', currentValue || '');
 
           // CRITICAL FIX: Update React state FIRST, then dispatch events in next tick
           // This ensures React's controlled input system recognizes the change
-          if (data.title !== currentValue) {
-            // Update state immediately - React will re-render
-            handleDataUpdate({ title: currentValue });
+          // Update state immediately - React will re-render
+          handleDataUpdate({ title: currentValue });
 
-            // Use setTimeout to dispatch events after state update is queued
-            // This ensures React processes the state change before events fire
-            setTimeout(() => {
-              // Create proper InputEvent with correct properties for React
-              const inputEvent = new InputEvent('input', {
-                bubbles: true,
-                cancelable: true,
-                data: currentValue,
-                inputType: 'insertText',
-                isComposing: false
-              });
+          // Use setTimeout to dispatch events after state update is queued
+          // This ensures React processes the state change before events fire
+          setTimeout(() => {
+            // Create proper InputEvent with correct properties for React
+            const inputEvent = new InputEvent('input', {
+              bubbles: true,
+              cancelable: true,
+              data: currentValue,
+              inputType: 'insertText',
+              isComposing: false
+            });
 
-              // Also dispatch change event for form validation
-              const changeEvent = new Event('change', {
-                bubbles: true,
-                cancelable: true
-              });
+            // Also dispatch change event for form validation
+            const changeEvent = new Event('change', {
+              bubbles: true,
+              cancelable: true
+            });
 
-              // Dispatch events in correct order
-              currentInput.dispatchEvent(inputEvent);
-              currentInput.dispatchEvent(changeEvent);
-
-              // Trigger focus/blur cycle to ensure validation runs
-              currentInput.focus();
-              setTimeout(() => currentInput.blur(), 10);
-            }, 0);
-          }
+            // Dispatch events in correct order
+            currentInput.dispatchEvent(inputEvent);
+            currentInput.dispatchEvent(changeEvent);
+          }, 0);
         }
       };
 
       const syncDescription = () => {
         const currentInput = getDescriptionInput();
         if (!currentInput) return;
+        
+        // CRITICAL: Only sync if input is NOT focused (programmatic changes from E2E tests)
+        // If user is actively typing, React's controlled input handles it naturally
+        if (document.activeElement === currentInput) {
+          return;
+        }
+        
         const currentValue = currentInput.value;
         const syncedValue = currentInput.getAttribute('data-synced-value');
         // Sync if value exists and is different from what we last synced
         // Also sync if value is empty but we had a value before (reset case)
-        if (currentValue !== syncedValue) {
+        if (currentValue !== syncedValue && data.description !== currentValue) {
           currentInput.setAttribute('data-synced-value', currentValue || '');
 
           // CRITICAL FIX: Update React state FIRST, then dispatch events in next tick
-          if (data.description !== currentValue) {
-            // Update state immediately - React will re-render
-            handleDataUpdate({ description: currentValue });
+          // Update state immediately - React will re-render
+          handleDataUpdate({ description: currentValue });
 
-            // Use setTimeout to dispatch events after state update is queued
-            setTimeout(() => {
-              // Create proper InputEvent with correct properties for React
-              const inputEvent = new InputEvent('input', {
-                bubbles: true,
-                cancelable: true,
-                data: currentValue,
-                inputType: 'insertText',
-                isComposing: false
-              });
+          // Use setTimeout to dispatch events after state update is queued
+          setTimeout(() => {
+            // Create proper InputEvent with correct properties for React
+            const inputEvent = new InputEvent('input', {
+              bubbles: true,
+              cancelable: true,
+              data: currentValue,
+              inputType: 'insertText',
+              isComposing: false
+            });
 
-              // Also dispatch change event for form validation
-              const changeEvent = new Event('change', {
-                bubbles: true,
-                cancelable: true
-              });
+            // Also dispatch change event for form validation
+            const changeEvent = new Event('change', {
+              bubbles: true,
+              cancelable: true
+            });
 
-              // Dispatch events in correct order
-              currentInput.dispatchEvent(inputEvent);
-              currentInput.dispatchEvent(changeEvent);
-
-              // Trigger focus/blur cycle to ensure validation runs
-              currentInput.focus();
-              setTimeout(() => currentInput.blur(), 10);
-            }, 0);
-          }
+            // Dispatch events in correct order
+            currentInput.dispatchEvent(inputEvent);
+            currentInput.dispatchEvent(changeEvent);
+          }, 0);
         }
       };
 
-      // Sync on input events (for E2E tests that use page.fill())
-      titleInput?.addEventListener('input', syncTitle);
-      descriptionInput?.addEventListener('input', syncDescription);
-
-      // Also listen for focus/blur to catch programmatic fills
-      titleInput?.addEventListener('focus', syncTitle);
-      descriptionInput?.addEventListener('focus', syncDescription);
+      // Only sync on blur events (when user finishes typing) and periodically for E2E tests
+      // Don't sync on input/focus - let React's controlled inputs handle normal typing
+      titleInput?.addEventListener('blur', syncTitle);
+      descriptionInput?.addEventListener('blur', syncDescription);
 
       // Also sync periodically to catch any direct DOM manipulation (E2E tests)
+      // Only sync when inputs are NOT focused to avoid interfering with user typing
       // Keep syncing for 30 seconds to handle slower test environments
       const interval = setInterval(() => {
         syncTitle();
         syncDescription();
-      }, 100); // Check every 100ms
+      }, 500); // Check every 500ms (less frequent to avoid interference)
 
       // Extended to 30 seconds to catch late DOM updates in production/test environments
       const timeout = setTimeout(() => clearInterval(interval), 30000);
@@ -452,12 +452,10 @@ export default function CreatePollPage() {
         const currentTitleInput = getTitleInput();
         const currentDescriptionInput = getDescriptionInput();
         if (currentTitleInput) {
-          currentTitleInput.removeEventListener('input', syncTitle);
-          currentTitleInput.removeEventListener('focus', syncTitle);
+          currentTitleInput.removeEventListener('blur', syncTitle);
         }
         if (currentDescriptionInput) {
-          currentDescriptionInput.removeEventListener('input', syncDescription);
-          currentDescriptionInput.removeEventListener('focus', syncDescription);
+          currentDescriptionInput.removeEventListener('blur', syncDescription);
         }
         clearInterval(interval);
         clearTimeout(timeout);
@@ -500,57 +498,58 @@ export default function CreatePollPage() {
           const optionInput = getOptionInput(index);
           if (!optionInput) return;
 
+          // CRITICAL: Only sync if input is NOT focused (programmatic changes from E2E tests)
+          // If user is actively typing, React's controlled input handles it naturally
+          if (document.activeElement === optionInput) {
+            return;
+          }
+
           const currentValue = optionInput.value;
           const syncedValue = optionInput.getAttribute('data-synced-value');
           // Sync if value exists and is different from what we last synced
-          if (currentValue !== syncedValue) {
+          if (currentValue !== syncedValue && currentOption !== currentValue) {
             optionInput.setAttribute('data-synced-value', currentValue || '');
 
             // CRITICAL FIX: Update React state FIRST, then dispatch events in next tick
-            if (currentOption !== currentValue) {
-              // Update state immediately - React will re-render
-              handleOptionChange(index, currentValue);
+            // Update state immediately - React will re-render
+            handleOptionChange(index, currentValue);
 
-              // Use setTimeout to dispatch events after state update is queued
-              setTimeout(() => {
-                // Create proper InputEvent with correct properties for React
-                const inputEvent = new InputEvent('input', {
-                  bubbles: true,
-                  cancelable: true,
-                  data: currentValue,
-                  inputType: 'insertText',
-                  isComposing: false
-                });
+            // Use setTimeout to dispatch events after state update is queued
+            setTimeout(() => {
+              // Create proper InputEvent with correct properties for React
+              const inputEvent = new InputEvent('input', {
+                bubbles: true,
+                cancelable: true,
+                data: currentValue,
+                inputType: 'insertText',
+                isComposing: false
+              });
 
-                // Also dispatch change event for form validation
-                const changeEvent = new Event('change', {
-                  bubbles: true,
-                  cancelable: true
-                });
+              // Also dispatch change event for form validation
+              const changeEvent = new Event('change', {
+                bubbles: true,
+                cancelable: true
+              });
 
-                // Dispatch events in correct order
-                optionInput.dispatchEvent(inputEvent);
-                optionInput.dispatchEvent(changeEvent);
-
-                // Trigger focus/blur cycle to ensure validation runs
-                optionInput.focus();
-                setTimeout(() => optionInput.blur(), 10);
-              }, 0);
-            }
+              // Dispatch events in correct order
+              optionInput.dispatchEvent(inputEvent);
+              optionInput.dispatchEvent(changeEvent);
+            }, 0);
           }
         });
       };
 
-      // Sync on input events for all option inputs
+      // Only sync on blur events (when user finishes typing) for all option inputs
+      // Don't sync on input/focus - let React's controlled inputs handle normal typing
       data.options.forEach((_, index) => {
         const optionInput = getOptionInput(index);
-        optionInput?.addEventListener('input', syncOptions);
-        optionInput?.addEventListener('focus', syncOptions);
+        optionInput?.addEventListener('blur', syncOptions);
       });
 
       // Also sync periodically to catch any direct DOM manipulation (E2E tests)
+      // Only sync when inputs are NOT focused to avoid interfering with user typing
       // Keep syncing for 30 seconds to handle slower test environments
-      const interval = setInterval(syncOptions, 100); // Check every 100ms
+      const interval = setInterval(syncOptions, 500); // Check every 500ms (less frequent to avoid interference)
 
       // Extended to 30 seconds to catch late DOM updates in production/test environments
       const timeout = setTimeout(() => clearInterval(interval), 30000);
@@ -558,8 +557,7 @@ export default function CreatePollPage() {
       cleanup = () => {
         data.options.forEach((_, index) => {
           const optionInput = getOptionInput(index);
-          optionInput?.removeEventListener('input', syncOptions);
-          optionInput?.removeEventListener('focus', syncOptions);
+          optionInput?.removeEventListener('blur', syncOptions);
         });
         clearInterval(interval);
         clearTimeout(timeout);
