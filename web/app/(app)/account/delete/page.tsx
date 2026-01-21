@@ -317,7 +317,7 @@ export default function AccountDeletionPage() {
           {/* Main Content */}
           <div className="lg:col-span-2 space-y-6">
             {/* Warning Alert */}
-            <Alert className="border-red-200 bg-red-50">
+            <Alert className="border-red-200 bg-red-50" role="alert" data-testid="account-delete-warning">
               <AlertTriangle className="h-4 w-4 text-red-600" />
               <AlertDescription className="text-red-800">
                 <strong>Warning:</strong> This action is irreversible. Once you delete your account,

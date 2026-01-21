@@ -171,10 +171,14 @@ export default async function PollPage({ params }: { params: { id: string } }) {
       },
     });
 
-    if (!res.ok) {
-      logger.error('Poll API returned error', { status: res.status, pollId: id });
-      throw new Error(`poll load ${res.status}`);
-    }
+      if (!res.ok) {
+        logger.error('Poll API returned error', { status: res.status, pollId: id });
+        // For 404, provide a more specific error message
+        if (res.status === 404) {
+          throw new Error(`Poll not found: ${id}`);
+        }
+        throw new Error(`poll load ${res.status}`);
+      }
 
     const payload = await res.json();
     if (!payload?.success || !payload?.data) {
@@ -199,12 +203,23 @@ export default async function PollPage({ params }: { params: { id: string } }) {
     );
   } catch (error) {
     logger.error('Failed to render poll page', { error, pollId: id });
+    const isNotFound = error instanceof Error && (
+      error.message.includes('404') || 
+      error.message.includes('not found') ||
+      error.message.includes('Poll not found')
+    );
+    
     return (
-      <div className="flex min-h-screen items-center justify-center px-4">
+      <div className="flex min-h-screen items-center justify-center px-4" data-testid="poll-error">
         <div className="text-center space-y-4 max-w-md">
-          <h1 className="text-2xl font-bold text-gray-900 dark:text-gray-100">Unable to load poll</h1>
-          <p className="text-gray-600 dark:text-gray-400">
-            We couldn&apos;t find or load this poll. It may have been deleted or you may not have permission to view it.
+          <h1 className="text-2xl font-bold text-gray-900 dark:text-gray-100">
+            {isNotFound ? 'Poll Not Found' : 'Unable to load poll'}
+          </h1>
+          <p className="text-gray-600 dark:text-gray-400" role="alert">
+            {isNotFound 
+              ? `The poll you're looking for doesn't exist or has been deleted.`
+              : `We couldn't find or load this poll. It may have been deleted or you may not have permission to view it.`
+            }
           </p>
           <a
             href="/polls"
