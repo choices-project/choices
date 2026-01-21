@@ -303,16 +303,118 @@ export default function CreatePollPage() {
     router.push('/polls/create')
   }
 
-  const handleDataUpdate = (update: Partial<typeof data>) => {
+  const handleDataUpdate = useCallback((update: Partial<typeof data>) => {
     actions.updateData(update)
     Object.keys(update).forEach((field) => actions.clearFieldError(field))
-  }
+  }, [actions])
 
-  const handleOptionChange = (index: number, value: string) => {
+  const handleOptionChange = useCallback((index: number, value: string) => {
     actions.updateOption(index, value)
     actions.clearFieldError(`option-${index}`)
     actions.clearFieldError("options")
-  }
+  }, [actions])
+
+  // Sync DOM values to React state for browser automation compatibility (step 1: details)
+  useEffect(() => {
+    if (typeof window === 'undefined' || currentStep !== 0) return;
+
+    const titleInput = document.getElementById('title') as HTMLInputElement | null;
+    const descriptionInput = document.getElementById('description') as HTMLTextAreaElement | null;
+
+    if (!titleInput && !descriptionInput) return;
+
+    const syncInputs = () => {
+      if (titleInput) {
+        const domValue = titleInput.value;
+        if (domValue !== data.title) {
+          // Update React state first
+          handleDataUpdate({ title: domValue });
+          // Then trigger events in next tick for React to process
+          setTimeout(() => {
+            const inputEvent = new InputEvent('input', {
+              bubbles: true,
+              cancelable: true,
+              inputType: 'insertText',
+              isComposing: false
+            });
+            const changeEvent = new Event('change', { bubbles: true });
+            titleInput.dispatchEvent(inputEvent);
+            titleInput.dispatchEvent(changeEvent);
+          }, 0);
+        }
+      }
+      if (descriptionInput) {
+        const domValue = descriptionInput.value;
+        if (domValue !== data.description) {
+          // Update React state first
+          handleDataUpdate({ description: domValue });
+          // Then trigger events in next tick
+          setTimeout(() => {
+            const inputEvent = new InputEvent('input', {
+              bubbles: true,
+              cancelable: true,
+              inputType: 'insertText',
+              isComposing: false
+            });
+            const changeEvent = new Event('change', { bubbles: true });
+            descriptionInput.dispatchEvent(inputEvent);
+            descriptionInput.dispatchEvent(changeEvent);
+          }, 0);
+        }
+      }
+    };
+
+    // Sync on input events
+    titleInput?.addEventListener('input', syncInputs);
+    descriptionInput?.addEventListener('input', syncInputs);
+
+    // Also sync periodically for E2E tests
+    const interval = setInterval(syncInputs, 100);
+    const timeout = setTimeout(() => clearInterval(interval), 5000);
+
+    return () => {
+      titleInput?.removeEventListener('input', syncInputs);
+      descriptionInput?.removeEventListener('input', syncInputs);
+      clearInterval(interval);
+      clearTimeout(timeout);
+    };
+  }, [currentStep, data.title, data.description, handleDataUpdate]);
+
+  // Sync DOM values to React state for browser automation compatibility (step 2: options)
+  useEffect(() => {
+    if (typeof window === 'undefined' || currentStep !== 1) return;
+
+    const syncOptions = () => {
+      data.options.forEach((_, index) => {
+        const optionInput = document.getElementById(`option-${index}`) as HTMLInputElement | null;
+        if (optionInput) {
+          const domValue = optionInput.value;
+          if (domValue !== data.options[index]) {
+            handleOptionChange(index, domValue);
+          }
+        }
+      });
+    };
+
+    // Sync on input events for all option inputs
+    data.options.forEach((_, index) => {
+      const optionInput = document.getElementById(`option-${index}`) as HTMLInputElement | null;
+      optionInput?.addEventListener('input', syncOptions);
+    });
+
+    // Also sync periodically for E2E tests
+    const interval = setInterval(syncOptions, 100);
+    const timeout = setTimeout(() => clearInterval(interval), 5000);
+
+    return () => {
+      data.options.forEach((_, index) => {
+        const optionInput = document.getElementById(`option-${index}`) as HTMLInputElement | null;
+        optionInput?.removeEventListener('input', syncOptions);
+      });
+      clearInterval(interval);
+      clearTimeout(timeout);
+    };
+  }, [currentStep, data.options, handleOptionChange]);
 
   const handleAddOption = () => {
     if (data.options.length < MAX_OPTIONS) {
@@ -524,8 +626,15 @@ export default function CreatePollPage() {
               })()}</Label>
               <Textarea
                  id="description"
-                 value={data.description}
+                value={data.description}
                 onChange={(event) => handleDataUpdate({ description: event.target.value })}
+                onInput={(event) => {
+                  // Sync DOM value to React state for browser automation compatibility
+                  const value = (event.target as HTMLTextAreaElement).value;
+                  if (value !== data.description) {
+                    handleDataUpdate({ description: value });
+                  }
+                }}
                 placeholder={(() => {
                   const placeholder = t('polls.create.wizard.details.description.placeholder');
                   return placeholder && placeholder !== 'Placeholder' && placeholder !== 'polls.create.wizard.details.description.placeholder' ? placeholder : 'Explain why this poll matters and what voters should consider...';
@@ -594,6 +703,13 @@ export default function CreatePollPage() {
                         id={`option-${index}`}
                         value={option}
                         onChange={(event) => handleOptionChange(index, event.target.value)}
+                        onInput={(event) => {
+                          // Sync DOM value to React state for browser automation compatibility
+                          const value = (event.target as HTMLInputElement).value;
+                          if (value !== option) {
+                            handleOptionChange(index, value);
+                          }
+                        }}
                         placeholder={`Option ${index + 1} (e.g., "Yes", "No", "Maybe")`}
                         aria-label={`Poll option ${index + 1}`}
                         aria-invalid={Boolean(errors[`option-${index}`])}
