@@ -343,13 +343,13 @@ export default function CreatePollPage() {
       const syncTitle = () => {
         const currentInput = getTitleInput();
         if (!currentInput) return;
-        
+
         // CRITICAL: Only sync if input is NOT focused (programmatic changes from E2E tests)
         // If user is actively typing, React's controlled input handles it naturally
         if (document.activeElement === currentInput) {
           return;
         }
-        
+
         const currentValue = currentInput.value;
         const syncedValue = currentInput.getAttribute('data-synced-value');
         // Sync if value exists and is different from what we last synced
@@ -390,13 +390,13 @@ export default function CreatePollPage() {
       const syncDescription = () => {
         const currentInput = getDescriptionInput();
         if (!currentInput) return;
-        
+
         // CRITICAL: Only sync if input is NOT focused (programmatic changes from E2E tests)
         // If user is actively typing, React's controlled input handles it naturally
         if (document.activeElement === currentInput) {
           return;
         }
-        
+
         const currentValue = currentInput.value;
         const syncedValue = currentInput.getAttribute('data-synced-value');
         // Sync if value exists and is different from what we last synced
@@ -948,8 +948,8 @@ export default function CreatePollPage() {
                       </option>
                     ))}
                   </select>
-                  <p id="privacy-help" className="mt-2 text-xs text-muted-foreground">
-                    {safeT('polls.create.wizard.audience.privacy.hint', 'Control who can find and access your poll.')}
+                  <p id="privacy-help" className="mt-2 text-xs text-muted-foreground leading-relaxed">
+                    {safeT('polls.create.wizard.audience.privacy.hint', 'Control who can find and access your poll. Public polls appear in search and listings, Private polls require a direct link, and Unlisted polls are hidden from search but accessible via link.')}
                   </p>
                 </div>
 
@@ -970,8 +970,8 @@ export default function CreatePollPage() {
                       </option>
                     ))}
                   </select>
-                  <p id="voting-method-help" className="mt-2 text-xs text-muted-foreground">
-                    {safeT('polls.create.wizard.audience.votingMethod.hint', 'Choose how votes are counted and ranked.')}
+                  <p id="voting-method-help" className="mt-2 text-xs text-muted-foreground leading-relaxed">
+                    {safeT('polls.create.wizard.audience.votingMethod.hint', 'Choose how votes are counted and ranked. Single allows one choice, Multiple allows several, Approval lets voters approve multiple options, and Ranked uses instant runoff voting to find majority support.')}
                   </p>
                 </div>
               </fieldset>
@@ -979,33 +979,52 @@ export default function CreatePollPage() {
 
             {/* Category Section */}
             <fieldset>
-              <Label>{safeT('polls.create.wizard.audience.category.label', 'Category')}</Label>
-              <p className="mt-1 text-xs text-muted-foreground">{safeT('polls.create.wizard.audience.category.hint', 'Choose a category to help voters find your poll.')}</p>
+              <Label className="text-base font-semibold">{safeT('polls.create.wizard.audience.category.label', 'Category')}</Label>
+              <p className="mt-1 text-sm text-muted-foreground mb-1">
+                {safeT('polls.create.wizard.audience.category.hint', 'Choose a category to help voters find your poll. Categories help organize polls and make them easier to discover.')}
+              </p>
+              <p className="text-xs text-muted-foreground italic">
+                {safeT('polls.create.wizard.audience.category.subHint', 'Click on a category card below to select it.')}
+              </p>
               {errors.category && (
                 <p className="mt-2 text-sm text-destructive" id="error-category">
                   {errors.category}
                 </p>
               )}
 
-              <div className="mt-4 grid grid-cols-1 gap-3 sm:grid-cols-2">
+              <div className="mt-4 grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
                 {categories.map((category) => {
                   const isSelected = data.category === category.id;
                   return (
                   <button
                     key={category.id}
                     type="button"
-                      onClick={() => handleDataUpdate({ category: category.id })}
-                      className={cn(
-                        "rounded-lg border p-4 text-left transition",
-                        isSelected ? "border-primary bg-primary/5" : "border-border hover:border-primary/60",
-                      )}
-                      aria-pressed={isSelected}
-                    >
-                      <div className="text-2xl" aria-hidden>
+                    onClick={(e) => {
+                      e.preventDefault();
+                      e.stopPropagation();
+                      handleDataUpdate({ category: category.id });
+                    }}
+                    className={cn(
+                      "rounded-lg border-2 p-4 text-left transition-all cursor-pointer",
+                      "hover:shadow-md hover:scale-[1.02] active:scale-[0.98]",
+                      isSelected 
+                        ? "border-primary bg-primary/10 shadow-md ring-2 ring-primary/20" 
+                        : "border-border hover:border-primary/60 bg-card",
+                    )}
+                    aria-pressed={isSelected}
+                    aria-label={`Select ${category.name} category`}
+                  >
+                      <div className="text-2xl mb-2" aria-hidden>
                         {category.icon}
                       </div>
-                      <div className="mt-2 font-medium">{category.name}</div>
-                      <p className="mt-1 text-sm text-muted-foreground">{category.description}</p>
+                      <div className="font-semibold text-base">{category.name}</div>
+                      <p className="mt-1 text-sm text-muted-foreground leading-relaxed">{category.description}</p>
+                      {isSelected && (
+                        <div className="mt-2 flex items-center gap-1 text-primary text-xs font-medium">
+                          <CheckCircle2 className="h-3 w-3" />
+                          Selected
+                        </div>
+                      )}
                   </button>
                   );
                 })}
@@ -1013,8 +1032,13 @@ export default function CreatePollPage() {
             </fieldset>
 
             <fieldset>
-              <Label htmlFor="tags">{safeT('polls.create.wizard.audience.tags.label', 'Tags')}</Label>
-              <p className="mt-1 text-xs text-muted-foreground">{safeT('polls.create.wizard.audience.tags.hint', 'Add tags to help categorize your poll.')}</p>
+              <Label htmlFor="tags" className="text-base font-semibold">{safeT('polls.create.wizard.audience.tags.label', 'Tags')}</Label>
+              <p className="mt-1 text-sm text-muted-foreground mb-1">
+                {safeT('polls.create.wizard.audience.tags.hint', 'Add tags to help categorize your poll. Tags make your poll easier to find and help voters discover polls on similar topics.')}
+              </p>
+              <p className="text-xs text-muted-foreground italic mb-2">
+                {safeT('polls.create.wizard.audience.tags.subHint', 'Type a tag and press Enter or click Add to include it.')}
+              </p>
               {errors.tags && (
                 <p className="mt-2 text-sm text-destructive" id="error-tags">
                   {errors.tags}
@@ -1063,40 +1087,48 @@ export default function CreatePollPage() {
             </fieldset>
 
             <fieldset className="space-y-4">
-              <legend className="text-sm font-medium">{safeT('polls.create.wizard.audience.settings.legend', 'Poll Settings')}</legend>
+              <div className="mb-4">
+                <legend className="text-base font-semibold mb-1 flex items-center gap-2">
+                  <Lightbulb className="h-4 w-4 text-primary" />
+                  {safeT('polls.create.wizard.audience.settings.legend', 'Poll Settings')}
+                </legend>
+                <p className="text-sm text-muted-foreground">
+                  {safeT('polls.create.wizard.audience.settings.description', 'Configure additional options for how your poll works and what voters can do.')}
+                </p>
+              </div>
               <SettingToggle
                 id="allow-multiple-votes"
                 label={safeT('polls.create.wizard.audience.settings.allowMultipleVotes.label', 'Allow multiple votes')}
-                description={safeT('polls.create.wizard.audience.settings.allowMultipleVotes.description', 'Let voters cast multiple votes on this poll.')}
-                      checked={data.settings.allowMultipleVotes}
+                description={safeT('polls.create.wizard.audience.settings.allowMultipleVotes.description', 'Let voters cast multiple votes on this poll. When enabled, voters can select more than one option, which is useful for polls where multiple choices are acceptable.')}
+                checked={data.settings.allowMultipleVotes}
                 onCheckedChange={(checked) => actions.updateSettings({ allowMultipleVotes: checked })}
               />
               <SettingToggle
                 id="allow-anonymous-votes"
                 label={safeT('polls.create.wizard.audience.settings.allowAnonymousVotes.label', 'Allow anonymous votes')}
-                description={safeT('polls.create.wizard.audience.settings.allowAnonymousVotes.description', 'Allow voters to vote without revealing their identity.')}
-                      checked={data.settings.allowAnonymousVotes}
+                description={safeT('polls.create.wizard.audience.settings.allowAnonymousVotes.description', 'Allow voters to vote without revealing their identity. This encourages participation but reduces accountability. Results will not show individual voter information.')}
+                checked={data.settings.allowAnonymousVotes}
                 onCheckedChange={(checked) => actions.updateSettings({ allowAnonymousVotes: checked })}
               />
               <SettingToggle
                 id="require-authentication"
                 label={safeT('polls.create.wizard.audience.settings.requireAuthentication.label', 'Require authentication')}
-                description={safeT('polls.create.wizard.audience.settings.requireAuthentication.description', 'Only authenticated users can vote on this poll.')}
+                description={safeT('polls.create.wizard.audience.settings.requireAuthentication.description', 'Only authenticated users can vote on this poll. This ensures each person can only vote once and helps prevent spam or manipulation.')}
                 checked={data.settings.requireAuthentication}
                 onCheckedChange={(checked) => actions.updateSettings({ requireAuthentication: checked })}
               />
               <SettingToggle
                 id="show-results"
                 label={safeT('polls.create.wizard.audience.settings.showResults.label', 'Show results')}
-                description={safeT('polls.create.wizard.audience.settings.showResults.description', 'Display poll results to voters.')}
-                      checked={data.settings.showResults}
+                description={safeT('polls.create.wizard.audience.settings.showResults.description', 'Display poll results to voters. When enabled, voters can see current vote counts and percentages. You can choose to show results immediately or after voting.')}
+                checked={data.settings.showResults}
                 onCheckedChange={(checked) => actions.updateSettings({ showResults: checked })}
               />
               <SettingToggle
                 id="allow-comments"
                 label={safeT('polls.create.wizard.audience.settings.allowComments.label', 'Allow comments')}
-                description={safeT('polls.create.wizard.audience.settings.allowComments.description', 'Let voters comment on this poll.')}
-                      checked={data.settings.allowComments}
+                description={safeT('polls.create.wizard.audience.settings.allowComments.description', 'Let voters comment on this poll. Comments enable discussion and allow voters to share their reasoning, which can enrich the voting experience and provide context for decisions.')}
+                checked={data.settings.allowComments}
                 onCheckedChange={(checked) => actions.updateSettings({ allowComments: checked })}
               />
             </fieldset>
@@ -1607,13 +1639,13 @@ const SettingToggle = ({ id, label, description, checked, onCheckedChange }: Set
   const displayDescription = description && description !== 'Description' && description !== 'Hint' && !description.includes('polls.create.') ? description : '';
 
   return (
-    <div className="flex items-start justify-between gap-4 rounded-lg border border-border/60 p-4">
-      <div className="space-y-1">
-        <Label htmlFor={id} className="font-medium">
+    <div className="flex items-start justify-between gap-4 rounded-lg border border-border/60 p-4 hover:border-primary/40 transition-colors">
+      <div className="space-y-1 flex-1">
+        <Label htmlFor={id} className="font-semibold text-sm cursor-pointer">
           {displayLabel}
         </Label>
         {displayDescription && (
-          <p id={`${id}-description`} className="text-xs text-muted-foreground">
+          <p id={`${id}-description`} className="text-xs text-muted-foreground mt-1 leading-relaxed">
             {displayDescription}
           </p>
         )}
@@ -1621,8 +1653,9 @@ const SettingToggle = ({ id, label, description, checked, onCheckedChange }: Set
       <Switch
         id={id}
         checked={checked}
-        onChange={(event) => onCheckedChange(event.currentTarget.checked)}
+        onCheckedChange={onCheckedChange}
         aria-describedby={displayDescription ? `${id}-description` : undefined}
+        className="shrink-0"
       />
     </div>
   );
