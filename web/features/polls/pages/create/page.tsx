@@ -70,6 +70,16 @@ export default function CreatePollPage() {
     submit,
   } = usePollCreateController()
 
+  // Helper function to safely get translations with fallback
+  const safeT = useCallback((key: string, fallback: string, params?: Record<string, string | number>): string => {
+    const result = params ? t(key, params) : t(key);
+    // Check if result is the key itself or a generic placeholder
+    if (result === key || result === 'Label' || result === 'Hint' || result === 'Title' || result === 'Subtitle' || result === 'MaxHint' || result.includes('polls.create.')) {
+      return fallback;
+    }
+    return result;
+  }, [t]);
+
   // Handle clickable step navigation
   const handleStepClick = useCallback((stepIndex: number) => {
     if (actions.goToStep && stepIndex >= 0 && stepIndex < POLL_CREATION_STEPS.length) {
@@ -550,16 +560,10 @@ export default function CreatePollPage() {
           <div className="space-y-6">
             <fieldset>
               <legend className="text-base font-semibold mb-2">
-                {(() => {
-                  const label = t('polls.create.wizard.options.label');
-                  return label && label !== 'Label' && label !== 'polls.create.wizard.options.label' ? label : 'Poll Options';
-                })()}
+                {safeT('polls.create.wizard.options.label', 'Poll Options')}
               </legend>
               <p className="mt-1 text-sm text-muted-foreground mb-4">
-                {(() => {
-                  const hint = t('polls.create.wizard.options.hint');
-                  return hint && hint !== 'Hint' && hint !== 'polls.create.wizard.options.hint' ? hint : 'Provide clear, distinct choices for voters to select from.';
-                })()}
+                {safeT('polls.create.wizard.options.hint', 'Provide clear, distinct choices for voters to select from.')}
               </p>
               {errors.options && (
                 <Alert variant="destructive" className="mt-2 mb-4">
@@ -613,10 +617,7 @@ export default function CreatePollPage() {
               </div>
 
               <div className="mt-4 flex items-center justify-between text-xs text-muted-foreground">
-                <span>{(() => {
-                  const hint = t('polls.create.wizard.options.maxHint', { max: MAX_OPTIONS });
-                  return hint && hint !== 'MaxHint' && !hint.includes('maxHint') ? hint : `You can add up to ${MAX_OPTIONS} options.`;
-                })()}</span>
+                <span>{safeT('polls.create.wizard.options.maxHint', `You can add up to ${MAX_OPTIONS} options.`, { max: MAX_OPTIONS })}</span>
                 <span className="font-medium">
                   {data.options.length}/{MAX_OPTIONS}
                 </span>
@@ -951,15 +952,9 @@ export default function CreatePollPage() {
     <div className="min-h-screen bg-muted/30 py-10">
       <div className="mx-auto max-w-4xl px-4 sm:px-6 lg:px-8">
         <header className="mb-10 space-y-2">
-          <h1 className="text-3xl font-bold tracking-tight text-foreground">{(() => {
-            const title = t('polls.create.page.title');
-            return title && title !== 'Title' && title !== 'polls.create.page.title' ? title : 'Create Poll';
-          })()}</h1>
+          <h1 className="text-3xl font-bold tracking-tight text-foreground">{safeT('polls.create.page.title', 'Create Poll')}</h1>
           <p className="max-w-2xl text-sm text-muted-foreground">
-            {(() => {
-              const subtitle = t('polls.create.page.subtitle');
-              return subtitle && subtitle !== 'Subtitle' && subtitle !== 'polls.create.page.subtitle' ? subtitle : 'Create a new poll to gather opinions and make decisions.';
-            })()}
+            {safeT('polls.create.page.subtitle', 'Create a new poll to gather opinions and make decisions.')}
           </p>
         </header>
 
@@ -1019,7 +1014,7 @@ export default function CreatePollPage() {
             className="w-full sm:w-auto"
           >
             <ArrowLeft className="mr-2 h-4 w-4" />
-            {t('polls.create.page.buttons.previous') || 'Previous'}
+            {safeT('polls.create.page.buttons.previous', 'Previous')}
           </Button>
 
           <div className="flex w-full flex-col gap-3 sm:w-auto sm:flex-row">
@@ -1034,7 +1029,7 @@ export default function CreatePollPage() {
                 }}
                 disabled={!canProceed || isLoading}
               >
-                {isLoading ? (t('polls.create.page.buttons.creating') || 'Creating...') : (t('polls.create.page.buttons.publish') || 'Publish poll')}
+                {isLoading ? safeT('polls.create.page.buttons.creating', 'Creating...') : safeT('polls.create.page.buttons.publish', 'Publish poll')}
               </Button>
             ) : (
               <Button
@@ -1047,7 +1042,7 @@ export default function CreatePollPage() {
                 }}
                 disabled={!canProceed || isLoading}
               >
-                {t('polls.create.page.buttons.next') || 'Next'}
+                {safeT('polls.create.page.buttons.next', 'Next')}
                 <ArrowRight className="ml-2 h-4 w-4" />
               </Button>
             )}
