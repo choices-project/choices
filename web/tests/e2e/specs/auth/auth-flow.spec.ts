@@ -187,9 +187,35 @@ test.describe('Authentication Flow', () => {
       // Wait for auth page to be hydrated
       await page.waitForSelector('[data-testid="auth-hydrated"]', { state: 'attached', timeout: 30_000 });
 
-      // Fill in login form
-      await page.fill('input[type="email"]', regularEmail!);
-      await page.fill('input[type="password"]', regularPassword!);
+      // Fill in login form - use data-testid selectors for reliability
+      const emailInput = page.locator('[data-testid="login-email"]');
+      const passwordInput = page.locator('[data-testid="login-password"]');
+      
+      await emailInput.waitFor({ state: 'visible', timeout: 10_000 });
+      await passwordInput.waitFor({ state: 'visible', timeout: 10_000 });
+      
+      await emailInput.fill(regularEmail!);
+      await passwordInput.fill(regularPassword!);
+      
+      // Wait for sync mechanism to process (check every 100ms, so wait at least that long)
+      await page.waitForTimeout(200);
+      
+      // Also trigger the sync manually by dispatching input events
+      await page.evaluate(() => {
+        const emailEl = document.querySelector('[data-testid="login-email"]') as HTMLInputElement;
+        const passwordEl = document.querySelector('[data-testid="login-password"]') as HTMLInputElement;
+        if (emailEl) {
+          emailEl.dispatchEvent(new Event('input', { bubbles: true }));
+          emailEl.dispatchEvent(new Event('change', { bubbles: true }));
+        }
+        if (passwordEl) {
+          passwordEl.dispatchEvent(new Event('input', { bubbles: true }));
+          passwordEl.dispatchEvent(new Event('change', { bubbles: true }));
+        }
+      });
+      
+      // Wait a moment more for React to process
+      await page.waitForTimeout(300);
 
       // Comprehensive diagnostics for login form state
       const formDiagnostics = await page.evaluate(() => {

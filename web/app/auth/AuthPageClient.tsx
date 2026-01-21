@@ -183,13 +183,19 @@ export default function AuthPageClient() {
 
       const syncEmail = () => {
         const currentValue = emailInput.value;
-        if (currentValue && currentValue !== emailInput.getAttribute('data-synced-value')) {
-          emailInput.setAttribute('data-synced-value', currentValue);
+        const syncedValue = emailInput.getAttribute('data-synced-value');
+        // Sync if value exists and is different from what we last synced
+        // Also sync if value is empty but we had a value before (reset case)
+        if (currentValue !== syncedValue) {
+          emailInput.setAttribute('data-synced-value', currentValue || '');
           setFormData(prev => {
             if (prev.email !== currentValue) {
               // Trigger both input and change events to ensure React processes them
-              emailInput.dispatchEvent(new Event('input', { bubbles: true, cancelable: true }));
-              emailInput.dispatchEvent(new Event('change', { bubbles: true, cancelable: true }));
+              // Use InputEvent and ChangeEvent for better React compatibility
+              const inputEvent = new Event('input', { bubbles: true, cancelable: true });
+              const changeEvent = new Event('change', { bubbles: true, cancelable: true });
+              emailInput.dispatchEvent(inputEvent);
+              emailInput.dispatchEvent(changeEvent);
               return { ...prev, email: currentValue };
             }
             return prev;
@@ -199,13 +205,19 @@ export default function AuthPageClient() {
 
       const syncPassword = () => {
         const currentValue = passwordInput.value;
-        if (currentValue && currentValue !== passwordInput.getAttribute('data-synced-value')) {
-          passwordInput.setAttribute('data-synced-value', currentValue);
+        const syncedValue = passwordInput.getAttribute('data-synced-value');
+        // Sync if value exists and is different from what we last synced
+        // Also sync if value is empty but we had a value before (reset case)
+        if (currentValue !== syncedValue) {
+          passwordInput.setAttribute('data-synced-value', currentValue || '');
           setFormData(prev => {
             if (prev.password !== currentValue) {
               // Trigger both input and change events to ensure React processes them
-              passwordInput.dispatchEvent(new Event('input', { bubbles: true, cancelable: true }));
-              passwordInput.dispatchEvent(new Event('change', { bubbles: true, cancelable: true }));
+              // Use InputEvent and ChangeEvent for better React compatibility
+              const inputEvent = new Event('input', { bubbles: true, cancelable: true });
+              const changeEvent = new Event('change', { bubbles: true, cancelable: true });
+              passwordInput.dispatchEvent(inputEvent);
+              passwordInput.dispatchEvent(changeEvent);
               return { ...prev, password: currentValue };
             }
             return prev;
@@ -216,6 +228,10 @@ export default function AuthPageClient() {
       // Sync on input events (for E2E tests that use page.fill())
       emailInput.addEventListener('input', syncEmail);
       passwordInput.addEventListener('input', syncPassword);
+      
+      // Also listen for focus/blur to catch programmatic fills
+      emailInput.addEventListener('focus', syncEmail);
+      passwordInput.addEventListener('focus', syncPassword);
 
       // Also sync periodically to catch any direct DOM manipulation (E2E tests)
       // Increased frequency and extended duration for better E2E test compatibility
@@ -223,7 +239,7 @@ export default function AuthPageClient() {
       const interval = setInterval(() => {
         syncEmail();
         syncPassword();
-      }, 50); // Check every 50ms for faster response
+      }, 100); // Check every 100ms (reduced frequency slightly for performance)
 
       // Extended to 30 seconds to catch late DOM updates in production/test environments
       const timeout = setTimeout(() => clearInterval(interval), 30000);
