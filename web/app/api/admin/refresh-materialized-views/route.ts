@@ -30,17 +30,51 @@ export const POST = withErrorHandling(async (_request: NextRequest) => {
       throw new Error('Database connection not available');
     }
 
-    // Get list of all materialized views in the public schema
-    // Since exec_sql may not exist and has complex typing, we'll skip it
-    // and go straight to the fallback method
-    let views: any = null;
-    let viewsError: any = null;
+    // Try to use refresh_all_materialized_views function if available
+    // This function returns a table with view_name, refreshed, error_message
+    let refreshResults: any = null;
+    let refreshError: any = null;
 
-    // Skip exec_sql attempt - go directly to fallback method
-    // This avoids TypeScript errors and works even without the function
-    viewsError = new Error('Using fallback method for materialized views');
+    try {
+      // Use the refresh_all_materialized_views function if it exists
+      const result = await (supabase.rpc as any)('refresh_all_materialized_views', {});
+      refreshResults = result.data;
+      refreshError = result.error;
+    } catch (err) {
+      refreshError = err;
+    }
 
-    if (viewsError) {
+    // If refresh_all_materialized_views worked, use those results
+    if (refreshResults && Array.isArray(refreshResults) && refreshResults.length > 0) {
+      const refreshedViews = refreshResults
+        .filter((r: any) => r.refreshed === true)
+        .map((r: any) => r.view_name);
+      const errors = refreshResults
+        .filter((r: any) => r.refreshed === false)
+        .map((r: any) => `${r.view_name}: ${r.error_message || 'Unknown error'}`);
+
+      const duration = Date.now() - startTime;
+
+      logger.info('Materialized views refresh completed via refresh_all_materialized_views', {
+        total: refreshResults.length,
+        refreshed: refreshedViews.length,
+        errors: errors.length,
+        duration,
+      });
+
+      return successResponse({
+        success: true,
+        message: `Refreshed ${refreshedViews.length} of ${refreshResults.length} materialized view(s)`,
+        total: refreshResults.length,
+        refreshed: refreshedViews,
+        errors: errors.length > 0 ? errors : undefined,
+        duration: `${duration}ms`,
+        timestamp: new Date().toISOString(),
+      });
+    }
+
+    // Fallback: Try individual refresh_materialized_view calls for common views
+    if (refreshError) {
       // If exec_sql RPC doesn't exist, try direct query approach
       logger.warn('RPC exec_sql not available, using alternative method', viewsError);
 
@@ -51,7 +85,8 @@ export const POST = withErrorHandling(async (_request: NextRequest) => {
       const refreshedViews: string[] = [];
       const errors: string[] = [];
 
-      // Common materialized view names to try (customize based on your schema)
+      // Common materialized view names to try
+      // These should match any materialized views you've created in your database
       const commonViewNames = [
         'poll_analytics_summary',
         'user_activity_summary',
@@ -102,53 +137,6 @@ export const POST = withErrorHandling(async (_request: NextRequest) => {
         timestamp: new Date().toISOString(),
       });
     }
-
-    // If we got the list of views, refresh each one
-    const viewList = Array.isArray(views) ? views : [];
-    const refreshedViews: string[] = [];
-    const errors: string[] = [];
-
-    for (const view of viewList) {
-      const viewName = typeof view === 'object' && view !== null && 'matviewname' in view
-        ? String(view.matviewname)
-        : String(view);
-
-      try {
-        // Refresh the materialized view
-        // Note: This requires a database function or direct SQL access
-        const { error: refreshError } = await (supabase.rpc as any)('refresh_materialized_view', {
-          view_name: viewName,
-        });
-
-        if (refreshError) {
-          errors.push(`${viewName}: ${refreshError.message}`);
-        } else {
-          refreshedViews.push(viewName);
-        }
-      } catch (err) {
-        const message = err instanceof Error ? err.message : 'Unknown error';
-        errors.push(`${viewName}: ${message}`);
-      }
-    }
-
-    const duration = Date.now() - startTime;
-
-    logger.info('Materialized views refresh completed', {
-      total: viewList.length,
-      refreshed: refreshedViews.length,
-      errors: errors.length,
-      duration,
-    });
-
-    return successResponse({
-      success: true,
-      message: `Refreshed ${refreshedViews.length} of ${viewList.length} materialized view(s)`,
-      total: viewList.length,
-      refreshed: refreshedViews,
-      errors: errors.length > 0 ? errors : undefined,
-      duration: `${duration}ms`,
-      timestamp: new Date().toISOString(),
-    });
   } catch (error) {
     const duration = Date.now() - startTime;
     logger.error('Failed to refresh materialized views', { error, duration });
