@@ -33,9 +33,11 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 
 import ScreenReaderSupport from '@/lib/accessibility/screen-reader';
+import { getErrorMessageWithFallback, ERROR_MESSAGES } from '@/lib/constants/error-messages';
 import { useNotificationActions, useNotificationSettings } from '@/lib/stores/notificationStore';
 import { useUserStore } from '@/lib/stores/userStore';
 import logger from '@/lib/utils/logger';
+
 
 import VotingInterface, {
   type VoteSubmission,
@@ -184,6 +186,7 @@ export default function PollClient({ poll }: PollClientProps) {
 
   const [results, setResults] = useState<PollResultsState | null>(null);
   const [loading, setLoading] = useState(false);
+  const [loadingTimeout, setLoadingTimeout] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [hasVoted, setHasVoted] = useState(false);
   // CRITICAL UX FIX: Show voting interface immediately - no need for extra click
@@ -292,13 +295,18 @@ export default function PollClient({ poll }: PollClientProps) {
   }, [poll.id]);
 
   const fetchPollData = useCallback(async () => {
+    let timeoutWarningId: NodeJS.Timeout | null = null;
     try {
       setLoading(true);
+      setLoadingTimeout(false);
       setVotingLoadingRef.current(true);
       setError(null);
       clearVotingErrorRef.current();
 
-      const generalError = 'Failed to load poll results. Please try again later.';
+      // Set timeout warning after 10 seconds
+      timeoutWarningId = setTimeout(() => {
+        setLoadingTimeout(true);
+      }, 10_000);
 
       // Fetch results data with timeout
       const controller = new AbortController();
@@ -312,34 +320,43 @@ export default function PollClient({ poll }: PollClientProps) {
         clearTimeout(timeoutId);
       } catch (fetchError) {
         clearTimeout(timeoutId);
+        if (timeoutWarningId) clearTimeout(timeoutWarningId);
         if (fetchError instanceof Error && fetchError.name === 'AbortError') {
-          const timeoutError = 'Request timed out. Please check your connection and try again.';
-          setError(timeoutError);
-          setVotingErrorRef.current(timeoutError);
+          const timeoutConfig = getErrorMessageWithFallback('TIMEOUT_ERROR', ERROR_MESSAGES.TIMEOUT_ERROR);
+          setError(timeoutConfig.message);
+          setVotingErrorRef.current(timeoutConfig.message);
           setResults(null);
+          setLoading(false);
+          setLoadingTimeout(false);
+          setVotingLoadingRef.current(false);
           return;
         }
-        const networkError = 'Network error. Please check your connection and try again.';
-        setError(networkError);
-        setVotingErrorRef.current(networkError);
+        const networkConfig = getErrorMessageWithFallback('NETWORK_ERROR', ERROR_MESSAGES.NETWORK_ERROR);
+        setError(networkConfig.message);
+        setVotingErrorRef.current(networkConfig.message);
         setResults(null);
+        setLoading(false);
+        setLoadingTimeout(false);
+        setVotingLoadingRef.current(false);
         return;
       }
 
       if (!resultsResponse.ok) {
+        if (timeoutWarningId) clearTimeout(timeoutWarningId);
         setResults(null);
+        let errorConfig;
         if (resultsResponse.status === 404) {
-          const notFoundError = 'Poll not found. It may have been deleted or is no longer available.';
-          setError(notFoundError);
-          setVotingErrorRef.current(notFoundError);
+          errorConfig = getErrorMessageWithFallback('POLL_NOT_FOUND', ERROR_MESSAGES.POLL_NOT_FOUND);
         } else if (resultsResponse.status >= 500) {
-          setError(generalError);
-          setVotingErrorRef.current(generalError);
+          errorConfig = getErrorMessageWithFallback('SERVER_ERROR', ERROR_MESSAGES.SERVER_ERROR);
         } else {
-          const clientError = `Unable to load results (${resultsResponse.status}). Please try again.`;
-          setError(clientError);
-          setVotingErrorRef.current(clientError);
+          errorConfig = getErrorMessageWithFallback('NETWORK_ERROR', ERROR_MESSAGES.NETWORK_ERROR);
         }
+        setError(errorConfig.message);
+        setVotingErrorRef.current(errorConfig.message);
+        setLoading(false);
+        setLoadingTimeout(false);
+        setVotingLoadingRef.current(false);
         return;
       }
 
@@ -347,11 +364,15 @@ export default function PollClient({ poll }: PollClientProps) {
       try {
         payload = await resultsResponse.json();
       } catch (jsonError) {
-        const parseError = 'Invalid response from server. Please try again.';
+        if (timeoutWarningId) clearTimeout(timeoutWarningId);
+        const parseConfig = getErrorMessageWithFallback('SERVER_ERROR', ERROR_MESSAGES.SERVER_ERROR);
         logger.error('Failed to parse poll results JSON', jsonError);
-        setError(parseError);
-        setVotingErrorRef.current(parseError);
+        setError(parseConfig.message);
+        setVotingErrorRef.current(parseConfig.message);
         setResults(null);
+        setLoading(false);
+        setLoadingTimeout(false);
+        setVotingLoadingRef.current(false);
         return;
       }
 
@@ -440,7 +461,9 @@ export default function PollClient({ poll }: PollClientProps) {
       setError(errorMessage);
       setVotingErrorRef.current(errorMessage);
     } finally {
+      if (timeoutWarningId) clearTimeout(timeoutWarningId);
       setLoading(false);
+      setLoadingTimeout(false);
       setVotingLoadingRef.current(false);
     }
   }, [pollId]);
@@ -1078,10 +1101,20 @@ export default function PollClient({ poll }: PollClientProps) {
         {/* Loading State */}
         {loading && (
           <Card>
-            <CardContent className="text-center py-8">
-              <div className="flex items-center justify-center space-x-2">
-                <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-blue-600" />
-                <span className="text-gray-600">Loading results...</span>
+            <CardContent className="text-center py-8" role="status" aria-live="polite" aria-busy="true">
+              <div className="flex flex-col items-center justify-center space-y-3">
+                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 dark:border-blue-400" aria-hidden="true" />
+                <div>
+                  <p className="text-sm font-medium text-gray-700 dark:text-gray-300">
+                    {loadingTimeout ? 'Loading is taking longer than expected...' : 'Loading poll results...'}
+                  </p>
+                  {loadingTimeout && (
+                    <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+                      The server may be experiencing high load. Please wait...
+                    </p>
+                  )}
+                </div>
+                <span className="sr-only">Loading poll results, please wait</span>
               </div>
             </CardContent>
           </Card>

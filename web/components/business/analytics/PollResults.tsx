@@ -5,6 +5,8 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { EnhancedEmptyState } from '@/components/shared/EnhancedEmptyState';
 import { EnhancedErrorDisplay } from '@/components/shared/EnhancedErrorDisplay';
 
+import { getErrorMessageWithFallback, ERROR_MESSAGES } from '@/lib/constants/error-messages';
+
 type PollResult = {
   option_id: string;
   option_text: string;
@@ -50,12 +52,14 @@ export function PollResults({ pollId, trustTiers }: PollResultsProps) {
 
       const response = await fetch(url);
       if (!response.ok) {
-        const errorText = await response.text().catch(() => 'Failed to fetch results');
-        // Use standardized error messages
+        // Use standardized error message keys
         if (response.status === 404) {
           throw new Error('POLL_NOT_FOUND');
         }
-        throw new Error(errorText || 'NETWORK_ERROR');
+        if (response.status >= 500) {
+          throw new Error('SERVER_ERROR');
+        }
+        throw new Error('NETWORK_ERROR');
       }
 
       const result = await response.json();
@@ -79,8 +83,13 @@ export function PollResults({ pollId, trustTiers }: PollResultsProps) {
         setResults([]);
       }
     } catch (err) {
-      const errorMessage = err instanceof Error ? err.message : 'Failed to load results';
-      setError(errorMessage);
+      const errorKey = err instanceof Error ? err.message : 'NETWORK_ERROR';
+      // Use standardized error messages
+      const errorConfig = getErrorMessageWithFallback(
+        errorKey,
+        ERROR_MESSAGES.NETWORK_ERROR
+      );
+      setError(errorConfig.message);
       console.error('Poll results fetch error:', err);
     } finally {
       setLoading(false);
@@ -110,14 +119,24 @@ export function PollResults({ pollId, trustTiers }: PollResultsProps) {
   }
 
   if (error) {
+    // Determine error type from error message
+    const errorKey = error.includes('not found') || error.includes('Poll not found') 
+      ? 'POLL_NOT_FOUND'
+      : error.includes('timeout') || error.includes('Timeout')
+      ? 'TIMEOUT_ERROR'
+      : 'NETWORK_ERROR';
+    
+    const errorConfig = getErrorMessageWithFallback(errorKey, ERROR_MESSAGES.NETWORK_ERROR);
+    
     return (
       <EnhancedErrorDisplay
-        title="Error Loading Poll Results"
-        message={error}
-        details="We encountered an issue while loading poll results. This might be a temporary network problem."
-        tip="Check your internet connection and try again. If the problem persists, the poll may not exist or may have been removed."
+        title={errorConfig.title}
+        message={errorConfig.message}
+        details={errorConfig.details || "We encountered an issue while loading poll results. This might be a temporary network problem."}
+        tip={errorConfig.tip || "Check your internet connection and try again. If the problem persists, the poll may not exist or may have been removed."}
         canRetry={true}
         onRetry={handleRetry}
+        severity={errorConfig.severity}
       />
     );
   }
