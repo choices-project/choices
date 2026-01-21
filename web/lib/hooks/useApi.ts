@@ -528,7 +528,31 @@ export function useAnalyticsGeneral(
       queryKey: queryKeys.analyticsGeneral,
       queryFn: async () => {
         try {
-          return await get('/api/analytics?type=general');
+          // Add timeout to prevent hanging
+          const controller = new AbortController();
+          const timeoutId = setTimeout(() => controller.abort(), 20000); // 20 second timeout
+          
+          try {
+            const response = await fetch('/api/analytics?type=general', {
+              signal: controller.signal,
+            });
+            
+            clearTimeout(timeoutId);
+            
+            if (!response.ok) {
+              const errorData = await response.json().catch(() => ({ error: response.statusText }));
+              throw new Error(errorData.error || `Failed to fetch analytics: ${response.statusText}`);
+            }
+            
+            const data = await response.json();
+            return data.data || data; // Handle both { data: {...} } and direct response
+          } catch (fetchError) {
+            clearTimeout(timeoutId);
+            if (fetchError instanceof Error && fetchError.name === 'AbortError') {
+              throw new Error('Request timed out. Please try again.');
+            }
+            throw fetchError;
+          }
         } catch (error) {
           // If auth error, return null instead of throwing (allows component to render)
           if (error instanceof Error && (error.message.includes('auth') || error.message.includes('unauthorized'))) {

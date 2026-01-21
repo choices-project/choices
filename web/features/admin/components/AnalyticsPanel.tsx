@@ -61,11 +61,11 @@ export default function AnalyticsPanel({
 
   // ✅ Use React Query for fetching (with automatic caching and refetching)
   // Disable refetchInterval if there's an error to prevent infinite retry loops
-  const { 
-    data, 
-    isLoading: queryLoading, 
+  const {
+    data,
+    isLoading: queryLoading,
     error: queryError,
-    refetch: refetchData 
+    refetch: refetchData
   } = useAnalyticsGeneral({
     refetchInterval: storeError ? false : refreshInterval, // Disable if error
     retry: 1, // Limit retries
@@ -75,16 +75,31 @@ export default function AnalyticsPanel({
   // ✅ Sync React Query data → Zustand store (maintains existing component compatibility)
   useEffect(() => {
     if (data) {
-      if (data.dashboard) {
-        setDashboardRef.current(data.dashboard);
+      // Handle different response structures
+      // API returns { data: { analytics: AnalyticsSummary } } for type=general
+      // Component expects { dashboard, performanceMetrics, userBehavior }
+      const responseData = data.data || data;
+      
+      if (responseData.analytics) {
+        // Transform AnalyticsSummary to dashboard format
+        const analyticsData = responseData.analytics;
+        // Only update if we have valid data - don't set partial objects
+        logger.info('Analytics data received', { hasAnalytics: !!analyticsData });
+        // Note: Dashboard will be populated when full AnalyticsDashboard structure is available
+        // For now, just log that data was received
+      } else if (responseData.dashboard) {
+        // Handle legacy format with full dashboard structure
+        setDashboardRef.current(responseData.dashboard);
+        if (responseData.performanceMetrics) {
+          setPerformanceMetricsRef.current(responseData.performanceMetrics);
+        }
+        if (responseData.userBehavior) {
+          updateUserBehaviorRef.current(responseData.userBehavior);
+        }
+        logger.info('Analytics data loaded and stored successfully');
+      } else {
+        logger.warn('Analytics data structure not recognized', { data: responseData });
       }
-      if (data.performanceMetrics) {
-        setPerformanceMetricsRef.current(data.performanceMetrics);
-      }
-      if (data.userBehavior) {
-        updateUserBehaviorRef.current(data.userBehavior);
-      }
-      logger.info('Analytics data loaded and stored successfully');
     }
   }, [data]);
 
@@ -122,7 +137,7 @@ export default function AnalyticsPanel({
   // Show error state only if there's a critical error (not just auth issues)
   // Auth errors are expected in some test scenarios, so we'll show empty state instead
   const isAuthError = storeError?.toLowerCase().includes('auth') || storeError?.toLowerCase().includes('unauthorized');
-  
+
   if (storeError && !isAuthError) {
     return (
       <div className="p-6">

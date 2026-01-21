@@ -24,7 +24,7 @@ import {
 import logger from '@/lib/utils/logger';
 
 type UserManagementProps = {
-  onUserUpdate?: (user: AdminUser) => void;
+  onUserUpdate?: (userId: string, updates: Partial<AdminUser>) => void;
   onUserDelete?: (userId: string) => void;
 }
 
@@ -415,8 +415,38 @@ export default function UserManagement({ onUserUpdate, onUserDelete }: UserManag
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
                     <div className="flex space-x-2">
-                      <button className="text-blue-600 dark:text-blue-400 hover:text-blue-900 dark:hover:text-blue-300">Edit</button>
-                      <button className="text-red-600 dark:text-red-400 hover:text-red-900 dark:hover:text-red-300">Delete</button>
+                      <button
+                        onClick={() => {
+                          // For now, allow editing role via dropdown (already implemented)
+                          // TODO: Add full edit modal for other fields
+                          const newRole = prompt(`Edit user role for ${user.email}:\n\nCurrent: ${user.role}\n\nEnter new role (user/moderator/admin):`, user.role);
+                          if (newRole && newRole !== user.role && ['user', 'moderator', 'admin'].includes(newRole)) {
+                            handleUserRoleChange(user.id, newRole);
+                            onUserUpdate?.(user.id, { role: newRole as AdminUser['role'] });
+                          }
+                        }}
+                        className="text-blue-600 dark:text-blue-400 hover:text-blue-900 dark:hover:text-blue-300"
+                        aria-label={`Edit user ${user.email}`}
+                      >
+                        Edit
+                      </button>
+                      <button
+                        onClick={async () => {
+                          if (confirm(`Are you sure you want to delete user ${user.email}? This action cannot be undone.`)) {
+                            try {
+                              await deleteUser(user.id);
+                              onUserDelete?.(user.id);
+                            } catch (error) {
+                              logger.error('Failed to delete user', error);
+                              alert('Failed to delete user. Please try again.');
+                            }
+                          }
+                        }}
+                        className="text-red-600 dark:text-red-400 hover:text-red-900 dark:hover:text-red-300"
+                        aria-label={`Delete user ${user.email}`}
+                      >
+                        Delete
+                      </button>
                     </div>
                   </td>
                 </tr>

@@ -717,14 +717,14 @@ export const performanceStoreCreator: PerformanceStoreCreator = (set, get) => {
             }
 
             const data = await response.json();
-            
+
             // Transform API response to expected format
             const report = data.data?.report ?? {};
-            
+
             // Convert performance report to database metrics format
             // PerformanceReport has: totalOperations, averageResponseTime, errorRate, slowestOperations
             const databaseMetrics: DatabasePerformanceMetric[] = [];
-            
+
             // Add overall performance metrics
             if (typeof report.averageResponseTime === 'number') {
               databaseMetrics.push({
@@ -736,7 +736,7 @@ export const performanceStoreCreator: PerformanceStoreCreator = (set, get) => {
                 timestamp: new Date(),
               });
             }
-            
+
             // Add slowest operations as individual metrics
             if (Array.isArray(report.slowestOperations)) {
               for (const op of report.slowestOperations.slice(0, 10)) {
@@ -755,12 +755,19 @@ export const performanceStoreCreator: PerformanceStoreCreator = (set, get) => {
             }
 
             // Cache stats from report (with fallbacks)
+            // If no data, check if this is a fresh system or if monitoring hasn't started
+            const hasNoData = databaseMetrics.length === 0 && report.totalOperations === 0;
             const cacheStats: CacheStats = {
               size: 0, // Not available from performance monitor
               keys: [],
               memoryUsage: 0, // Not available from performance monitor
-              hitRate: 0, // Not available from performance monitor
+              hitRate: hasNoData ? 0 : 0, // Not available from performance monitor
             };
+            
+            // Log if no data is available (helpful for debugging)
+            if (hasNoData) {
+              logger.info('Performance dashboard: No performance data tracked yet. Operations will appear as they are tracked.');
+            }
 
             setDatabaseMetrics(databaseMetrics);
             setCacheStats(cacheStats);
@@ -788,21 +795,36 @@ export const performanceStoreCreator: PerformanceStoreCreator = (set, get) => {
             setLoading(true);
             setError(null);
 
+            // Add timeout to prevent hanging
+            const controller = new AbortController();
+            const timeoutId = setTimeout(() => controller.abort(), 30000); // 30 second timeout
+
             const response = await fetch('/api/admin/refresh-materialized-views', {
               method: 'POST',
               headers: { 'Content-Type': 'application/json' },
+              signal: controller.signal,
             });
 
+            clearTimeout(timeoutId);
+
             if (!response.ok) {
-              throw new Error(`Failed to refresh materialized views: ${response.statusText}`);
+              const errorData = await response.json().catch(() => ({ error: response.statusText }));
+              throw new Error(errorData.error || `Failed to refresh materialized views: ${response.statusText}`);
             }
 
+            // Reload performance data after refresh
             await loadDatabasePerformance();
             scheduleAutoRefreshTimer();
           } catch (error) {
-      const errorMessage =
-        error instanceof Error ? error.message : 'Failed to refresh materialized views';
-            setError(errorMessage);
+            const errorMessage =
+              error instanceof Error ? error.message : 'Failed to refresh materialized views';
+            // Handle timeout specifically
+            if (error instanceof Error && error.name === 'AbortError') {
+              setError('Request timed out. The operation may still be processing.');
+            } else {
+              setError(errorMessage);
+            }
+            logger.error('Failed to refresh materialized views', error);
           } finally {
             setLoading(false);
           }
@@ -815,21 +837,36 @@ export const performanceStoreCreator: PerformanceStoreCreator = (set, get) => {
             setLoading(true);
             setError(null);
 
+            // Add timeout to prevent hanging
+            const controller = new AbortController();
+            const timeoutId = setTimeout(() => controller.abort(), 60000); // 60 second timeout (maintenance can take longer)
+
             const response = await fetch('/api/admin/perform-database-maintenance', {
               method: 'POST',
               headers: { 'Content-Type': 'application/json' },
+              signal: controller.signal,
             });
 
+            clearTimeout(timeoutId);
+
             if (!response.ok) {
-              throw new Error(`Failed to perform database maintenance: ${response.statusText}`);
+              const errorData = await response.json().catch(() => ({ error: response.statusText }));
+              throw new Error(errorData.error || `Failed to perform database maintenance: ${response.statusText}`);
             }
 
+            // Reload performance data after maintenance
             await loadDatabasePerformance();
             scheduleAutoRefreshTimer();
           } catch (error) {
-      const errorMessage =
-        error instanceof Error ? error.message : 'Failed to perform database maintenance';
-            setError(errorMessage);
+            const errorMessage =
+              error instanceof Error ? error.message : 'Failed to perform database maintenance';
+            // Handle timeout specifically
+            if (error instanceof Error && error.name === 'AbortError') {
+              setError('Request timed out. The operation may still be processing.');
+            } else {
+              setError(errorMessage);
+            }
+            logger.error('Failed to perform database maintenance', error);
           } finally {
             setLoading(false);
           }
