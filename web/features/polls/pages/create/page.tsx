@@ -1091,15 +1091,13 @@ export default function CreatePollPage() {
             </fieldset>
 
             <fieldset className="space-y-4">
-              <div className="mb-4">
-                <legend className="text-base font-semibold mb-1 flex items-center gap-2">
-                  <Lightbulb className="h-4 w-4 text-primary" />
-                  {safeT('polls.create.wizard.audience.settings.legend', 'Poll Settings')}
-                </legend>
-                <p className="text-sm text-muted-foreground">
-                  {safeT('polls.create.wizard.audience.settings.description', 'Configure additional options for how your poll works and what voters can do.')}
-                </p>
-              </div>
+              <legend className="text-base font-semibold mb-2 flex items-center gap-2">
+                <Lightbulb className="h-4 w-4 text-primary" />
+                {safeT('polls.create.wizard.audience.settings.legend', 'Poll Settings')}
+              </legend>
+              <p className="text-sm text-muted-foreground mb-4">
+                {safeT('polls.create.wizard.audience.settings.description', 'Configure additional options for how your poll works and what voters can do.')}
+              </p>
               <SettingToggle
                 id="allow-multiple-votes"
                 label={safeT('polls.create.wizard.audience.settings.allowMultipleVotes.label', 'Allow multiple votes')}
