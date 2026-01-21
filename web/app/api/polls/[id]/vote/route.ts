@@ -299,12 +299,21 @@ export const POST = withErrorHandling(async (request: NextRequest, { params }: {
       return errorResponse('Database service unavailable', 500);
     }
 
+    // Verify admin client is using service role (should bypass RLS)
+    // Log the client configuration for debugging
+    logger.info('Using admin client for poll_rankings operations', {
+      pollId,
+      userId: user.id,
+      hasAdminClient: !!adminClient,
+    });
+
     // Delete existing ballot - explicit security: only delete user's own rankings
-    const { error: deleteExistingBallotError } = await adminClient
+    const { error: deleteExistingBallotError, data: deleteData } = await adminClient
       .from('poll_rankings')
       .delete()
       .eq('poll_id', pollId)
-      .eq('user_id', user.id); // Explicit security check: user can only delete their own
+      .eq('user_id', user.id) // Explicit security check: user can only delete their own
+      .select(); // Select to get more info
 
     if (deleteExistingBallotError) {
       logger.error('Ranked vote delete failed', {
@@ -314,7 +323,23 @@ export const POST = withErrorHandling(async (request: NextRequest, { params }: {
         message: deleteExistingBallotError.message,
         details: deleteExistingBallotError.details,
         hint: deleteExistingBallotError.hint,
+        code: deleteExistingBallotError.code,
+        deleteData,
       });
+      
+      // Check if it's a permission error - might indicate RLS is still blocking
+      if (deleteExistingBallotError.message?.includes('permission denied') || deleteExistingBallotError.code === '42501') {
+        logger.error('RLS blocking admin client - this should not happen', {
+          error: deleteExistingBallotError,
+          pollId,
+          userId: user.id,
+        });
+        return errorResponse(
+          'Database permission error. Please contact support if this persists.',
+          500
+        );
+      }
+      
       return errorResponse(
         `Failed to update your ranked ballot: ${deleteExistingBallotError.message ?? 'Database error'}`,
         500

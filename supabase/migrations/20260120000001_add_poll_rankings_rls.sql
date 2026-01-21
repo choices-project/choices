@@ -28,11 +28,15 @@ CREATE POLICY poll_rankings_delete_own ON public.poll_rankings
   USING (auth.uid() = user_id);
 
 -- Policy: Service role has full access (for server-side operations)
+-- Note: Service role should bypass RLS, but this policy ensures access if RLS is enforced
 CREATE POLICY poll_rankings_service_full ON public.poll_rankings
   FOR ALL
   TO service_role
   USING (true)
   WITH CHECK (true);
+
+-- Grant explicit permissions to service role (redundant but ensures access)
+GRANT ALL ON public.poll_rankings TO service_role;
 
 -- migrate:down
 DROP POLICY IF EXISTS poll_rankings_service_full ON public.poll_rankings;
