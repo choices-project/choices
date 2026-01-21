@@ -598,7 +598,7 @@ export async function loginTestUser(page: Page, user: TestUser): Promise<void> {
     const emailValue = await emailInput.first().inputValue();
     const passwordValue = await passwordInput.first().inputValue();
     const emailValid = emailValue.includes('@') && emailValue === email;
-    const passwordValid = passwordValue.length >= 6 && passwordValue === password;
+    const passwordValid = passwordValue.length >= 8 && passwordValue === password; // Form requires >= 8 characters
 
     if (emailValid && passwordValid) {
       // Inputs are valid, but React state might not be synced

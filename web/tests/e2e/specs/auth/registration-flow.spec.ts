@@ -184,14 +184,39 @@ test.describe('Registration Flow', () => {
 
       // Wait for button to be enabled (form validation passes)
       // Registration form requires: email, password (>=8 chars), displayName (>=3 chars), confirmPassword match
-      await page.waitForFunction(
-        () => {
-          const button = document.querySelector('[data-testid="login-submit"]') as HTMLButtonElement;
-          return button && !button.disabled;
-        },
-        { timeout: 30_000 }
-      ).catch(async () => {
-        // If still disabled, check form state
+      let buttonEnabled = false;
+      const maxWaitAttempts = 100; // 30 seconds total (100 * 300ms)
+      
+      for (let attempt = 0; attempt < maxWaitAttempts; attempt++) {
+        buttonEnabled = !(await submitButton.isDisabled());
+        if (buttonEnabled) {
+          break;
+        }
+        
+        // Every 10 attempts, trigger events again to help React sync
+        if (attempt % 10 === 0 && attempt > 0) {
+          await page.evaluate(() => {
+            const emailEl = document.querySelector('[data-testid="login-email"]') as HTMLInputElement;
+            const passwordEl = document.querySelector('[data-testid="login-password"]') as HTMLInputElement;
+            const displayNameEl = document.querySelector('[data-testid="auth-display-name"]') as HTMLInputElement;
+            const confirmPasswordEl = document.querySelector('[data-testid="auth-confirm-password"]') as HTMLInputElement;
+            
+            [emailEl, passwordEl, displayNameEl, confirmPasswordEl].forEach(el => {
+              if (el) {
+                el.dispatchEvent(new Event('input', { bubbles: true }));
+                el.dispatchEvent(new Event('change', { bubbles: true }));
+                el.focus();
+                el.blur();
+              }
+            });
+          });
+        }
+        
+        await page.waitForTimeout(300);
+      }
+      
+      if (!buttonEnabled) {
+        // Diagnostic: check form state
         const formState = await page.evaluate(() => {
           const email = (document.querySelector('[data-testid="login-email"]') as HTMLInputElement)?.value || '';
           const password = (document.querySelector('[data-testid="login-password"]') as HTMLInputElement)?.value || '';
@@ -211,8 +236,8 @@ test.describe('Registration Flow', () => {
           };
         });
         console.log('[DIAGNOSTIC] Registration form state:', formState);
-        throw new Error('Registration submit button remained disabled - form validation may have failed');
-      });
+        throw new Error(`Registration submit button remained disabled after ${maxWaitAttempts} attempts. Form state: ${JSON.stringify(formState)}`);
+      }
 
       // Click submit
       await submitButton.click();
@@ -363,7 +388,7 @@ test.describe('Registration Flow', () => {
         const passwordEl = document.querySelector('[data-testid="login-password"]') as HTMLInputElement;
         const displayNameEl = document.querySelector('[data-testid="auth-display-name"]') as HTMLInputElement;
         const confirmPasswordEl = document.querySelector('[data-testid="auth-confirm-password"]') as HTMLInputElement;
-        
+
         [emailEl, passwordEl, displayNameEl, confirmPasswordEl].forEach(el => {
           if (el) {
             el.dispatchEvent(new Event('input', { bubbles: true }));
@@ -376,7 +401,7 @@ test.describe('Registration Flow', () => {
       // Wait for button to be enabled
       const submitButton = page.locator('[data-testid="login-submit"]').first();
       await submitButton.waitFor({ state: 'visible', timeout: 10_000 });
-      
+
       // Wait for button to be enabled (with timeout)
       await page.waitForFunction(
         () => {

@@ -9,7 +9,7 @@ import LanguageSelector from '@/components/shared/LanguageSelector';
 import ThemeSelector from '@/components/shared/ThemeSelector';
 import { Button } from '@/components/ui/button';
 
-import { useSession, useUser as useUserStore } from '@/lib/stores';
+import { useSession, useUser as useUserStore, useIsAuthenticated as useIsAuthenticatedStore } from '@/lib/stores';
 import logger from '@/lib/utils/logger';
 
 import { useAuth } from '@/hooks/useAuth';
@@ -67,8 +67,11 @@ export default function GlobalNavigation() {
   const { user, isLoading: authLoading, logout: authSignOut } = useAuth();
   const storeSession = useSession();
   const storeUser = useUserStore();
+  const storeIsAuthenticated = useIsAuthenticatedStore();
   const authUser = user ?? storeUser ?? storeSession?.user ?? null;
-  const isAuthenticated = Boolean(authUser);
+  // Use store's isAuthenticated as primary source, fallback to checking authUser
+  // This ensures we're using the canonical authentication state
+  const isAuthenticated = storeIsAuthenticated || Boolean(authUser);
   const [loadingTimeout, setLoadingTimeout] = useState(false);
 
   // Add timeout fallback to prevent infinite loading state

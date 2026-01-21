@@ -178,12 +178,12 @@ test.describe('Accessibility - Main Landmarks', () => {
     if (count > 0) {
       // Skip link exists - verify it's in the DOM
       await expect(skipLink.first()).toBeAttached();
-      
+
       // Verify main content exists and has proper attributes
       const main = page.locator('main#main-content');
       await expect(main).toBeVisible();
       expect(await main.getAttribute('tabIndex')).toBe('-1');
-      
+
       // Try to click skip link (may need to make it visible first)
       try {
         await skipLink.click({ timeout: 5_000 });
