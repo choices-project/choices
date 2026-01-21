@@ -8,6 +8,7 @@ import {
   GripVertical,
   Lightbulb,
   Plus,
+  Trash2,
   X,
 } from "lucide-react"
 import { useRouter } from "next/navigation"
@@ -21,6 +22,16 @@ import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog"
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Separator } from "@/components/ui/separator"
@@ -296,6 +307,53 @@ export default function CreatePollPage() {
     router.push(`/polls/analytics?pollId=${shareInfo.pollId}`)
     setShareInfo(null)
   }
+
+  const [isDeletingPoll, setIsDeletingPoll] = useState(false);
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+
+  const handleDeletePoll = useCallback(async () => {
+    if (!shareInfo?.pollId) return;
+
+    setIsDeletingPoll(true);
+    try {
+      const response = await fetch(`/api/polls/${shareInfo.pollId}`, {
+        method: 'DELETE',
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}));
+        throw new Error(errorData.error ?? `Failed to delete poll: ${response.status}`);
+      }
+
+      addNotification({
+        type: 'success',
+        title: safeT('polls.create.share.dialog.delete.success.title', 'Poll deleted'),
+        message: safeT('polls.create.share.dialog.delete.success.message', 'Your poll has been deleted successfully.'),
+        duration: 4000,
+      });
+
+      recordPollEvent('poll_deleted', {
+        label: shareInfo.pollId,
+        value: 1,
+      });
+
+      // Close dialog and redirect to polls page
+      setShareInfo(null);
+      router.push('/polls');
+    } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : safeT('polls.create.share.dialog.delete.error.message', 'Failed to delete poll');
+      addNotification({
+        type: 'error',
+        title: safeT('polls.create.share.dialog.delete.error.title', 'Delete failed'),
+        message: errorMessage,
+        duration: 6000,
+      });
+      logger.error('Failed to delete poll:', error);
+    } finally {
+      setIsDeletingPoll(false);
+      setShowDeleteConfirm(false);
+    }
+  }, [shareInfo, addNotification, recordPollEvent, router, safeT]);
 
   const handleCreateAnotherPoll = () => {
     setShareInfo(null)
@@ -1350,26 +1408,26 @@ export default function CreatePollPage() {
               <div className="rounded-lg border border-dashed border-border/70 bg-muted/40 p-4">
                 <div className="space-y-3 text-sm">
                   <div>
-                    <p className="text-xs font-medium uppercase text-muted-foreground">{safeT('polls.create.share.dialog.pollTitle', 'Poll Title')}</p>
+                    <p className="text-xs font-semibold uppercase text-foreground/70">{safeT('polls.create.share.dialog.pollTitle', 'Poll Title')}</p>
                     <p className="text-base font-semibold text-foreground">{shareInfo.title}</p>
                   </div>
                   <div className="grid grid-cols-1 gap-3 text-sm sm:grid-cols-2">
                     <div>
-                      <p className="text-xs font-medium uppercase text-muted-foreground">{safeT('polls.create.share.dialog.privacy', 'Privacy')}</p>
-                      <p>{PRIVACY_LABELS[shareInfo.privacyLevel] || shareInfo.privacyLevel}</p>
+                      <p className="text-xs font-semibold uppercase text-foreground/70">{safeT('polls.create.share.dialog.privacy', 'Privacy')}</p>
+                      <p className="font-medium text-foreground">{PRIVACY_LABELS[shareInfo.privacyLevel] || shareInfo.privacyLevel}</p>
                     </div>
                     <div>
-                      <p className="text-xs font-medium uppercase text-muted-foreground">{safeT('polls.create.share.dialog.votingMethod', 'Voting Method')}</p>
-                      <p>{VOTING_METHOD_LABELS[shareInfo.votingMethod] || shareInfo.votingMethod}</p>
+                      <p className="text-xs font-semibold uppercase text-foreground/70">{safeT('polls.create.share.dialog.votingMethod', 'Voting Method')}</p>
+                      <p className="font-medium text-foreground">{VOTING_METHOD_LABELS[shareInfo.votingMethod] || shareInfo.votingMethod}</p>
                     </div>
                     <div>
-                      <p className="text-xs font-medium uppercase text-muted-foreground">{safeT('polls.create.share.dialog.category', 'Category')}</p>
-                      <p className="capitalize">{shareInfo.category}</p>
+                      <p className="text-xs font-semibold uppercase text-foreground/70">{safeT('polls.create.share.dialog.category', 'Category')}</p>
+                      <p className="capitalize font-medium text-foreground">{shareInfo.category}</p>
                     </div>
                     {nextMilestone && (
                       <div>
-                        <p className="text-xs font-medium uppercase text-muted-foreground">{safeT('polls.create.share.dialog.nextMilestone', 'Next Milestone')}</p>
-                        <p>{safeT('polls.create.share.dialog.milestoneVotes', `${nextMilestone} votes`, { count: nextMilestone })}</p>
+                        <p className="text-xs font-semibold uppercase text-foreground/70">{safeT('polls.create.share.dialog.nextMilestone', 'Next Milestone')}</p>
+                        <p className="font-medium text-foreground">{safeT('polls.create.share.dialog.milestoneVotes', `${nextMilestone} votes`, { count: nextMilestone })}</p>
                       </div>
                     )}
                   </div>
@@ -1447,8 +1505,8 @@ export default function CreatePollPage() {
               </Button>
             </div>
 
-            {/* Milestones - Collapsible and less prominent */}
-            <details className="rounded-lg border border-border/40 bg-muted/20">
+            {/* Milestones - Collapsible and less prominent (collapsed by default) */}
+            <details className="rounded-lg border border-border/40 bg-muted/20" open={false}>
               <summary className="cursor-pointer p-3 text-sm font-medium text-foreground hover:bg-muted/30 transition-colors">
               <div className="flex items-center justify-between">
                   <span>{safeT('polls.create.share.dialog.milestones.title', 'Vote Milestones')}</span>
@@ -1458,7 +1516,7 @@ export default function CreatePollPage() {
               </div>
               </summary>
               <div className="border-t border-border/40 p-3">
-                <p className="mb-3 text-xs text-muted-foreground">
+                <p className="mb-3 text-xs font-medium text-foreground/80">
                   {safeT('polls.create.share.dialog.milestones.description', 'Get notified when your poll reaches these vote counts.')}
                 </p>
                 <div className="space-y-2">
@@ -1467,7 +1525,7 @@ export default function CreatePollPage() {
                     key={`milestone-pref-${milestone}`}
                       className="flex items-center justify-between gap-3 rounded-md border border-border/40 bg-background/50 p-2"
                   >
-                      <Label htmlFor={`milestone-${milestone}`} className="text-xs font-medium cursor-pointer flex-1">
+                      <Label htmlFor={`milestone-${milestone}`} className="text-xs font-semibold cursor-pointer flex-1 text-foreground">
                         {safeT('polls.create.share.dialog.milestones.notifyAt', `${milestone} votes`, { count: milestone })}
                       </Label>
                     <Switch
@@ -1479,20 +1537,56 @@ export default function CreatePollPage() {
                   </div>
                 ))}
               </div>
-            </div>
+              </div>
             </details>
           </div>
 
           <DialogFooter className="pt-4">
-            <Button type="button" variant="ghost" onClick={handleCreateAnotherPoll}>
-              {safeT('polls.create.share.dialog.buttons.createAnother', 'Create Another')}
-            </Button>
-            <Button type="button" onClick={handleViewPoll}>
-              {safeT('polls.create.share.dialog.buttons.done', 'Done')}
-            </Button>
+            <div className="flex w-full items-center justify-between">
+              <Button
+                type="button"
+                variant="destructive"
+                onClick={() => setShowDeleteConfirm(true)}
+                className="flex items-center gap-2"
+                disabled={isDeletingPoll}
+              >
+                <Trash2 className="h-4 w-4" />
+                {safeT('polls.create.share.dialog.buttons.delete', 'Delete Poll')}
+              </Button>
+              <div className="flex gap-2">
+                <Button type="button" variant="ghost" onClick={handleCreateAnotherPoll}>
+                  {safeT('polls.create.share.dialog.buttons.createAnother', 'Create Another')}
+                </Button>
+                <Button type="button" onClick={handleViewPoll}>
+                  {safeT('polls.create.share.dialog.buttons.done', 'Done')}
+                </Button>
+              </div>
+            </div>
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      {/* Delete Confirmation Dialog */}
+      <AlertDialog open={showDeleteConfirm} onOpenChange={setShowDeleteConfirm}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>{safeT('polls.create.share.dialog.delete.confirm.title', 'Delete Poll')}</AlertDialogTitle>
+            <AlertDialogDescription>
+              {safeT('polls.create.share.dialog.delete.confirm.description', `Are you sure you want to delete "${shareInfo?.title ?? safeT('polls.create.share.dialog.yourPoll', 'your poll')}"? This action cannot be undone and will permanently remove the poll and all associated votes.`, { title: shareInfo?.title ?? safeT('polls.create.share.dialog.yourPoll', 'your poll') })}
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={isDeletingPoll}>{safeT('polls.create.share.dialog.delete.confirm.cancel', 'Cancel')}</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={handleDeletePoll}
+              disabled={isDeletingPoll}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            >
+              {isDeletingPoll ? safeT('polls.create.share.dialog.delete.confirm.deleting', 'Deleting...') : safeT('polls.create.share.dialog.delete.confirm.delete', 'Delete Poll')}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }

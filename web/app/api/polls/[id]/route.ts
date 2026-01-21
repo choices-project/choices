@@ -19,7 +19,7 @@ export const GET = withErrorHandling(async (
     if (!pollIdValidation.success) {
       return validationError({ pollId: 'Invalid poll ID format' });
     }
-    
+
     const pollId = pollIdValidation.data;
 
     const supabaseClient = await getSupabaseServerClient();
@@ -102,7 +102,7 @@ export const DELETE = withErrorHandling(async (
   { params }: { params: Promise<{ id: string }> }
 ) => {
   const { id: pollId } = await params;
-  
+
   // Validate poll ID format (UUID)
   const pollIdValidation = z.string().uuid('Invalid poll ID format').safeParse(pollId);
   if (!pollIdValidation.success) {

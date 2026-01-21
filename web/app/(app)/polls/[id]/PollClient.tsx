@@ -897,15 +897,15 @@ export default function PollClient({ poll }: PollClientProps) {
           </CardHeader>
           <CardContent>
             {/* Poll Metadata */}
-            <div className="flex flex-wrap items-center gap-3 text-sm text-muted-foreground">
-              <Badge variant="outline" className="text-xs">
+            <div className="flex flex-wrap items-center gap-3 text-sm">
+              <Badge variant="outline" className="text-xs font-medium">
                 {poll.privacyLevel}
               </Badge>
-              <Badge variant="outline" className="text-xs" data-testid="voting-method">
+              <Badge variant="outline" className="text-xs font-medium" data-testid="voting-method">
                 {formatVotingMethod(poll.votingMethod)}
               </Badge>
               {poll.endtime && (
-                <span className="text-xs">Ends {formatDate(poll.endtime)}</span>
+                <span className="text-xs font-medium text-foreground">Ends {formatDate(poll.endtime)}</span>
               )}
             </div>
           </CardContent>
@@ -1059,7 +1059,7 @@ export default function PollClient({ poll }: PollClientProps) {
                     <div className="text-2xl font-bold text-foreground">
                       {results.totalVotes}
                     </div>
-                    <div className="text-sm text-muted-foreground mt-1">Total Votes</div>
+                    <div className="text-sm font-medium text-foreground mt-1">Total Votes</div>
                   </div>
                   <div className="text-center p-4 bg-muted/50 rounded-lg border">
                     <div className="text-lg font-semibold text-foreground">
@@ -1088,24 +1088,24 @@ export default function PollClient({ poll }: PollClientProps) {
                     />
 
                     <div className="space-y-4">
-                      <h4 className="text-sm font-semibold text-gray-700">Instant runoff rounds</h4>
+                      <h4 className="text-sm font-semibold text-foreground">Instant runoff rounds</h4>
                       {results.rounds.map((round) => (
                         <div key={round.round} className="rounded-lg border bg-gray-50 p-4">
                           <div className="mb-2 flex items-center justify-between">
-                            <span className="font-medium text-gray-800">Round {round.round}</span>
+                            <span className="font-medium text-foreground">Round {round.round}</span>
                             {round.eliminated !== undefined && (
                               <span className="text-xs text-red-600">
                                 Eliminated: {getOptionLabel(Number(round.eliminated))}
                               </span>
                             )}
                           </div>
-                          <div className="space-y-1 text-xs text-gray-600">
+                          <div className="space-y-1 text-xs text-foreground">
                             {Object.entries(round.votes).map(([optionKey, voteCount]) => {
                               const percentage = round.percentages[optionKey] ?? 0;
                               const label = getOptionLabel(Number(optionKey));
                               return (
                                 <div key={`${round.round}-${optionKey}`} className="flex justify-between">
-                                  <span className="font-medium text-gray-700">{label}</span>
+                                  <span className="font-medium text-foreground">{label}</span>
                                   <span>
                                     {voteCount} vote{voteCount === 1 ? '' : 's'} ({percentage.toFixed(1)}%)
                                   </span>
