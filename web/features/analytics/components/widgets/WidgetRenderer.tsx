@@ -62,23 +62,34 @@ class WidgetErrorBoundary extends React.Component<WidgetErrorBoundaryProps, Widg
   }
 
   override componentDidCatch(error: Error, errorInfo: React.ErrorInfo) {
-    logger.error('Widget error:', { widgetId: this.props.widgetId, error, errorInfo });
+    logger.error('Widget error:', { 
+      widgetId: this.props.widgetId, 
+      error: error.message, 
+      errorStack: error.stack,
+      componentStack: errorInfo.componentStack,
+      errorInfo 
+    });
     this.props.onError?.(error);
   }
 
   override render() {
     if (this.state.hasError) {
       return (
-        <div className="flex flex-col items-center justify-center p-8 text-center">
+        <div 
+          className="flex flex-col items-center justify-center p-8 text-center"
+          data-testid={`widget-error-${this.props.widgetId}`}
+          data-widget-id={this.props.widgetId}
+        >
           <AlertCircle className="w-12 h-12 text-destructive mb-4" />
           <h3 className="font-semibold text-lg mb-2">Widget Error</h3>
           <p className="text-sm text-muted-foreground mb-4">
-            {this.state.error?.message ?? 'Something went wrong loading this widget'}
+            {this.state.error?.message ?? `Something went wrong loading widget: ${this.props.widgetId}`}
           </p>
           <Button
             variant="outline"
             size="sm"
             onClick={() => this.setState({ hasError: false, error: null })}
+            data-testid={`widget-retry-${this.props.widgetId}`}
           >
             <RefreshCw className="w-4 h-4 mr-2" />
             Retry
@@ -161,7 +172,13 @@ export const WidgetRenderer: React.FC<WidgetRendererProps> = ({
   const resizeButtonAriaLabel = t('analytics.widgets.resizeButtonAria' as never);
 
   const handleError = (widgetError: Error) => {
-    logger.error('Widget rendering error:', { widgetId: config.id, error: widgetError });
+    logger.error('Widget rendering error:', { 
+      widgetId: config.id, 
+      error: widgetError.message,
+      errorStack: widgetError.stack,
+      widgetTitle: config.title,
+      widgetType: config.type
+    });
   };
 
   const focusCard = useCallback(() => {
@@ -567,14 +584,23 @@ export const WidgetRenderer: React.FC<WidgetRendererProps> = ({
           {isLoading ? (
             <WidgetLoadingSkeleton />
           ) : error ? (
-            <div className="flex flex-col items-center justify-center p-8 text-center">
+            <div 
+              className="flex flex-col items-center justify-center p-8 text-center"
+              data-testid={`widget-load-error-${config.id}`}
+              data-widget-id={config.id}
+            >
               <AlertCircle className="w-12 h-12 text-destructive mb-4" />
               <h3 className="font-semibold text-lg mb-2">Failed to Load</h3>
               <p className="text-sm text-muted-foreground mb-4">
-                {error.message || 'An error occurred while loading this widget'}
+                {error.message || `An error occurred while loading widget: ${config.id}`}
               </p>
               {onRefresh && (
-                <Button variant="outline" size="sm" onClick={onRefresh}>
+                <Button 
+                  variant="outline" 
+                  size="sm" 
+                  onClick={onRefresh}
+                  data-testid={`widget-refresh-${config.id}`}
+                >
                   <RefreshCw className="w-4 h-4 mr-2" />
                   Try Again
                 </Button>

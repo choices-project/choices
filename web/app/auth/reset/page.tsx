@@ -35,11 +35,15 @@ export default function ResetPasswordPage() {
 
       if (resetError) {
         setError(resetError.message || t('auth.reset.error'));
+        setIsSuccess(false); // Explicitly clear success state on error
         setIsSubmitting(false);
         return;
       }
 
+      // Success - clear any previous errors and set success state
+      setError(null);
       setIsSuccess(true);
+      setIsSubmitting(false);
     } catch (err) {
       const message = err instanceof Error ? err.message : t('auth.reset.error');
       setError(message || t('auth.reset.error'));
