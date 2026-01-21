@@ -100,14 +100,14 @@ type PollClientProps = {
 export default function PollClient({ poll }: PollClientProps) {
   const router = useRouter();
   const params = useParams();
-  
+
   // Track if component is mounted to prevent hydration mismatches from date formatting
   const [isMounted, setIsMounted] = useState(false);
-  
+
   useEffect(() => {
     setIsMounted(true);
   }, []);
-  
+
   // useParams() is safe here because this component is dynamically imported with ssr: false
   // With ssr: false, the component never renders on the server, so useParams() is safe
   const pollId = (params?.id as string) || poll?.id || '';
@@ -479,7 +479,7 @@ export default function PollClient({ poll }: PollClientProps) {
       });
       hasRecordedViewRef.current = true;
     }
-     
+
   }, []);
 
   const handleVote = useCallback(async (submission: VoteSubmission): Promise<VoteResponse> => {
@@ -606,7 +606,7 @@ export default function PollClient({ poll }: PollClientProps) {
     } finally {
       setVotingRef.current(false);
     }
-     
+
   }, [
     fetchPollData,
     poll.id,
@@ -877,45 +877,84 @@ export default function PollClient({ poll }: PollClientProps) {
           </Card>
         )}
 
-        {/* Voting Interface */}
-        {isPollActive && !hasVoted && (
+        {/* Poll Options Display - Always show so users know what the poll is about */}
+        {normalizedOptions && normalizedOptions.length > 0 && (
+          <Card className="mb-8">
+            <CardHeader>
+              <CardTitle data-testid="poll-options-title">Poll Options</CardTitle>
+              <CardDescription>
+                {isPollActive && !hasVoted
+                  ? 'Select your preferred option below to cast your vote'
+                  : hasVoted
+                    ? 'You have already voted on this poll'
+                    : 'This poll is no longer accepting votes'}
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-3" data-testid="poll-options-list">
+                {normalizedOptions.map((option, index) => (
+                  <div
+                    key={option.id || index}
+                    className="p-4 border border-gray-200 rounded-lg hover:border-blue-300 transition-colors"
+                  >
+                    <div className="flex items-center space-x-3">
+                      <div className="flex-shrink-0 w-8 h-8 rounded-full bg-blue-100 text-blue-800 flex items-center justify-center font-semibold text-sm">
+                        {index + 1}
+                      </div>
+                      <div className="flex-1">
+                        <p className="text-gray-900 font-medium">{option.text}</p>
+                        {option.votes !== undefined && option.votes > 0 && (
+                          <p className="text-sm text-gray-500 mt-1">{option.votes} vote{option.votes !== 1 ? 's' : ''}</p>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </CardContent>
+          </Card>
+        )}
+
+        {/* Voting Interface - Only show for active polls where user hasn't voted */}
+        {isPollActive && !hasVoted && normalizedOptions && normalizedOptions.length > 0 && (
           <Card className="mb-8">
             <CardHeader>
               <CardTitle data-testid="voting-section-title">Cast Your Vote</CardTitle>
-              <CardDescription>
-                {poll.options && poll.options.length > 0
-                  ? 'Select your preferred option below'
-                  : 'This poll has no options available'}
-              </CardDescription>
+              <CardDescription>Select your preferred option below</CardDescription>
             </CardHeader>
             <CardContent data-testid="voting-form">
-              {normalizedOptions && normalizedOptions.length > 0 ? (
-                <VotingInterface
-                  poll={{
-                    id: poll.id,
-                    title: poll.title,
-                    description: poll.description,
-                    options: normalizedOptions.map((option) => ({
-                      id: option.id,
-                      text: option.text
-                    })),
-                    votingMethod: poll.votingMethod,
-                    totalVotes: poll.totalvotes,
-                    endtime: poll.endtime || new Date(Date.now() + 365 * 24 * 60 * 60 * 1000).toISOString() // Default to 1 year from now if no endtime
-                  }}
-                  onVote={handleVote}
-                  isVoting={storeIsVoting}
-                  hasVoted={hasVoted}
-                  onAnalyticsEvent={recordPollEvent}
-                />
-              ) : (
-                <Alert variant="destructive">
-                  <AlertCircle className="h-4 w-4" />
-                  <AlertDescription>
-                    This poll has no voting options configured. Please contact the poll creator.
-                  </AlertDescription>
-                </Alert>
-              )}
+              <VotingInterface
+                poll={{
+                  id: poll.id,
+                  title: poll.title,
+                  description: poll.description,
+                  options: normalizedOptions.map((option) => ({
+                    id: option.id,
+                    text: option.text
+                  })),
+                  votingMethod: poll.votingMethod,
+                  totalVotes: poll.totalvotes,
+                  endtime: poll.endtime || new Date(Date.now() + 365 * 24 * 60 * 60 * 1000).toISOString() // Default to 1 year from now if no endtime
+                }}
+                onVote={handleVote}
+                isVoting={storeIsVoting}
+                hasVoted={hasVoted}
+                onAnalyticsEvent={recordPollEvent}
+              />
+            </CardContent>
+          </Card>
+        )}
+
+        {/* Error if poll has no options */}
+        {(!normalizedOptions || normalizedOptions.length === 0) && (
+          <Card className="mb-8">
+            <CardContent className="pt-6">
+              <Alert variant="destructive">
+                <AlertCircle className="h-4 w-4" />
+                <AlertDescription>
+                  This poll has no voting options configured. Please contact the poll creator.
+                </AlertDescription>
+              </Alert>
             </CardContent>
           </Card>
         )}
