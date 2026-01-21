@@ -3,7 +3,7 @@
 import { RefreshCw, Shield, AlertTriangle, Users, Activity } from 'lucide-react';
 import React, { useState, useEffect } from 'react';
 
-
+import { ErrorBoundary } from '@/components/shared/ErrorBoundary';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -120,42 +120,43 @@ export default function AdminSecurityPage() {
   };
 
   // CRITICAL FIX: Remove AdminLayout wrapper - parent layout.tsx already provides it
-  if (loading && !data) {
-    return (
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        <div className="flex items-center justify-center h-64">
-          <RefreshCw className="h-8 w-8 animate-spin" />
-          <span className="ml-2">Loading security data...</span>
-        </div>
-      </div>
-    );
-  }
-
-  if (error) {
-    return (
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        <Alert variant="destructive">
-          <AlertTriangle className="h-4 w-4" />
-          <AlertDescription>
-            Failed to load security data: {error}
-            <Button
-              variant="outline"
-              size="sm"
-              className="ml-2"
-              onClick={() => void fetchData()}
-            >
-              Retry
-            </Button>
-          </AlertDescription>
-        </Alert>
-      </div>
-    );
-  }
-
-  if (!data) return null;
-
   return (
-    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-6">
+    <ErrorBoundary
+      fallback={
+        <div className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg p-6 m-8">
+          <h3 className="text-lg font-medium text-red-800 dark:text-red-300">Security Dashboard Error</h3>
+          <p className="text-red-600 dark:text-red-400 mt-2">
+            An error occurred while loading the security dashboard. Please try refreshing the page.
+          </p>
+        </div>
+      }
+    >
+      {loading && !data ? (
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+          <div className="flex items-center justify-center h-64">
+            <RefreshCw className="h-8 w-8 animate-spin" />
+            <span className="ml-2">Loading security data...</span>
+          </div>
+        </div>
+      ) : error ? (
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+          <Alert variant="destructive">
+            <AlertTriangle className="h-4 w-4" />
+            <AlertDescription>
+              Failed to load security data: {error}
+              <Button
+                variant="outline"
+                size="sm"
+                className="ml-2"
+                onClick={() => void fetchData()}
+              >
+                Retry
+              </Button>
+            </AlertDescription>
+          </Alert>
+        </div>
+      ) : !data ? null : (
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-6">
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-3xl font-bold flex items-center gap-2">
@@ -367,6 +368,8 @@ export default function AdminSecurityPage() {
           )}
         </CardContent>
       </Card>
-    </div>
+        </div>
+      )}
+    </ErrorBoundary>
   );
 }

@@ -1,15 +1,15 @@
 /**
  * Analytics Page - ADMIN ONLY
- * 
+ *
  * Dual-mode analytics dashboard:
  * - Classic Mode: EnhancedAnalyticsDashboard (tabbed layout)
  * - Widget Mode: WidgetDashboard (customizable drag-drop)
- * 
+ *
  * Updated: November 6, 2025
  * - Added widget dashboard with full customization
  * - Toggle between modes
  * - Persists user preference
- * 
+ *
  * Access: Admin-only
  */
 
@@ -23,6 +23,7 @@ import { getSupabaseBrowserClient } from '@/utils/supabase/client';
 import { EnhancedAnalyticsDashboard } from '@/features/analytics';
 import { WidgetDashboard } from '@/features/analytics/components/widgets/WidgetDashboard';
 
+import { ErrorBoundary } from '@/components/shared/ErrorBoundary';
 import { Button } from '@/components/ui/button';
 
 import { useUser, useUserLoading } from '@/lib/stores';
@@ -58,7 +59,7 @@ export default function AnalyticsPage() {
 
   useEffect(() => {
     let isMounted = true; // Track if component is still mounted
-    
+
     const loadPreferences = async () => {
       if (!user?.id) {
         if (isMounted) {
@@ -119,7 +120,7 @@ export default function AnalyticsPage() {
           analytics_dashboard_mode: newMode,
         })
         .eq('user_id', user.id);
-      
+
       logger.info('Dashboard mode preference saved', { mode: newMode, userId: user.id });
     } catch (error) {
       logger.error('Failed to save mode preference', { error, userId: user.id });
@@ -167,9 +168,33 @@ export default function AnalyticsPage() {
 
       {/* Dashboard Renderer */}
       {mode === 'classic' ? (
-        <EnhancedAnalyticsDashboard enableRealTime enableNewSchema skipAccessGuard />
+        <ErrorBoundary
+          fallback={
+            <div className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg p-6">
+              <h3 className="text-lg font-medium text-red-800 dark:text-red-300">Analytics Dashboard Error</h3>
+              <p className="text-red-600 dark:text-red-400 mt-2">
+                An error occurred while loading the analytics dashboard. Please try refreshing the page.
+              </p>
+            </div>
+          }
+        >
+          <EnhancedAnalyticsDashboard enableRealTime enableNewSchema skipAccessGuard />
+        </ErrorBoundary>
       ) : (
-        user?.id && <WidgetDashboard userId={user.id} isAdmin={true} />
+        user?.id && (
+          <ErrorBoundary
+            fallback={
+              <div className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg p-6">
+                <h3 className="text-lg font-medium text-red-800 dark:text-red-300">Widget Dashboard Error</h3>
+                <p className="text-red-600 dark:text-red-400 mt-2">
+                  An error occurred while loading the widget dashboard. Please try refreshing the page.
+                </p>
+              </div>
+            }
+          >
+            <WidgetDashboard userId={user.id} isAdmin={true} />
+          </ErrorBoundary>
+        )
       )}
     </div>
   );

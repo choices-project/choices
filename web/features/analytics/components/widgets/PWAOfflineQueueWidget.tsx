@@ -1,7 +1,7 @@
 'use client';
 
 import { AlertTriangle, CheckCircle2, Loader2, RefreshCw } from 'lucide-react';
-import { useCallback, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 
 import { Button } from '@/components/ui/button';
 
@@ -12,7 +12,9 @@ import type { WidgetProps } from '../../types/widget';
 
 const QUEUE_WARN_THRESHOLD = 5;
 
-const formatRelativeTime = (value: string | null | undefined) => {
+// Guard Date.now() usage to prevent hydration mismatches
+// Following established pattern: use useState + useEffect for client-only calculations
+const formatRelativeTime = (value: string | null | undefined, now: number | null) => {
   if (!value) {
     return 'Never';
   }
@@ -22,7 +24,12 @@ const formatRelativeTime = (value: string | null | undefined) => {
     return 'Unknown';
   }
 
-  const diffMs = Date.now() - timestamp;
+  // Only calculate relative time after mount to prevent hydration mismatch
+  if (now === null) {
+    return 'Calculating...';
+  }
+
+  const diffMs = now - timestamp;
   if (diffMs < 0) {
     return 'Just now';
   }
@@ -100,6 +107,14 @@ export default function PWAOfflineQueueWidget(_: WidgetProps) {
   const { processOfflineActions } = usePWAActions();
   const [isProcessing, setIsProcessing] = useState(false);
 
+  // Guard Date.now() usage to prevent hydration mismatches
+  const [now, setNow] = useState<number | null>(null);
+
+  useEffect(() => {
+    // Only calculate after mount to prevent hydration mismatch
+    setNow(Date.now());
+  }, []);
+
   const queueSize = stats.offlineQueueSize ?? stats.queuedActions;
   const status = useMemo(
     () => getQueueStatus(queueSize, stats.isOffline, stats.isSyncing),
@@ -107,8 +122,8 @@ export default function PWAOfflineQueueWidget(_: WidgetProps) {
   );
 
   const lastUpdatedLabel = useMemo(
-    () => formatRelativeTime(stats.offlineQueueUpdatedAt),
-    [stats.offlineQueueUpdatedAt]
+    () => formatRelativeTime(stats.offlineQueueUpdatedAt, now),
+    [stats.offlineQueueUpdatedAt, now]
   );
 
   const handleProcessOffline = useCallback(async () => {

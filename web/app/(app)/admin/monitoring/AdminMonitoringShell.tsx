@@ -2,6 +2,8 @@
 
 import React, { useEffect } from 'react';
 
+import { ErrorBoundary } from '@/components/shared/ErrorBoundary';
+
 import { useAppActions } from '@/lib/stores/appStore';
 
 // CRITICAL FIX: AdminLayout is provided by parent layout.tsx - don't import or use it here
@@ -30,7 +32,20 @@ export function AdminMonitoringShell({ children }: AdminMonitoringShellProps) {
 
   // CRITICAL FIX: Remove AdminLayout wrapper - parent layout.tsx already provides it
   // This shell component is just for setting route state, not layout structure
-  return <>{children}</>;
+  return (
+    <ErrorBoundary
+      fallback={
+        <div className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg p-6 m-8">
+          <h3 className="text-lg font-medium text-red-800 dark:text-red-300">Monitoring Page Error</h3>
+          <p className="text-red-600 dark:text-red-400 mt-2">
+            An error occurred while loading the monitoring page. Please try refreshing the page.
+          </p>
+        </div>
+      }
+    >
+      {children}
+    </ErrorBoundary>
+  );
 }
 
 

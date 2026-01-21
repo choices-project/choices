@@ -11,6 +11,7 @@ import {
   usePerformanceLoading,
   usePerformanceError
 } from '@/lib/stores';
+import logger from '@/lib/utils/logger';
 
 export default function PerformanceDashboard() {
   // Get state from performanceStore
@@ -20,9 +21,9 @@ export default function PerformanceDashboard() {
   const autoRefresh = useAutoRefresh();
   const loading = usePerformanceLoading();
   const error = usePerformanceError();
-  const { 
-    loadDatabasePerformance, 
-    refreshMaterializedViews, 
+  const {
+    loadDatabasePerformance,
+    refreshMaterializedViews,
     performDatabaseMaintenance,
     setAutoRefresh,
     initialize,
@@ -41,24 +42,55 @@ export default function PerformanceDashboard() {
   // Load performance statistics
   const loadPerformanceStats = useCallback(async () => {
     await loadDatabasePerformanceRef.current();
-  }, [])  
+  }, [])
 
 
   // Refresh materialized views
   const handleRefreshMaterializedViews = useCallback(async () => {
     await refreshMaterializedViewsRef.current();
-  }, [])  
+  }, [])
 
   // Perform database maintenance
   const handleDatabaseMaintenance = useCallback(async () => {
     await performDatabaseMaintenanceRef.current();
-  }, [])  
+  }, [])
 
-  // Load data on mount
+  // Load data on mount with error handling and timeout
   useEffect(() => {
-    initializeRef.current();
-    loadPerformanceStats();
-  }, [loadPerformanceStats]);  
+    let isMounted = true;
+    let timeoutId: NodeJS.Timeout | null = null;
+
+    const loadData = async () => {
+      try {
+        initializeRef.current();
+
+        // Set timeout for loading (30 seconds)
+        timeoutId = setTimeout(() => {
+          if (isMounted) {
+            logger.warn('Performance dashboard load timeout - showing error state');
+            // Error will be set by the store if load fails
+          }
+        }, 30_000);
+
+        await loadPerformanceStats();
+      } catch (err) {
+        logger.error('Failed to load performance data:', err);
+      } finally {
+        if (timeoutId) {
+          clearTimeout(timeoutId);
+        }
+      }
+    };
+
+    loadData();
+
+    return () => {
+      isMounted = false;
+      if (timeoutId) {
+        clearTimeout(timeoutId);
+      }
+    };
+  }, [loadPerformanceStats]);
 
   // Calculate performance insights
   const performanceInsights = {
@@ -80,17 +112,44 @@ export default function PerformanceDashboard() {
 
   if (loading) {
     return (
-      <div className="space-y-4">
+      <div className="space-y-4" role="status" aria-live="polite" aria-busy="true">
         <div className="animate-pulse">
-          <div className="h-8 bg-gray-200 rounded w-1/4 mb-4" />
+          <div className="h-8 bg-gray-200 dark:bg-gray-700 rounded w-1/4 mb-4" />
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             {[1, 2, 3].map((i) => (
-              <div key={i} className="h-32 bg-gray-200 rounded" />
+              <div key={i} className="h-32 bg-gray-200 dark:bg-gray-700 rounded" />
             ))}
           </div>
         </div>
+        <p className="text-sm text-gray-600 dark:text-gray-400 text-center">
+          Loading performance metrics...
+        </p>
       </div>
-    )
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg p-6">
+        <div className="flex items-center">
+          <svg className="w-6 h-6 text-red-600 dark:text-red-400 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+          </svg>
+          <div>
+            <h3 className="text-lg font-medium text-red-800 dark:text-red-300">Error Loading Performance Data</h3>
+            <p className="text-red-600 dark:text-red-400">{error}</p>
+            <button
+              onClick={() => {
+                loadPerformanceStats();
+              }}
+              className="mt-4 px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700"
+            >
+              Try Again
+            </button>
+          </div>
+        </div>
+      </div>
+    );
   }
 
   return (

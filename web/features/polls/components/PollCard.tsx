@@ -131,7 +131,7 @@ const PollCard: React.FC<PollCardProps> = ({ poll, showActions = true, className
   const optionsCount = optionsArray.length;
 
   return (
-    <Card 
+    <Card
       className={`hover:shadow-md transition-shadow duration-200 ${className}`}
       data-testid="poll-card"
       data-poll-id={poll.id}
@@ -211,7 +211,7 @@ const PollCard: React.FC<PollCardProps> = ({ poll, showActions = true, className
         {showActions && (
           <div className="flex gap-2">
             <Button asChild variant="default" className="flex-1">
-              <Link 
+              <Link
                 href={`/polls/${poll.id}`}
                 data-testid="poll-link"
                 aria-label={`View poll: ${displayTitle}`}
@@ -223,7 +223,7 @@ const PollCard: React.FC<PollCardProps> = ({ poll, showActions = true, className
 
             {status === 'active' && (
               <Button asChild variant="outline" className="flex-1">
-                <Link 
+                <Link
                   href={`/polls/${poll.id}/vote`}
                   data-testid="poll-vote-link"
                   aria-label={`Vote on poll: ${displayTitle}`}

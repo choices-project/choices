@@ -120,14 +120,14 @@ export function PollResults({ pollId, trustTiers }: PollResultsProps) {
 
   if (error) {
     // Determine error type from error message
-    const errorKey = error.includes('not found') || error.includes('Poll not found') 
+    const errorKey = error.includes('not found') || error.includes('Poll not found')
       ? 'POLL_NOT_FOUND'
       : error.includes('timeout') || error.includes('Timeout')
       ? 'TIMEOUT_ERROR'
       : 'NETWORK_ERROR';
-    
+
     const errorConfig = getErrorMessageWithFallback(errorKey, ERROR_MESSAGES.NETWORK_ERROR);
-    
+
     return (
       <EnhancedErrorDisplay
         title={errorConfig.title}

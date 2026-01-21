@@ -52,57 +52,29 @@ export default function UserManagement({ onUserUpdate, onUserDelete }: UserManag
 
   const { loadUsers, setError } = useAdminActions();
 
-  // #region agent log
-  const renderCountRef = useRef(0);
-  renderCountRef.current += 1;
-  useEffect(() => {
-    const funcIdA = loadUsers.toString().slice(0, 50);
-    const funcIdB = setError.toString().slice(0, 50);
-    fetch('http://127.0.0.1:7242/ingest/6a732aed-2d72-4883-a63a-f3c892fc1216',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'UserManagement.tsx:54',message:'useAdminActions returned values',data:{funcIdA,funcIdB,renderCount:renderCountRef.current},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'C'})}).catch(()=>{});
-  }, [loadUsers, setError]);
-  // #endregion
-
   const loadUsersRef = useRef(loadUsers);
   const setErrorRef = useRef(setError);
   const hasLoadedRef = useRef(false);
 
   useEffect(() => {
-    // #region agent log
-    fetch('http://127.0.0.1:7242/ingest/6a732aed-2d72-4883-a63a-f3c892fc1216',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'UserManagement.tsx:66',message:'useEffect ref update running',data:{renderCount:renderCountRef.current},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'C'})}).catch(()=>{});
-    // #endregion
     loadUsersRef.current = loadUsers;
     setErrorRef.current = setError;
   }, [loadUsers, setError]);
 
   useEffect(() => {
     if (hasLoadedRef.current) {
-      // #region agent log
-      fetch('http://127.0.0.1:7242/ingest/6a732aed-2d72-4883-a63a-f3c892fc1216',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'UserManagement.tsx:75',message:'useEffect load skipped - already loaded',data:{},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'D'})}).catch(()=>{});
-      // #endregion
       return;
     }
-    // #region agent log
-    fetch('http://127.0.0.1:7242/ingest/6a732aed-2d72-4883-a63a-f3c892fc1216',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'UserManagement.tsx:79',message:'useEffect load running - calling loadUsers',data:{},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'D'})}).catch(()=>{});
-    // #endregion
     hasLoadedRef.current = true;
     const startTime = performance.now();
 
     const loadUsersData = async () => {
       try {
-        // #region agent log
-        fetch('http://127.0.0.1:7242/ingest/6a732aed-2d72-4883-a63a-f3c892fc1216',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'UserManagement.tsx:87',message:'loadUsersData before loadUsers call',data:{},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'D'})}).catch(()=>{});
-        // #endregion
         await loadUsersRef.current();
-        // #region agent log
-        fetch('http://127.0.0.1:7242/ingest/6a732aed-2d72-4883-a63a-f3c892fc1216',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'UserManagement.tsx:90',message:'loadUsersData after loadUsers call',data:{},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'D'})}).catch(()=>{});
-        // #endregion
 
         const loadTime = performance.now() - startTime;
         performanceMetrics.addMetric('user-management-load', loadTime);
       } catch (err) {
-        // #region agent log
-        fetch('http://127.0.0.1:7242/ingest/6a732aed-2d72-4883-a63a-f3c892fc1216',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'UserManagement.tsx:96',message:'loadUsersData error',data:{error:err instanceof Error?err.message:'unknown'},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'D'})}).catch(()=>{});
-        // #endregion
         const errorMessage = err instanceof Error ? err.message : 'Failed to load users';
         setErrorRef.current(errorMessage);
         performanceMetrics.addMetric('user-management-error', 1);

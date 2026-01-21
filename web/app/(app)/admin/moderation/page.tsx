@@ -3,6 +3,7 @@
 import { AlertTriangle, Shield, RefreshCw } from 'lucide-react';
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 
+import { ErrorBoundary } from '@/components/shared/ErrorBoundary';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -173,7 +174,17 @@ export default function ModerationPage() {
   );
 
   return (
-    <div className="max-w-6xl mx-auto px-6 py-8 space-y-6">
+    <ErrorBoundary
+      fallback={
+        <div className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg p-6 m-8">
+          <h3 className="text-lg font-medium text-red-800 dark:text-red-300">Moderation Page Error</h3>
+          <p className="text-red-600 dark:text-red-400 mt-2">
+            An error occurred while loading the moderation page. Please try refreshing the page.
+          </p>
+        </div>
+      }
+    >
+      <div className="max-w-6xl mx-auto px-6 py-8 space-y-6">
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-2xl font-semibold text-gray-900 dark:text-gray-100">Moderation Queue</h1>
@@ -370,6 +381,7 @@ export default function ModerationPage() {
           )}
         </CardContent>
       </Card>
-    </div>
+      </div>
+    </ErrorBoundary>
   );
 }

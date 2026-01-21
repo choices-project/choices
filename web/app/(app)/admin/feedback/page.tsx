@@ -2,6 +2,8 @@
 
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 
+import { ErrorBoundary } from '@/components/shared/ErrorBoundary';
+
 import { useAppActions } from '@/lib/stores/appStore';
 import { logger } from '@/lib/utils/logger';
 
@@ -301,7 +303,17 @@ export default function AdminFeedbackPage() {
   }, []);
 
   return (
-    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-6" data-testid="admin-feedback-page">
+    <ErrorBoundary
+      fallback={
+        <div className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg p-6 m-8">
+          <h3 className="text-lg font-medium text-red-800 dark:text-red-300">Feedback Page Error</h3>
+          <p className="text-red-600 dark:text-red-400 mt-2">
+            An error occurred while loading the feedback page. Please try refreshing the page.
+          </p>
+        </div>
+      }
+    >
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-6" data-testid="admin-feedback-page">
       <div>
         <h1 className="text-2xl font-bold text-gray-900 dark:text-gray-100">Feedback Management</h1>
         <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">
@@ -338,6 +350,7 @@ export default function AdminFeedbackPage() {
           onStatusUpdate={handleStatusUpdate}
         />
       )}
-    </div>
+      </div>
+    </ErrorBoundary>
   );
 }
