@@ -291,18 +291,30 @@ export const POST = withErrorHandling(async (request: NextRequest, { params }: {
       return validationError({ rankings: 'Select at least one option to rank.' });
     }
 
-    const { error: deleteExistingBallotError } = await supabase
+    // Use admin client to bypass RLS for delete operation
+    const { error: deleteExistingBallotError } = await adminClient
       .from('poll_rankings')
       .delete()
       .eq('poll_id', pollId)
       .eq('user_id', user.id);
 
     if (deleteExistingBallotError) {
-      logger.error('Ranked vote delete failed', deleteExistingBallotError);
-      return errorResponse('Failed to update your ranked ballot', 500);
+      logger.error('Ranked vote delete failed', {
+        error: deleteExistingBallotError,
+        pollId,
+        userId: user.id,
+        message: deleteExistingBallotError.message,
+        details: deleteExistingBallotError.details,
+        hint: deleteExistingBallotError.hint,
+      });
+      return errorResponse(
+        `Failed to update your ranked ballot: ${deleteExistingBallotError.message ?? 'Database error'}`,
+        500
+      );
     }
 
-    const { data: insertedBallot, error: insertBallotError } = await supabase
+    // Use admin client to bypass RLS for insert operation
+    const { data: insertedBallot, error: insertBallotError } = await adminClient
       .from('poll_rankings')
       .insert({
         poll_id: pollId,
@@ -315,8 +327,19 @@ export const POST = withErrorHandling(async (request: NextRequest, { params }: {
       .single<{ id: string }>();
 
     if (insertBallotError) {
-      logger.error('Ranked vote insert failed', insertBallotError);
-      return errorResponse('Failed to submit ranked vote', 500);
+      logger.error('Ranked vote insert failed', {
+        error: insertBallotError,
+        pollId,
+        userId: user.id,
+        rankings: uniqueRankingIndices,
+        message: insertBallotError.message,
+        details: insertBallotError.details,
+        hint: insertBallotError.hint,
+      });
+      return errorResponse(
+        `Failed to submit ranked vote: ${insertBallotError.message ?? 'Database error'}`,
+        500
+      );
     }
 
     await recordAnalyticsSafely();
