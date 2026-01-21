@@ -508,7 +508,10 @@ export default function CreatePollPage() {
             </fieldset>
 
             <fieldset>
-              <Label htmlFor="description">{t('polls.create.wizard.details.description.label') || 'Description'}</Label>
+              <Label htmlFor="description">{(() => {
+                const label = t('polls.create.wizard.details.description.label');
+                return label && label !== 'Label' && label !== 'polls.create.wizard.details.description.label' ? label : 'Description';
+              })()}</Label>
               <Textarea
                  id="description"
                  value={data.description}
@@ -547,13 +550,16 @@ export default function CreatePollPage() {
           <div className="space-y-6">
             <fieldset>
               <legend className="text-base font-semibold mb-2">
-                {t('polls.create.wizard.options.label') || 'Poll Options'}
+                {(() => {
+                  const label = t('polls.create.wizard.options.label');
+                  return label && label !== 'Label' && label !== 'polls.create.wizard.options.label' ? label : 'Poll Options';
+                })()}
               </legend>
               <p className="mt-1 text-sm text-muted-foreground mb-4">
-                {t('polls.create.wizard.options.hint') || 'Provide clear, distinct choices for voters to select from.'}
-              </p>
-              <p className="mt-1 text-sm text-muted-foreground mb-4">
-                {t('polls.create.wizard.options.hint') || 'Provide clear, distinct choices for voters to select from.'}
+                {(() => {
+                  const hint = t('polls.create.wizard.options.hint');
+                  return hint && hint !== 'Hint' && hint !== 'polls.create.wizard.options.hint' ? hint : 'Provide clear, distinct choices for voters to select from.';
+                })()}
               </p>
               {errors.options && (
                 <Alert variant="destructive" className="mt-2 mb-4">
@@ -607,7 +613,10 @@ export default function CreatePollPage() {
               </div>
 
               <div className="mt-4 flex items-center justify-between text-xs text-muted-foreground">
-                <span>{t('polls.create.wizard.options.maxHint', { max: MAX_OPTIONS }) || `You can add up to ${MAX_OPTIONS} options.`}</span>
+                <span>{(() => {
+                  const hint = t('polls.create.wizard.options.maxHint', { max: MAX_OPTIONS });
+                  return hint && hint !== 'MaxHint' && !hint.includes('maxHint') ? hint : `You can add up to ${MAX_OPTIONS} options.`;
+                })()}</span>
                 <span className="font-medium">
                   {data.options.length}/{MAX_OPTIONS}
                 </span>
@@ -942,9 +951,15 @@ export default function CreatePollPage() {
     <div className="min-h-screen bg-muted/30 py-10">
       <div className="mx-auto max-w-4xl px-4 sm:px-6 lg:px-8">
         <header className="mb-10 space-y-2">
-          <h1 className="text-3xl font-bold tracking-tight text-foreground">{t('polls.create.page.title') || 'Create Poll'}</h1>
+          <h1 className="text-3xl font-bold tracking-tight text-foreground">{(() => {
+            const title = t('polls.create.page.title');
+            return title && title !== 'Title' && title !== 'polls.create.page.title' ? title : 'Create Poll';
+          })()}</h1>
           <p className="max-w-2xl text-sm text-muted-foreground">
-            {t('polls.create.page.subtitle') || 'Create a new poll to gather opinions and make decisions.'}
+            {(() => {
+              const subtitle = t('polls.create.page.subtitle');
+              return subtitle && subtitle !== 'Subtitle' && subtitle !== 'polls.create.page.subtitle' ? subtitle : 'Create a new poll to gather opinions and make decisions.';
+            })()}
           </p>
         </header>
 
@@ -1293,7 +1308,7 @@ const SettingToggle = ({ id, label, description, checked, onCheckedChange }: Set
   // Ensure we never show generic "Label" or "Description" text
   const displayLabel = label && label !== 'Label' ? label : 'Setting';
   const displayDescription = description && description !== 'Description' ? description : '';
-  
+
   return (
     <div className="flex items-start justify-between gap-4 rounded-lg border border-border/60 p-4">
       <div className="space-y-1">
