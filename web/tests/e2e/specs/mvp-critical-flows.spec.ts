@@ -46,7 +46,7 @@ test.describe('MVP Critical Flows', () => {
 
       // Wait for session to be fully established
       await page.waitForTimeout(2_000);
-      
+
       // Navigate to profile edit page
       await page.goto(`${BASE_URL}/profile/edit`, { waitUntil: 'domcontentloaded', timeout: 30_000 });
       await waitForPageReady(page);
@@ -54,14 +54,14 @@ test.describe('MVP Critical Flows', () => {
 
       // Check if we're still on edit page or were redirected
       const editUrl = page.url();
-      
+
       // If redirected to auth, log for debugging but don't fail (might need onboarding)
       if (editUrl.includes('/auth')) {
         console.log('[DIAGNOSTIC] Profile edit redirected to auth - may need onboarding completion');
         // Don't fail the test - login itself worked, which verifies the RLS fix
         return; // Skip rest of test
       }
-      
+
       // Should be on edit page
       expect(editUrl).toMatch(/\/profile\/edit/);
 

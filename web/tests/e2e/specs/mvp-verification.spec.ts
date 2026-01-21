@@ -156,14 +156,14 @@ test.describe('MVP Functional Verification', () => {
 
       // Wait for session to be fully established
       await page.waitForTimeout(2_000);
-      
+
       // Navigate to profile page
       await page.goto(`${BASE_URL}/profile`, { waitUntil: 'domcontentloaded', timeout: 30_000 });
       await page.waitForTimeout(3_000);
 
       // Check if we're still on profile or were redirected
       const profileUrl = page.url();
-      
+
       // If redirected to auth, log for debugging but don't fail (might need onboarding)
       if (profileUrl.includes('/auth')) {
         console.log('[DIAGNOSTIC] Profile redirected to auth - may need onboarding completion');
