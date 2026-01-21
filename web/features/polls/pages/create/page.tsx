@@ -508,7 +508,7 @@ export default function CreatePollPage() {
             </fieldset>
 
             <fieldset>
-              <Label htmlFor="description">{t('polls.create.wizard.details.description.label')}</Label>
+              <Label htmlFor="description">{t('polls.create.wizard.details.description.label') || 'Description'}</Label>
               <Textarea
                  id="description"
                  value={data.description}
@@ -549,6 +549,9 @@ export default function CreatePollPage() {
               <legend className="text-base font-semibold mb-2">
                 {t('polls.create.wizard.options.label') || 'Poll Options'}
               </legend>
+              <p className="mt-1 text-sm text-muted-foreground mb-4">
+                {t('polls.create.wizard.options.hint') || 'Provide clear, distinct choices for voters to select from.'}
+              </p>
               <p className="mt-1 text-sm text-muted-foreground mb-4">
                 {t('polls.create.wizard.options.hint') || 'Provide clear, distinct choices for voters to select from.'}
               </p>
@@ -686,8 +689,8 @@ export default function CreatePollPage() {
 
             {/* Category Section */}
             <fieldset>
-              <Label>{t('polls.create.wizard.audience.category.label')}</Label>
-              <p className="mt-1 text-xs text-muted-foreground">{t('polls.create.wizard.audience.category.hint')}</p>
+              <Label>{t('polls.create.wizard.audience.category.label') || 'Category'}</Label>
+              <p className="mt-1 text-xs text-muted-foreground">{t('polls.create.wizard.audience.category.hint') || 'Choose a category to help voters find your poll.'}</p>
               {errors.category && (
                 <p className="mt-2 text-sm text-destructive" id="error-category">
                   {errors.category}
@@ -720,8 +723,8 @@ export default function CreatePollPage() {
             </fieldset>
 
             <fieldset>
-              <Label htmlFor="tags">{t('polls.create.wizard.audience.tags.label')}</Label>
-              <p className="mt-1 text-xs text-muted-foreground">{t('polls.create.wizard.audience.tags.hint')}</p>
+              <Label htmlFor="tags">{t('polls.create.wizard.audience.tags.label') || 'Tags'}</Label>
+              <p className="mt-1 text-xs text-muted-foreground">{t('polls.create.wizard.audience.tags.hint') || 'Add tags to help categorize your poll.'}</p>
               {errors.tags && (
                 <p className="mt-2 text-sm text-destructive" id="error-tags">
                   {errors.tags}
@@ -770,7 +773,7 @@ export default function CreatePollPage() {
             </fieldset>
 
             <fieldset className="space-y-4">
-              <legend className="text-sm font-medium">{t('polls.create.wizard.audience.settings.legend')}</legend>
+              <legend className="text-sm font-medium">{t('polls.create.wizard.audience.settings.legend') || 'Poll Settings'}</legend>
               <SettingToggle
                 id="allow-multiple-votes"
                 label={t('polls.create.wizard.audience.settings.allowMultipleVotes.label')}
@@ -939,9 +942,9 @@ export default function CreatePollPage() {
     <div className="min-h-screen bg-muted/30 py-10">
       <div className="mx-auto max-w-4xl px-4 sm:px-6 lg:px-8">
         <header className="mb-10 space-y-2">
-          <h1 className="text-3xl font-bold tracking-tight text-foreground">{t('polls.create.page.title')}</h1>
+          <h1 className="text-3xl font-bold tracking-tight text-foreground">{t('polls.create.page.title') || 'Create Poll'}</h1>
           <p className="max-w-2xl text-sm text-muted-foreground">
-            {t('polls.create.page.subtitle')}
+            {t('polls.create.page.subtitle') || 'Create a new poll to gather opinions and make decisions.'}
           </p>
         </header>
 
@@ -1230,7 +1233,7 @@ const WizardProgress = ({ steps, onStepClick, currentStep }: WizardProgressProps
               onStepClick(index);
             }
           };
-          
+
           return (
             <li key={step.title} className="flex flex-1 items-center gap-2">
               <button
@@ -1286,21 +1289,29 @@ type SettingToggleProps = {
   onCheckedChange: (checked: boolean) => void;
 };
 
-const SettingToggle = ({ id, label, description, checked, onCheckedChange }: SettingToggleProps) => (
-  <div className="flex items-start justify-between gap-4 rounded-lg border border-border/60 p-4">
-    <div className="space-y-1">
-      <Label htmlFor={id} className="font-medium">
-        {label}
-      </Label>
-      <p id={`${id}-description`} className="text-xs text-muted-foreground">
-        {description}
-      </p>
+const SettingToggle = ({ id, label, description, checked, onCheckedChange }: SettingToggleProps) => {
+  // Ensure we never show generic "Label" or "Description" text
+  const displayLabel = label && label !== 'Label' ? label : 'Setting';
+  const displayDescription = description && description !== 'Description' ? description : '';
+  
+  return (
+    <div className="flex items-start justify-between gap-4 rounded-lg border border-border/60 p-4">
+      <div className="space-y-1">
+        <Label htmlFor={id} className="font-medium">
+          {displayLabel}
+        </Label>
+        {displayDescription && (
+          <p id={`${id}-description`} className="text-xs text-muted-foreground">
+            {displayDescription}
+          </p>
+        )}
+      </div>
+      <Switch
+        id={id}
+        checked={checked}
+        onChange={(event) => onCheckedChange(event.currentTarget.checked)}
+        aria-describedby={displayDescription ? `${id}-description` : undefined}
+      />
     </div>
-    <Switch
-      id={id}
-      checked={checked}
-      onChange={(event) => onCheckedChange(event.currentTarget.checked)}
-      aria-describedby={`${id}-description`}
-    />
-  </div>
-);
+  );
+};
