@@ -245,7 +245,7 @@ test.describe('Authentication Flow', () => {
       ).catch(async () => {
         // If button is still disabled, wait a bit more and check again (React state may be syncing)
         await page.waitForTimeout(2_000);
-        
+
         const finalState = await page.evaluate(() => {
           const emailInput = document.querySelector('[data-testid="login-email"]') as HTMLInputElement;
           const passwordInput = document.querySelector('[data-testid="login-password"]') as HTMLInputElement;
@@ -264,7 +264,7 @@ test.describe('Authentication Flow', () => {
           };
         });
         console.log('[DIAGNOSTIC] Login form final state (button still disabled):', JSON.stringify(finalState, null, 2));
-        
+
         // Final check - if inputs are valid but button is still disabled, throw error
         if (finalState.emailValid && finalState.passwordValid && finalState.buttonDisabled) {
           throw new Error('Login button remained disabled after form fill - React state sync may have failed');

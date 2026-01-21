@@ -168,13 +168,16 @@ export default function AuthPageClient() {
     };
 
     // Wait for inputs to be available (handles hydration delay)
-    const checkInputs = () => {
+    let cleanup: (() => void) | undefined;
+    let checkTimeout: NodeJS.Timeout | undefined;
+
+    const checkInputs = (): void => {
       const emailInput = getEmailInput();
       const passwordInput = getPasswordInput();
 
       if (!emailInput || !passwordInput) {
-        // Retry after a short delay if inputs aren't ready
-        setTimeout(checkInputs, 100);
+        // Retry after a short delay if inputs aren't ready (max 5 seconds)
+        checkTimeout = setTimeout(checkInputs, 100);
         return;
       }
 
@@ -225,8 +228,8 @@ export default function AuthPageClient() {
       // Extended to 30 seconds to catch late DOM updates in production/test environments
       const timeout = setTimeout(() => clearInterval(interval), 30000);
 
-      // Cleanup function
-      return () => {
+      // Set cleanup function
+      cleanup = () => {
         emailInput.removeEventListener('input', syncEmail);
         passwordInput.removeEventListener('input', syncPassword);
         clearInterval(interval);
@@ -235,8 +238,17 @@ export default function AuthPageClient() {
     };
 
     // Start checking for inputs
-    const cleanup = checkInputs();
-    return cleanup;
+    checkInputs();
+
+    // Cleanup function
+    return () => {
+      if (checkTimeout) {
+        clearTimeout(checkTimeout);
+      }
+      if (cleanup) {
+        cleanup();
+      }
+    };
   }, []); // Empty deps - only run once on mount
 
   // CRITICAL: Redirect recovery for E2E tests - if bypass flag is set and we have redirectTo param, redirect immediately
