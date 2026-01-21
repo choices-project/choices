@@ -382,7 +382,7 @@ export async function loginTestUser(page: Page, user: TestUser): Promise<void> {
 
       setNativeValue(emailInput, expectedEmail);
       setNativeValue(passwordInput, expectedPassword);
-      
+
       // Trigger focus/blur to ensure React processes the events
       emailInput?.focus();
       emailInput?.blur();
@@ -406,19 +406,19 @@ export async function loginTestUser(page: Page, user: TestUser): Promise<void> {
         ({ expectedEmail, expectedPassword }: { expectedEmail: string; expectedPassword: string }) => {
           const emailInput = document.getElementById('email') as HTMLInputElement | null;
           const passwordInput = document.getElementById('password') as HTMLInputElement | null;
-          
+
           // Check DOM values match
           const domMatches = emailInput?.value === expectedEmail && passwordInput?.value === expectedPassword;
-          
+
           // Check if validation indicators are visible (means React state is synced)
           const emailValidation = document.querySelector('[data-testid="email-validation"]');
           const passwordValidation = document.querySelector('[data-testid="password-validation"]');
           const hasValidations = emailValidation || passwordValidation;
-          
+
           // For login, we need email with @ and password >= 8 chars
           const emailValid = expectedEmail.includes('@');
           const passwordValid = expectedPassword.length >= 8;
-          
+
           return domMatches && (hasValidations || (emailValid && passwordValid));
         },
         { expectedEmail: email, expectedPassword: password },
@@ -443,7 +443,7 @@ export async function loginTestUser(page: Page, user: TestUser): Promise<void> {
 
             setNativeValue(emailInput, expectedEmail);
             setNativeValue(passwordInput, expectedPassword);
-            
+
             // Force focus/blur to trigger React state update
             emailInput?.focus();
             emailInput?.blur();

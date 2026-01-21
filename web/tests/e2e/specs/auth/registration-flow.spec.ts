@@ -186,13 +186,13 @@ test.describe('Registration Flow', () => {
       // Registration form requires: email, password (>=8 chars), displayName (>=3 chars), confirmPassword match
       let buttonEnabled = false;
       const maxWaitAttempts = 100; // 30 seconds total (100 * 300ms)
-      
+
       for (let attempt = 0; attempt < maxWaitAttempts; attempt++) {
         buttonEnabled = !(await submitButton.isDisabled());
         if (buttonEnabled) {
           break;
         }
-        
+
         // Every 10 attempts, trigger events again to help React sync
         if (attempt % 10 === 0 && attempt > 0) {
           await page.evaluate(() => {
@@ -200,7 +200,7 @@ test.describe('Registration Flow', () => {
             const passwordEl = document.querySelector('[data-testid="login-password"]') as HTMLInputElement;
             const displayNameEl = document.querySelector('[data-testid="auth-display-name"]') as HTMLInputElement;
             const confirmPasswordEl = document.querySelector('[data-testid="auth-confirm-password"]') as HTMLInputElement;
-            
+
             [emailEl, passwordEl, displayNameEl, confirmPasswordEl].forEach(el => {
               if (el) {
                 el.dispatchEvent(new Event('input', { bubbles: true }));
@@ -211,10 +211,10 @@ test.describe('Registration Flow', () => {
             });
           });
         }
-        
+
         await page.waitForTimeout(300);
       }
-      
+
       if (!buttonEnabled) {
         // Diagnostic: check form state
         const formState = await page.evaluate(() => {
