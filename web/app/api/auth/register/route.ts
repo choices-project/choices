@@ -1,7 +1,7 @@
 
 import { z } from 'zod'
 
-import { getSupabaseServerClient } from '@/utils/supabase/server'
+import { getSupabaseServerClient, getSupabaseAdminClient } from '@/utils/supabase/server'
 
 import {
   withErrorHandling,
@@ -121,10 +121,13 @@ export const POST = withErrorHandling(async (request: NextRequest) => {
       );
     }
 
-    // Create user profile
-    const { data: profile, error: profileError } = await (supabaseClient as any)
+    // Create user profile using admin client to bypass RLS
+    // Regular client can't insert profiles for newly created users due to RLS policies
+    const adminClient = await getSupabaseAdminClient()
+    const { data: profile, error: profileError } = await adminClient
       .from('user_profiles')
       .insert({
+        id: authData.user.id,
         user_id: authData.user.id,
         username: normalizedUsername,
         email: normalizedEmail,

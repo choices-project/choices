@@ -277,6 +277,7 @@ export const useElectionCountdown = (
     fetchElections,
     loading,
     upcomingElections.length,
+    error,
   ]);
 
   return useMemo(

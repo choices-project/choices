@@ -35,27 +35,28 @@ declare global {
 // Set up placeholder harness immediately at module load time (before React renders)
 // This ensures the harness object exists when tests check for it
 if (typeof window !== 'undefined') {
+  const noop = () => undefined;
   // Create a placeholder that will be replaced by the real harness in useLayoutEffect
   // This prevents tests from timing out while waiting for React to render
   (window as any).__pollWizardHarness = {
     getSnapshot: () => usePollWizardStore.getState(),
     actions: {
-      nextStep: () => {},
-      prevStep: () => {},
-      goToStep: () => {},
-      resetWizard: () => {},
-      updateData: () => {},
-      updateSettings: () => {},
-      addOption: () => {},
-      removeOption: () => {},
-      updateOption: () => {},
-      addTag: () => {},
-      removeTag: () => {},
-      updateTags: () => {},
+      nextStep: noop,
+      prevStep: noop,
+      goToStep: noop,
+      resetWizard: noop,
+      updateData: noop,
+      updateSettings: noop,
+      addOption: noop,
+      removeOption: noop,
+      updateOption: noop,
+      addTag: noop,
+      removeTag: noop,
+      updateTags: noop,
       validateCurrentStep: () => true,
-      clearAllErrors: () => {},
-      setFieldError: () => {},
-      clearFieldError: () => {},
+      clearAllErrors: noop,
+      setFieldError: noop,
+      clearFieldError: noop,
       canProceedToNextStep: () => true,
       getStepErrors: () => ({}),
     },

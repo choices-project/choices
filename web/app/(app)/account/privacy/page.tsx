@@ -54,7 +54,7 @@ export default function PrivacyPage() {
   useEffect(() => { setSidebarActiveSectionRef.current = setSidebarActiveSection; }, [setSidebarActiveSection]);
   const setBreadcrumbsRef = useRef(setBreadcrumbs);
   useEffect(() => { setBreadcrumbsRef.current = setBreadcrumbs; }, [setBreadcrumbs]);
-  
+
   // Refs for stable profile draft actions
   const mergeDraftRef = useRef(mergeDraft);
   useEffect(() => { mergeDraftRef.current = mergeDraft; }, [mergeDraft]);
@@ -82,20 +82,20 @@ export default function PrivacyPage() {
       setSidebarActiveSectionRef.current(null);
       setBreadcrumbsRef.current([]);
     };
-  }, []);  
+  }, []);
 
   useEffect(() => {
     if (privacySettings) {
       mergeDraftRef.current({ privacy_settings: privacySettings });
       setProfileEditingRef.current(true);
     }
-  }, [privacySettings]);  
+  }, [privacySettings]);
 
   useEffect(
     () => () => {
       setProfileEditingRef.current(false);
     },
-    [],  
+    [],
   );
 
   // Add timeout to prevent infinite loading - must be before early returns
@@ -144,7 +144,7 @@ export default function PrivacyPage() {
         throw error;
       }
     },
-    [privacySettings]  
+    [privacySettings]
   );
 
   if (!user && !profileLoading) {
@@ -156,6 +156,7 @@ export default function PrivacyPage() {
           <a
             href="/auth?redirectTo=/account/privacy"
             className="bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700"
+            aria-label="Log in to manage privacy settings"
           >
             Log in
           </a>
@@ -178,6 +179,7 @@ export default function PrivacyPage() {
                 window.location.reload();
               }}
               className="mt-4 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
+              aria-label="Reload page to retry loading privacy settings"
             >
               Reload Page
             </button>
@@ -197,12 +199,14 @@ export default function PrivacyPage() {
             <button
               onClick={() => window.location.reload()}
               className="px-4 py-2 rounded-md bg-blue-600 text-white hover:bg-blue-700"
+              aria-label="Reload page to retry loading privacy settings"
             >
               Reload
             </button>
             <a
               href="/dashboard"
               className="px-4 py-2 rounded-md border border-gray-300 text-gray-700 hover:bg-gray-50"
+              aria-label="Navigate back to dashboard"
             >
               Back to dashboard
             </a>

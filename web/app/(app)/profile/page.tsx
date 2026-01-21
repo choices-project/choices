@@ -1,14 +1,14 @@
 'use client'
 
-import { User, Shield, Download, Edit, Settings, CheckCircle, AlertTriangle, MapPin } from 'lucide-react';
+import { User, Shield, Download, Edit, Settings, CheckCircle, MapPin, RefreshCw } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import React, { useEffect, useState, useCallback, useRef } from 'react';
 
 import { AddressLookup } from '@/features/profile/components/AddressLookup';
 import { useProfileData, useProfileExport } from '@/features/profile/hooks/use-profile';
 
+import { EnhancedErrorDisplay } from '@/components/shared/EnhancedErrorDisplay';
 import { ErrorBoundary } from '@/components/shared/ErrorBoundary';
-import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/components/ui/card';
@@ -148,7 +148,9 @@ function ProfilePageContent() {
 
   // #region agent log
   React.useEffect(() => {
-    fetch('http://127.0.0.1:7242/ingest/6a732aed-2d72-4883-a63a-f3c892fc1216',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'profile/page.tsx:150',message:'ProfilePageContent render check',data:{isMounted,isUserLoading,profileLoading,isAuthenticated,hasProfile:!!profile,hasProfileError:!!profileError,shouldShowLoading:!isMounted || isUserLoading || profileLoading,timestamp:Date.now()},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'C'})}).catch(()=>{});
+    if (process.env.NODE_ENV === 'development') {
+      // Debug logging removed for production
+    }
   }, [isMounted, isUserLoading, profileLoading, isAuthenticated, profile, profileError]);
   // #endregion
 
@@ -238,24 +240,27 @@ function ProfilePageContent() {
     return (
       <ErrorBoundary>
         <div className="container mx-auto px-4 py-8">
-          <Alert variant="destructive" role="alert" aria-live="assertive">
-            <AlertTriangle className="h-4 w-4" aria-hidden="true" />
-            <AlertDescription>
-              <div className="space-y-2">
-                <p className="font-medium">Failed to load profile data</p>
-                <p className="text-sm">{profileError}</p>
-                <button
-                  onClick={() => {
-                    void refetchRef.current();
-                  }}
-                  className="mt-2 text-sm font-medium underline hover:no-underline focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2 rounded"
-                  aria-label="Retry loading profile"
-                >
-                  Try again
-                </button>
-              </div>
-            </AlertDescription>
-          </Alert>
+          <EnhancedErrorDisplay
+            title="Failed to load profile"
+            message={profileError}
+            details="We encountered an issue while loading your profile. This might be a temporary network problem."
+            tip="Check your internet connection and try again. If the problem persists, the service may be temporarily unavailable."
+            canRetry={true}
+            onRetry={() => {
+              void refetchRef.current();
+            }}
+            primaryAction={{
+              label: 'Try Again',
+              onClick: () => {
+                void refetchRef.current();
+              },
+              icon: <RefreshCw className="h-4 w-4" />,
+            }}
+            secondaryAction={{
+              label: 'Go to Dashboard',
+              href: '/dashboard',
+            }}
+          />
         </div>
       </ErrorBoundary>
     );

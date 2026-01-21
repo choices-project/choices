@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useLayoutEffect, useRef, useState } from 'react';
+import { useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
 
 import GlobalNavigation from '@/components/shared/GlobalNavigation';
 
@@ -34,7 +34,7 @@ type AppShellProps = {
  */
 export function AppShell({ navigation, siteMessages, feedback, children }: AppShellProps) {
   // Use navigation prop if provided, otherwise use GlobalNavigation
-  const navComponent = navigation ?? <GlobalNavigation />;
+  const navComponent = useMemo(() => navigation ?? <GlobalNavigation />, [navigation]);
 
   const resolvedTheme = useResolvedTheme();
   const sidebarCollapsed = useSidebarCollapsed();

@@ -25,15 +25,17 @@ export default function ClientOnly({ children, fallback = null }: ClientOnlyProp
       runId: 'run1',
       hypothesisId: 'F',
     };
-    fetch('http://127.0.0.1:7242/ingest/6a732aed-2d72-4883-a63a-f3c892fc1216', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(mountLogData),
-    }).catch(() => {});
+    if (process.env.NODE_ENV === 'development') {
+      fetch('http://127.0.0.1:7242/ingest/6a732aed-2d72-4883-a63a-f3c892fc1216', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(mountLogData),
+      }).catch(() => undefined);
+    }
     // #endregion
 
     setHasMounted(true)
-  }, [])
+  }, [fallback, hasMounted])
 
   // #region agent log - Track render decisions
   if (typeof window !== 'undefined' && !hasMounted) {
@@ -50,11 +52,13 @@ export default function ClientOnly({ children, fallback = null }: ClientOnlyProp
       runId: 'run1',
       hypothesisId: 'F',
     };
-    fetch('http://127.0.0.1:7242/ingest/6a732aed-2d72-4883-a63a-f3c892fc1216', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(renderLogData),
-    }).catch(() => {});
+    if (process.env.NODE_ENV === 'development') {
+      fetch('http://127.0.0.1:7242/ingest/6a732aed-2d72-4883-a63a-f3c892fc1216', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(renderLogData),
+      }).catch(() => undefined);
+    }
   }
   // #endregion
 

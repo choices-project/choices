@@ -6,12 +6,13 @@ import {
   Users,
   Activity,
   RefreshCw,
-  Bell,
   Zap,
   Shield,
   Brain
 } from 'lucide-react';
 import React, { useState, useEffect } from 'react';
+
+import { EnhancedErrorDisplay } from '@/components/shared/EnhancedErrorDisplay';
 
 import {
   useAnalyticsDashboard,
@@ -234,19 +235,24 @@ export default function AnalyticsPage() {
 
   if (error) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 flex items-center justify-center" role="alert" aria-live="assertive">
-        <div className="text-center max-w-md mx-auto p-8">
-          <Bell className="h-16 w-16 text-red-400 mx-auto mb-4" aria-hidden="true" />
-          <h1 className="text-2xl font-bold text-gray-900 mb-2">Analytics Error</h1>
-          <p className="text-gray-600 mb-4">{error}</p>
-          <button
-            onClick={() => sendAnalytics()}
-            className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
-            aria-label="Retry loading analytics"
-          >
-            Retry
-          </button>
-        </div>
+      <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 flex items-center justify-center px-4">
+        <EnhancedErrorDisplay
+          title="Analytics Error"
+          message={error}
+          details="We encountered an issue while loading analytics data. This might be a temporary network problem."
+          tip="Check your internet connection and try again. If the problem persists, the analytics service may be temporarily unavailable."
+          canRetry={true}
+          onRetry={() => sendAnalytics()}
+          primaryAction={{
+            label: 'Retry',
+            onClick: () => sendAnalytics(),
+            icon: <RefreshCw className="h-4 w-4" />,
+          }}
+          secondaryAction={{
+            label: 'Go to Dashboard',
+            href: '/dashboard',
+          }}
+        />
       </div>
     );
   }

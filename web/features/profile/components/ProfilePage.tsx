@@ -9,6 +9,7 @@ import {
   Edit,
   Loader2,
   Mail,
+  RefreshCw,
   Settings,
   Shield,
   User,
@@ -17,6 +18,7 @@ import {
 import { useRouter } from 'next/navigation';
 import { useCallback, useEffect, useId, useMemo, useRef, useState } from 'react';
 
+import { EnhancedErrorDisplay } from '@/components/shared/EnhancedErrorDisplay';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
@@ -197,20 +199,23 @@ export default function ProfilePage({
   if (finalError || !finalUser) {
     return (
       <div className="max-w-2xl mx-auto p-6">
-        <Alert variant="destructive">
-          <AlertTriangle className="h-4 w-4" />
-          <AlertDescription>
-            {finalError ?? 'Failed to load profile. Please try again.'}
-          </AlertDescription>
-        </Alert>
-        <div className="mt-4 flex flex-wrap gap-3">
-          <Button onClick={() => window.location.reload()}>
-            Try again
-          </Button>
-          <Button onClick={() => router.push('/dashboard')} variant="outline">
-            Back to dashboard
-          </Button>
-        </div>
+        <EnhancedErrorDisplay
+          title="Failed to load profile"
+          message={finalError ?? 'Failed to load profile. Please try again.'}
+          details="We encountered an issue while loading your profile. This might be a temporary network problem."
+          tip="Check your internet connection and try again. If the problem persists, the service may be temporarily unavailable."
+          canRetry={true}
+          onRetry={() => window.location.reload()}
+          primaryAction={{
+            label: 'Try Again',
+            onClick: () => window.location.reload(),
+            icon: <RefreshCw className="h-4 w-4" />,
+          }}
+          secondaryAction={{
+            label: 'Back to Dashboard',
+            onClick: () => router.push('/dashboard'),
+          }}
+        />
       </div>
     );
   }

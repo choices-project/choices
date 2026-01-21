@@ -18,10 +18,12 @@
  */
 
 import { HashtagIcon, MoonIcon, SunIcon } from '@heroicons/react/24/outline';
-import { MapPin } from 'lucide-react';
+import { MapPin, RefreshCw } from 'lucide-react';
 import React, { useState, useCallback, useEffect, useRef } from 'react';
 
 import { DistrictIndicator } from '@/components/feeds/DistrictBadge';
+import { EnhancedEmptyState } from '@/components/shared/EnhancedEmptyState';
+import { EnhancedErrorDisplay } from '@/components/shared/EnhancedErrorDisplay';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -270,47 +272,24 @@ export default function FeedCore({
     );
   }
 
-  // Error state
+  // Error state - Enhanced UX
   if (error) {
     return (
       <div className={cn('unified-feed', className)} data-testid="unified-feed">
         <div className="flex items-center justify-center min-h-[400px] px-4">
-          <div className="text-center max-w-md" role="alert" data-testid="feed-error-boundary">
-            <div className="mb-6">
-              <svg
-                className="mx-auto h-16 w-16 text-red-500"
-                fill="none"
-                viewBox="0 0 24 24"
-                stroke="currentColor"
-                aria-hidden="true"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={1.5}
-                  d="M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126zM12 15.75h.007v.008H12v-.008z"
-                />
-              </svg>
-            </div>
-            <h1 className="sr-only">{t('feeds.core.header.title')}</h1>
-            <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-2">
-              {t('feeds.core.error.title')}
-            </h2>
-            <p className="text-gray-600 dark:text-gray-400 mb-6">{error}</p>
-            <div className="space-y-3">
-              <Button
-                onClick={onRefresh}
-                variant="default"
-                className="w-full sm:w-auto"
-                aria-label="Try again to load feed"
-              >
-                {t('feeds.core.error.retry')}
-              </Button>
-              <p className="text-sm text-gray-500 dark:text-gray-400">
-                {t('feeds.core.error.help')}
-              </p>
-            </div>
-          </div>
+          <EnhancedErrorDisplay
+            title={t('feeds.core.error.title') || 'Unable to load feed'}
+            message={error}
+            details="We encountered an issue while loading your feed. This might be a temporary network problem."
+            tip="Check your internet connection and try again. If the problem persists, the service may be temporarily unavailable."
+            canRetry={true}
+            onRetry={onRefresh}
+            primaryAction={{
+              label: t('feeds.core.error.retry') || 'Try Again',
+              onClick: onRefresh,
+              icon: <RefreshCw className="h-4 w-4" />,
+            }}
+          />
         </div>
       </div>
     );
@@ -509,110 +488,69 @@ export default function FeedCore({
               ))}
             </div>
           ) : feeds.length === 0 ? (
-            <div className="text-center py-16 px-4" role="status" aria-live="polite">
-              <div className="max-w-md mx-auto">
-                <div className="mb-6">
-                  <svg
-                    className="mx-auto h-16 w-16 text-gray-400 dark:text-gray-500"
-                    fill="none"
-                    viewBox="0 0 24 24"
-                    stroke="currentColor"
-                    aria-hidden="true"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth={1.5}
-                      d="M12 6.75a.75.75 0 110-1.5.75.75 0 010 1.5zM12 12a.75.75 0 110-1.5.75.75 0 010 1.5zM12 17.25a.75.75 0 110-1.5.75.75 0 010 1.5zM18.75 6.75a.75.75 0 110-1.5.75.75 0 010 1.5zM18.75 12a.75.75 0 110-1.5.75.75 0 010 1.5zM18.75 17.25a.75.75 0 110-1.5.75.75 0 010 1.5zM5.25 6.75a.75.75 0 110-1.5.75.75 0 010 1.5zM5.25 12a.75.75 0 110-1.5.75.75 0 010 1.5zM5.25 17.25a.75.75 0 110-1.5.75.75 0 010 1.5z"
-                    />
-                  </svg>
-                </div>
-                <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-2">
-                  {selectedHashtags.length > 0
-                    ? t('feeds.core.empty.filters.title')
-                    : t('feeds.core.empty.default.title')}
-                </h3>
-                <p className="text-gray-600 dark:text-gray-400 mb-6">
-                  {selectedHashtags.length > 0
-                    ? t('feeds.core.empty.filters.description')
-                    : t('feeds.core.empty.default.description')}
-                </p>
-                {selectedHashtags.length > 0 ? (
-                  <Button
-                    onClick={() => {
+            <EnhancedEmptyState
+              icon={
+                <svg
+                  className="h-12 w-12 text-gray-400"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  stroke="currentColor"
+                  aria-hidden="true"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={1.5}
+                    d="M12 6.75a.75.75 0 110-1.5.75.75 0 010 1.5zM12 12a.75.75 0 110-1.5.75.75 0 010 1.5zM12 17.25a.75.75 0 110-1.5.75.75 0 010 1.5zM18.75 6.75a.75.75 0 110-1.5.75.75 0 010 1.5zM18.75 12a.75.75 0 110-1.5.75.75 0 010 1.5zM18.75 17.25a.75.75 0 110-1.5.75.75 0 010 1.5zM5.25 6.75a.75.75 0 110-1.5.75.75 0 010 1.5zM5.25 12a.75.75 0 110-1.5.75.75 0 010 1.5zM5.25 17.25a.75.75 0 110-1.5.75.75 0 010 1.5z"
+                  />
+                </svg>
+              }
+              title={
+                selectedHashtags.length > 0
+                  ? t('feeds.core.empty.filters.title') || 'No feeds match your filters'
+                  : t('feeds.core.empty.default.title') || 'No feeds yet'
+              }
+              description={
+                selectedHashtags.length > 0
+                  ? t('feeds.core.empty.filters.description') || 'Try adjusting your hashtag filters to see more feeds.'
+                  : t('feeds.core.empty.default.description') || 'Start following hashtags or create content to see feeds here.'
+              }
+              tip={
+                selectedHashtags.length > 0
+                  ? 'You can clear your hashtag filters to see all available feeds.'
+                  : 'Follow hashtags you care about or create polls to start seeing feeds in your feed.'
+              }
+              isFiltered={selectedHashtags.length > 0}
+              onResetFilters={
+                selectedHashtags.length > 0
+                  ? () => {
                       selectedHashtags.forEach(tag => onHashtagRemove(tag));
-                    }}
-                    variant="outline"
-                    className="mb-4"
-                  >
-                    {t('feeds.core.empty.filters.clear')}
-                  </Button>
-                ) : (
-                  <div className="space-y-3">
-                    <div className="flex flex-col sm:flex-row gap-3 justify-center">
-                      <Button
-                        onClick={onRefresh}
-                        variant="default"
-                        className="w-full sm:w-auto"
-                        aria-label={t('feeds.core.empty.default.refresh')}
-                      >
-                        {t('feeds.core.empty.default.refresh')}
-                      </Button>
-                      <Button
-                        onClick={() => {
-                          // Explore action: show trending hashtags or navigate to polls
-                          if (trendingHashtags.length > 0) {
-                            // Add first trending hashtag to explore
-                            const firstTag = trendingHashtags[0];
-                            if (firstTag) {
-                              onHashtagAdd(firstTag);
-                            } else {
-                              onRefresh();
-                            }
-                          } else {
-                            // Fallback to refresh
-                            onRefresh();
-                          }
-                        }}
-                        variant="outline"
-                        className="w-full sm:w-auto"
-                        aria-label={t('feeds.core.empty.default.explore') || 'Explore content'}
-                      >
-                        {t('feeds.core.empty.default.explore') || 'Explore'}
-                      </Button>
-                    </div>
-                    {trendingHashtags.length > 0 && (
-                      <div className="mt-6">
-                        <p className="text-sm text-gray-500 dark:text-gray-400 mb-3">
-                          {t('feeds.core.empty.default.suggestions')}
-                        </p>
-                        <div className="flex flex-wrap gap-2 justify-center">
-                          {trendingHashtags.slice(0, 5).map(tag => (
-                            <Badge
-                              key={tag}
-                              variant="secondary"
-                              className="cursor-pointer hover:bg-gray-200 dark:hover:bg-gray-700"
-                              onClick={() => onHashtagAdd(tag)}
-                              role="button"
-                              tabIndex={0}
-                              onKeyDown={(e) => {
-                                if (e.key === 'Enter' || e.key === ' ') {
-                                  e.preventDefault();
-                                  onHashtagAdd(tag);
-                                }
-                              }}
-                              aria-label={`Explore ${tag} hashtag`}
-                            >
-                              #{tag}
-                            </Badge>
-                          ))}
-                        </div>
-                      </div>
-                    )}
-                  </div>
-                )}
-              </div>
-            </div>
+                    }
+                  : undefined
+              }
+              primaryAction={{
+                label: selectedHashtags.length > 0
+                  ? (t('feeds.core.empty.filters.clear') || 'Clear Filters')
+                  : (t('feeds.core.empty.default.refresh') || 'Refresh Feed'),
+                onClick: selectedHashtags.length > 0
+                  ? () => {
+                      selectedHashtags.forEach(tag => onHashtagRemove(tag));
+                    }
+                  : onRefresh,
+                icon: selectedHashtags.length > 0 ? undefined : <RefreshCw className="h-4 w-4" />,
+              }}
+              {...(selectedHashtags.length === 0 && trendingHashtags.length > 0 ? {
+                secondaryAction: {
+                  label: t('feeds.core.empty.default.explore') || 'Explore',
+                  onClick: () => {
+                    const firstTag = trendingHashtags[0];
+                    if (firstTag) {
+                      onHashtagAdd(firstTag);
+                    }
+                  },
+                }
+              } : {})}
+            />
           ) : (
             <div className="space-y-4" role="feed">
               {feeds.map(feed => (

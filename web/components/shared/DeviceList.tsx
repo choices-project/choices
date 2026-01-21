@@ -9,6 +9,9 @@ import logger from '@/lib/utils/logger'
 
 import { useI18n } from '@/hooks/useI18n'
 
+import { EnhancedEmptyState } from './EnhancedEmptyState'
+import { EnhancedErrorDisplay } from './EnhancedErrorDisplay'
+
 type Device = {
   id: string
   name: string
@@ -88,7 +91,7 @@ export const DeviceList: React.FC<DeviceListProps> = ({
               timestamp: new Date().toISOString(),
               setupUrl: `${window.location.origin}/devices/setup/${device.id}`
             })
-            
+
             const qrDataUrl = await QRCode.toDataURL(qrData, {
               width: 128,
               margin: 2,
@@ -103,7 +106,7 @@ export const DeviceList: React.FC<DeviceListProps> = ({
           logger.error('Failed to generate QR code:', error)
         }
       }
-      
+
       generateQR()
     }
   }, [showQRCode, devices])
@@ -123,7 +126,7 @@ export const DeviceList: React.FC<DeviceListProps> = ({
   // Loading state
   if (isLoading) {
     return (
-      <div 
+      <div
         className={`device-list ${className}`}
         data-testid="device-list"
         aria-label="Loading devices"
@@ -140,32 +143,21 @@ export const DeviceList: React.FC<DeviceListProps> = ({
   // Error state
   if (hasError) {
     return (
-      <div 
+      <div
         className={`device-list ${className}`}
         data-testid="device-list"
-        role="alert"
-        aria-live="assertive"
       >
-        <div className="flex flex-col items-center justify-center p-8">
-          <svg 
-            className="h-8 w-8 text-red-600 mb-4" 
-            fill="none" 
-            stroke="currentColor" 
-            viewBox="0 0 24 24"
-            aria-hidden="true"
-          >
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z" />
-          </svg>
-          <span className="text-red-600 mb-4 font-medium">{t('common.devices.loadFailed')}</span>
-          <button
-            onClick={handleRetry}
-            className="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition-colors"
-            data-testid="retry-button"
-            aria-label="Retry loading devices"
-          >
-            {t('common.actions.retry')}
-          </button>
-        </div>
+        <EnhancedErrorDisplay
+          title={t('common.devices.loadFailed') || 'Failed to load devices'}
+          message="We couldn't load your registered devices. This might be a temporary issue."
+          tip="Check your internet connection. If the problem persists, try refreshing the page."
+          canRetry={true}
+          onRetry={handleRetry}
+          primaryAction={{
+            label: 'Refresh Page',
+            onClick: () => window.location.reload(),
+          }}
+        />
       </div>
     )
   }
@@ -173,41 +165,41 @@ export const DeviceList: React.FC<DeviceListProps> = ({
   // Empty state
   if (memoizedDevices.length === 0) {
     return (
-      <div 
+      <div
         className={`device-list ${className}`}
         data-testid="device-list"
         role="status"
         aria-live="polite"
       >
-        <div className="flex flex-col items-center justify-center p-8">
-          <svg 
-            className="h-8 w-8 text-gray-400 mb-4" 
-            fill="none" 
-            stroke="currentColor" 
-            viewBox="0 0 24 24"
-            aria-hidden="true"
-          >
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 18h.01M8 21h8a2 2 0 002-2V5a2 2 0 00-2-2H8a2 2 0 00-2 2v14a2 2 0 002 2z" />
-          </svg>
-          <span className="text-gray-500 mb-4">{t('common.devices.empty')}</span>
-          {onAddDevice && (
-            <button
-              onClick={handleAddDevice}
-              className="flex items-center px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition-colors"
-              data-testid="add-device-button"
-              aria-label="Add a new device"
+        <EnhancedEmptyState
+          icon={
+            <svg
+              className="h-12 w-12 text-gray-400"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+              aria-hidden="true"
             >
-              <Plus className="w-4 h-4 mr-2" aria-hidden="true" />
-              {t('common.devices.add')}
-            </button>
-          )}
-        </div>
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 18h.01M8 21h8a2 2 0 002-2V5a2 2 0 00-2-2H8a2 2 0 00-2 2v14a2 2 0 002 2z" />
+            </svg>
+          }
+          title={t('common.devices.empty') || 'No devices registered'}
+          description="You haven't registered any devices yet. Register a device to enable secure authentication."
+          tip="Registered devices allow you to sign in securely using biometric authentication or security keys."
+          {...(onAddDevice ? {
+            primaryAction: {
+              label: t('common.devices.add') || 'Add Device',
+              onClick: handleAddDevice,
+              icon: <Plus className="h-4 w-4" />,
+            },
+          } : {})}
+        />
       </div>
     )
   }
 
   return (
-    <div 
+    <div
       className={`device-list ${className}`}
       data-testid="device-list"
       role="list"
@@ -249,8 +241,8 @@ export const DeviceList: React.FC<DeviceListProps> = ({
                   {t('common.devices.lastUsed')}: {new Date(device.lastUsed).toLocaleDateString()}
                 </p>
                 {device.isActive && (
-                  <span 
-                    className="inline-block w-2 h-2 bg-green-500 rounded-full mr-2" 
+                  <span
+                    className="inline-block w-2 h-2 bg-green-500 rounded-full mr-2"
                     aria-label={t('common.devices.active')}
                     title={t('common.devices.active')}
                   />
@@ -274,7 +266,7 @@ export const DeviceList: React.FC<DeviceListProps> = ({
                   <QrCode className="w-4 h-4" aria-hidden="true" />
                 </button>
               )}
-              
+
               {onRemoveDevice && (
                 <button
                   onClick={(e) => {
@@ -296,12 +288,11 @@ export const DeviceList: React.FC<DeviceListProps> = ({
 
       {/* QR Code Modal */}
       {showQRCode && (
-        <div 
+        <div
           className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50"
-          role="dialog"
-          aria-modal="true"
-          aria-labelledby="qr-code-modal-title"
-          aria-describedby="qr-code-modal-description"
+          role="button"
+          tabIndex={0}
+          aria-label="Close QR code modal"
           onClick={(e) => {
             if (e.target === e.currentTarget) {
               setShowQRCode(null)
@@ -313,9 +304,12 @@ export const DeviceList: React.FC<DeviceListProps> = ({
             }
           }}
         >
-          <div 
+          <div
             className="bg-white dark:bg-gray-800 p-6 rounded-lg max-w-sm w-full mx-4 shadow-xl"
-            role="document"
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="qr-code-modal-title"
+            aria-describedby="qr-code-modal-description"
           >
             <h3 id="qr-code-modal-title" className="text-lg font-semibold mb-4 text-gray-900 dark:text-gray-100">
               {t('common.devices.qrCodeTitle')}

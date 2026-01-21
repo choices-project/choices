@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useEffect, useRef, Suspense } from 'react';
+import React, { useEffect, useMemo, useRef, Suspense } from 'react';
 
 import { UnifiedFeedRefactored } from '@/features/feeds';
 import { useFormattedDistrict } from '@/features/profile/hooks/useUserDistrict';
@@ -18,12 +18,12 @@ export default function FeedContent() {
   // #region agent log - Track FeedContent render
   const renderTime = Date.now();
   const isClient = typeof window !== 'undefined';
-  const htmlAttrsAtRender = isClient ? {
+  const htmlAttrsAtRender = useMemo(() => (isClient ? {
     theme: document.documentElement.getAttribute('data-theme'),
     collapsed: document.documentElement.getAttribute('data-sidebar-collapsed'),
     width: document.documentElement.getAttribute('data-sidebar-width'),
     pinned: document.documentElement.getAttribute('data-sidebar-pinned'),
-  } : null;
+  } : null), [isClient]);
   if (process.env.DEBUG_DASHBOARD === '1') {
     logger.debug('FeedContent component rendering', {
       pathname: isClient ? window.location.pathname : 'SSR',
@@ -55,7 +55,7 @@ export default function FeedContent() {
         htmlAttrsAtRender,
       });
     }
-  }, [user, userDistrict]);
+  }, [user, userDistrict, htmlAttrsAtRender, renderTime]);
   // #endregion
   const { setCurrentRoute, setSidebarActiveSection, setBreadcrumbs } = useAppActions();
 

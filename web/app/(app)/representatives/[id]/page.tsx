@@ -26,6 +26,7 @@ import {
   CalendarClock,
 } from 'lucide-react';
 import dynamicImport from 'next/dynamic';
+import Image from 'next/image';
 import { useParams, useRouter } from 'next/navigation';
 import React, { useCallback, useEffect, useMemo } from 'react';
 
@@ -422,10 +423,13 @@ function RepresentativeDetailPageContent() {
         <div className="bg-gradient-to-r from-blue-600 to-blue-800 p-8 text-white">
           <div className="flex items-start gap-6">
             {photoUrl ? (
-              <img
+              <Image
                 src={photoUrl}
-                alt={representative.name}
+                alt={`${representative.name} - ${representative.office}`}
+                width={128}
+                height={128}
                 className="w-32 h-32 rounded-full border-4 border-white shadow-lg object-cover"
+                priority
               />
             ) : (
               <div className="w-32 h-32 rounded-full border-4 border-white shadow-lg bg-blue-500 flex items-center justify-center">

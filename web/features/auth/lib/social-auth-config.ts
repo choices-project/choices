@@ -26,6 +26,18 @@ export const socialLoginOptions: SocialLoginOption[] = [
     hoverTextColor: 'hover:text-white'
   },
   {
+    provider: 'apple',
+    label: 'Continue with Apple',
+    description: 'Sign in with your Apple ID',
+    icon: 'Apple',
+    color: '#000000',
+    bgColor: 'bg-black',
+    borderColor: 'border-black',
+    textColor: 'text-white',
+    hoverBgColor: 'hover:bg-gray-900',
+    hoverTextColor: 'hover:text-white'
+  },
+  {
     provider: 'facebook',
     label: 'Continue with Facebook',
     description: 'Sign in with your Facebook account',
@@ -107,11 +119,11 @@ export const getAvailableProviders = (): SocialLoginOption[] => {
   // Filter based on environment configuration
   // Default to Google if no env var is set (for production builds where env var wasn't set at build time)
   const envValue = process.env.NEXT_PUBLIC_ENABLED_OAUTH_PROVIDERS
-  const enabledProviders = envValue && envValue.trim() 
+  const enabledProviders = envValue && envValue.trim()
     ? envValue.split(',').map(p => p.trim()).filter(Boolean)
     : ['google'] // Default to Google OAuth if env var not set
-  
-  return socialLoginOptions.filter(option => 
+
+  return socialLoginOptions.filter(option =>
     enabledProviders.includes(option.provider)
   )
 }

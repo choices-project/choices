@@ -86,14 +86,18 @@ export function useProfile(): UseProfileReturn {
 
   useEffect(() => {
     // #region agent log
-    fetch('http://127.0.0.1:7242/ingest/6a732aed-2d72-4883-a63a-f3c892fc1216',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'use-profile.ts:87',message:'useEffect check for loadProfile',data:{shouldBypassProfileLoad,isProfileLoaded,isProfileLoading,shouldCall:!shouldBypassProfileLoad && !isProfileLoaded && !isProfileLoading,timestamp:Date.now()},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'D'})}).catch(()=>{});
+    if (process.env.NODE_ENV === 'development') {
+      fetch('http://127.0.0.1:7242/ingest/6a732aed-2d72-4883-a63a-f3c892fc1216',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'use-profile.ts:87',message:'useEffect check for loadProfile',data:{shouldBypassProfileLoad,isProfileLoaded,isProfileLoading,shouldCall:!shouldBypassProfileLoad && !isProfileLoaded && !isProfileLoading,timestamp:Date.now()},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'D'})}).catch(() => undefined);
+    }
     // #endregion
     if (shouldBypassProfileLoad) {
       return;
     }
     if (!isProfileLoaded && !isProfileLoading) {
       // #region agent log
-      fetch('http://127.0.0.1:7242/ingest/6a732aed-2d72-4883-a63a-f3c892fc1216',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'use-profile.ts:92',message:'Calling loadProfile from useEffect',data:{timestamp:Date.now()},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'D'})}).catch(()=>{});
+      if (process.env.NODE_ENV === 'development') {
+        fetch('http://127.0.0.1:7242/ingest/6a732aed-2d72-4883-a63a-f3c892fc1216',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'use-profile.ts:92',message:'Calling loadProfile from useEffect',data:{timestamp:Date.now()},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'D'})}).catch(() => undefined);
+      }
       // #endregion
       void loadProfileRef.current();
     }

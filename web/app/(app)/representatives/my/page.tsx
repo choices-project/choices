@@ -9,7 +9,7 @@
 
 'use client';
 
-import { Heart, Users, AlertCircle, Mail, Send } from 'lucide-react';
+import { Heart, Users, Mail, RefreshCw, Send } from 'lucide-react';
 import Link from 'next/link';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
@@ -17,8 +17,10 @@ import { RepresentativeCard } from '@/features/civics/components/representative/
 import BulkContactModal from '@/features/contact/components/BulkContactModal';
 import ContactModal from '@/features/contact/components/ContactModal';
 
+import { EnhancedEmptyState } from '@/components/shared/EnhancedEmptyState';
+import { EnhancedErrorDisplay } from '@/components/shared/EnhancedErrorDisplay';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent, CardHeader } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
 
 import {
@@ -98,38 +100,28 @@ export default function MyRepresentativesPage() {
 
   if (error) {
     return (
-      <div className="container mx-auto px-4 py-8" role="alert" aria-live="assertive">
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center space-x-2">
-              <AlertCircle className="w-5 h-5 text-red-500" aria-hidden="true" />
-              <span>Error Loading Representatives</span>
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="space-y-4">
-              <p className="text-gray-600">{error}</p>
-              <div className="flex gap-4">
-                <Button 
-                  onClick={() => {
-                    void getUserRepresentativesRef.current();
-                  }}
-                  className="focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
-                  aria-label="Retry loading representatives"
-                >
-                  Try Again
-                </Button>
-                <Button 
-                  asChild
-                  variant="outline"
-                  className="focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
-                >
-                  <Link href="/representatives">Browse Representatives</Link>
-                </Button>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
+      <div className="container mx-auto px-4 py-8">
+        <EnhancedErrorDisplay
+          title="Error Loading Representatives"
+          message={error}
+          details="We encountered an issue while loading your followed representatives. This might be a temporary network problem."
+          tip="Check your internet connection and try again. If the problem persists, the service may be temporarily unavailable."
+          canRetry={true}
+          onRetry={() => {
+            void getUserRepresentativesRef.current();
+          }}
+          primaryAction={{
+            label: 'Try Again',
+            onClick: () => {
+              void getUserRepresentativesRef.current();
+            },
+            icon: <RefreshCw className="h-4 w-4" />,
+          }}
+          secondaryAction={{
+            label: 'Browse Representatives',
+            href: '/representatives',
+          }}
+        />
       </div>
     );
   }
@@ -155,22 +147,16 @@ export default function MyRepresentativesPage() {
       </div>
 
       {representativeCount === 0 ? (
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center space-x-2">
-              <Users className="w-5 h-5 text-gray-400" />
-              <span>No Representatives Followed</span>
-            </CardTitle>
-            <CardDescription>
-              Start following representatives to see them here
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <Button asChild>
-              <Link href="/representatives">Browse Representatives</Link>
-            </Button>
-          </CardContent>
-        </Card>
+        <EnhancedEmptyState
+          icon={<Users className="h-12 w-12 text-gray-400" />}
+          title="No representatives followed"
+          description="Start following representatives to see them here and get notified about their activity."
+          tip="Browse representatives by location, office, or search to find the ones you want to follow."
+          primaryAction={{
+            label: 'Browse Representatives',
+            href: '/representatives',
+          }}
+        />
       ) : (
         <>
           <div className="mb-4 flex items-center justify-between">

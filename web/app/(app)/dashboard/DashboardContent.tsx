@@ -295,7 +295,7 @@ export default function DashboardContent() {
         logger.debug('🚨 Dashboard: Bypass flag detected in initial useEffect', { bypassValue });
       }
     }
-  }, []);
+  }, [shouldBypassAuth]);
 
   // Re-check bypass flag periodically to catch cases where it's set after initial render
   // This handles E2E tests that set localStorage via addInitScript

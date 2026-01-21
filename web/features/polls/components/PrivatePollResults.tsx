@@ -2,6 +2,8 @@
 
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 
+import { EnhancedEmptyState } from '@/components/shared/EnhancedEmptyState';
+import { EnhancedErrorDisplay } from '@/components/shared/EnhancedErrorDisplay';
 
 import { logger } from '@/lib/utils/logger';
 
@@ -177,31 +179,35 @@ export default function PrivatePollResults({ poll, userId, onPrivacyBudgetExceed
 
   if (error) {
     return (
-      <div className="bg-red-50 border border-red-200 rounded-lg p-6">
-        <div className="flex items-center space-x-3">
-          <svg className="w-5 h-5 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z" />
-          </svg>
-          <div>
-            <h3 className="font-semibold text-red-800">Error Loading Results</h3>
-            <p className="text-sm text-red-700">{error}</p>
-          </div>
-        </div>
-      </div>
+      <EnhancedErrorDisplay
+        title="Error Loading Results"
+        message={error}
+        details="We encountered an issue while loading private poll results. This might be a temporary network problem or a privacy budget issue."
+        tip="If this is a privacy budget error, the poll may have reached its privacy limit. Try again later or contact support."
+        canRetry={true}
+        onRetry={() => {
+          // Retry logic would be handled by the parent component
+          if (onPrivacyBudgetExceeded && error && typeof error === 'string' && error.includes('Privacy budget exceeded')) {
+            onPrivacyBudgetExceeded?.();
+          }
+        }}
+        severity={error && typeof error === 'string' && error.includes('Privacy budget exceeded') ? 'warning' : 'error'}
+      />
     )
   }
 
   if (!results) {
     return (
-      <div className="bg-gray-50 border border-gray-200 rounded-lg p-6 text-center">
-        <div className="text-gray-500 mb-2">
-          <svg className="w-8 h-8 mx-auto mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      <EnhancedEmptyState
+        icon={
+          <svg className="h-12 w-12 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
           </svg>
-        </div>
-        <h3 className="text-lg font-semibold text-gray-700 mb-2">No Results Available</h3>
-        <p className="text-gray-600">Poll results are not yet available.</p>
-      </div>
+        }
+        title="No Results Available"
+        description="Poll results are not yet available. Results may be processing or the poll may not have received any votes yet."
+        tip="Private poll results are computed with differential privacy. Check back later if votes have been cast."
+      />
     )
   }
 

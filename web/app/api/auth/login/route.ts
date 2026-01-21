@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server'
 import { z } from 'zod'
 
 import { getSupabaseApiRouteClient } from '@/utils/supabase/api-route'
+import { getSupabaseAdminClient } from '@/utils/supabase/server'
 
 import {
   withErrorHandling,
@@ -151,9 +152,12 @@ export const POST = withErrorHandling(async (request: NextRequest): Promise<Next
         error: profileError?.message ?? profileError,
       })
 
-      const { data: createdProfile, error: createError } = await supabaseClient
+      // Use admin client to bypass RLS for profile creation
+      const adminClient = await getSupabaseAdminClient()
+      const { data: createdProfile, error: createError } = await adminClient
         .from('user_profiles')
         .insert({
+          id: authData.user.id,
           user_id: authData.user.id,
           email: authData.user.email,
           username: authData.user.email?.split('@')[0] ?? null,
@@ -162,6 +166,7 @@ export const POST = withErrorHandling(async (request: NextRequest): Promise<Next
             ?? 'User',
           bio: null,
           is_active: true,
+          trust_tier: 'T1',
         } as any)
         .select('username, trust_tier, display_name, avatar_url, bio, is_active, user_id, created_at, updated_at')
         .single()

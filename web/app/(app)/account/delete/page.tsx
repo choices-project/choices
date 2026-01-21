@@ -60,7 +60,7 @@ export default function AccountDeletionPage() {
   const { signOut } = useUserActions()
   const { exportProfile, isExporting: profileExporting, error: exportError } = useProfileExport()
   const { deleteProfile, isDeleting: profileDeleting, error: deleteError } = useProfileDelete()
-  
+
   // All hooks must be called at the top level
   const [userData, setUserData] = useState<UserData | null>(null)
   const [isLoading, setIsLoading] = useState(true)
@@ -186,8 +186,8 @@ export default function AccountDeletionPage() {
   }, [exportProfile, user])
 
   const confirmDeletion = useCallback(() => {
-    setDeletionSteps(prev => 
-      prev.map(step => 
+    setDeletionSteps(prev =>
+      prev.map(step =>
         step.id === 'confirm-deletion' ? { ...step, completed: true } : step
       )
     )
@@ -196,8 +196,8 @@ export default function AccountDeletionPage() {
 
   const handleEmailConfirmation = useCallback((email: string) => {
     if (email === user?.email) {
-      setDeletionSteps(prev => 
-        prev.map(step => 
+      setDeletionSteps(prev =>
+        prev.map(step =>
           step.id === 'enter-email' ? { ...step, completed: true } : step
         )
       )
@@ -254,7 +254,7 @@ export default function AccountDeletionPage() {
         <div className="text-center">
           <h1 className="text-2xl font-bold text-gray-900 mb-4">Account Deletion</h1>
           <p className="text-gray-600 mb-6">Please log in to access this page.</p>
-          <a 
+          <a
             href="/auth?redirectTo=/account/delete"
             className="bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700"
           >
@@ -320,7 +320,7 @@ export default function AccountDeletionPage() {
             <Alert className="border-red-200 bg-red-50">
               <AlertTriangle className="h-4 w-4 text-red-600" />
               <AlertDescription className="text-red-800">
-                <strong>Warning:</strong> This action is irreversible. Once you delete your account, 
+                <strong>Warning:</strong> This action is irreversible. Once you delete your account,
                 all your data including polls, votes, and comments will be permanently removed.
               </AlertDescription>
             </Alert>
@@ -397,7 +397,7 @@ export default function AccountDeletionPage() {
                           )}
                         </div>
                         <p className="text-sm text-gray-600 mt-1">{step.description}</p>
-                        
+
                         {/* Step-specific actions */}
                         {step.id === 'data-export' && !step.completed && (
                           <Button

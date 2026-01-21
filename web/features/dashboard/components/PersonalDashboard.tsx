@@ -19,7 +19,7 @@
  * - Memoized dashboardPreferences with specific property dependencies
  */
 
-import { BarChart3, TrendingUp, Vote, Users, Settings2, Zap, ArrowRight, AlertCircle, RefreshCw } from 'lucide-react';
+import { BarChart3, TrendingUp, Vote, Users, Settings2, Zap, ArrowRight, RefreshCw } from 'lucide-react';
 import Image from 'next/image';
 import Link from 'next/link';
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
@@ -27,6 +27,8 @@ import { useShallow } from 'zustand/react/shallow';
 
 import { useProfile, useProfileErrorStates, useProfileLoadingStates } from '@/features/profile/hooks/use-profile';
 
+import { EnhancedEmptyState } from '@/components/shared/EnhancedEmptyState';
+import { EnhancedErrorDisplay } from '@/components/shared/EnhancedErrorDisplay';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Label } from '@/components/ui/label';
@@ -427,49 +429,35 @@ function StandardPersonalDashboard({ userId: _fallbackUserId }: PersonalDashboar
         </p>
           </div>
 
-      {/* Error Handling UI - Show when API calls fail - Enhanced UX */}
+      {/* Error Handling UI - Enhanced UX with EnhancedErrorDisplay */}
       {isMounted && pollsError && (
-        <Card
-          className="border-red-200 bg-red-50 dark:bg-red-900/20 dark:border-red-800 shadow-sm"
-          role="alert"
-          aria-live="assertive"
-          aria-atomic="true"
-          data-testid="error-boundary"
-        >
-          <CardContent className="pt-6">
-            <div className="flex items-start gap-4">
-              <div className="flex-shrink-0">
-                <div className="p-2 rounded-full bg-red-100 dark:bg-red-900/40">
-                  <AlertCircle className="h-5 w-5 text-red-600 dark:text-red-400" aria-hidden="true" />
-            </div>
-      </div>
-              <div className="flex-1 min-w-0">
-                <h2 className="text-sm font-semibold text-red-900 dark:text-red-200 mb-1">
-                  Unable to load data
-                </h2>
-                <p className="text-sm text-red-700 dark:text-red-300 mb-4">
-                  {typeof pollsError === 'string'
-                    ? pollsError
-                    : 'Failed to load dashboard data. Please check your connection and try again.'}
-                </p>
-          <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => {
-                    if (loadPollsRef.current) {
-                      loadPollsRef.current();
-                    }
-                  }}
-                  className="border-red-300 text-red-700 hover:bg-red-100 dark:border-red-700 dark:text-red-300 dark:hover:bg-red-900/30 transition-colors"
-                  aria-label="Retry loading dashboard data"
-                >
-                  <RefreshCw className="h-4 w-4 mr-2" aria-hidden="true" />
-                  Try Again
-          </Button>
+        <div className="mb-6" data-testid="dashboard-error">
+          <EnhancedErrorDisplay
+            title="Unable to load dashboard data"
+            message={
+              typeof pollsError === 'string'
+                ? pollsError
+                : 'Failed to load dashboard data. Please check your connection and try again.'
+            }
+            details="We encountered an issue while loading your dashboard. This might be a temporary network problem."
+            tip="Check your internet connection and try again. If the problem persists, the service may be temporarily unavailable."
+            canRetry={true}
+            onRetry={() => {
+              if (loadPollsRef.current) {
+                loadPollsRef.current();
+              }
+            }}
+            primaryAction={{
+              label: 'Try Again',
+              onClick: () => {
+                if (loadPollsRef.current) {
+                  loadPollsRef.current();
+                }
+              },
+              icon: <RefreshCw className="h-4 w-4" />,
+            }}
+          />
         </div>
-      </div>
-          </CardContent>
-        </Card>
       )}
 
       {/* Analytics Metrics Cards - Improved UX with graceful error handling */}
@@ -584,23 +572,21 @@ function StandardPersonalDashboard({ userId: _fallbackUserId }: PersonalDashboar
                   </CardHeader>
           <CardContent>
             {recentActivity.length === 0 ? (
-              <div className="text-center py-12">
-                <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-gray-100 dark:bg-gray-800 mb-4">
-                  <Vote className="h-8 w-8 text-gray-400 dark:text-gray-500" />
-                </div>
-                <p className="text-sm font-medium text-gray-900 dark:text-gray-100 mb-1">
-                  No recent activity
-                </p>
-                <p className="text-xs text-gray-500 dark:text-gray-400 mb-4">
-                  Start voting or creating polls to see your activity here
-                </p>
-                <Link href="/polls">
-                  <Button variant="outline" size="sm">
-                    Browse Polls
-                    <ArrowRight className="ml-2 h-4 w-4" />
-                  </Button>
-                </Link>
-                        </div>
+              <EnhancedEmptyState
+                icon={<Vote className="h-12 w-12 text-gray-400" />}
+                title="No recent activity"
+                description="Start voting or creating polls to see your activity here."
+                tip="Your recent votes and poll creations will appear here to help you track your civic engagement."
+                primaryAction={{
+                  label: 'Browse Polls',
+                  href: '/polls',
+                  icon: <ArrowRight className="h-4 w-4" />,
+                }}
+                secondaryAction={{
+                  label: 'Create Poll',
+                  href: '/polls/create',
+                }}
+              />
                       ) : (
               <div className="space-y-2" role="list" aria-label="Recent activity items">
                 {recentActivity.map((activity, index) => {

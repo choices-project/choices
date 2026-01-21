@@ -13,15 +13,17 @@
 import { 
   ChatBubbleLeftRightIcon,
   ClockIcon,
-  ExclamationTriangleIcon,
-  EnvelopeIcon,
-  FunnelIcon
+  ExclamationTriangleIcon
 } from '@heroicons/react/24/outline';
+import { RefreshCw } from 'lucide-react';
+import Image from 'next/image';
 import Link from 'next/link';
 import { useEffect, useState, useMemo, useCallback } from 'react';
 
+import { EnhancedEmptyState } from '@/components/shared/EnhancedEmptyState';
+import { EnhancedErrorDisplay } from '@/components/shared/EnhancedErrorDisplay';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 
 import { useAppActions } from '@/lib/stores/appStore';
 import { logger } from '@/lib/utils/logger';
@@ -132,20 +134,23 @@ export default function ContactHistoryPage() {
   if (error) {
     return (
       <div className="container mx-auto px-4 py-8">
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center space-x-2">
-              <ExclamationTriangleIcon className="w-5 h-5 text-red-500" />
-              <span>Error</span>
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <p className="text-gray-600 mb-4">{error}</p>
-            <Button asChild>
-              <Link href="/representatives">Browse Representatives</Link>
-            </Button>
-          </CardContent>
-        </Card>
+        <EnhancedErrorDisplay
+          title="Unable to load message history"
+          message={error}
+          details="We encountered an issue while loading your communication history. This might be a temporary network problem."
+          tip="Check your internet connection and try again. If the problem persists, the service may be temporarily unavailable."
+          canRetry={true}
+          onRetry={() => void fetchThreads()}
+          primaryAction={{
+            label: 'Try Again',
+            onClick: () => void fetchThreads(),
+            icon: <RefreshCw className="h-4 w-4" />,
+          }}
+          secondaryAction={{
+            label: 'Browse Representatives',
+            href: '/representatives',
+          }}
+        />
       </div>
     );
   }
@@ -165,7 +170,6 @@ export default function ContactHistoryPage() {
       {/* Filters */}
       <div className="mb-6 flex flex-wrap items-center gap-4">
         <div className="flex items-center space-x-2">
-          <FunnelIcon className="w-5 h-5 text-gray-400" />
           <span className="text-sm font-medium text-gray-700">Filter:</span>
           <div className="flex space-x-2">
             {(['all', 'active', 'closed'] as const).map(filterOption => (
@@ -199,22 +203,16 @@ export default function ContactHistoryPage() {
       </div>
 
       {filteredThreads.length === 0 ? (
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center space-x-2">
-              <EnvelopeIcon className="w-5 h-5 text-gray-400" />
-              <span>No Messages Yet</span>
-            </CardTitle>
-            <CardDescription>
-              Start a conversation with your representatives to see it here
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <Button asChild>
-              <Link href="/representatives">Browse Representatives</Link>
-            </Button>
-          </CardContent>
-        </Card>
+        <EnhancedEmptyState
+          icon={<ChatBubbleLeftRightIcon className="h-12 w-12 text-gray-400" />}
+          title="No messages yet"
+          description="Start a conversation with your representatives to see it here."
+          tip="Browse your representatives and send them a message to start a conversation thread."
+          primaryAction={{
+            label: 'Browse Representatives',
+            href: '/representatives',
+          }}
+        />
       ) : (
         <div className="space-y-4">
           {filteredThreads.map(thread => (
@@ -226,9 +224,11 @@ export default function ContactHistoryPage() {
                     <div className="flex items-center space-x-4 text-sm text-gray-600">
                       <div className="flex items-center space-x-1">
                         {thread.representative.photo ? (
-                          <img
+                          <Image
                             src={thread.representative.photo}
                             alt={thread.representative.name}
+                            width={24}
+                            height={24}
                             className="w-6 h-6 rounded-full object-cover"
                           />
                         ) : (

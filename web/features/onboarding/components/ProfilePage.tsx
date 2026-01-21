@@ -6,7 +6,8 @@ import {
   Settings,
   CheckCircle,
   AlertTriangle,
-  Loader2
+  Loader2,
+  RefreshCw
 } from 'lucide-react';
 import React, { useMemo, useState } from 'react';
 
@@ -24,6 +25,7 @@ import React, { useMemo, useState } from 'react';
 
 import { useProfile, useProfileLoadingStates, useProfileErrorStates, useProfileExport } from '@/features/profile/hooks/use-profile';
 
+import { EnhancedErrorDisplay } from '@/components/shared/EnhancedErrorDisplay';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
@@ -79,12 +81,22 @@ export default function ProfilePage() {
   if (error || !profile) {
     return (
       <div className="max-w-2xl mx-auto p-6">
-        <Alert variant="destructive">
-          <AlertTriangle className="h-4 w-4" />
-      <AlertDescription>
-        {profileError ?? 'Failed to load profile. Please try again.'}
-          </AlertDescription>
-        </Alert>
+        <EnhancedErrorDisplay
+          title="Failed to load profile"
+          message={profileError ?? 'Failed to load profile. Please try again.'}
+          details="We encountered an issue while loading your profile. This might be a temporary network problem."
+          tip="Check your internet connection and try again. If the problem persists, the service may be temporarily unavailable."
+          canRetry={true}
+          onRetry={() => {
+            // Profile will be refetched automatically by the hook
+            window.location.reload();
+          }}
+          primaryAction={{
+            label: 'Try Again',
+            onClick: () => window.location.reload(),
+            icon: <RefreshCw className="h-4 w-4" />,
+          }}
+        />
       </div>
     );
   }

@@ -1,16 +1,16 @@
 /**
  * Error Handler Module
- * 
+ *
  * Comprehensive error handling for API routes and server actions.
  * Provides standardized error types, handling, and user-friendly messages.
- * 
+ *
  * Features:
  * - Custom error classes
  * - Error logging and monitoring
  * - User-friendly error messages
  * - HTTP status code mapping
  * - Error recovery strategies
- * 
+ *
  * @author Choices Platform Team
  * @created 2025-10-26
  * @version 1.0.0
@@ -202,20 +202,20 @@ export function handleError(error: unknown): {
  */
 export function getUserMessage(error: AppError): string {
   const userMessages: Record<string, string> = {
-    VALIDATION_ERROR: 'Please check your input and try again',
-    AUTHENTICATION_ERROR: 'Please log in to continue',
-    AUTHORIZATION_ERROR: 'You do not have permission to perform this action',
-    NOT_FOUND_ERROR: 'The requested resource was not found',
-    CONFLICT_ERROR: 'This action conflicts with existing data',
-    RATE_LIMIT_ERROR: 'Too many requests. Please try again later',
-    DATABASE_ERROR: 'A temporary error occurred. Please try again',
-    EXTERNAL_SERVICE_ERROR: 'A service is temporarily unavailable',
-    INTERNAL_ERROR: 'An unexpected error occurred. Please try again',
-    UNEXPECTED_ERROR: 'An unexpected error occurred. Please try again',
-    UNKNOWN_ERROR: 'An unknown error occurred. Please try again'
+    VALIDATION_ERROR: 'Please check your input and try again. Make sure all required fields are filled correctly.',
+    AUTHENTICATION_ERROR: 'Please log in to continue. Your session may have expired.',
+    AUTHORIZATION_ERROR: 'You do not have permission to perform this action. Contact an administrator if you believe this is an error.',
+    NOT_FOUND_ERROR: 'The requested resource was not found. It may have been moved or deleted.',
+    CONFLICT_ERROR: 'This action conflicts with existing data. Please check for duplicates or conflicting information.',
+    RATE_LIMIT_ERROR: 'Too many requests. Please wait a moment and try again.',
+    DATABASE_ERROR: 'A temporary error occurred. Please try again in a few moments. If the problem persists, contact support.',
+    EXTERNAL_SERVICE_ERROR: 'A service is temporarily unavailable. Please try again later.',
+    INTERNAL_ERROR: 'An unexpected error occurred. Please try again. If the problem continues, contact support.',
+    UNEXPECTED_ERROR: 'An unexpected error occurred. Please try again. If the problem continues, contact support.',
+    UNKNOWN_ERROR: 'An unknown error occurred. Please try again. If the problem continues, contact support.'
   };
 
-  return userMessages[error.code] ?? 'An error occurred. Please try again';
+  return userMessages[error.code] ?? 'An error occurred. Please try again. If the problem continues, contact support.';
 }
 
 /**
@@ -237,7 +237,7 @@ export function isOperationalError(error: unknown): boolean {
  */
 export function createErrorResponse(error: unknown): Response {
   const { statusCode, response } = handleError(error);
-  
+
   return new Response(
     JSON.stringify(response),
     {
@@ -261,7 +261,7 @@ export function createServerActionError(error: unknown): {
   timestamp: string;
 } {
   const { response } = handleError(error);
-  
+
   const result: any = {
     success: false,
     error: response.error,
@@ -285,20 +285,20 @@ export const errorRecovery = {
     baseDelay: number = 1000
   ): Promise<T> {
     let lastError: unknown;
-    
+
     for (let attempt = 0; attempt <= maxRetries; attempt++) {
       try {
         return await operation();
       } catch (error) {
         lastError = error;
-        
+
         if (attempt === maxRetries) {
           break;
         }
-        
+
         const delay = baseDelay * Math.pow(2, attempt);
         await new Promise(resolve => setTimeout(resolve, delay));
-        
+
         logger.warn(`Operation failed, retrying in ${delay}ms`, {
           attempt: attempt + 1,
           maxRetries,
@@ -306,7 +306,7 @@ export const errorRecovery = {
         });
       }
     }
-    
+
     throw lastError;
   },
 
@@ -349,21 +349,21 @@ export const errorRecovery = {
 
       try {
         const result = await operation();
-        
+
         if (state === 'HALF_OPEN') {
           state = 'CLOSED';
           failures = 0;
         }
-        
+
         return result;
       } catch (error) {
         failures++;
         lastFailureTime = Date.now();
-        
+
         if (failures >= failureThreshold) {
           state = 'OPEN';
         }
-        
+
         throw error;
       }
     };

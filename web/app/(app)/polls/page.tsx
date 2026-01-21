@@ -7,6 +7,8 @@ import React, { useEffect, useCallback, useMemo, useRef } from 'react';
 import { PollFiltersPanel } from '@/features/polls/components/PollFiltersPanel';
 import { getPollCategoryColor, getPollCategoryIcon } from '@/features/polls/constants/categories';
 
+import { EnhancedEmptyState } from '@/components/shared/EnhancedEmptyState';
+import { EnhancedErrorDisplay } from '@/components/shared/EnhancedErrorDisplay';
 import { ErrorBoundary } from '@/components/shared/ErrorBoundary';
 import { Skeleton } from '@/components/ui/skeleton';
 
@@ -19,6 +21,7 @@ import {
   usePollsActions,
   usePollsError,
   usePollsLoading,
+  usePollsStore,
 } from '@/lib/stores/pollsStore';
 import logger from '@/lib/utils/logger';
 
@@ -47,6 +50,18 @@ function PollsPageContent() {
     setTrendingOnly,
     setCurrentPage,
   } = usePollsActions();
+  const clearSearch = usePollsStore((state) => state.clearSearch);
+  const clearSearchRef = useRef(clearSearch);
+  React.useEffect(() => { clearSearchRef.current = clearSearch; }, [clearSearch]);
+
+  const handleClearFilters = useCallback(async () => {
+    setFiltersRef.current({ status: [] });
+    setTrendingOnlyRef.current(false);
+    if (search.query) {
+      await clearSearchRef.current();
+    }
+    void loadPollsRef.current();
+  }, [search.query]);
 
   // Use refs for store actions to prevent infinite re-renders
   const loadPollsRef = useRef(loadPolls);
@@ -200,7 +215,6 @@ function PollsPageContent() {
         logger.debug('Polls page calling loadPolls');
       }
       loadPollsRef.current().catch((error) => {
-        console.error('[POLLS PAGE] Failed to load polls:', error);
         logger.warn('Failed to load polls (non-critical):', error);
       });
     }, 0);
@@ -311,32 +325,23 @@ function PollsPageContent() {
         </div>
 
         {error && (
-          <div
-            className="mb-6 rounded-lg border border-red-200 dark:border-red-800 bg-red-50 dark:bg-red-900/20 p-4 text-sm text-red-700 dark:text-red-400"
-            role="alert"
-            aria-live="assertive"
-            aria-atomic="true"
-          >
-            <div className="flex items-start gap-2">
-              <svg className="h-5 w-5 flex-shrink-0 mt-0.5" fill="currentColor" viewBox="0 0 20 20" aria-hidden="true">
-                <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" />
-              </svg>
-              <div className="flex-1">
-                <p className="font-medium">Unable to load polls</p>
-                <p className="mt-1">{error}</p>
-                <button
-                  onClick={() => {
-                    loadPollsRef.current().catch((err) => {
-                      logger.error('Failed to retry loading polls:', err);
-                    });
-                  }}
-                  className="mt-2 text-sm font-medium underline hover:no-underline focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2 rounded"
-                  aria-label="Retry loading polls"
-                >
-                  Try again
-                </button>
-              </div>
-            </div>
+          <div className="mb-6">
+            <EnhancedErrorDisplay
+              title="Unable to load polls"
+              message={error}
+              details="We encountered an issue while loading polls. This might be a temporary network problem."
+              tip="Check your internet connection and try again. If the problem persists, the service may be temporarily unavailable."
+              canRetry={true}
+              onRetry={() => {
+                loadPollsRef.current().catch((err) => {
+                  logger.error('Failed to retry loading polls:', err);
+                });
+              }}
+              primaryAction={{
+                label: 'Refresh Page',
+                onClick: () => window.location.reload(),
+              }}
+            />
           </div>
         )}
 
@@ -344,26 +349,41 @@ function PollsPageContent() {
 
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {polls.length === 0 ? (
-            <div className="col-span-full text-center py-12" role="status" aria-live="polite">
-              <div className="text-gray-400 mb-4" aria-hidden="true">
-                <BarChart3 className="h-12 w-12 mx-auto" />
-              </div>
-              <h2 className="text-lg font-medium text-gray-900 dark:text-gray-100 mb-2">
-                {tRef.current('polls.page.empty.title')}
-              </h2>
-              <p className="text-gray-600 dark:text-gray-400 mb-4">
-                {((search.query ?? '') || selectedCategory !== 'all' || activeFilter !== 'all')
-                  ? tRef.current('polls.page.empty.filters')
-                  : tRef.current('polls.page.empty.ctaMessage')}
-              </p>
-              <Link
-                href="/polls/create"
-                className="inline-flex items-center px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
-                aria-label="Create a new poll"
-              >
-                <Plus className="h-4 w-4 mr-2" aria-hidden="true" />
-                {tRef.current('polls.page.cta.create')}
-              </Link>
+            <div className="col-span-full">
+              <EnhancedEmptyState
+                icon={<BarChart3 className="h-12 w-12 text-gray-400" />}
+                title={((search.query ?? '') || selectedCategory !== 'all' || activeFilter !== 'all')
+                  ? 'No polls match your filters'
+                  : 'No polls yet'}
+                description={((search.query ?? '') || selectedCategory !== 'all' || activeFilter !== 'all')
+                  ? 'Try adjusting your search or filters to see more results.'
+                  : 'Be the first to create a poll and start engaging with your community.'}
+                tip={((search.query ?? '') || selectedCategory !== 'all' || activeFilter !== 'all')
+                  ? 'You can clear your filters to see all available polls.'
+                  : 'Polls help you gather opinions, make decisions, and engage with your community.'}
+                primaryAction={(() => {
+                  const isFiltered = ((search.query ?? '') || selectedCategory !== 'all' || activeFilter !== 'all');
+                  const action: {
+                    label: string;
+                    href?: string;
+                    onClick?: () => void;
+                    icon: React.ReactNode;
+                  } = {
+                    label: isFiltered ? 'Clear Filters' : 'Create Your First Poll',
+                    icon: <Plus className="h-4 w-4" />,
+                  };
+                  if (isFiltered) {
+                    action.onClick = handleClearFilters;
+                  } else {
+                    action.href = '/polls/create';
+                  }
+                  return action;
+                })()}
+                isFiltered={!!((search.query ?? '') || selectedCategory !== 'all' || activeFilter !== 'all')}
+                {...((search.query ?? '') || selectedCategory !== 'all' || activeFilter !== 'all' ? {
+                  onResetFilters: handleClearFilters
+                } : {})}
+              />
             </div>
           ) : (
             polls.map((poll) => (

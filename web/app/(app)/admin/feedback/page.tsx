@@ -106,10 +106,13 @@ export default function AdminFeedbackPage() {
   const debouncedSearch = useDebounce(filters.search, 500);
 
   // Create debounced filters object for API calls
-  const debouncedFilters = useMemo(() => ({
-    ...filters,
-    search: debouncedSearch,
-  }), [filters.type, filters.sentiment, filters.status, filters.priority, filters.dateRange, debouncedSearch]);
+  const debouncedFilters = useMemo(
+    () => ({
+      ...filters,
+      search: debouncedSearch,
+    }),
+    [filters, debouncedSearch],
+  );
 
   useEffect(() => {
     setCurrentRoute('/admin/feedback');

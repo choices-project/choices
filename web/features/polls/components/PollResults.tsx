@@ -1,6 +1,10 @@
 'use client'
 
+import { RefreshCw } from 'lucide-react';
 import React, { useState, useEffect, useCallback, useMemo, useId, useRef } from 'react';
+
+import { EnhancedEmptyState } from '@/components/shared/EnhancedEmptyState';
+import { EnhancedErrorDisplay } from '@/components/shared/EnhancedErrorDisplay';
 
 import ScreenReaderSupport from '@/lib/accessibility/screen-reader';
 import { logger } from '@/lib/utils/logger';
@@ -50,11 +54,13 @@ export default function OptimizedPollResults({
     averageAge: number;
   } | null>(null)
 
-  // Use refs for stable callback props to prevent unnecessary re-renders
+  // Use refs for stable callback props and translation function (optimized pattern)
   const onResultsLoadedRef = useRef(onResultsLoaded);
   useEffect(() => { onResultsLoadedRef.current = onResultsLoaded; }, [onResultsLoaded]);
   const onErrorRef = useRef(onError);
   useEffect(() => { onErrorRef.current = onError; }, [onError]);
+  const tRef = useRef(t);
+  useEffect(() => { tRef.current = t; }, [t]);
 
   // Memoized poll results loading function
   const loadPollResults = useCallback(async () => {
@@ -138,11 +144,11 @@ export default function OptimizedPollResults({
   // Handle refresh
   const handleRefresh = useCallback(async () => {
     const refreshTime = Date.now();
-    ScreenReaderSupport.announce(t('polls.results.refreshing'), 'polite');
+    ScreenReaderSupport.announce(tRef.current('polls.results.refreshing'), 'polite');
     await loadPollResults()
     loadCacheStats()
     previousRefreshRef.current = refreshTime;
-  }, [loadPollResults, loadCacheStats, t])
+  }, [loadPollResults, loadCacheStats])
 
   // Announce results updates
   useEffect(() => {
@@ -152,7 +158,7 @@ export default function OptimizedPollResults({
     const topOption = sortedOptions[0];
     if (!topOption) return;
 
-    const summary = t('polls.results.summary', {
+    const summary = tRef.current('polls.results.summary', {
       totalVotes,
       topOption: topOption.label ?? topOption.option,
       topVotes: topOption.voteCount ?? topOption.votes,
@@ -160,7 +166,7 @@ export default function OptimizedPollResults({
     });
 
     ScreenReaderSupport.announce(summary, 'polite');
-  }, [results, sortedOptions, loading, t]);
+  }, [results, sortedOptions, loading]);
 
   if (loading) {
     return (
@@ -179,35 +185,34 @@ export default function OptimizedPollResults({
 
   if (error) {
     return (
-      <div className="bg-red-50 border border-red-200 rounded-lg p-4">
-        <div className="flex items-center">
-          <div className="flex-shrink-0">
-            <svg className="h-5 w-5 text-red-400" viewBox="0 0 20 20" fill="currentColor">
-              <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" />
-            </svg>
-          </div>
-          <div className="ml-3">
-            <h3 className="text-sm font-medium text-red-800">Error loading poll results</h3>
-            <p className="text-sm text-red-700 mt-1">{error}</p>
-          </div>
-        </div>
-        <div className="mt-4">
-          <button
-            onClick={() => void handleRefresh()}
-            className="bg-red-100 text-red-800 px-3 py-2 rounded-md text-sm font-medium hover:bg-red-200"
-          >
-            Try Again
-          </button>
-        </div>
-      </div>
+      <EnhancedErrorDisplay
+        title={tRef.current('polls.results.error.title') || 'Error loading poll results'}
+        message={error}
+        details="We encountered an issue while loading poll results. This might be a temporary network problem."
+        tip="Check your internet connection and try again. If the problem persists, the service may be temporarily unavailable."
+        canRetry={true}
+        onRetry={() => void handleRefresh()}
+        primaryAction={{
+          label: tRef.current('polls.results.error.retry') || 'Try Again',
+          onClick: () => void handleRefresh(),
+          icon: <RefreshCw className="h-4 w-4" />,
+        }}
+      />
     )
   }
 
   if (!results) {
     return (
-      <div className="text-center py-8">
-        <p className="text-gray-500">No poll results available</p>
-      </div>
+      <EnhancedEmptyState
+        icon={
+          <svg className="h-12 w-12 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+          </svg>
+        }
+        title={tRef.current('polls.results.empty.title') || 'No poll results available'}
+        description={tRef.current('polls.results.empty.description') || 'Poll results are not yet available. Results may be processing or the poll may not have received any votes yet.'}
+        tip="Check back later if votes have been cast, or refresh to see if results have been updated."
+      />
     )
   }
 
