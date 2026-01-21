@@ -161,24 +161,25 @@ test.describe('Authentication Redirects', () => {
       });
 
       await waitForPageReady(page);
-      
+
       // Wait for navigation to update after login
       // Navigation may need time to reflect authentication state
       // Check if we were redirected (login successful)
       await page.waitForTimeout(2_000);
-      
+
       // Check current URL - if still on /auth, wait a bit more for redirect
-      let currentUrl = page.url();
-      if (currentUrl.includes('/auth')) {
+      let urlAfterLogin = page.url();
+      if (urlAfterLogin.includes('/auth')) {
         // Wait for redirect to complete
         await page.waitForURL(url => !url.includes('/auth'), { timeout: 10_000 }).catch(() => {});
         await page.waitForTimeout(2_000);
+        urlAfterLogin = page.url();
       }
-      
+
       // Navigate to feed page to ensure navigation renders with auth state
       await page.goto(`${BASE_URL}/feed`, { waitUntil: 'domcontentloaded', timeout: 30_000 });
       await waitForPageReady(page);
-      
+
       // Wait for navigation to update - check for logout button or profile link
       // Use waitForFunction to check if navigation has updated
       await page.waitForFunction(
@@ -191,18 +192,18 @@ test.describe('Authentication Redirects', () => {
       ).catch(() => {
         // If function times out, check manually
       });
-      
+
       await page.waitForTimeout(2_000);
 
       // Verify we're logged in - check for logout button
       // Also check for profile link as alternative indicator
       const logoutButton = page.locator('[data-testid="logout-button"]');
       const profileLink = page.locator('a[href="/profile"]');
-      
+
       // Verify at least one is visible
       const hasLogout = await logoutButton.isVisible().catch(() => false);
       const hasProfile = await profileLink.isVisible().catch(() => false);
-      
+
       if (!hasLogout && !hasProfile) {
         // Take screenshot for debugging
         await page.screenshot({ path: 'test-results/logout-button-missing.png' });
@@ -211,12 +212,18 @@ test.describe('Authentication Redirects', () => {
         throw new Error(`Neither logout button nor profile link visible after login. Navigation content: ${navContent.substring(0, 200)}`);
       }
 
-      // Click logout button
-      await logoutButton.click();
+      // Click logout button (use the one that's visible)
+      if (hasLogout) {
+        await logoutButton.click();
+      } else {
+        // If only profile link is visible, navigation might be in a different state
+        throw new Error('Logout button not found - navigation may not be updating correctly');
+      }
+
       await page.waitForTimeout(2_000);
 
       // Should be redirected (either to /auth or home)
-      const currentUrl = page.url();
+      const urlAfterLogout = page.url();
       expect(currentUrl).toMatch(/\/(auth|$|\?)/);
 
       // Verify we're logged out - try accessing protected page
@@ -253,11 +260,11 @@ test.describe('Authentication Redirects', () => {
 
       await waitForPageReady(page);
       await page.waitForTimeout(2_000);
-      
+
       // Navigate to feed to ensure navigation renders
       await page.goto(`${BASE_URL}/feed`, { waitUntil: 'domcontentloaded', timeout: 30_000 });
       await waitForPageReady(page);
-      
+
       // Wait for navigation to update
       await page.waitForFunction(
         () => {
@@ -267,22 +274,22 @@ test.describe('Authentication Redirects', () => {
         },
         { timeout: 15_000 }
       ).catch(() => {});
-      
+
       await page.waitForTimeout(2_000);
 
       // Logout - check for logout button or profile link
       const logoutButton = page.locator('[data-testid="logout-button"]');
       const profileLink = page.locator('a[href="/profile"]');
-      
+
       // Wait for at least one to be visible
       const hasLogout = await logoutButton.isVisible().catch(() => false);
       const hasProfile = await profileLink.isVisible().catch(() => false);
-      
+
       if (!hasLogout && !hasProfile) {
         await page.screenshot({ path: 'test-results/logout-button-missing-before-logout.png' });
         throw new Error('Logout button not visible - cannot test logout functionality');
       }
-      
+
       // If logout button is visible, click it
       if (hasLogout) {
         await logoutButton.click();
@@ -291,7 +298,7 @@ test.describe('Authentication Redirects', () => {
         // Try to find logout in mobile menu or check if we need to navigate
         throw new Error('Logout button not found - navigation may not be updating correctly');
       }
-      
+
       await page.waitForTimeout(3_000);
 
       // Navigate to a public page
