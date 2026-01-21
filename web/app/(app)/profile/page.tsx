@@ -36,7 +36,7 @@ function ProfilePageContent() {
   const { exportProfile, isExporting } = useProfileExport();
   const [exportStatus, setExportStatus] = useState<'success' | 'error' | null>(null);
   const { setCurrentRoute, setBreadcrumbs, setSidebarActiveSection } = useAppActions();
-  
+
   // Profile display and stats
   const { displayName, isAdmin } = useProfileDisplay();
   const { isProfileComplete } = useProfileStats();
@@ -214,7 +214,7 @@ function ProfilePageContent() {
 
   // Check if profile doesn't exist (user needs onboarding) OR if onboarding not completed
   // Allow admin users to complete onboarding even if profile exists
-  const needsOnboarding = (isAuthenticated && !profileLoading && !profile && !profileError) || 
+  const needsOnboarding = (isAuthenticated && !profileLoading && !profile && !profileError) ||
                           (!onboardingIsCompleted && profile); // Profile exists but onboarding not completed
 
   if (needsOnboarding) {
@@ -229,7 +229,7 @@ function ProfilePageContent() {
                 </div>
                 <CardTitle className="text-2xl text-foreground">Complete Your Profile</CardTitle>
                 <CardDescription className="mt-2 text-muted-foreground">
-                  {!profile 
+                  {!profile
                     ? 'Please complete onboarding to access your profile page.'
                     : 'Complete onboarding to unlock all features and personalize your experience.'}
                 </CardDescription>

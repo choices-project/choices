@@ -972,8 +972,10 @@ const BalancedOnboardingFlow: React.FC = () => {
   // Get redirect parameters from URL
   const searchParams = useSearchParams();
   const redirectToRef = useRef<string | null>(null);
+  const reasonRef = useRef<string | null>(null);
   useEffect(() => {
     redirectToRef.current = searchParams.get('redirect');
+    reasonRef.current = searchParams.get('reason');
   }, [searchParams]);
 
   const currentStep = useOnboardingStep();
@@ -1108,8 +1110,14 @@ const BalancedOnboardingFlow: React.FC = () => {
   }, [isFlowCompleted]);
 
   // Check if user has already completed onboarding
+  // BUT allow access if reason parameter indicates they want to complete onboarding
   useEffect(() => {
     const redirectIfCompleted = async () => {
+      // Allow access if user explicitly wants to complete onboarding (e.g., from profile page)
+      if (reasonRef.current === 'complete_profile' || reasonRef.current === 'onboarding_required') {
+        return; // Don't redirect - allow them to proceed with onboarding
+      }
+
       if (!isLoading && !profileLoading && user) {
         try {
           const hasCompleted =
