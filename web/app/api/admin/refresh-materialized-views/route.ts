@@ -32,14 +32,24 @@ export const POST = withErrorHandling(async (_request: NextRequest) => {
 
     // Get list of all materialized views in the public schema
     // Type assertion needed since exec_sql may not exist in schema
-    const { data: views, error: viewsError } = await (supabase.rpc as any)('exec_sql', {
-      sql: `
-        SELECT schemaname, matviewname
-        FROM pg_matviews
-        WHERE schemaname = 'public'
-        ORDER BY matviewname;
-      `,
-    });
+    // Note: exec_sql typically requires 2 parameters, but we'll try with sql only
+    let views: any = null;
+    let viewsError: any = null;
+    
+    try {
+      const result = await (supabase.rpc as any)('exec_sql', {
+        sql: `
+          SELECT schemaname, matviewname 
+          FROM pg_matviews 
+          WHERE schemaname = 'public'
+          ORDER BY matviewname;
+        `,
+      });
+      views = result.data;
+      viewsError = result.error;
+    } catch (err) {
+      viewsError = err;
+    }
 
     if (viewsError) {
       // If exec_sql RPC doesn't exist, try direct query approach

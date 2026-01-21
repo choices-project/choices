@@ -114,9 +114,11 @@ $$;
 -- Permissions
 -- ============================================================================
 
--- Grant execute permissions to service role (adjust role name as needed)
--- GRANT EXECUTE ON FUNCTION refresh_materialized_view(TEXT) TO service_role;
--- GRANT EXECUTE ON FUNCTION refresh_all_materialized_views() TO service_role;
--- GRANT EXECUTE ON FUNCTION vacuum_analyze_table(TEXT) TO service_role;
--- GRANT EXECUTE ON FUNCTION analyze_database() TO service_role;
--- GRANT EXECUTE ON FUNCTION perform_maintenance_on_tables() TO service_role;
+-- Grant execute permissions to service role
+-- Note: In Supabase, the service role is typically 'service_role' or 'postgres'
+-- If you get permission errors, try 'postgres' or 'authenticator' instead
+GRANT EXECUTE ON FUNCTION refresh_materialized_view(TEXT) TO service_role;
+GRANT EXECUTE ON FUNCTION refresh_all_materialized_views() TO service_role;
+GRANT EXECUTE ON FUNCTION vacuum_analyze_table(TEXT) TO service_role;
+GRANT EXECUTE ON FUNCTION analyze_database() TO service_role;
+GRANT EXECUTE ON FUNCTION perform_maintenance_on_tables() TO service_role;
