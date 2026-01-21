@@ -1111,10 +1111,17 @@ const BalancedOnboardingFlow: React.FC = () => {
 
   // Check if user has already completed onboarding
   // BUT allow access if reason parameter indicates they want to complete onboarding
+  // OR if onboarding store says it's not completed (user may want to update their onboarding)
   useEffect(() => {
     const redirectIfCompleted = async () => {
       // Allow access if user explicitly wants to complete onboarding (e.g., from profile page)
       if (reasonRef.current === 'complete_profile' || reasonRef.current === 'onboarding_required') {
+        return; // Don't redirect - allow them to proceed with onboarding
+      }
+
+      // Allow access if onboarding store indicates it's not completed
+      // This allows users to complete onboarding even if they have a profile
+      if (!isFlowCompleted) {
         return; // Don't redirect - allow them to proceed with onboarding
       }
 
@@ -1126,7 +1133,8 @@ const BalancedOnboardingFlow: React.FC = () => {
             !!profile?.community_focus &&
             !!profile?.participation_style;
 
-          if (hasCompleted) {
+          // Only redirect if they've truly completed onboarding AND onboarding store says it's completed
+          if (hasCompleted && isFlowCompleted) {
             const { safeNavigate } = await import('@/lib/utils/ssr-safe');
             // Respect redirect parameter if user already completed onboarding
             const redirectTo = redirectToRef.current || '/dashboard';
@@ -1139,7 +1147,7 @@ const BalancedOnboardingFlow: React.FC = () => {
     };
 
     void redirectIfCompleted();
-  }, [user, isLoading, profile, profileLoading]);
+  }, [user, isLoading, profile, profileLoading, isFlowCompleted]);
 
   const handleNext = () => {
     nextStep();
