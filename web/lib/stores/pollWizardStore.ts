@@ -336,12 +336,16 @@ export const createPollWizardActions = (
 
       const next = Math.min(state.currentStep + 1, state.totalSteps - 1);
       applyStepResult(next);
+      // Validate the new step to ensure canProceed is correctly set
+      get().validateCurrentStep();
     },
 
     prevStep: () => {
       const state = get();
       const previous = Math.max(state.currentStep - 1, 0);
       applyStepResult(previous);
+      // Validate the new step to ensure canProceed is correctly set
+      get().validateCurrentStep();
     },
 
     goToStep: (step: number) => {
@@ -360,6 +364,8 @@ export const createPollWizardActions = (
       }
 
       applyStepResult(target);
+      // Validate the new step to ensure canProceed is correctly set
+      get().validateCurrentStep();
     },
 
     resetWizard: () =>
