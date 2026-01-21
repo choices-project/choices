@@ -341,12 +341,14 @@ export default function CreatePollPage() {
       }
 
       const syncTitle = () => {
-        if (!titleInput) return;
-        const currentValue = titleInput.value;
-        const syncedValue = titleInput.getAttribute('data-synced-value');
+        const currentInput = getTitleInput();
+        if (!currentInput) return;
+        const currentValue = currentInput.value;
+        const syncedValue = currentInput.getAttribute('data-synced-value');
         // Sync if value exists and is different from what we last synced
+        // Also sync if value is empty but we had a value before (reset case)
         if (currentValue !== syncedValue) {
-          titleInput.setAttribute('data-synced-value', currentValue || '');
+          currentInput.setAttribute('data-synced-value', currentValue || '');
 
           // CRITICAL FIX: Update React state FIRST, then dispatch events in next tick
           // This ensures React's controlled input system recognizes the change
@@ -373,24 +375,26 @@ export default function CreatePollPage() {
               });
 
               // Dispatch events in correct order
-              titleInput.dispatchEvent(inputEvent);
-              titleInput.dispatchEvent(changeEvent);
+              currentInput.dispatchEvent(inputEvent);
+              currentInput.dispatchEvent(changeEvent);
 
               // Trigger focus/blur cycle to ensure validation runs
-              titleInput.focus();
-              setTimeout(() => titleInput.blur(), 10);
+              currentInput.focus();
+              setTimeout(() => currentInput.blur(), 10);
             }, 0);
           }
         }
       };
 
       const syncDescription = () => {
-        if (!descriptionInput) return;
-        const currentValue = descriptionInput.value;
-        const syncedValue = descriptionInput.getAttribute('data-synced-value');
+        const currentInput = getDescriptionInput();
+        if (!currentInput) return;
+        const currentValue = currentInput.value;
+        const syncedValue = currentInput.getAttribute('data-synced-value');
         // Sync if value exists and is different from what we last synced
+        // Also sync if value is empty but we had a value before (reset case)
         if (currentValue !== syncedValue) {
-          descriptionInput.setAttribute('data-synced-value', currentValue || '');
+          currentInput.setAttribute('data-synced-value', currentValue || '');
 
           // CRITICAL FIX: Update React state FIRST, then dispatch events in next tick
           if (data.description !== currentValue) {
@@ -415,12 +419,12 @@ export default function CreatePollPage() {
               });
 
               // Dispatch events in correct order
-              descriptionInput.dispatchEvent(inputEvent);
-              descriptionInput.dispatchEvent(changeEvent);
+              currentInput.dispatchEvent(inputEvent);
+              currentInput.dispatchEvent(changeEvent);
 
               // Trigger focus/blur cycle to ensure validation runs
-              descriptionInput.focus();
-              setTimeout(() => descriptionInput.blur(), 10);
+              currentInput.focus();
+              setTimeout(() => currentInput.blur(), 10);
             }, 0);
           }
         }
@@ -445,10 +449,16 @@ export default function CreatePollPage() {
       const timeout = setTimeout(() => clearInterval(interval), 30000);
 
       cleanup = () => {
-        titleInput?.removeEventListener('input', syncTitle);
-        descriptionInput?.removeEventListener('input', syncDescription);
-        titleInput?.removeEventListener('focus', syncTitle);
-        descriptionInput?.removeEventListener('focus', syncDescription);
+        const currentTitleInput = getTitleInput();
+        const currentDescriptionInput = getDescriptionInput();
+        if (currentTitleInput) {
+          currentTitleInput.removeEventListener('input', syncTitle);
+          currentTitleInput.removeEventListener('focus', syncTitle);
+        }
+        if (currentDescriptionInput) {
+          currentDescriptionInput.removeEventListener('input', syncDescription);
+          currentDescriptionInput.removeEventListener('focus', syncDescription);
+        }
         clearInterval(interval);
         clearTimeout(timeout);
         if (checkTimeout) clearTimeout(checkTimeout);
