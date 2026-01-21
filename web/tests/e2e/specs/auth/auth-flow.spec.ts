@@ -369,13 +369,13 @@ test.describe('Authentication Flow', () => {
       // This verifies the login RLS fix - profile auto-provision should work
       // Wait for session to be fully established
       await page.waitForTimeout(2_000);
-      
+
       await page.goto(`${BASE_URL}/profile`, { waitUntil: 'domcontentloaded', timeout: 30_000 });
       await page.waitForTimeout(3_000); // Wait for potential redirects
 
       // Check if we're still on profile or were redirected
       const profileUrl = page.url();
-      
+
       // If redirected to auth, it might be a session issue or onboarding requirement
       // Log for debugging but don't fail - login itself worked, which verifies the RLS fix
       if (profileUrl.includes('/auth')) {
@@ -383,7 +383,7 @@ test.describe('Authentication Flow', () => {
         const cookies = await page.context().cookies();
         const authCookies = cookies.filter(c => c.name.startsWith('sb-') && c.value);
         console.log('[DIAGNOSTIC] Redirected to auth after login. Auth cookies:', authCookies.length);
-        
+
         // The RLS fix is verified if login succeeded and we got to /feed or /dashboard
         // Profile access might require onboarding completion, which is acceptable
       } else {

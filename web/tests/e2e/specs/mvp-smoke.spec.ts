@@ -1,5 +1,5 @@
 import type { Page } from '@playwright/test';
-import { test } from '@playwright/test';
+import { expect, test } from '@playwright/test';
 
 import { waitForPageReady } from '../helpers/e2e-setup';
 

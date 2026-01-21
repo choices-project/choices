@@ -150,7 +150,7 @@ test.describe('Registration Flow', () => {
       if (displayNameCount > 0) {
         await displayNameInput.fill(testUser.username);
       }
-      
+
       // Also fill confirm password if present (required for signup)
       const confirmPasswordInput = page.locator('input[data-testid="auth-confirm-password"]').first();
       const confirmPasswordCount = await confirmPasswordInput.count();
@@ -160,14 +160,14 @@ test.describe('Registration Flow', () => {
 
       // Wait for React to process inputs and sync mechanism to run
       await page.waitForTimeout(500);
-      
+
       // Trigger events manually to ensure React processes the values
       await page.evaluate(() => {
         const emailEl = document.querySelector('[data-testid="login-email"]') as HTMLInputElement;
         const passwordEl = document.querySelector('[data-testid="login-password"]') as HTMLInputElement;
         const displayNameEl = document.querySelector('[data-testid="auth-display-name"]') as HTMLInputElement;
         const confirmPasswordEl = document.querySelector('[data-testid="auth-confirm-password"]') as HTMLInputElement;
-        
+
         [emailEl, passwordEl, displayNameEl, confirmPasswordEl].forEach(el => {
           if (el) {
             el.dispatchEvent(new Event('input', { bubbles: true }));
@@ -175,7 +175,7 @@ test.describe('Registration Flow', () => {
           }
         });
       });
-      
+
       await page.waitForTimeout(300);
 
       // Find and click submit button - use data-testid for reliability
