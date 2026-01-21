@@ -7,6 +7,7 @@ import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import ReportModal from '@/features/moderation/components/ReportModal';
 import { useRecordPollEvent } from '@/features/polls/hooks/usePollAnalytics';
 import { usePollMilestoneNotifications, POLL_MILESTONES, type PollMilestone } from '@/features/polls/hooks/usePollMilestones';
+import VotingInterface, { type VoteSubmission } from '@/features/voting/components/VotingInterface';
 import {
   createBallotFromPoll,
   createVotingRecordFromPollSubmission,
@@ -27,6 +28,7 @@ import {
 } from '@/components/ui/alert-dialog';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Separator } from '@/components/ui/separator';
 import { Switch } from '@/components/ui/switch';
 
@@ -439,7 +441,6 @@ export default function PollClient({ poll }: PollClientProps) {
     return null;
   }, [canVote, pollStatus, t, user]);
 
-  const [selectedOption, setSelectedOption] = useState<string | null>(poll.userVote ?? null);
   const [hasVoted, setHasVoted] = useState(Boolean(poll.userVote));
 
   // Guard window access to prevent hydration mismatch
@@ -496,9 +497,9 @@ export default function PollClient({ poll }: PollClientProps) {
     [poll.id, recordPollEvent, updateMilestonePreference],
   );
 
-  const handleVote = async (option: NormalizedOption) => {
+  const handleVote = useCallback(async (submission: VoteSubmission): Promise<{ ok: boolean; id?: string; error?: string }> => {
     if (!user || !canVote || pollStatus !== 'active' || storeIsVoting) {
-      return;
+      return { ok: false, error: 'Cannot vote at this time' };
     }
 
     setHasVoteAttempted(true);
@@ -507,13 +508,32 @@ export default function PollClient({ poll }: PollClientProps) {
     setVoting(true);
 
     try {
+      // Build request body based on voting method
+      let requestBody: Record<string, unknown>;
+      
+      if (submission.method === 'single') {
+        requestBody = { choice: submission.choice };
+      } else if (submission.method === 'multiple') {
+        requestBody = { selections: submission.selections };
+      } else if (submission.method === 'approval') {
+        requestBody = { approvals: submission.approvals };
+      } else if (submission.method === 'ranked') {
+        requestBody = { rankings: submission.rankings };
+      } else if (submission.method === 'range') {
+        requestBody = { ratings: submission.ratings };
+      } else if (submission.method === 'quadratic') {
+        requestBody = { allocations: submission.allocations };
+      } else {
+        throw new Error('Invalid voting method');
+      }
+
       const response = await fetch(`/api/polls/${poll.id}/vote`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
         credentials: 'include',
-        body: JSON.stringify({ choice: option.index }),
+        body: JSON.stringify(requestBody),
       });
 
       if (!response.ok) {
@@ -524,15 +544,13 @@ export default function PollClient({ poll }: PollClientProps) {
       const payload = await response.json();
       const resultData = payload?.data ?? {};
 
-      setSelectedOption(option.id);
       setHasVoted(true);
-      logger.info('Vote submitted successfully', { pollId: poll.id, optionId: option.id });
+      logger.info('Vote submitted successfully', { pollId: poll.id, method: submission.method });
       recordPollEvent('vote_cast', {
         label: poll.id,
         value: 1,
         metadata: {
-          optionId: option.id,
-          optionIndex: option.index,
+          method: submission.method,
         },
       });
       addNotification({
@@ -551,7 +569,7 @@ export default function PollClient({ poll }: PollClientProps) {
       addVotingRecord(
         createVotingRecordFromPollSubmission({
           poll: pollDetailsForBallot,
-          submission: { method: 'single', choice: option.index },
+          submission,
           voteId,
         })
       );
@@ -573,7 +591,7 @@ export default function PollClient({ poll }: PollClientProps) {
       recordPollEvent('vote_failed', {
         label: poll.id,
         metadata: {
-          optionId: option.id,
+          method: submission.method,
           error: errorMessage,
         },
       });
@@ -585,7 +603,7 @@ export default function PollClient({ poll }: PollClientProps) {
     } finally {
       setVoting(false);
     }
-  };
+  }, [user, canVote, pollStatus, storeIsVoting, poll.id, pollDetailsForBallot, t, addNotification, recordPollEvent, fetchPollData, addVotingRecord, isMounted, setVoting, setError, setHasVoted, setHasVoteAttempted, clearVotingError, setVotingError]);
 
   const handleCopyShareLink = async () => {
     if (!shareUrl) return;
@@ -857,41 +875,85 @@ export default function PollClient({ poll }: PollClientProps) {
         </div>
       )}
 
-      <div className="space-y-4">
-        {normalizedOptions.map((option) => (
-          <div
-            key={option.id}
-            className="border rounded-lg bg-white p-4 shadow-sm"
-            data-testid={`poll-option-${option.index}`}
-          >
-            <div className="flex items-center justify-between mb-2">
-              <span className="font-semibold text-foreground">{option.text}</span>
-              <span className="text-sm font-medium text-foreground/80">
-                {t('polls.view.options.voteCount', { votes: option.votes, percentage: getVotePercentage(option.votes) })}
-              </span>
-            </div>
+      {/* Voting Interface - Only show for active polls where user can vote */}
+      {pollStatus === 'active' && canVote && user && !hasVoted && normalizedOptions.length > 0 && (
+        <Card className="mb-6 border-2 border-primary/20">
+          <CardHeader className="bg-primary/5">
+            <CardTitle data-testid="voting-section-title">Cast Your Vote</CardTitle>
+            <CardDescription>Select your preferred option(s) below</CardDescription>
+          </CardHeader>
+          <CardContent className="pt-6" data-testid="voting-form">
+            <VotingInterface
+              poll={{
+                id: poll.id,
+                title: poll.title,
+                ...(poll.description ? { description: poll.description } : {}),
+                options: normalizedOptions.map((option) => ({
+                  id: option.id,
+                  text: option.text,
+                })),
+                votingMethod: poll.votingMethod ?? 'single',
+                totalVotes: computedTotalVotes,
+                endtime: poll.endtime ?? new Date(Date.now() + 365 * 24 * 60 * 60 * 1000).toISOString(),
+              }}
+              onVote={handleVote}
+              isVoting={storeIsVoting}
+              hasVoted={hasVoted}
+              onAnalyticsEvent={(action, payload) => {
+                recordPollEvent(action, payload ?? {});
+              }}
+            />
+          </CardContent>
+        </Card>
+      )}
 
-            <div className="w-full bg-gray-200 rounded-full h-2 mb-2">
-              <div
-                className="bg-blue-600 h-2 rounded-full transition-all duration-300"
-                style={{ width: `${getVotePercentage(option.votes)}%` }}
-              />
+      {/* Poll Options Display - Always show so users know what the poll is about */}
+      {normalizedOptions.length > 0 && (
+        <Card className="mb-6">
+          <CardHeader>
+            <CardTitle data-testid="poll-options-title">Poll Options</CardTitle>
+            <CardDescription>
+              {pollStatus === 'active' && !hasVoted && user
+                ? 'View the options below'
+                : hasVoted
+                  ? 'You have already voted on this poll'
+                  : 'This poll is no longer accepting votes'}
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div className="grid gap-3 sm:grid-cols-2" data-testid="poll-options-list">
+              {normalizedOptions.map((option, index) => (
+                <div
+                  key={option.id}
+                  className="p-4 border-2 border-border rounded-lg bg-card hover:border-primary/50 hover:shadow-sm transition-all"
+                >
+                  <div className="flex items-start gap-3">
+                    <div className="flex-shrink-0 w-8 h-8 rounded-full bg-primary/10 text-primary flex items-center justify-center font-semibold text-sm">
+                      {index + 1}
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <p className="font-semibold text-foreground break-words">{option.text}</p>
+                      {option.votes !== undefined && option.votes > 0 && (
+                        <p className="text-sm text-muted-foreground mt-1">
+                          {option.votes} vote{option.votes !== 1 ? 's' : ''} ({getVotePercentage(option.votes)}%)
+                        </p>
+                      )}
+                    </div>
+                  </div>
+                  {option.votes > 0 && (
+                    <div className="mt-3 w-full bg-muted rounded-full h-2">
+                      <div
+                        className="bg-primary h-2 rounded-full transition-all duration-300"
+                        style={{ width: `${getVotePercentage(option.votes)}%` }}
+                      />
+                    </div>
+                  )}
+                </div>
+              ))}
             </div>
-
-            {pollStatus === 'active' && canVote && user && (
-              <Button
-                type="button"
-                variant={selectedOption === option.id ? 'secondary' : 'default'}
-                onClick={() => handleVote(option)}
-                disabled={storeIsVoting || hasVoted}
-                data-testid={`vote-button-${option.index}`}
-              >
-                {selectedOption === option.id ? t('polls.view.buttons.voted') : storeIsVoting ? t('polls.view.buttons.voting') : t('polls.view.buttons.vote')}
-              </Button>
-            )}
-          </div>
-        ))}
-      </div>
+          </CardContent>
+        </Card>
+      )}
 
       <Separator />
 
