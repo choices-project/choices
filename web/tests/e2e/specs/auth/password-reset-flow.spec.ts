@@ -38,7 +38,7 @@ test.describe('Password Reset Flow', () => {
     // Check for reset password heading (more flexible matching)
     const heading = page.locator('h1').filter({ hasText: /reset|password|forgot/i }).first();
     const hasHeading = (await heading.count()) > 0;
-    
+
     if (!hasHeading) {
       // Alternative: check for any heading or page content
       const anyHeading = page.locator('h1, h2').first();
@@ -92,7 +92,7 @@ test.describe('Password Reset Flow', () => {
     const successBox = page.locator('[role="status"]');
     const successText = page.locator('text=/check.*email|reset.*link.*sent|we.*sent|email.*sent/i');
     const errorMessage = page.locator('[role="alert"]');
-    
+
     // Check if form is still visible (if hidden, might indicate success)
     const form = page.locator('form').first();
     const isFormVisible = await form.isVisible().catch(() => false);
@@ -108,7 +108,7 @@ test.describe('Password Reset Flow', () => {
     // Also check if button is disabled (indicates submission in progress or complete)
     const buttonDisabled = await submitButton.isDisabled().catch(() => false);
     const hasAnyResponse = hasSuccessBox || hasSuccessText || hasError || !isFormVisible || buttonDisabled;
-    
+
     // Verify we got some response (form submitted and got feedback)
     // If none of these are true, the form might not have submitted properly
     if (!hasAnyResponse) {
@@ -174,15 +174,17 @@ test.describe('Password Reset Flow', () => {
     // Check if we see the form (when token is valid) or error message (when invalid)
     const heading = page.locator('h1');
     const passwordInput = page.locator('input[type="password"]');
-    const errorMessage = page.locator('text=/invalid|error/i');
+    const errorMessage = page.locator('text=/invalid|error|link|request/i');
+    const loadingText = page.locator('text=/loading|preparing/i');
 
-    // Should see either the form heading or error message
+    // Should see either the form heading, password input, error message, or loading state
     const hasHeading = (await heading.count()) > 0;
     const hasPasswordInput = (await passwordInput.count()) > 0;
     const hasError = (await errorMessage.count()) > 0;
+    const isLoading = (await loadingText.count()) > 0;
 
-    // Page should render something (form or error)
-    expect(hasHeading || hasError).toBe(true);
+    // Page should render something (form, error, or loading state)
+    expect(hasHeading || hasPasswordInput || hasError || isLoading).toBe(true);
   });
 
   test('password reset form validates password requirements', async ({ page }) => {

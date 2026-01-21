@@ -155,10 +155,10 @@ test.describe('Poll Analytics Verification', () => {
     const criticalError = page.locator('[role="alert"]').filter({ hasText: /error|failed|unauthorized/i });
     const errorAlert = page.locator('.text-red-700, .text-destructive, [class*="error"]').filter({ hasText: /error|failed|unauthorized/i });
     const hasCriticalError = (await criticalError.count()) > 0 || (await errorAlert.count()) > 0;
-    
+
     // Only fail if there's a critical error alert, not just the word "error" in normal text
     if (hasCriticalError) {
-      const errorText = await criticalError.first().textContent().catch(() => 
+      const errorText = await criticalError.first().textContent().catch(() =>
         errorAlert.first().textContent().catch(() => '')
       );
       // Allow for error handling documentation, error boundaries, or widget error messages (which are handled by error boundaries)
@@ -168,7 +168,7 @@ test.describe('Poll Analytics Verification', () => {
         errorText.toLowerCase().includes('widget error') ||
         errorText.toLowerCase().includes('try again')
       );
-      
+
       // Only fail if it's a critical error that prevents the page from working
       if (!isNonCriticalError && errorText) {
         // Log the error for debugging but don't fail - might be a transient issue

@@ -1,24 +1,24 @@
 /**
  * Widget Renderer Component
- * 
+ *
  * Wraps individual widgets with:
  * - Error boundaries
  * - Loading states
  * - Configuration controls
  * - Drag handles
  * - Resize handles
- * 
+ *
  * Created: November 5, 2025
  * Status: PRODUCTION
  */
 
 'use client';
 
-import { 
-  Settings, 
-  X, 
-  RefreshCw, 
-  Maximize2, 
+import {
+  Settings,
+  X,
+  RefreshCw,
+  Maximize2,
   AlertCircle,
   GripVertical,
   Move,
@@ -62,12 +62,12 @@ class WidgetErrorBoundary extends React.Component<WidgetErrorBoundaryProps, Widg
   }
 
   override componentDidCatch(error: Error, errorInfo: React.ErrorInfo) {
-    logger.error('Widget error:', { 
-      widgetId: this.props.widgetId, 
-      error: error.message, 
+    logger.error('Widget error:', {
+      widgetId: this.props.widgetId,
+      error: error.message,
       errorStack: error.stack,
       componentStack: errorInfo.componentStack,
-      errorInfo 
+      errorInfo
     });
     this.props.onError?.(error);
   }
@@ -75,7 +75,7 @@ class WidgetErrorBoundary extends React.Component<WidgetErrorBoundaryProps, Widg
   override render() {
     if (this.state.hasError) {
       return (
-        <div 
+        <div
           className="flex flex-col items-center justify-center p-8 text-center"
           data-testid={`widget-error-${this.props.widgetId}`}
           data-widget-id={this.props.widgetId}
@@ -172,8 +172,8 @@ export const WidgetRenderer: React.FC<WidgetRendererProps> = ({
   const resizeButtonAriaLabel = t('analytics.widgets.resizeButtonAria' as never);
 
   const handleError = (widgetError: Error) => {
-    logger.error('Widget rendering error:', { 
-      widgetId: config.id, 
+    logger.error('Widget rendering error:', {
+      widgetId: config.id,
       error: widgetError.message,
       errorStack: widgetError.stack,
       widgetTitle: config.title,
@@ -584,7 +584,7 @@ export const WidgetRenderer: React.FC<WidgetRendererProps> = ({
           {isLoading ? (
             <WidgetLoadingSkeleton />
           ) : error ? (
-            <div 
+            <div
               className="flex flex-col items-center justify-center p-8 text-center"
               data-testid={`widget-load-error-${config.id}`}
               data-widget-id={config.id}
@@ -595,9 +595,9 @@ export const WidgetRenderer: React.FC<WidgetRendererProps> = ({
                 {error.message || `An error occurred while loading widget: ${config.id}`}
               </p>
               {onRefresh && (
-                <Button 
-                  variant="outline" 
-                  size="sm" 
+                <Button
+                  variant="outline"
+                  size="sm"
                   onClick={onRefresh}
                   data-testid={`widget-refresh-${config.id}`}
                 >
@@ -627,7 +627,7 @@ export const WidgetRenderer: React.FC<WidgetRendererProps> = ({
               <X className="w-4 h-4" />
             </Button>
           </div>
-          
+
           {/* Configuration form would go here */}
           <div className="space-y-4">
             <p className="text-sm text-muted-foreground">
