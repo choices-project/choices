@@ -376,24 +376,24 @@ export const POST = withErrorHandling(async (request: NextRequest, { params }: {
     }
 
     await recordAnalyticsSafely();
-    // For ranked votes, wait for integrity scoring to complete so the vote appears in results immediately
+    // MVP: Integrity scoring is optional - run async to not block vote submission
+    // Can be enabled later when needed for fraud detection
     if (insertedBallot?.id) {
-      try {
-        await recordIntegrityForVote({
-          supabase,
-          adminClient,
-          userId: user.id,
-          pollId,
-          voteId: insertedBallot.id,
-          voteType: 'ranked',
-          ipAddress: clientIp,
-          userAgent,
-          actionFlags,
-        });
-      } catch (error) {
+      // Run integrity scoring in background - don't block vote submission
+      void recordIntegrityForVote({
+        supabase,
+        adminClient,
+        userId: user.id,
+        pollId,
+        voteId: insertedBallot.id,
+        voteType: 'ranked',
+        ipAddress: clientIp,
+        userAgent,
+        actionFlags,
+      }).catch((error) => {
         // Log but don't fail the vote submission if integrity scoring fails
-        logger.warn('Integrity scoring failed for ranked ballot', error);
-      }
+        logger.warn('Integrity scoring failed for ranked ballot (non-blocking)', error);
+      });
     }
 
     return successResponse(

@@ -27,7 +27,8 @@ export const GET = withErrorHandling(async (
     const tierParam = url.searchParams.get('tier');
     const integrityParam = url.searchParams.get('integrity');
     const trustTier = tierParam ? Number.parseInt(tierParam, 10) : null;
-    const includeAllVotes = integrityParam === 'all';
+    // MVP: Include all votes by default. Use ?integrity=verified to enable integrity filtering
+    const includeAllVotes = integrityParam !== 'verified';
     const integrityThreshold = getIntegrityThreshold();
 
     if (tierParam && Number.isNaN(trustTier)) {
