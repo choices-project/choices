@@ -192,16 +192,24 @@ test.describe('MVP Critical Flows', () => {
             await page.waitForTimeout(3_000);
 
             // Should see poll content or appropriate state
-            const pollContent = page.locator('[data-testid="poll"], h1, h2');
+            // Poll detail page may show: poll title (h1/h2), loading state, or error
+            const pollContent = page.locator('h1, h2, [data-testid="poll"]');
             const loadingState = page.locator('text=/loading/i, [aria-busy="true"]');
-            const errorState = page.locator('[data-testid="poll-error"], [role="alert"]');
+            const errorState = page.locator('[data-testid="poll-error"], [role="alert"], text=/error/i, text=/not found/i');
+
+            // Wait a bit for page to load
+            await page.waitForTimeout(2_000);
 
             const hasContent = await pollContent.count();
             const hasLoading = await loadingState.count();
             const hasError = await errorState.count();
 
             // At least one state should be present
-            expect(hasContent + hasLoading + hasError).toBeGreaterThan(0);
+            if (hasContent + hasLoading + hasError === 0) {
+              // Take screenshot for debugging
+              await page.screenshot({ path: `test-results/poll-detail-${pollId}.png` });
+              throw new Error(`Poll detail page for ${pollId} showed no content, loading, or error state`);
+            }
 
             // If error, verify it's user-friendly
             if (hasError > 0) {
@@ -287,12 +295,12 @@ test.describe('MVP Critical Flows', () => {
       const deleteUrl = page.url();
       expect(deleteUrl).toMatch(/\/account\/delete/);
 
-      // Should see delete page content
-      const deletePage = page.locator('h1:has-text(/delete/i), h1:has-text(/account/i), [data-testid*="delete"]');
-      await expect(deletePage.first()).toBeVisible({ timeout: 10_000 });
+      // Should see delete page content - page has h1 "Delete Account"
+      const deletePage = page.locator('h1:has-text("Delete Account")');
+      await expect(deletePage).toBeVisible({ timeout: 10_000 });
 
-      // Should see warning information
-      const warningText = page.locator('text=/warning/i, text=/permanent/i, text=/cannot.*undo/i');
+      // Should see warning information - page has Alert with "Warning:" and "irreversible"
+      const warningText = page.locator('text=/Warning:/i, text=/irreversible/i, text=/permanent/i');
       const warningCount = await warningText.count();
 
       // Warning should be present

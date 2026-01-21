@@ -334,15 +334,61 @@ test.describe('Registration Flow', () => {
       await page.waitForTimeout(500);
 
       // Try to register with existing email
-      const emailInput = page.locator('input[type="email"]').first();
-      const passwordInput = page.locator('input[type="password"]').first();
+      const emailInput = page.locator('[data-testid="login-email"]').first();
+      const passwordInput = page.locator('[data-testid="login-password"]').first();
+      const displayNameInput = page.locator('[data-testid="auth-display-name"]').first();
+      const confirmPasswordInput = page.locator('[data-testid="auth-confirm-password"]').first();
+
+      await emailInput.waitFor({ state: 'visible', timeout: 10_000 });
+      await passwordInput.waitFor({ state: 'visible', timeout: 10_000 });
 
       await emailInput.fill(regularEmail);
       await passwordInput.fill(regularPassword);
 
-      await page.waitForTimeout(500);
+      // Fill display name and confirm password if present
+      const displayNameCount = await displayNameInput.count();
+      if (displayNameCount > 0) {
+        await displayNameInput.fill('Test User');
+      }
 
-      const submitButton = page.locator('button[type="submit"]').first();
+      const confirmPasswordCount = await confirmPasswordInput.count();
+      if (confirmPasswordCount > 0) {
+        await confirmPasswordInput.fill(regularPassword);
+      }
+
+      // Wait for React to process and trigger events
+      await page.waitForTimeout(500);
+      await page.evaluate(() => {
+        const emailEl = document.querySelector('[data-testid="login-email"]') as HTMLInputElement;
+        const passwordEl = document.querySelector('[data-testid="login-password"]') as HTMLInputElement;
+        const displayNameEl = document.querySelector('[data-testid="auth-display-name"]') as HTMLInputElement;
+        const confirmPasswordEl = document.querySelector('[data-testid="auth-confirm-password"]') as HTMLInputElement;
+        
+        [emailEl, passwordEl, displayNameEl, confirmPasswordEl].forEach(el => {
+          if (el) {
+            el.dispatchEvent(new Event('input', { bubbles: true }));
+            el.dispatchEvent(new Event('change', { bubbles: true }));
+          }
+        });
+      });
+      await page.waitForTimeout(300);
+
+      // Wait for button to be enabled
+      const submitButton = page.locator('[data-testid="login-submit"]').first();
+      await submitButton.waitFor({ state: 'visible', timeout: 10_000 });
+      
+      // Wait for button to be enabled (with timeout)
+      await page.waitForFunction(
+        () => {
+          const button = document.querySelector('[data-testid="login-submit"]') as HTMLButtonElement;
+          return button && !button.disabled;
+        },
+        { timeout: 30_000 }
+      ).catch(() => {
+        // If button stays disabled, try clicking anyway (may be validation issue)
+        console.log('[DIAGNOSTIC] Submit button may be disabled, attempting click anyway');
+      });
+
       await submitButton.click();
 
       // Wait for error response
