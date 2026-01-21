@@ -14,7 +14,7 @@ export const dynamic = 'force-dynamic';
  * Note: This is a stub implementation - actual materialized view refresh logic
  * should be implemented based on your database schema.
  */
-export const POST = withErrorHandling(async (request: NextRequest) => {
+export const POST = withErrorHandling(async (_request: NextRequest) => {
   const authGate = await requireAdminOr401();
   if (authGate) {
     return authGate;
