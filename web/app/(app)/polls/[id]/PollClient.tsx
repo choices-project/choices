@@ -198,9 +198,6 @@ export default function PollClient({ poll }: PollClientProps) {
   const addNotificationRef = useRef(addNotification);
   React.useEffect(() => { addNotificationRef.current = addNotification; }, [addNotification]);
 
-  const [isDeleting, setIsDeleting] = useState(false);
-  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
-
   // Normalize options to handle both string[] and PollOption[] formats
   const normalizedOptions = useMemo(() => {
     if (!poll.options || !Array.isArray(poll.options)) {
