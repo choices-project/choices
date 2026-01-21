@@ -154,16 +154,41 @@ test.describe('Registration Flow', () => {
       // Wait for React to process inputs
       await page.waitForTimeout(500);
 
-      // Find and click submit button
-      const submitButton = page.locator('button[type="submit"]').first();
-      await submitButton.waitFor({ state: 'visible', timeout: 5_000 });
+      // Find and click submit button - use data-testid for reliability
+      const submitButton = page.locator('[data-testid="login-submit"]').first();
+      await submitButton.waitFor({ state: 'visible', timeout: 10_000 });
 
-      // Check if button is enabled (form validation passes)
-      const isDisabled = await submitButton.isDisabled();
-      if (isDisabled) {
-        // Wait a bit more for React state to update
-        await page.waitForTimeout(1000);
-      }
+      // Wait for button to be enabled (form validation passes)
+      // Registration form requires: email, password (>=8 chars), displayName (>=3 chars), confirmPassword match
+      await page.waitForFunction(
+        () => {
+          const button = document.querySelector('[data-testid="login-submit"]') as HTMLButtonElement;
+          return button && !button.disabled;
+        },
+        { timeout: 30_000 }
+      ).catch(async () => {
+        // If still disabled, check form state
+        const formState = await page.evaluate(() => {
+          const email = (document.querySelector('[data-testid="login-email"]') as HTMLInputElement)?.value || '';
+          const password = (document.querySelector('[data-testid="login-password"]') as HTMLInputElement)?.value || '';
+          const displayName = (document.querySelector('[data-testid="auth-display-name"]') as HTMLInputElement)?.value || '';
+          const confirmPassword = (document.querySelector('[data-testid="auth-confirm-password"]') as HTMLInputElement)?.value || '';
+          const button = document.querySelector('[data-testid="login-submit"]') as HTMLButtonElement;
+          
+          return {
+            email: email,
+            passwordLength: password.length,
+            displayNameLength: displayName.length,
+            passwordsMatch: password === confirmPassword,
+            buttonDisabled: button?.disabled ?? true,
+            emailValid: email.includes('@'),
+            passwordValid: password.length >= 8,
+            displayNameValid: displayName.length >= 3,
+          };
+        });
+        console.log('[DIAGNOSTIC] Registration form state:', formState);
+        throw new Error('Registration submit button remained disabled - form validation may have failed');
+      });
 
       // Click submit
       await submitButton.click();
