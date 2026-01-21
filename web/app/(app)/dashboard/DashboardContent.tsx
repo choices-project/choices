@@ -834,32 +834,33 @@ export default function DashboardContent() {
   // #endregion
 
   return (
-    <ErrorBoundary
-      fallback={
-        <div
-          className="flex items-center justify-center min-h-[400px] px-4"
-          data-testid="dashboard-error-boundary"
-          role="alert"
-        >
-          <div className="text-center max-w-md">
-            <h2 className="text-xl font-semibold text-red-600 dark:text-red-400 mb-2">
-              Unable to load dashboard
-            </h2>
-            <p className="text-gray-600 dark:text-gray-400 mb-4">
-              We encountered an error while loading your dashboard. Please try again.
-            </p>
-            <button
-              onClick={() => window.location.reload()}
-              className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition-colors"
-              aria-label="Try again to load dashboard"
-              data-testid="dashboard-error-boundary-retry"
-            >
-              Try again
-            </button>
+    <AuthGuard redirectTo="/auth">
+      <ErrorBoundary
+        fallback={
+          <div
+            className="flex items-center justify-center min-h-[400px] px-4"
+            data-testid="dashboard-error-boundary"
+            role="alert"
+          >
+            <div className="text-center max-w-md">
+              <h2 className="text-xl font-semibold text-red-600 dark:text-red-400 mb-2">
+                Unable to load dashboard
+              </h2>
+              <p className="text-gray-600 dark:text-gray-400 mb-4">
+                We encountered an error while loading your dashboard. Please try again.
+              </p>
+              <button
+                onClick={() => window.location.reload()}
+                className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition-colors"
+                aria-label="Try again to load dashboard"
+                data-testid="dashboard-error-boundary-retry"
+              >
+                Try again
+              </button>
+            </div>
           </div>
-        </div>
-      }
-    >
+        }
+      >
       <div>
       {/* CRITICAL: DashboardNavigation is dynamically imported with ssr: false */}
       {/* This prevents hydration mismatches since it uses usePathname() */}
@@ -909,7 +910,7 @@ export default function DashboardContent() {
       {/* MobileDashboardNav is client-only component */}
       <MobileDashboardNav />
       </div>
-    </ErrorBoundary>
+      </ErrorBoundary>
     </AuthGuard>
   );
 }
