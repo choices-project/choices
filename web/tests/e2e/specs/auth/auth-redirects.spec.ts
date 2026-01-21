@@ -123,7 +123,7 @@ test.describe('Authentication Redirects', () => {
 
       // Try accessing protected pages - should NOT redirect to /auth
       const protectedPages = ['/feed', '/dashboard', '/profile'];
-      
+
       for (const path of protectedPages) {
         await page.goto(`${BASE_URL}${path}`, { waitUntil: 'domcontentloaded', timeout: 30_000 });
         await waitForPageReady(page);

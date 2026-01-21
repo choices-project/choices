@@ -193,9 +193,18 @@ test.describe('MVP Critical Flows', () => {
 
             // Should see poll content or appropriate state
             // Poll detail page may show: poll title (h1/h2), loading state, or error
-            const pollContent = page.locator('h1, h2, [data-testid="poll"]');
-            const loadingState = page.locator('text=/loading/i, [aria-busy="true"]');
-            const errorState = page.locator('[data-testid="poll-error"], [role="alert"], text=/error/i, text=/not found/i');
+            // Use separate locators to avoid CSS selector syntax errors
+            const pollContent1 = page.locator('h1');
+            const pollContent2 = page.locator('h2');
+            const pollContent3 = page.locator('[data-testid="poll"]');
+            
+            const loadingState1 = page.locator('text=/loading/i');
+            const loadingState2 = page.locator('[aria-busy="true"]');
+            
+            const errorState1 = page.locator('[data-testid="poll-error"]');
+            const errorState2 = page.locator('[role="alert"]');
+            const errorState3 = page.locator('text=/error/i');
+            const errorState4 = page.locator('text=/not found/i');
 
             // Wait a bit for page to load
             await page.waitForTimeout(2_000);
@@ -213,7 +222,17 @@ test.describe('MVP Critical Flows', () => {
 
             // If error, verify it's user-friendly
             if (hasError > 0) {
-              const errorText = await errorState.first().textContent();
+              // Get error text from first available error element
+              let errorText = '';
+              if (await errorState1.count() > 0) {
+                errorText = await errorState1.first().textContent() || '';
+              } else if (await errorState2.count() > 0) {
+                errorText = await errorState2.first().textContent() || '';
+              } else if (await errorState3.count() > 0) {
+                errorText = await errorState3.first().textContent() || '';
+              } else if (await errorState4.count() > 0) {
+                errorText = await errorState4.first().textContent() || '';
+              }
               expect(errorText).toBeTruthy();
 
               // Should have retry option
@@ -256,8 +275,15 @@ test.describe('MVP Critical Flows', () => {
       await page.waitForTimeout(3_000);
 
       // Should see error state or 404
-      const errorState = page.locator('[data-testid="poll-error"], [role="alert"], text=/not found|error/i');
-      const hasError = await errorState.count();
+      // Fix CSS selector syntax - use separate locators for different selector types
+      const errorByTestId = page.locator('[data-testid="poll-error"]');
+      const errorByRole = page.locator('[role="alert"]');
+      const errorByText = page.locator('text=/not found|error/i');
+      
+      const hasErrorTestId = await errorByTestId.count();
+      const hasErrorRole = await errorByRole.count();
+      const hasErrorText = await errorByText.count();
+      const hasError = hasErrorTestId + hasErrorRole + hasErrorText;
 
       // Error should be user-friendly
       if (hasError > 0) {

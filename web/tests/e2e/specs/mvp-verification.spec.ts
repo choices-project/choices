@@ -59,15 +59,29 @@ test.describe('MVP Functional Verification', () => {
       // 2. Empty state (if no polls exist)
       // 3. Error state (if API fails)
 
-      const pollsList = page.locator('[data-testid="polls-list"], [role="feed"], [data-testid="polls-container"]');
-      const emptyState = page.locator('[data-testid="empty-state"], text=/no polls|no results/i');
-      const errorState = page.locator('[data-testid="error-display"], [role="alert"]');
+      // Use separate locators for different selector types to avoid CSS syntax errors
+      const pollsList1 = page.locator('[data-testid="polls-list"]');
+      const pollsList2 = page.locator('[role="feed"]');
+      const pollsList3 = page.locator('[data-testid="polls-container"]');
+      const pollsList4 = page.locator('[data-testid="poll"]'); // Individual poll cards
+      
+      const emptyState1 = page.locator('[data-testid="empty-state"]');
+      const emptyState2 = page.locator('text=/no polls|no results|no data/i');
+      
+      const errorState1 = page.locator('[data-testid="error-display"]');
+      const errorState2 = page.locator('[role="alert"]');
 
-      const pollsCount = await pollsList.count();
-      const emptyCount = await emptyState.count();
-      const errorCount = await errorState.count();
+      const pollsCount = (await pollsList1.count()) + (await pollsList2.count()) + (await pollsList3.count()) + (await pollsList4.count());
+      const emptyCount = (await emptyState1.count()) + (await emptyState2.count());
+      const errorCount = (await errorState1.count()) + (await errorState2.count());
 
       // At least one of these should be visible
+      if (pollsCount + emptyCount + errorCount === 0) {
+        // Take screenshot for debugging
+        await page.screenshot({ path: 'test-results/polls-page-debug.png' });
+        throw new Error('Polls page shows neither polls, empty state, nor error state');
+      }
+      
       expect(pollsCount + emptyCount + errorCount).toBeGreaterThan(0);
 
       // If polls are displayed, verify they have content
