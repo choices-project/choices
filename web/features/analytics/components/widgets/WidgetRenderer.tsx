@@ -592,7 +592,13 @@ export const WidgetRenderer: React.FC<WidgetRendererProps> = ({
               <AlertCircle className="w-12 h-12 text-destructive mb-4" />
               <h3 className="font-semibold text-lg mb-2">Failed to Load</h3>
               <p className="text-sm text-muted-foreground mb-4">
-                {error.message || `An error occurred while loading widget: ${config.id}`}
+                {error.message?.includes('Admin access required')
+                  ? 'This widget requires admin access. Please contact an administrator.'
+                  : error.message?.includes('Server error')
+                  ? 'The server encountered an error. Please try again in a moment.'
+                  : error.message?.includes('Connection error') || error.message?.includes('Failed to fetch')
+                  ? 'Unable to connect to the server. Please check your internet connection.'
+                  : error.message || `An error occurred while loading widget: ${config.id}`}
               </p>
               {onRefresh && (
                 <Button

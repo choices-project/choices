@@ -103,7 +103,7 @@ test.describe('Complete Onboarding Flow', () => {
       const isOnFeed = currentUrl.includes('/feed');
       const isOnAuth = currentUrl.includes('/auth');
       const isOnOnboarding = currentUrl.includes('/onboarding');
-      
+
       // Accept any of these as valid states
       expect(isOnDashboard || isOnFeed || isOnAuth || isOnOnboarding).toBe(true);
     }

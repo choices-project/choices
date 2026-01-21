@@ -67,6 +67,12 @@ export default function FunnelWidget({ config, onConfigChange }: WidgetProps) {
         headers: { 'Accept': 'application/json' },
       });
       if (!response.ok) {
+        if (response.status === 403 || response.status === 401) {
+          throw new Error('Admin access required to view this widget');
+        }
+        if (response.status >= 500) {
+          throw new Error('Server error - please try again later');
+        }
         throw new Error(`Request failed (${response.status})`);
       }
 

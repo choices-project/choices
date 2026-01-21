@@ -87,6 +87,16 @@ export default function ElectionNotificationWidget({ config }: WidgetProps) {
       const response = await fetch('/api/analytics/election-notifications', {
         cache: 'no-store'
       });
+      if (!response.ok) {
+        if (response.status === 403 || response.status === 401) {
+          throw new Error('Admin access required to view this widget');
+        }
+        if (response.status >= 500) {
+          throw new Error('Server error - please try again later');
+        }
+        throw new Error(`Request failed (${response.status})`);
+      }
+
       const payload = (await response.json()) as ApiResponse;
       if ('success' in payload && payload.success) {
         setMetrics(payload.data);
@@ -94,7 +104,13 @@ export default function ElectionNotificationWidget({ config }: WidgetProps) {
         setError(payload.error ?? 'Failed to load metrics');
       }
     } catch (cause) {
-      setError(cause instanceof Error ? cause.message : 'Failed to load metrics');
+      const message = cause instanceof Error ? cause.message : 'Failed to load metrics';
+      // Handle network errors
+      if (message.includes('Failed to fetch') || message.includes('NetworkError')) {
+        setError('Connection error - please check your internet connection');
+      } else {
+        setError(message);
+      }
     } finally {
       setIsLoading(false);
     }
