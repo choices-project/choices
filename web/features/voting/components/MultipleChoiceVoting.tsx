@@ -106,17 +106,17 @@ export default function MultipleChoiceVoting({
   return (
     <div className="max-w-2xl mx-auto">
       {/* Header */}
-      <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6 mb-6">
+      <div className="bg-card rounded-xl shadow-sm border border-border p-6 mb-6">
         <div className="flex items-start justify-between mb-4">
           <div>
-            <h1 className="text-2xl font-bold text-gray-900 mb-2">{title}</h1>
+            <h1 className="text-2xl font-bold text-foreground mb-2">{title}</h1>
             {description && (
-              <p className="text-gray-600">{description}</p>
+              <p className="text-muted-foreground">{description}</p>
             )}
           </div>
           <button
             onClick={() => setShowExplanation(!showExplanation)}
-            className="flex items-center space-x-2 text-blue-600 hover:text-blue-700 transition-colors"
+            className="flex items-center space-x-2 text-primary hover:text-primary/80 transition-colors"
           >
             <Info className="w-5 h-5" />
             <span className="text-sm font-medium">How it works</span>
@@ -125,9 +125,9 @@ export default function MultipleChoiceVoting({
 
         {/* Multiple Choice Explanation */}
         {showExplanation && (
-          <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-4">
-            <h3 className="font-semibold text-blue-900 mb-2">How Multiple Choice Voting Works</h3>
-            <div className="text-sm text-blue-800 space-y-2">
+          <div className="bg-primary/10 border border-primary/20 rounded-lg p-4 mb-4">
+            <h3 className="font-semibold text-foreground mb-2">How Multiple Choice Voting Works</h3>
+            <div className="text-sm text-foreground/90 space-y-2">
               <p>• <strong>Select multiple options:</strong> Choose all options you support</p>
               <p>• <strong>Express preferences:</strong> Show support for multiple ideas</p>
               <p>• <strong>Flexible voting:</strong> Perfect when multiple options can coexist</p>
@@ -138,10 +138,10 @@ export default function MultipleChoiceVoting({
 
         {/* Voting Method Badge */}
         <div className="flex items-center space-x-2">
-          <div className="bg-green-100 text-green-800 px-3 py-1 rounded-full text-sm font-medium">
+          <div className="bg-green-500/20 text-green-600 dark:text-green-400 px-3 py-1 rounded-full text-sm font-medium">
             🎯 Multiple Choice Voting
           </div>
-          <span className="text-sm text-gray-500">
+          <span className="text-sm text-muted-foreground">
             Select all options you support
             {maxSelections && ` (up to ${maxSelections})`}
           </span>
@@ -150,16 +150,16 @@ export default function MultipleChoiceVoting({
 
       {/* Error Message */}
       {error && (
-        <div className="bg-red-50 border border-red-200 rounded-lg p-4 mb-6">
+        <div className="bg-destructive/10 border border-destructive/20 rounded-lg p-4 mb-6">
           <div className="flex items-center">
-            <AlertCircle className="w-5 h-5 text-red-500 mr-2" />
-            <p className="text-red-800">{error}</p>
+            <AlertCircle className="w-5 h-5 text-destructive mr-2" />
+            <p className="text-destructive">{error}</p>
           </div>
         </div>
       )}
 
       {/* Voting Interface */}
-      <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6" data-testid="voting-form">
+      <div className="bg-card rounded-xl shadow-sm border border-border p-6" data-testid="voting-form">
         <div className="space-y-3">
           {options.map((option: PollOption, index: number) => (
             <div
@@ -169,11 +169,11 @@ export default function MultipleChoiceVoting({
                 relative p-4 border-2 rounded-lg cursor-pointer transition-all duration-200
                 ${isDisabled 
                   ? 'cursor-not-allowed opacity-60' 
-                  : 'hover:border-green-300 hover:bg-green-50'
+                  : 'hover:border-green-500/50 hover:bg-green-500/5'
                 }
                 ${selectedOptions.includes(index)
-                  ? 'border-green-500 bg-green-50' 
-                  : 'border-gray-200'
+                  ? 'border-green-500 bg-green-500/10' 
+                  : 'border-border'
                 }
               `}
               data-testid={`option-${index + 1}-checkbox`}
@@ -195,7 +195,7 @@ export default function MultipleChoiceVoting({
                     w-5 h-5 rounded border-2 flex items-center justify-center
                     ${selectedOptions.includes(index)
                       ? 'border-green-500 bg-green-500'
-                      : 'border-gray-300 bg-white'
+                      : 'border-border bg-background'
                     }
                     transition-all duration-200
                   `}>
@@ -207,9 +207,9 @@ export default function MultipleChoiceVoting({
 
                 {/* Option Content */}
                 <div className="flex-1">
-                  <h3 className="font-semibold text-gray-900 mb-1">{String((option as any).text ?? '')}</h3>
+                  <h3 className="font-semibold text-foreground mb-1">{String((option as any).text ?? '')}</h3>
                   {(option as any).option_text && (
-                    <p className="text-sm text-gray-600">{String((option as any).option_text)}</p>
+                    <p className="text-sm text-muted-foreground">{String((option as any).option_text)}</p>
                   )}
                 </div>
 
@@ -225,12 +225,12 @@ export default function MultipleChoiceVoting({
         </div>
 
         {/* Instructions */}
-        <div className="mt-6 p-4 bg-gray-50 rounded-lg">
+        <div className="mt-6 p-4 bg-muted rounded-lg">
           <div className="flex items-center space-x-2 mb-2">
-            <CheckCircle className="w-5 h-5 text-gray-600" />
-            <span className="font-medium text-gray-900">Voting Instructions</span>
+            <CheckCircle className="w-5 h-5 text-muted-foreground" />
+            <span className="font-medium text-foreground">Voting Instructions</span>
           </div>
-          <div className="text-sm text-gray-600 space-y-1">
+          <div className="text-sm text-muted-foreground space-y-1">
             <p>• Click on options to select/deselect them</p>
             <p>• You can select multiple options</p>
             <p>• You can change your selections before submitting</p>
@@ -244,7 +244,7 @@ export default function MultipleChoiceVoting({
         {/* Submit Button */}
         <div className="mt-6 flex justify-center">
           {hasVoted ? (
-            <div className="flex items-center space-x-2 text-green-600" data-testid="vote-confirmation">
+            <div className="flex items-center space-x-2 text-green-600 dark:text-green-400" data-testid="vote-confirmation">
               <CheckCircle className="w-5 h-5" />
               <span className="font-medium" data-testid="vote-receipt">Vote submitted successfully!</span>
             </div>
@@ -255,8 +255,8 @@ export default function MultipleChoiceVoting({
               className={`
                 flex items-center space-x-2 px-8 py-3 rounded-lg font-medium transition-colors
                 ${isDisabled || selectedOptions.length === 0
-                  ? 'bg-gray-300 text-gray-500 cursor-not-allowed'
-                  : 'bg-green-600 text-white hover:bg-green-700'
+                  ? 'bg-muted text-muted-foreground cursor-not-allowed'
+                  : 'bg-green-600 text-white hover:bg-green-700 dark:bg-green-500 dark:hover:bg-green-600'
                 }
               `}
               data-testid="submit-vote-button"
@@ -270,8 +270,8 @@ export default function MultipleChoiceVoting({
         {/* Selection Summary */}
         {selectedOptions.length > 0 && !hasVoted && (
           <div className="mt-4 text-center">
-            <div className="text-sm text-gray-600">
-              Selected {selectedOptions.length} option{selectedOptions.length !== 1 ? 's' : ''}: <span className="font-medium text-green-600">
+            <div className="text-sm text-muted-foreground">
+              Selected {selectedOptions.length} option{selectedOptions.length !== 1 ? 's' : ''}: <span className="font-medium text-green-600 dark:text-green-400">
                 {selectedOptions.map(idx => options[idx]?.text).join(', ')}
               </span>
             </div>
@@ -280,11 +280,11 @@ export default function MultipleChoiceVoting({
       </div>
 
       {/* Best Practices */}
-      <div className="mt-6 bg-white rounded-xl shadow-sm border border-gray-200 p-6">
-        <h3 className="font-semibold text-gray-900 mb-3">When to Use Multiple Choice Voting</h3>
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm text-gray-600">
+      <div className="mt-6 bg-card rounded-xl shadow-sm border border-border p-6">
+        <h3 className="font-semibold text-foreground mb-3">When to Use Multiple Choice Voting</h3>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm text-muted-foreground">
           <div>
-            <h4 className="font-medium text-gray-900 mb-2">✅ Good For:</h4>
+            <h4 className="font-medium text-foreground mb-2">✅ Good For:</h4>
             <ul className="space-y-1">
               <li>• Feature requests</li>
               <li>• Preference surveys</li>
@@ -294,7 +294,7 @@ export default function MultipleChoiceVoting({
             </ul>
           </div>
           <div>
-            <h4 className="font-medium text-gray-900 mb-2">⚠️ Consider Alternatives For:</h4>
+            <h4 className="font-medium text-foreground mb-2">⚠️ Consider Alternatives For:</h4>
             <ul className="space-y-1">
               <li>• Mutually exclusive choices</li>
               <li>• Single winner scenarios</li>

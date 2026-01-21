@@ -279,15 +279,15 @@ export default function VotingInterface({
   const getVerificationTierColor = (tier: string) => {
     switch (tier) {
       case 'T3':
-        return 'text-purple-600 bg-purple-50 border-purple-200';
+        return 'text-primary bg-primary/10 border-primary/20';
       case 'T2':
         return 'text-blue-600 bg-blue-50 border-blue-200';
       case 'T1':
         return 'text-green-600 bg-green-50 border-green-200';
       case 'T0':
-        return 'text-gray-600 bg-gray-50 border-gray-200';
+        return 'text-muted-foreground bg-muted border-border';
       default:
-        return 'text-gray-600 bg-gray-50 border-gray-200';
+        return 'text-muted-foreground bg-muted border-border';
     }
   };
 
@@ -448,16 +448,16 @@ export default function VotingInterface({
   return (
     <div className="max-w-4xl mx-auto" data-testid="voting-form">
       {/* Header with poll info and verification tier */}
-      <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6 mb-6">
+      <div className="bg-card rounded-xl shadow-sm border border-border p-6 mb-6">
         <div className="flex items-start justify-between mb-4">
           <div className="flex-1">
-            <h1 className="text-2xl font-bold text-gray-900 mb-2">{poll.title}</h1>
+            <h1 className="text-2xl font-bold text-foreground mb-2">{poll.title}</h1>
             {poll.description && (
-              <p className="text-gray-600 mb-4">{poll.description}</p>
+              <p className="text-muted-foreground mb-4">{poll.description}</p>
             )}
 
             {/* Poll stats */}
-            <div className="flex items-center space-x-6 text-sm text-gray-500">
+            <div className="flex items-center space-x-6 text-sm text-muted-foreground">
               <div className="flex items-center space-x-1">
                 <Users className="w-4 h-4" />
                 <span>{poll.totalVotes} votes</span>

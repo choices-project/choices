@@ -79,17 +79,17 @@ export default function SingleChoiceVoting({
   return (
     <div className="max-w-2xl mx-auto">
       {/* Header */}
-      <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6 mb-6">
+      <div className="bg-card rounded-xl shadow-sm border border-border p-6 mb-6">
         <div className="flex items-start justify-between mb-4">
           <div>
-            <h1 className="text-2xl font-bold text-gray-900 mb-2">{title}</h1>
+            <h1 className="text-2xl font-bold text-foreground mb-2">{title}</h1>
             {description && (
-              <p className="text-gray-600">{description}</p>
+              <p className="text-muted-foreground">{description}</p>
             )}
           </div>
           <button
             onClick={() => setShowExplanation(!showExplanation)}
-            className="flex items-center space-x-2 text-blue-600 hover:text-blue-700 transition-colors"
+            className="flex items-center space-x-2 text-primary hover:text-primary/80 transition-colors"
           >
             <Info className="w-5 h-5" />
             <span className="text-sm font-medium">How it works</span>
@@ -98,9 +98,9 @@ export default function SingleChoiceVoting({
 
         {/* Single Choice Explanation */}
         {showExplanation && (
-          <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-4">
-            <h3 className="font-semibold text-blue-900 mb-2">How Single Choice Voting Works</h3>
-            <div className="text-sm text-blue-800 space-y-2">
+          <div className="bg-primary/10 border border-primary/20 rounded-lg p-4 mb-4">
+            <h3 className="font-semibold text-foreground mb-2">How Single Choice Voting Works</h3>
+            <div className="text-sm text-foreground/90 space-y-2">
               <p>• <strong>Pick one option:</strong> Select the option you prefer most</p>
               <p>• <strong>Highest vote count wins:</strong> The option with the most votes becomes the winner</p>
               <p>• <strong>Simple and familiar:</strong> This is the most common voting method</p>
@@ -111,10 +111,10 @@ export default function SingleChoiceVoting({
 
         {/* Voting Method Badge */}
         <div className="flex items-center space-x-2">
-          <div className="bg-blue-100 text-blue-800 px-3 py-1 rounded-full text-sm font-medium">
+          <div className="bg-primary/20 text-primary px-3 py-1 rounded-full text-sm font-medium">
             🎯 Single Choice Voting
           </div>
-          <span className="text-sm text-gray-500">
+          <span className="text-sm text-muted-foreground">
             Select one option that you prefer most
           </span>
         </div>
@@ -122,16 +122,16 @@ export default function SingleChoiceVoting({
 
       {/* Error Message */}
       {error && (
-        <div className="bg-red-50 border border-red-200 rounded-lg p-4 mb-6">
+        <div className="bg-destructive/10 border border-destructive/20 rounded-lg p-4 mb-6">
           <div className="flex items-center">
-            <AlertCircle className="w-5 h-5 text-red-500 mr-2" />
-            <p className="text-red-800">{error}</p>
+            <AlertCircle className="w-5 h-5 text-destructive mr-2" />
+            <p className="text-destructive">{error}</p>
           </div>
         </div>
       )}
 
       {/* Voting Interface */}
-      <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6" data-testid="voting-form">
+      <div className="bg-card rounded-xl shadow-sm border border-border p-6" data-testid="voting-form">
         <div className="space-y-3">
           {options.map((option: PollOption, index: number) => (
             <div
@@ -141,11 +141,11 @@ export default function SingleChoiceVoting({
                 relative p-4 border-2 rounded-lg cursor-pointer transition-all duration-200
                 ${isDisabled 
                   ? 'cursor-not-allowed opacity-60' 
-                  : 'hover:border-blue-300 hover:bg-blue-50'
+                  : 'hover:border-primary/50 hover:bg-primary/5'
                 }
                 ${selectedOption === index 
-                  ? 'border-blue-500 bg-blue-50' 
-                  : 'border-gray-200'
+                  ? 'border-primary bg-primary/10' 
+                  : 'border-border'
                 }
               `}
               data-testid={`option-${index + 1}-radio`}
@@ -166,29 +166,29 @@ export default function SingleChoiceVoting({
                   <div className={`
                     w-5 h-5 rounded-full border-2 flex items-center justify-center
                     ${selectedOption === index
-                      ? 'border-blue-500 bg-blue-500'
-                      : 'border-gray-300 bg-white'
+                      ? 'border-primary bg-primary'
+                      : 'border-border bg-background'
                     }
                     transition-all duration-200
                   `}>
                     {selectedOption === index && (
-                      <div className="w-2 h-2 bg-white rounded-full" />
+                      <div className="w-2 h-2 bg-primary-foreground rounded-full" />
                     )}
                   </div>
                 </div>
 
                 {/* Option Content */}
                 <div className="flex-1">
-                  <h3 className="font-semibold text-gray-900 mb-1">{String((option as any).text ?? '')}</h3>
+                  <h3 className="font-semibold text-foreground mb-1">{String((option as any).text ?? '')}</h3>
                   {(option as any).option_text && (
-                    <p className="text-sm text-gray-600">{String((option as any).option_text)}</p>
+                    <p className="text-sm text-muted-foreground">{String((option as any).option_text)}</p>
                   )}
                 </div>
 
                 {/* Selection Indicator */}
                 {selectedOption === index && (
                   <div className="flex-shrink-0">
-                    <CheckCircle className="w-5 h-5 text-blue-500" />
+                    <CheckCircle className="w-5 h-5 text-primary" />
                   </div>
                 )}
               </div>
@@ -197,12 +197,12 @@ export default function SingleChoiceVoting({
         </div>
 
         {/* Instructions */}
-        <div className="mt-6 p-4 bg-gray-50 rounded-lg">
+        <div className="mt-6 p-4 bg-muted rounded-lg">
           <div className="flex items-center space-x-2 mb-2">
-            <CheckCircle className="w-5 h-5 text-gray-600" />
-            <span className="font-medium text-gray-900">Voting Instructions</span>
+            <CheckCircle className="w-5 h-5 text-muted-foreground" />
+            <span className="font-medium text-foreground">Voting Instructions</span>
           </div>
-          <div className="text-sm text-gray-600 space-y-1">
+          <div className="text-sm text-muted-foreground space-y-1">
             <p>• Click on an option to select it as your choice</p>
             <p>• You can change your selection before submitting</p>
             <p>• Only one option can be selected at a time</p>
@@ -213,7 +213,7 @@ export default function SingleChoiceVoting({
         {/* Submit Button */}
         <div className="mt-6 flex justify-center">
           {hasVoted ? (
-            <div className="flex items-center space-x-2 text-green-600" data-testid="vote-confirmation">
+            <div className="flex items-center space-x-2 text-green-600 dark:text-green-400" data-testid="vote-confirmation">
               <CheckCircle className="w-5 h-5" />
               <span className="font-medium" data-testid="vote-receipt">Vote submitted successfully!</span>
             </div>
@@ -224,8 +224,8 @@ export default function SingleChoiceVoting({
               className={`
                 flex items-center space-x-2 px-8 py-3 rounded-lg font-medium transition-colors
                 ${isDisabled || selectedOption === null
-                  ? 'bg-gray-300 text-gray-500 cursor-not-allowed'
-                  : 'bg-blue-600 text-white hover:bg-blue-700'
+                  ? 'bg-muted text-muted-foreground cursor-not-allowed'
+                  : 'bg-primary text-primary-foreground hover:bg-primary/90'
                 }
               `}
               data-testid="submit-vote-button"
@@ -239,8 +239,8 @@ export default function SingleChoiceVoting({
         {/* Selection Summary */}
         {selectedOption !== null && !hasVoted && (
           <div className="mt-4 text-center">
-            <div className="text-sm text-gray-600">
-              Selected: <span className="font-medium text-blue-600">
+            <div className="text-sm text-muted-foreground">
+              Selected: <span className="font-medium text-primary">
                 {String((options.find((_: PollOption, idx: number) => idx === selectedOption) as any)?.text ?? '')}
               </span>
             </div>
@@ -249,11 +249,11 @@ export default function SingleChoiceVoting({
       </div>
 
       {/* Best Practices */}
-      <div className="mt-6 bg-white rounded-xl shadow-sm border border-gray-200 p-6">
-        <h3 className="font-semibold text-gray-900 mb-3">When to Use Single Choice Voting</h3>
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm text-gray-600">
+      <div className="mt-6 bg-card rounded-xl shadow-sm border border-border p-6">
+        <h3 className="font-semibold text-foreground mb-3">When to Use Single Choice Voting</h3>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm text-muted-foreground">
           <div>
-            <h4 className="font-medium text-gray-900 mb-2">✅ Good For:</h4>
+            <h4 className="font-medium text-foreground mb-2">✅ Good For:</h4>
             <ul className="space-y-1">
               <li>• Quick decisions</li>
               <li>• Binary choices</li>
@@ -263,7 +263,7 @@ export default function SingleChoiceVoting({
             </ul>
           </div>
           <div>
-            <h4 className="font-medium text-gray-900 mb-2">⚠️ Consider Alternatives For:</h4>
+            <h4 className="font-medium text-foreground mb-2">⚠️ Consider Alternatives For:</h4>
             <ul className="space-y-1">
               <li>• Many similar options</li>
               <li>• Preference expression</li>

@@ -510,7 +510,7 @@ export default function PollClient({ poll }: PollClientProps) {
     try {
       // Build request body based on voting method
       let requestBody: Record<string, unknown>;
-      
+
       if (submission.method === 'single') {
         requestBody = { choice: submission.choice };
       } else if (submission.method === 'multiple') {
@@ -738,15 +738,15 @@ export default function PollClient({ poll }: PollClientProps) {
       )}
 
       {topOption && totalRecordedVotes > 0 && (
-        <div className="rounded-lg border border-amber-200 bg-amber-50 p-4 shadow-sm">
+        <div className="rounded-lg border border-amber-500/20 bg-amber-500/10 p-4 shadow-sm">
           <div className="flex items-start gap-3">
-            <div className="rounded-full bg-amber-200 p-2">
-              <Trophy className="h-5 w-5 text-amber-700" />
+            <div className="rounded-full bg-amber-500/20 p-2">
+              <Trophy className="h-5 w-5 text-amber-600 dark:text-amber-400" />
             </div>
             <div>
-              <p className="text-sm font-semibold uppercase text-amber-700">{t('polls.view.leadingOption.label')}</p>
-              <p className="mt-1 text-lg font-semibold text-amber-900">{topOption.text}</p>
-              <p className="text-sm text-amber-800">
+              <p className="text-sm font-semibold uppercase text-amber-700 dark:text-amber-400">{t('polls.view.leadingOption.label')}</p>
+              <p className="mt-1 text-lg font-semibold text-foreground">{topOption.text}</p>
+              <p className="text-sm text-foreground/80">
                 {t('polls.view.leadingOption.votes', { votes: topOption.votes, percentage: getVotePercentage(topOption.votes), total: computedTotalVotes })}
               </p>
             </div>
@@ -755,40 +755,40 @@ export default function PollClient({ poll }: PollClientProps) {
       )}
 
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
-        <div className="rounded-lg border bg-white p-4 shadow-sm">
+        <div className="rounded-lg border border-border bg-card p-4 shadow-sm">
           <p className="text-xs uppercase font-semibold text-foreground/80">{t('polls.view.stats.totalVotes')}</p>
           <p className="mt-2 text-2xl font-semibold text-foreground">
             {isMounted ? computedTotalVotes.toLocaleString() : computedTotalVotes.toString()}
           </p>
         </div>
-        <div className="rounded-lg border bg-white p-4 shadow-sm">
+        <div className="rounded-lg border border-border bg-card p-4 shadow-sm">
           <p className="text-xs uppercase font-semibold text-foreground/80">{t('polls.view.stats.participation')}</p>
           <p className="mt-2 text-2xl font-semibold text-foreground">
             {isMounted ? participationCount.toLocaleString() : participationCount.toString()}
           </p>
         </div>
-        <div className="rounded-lg border bg-white p-4 shadow-sm">
+        <div className="rounded-lg border border-border bg-card p-4 shadow-sm">
           <p className="text-xs uppercase font-semibold text-foreground/80">{t('polls.view.stats.status')}</p>
-          <p className={cn('mt-2 text-2xl font-semibold capitalize', pollStatus === 'closed' ? 'text-red-600' : 'text-emerald-600')}>
+          <p className={cn('mt-2 text-2xl font-semibold capitalize', pollStatus === 'closed' ? 'text-red-600 dark:text-red-400' : 'text-emerald-600 dark:text-emerald-400')}>
             {pollStatus === 'closed' ? t('polls.view.status.closed.label') : pollStatus === 'active' ? t('polls.view.status.active.label') : t('polls.view.status.draft.label')}
           </p>
         </div>
       </div>
 
       {integrityInfo && (
-        <div className="rounded-lg border border-blue-200 bg-blue-50 p-4 shadow-sm">
+        <div className="rounded-lg border border-primary/20 bg-primary/10 p-4 shadow-sm">
           <div className="flex items-start gap-3">
-            <div className="rounded-full bg-blue-100 p-2">
-              <Shield className="h-5 w-5 text-blue-700" />
+            <div className="rounded-full bg-primary/20 p-2">
+              <Shield className="h-5 w-5 text-primary" />
             </div>
             <div>
-              <p className="text-sm font-semibold uppercase text-blue-700">Integrity check applied</p>
-              <p className="text-sm text-blue-800">
+              <p className="text-sm font-semibold uppercase text-foreground">Integrity check applied</p>
+              <p className="text-sm text-foreground/80">
                 {integrityInfo.excluded_votes > 0
                   ? `${integrityInfo.excluded_votes} votes excluded from displayed results.`
                   : 'No votes excluded from displayed results.'}
               </p>
-              <p className="text-xs text-blue-700/80">
+              <p className="text-xs text-foreground/70">
                 Raw total: {isMounted ? integrityInfo.raw_total_votes.toLocaleString() : integrityInfo.raw_total_votes}
                 {' '}• Scored: {integrityInfo.scored_votes} • Unscored: {integrityInfo.unscored_votes}
               </p>
@@ -822,7 +822,7 @@ export default function PollClient({ poll }: PollClientProps) {
                 </p>
               )}
               {nextMilestone && (
-                <p className="mt-3 text-sm font-semibold text-emerald-700">
+                <p className="mt-3 text-sm font-semibold text-emerald-600 dark:text-emerald-400">
                   {t('polls.view.milestones.nextUp', { count: nextMilestone })}
                 </p>
               )}
@@ -862,15 +862,15 @@ export default function PollClient({ poll }: PollClientProps) {
       </details>
 
       {votingStatusMessage && (
-        <Alert variant="default" className="border border-amber-200 bg-amber-50 text-amber-900">
-          <AlertCircle className="h-4 w-4" />
-          <AlertTitle>{votingStatusMessage.title}</AlertTitle>
-          <AlertDescription>{votingStatusMessage.description}</AlertDescription>
+        <Alert variant="default" className="border border-amber-500/20 bg-amber-500/10 text-foreground">
+          <AlertCircle className="h-4 w-4 text-amber-600 dark:text-amber-400" />
+          <AlertTitle className="text-foreground">{votingStatusMessage.title}</AlertTitle>
+          <AlertDescription className="text-foreground/90">{votingStatusMessage.description}</AlertDescription>
         </Alert>
       )}
 
       {combinedError && (
-        <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded" role="alert">
+        <div className="bg-destructive/10 border border-destructive/20 text-destructive px-4 py-3 rounded" role="alert">
           {combinedError}
         </div>
       )}

@@ -157,16 +157,16 @@ export default function RankedChoiceVoting({
 
   return (
     <div className="mx-auto max-w-2xl">
-      <div className="mb-6 rounded-xl border border-gray-200 bg-white p-6 shadow-sm">
+      <div className="mb-6 rounded-xl border border-border bg-card p-6 shadow-sm">
         <div className="mb-4 flex items-start justify-between">
           <div>
-            <h1 className="mb-2 text-2xl font-bold text-gray-900">{title}</h1>
-            {description && <p className="text-gray-600">{description}</p>}
+            <h1 className="mb-2 text-2xl font-bold text-foreground">{title}</h1>
+            {description && <p className="text-muted-foreground">{description}</p>}
           </div>
           <button
             type="button"
             onClick={() => setShowExplanation((value) => !value)}
-            className="flex items-center space-x-2 text-blue-600 transition-colors hover:text-blue-700"
+            className="flex items-center space-x-2 text-primary transition-colors hover:text-primary/80"
           >
             <Info className="h-5 w-5" aria-hidden="true" />
             <span className="text-sm font-medium">How it works</span>
@@ -174,9 +174,9 @@ export default function RankedChoiceVoting({
         </div>
 
         {showExplanation && (
-          <div className="mb-4 rounded-lg border border-blue-200 bg-blue-50 p-4">
-            <h3 className="mb-2 font-semibold text-blue-900">How Ranked Choice Voting Works</h3>
-            <div className="space-y-2 text-sm text-blue-800">
+          <div className="mb-4 rounded-lg border border-primary/20 bg-primary/10 p-4">
+            <h3 className="mb-2 font-semibold text-foreground">How Ranked Choice Voting Works</h3>
+            <div className="space-y-2 text-sm text-foreground/90">
               <p>
                 • <strong>Rank every option</strong> from 1st (most preferred) to last (least preferred).
               </p>
@@ -191,23 +191,23 @@ export default function RankedChoiceVoting({
         )}
 
         <div className="flex items-center space-x-2">
-          <div className="rounded-full bg-purple-100 px-3 py-1 text-sm font-medium text-purple-800">
+          <div className="rounded-full bg-primary/20 px-3 py-1 text-sm font-medium text-primary">
             🏆 Ranked Choice Voting
           </div>
-          <span className="text-sm text-gray-500">Rank each option (1 = most preferred) before submitting.</span>
+          <span className="text-sm text-muted-foreground">Rank each option (1 = most preferred) before submitting.</span>
         </div>
       </div>
 
       {submissionError && (
-        <div className="mb-4 rounded-lg border border-red-200 bg-red-50 p-4" role="alert">
+        <div className="mb-4 rounded-lg border border-destructive/20 bg-destructive/10 p-4" role="alert">
           <div className="flex items-center">
-            <AlertCircle className="mr-2 h-5 w-5 text-red-500" aria-hidden="true" />
-            <p className="text-red-800">{submissionError}</p>
+            <AlertCircle className="mr-2 h-5 w-5 text-destructive" aria-hidden="true" />
+            <p className="text-destructive">{submissionError}</p>
           </div>
         </div>
       )}
 
-      <div className="rounded-xl border border-gray-200 bg-white p-6 shadow-sm">
+      <div className="rounded-xl border border-border bg-card p-6 shadow-sm">
         <AccessibleRankingInterface
           candidates={candidates}
           onRankingChange={handleRankingChange}
@@ -220,14 +220,14 @@ export default function RankedChoiceVoting({
         />
 
         {validationWarnings.length > 0 && !validationErrors.length && (
-          <div className="mb-4 rounded-md border border-yellow-200 bg-yellow-50 p-3 text-sm text-yellow-800" role="status">
+          <div className="mb-4 rounded-md border border-yellow-500/20 bg-yellow-500/10 p-3 text-sm text-yellow-600 dark:text-yellow-400" role="status">
             {validationWarnings[0]}
           </div>
         )}
 
         <div className="flex justify-center">
           {hasVoted ? (
-            <div className="flex items-center space-x-2 text-green-600">
+            <div className="flex items-center space-x-2 text-green-600 dark:text-green-400">
               <CheckCircle className="h-5 w-5" aria-hidden="true" />
               <span className="font-medium">Vote submitted successfully!</span>
             </div>
@@ -238,7 +238,7 @@ export default function RankedChoiceVoting({
               disabled={isDisabled}
               data-testid="start-voting-button"
               className={`flex items-center space-x-2 rounded-lg px-8 py-3 font-medium transition-colors ${
-                isDisabled ? 'cursor-not-allowed bg-gray-300 text-gray-500' : 'bg-blue-600 text-white hover:bg-blue-700'
+                isDisabled ? 'cursor-not-allowed bg-muted text-muted-foreground' : 'bg-primary text-primary-foreground hover:bg-primary/90'
               }`}
             >
               <CheckCircle className="h-5 w-5" aria-hidden="true" />
@@ -249,15 +249,15 @@ export default function RankedChoiceVoting({
       </div>
 
       {orderedCandidateSummary.length > 0 && !hasVoted && (
-        <div className="mt-6 rounded-xl border border-gray-200 bg-white p-6 shadow-sm">
-          <h3 className="mb-4 font-semibold text-gray-900">Your current rankings</h3>
+        <div className="mt-6 rounded-xl border border-border bg-card p-6 shadow-sm">
+          <h3 className="mb-4 font-semibold text-foreground">Your current rankings</h3>
           <div className="space-y-2">
             {orderedCandidateSummary.map((item) => (
               <div key={item.id} className="flex items-center space-x-3">
-                <div className="flex h-6 w-6 items-center justify-center rounded-full bg-blue-600 text-xs font-bold text-white">
+                <div className="flex h-6 w-6 items-center justify-center rounded-full bg-primary text-xs font-bold text-primary-foreground">
                   {item.rank}
                 </div>
-                <span className="text-gray-900">{item.name}</span>
+                <span className="text-foreground">{item.name}</span>
               </div>
             ))}
           </div>

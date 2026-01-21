@@ -103,17 +103,17 @@ export default function ApprovalVoting({
   return (
     <div className="max-w-2xl mx-auto">
       {/* Header */}
-      <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6 mb-6">
+      <div className="bg-card rounded-xl shadow-sm border border-border p-6 mb-6">
         <div className="flex items-start justify-between mb-4">
           <div>
-            <h1 className="text-2xl font-bold text-gray-900 mb-2">{title}</h1>
+            <h1 className="text-2xl font-bold text-foreground mb-2">{title}</h1>
             {description && (
-              <p className="text-gray-600">{description}</p>
+              <p className="text-muted-foreground">{description}</p>
             )}
           </div>
           <button
             onClick={() => setShowExplanation(!showExplanation)}
-            className="flex items-center space-x-2 text-green-600 hover:text-green-700 transition-colors"
+            className="flex items-center space-x-2 text-primary hover:text-primary/80 transition-colors"
           >
             <Info className="w-5 h-5" />
             <span className="text-sm font-medium">How it works</span>
@@ -122,9 +122,9 @@ export default function ApprovalVoting({
 
         {/* Approval Voting Explanation */}
         {showExplanation && (
-          <div className="bg-green-50 border border-green-200 rounded-lg p-4 mb-4">
-            <h3 className="font-semibold text-green-900 mb-2">How Approval Voting Works</h3>
-            <div className="text-sm text-green-800 space-y-2">
+          <div className="bg-primary/10 border border-primary/20 rounded-lg p-4 mb-4">
+            <h3 className="font-semibold text-foreground mb-2">How Approval Voting Works</h3>
+            <div className="text-sm text-foreground/90 space-y-2">
               <p>• <strong>Approve multiple options:</strong> Check all options you find acceptable</p>
               <p>• <strong>Most approvals wins:</strong> The option with the most approvals becomes the winner</p>
               <p>• <strong>Prevents vote splitting:</strong> No penalty for approving similar options</p>
@@ -135,10 +135,10 @@ export default function ApprovalVoting({
 
         {/* Voting Method Badge */}
         <div className="flex items-center space-x-2">
-          <div className="bg-green-100 text-green-800 px-3 py-1 rounded-full text-sm font-medium">
+          <div className="bg-green-500/20 text-green-600 dark:text-green-400 px-3 py-1 rounded-full text-sm font-medium">
             ✅ Approval Voting
           </div>
-          <span className="text-sm text-gray-500">
+          <span className="text-sm text-muted-foreground">
             Check all options you find acceptable
           </span>
         </div>
@@ -146,16 +146,16 @@ export default function ApprovalVoting({
 
       {/* Error Message */}
       {error && (
-        <div className="bg-red-50 border border-red-200 rounded-lg p-4 mb-6">
+        <div className="bg-destructive/10 border border-destructive/20 rounded-lg p-4 mb-6">
           <div className="flex items-center">
-            <AlertCircle className="w-5 h-5 text-red-500 mr-2" />
-            <p className="text-red-800">{error}</p>
+            <AlertCircle className="w-5 h-5 text-destructive mr-2" />
+            <p className="text-destructive">{error}</p>
           </div>
         </div>
       )}
 
       {/* Voting Interface */}
-      <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
+      <div className="bg-card rounded-xl shadow-sm border border-border p-6">
         <div className="space-y-3">
           {options.map((option: PollOption) => {
             const optionId = String(option.id)
@@ -168,9 +168,9 @@ export default function ApprovalVoting({
                   relative p-4 border-2 rounded-lg cursor-pointer transition-all duration-200
                   ${isDisabled 
                     ? 'cursor-not-allowed opacity-60' 
-                    : 'hover:border-green-300 hover:bg-green-50'
+                    : 'hover:border-green-500/50 hover:bg-green-500/5'
                   }
-                  ${approvedOptions.includes(optionId) ? 'border-green-500 bg-green-50' : 'border-gray-200'}
+                  ${approvedOptions.includes(optionId) ? 'border-green-500 bg-green-500/10' : 'border-border'}
                 `}
                 role="checkbox"
                 aria-checked={approvedOptions.includes(optionId)}
@@ -188,7 +188,7 @@ export default function ApprovalVoting({
                     <div className={`w-5 h-5 rounded border-2 flex items-center justify-center transition-all duration-200 ${
                       approvedOptions.includes(optionId)
                         ? 'border-green-500 bg-green-500' 
-                        : 'border-gray-300 bg-white'
+                        : 'border-border bg-background'
                     }`}>
                       {approvedOptions.includes(optionId) && (
                         <CheckSquare className="w-4 h-4 text-white" />
@@ -196,9 +196,9 @@ export default function ApprovalVoting({
                     </div>
                   </div>
                   <div className="flex-1">
-                    <h3 className="font-semibold text-gray-900 mb-1">{String((option as any).text ?? '')}</h3>
+                    <h3 className="font-semibold text-foreground mb-1">{String((option as any).text ?? '')}</h3>
                     {(option as any).option_text && (
-                      <p className="text-sm text-gray-600">{String((option as any).option_text)}</p>
+                      <p className="text-sm text-muted-foreground">{String((option as any).option_text)}</p>
                     )}
                   </div>
                   {approvedOptions.includes(optionId) && (
@@ -213,12 +213,12 @@ export default function ApprovalVoting({
         </div>
 
         {/* Instructions */}
-        <div className="mt-6 p-4 bg-gray-50 rounded-lg">
+        <div className="mt-6 p-4 bg-muted rounded-lg">
           <div className="flex items-center space-x-2 mb-2">
-            <CheckCircle className="w-5 h-5 text-gray-600" />
-            <span className="font-medium text-gray-900">Voting Instructions</span>
+            <CheckCircle className="w-5 h-5 text-muted-foreground" />
+            <span className="font-medium text-foreground">Voting Instructions</span>
           </div>
-          <div className="text-sm text-gray-600 space-y-1">
+          <div className="text-sm text-muted-foreground space-y-1">
             <p>• Click on options to approve or disapprove them</p>
             <p>• You can approve multiple options</p>
             <p>• You must approve at least one option to submit</p>
@@ -230,11 +230,11 @@ export default function ApprovalVoting({
         <div className="mt-6 flex justify-center">
           {hasVoted ? (
             <div className="text-center">
-              <div className="flex items-center justify-center space-x-2 text-green-600 mb-2" data-testid="vote-confirmation">
+              <div className="flex items-center justify-center space-x-2 text-green-600 dark:text-green-400 mb-2" data-testid="vote-confirmation">
                 <CheckCircle className="w-5 h-5" />
                 <span className="font-medium">Vote submitted successfully!</span>
               </div>
-              <div className="text-sm text-gray-600" data-testid="selected-options">
+              <div className="text-sm text-muted-foreground" data-testid="selected-options">
                 You approved: {approvedOptions.map(id => options.find(opt => opt.id === id)?.text).join(', ')}
               </div>
             </div>
@@ -246,8 +246,8 @@ export default function ApprovalVoting({
               className={`
                 flex items-center space-x-2 px-8 py-3 rounded-lg font-medium transition-colors
                 ${isDisabled || approvedOptions.length === 0
-                  ? 'bg-gray-300 text-gray-500 cursor-not-allowed'
-                  : 'bg-green-600 text-white hover:bg-green-700'
+                  ? 'bg-muted text-muted-foreground cursor-not-allowed'
+                  : 'bg-green-600 text-white hover:bg-green-700 dark:bg-green-500 dark:hover:bg-green-600'
                 }
               `}
             >
@@ -260,12 +260,12 @@ export default function ApprovalVoting({
         {/* Progress Indicator */}
         {!hasVoted && (
           <div className="mt-4 text-center">
-            <div className="text-sm text-gray-600">
+            <div className="text-sm text-muted-foreground">
               {approvedOptions.length} of {options.length} options approved
             </div>
-            <div className="mt-2 w-full bg-gray-200 rounded-full h-2">
+            <div className="mt-2 w-full bg-muted rounded-full h-2">
               <div 
-                className="bg-green-600 h-2 rounded-full transition-all duration-300"
+                className="bg-green-600 dark:bg-green-500 h-2 rounded-full transition-all duration-300"
                 style={{ 
                   width: `${(approvedOptions.length / options.length) * 100}%` 
                 }}
@@ -276,11 +276,11 @@ export default function ApprovalVoting({
       </div>
 
       {/* Best Practices */}
-      <div className="mt-6 bg-white rounded-xl shadow-sm border border-gray-200 p-6">
-        <h3 className="font-semibold text-gray-900 mb-3">When to Use Approval Voting</h3>
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm text-gray-600">
+      <div className="mt-6 bg-card rounded-xl shadow-sm border border-border p-6">
+        <h3 className="font-semibold text-foreground mb-3">When to Use Approval Voting</h3>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm text-muted-foreground">
           <div>
-            <h4 className="font-medium text-gray-900 mb-2">✅ Good For:</h4>
+            <h4 className="font-medium text-foreground mb-2">✅ Good For:</h4>
             <ul className="space-y-1">
               <li>• Multi-candidate elections</li>
               <li>• Consensus building</li>
@@ -290,7 +290,7 @@ export default function ApprovalVoting({
             </ul>
           </div>
           <div>
-            <h4 className="font-medium text-gray-900 mb-2">⚠️ Consider Alternatives For:</h4>
+            <h4 className="font-medium text-foreground mb-2">⚠️ Consider Alternatives For:</h4>
             <ul className="space-y-1">
               <li>• Binary yes/no decisions</li>
               <li>• Preference intensity matters</li>
