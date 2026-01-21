@@ -113,7 +113,7 @@ export default function RankedChoiceVoting({
 
     setRankedOrder(newOrder);
     setDraggedIndex(null);
-    
+
     const option = options.find((opt, idx) => String(opt.id) === draggedItem || idx === Number.parseInt(draggedItem, 10));
     const optionName = option?.text ?? String((option as unknown as { text?: string })?.text) ?? 'option';
     ScreenReaderSupport.announce(`${optionName} moved to position ${dropIndex + 1}`, 'polite');
@@ -220,7 +220,7 @@ export default function RankedChoiceVoting({
       <div className="mb-6 rounded-xl border border-border bg-card p-6 shadow-sm">
         <div className="mb-4 flex items-start justify-between">
           <div>
-            <h1 className="mb-2 text-2xl font-bold text-foreground">{title}</h1>
+            {title && <h1 className="mb-2 text-2xl font-bold text-foreground">{title}</h1>}
             {description && <p className="text-muted-foreground">{description}</p>}
           </div>
           <button
