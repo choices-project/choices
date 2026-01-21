@@ -300,11 +300,22 @@ test.describe('MVP Critical Flows', () => {
       await expect(deletePage).toBeVisible({ timeout: 10_000 });
 
       // Should see warning information - page has Alert with "Warning:" and "irreversible"
-      const warningText = page.locator('text=/Warning:/i, text=/irreversible/i, text=/permanent/i');
+      // Also check for the specific warning text in the Alert component
+      const warningText = page.locator('text=/Warning:/i, text=/irreversible/i, text=/permanent/i, text=/cannot.*undo/i, text=/permanently.*removed/i');
+      const warningAlert = page.locator('[role="alert"]:has-text(/warning/i), .alert:has-text(/irreversible/i)');
+      
       const warningCount = await warningText.count();
+      const alertCount = await warningAlert.count();
 
-      // Warning should be present
-      expect(warningCount).toBeGreaterThan(0);
+      // Warning should be present (either in text or alert)
+      if (warningCount === 0 && alertCount === 0) {
+        // Take screenshot for debugging
+        await page.screenshot({ path: 'test-results/account-delete-warning-debug.png' });
+        throw new Error('No warning text or alert found on account delete page');
+      }
+      
+      // At least one warning indicator should be present
+      expect(warningCount + alertCount).toBeGreaterThan(0);
 
       // Should see delete button (but don't click it)
       const deleteButton = page.locator('button:has-text(/delete.*account/i), button[type="submit"]');
