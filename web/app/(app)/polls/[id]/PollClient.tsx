@@ -300,21 +300,68 @@ export default function PollClient({ poll }: PollClientProps) {
 
       const generalError = 'Failed to load poll results. Please try again later.';
 
-      // Fetch results data
-      const resultsResponse = await fetch(`/api/polls/${pollId}/results`);
+      // Fetch results data with timeout
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 30000); // 30 second timeout
+
+      let resultsResponse: Response;
+      try {
+        resultsResponse = await fetch(`/api/polls/${pollId}/results`, {
+          signal: controller.signal,
+        });
+        clearTimeout(timeoutId);
+      } catch (fetchError) {
+        clearTimeout(timeoutId);
+        if (fetchError instanceof Error && fetchError.name === 'AbortError') {
+          const timeoutError = 'Request timed out. Please check your connection and try again.';
+          setError(timeoutError);
+          setVotingErrorRef.current(timeoutError);
+          setResults(null);
+          return;
+        }
+        const networkError = 'Network error. Please check your connection and try again.';
+        setError(networkError);
+        setVotingErrorRef.current(networkError);
+        setResults(null);
+        return;
+      }
+
       if (!resultsResponse.ok) {
         setResults(null);
-        if (resultsResponse.status >= 500) {
+        if (resultsResponse.status === 404) {
+          const notFoundError = 'Poll not found. It may have been deleted or is no longer available.';
+          setError(notFoundError);
+          setVotingErrorRef.current(notFoundError);
+        } else if (resultsResponse.status >= 500) {
           setError(generalError);
           setVotingErrorRef.current(generalError);
+        } else {
+          const clientError = `Unable to load results (${resultsResponse.status}). Please try again.`;
+          setError(clientError);
+          setVotingErrorRef.current(clientError);
         }
         return;
       }
 
-      const payload = await resultsResponse.json();
+      let payload: any;
+      try {
+        payload = await resultsResponse.json();
+      } catch (jsonError) {
+        const parseError = 'Invalid response from server. Please try again.';
+        logger.error('Failed to parse poll results JSON', jsonError);
+        setError(parseError);
+        setVotingErrorRef.current(parseError);
+        setResults(null);
+        return;
+      }
+
       if (!payload?.success || !payload.data) {
         setResults(null);
         clearVotingErrorRef.current();
+        // If we have a data structure but no success flag, log it for debugging
+        if (payload && !payload.success) {
+          logger.warn('Poll results API returned unsuccessful response', { pollId, payload });
+        }
         return;
       }
 
@@ -1067,13 +1114,13 @@ export default function PollClient({ poll }: PollClientProps) {
                     </div>
                     <div className="text-sm text-muted-foreground mt-1">Voting Method</div>
                   </div>
-                  <div className="text-center p-4 bg-gray-50 rounded-lg">
-                    <div className="text-2xl font-bold text-gray-900">
+                  <div className="text-center p-4 bg-muted/50 rounded-lg border">
+                    <div className="text-2xl font-bold text-foreground">
                       {results.votingMethod === 'ranked'
                         ? results.optionStats.length
                         : results.optionTotals.length}
                     </div>
-                    <div className="text-sm text-gray-600">Options</div>
+                    <div className="text-sm text-muted-foreground mt-1">Options</div>
                   </div>
                 </div>
 
@@ -1090,23 +1137,26 @@ export default function PollClient({ poll }: PollClientProps) {
                     <div className="space-y-4">
                       <h4 className="text-sm font-semibold text-foreground">Instant runoff rounds</h4>
                       {results.rounds.map((round) => (
-                        <div key={round.round} className="rounded-lg border bg-gray-50 p-4">
-                          <div className="mb-2 flex items-center justify-between">
-                            <span className="font-medium text-foreground">Round {round.round}</span>
+                        <div key={round.round} className="rounded-lg border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800/50 p-4">
+                          <div className="mb-3 flex items-center justify-between">
+                            <span className="font-semibold text-foreground">Round {round.round}</span>
                             {round.eliminated !== undefined && (
-                              <span className="text-xs text-red-600">
-                                Eliminated: {getOptionLabel(Number(round.eliminated))}
+                              <span className="text-xs font-medium text-red-600 dark:text-red-400 flex items-center space-x-1">
+                                <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                                </svg>
+                                <span>Eliminated: {getOptionLabel(Number(round.eliminated))}</span>
                               </span>
                             )}
                           </div>
-                          <div className="space-y-1 text-xs text-foreground">
+                          <div className="space-y-2">
                             {Object.entries(round.votes).map(([optionKey, voteCount]) => {
                               const percentage = round.percentages[optionKey] ?? 0;
                               const label = getOptionLabel(Number(optionKey));
                               return (
-                                <div key={`${round.round}-${optionKey}`} className="flex justify-between">
-                                  <span className="font-medium text-foreground">{label}</span>
-                                  <span>
+                                <div key={`${round.round}-${optionKey}`} className="flex items-center justify-between p-2 rounded bg-white dark:bg-gray-900/50">
+                                  <span className="font-medium text-foreground text-sm">{label}</span>
+                                  <span className="text-sm text-muted-foreground">
                                     {voteCount} vote{voteCount === 1 ? '' : 's'} ({percentage.toFixed(1)}%)
                                   </span>
                                 </div>
@@ -1118,18 +1168,31 @@ export default function PollClient({ poll }: PollClientProps) {
                     </div>
 
                     {results.winner && (
-                      <div className="rounded-lg border border-purple-200 bg-purple-50 p-3 text-sm text-purple-800">
-                        Winner:{' '}
-                        {rankedChartData?.find(
-                          (item) => String(item.id) === String(results.winner),
-                        )?.name ?? getOptionLabel(Number(results.winner))}
+                      <div className="rounded-lg border border-purple-200 dark:border-purple-800 bg-purple-50 dark:bg-purple-900/20 p-4 text-sm">
+                        <div className="flex items-center space-x-2">
+                          <svg className="h-5 w-5 text-purple-600 dark:text-purple-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4M7.835 4.697a3.42 3.42 0 001.946-.806 3.42 3.42 0 014.438 0 3.42 3.42 0 001.946.806 3.42 3.42 0 013.138 3.138 3.42 3.42 0 00.806 1.946 3.42 3.42 0 010 4.438 3.42 3.42 0 00-.806 1.946 3.42 3.42 0 01-3.138 3.138 3.42 3.42 0 00-1.946.806 3.42 3.42 0 01-4.438 0 3.42 3.42 0 00-1.946-.806 3.42 3.42 0 01-3.138-3.138 3.42 3.42 0 00-.806-1.946 3.42 3.42 0 010-4.438 3.42 3.42 0 00.806-1.946 3.42 3.42 0 013.138-3.138z" />
+                          </svg>
+                          <span className="font-semibold text-purple-800 dark:text-purple-300">Winner:</span>
+                          <span className="text-purple-700 dark:text-purple-200">
+                            {rankedChartData?.find(
+                              (item) => String(item.id) === String(results.winner),
+                            )?.name ?? getOptionLabel(Number(results.winner))}
+                          </span>
+                        </div>
                       </div>
                     )}
                   </div>
                 )}
 
                 {results.votingMethod === 'ranked' && !rankedChartData?.length && (
-                  <p className="text-sm text-gray-600">No first-choice votes recorded yet.</p>
+                  <div className="text-center py-8">
+                    <svg className="h-12 w-12 text-gray-400 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+                    </svg>
+                    <p className="text-sm font-medium text-gray-600 dark:text-gray-400">No first-choice votes recorded yet.</p>
+                    <p className="text-xs text-gray-500 dark:text-gray-500 mt-1">Be the first to vote on this ranked choice poll!</p>
+                  </div>
                 )}
 
                 {results.votingMethod !== 'ranked' && standardChartData?.length && (
@@ -1143,7 +1206,13 @@ export default function PollClient({ poll }: PollClientProps) {
                 )}
 
                 {results.votingMethod !== 'ranked' && !standardChartData?.length && (
-                  <p className="text-sm text-gray-600">No votes recorded yet.</p>
+                  <div className="text-center py-8">
+                    <svg className="h-12 w-12 text-gray-400 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+                    </svg>
+                    <p className="text-sm font-medium text-gray-600 dark:text-gray-400">No votes recorded yet.</p>
+                    <p className="text-xs text-gray-500 dark:text-gray-500 mt-1">Be the first to vote on this poll!</p>
+                  </div>
                 )}
               </div>
             </CardContent>

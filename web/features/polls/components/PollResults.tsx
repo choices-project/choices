@@ -72,19 +72,96 @@ export default function OptimizedPollResults({
     try {
       const startTime = performance.now()
 
-      const pollResults = await optimizedPollService.getOptimizedPollResults(
-        pollId,
-        userId,
-        includePrivate
-      )
+      // Use real API endpoint instead of mock service
+      const response = await fetch(`/api/polls/${pollId}/results`)
+
+      if (!response.ok) {
+        throw new Error(response.status === 404 ? 'Poll not found' : 'Failed to fetch results')
+      }
+
+      const result = await response.json()
+      // API returns { success: true, data: { poll_id, voting_method, results: [...] } } structure
+      // OR for ranked: { success: true, data: { poll_id, voting_method, rounds, option_stats, ... } }
+      const data = result?.success && result?.data ? result.data : result
 
       const endTime = performance.now()
       const loadTime = endTime - startTime
 
-      setResults(pollResults)
+      // Transform API response to OptimizedPollResult format
+      let transformedResults: OptimizedPollResult | null = null
+
+      if (data?.results && Array.isArray(data.results)) {
+        // Standard voting method results
+        transformedResults = {
+          id: pollId,
+          title: data.poll_title || 'Poll Results',
+          options: data.results.map((r: any) => r.option_text || r.option_id),
+          totalVotes: data.total_votes || 0,
+          results: data.results.map((r: any) => ({
+            option: r.option_text || r.option_id,
+            optionId: r.option_id,
+            label: r.option_text,
+            votes: r.vote_count || 0,
+            voteCount: r.vote_count || 0,
+            percentage: r.percentage || 0,
+            votePercentage: r.percentage || 0,
+          })),
+          metadata: {
+            responseTime: loadTime,
+            cacheHit: false,
+            includePrivate,
+            userId,
+            votingMethod: data.voting_method,
+          },
+          pollStatus: 'active',
+          pollTitle: data.poll_title || 'Poll Results',
+          pollType: data.voting_method || 'single',
+          uniqueVoters: data.total_votes || 0,
+          canVote: true,
+          hasVoted: false,
+        }
+      } else if (data?.option_stats && Array.isArray(data.option_stats)) {
+        // Ranked choice results
+        transformedResults = {
+          id: pollId,
+          title: data.poll_title || 'Poll Results',
+          options: data.option_stats.map((s: any) => s.text || `Option ${s.option_index + 1}`),
+          totalVotes: data.total_votes || 0,
+          results: data.option_stats.map((s: any) => ({
+            option: s.text || `Option ${s.option_index + 1}`,
+            optionId: s.option_id || s.option_index?.toString(),
+            label: s.text,
+            votes: s.first_choice_votes || 0,
+            voteCount: s.first_choice_votes || 0,
+            percentage: s.first_choice_percentage || 0,
+            votePercentage: s.first_choice_percentage || 0,
+          })),
+          metadata: {
+            responseTime: loadTime,
+            cacheHit: false,
+            includePrivate,
+            userId,
+            votingMethod: 'ranked',
+            rounds: data.rounds,
+            winner: data.winner,
+          },
+          pollStatus: 'active',
+          pollTitle: data.poll_title || 'Poll Results',
+          pollType: 'ranked',
+          uniqueVoters: data.total_votes || 0,
+          canVote: true,
+          hasVoted: false,
+        }
+      }
+
+      if (!transformedResults) {
+        throw new Error('Invalid poll results format')
+      }
+
+      setResults(transformedResults)
       setPerformanceMetrics({
         loadTime,
-        cacheHit: false, // Will be updated by the service
+        cacheHit: false,
         timestamp: new Date().toISOString()
       })
 

@@ -1,14 +1,17 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 
+import { EnhancedEmptyState } from '@/components/shared/EnhancedEmptyState';
+import { EnhancedErrorDisplay } from '@/components/shared/EnhancedErrorDisplay';
 
 type PollResult = {
   option_id: string;
   option_text: string;
   vote_count: number;
-  avg_trust_tier: number;
-  trust_distribution: {
+  percentage?: number;
+  avg_trust_tier?: number;
+  trust_distribution?: {
     verified_votes: number;
     established_votes: number;
     new_user_votes: number;
@@ -26,27 +29,40 @@ export function PollResults({ pollId, trustTiers }: PollResultsProps) {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  const fetchResults = React.useCallback(async () => {
+  const fetchResults = useCallback(async () => {
+    if (!pollId) {
+      setError('Poll ID is required');
+      setLoading(false);
+      return;
+    }
+
     try {
       setLoading(true);
+      setError(null);
+
       // Build URL with multiple tier support
       const params = new URLSearchParams();
       if (trustTiers && trustTiers.length > 0) {
         trustTiers.forEach(tier => params.append('tier', tier.toString()));
       }
-      
+
       const url = `/api/polls/${pollId}/results?${params.toString()}`;
-      
+
       const response = await fetch(url);
       if (!response.ok) {
-        throw new Error('Failed to fetch results');
+        const errorText = await response.text().catch(() => 'Failed to fetch results');
+        // Use standardized error messages
+        if (response.status === 404) {
+          throw new Error('POLL_NOT_FOUND');
+        }
+        throw new Error(errorText || 'NETWORK_ERROR');
       }
-      
+
       const result = await response.json();
       // API returns { success: true, data: { poll_id, voting_method, results: [...] } } structure
       // OR for ranked: { success: true, data: { poll_id, voting_method, rounds, option_stats, ... } }
       const data = result?.success && result?.data ? result.data : result;
-      
+
       // Handle different response structures
       if (data?.results && Array.isArray(data.results)) {
         setResults(data.results);
@@ -63,7 +79,9 @@ export function PollResults({ pollId, trustTiers }: PollResultsProps) {
         setResults([]);
       }
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to load results');
+      const errorMessage = err instanceof Error ? err.message : 'Failed to load results';
+      setError(errorMessage);
+      console.error('Poll results fetch error:', err);
     } finally {
       setLoading(false);
     }
@@ -73,86 +91,137 @@ export function PollResults({ pollId, trustTiers }: PollResultsProps) {
     void fetchResults();
   }, [fetchResults]);
 
+  const handleRetry = useCallback(() => {
+    void fetchResults();
+  }, [fetchResults]);
+
   if (loading) {
     return (
-      <div className="space-y-3">
+      <div className="space-y-3" role="status" aria-live="polite" aria-busy="true">
         {[1, 2, 3].map(i => (
           <div key={i} className="animate-pulse">
-            <div className="h-4 bg-gray-200 rounded mb-2" />
-            <div className="h-2 bg-gray-200 rounded" />
+            <div className="h-4 bg-gray-200 dark:bg-gray-700 rounded mb-2" />
+            <div className="h-2 bg-gray-200 dark:bg-gray-700 rounded" />
           </div>
         ))}
+        <span className="sr-only">Loading poll results...</span>
       </div>
     );
   }
 
   if (error) {
     return (
-      <div className="bg-red-50 border border-red-200 rounded p-3">
-        <p className="text-red-600 text-sm">{error}</p>
-      </div>
+      <EnhancedErrorDisplay
+        title="Error Loading Poll Results"
+        message={error}
+        details="We encountered an issue while loading poll results. This might be a temporary network problem."
+        tip="Check your internet connection and try again. If the problem persists, the poll may not exist or may have been removed."
+        canRetry={true}
+        onRetry={handleRetry}
+      />
     );
   }
 
   if (!results.length) {
     return (
-      <div className="text-center py-8 text-gray-500">
-        No votes yet. Be the first to vote!
-      </div>
+      <EnhancedEmptyState
+        icon={
+          <svg className="h-12 w-12 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+          </svg>
+        }
+        title="No votes yet"
+        description="This poll hasn't received any votes yet. Be the first to vote!"
+        tip="Share this poll with others to get more participation."
+      />
     );
   }
 
   const totalVotes = results.reduce((sum, r) => sum + r.vote_count, 0);
 
   return (
-    <div className="space-y-3">
+    <div className="space-y-3" role="region" aria-label="Poll results">
       {results.map((result) => {
-        const percentage = totalVotes > 0 ? (result.vote_count / totalVotes) * 100 : 0;
-        
+        const percentage = result.percentage ?? (totalVotes > 0 ? (result.vote_count / totalVotes) * 100 : 0);
+        const hasTrustDistribution = result.trust_distribution &&
+          (result.trust_distribution.verified_votes > 0 ||
+           result.trust_distribution.established_votes > 0 ||
+           result.trust_distribution.new_user_votes > 0 ||
+           result.trust_distribution.anonymous_votes > 0);
+
         return (
-          <div key={result.option_id} className="border rounded-lg p-4">
+          <div
+            key={result.option_id}
+            className="border border-gray-200 dark:border-gray-700 rounded-lg p-4 bg-white dark:bg-gray-800 hover:shadow-md transition-shadow"
+            role="article"
+            aria-label={`${result.option_text}: ${result.vote_count} votes, ${percentage.toFixed(1)}%`}
+          >
             <div className="flex justify-between items-center mb-2">
-              <span className="font-medium">{result.option_text}</span>
-              <span className="text-lg font-bold">{result.vote_count} votes</span>
+              <span className="font-medium text-gray-900 dark:text-gray-100">{result.option_text}</span>
+              <span className="text-lg font-bold text-gray-900 dark:text-gray-100">{result.vote_count} {result.vote_count === 1 ? 'vote' : 'votes'}</span>
             </div>
-            
+
             {/* Progress Bar */}
-            <div className="w-full bg-gray-200 rounded-full h-2 mb-3">
-              <div 
-                className="bg-blue-500 h-2 rounded-full transition-all duration-300"
+            <div
+              className="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-3 mb-3"
+              role="progressbar"
+              aria-valuenow={percentage}
+              aria-valuemin={0}
+              aria-valuemax={100}
+              aria-label={`${result.option_text} has ${percentage.toFixed(1)}% of votes`}
+            >
+              <div
+                className="bg-blue-500 dark:bg-blue-600 h-3 rounded-full transition-all duration-300 ease-out"
                 style={{ width: `${percentage}%` }}
-               />
+              />
             </div>
-            
-            <div className="text-sm text-gray-600">
+
+            <div className="text-sm text-gray-600 dark:text-gray-400">
               {percentage.toFixed(1)}% of total votes
             </div>
-            
-            {/* Trust Distribution */}
-            <div className="mt-3 pt-3 border-t">
-              <div className="text-xs text-gray-500 mb-2">Trust Distribution:</div>
-              <div className="grid grid-cols-2 gap-2 text-xs">
-                <div className="flex items-center space-x-1">
-                  <span className="w-2 h-2 bg-green-500 rounded-full" />
-                  <span>Verified: {result.trust_distribution.verified_votes}</span>
-                </div>
-                <div className="flex items-center space-x-1">
-                  <span className="w-2 h-2 bg-blue-500 rounded-full" />
-                  <span>Established: {result.trust_distribution.established_votes}</span>
-                </div>
-                <div className="flex items-center space-x-1">
-                  <span className="w-2 h-2 bg-yellow-500 rounded-full" />
-                  <span>New: {result.trust_distribution.new_user_votes}</span>
-                </div>
-                <div className="flex items-center space-x-1">
-                  <span className="w-2 h-2 bg-gray-500 rounded-full" />
-                  <span>Anonymous: {result.trust_distribution.anonymous_votes}</span>
+
+            {/* Trust Distribution - Only show if data exists */}
+            {hasTrustDistribution && result.trust_distribution && (
+              <div className="mt-3 pt-3 border-t border-gray-200 dark:border-gray-700">
+                <div className="text-xs font-medium text-gray-500 dark:text-gray-400 mb-2">Trust Distribution:</div>
+                <div className="grid grid-cols-2 gap-2 text-xs">
+                  {result.trust_distribution.verified_votes > 0 && (
+                    <div className="flex items-center space-x-1">
+                      <span className="w-2 h-2 bg-green-500 rounded-full" aria-hidden="true" />
+                      <span className="text-gray-700 dark:text-gray-300">Verified: {result.trust_distribution.verified_votes}</span>
+                    </div>
+                  )}
+                  {result.trust_distribution.established_votes > 0 && (
+                    <div className="flex items-center space-x-1">
+                      <span className="w-2 h-2 bg-blue-500 rounded-full" aria-hidden="true" />
+                      <span className="text-gray-700 dark:text-gray-300">Established: {result.trust_distribution.established_votes}</span>
+                    </div>
+                  )}
+                  {result.trust_distribution.new_user_votes > 0 && (
+                    <div className="flex items-center space-x-1">
+                      <span className="w-2 h-2 bg-yellow-500 rounded-full" aria-hidden="true" />
+                      <span className="text-gray-700 dark:text-gray-300">New: {result.trust_distribution.new_user_votes}</span>
+                    </div>
+                  )}
+                  {result.trust_distribution.anonymous_votes > 0 && (
+                    <div className="flex items-center space-x-1">
+                      <span className="w-2 h-2 bg-gray-500 rounded-full" aria-hidden="true" />
+                      <span className="text-gray-700 dark:text-gray-300">Anonymous: {result.trust_distribution.anonymous_votes}</span>
+                    </div>
+                  )}
                 </div>
               </div>
-            </div>
+            )}
           </div>
         );
       })}
+
+      {/* Total Votes Summary */}
+      <div className="mt-4 pt-4 border-t border-gray-200 dark:border-gray-700 text-center">
+        <p className="text-sm font-medium text-gray-600 dark:text-gray-400">
+          Total: <span className="font-bold text-gray-900 dark:text-gray-100">{totalVotes}</span> {totalVotes === 1 ? 'vote' : 'votes'}
+        </p>
+      </div>
     </div>
   );
 }

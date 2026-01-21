@@ -209,6 +209,53 @@ function ProfilePageContent() {
     );
   }
 
+  // Check if profile doesn't exist (user needs onboarding)
+  // This happens when user is authenticated but hasn't completed onboarding
+  if (isAuthenticated && !profileLoading && !profile && !profileError) {
+    return (
+      <ErrorBoundary>
+        <div className="container mx-auto px-4 py-8">
+          <div className="max-w-2xl mx-auto">
+            <Card>
+              <CardHeader className="text-center">
+                <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-blue-100 dark:bg-blue-900">
+                  <User className="h-8 w-8 text-blue-600 dark:text-blue-400" />
+                </div>
+                <CardTitle className="text-2xl">Complete Your Profile</CardTitle>
+                <CardDescription className="mt-2">
+                  Please complete onboarding to access your profile page.
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <p className="text-center text-gray-600 dark:text-gray-400">
+                  You need to finish setting up your profile before you can view or edit it.
+                </p>
+                <div className="flex justify-center gap-4">
+                  <Button
+                    onClick={() => {
+                      routerRef.current.push('/onboarding?redirect=/profile&reason=onboarding_required');
+                    }}
+                    className="bg-blue-600 hover:bg-blue-700"
+                  >
+                    Complete Onboarding
+                  </Button>
+                  <Button
+                    variant="outline"
+                    onClick={() => {
+                      routerRef.current.push('/dashboard');
+                    }}
+                  >
+                    Go to Dashboard
+                  </Button>
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+        </div>
+      </ErrorBoundary>
+    );
+  }
+
   if ((profileLoading && !profile && !profileError) || loadingTimeout) {
     // Show loading state with timeout message if taking too long
     return (
@@ -238,15 +285,50 @@ function ProfilePageContent() {
   }
 
   if (profileError) {
+    // Check if error indicates profile not found (onboarding required)
+    const isOnboardingError = profileError.toLowerCase().includes('not found') ||
+                              profileError.toLowerCase().includes('profile') &&
+                              profileError.toLowerCase().includes('doesn\'t exist');
+
     return (
       <ErrorBoundary>
         <div className="container mx-auto px-4 py-8">
-          <EnhancedErrorDisplay
-            title="Failed to load profile"
-            message={profileError}
-            details="We encountered an issue while loading your profile. This might be a temporary network problem."
-            tip="Check your internet connection and try again. If the problem persists, the service may be temporarily unavailable."
-            canRetry={true}
+          {isOnboardingError ? (
+            <div className="max-w-2xl mx-auto">
+              <Card>
+                <CardHeader className="text-center">
+                  <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-blue-100 dark:bg-blue-900">
+                    <User className="h-8 w-8 text-blue-600 dark:text-blue-400" />
+                  </div>
+                  <CardTitle className="text-2xl">Profile Setup Required</CardTitle>
+                  <CardDescription className="mt-2">
+                    Your profile needs to be set up before you can access it.
+                  </CardDescription>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  <p className="text-center text-gray-600 dark:text-gray-400">
+                    Please complete the onboarding process to create your profile.
+                  </p>
+                  <div className="flex justify-center gap-4">
+                    <Button
+                      onClick={() => {
+                        routerRef.current.push('/onboarding?redirect=/profile&reason=onboarding_required');
+                      }}
+                      className="bg-blue-600 hover:bg-blue-700"
+                    >
+                      Start Onboarding
+                    </Button>
+                  </div>
+                </CardContent>
+              </Card>
+            </div>
+          ) : (
+            <EnhancedErrorDisplay
+              title="Failed to load profile"
+              message={profileError}
+              details="We encountered an issue while loading your profile. This might be a temporary network problem."
+              tip="Check your internet connection and try again. If the problem persists, the service may be temporarily unavailable."
+              canRetry={true}
             onRetry={() => {
               void refetchRef.current();
             }}

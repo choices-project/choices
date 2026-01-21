@@ -5,16 +5,16 @@
 -- ============================================================================
 -- 1. Check RLS Status for poll_rankings
 -- ============================================================================
-SELECT 
+SELECT
   schemaname,
   tablename,
   rowsecurity as rls_enabled
-FROM pg_tables 
-WHERE schemaname = 'public' 
+FROM pg_tables
+WHERE schemaname = 'public'
   AND tablename = 'poll_rankings';
 
 -- List all policies on poll_rankings
-SELECT 
+SELECT
   schemaname,
   tablename,
   policyname,
@@ -23,8 +23,8 @@ SELECT
   cmd as command,
   qual as using_expression,
   with_check as with_check_expression
-FROM pg_policies 
-WHERE schemaname = 'public' 
+FROM pg_policies
+WHERE schemaname = 'public'
   AND tablename = 'poll_rankings'
 ORDER BY policyname;
 
@@ -38,16 +38,16 @@ ORDER BY policyname;
 -- ============================================================================
 -- 2. Check RLS Status for vote_integrity_scores
 -- ============================================================================
-SELECT 
+SELECT
   schemaname,
   tablename,
   rowsecurity as rls_enabled
-FROM pg_tables 
-WHERE schemaname = 'public' 
+FROM pg_tables
+WHERE schemaname = 'public'
   AND tablename = 'vote_integrity_scores';
 
 -- List all policies on vote_integrity_scores
-SELECT 
+SELECT
   schemaname,
   tablename,
   policyname,
@@ -56,8 +56,8 @@ SELECT
   cmd as command,
   qual as using_expression,
   with_check as with_check_expression
-FROM pg_policies 
-WHERE schemaname = 'public' 
+FROM pg_policies
+WHERE schemaname = 'public'
   AND tablename = 'vote_integrity_scores'
 ORDER BY policyname;
 
@@ -70,16 +70,16 @@ ORDER BY policyname;
 -- ============================================================================
 -- 3. Check RLS Status for integrity_signals
 -- ============================================================================
-SELECT 
+SELECT
   schemaname,
   tablename,
   rowsecurity as rls_enabled
-FROM pg_tables 
-WHERE schemaname = 'public' 
+FROM pg_tables
+WHERE schemaname = 'public'
   AND tablename = 'integrity_signals';
 
 -- List all policies on integrity_signals
-SELECT 
+SELECT
   schemaname,
   tablename,
   policyname,
@@ -88,8 +88,8 @@ SELECT
   cmd as command,
   qual as using_expression,
   with_check as with_check_expression
-FROM pg_policies 
-WHERE schemaname = 'public' 
+FROM pg_policies
+WHERE schemaname = 'public'
   AND tablename = 'integrity_signals'
 ORDER BY policyname;
 
@@ -102,7 +102,7 @@ ORDER BY policyname;
 -- ============================================================================
 -- 4. Check Table Permissions (GRANT statements)
 -- ============================================================================
-SELECT 
+SELECT
   grantee,
   table_schema,
   table_name,
@@ -116,7 +116,7 @@ ORDER BY table_name, grantee, privilege_type;
 -- ============================================================================
 -- 5. Summary: Count policies per table
 -- ============================================================================
-SELECT 
+SELECT
   tablename,
   COUNT(*) as policy_count,
   STRING_AGG(policyname, ', ' ORDER BY policyname) as policy_names
@@ -129,7 +129,7 @@ ORDER BY tablename;
 -- ============================================================================
 -- 6. Check if service_role policies exist (critical for admin client)
 -- ============================================================================
-SELECT 
+SELECT
   tablename,
   policyname,
   roles,
@@ -141,3 +141,28 @@ WHERE schemaname = 'public'
 ORDER BY tablename, policyname;
 
 -- Expected: Should see service_role policies for all three tables
+
+-- ============================================================================
+-- 7. Check agent_operations table (if agent infrastructure is set up)
+-- ============================================================================
+SELECT
+  schemaname,
+  tablename,
+  rowsecurity as rls_enabled
+FROM pg_tables
+WHERE schemaname = 'public'
+  AND tablename = 'agent_operations';
+
+-- Check agent_operations policies
+SELECT
+  tablename,
+  policyname,
+  roles,
+  cmd as command
+FROM pg_policies
+WHERE schemaname = 'public'
+  AND tablename = 'agent_operations'
+  AND 'service_role' = ANY(roles)
+ORDER BY policyname;
+
+-- Note: Run verify_agent_setup.sql for comprehensive agent infrastructure verification

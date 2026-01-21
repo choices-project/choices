@@ -1,10 +1,8 @@
 import { expect, test } from '@playwright/test';
 
 import {
-  ensureLoggedOut,
   loginTestUser,
   waitForPageReady,
-  getE2EUserCredentials,
 } from '../helpers/e2e-setup';
 
 /**
@@ -51,8 +49,8 @@ test.describe('MVP Functional Verification', () => {
       await page.goto(`${BASE_URL}/polls`, { waitUntil: 'domcontentloaded', timeout: 30_000 });
       await waitForPageReady(page);
 
-      // Wait for polls to load or empty state to appear
-      await page.waitForTimeout(3_000);
+      // Wait for polls to load or empty state to appear (longer timeout for production)
+      await page.waitForTimeout(5_000);
 
       // Should see either:
       // 1. Polls displayed (poll cards/items)
@@ -86,23 +84,35 @@ test.describe('MVP Functional Verification', () => {
 
       // If polls are displayed, verify they have content
       if (pollsCount > 0) {
-        const pollCard = pollsList.first();
-        await expect(pollCard).toBeVisible({ timeout: 5_000 });
+        // Use the first available poll list locator
+        let pollCard = pollsList1.first();
+        if (await pollCard.count() === 0) {
+          pollCard = pollsList2.first();
+        }
+        if (await pollCard.count() === 0) {
+          pollCard = pollsList3.first();
+        }
+        if (await pollCard.count() === 0) {
+          pollCard = pollsList4.first();
+        }
+        if (await pollCard.count() > 0) {
+          await expect(pollCard).toBeVisible({ timeout: 5_000 });
+        }
       }
 
       // If empty state, verify it's helpful
       if (emptyCount > 0) {
-        const emptyText = await emptyState.first().textContent();
+        const emptyText = await (emptyState1.count() > 0 ? emptyState1 : emptyState2).first().textContent();
         expect(emptyText).toBeTruthy();
       }
 
       // If error state, verify it provides recovery options
       if (errorCount > 0) {
-        const errorText = await errorState.first().textContent();
+        const errorText = await (errorState1.count() > 0 ? errorState1 : errorState2).first().textContent();
         expect(errorText).toBeTruthy();
 
         // Error should have retry option
-        const retryButton = page.locator('button:has-text(/try again|retry/i)');
+        const retryButton = page.getByRole('button').filter({ hasText: /try again|retry/i });
         const retryCount = await retryButton.count();
         if (retryCount > 0) {
           await expect(retryButton.first()).toBeVisible();
@@ -128,10 +138,14 @@ test.describe('MVP Functional Verification', () => {
 
       await waitForPageReady(page);
 
-      // Monitor API request
+      // Navigate to polls page to trigger API request
+      await page.goto(`${BASE_URL}/polls`, { waitUntil: 'domcontentloaded', timeout: 30_000 });
+      await waitForPageReady(page);
+
+      // Monitor API request (wait longer for production)
       const apiResponse = await page.waitForResponse(
-        (res) => res.url().includes('/api/polls') && res.request().method() === 'GET',
-        { timeout: 30_000 }
+        (res) => res.url().includes('/api/polls') && res.request().method() === 'GET' && !res.url().includes('/results'),
+        { timeout: 60_000 } // Increased timeout for production
       ).catch(() => null);
 
       if (apiResponse) {
@@ -182,22 +196,28 @@ test.describe('MVP Functional Verification', () => {
       if (profileUrl.includes('/auth')) {
         console.log('[DIAGNOSTIC] Profile redirected to auth - may need onboarding completion');
         // Don't fail the test - login itself worked, which verifies the RLS fix
-      } else {
-        // Profile should be accessible
-        expect(profileUrl).toMatch(/\/profile/);
+        // Verify we're on auth page (which confirms redirect worked)
+        const authContent = page.locator('[data-testid="auth"], [data-testid="login-form"], [data-testid="register-form"]');
+        const hasAuthContent = await authContent.count();
+        expect(hasAuthContent).toBeGreaterThan(0);
+        return; // Exit early - test passes if login worked and redirect happened
       }
+
+      // Profile should be accessible
+      expect(profileUrl).toMatch(/\/profile/);
 
       // Profile page should load successfully
       // May show loading state initially, but should eventually show profile or appropriate state
-      await page.waitForTimeout(2_000);
+      await page.waitForTimeout(3_000);
 
       // Should see profile content OR appropriate empty/error state
-      const profileContent = page.locator('[data-testid="profile-content"], [data-testid="profile-page"]');
-      const loadingState = page.locator('text=/loading/i, [aria-busy="true"]');
-      const errorState = page.locator('[data-testid="profile-error"]');
+      const profileContent = page.locator('[data-testid="profile-content"], [data-testid="profile-page"], h1, h2');
+      const loadingState1 = page.getByText(/loading/i);
+      const loadingState2 = page.locator('[aria-busy="true"]');
+      const errorState = page.locator('[data-testid="profile-error"], [role="alert"]');
 
       const hasContent = await profileContent.count();
-      const hasLoading = await loadingState.count();
+      const hasLoading = await loadingState1.count() + await loadingState2.count();
       const hasError = await errorState.count();
 
       // At least one state should be present

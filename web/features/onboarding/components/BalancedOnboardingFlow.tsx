@@ -13,7 +13,7 @@
 
 'use client';
 
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 
 import { PasskeyRegister } from '@/features/auth/components/PasskeyRegister';
@@ -968,7 +968,14 @@ const BalancedOnboardingFlow: React.FC = () => {
   // Ref for stable translation function (even though useI18n stabilizes it, using ref for consistency)
   const tRef = useRef(t);
   useEffect(() => { tRef.current = t; }, [t]);
-  
+
+  // Get redirect parameters from URL
+  const searchParams = useSearchParams();
+  const redirectToRef = useRef<string | null>(null);
+  useEffect(() => {
+    redirectToRef.current = searchParams.get('redirect');
+  }, [searchParams]);
+
   const currentStep = useOnboardingStep();
   const onboardingData = useOnboardingData();
   const isFlowCompleted = onboardingData?.isCompleted ?? false;
@@ -1019,7 +1026,7 @@ const BalancedOnboardingFlow: React.FC = () => {
     clearAllData,
   } = useOnboardingActions();
   const { signOut: resetUserState } = useUserActions();
-  
+
   // Refs for store actions used in useEffect/callbacks
   const restartOnboardingRef = useRef(restartOnboarding);
   const clearAllDataRef = useRef(clearAllData);
@@ -1027,7 +1034,7 @@ const BalancedOnboardingFlow: React.FC = () => {
   useEffect(() => { restartOnboardingRef.current = restartOnboarding; }, [restartOnboarding]);
   useEffect(() => { clearAllDataRef.current = clearAllData; }, [clearAllData]);
   useEffect(() => { resetUserStateRef.current = resetUserState; }, [resetUserState]);
-  
+
   const loading = useOnboardingLoading();
   const error = useOnboardingError();
 
@@ -1045,7 +1052,7 @@ const BalancedOnboardingFlow: React.FC = () => {
     return () => {
       clearAllDataRef.current();
     };
-     
+
   }, []);
 
   useEffect(() => {
@@ -1079,7 +1086,7 @@ const BalancedOnboardingFlow: React.FC = () => {
     if (mainRegionRef.current) {
       mainRegionRef.current.focus();
     }
-  }, [currentStep, stepLabels, totalSteps]);  
+  }, [currentStep, stepLabels, totalSteps]);
 
   useEffect(() => {
     if (!error || previousErrorRef.current === error) {
@@ -1089,7 +1096,7 @@ const BalancedOnboardingFlow: React.FC = () => {
     const message = tRef.current('onboarding.progress.live.error', { message: error });
     setLiveAnnouncement(message);
     ScreenReaderSupport.announce(message, 'assertive');
-  }, [error]);  
+  }, [error]);
 
   useEffect(() => {
     if (!isFlowCompleted) {
@@ -1098,7 +1105,7 @@ const BalancedOnboardingFlow: React.FC = () => {
     const completionMessage = tRef.current('onboarding.progress.live.completed');
     setLiveAnnouncement(completionMessage);
     ScreenReaderSupport.announce(completionMessage, 'polite');
-  }, [isFlowCompleted]);  
+  }, [isFlowCompleted]);
 
   // Check if user has already completed onboarding
   useEffect(() => {
@@ -1113,7 +1120,9 @@ const BalancedOnboardingFlow: React.FC = () => {
 
           if (hasCompleted) {
             const { safeNavigate } = await import('@/lib/utils/ssr-safe');
-            safeNavigate('/dashboard');
+            // Respect redirect parameter if user already completed onboarding
+            const redirectTo = redirectToRef.current || '/dashboard';
+            safeNavigate(redirectTo);
           }
         } catch (err) {
           logger.error('Error during onboarding completion check:', err);
@@ -1205,12 +1214,22 @@ const BalancedOnboardingFlow: React.FC = () => {
       completeOnboarding();
       clearAllData();
 
-      // Redirect to main app
-      window.location.href = '/civics';
+      // Get redirect destination from URL parameters (stored in ref)
+      const redirectTo = redirectToRef.current || '/dashboard';
+      const redirectReason = searchParams.get('reason');
+
+      // Log redirect reason for debugging
+      if (redirectReason) {
+        logger.debug('Onboarding completed with redirect reason:', redirectReason);
+      }
+
+      // Redirect to requested destination or default to dashboard
+      window.location.href = redirectTo;
     } catch (error) {
       logger.error('Error completing onboarding:', error);
       // Still redirect even if database update fails
-      window.location.href = '/civics';
+      const redirectTo = redirectToRef.current || '/dashboard';
+      window.location.href = redirectTo;
     }
   };
 
