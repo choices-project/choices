@@ -1,6 +1,5 @@
 'use client'
 
-
 import { AlertCircle, CheckCircle2, Fingerprint, Loader2 } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import React, { useCallback, useEffect, useRef } from 'react';
@@ -18,6 +17,9 @@ import {
   useUserLoading,
 } from '@/features/auth/lib/store';
 import { useProfileData } from '@/features/profile/hooks/use-profile';
+
+import { Button } from '@/components/ui/button';
+import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/components/ui/card';
 
 export default function BiometricSetupPage() {
   const router = useRouter();
@@ -44,7 +46,7 @@ export default function BiometricSetupPage() {
     if (!isUserLoading && !isAuthenticated) {
       routerRef.current.replace('/auth?redirectTo=/profile/biometric-setup');
     }
-  }, [isAuthenticated, isUserLoading]); // Removed router
+  }, [isAuthenticated, isUserLoading]);
 
   useEffect(() => {
     if (biometricSuccess) {
@@ -54,7 +56,7 @@ export default function BiometricSetupPage() {
       return () => window.clearTimeout(timeout);
     }
     return undefined;
-  }, [biometricSuccess]); // Removed router
+  }, [biometricSuccess]);
 
   const handleSuccess = useCallback(() => {
     // Success state handled by store; effect above triggers redirect.
@@ -66,78 +68,78 @@ export default function BiometricSetupPage() {
 
   if (isSupported === null || isAvailable === null || profileLoading || isUserLoading) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50 flex items-center justify-center">
+      <main id="main-content" role="main" className="min-h-screen bg-background flex items-center justify-center">
         <div className="text-center">
-          <Loader2 className="h-8 w-8 animate-spin mx-auto mb-4 text-blue-600" />
+          <Loader2 className="h-8 w-8 animate-spin mx-auto mb-4 text-primary" />
+          <p className="text-muted-foreground">Checking device support...</p>
         </div>
-      </div>
+      </main>
     );
   }
 
   if (!isSupported || !isAvailable) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50 flex items-center justify-center">
-        <div className="max-w-md w-full space-y-8 p-6">
-          <div className="text-center">
-            <AlertCircle className="h-12 w-12 text-red-500 mx-auto mb-4" />
-            <h1 className="text-2xl font-bold text-gray-900 mb-2">
-              Biometric Authentication Not Supported
-            </h1>
-            <p className="text-gray-600 mb-6">
+      <main id="main-content" role="main" className="min-h-screen bg-background flex items-center justify-center py-12 px-4">
+        <Card className="max-w-md w-full bg-card dark:bg-card border-border">
+          <CardHeader className="text-center">
+            <AlertCircle className="h-12 w-12 text-destructive mx-auto mb-4" />
+            <CardTitle className="text-2xl text-foreground">Biometric Authentication Not Supported</CardTitle>
+            <CardDescription className="mt-2 text-muted-foreground">
               Your device or browser doesn&apos;t support biometric authentication. You can still use
               email and password login.
-            </p>
-            <button
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <Button
               onClick={() => routerRef.current.push('/profile')}
-              className="w-full bg-blue-600 text-white py-2 px-4 rounded-md hover:bg-blue-700 transition-colors"
+              className="w-full"
             >
               Back to Profile
-            </button>
-          </div>
-        </div>
-      </div>
+            </Button>
+          </CardContent>
+        </Card>
+      </main>
     );
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50 flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8">
-      <div className="max-w-md w-full space-y-8">
-        <div className="text-center">
-          <Fingerprint className="h-12 w-12 text-blue-600 mx-auto mb-4" />
-          <h1 className="text-3xl font-bold text-gray-900 mb-2">Set Up Biometric Authentication</h1>
-          <p className="text-gray-600">
+    <main id="main-content" role="main" className="min-h-screen bg-background flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8">
+      <Card className="max-w-md w-full bg-card dark:bg-card border-border">
+        <CardHeader className="text-center">
+          <Fingerprint className="h-12 w-12 text-primary mx-auto mb-4" />
+          <CardTitle className="text-3xl text-foreground">Set Up Biometric Authentication</CardTitle>
+          <CardDescription className="mt-2 text-muted-foreground">
             Use your fingerprint, face, or other biometric to sign in securely
-          </p>
-        </div>
-
-        {biometricError && (
-          <div className="bg-red-50 border border-red-200 rounded-md p-4">
-            <div className="flex">
-              <AlertCircle className="h-5 w-5 text-red-400" />
-              <div className="ml-3">
-                <p className="text-sm text-red-700">{biometricError}</p>
+          </CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-6">
+          {biometricError && (
+            <div className="bg-destructive/10 border border-destructive/20 rounded-md p-4">
+              <div className="flex">
+                <AlertCircle className="h-5 w-5 text-destructive shrink-0" />
+                <div className="ml-3">
+                  <p className="text-sm text-destructive">{biometricError}</p>
+                </div>
               </div>
             </div>
-          </div>
-        )}
+          )}
 
-        {biometricSuccess && (
-          <div className="bg-green-50 border border-green-200 rounded-md p-4">
-            <div className="flex">
-              <CheckCircle2 className="h-5 w-5 text-green-400" />
-              <div className="ml-3">
-                <p className="text-sm text-green-700">
-                  Biometric authentication is ready to use. Redirecting…
-                </p>
+          {biometricSuccess && (
+            <div className="bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 rounded-md p-4">
+              <div className="flex">
+                <CheckCircle2 className="h-5 w-5 text-green-600 dark:text-green-400 shrink-0" />
+                <div className="ml-3">
+                  <p className="text-sm text-green-700 dark:text-green-300">
+                    Biometric authentication is ready to use. Redirecting…
+                  </p>
+                </div>
               </div>
             </div>
-          </div>
-        )}
+          )}
 
-        <div className="space-y-6">
-          <div className="bg-blue-50 border border-blue-200 rounded-md p-4">
-            <h3 className="text-sm font-medium text-blue-800 mb-2">How it works:</h3>
-            <ul className="text-sm text-blue-700 space-y-1">
+          <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-md p-4">
+            <h3 className="text-sm font-medium text-blue-900 dark:text-blue-100 mb-2">How it works:</h3>
+            <ul className="text-sm text-blue-700 dark:text-blue-300 space-y-1">
               <li>• Touch your fingerprint sensor or use face recognition</li>
               <li>• Your biometric data stays on your device</li>
               <li>• No passwords needed for future logins</li>
@@ -152,20 +154,21 @@ export default function BiometricSetupPage() {
           />
 
           {hasCredentials && (
-            <p className="text-sm text-green-700 text-center">
+            <p className="text-sm text-green-600 dark:text-green-400 text-center">
               You already have a passkey registered. Registering again will add another credential.
             </p>
           )}
 
-          <button
+          <Button
             onClick={() => routerRef.current.push('/profile')}
-            className="w-full text-gray-600 hover:text-gray-800 transition-colors"
+            variant="ghost"
+            className="w-full text-muted-foreground hover:text-foreground"
             disabled={isRegistering}
           >
             Skip for now
-          </button>
-        </div>
-      </div>
-    </div>
+          </Button>
+        </CardContent>
+      </Card>
+    </main>
   );
 }
