@@ -306,8 +306,32 @@ export default function VotingInterface({
     }
   };
 
+  // Normalize voting method to handle variations like 'ranked_choice' -> 'ranked'
+  const normalizeVotingMethod = (method: string): string => {
+    const normalized = method.toLowerCase();
+    switch (normalized) {
+      case 'single':
+      case 'single_choice':
+        return 'single';
+      case 'multiple':
+      case 'multiple_choice':
+        return 'multiple';
+      case 'ranked':
+      case 'ranked_choice':
+        return 'ranked';
+      case 'approval':
+        return 'approval';
+      case 'quadratic':
+        return 'quadratic';
+      case 'range':
+        return 'range';
+      default:
+        return normalized;
+    }
+  };
+
   const renderVotingComponent = () => {
-    const votingMethod = (poll.votingMethod ?? 'single').toLowerCase();
+    const votingMethod = normalizeVotingMethod(poll.votingMethod ?? 'single');
 
     switch (votingMethod) {
       case 'approval':

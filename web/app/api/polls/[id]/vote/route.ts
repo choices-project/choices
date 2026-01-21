@@ -492,14 +492,14 @@ export const POST = withErrorHandling(async (request: NextRequest, { params }: {
     }
 
     if (!optionByIndex.has(choiceIndex)) {
-      logger.warn('Vote submission choice index out of range', { 
-        pollId, 
-        choiceIndex, 
+      logger.warn('Vote submission choice index out of range', {
+        pollId,
+        choiceIndex,
         availableIndices: Array.from(optionByIndex.keys()),
-        optionsCount: options.length 
+        optionsCount: options.length
       });
-      return validationError({ 
-        choice: `Selected option index ${choiceIndex} is not valid. This poll has ${options.length} option${options.length === 1 ? '' : 's'} (indices 0-${options.length - 1}).` 
+      return validationError({
+        choice: `Selected option index ${choiceIndex} is not valid. This poll has ${options.length} option${options.length === 1 ? '' : 's'} (indices 0-${options.length - 1}).`
       });
     }
 

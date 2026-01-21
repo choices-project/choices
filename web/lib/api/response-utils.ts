@@ -119,7 +119,7 @@ export function errorResponse(
   code?: string
 ): NextResponse<ApiErrorResponse> {
   const isProduction = process.env.NODE_ENV === 'production';
-  
+
   // In production, sanitize error messages to prevent information leakage
   // Don't expose internal system details, file paths, or stack traces
   let sanitizedError = error;
@@ -130,13 +130,13 @@ export function errorResponse(
       .replace(/\/[^\s]+/g, '') // Remove file paths
       .replace(/Error:\s*/gi, '') // Remove "Error:" prefix
       .trim();
-    
+
     // If error is empty after sanitization, use generic message
     if (!sanitizedError) {
       sanitizedError = 'An error occurred';
     }
   }
-  
+
   const payload: ApiErrorResponse = {
     success: false,
     error: sanitizedError,
@@ -289,16 +289,16 @@ export function withErrorHandling<T extends any[]>(
       return await handler(...args);
     } catch (error) {
       // Log full error details for debugging (server-side only)
-      const errorDetails = error instanceof Error 
+      const errorDetails = error instanceof Error
         ? {
             message: error.message,
             stack: error.stack,
             name: error.name,
           }
         : { error: String(error) };
-      
+
       logger.error('API Error:', errorDetails);
-      
+
       // Use serverError which already handles production sanitization
       return serverError(error);
     }

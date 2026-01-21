@@ -546,12 +546,12 @@ export default function PollClient({ poll }: PollClientProps) {
             errorMessage = Array.isArray(fieldErrors) ? fieldErrors[0] : String(fieldErrors[0]);
           }
         }
-        logger.error('Vote submission failed', { 
-          pollId: poll.id, 
+        logger.error('Vote submission failed', {
+          pollId: poll.id,
           status: response.status,
           error: errorMessage,
           errorData,
-          requestBody 
+          requestBody
         });
         throw new Error(errorMessage);
       }
