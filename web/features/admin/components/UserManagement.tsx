@@ -144,7 +144,8 @@ export default function UserManagement({ onUserUpdate, onUserDelete }: UserManag
     const existingUser = filteredUsers.find((user: AdminUser) => user.id === userId);
     updateUserRole(userId, newRole);
     if (existingUser) {
-      onUserUpdate?.({ ...existingUser, role: newRole });
+      // onUserUpdate expects (userId, updates) signature
+      onUserUpdate?.(userId, { role: newRole });
     }
     performanceMetrics.addMetric('user-role-change', 1);
   };
@@ -422,6 +423,7 @@ export default function UserManagement({ onUserUpdate, onUserDelete }: UserManag
                           const newRole = prompt(`Edit user role for ${user.email}:\n\nCurrent: ${user.role}\n\nEnter new role (user/moderator/admin):`, user.role);
                           if (newRole && newRole !== user.role && ['user', 'moderator', 'admin'].includes(newRole)) {
                             handleUserRoleChange(user.id, newRole);
+                            // onUserUpdate expects (userId, updates) signature
                             onUserUpdate?.(user.id, { role: newRole as AdminUser['role'] });
                           }
                         }}
