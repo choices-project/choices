@@ -74,7 +74,7 @@ export default function CreatePollPage() {
   const safeT = useCallback((key: string, fallback: string, params?: Record<string, string | number>): string => {
     const result = params ? t(key, params) : t(key);
     // Check if result is the key itself or a generic placeholder
-    if (result === key || result === 'Label' || result === 'Hint' || result === 'Title' || result === 'Subtitle' || result === 'MaxHint' || result.includes('polls.create.')) {
+    if (result === key || result === 'Label' || result === 'Hint' || result === 'Title' || result === 'Subtitle' || result === 'MaxHint' || result === 'Placeholder' || result.includes('polls.create.')) {
       return fallback;
     }
     return result;
