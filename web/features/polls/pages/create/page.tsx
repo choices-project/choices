@@ -62,7 +62,6 @@ export default function CreatePollPage() {
     steps,
     activeTip,
     canProceed,
-    canGoBack,
     isLoading,
     categories,
     actions,
@@ -70,6 +69,13 @@ export default function CreatePollPage() {
     goToPreviousStep,
     submit,
   } = usePollCreateController()
+
+  // Handle clickable step navigation
+  const handleStepClick = useCallback((stepIndex: number) => {
+    if (actions.goToStep && stepIndex >= 0 && stepIndex < POLL_CREATION_STEPS.length) {
+      actions.goToStep(stepIndex);
+    }
+  }, [actions.goToStep])
 
   const PRIVACY_LABELS: Record<string, string> = useMemo(() => ({
     public: t('polls.create.privacy.public'),
@@ -349,7 +355,11 @@ export default function CreatePollPage() {
     actions.clearFieldError("privacyLevel")
   }
 
-  const handleSubmit = async () => {
+  const handleSubmit = async (e?: React.MouseEvent) => {
+    if (e) {
+      e.preventDefault();
+      e.stopPropagation();
+    }
     const result = await submit();
 
     if (!result.success) {
@@ -850,7 +860,7 @@ export default function CreatePollPage() {
                                 {index + 1}
                               </div>
                               <div className="flex-1">
-                                <span className="text-sm font-medium">{option || `Option ${index + 1}`}</span>
+                                <span className="text-sm font-semibold text-foreground">{option || `Option ${index + 1}`}</span>
                               </div>
                               <div className="flex-shrink-0 text-xs text-muted-foreground">
                                 Rank: <span className="font-semibold text-purple-600">{index + 1}</span>
@@ -863,7 +873,7 @@ export default function CreatePollPage() {
                       </div>
                       <div className="mt-3 p-3 rounded-lg bg-muted/50 border border-dashed">
                         <p className="text-xs text-muted-foreground">
-                          <strong>How it works:</strong> Voters will drag options to reorder them, with 1st being their top choice. 
+                          <strong>How it works:</strong> Voters will drag options to reorder them, with 1st being their top choice.
                           The system uses instant runoff to find the option with majority support.
                         </p>
                       </div>
@@ -877,7 +887,7 @@ export default function CreatePollPage() {
                             <span className="flex h-6 w-6 items-center justify-center rounded-full border-2 border-primary text-primary text-sm font-semibold shrink-0" aria-hidden>
                               {index + 1}
                             </span>
-                            <span className="text-sm font-medium">{option || `Option ${index + 1}`}</span>
+                            <span className="text-sm font-semibold text-foreground">{option || `Option ${index + 1}`}</span>
                           </div>
                         ))}
                       {data.options.filter((option) => option.trim().length > 0).length === 0 && (
@@ -935,7 +945,7 @@ export default function CreatePollPage() {
           </p>
         </header>
 
-        <WizardProgress steps={steps} />
+        <WizardProgress steps={steps} onStepClick={handleStepClick} currentStep={currentStep} />
 
         {activeTip && (
           <aside className="mb-6 rounded-lg border border-primary/20 bg-primary/5 p-4" aria-live="polite">
@@ -983,9 +993,11 @@ export default function CreatePollPage() {
             onClick={(e) => {
               e.preventDefault();
               e.stopPropagation();
-              goToPreviousStep();
+              if (currentStep > 0) {
+                goToPreviousStep();
+              }
             }}
-            disabled={!canGoBack || isLoading}
+            disabled={currentStep === 0 || isLoading}
             className="w-full sm:w-auto"
           >
             <ArrowLeft className="mr-2 h-4 w-4" />
@@ -994,27 +1006,27 @@ export default function CreatePollPage() {
 
           <div className="flex w-full flex-col gap-3 sm:w-auto sm:flex-row">
             {currentStep === POLL_CREATION_STEPS.length - 1 ? (
-              <Button 
-                type="button" 
-                className="w-full" 
+              <Button
+                type="button"
+                className="w-full"
                 onClick={(e) => {
                   e.preventDefault();
                   e.stopPropagation();
                   handleSubmit();
-                }} 
+                }}
                 disabled={!canProceed || isLoading}
               >
                 {isLoading ? (t('polls.create.page.buttons.creating') || 'Creating...') : (t('polls.create.page.buttons.publish') || 'Publish poll')}
               </Button>
             ) : (
-              <Button 
-                type="button" 
-                className="w-full" 
+              <Button
+                type="button"
+                className="w-full"
                 onClick={(e) => {
                   e.preventDefault();
                   e.stopPropagation();
                   goToNextStep();
-                }} 
+                }}
                 disabled={!canProceed || isLoading}
               >
                 {t('polls.create.page.buttons.next') || 'Next'}
@@ -1202,41 +1214,65 @@ type WizardProgressProps = {
     isCompleted: boolean;
     hasError: boolean;
   }>;
+  onStepClick?: (stepIndex: number) => void;
+  currentStep: number;
 };
 
-const WizardProgress = ({ steps }: WizardProgressProps) => {
+const WizardProgress = ({ steps, onStepClick, currentStep }: WizardProgressProps) => {
   const { t } = useI18n();
   return (
-    <nav aria-label={t('polls.create.wizard.progress.ariaLabel')} className="mb-8">
+    <nav aria-label={t('polls.create.wizard.progress.ariaLabel') || 'Poll creation steps'} className="mb-8">
       <ol className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-        {steps.map((step, index) => (
-          <li key={step.title} className="flex flex-1 items-center gap-2">
-            <div
-              className={cn(
-                'flex h-9 w-9 items-center justify-center rounded-full border text-sm font-medium transition',
-                step.isCompleted
-                  ? 'border-green-500 bg-green-500 text-white'
-                  : step.isCurrent
-                  ? 'border-primary bg-primary text-primary-foreground'
-                  : 'border-border bg-background text-muted-foreground',
-              )}
-              aria-current={step.isCurrent ? 'step' : undefined}
-            >
-              {step.isCompleted ? (
-                <CheckCircle2 className="h-5 w-5" aria-hidden />
-              ) : step.hasError ? (
-                <AlertCircle className="h-5 w-5" aria-hidden />
-              ) : (
-                <span>{index + 1}</span>
-              )}
-            </div>
-            <div className="text-left">
-              <p className="text-sm font-semibold text-foreground">{step.title}</p>
-              <p className="text-xs text-muted-foreground">{step.subtitle}</p>
-            </div>
-            {index < steps.length - 1 && <div className="ml-2 hidden h-px flex-1 bg-border sm:block" />}
-          </li>
-        ))}
+        {steps.map((step, index) => {
+          const isClickable = onStepClick && (step.isCompleted || index <= currentStep);
+          const handleClick = () => {
+            if (isClickable && onStepClick) {
+              onStepClick(index);
+            }
+          };
+          
+          return (
+            <li key={step.title} className="flex flex-1 items-center gap-2">
+              <button
+                type="button"
+                onClick={handleClick}
+                disabled={!isClickable}
+                className={cn(
+                  'flex flex-1 items-center gap-2 text-left transition-opacity',
+                  isClickable ? 'cursor-pointer hover:opacity-80' : 'cursor-default',
+                  !isClickable && 'opacity-60'
+                )}
+                aria-label={`Go to step ${index + 1}: ${step.title}`}
+                aria-current={step.isCurrent ? 'step' : undefined}
+              >
+                <div
+                  className={cn(
+                    'flex h-9 w-9 items-center justify-center rounded-full border text-sm font-medium transition',
+                    step.isCompleted
+                      ? 'border-green-500 bg-green-500 text-white'
+                      : step.isCurrent
+                      ? 'border-primary bg-primary text-primary-foreground'
+                      : 'border-border bg-background text-muted-foreground',
+                    isClickable && 'hover:scale-105'
+                  )}
+                >
+                  {step.isCompleted ? (
+                    <CheckCircle2 className="h-5 w-5" aria-hidden />
+                  ) : step.hasError ? (
+                    <AlertCircle className="h-5 w-5" aria-hidden />
+                  ) : (
+                    <span>{index + 1}</span>
+                  )}
+                </div>
+                <div className="text-left">
+                  <p className="text-sm font-semibold text-foreground">{step.title}</p>
+                  <p className="text-xs text-muted-foreground">{step.subtitle}</p>
+                </div>
+              </button>
+              {index < steps.length - 1 && <div className="ml-2 hidden h-px flex-1 bg-border sm:block" />}
+            </li>
+          );
+        })}
       </ol>
     </nav>
   );

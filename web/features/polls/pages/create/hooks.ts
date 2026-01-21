@@ -44,6 +44,7 @@ export const usePollCreateController = () => {
   const {
     nextStep,
     prevStep,
+    goToStep,
     updateData,
     updateSettings,
     addOption,
@@ -165,6 +166,7 @@ export const usePollCreateController = () => {
       clearFieldError,
       clearAllErrors,
       resetWizard,
+      goToStep,
     },
     goToNextStep,
     goToPreviousStep,
