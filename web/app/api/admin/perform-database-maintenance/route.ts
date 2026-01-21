@@ -89,7 +89,7 @@ export const POST = withErrorHandling(async (_request: NextRequest) => {
     // 2. General ANALYZE on database
     try {
       const analyzeStart = Date.now();
-      const { error: analyzeError } = await (supabase.rpc as any)('analyze_database');
+      const { error: analyzeError } = await (supabase.rpc as any)('analyze_database', {});
 
       const duration = Date.now() - analyzeStart;
 

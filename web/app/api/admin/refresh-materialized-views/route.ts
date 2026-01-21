@@ -34,8 +34,8 @@ export const POST = withErrorHandling(async (_request: NextRequest) => {
     // Type assertion needed since exec_sql may not exist in schema
     const { data: views, error: viewsError } = await (supabase.rpc as any)('exec_sql', {
       sql: `
-        SELECT schemaname, matviewname 
-        FROM pg_matviews 
+        SELECT schemaname, matviewname
+        FROM pg_matviews
         WHERE schemaname = 'public'
         ORDER BY matviewname;
       `,
@@ -44,11 +44,11 @@ export const POST = withErrorHandling(async (_request: NextRequest) => {
     if (viewsError) {
       // If exec_sql RPC doesn't exist, try direct query approach
       logger.warn('RPC exec_sql not available, using alternative method', viewsError);
-      
+
       // Alternative: Use a PostgreSQL function if available, or refresh common views
       // For now, we'll attempt to refresh via a direct SQL execution pattern
       // Note: Supabase may require creating a function in the database first
-      
+
       const refreshedViews: string[] = [];
       const errors: string[] = [];
 

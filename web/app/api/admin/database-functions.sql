@@ -1,5 +1,5 @@
 -- Database Functions for Admin Maintenance Operations
--- 
+--
 -- These PostgreSQL functions need to be created in your Supabase database
 -- to enable the refresh-materialized-views and perform-database-maintenance endpoints.
 --
