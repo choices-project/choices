@@ -188,15 +188,42 @@ export default function AuthPageClient() {
         // Also sync if value is empty but we had a value before (reset case)
         if (currentValue !== syncedValue) {
           emailInput.setAttribute('data-synced-value', currentValue || '');
+          
+          // CRITICAL FIX: Update React state FIRST, then dispatch events in next tick
+          // This ensures React's controlled input system recognizes the change
           setFormData(prev => {
             if (prev.email !== currentValue) {
-              // Trigger both input and change events to ensure React processes them
-              // Use InputEvent and ChangeEvent for better React compatibility
-              const inputEvent = new Event('input', { bubbles: true, cancelable: true });
-              const changeEvent = new Event('change', { bubbles: true, cancelable: true });
-              emailInput.dispatchEvent(inputEvent);
-              emailInput.dispatchEvent(changeEvent);
-              return { ...prev, email: currentValue };
+              // Update state immediately - React will re-render
+              const newState = { ...prev, email: currentValue };
+              
+              // Use setTimeout to dispatch events after state update is queued
+              // This ensures React processes the state change before events fire
+              setTimeout(() => {
+                // Create proper InputEvent with correct properties for React
+                const inputEvent = new InputEvent('input', { 
+                  bubbles: true, 
+                  cancelable: true,
+                  data: currentValue,
+                  inputType: 'insertText',
+                  isComposing: false
+                });
+                
+                // Also dispatch change event for form validation
+                const changeEvent = new Event('change', { 
+                  bubbles: true, 
+                  cancelable: true 
+                });
+                
+                // Dispatch events in correct order
+                emailInput.dispatchEvent(inputEvent);
+                emailInput.dispatchEvent(changeEvent);
+                
+                // Trigger focus/blur cycle to ensure validation runs
+                emailInput.focus();
+                setTimeout(() => emailInput.blur(), 10);
+              }, 0);
+              
+              return newState;
             }
             return prev;
           });
@@ -210,15 +237,42 @@ export default function AuthPageClient() {
         // Also sync if value is empty but we had a value before (reset case)
         if (currentValue !== syncedValue) {
           passwordInput.setAttribute('data-synced-value', currentValue || '');
+          
+          // CRITICAL FIX: Update React state FIRST, then dispatch events in next tick
+          // This ensures React's controlled input system recognizes the change
           setFormData(prev => {
             if (prev.password !== currentValue) {
-              // Trigger both input and change events to ensure React processes them
-              // Use InputEvent and ChangeEvent for better React compatibility
-              const inputEvent = new Event('input', { bubbles: true, cancelable: true });
-              const changeEvent = new Event('change', { bubbles: true, cancelable: true });
-              passwordInput.dispatchEvent(inputEvent);
-              passwordInput.dispatchEvent(changeEvent);
-              return { ...prev, password: currentValue };
+              // Update state immediately - React will re-render
+              const newState = { ...prev, password: currentValue };
+              
+              // Use setTimeout to dispatch events after state update is queued
+              // This ensures React processes the state change before events fire
+              setTimeout(() => {
+                // Create proper InputEvent with correct properties for React
+                const inputEvent = new InputEvent('input', { 
+                  bubbles: true, 
+                  cancelable: true,
+                  data: currentValue,
+                  inputType: 'insertText',
+                  isComposing: false
+                });
+                
+                // Also dispatch change event for form validation
+                const changeEvent = new Event('change', { 
+                  bubbles: true, 
+                  cancelable: true 
+                });
+                
+                // Dispatch events in correct order
+                passwordInput.dispatchEvent(inputEvent);
+                passwordInput.dispatchEvent(changeEvent);
+                
+                // Trigger focus/blur cycle to ensure validation runs
+                passwordInput.focus();
+                setTimeout(() => passwordInput.blur(), 10);
+              }, 0);
+              
+              return newState;
             }
             return prev;
           });
