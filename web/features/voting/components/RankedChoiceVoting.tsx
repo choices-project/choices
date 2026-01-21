@@ -1,13 +1,12 @@
 'use client'
 
-import { CheckCircle, AlertCircle, Info } from 'lucide-react';
+import { CheckCircle, AlertCircle, Info, GripVertical } from 'lucide-react';
 import React, { useCallback, useMemo, useState } from 'react';
 
 import { useVotingIsVoting } from '@/features/voting/lib/store';
 
-import { AccessibleRankingInterface } from '@/components/accessible/RankingInterface';
-
 import ScreenReaderSupport from '@/lib/accessibility/screen-reader';
+import { cn } from '@/lib/utils';
 
 import type { PollOption } from '../types';
 
@@ -33,7 +32,14 @@ export default function RankedChoiceVoting({
   userVote,
 }: RankedChoiceVotingProps) {
   const storeIsVoting = useVotingIsVoting();
-  const [selectedRankings, setSelectedRankings] = useState<string[]>(userVote ?? []);
+  // Initialize rankings from user vote or create default order
+  const [rankedOrder, setRankedOrder] = useState<string[]>(() => {
+    if (userVote && userVote.length > 0) {
+      return userVote;
+    }
+    return options.map((_, index) => String(options[index]?.id ?? index));
+  });
+  const [draggedIndex, setDraggedIndex] = useState<number | null>(null);
   const [validationErrors, setValidationErrors] = useState<string[]>([]);
   const [validationWarnings, setValidationWarnings] = useState<string[]>([]);
   const [isValid, setIsValid] = useState<boolean>(userVote ? userVote.length === options.length : false);
@@ -44,52 +50,104 @@ export default function RankedChoiceVoting({
   const effectiveIsVoting = storeIsVoting || isVoting;
   const isDisabled = hasVoted || effectiveIsVoting || isSubmitting;
 
-  const candidates = useMemo(
-    () =>
-      options.map((option) => ({
-        id: String(option.id),
-        name: String((option as unknown as { text?: string }).text ?? option.id),
-        bio: String((option as unknown as { option_text?: string }).option_text ?? ''),
-      })),
-    [options],
-  );
+  // Initialize ranked order when options change
+  useEffect(() => {
+    if (userVote && userVote.length > 0) {
+      setRankedOrder(userVote);
+    } else {
+      setRankedOrder(options.map((_, index) => String(options[index]?.id ?? index)));
+    }
+  }, [options.length, userVote, options]);
 
-  const handleRankingChange = useCallback((rankings: string[]) => {
-    setSelectedRankings(rankings);
-  }, []);
+  // Update validation when rankings change
+  useEffect(() => {
+    const allRanked = rankedOrder.length === options.length;
+    const errors: string[] = [];
+    const warnings: string[] = [];
 
-  const handleValidationChange = useCallback(
-    (valid: boolean, errors: string[], warnings: string[]) => {
-      setIsValid(valid);
-      setValidationErrors(errors);
-      setValidationWarnings(warnings);
-
-      if (errors.length) {
-        ScreenReaderSupport.announce(errors[0] ?? 'Ranking validation error', 'assertive');
-      } else if (warnings.length) {
-        ScreenReaderSupport.announce(
-          warnings[0] ?? 'Ranking warning. Review your selections.',
-          'polite',
-        );
-      }
-    },
-    [],
-  );
-
-  const orderedCandidateSummary = useMemo(() => {
-    if (!selectedRankings.length) {
-      return [];
+    if (rankedOrder.length < 2) {
+      errors.push('Please rank at least 2 candidates');
+    } else if (rankedOrder.length < options.length) {
+      warnings.push(`You can rank all ${options.length} candidates for better accuracy`);
     }
 
-    return selectedRankings.map((candidateId, index) => {
-      const candidate = candidates.find((item) => item.id === candidateId);
+    setIsValid(allRanked && errors.length === 0);
+    setValidationErrors(errors);
+    setValidationWarnings(warnings);
+
+    if (errors.length) {
+      ScreenReaderSupport.announce(errors[0] ?? 'Ranking validation error', 'assertive');
+    } else if (warnings.length) {
+      ScreenReaderSupport.announce(warnings[0] ?? 'Ranking warning. Review your selections.', 'polite');
+    }
+  }, [rankedOrder, options.length]);
+
+  // Drag and drop handlers
+  const handleDragStart = useCallback((index: number) => {
+    if (isDisabled) return;
+    setDraggedIndex(index);
+    ScreenReaderSupport.announce(`Started dragging option at position ${index + 1}`, 'polite');
+  }, [isDisabled]);
+
+  const handleDragOver = useCallback((e: React.DragEvent) => {
+    e.preventDefault();
+    e.currentTarget.classList.add('opacity-50');
+  }, []);
+
+  const handleDragLeave = useCallback((e: React.DragEvent) => {
+    e.currentTarget.classList.remove('opacity-50');
+  }, []);
+
+  const handleDrop = useCallback((e: React.DragEvent, dropIndex: number) => {
+    e.preventDefault();
+    e.currentTarget.classList.remove('opacity-50');
+
+    if (draggedIndex === null || isDisabled) return;
+
+    const newOrder = [...rankedOrder];
+    const draggedItem = newOrder[draggedIndex];
+    if (!draggedItem) return;
+
+    newOrder.splice(draggedIndex, 1);
+    newOrder.splice(dropIndex, 0, draggedItem);
+
+    setRankedOrder(newOrder);
+    setDraggedIndex(null);
+    
+    const option = options.find((opt, idx) => String(opt.id) === draggedItem || idx === Number.parseInt(draggedItem, 10));
+    const optionName = option?.text ?? String((option as unknown as { text?: string })?.text) ?? 'option';
+    ScreenReaderSupport.announce(`${optionName} moved to position ${dropIndex + 1}`, 'polite');
+  }, [draggedIndex, rankedOrder, isDisabled, options]);
+
+  // Keyboard navigation handlers
+  const handleKeyDown = useCallback((e: React.KeyboardEvent, currentIndex: number) => {
+    if (isDisabled) return;
+
+    if (e.key === 'ArrowUp' && currentIndex > 0) {
+      e.preventDefault();
+      const newOrder = [...rankedOrder];
+      [newOrder[currentIndex - 1], newOrder[currentIndex]] = [newOrder[currentIndex], newOrder[currentIndex - 1]];
+      setRankedOrder(newOrder);
+      ScreenReaderSupport.announce(`Moved option up to position ${currentIndex}`, 'polite');
+    } else if (e.key === 'ArrowDown' && currentIndex < rankedOrder.length - 1) {
+      e.preventDefault();
+      const newOrder = [...rankedOrder];
+      [newOrder[currentIndex], newOrder[currentIndex + 1]] = [newOrder[currentIndex + 1], newOrder[currentIndex]];
+      setRankedOrder(newOrder);
+      ScreenReaderSupport.announce(`Moved option down to position ${currentIndex + 2}`, 'polite');
+    }
+  }, [rankedOrder, isDisabled]);
+
+  const orderedCandidateSummary = useMemo(() => {
+    return rankedOrder.map((optionId, index) => {
+      const option = options.find((opt) => String(opt.id) === optionId);
       return {
-        id: candidateId,
-        name: candidate?.name ?? candidateId,
+        id: optionId,
+        name: option?.text ?? String((option as unknown as { text?: string })?.text) ?? optionId,
         rank: index + 1,
       };
     });
-  }, [candidates, selectedRankings]);
+  }, [rankedOrder, options]);
 
   const handleSubmit = useCallback(async () => {
     if (isDisabled) {
@@ -98,14 +156,14 @@ export default function RankedChoiceVoting({
 
     setSubmissionError(null);
 
-    if (!selectedRankings.length) {
-      const message = 'Please rank all options before submitting.';
+    if (rankedOrder.length < 2) {
+      const message = 'Please rank at least 2 options before submitting.';
       setSubmissionError(message);
       ScreenReaderSupport.announce(message, 'assertive');
       return;
     }
 
-    if (selectedRankings.length !== options.length) {
+    if (rankedOrder.length !== options.length) {
       const message = `Please rank all ${options.length} options before submitting your vote.`;
       setSubmissionError(message);
       ScreenReaderSupport.announce(message, 'assertive');
@@ -121,20 +179,22 @@ export default function RankedChoiceVoting({
 
     setIsSubmitting(true);
     try {
+      // Convert option IDs to indices for API
+      const numericRankings = rankedOrder.map((optionId) => {
+        const optionIndex = options.findIndex((opt) => String(opt.id) === optionId);
+        return optionIndex >= 0 ? optionIndex : Number.parseInt(optionId, 10);
+      }).filter((value) => Number.isFinite(value) && value >= 0);
+
       const { safeWindow } = await import('@/lib/utils/ssr-safe');
       const gtag = safeWindow((w) => w.gtag);
       if (gtag) {
         gtag('event', 'vote_submitted', {
           poll_id: pollId,
-          rankings: selectedRankings,
+          rankings: numericRankings,
           voting_method: 'ranked_choice',
-          ranked_options_count: selectedRankings.length,
+          ranked_options_count: numericRankings.length,
         });
       }
-
-      const numericRankings = selectedRankings
-        .map((value) => Number.parseInt(value, 10))
-        .filter((value) => Number.isFinite(value));
 
       await onVote(pollId, numericRankings);
       ScreenReaderSupport.announce('Your ranked choice vote has been submitted.', 'polite');
@@ -147,10 +207,10 @@ export default function RankedChoiceVoting({
     }
   }, [
     isDisabled,
-    selectedRankings,
+    rankedOrder,
     isValid,
     validationErrors,
-    options.length,
+    options,
     pollId,
     onVote,
   ]);
@@ -208,16 +268,66 @@ export default function RankedChoiceVoting({
       )}
 
       <div className="rounded-xl border border-border bg-card p-6 shadow-sm">
-        <AccessibleRankingInterface
-          candidates={candidates}
-          onRankingChange={handleRankingChange}
-          onValidationChange={handleValidationChange}
-          initialRankings={userVote ?? []}
-          maxRankings={options.length}
-          allowPartialRanking={false}
-          showSocialInsights={false}
-          className="mb-6"
-        />
+        {/* Instructions */}
+        <div className="mb-4 rounded-lg border border-primary/20 bg-primary/10 p-4">
+          <p className="text-sm text-foreground/90 leading-relaxed">
+            <strong className="font-semibold">How it works:</strong> Drag options to reorder them, with 1st being your top choice.
+            You can also use ↑ and ↓ arrow keys to move options. The system uses instant runoff to find the option with majority support.
+          </p>
+        </div>
+
+        {/* Drag and Drop Ranking Interface */}
+        <div className="space-y-3 mb-6" role="list" aria-label="Rank your preferences">
+          {rankedOrder.map((optionId, displayIndex) => {
+            const option = options.find((opt) => String(opt.id) === optionId);
+            const optionText = option?.text ?? String((option as unknown as { text?: string })?.text) ?? `Option ${displayIndex + 1}`;
+
+            return (
+              <div
+                key={`ranked-${optionId}-${displayIndex}`}
+                draggable={!isDisabled}
+                onDragStart={() => handleDragStart(displayIndex)}
+                onDragOver={handleDragOver}
+                onDragLeave={handleDragLeave}
+                onDrop={(e) => handleDrop(e, displayIndex)}
+                onKeyDown={(e) => handleKeyDown(e, displayIndex)}
+                tabIndex={isDisabled ? -1 : 0}
+                role="listitem"
+                aria-label={`${optionText}, currently ranked ${displayIndex + 1}`}
+                className={cn(
+                  "flex items-center gap-3 p-4 rounded-lg border-2 shadow-sm transition-all",
+                  "hover:shadow-md active:scale-[0.98]",
+                  isDisabled
+                    ? "cursor-not-allowed opacity-60 border-border bg-muted"
+                    : "cursor-move border-primary/30 bg-card hover:border-primary/50 focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2",
+                  draggedIndex === displayIndex && "opacity-50"
+                )}
+              >
+                <div className="flex-shrink-0 flex items-center justify-center w-10 h-10 rounded-full bg-primary/20 text-primary font-bold text-sm shadow-sm">
+                  {displayIndex + 1}
+                </div>
+                <div className="flex-1">
+                  <span className="text-base font-semibold text-foreground">{optionText}</span>
+                </div>
+                <div className="flex-shrink-0 flex items-center gap-2">
+                  <GripVertical className="h-4 w-4 text-muted-foreground" aria-hidden="true" />
+                  <div className="text-xs font-medium text-primary bg-primary/10 px-2 py-1 rounded">
+                    Rank {displayIndex + 1}
+                  </div>
+                </div>
+              </div>
+            );
+          })}
+        </div>
+
+        {validationErrors.length > 0 && (
+          <div className="mb-4 rounded-md border border-destructive/20 bg-destructive/10 p-3 text-sm text-destructive" role="alert">
+            <div className="flex items-center gap-2">
+              <AlertCircle className="h-4 w-4" aria-hidden="true" />
+              <span>{validationErrors[0]}</span>
+            </div>
+          </div>
+        )}
 
         {validationWarnings.length > 0 && !validationErrors.length && (
           <div className="mb-4 rounded-md border border-yellow-500/20 bg-yellow-500/10 p-3 text-sm text-yellow-600 dark:text-yellow-400" role="status">
@@ -252,7 +362,7 @@ export default function RankedChoiceVoting({
         <div className="mt-6 rounded-xl border border-border bg-card p-6 shadow-sm">
           <h3 className="mb-4 font-semibold text-foreground">Your current rankings</h3>
           <div className="space-y-2">
-            {orderedCandidateSummary.map((item) => (
+            {orderedCandidateSummary.map((item: { id: string; name: string; rank: number }) => (
               <div key={item.id} className="flex items-center space-x-3">
                 <div className="flex h-6 w-6 items-center justify-center rounded-full bg-primary text-xs font-bold text-primary-foreground">
                   {item.rank}

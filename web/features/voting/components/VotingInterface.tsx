@@ -39,7 +39,7 @@ type OnVerify = (id: string) => Promise<VerificationResponse>
 
 type Poll = {
   id: string;
-  title: string;
+  title?: string;
   description?: string;
   votingMethod?: string;
   options: Array<{ id: string; text: string; description?: string }>;
@@ -338,7 +338,7 @@ export default function VotingInterface({
         return (
           <ApprovalVoting
             pollId={poll.id}
-            title={poll.title}
+            title={poll.title ?? 'Vote'}
             options={poll.options.map(option => ({
               id: option.id,
               text: option.text,
@@ -360,7 +360,7 @@ export default function VotingInterface({
         return (
           <QuadraticVoting
             pollId={poll.id}
-            title={poll.title}
+            title={poll.title ?? 'Vote'}
             options={poll.options.map(option => ({
               id: option.id,
               text: option.text,
@@ -382,7 +382,7 @@ export default function VotingInterface({
         return (
           <RangeVoting
             pollId={poll.id}
-            title={poll.title}
+            title={poll.title ?? 'Vote'}
             options={poll.options.map(option => ({
               id: option.id,
               text: option.text,
@@ -404,7 +404,7 @@ export default function VotingInterface({
         return (
           <RankedChoiceVoting
             pollId={poll.id}
-            title={poll.title}
+            title={poll.title ?? 'Vote'}
             options={poll.options.map(option => ({
               id: option.id,
               text: option.text,
@@ -426,7 +426,7 @@ export default function VotingInterface({
         return (
           <MultipleChoiceVoting
             pollId={poll.id}
-            title={poll.title}
+            title={poll.title ?? 'Vote'}
             options={poll.options.map(option => ({
               id: option.id,
               text: option.text,
@@ -448,7 +448,7 @@ export default function VotingInterface({
         return (
           <SingleChoiceVoting
             pollId={poll.id}
-            title={poll.title}
+            title={poll.title ?? 'Vote'}
             options={poll.options.map(option => ({
               id: option.id,
               text: option.text,
@@ -471,35 +471,37 @@ export default function VotingInterface({
 
   return (
     <div className="max-w-4xl mx-auto" data-testid="voting-form">
-      {/* Header with poll info and verification tier */}
-      <div className="bg-card rounded-xl shadow-sm border border-border p-6 mb-6">
-        <div className="flex items-start justify-between mb-4">
-          <div className="flex-1">
-            <h1 className="text-2xl font-bold text-foreground mb-2">{poll.title}</h1>
-            {poll.description && (
-              <p className="text-muted-foreground mb-4">{poll.description}</p>
-            )}
+      {/* Header with poll info and verification tier - Only show if title/description provided */}
+      {poll.title && (
+        <div className="bg-card rounded-xl shadow-sm border border-border p-6 mb-6">
+          <div className="flex items-start justify-between mb-4">
+            <div className="flex-1">
+              {poll.title && <h1 className="text-2xl font-bold text-foreground mb-2">{poll.title}</h1>}
+              {poll.description && (
+                <p className="text-muted-foreground mb-4">{poll.description}</p>
+              )}
 
-            {/* Poll stats */}
-            <div className="flex items-center space-x-6 text-sm text-muted-foreground">
-              <div className="flex items-center space-x-1">
-                <Users className="w-4 h-4" />
-                <span>{poll.totalVotes} votes</span>
-              </div>
-              <div className="flex items-center space-x-1">
-                <Clock className="w-4 h-4" />
-                <span>{timeRemaining}</span>
+              {/* Poll stats */}
+              <div className="flex items-center space-x-6 text-sm text-muted-foreground">
+                <div className="flex items-center space-x-1">
+                  <Users className="w-4 h-4" />
+                  <span>{poll.totalVotes} votes</span>
+                </div>
+                <div className="flex items-center space-x-1">
+                  <Clock className="w-4 h-4" />
+                  <span>{timeRemaining}</span>
+                </div>
               </div>
             </div>
-          </div>
 
-          {/* Verification tier badge */}
-          <div className={`flex items-center space-x-2 px-3 py-1 rounded-full border text-sm font-medium ${getVerificationTierColor(verificationTier)}`}>
-            {getVerificationTierIcon(verificationTier)}
-            <span>Tier {verificationTier.slice(1)}</span>
+            {/* Verification tier badge */}
+            <div className={`flex items-center space-x-2 px-3 py-1 rounded-full border text-sm font-medium ${getVerificationTierColor(verificationTier)}`}>
+              {getVerificationTierIcon(verificationTier)}
+              <span>Tier {verificationTier.slice(1)}</span>
+            </div>
           </div>
         </div>
-      </div>
+      )}
 
       {/* Voting component */}
       {renderVotingComponent()}

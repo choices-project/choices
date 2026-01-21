@@ -747,29 +747,13 @@ export default function PollClient({ poll }: PollClientProps) {
       )}
 
       {poll.description && (
-        <p className="text-foreground font-medium leading-relaxed" data-testid="poll-description">
+        <p className="text-foreground font-medium leading-relaxed mb-6" data-testid="poll-description">
           {poll.description}
         </p>
       )}
 
-      {topOption && totalRecordedVotes > 0 && (
-        <div className="rounded-lg border border-amber-500/20 bg-amber-500/10 p-4 shadow-sm">
-          <div className="flex items-start gap-3">
-            <div className="rounded-full bg-amber-500/20 p-2">
-              <Trophy className="h-5 w-5 text-amber-600 dark:text-amber-400" />
-            </div>
-            <div>
-              <p className="text-sm font-semibold uppercase text-amber-700 dark:text-amber-400">{t('polls.view.leadingOption.label')}</p>
-              <p className="mt-1 text-lg font-semibold text-foreground">{topOption.text}</p>
-              <p className="text-sm text-foreground/80">
-                {t('polls.view.leadingOption.votes', { votes: topOption.votes, percentage: getVotePercentage(topOption.votes), total: computedTotalVotes })}
-              </p>
-            </div>
-          </div>
-        </div>
-      )}
-
-      <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
+      {/* Quick Stats - Compact summary */}
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-3 mb-6">
         <div className="rounded-lg border border-border bg-card p-4 shadow-sm">
           <p className="text-xs uppercase font-semibold text-foreground/80">{t('polls.view.stats.totalVotes')}</p>
           <p className="mt-2 text-2xl font-semibold text-foreground">
@@ -790,30 +774,123 @@ export default function PollClient({ poll }: PollClientProps) {
         </div>
       </div>
 
-      {integrityInfo && (
-        <div className="rounded-lg border border-primary/20 bg-primary/10 p-4 shadow-sm">
+      {/* Leading Option - Only show if there are votes */}
+      {topOption && totalRecordedVotes > 0 && (
+        <div className="rounded-lg border border-amber-500/20 bg-amber-500/10 p-4 shadow-sm mb-6">
           <div className="flex items-start gap-3">
-            <div className="rounded-full bg-primary/20 p-2">
-              <Shield className="h-5 w-5 text-primary" />
+            <div className="rounded-full bg-amber-500/20 p-2">
+              <Trophy className="h-5 w-5 text-amber-600 dark:text-amber-400" />
             </div>
             <div>
-              <p className="text-sm font-semibold uppercase text-foreground">Integrity check applied</p>
+              <p className="text-sm font-semibold uppercase text-amber-700 dark:text-amber-400">{t('polls.view.leadingOption.label')}</p>
+              <p className="mt-1 text-lg font-semibold text-foreground">{topOption.text}</p>
               <p className="text-sm text-foreground/80">
-                {integrityInfo.excluded_votes > 0
-                  ? `${integrityInfo.excluded_votes} votes excluded from displayed results.`
-                  : 'No votes excluded from displayed results.'}
-              </p>
-              <p className="text-xs text-foreground/70">
-                Raw total: {isMounted ? integrityInfo.raw_total_votes.toLocaleString() : integrityInfo.raw_total_votes}
-                {' '}• Scored: {integrityInfo.scored_votes} • Unscored: {integrityInfo.unscored_votes}
+                {t('polls.view.leadingOption.votes', { votes: topOption.votes, percentage: getVotePercentage(topOption.votes), total: computedTotalVotes })}
               </p>
             </div>
           </div>
         </div>
       )}
 
+      {votingStatusMessage && (
+        <Alert variant="default" className="border border-amber-500/20 bg-amber-500/10 text-foreground mb-6">
+          <AlertCircle className="h-4 w-4 text-amber-600 dark:text-amber-400" />
+          <AlertTitle className="text-foreground">{votingStatusMessage.title}</AlertTitle>
+          <AlertDescription className="text-foreground/90">{votingStatusMessage.description}</AlertDescription>
+        </Alert>
+      )}
+
+      {combinedError && (
+        <div className="bg-destructive/10 border border-destructive/20 text-destructive px-4 py-3 rounded mb-6" role="alert">
+          {combinedError}
+        </div>
+      )}
+
+      {/* Voting Interface - PRIORITY: Show first for active polls where user can vote */}
+      {pollStatus === 'active' && canVote && user && !hasVoted && normalizedOptions.length > 0 && (
+        <Card className="mb-6 border-2 border-primary/20">
+          <CardHeader className="bg-primary/5">
+            <CardTitle data-testid="voting-section-title">Cast Your Vote</CardTitle>
+            <CardDescription>Select your preferred option(s) below</CardDescription>
+          </CardHeader>
+          <CardContent className="pt-6" data-testid="voting-form">
+            <VotingInterface
+              poll={{
+                id: poll.id,
+                // Don't duplicate title/description - they're already shown above
+                options: normalizedOptions.map((option) => ({
+                  id: option.id,
+                  text: option.text,
+                })),
+                votingMethod: poll.votingMethod ?? 'single',
+                totalVotes: computedTotalVotes,
+                endtime: poll.endtime ?? new Date(Date.now() + 365 * 24 * 60 * 60 * 1000).toISOString(),
+              }}
+              onVote={handleVote}
+              isVoting={storeIsVoting}
+              hasVoted={hasVoted}
+              onAnalyticsEvent={(action, payload) => {
+                recordPollEvent(action, payload ?? {});
+              }}
+            />
+          </CardContent>
+        </Card>
+      )}
+
+      {/* Poll Options Display - Show after voting interface */}
+      {normalizedOptions.length > 0 && (
+        <Card className="mb-6">
+          <CardHeader>
+            <CardTitle data-testid="poll-options-title">Poll Options</CardTitle>
+            <CardDescription>
+              {pollStatus === 'active' && !hasVoted && user
+                ? 'View the options below'
+                : hasVoted
+                  ? 'You have already voted on this poll'
+                  : 'This poll is no longer accepting votes'}
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div className="grid gap-3 sm:grid-cols-2" data-testid="poll-options-list">
+              {normalizedOptions.map((option, index) => (
+                <div
+                  key={option.id}
+                  className="p-4 border-2 border-border rounded-lg bg-card hover:border-primary/50 hover:shadow-sm transition-all"
+                >
+                  <div className="flex items-start gap-3">
+                    <div className="flex-shrink-0 w-8 h-8 rounded-full bg-primary/10 text-primary flex items-center justify-center font-semibold text-sm">
+                      {index + 1}
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <p className="font-semibold text-foreground break-words">{option.text}</p>
+                      {option.votes !== undefined && option.votes > 0 && (
+                        <p className="text-sm text-muted-foreground mt-1">
+                          {option.votes} vote{option.votes !== 1 ? 's' : ''} ({getVotePercentage(option.votes)}%)
+                        </p>
+                      )}
+                    </div>
+                  </div>
+                  {option.votes > 0 && (
+                    <div className="mt-3 w-full bg-muted rounded-full h-2">
+                      <div
+                        className="bg-primary h-2 rounded-full transition-all duration-300"
+                        style={{ width: `${getVotePercentage(option.votes)}%` }}
+                      />
+                    </div>
+                  )}
+                </div>
+              ))}
+            </div>
+          </CardContent>
+        </Card>
+      )}
+
+      <Separator className="my-6" />
+
+      {/* Secondary Information - Moved to bottom */}
+
       {/* Milestones - Collapsible and less prominent (collapsed by default) */}
-      <details className="rounded-lg border border-border/40 bg-muted/20" open={false}>
+      <details className="rounded-lg border border-border/40 bg-muted/20 mb-4" open={false}>
         <summary className="cursor-pointer p-3 text-sm font-semibold text-foreground hover:bg-muted/30 transition-colors">
           <div className="flex items-center justify-between">
             <span>{t('polls.view.milestones.label')}</span>
@@ -876,98 +953,32 @@ export default function PollClient({ poll }: PollClientProps) {
         </div>
       </details>
 
-      {votingStatusMessage && (
-        <Alert variant="default" className="border border-amber-500/20 bg-amber-500/10 text-foreground">
-          <AlertCircle className="h-4 w-4 text-amber-600 dark:text-amber-400" />
-          <AlertTitle className="text-foreground">{votingStatusMessage.title}</AlertTitle>
-          <AlertDescription className="text-foreground/90">{votingStatusMessage.description}</AlertDescription>
-        </Alert>
-      )}
-
-      {combinedError && (
-        <div className="bg-destructive/10 border border-destructive/20 text-destructive px-4 py-3 rounded" role="alert">
-          {combinedError}
-        </div>
-      )}
-
-      {/* Voting Interface - Only show for active polls where user can vote */}
-      {pollStatus === 'active' && canVote && user && !hasVoted && normalizedOptions.length > 0 && (
-        <Card className="mb-6 border-2 border-primary/20">
-          <CardHeader className="bg-primary/5">
-            <CardTitle data-testid="voting-section-title">Cast Your Vote</CardTitle>
-            <CardDescription>Select your preferred option(s) below</CardDescription>
-          </CardHeader>
-          <CardContent className="pt-6" data-testid="voting-form">
-            <VotingInterface
-              poll={{
-                id: poll.id,
-                title: poll.title,
-                ...(poll.description ? { description: poll.description } : {}),
-                options: normalizedOptions.map((option) => ({
-                  id: option.id,
-                  text: option.text,
-                })),
-                votingMethod: poll.votingMethod ?? 'single',
-                totalVotes: computedTotalVotes,
-                endtime: poll.endtime ?? new Date(Date.now() + 365 * 24 * 60 * 60 * 1000).toISOString(),
-              }}
-              onVote={handleVote}
-              isVoting={storeIsVoting}
-              hasVoted={hasVoted}
-              onAnalyticsEvent={(action, payload) => {
-                recordPollEvent(action, payload ?? {});
-              }}
-            />
-          </CardContent>
-        </Card>
-      )}
-
-      {/* Poll Options Display - Always show so users know what the poll is about */}
-      {normalizedOptions.length > 0 && (
-        <Card className="mb-6">
-          <CardHeader>
-            <CardTitle data-testid="poll-options-title">Poll Options</CardTitle>
-            <CardDescription>
-              {pollStatus === 'active' && !hasVoted && user
-                ? 'View the options below'
-                : hasVoted
-                  ? 'You have already voted on this poll'
-                  : 'This poll is no longer accepting votes'}
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <div className="grid gap-3 sm:grid-cols-2" data-testid="poll-options-list">
-              {normalizedOptions.map((option, index) => (
-                <div
-                  key={option.id}
-                  className="p-4 border-2 border-border rounded-lg bg-card hover:border-primary/50 hover:shadow-sm transition-all"
-                >
-                  <div className="flex items-start gap-3">
-                    <div className="flex-shrink-0 w-8 h-8 rounded-full bg-primary/10 text-primary flex items-center justify-center font-semibold text-sm">
-                      {index + 1}
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <p className="font-semibold text-foreground break-words">{option.text}</p>
-                      {option.votes !== undefined && option.votes > 0 && (
-                        <p className="text-sm text-muted-foreground mt-1">
-                          {option.votes} vote{option.votes !== 1 ? 's' : ''} ({getVotePercentage(option.votes)}%)
-                        </p>
-                      )}
-                    </div>
-                  </div>
-                  {option.votes > 0 && (
-                    <div className="mt-3 w-full bg-muted rounded-full h-2">
-                      <div
-                        className="bg-primary h-2 rounded-full transition-all duration-300"
-                        style={{ width: `${getVotePercentage(option.votes)}%` }}
-                      />
-                    </div>
-                  )}
-                </div>
-              ))}
+      {/* Integrity Check - Moved to bottom (incomplete feature) */}
+      {integrityInfo && (
+        <details className="rounded-lg border border-border/40 bg-muted/20" open={false}>
+          <summary className="cursor-pointer p-3 text-sm font-semibold text-foreground hover:bg-muted/30 transition-colors">
+            Integrity Check Applied
+          </summary>
+          <div className="border-t border-border/40 p-4">
+            <div className="flex items-start gap-3">
+              <div className="rounded-full bg-primary/20 p-2">
+                <Shield className="h-5 w-5 text-primary" />
+              </div>
+              <div>
+                <p className="text-sm font-semibold uppercase text-foreground">Integrity check applied</p>
+                <p className="text-sm text-foreground/80">
+                  {integrityInfo.excluded_votes > 0
+                    ? `${integrityInfo.excluded_votes} votes excluded from displayed results.`
+                    : 'No votes excluded from displayed results.'}
+                </p>
+                <p className="text-xs text-foreground/70 mt-1">
+                  Raw total: {isMounted ? integrityInfo.raw_total_votes.toLocaleString() : integrityInfo.raw_total_votes}
+                  {' '}• Scored: {integrityInfo.scored_votes} • Unscored: {integrityInfo.unscored_votes}
+                </p>
+              </div>
             </div>
-          </CardContent>
-        </Card>
+          </div>
+        </details>
       )}
 
       <Separator />
