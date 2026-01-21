@@ -526,14 +526,20 @@ export default function CreatePollPage() {
                  id="description"
                  value={data.description}
                 onChange={(event) => handleDataUpdate({ description: event.target.value })}
-                placeholder={t('polls.create.wizard.details.description.placeholder')}
+                placeholder={(() => {
+                  const placeholder = t('polls.create.wizard.details.description.placeholder');
+                  return placeholder && placeholder !== 'Placeholder' && placeholder !== 'polls.create.wizard.details.description.placeholder' ? placeholder : 'Explain why this poll matters and what voters should consider...';
+                })()}
                 rows={5}
                 maxLength={DESCRIPTION_CHAR_LIMIT}
                 aria-invalid={Boolean(errors.description)}
                 aria-describedby="description-hint description-count"
               />
               <div id="description-hint" className="mt-2 text-xs text-muted-foreground">
-                {t('polls.create.wizard.details.description.hint')}
+                {(() => {
+                  const hint = t('polls.create.wizard.details.description.hint');
+                  return hint && hint !== 'Hint' && hint !== 'polls.create.wizard.details.description.hint' ? hint : 'Provide context and background information for your poll.';
+                })()}
               </div>
               <div
                 id="description-count"
