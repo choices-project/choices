@@ -47,9 +47,9 @@ export default function MultipleChoiceVoting({
 
   const handleOptionToggle = (optionIndex: number) => {
     if (hasVoted || effectiveIsVoting) return
-    
+
     setError(null)
-    
+
     setSelectedOptions(prev => {
       const isSelected = prev.includes(optionIndex)
       if (isSelected) {
@@ -88,7 +88,7 @@ export default function MultipleChoiceVoting({
           voting_method: 'multiple_choice'
         })
       }
-      
+
       // Use the selections parameter properly
       if (hasVoted || effectiveIsVoting) {
         return
@@ -167,12 +167,12 @@ export default function MultipleChoiceVoting({
               onClick={() => handleOptionToggle(index)}
               className={`
                 relative p-4 border-2 rounded-lg cursor-pointer transition-all duration-200
-                ${isDisabled 
-                  ? 'cursor-not-allowed opacity-60' 
+                ${isDisabled
+                  ? 'cursor-not-allowed opacity-60'
                   : 'hover:border-green-500/50 hover:bg-green-500/5'
                 }
                 ${selectedOptions.includes(index)
-                  ? 'border-green-500 bg-green-500/10' 
+                  ? 'border-green-500 bg-green-500/10'
                   : 'border-border'
                 }
               `}

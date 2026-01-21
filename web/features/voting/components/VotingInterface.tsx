@@ -117,7 +117,7 @@ export default function VotingInterface({
         onAnalyticsEvent(action, payload)
       }
     },
-    [onAnalyticsEvent, poll.id]  
+    [onAnalyticsEvent, poll.id]
   )
 
   const notifySuccess = useCallback(
@@ -129,7 +129,7 @@ export default function VotingInterface({
         duration: notificationSettings.duration,
       })
     },
-    [notificationSettings.duration]  
+    [notificationSettings.duration]
   )
 
   const notifyError = useCallback(
@@ -141,7 +141,7 @@ export default function VotingInterface({
         duration: notificationSettings.duration,
       })
     },
-    [notificationSettings.duration]  
+    [notificationSettings.duration]
   )
 
   const handleVoteResult = useCallback(

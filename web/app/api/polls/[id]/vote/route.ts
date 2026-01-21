@@ -482,17 +482,32 @@ export const POST = withErrorHandling(async (request: NextRequest, { params }: {
 
   if (!selectedOption) {
     if (choiceIndex === undefined) {
+      logger.warn('Vote submission missing choice', { pollId, body, optionsCount: options.length });
       return validationError({ choice: 'Option selection is required.' });
     }
 
-    if (!Number.isInteger(choiceIndex) || !optionByIndex.has(choiceIndex)) {
-      return validationError({ choice: 'Selected option is not valid for this poll.' });
+    if (!Number.isInteger(choiceIndex)) {
+      logger.warn('Vote submission invalid choice type', { pollId, choiceIndex, choiceType: typeof choiceIndex });
+      return validationError({ choice: 'Selected option must be a valid number.' });
+    }
+
+    if (!optionByIndex.has(choiceIndex)) {
+      logger.warn('Vote submission choice index out of range', { 
+        pollId, 
+        choiceIndex, 
+        availableIndices: Array.from(optionByIndex.keys()),
+        optionsCount: options.length 
+      });
+      return validationError({ 
+        choice: `Selected option index ${choiceIndex} is not valid. This poll has ${options.length} option${options.length === 1 ? '' : 's'} (indices 0-${options.length - 1}).` 
+      });
     }
 
     selectedOption = optionByIndex.get(choiceIndex);
   }
 
   if (!selectedOption) {
+    logger.error('Vote submission selectedOption still null after resolution', { pollId, choiceIndex, optionIdFromBody });
     return validationError({ choice: 'Selected option is not valid for this poll.' });
   }
 

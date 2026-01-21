@@ -34,7 +34,7 @@ export default function SingleChoiceVoting({
 
   const handleOptionSelect = (optionIndex: number) => {
     if (hasVoted || effectiveIsVoting) return
-    
+
     setError(null)
     setSelectedOption(optionIndex)
   }
@@ -61,7 +61,7 @@ export default function SingleChoiceVoting({
           voting_method: 'single_choice'
         })
       }
-      
+
       // Use the choice parameter properly
       if (hasVoted || effectiveIsVoting) {
         return
@@ -139,12 +139,12 @@ export default function SingleChoiceVoting({
               onClick={() => handleOptionSelect(index)}
               className={`
                 relative p-4 border-2 rounded-lg cursor-pointer transition-all duration-200
-                ${isDisabled 
-                  ? 'cursor-not-allowed opacity-60' 
+                ${isDisabled
+                  ? 'cursor-not-allowed opacity-60'
                   : 'hover:border-primary/50 hover:bg-primary/5'
                 }
-                ${selectedOption === index 
-                  ? 'border-primary bg-primary/10' 
+                ${selectedOption === index
+                  ? 'border-primary bg-primary/10'
                   : 'border-border'
                 }
               `}

@@ -47,7 +47,7 @@ export default function ApprovalVoting({
     if (hasVoted || effectiveIsVoting) return
 
     setError(null)
-    setApprovedOptions(prev => 
+    setApprovedOptions(prev =>
       prev.includes(optionId)
         ? prev.filter(id => id !== optionId)
         : [...prev, optionId].filter(id => id !== undefined)
@@ -67,14 +67,14 @@ export default function ApprovalVoting({
 
     try {
       // Validate approvals before submission
-      const validApprovals = approvedOptions.filter(approval => 
+      const validApprovals = approvedOptions.filter(approval =>
         options.some(option => String(option.id) === approval)
       )
-      
+
       if (validApprovals.length !== approvedOptions.length) {
         throw new Error('Some approved options are invalid')
       }
-      
+
       // Track analytics with poll ID using SSR-safe access
       const { safeWindow } = await import('@/lib/utils/ssr-safe');
       const gtag = safeWindow(w => w.gtag);
@@ -86,7 +86,7 @@ export default function ApprovalVoting({
           approval_count: approvedOptions.length
         })
       }
-      
+
       if (hasVoted || effectiveIsVoting) {
         return
       }
@@ -166,8 +166,8 @@ export default function ApprovalVoting({
                 data-testid={`option-${parseInt(optionId) + 1}-checkbox`}
                 className={`
                   relative p-4 border-2 rounded-lg cursor-pointer transition-all duration-200
-                  ${isDisabled 
-                    ? 'cursor-not-allowed opacity-60' 
+                  ${isDisabled
+                    ? 'cursor-not-allowed opacity-60'
                     : 'hover:border-green-500/50 hover:bg-green-500/5'
                   }
                   ${approvedOptions.includes(optionId) ? 'border-green-500 bg-green-500/10' : 'border-border'}
@@ -187,7 +187,7 @@ export default function ApprovalVoting({
                   <div className="flex-shrink-0 mt-1">
                     <div className={`w-5 h-5 rounded border-2 flex items-center justify-center transition-all duration-200 ${
                       approvedOptions.includes(optionId)
-                        ? 'border-green-500 bg-green-500' 
+                        ? 'border-green-500 bg-green-500'
                         : 'border-border bg-background'
                     }`}>
                       {approvedOptions.includes(optionId) && (
@@ -264,10 +264,10 @@ export default function ApprovalVoting({
               {approvedOptions.length} of {options.length} options approved
             </div>
             <div className="mt-2 w-full bg-muted rounded-full h-2">
-              <div 
+              <div
                 className="bg-green-600 dark:bg-green-500 h-2 rounded-full transition-all duration-300"
-                style={{ 
-                  width: `${(approvedOptions.length / options.length) * 100}%` 
+                style={{
+                  width: `${(approvedOptions.length / options.length) * 100}%`
                 }}
               />
             </div>

@@ -538,7 +538,22 @@ export default function PollClient({ poll }: PollClientProps) {
 
       if (!response.ok) {
         const errorData = await response.json().catch(() => null);
-        throw new Error(errorData?.error ?? t('polls.view.errors.voteFailed'));
+        // Extract detailed error message from validation errors if available
+        let errorMessage = errorData?.error ?? t('polls.view.errors.voteFailed');
+        if (errorData?.details && typeof errorData.details === 'object') {
+          const fieldErrors = Object.values(errorData.details).filter(Boolean);
+          if (fieldErrors.length > 0) {
+            errorMessage = Array.isArray(fieldErrors) ? fieldErrors[0] : String(fieldErrors[0]);
+          }
+        }
+        logger.error('Vote submission failed', { 
+          pollId: poll.id, 
+          status: response.status,
+          error: errorMessage,
+          errorData,
+          requestBody 
+        });
+        throw new Error(errorMessage);
       }
 
       const payload = await response.json();
