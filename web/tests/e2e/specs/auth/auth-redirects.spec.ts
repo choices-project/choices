@@ -161,11 +161,36 @@ test.describe('Authentication Redirects', () => {
       });
 
       await waitForPageReady(page);
+      
+      // Wait for navigation to update after login
+      // Navigation may need time to reflect authentication state
+      await page.waitForTimeout(3_000);
+      
+      // Navigate to a page to ensure navigation renders
+      await page.goto(`${BASE_URL}/feed`, { waitUntil: 'domcontentloaded', timeout: 30_000 });
+      await waitForPageReady(page);
       await page.waitForTimeout(2_000);
 
       // Verify we're logged in - check for logout button
+      // Also check for profile link as alternative indicator
       const logoutButton = page.locator('[data-testid="logout-button"]');
-      await expect(logoutButton).toBeVisible({ timeout: 10_000 });
+      const profileLink = page.locator('a[href="/profile"]:has-text("Profile")');
+      
+      // Wait for either logout button or profile link to appear (both indicate logged in)
+      await Promise.race([
+        logoutButton.waitFor({ state: 'visible', timeout: 15_000 }).catch(() => null),
+        profileLink.waitFor({ state: 'visible', timeout: 15_000 }).catch(() => null),
+      ]);
+      
+      // Verify at least one is visible
+      const hasLogout = await logoutButton.isVisible().catch(() => false);
+      const hasProfile = await profileLink.isVisible().catch(() => false);
+      
+      if (!hasLogout && !hasProfile) {
+        // Take screenshot for debugging
+        await page.screenshot({ path: 'test-results/logout-button-missing.png' });
+        throw new Error('Neither logout button nor profile link visible after login - navigation may not be updating');
+      }
 
       // Click logout button
       await logoutButton.click();

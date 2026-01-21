@@ -303,7 +303,7 @@ test.describe('MVP Critical Flows', () => {
       // Also check for the specific warning text in the Alert component
       const warningText = page.locator('text=/Warning:/i, text=/irreversible/i, text=/permanent/i, text=/cannot.*undo/i, text=/permanently.*removed/i');
       const warningAlert = page.locator('[role="alert"]:has-text(/warning/i), .alert:has-text(/irreversible/i)');
-      
+
       const warningCount = await warningText.count();
       const alertCount = await warningAlert.count();
 
@@ -313,7 +313,7 @@ test.describe('MVP Critical Flows', () => {
         await page.screenshot({ path: 'test-results/account-delete-warning-debug.png' });
         throw new Error('No warning text or alert found on account delete page');
       }
-      
+
       // At least one warning indicator should be present
       expect(warningCount + alertCount).toBeGreaterThan(0);
 
