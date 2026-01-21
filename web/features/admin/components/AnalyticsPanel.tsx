@@ -79,7 +79,7 @@ export default function AnalyticsPanel({
       // API returns { data: { analytics: AnalyticsSummary } } for type=general
       // Component expects { dashboard, performanceMetrics, userBehavior }
       const responseData = data.data || data;
-      
+
       if (responseData.analytics) {
         // Transform AnalyticsSummary to dashboard format
         const analyticsData = responseData.analytics;

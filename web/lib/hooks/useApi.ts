@@ -75,7 +75,7 @@ export const queryKeys = {
   health: ['health'] as const,
   healthDatabase: ['health', 'database'] as const,
   healthExtended: ['health', 'extended'] as const,
-  
+
   // Monitoring (admin)
   monitoring: ['monitoring'] as const,
   monitoringSecurity: ['monitoring', 'security'] as const,
@@ -531,19 +531,19 @@ export function useAnalyticsGeneral(
           // Add timeout to prevent hanging
           const controller = new AbortController();
           const timeoutId = setTimeout(() => controller.abort(), 20000); // 20 second timeout
-          
+
           try {
             const response = await fetch('/api/analytics?type=general', {
               signal: controller.signal,
             });
-            
+
             clearTimeout(timeoutId);
-            
+
             if (!response.ok) {
               const errorData = await response.json().catch(() => ({ error: response.statusText }));
               throw new Error(errorData.error || `Failed to fetch analytics: ${response.statusText}`);
             }
-            
+
             const data = await response.json();
             return data.data || data; // Handle both { data: {...} } and direct response
           } catch (fetchError) {

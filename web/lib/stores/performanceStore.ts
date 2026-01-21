@@ -763,7 +763,7 @@ export const performanceStoreCreator: PerformanceStoreCreator = (set, get) => {
               memoryUsage: 0, // Not available from performance monitor
               hitRate: hasNoData ? 0 : 0, // Not available from performance monitor
             };
-            
+
             // Log if no data is available (helpful for debugging)
             if (hasNoData) {
               logger.info('Performance dashboard: No performance data tracked yet. Operations will appear as they are tracked.');
