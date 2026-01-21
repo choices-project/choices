@@ -95,21 +95,37 @@ export const GET = withErrorHandling(async (
           .in('vote_id', ballotIds);
 
         if (scoreError) {
-          logger.warn('Integrity score lookup failed for ranked ballots', scoreError);
+          logger.error('Integrity score lookup failed for ranked ballots', {
+            error: scoreError,
+            pollId: id,
+            ballotCount: ballotIds.length,
+            ballotIds: ballotIds.slice(0, 5), // Log first 5 for debugging
+          });
+          // If integrity lookup fails, include all ballots to avoid losing votes
+          logger.warn('Including all ballots due to integrity score lookup failure');
         } else {
+          logger.info('Integrity scores retrieved', {
+            pollId: id,
+            totalBallots: ballotIds.length,
+            scoredBallots: scoreRows?.length ?? 0,
+            scores: scoreRows?.map((r: { vote_id?: string; score?: number }) => ({
+              voteId: r.vote_id,
+              score: r.score,
+            })) ?? [],
+          });
           const allScoredIds = new Set(
             (scoreRows ?? [])
               .map((row: { vote_id?: string | null }) => row.vote_id)
               .filter(Boolean) as string[]
           );
-          
+
           scoredBallotIds = new Set(
             (scoreRows ?? [])
               .filter((row: { score?: number }) => (row.score ?? 0) >= integrityThreshold)
               .map((row: { vote_id?: string | null }) => row.vote_id)
               .filter(Boolean) as string[]
           );
-          
+
           excludedBallots = ballotIds.filter((idValue) => !scoredBallotIds.has(idValue)).length;
 
           // Include unscored ballots that are very recent (within last 30 seconds) to handle async integrity scoring
@@ -126,7 +142,7 @@ export const GET = withErrorHandling(async (
               const isScoredAboveThreshold = scoredBallotIds.has(ballot.id);
               const isRecent = ballot.created_at && ballot.created_at >= recentCutoff;
               const isUnscored = !allScoredIds.has(ballot.id);
-              
+
               return isScoredAboveThreshold || (isRecent && isUnscored);
             }
           );
