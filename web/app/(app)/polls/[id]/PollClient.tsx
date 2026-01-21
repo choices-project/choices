@@ -18,9 +18,6 @@ import { AccessibleResultsChart } from '@/components/accessible/AccessibleResult
 import ModeSwitch from '@/components/shared/ModeSwitch';
 import type { ResultsMode } from '@/components/shared/ModeSwitch';
 import { Alert, AlertDescription } from '@/components/ui/alert';
-import { Badge } from '@/components/ui/badge';
-import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -31,6 +28,9 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
+import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 
 import ScreenReaderSupport from '@/lib/accessibility/screen-reader';
 import { useNotificationActions, useNotificationSettings } from '@/lib/stores/notificationStore';
@@ -1161,7 +1161,7 @@ export default function PollClient({ poll }: PollClientProps) {
             <AlertDialogHeader>
               <AlertDialogTitle>Delete Poll</AlertDialogTitle>
               <AlertDialogDescription>
-                Are you sure you want to delete "{poll.title}"? This action cannot be undone and will permanently remove the poll and all associated votes.
+                Are you sure you want to delete &ldquo;{poll.title}&rdquo;? This action cannot be undone and will permanently remove the poll and all associated votes.
               </AlertDialogDescription>
             </AlertDialogHeader>
             <AlertDialogFooter>

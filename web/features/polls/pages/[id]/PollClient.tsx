@@ -1017,7 +1017,7 @@ export default function PollClient({ poll }: PollClientProps) {
           <AlertDialogHeader>
             <AlertDialogTitle>Delete Poll</AlertDialogTitle>
             <AlertDialogDescription>
-              Are you sure you want to delete "{poll.title}"? This action cannot be undone and will permanently remove the poll and all associated votes.
+              Are you sure you want to delete &ldquo;{poll.title}&rdquo;? This action cannot be undone and will permanently remove the poll and all associated votes.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>

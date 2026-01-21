@@ -1,7 +1,7 @@
 'use client'
 
 import { CheckCircle, AlertCircle, Info, GripVertical } from 'lucide-react';
-import React, { useCallback, useMemo, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useState } from 'react';
 
 import { useVotingIsVoting } from '@/features/voting/lib/store';
 
@@ -115,7 +115,8 @@ export default function RankedChoiceVoting({
     setDraggedIndex(null);
 
     const option = options.find((opt, idx) => String(opt.id) === draggedItem || idx === Number.parseInt(draggedItem, 10));
-    const optionName = option?.text ?? String((option as unknown as { text?: string })?.text) ?? 'option';
+    const textValue = option?.text ?? (option ? (option as unknown as { text?: string })?.text : undefined);
+    const optionName = textValue || 'option';
     ScreenReaderSupport.announce(`${optionName} moved to position ${dropIndex + 1}`, 'polite');
   }, [draggedIndex, rankedOrder, isDisabled, options]);
 
@@ -149,9 +150,14 @@ export default function RankedChoiceVoting({
   const orderedCandidateSummary = useMemo(() => {
     return rankedOrder.map((optionId, index) => {
       const option = options.find((opt) => String(opt.id) === optionId);
+      let name = optionId;
+      if (option) {
+        const textValue = option.text ?? (option as unknown as { text?: string })?.text;
+        name = textValue || optionId;
+      }
       return {
         id: optionId,
-        name: option?.text ?? String((option as unknown as { text?: string })?.text) ?? optionId,
+        name,
         rank: index + 1,
       };
     });
@@ -288,7 +294,7 @@ export default function RankedChoiceVoting({
         <div className="space-y-3 mb-6" role="list" aria-label="Rank your preferences">
           {rankedOrder.map((optionId, displayIndex) => {
             const option = options.find((opt) => String(opt.id) === optionId);
-            const optionText = option?.text ?? String((option as unknown as { text?: string })?.text) ?? `Option ${displayIndex + 1}`;
+            const optionText = (option?.text ?? (option ? String((option as unknown as { text?: string })?.text ?? '') : '')) || `Option ${displayIndex + 1}`;
 
             return (
               <div
@@ -300,8 +306,8 @@ export default function RankedChoiceVoting({
                 onDrop={(e) => handleDrop(e, displayIndex)}
                 onKeyDown={(e) => handleKeyDown(e, displayIndex)}
                 tabIndex={isDisabled ? -1 : 0}
-                role="listitem"
-                aria-label={`${optionText}, currently ranked ${displayIndex + 1}`}
+                role="button"
+                aria-label={`${optionText}, currently ranked ${displayIndex + 1}. Drag to reorder or use arrow keys.`}
                 className={cn(
                   "flex items-center gap-3 p-4 rounded-lg border-2 shadow-sm transition-all",
                   "hover:shadow-md active:scale-[0.98]",
