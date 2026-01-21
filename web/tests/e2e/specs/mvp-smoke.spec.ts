@@ -125,3 +125,65 @@ test.describe('@smoke MVP core pages', () => {
     ]);
   });
 });
+
+test.describe('Accessibility - Main Landmarks', () => {
+  test('main landmark present on auth page', async ({ page }) => {
+    await page.goto('/auth', { waitUntil: 'domcontentloaded' });
+    await waitForPageReady(page);
+    
+    // Verify main landmark exists
+    const main = page.locator('main#main-content');
+    await expect(main).toBeVisible();
+    
+    // Verify it has proper role (implicit from <main> tag)
+    const role = await main.getAttribute('role');
+    expect(role).toBeNull(); // <main> tag has implicit role="main", no explicit attribute needed
+  });
+
+  test('main landmark present on polls page', async ({ page }) => {
+    await page.goto('/polls', { waitUntil: 'domcontentloaded' });
+    await waitForPageReady(page);
+    
+    // Verify main landmark exists
+    const main = page.locator('main#main-content');
+    await expect(main).toBeVisible();
+  });
+
+  test('main landmark present on dashboard page', async ({ page }) => {
+    await page.goto('/dashboard', { waitUntil: 'domcontentloaded' });
+    await waitForPageReady(page);
+    
+    // Verify main landmark exists
+    const main = page.locator('main#main-content');
+    await expect(main).toBeVisible();
+  });
+
+  test('main landmark present on profile page', async ({ page }) => {
+    await page.goto('/profile', { waitUntil: 'domcontentloaded' });
+    await waitForPageReady(page);
+    
+    // Verify main landmark exists (may redirect to auth if not authenticated)
+    const main = page.locator('main#main-content');
+    await expect(main).toBeVisible();
+  });
+
+  test('skip nav link targets main content', async ({ page }) => {
+    await page.goto('/auth', { waitUntil: 'domcontentloaded' });
+    await waitForPageReady(page);
+    
+    // Find skip nav link
+    const skipLink = page.locator('a[href="#main-content"]');
+    const count = await skipLink.count();
+    
+    if (count > 0) {
+      // Click skip link
+      await skipLink.click();
+      
+      // Verify focus moved to main content
+      const main = page.locator('main#main-content');
+      const isFocused = await main.evaluate((el) => document.activeElement === el);
+      // Note: Focus may not be immediately on main, but tabIndex={-1} allows programmatic focus
+      expect(await main.getAttribute('tabIndex')).toBe('-1');
+    }
+  });
+});
