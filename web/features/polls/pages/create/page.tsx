@@ -74,7 +74,8 @@ export default function CreatePollPage() {
   const safeT = useCallback((key: string, fallback: string, params?: Record<string, string | number>): string => {
     const result = params ? t(key, params) : t(key);
     // Check if result is the key itself or a generic placeholder
-    if (result === key || result === 'Label' || result === 'Hint' || result === 'Title' || result === 'Subtitle' || result === 'MaxHint' || result === 'Placeholder' || result.includes('polls.create.')) {
+    const genericPlaceholders = ['Label', 'Hint', 'Title', 'Subtitle', 'MaxHint', 'Placeholder', 'SubHint', 'subHint', 'Description', 'Legend'];
+    if (result === key || genericPlaceholders.includes(result) || result.includes('polls.create.')) {
       return fallback;
     }
     return result;
@@ -1007,8 +1008,8 @@ export default function CreatePollPage() {
                     className={cn(
                       "rounded-lg border-2 p-4 text-left transition-all cursor-pointer",
                       "hover:shadow-md hover:scale-[1.02] active:scale-[0.98]",
-                      isSelected 
-                        ? "border-primary bg-primary/10 shadow-md ring-2 ring-primary/20" 
+                      isSelected
+                        ? "border-primary bg-primary/10 shadow-md ring-2 ring-primary/20"
                         : "border-border hover:border-primary/60 bg-card",
                     )}
                     aria-pressed={isSelected}
@@ -1037,7 +1038,10 @@ export default function CreatePollPage() {
                 {safeT('polls.create.wizard.audience.tags.hint', 'Add tags to help categorize your poll. Tags make your poll easier to find and help voters discover polls on similar topics.')}
               </p>
               <p className="text-xs text-muted-foreground italic mb-2">
-                {safeT('polls.create.wizard.audience.tags.subHint', 'Type a tag and press Enter or click Add to include it.')}
+                {(() => {
+                  const hint = safeT('polls.create.wizard.audience.tags.subHint', 'Type a tag and press Enter or click Add to include it.');
+                  return hint && hint !== 'SubHint' && hint !== 'subHint' ? hint : 'Type a tag and press Enter or click Add to include it.';
+                })()}
               </p>
               {errors.tags && (
                 <p className="mt-2 text-sm text-destructive" id="error-tags">
