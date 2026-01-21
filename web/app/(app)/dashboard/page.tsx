@@ -111,6 +111,6 @@ export default function DashboardPage() {
   // H37: Loading fallback structure restored to match DashboardContent exactly (div > nav > div > nav)
   // AuthGuard is handled inside DashboardContent (client component)
   // Middleware also protects this route server-side
-  
+
   return <DashboardContent />;
 }

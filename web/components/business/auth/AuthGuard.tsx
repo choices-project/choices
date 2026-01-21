@@ -46,7 +46,7 @@ export function AuthGuard({
       logger.warn('AuthGuard - Unauthenticated user blocked, redirecting to login');
       routerRef.current.push(redirectTo);
     }
-  }, [isAuthenticated, isLoading, redirectTo]);  
+  }, [isAuthenticated, isLoading, redirectTo]);
 
   // Show loading while checking authentication
   if (isLoading) {

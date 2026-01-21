@@ -909,7 +909,7 @@ export default function DashboardContent() {
       {/* MobileDashboardNav is client-only component */}
       <MobileDashboardNav />
       </div>
-      </ErrorBoundary>
+    </ErrorBoundary>
     </AuthGuard>
   );
 }

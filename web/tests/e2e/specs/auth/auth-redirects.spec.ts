@@ -57,11 +57,11 @@ test.describe('Authentication Redirects', () => {
         const authForm = page.locator('[data-testid="login-form"]');
         const authHeading = page.locator('h1:has-text("Sign In"), h1:has-text("Sign Up"), h1:has-text("Log In")');
         const authToggle = page.locator('[data-testid="auth-toggle"]');
-        
+
         const hasForm = await authForm.count();
         const hasHeading = await authHeading.count();
         const hasToggle = await authToggle.count();
-        
+
         // At least one auth indicator should be present
         expect(hasForm + hasHeading + hasToggle).toBeGreaterThan(0);
       });
