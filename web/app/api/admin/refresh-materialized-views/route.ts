@@ -35,20 +35,24 @@ export const POST = withErrorHandling(async (_request: NextRequest) => {
     // Note: exec_sql typically requires 2 parameters, but we'll try with sql only
     let views: any = null;
     let viewsError: any = null;
-    
+
     try {
+      // Try to get list of materialized views via RPC
+      // Note: exec_sql may not exist, so we'll catch and use fallback
       const result = await (supabase.rpc as any)('exec_sql', {
         sql: `
-          SELECT schemaname, matviewname 
-          FROM pg_matviews 
+          SELECT schemaname, matviewname
+          FROM pg_matviews
           WHERE schemaname = 'public'
           ORDER BY matviewname;
         `,
-      });
-      views = result.data;
-      viewsError = result.error;
+      }).catch((err: any) => ({ data: null, error: err }));
+      
+      views = result?.data ?? null;
+      viewsError = result?.error ?? null;
     } catch (err) {
       viewsError = err;
+      views = null;
     }
 
     if (viewsError) {
