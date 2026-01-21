@@ -224,7 +224,7 @@ test.describe('Authentication Redirects', () => {
 
       // Should be redirected (either to /auth or home)
       const urlAfterLogout = page.url();
-      expect(currentUrl).toMatch(/\/(auth|$|\?)/);
+      expect(urlAfterLogout).toMatch(/\/(auth|$|\?)/);
 
       // Verify we're logged out - try accessing protected page
       await page.goto(`${BASE_URL}/feed`, { waitUntil: 'domcontentloaded', timeout: 30_000 });
@@ -308,13 +308,13 @@ test.describe('Authentication Redirects', () => {
 
       // Should see login button, not logout button
       const loginLink = page.locator('a[href="/login"], a[href="/auth"], button:has-text(/log in|sign in/i)');
-      const logoutButtonAfter = page.locator('[data-testid="logout-button"]');
+      const logoutButtonAfterLogout = page.locator('[data-testid="logout-button"]');
 
       const hasLogin = await loginLink.count();
-      const hasLogout = await logoutButtonAfter.count();
+      const hasLogoutAfter = await logoutButtonAfterLogout.count();
 
       expect(hasLogin).toBeGreaterThan(0);
-      expect(hasLogout).toBe(0);
+      expect(hasLogoutAfter).toBe(0);
     });
   });
 });
