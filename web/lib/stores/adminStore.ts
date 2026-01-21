@@ -681,23 +681,23 @@ export const createAdminActions = (
             const limit = Math.min(options?.limit ?? 50, 100); // Default to 50, max 100 allowed by API
             const page = options?.page ?? 1;
             const search = options?.search ?? '';
-            
+
             const params = new URLSearchParams({
               limit: String(limit),
               page: String(page),
             });
-            
+
             if (search) {
               params.set('search', search);
             }
-            
+
             const controller = new AbortController();
             const timeoutId = setTimeout(() => controller.abort(), 30000); // 30 second timeout
-            
+
             const response = await fetch(`/api/admin/users?${params.toString()}`, {
               signal: controller.signal,
             });
-            
+
             clearTimeout(timeoutId);
 
             if (!response.ok) {
@@ -1236,18 +1236,23 @@ export const createAdminActions = (
 
         updateUserRole: async (userId, role) => {
           try {
-            const supabase = await getSupabaseBrowserClient();
-            if (!supabase) {
-              throw new Error('Database connection not available');
-            }
+            // Use API endpoint instead of direct Supabase query to respect RLS and admin auth
+            const response = await fetch('/api/admin/users', {
+              method: 'PUT',
+              headers: {
+                'Content-Type': 'application/json',
+              },
+              body: JSON.stringify({
+                userId,
+                updates: {
+                  is_admin: role === 'admin',
+                },
+              }),
+            });
 
-            const { error } = await supabase
-              .from('user_profiles')
-              .update({ is_admin: role === 'admin' })
-              .eq('user_id', userId);
-
-            if (error) {
-              throw new Error(`Failed to update user role: ${error.message}`);
+            if (!response.ok) {
+              const errorData = await response.json().catch(() => ({ error: response.statusText }));
+              throw new Error(errorData.error || `Failed to update user role: ${response.statusText}`);
             }
 
         setState((state) => {
@@ -1266,6 +1271,7 @@ export const createAdminActions = (
           'Failed to update user role',
           error instanceof Error ? error : new Error(message)
         );
+        throw error; // Re-throw so UI can handle it
           }
         },
 
