@@ -5,12 +5,13 @@ import {
   ArrowLeft,
   ArrowRight,
   CheckCircle2,
+  GripVertical,
   Lightbulb,
   Plus,
   X,
 } from "lucide-react"
 import { useRouter } from "next/navigation"
-import { useCallback, useEffect, useMemo, useRef, useState } from "react"
+import React, { useCallback, useEffect, useMemo, useRef, useState } from "react"
 
 import { useRecordPollEvent, type PollEventOptions } from '@/features/polls/hooks/usePollAnalytics';
 import { usePollMilestoneNotifications, type PollMilestone } from '@/features/polls/hooks/usePollMilestones';
@@ -1174,61 +1175,10 @@ export default function CreatePollPage() {
 
                 <section>
                   <h4 className="text-base font-semibold mb-4 text-foreground">{safeT('polls.create.wizard.review.optionsHeading', 'Poll Options')}</h4>
-                  {data.settings.votingMethod === 'ranked' ? (
-                    <div className="space-y-4">
-                      <div className="rounded-lg border-2 border-purple-300 bg-gradient-to-br from-purple-50 to-purple-100/50 p-4 mb-4 shadow-sm">
-                        <div className="flex items-center gap-2 mb-2">
-                          <span className="text-xl">🏆</span>
-                          <span className="text-sm font-bold text-purple-900">Ranked Choice Voting</span>
-                        </div>
-                        <p className="text-xs text-purple-800 leading-relaxed">
-                          Voters will rank each option from 1st (most preferred) to last (least preferred).
-                        </p>
-                      </div>
-                      <div className="space-y-3">
-                        {data.options
-                          .filter((option) => option.trim().length > 0)
-                          .map((option, index) => (
-                            <div key={`preview-option-${index}`} className="flex items-center gap-3 p-4 rounded-lg border-2 border-purple-200 bg-white shadow-sm hover:shadow-md transition-shadow">
-                              <div className="flex-shrink-0 flex items-center justify-center w-10 h-10 rounded-full bg-gradient-to-br from-purple-100 to-purple-200 text-purple-700 font-bold text-sm shadow-sm">
-                                {index + 1}
-                              </div>
-                              <div className="flex-1">
-                                <span className="text-base font-semibold text-foreground">{option || `Option ${index + 1}`}</span>
-                              </div>
-                              <div className="flex-shrink-0 text-xs font-medium text-purple-600 bg-purple-50 px-2 py-1 rounded">
-                                Rank {index + 1}
-                              </div>
-                            </div>
-                          ))}
-                        {data.options.filter((option) => option.trim().length > 0).length === 0 && (
-                          <p className="text-sm text-muted-foreground italic text-center py-4">No options added yet.</p>
-                        )}
-                      </div>
-                      <div className="mt-4 p-4 rounded-lg bg-purple-50/30 border border-purple-200">
-                        <p className="text-xs text-purple-900 leading-relaxed">
-                          <strong className="font-semibold">How it works:</strong> Voters will drag options to reorder them, with 1st being their top choice.
-                          The system uses instant runoff to find the option with majority support.
-                        </p>
-                      </div>
-                    </div>
-                  ) : (
-                    <div className="space-y-3">
-                      {data.options
-                        .filter((option) => option.trim().length > 0)
-                        .map((option, index) => (
-                          <div key={`preview-option-${index}`} className="flex items-center gap-3 p-4 rounded-lg border-2 border-border bg-card shadow-sm hover:shadow-md transition-shadow">
-                            <span className="flex h-8 w-8 items-center justify-center rounded-full border-2 border-primary bg-primary/10 text-primary text-sm font-bold shrink-0 shadow-sm" aria-hidden>
-                              {index + 1}
-                            </span>
-                            <span className="text-base font-semibold text-foreground">{option || `Option ${index + 1}`}</span>
-                          </div>
-                        ))}
-                      {data.options.filter((option) => option.trim().length > 0).length === 0 && (
-                        <p className="text-sm text-muted-foreground italic text-center py-4">No options added yet.</p>
-                      )}
-                    </div>
-                  )}
+                  <InteractivePreview 
+                    votingMethod={data.settings.votingMethod}
+                    options={data.options.filter((option) => option.trim().length > 0)}
+                  />
                 </section>
 
                   <Separator />
@@ -1633,6 +1583,227 @@ type SettingToggleProps = {
   description: string;
   checked: boolean;
   onCheckedChange: (checked: boolean) => void;
+};
+
+// Interactive Preview Component for Step 4
+type InteractivePreviewProps = {
+  votingMethod: string;
+  options: string[];
+};
+
+const InteractivePreview = ({ votingMethod, options }: InteractivePreviewProps) => {
+  const [rankedOrder, setRankedOrder] = React.useState<string[]>(() => 
+    options.map((_, index) => `option-${index}`)
+  );
+  const [draggedIndex, setDraggedIndex] = React.useState<number | null>(null);
+  const [selectedSingle, setSelectedSingle] = React.useState<number | null>(null);
+  const [selectedMultiple, setSelectedMultiple] = React.useState<number[]>([]);
+  const [selectedApproval, setSelectedApproval] = React.useState<number[]>([]);
+
+  // Initialize ranked order when options change
+  React.useEffect(() => {
+    setRankedOrder(options.map((_, index) => `option-${index}`));
+  }, [options.length]);
+
+  // Drag and drop handlers for ranked choice
+  const handleDragStart = (index: number) => {
+    setDraggedIndex(index);
+  };
+
+  const handleDragOver = (e: React.DragEvent) => {
+    e.preventDefault();
+    e.currentTarget.classList.add('opacity-50');
+  };
+
+  const handleDragLeave = (e: React.DragEvent) => {
+    e.currentTarget.classList.remove('opacity-50');
+  };
+
+  const handleDrop = (e: React.DragEvent, dropIndex: number) => {
+    e.preventDefault();
+    e.currentTarget.classList.remove('opacity-50');
+    
+    if (draggedIndex === null) return;
+    
+    const newOrder = [...rankedOrder];
+    const draggedItem = newOrder[draggedIndex];
+    if (!draggedItem) return;
+    
+    newOrder.splice(draggedIndex, 1);
+    newOrder.splice(dropIndex, 0, draggedItem);
+    
+    setRankedOrder(newOrder);
+    setDraggedIndex(null);
+  };
+
+
+  if (votingMethod === 'ranked') {
+    return (
+      <div className="space-y-4">
+        <div className="rounded-lg border-2 border-purple-300 bg-gradient-to-br from-purple-50 to-purple-100/50 p-4 mb-4 shadow-sm">
+          <div className="flex items-center gap-2 mb-2">
+            <span className="text-xl">🏆</span>
+            <span className="text-sm font-bold text-purple-900">Ranked Choice Voting</span>
+          </div>
+          <p className="text-xs text-purple-800 leading-relaxed">
+            Voters will rank each option from 1st (most preferred) to last (least preferred).
+          </p>
+        </div>
+        <div className="space-y-3">
+          {rankedOrder.map((orderKey, displayIndex) => {
+            const optionIndex = parseInt(orderKey.replace('option-', ''), 10);
+            const option = options[optionIndex];
+            if (optionIndex < 0 || optionIndex >= options.length || !option) return null;
+            
+            return (
+              <div
+                key={`preview-ranked-${orderKey}`}
+                draggable
+                onDragStart={() => handleDragStart(displayIndex)}
+                onDragOver={handleDragOver}
+                onDragLeave={handleDragLeave}
+                onDrop={(e) => handleDrop(e, displayIndex)}
+                className="flex items-center gap-3 p-4 rounded-lg border-2 border-purple-200 bg-white shadow-sm hover:shadow-md transition-all cursor-move hover:border-purple-300 active:scale-[0.98]"
+              >
+                <div className="flex-shrink-0 flex items-center justify-center w-10 h-10 rounded-full bg-gradient-to-br from-purple-100 to-purple-200 text-purple-700 font-bold text-sm shadow-sm">
+                  {displayIndex + 1}
+                </div>
+                <div className="flex-1">
+                  <span className="text-base font-semibold text-foreground">{option}</span>
+                </div>
+                <div className="flex-shrink-0 flex items-center gap-2">
+                  <GripVertical className="h-4 w-4 text-purple-400" />
+                  <div className="text-xs font-medium text-purple-600 bg-purple-50 px-2 py-1 rounded">
+                    Rank {displayIndex + 1}
+                  </div>
+                </div>
+              </div>
+            );
+          })}
+          {options.length === 0 && (
+            <p className="text-sm text-muted-foreground italic text-center py-4">No options added yet.</p>
+          )}
+        </div>
+        <div className="mt-4 p-4 rounded-lg bg-purple-50/30 border border-purple-200">
+          <p className="text-xs text-purple-900 leading-relaxed">
+            <strong className="font-semibold">How it works:</strong> Drag options to reorder them, with 1st being your top choice.
+            The system uses instant runoff to find the option with majority support.
+          </p>
+        </div>
+      </div>
+    );
+  }
+
+  if (votingMethod === 'single') {
+    return (
+      <div className="space-y-3">
+        {options.map((option, index) => (
+          <label
+            key={`preview-single-${index}`}
+            className="flex items-center gap-3 p-4 rounded-lg border-2 border-border bg-card shadow-sm hover:shadow-md transition-all cursor-pointer hover:border-primary/60"
+          >
+            <input
+              type="radio"
+              name="preview-single-choice"
+              checked={selectedSingle === index}
+              onChange={() => setSelectedSingle(index)}
+              className="h-5 w-5 text-primary focus:ring-primary"
+            />
+            <span className="flex h-8 w-8 items-center justify-center rounded-full border-2 border-primary bg-primary/10 text-primary text-sm font-bold shrink-0 shadow-sm" aria-hidden>
+              {index + 1}
+            </span>
+            <span className="text-base font-semibold text-foreground flex-1">{option}</span>
+          </label>
+        ))}
+        {options.length === 0 && (
+          <p className="text-sm text-muted-foreground italic text-center py-4">No options added yet.</p>
+        )}
+      </div>
+    );
+  }
+
+  if (votingMethod === 'multiple') {
+    return (
+      <div className="space-y-3">
+        {options.map((option, index) => (
+          <label
+            key={`preview-multiple-${index}`}
+            className="flex items-center gap-3 p-4 rounded-lg border-2 border-border bg-card shadow-sm hover:shadow-md transition-all cursor-pointer hover:border-primary/60"
+          >
+            <input
+              type="checkbox"
+              checked={selectedMultiple.includes(index)}
+              onChange={(e) => {
+                if (e.target.checked) {
+                  setSelectedMultiple([...selectedMultiple, index]);
+                } else {
+                  setSelectedMultiple(selectedMultiple.filter(i => i !== index));
+                }
+              }}
+              className="h-5 w-5 text-primary focus:ring-primary rounded"
+            />
+            <span className="flex h-8 w-8 items-center justify-center rounded-full border-2 border-primary bg-primary/10 text-primary text-sm font-bold shrink-0 shadow-sm" aria-hidden>
+              {index + 1}
+            </span>
+            <span className="text-base font-semibold text-foreground flex-1">{option}</span>
+          </label>
+        ))}
+        {options.length === 0 && (
+          <p className="text-sm text-muted-foreground italic text-center py-4">No options added yet.</p>
+        )}
+      </div>
+    );
+  }
+
+  if (votingMethod === 'approval') {
+    return (
+      <div className="space-y-3">
+        {options.map((option, index) => (
+          <label
+            key={`preview-approval-${index}`}
+            className="flex items-center gap-3 p-4 rounded-lg border-2 border-border bg-card shadow-sm hover:shadow-md transition-all cursor-pointer hover:border-primary/60"
+          >
+            <input
+              type="checkbox"
+              checked={selectedApproval.includes(index)}
+              onChange={(e) => {
+                if (e.target.checked) {
+                  setSelectedApproval([...selectedApproval, index]);
+                } else {
+                  setSelectedApproval(selectedApproval.filter(i => i !== index));
+                }
+              }}
+              className="h-5 w-5 text-primary focus:ring-primary rounded"
+            />
+            <span className="flex h-8 w-8 items-center justify-center rounded-full border-2 border-primary bg-primary/10 text-primary text-sm font-bold shrink-0 shadow-sm" aria-hidden>
+              {index + 1}
+            </span>
+            <span className="text-base font-semibold text-foreground flex-1">{option}</span>
+          </label>
+        ))}
+        {options.length === 0 && (
+          <p className="text-sm text-muted-foreground italic text-center py-4">No options added yet.</p>
+        )}
+      </div>
+    );
+  }
+
+  // Default fallback for other voting methods
+  return (
+    <div className="space-y-3">
+      {options.map((option, index) => (
+        <div key={`preview-default-${index}`} className="flex items-center gap-3 p-4 rounded-lg border-2 border-border bg-card shadow-sm hover:shadow-md transition-shadow">
+          <span className="flex h-8 w-8 items-center justify-center rounded-full border-2 border-primary bg-primary/10 text-primary text-sm font-bold shrink-0 shadow-sm" aria-hidden>
+            {index + 1}
+          </span>
+          <span className="text-base font-semibold text-foreground">{option}</span>
+        </div>
+      ))}
+      {options.length === 0 && (
+        <p className="text-sm text-muted-foreground italic text-center py-4">No options added yet.</p>
+      )}
+    </div>
+  );
 };
 
 const SettingToggle = ({ id, label, description, checked, onCheckedChange }: SettingToggleProps) => {
