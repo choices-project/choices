@@ -1,6 +1,6 @@
 'use client';
 
-import { ArrowLeft, Share2, AlertCircle } from 'lucide-react';
+import { ArrowLeft, Share2, AlertCircle, Trash2 } from 'lucide-react';
 import { useParams, useRouter } from 'next/navigation';
 import React, { useState, useEffect, useCallback, useRef, useMemo } from 'react';
 
@@ -21,9 +21,20 @@ import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from '@/components/ui/alert-dialog';
 
 import ScreenReaderSupport from '@/lib/accessibility/screen-reader';
 import { useNotificationActions, useNotificationSettings } from '@/lib/stores/notificationStore';
+import { useUserStore } from '@/lib/stores/userStore';
 import logger from '@/lib/utils/logger';
 
 import VotingInterface, {
@@ -52,6 +63,7 @@ type Poll = {
   category: string;
   privacyLevel: string;
   createdAt: string;
+  createdBy?: string | null;
   baselineAt?: string;
   lockedAt?: string;
   allowPostClose?: boolean;
@@ -100,9 +112,13 @@ type PollClientProps = {
 export default function PollClient({ poll }: PollClientProps) {
   const router = useRouter();
   const params = useParams();
+  const user = useUserStore((state) => state.user);
+  const isPollCreator = user?.id && poll.createdBy && user.id === poll.createdBy;
 
   // Track if component is mounted to prevent hydration mismatches from date formatting
   const [isMounted, setIsMounted] = useState(false);
+  const [isDeleting, setIsDeleting] = useState(false);
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
 
   useEffect(() => {
     setIsMounted(true);
@@ -181,6 +197,9 @@ export default function PollClient({ poll }: PollClientProps) {
   const { addNotification } = useNotificationActions();
   const addNotificationRef = useRef(addNotification);
   React.useEffect(() => { addNotificationRef.current = addNotification; }, [addNotification]);
+
+  const [isDeleting, setIsDeleting] = useState(false);
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
 
   // Normalize options to handle both string[] and PollOption[] formats
   const normalizedOptions = useMemo(() => {
@@ -667,6 +686,85 @@ export default function PollClient({ poll }: PollClientProps) {
     routerRef.current.push('/polls');
   }, []);
 
+  const handleDeletePoll = useCallback(async () => {
+    if (!isPollCreator || !pollId) return;
+
+    setIsDeleting(true);
+    try {
+      const response = await fetch(`/api/polls/${pollId}`, {
+        method: 'DELETE',
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}));
+        throw new Error(errorData.error ?? `Failed to delete poll: ${response.status}`);
+      }
+
+      addNotificationRef.current({
+        type: 'success',
+        title: 'Poll deleted',
+        message: 'Your poll has been deleted successfully.',
+        duration: 4000,
+      });
+
+      // Redirect to polls page
+      routerRef.current.push('/polls');
+    } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : 'Failed to delete poll';
+      addNotificationRef.current({
+        type: 'error',
+        title: 'Delete failed',
+        message: errorMessage,
+        duration: 6000,
+      });
+      logger.error('Failed to delete poll:', error);
+    } finally {
+      setIsDeleting(false);
+      setShowDeleteConfirm(false);
+    }
+  }, [isPollCreator, pollId]);
+
+  const [isDeleting, setIsDeleting] = useState(false);
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+
+  const handleDeletePoll = useCallback(async () => {
+    if (!isPollCreator || !pollId) return;
+
+    setIsDeleting(true);
+    try {
+      const response = await fetch(`/api/polls/${pollId}`, {
+        method: 'DELETE',
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}));
+        throw new Error(errorData.error ?? `Failed to delete poll: ${response.status}`);
+      }
+
+      addNotificationRef.current({
+        type: 'success',
+        title: 'Poll deleted',
+        message: 'Your poll has been deleted successfully.',
+        duration: 4000,
+      });
+
+      // Redirect to polls page
+      routerRef.current.push('/polls');
+    } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : 'Failed to delete poll';
+      addNotificationRef.current({
+        type: 'error',
+        title: 'Delete failed',
+        message: errorMessage,
+        duration: 6000,
+      });
+      logger.error('Failed to delete poll:', error);
+    } finally {
+      setIsDeleting(false);
+      setShowDeleteConfirm(false);
+    }
+  }, [isPollCreator, pollId]);
+
   const formatDate = (dateString: string) => {
     // Guard with isMounted to prevent hydration mismatches from locale differences
     if (!isMounted) {
@@ -826,6 +924,18 @@ export default function PollClient({ poll }: PollClientProps) {
                   <Share2 className="w-4 h-4" />
                   <span>{copied ? 'Copied!' : 'Share'}</span>
                 </Button>
+                {isPollCreator && (
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => setShowDeleteConfirm(true)}
+                    className="flex items-center gap-2 text-destructive hover:text-destructive hover:bg-destructive/10"
+                    disabled={isDeleting}
+                  >
+                    <Trash2 className="w-4 h-4" />
+                    <span>Delete</span>
+                  </Button>
+                )}
               </div>
             </div>
           </CardHeader>
@@ -1088,7 +1198,29 @@ export default function PollClient({ poll }: PollClientProps) {
         {isPollClosed && poll.allowPostClose && (
           <PostCloseBanner pollStatus={poll.status as 'closed' | 'locked' | 'post-close'} />
         )}
+
+        {/* Delete Confirmation Dialog */}
+        <AlertDialog open={showDeleteConfirm} onOpenChange={setShowDeleteConfirm}>
+          <AlertDialogContent>
+            <AlertDialogHeader>
+              <AlertDialogTitle>Delete Poll</AlertDialogTitle>
+              <AlertDialogDescription>
+                Are you sure you want to delete "{poll.title}"? This action cannot be undone and will permanently remove the poll and all associated votes.
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter>
+              <AlertDialogCancel disabled={isDeleting}>Cancel</AlertDialogCancel>
+              <AlertDialogAction
+                onClick={handleDeletePoll}
+                disabled={isDeleting}
+                className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+              >
+                {isDeleting ? 'Deleting...' : 'Delete Poll'}
+              </AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
       </div>
-      </div>
+    </div>
   );
 }

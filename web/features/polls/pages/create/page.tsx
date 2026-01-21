@@ -299,6 +299,8 @@ export default function CreatePollPage() {
 
   const handleCreateAnotherPoll = () => {
     setShareInfo(null)
+    // Reset wizard state to ensure fresh start
+    actions.resetWizard();
     recordPollEvent('create_another', {
       value: 1,
     });

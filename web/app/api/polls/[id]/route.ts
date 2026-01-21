@@ -41,6 +41,7 @@ export const GET = withErrorHandling(async (
           category,
           voting_method,
           created_at,
+          created_by,
           poll_settings,
           poll_options:poll_options (
             id,
@@ -83,6 +84,7 @@ export const GET = withErrorHandling(async (
       category: poll.category,
       votingMethod: poll.voting_method ?? 'single',
       createdAt: poll.created_at,
+      createdBy: poll.created_by ?? null,
       canVote: (poll.status ?? 'active') === 'active',
       settings: {
         allowMultipleVotes: Boolean(pollSettings?.allow_multiple_votes),
@@ -93,4 +95,60 @@ export const GET = withErrorHandling(async (
     };
 
     return successResponse(sanitizedPoll);
+});
+
+export const DELETE = withErrorHandling(async (
+  _request: NextRequest,
+  { params }: { params: Promise<{ id: string }> }
+) => {
+  const { id: pollId } = await params;
+  
+  // Validate poll ID format (UUID)
+  const pollIdValidation = z.string().uuid('Invalid poll ID format').safeParse(pollId);
+  if (!pollIdValidation.success) {
+    return validationError({ pollId: 'Invalid poll ID format' });
+  }
+
+  const supabaseClient = await getSupabaseServerClient();
+  if (!supabaseClient) {
+    return errorResponse('Database not available', 500);
+  }
+
+  // Get current user
+  const { data: { user }, error: userError } = await supabaseClient.auth.getUser();
+  if (userError || !user) {
+    return errorResponse('Authentication required', 401);
+  }
+
+  // Get poll to verify ownership
+  const { data: poll, error: pollError } = await supabaseClient
+    .from('polls')
+    .select('id, title, created_by, status')
+    .eq('id', pollId)
+    .maybeSingle();
+
+  if (pollError || !poll) {
+    return notFoundError('Poll not found');
+  }
+
+  // Verify user is the creator
+  if (poll.created_by !== user.id) {
+    return errorResponse('Only the poll creator can delete this poll', 403);
+  }
+
+  // Delete poll (cascade will handle related records like votes, options, etc.)
+  const { error: deleteError } = await supabaseClient
+    .from('polls')
+    .delete()
+    .eq('id', pollId)
+    .eq('created_by', user.id); // Extra safety check
+
+  if (deleteError) {
+    return errorResponse('Failed to delete poll', 500);
+  }
+
+  return successResponse({
+    message: 'Poll deleted successfully',
+    pollId,
+  });
 });
