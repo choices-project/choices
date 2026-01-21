@@ -151,7 +151,7 @@ export type AdminActions = Pick<BaseStore, 'setLoading' | 'setError' | 'clearErr
   setSystemMetrics: (metrics: SystemMetrics) => void;
   updateActivityFeed: (activities: ActivityItem[]) => void;
 
-  loadUsers: () => Promise<void>;
+  loadUsers: (options?: { limit?: number; page?: number; search?: string }) => Promise<void>;
   loadDashboardStats: () => Promise<void>;
   loadSystemSettings: () => Promise<void>;
 
@@ -670,22 +670,43 @@ export const createAdminActions = (
           });
         },
 
-        loadUsers: async () => {
+        loadUsers: async (options?: { limit?: number; page?: number; search?: string }) => {
           // Set loading state synchronously before any async operations
           setLoadingState(true);
           clearErrorState();
-          
+
           try {
-            // Use API endpoint instead of direct Supabase query to respect RLS and admin auth
-            const response = await fetch('/api/admin/users');
+            // Use API endpoint with pagination to prevent loading too many users at once
+            // Limit to 50 users initially to prevent performance issues
+            const limit = Math.min(options?.limit ?? 50, 100); // Default to 50, max 100 allowed by API
+            const page = options?.page ?? 1;
+            const search = options?.search ?? '';
             
+            const params = new URLSearchParams({
+              limit: String(limit),
+              page: String(page),
+            });
+            
+            if (search) {
+              params.set('search', search);
+            }
+            
+            const controller = new AbortController();
+            const timeoutId = setTimeout(() => controller.abort(), 30000); // 30 second timeout
+            
+            const response = await fetch(`/api/admin/users?${params.toString()}`, {
+              signal: controller.signal,
+            });
+            
+            clearTimeout(timeoutId);
+
             if (!response.ok) {
               const errorData = await response.json().catch(() => ({ error: response.statusText }));
               throw new Error(errorData.error || `Failed to fetch users: ${response.statusText}`);
             }
 
             const data = await response.json();
-            
+
             // Handle API response structure from paginatedResponse:
             // { success: true, data: [...users], metadata: { pagination: { total, limit, offset, ... } } }
             const users = Array.isArray(data.data) ? data.data : [];
@@ -719,7 +740,12 @@ export const createAdminActions = (
             });
           } catch (error) {
         const message = error instanceof Error ? error.message : 'Unknown error';
-        setErrorState(message);
+        // Handle abort/timeout errors specifically
+        if (error instanceof Error && error.name === 'AbortError') {
+          setErrorState('Request timed out. Please try again with more specific filters.');
+        } else {
+          setErrorState(message);
+        }
         logger.error(
           'Failed to load users',
           error instanceof Error ? error : new Error(message)
@@ -1115,7 +1141,7 @@ export const createAdminActions = (
           // Set loading state synchronously before any async operations
           setLoadingState(true);
           clearErrorState();
-          
+
           try {
             const supabase = await getSupabaseBrowserClient();
             if (!supabase) {
@@ -1341,7 +1367,7 @@ export const createAdminActions = (
           // Set saving state synchronously before any async operations
           setIsSavingSettingsState(true);
           clearErrorState();
-          
+
           try {
 
         const settings = get().systemSettings;

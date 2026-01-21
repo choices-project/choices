@@ -5,7 +5,7 @@
  * It's loaded only when needed to reduce initial bundle size.
  */
 
-import React, { useEffect, useRef } from 'react';
+import React, { useEffect, useRef, useMemo } from 'react';
 
 import type { AdminUser } from '@/features/admin/types';
 
@@ -37,6 +37,11 @@ export default function UserManagement({ onUserUpdate, onUserDelete }: UserManag
   const totalUsers = useAdminUserCount();
   const loading = useAdminLoading();
   const error = useAdminError();
+
+  // Limit visible users to prevent rendering too many rows at once (performance safeguard)
+  const visibleUsers = useMemo(() => {
+    return filteredUsers.slice(0, 100); // Only render first 100 users
+  }, [filteredUsers]);
 
   // Get actions from adminStore
   const {
@@ -70,7 +75,8 @@ export default function UserManagement({ onUserUpdate, onUserDelete }: UserManag
 
     const loadUsersData = async () => {
       try {
-        await loadUsersRef.current();
+        // Load with pagination - limit to 50 users initially
+        await loadUsersRef.current({ limit: 50, page: 1 });
 
         const loadTime = performance.now() - startTime;
         performanceMetrics.addMetric('user-management-load', loadTime);
@@ -79,6 +85,8 @@ export default function UserManagement({ onUserUpdate, onUserDelete }: UserManag
         setErrorRef.current(errorMessage);
         performanceMetrics.addMetric('user-management-error', 1);
         logger.error('User management load error:', err);
+        // Reset hasLoadedRef on error so user can retry
+        hasLoadedRef.current = false;
       }
     };
 
@@ -200,7 +208,7 @@ export default function UserManagement({ onUserUpdate, onUserDelete }: UserManag
             <button
               onClick={() => {
                 hasLoadedRef.current = false;
-                void loadUsersRef.current();
+                void loadUsersRef.current({ limit: 50, page: 1 });
               }}
               className="mt-4 px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700"
             >
@@ -213,7 +221,7 @@ export default function UserManagement({ onUserUpdate, onUserDelete }: UserManag
   }
 
   // Safety check: prevent rendering if there are too many users (performance safeguard)
-  if (filteredUsers.length > 10000) {
+  if (filteredUsers.length > 1000) {
     return (
       <div className="bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-800 rounded-lg p-6">
         <div className="flex items-center">
@@ -223,7 +231,7 @@ export default function UserManagement({ onUserUpdate, onUserDelete }: UserManag
           <div>
             <h3 className="text-lg font-medium text-yellow-800 dark:text-yellow-300">Too Many Users</h3>
             <p className="text-yellow-600 dark:text-yellow-400">
-              There are {filteredUsers.length} users matching your filters. Please refine your search to view results.
+              There are {filteredUsers.length} users matching your filters. Please refine your search to view results. Only the first 100 users are displayed.
             </p>
           </div>
         </div>
@@ -238,7 +246,7 @@ export default function UserManagement({ onUserUpdate, onUserDelete }: UserManag
         <h2 className="text-2xl font-bold text-gray-900 dark:text-gray-100" data-testid="user-management-title">User Management</h2>
         <div className="flex items-center space-x-4">
           <span className="text-sm text-gray-600 dark:text-gray-400">
-            {filteredUsers.length} of {totalUsers} users
+            {visibleUsers.length} of {filteredUsers.length} shown ({totalUsers} total)
           </span>
           <button className="px-4 py-2 bg-blue-600 dark:bg-blue-700 text-white rounded-lg hover:bg-blue-700 dark:hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-500">
             Add User
@@ -367,7 +375,7 @@ export default function UserManagement({ onUserUpdate, onUserDelete }: UserManag
               </tr>
             </thead>
             <tbody className="bg-white dark:bg-gray-900 divide-y divide-gray-200 dark:divide-gray-700">
-              {filteredUsers.map((user: AdminUser) => (
+              {visibleUsers.map((user: AdminUser) => (
                 <tr key={user.id} className="hover:bg-gray-50 dark:hover:bg-gray-800">
                   <td className="px-6 py-4 whitespace-nowrap">
                     <input
