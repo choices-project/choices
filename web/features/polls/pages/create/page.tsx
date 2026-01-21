@@ -41,6 +41,7 @@ import { Textarea } from "@/components/ui/textarea"
 import { useAccessibleDialog } from '@/lib/accessibility/useAccessibleDialog';
 import { useNotificationActions } from "@/lib/stores"
 import { cn } from "@/lib/utils"
+import logger from '@/lib/utils/logger';
 
 import { useI18n } from '@/hooks/useI18n';
 
