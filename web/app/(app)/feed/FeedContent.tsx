@@ -5,6 +5,7 @@ import React, { useEffect, useMemo, useRef, Suspense } from 'react';
 import { UnifiedFeedRefactored } from '@/features/feeds';
 import { useFormattedDistrict } from '@/features/profile/hooks/useUserDistrict';
 
+import { AuthGuard } from '@/components/business/auth/AuthGuard';
 import { ErrorBoundary } from '@/components/shared/ErrorBoundary';
 
 import { useUser } from '@/lib/stores';
@@ -105,45 +106,47 @@ export default function FeedContent() {
   );
 
   return (
-    <ErrorBoundary
-      fallback={
-        <div
-          className="flex items-center justify-center min-h-[400px] px-4"
-          data-testid="feed-error-boundary"
-          role="alert"
-        >
-          <div className="text-center max-w-md">
-            <h2 className="text-xl font-semibold text-red-600 dark:text-red-400 mb-2">
-              Unable to load feed
-            </h2>
-            <p className="text-gray-600 dark:text-gray-400 mb-4">
-              We encountered an error while loading your feed. Please try again.
-            </p>
-            <button
-              onClick={() => window.location.reload()}
-              className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition-colors"
-              aria-label="Try again to load feed"
-              data-testid="feed-error-boundary-retry"
-            >
-              Try again
-            </button>
+    <AuthGuard redirectTo="/auth">
+      <ErrorBoundary
+        fallback={
+          <div
+            className="flex items-center justify-center min-h-[400px] px-4"
+            data-testid="feed-error-boundary"
+            role="alert"
+          >
+            <div className="text-center max-w-md">
+              <h2 className="text-xl font-semibold text-red-600 dark:text-red-400 mb-2">
+                Unable to load feed
+              </h2>
+              <p className="text-gray-600 dark:text-gray-400 mb-4">
+                We encountered an error while loading your feed. Please try again.
+              </p>
+              <button
+                onClick={() => window.location.reload()}
+                className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition-colors"
+                aria-label="Try again to load feed"
+                data-testid="feed-error-boundary-retry"
+              >
+                Try again
+              </button>
+            </div>
           </div>
+        }
+      >
+        <div className="container mx-auto px-4 py-8 bg-white dark:bg-gray-900 min-h-screen">
+          <Suspense fallback={loadingFallback}>
+            <UnifiedFeedRefactored
+              {...{
+                enableAnalytics: true,
+                maxItems: 50,
+                userDistrict,
+                ...(user?.id ? { userId: user.id } : {}),
+              }}
+            />
+          </Suspense>
         </div>
-      }
-    >
-      <div className="container mx-auto px-4 py-8 bg-white dark:bg-gray-900 min-h-screen">
-        <Suspense fallback={loadingFallback}>
-          <UnifiedFeedRefactored
-            {...{
-              enableAnalytics: true,
-              maxItems: 50,
-              userDistrict,
-              ...(user?.id ? { userId: user.id } : {}),
-            }}
-          />
-        </Suspense>
-      </div>
-    </ErrorBoundary>
+      </ErrorBoundary>
+    </AuthGuard>
   );
 }
 

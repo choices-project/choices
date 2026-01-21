@@ -14,6 +14,7 @@ import React, { Suspense, useEffect, useRef, useState } from 'react';
 import { PersonalDashboard } from '@/features/dashboard';
 import { useProfile } from '@/features/profile/hooks/use-profile';
 
+import { AuthGuard } from '@/components/business/auth/AuthGuard';
 import DashboardNavigation, { MobileDashboardNav } from '@/components/shared/DashboardNavigation';
 import { ErrorBoundary } from '@/components/shared/ErrorBoundary';
 import { Button } from '@/components/ui/button';
@@ -908,7 +909,8 @@ export default function DashboardContent() {
       {/* MobileDashboardNav is client-only component */}
       <MobileDashboardNav />
       </div>
-    </ErrorBoundary>
+      </ErrorBoundary>
+    </AuthGuard>
   );
 }
 

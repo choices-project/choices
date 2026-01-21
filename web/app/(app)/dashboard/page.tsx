@@ -6,7 +6,7 @@
  *
  * Fixed: January 2025 - Extracted page logic to DashboardContent with dynamic import
  * This prevents hydration mismatches by ensuring the component never renders on the server
- * 
+ *
  * CRITICAL: This is a Server Component (no 'use client'), similar to feed page.
  * The page component itself doesn't need to be a Client Component since DashboardContent
  * is dynamically imported with ssr: false. Making this a Server Component prevents
@@ -14,8 +14,6 @@
  */
 
 import dynamicImport from 'next/dynamic';
-
-import { AuthGuard } from '@/components/business/auth/AuthGuard';
 
 // CRITICAL: Load DashboardContent only on client to prevent SSR hydration mismatch
 // This component uses hooks and client-side state that cause React Error #185 when rendered during SSR
@@ -111,10 +109,8 @@ export default function DashboardPage() {
   // H32: Removed client-side code from Server Component - Server Components must be pure and cannot access window/document
   // This was causing hydration mismatch because server and client rendered different code paths
   // H37: Loading fallback structure restored to match DashboardContent exactly (div > nav > div > nav)
+  // AuthGuard is handled inside DashboardContent (client component)
+  // Middleware also protects this route server-side
   
-  return (
-    <AuthGuard redirectTo="/auth">
-      <DashboardContent />
-    </AuthGuard>
-  );
+  return <DashboardContent />;
 }

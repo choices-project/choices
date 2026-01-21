@@ -19,8 +19,6 @@
 
 import dynamicImport from 'next/dynamic';
 
-import { AuthGuard } from '@/components/business/auth/AuthGuard';
-
 // CRITICAL: Load FeedContent only on client to prevent SSR hydration mismatch
 // This component uses hooks and client-side state that cause React Error #185 when rendered during SSR
 const FeedContent = dynamicImport(
@@ -53,9 +51,7 @@ const FeedContent = dynamicImport(
 );
 
 export default function FeedPage() {
-  return (
-    <AuthGuard redirectTo="/auth">
-      <FeedContent />
-    </AuthGuard>
-  );
+  // AuthGuard is handled inside FeedContent (client component)
+  // Middleware also protects this route server-side
+  return <FeedContent />;
 }

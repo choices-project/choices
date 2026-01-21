@@ -1,10 +1,10 @@
+'use client';
+
 import { useRouter } from 'next/navigation';
 import React, { useEffect, useRef } from 'react';
 
 import { useIsAuthenticated, useUserLoading } from '@/lib/stores';
 import { logger } from '@/lib/utils/logger';
-
-'use client';
 
 type AuthGuardProps = {
   children: React.ReactNode;

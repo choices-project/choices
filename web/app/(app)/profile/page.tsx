@@ -270,7 +270,8 @@ function ProfilePageContent() {
   // Profile data is already available from useProfile hook
 
   return (
-    <ErrorBoundary>
+    <AuthGuard redirectTo="/auth">
+      <ErrorBoundary>
       <div className="container mx-auto px-4 py-8">
       <div className="max-w-4xl mx-auto">
         {/* Profile Header */}
@@ -444,14 +445,11 @@ function ProfilePageContent() {
         </Card>
       </div>
       </div>
-    </ErrorBoundary>
+      </ErrorBoundary>
+    </AuthGuard>
   );
 }
 
 export default function ProfilePage() {
-  return (
-    <AuthGuard redirectTo="/auth">
-      <ProfilePageContent />
-    </AuthGuard>
-  );
+  return <ProfilePageContent />;
 }
