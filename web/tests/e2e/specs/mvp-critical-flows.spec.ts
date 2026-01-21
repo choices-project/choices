@@ -197,10 +197,10 @@ test.describe('MVP Critical Flows', () => {
             const pollContent1 = page.locator('h1');
             const pollContent2 = page.locator('h2');
             const pollContent3 = page.locator('[data-testid="poll"]');
-            
+
             const loadingState1 = page.locator('text=/loading/i');
             const loadingState2 = page.locator('[aria-busy="true"]');
-            
+
             const errorState1 = page.locator('[data-testid="poll-error"]');
             const errorState2 = page.locator('[role="alert"]');
             const errorState3 = page.locator('text=/error/i');
@@ -279,7 +279,7 @@ test.describe('MVP Critical Flows', () => {
       const errorByTestId = page.locator('[data-testid="poll-error"]');
       const errorByRole = page.locator('[role="alert"]');
       const errorByText = page.locator('text=/not found|error/i');
-      
+
       const hasErrorTestId = await errorByTestId.count();
       const hasErrorRole = await errorByRole.count();
       const hasErrorText = await errorByText.count();

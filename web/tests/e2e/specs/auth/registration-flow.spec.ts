@@ -272,14 +272,14 @@ test.describe('Registration Flow', () => {
       expect(responseBody.data?.user).toBeDefined();
       expect(responseBody.data?.user?.id).toBeDefined();
       expect(responseBody.data?.user?.email).toBe(testUser.email.toLowerCase());
-      
+
       // Profile fields may be in different locations depending on API response structure
       // Check for username (may be in user object or profile object)
-      const username = responseBody.data?.user?.username || 
-                      responseBody.data?.profile?.username || 
+      const username = responseBody.data?.user?.username ||
+                      responseBody.data?.profile?.username ||
                       responseBody.data?.user?.display_name;
       expect(username).toBeDefined();
-      
+
       // Verify profile was created by checking for profile-related fields
       // At minimum, user should have an ID and email, which indicates successful registration
       // Additional profile fields may be populated asynchronously
@@ -445,18 +445,18 @@ test.describe('Registration Flow', () => {
       } else {
         // Check for UI error message - wait a bit for error to appear
         await page.waitForTimeout(2_000);
-        
+
         // Check multiple possible error indicators
         const errorElement1 = page.locator('[data-testid="auth-error"]');
         const errorElement2 = page.locator('[role="alert"]');
         const errorElement3 = page.locator('text=/already exists|duplicate|taken/i');
         const errorElement4 = page.locator('.text-red-600, .text-red-500, .text-destructive');
-        
-        const errorCount = (await errorElement1.count()) + 
-                          (await errorElement2.count()) + 
-                          (await errorElement3.count()) + 
+
+        const errorCount = (await errorElement1.count()) +
+                          (await errorElement2.count()) +
+                          (await errorElement3.count()) +
                           (await errorElement4.count());
-        
+
         if (errorCount === 0) {
           // Take screenshot for debugging
           await page.screenshot({ path: 'test-results/duplicate-email-no-error.png' });
@@ -464,7 +464,7 @@ test.describe('Registration Flow', () => {
           const pageContent = await page.content();
           console.log('[DIAGNOSTIC] Page content (first 500 chars):', pageContent.substring(0, 500));
         }
-        
+
         expect(errorCount).toBeGreaterThan(0);
       }
     });

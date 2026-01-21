@@ -64,10 +64,10 @@ test.describe('MVP Functional Verification', () => {
       const pollsList2 = page.locator('[role="feed"]');
       const pollsList3 = page.locator('[data-testid="polls-container"]');
       const pollsList4 = page.locator('[data-testid="poll"]'); // Individual poll cards
-      
+
       const emptyState1 = page.locator('[data-testid="empty-state"]');
       const emptyState2 = page.locator('text=/no polls|no results|no data/i');
-      
+
       const errorState1 = page.locator('[data-testid="error-display"]');
       const errorState2 = page.locator('[role="alert"]');
 
@@ -81,7 +81,7 @@ test.describe('MVP Functional Verification', () => {
         await page.screenshot({ path: 'test-results/polls-page-debug.png' });
         throw new Error('Polls page shows neither polls, empty state, nor error state');
       }
-      
+
       expect(pollsCount + emptyCount + errorCount).toBeGreaterThan(0);
 
       // If polls are displayed, verify they have content
