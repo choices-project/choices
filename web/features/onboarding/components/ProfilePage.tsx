@@ -1,4 +1,4 @@
-import { 
+import {
   User,
   Shield,
   Download,
@@ -13,10 +13,10 @@ import React, { useMemo, useState } from 'react';
 
 /**
  * Enhanced Profile Page Component
- * 
+ *
  * Superior implementation using React Query and Server Actions
  * Provides proper state management and real-time updates
- * 
+ *
  * Created: January 27, 2025
  * Status: ✅ SUPERIOR IMPLEMENTATION
  */
@@ -41,7 +41,7 @@ export default function ProfilePage() {
   const { isAnyUpdating } = useProfileLoadingStates();
   const { profileError } = useProfileErrorStates();
   const exportMutation = useProfileExport();
-  
+
   const [showExportConfirm, setShowExportConfirm] = useState(false);
 
   const profilePreferences = useMemo(() => {
@@ -278,8 +278,8 @@ export default function ProfilePage() {
         </CardHeader>
         <CardContent className="space-y-4">
           <div className="flex flex-wrap gap-4">
-            <Button 
-              variant="outline" 
+            <Button
+              variant="outline"
               onClick={() => setShowExportConfirm(true)}
               disabled={exportMutation.isExporting}
             >
@@ -320,7 +320,7 @@ export default function ProfilePage() {
                 </AlertDescription>
               </Alert>
               <div className="flex space-x-2">
-                <Button 
+                <Button
                   onClick={handleExportData}
                   disabled={exportMutation.isExporting}
                   className="flex-1"
@@ -332,8 +332,8 @@ export default function ProfilePage() {
                   )}
                   Export Data
                 </Button>
-                <Button 
-                  variant="outline" 
+                <Button
+                  variant="outline"
                   onClick={() => setShowExportConfirm(false)}
                   className="flex-1"
                 >

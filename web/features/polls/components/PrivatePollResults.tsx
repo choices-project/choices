@@ -58,57 +58,57 @@ export default function PrivatePollResults({ poll, userId, onPrivacyBudgetExceed
     try {
       setLoading(true)
       setError(null)
-      
+
       // Check if we can allocate epsilon for this operation
       const epsilon = 0.8
       if (!differentialPrivacy.canAllocateEpsilon(poll.id, epsilon)) {
         throw new Error('Privacy budget exceeded')
       }
-      
+
       // Fetch actual poll results from the database
       const response = await fetch(`/api/polls/${poll.id}/results`)
       if (!response.ok) {
         throw new Error('Failed to fetch poll results')
       }
-      
+
       const pollResults = await response.json()
       const rawResults = pollResults.options.map((option: any) => ({
         optionId: option.id,
         count: option.voteCount || 0,
         percentage: 0 // Will be calculated
       }))
-      
+
       // Apply differential privacy to the results
       const counts = rawResults.map((r: { count: number }) => r.count)
       const dpResults = differentialPrivacy.dpCounts(counts, epsilon)
-      
+
       // Check k-anonymity for each result
       const totalVotes = counts.reduce((sum: number, count: number) => sum + count, 0)
       const kAnonymityResult = differentialPrivacy.shouldShowBreakdown(
-        totalVotes, 
-        'public', 
+        totalVotes,
+        'public',
         totalVotes
       )
-      
+
       // Calculate percentages with privacy protection
       const privacyProtectedResults = rawResults.map((result: { optionId: string; count: number }, index: number) => {
         const dpResult = dpResults[index]
         if (!dpResult) {
           throw new Error(`Missing differential privacy result for index ${index}`)
         }
-        
+
         const percentage = totalVotes > 0 ? (dpResult.noisyCount / totalVotes) * 100 : 0
-        
+
         return {
           optionId: result.optionId,
           count: dpResult.noisyCount,
           percentage: Math.round(percentage * 100) / 100
         }
       })
-      
+
       // Track epsilon usage
       differentialPrivacy.trackEpsilonUsage(poll.id, epsilon, 'poll-results-query', `user-${userId}`)
-      
+
       const privateResults: PrivateQueryResult<Array<{ optionId: string; count: number; percentage: number }>> = {
         data: privacyProtectedResults,
         kAnonymitySatisfied: kAnonymityResult.shouldShow,
@@ -117,12 +117,12 @@ export default function PrivatePollResults({ poll, userId, onPrivacyBudgetExceed
         noiseAdded: dpResults.reduce((sum: any, result: any) => sum + Math.abs(result.noisyCount - result.originalCount), 0),
         confidenceInterval: [Math.min(...dpResults.map((r: any) => r.noisyCount)), Math.max(...dpResults.map((r: any) => r.noisyCount))]
       }
-      
+
       setResults(privateResults)
     } catch (error) {
       const err = error instanceof Error ? error : new Error(String(error))
       logger.error('Failed to load private results:', err)
-      
+
       if (error instanceof Error && error.message.includes('Privacy budget exceeded')) {
         setError('Privacy budget exceeded. Please try again later.')
         onPrivacyBudgetExceededRef.current?.()
@@ -215,8 +215,8 @@ export default function PrivatePollResults({ poll, userId, onPrivacyBudgetExceed
     <div className="space-y-6">
       {/* Privacy Status Banner */}
       <div className={`border rounded-lg p-4 ${
-        results.kAnonymitySatisfied 
-          ? 'bg-green-50 border-green-200' 
+        results.kAnonymitySatisfied
+          ? 'bg-green-50 border-green-200'
           : 'bg-yellow-50 border-yellow-200'
       }`}>
         <div className="flex items-center justify-between">
@@ -235,20 +235,20 @@ export default function PrivatePollResults({ poll, userId, onPrivacyBudgetExceed
               <p className={`text-sm ${
                 results.kAnonymitySatisfied ? 'text-green-700' : 'text-yellow-700'
               }`}>
-                {results.kAnonymitySatisfied 
+                {results.kAnonymitySatisfied
                   ? 'Results are protected with differential privacy'
                   : 'Results hidden until minimum participant threshold is met'
                 }
               </p>
             </div>
           </div>
-          
+
           {/* Privacy Budget Indicator */}
           {privacyBudget !== null && (
             <div className="text-right">
               <div className="text-sm text-gray-600">Privacy Budget</div>
               <div className={`font-semibold ${
-                privacyBudget > 5 ? 'text-green-600' : 
+                privacyBudget > 5 ? 'text-green-600' :
                 privacyBudget > 2 ? 'text-yellow-600' : 'text-red-600'
               }`}>
                 {privacyBudget.toFixed(2)} ε
@@ -262,7 +262,7 @@ export default function PrivatePollResults({ poll, userId, onPrivacyBudgetExceed
       {results.kAnonymitySatisfied && results.data.length > 0 ? (
         <div className="bg-white border border-gray-200 rounded-lg p-6">
           <h3 className="text-lg font-semibold text-gray-900 mb-4">Poll Results</h3>
-          
+
           <div className="space-y-4">
             {results.data.map((result: { optionId: string; count: number; percentage: number }, index: number) => {
               const option = poll.options.find(opt => opt.id === result.optionId)
@@ -292,10 +292,10 @@ export default function PrivatePollResults({ poll, userId, onPrivacyBudgetExceed
                       <div className="text-sm text-gray-600">{result.percentage}%</div>
                     </div>
                   </div>
-                  
+
                   {/* Progress Bar */}
                   <div className="w-full bg-gray-200 rounded-full h-2">
-                    <div 
+                    <div
                       className="bg-blue-500 h-2 rounded-full transition-all duration-300"
                       style={{ width: `${Math.min(result.percentage, 100)}%` }}
                     />

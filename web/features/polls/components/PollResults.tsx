@@ -71,13 +71,13 @@ export default function OptimizedPollResults({
 
     try {
       const startTime = performance.now()
-      
+
       const pollResults = await optimizedPollService.getOptimizedPollResults(
         pollId,
         userId,
         includePrivate
       )
-      
+
       const endTime = performance.now()
       const loadTime = endTime - startTime
 
@@ -118,7 +118,7 @@ export default function OptimizedPollResults({
   // Memoized sorted options for performance
   const sortedOptions = useMemo(() => {
     if (!results?.results) return []
-    
+
     return [...results.results].sort((a, b) => (b.voteCount ?? b.votes) - (a.voteCount ?? a.votes))
   }, [results?.results])
 
@@ -130,13 +130,13 @@ export default function OptimizedPollResults({
   // Memoized poll status display
   const pollStatusDisplay = useMemo(() => {
     if (!results) return null
-    
+
     const statusConfig = {
       ended: { label: 'Poll Ended', color: 'text-red-600', bgColor: 'bg-red-50' },
       active: { label: 'Active', color: 'text-green-600', bgColor: 'bg-green-50' },
       ongoing: { label: 'Ongoing', color: 'text-blue-600', bgColor: 'bg-blue-50' }
     }
-    
+
     const config = statusConfig[results.pollStatus as keyof typeof statusConfig]
     return config
   }, [results])
@@ -153,7 +153,7 @@ export default function OptimizedPollResults({
   // Announce results updates
   useEffect(() => {
     if (!results || loading) return;
-    
+
     const totalVotes = results.totalVotes ?? 0;
     const topOption = sortedOptions[0];
     if (!topOption) return;
@@ -320,7 +320,7 @@ export default function OptimizedPollResults({
             const uniqueVoters = option.uniqueVoters ?? 0;
             const optionLabel = option.label ?? option.option;
             const optionSummaryId = `${resultsRegionId}-option-${index}-summary`;
-            
+
             return (
               <article
                 key={optionId}

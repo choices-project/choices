@@ -58,7 +58,7 @@ test.describe('MVP Functional Verification', () => {
       // 1. Polls displayed (poll cards/items)
       // 2. Empty state (if no polls exist)
       // 3. Error state (if API fails)
-      
+
       const pollsList = page.locator('[data-testid="polls-list"], [role="feed"], [data-testid="polls-container"]');
       const emptyState = page.locator('[data-testid="empty-state"], text=/no polls|no results/i');
       const errorState = page.locator('[data-testid="error-display"], [role="alert"]');
@@ -86,7 +86,7 @@ test.describe('MVP Functional Verification', () => {
       if (errorCount > 0) {
         const errorText = await errorState.first().textContent();
         expect(errorText).toBeTruthy();
-        
+
         // Error should have retry option
         const retryButton = page.locator('button:has-text(/try again|retry/i)');
         const retryCount = await retryButton.count();
@@ -126,7 +126,7 @@ test.describe('MVP Functional Verification', () => {
 
         const body = await apiResponse.json().catch(() => ({}));
         expect(body).toBeDefined();
-        
+
         // API should return success response with polls data
         if (body.success) {
           expect(body.data).toBeDefined();

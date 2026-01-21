@@ -1,8 +1,8 @@
 /**
  * My Representatives Page
- * 
+ *
  * Dashboard showing all representatives the user is following
- * 
+ *
  * Created: January 26, 2025
  * Status: ✅ PRODUCTION
  */
@@ -42,7 +42,7 @@ export default function MyRepresentativesPage() {
   const [showContactModal, setShowContactModal] = useState(false);
   const [showBulkContactModal, setShowBulkContactModal] = useState(false);
   const [selectedRepresentative, setSelectedRepresentative] = useState<Representative | null>(null);
-  
+
   const { user } = useAuth();
   const representativeEntries = useUserRepresentativeEntries();
   const getUserRepresentatives = useGetUserRepresentatives();
@@ -62,11 +62,11 @@ export default function MyRepresentativesPage() {
 
   useEffect(() => {
     void getUserRepresentativesRef.current();
-  }, []);  
+  }, []);
 
   const handleUnfollow = useCallback(() => {
     void getUserRepresentativesRef.current();
-  }, []);  
+  }, []);
 
   if (loading) {
     return (

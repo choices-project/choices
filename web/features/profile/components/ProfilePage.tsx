@@ -104,7 +104,7 @@ export default function ProfilePage({
         logger.error('Failed to navigate', err instanceof Error ? err : new Error(String(err)));
       }
     },
-    [],  
+    [],
   );
 
   const handleExportData = useCallback(async () => {
@@ -138,7 +138,7 @@ export default function ProfilePage({
       setExportErrorMessage(message);
       logger.error('Profile export failed', err instanceof Error ? err : new Error(String(err)));
     }
-  }, []);  
+  }, []);
 
   useEffect(() => {
     if (!showExportConfirm) {

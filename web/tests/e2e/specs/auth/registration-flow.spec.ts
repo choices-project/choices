@@ -53,7 +53,7 @@ test.describe('Registration Flow', () => {
 
       await expect(emailInput).toBeVisible({ timeout: 5_000 });
       await expect(passwordInput).toBeVisible({ timeout: 5_000 });
-      
+
       // Display name and confirm password should be visible in signup mode
       // (or at least the heading should indicate signup mode)
       const signupHeading = page.locator('text=/sign up|create account/i').first();
@@ -227,7 +227,7 @@ test.describe('Registration Flow', () => {
       // After registration, user should be redirected
       await page.waitForTimeout(2_000);
       const finalUrl = page.url();
-      
+
       // Should redirect to onboarding or dashboard
       expect(finalUrl).toMatch(/\/(onboarding|dashboard|feed)/);
 
@@ -239,7 +239,7 @@ test.describe('Registration Flow', () => {
       // Should not redirect to auth (profile should be accessible)
       const profileUrl = page.url();
       expect(profileUrl).not.toMatch(/\/auth/);
-      
+
       // Profile page should load (or show appropriate error if not onboarded)
       // The key is that we shouldn't get a "profile not found" error
       const errorElement = page.locator('[data-testid="profile-error"]');

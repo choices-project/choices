@@ -12,7 +12,7 @@ export default function PollRouteError({ error }: { error: Error & { digest?: st
   if (process.env.NODE_ENV === 'development') {
     logger.error('Poll route error:', error);
   }
-  
+
   // Use existing error logging system
   useEffect(() => {
     // Log error using existing logger system
@@ -31,10 +31,10 @@ export default function PollRouteError({ error }: { error: Error & { digest?: st
       }
     });
   }, [error]);
-  
+
   return (
-    <div 
-      data-testid="poll-error" 
+    <div
+      data-testid="poll-error"
       className="container mx-auto px-4 py-8"
     >
       <div className="max-w-2xl mx-auto">

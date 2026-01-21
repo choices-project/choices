@@ -1,16 +1,16 @@
 /**
  * Communication History Page
- * 
+ *
  * Displays all message threads and communication history between
  * the user and their representatives
- * 
+ *
  * Created: January 26, 2025
  * Status: ✅ PRODUCTION
  */
 
 'use client';
 
-import { 
+import {
   ChatBubbleLeftRightIcon,
   ClockIcon,
   ExclamationTriangleIcon
@@ -59,7 +59,7 @@ export default function ContactHistoryPage() {
       setError(null);
 
       const response = await fetch('/api/contact/threads');
-      
+
       if (!response.ok) {
         if (response.status === 401) {
           setError('Please sign in to view your message history');
@@ -69,7 +69,7 @@ export default function ContactHistoryPage() {
       }
 
       const data = await response.json();
-      
+
       if (data.success && data.data) {
         setThreads(data.data.threads ?? []);
       } else {
@@ -246,8 +246,8 @@ export default function ContactHistoryPage() {
                   </div>
                   <div className="flex items-center space-x-2">
                     <span className={`px-2 py-1 rounded text-xs font-medium ${
-                      thread.status === 'active' 
-                        ? 'bg-green-100 text-green-800' 
+                      thread.status === 'active'
+                        ? 'bg-green-100 text-green-800'
                         : 'bg-gray-100 text-gray-800'
                     }`}>
                       {thread.status}

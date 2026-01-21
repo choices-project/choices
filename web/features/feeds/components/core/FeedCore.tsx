@@ -521,13 +521,11 @@ export default function FeedCore({
                   : 'Follow hashtags you care about or create polls to start seeing feeds in your feed.'
               }
               isFiltered={selectedHashtags.length > 0}
-              onResetFilters={
-                selectedHashtags.length > 0
-                  ? () => {
-                      selectedHashtags.forEach(tag => onHashtagRemove(tag));
-                    }
-                  : undefined
-              }
+              {...(selectedHashtags.length > 0 ? {
+                onResetFilters: () => {
+                  selectedHashtags.forEach(tag => onHashtagRemove(tag));
+                }
+              } : {})}
               primaryAction={{
                 label: selectedHashtags.length > 0
                   ? (t('feeds.core.empty.filters.clear') || 'Clear Filters')
