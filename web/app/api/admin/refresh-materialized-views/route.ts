@@ -74,9 +74,8 @@ export const POST = withErrorHandling(async (_request: NextRequest) => {
     }
 
     // Fallback: Try individual refresh_materialized_view calls for common views
-    if (refreshError) {
-      // If exec_sql RPC doesn't exist, try direct query approach
-      logger.warn('RPC exec_sql not available, using alternative method', viewsError);
+    // This handles the case where refresh_all_materialized_views doesn't exist or returned no results
+    logger.info('Using fallback method: refreshing individual materialized views', { refreshError });
 
       // Alternative: Use a PostgreSQL function if available, or refresh common views
       // For now, we'll attempt to refresh via a direct SQL execution pattern
@@ -137,6 +136,19 @@ export const POST = withErrorHandling(async (_request: NextRequest) => {
         timestamp: new Date().toISOString(),
       });
     }
+
+    // If we get here, refresh_all_materialized_views returned empty array (no views exist)
+    // Return success with informative message
+    const duration = Date.now() - startTime;
+    logger.info('No materialized views found to refresh', { duration });
+    return successResponse({
+      success: true,
+      message: 'No materialized views found in the database',
+      total: 0,
+      refreshed: [],
+      duration: `${duration}ms`,
+      timestamp: new Date().toISOString(),
+    });
   } catch (error) {
     const duration = Date.now() - startTime;
     logger.error('Failed to refresh materialized views', { error, duration });
