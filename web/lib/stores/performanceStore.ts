@@ -701,47 +701,65 @@ export const performanceStoreCreator: PerformanceStoreCreator = (set, get) => {
             setLoading(true);
             setError(null);
 
-      const supabase = await import('@/utils/supabase/client').then((m) => m.getSupabaseBrowserClient());
-            if (!supabase) {
-              throw new Error('Database connection not available');
+            // Use API endpoint instead of direct Supabase query to respect RLS and add timeout
+            const controller = new AbortController();
+            const timeoutId = setTimeout(() => controller.abort(), 20000); // 20 second timeout
+
+            const response = await fetch('/api/admin/performance', {
+              signal: controller.signal,
+            });
+
+            clearTimeout(timeoutId);
+
+            if (!response.ok) {
+              const errorData = await response.json().catch(() => ({ error: response.statusText }));
+              throw new Error(errorData.error || `Failed to fetch performance metrics: ${response.statusText}`);
             }
 
-            const { data: metricsData, error: metricsError } = await supabase
-              .from('analytics_events')
-              .select('*')
-              .gte('created_at', new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString())
-              .order('created_at', { ascending: false });
-
-            if (metricsError) {
-              throw new Error(`Failed to fetch database metrics: ${metricsError.message}`);
+            const data = await response.json();
+            
+            // Transform API response to expected format
+            const report = data.data?.report ?? {};
+            
+            // Convert performance report to database metrics format
+            // PerformanceReport has: totalOperations, averageResponseTime, errorRate, slowestOperations
+            const databaseMetrics: DatabasePerformanceMetric[] = [];
+            
+            // Add overall performance metrics
+            if (typeof report.averageResponseTime === 'number') {
+              databaseMetrics.push({
+                metricName: 'average_response_time',
+                avgValue: report.averageResponseTime,
+                minValue: 0,
+                maxValue: report.averageResponseTime,
+                countMeasurements: report.totalOperations ?? 0,
+                timestamp: new Date(),
+              });
+            }
+            
+            // Add slowest operations as individual metrics
+            if (Array.isArray(report.slowestOperations)) {
+              for (const op of report.slowestOperations.slice(0, 10)) {
+                if (op && typeof op === 'object' && 'operation' in op && 'duration' in op) {
+                  const opObj = op as { operation: string; duration: number };
+                  databaseMetrics.push({
+                    metricName: opObj.operation ?? 'unknown',
+                    avgValue: opObj.duration ?? 0,
+                    minValue: 0,
+                    maxValue: opObj.duration ?? 0,
+                    countMeasurements: 1,
+                    timestamp: new Date(),
+                  });
+                }
+              }
             }
 
-      const databaseMetrics: DatabasePerformanceMetric[] =
-        metricsData?.map((metric) => ({
-              metricName: metric.event_type ?? 'unknown',
-          avgValue: 0,
-              minValue: 0,
-              maxValue: 0,
-              countMeasurements: 1,
-          timestamp: new Date(metric.created_at ?? new Date()),
-            })) ?? [];
-
-            const { error: cacheError } = await supabase
-              .from('analytics_events')
-              .select('*')
-              .eq('event_type', 'vote')
-              .order('created_at', { ascending: false })
-              .limit(1);
-
-            if (cacheError && cacheError.code !== 'PGRST116') {
-              throw new Error(`Failed to fetch cache stats: ${cacheError.message}`);
-            }
-
+            // Cache stats from report (with fallbacks)
             const cacheStats: CacheStats = {
-              size: 0,
+              size: 0, // Not available from performance monitor
               keys: [],
-              memoryUsage: 0,
-        hitRate: 0,
+              memoryUsage: 0, // Not available from performance monitor
+              hitRate: 0, // Not available from performance monitor
             };
 
             setDatabaseMetrics(databaseMetrics);
@@ -749,9 +767,15 @@ export const performanceStoreCreator: PerformanceStoreCreator = (set, get) => {
             setLastRefresh(new Date());
             scheduleAutoRefreshTimer();
           } catch (error) {
-      const errorMessage =
-        error instanceof Error ? error.message : 'Failed to load database performance';
-            setError(errorMessage);
+            const errorMessage =
+              error instanceof Error ? error.message : 'Failed to load database performance';
+            // Handle abort/timeout errors specifically
+            if (error instanceof Error && error.name === 'AbortError') {
+              setError('Request timed out. Please try again.');
+            } else {
+              setError(errorMessage);
+            }
+            logger.error('Failed to load performance data', error);
           } finally {
             setLoading(false);
           }

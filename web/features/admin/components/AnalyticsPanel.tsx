@@ -60,13 +60,16 @@ export default function AnalyticsPanel({
   useEffect(() => { clearErrorRef.current = clearError; }, [clearError]);
 
   // ✅ Use React Query for fetching (with automatic caching and refetching)
+  // Disable refetchInterval if there's an error to prevent infinite retry loops
   const { 
     data, 
     isLoading: queryLoading, 
     error: queryError,
     refetch: refetchData 
   } = useAnalyticsGeneral({
-    refetchInterval: refreshInterval,
+    refetchInterval: storeError ? false : refreshInterval, // Disable if error
+    retry: 1, // Limit retries
+    retryDelay: 5000, // 5 second delay between retries
   });
 
   // ✅ Sync React Query data → Zustand store (maintains existing component compatibility)

@@ -248,14 +248,25 @@ export default function AdminFeedbackPage() {
 
   useEffect(() => {
     const isMountedRef = { current: true }; // Track if component is still mounted
+    const hasLoadedRef = { current: false }; // Prevent multiple simultaneous loads
 
-    void fetchFeedback(isMountedRef);
+    const loadData = async () => {
+      if (hasLoadedRef.current) return;
+      hasLoadedRef.current = true;
+      await fetchFeedback(isMountedRef);
+      // Reset on error so user can retry
+      if (!isMountedRef.current) {
+        hasLoadedRef.current = false;
+      }
+    };
+
+    void loadData();
 
     // Cleanup: mark component as unmounted
     return () => {
       isMountedRef.current = false;
     };
-  }, [fetchFeedback]);
+  }, [debouncedFilters]); // Only reload when filters change, not when fetchFeedback changes
 
   const handleStatusUpdate = useCallback(async (feedbackId: string, newStatus: string) => {
     try {

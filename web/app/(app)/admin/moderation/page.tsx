@@ -83,8 +83,14 @@ export default function ModerationPage() {
   }, [fetchAppeals, fetchReports]);
 
   useEffect(() => {
-    void refreshAll();
-  }, [refreshAll]);
+    const hasLoadedRef = { current: false };
+    const loadData = async () => {
+      if (hasLoadedRef.current) return;
+      hasLoadedRef.current = true;
+      await refreshAll();
+    };
+    void loadData();
+  }, []); // Only load once on mount
 
   const handleReportStatusChange = async (reportId: string, status: string) => {
     try {

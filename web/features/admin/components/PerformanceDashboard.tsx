@@ -57,40 +57,27 @@ export default function PerformanceDashboard() {
 
   // Load data on mount with error handling and timeout
   useEffect(() => {
-    let isMounted = true;
-    let timeoutId: NodeJS.Timeout | null = null;
+    const hasLoadedRef = { current: false };
 
     const loadData = async () => {
+      // Prevent multiple simultaneous loads
+      if (hasLoadedRef.current) {
+        return;
+      }
+      hasLoadedRef.current = true;
+
       try {
         initializeRef.current();
-
-        // Set timeout for loading (30 seconds)
-        timeoutId = setTimeout(() => {
-          if (isMounted) {
-            logger.warn('Performance dashboard load timeout - showing error state');
-            // Error will be set by the store if load fails
-          }
-        }, 30_000);
-
         await loadPerformanceStats();
       } catch (err) {
         logger.error('Failed to load performance data:', err);
-      } finally {
-        if (timeoutId) {
-          clearTimeout(timeoutId);
-        }
+        // Reset on error so user can retry
+        hasLoadedRef.current = false;
       }
     };
 
     loadData();
-
-    return () => {
-      isMounted = false;
-      if (timeoutId) {
-        clearTimeout(timeoutId);
-      }
-    };
-  }, [loadPerformanceStats]);
+  }, []); // Empty deps - only load once on mount
 
   // Calculate performance insights
   const performanceInsights = {

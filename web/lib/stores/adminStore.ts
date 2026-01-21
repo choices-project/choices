@@ -1774,12 +1774,12 @@ export const adminSelectors = {
   error: (state: AdminStore) => state.error,
 };
 
-export const useTrendingTopics = () => useAdminStore((state) => state.trendingTopics);
-export const useGeneratedPolls = () => useAdminStore((state) => state.generatedPolls);
-export const useSystemMetrics = () => useAdminStore((state) => state.systemMetrics);
-export const useActivityItems = () => useAdminStore((state) => state.activityItems);
-export const useActivityFeed = () => useAdminStore((state) => state.activityFeed);
-export const useAdminNotifications = () => useAdminStore((state) => state.notifications);
+export const useTrendingTopics = () => useAdminStore(useShallow((state) => state.trendingTopics));
+export const useGeneratedPolls = () => useAdminStore(useShallow((state) => state.generatedPolls));
+export const useSystemMetrics = () => useAdminStore(useShallow((state) => state.systemMetrics));
+export const useActivityItems = () => useAdminStore(useShallow((state) => state.activityItems));
+export const useActivityFeed = () => useAdminStore(useShallow((state) => state.activityFeed));
+export const useAdminNotifications = () => useAdminStore(useShallow((state) => state.notifications));
 export const useAdminFeatureFlags = () => useAdminStore((state) => state.featureFlags);
 export const useAdminSidebarCollapsed = () => useAdminStore((state) => state.sidebarCollapsed);
 export const useAdminLoading = () => useAdminStore((state) => state.isLoading);
@@ -1836,7 +1836,7 @@ export const useAdminUserActions = () =>
   }, []);
 
 export const useAdminActiveTab = () => useAdminStore((state) => state.activeTab);
-export const useAdminDashboardStats = () => useAdminStore((state) => state.dashboardStats);
+export const useAdminDashboardStats = () => useAdminStore(useShallow((state) => state.dashboardStats));
 export const useAdminDashboardActions = () =>
   useMemo(() => {
     const state = useAdminStore.getState();
@@ -1948,7 +1948,7 @@ export const useAdminStats = () => {
 };
 
 export const useRecentActivity = () => {
-  const activityItems = useAdminStore((state) => state.activityItems);
+  const activityItems = useAdminStore(useShallow((state) => state.activityItems));
   return useMemo(() => activityItems.slice(0, 10), [activityItems]);
 };
 
