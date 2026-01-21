@@ -1778,9 +1778,11 @@ export const selectFilteredAdminUsers = (state: AdminState) =>
 
 export const useAdminUsers = () => useAdminStore((state) => state.users);
 export const useAdminUserCount = () => useAdminStore((state) => state.users.length);
-export const useAdminUserFilters = () => useAdminStore((state) => state.userFilters);
+export const useAdminUserFilters = () => useAdminStore(useShallow((state) => state.userFilters));
 export const useFilteredAdminUsers = () =>
-  useAdminStore((state) => filterAdminUsers(state.users, state.userFilters));
+  useAdminStore(
+    useShallow((state) => filterAdminUsers(state.users, state.userFilters))
+  );
 export const useAdminSelectedUsers = () =>
   useAdminStore((state) => state.userFilters.selectedUsers);
 export const useAdminShowBulkActions = () =>

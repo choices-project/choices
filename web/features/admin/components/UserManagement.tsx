@@ -197,6 +197,34 @@ export default function UserManagement({ onUserUpdate, onUserDelete }: UserManag
           <div>
             <h3 className="text-lg font-medium text-red-800 dark:text-red-300">Error Loading Users</h3>
             <p className="text-red-600 dark:text-red-400">{error}</p>
+            <button
+              onClick={() => {
+                hasLoadedRef.current = false;
+                void loadUsersRef.current();
+              }}
+              className="mt-4 px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700"
+            >
+              Retry
+            </button>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // Safety check: prevent rendering if there are too many users (performance safeguard)
+  if (filteredUsers.length > 10000) {
+    return (
+      <div className="bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-800 rounded-lg p-6">
+        <div className="flex items-center">
+          <svg className="w-6 h-6 text-yellow-600 dark:text-yellow-400 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z" />
+          </svg>
+          <div>
+            <h3 className="text-lg font-medium text-yellow-800 dark:text-yellow-300">Too Many Users</h3>
+            <p className="text-yellow-600 dark:text-yellow-400">
+              There are {filteredUsers.length} users matching your filters. Please refine your search to view results.
+            </p>
           </div>
         </div>
       </div>
