@@ -88,17 +88,17 @@ export default function CreatePollPage() {
   }, [actions.goToStep])
 
   const PRIVACY_LABELS: Record<string, string> = useMemo(() => ({
-    public: t('polls.create.privacy.public'),
-    private: t('polls.create.privacy.private'),
-    unlisted: t('polls.create.privacy.unlisted'),
-  }), [t]);
+    public: safeT('polls.create.privacy.public', 'Public'),
+    private: safeT('polls.create.privacy.private', 'Private'),
+    unlisted: safeT('polls.create.privacy.unlisted', 'Unlisted'),
+  }), [safeT]);
 
   const VOTING_METHOD_LABELS: Record<string, string> = useMemo(() => ({
-    single: t('polls.create.votingMethod.single'),
-    multiple: t('polls.create.votingMethod.multiple'),
-    approval: t('polls.create.votingMethod.approval'),
-    ranked: t('polls.create.votingMethod.ranked'),
-  }), [t]);
+    single: safeT('polls.create.votingMethod.single', 'Single Choice'),
+    multiple: safeT('polls.create.votingMethod.multiple', 'Multiple Choice'),
+    approval: safeT('polls.create.votingMethod.approval', 'Approval Voting'),
+    ranked: safeT('polls.create.votingMethod.ranked', 'Ranked Choice'),
+  }), [safeT]);
 
   const [newTag, setNewTag] = useState("")
   const [shareInfo, setShareInfo] = useState<ShareModalState | null>(null)
@@ -647,8 +647,8 @@ export default function CreatePollPage() {
       if (result.status === 401) {
         addNotification({
           type: 'warning',
-          title: t('polls.create.notifications.signInRequired.title'),
-          message: t('polls.create.notifications.signInRequired.message'),
+          title: safeT('polls.create.notifications.signInRequired.title', 'Sign In Required'),
+          message: safeT('polls.create.notifications.signInRequired.message', 'Please sign in to create a poll.'),
           duration: 6000,
         });
         router.push(`/auth?redirect=${encodeURIComponent('/polls/create')}`);
@@ -658,8 +658,8 @@ export default function CreatePollPage() {
       if (result.status === 403) {
         addNotification({
           type: 'error',
-          title: t('polls.create.notifications.accessDenied.title'),
-          message: t('polls.create.notifications.accessDenied.message'),
+          title: safeT('polls.create.notifications.accessDenied.title', 'Access Denied'),
+          message: safeT('polls.create.notifications.accessDenied.message', 'You do not have permission to create polls.'),
           duration: 6000,
         });
         return;
@@ -668,8 +668,8 @@ export default function CreatePollPage() {
       if (result.status === 429) {
         addNotification({
           type: 'warning',
-          title: t('polls.create.notifications.rateLimit.title'),
-          message: t('polls.create.notifications.rateLimit.message'),
+          title: safeT('polls.create.notifications.rateLimit.title', 'Rate Limit Exceeded'),
+          message: safeT('polls.create.notifications.rateLimit.message', 'Please wait a moment before creating another poll.'),
           duration: 6000,
         });
         return;
@@ -704,8 +704,8 @@ export default function CreatePollPage() {
 
     addNotification({
       type: 'success',
-      title: t('polls.create.notifications.pollCreated.title'),
-      message: result.message ?? t('polls.create.notifications.pollCreated.message'),
+      title: safeT('polls.create.notifications.pollCreated.title', 'Poll Created!'),
+      message: result.message ?? safeT('polls.create.notifications.pollCreated.message', 'Your poll has been created successfully.'),
       duration: 4000,
     });
 
@@ -1112,81 +1112,88 @@ export default function CreatePollPage() {
           <div className="space-y-6">
             {/* Preview Section */}
             <div className="mb-6">
-              <h3 className="text-base font-semibold mb-1">Preview</h3>
+              <h3 className="text-base font-semibold mb-1 text-foreground">Preview</h3>
               <p className="text-sm text-muted-foreground mb-4">
                 This is what voters will see.
               </p>
             </div>
 
-            <Card>
-              <CardHeader>
-                <CardTitle className="text-lg">{t('polls.create.wizard.review.title') || 'Review Your Poll'}</CardTitle>
-                <CardDescription>{t('polls.create.wizard.review.description') || 'Double-check everything before publishing.'}</CardDescription>
+            <Card className="border-2 shadow-lg">
+              <CardHeader className="bg-muted/30 pb-4">
+                <CardTitle className="text-xl font-bold">{safeT('polls.create.wizard.review.title', 'Review Your Poll')}</CardTitle>
+                <CardDescription className="text-sm mt-1">{safeT('polls.create.wizard.review.description', 'Double-check everything before publishing.')}</CardDescription>
               </CardHeader>
-              <CardContent className="space-y-5">
+              <CardContent className="space-y-6 pt-6">
                 <section>
-                  <h3 className="text-lg font-semibold">{data.title || t('polls.create.wizard.review.untitled') || 'Untitled Poll'}</h3>
-                  <p className="mt-1 text-sm text-muted-foreground">
-                    {data.description || t('polls.create.wizard.review.noDescription') || 'No description provided.'}
-                  </p>
+                  <h3 className="text-xl font-bold text-foreground leading-tight">{data.title || safeT('polls.create.wizard.review.untitled', 'Untitled Poll')}</h3>
+                  {data.description && (
+                    <p className="mt-2 text-sm text-muted-foreground leading-relaxed">
+                      {data.description}
+                    </p>
+                  )}
+                  {!data.description && (
+                    <p className="mt-2 text-sm text-muted-foreground italic">
+                      {safeT('polls.create.wizard.review.noDescription', 'No description provided.')}
+                    </p>
+                  )}
                 </section>
 
                   <Separator />
 
                 <section>
-                  <h4 className="text-sm font-semibold mb-3">{t('polls.create.wizard.review.optionsHeading') || 'Poll Options'}</h4>
+                  <h4 className="text-base font-semibold mb-4 text-foreground">{safeT('polls.create.wizard.review.optionsHeading', 'Poll Options')}</h4>
                   {data.settings.votingMethod === 'ranked' ? (
-                    <div className="space-y-3">
-                      <div className="rounded-lg border border-purple-200 bg-purple-50/50 p-4 mb-3">
+                    <div className="space-y-4">
+                      <div className="rounded-lg border-2 border-purple-300 bg-gradient-to-br from-purple-50 to-purple-100/50 p-4 mb-4 shadow-sm">
                         <div className="flex items-center gap-2 mb-2">
-                          <span className="text-lg">🏆</span>
-                          <span className="text-sm font-semibold text-purple-900">Ranked Choice Voting</span>
+                          <span className="text-xl">🏆</span>
+                          <span className="text-sm font-bold text-purple-900">Ranked Choice Voting</span>
                         </div>
-                        <p className="text-xs text-purple-700">
+                        <p className="text-xs text-purple-800 leading-relaxed">
                           Voters will rank each option from 1st (most preferred) to last (least preferred).
                         </p>
                       </div>
-                      <div className="space-y-2">
+                      <div className="space-y-3">
                         {data.options
                           .filter((option) => option.trim().length > 0)
                           .map((option, index) => (
-                            <div key={`preview-option-${index}`} className="flex items-center gap-3 p-3 rounded-lg border-2 border-purple-200 bg-white">
-                              <div className="flex-shrink-0 flex items-center justify-center w-8 h-8 rounded-full bg-purple-100 text-purple-700 font-semibold text-sm">
+                            <div key={`preview-option-${index}`} className="flex items-center gap-3 p-4 rounded-lg border-2 border-purple-200 bg-white shadow-sm hover:shadow-md transition-shadow">
+                              <div className="flex-shrink-0 flex items-center justify-center w-10 h-10 rounded-full bg-gradient-to-br from-purple-100 to-purple-200 text-purple-700 font-bold text-sm shadow-sm">
                                 {index + 1}
                               </div>
                               <div className="flex-1">
-                                <span className="text-sm font-semibold text-foreground">{option || `Option ${index + 1}`}</span>
+                                <span className="text-base font-semibold text-foreground">{option || `Option ${index + 1}`}</span>
                               </div>
-                              <div className="flex-shrink-0 text-xs text-muted-foreground">
-                                Rank: <span className="font-semibold text-purple-600">{index + 1}</span>
+                              <div className="flex-shrink-0 text-xs font-medium text-purple-600 bg-purple-50 px-2 py-1 rounded">
+                                Rank {index + 1}
                               </div>
                             </div>
                           ))}
                         {data.options.filter((option) => option.trim().length > 0).length === 0 && (
-                          <p className="text-sm text-muted-foreground italic">No options added yet.</p>
+                          <p className="text-sm text-muted-foreground italic text-center py-4">No options added yet.</p>
                         )}
                       </div>
-                      <div className="mt-3 p-3 rounded-lg bg-muted/50 border border-dashed">
-                        <p className="text-xs text-muted-foreground">
-                          <strong>How it works:</strong> Voters will drag options to reorder them, with 1st being their top choice.
+                      <div className="mt-4 p-4 rounded-lg bg-purple-50/30 border border-purple-200">
+                        <p className="text-xs text-purple-900 leading-relaxed">
+                          <strong className="font-semibold">How it works:</strong> Voters will drag options to reorder them, with 1st being their top choice.
                           The system uses instant runoff to find the option with majority support.
                         </p>
                       </div>
                     </div>
                   ) : (
-                    <div className="space-y-2">
+                    <div className="space-y-3">
                       {data.options
                         .filter((option) => option.trim().length > 0)
                         .map((option, index) => (
-                          <div key={`preview-option-${index}`} className="flex items-center gap-3 p-3 rounded-lg border bg-muted/30">
-                            <span className="flex h-6 w-6 items-center justify-center rounded-full border-2 border-primary text-primary text-sm font-semibold shrink-0" aria-hidden>
+                          <div key={`preview-option-${index}`} className="flex items-center gap-3 p-4 rounded-lg border-2 border-border bg-card shadow-sm hover:shadow-md transition-shadow">
+                            <span className="flex h-8 w-8 items-center justify-center rounded-full border-2 border-primary bg-primary/10 text-primary text-sm font-bold shrink-0 shadow-sm" aria-hidden>
                               {index + 1}
                             </span>
-                            <span className="text-sm font-semibold text-foreground">{option || `Option ${index + 1}`}</span>
+                            <span className="text-base font-semibold text-foreground">{option || `Option ${index + 1}`}</span>
                           </div>
                         ))}
                       {data.options.filter((option) => option.trim().length > 0).length === 0 && (
-                        <p className="text-sm text-muted-foreground italic">No options added yet.</p>
+                        <p className="text-sm text-muted-foreground italic text-center py-4">No options added yet.</p>
                       )}
                     </div>
                   )}
@@ -1194,34 +1201,48 @@ export default function CreatePollPage() {
 
                   <Separator />
 
-                <section className="flex flex-wrap gap-2 text-sm text-muted-foreground">
-                    <Badge variant="outline">{data.category}</Badge>
+                <section className="flex flex-wrap gap-2">
+                    <Badge variant="outline" className="text-sm font-medium px-3 py-1">{data.category}</Badge>
                     {data.tags.map((tag) => (
-                    <Badge key={`preview-tag-${tag}`} variant="secondary">
+                    <Badge key={`preview-tag-${tag}`} variant="secondary" className="text-sm font-medium px-3 py-1">
                       {tag}
                     </Badge>
                   ))}
                 </section>
 
-                <section className="grid gap-2 text-sm text-muted-foreground md:grid-cols-2">
-                  <p>
-                    <span className="font-medium text-foreground">{t('polls.create.wizard.review.privacy')}:</span> {PRIVACY_LABELS[data.settings.privacyLevel]}
-                  </p>
-                  <p>
-                    <span className="font-medium text-foreground">{t('polls.create.wizard.review.votingMethod')}:</span> {VOTING_METHOD_LABELS[data.settings.votingMethod]}
-                  </p>
-                  <p>
-                    <span className="font-medium text-foreground">{t('polls.create.wizard.review.multipleVotes')}:</span> {data.settings.allowMultipleVotes ? t('polls.create.wizard.review.enabled') : t('polls.create.wizard.review.disabled')}
-                  </p>
-                  <p>
-                    <span className="font-medium text-foreground">{t('polls.create.wizard.review.anonymousVotes')}:</span> {data.settings.allowAnonymousVotes ? t('polls.create.wizard.review.allowed') : t('polls.create.wizard.review.disabled')}
-                  </p>
-                  <p>
-                    <span className="font-medium text-foreground">{t('polls.create.wizard.review.requireSignIn')}:</span> {data.settings.requireAuthentication ? t('polls.create.wizard.review.yes') : t('polls.create.wizard.review.no')}
-                  </p>
-                  <p>
-                    <span className="font-medium text-foreground">{t('polls.create.wizard.review.comments')}:</span> {data.settings.allowComments ? t('polls.create.wizard.review.enabled') : t('polls.create.wizard.review.disabled')}
-                  </p>
+                <section className="grid gap-3 text-sm md:grid-cols-2">
+                  <div className="flex items-center justify-between p-3 rounded-lg bg-muted/30 border">
+                    <span className="font-medium text-foreground">{safeT('polls.create.wizard.review.privacy', 'Privacy')}</span>
+                    <span className="text-muted-foreground font-semibold">{PRIVACY_LABELS[data.settings.privacyLevel] || data.settings.privacyLevel}</span>
+                  </div>
+                  <div className="flex items-center justify-between p-3 rounded-lg bg-muted/30 border">
+                    <span className="font-medium text-foreground">{safeT('polls.create.wizard.review.votingMethod', 'Voting Method')}</span>
+                    <span className="text-muted-foreground font-semibold">{VOTING_METHOD_LABELS[data.settings.votingMethod] || data.settings.votingMethod}</span>
+                  </div>
+                  <div className="flex items-center justify-between p-3 rounded-lg bg-muted/30 border">
+                    <span className="font-medium text-foreground">{safeT('polls.create.wizard.review.multipleVotes', 'Multiple Votes')}</span>
+                    <span className={cn("font-semibold", data.settings.allowMultipleVotes ? "text-green-600" : "text-muted-foreground")}>
+                      {data.settings.allowMultipleVotes ? safeT('polls.create.wizard.review.enabled', 'Enabled') : safeT('polls.create.wizard.review.disabled', 'Disabled')}
+                    </span>
+                  </div>
+                  <div className="flex items-center justify-between p-3 rounded-lg bg-muted/30 border">
+                    <span className="font-medium text-foreground">{safeT('polls.create.wizard.review.anonymousVotes', 'Anonymous Votes')}</span>
+                    <span className={cn("font-semibold", data.settings.allowAnonymousVotes ? "text-green-600" : "text-muted-foreground")}>
+                      {data.settings.allowAnonymousVotes ? safeT('polls.create.wizard.review.allowed', 'Allowed') : safeT('polls.create.wizard.review.disabled', 'Disabled')}
+                    </span>
+                  </div>
+                  <div className="flex items-center justify-between p-3 rounded-lg bg-muted/30 border">
+                    <span className="font-medium text-foreground">{safeT('polls.create.wizard.review.requireSignIn', 'Require Sign In')}</span>
+                    <span className={cn("font-semibold", data.settings.requireAuthentication ? "text-green-600" : "text-muted-foreground")}>
+                      {data.settings.requireAuthentication ? safeT('polls.create.wizard.review.yes', 'Yes') : safeT('polls.create.wizard.review.no', 'No')}
+                    </span>
+                  </div>
+                  <div className="flex items-center justify-between p-3 rounded-lg bg-muted/30 border">
+                    <span className="font-medium text-foreground">{safeT('polls.create.wizard.review.comments', 'Comments')}</span>
+                    <span className={cn("font-semibold", data.settings.allowComments ? "text-green-600" : "text-muted-foreground")}>
+                      {data.settings.allowComments ? safeT('polls.create.wizard.review.enabled', 'Enabled') : safeT('polls.create.wizard.review.disabled', 'Disabled')}
+                    </span>
+                  </div>
                 </section>
               </CardContent>
             </Card>
@@ -1266,7 +1287,7 @@ export default function CreatePollPage() {
             aria-atomic="true"
           >
             <AlertCircle className="h-4 w-4" />
-            <AlertTitle className="text-red-900 dark:text-red-100">{t('polls.create.page.errorSummary.title')}</AlertTitle>
+            <AlertTitle className="text-red-900 dark:text-red-100">{safeT('polls.create.page.errorSummary.title', 'Please fix the following errors')}</AlertTitle>
             <AlertDescription className="text-red-800 dark:text-red-200">
               <ul className="mt-2 list-disc space-y-1 pl-5 text-sm">
                 {errorMessages.map(({ id, message }) => (
@@ -1340,9 +1361,9 @@ export default function CreatePollPage() {
           aria-describedby="share-dialog-description share-dialog-link"
         >
           <DialogHeader>
-            <DialogTitle id="share-dialog-title">{t('polls.create.share.dialog.title')}</DialogTitle>
+            <DialogTitle id="share-dialog-title">{safeT('polls.create.share.dialog.title', 'Your poll is live!')}</DialogTitle>
             <DialogDescription id="share-dialog-description">
-              {t('polls.create.share.dialog.description', { title: shareInfo?.title ?? t('polls.create.share.dialog.yourPoll') })}
+              {safeT('polls.create.share.dialog.description', `Share "${shareInfo?.title ?? safeT('polls.create.share.dialog.yourPoll', 'your poll')}" with others.`, { title: shareInfo?.title ?? safeT('polls.create.share.dialog.yourPoll', 'your poll') })}
             </DialogDescription>
           </DialogHeader>
 
@@ -1351,26 +1372,26 @@ export default function CreatePollPage() {
               <div className="rounded-lg border border-dashed border-border/70 bg-muted/40 p-4">
                 <div className="space-y-3 text-sm">
                   <div>
-                    <p className="text-xs font-medium uppercase text-muted-foreground">{t('polls.create.share.dialog.pollTitle')}</p>
+                    <p className="text-xs font-medium uppercase text-muted-foreground">{safeT('polls.create.share.dialog.pollTitle', 'Poll Title')}</p>
                     <p className="text-base font-semibold text-foreground">{shareInfo.title}</p>
                   </div>
                   <div className="grid grid-cols-1 gap-3 text-sm sm:grid-cols-2">
                     <div>
-                      <p className="text-xs font-medium uppercase text-muted-foreground">{t('polls.create.share.dialog.privacy')}</p>
-                      <p>{PRIVACY_LABELS[shareInfo.privacyLevel]}</p>
+                      <p className="text-xs font-medium uppercase text-muted-foreground">{safeT('polls.create.share.dialog.privacy', 'Privacy')}</p>
+                      <p>{PRIVACY_LABELS[shareInfo.privacyLevel] || shareInfo.privacyLevel}</p>
                     </div>
                     <div>
-                      <p className="text-xs font-medium uppercase text-muted-foreground">{t('polls.create.share.dialog.votingMethod')}</p>
-                      <p>{VOTING_METHOD_LABELS[shareInfo.votingMethod]}</p>
+                      <p className="text-xs font-medium uppercase text-muted-foreground">{safeT('polls.create.share.dialog.votingMethod', 'Voting Method')}</p>
+                      <p>{VOTING_METHOD_LABELS[shareInfo.votingMethod] || shareInfo.votingMethod}</p>
                     </div>
                     <div>
-                      <p className="text-xs font-medium uppercase text-muted-foreground">{t('polls.create.share.dialog.category')}</p>
+                      <p className="text-xs font-medium uppercase text-muted-foreground">{safeT('polls.create.share.dialog.category', 'Category')}</p>
                       <p className="capitalize">{shareInfo.category}</p>
                     </div>
                     {nextMilestone && (
                       <div>
-                        <p className="text-xs font-medium uppercase text-muted-foreground">{t('polls.create.share.dialog.nextMilestone')}</p>
-                        <p>{t('polls.create.share.dialog.milestoneVotes', { count: nextMilestone })}</p>
+                        <p className="text-xs font-medium uppercase text-muted-foreground">{safeT('polls.create.share.dialog.nextMilestone', 'Next Milestone')}</p>
+                        <p>{safeT('polls.create.share.dialog.milestoneVotes', `${nextMilestone} votes`, { count: nextMilestone })}</p>
                       </div>
                     )}
                   </div>
@@ -1379,7 +1400,7 @@ export default function CreatePollPage() {
             )}
 
             <div>
-              <Label htmlFor="share-link">{t('polls.create.share.dialog.pollLink')}</Label>
+              <Label htmlFor="share-link">{safeT('polls.create.share.dialog.pollLink', 'Poll Link')}</Label>
               <div className="mt-2 flex items-center gap-2">
                 <Input
                   id="share-link"
@@ -1394,28 +1415,28 @@ export default function CreatePollPage() {
                   onClick={handleCopyShareLink}
                   ref={shareCopyButtonRef}
                 >
-                  {hasCopiedShareLink ? t('polls.create.share.dialog.copied') : t('polls.create.share.dialog.copyLink')}
+                  {hasCopiedShareLink ? safeT('polls.create.share.dialog.copied', 'Copied!') : safeT('polls.create.share.dialog.copyLink', 'Copy Link')}
                 </Button>
               </div>
               <div id="share-dialog-link" className="sr-only">
                 {hasCopiedShareLink
-                  ? t('polls.create.share.dialog.linkCopiedAria')
-                  : t('polls.create.share.dialog.linkCopyHintAria')}
+                  ? safeT('polls.create.share.dialog.linkCopiedAria', 'Link copied to clipboard')
+                  : safeT('polls.create.share.dialog.linkCopyHintAria', 'Click to copy poll link')}
               </div>
             </div>
 
             <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
               <Button type="button" variant="secondary" onClick={handleViewPoll}>
-                {t('polls.create.share.dialog.buttons.viewPoll')}
+                {safeT('polls.create.share.dialog.buttons.viewPoll', 'View Poll')}
               </Button>
               <Button type="button" variant="outline" onClick={handleViewAnalytics}>
-                {t('polls.create.share.dialog.buttons.viewAnalytics')}
+                {safeT('polls.create.share.dialog.buttons.viewAnalytics', 'View Analytics')}
               </Button>
               <Button
                 type="button"
                 variant="outline"
                 onClick={() => {
-                  window.open(`mailto:?subject=${encodeURIComponent(t('polls.create.share.dialog.email.subject'))}&body=${encodeURIComponent(shareUrl)}`);
+                  window.open(`mailto:?subject=${encodeURIComponent(safeT('polls.create.share.dialog.email.subject', 'Check out this poll'))}&body=${encodeURIComponent(shareUrl)}`);
                   recordPollEvent('email_link', {
                     value: 1,
                     metadata: {
@@ -1426,13 +1447,14 @@ export default function CreatePollPage() {
                   });
                 }}
               >
-                {t('polls.create.share.dialog.buttons.emailLink')}
+                {safeT('polls.create.share.dialog.buttons.emailLink', 'Email Link')}
               </Button>
               <Button
                 type="button"
                 variant="outline"
                 onClick={() => {
-                  window.open(`https://twitter.com/intent/tweet?text=${encodeURIComponent(t('polls.create.share.dialog.x.tweet', { title: shareInfo?.title ?? t('polls.create.share.dialog.yourPoll'), url: shareUrl }))}`, '_blank');
+                  const tweetText = safeT('polls.create.share.dialog.x.tweet', `Check out this poll: "${shareInfo?.title ?? safeT('polls.create.share.dialog.yourPoll', 'your poll')}" ${shareUrl}`, { title: shareInfo?.title ?? safeT('polls.create.share.dialog.yourPoll', 'your poll'), url: shareUrl });
+                  window.open(`https://twitter.com/intent/tweet?text=${encodeURIComponent(tweetText)}`, '_blank');
                   recordPollEvent('share_x', {
                     value: 1,
                     metadata: {
@@ -1443,20 +1465,20 @@ export default function CreatePollPage() {
                   });
                 }}
               >
-                {t('polls.create.share.dialog.buttons.shareOnX')}
+                {safeT('polls.create.share.dialog.buttons.shareOnX', 'Share on X')}
               </Button>
             </div>
 
             <div className="space-y-4">
               <div className="flex items-center justify-between">
                 <div>
-                  <h3 className="text-sm font-semibold text-foreground">{t('polls.create.share.dialog.milestones.title')}</h3>
+                  <h3 className="text-sm font-semibold text-foreground">{safeT('polls.create.share.dialog.milestones.title', 'Vote Milestones')}</h3>
                   <p className="text-xs text-muted-foreground">
-                    {t('polls.create.share.dialog.milestones.description')}
+                    {safeT('polls.create.share.dialog.milestones.description', 'Get notified when your poll reaches these vote counts.')}
                   </p>
                 </div>
                 <span className="text-xs text-muted-foreground">
-                  {t('polls.create.share.dialog.milestones.enabled', { current: enabledMilestones.length, total: milestones.length })}
+                  {safeT('polls.create.share.dialog.milestones.enabled', `${enabledMilestones.length} of ${milestones.length} enabled`, { current: enabledMilestones.length, total: milestones.length })}
                 </span>
               </div>
 
@@ -1468,10 +1490,10 @@ export default function CreatePollPage() {
                   >
                     <div>
                       <Label htmlFor={`milestone-${milestone}`} className="text-sm font-medium">
-                        {t('polls.create.share.dialog.milestones.notifyAt', { count: milestone })}
+                        {safeT('polls.create.share.dialog.milestones.notifyAt', `Notify at ${milestone} votes`, { count: milestone })}
                       </Label>
                       <p id={`milestone-${milestone}-description`} className="text-xs text-muted-foreground">
-                        {t('polls.create.share.dialog.milestones.itemDescription', { count: milestone })}
+                        {safeT('polls.create.share.dialog.milestones.itemDescription', `Get notified when your poll reaches ${milestone} votes.`, { count: milestone })}
                       </p>
                     </div>
                     <Switch
@@ -1488,10 +1510,10 @@ export default function CreatePollPage() {
 
           <DialogFooter className="pt-4">
             <Button type="button" variant="ghost" onClick={handleCreateAnotherPoll}>
-              {t('polls.create.share.dialog.buttons.createAnother')}
+              {safeT('polls.create.share.dialog.buttons.createAnother', 'Create Another')}
             </Button>
             <Button type="button" onClick={handleViewPoll}>
-              {t('polls.create.share.dialog.buttons.done')}
+              {safeT('polls.create.share.dialog.buttons.done', 'Done')}
             </Button>
           </DialogFooter>
         </DialogContent>
