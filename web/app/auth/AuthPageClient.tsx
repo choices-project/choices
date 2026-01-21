@@ -228,7 +228,7 @@ export default function AuthPageClient() {
       // Sync on input events (for E2E tests that use page.fill())
       emailInput.addEventListener('input', syncEmail);
       passwordInput.addEventListener('input', syncPassword);
-      
+
       // Also listen for focus/blur to catch programmatic fills
       emailInput.addEventListener('focus', syncEmail);
       passwordInput.addEventListener('focus', syncPassword);
@@ -248,9 +248,15 @@ export default function AuthPageClient() {
       cleanup = () => {
         emailInput.removeEventListener('input', syncEmail);
         passwordInput.removeEventListener('input', syncPassword);
+        emailInput.removeEventListener('focus', syncEmail);
+        passwordInput.removeEventListener('focus', syncPassword);
         clearInterval(interval);
         clearTimeout(timeout);
       };
+
+      // Run sync immediately to catch any values already in the DOM
+      syncEmail();
+      syncPassword();
     };
 
     // Start checking for inputs

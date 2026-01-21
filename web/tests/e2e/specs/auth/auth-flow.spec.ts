@@ -190,16 +190,16 @@ test.describe('Authentication Flow', () => {
       // Fill in login form - use data-testid selectors for reliability
       const emailInput = page.locator('[data-testid="login-email"]');
       const passwordInput = page.locator('[data-testid="login-password"]');
-      
+
       await emailInput.waitFor({ state: 'visible', timeout: 10_000 });
       await passwordInput.waitFor({ state: 'visible', timeout: 10_000 });
-      
+
       await emailInput.fill(regularEmail!);
       await passwordInput.fill(regularPassword!);
-      
+
       // Wait for sync mechanism to process (check every 100ms, so wait at least that long)
       await page.waitForTimeout(200);
-      
+
       // Also trigger the sync manually by dispatching input events
       await page.evaluate(() => {
         const emailEl = document.querySelector('[data-testid="login-email"]') as HTMLInputElement;
@@ -213,7 +213,7 @@ test.describe('Authentication Flow', () => {
           passwordEl.dispatchEvent(new Event('change', { bubbles: true }));
         }
       });
-      
+
       // Wait a moment more for React to process
       await page.waitForTimeout(300);
 
@@ -245,7 +245,7 @@ test.describe('Authentication Flow', () => {
           },
           formValidation: {
             emailValid: emailInput?.value?.includes('@') || false,
-            passwordValid: (passwordInput?.value?.length || 0) >= 6,
+            passwordValid: (passwordInput?.value?.length || 0) >= 8,
             shouldBeEnabled: (emailInput?.value?.includes('@') || false) && ((passwordInput?.value?.length || 0) >= 6),
           },
         };
@@ -261,7 +261,8 @@ test.describe('Authentication Flow', () => {
           const submitButton = document.querySelector('[data-testid="login-submit"]') as HTMLButtonElement;
 
           const emailValid = emailInput?.value === expectedEmail && expectedEmail.includes('@');
-          const passwordValid = passwordInput?.value === expectedPassword && expectedPassword.length >= 6;
+          // Password must be at least 8 characters (minPasswordLength = 8 in AuthPageClient)
+          const passwordValid = passwordInput?.value === expectedPassword && expectedPassword.length >= 8;
           const isEnabled = !submitButton?.disabled;
 
           return emailValid && passwordValid && isEnabled;
@@ -283,7 +284,7 @@ test.describe('Authentication Flow', () => {
             buttonDisabled: submitButton?.disabled ?? null,
             buttonAriaBusy: submitButton?.getAttribute('aria-busy'),
             emailValid: emailInput?.value?.includes('@') || false,
-            passwordValid: (passwordInput?.value?.length || 0) >= 6,
+            passwordValid: (passwordInput?.value?.length || 0) >= 8,
             // Check if sync effect is running
             emailHasSyncedValue: emailInput?.getAttribute('data-synced-value') || null,
             passwordHasSyncedValue: passwordInput?.getAttribute('data-synced-value') || null,
