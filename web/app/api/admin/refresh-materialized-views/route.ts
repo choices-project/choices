@@ -42,6 +42,7 @@ export const POST = withErrorHandling(async (_request: NextRequest) => {
       refreshError = result.error;
     } catch (err) {
       refreshError = err;
+      refreshResults = null;
     }
 
     // If refresh_all_materialized_views worked, use those results
@@ -77,59 +78,45 @@ export const POST = withErrorHandling(async (_request: NextRequest) => {
     // This handles the case where refresh_all_materialized_views doesn't exist or returned no results
     logger.info('Using fallback method: refreshing individual materialized views', { refreshError });
 
-      // Alternative: Use a PostgreSQL function if available, or refresh common views
-      // For now, we'll attempt to refresh via a direct SQL execution pattern
-      // Note: Supabase may require creating a function in the database first
+    const refreshedViews: string[] = [];
+    const errors: string[] = [];
 
-      const refreshedViews: string[] = [];
-      const errors: string[] = [];
+    // Common materialized view names to try
+    // These should match any materialized views you've created in your database
+    const commonViewNames = [
+      'poll_analytics_summary',
+      'user_activity_summary',
+      'vote_statistics',
+      'trending_topics_summary',
+    ];
 
-      // Common materialized view names to try
-      // These should match any materialized views you've created in your database
-      const commonViewNames = [
-        'poll_analytics_summary',
-        'user_activity_summary',
-        'vote_statistics',
-        'trending_topics_summary',
-      ];
-
-      for (const viewName of commonViewNames) {
-        try {
-          // Attempt to refresh via RPC if a function exists
-          const { error: refreshError } = await (supabase.rpc as any)('refresh_materialized_view', {
-            view_name: viewName,
-          });
-
-          if (refreshError) {
-            // If RPC doesn't exist, log but continue
-            logger.debug(`Could not refresh ${viewName} via RPC`, refreshError);
-            errors.push(`${viewName}: ${refreshError.message}`);
-          } else {
-            refreshedViews.push(viewName);
-          }
-        } catch (err) {
-          const message = err instanceof Error ? err.message : 'Unknown error';
-          errors.push(`${viewName}: ${message}`);
-        }
-      }
-
-      const duration = Date.now() - startTime;
-
-      if (refreshedViews.length === 0 && errors.length > 0) {
-        logger.warn('No materialized views could be refreshed', { errors });
-        return successResponse({
-          success: true,
-          message: 'Materialized views refresh attempted. Note: Database functions may need to be created.',
-          refreshed: refreshedViews,
-          errors: errors.length > 0 ? errors : undefined,
-          duration: `${duration}ms`,
-          timestamp: new Date().toISOString(),
+    for (const viewName of commonViewNames) {
+      try {
+        // Attempt to refresh via RPC if a function exists
+        const { error: viewRefreshError } = await (supabase.rpc as any)('refresh_materialized_view', {
+          view_name: viewName,
         });
-      }
 
+        if (viewRefreshError) {
+          // If RPC doesn't exist, log but continue
+          logger.debug(`Could not refresh ${viewName} via RPC`, viewRefreshError);
+          errors.push(`${viewName}: ${viewRefreshError.message}`);
+        } else {
+          refreshedViews.push(viewName);
+        }
+      } catch (err) {
+        const message = err instanceof Error ? err.message : 'Unknown error';
+        errors.push(`${viewName}: ${message}`);
+      }
+    }
+
+    const duration = Date.now() - startTime;
+
+    if (refreshedViews.length === 0 && errors.length > 0) {
+      logger.warn('No materialized views could be refreshed', { errors });
       return successResponse({
         success: true,
-        message: `Refreshed ${refreshedViews.length} materialized view(s)`,
+        message: 'Materialized views refresh attempted. Note: Database functions may need to be created.',
         refreshed: refreshedViews,
         errors: errors.length > 0 ? errors : undefined,
         duration: `${duration}ms`,
@@ -137,15 +124,11 @@ export const POST = withErrorHandling(async (_request: NextRequest) => {
       });
     }
 
-    // If we get here, refresh_all_materialized_views returned empty array (no views exist)
-    // Return success with informative message
-    const duration = Date.now() - startTime;
-    logger.info('No materialized views found to refresh', { duration });
     return successResponse({
       success: true,
-      message: 'No materialized views found in the database',
-      total: 0,
-      refreshed: [],
+      message: `Refreshed ${refreshedViews.length} materialized view(s)`,
+      refreshed: refreshedViews,
+      errors: errors.length > 0 ? errors : undefined,
       duration: `${duration}ms`,
       timestamp: new Date().toISOString(),
     });
