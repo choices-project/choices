@@ -830,21 +830,61 @@ export default function CreatePollPage() {
 
                 <section>
                   <h4 className="text-sm font-semibold mb-3">{t('polls.create.wizard.review.optionsHeading') || 'Poll Options'}</h4>
-                  <div className="space-y-2">
-                    {data.options
-                      .filter((option) => option.trim().length > 0)
-                      .map((option, index) => (
-                        <div key={`preview-option-${index}`} className="flex items-center gap-3 p-3 rounded-lg border bg-muted/30">
-                          <span className="flex h-6 w-6 items-center justify-center rounded-full border-2 border-primary text-primary text-sm font-semibold shrink-0" aria-hidden>
-                            {index + 1}
-                          </span>
-                          <span className="text-sm font-medium">{option || `Option ${index + 1}`}</span>
+                  {data.settings.votingMethod === 'ranked' ? (
+                    <div className="space-y-3">
+                      <div className="rounded-lg border border-purple-200 bg-purple-50/50 p-4 mb-3">
+                        <div className="flex items-center gap-2 mb-2">
+                          <span className="text-lg">🏆</span>
+                          <span className="text-sm font-semibold text-purple-900">Ranked Choice Voting</span>
                         </div>
-                      ))}
-                    {data.options.filter((option) => option.trim().length > 0).length === 0 && (
-                      <p className="text-sm text-muted-foreground italic">No options added yet.</p>
-                    )}
-                  </div>
+                        <p className="text-xs text-purple-700">
+                          Voters will rank each option from 1st (most preferred) to last (least preferred).
+                        </p>
+                      </div>
+                      <div className="space-y-2">
+                        {data.options
+                          .filter((option) => option.trim().length > 0)
+                          .map((option, index) => (
+                            <div key={`preview-option-${index}`} className="flex items-center gap-3 p-3 rounded-lg border-2 border-purple-200 bg-white">
+                              <div className="flex-shrink-0 flex items-center justify-center w-8 h-8 rounded-full bg-purple-100 text-purple-700 font-semibold text-sm">
+                                {index + 1}
+                              </div>
+                              <div className="flex-1">
+                                <span className="text-sm font-medium">{option || `Option ${index + 1}`}</span>
+                              </div>
+                              <div className="flex-shrink-0 text-xs text-muted-foreground">
+                                Rank: <span className="font-semibold text-purple-600">{index + 1}</span>
+                              </div>
+                            </div>
+                          ))}
+                        {data.options.filter((option) => option.trim().length > 0).length === 0 && (
+                          <p className="text-sm text-muted-foreground italic">No options added yet.</p>
+                        )}
+                      </div>
+                      <div className="mt-3 p-3 rounded-lg bg-muted/50 border border-dashed">
+                        <p className="text-xs text-muted-foreground">
+                          <strong>How it works:</strong> Voters will drag options to reorder them, with 1st being their top choice. 
+                          The system uses instant runoff to find the option with majority support.
+                        </p>
+                      </div>
+                    </div>
+                  ) : (
+                    <div className="space-y-2">
+                      {data.options
+                        .filter((option) => option.trim().length > 0)
+                        .map((option, index) => (
+                          <div key={`preview-option-${index}`} className="flex items-center gap-3 p-3 rounded-lg border bg-muted/30">
+                            <span className="flex h-6 w-6 items-center justify-center rounded-full border-2 border-primary text-primary text-sm font-semibold shrink-0" aria-hidden>
+                              {index + 1}
+                            </span>
+                            <span className="text-sm font-medium">{option || `Option ${index + 1}`}</span>
+                          </div>
+                        ))}
+                      {data.options.filter((option) => option.trim().length > 0).length === 0 && (
+                        <p className="text-sm text-muted-foreground italic">No options added yet.</p>
+                      )}
+                    </div>
+                  )}
                 </section>
 
                   <Separator />
@@ -940,22 +980,44 @@ export default function CreatePollPage() {
           <Button
             type="button"
             variant="outline"
-            onClick={goToPreviousStep}
+            onClick={(e) => {
+              e.preventDefault();
+              e.stopPropagation();
+              goToPreviousStep();
+            }}
             disabled={!canGoBack || isLoading}
             className="w-full sm:w-auto"
           >
             <ArrowLeft className="mr-2 h-4 w-4" />
-            {t('polls.create.page.buttons.previous')}
+            {t('polls.create.page.buttons.previous') || 'Previous'}
           </Button>
 
           <div className="flex w-full flex-col gap-3 sm:w-auto sm:flex-row">
             {currentStep === POLL_CREATION_STEPS.length - 1 ? (
-              <Button type="button" className="w-full" onClick={handleSubmit} disabled={!canProceed || isLoading}>
-                {isLoading ? t('polls.create.page.buttons.creating') : t('polls.create.page.buttons.publish')}
+              <Button 
+                type="button" 
+                className="w-full" 
+                onClick={(e) => {
+                  e.preventDefault();
+                  e.stopPropagation();
+                  handleSubmit();
+                }} 
+                disabled={!canProceed || isLoading}
+              >
+                {isLoading ? (t('polls.create.page.buttons.creating') || 'Creating...') : (t('polls.create.page.buttons.publish') || 'Publish poll')}
               </Button>
             ) : (
-              <Button type="button" className="w-full" onClick={goToNextStep} disabled={!canProceed || isLoading}>
-                {t('polls.create.page.buttons.next')}
+              <Button 
+                type="button" 
+                className="w-full" 
+                onClick={(e) => {
+                  e.preventDefault();
+                  e.stopPropagation();
+                  goToNextStep();
+                }} 
+                disabled={!canProceed || isLoading}
+              >
+                {t('polls.create.page.buttons.next') || 'Next'}
                 <ArrowRight className="ml-2 h-4 w-4" />
               </Button>
             )}
