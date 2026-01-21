@@ -315,104 +315,254 @@ export default function CreatePollPage() {
   }, [actions])
 
   // Sync DOM values to React state for browser automation compatibility (step 1: details)
+  // Uses the same proven pattern from AuthPageClient
   useEffect(() => {
     if (typeof window === 'undefined' || currentStep !== 0) return;
 
-    const titleInput = document.getElementById('title') as HTMLInputElement | null;
-    const descriptionInput = document.getElementById('description') as HTMLTextAreaElement | null;
-
-    if (!titleInput && !descriptionInput) return;
-
-    const syncInputs = () => {
-      if (titleInput) {
-        const domValue = titleInput.value;
-        if (domValue !== data.title) {
-          // Update React state first
-          handleDataUpdate({ title: domValue });
-          // Then trigger events in next tick for React to process
-          setTimeout(() => {
-            const inputEvent = new InputEvent('input', {
-              bubbles: true,
-              cancelable: true,
-              inputType: 'insertText',
-              isComposing: false
-            });
-            const changeEvent = new Event('change', { bubbles: true });
-            titleInput.dispatchEvent(inputEvent);
-            titleInput.dispatchEvent(changeEvent);
-          }, 0);
-        }
-      }
-      if (descriptionInput) {
-        const domValue = descriptionInput.value;
-        if (domValue !== data.description) {
-          // Update React state first
-          handleDataUpdate({ description: domValue });
-          // Then trigger events in next tick
-          setTimeout(() => {
-            const inputEvent = new InputEvent('input', {
-              bubbles: true,
-              cancelable: true,
-              inputType: 'insertText',
-              isComposing: false
-            });
-            const changeEvent = new Event('change', { bubbles: true });
-            descriptionInput.dispatchEvent(inputEvent);
-            descriptionInput.dispatchEvent(changeEvent);
-          }, 0);
-        }
-      }
+    const getTitleInput = (): HTMLInputElement | null => {
+      return document.getElementById('title') as HTMLInputElement | null;
     };
 
-    // Sync on input events
-    titleInput?.addEventListener('input', syncInputs);
-    descriptionInput?.addEventListener('input', syncInputs);
+    const getDescriptionInput = (): HTMLTextAreaElement | null => {
+      return document.getElementById('description') as HTMLTextAreaElement | null;
+    };
 
-    // Also sync periodically for E2E tests
-    const interval = setInterval(syncInputs, 100);
-    const timeout = setTimeout(() => clearInterval(interval), 5000);
+    let cleanup: (() => void) | undefined;
+    let checkTimeout: NodeJS.Timeout | undefined;
+
+    const checkInputs = (): void => {
+      const titleInput = getTitleInput();
+      const descriptionInput = getDescriptionInput();
+
+      if (!titleInput && !descriptionInput) {
+        // Retry after a short delay if inputs aren't ready (max 5 seconds)
+        checkTimeout = setTimeout(checkInputs, 100);
+        return;
+      }
+
+      const syncTitle = () => {
+        if (!titleInput) return;
+        const currentValue = titleInput.value;
+        const syncedValue = titleInput.getAttribute('data-synced-value');
+        // Sync if value exists and is different from what we last synced
+        if (currentValue !== syncedValue) {
+          titleInput.setAttribute('data-synced-value', currentValue || '');
+
+          // CRITICAL FIX: Update React state FIRST, then dispatch events in next tick
+          // This ensures React's controlled input system recognizes the change
+          if (data.title !== currentValue) {
+            // Update state immediately - React will re-render
+            handleDataUpdate({ title: currentValue });
+
+            // Use setTimeout to dispatch events after state update is queued
+            // This ensures React processes the state change before events fire
+            setTimeout(() => {
+              // Create proper InputEvent with correct properties for React
+              const inputEvent = new InputEvent('input', {
+                bubbles: true,
+                cancelable: true,
+                data: currentValue,
+                inputType: 'insertText',
+                isComposing: false
+              });
+
+              // Also dispatch change event for form validation
+              const changeEvent = new Event('change', {
+                bubbles: true,
+                cancelable: true
+              });
+
+              // Dispatch events in correct order
+              titleInput.dispatchEvent(inputEvent);
+              titleInput.dispatchEvent(changeEvent);
+
+              // Trigger focus/blur cycle to ensure validation runs
+              titleInput.focus();
+              setTimeout(() => titleInput.blur(), 10);
+            }, 0);
+          }
+        }
+      };
+
+      const syncDescription = () => {
+        if (!descriptionInput) return;
+        const currentValue = descriptionInput.value;
+        const syncedValue = descriptionInput.getAttribute('data-synced-value');
+        // Sync if value exists and is different from what we last synced
+        if (currentValue !== syncedValue) {
+          descriptionInput.setAttribute('data-synced-value', currentValue || '');
+
+          // CRITICAL FIX: Update React state FIRST, then dispatch events in next tick
+          if (data.description !== currentValue) {
+            // Update state immediately - React will re-render
+            handleDataUpdate({ description: currentValue });
+
+            // Use setTimeout to dispatch events after state update is queued
+            setTimeout(() => {
+              // Create proper InputEvent with correct properties for React
+              const inputEvent = new InputEvent('input', {
+                bubbles: true,
+                cancelable: true,
+                data: currentValue,
+                inputType: 'insertText',
+                isComposing: false
+              });
+
+              // Also dispatch change event for form validation
+              const changeEvent = new Event('change', {
+                bubbles: true,
+                cancelable: true
+              });
+
+              // Dispatch events in correct order
+              descriptionInput.dispatchEvent(inputEvent);
+              descriptionInput.dispatchEvent(changeEvent);
+
+              // Trigger focus/blur cycle to ensure validation runs
+              descriptionInput.focus();
+              setTimeout(() => descriptionInput.blur(), 10);
+            }, 0);
+          }
+        }
+      };
+
+      // Sync on input events (for E2E tests that use page.fill())
+      titleInput?.addEventListener('input', syncTitle);
+      descriptionInput?.addEventListener('input', syncDescription);
+
+      // Also listen for focus/blur to catch programmatic fills
+      titleInput?.addEventListener('focus', syncTitle);
+      descriptionInput?.addEventListener('focus', syncDescription);
+
+      // Also sync periodically to catch any direct DOM manipulation (E2E tests)
+      // Keep syncing for 30 seconds to handle slower test environments
+      const interval = setInterval(() => {
+        syncTitle();
+        syncDescription();
+      }, 100); // Check every 100ms
+
+      // Extended to 30 seconds to catch late DOM updates in production/test environments
+      const timeout = setTimeout(() => clearInterval(interval), 30000);
+
+      cleanup = () => {
+        titleInput?.removeEventListener('input', syncTitle);
+        descriptionInput?.removeEventListener('input', syncDescription);
+        titleInput?.removeEventListener('focus', syncTitle);
+        descriptionInput?.removeEventListener('focus', syncDescription);
+        clearInterval(interval);
+        clearTimeout(timeout);
+        if (checkTimeout) clearTimeout(checkTimeout);
+      };
+    };
+
+    // Start checking for inputs
+    checkInputs();
 
     return () => {
-      titleInput?.removeEventListener('input', syncInputs);
-      descriptionInput?.removeEventListener('input', syncInputs);
-      clearInterval(interval);
-      clearTimeout(timeout);
+      if (cleanup) cleanup();
+      if (checkTimeout) clearTimeout(checkTimeout);
     };
   }, [currentStep, data.title, data.description, handleDataUpdate]);
 
   // Sync DOM values to React state for browser automation compatibility (step 2: options)
+  // Uses the same proven pattern from AuthPageClient
   useEffect(() => {
     if (typeof window === 'undefined' || currentStep !== 1) return;
 
-    const syncOptions = () => {
-      data.options.forEach((_, index) => {
-        const optionInput = document.getElementById(`option-${index}`) as HTMLInputElement | null;
-        if (optionInput) {
-          const domValue = optionInput.value;
-          if (domValue !== data.options[index]) {
-            handleOptionChange(index, domValue);
-          }
-        }
-      });
+    const getOptionInput = (index: number): HTMLInputElement | null => {
+      return document.getElementById(`option-${index}`) as HTMLInputElement | null;
     };
 
-    // Sync on input events for all option inputs
-    data.options.forEach((_, index) => {
-      const optionInput = document.getElementById(`option-${index}`) as HTMLInputElement | null;
-      optionInput?.addEventListener('input', syncOptions);
-    });
+    let cleanup: (() => void) | undefined;
+    let checkTimeout: NodeJS.Timeout | undefined;
 
-    // Also sync periodically for E2E tests
-    const interval = setInterval(syncOptions, 100);
-    const timeout = setTimeout(() => clearInterval(interval), 5000);
+    const checkInputs = (): void => {
+      // Check if at least one option input exists
+      const firstOptionInput = getOptionInput(0);
+      if (!firstOptionInput) {
+        // Retry after a short delay if inputs aren't ready (max 5 seconds)
+        checkTimeout = setTimeout(checkInputs, 100);
+        return;
+      }
+
+      const syncOptions = () => {
+        data.options.forEach((currentOption, index) => {
+          const optionInput = getOptionInput(index);
+          if (!optionInput) return;
+
+          const currentValue = optionInput.value;
+          const syncedValue = optionInput.getAttribute('data-synced-value');
+          // Sync if value exists and is different from what we last synced
+          if (currentValue !== syncedValue) {
+            optionInput.setAttribute('data-synced-value', currentValue || '');
+
+            // CRITICAL FIX: Update React state FIRST, then dispatch events in next tick
+            if (currentOption !== currentValue) {
+              // Update state immediately - React will re-render
+              handleOptionChange(index, currentValue);
+
+              // Use setTimeout to dispatch events after state update is queued
+              setTimeout(() => {
+                // Create proper InputEvent with correct properties for React
+                const inputEvent = new InputEvent('input', {
+                  bubbles: true,
+                  cancelable: true,
+                  data: currentValue,
+                  inputType: 'insertText',
+                  isComposing: false
+                });
+
+                // Also dispatch change event for form validation
+                const changeEvent = new Event('change', {
+                  bubbles: true,
+                  cancelable: true
+                });
+
+                // Dispatch events in correct order
+                optionInput.dispatchEvent(inputEvent);
+                optionInput.dispatchEvent(changeEvent);
+
+                // Trigger focus/blur cycle to ensure validation runs
+                optionInput.focus();
+                setTimeout(() => optionInput.blur(), 10);
+              }, 0);
+            }
+          }
+        });
+      };
+
+      // Sync on input events for all option inputs
+      data.options.forEach((_, index) => {
+        const optionInput = getOptionInput(index);
+        optionInput?.addEventListener('input', syncOptions);
+        optionInput?.addEventListener('focus', syncOptions);
+      });
+
+      // Also sync periodically to catch any direct DOM manipulation (E2E tests)
+      // Keep syncing for 30 seconds to handle slower test environments
+      const interval = setInterval(syncOptions, 100); // Check every 100ms
+
+      // Extended to 30 seconds to catch late DOM updates in production/test environments
+      const timeout = setTimeout(() => clearInterval(interval), 30000);
+
+      cleanup = () => {
+        data.options.forEach((_, index) => {
+          const optionInput = getOptionInput(index);
+          optionInput?.removeEventListener('input', syncOptions);
+          optionInput?.removeEventListener('focus', syncOptions);
+        });
+        clearInterval(interval);
+        clearTimeout(timeout);
+        if (checkTimeout) clearTimeout(checkTimeout);
+      };
+    };
+
+    // Start checking for inputs
+    checkInputs();
 
     return () => {
-      data.options.forEach((_, index) => {
-        const optionInput = document.getElementById(`option-${index}`) as HTMLInputElement | null;
-        optionInput?.removeEventListener('input', syncOptions);
-      });
-      clearInterval(interval);
-      clearTimeout(timeout);
+      if (cleanup) cleanup();
+      if (checkTimeout) clearTimeout(checkTimeout);
     };
   }, [currentStep, data.options, handleOptionChange]);
 
