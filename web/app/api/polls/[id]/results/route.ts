@@ -104,7 +104,16 @@ export const GET = withErrorHandling(async (
               .filter(Boolean) as string[]
           );
           excludedBallots = ballotIds.filter((idValue) => !scoredBallotIds.has(idValue)).length;
-          filteredBallots = filteredBallots.filter((ballot) => scoredBallotIds.has(ballot.id));
+          
+          // Include unscored ballots that are very recent (within last 5 seconds) to handle async integrity scoring
+          // This ensures newly submitted votes appear immediately even if integrity scoring hasn't completed
+          const now = Date.now();
+          const recentCutoff = new Date(now - 5000).toISOString();
+          
+          // Include both scored ballots and very recent unscored ballots
+          filteredBallots = filteredBallots.filter(
+            (ballot) => scoredBallotIds.has(ballot.id) || (ballot.created_at && ballot.created_at >= recentCutoff)
+          );
         }
       }
 

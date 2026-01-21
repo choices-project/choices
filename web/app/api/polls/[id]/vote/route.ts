@@ -326,7 +326,7 @@ export const POST = withErrorHandling(async (request: NextRequest, { params }: {
         code: deleteExistingBallotError.code,
         deleteData,
       });
-      
+
       // Check if it's a permission error - might indicate RLS is still blocking
       if (deleteExistingBallotError.message?.includes('permission denied') || deleteExistingBallotError.code === '42501') {
         logger.error('RLS blocking admin client - this should not happen', {
@@ -339,7 +339,7 @@ export const POST = withErrorHandling(async (request: NextRequest, { params }: {
           500
         );
       }
-      
+
       return errorResponse(
         `Failed to update your ranked ballot: ${deleteExistingBallotError.message ?? 'Database error'}`,
         500
@@ -376,20 +376,24 @@ export const POST = withErrorHandling(async (request: NextRequest, { params }: {
     }
 
     await recordAnalyticsSafely();
+    // For ranked votes, wait for integrity scoring to complete so the vote appears in results immediately
     if (insertedBallot?.id) {
-      void recordIntegrityForVote({
-        supabase,
-        adminClient,
-        userId: user.id,
-        pollId,
-        voteId: insertedBallot.id,
-        voteType: 'ranked',
-        ipAddress: clientIp,
-        userAgent,
-        actionFlags,
-      }).catch((error) => {
+      try {
+        await recordIntegrityForVote({
+          supabase,
+          adminClient,
+          userId: user.id,
+          pollId,
+          voteId: insertedBallot.id,
+          voteType: 'ranked',
+          ipAddress: clientIp,
+          userAgent,
+          actionFlags,
+        });
+      } catch (error) {
+        // Log but don't fail the vote submission if integrity scoring fails
         logger.warn('Integrity scoring failed for ranked ballot', error);
-      });
+      }
     }
 
     return successResponse(
