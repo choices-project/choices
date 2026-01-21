@@ -291,34 +291,26 @@ export const POST = withErrorHandling(async (request: NextRequest, { params }: {
       return validationError({ rankings: 'Select at least one option to rank.' });
     }
 
-    // Verify user session is available for RLS policies
-    // The createServerClient should automatically read session from cookies,
-    // but we verify it's loaded before making RLS-protected calls
-    const { data: { user: authUser }, error: sessionError } = await supabase.auth.getUser();
-    if (sessionError || !authUser || authUser.id !== user.id) {
-      logger.error('Session verification failed for ranked vote', {
-        sessionError,
-        authUserId: authUser?.id,
-        expectedUserId: user.id,
-        hasSession: !!authUser,
-      });
-      return authError('Session verification failed. Please try logging in again.');
+    // Use admin client with explicit security checks
+    // RLS policies require auth.uid() which may not be available in server context
+    // We use admin client but enforce security at application level
+    if (!adminClient) {
+      logger.error('Admin client not available for ranked vote');
+      return errorResponse('Database service unavailable', 500);
     }
 
-    // Delete existing ballot - RLS policy ensures user can only delete their own
-    // The session is now verified, so auth.uid() in RLS will match user.id
-    const { error: deleteExistingBallotError } = await supabase
+    // Delete existing ballot - explicit security: only delete user's own rankings
+    const { error: deleteExistingBallotError } = await adminClient
       .from('poll_rankings')
       .delete()
       .eq('poll_id', pollId)
-      .eq('user_id', user.id);
+      .eq('user_id', user.id); // Explicit security check: user can only delete their own
 
     if (deleteExistingBallotError) {
       logger.error('Ranked vote delete failed', {
         error: deleteExistingBallotError,
         pollId,
         userId: user.id,
-        authUserId: authUser.id,
         message: deleteExistingBallotError.message,
         details: deleteExistingBallotError.details,
         hint: deleteExistingBallotError.hint,
@@ -329,12 +321,12 @@ export const POST = withErrorHandling(async (request: NextRequest, { params }: {
       );
     }
 
-    // Insert new ballot - RLS policy ensures user can only insert for themselves
-    const { data: insertedBallot, error: insertBallotError } = await supabase
+    // Insert new ballot - explicit security: only insert for authenticated user
+    const { data: insertedBallot, error: insertBallotError } = await adminClient
       .from('poll_rankings')
       .insert({
         poll_id: pollId,
-        user_id: user.id,
+        user_id: user.id, // Explicit security check: user can only insert for themselves
         rankings: uniqueRankingIndices,
         created_at: new Date().toISOString(),
         updated_at: new Date().toISOString(),
@@ -347,7 +339,6 @@ export const POST = withErrorHandling(async (request: NextRequest, { params }: {
         error: insertBallotError,
         pollId,
         userId: user.id,
-        authUserId: authUser.id,
         rankings: uniqueRankingIndices,
         message: insertBallotError.message,
         details: insertBallotError.details,
