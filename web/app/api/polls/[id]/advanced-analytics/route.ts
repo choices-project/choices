@@ -1,13 +1,13 @@
 /**
  * Advanced Analytics API Endpoint (Rate-Limited)
- * 
+ *
  * Wrapper around /api/analytics/unified/[id] that adds:
  * - Rate limiting (3 per week per user, admins unlimited)
  * - Poll status validation (closed polls only for non-admins)
  * - Usage tracking
- * 
+ *
  * Uses existing /api/analytics/unified/[id] for actual analytics processing.
- * 
+ *
  * Created: January 2025
  */
 
@@ -32,7 +32,7 @@ export const dynamic = 'force-dynamic';
 
 /**
  * POST /api/polls/[id]/advanced-analytics
- * 
+ *
  * Request body:
  * {
  *   "analyticsType": "demographics" | "geographic" | "trust_tier" | "temporal" | "funnel",
@@ -215,7 +215,7 @@ export const POST = withErrorHandling(async (
 
 /**
  * GET /api/polls/[id]/advanced-analytics
- * 
+ *
  * Returns rate limit status without running analytics
  */
 export const GET = withErrorHandling(async (

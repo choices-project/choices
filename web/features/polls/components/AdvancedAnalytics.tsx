@@ -1,13 +1,13 @@
 /**
  * Advanced Analytics Component
- * 
+ *
  * Provides advanced analytics for closed polls with rate limiting:
  * - Regular users: 3 requests per week
  * - Admins: Unlimited
  * - Only available for closed polls (non-admins)
- * 
+ *
  * Uses existing /api/analytics/unified/[id] endpoint via wrapper.
- * 
+ *
  * Created: January 2025
  */
 

@@ -182,8 +182,8 @@ Periodically review and remove indexes that:
 -- Check unused indexes
 SELECT
   schemaname,
-  tablename,
-  indexname,
+  relname as tablename,
+  indexrelname as indexname,
   idx_scan as index_scans
 FROM pg_stat_user_indexes
 WHERE idx_scan = 0  -- Never used
@@ -265,8 +265,8 @@ ANALYZE table_name;
 -- Index usage statistics
 SELECT
   schemaname,
-  tablename,
-  indexname,
+  relname as tablename,
+  indexrelname as indexname,
   idx_scan as scans,
   idx_tup_read as tuples_read,
   idx_tup_fetch as tuples_fetched
@@ -308,8 +308,8 @@ SET enable_seqscan = on;
 ```sql
 SELECT
   schemaname,
-  tablename,
-  indexname,
+  relname as tablename,
+  indexrelname as indexname,
   pg_size_pretty(pg_relation_size(indexrelid)) as index_size
 FROM pg_stat_user_indexes
 WHERE schemaname = 'public'

@@ -9,25 +9,25 @@ CREATE TABLE IF NOT EXISTS advanced_analytics_usage (
   poll_id UUID NOT NULL REFERENCES polls(id) ON DELETE CASCADE,
   analytics_type TEXT NOT NULL CHECK (analytics_type IN ('demographics', 'geographic', 'trust_tier', 'temporal', 'funnel')),
   created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
-  
+
   -- Prevent duplicate entries (same user, poll, type)
   CONSTRAINT unique_user_poll_type UNIQUE(user_id, poll_id, analytics_type)
 );
 
 -- Index for quick weekly lookups (most common query)
-CREATE INDEX IF NOT EXISTS idx_analytics_usage_user_week 
+CREATE INDEX IF NOT EXISTS idx_analytics_usage_user_week
 ON advanced_analytics_usage(user_id, created_at DESC);
 
 -- Index for poll lookups
-CREATE INDEX IF NOT EXISTS idx_analytics_usage_poll 
+CREATE INDEX IF NOT EXISTS idx_analytics_usage_poll
 ON advanced_analytics_usage(poll_id);
 
 -- Index for analytics type queries
-CREATE INDEX IF NOT EXISTS idx_analytics_usage_type 
+CREATE INDEX IF NOT EXISTS idx_analytics_usage_type
 ON advanced_analytics_usage(analytics_type);
 
 -- Index for cleanup queries (old entries)
-CREATE INDEX IF NOT EXISTS idx_analytics_usage_created_at 
+CREATE INDEX IF NOT EXISTS idx_analytics_usage_created_at
 ON advanced_analytics_usage(created_at);
 
 -- Enable Row Level Security

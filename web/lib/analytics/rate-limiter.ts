@@ -1,11 +1,11 @@
 /**
  * Advanced Analytics Rate Limiter
- * 
+ *
  * Enforces rate limits for advanced analytics:
  * - Regular users: 3 requests per week
  * - Admins: Unlimited
  * - Only available for closed polls (non-admins)
- * 
+ *
  * Created: January 2025
  */
 
