@@ -47,12 +47,24 @@ export default function PerformanceDashboard() {
 
   // Refresh materialized views
   const handleRefreshMaterializedViews = useCallback(async () => {
-    await refreshMaterializedViewsRef.current();
+    try {
+      await refreshMaterializedViewsRef.current();
+      // Success is handled by the store (reloads data automatically)
+      // Error is also handled by the store (sets error state)
+    } catch (err) {
+      logger.error('Failed to refresh materialized views', err);
+    }
   }, [])
 
   // Perform database maintenance
   const handleDatabaseMaintenance = useCallback(async () => {
-    await performDatabaseMaintenanceRef.current();
+    try {
+      await performDatabaseMaintenanceRef.current();
+      // Success is handled by the store (reloads data automatically)
+      // Error is also handled by the store (sets error state)
+    } catch (err) {
+      logger.error('Failed to perform database maintenance', err);
+    }
   }, [])
 
   // Load data on mount with error handling and timeout
