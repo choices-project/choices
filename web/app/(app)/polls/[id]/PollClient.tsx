@@ -1,6 +1,6 @@
 'use client';
 
-import { ArrowLeft, Share2, AlertCircle, Trash2 } from 'lucide-react';
+import { ArrowLeft, Share2, AlertCircle, Trash2, Lock } from 'lucide-react';
 import { useParams, useRouter } from 'next/navigation';
 import React, { useState, useEffect, useCallback, useRef, useMemo } from 'react';
 
@@ -122,6 +122,8 @@ export default function PollClient({ poll }: PollClientProps) {
   const [isMounted, setIsMounted] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  const [isClosing, setIsClosing] = useState(false);
+  const [showCloseConfirm, setShowCloseConfirm] = useState(false);
 
   useEffect(() => {
     setIsMounted(true);
@@ -754,6 +756,49 @@ export default function PollClient({ poll }: PollClientProps) {
     routerRef.current.push('/polls');
   }, []);
 
+  const handleClosePoll = useCallback(async () => {
+    if (!isPollCreator || !pollId || poll.status !== 'active') return;
+
+    setIsClosing(true);
+    try {
+      const response = await fetch(`/api/polls/${pollId}/close`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+      });
+
+      if (!response.ok) {
+        const error = await response.json().catch(() => ({ error: 'Failed to close poll' }));
+        throw new Error(error.error || error.message || 'Failed to close poll');
+      }
+
+      const result = await response.json();
+      logger.info('Poll closed successfully', { pollId, result });
+
+      // Refresh the page to show updated status
+      routerRef.current.refresh();
+      
+      // Show success notification
+      addNotificationRef.current({
+        type: 'success',
+        title: 'Poll closed',
+        message: 'Your poll has been closed successfully. Advanced analytics are now available.',
+        duration: notificationSettings.duration,
+      });
+    } catch (error) {
+      logger.error('Failed to close poll', { pollId, error });
+      const errorMessage = error instanceof Error ? error.message : 'Failed to close poll';
+      addNotificationRef.current({
+        type: 'error',
+        title: 'Failed to close poll',
+        message: errorMessage,
+        duration: notificationSettings.duration,
+      });
+    } finally {
+      setIsClosing(false);
+      setShowCloseConfirm(false);
+    }
+  }, [isPollCreator, pollId, poll.status]);
+
   const handleDeletePoll = useCallback(async () => {
     if (!isPollCreator || !pollId) return;
 
@@ -951,6 +996,18 @@ export default function PollClient({ poll }: PollClientProps) {
                   <Share2 className="w-4 h-4" />
                   <span>{copied ? 'Copied!' : 'Share'}</span>
                 </Button>
+                {isPollCreator && isPollActive && (
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => setShowCloseConfirm(true)}
+                    className="flex items-center gap-2 text-orange-600 hover:text-orange-700 hover:bg-orange-50 dark:hover:bg-orange-900/20"
+                    disabled={isClosing}
+                  >
+                    <Lock className="w-4 h-4" />
+                    <span>Close Poll</span>
+                  </Button>
+                )}
                 {isPollCreator && (
                   <Button
                     variant="outline"
@@ -1266,6 +1323,28 @@ export default function PollClient({ poll }: PollClientProps) {
             className="mt-6"
           />
         )}
+
+        {/* Close Poll Confirmation Dialog */}
+        <AlertDialog open={showCloseConfirm} onOpenChange={setShowCloseConfirm}>
+          <AlertDialogContent>
+            <AlertDialogHeader>
+              <AlertDialogTitle>Close Poll</AlertDialogTitle>
+              <AlertDialogDescription>
+                Are you sure you want to close &ldquo;{poll.title}&rdquo;? Once closed, users will no longer be able to vote, but you&apos;ll be able to view advanced analytics. You can still delete the poll later if needed.
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter>
+              <AlertDialogCancel disabled={isClosing}>Cancel</AlertDialogCancel>
+              <AlertDialogAction
+                onClick={handleClosePoll}
+                disabled={isClosing}
+                className="bg-orange-600 text-white hover:bg-orange-700"
+              >
+                {isClosing ? 'Closing...' : 'Close Poll'}
+              </AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
 
         {/* Delete Confirmation Dialog */}
         <AlertDialog open={showDeleteConfirm} onOpenChange={setShowDeleteConfirm}>
