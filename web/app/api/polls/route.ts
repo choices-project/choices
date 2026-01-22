@@ -559,6 +559,10 @@ export const POST = withErrorHandling(async (request: NextRequest) => {
       ? new Date(Date.now() + autoLockDuration * 24 * 60 * 60 * 1000).toISOString()
       : null;
 
+    // Extract end date from metadata (set by poll wizard)
+    const endDate = typeof metadata?.endDate === 'string' ? metadata.endDate : null;
+    const endTime = endDate ? new Date(endDate).toISOString() : null;
+
     const pollData = {
       title: title.trim(),
       description: description?.trim() ?? '',
@@ -568,6 +572,7 @@ export const POST = withErrorHandling(async (request: NextRequest) => {
       created_by: user.id,
       status: 'active',
       voting_method: normalizedVotingMethod,
+      end_time: endTime, // Set closing time if provided
 
         // Sophisticated poll features
         auto_lock_at: autoLockAt,

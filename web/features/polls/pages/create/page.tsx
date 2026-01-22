@@ -1161,6 +1161,39 @@ export default function CreatePollPage() {
               <p className="text-sm text-muted-foreground mb-4">
                 {safeT('polls.create.wizard.audience.settings.description', 'Configure additional options for how your poll works and what voters can do.')}
               </p>
+              
+              {/* End Date/Time Field */}
+              <div className="space-y-2 mb-4">
+                <Label htmlFor="end-date">
+                  {safeT('polls.create.wizard.audience.endDate.label', 'Closing Date & Time (Optional)')}
+                </Label>
+                <Input
+                  id="end-date"
+                  type="datetime-local"
+                  value={data.endDate ? new Date(data.endDate).toISOString().slice(0, 16) : ''}
+                  onChange={(event) => {
+                    const value = event.target.value;
+                    if (value) {
+                      // Convert local datetime to ISO string
+                      const localDate = new Date(value);
+                      handleDataUpdate({ endDate: localDate.toISOString() });
+                    } else {
+                      handleDataUpdate({ endDate: undefined });
+                    }
+                  }}
+                  min={new Date().toISOString().slice(0, 16)}
+                  aria-describedby="end-date-hint"
+                />
+                <p id="end-date-hint" className="text-xs text-muted-foreground">
+                  {safeT('polls.create.wizard.audience.endDate.hint', 'Set when this poll should automatically close. Leave empty to keep it open indefinitely. You can also close it manually using the Close Poll button.')}
+                </p>
+                {errors.endDate && (
+                  <p className="text-sm text-destructive" id="error-end-date">
+                    {errors.endDate}
+                  </p>
+                )}
+              </div>
+              
               <SettingToggle
                 id="allow-anonymous-votes"
                 label={safeT('polls.create.wizard.audience.settings.allowAnonymousVotes.label', 'Allow anonymous votes')}

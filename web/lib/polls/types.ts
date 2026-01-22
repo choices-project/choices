@@ -57,5 +57,6 @@ export type PollWizardData = {
   showResults: boolean;
   isTemplate: boolean;
   settings: PollWizardSettings;
+  endDate?: string; // ISO datetime string for when poll should close
 };
 

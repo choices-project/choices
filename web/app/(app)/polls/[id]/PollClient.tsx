@@ -117,6 +117,19 @@ export default function PollClient({ poll }: PollClientProps) {
   const params = useParams();
   const user = useUserStore((state) => state.user);
   const isPollCreator = user?.id && poll.createdBy && user.id === poll.createdBy;
+  
+  // Debug logging for close button visibility
+  useEffect(() => {
+    if (isPollCreator) {
+      logger.debug('Poll creator check', {
+        userId: user?.id,
+        pollCreatedBy: poll.createdBy,
+        pollStatus: poll.status,
+        isPollActive: poll.status === 'active',
+        shouldShowCloseButton: isPollCreator && poll.status === 'active',
+      });
+    }
+  }, [isPollCreator, user?.id, poll.createdBy, poll.status]);
 
   // Track if component is mounted to prevent hydration mismatches from date formatting
   const [isMounted, setIsMounted] = useState(false);
@@ -663,7 +676,13 @@ export default function PollClient({ poll }: PollClientProps) {
       const result = await response.json();
 
       setHasVoted(true);
-      void fetchPollData();
+      // Refresh poll data to update vote counts immediately
+      await fetchPollData();
+      // Also refresh the page after a short delay to get updated poll prop
+      // This ensures both results state and poll prop are updated
+      setTimeout(() => {
+        window.location.reload();
+      }, 1500);
 
       const voteId: string =
         (typeof result.voteId === 'string' && result.voteId) ||
@@ -776,7 +795,7 @@ export default function PollClient({ poll }: PollClientProps) {
 
       // Refresh the page to show updated status
       window.location.reload();
-      
+
       // Show success notification
       addNotificationRef.current({
         type: 'success',

@@ -77,6 +77,7 @@ const pollWizardSubmissionSchema = z
       .transform((tags) => Array.from(new Set(tags.map((tag) => tag.toLowerCase())))),
     privacyLevel: privacyLevelSchema.default('public'),
     settings: wizardSettingsSchema,
+    endDate: z.string().datetime().optional(), // ISO datetime string
   })
   .transform((data) => {
     const tags = Array.from(new Set(data.tags)).slice(0, MAX_TAGS);
@@ -208,6 +209,7 @@ export const buildPollCreatePayload = (data: SanitizedWizardData): PollCreatePay
     submittedAt,
     optionCount: data.options.length,
     tagCount: data.tags.length,
+    endDate: data.endDate, // Include end date in metadata
   } as Record<string, unknown>;
 
   const metadata = clientMetadata ? { ...metadataBase, client: clientMetadata } : metadataBase;
@@ -220,7 +222,10 @@ export const buildPollCreatePayload = (data: SanitizedWizardData): PollCreatePay
     tags: data.tags,
     options,
     settings,
-    metadata,
+    metadata: {
+      ...metadata,
+      endDate: data.endDate, // Include end date in metadata
+    },
   } satisfies PollCreatePayload;
 };
 
