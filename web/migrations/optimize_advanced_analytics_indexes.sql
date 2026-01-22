@@ -1,7 +1,7 @@
 -- Migration: Optimize indexes for advanced_analytics_usage table
 -- Purpose: Optimize indexes based on actual query patterns for rate limiting
 -- Created: January 2025
--- 
+--
 -- This migration optimizes indexes based on analysis of query patterns:
 -- 1. Count queries: WHERE user_id = ? AND created_at >= ?
 -- 2. Oldest queries: WHERE user_id = ? AND created_at >= ? ORDER BY created_at ASC LIMIT 1
@@ -45,7 +45,14 @@ ON advanced_analytics_usage(user_id, created_at ASC);
 ANALYZE advanced_analytics_usage;
 
 -- Verification queries (run these to check index usage):
--- 
+--
+-- NOTE: idx_scan = 0 is NORMAL for a new table with no queries yet.
+-- Indexes will show usage once:
+--   1. Rate limiting queries are executed
+--   2. Analytics requests are made  
+--   3. The table has data
+-- Check again after 24-48 hours of actual usage.
+--
 -- 1. Check if indexes are being used:
 -- SELECT schemaname, relname as tablename, indexrelname as indexname, idx_scan, idx_tup_read, idx_tup_fetch
 -- FROM pg_stat_user_indexes
