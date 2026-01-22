@@ -1161,7 +1161,7 @@ export default function CreatePollPage() {
               <p className="text-sm text-muted-foreground mb-4">
                 {safeT('polls.create.wizard.audience.settings.description', 'Configure additional options for how your poll works and what voters can do.')}
               </p>
-              
+
               {/* End Date/Time Field */}
               <div className="space-y-2 mb-4">
                 <Label htmlFor="end-date">
@@ -1193,7 +1193,7 @@ export default function CreatePollPage() {
                   </p>
                 )}
               </div>
-              
+
               <SettingToggle
                 id="allow-anonymous-votes"
                 label={safeT('polls.create.wizard.audience.settings.allowAnonymousVotes.label', 'Allow anonymous votes')}

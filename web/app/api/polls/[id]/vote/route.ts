@@ -396,6 +396,36 @@ export const POST = withErrorHandling(async (request: NextRequest, { params }: {
       });
     }
 
+    // Update poll's total_votes count for ranked votes
+    // Count distinct users who have voted (ranked votes use poll_rankings, not votes table)
+    try {
+      const { data: voterData, error: countError } = await supabase
+        .from('poll_rankings')
+        .select('user_id')
+        .eq('poll_id', pollId);
+
+      if (!countError && voterData) {
+        const uniqueVoterCount = new Set(voterData.map(v => v.user_id)).size;
+        
+        // Update poll with new vote count
+        const { error: updateError } = await supabase
+          .from('polls')
+          .update({ 
+            total_votes: uniqueVoterCount,
+            updated_at: new Date().toISOString()
+          })
+          .eq('id', pollId);
+        
+        if (updateError) {
+          logger.warn('Failed to update poll vote count for ranked vote', { pollId, error: updateError });
+        } else {
+          logger.debug('Updated poll vote count for ranked vote', { pollId, totalVotes: uniqueVoterCount });
+        }
+      }
+    } catch (error) {
+      logger.warn('Error updating poll vote count for ranked vote', { pollId, error });
+    }
+
     return successResponse(
       {
         pollId,
@@ -519,6 +549,36 @@ export const POST = withErrorHandling(async (request: NextRequest, { params }: {
       });
     }
 
+    // Update poll's total_votes count for multi-select votes
+    // Count distinct users who have voted
+    try {
+      const { data: voterData, error: countError } = await supabase
+        .from('votes')
+        .select('user_id')
+        .eq('poll_id', pollId);
+
+      if (!countError && voterData) {
+        const uniqueVoterCount = new Set(voterData.map(v => v.user_id)).size;
+        
+        // Update poll with new vote count
+        const { error: updateError } = await supabase
+          .from('polls')
+          .update({ 
+            total_votes: uniqueVoterCount,
+            updated_at: new Date().toISOString()
+          })
+          .eq('id', pollId);
+        
+        if (updateError) {
+          logger.warn('Failed to update poll vote count for multi-select', { pollId, error: updateError });
+        } else {
+          logger.debug('Updated poll vote count for multi-select', { pollId, totalVotes: uniqueVoterCount });
+        }
+      }
+    } catch (error) {
+      logger.warn('Error updating poll vote count for multi-select', { pollId, error });
+    }
+
     return successResponse(
       {
         pollId,
@@ -613,6 +673,37 @@ export const POST = withErrorHandling(async (request: NextRequest, { params }: {
     }).catch((error) => {
       logger.warn('Integrity scoring failed for vote', error);
     });
+  }
+
+  // Update poll's total_votes count
+  // Count distinct users who have voted (not total vote rows, since ranked/multiple can have multiple rows per user)
+  try {
+    // Use a subquery to count distinct users
+    const { data: voterData, error: countError } = await supabase
+      .from('votes')
+      .select('user_id')
+      .eq('poll_id', pollId);
+
+    if (!countError && voterData) {
+      const uniqueVoterCount = new Set(voterData.map(v => v.user_id)).size;
+      
+      // Update poll with new vote count
+      const { error: updateError } = await supabase
+        .from('polls')
+        .update({ 
+          total_votes: uniqueVoterCount,
+          updated_at: new Date().toISOString()
+        })
+        .eq('id', pollId);
+      
+      if (updateError) {
+        logger.warn('Failed to update poll vote count', { pollId, error: updateError });
+      } else {
+        logger.debug('Updated poll vote count', { pollId, totalVotes: uniqueVoterCount });
+      }
+    }
+  } catch (error) {
+    logger.warn('Error updating poll vote count', { pollId, error });
   }
 
   const optionIndex = selectedOption.index;

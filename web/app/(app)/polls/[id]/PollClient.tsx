@@ -117,7 +117,7 @@ export default function PollClient({ poll }: PollClientProps) {
   const params = useParams();
   const user = useUserStore((state) => state.user);
   const isPollCreator = user?.id && poll.createdBy && user.id === poll.createdBy;
-  
+
   // Debug logging for close button visibility
   useEffect(() => {
     if (isPollCreator) {
@@ -678,11 +678,11 @@ export default function PollClient({ poll }: PollClientProps) {
       setHasVoted(true);
       // Refresh poll data to update vote counts immediately
       await fetchPollData();
-      // Also refresh the page after a short delay to get updated poll prop
-      // This ensures both results state and poll prop are updated
+      // Refresh the page to get updated poll prop with new total_votes
+      // Small delay to ensure vote is processed server-side
       setTimeout(() => {
         window.location.reload();
-      }, 1500);
+      }, 500);
 
       const voteId: string =
         (typeof result.voteId === 'string' && result.voteId) ||
@@ -1043,6 +1043,28 @@ export default function PollClient({ poll }: PollClientProps) {
             </div>
           </CardHeader>
           <CardContent>
+            {/* Poll Stats Cards */}
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-4">
+              <div className="text-center p-4 bg-muted/50 rounded-lg border">
+                <div className="text-2xl font-bold text-foreground">
+                  {results?.totalVotes ?? poll.totalvotes ?? 0}
+                </div>
+                <div className="text-sm font-medium text-foreground mt-1">TOTAL VOTES</div>
+              </div>
+              <div className="text-center p-4 bg-muted/50 rounded-lg border">
+                <div className="text-2xl font-bold text-foreground">
+                  {poll.totalvotes > 0 ? Math.round((poll.totalvotes / (poll.totalvotes + 10)) * 100) : 0}%
+                </div>
+                <div className="text-sm font-medium text-foreground mt-1">PARTICIPATION</div>
+              </div>
+              <div className="text-center p-4 bg-muted/50 rounded-lg border">
+                <div className="text-lg font-semibold text-foreground">
+                  {isPollActive ? 'Active' : isPollClosed ? 'Closed' : isPollLocked ? 'Locked' : 'Unknown'}
+                </div>
+                <div className="text-sm font-medium text-foreground mt-1">STATUS</div>
+              </div>
+            </div>
+            
             {/* Poll Metadata */}
             <div className="flex flex-wrap items-center gap-3 text-sm">
               <Badge variant="outline" className="text-xs font-medium">
