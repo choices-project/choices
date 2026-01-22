@@ -120,17 +120,32 @@ export default function PollClient({ poll }: PollClientProps) {
 
   // Debug logging for close button visibility
   useEffect(() => {
+    const shouldShow = isPollCreator && poll.status === 'active';
     logger.debug('Poll creator and close button check', {
       userId: user?.id,
       pollCreatedBy: poll.createdBy,
       pollStatus: poll.status,
       isPollActive: poll.status === 'active',
       isPollCreator,
-      shouldShowCloseButton: isPollCreator && poll.status === 'active',
+      shouldShowCloseButton: shouldShow,
       userExists: !!user,
       pollCreatedByExists: !!poll.createdBy,
       idsMatch: user?.id === poll.createdBy,
+      userType: typeof user?.id,
+      createdByType: typeof poll.createdBy,
     });
+    
+    // Also log to console for easier debugging
+    if (process.env.NODE_ENV === 'development') {
+      console.log('[Close Button Debug]', {
+        shouldShow,
+        isPollCreator,
+        isPollActive: poll.status === 'active',
+        userId: user?.id,
+        pollCreatedBy: poll.createdBy,
+        idsMatch: user?.id === poll.createdBy,
+      });
+    }
   }, [isPollCreator, user?.id, poll.createdBy, poll.status]);
 
   // Track if component is mounted to prevent hydration mismatches from date formatting
@@ -680,11 +695,11 @@ export default function PollClient({ poll }: PollClientProps) {
       setHasVoted(true);
       // Refresh poll data to update vote counts immediately
       await fetchPollData();
-      // Use router.refresh() to revalidate server components and get updated poll prop
-      // This ensures the poll.totalvotes prop is updated from the server
+      // Force a full page reload to ensure poll prop is updated from server
+      // router.refresh() doesn't work reliably with client-only components
       // Small delay to ensure vote is processed server-side
       setTimeout(() => {
-        router.refresh();
+        window.location.reload();
       }, 1000);
 
       const voteId: string =
@@ -1019,18 +1034,31 @@ export default function PollClient({ poll }: PollClientProps) {
                   <Share2 className="w-4 h-4" />
                   <span>{copied ? 'Copied!' : 'Share'}</span>
                 </Button>
-                {isPollCreator && isPollActive && (
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => setShowCloseConfirm(true)}
-                    className="flex items-center gap-2 text-orange-600 hover:text-orange-700 hover:bg-orange-50 dark:hover:bg-orange-900/20"
-                    disabled={isClosing}
-                  >
-                    <Lock className="w-4 h-4" />
-                    <span>Close Poll</span>
-                  </Button>
-                )}
+                {/* Close Poll button - show if user is creator and poll is active */}
+                {(() => {
+                  const canClose = isPollCreator && isPollActive;
+                  if (process.env.NODE_ENV === 'development' && !canClose && poll.status === 'active') {
+                    console.log('[Close Button] Not showing because:', {
+                      isPollCreator,
+                      isPollActive,
+                      userId: user?.id,
+                      pollCreatedBy: poll.createdBy,
+                      pollStatus: poll.status,
+                    });
+                  }
+                  return canClose ? (
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => setShowCloseConfirm(true)}
+                      className="flex items-center gap-2 text-orange-600 hover:text-orange-700 hover:bg-orange-50 dark:hover:bg-orange-900/20"
+                      disabled={isClosing}
+                    >
+                      <Lock className="w-4 h-4" />
+                      <span>Close Poll</span>
+                    </Button>
+                  ) : null;
+                })()}
                 {isPollCreator && (
                   <Button
                     variant="outline"
