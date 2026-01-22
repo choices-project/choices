@@ -699,7 +699,7 @@ export const POST = withErrorHandling(async (request: NextRequest, { params }: {
       if (updateError) {
         logger.warn('Failed to update poll vote count', { pollId, error: updateError });
       } else {
-        logger.info('Updated poll vote count (single-choice)', { pollId, totalVotes: uniqueVoterCount, previousCount: poll?.total_votes });
+        logger.info('Updated poll vote count (single-choice)', { pollId, totalVotes: uniqueVoterCount });
       }
     } else if (countError) {
       logger.error('Error counting votes for poll update', { pollId, error: countError });

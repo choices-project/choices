@@ -80,7 +80,7 @@ export default function RangeVoting({
       // Validate ratings before submission
       const validRatings: { [optionId: string]: number } = {}
       let totalRating = 0
-      
+
       for (const [optionId, rating] of Object.entries(ratings)) {
         if (options.some(option => String(option.id) === optionId)) {
           const validRating = Math.max(minRating, Math.min(maxRating, rating))
@@ -88,12 +88,12 @@ export default function RangeVoting({
           totalRating += validRating
         }
       }
-      
+
       // Check if all options are rated
       if (Object.keys(validRatings).length !== options.length) {
         throw new Error('All options must be rated')
       }
-      
+
       // Track analytics with poll ID using SSR-safe access
       const { safeWindow } = await import('@/lib/utils/ssr-safe');
       const gtag = safeWindow(w => w.gtag);
@@ -106,7 +106,7 @@ export default function RangeVoting({
           rated_options_count: Object.keys(validRatings).length
         })
       }
-      
+
       if (hasVoted || effectiveIsVoting) {
         return
       }
@@ -200,7 +200,7 @@ export default function RangeVoting({
                   <span className="text-sm text-gray-600">Rating: {ratings[optionId] || minRating}</span>
                   <span className="text-sm text-gray-500">{minRating} - {maxRating}</span>
                 </div>
-                
+
                 <div className="flex items-center space-x-2">
                   <label htmlFor={`range-input-${optionId}`} className="sr-only">
                     Rating for {String((option as any).text ?? 'option')}
@@ -299,10 +299,10 @@ export default function RangeVoting({
               Average rating: {getAverageRating()}/10
             </div>
             <div className="mt-2 w-full bg-gray-200 rounded-full h-2">
-              <div 
+              <div
                 className="bg-yellow-600 h-2 rounded-full transition-all duration-300"
-                style={{ 
-                  width: `${(getAverageRating() / maxRating) * 100}%` 
+                style={{
+                  width: `${(getAverageRating() / maxRating) * 100}%`
                 }}
               />
             </div>
