@@ -23,6 +23,8 @@ type OptimizedPollResultsProps = {
   onResultsLoaded?: () => void
   onError?: () => void
   showPerformanceMetrics?: boolean
+  pollStatus?: 'active' | 'closed' | 'draft' | 'archived' // Poll status for auto-refresh logic
+  autoRefreshInterval?: number // Auto-refresh interval in ms (default: 5 min for active, disabled for closed)
 }
 
 export default function OptimizedPollResults({
@@ -31,7 +33,9 @@ export default function OptimizedPollResults({
   includePrivate = false,
   onResultsLoaded,
   onError,
-  showPerformanceMetrics = false
+  showPerformanceMetrics = false,
+  pollStatus = 'active',
+  autoRefreshInterval
 }: OptimizedPollResultsProps) {
   const { t } = useI18n();
   const resultsRegionId = useId();
@@ -191,6 +195,29 @@ export default function OptimizedPollResults({
     void loadPollResults()
     loadCacheStats()
   }, [loadPollResults, loadCacheStats])
+
+  // Auto-refresh for active polls (5-10 minutes recommended)
+  useEffect(() => {
+    // Only auto-refresh active polls
+    if (pollStatus !== 'active') {
+      return;
+    }
+
+    // Default to 5 minutes if not specified
+    const interval = autoRefreshInterval ?? 5 * 60 * 1000; // 5 minutes
+
+    // Don't set up interval if disabled (0 or negative)
+    if (interval <= 0) {
+      return;
+    }
+
+    const intervalId = setInterval(() => {
+      logger.debug('Auto-refreshing poll results', { pollId, pollStatus });
+      void loadPollResults();
+    }, interval);
+
+    return () => clearInterval(intervalId);
+  }, [pollId, pollStatus, autoRefreshInterval, loadPollResults])
 
   // Memoized sorted options for performance
   const sortedOptions = useMemo(() => {
