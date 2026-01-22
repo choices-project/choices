@@ -676,9 +676,9 @@ export const POST = withErrorHandling(async (request: NextRequest, { params }: {
   }
 
   // Update poll's total_votes count
-  // Count distinct users who have voted (not total vote rows, since ranked/multiple can have multiple rows per user)
+  // For single-choice votes, count distinct users from votes table
+  // Note: This is called after a single-choice vote is inserted
   try {
-    // Use a subquery to count distinct users
     const { data: voterData, error: countError } = await supabase
       .from('votes')
       .select('user_id')
@@ -699,11 +699,13 @@ export const POST = withErrorHandling(async (request: NextRequest, { params }: {
       if (updateError) {
         logger.warn('Failed to update poll vote count', { pollId, error: updateError });
       } else {
-        logger.debug('Updated poll vote count', { pollId, totalVotes: uniqueVoterCount });
+        logger.info('Updated poll vote count (single-choice)', { pollId, totalVotes: uniqueVoterCount, previousCount: poll?.total_votes });
       }
+    } else if (countError) {
+      logger.error('Error counting votes for poll update', { pollId, error: countError });
     }
   } catch (error) {
-    logger.warn('Error updating poll vote count', { pollId, error });
+    logger.error('Exception updating poll vote count', { pollId, error });
   }
 
   const optionIndex = selectedOption.index;

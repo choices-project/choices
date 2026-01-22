@@ -160,8 +160,11 @@ export default function MultipleChoiceVoting({
 
       {/* Voting Interface */}
       <div className="bg-card rounded-xl shadow-sm border border-border p-6" data-testid="voting-form">
-        <div className="space-y-3">
-          {options.map((option: PollOption, index: number) => (
+        <div className="space-y-3" role="group" aria-label="Poll options">
+          {options.map((option: PollOption, index: number) => {
+            const optionId = `option-${String(option.id ?? index)}`;
+            const optionText = String((option as any).text ?? `Option ${index + 1}`);
+            return (
             <div
               key={String(option.id ?? index)}
               onClick={() => handleOptionToggle(index)}
@@ -179,6 +182,8 @@ export default function MultipleChoiceVoting({
               data-testid={`option-${index + 1}-checkbox`}
               role="checkbox"
               aria-checked={selectedOptions.includes(index)}
+              aria-labelledby={`${optionId}-label`}
+              id={optionId}
               tabIndex={isDisabled ? -1 : 0}
               onKeyDown={(e) => {
                 if (isDisabled) return;
@@ -207,7 +212,7 @@ export default function MultipleChoiceVoting({
 
                 {/* Option Content */}
                 <div className="flex-1">
-                  <h3 className="font-semibold text-foreground mb-1">{String((option as any).text ?? '')}</h3>
+                  <h3 id={`${optionId}-label`} className="font-semibold text-foreground mb-1">{optionText}</h3>
                   {(option as any).option_text && (
                     <p className="text-sm text-muted-foreground">{String((option as any).option_text)}</p>
                   )}
@@ -221,7 +226,8 @@ export default function MultipleChoiceVoting({
                 )}
               </div>
             </div>
-          ))}
+            );
+          })}
         </div>
 
         {/* Instructions */}

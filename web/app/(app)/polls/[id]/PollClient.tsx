@@ -118,9 +118,23 @@ export default function PollClient({ poll }: PollClientProps) {
   const user = useUserStore((state) => state.user);
   const isPollCreator = user?.id && poll.createdBy && user.id === poll.createdBy;
 
-  // Debug logging for close button visibility
+  // Debug logging for close button visibility - ALWAYS log to console for debugging
   useEffect(() => {
     const shouldShow = isPollCreator && poll.status === 'active';
+    
+    // Always log to console (not just in dev) to help debug production issues
+    console.log('[Close Button Debug]', {
+      shouldShow,
+      isPollCreator,
+      isPollActive: poll.status === 'active',
+      userId: user?.id,
+      pollCreatedBy: poll.createdBy,
+      idsMatch: user?.id === poll.createdBy,
+      userExists: !!user,
+      pollCreatedByExists: !!poll.createdBy,
+      pollStatus: poll.status,
+    });
+    
     logger.debug('Poll creator and close button check', {
       userId: user?.id,
       pollCreatedBy: poll.createdBy,
@@ -134,18 +148,6 @@ export default function PollClient({ poll }: PollClientProps) {
       userType: typeof user?.id,
       createdByType: typeof poll.createdBy,
     });
-    
-    // Also log to console for easier debugging
-    if (process.env.NODE_ENV === 'development') {
-      console.log('[Close Button Debug]', {
-        shouldShow,
-        isPollCreator,
-        isPollActive: poll.status === 'active',
-        userId: user?.id,
-        pollCreatedBy: poll.createdBy,
-        idsMatch: user?.id === poll.createdBy,
-      });
-    }
   }, [isPollCreator, user?.id, poll.createdBy, poll.status]);
 
   // Track if component is mounted to prevent hydration mismatches from date formatting
@@ -693,14 +695,20 @@ export default function PollClient({ poll }: PollClientProps) {
       const result = await response.json();
 
       setHasVoted(true);
+      
+      // Log vote submission for debugging
+      console.log('[Vote] Vote submitted successfully', { pollId: poll.id, votingMethod: poll.votingMethod });
+      
       // Refresh poll data to update vote counts immediately
       await fetchPollData();
+      
       // Force a full page reload to ensure poll prop is updated from server
+      // Increased delay to ensure database update completes
       // router.refresh() doesn't work reliably with client-only components
-      // Small delay to ensure vote is processed server-side
+      console.log('[Vote] Reloading page in 2 seconds to show updated vote count...');
       setTimeout(() => {
         window.location.reload();
-      }, 1000);
+      }, 2000);
 
       const voteId: string =
         (typeof result.voteId === 'string' && result.voteId) ||

@@ -202,7 +202,12 @@ export default function RangeVoting({
                 </div>
                 
                 <div className="flex items-center space-x-2">
+                  <label htmlFor={`range-input-${optionId}`} className="sr-only">
+                    Rating for {String((option as any).text ?? 'option')}
+                  </label>
                   <input
+                    id={`range-input-${optionId}`}
+                    name={`rating-${optionId}`}
                     type="range"
                     min={minRating}
                     max={maxRating}
@@ -211,6 +216,7 @@ export default function RangeVoting({
                     onChange={(e) => handleRatingChange(optionId, parseInt(e.target.value))}
                     disabled={isDisabled}
                     className="flex-1 h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer slider"
+                    aria-label={`Rating for ${String((option as any).text ?? 'option')}, currently ${ratings[optionId] || minRating}`}
                   />
                   <span className="text-sm font-medium text-gray-900 min-w-[2rem] text-center">
                     {ratings[optionId] || minRating}
