@@ -775,7 +775,7 @@ export default function PollClient({ poll }: PollClientProps) {
       logger.info('Poll closed successfully', { pollId, result });
 
       // Refresh the page to show updated status
-      routerRef.current.refresh();
+      window.location.reload();
       
       // Show success notification
       addNotificationRef.current({
