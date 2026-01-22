@@ -6,6 +6,7 @@ import React, { useState, useEffect, useCallback, useRef, useMemo } from 'react'
 
 import { PollShare } from '@/features/polls';
 import PostCloseBanner from '@/features/polls/components/PostCloseBanner';
+import AdvancedAnalytics from '@/features/polls/components/AdvancedAnalytics';
 import { useRecordPollEvent } from '@/features/polls/hooks/usePollAnalytics';
 import {
   createBallotFromPoll,
@@ -1255,6 +1256,15 @@ export default function PollClient({ poll }: PollClientProps) {
         {/* Post-Close Banner */}
         {isPollClosed && poll.allowPostClose && (
           <PostCloseBanner pollStatus={poll.status as 'closed' | 'locked' | 'post-close'} />
+        )}
+
+        {/* Advanced Analytics (only for closed polls) */}
+        {isPollClosed && (
+          <AdvancedAnalytics
+            pollId={pollId}
+            pollStatus={poll.status as 'active' | 'closed' | 'draft' | 'archived'}
+            className="mt-6"
+          />
         )}
 
         {/* Delete Confirmation Dialog */}

@@ -49,7 +49,7 @@ ANALYZE advanced_analytics_usage;
 -- NOTE: idx_scan = 0 is NORMAL for a new table with no queries yet.
 -- Indexes will show usage once:
 --   1. Rate limiting queries are executed
---   2. Analytics requests are made  
+--   2. Analytics requests are made
 --   3. The table has data
 -- Check again after 24-48 hours of actual usage.
 --

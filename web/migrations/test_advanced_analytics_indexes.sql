@@ -6,14 +6,14 @@
 -- to verify indexes are working correctly
 
 -- 1. Check current index usage statistics
-SELECT 
-  schemaname, 
-  relname as tablename, 
-  indexrelname as indexname, 
+SELECT
+  schemaname,
+  relname as tablename,
+  indexrelname as indexname,
   idx_scan as index_scans,
   idx_tup_read as tuples_read,
   idx_tup_fetch as tuples_fetched,
-  CASE 
+  CASE
     WHEN idx_scan = 0 THEN '⚠️  Never used'
     WHEN idx_scan < 10 THEN '⚠️  Rarely used'
     ELSE '✅ Used'
@@ -23,7 +23,7 @@ WHERE relname = 'advanced_analytics_usage'
 ORDER BY idx_scan DESC, indexrelname;
 
 -- 2. Check table statistics (should have data for indexes to be useful)
-SELECT 
+SELECT
   schemaname,
   relname as tablename,
   n_live_tup as row_count,
@@ -37,17 +37,17 @@ WHERE relname = 'advanced_analytics_usage';
 
 -- 3. Test query with EXPLAIN to verify index usage
 -- Replace 'test-user-id' with an actual user_id from your table
--- 
+--
 -- This should show "Index Scan using idx_analytics_usage_user_week" in the plan
 EXPLAIN ANALYZE
-SELECT COUNT(*) 
+SELECT COUNT(*)
 FROM advanced_analytics_usage
 WHERE user_id = '00000000-0000-0000-0000-000000000000'::uuid
   AND created_at >= NOW() - INTERVAL '7 days';
 
 -- 4. Test oldest query (should use idx_analytics_usage_user_created_asc)
 EXPLAIN ANALYZE
-SELECT created_at 
+SELECT created_at
 FROM advanced_analytics_usage
 WHERE user_id = '00000000-0000-0000-0000-000000000000'::uuid
   AND created_at >= NOW() - INTERVAL '7 days'
