@@ -120,15 +120,17 @@ export default function PollClient({ poll }: PollClientProps) {
 
   // Debug logging for close button visibility
   useEffect(() => {
-    if (isPollCreator) {
-      logger.debug('Poll creator check', {
-        userId: user?.id,
-        pollCreatedBy: poll.createdBy,
-        pollStatus: poll.status,
-        isPollActive: poll.status === 'active',
-        shouldShowCloseButton: isPollCreator && poll.status === 'active',
-      });
-    }
+    logger.debug('Poll creator and close button check', {
+      userId: user?.id,
+      pollCreatedBy: poll.createdBy,
+      pollStatus: poll.status,
+      isPollActive: poll.status === 'active',
+      isPollCreator,
+      shouldShowCloseButton: isPollCreator && poll.status === 'active',
+      userExists: !!user,
+      pollCreatedByExists: !!poll.createdBy,
+      idsMatch: user?.id === poll.createdBy,
+    });
   }, [isPollCreator, user?.id, poll.createdBy, poll.status]);
 
   // Track if component is mounted to prevent hydration mismatches from date formatting
@@ -678,11 +680,12 @@ export default function PollClient({ poll }: PollClientProps) {
       setHasVoted(true);
       // Refresh poll data to update vote counts immediately
       await fetchPollData();
-      // Refresh the page to get updated poll prop with new total_votes
+      // Use router.refresh() to revalidate server components and get updated poll prop
+      // This ensures the poll.totalvotes prop is updated from the server
       // Small delay to ensure vote is processed server-side
       setTimeout(() => {
-        window.location.reload();
-      }, 500);
+        router.refresh();
+      }, 1000);
 
       const voteId: string =
         (typeof result.voteId === 'string' && result.voteId) ||
@@ -793,7 +796,8 @@ export default function PollClient({ poll }: PollClientProps) {
       const result = await response.json();
       logger.info('Poll closed successfully', { pollId, result });
 
-      // Refresh the page to show updated status
+      // Refresh the page to show updated status using router.refresh() for better Next.js integration
+      router.refresh();
       window.location.reload();
 
       // Show success notification
@@ -1064,7 +1068,7 @@ export default function PollClient({ poll }: PollClientProps) {
                 <div className="text-sm font-medium text-foreground mt-1">STATUS</div>
               </div>
             </div>
-            
+
             {/* Poll Metadata */}
             <div className="flex flex-wrap items-center gap-3 text-sm">
               <Badge variant="outline" className="text-xs font-medium">

@@ -406,16 +406,16 @@ export const POST = withErrorHandling(async (request: NextRequest, { params }: {
 
       if (!countError && voterData) {
         const uniqueVoterCount = new Set(voterData.map(v => v.user_id)).size;
-        
+
         // Update poll with new vote count
         const { error: updateError } = await supabase
           .from('polls')
-          .update({ 
+          .update({
             total_votes: uniqueVoterCount,
             updated_at: new Date().toISOString()
           })
           .eq('id', pollId);
-        
+
         if (updateError) {
           logger.warn('Failed to update poll vote count for ranked vote', { pollId, error: updateError });
         } else {
@@ -559,16 +559,16 @@ export const POST = withErrorHandling(async (request: NextRequest, { params }: {
 
       if (!countError && voterData) {
         const uniqueVoterCount = new Set(voterData.map(v => v.user_id)).size;
-        
+
         // Update poll with new vote count
         const { error: updateError } = await supabase
           .from('polls')
-          .update({ 
+          .update({
             total_votes: uniqueVoterCount,
             updated_at: new Date().toISOString()
           })
           .eq('id', pollId);
-        
+
         if (updateError) {
           logger.warn('Failed to update poll vote count for multi-select', { pollId, error: updateError });
         } else {
@@ -686,16 +686,16 @@ export const POST = withErrorHandling(async (request: NextRequest, { params }: {
 
     if (!countError && voterData) {
       const uniqueVoterCount = new Set(voterData.map(v => v.user_id)).size;
-      
+
       // Update poll with new vote count
       const { error: updateError } = await supabase
         .from('polls')
-        .update({ 
+        .update({
           total_votes: uniqueVoterCount,
           updated_at: new Date().toISOString()
         })
         .eq('id', pollId);
-      
+
       if (updateError) {
         logger.warn('Failed to update poll vote count', { pollId, error: updateError });
       } else {
