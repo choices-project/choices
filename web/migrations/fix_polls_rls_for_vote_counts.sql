@@ -54,15 +54,20 @@ BEGIN
     total_votes = vote_count,
     updated_at = NOW()
   WHERE id = poll_id_param;
-  
+
   -- Log the update (optional, for debugging)
   RAISE NOTICE 'Updated poll % vote count to %', poll_id_param, vote_count;
 END;
 $$;
 
--- Set function owner to postgres (or service_role user) to ensure SECURITY DEFINER works
--- This ensures the function has the necessary privileges
+-- Set function owner to postgres (superuser) to ensure SECURITY DEFINER works
+-- Postgres superuser bypasses RLS, so this ensures the function can update polls
+-- Alternative: Could use service_role, but postgres is more reliable
 ALTER FUNCTION update_poll_vote_count(UUID) OWNER TO postgres;
+
+-- Verify the function owner has the necessary privileges
+-- Postgres superuser should bypass RLS, but let's be explicit
+-- Note: In Supabase, postgres is typically a superuser and bypasses RLS
 
 -- Grant execute permission to authenticated users and service_role
 GRANT EXECUTE ON FUNCTION update_poll_vote_count(UUID) TO authenticated;
@@ -117,14 +122,14 @@ DO $$
 BEGIN
   -- Drop existing policy if it exists (to recreate with correct settings)
   DROP POLICY IF EXISTS polls_service_full ON public.polls;
-  
+
   -- Create policy for service_role to have full access
   CREATE POLICY polls_service_full ON public.polls
     FOR ALL
     TO service_role
     USING (true)
     WITH CHECK (true);
-    
+
   RAISE NOTICE 'Created polls_service_full policy for service_role';
 END $$;
 

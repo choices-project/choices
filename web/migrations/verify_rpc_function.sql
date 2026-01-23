@@ -4,7 +4,7 @@
 -- ============================================================================
 -- 1. Check if function exists
 -- ============================================================================
-SELECT 
+SELECT
   proname as function_name,
   prosecdef as is_security_definer,
   proowner::regrole as function_owner,
@@ -18,7 +18,7 @@ WHERE proname = 'update_poll_vote_count'
 -- ============================================================================
 -- 2. Check function permissions
 -- ============================================================================
-SELECT 
+SELECT
   grantee,
   privilege_type
 FROM information_schema.routine_privileges
@@ -31,7 +31,7 @@ ORDER BY grantee, privilege_type;
 -- ============================================================================
 -- 3. Check polls table policies (especially service_role)
 -- ============================================================================
-SELECT 
+SELECT
   policyname,
   roles,
   cmd as command,
@@ -54,19 +54,27 @@ ORDER BY policyname;
 -- 5. Check if function can actually update polls
 -- ============================================================================
 -- This query checks if the function owner has the necessary privileges
-SELECT 
+SELECT
   p.proname as function_name,
   r.rolname as function_owner,
-  CASE 
-    WHEN r.rolsuper THEN 'SUPERUSER - has all privileges'
+  r.rolsuper as is_superuser,
+  CASE
+    WHEN r.rolsuper THEN 'SUPERUSER - bypasses RLS, should work'
     WHEN EXISTS (
-      SELECT 1 FROM pg_policies 
-      WHERE tablename = 'polls' 
+      SELECT 1 FROM pg_policies
+      WHERE tablename = 'polls'
         AND 'service_role' = ANY(roles)
-        AND cmd = 'UPDATE'
+        AND (cmd = 'UPDATE' OR cmd = 'ALL')
     ) THEN 'Has service_role policy - should work'
     ELSE 'WARNING: May not have UPDATE privileges on polls table'
-  END as privilege_status
+  END as privilege_status,
+  -- Check if polls_service_full policy exists
+  EXISTS (
+    SELECT 1 FROM pg_policies
+    WHERE tablename = 'polls'
+      AND policyname = 'polls_service_full'
+      AND 'service_role' = ANY(roles)
+  ) as has_service_role_policy
 FROM pg_proc p
 JOIN pg_roles r ON p.proowner = r.oid
 WHERE p.proname = 'update_poll_vote_count'

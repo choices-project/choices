@@ -402,7 +402,12 @@ export const POST = withErrorHandling(async (request: NextRequest, { params }: {
     try {
       // Use the secure RPC function that handles both regular and ranked polls
       // Type assertion needed until migration is run and types are regenerated
-      logger.info('Calling update_poll_vote_count RPC function', { pollId, votingMethod: 'ranked' });
+      logger.info('Calling update_poll_vote_count RPC function', { 
+        pollId, 
+        votingMethod: 'ranked',
+        userId: user.id,
+        timestamp: new Date().toISOString()
+      });
       const { error: updateError, data: rpcData } = await (supabase as any)
         .rpc('update_poll_vote_count', { poll_id_param: pollId });
 
@@ -582,7 +587,12 @@ export const POST = withErrorHandling(async (request: NextRequest, { params }: {
     try {
       // Use the secure RPC function that recalculates from actual votes
       // Type assertion needed until migration is run and types are regenerated
-      logger.info('Calling update_poll_vote_count RPC function', { pollId, votingMethod: 'multi-select' });
+      logger.info('Calling update_poll_vote_count RPC function', { 
+        pollId, 
+        votingMethod: 'multi-select',
+        userId: user.id,
+        timestamp: new Date().toISOString()
+      });
       const { error: updateError, data: rpcData } = await (supabase as any)
         .rpc('update_poll_vote_count', { poll_id_param: pollId });
 
@@ -733,12 +743,17 @@ export const POST = withErrorHandling(async (request: NextRequest, { params }: {
   // Use RPC function to safely update vote count (respects RLS, ensures integrity)
   // CRITICAL: This must complete before returning success response
   try {
-    // Use the secure RPC function that recalculates from actual votes
-    // This is safer than using adminClient and respects RLS policies
-    // Type assertion needed until migration is run and types are regenerated
-    logger.info('Calling update_poll_vote_count RPC function', { pollId, votingMethod: 'single' });
-    const { error: updateError, data: rpcData } = await (supabase as any)
-      .rpc('update_poll_vote_count', { poll_id_param: pollId });
+      // Use the secure RPC function that recalculates from actual votes
+      // This is safer than using adminClient and respects RLS policies
+      // Type assertion needed until migration is run and types are regenerated
+      logger.info('Calling update_poll_vote_count RPC function', { 
+        pollId, 
+        votingMethod: 'single',
+        userId: user.id,
+        timestamp: new Date().toISOString()
+      });
+      const { error: updateError, data: rpcData } = await (supabase as any)
+        .rpc('update_poll_vote_count', { poll_id_param: pollId });
 
     if (updateError) {
       logger.error('RPC function returned error', { pollId, error: updateError, errorMessage: updateError.message });
