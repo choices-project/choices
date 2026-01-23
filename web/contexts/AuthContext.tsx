@@ -296,7 +296,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       if (typeof window !== 'undefined') {
         // Use replace instead of href to prevent back button issues
         // This ensures users are taken back to the auth landing page after sign out
-        window.location.replace('/auth');
+        // Use full URL to ensure proper redirect
+        const authUrl = window.location.origin + '/auth';
+        window.location.replace(authUrl);
       }
     } catch (error) {
       logger.error('Failed to sign out:', error);

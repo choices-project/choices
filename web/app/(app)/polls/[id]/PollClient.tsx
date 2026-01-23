@@ -523,11 +523,22 @@ export default function PollClient({ poll }: PollClientProps) {
     }
   }, [pollId]);
 
+  // Fetch poll results on mount and when pollId changes
+  // CRITICAL: This fetches results which includes totalVotes, but poll.totalvotes from server component is the source of truth
   useEffect(() => {
     if (pollId) {
       fetchPollData();
     }
   }, [pollId, fetchPollData]);
+
+  // CRITICAL: Refresh poll data when poll prop changes (e.g., after vote)
+  // This ensures we get fresh totalvotes from the server component
+  useEffect(() => {
+    if (pollId && poll.id === pollId) {
+      // Poll data was updated (e.g., after voting), refresh results to match
+      fetchPollData();
+    }
+  }, [poll.id, poll.totalvotes, pollId, fetchPollData]);
 
   useEffect(() => {
     const optionVoteCounts: Record<string, number> = {};
@@ -1156,7 +1167,9 @@ export default function PollClient({ poll }: PollClientProps) {
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-4">
               <div className="text-center p-4 bg-muted/50 rounded-lg border">
                 <div className="text-2xl font-bold text-foreground">
-                  {results?.totalVotes ?? poll.totalvotes ?? 0}
+                  {/* CRITICAL: Use poll.totalvotes as primary source (from server component) */}
+                  {/* results?.totalVotes is only available after fetching results, which may not happen for non-authenticated users */}
+                  {poll.totalvotes ?? 0}
                 </div>
                 <div className="text-sm font-medium text-foreground mt-1">TOTAL VOTES</div>
                 {/* Debug info - remove after fixing */}
@@ -1268,8 +1281,24 @@ export default function PollClient({ poll }: PollClientProps) {
           </Card>
         )}
 
-        {/* Voting Interface - Only show for active polls where user hasn't voted */}
-        {isPollActive && !hasVoted && normalizedOptions && normalizedOptions.length > 0 && (
+        {/* Sign in required message for non-authenticated users */}
+        {isPollActive && !isAuthenticated && normalizedOptions && normalizedOptions.length > 0 && (
+          <Card className="mb-6 border-2 border-orange-200 dark:border-orange-800">
+            <CardContent className="pt-6">
+              <Alert variant="default" className="bg-orange-50 dark:bg-orange-900/20 border-orange-200 dark:border-orange-800">
+                <AlertCircle className="h-4 w-4 text-orange-600 dark:text-orange-400" />
+                <AlertDescription className="text-orange-900 dark:text-orange-100">
+                  <strong>Sign in required</strong>
+                  <br />
+                  Please sign in to vote in this poll.
+                </AlertDescription>
+              </Alert>
+            </CardContent>
+          </Card>
+        )}
+
+        {/* Voting Interface - Only show for active polls where user hasn't voted and is authenticated */}
+        {isPollActive && isAuthenticated && !hasVoted && normalizedOptions && normalizedOptions.length > 0 && (
           <Card className="mb-6 border-2 border-primary/20">
             <CardHeader className="bg-primary/5">
               <CardTitle data-testid="voting-section-title">Cast Your Vote</CardTitle>
