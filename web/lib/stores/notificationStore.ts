@@ -244,7 +244,13 @@ const scheduleNotificationEffects = (
       try {
         const audio = new Audio('/sounds/notification.mp3');
         audio.volume = 0.3;
-        void audio.play();
+        // Handle missing file gracefully - don't throw errors
+        audio.addEventListener('error', () => {
+          // Silently ignore missing audio file - it's not critical
+        });
+        void audio.play().catch(() => {
+          // Ignore play errors (e.g., user hasn't interacted with page)
+        });
       } catch {
         // Ignore audio errors
       }

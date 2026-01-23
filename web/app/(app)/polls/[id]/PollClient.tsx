@@ -721,11 +721,13 @@ export default function PollClient({ poll }: PollClientProps) {
       // Refresh poll data to update vote counts immediately
       await fetchPollData();
 
-      // Force a full page reload to ensure poll prop is updated from server
+      // Force a full page reload with cache-busting to ensure poll prop is updated from server
       // Vote count update is now complete on server side, so reload can happen quickly
+      // Use cache: 'no-store' equivalent by adding timestamp to force fresh fetch
       console.log('[Vote] Reloading page to show updated vote count...');
       setTimeout(() => {
-        window.location.reload();
+        // Force a hard reload to bypass Next.js cache
+        window.location.href = window.location.href.split('?')[0] + '?t=' + Date.now();
       }, 200);
 
       const voteId: string =
@@ -1430,10 +1432,10 @@ export default function PollClient({ poll }: PollClientProps) {
 
         {/* Close Poll Confirmation Dialog */}
         <AlertDialog open={showCloseConfirm} onOpenChange={setShowCloseConfirm}>
-          <AlertDialogContent>
+          <AlertDialogContent aria-describedby="close-poll-description">
             <AlertDialogHeader>
               <AlertDialogTitle>Close Poll</AlertDialogTitle>
-              <AlertDialogDescription>
+              <AlertDialogDescription id="close-poll-description">
                 Are you sure you want to close &ldquo;{poll.title}&rdquo;? Once closed, users will no longer be able to vote, but you&apos;ll be able to view advanced analytics. You can still delete the poll later if needed.
               </AlertDialogDescription>
             </AlertDialogHeader>
@@ -1452,10 +1454,10 @@ export default function PollClient({ poll }: PollClientProps) {
 
         {/* Delete Confirmation Dialog */}
         <AlertDialog open={showDeleteConfirm} onOpenChange={setShowDeleteConfirm}>
-          <AlertDialogContent>
+          <AlertDialogContent aria-describedby="delete-poll-description">
             <AlertDialogHeader>
               <AlertDialogTitle>Delete Poll</AlertDialogTitle>
-              <AlertDialogDescription>
+              <AlertDialogDescription id="delete-poll-description">
                 Are you sure you want to delete &ldquo;{poll.title}&rdquo;? This action cannot be undone and will permanently remove the poll and all associated votes.
               </AlertDialogDescription>
             </AlertDialogHeader>
