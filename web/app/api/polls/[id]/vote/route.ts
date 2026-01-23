@@ -396,9 +396,10 @@ export const POST = withErrorHandling(async (request: NextRequest, { params }: {
       });
     }
 
-    // Update poll's total_votes count for ranked votes
+    // Update poll's total_votes count for ranked votes BEFORE returning response
     // Count distinct users who have voted (ranked votes use poll_rankings, not votes table)
     // Use adminClient to bypass RLS for counting
+    // CRITICAL: This must complete before returning success response
     try {
       if (!adminClient) {
         logger.warn('Admin client not available for vote count update');
@@ -421,7 +422,8 @@ export const POST = withErrorHandling(async (request: NextRequest, { params }: {
             .eq('id', pollId);
 
           if (updateError) {
-            logger.warn('Failed to update poll vote count for ranked vote', { pollId, error: updateError });
+            logger.error('Failed to update poll vote count for ranked vote', { pollId, error: updateError });
+            // Don't fail the vote, but log the error
           } else {
             logger.info('Updated poll vote count for ranked vote', { pollId, totalVotes: uniqueVoterCount });
           }
@@ -431,6 +433,7 @@ export const POST = withErrorHandling(async (request: NextRequest, { params }: {
       }
     } catch (error) {
       logger.error('Exception updating poll vote count for ranked vote', { pollId, error });
+      // Don't fail the vote submission if count update fails
     }
 
     return successResponse(
@@ -556,9 +559,10 @@ export const POST = withErrorHandling(async (request: NextRequest, { params }: {
       });
     }
 
-    // Update poll's total_votes count for multi-select votes
+    // Update poll's total_votes count for multi-select votes BEFORE returning response
     // Count distinct users who have voted
     // Use adminClient to ensure we can read all votes and update the poll
+    // CRITICAL: This must complete before returning success response
     try {
       if (!adminClient) {
         logger.warn('Admin client not available for vote count update');
@@ -581,7 +585,8 @@ export const POST = withErrorHandling(async (request: NextRequest, { params }: {
             .eq('id', pollId);
 
           if (updateError) {
-            logger.warn('Failed to update poll vote count for multi-select', { pollId, error: updateError });
+            logger.error('Failed to update poll vote count for multi-select', { pollId, error: updateError });
+            // Don't fail the vote, but log the error
           } else {
             logger.info('Updated poll vote count for multi-select', { pollId, totalVotes: uniqueVoterCount });
           }
@@ -591,6 +596,7 @@ export const POST = withErrorHandling(async (request: NextRequest, { params }: {
       }
     } catch (error) {
       logger.error('Exception updating poll vote count for multi-select', { pollId, error });
+      // Don't fail the vote submission if count update fails
     }
 
     return successResponse(
@@ -689,37 +695,44 @@ export const POST = withErrorHandling(async (request: NextRequest, { params }: {
     });
   }
 
-  // Update poll's total_votes count
+  // Update poll's total_votes count BEFORE returning response
   // For single-choice votes, count distinct users from votes table
-  // Note: This is called after a single-choice vote is inserted
+  // Use adminClient to bypass RLS and ensure update completes
+  // CRITICAL: This must complete before returning success response
   try {
-    const { data: voterData, error: countError } = await supabase
-      .from('votes')
-      .select('user_id')
-      .eq('poll_id', pollId);
+    if (!adminClient) {
+      logger.warn('Admin client not available for vote count update');
+    } else {
+      const { data: voterData, error: countError } = await adminClient
+        .from('votes')
+        .select('user_id')
+        .eq('poll_id', pollId);
 
-    if (!countError && voterData) {
-      const uniqueVoterCount = new Set(voterData.map(v => v.user_id)).size;
+      if (!countError && voterData) {
+        const uniqueVoterCount = new Set(voterData.map(v => v.user_id)).size;
 
-      // Update poll with new vote count
-      const { error: updateError } = await supabase
-        .from('polls')
-        .update({
-          total_votes: uniqueVoterCount,
-          updated_at: new Date().toISOString()
-        })
-        .eq('id', pollId);
+        // Update poll with new vote count using admin client
+        const { error: updateError } = await adminClient
+          .from('polls')
+          .update({
+            total_votes: uniqueVoterCount,
+            updated_at: new Date().toISOString()
+          })
+          .eq('id', pollId);
 
-      if (updateError) {
-        logger.warn('Failed to update poll vote count', { pollId, error: updateError });
-      } else {
-        logger.info('Updated poll vote count (single-choice)', { pollId, totalVotes: uniqueVoterCount });
+        if (updateError) {
+          logger.error('Failed to update poll vote count', { pollId, error: updateError });
+          // Don't fail the vote, but log the error
+        } else {
+          logger.info('Updated poll vote count (single-choice)', { pollId, totalVotes: uniqueVoterCount });
+        }
+      } else if (countError) {
+        logger.error('Error counting votes for poll update', { pollId, error: countError });
       }
-    } else if (countError) {
-      logger.error('Error counting votes for poll update', { pollId, error: countError });
     }
   } catch (error) {
     logger.error('Exception updating poll vote count', { pollId, error });
+    // Don't fail the vote submission if count update fails
   }
 
   const optionIndex = selectedOption.index;

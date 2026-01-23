@@ -117,8 +117,11 @@ export default function PollClient({ poll }: PollClientProps) {
   const params = useParams();
   const user = useUserStore((state) => state.user);
   const isAuthenticated = useUserStore((state) => state.isAuthenticated);
-  // Check if user is poll creator - only after user is loaded
-  const isPollCreator = isAuthenticated && user?.id && poll.createdBy && user.id === poll.createdBy;
+  // Check if user is poll creator - normalize IDs to strings for comparison
+  // CRITICAL: Convert both to strings to handle UUID comparison edge cases
+  const userId = user?.id ? String(user.id) : null;
+  const pollCreatedBy = poll.createdBy ? String(poll.createdBy) : null;
+  const isPollCreator = isAuthenticated && userId && pollCreatedBy && userId === pollCreatedBy;
 
   // Debug logging for close button visibility - ALWAYS log to console for debugging
   useEffect(() => {
@@ -129,28 +132,38 @@ export default function PollClient({ poll }: PollClientProps) {
       shouldShow,
       isPollCreator,
       isPollActive: poll.status === 'active',
+      isAuthenticated,
       userId: user?.id,
+      userIdString: userId,
       pollCreatedBy: poll.createdBy,
-      idsMatch: user?.id === poll.createdBy,
+      pollCreatedByString: pollCreatedBy,
+      idsMatch: userId === pollCreatedBy,
+      idsMatchStrict: user?.id === poll.createdBy,
       userExists: !!user,
       pollCreatedByExists: !!poll.createdBy,
       pollStatus: poll.status,
+      userType: typeof user?.id,
+      createdByType: typeof poll.createdBy,
     });
 
     logger.debug('Poll creator and close button check', {
       userId: user?.id,
+      userIdString: userId,
       pollCreatedBy: poll.createdBy,
+      pollCreatedByString: pollCreatedBy,
       pollStatus: poll.status,
       isPollActive: poll.status === 'active',
+      isAuthenticated,
       isPollCreator,
       shouldShowCloseButton: shouldShow,
       userExists: !!user,
       pollCreatedByExists: !!poll.createdBy,
-      idsMatch: user?.id === poll.createdBy,
+      idsMatch: userId === pollCreatedBy,
+      idsMatchStrict: user?.id === poll.createdBy,
       userType: typeof user?.id,
       createdByType: typeof poll.createdBy,
     });
-  }, [isPollCreator, user?.id, poll.createdBy, poll.status]);
+  }, [isPollCreator, isAuthenticated, userId, pollCreatedBy, poll.status, user?.id, poll.createdBy]);
 
   // Track if component is mounted to prevent hydration mismatches from date formatting
   const [isMounted, setIsMounted] = useState(false);
@@ -701,19 +714,19 @@ export default function PollClient({ poll }: PollClientProps) {
       // Log vote submission for debugging
       console.log('[Vote] Vote submitted successfully', { pollId: poll.id, votingMethod: poll.votingMethod });
 
-      // Wait a bit for the database update to complete, then refresh
-      // The vote endpoint updates total_votes asynchronously, so we need to wait
-      await new Promise(resolve => setTimeout(resolve, 1500));
+      // The vote endpoint now waits for vote count update before returning,
+      // so we can reload immediately. Small delay to ensure UI updates.
+      await new Promise(resolve => setTimeout(resolve, 300));
 
       // Refresh poll data to update vote counts immediately
       await fetchPollData();
 
       // Force a full page reload to ensure poll prop is updated from server
-      // Additional delay to ensure database transaction is committed
+      // Vote count update is now complete on server side, so reload can happen quickly
       console.log('[Vote] Reloading page to show updated vote count...');
       setTimeout(() => {
         window.location.reload();
-      }, 500);
+      }, 200);
 
       const voteId: string =
         (typeof result.voteId === 'string' && result.voteId) ||
@@ -1050,13 +1063,18 @@ export default function PollClient({ poll }: PollClientProps) {
                 {/* Close Poll button - show if user is creator and poll is active */}
                 {(() => {
                   const canClose = isPollCreator && isPollActive;
-                  if (process.env.NODE_ENV === 'development' && !canClose && poll.status === 'active') {
+                  // Always log in production to help debug
+                  if (!canClose && poll.status === 'active') {
                     console.log('[Close Button] Not showing because:', {
                       isPollCreator,
                       isPollActive,
+                      isAuthenticated,
                       userId: user?.id,
+                      userIdString: userId,
                       pollCreatedBy: poll.createdBy,
+                      pollCreatedByString: pollCreatedBy,
                       pollStatus: poll.status,
+                      idsMatch: userId === pollCreatedBy,
                     });
                   }
                   return canClose ? (
