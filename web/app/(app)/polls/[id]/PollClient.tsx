@@ -999,9 +999,11 @@ export default function PollClient({ poll }: PollClientProps) {
   }, []);
 
 
-  const isPollActive = poll.status === 'active';
-  const isPollClosed = poll.status === 'closed';
-  const isPollLocked = poll.status === 'locked';
+  // Normalize status to lowercase for reliable comparison
+  const pollStatusNormalized = poll.status?.toLowerCase() ?? 'active';
+  const isPollActive = pollStatusNormalized === 'active';
+  const isPollClosed = pollStatusNormalized === 'closed';
+  const isPollLocked = pollStatusNormalized === 'locked';
 
   const rankedChartData = useMemo(() => {
     if (!results || results.votingMethod !== 'ranked') {
@@ -1121,36 +1123,19 @@ export default function PollClient({ poll }: PollClientProps) {
                   <Share2 className="w-4 h-4" />
                   <span>{copied ? 'Copied!' : 'Share'}</span>
                 </Button>
-                {/* Close Poll button - show if user is creator and poll is active */}
-                {(() => {
-                  const canClose = isPollCreator && isPollActive;
-                  // Always log in production to help debug
-                  if (!canClose && poll.status === 'active') {
-                    console.log('[Close Button] Not showing because:', {
-                      isPollCreator,
-                      isPollActive,
-                      isAuthenticated,
-                      userId: user?.id,
-                      userIdString: userId,
-                      pollCreatedBy: poll.createdBy,
-                      pollCreatedByString: pollCreatedBy,
-                      pollStatus: poll.status,
-                      idsMatch: userId === pollCreatedBy,
-                    });
-                  }
-                  return canClose ? (
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => setShowCloseConfirm(true)}
-                      className="flex items-center gap-2 text-orange-600 hover:text-orange-700 hover:bg-orange-50 dark:hover:bg-orange-900/20"
-                      disabled={isClosing}
-                    >
-                      <Lock className="w-4 h-4" />
-                      <span>Close Poll</span>
-                    </Button>
-                  ) : null;
-                })()}
+                {/* Close Poll button - show if user is creator and poll is active (matches Delete button pattern) */}
+                {isPollCreator && isPollActive && (
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => setShowCloseConfirm(true)}
+                    className="flex items-center gap-2 text-orange-600 hover:text-orange-700 hover:bg-orange-50 dark:hover:bg-orange-900/20"
+                    disabled={isClosing}
+                  >
+                    <Lock className="w-4 h-4" />
+                    <span>Close Poll</span>
+                  </Button>
+                )}
                 {isPollCreator && (
                   <Button
                     variant="outline"
