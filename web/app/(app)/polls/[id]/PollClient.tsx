@@ -837,35 +837,80 @@ export default function PollClient({ poll }: PollClientProps) {
   }, []);
 
   const handleClosePoll = useCallback(async () => {
-    if (!isPollCreator || !pollId || poll.status !== 'active') return;
+    // Enhanced validation with detailed logging
+    if (!isPollCreator) {
+      console.error('[Close Poll] Not authorized - isPollCreator is false', {
+        isPollCreator,
+        isAuthenticated,
+        userId,
+        pollCreatedBy,
+        idsMatch: userId === pollCreatedBy,
+      });
+      addNotificationRef.current({
+        type: 'error',
+        title: 'Cannot close poll',
+        message: 'Only the poll creator can close this poll.',
+        duration: notificationSettings.duration,
+      });
+      return;
+    }
+
+    if (!pollId) {
+      console.error('[Close Poll] Missing pollId', { pollId, pollIdFromParams: params?.id });
+      addNotificationRef.current({
+        type: 'error',
+        title: 'Error',
+        message: 'Poll ID is missing. Please refresh the page.',
+        duration: notificationSettings.duration,
+      });
+      return;
+    }
+
+    if (poll.status !== 'active') {
+      console.error('[Close Poll] Poll is not active', { status: poll.status });
+      addNotificationRef.current({
+        type: 'error',
+        title: 'Cannot close poll',
+        message: `Poll is ${poll.status}, only active polls can be closed.`,
+        duration: notificationSettings.duration,
+      });
+      return;
+    }
 
     setIsClosing(true);
     try {
+      console.log('[Close Poll] Attempting to close poll', { pollId, userId, pollCreatedBy });
       const response = await fetch(`/api/polls/${pollId}/close`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
       });
 
       if (!response.ok) {
-        const error = await response.json().catch(() => ({ error: 'Failed to close poll' }));
-        throw new Error(error.error || error.message || 'Failed to close poll');
+        const errorData = await response.json().catch(() => ({ error: 'Failed to close poll' }));
+        console.error('[Close Poll] API error', { status: response.status, error: errorData });
+        throw new Error(errorData.error || errorData.message || `Failed to close poll (${response.status})`);
       }
 
       const result = await response.json();
+      console.log('[Close Poll] Success', { pollId, result });
       logger.info('Poll closed successfully', { pollId, result });
 
-      // Refresh the page to show updated status using router.refresh() for better Next.js integration
-      router.refresh();
-      window.location.reload();
-
-      // Show success notification
+      // Show success notification before reload
       addNotificationRef.current({
         type: 'success',
         title: 'Poll closed',
         message: 'Your poll has been closed successfully. Advanced analytics are now available.',
         duration: notificationSettings.duration,
       });
+
+      // Refresh the page to show updated status using router.refresh() for better Next.js integration
+      router.refresh();
+      // Small delay to let notification show, then reload
+      setTimeout(() => {
+        window.location.reload();
+      }, 500);
     } catch (error) {
+      console.error('[Close Poll] Failed', { pollId, error });
       logger.error('Failed to close poll', { pollId, error });
       const errorMessage = error instanceof Error ? error.message : 'Failed to close poll';
       addNotificationRef.current({
@@ -874,11 +919,10 @@ export default function PollClient({ poll }: PollClientProps) {
         message: errorMessage,
         duration: notificationSettings.duration,
       });
-    } finally {
       setIsClosing(false);
       setShowCloseConfirm(false);
     }
-  }, [isPollCreator, pollId, poll.status]);
+  }, [isPollCreator, pollId, poll.status, isAuthenticated, userId, pollCreatedBy, params?.id, router, notificationSettings.duration]);
 
   const handleDeletePoll = useCallback(async () => {
     if (!isPollCreator || !pollId) return;
