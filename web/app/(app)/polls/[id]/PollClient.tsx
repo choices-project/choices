@@ -116,7 +116,9 @@ export default function PollClient({ poll }: PollClientProps) {
   const router = useRouter();
   const params = useParams();
   const user = useUserStore((state) => state.user);
-  const isPollCreator = user?.id && poll.createdBy && user.id === poll.createdBy;
+  const isAuthenticated = useUserStore((state) => state.isAuthenticated);
+  // Check if user is poll creator - only after user is loaded
+  const isPollCreator = isAuthenticated && user?.id && poll.createdBy && user.id === poll.createdBy;
 
   // Debug logging for close button visibility - ALWAYS log to console for debugging
   useEffect(() => {
@@ -699,16 +701,19 @@ export default function PollClient({ poll }: PollClientProps) {
       // Log vote submission for debugging
       console.log('[Vote] Vote submitted successfully', { pollId: poll.id, votingMethod: poll.votingMethod });
 
+      // Wait a bit for the database update to complete, then refresh
+      // The vote endpoint updates total_votes asynchronously, so we need to wait
+      await new Promise(resolve => setTimeout(resolve, 1500));
+
       // Refresh poll data to update vote counts immediately
       await fetchPollData();
 
       // Force a full page reload to ensure poll prop is updated from server
-      // Increased delay to ensure database update completes
-      // router.refresh() doesn't work reliably with client-only components
-      console.log('[Vote] Reloading page in 2 seconds to show updated vote count...');
+      // Additional delay to ensure database transaction is committed
+      console.log('[Vote] Reloading page to show updated vote count...');
       setTimeout(() => {
         window.location.reload();
-      }, 2000);
+      }, 500);
 
       const voteId: string =
         (typeof result.voteId === 'string' && result.voteId) ||

@@ -398,32 +398,39 @@ export const POST = withErrorHandling(async (request: NextRequest, { params }: {
 
     // Update poll's total_votes count for ranked votes
     // Count distinct users who have voted (ranked votes use poll_rankings, not votes table)
+    // Use adminClient to bypass RLS for counting
     try {
-      const { data: voterData, error: countError } = await supabase
-        .from('poll_rankings')
-        .select('user_id')
-        .eq('poll_id', pollId);
+      if (!adminClient) {
+        logger.warn('Admin client not available for vote count update');
+      } else {
+        const { data: voterData, error: countError } = await adminClient
+          .from('poll_rankings')
+          .select('user_id')
+          .eq('poll_id', pollId);
 
-      if (!countError && voterData) {
-        const uniqueVoterCount = new Set(voterData.map(v => v.user_id)).size;
+        if (!countError && voterData) {
+          const uniqueVoterCount = new Set(voterData.map(v => v.user_id)).size;
 
-        // Update poll with new vote count
-        const { error: updateError } = await supabase
-          .from('polls')
-          .update({
-            total_votes: uniqueVoterCount,
-            updated_at: new Date().toISOString()
-          })
-          .eq('id', pollId);
+          // Update poll with new vote count using admin client
+          const { error: updateError } = await adminClient
+            .from('polls')
+            .update({
+              total_votes: uniqueVoterCount,
+              updated_at: new Date().toISOString()
+            })
+            .eq('id', pollId);
 
-        if (updateError) {
-          logger.warn('Failed to update poll vote count for ranked vote', { pollId, error: updateError });
-        } else {
-          logger.debug('Updated poll vote count for ranked vote', { pollId, totalVotes: uniqueVoterCount });
+          if (updateError) {
+            logger.warn('Failed to update poll vote count for ranked vote', { pollId, error: updateError });
+          } else {
+            logger.info('Updated poll vote count for ranked vote', { pollId, totalVotes: uniqueVoterCount });
+          }
+        } else if (countError) {
+          logger.error('Error counting ranked votes for poll update', { pollId, error: countError });
         }
       }
     } catch (error) {
-      logger.warn('Error updating poll vote count for ranked vote', { pollId, error });
+      logger.error('Exception updating poll vote count for ranked vote', { pollId, error });
     }
 
     return successResponse(
@@ -551,32 +558,39 @@ export const POST = withErrorHandling(async (request: NextRequest, { params }: {
 
     // Update poll's total_votes count for multi-select votes
     // Count distinct users who have voted
+    // Use adminClient to ensure we can read all votes and update the poll
     try {
-      const { data: voterData, error: countError } = await supabase
-        .from('votes')
-        .select('user_id')
-        .eq('poll_id', pollId);
+      if (!adminClient) {
+        logger.warn('Admin client not available for vote count update');
+      } else {
+        const { data: voterData, error: countError } = await adminClient
+          .from('votes')
+          .select('user_id')
+          .eq('poll_id', pollId);
 
-      if (!countError && voterData) {
-        const uniqueVoterCount = new Set(voterData.map(v => v.user_id)).size;
+        if (!countError && voterData) {
+          const uniqueVoterCount = new Set(voterData.map(v => v.user_id)).size;
 
-        // Update poll with new vote count
-        const { error: updateError } = await supabase
-          .from('polls')
-          .update({
-            total_votes: uniqueVoterCount,
-            updated_at: new Date().toISOString()
-          })
-          .eq('id', pollId);
+          // Update poll with new vote count using admin client
+          const { error: updateError } = await adminClient
+            .from('polls')
+            .update({
+              total_votes: uniqueVoterCount,
+              updated_at: new Date().toISOString()
+            })
+            .eq('id', pollId);
 
-        if (updateError) {
-          logger.warn('Failed to update poll vote count for multi-select', { pollId, error: updateError });
-        } else {
-          logger.debug('Updated poll vote count for multi-select', { pollId, totalVotes: uniqueVoterCount });
+          if (updateError) {
+            logger.warn('Failed to update poll vote count for multi-select', { pollId, error: updateError });
+          } else {
+            logger.info('Updated poll vote count for multi-select', { pollId, totalVotes: uniqueVoterCount });
+          }
+        } else if (countError) {
+          logger.error('Error counting votes for multi-select poll update', { pollId, error: countError });
         }
       }
     } catch (error) {
-      logger.warn('Error updating poll vote count for multi-select', { pollId, error });
+      logger.error('Exception updating poll vote count for multi-select', { pollId, error });
     }
 
     return successResponse(
