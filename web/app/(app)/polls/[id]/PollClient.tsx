@@ -128,6 +128,7 @@ export default function PollClient({ poll }: PollClientProps) {
     const shouldShow = isPollCreator && poll.status === 'active';
 
     // Always log to console (not just in dev) to help debug production issues
+    // Enhanced logging to help diagnose close button and vote count issues
     console.log('[Close Button Debug]', {
       shouldShow,
       isPollCreator,
@@ -144,6 +145,10 @@ export default function PollClient({ poll }: PollClientProps) {
       pollStatus: poll.status,
       userType: typeof user?.id,
       createdByType: typeof poll.createdBy,
+      pollId: poll.id,
+      pollTitle: poll.title,
+      totalVotes: poll.totalvotes,
+      resultsTotalVotes: results?.totalVotes,
     });
 
     logger.debug('Poll creator and close button check', {
@@ -1115,6 +1120,12 @@ export default function PollClient({ poll }: PollClientProps) {
                   {results?.totalVotes ?? poll.totalvotes ?? 0}
                 </div>
                 <div className="text-sm font-medium text-foreground mt-1">TOTAL VOTES</div>
+                {/* Debug info - remove after fixing */}
+                {process.env.NODE_ENV === 'development' && (
+                  <div className="text-xs text-muted-foreground mt-1">
+                    poll.totalvotes: {poll.totalvotes ?? 'null'} | results: {results?.totalVotes ?? 'null'}
+                  </div>
+                )}
               </div>
               <div className="text-center p-4 bg-muted/50 rounded-lg border">
                 <div className="text-2xl font-bold text-foreground">
