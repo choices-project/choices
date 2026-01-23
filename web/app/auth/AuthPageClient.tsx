@@ -182,6 +182,12 @@ export default function AuthPageClient() {
       }
 
       const syncEmail = () => {
+        // CRITICAL FIX: Don't sync if input is focused (user is typing)
+        // This prevents the input from losing focus after each keystroke
+        if (document.activeElement === emailInput) {
+          return;
+        }
+
         const currentValue = emailInput.value;
         const syncedValue = emailInput.getAttribute('data-synced-value');
         // Sync if value exists and is different from what we last synced
@@ -218,9 +224,8 @@ export default function AuthPageClient() {
                 emailInput.dispatchEvent(inputEvent);
                 emailInput.dispatchEvent(changeEvent);
 
-                // Trigger focus/blur cycle to ensure validation runs
-                emailInput.focus();
-                setTimeout(() => emailInput.blur(), 10);
+                // REMOVED: focus/blur cycle that was causing input to lose focus
+                // Validation will run from the change event above
               }, 0);
 
               return newState;
@@ -231,6 +236,12 @@ export default function AuthPageClient() {
       };
 
       const syncPassword = () => {
+        // CRITICAL FIX: Don't sync if input is focused (user is typing)
+        // This prevents the input from losing focus after each keystroke
+        if (document.activeElement === passwordInput) {
+          return;
+        }
+
         const currentValue = passwordInput.value;
         const syncedValue = passwordInput.getAttribute('data-synced-value');
         // Sync if value exists and is different from what we last synced
@@ -267,9 +278,8 @@ export default function AuthPageClient() {
                 passwordInput.dispatchEvent(inputEvent);
                 passwordInput.dispatchEvent(changeEvent);
 
-                // Trigger focus/blur cycle to ensure validation runs
-                passwordInput.focus();
-                setTimeout(() => passwordInput.blur(), 10);
+                // REMOVED: focus/blur cycle that was causing input to lose focus
+                // Validation will run from the change event above
               }, 0);
 
               return newState;
