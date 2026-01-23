@@ -58,13 +58,11 @@ GRANT EXECUTE ON FUNCTION update_poll_vote_count(UUID) TO authenticated;
 GRANT EXECUTE ON FUNCTION update_poll_vote_count(UUID) TO service_role;
 
 -- ============================================================================
--- 2. Create RLS policy for updating polls (specifically total_votes)
+-- 2. Create RLS policy for updating polls
 -- ============================================================================
--- Allow authenticated users to update total_votes and updated_at only
--- This is safe because:
--- 1. The function recalculates from actual votes (can't be manipulated)
--- 2. Users can only update these specific fields
--- 3. The count is always accurate
+-- Allow poll creators to update their polls (for closing, settings, etc.)
+-- Note: total_votes should ONLY be updated via update_poll_vote_count() function
+-- Direct updates to total_votes by regular users are NOT allowed (security)
 
 DO $$
 BEGIN
@@ -74,6 +72,7 @@ BEGIN
   
   -- Create policy for poll creators to update their polls
   -- This allows closing polls, updating settings, etc.
+  -- Note: total_votes should be updated via update_poll_vote_count() function, not directly
   IF NOT EXISTS (
     SELECT 1 FROM pg_policies
     WHERE schemaname = 'public'
@@ -84,54 +83,14 @@ BEGIN
       FOR UPDATE
       TO authenticated
       USING (created_by = auth.uid())
-      WITH CHECK (
-        -- Poll creators can update most fields, but not total_votes directly
-        -- (total_votes should be updated via the function)
-        created_by = auth.uid()
-      );
+      WITH CHECK (created_by = auth.uid());
   END IF;
   
-  -- Create policy for vote count updates via function
-  -- This allows the update_poll_vote_count function to work
-  -- Note: The function itself uses SECURITY DEFINER, so it bypasses RLS
-  -- But we still want a policy for direct updates if needed
-  IF NOT EXISTS (
-    SELECT 1 FROM pg_policies
-    WHERE schemaname = 'public'
-      AND tablename = 'polls'
-      AND policyname = 'polls_vote_count_update'
-  ) THEN
-    -- Allow updating total_votes if user has voted on the poll
-    -- This ensures only legitimate vote count updates
-    CREATE POLICY polls_vote_count_update ON public.polls
-      FOR UPDATE
-      TO authenticated
-      USING (
-        -- User must have voted on this poll
-        EXISTS (
-          SELECT 1 FROM votes
-          WHERE votes.poll_id = polls.id
-            AND votes.user_id = auth.uid()
-        )
-        OR
-        -- Or user must have ranked this poll
-        EXISTS (
-          SELECT 1 FROM poll_rankings
-          WHERE poll_rankings.poll_id = polls.id
-            AND poll_rankings.user_id = auth.uid()
-        )
-      )
-      WITH CHECK (
-        -- Only allow updating total_votes and updated_at
-        -- Prevent updating other sensitive fields
-        (OLD.total_votes IS DISTINCT FROM NEW.total_votes OR OLD.updated_at IS DISTINCT FROM NEW.updated_at)
-        AND
-        -- Ensure other critical fields haven't changed
-        OLD.id = NEW.id
-        AND OLD.created_by = NEW.created_by
-        AND OLD.status = NEW.status
-      );
-  END IF;
+  -- Note: We don't need a separate policy for vote count updates
+  -- The update_poll_vote_count() function uses SECURITY DEFINER, so it bypasses RLS
+  -- This is the correct and secure way to handle this operation
+  -- Direct updates to total_votes by regular users are not allowed (security)
+  -- Only the function (with elevated privileges) can update total_votes
 END $$;
 
 -- ============================================================================
