@@ -9,6 +9,7 @@ import type { NextRequest } from 'next/server';
 
 
 export const dynamic = 'force-dynamic';
+export const revalidate = 0; // Never cache this endpoint
 
 export const GET = withErrorHandling(async (
   _request: NextRequest,

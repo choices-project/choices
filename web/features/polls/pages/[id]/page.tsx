@@ -163,11 +163,17 @@ export default async function PollPage({ params }: { params: { id: string } }) {
     const host = allHeaders.get('host') ?? 'localhost:3000';
     const baseUrl = `${protocol}://${host}`;
 
-    const res = await fetch(`${baseUrl}/api/polls/${id}`, {
+    // Use cache: 'no-store' and add cache-busting headers to ensure fresh data
+    // This is critical after voting to see updated vote counts
+    const cacheBuster = Date.now();
+    const res = await fetch(`${baseUrl}/api/polls/${id}?t=${cacheBuster}`, {
       cache: 'no-store',
+      next: { revalidate: 0 }, // Disable any Next.js caching
       headers: {
         ...(cookieHeader ? { cookie: cookieHeader } : {}),
         ...(bypassHeader ? { 'x-e2e-bypass': bypassHeader } : {}),
+        'Cache-Control': 'no-cache, no-store, must-revalidate',
+        'Pragma': 'no-cache',
       },
     });
 

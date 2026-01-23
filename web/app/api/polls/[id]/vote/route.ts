@@ -402,8 +402,8 @@ export const POST = withErrorHandling(async (request: NextRequest, { params }: {
     try {
       // Use the secure RPC function that handles both regular and ranked polls
       // Type assertion needed until migration is run and types are regenerated
-      logger.info('Calling update_poll_vote_count RPC function', { 
-        pollId, 
+      logger.info('Calling update_poll_vote_count RPC function', {
+        pollId,
         votingMethod: 'ranked',
         userId: user.id,
         timestamp: new Date().toISOString()
@@ -587,8 +587,8 @@ export const POST = withErrorHandling(async (request: NextRequest, { params }: {
     try {
       // Use the secure RPC function that recalculates from actual votes
       // Type assertion needed until migration is run and types are regenerated
-      logger.info('Calling update_poll_vote_count RPC function', { 
-        pollId, 
+      logger.info('Calling update_poll_vote_count RPC function', {
+        pollId,
         votingMethod: 'multi-select',
         userId: user.id,
         timestamp: new Date().toISOString()
@@ -746,8 +746,8 @@ export const POST = withErrorHandling(async (request: NextRequest, { params }: {
       // Use the secure RPC function that recalculates from actual votes
       // This is safer than using adminClient and respects RLS policies
       // Type assertion needed until migration is run and types are regenerated
-      logger.info('Calling update_poll_vote_count RPC function', { 
-        pollId, 
+      logger.info('Calling update_poll_vote_count RPC function', {
+        pollId,
         votingMethod: 'single',
         userId: user.id,
         timestamp: new Date().toISOString()

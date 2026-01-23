@@ -720,20 +720,30 @@ export default function PollClient({ poll }: PollClientProps) {
       console.log('[Vote] Vote submitted successfully', { pollId: poll.id, votingMethod: poll.votingMethod });
 
       // The vote endpoint now waits for vote count update before returning,
-      // so we can reload immediately. Small delay to ensure UI updates.
-      await new Promise(resolve => setTimeout(resolve, 300));
+      // but we need to wait a bit longer to ensure database transaction is fully committed
+      // and any replication lag is accounted for
+      console.log('[Vote] Waiting for database commit...');
+      await new Promise(resolve => setTimeout(resolve, 1000));
 
       // Refresh poll data to update vote counts immediately
       await fetchPollData();
 
       // Force a full page reload with cache-busting to ensure poll prop is updated from server
-      // Vote count update is now complete on server side, so reload can happen quickly
-      // Use cache: 'no-store' equivalent by adding timestamp to force fresh fetch
-      console.log('[Vote] Reloading page to show updated vote count...');
+      // CRITICAL: Wait longer to ensure database transaction is committed and visible
+      // Use router.refresh() first to try to revalidate, then fall back to full reload
+      console.log('[Vote] Attempting to refresh poll data...');
+      
+      // Try router.refresh() first (faster, but may not work if server component is cached)
+      router.refresh();
+      
+      // Then do a full reload after a delay to ensure fresh data
       setTimeout(() => {
+        console.log('[Vote] Performing full page reload with cache-busting...');
         // Force a hard reload to bypass Next.js cache
-        window.location.href = window.location.href.split('?')[0] + '?t=' + Date.now();
-      }, 200);
+        // Add timestamp AND a random value to ensure no caching
+        const cacheBuster = `?t=${Date.now()}&r=${Math.random().toString(36).substr(2, 9)}`;
+        window.location.href = window.location.href.split('?')[0] + cacheBuster;
+      }, 500);
 
       const voteId: string =
         (typeof result.voteId === 'string' && result.voteId) ||
