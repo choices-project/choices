@@ -1,7 +1,7 @@
 import { z } from 'zod';
 
 
-import { getSupabaseServerClient, getSupabaseAdminClient } from '@/utils/supabase/server';
+import { getSupabaseServerClient } from '@/utils/supabase/server';
 
 import { withErrorHandling, successResponse, notFoundError, validationError, errorResponse } from '@/lib/api';
 
@@ -27,11 +27,9 @@ export const GET = withErrorHandling(async (
       return errorResponse('Database not available', 500);
     }
 
-    // Use admin client to bypass RLS and ensure we get fresh data, especially for total_votes
-    const adminClient = await getSupabaseAdminClient();
-    const clientToUse = adminClient || supabaseClient;
-    
-    const { data: poll, error } = await clientToUse
+    // Use regular client - RLS policies should allow reading polls
+    // If we need admin access, we should fix RLS instead of bypassing it
+    const { data: poll, error } = await supabaseClient
       .from('polls')
       .select(
         `

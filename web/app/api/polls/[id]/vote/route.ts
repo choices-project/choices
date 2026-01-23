@@ -560,39 +560,47 @@ export const POST = withErrorHandling(async (request: NextRequest, { params }: {
     }
 
     // Update poll's total_votes count for multi-select votes BEFORE returning response
-    // Count distinct users who have voted
-    // Use adminClient to ensure we can read all votes and update the poll
+    // Use RPC function to safely update vote count (respects RLS, ensures integrity)
     // CRITICAL: This must complete before returning success response
     try {
-      if (!adminClient) {
-        logger.warn('Admin client not available for vote count update');
-      } else {
-        const { data: voterData, error: countError } = await adminClient
-          .from('votes')
-          .select('user_id')
-          .eq('poll_id', pollId);
+      // Use the secure RPC function that recalculates from actual votes
+      // Type assertion needed until migration is run and types are regenerated
+      const { error: updateError } = await (supabase as any)
+        .rpc('update_poll_vote_count', { poll_id_param: pollId });
 
-        if (!countError && voterData) {
-          const uniqueVoterCount = new Set(voterData.map(v => v.user_id)).size;
+      if (updateError) {
+        // If function doesn't exist yet (migration not run), fall back to adminClient
+        if (updateError.message?.includes('function') && updateError.message?.includes('does not exist')) {
+          logger.warn('update_poll_vote_count function not found, falling back to adminClient', { pollId });
+          
+          if (adminClient) {
+            const { data: voterData, error: countError } = await adminClient
+              .from('votes')
+              .select('user_id')
+              .eq('poll_id', pollId);
 
-          // Update poll with new vote count using admin client
-          const { error: updateError } = await adminClient
-            .from('polls')
-            .update({
-              total_votes: uniqueVoterCount,
-              updated_at: new Date().toISOString()
-            })
-            .eq('id', pollId);
+            if (!countError && voterData) {
+              const uniqueVoterCount = new Set(voterData.map(v => v.user_id)).size;
+              const { error: fallbackError } = await adminClient
+                .from('polls')
+                .update({
+                  total_votes: uniqueVoterCount,
+                  updated_at: new Date().toISOString()
+                })
+                .eq('id', pollId);
 
-          if (updateError) {
-            logger.error('Failed to update poll vote count for multi-select', { pollId, error: updateError });
-            // Don't fail the vote, but log the error
-          } else {
-            logger.info('Updated poll vote count for multi-select', { pollId, totalVotes: uniqueVoterCount });
+              if (fallbackError) {
+                logger.error('Failed to update poll vote count for multi-select (fallback)', { pollId, error: fallbackError });
+              } else {
+                logger.info('Updated poll vote count for multi-select (fallback)', { pollId, totalVotes: uniqueVoterCount });
+              }
+            }
           }
-        } else if (countError) {
-          logger.error('Error counting votes for multi-select poll update', { pollId, error: countError });
+        } else {
+          logger.error('Failed to update poll vote count for multi-select via RPC', { pollId, error: updateError });
         }
+      } else {
+        logger.info('Updated poll vote count for multi-select via RPC', { pollId });
       }
     } catch (error) {
       logger.error('Exception updating poll vote count for multi-select', { pollId, error });
@@ -696,39 +704,49 @@ export const POST = withErrorHandling(async (request: NextRequest, { params }: {
   }
 
   // Update poll's total_votes count BEFORE returning response
-  // For single-choice votes, count distinct users from votes table
-  // Use adminClient to bypass RLS and ensure update completes
+  // Use RPC function to safely update vote count (respects RLS, ensures integrity)
   // CRITICAL: This must complete before returning success response
   try {
-    if (!adminClient) {
-      logger.warn('Admin client not available for vote count update');
-    } else {
-      const { data: voterData, error: countError } = await adminClient
-        .from('votes')
-        .select('user_id')
-        .eq('poll_id', pollId);
+      // Use the secure RPC function that recalculates from actual votes
+      // This is safer than using adminClient and respects RLS policies
+      // Type assertion needed until migration is run and types are regenerated
+      const { error: updateError } = await (supabase as any)
+        .rpc('update_poll_vote_count', { poll_id_param: pollId });
 
-      if (!countError && voterData) {
-        const uniqueVoterCount = new Set(voterData.map(v => v.user_id)).size;
+    if (updateError) {
+      // If function doesn't exist yet (migration not run), fall back to adminClient
+      if (updateError.message?.includes('function') && updateError.message?.includes('does not exist')) {
+        logger.warn('update_poll_vote_count function not found, falling back to adminClient', { pollId });
+        
+        // Fallback: Use adminClient only if function doesn't exist
+        if (adminClient) {
+          const { data: voterData, error: countError } = await adminClient
+            .from('votes')
+            .select('user_id')
+            .eq('poll_id', pollId);
 
-        // Update poll with new vote count using admin client
-        const { error: updateError } = await adminClient
-          .from('polls')
-          .update({
-            total_votes: uniqueVoterCount,
-            updated_at: new Date().toISOString()
-          })
-          .eq('id', pollId);
+          if (!countError && voterData) {
+            const uniqueVoterCount = new Set(voterData.map(v => v.user_id)).size;
+            const { error: fallbackError } = await adminClient
+              .from('polls')
+              .update({
+                total_votes: uniqueVoterCount,
+                updated_at: new Date().toISOString()
+              })
+              .eq('id', pollId);
 
-        if (updateError) {
-          logger.error('Failed to update poll vote count', { pollId, error: updateError });
-          // Don't fail the vote, but log the error
-        } else {
-          logger.info('Updated poll vote count (single-choice)', { pollId, totalVotes: uniqueVoterCount });
+            if (fallbackError) {
+              logger.error('Failed to update poll vote count (fallback)', { pollId, error: fallbackError });
+            } else {
+              logger.info('Updated poll vote count (fallback method)', { pollId, totalVotes: uniqueVoterCount });
+            }
+          }
         }
-      } else if (countError) {
-        logger.error('Error counting votes for poll update', { pollId, error: countError });
+      } else {
+        logger.error('Failed to update poll vote count via RPC', { pollId, error: updateError });
       }
+    } else {
+      logger.info('Updated poll vote count via RPC function', { pollId });
     }
   } catch (error) {
     logger.error('Exception updating poll vote count', { pollId, error });
