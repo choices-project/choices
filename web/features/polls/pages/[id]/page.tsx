@@ -163,12 +163,11 @@ export default async function PollPage({ params }: { params: { id: string } }) {
     const host = allHeaders.get('host') ?? 'localhost:3000';
     const baseUrl = `${protocol}://${host}`;
 
-    // Use cache: 'no-store' and add cache-busting headers to ensure fresh data
+    // Use cache: 'no-store' to ensure fresh data (removed redundant revalidate: 0)
     // This is critical after voting to see updated vote counts
     const cacheBuster = Date.now();
     const res = await fetch(`${baseUrl}/api/polls/${id}?t=${cacheBuster}`, {
-      cache: 'no-store',
-      next: { revalidate: 0 }, // Disable any Next.js caching
+      cache: 'no-store', // This is sufficient - no need for revalidate: 0
       headers: {
         ...(cookieHeader ? { cookie: cookieHeader } : {}),
         ...(bypassHeader ? { 'x-e2e-bypass': bypassHeader } : {}),
