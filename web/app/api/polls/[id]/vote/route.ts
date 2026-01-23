@@ -397,39 +397,47 @@ export const POST = withErrorHandling(async (request: NextRequest, { params }: {
     }
 
     // Update poll's total_votes count for ranked votes BEFORE returning response
-    // Count distinct users who have voted (ranked votes use poll_rankings, not votes table)
-    // Use adminClient to bypass RLS for counting
+    // Use RPC function to safely update vote count (handles ranked polls automatically)
     // CRITICAL: This must complete before returning success response
     try {
-      if (!adminClient) {
-        logger.warn('Admin client not available for vote count update');
-      } else {
-        const { data: voterData, error: countError } = await adminClient
-          .from('poll_rankings')
-          .select('user_id')
-          .eq('poll_id', pollId);
+      // Use the secure RPC function that handles both regular and ranked polls
+      // Type assertion needed until migration is run and types are regenerated
+      const { error: updateError } = await (supabase as any)
+        .rpc('update_poll_vote_count', { poll_id_param: pollId });
 
-        if (!countError && voterData) {
-          const uniqueVoterCount = new Set(voterData.map(v => v.user_id)).size;
+      if (updateError) {
+        // If function doesn't exist yet (migration not run), fall back to adminClient
+        if (updateError.message?.includes('function') && updateError.message?.includes('does not exist')) {
+          logger.warn('update_poll_vote_count function not found, falling back to adminClient', { pollId });
 
-          // Update poll with new vote count using admin client
-          const { error: updateError } = await adminClient
-            .from('polls')
-            .update({
-              total_votes: uniqueVoterCount,
-              updated_at: new Date().toISOString()
-            })
-            .eq('id', pollId);
+          if (adminClient) {
+            const { data: voterData, error: countError } = await adminClient
+              .from('poll_rankings')
+              .select('user_id')
+              .eq('poll_id', pollId);
 
-          if (updateError) {
-            logger.error('Failed to update poll vote count for ranked vote', { pollId, error: updateError });
-            // Don't fail the vote, but log the error
-          } else {
-            logger.info('Updated poll vote count for ranked vote', { pollId, totalVotes: uniqueVoterCount });
+            if (!countError && voterData) {
+              const uniqueVoterCount = new Set(voterData.map(v => v.user_id)).size;
+              const { error: fallbackError } = await adminClient
+                .from('polls')
+                .update({
+                  total_votes: uniqueVoterCount,
+                  updated_at: new Date().toISOString()
+                })
+                .eq('id', pollId);
+
+              if (fallbackError) {
+                logger.error('Failed to update poll vote count for ranked vote (fallback)', { pollId, error: fallbackError });
+              } else {
+                logger.info('Updated poll vote count for ranked vote (fallback)', { pollId, totalVotes: uniqueVoterCount });
+              }
+            }
           }
-        } else if (countError) {
-          logger.error('Error counting ranked votes for poll update', { pollId, error: countError });
+        } else {
+          logger.error('Failed to update poll vote count for ranked vote via RPC', { pollId, error: updateError });
         }
+      } else {
+        logger.info('Updated poll vote count for ranked vote via RPC', { pollId });
       }
     } catch (error) {
       logger.error('Exception updating poll vote count for ranked vote', { pollId, error });
@@ -572,7 +580,7 @@ export const POST = withErrorHandling(async (request: NextRequest, { params }: {
         // If function doesn't exist yet (migration not run), fall back to adminClient
         if (updateError.message?.includes('function') && updateError.message?.includes('does not exist')) {
           logger.warn('update_poll_vote_count function not found, falling back to adminClient', { pollId });
-          
+
           if (adminClient) {
             const { data: voterData, error: countError } = await adminClient
               .from('votes')
@@ -717,7 +725,7 @@ export const POST = withErrorHandling(async (request: NextRequest, { params }: {
       // If function doesn't exist yet (migration not run), fall back to adminClient
       if (updateError.message?.includes('function') && updateError.message?.includes('does not exist')) {
         logger.warn('update_poll_vote_count function not found, falling back to adminClient', { pollId });
-        
+
         // Fallback: Use adminClient only if function doesn't exist
         if (adminClient) {
           const { data: voterData, error: countError } = await adminClient
