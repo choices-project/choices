@@ -588,6 +588,7 @@ export const POST = withErrorHandling(async (request: NextRequest) => {
         participation_rate: 0,
         total_views: 0,
         participation: 0,
+        total_votes: 0, // CRITICAL: Initialize vote count to 0
 
         // Advanced settings (type-safe extraction)
         poll_settings: {

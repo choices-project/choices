@@ -732,10 +732,10 @@ export default function PollClient({ poll }: PollClientProps) {
       // CRITICAL: Wait longer to ensure database transaction is committed and visible
       // Use router.refresh() first to try to revalidate, then fall back to full reload
       console.log('[Vote] Attempting to refresh poll data...');
-      
+
       // Try router.refresh() first (faster, but may not work if server component is cached)
       router.refresh();
-      
+
       // Then do a full reload after a delay to ensure fresh data
       setTimeout(() => {
         console.log('[Vote] Performing full page reload with cache-busting...');
