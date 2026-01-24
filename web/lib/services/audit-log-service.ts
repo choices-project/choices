@@ -14,6 +14,7 @@
  * Status: Production-ready
  */
 
+import { AUDIT_LOGS_SELECT_COLUMNS } from '@/lib/api/response-builders';
 import { logger } from '@/lib/utils/logger';
 
 import type { SupabaseClient } from '@supabase/supabase-js';
@@ -312,7 +313,7 @@ export class AuditLogService {
     try {
       const { data, error } = await this.supabase
         .from('audit_logs')
-        .select('*')
+        .select(AUDIT_LOGS_SELECT_COLUMNS)
         .order('created_at', { ascending: false })
         .range(offset, offset + limit - 1);
 
@@ -375,7 +376,7 @@ export class AuditLogService {
     try {
       let query = this.supabase
         .from('audit_logs')
-        .select('*')
+        .select(AUDIT_LOGS_SELECT_COLUMNS)
         .order('created_at', { ascending: false });
 
       if (filters.eventType) {

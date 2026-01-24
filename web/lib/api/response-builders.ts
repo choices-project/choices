@@ -4,11 +4,31 @@ import type { PrivacySettings, UserProfile } from './types';
 
 /** Explicit columns for user_profiles select (avoid select('*')) */
 export const PROFILE_SELECT_COLUMNS =
-  'id, user_id, email, display_name, username, avatar_url, bio, trust_tier, is_admin, is_active, created_at, updated_at, demographics, privacy_settings, primary_concerns, community_focus, participation_style, dashboard_layout';
+  'id, user_id, email, display_name, username, avatar_url, bio, trust_tier, is_admin, is_active, created_at, updated_at, demographics, privacy_settings, primary_concerns, community_focus, participation_style, dashboard_layout, analytics_dashboard_mode';
 
 /** Explicit columns for hashtag_flags select (avoid select('*')) */
 export const HASHTAG_FLAG_SELECT_COLUMNS =
   'id, hashtag_id, flag_type, reason, status, user_id, flagged_by, reviewed_at, reviewed_by, created_at';
+
+/** Explicit columns for hashtags select (avoid select('*')) */
+export const HASHTAGS_SELECT_COLUMNS =
+  'id, name, category, description, follower_count, usage_count, is_featured, is_trending, is_verified, trending_score, created_at, updated_at, created_by, metadata';
+
+/** Explicit columns for user_hashtags select (avoid select('*')) */
+export const USER_HASHTAGS_SELECT_COLUMNS =
+  'id, user_id, hashtag_id, followed_at, created_at, is_primary, last_used_at, preferences, usage_count';
+
+/** Explicit columns for hashtag_usage select (avoid select('*')) */
+export const HASHTAG_USAGE_SELECT_COLUMNS =
+  'id, hashtag_id, created_at, user_id, poll_id, usage_type';
+
+/** Explicit columns for hashtag_engagement select (avoid select('*')) */
+export const HASHTAG_ENGAGEMENT_SELECT_COLUMNS =
+  'id, engagement_type, hashtag_id, timestamp, user_id, created_at, metadata';
+
+/** Explicit columns for audit_logs select (avoid select('*')) */
+export const AUDIT_LOGS_SELECT_COLUMNS =
+  'id, event_type, event_name, severity, user_id, session_id, ip_address, user_agent, request_path, request_method, resource, action, status, granted, metadata, error_message, error_stack, created_at, expires_at';
 
 /** Explicit columns for moderation_reports select (avoid select('*')) */
 export const MODERATION_REPORT_SELECT_COLUMNS =
@@ -64,6 +84,26 @@ export const ANALYTICS_EVENTS_SHARE_SELECT_COLUMNS =
 /** Explicit columns for representative_follows select (avoid select('*')) */
 export const REPRESENTATIVE_FOLLOW_SELECT_COLUMNS =
   'user_id, representative_id, notify_on_votes, notify_on_committee_activity, notify_on_public_statements, notify_on_events, created_at, updated_at, notes, tags';
+
+/** Explicit columns for candidate_email_challenges select (avoid select('*')) */
+export const CANDIDATE_EMAIL_CHALLENGE_SELECT_COLUMNS =
+  'id, user_id, candidate_id, code, email, expires_at, used_at, failed_attempts, created_at';
+
+/** Explicit columns for official_email_fast_track select (avoid select('*')) */
+export const OFFICIAL_EMAIL_FAST_TRACK_SELECT_COLUMNS =
+  'id, domain, email, representative_id, verified, last_attempt_at';
+
+/** Explicit columns for user_consent select (avoid select('*')) */
+export const USER_CONSENT_SELECT_COLUMNS =
+  'id, user_id, consent_type, granted, granted_at, revoked_at, consent_version, purpose, data_types';
+
+/** Explicit columns for idempotency_keys select (avoid select('*')) */
+export const IDEMPOTENCY_KEYS_SELECT_COLUMNS =
+  'key, expires_at, result_data, status, data, error_message, started_at';
+
+/** Explicit columns for idempotency_monitor view select (avoid select('*')) */
+export const IDEMPOTENCY_MONITOR_SELECT_COLUMNS =
+  'status, count, stuck_count, avg_duration_seconds, max_duration_seconds';
 
 export type ProfileResponsePayload = {
   profile: UserProfile | null;

@@ -13,6 +13,7 @@
 import { getSupabaseServerClient } from '@/utils/supabase/server';
 
 import { withErrorHandling, successResponse, forbiddenError, validationError, errorResponse } from '@/lib/api';
+import { ANALYTICS_EVENTS_SHARE_SELECT_COLUMNS } from '@/lib/api/response-builders';
 import { isFeatureEnabled } from '@/lib/core/feature-flags';
 import { devLog } from '@/lib/utils/logger';
 
@@ -110,7 +111,7 @@ export const GET = withErrorHandling(async (request: NextRequest) => {
 
     let query = supabase
       .from('analytics_events')
-      .select('*')
+      .select(ANALYTICS_EVENTS_SHARE_SELECT_COLUMNS)
       .eq('event_type', 'share')
       .gte('created_at', startDate);
 

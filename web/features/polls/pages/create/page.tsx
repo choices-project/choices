@@ -99,7 +99,7 @@ export default function CreatePollPage() {
     if (actions.goToStep && stepIndex >= 0 && stepIndex < POLL_CREATION_STEPS.length) {
       actions.goToStep(stepIndex);
     }
-  }, [actions.goToStep])
+  }, [actions])
 
   const PRIVACY_LABELS: Record<string, string> = useMemo(() => ({
     public: safeT('polls.create.privacy.public', 'Public'),
@@ -1726,7 +1726,7 @@ const InteractivePreview = ({ votingMethod, options }: InteractivePreviewProps) 
   // Initialize ranked order when options change
   React.useEffect(() => {
     setRankedOrder(options.map((_, index) => `option-${index}`));
-  }, [options.length]);
+  }, [options]);
 
   // Drag and drop handlers for ranked choice
   const handleDragStart = (index: number) => {
@@ -1781,11 +1781,17 @@ const InteractivePreview = ({ votingMethod, options }: InteractivePreviewProps) 
             return (
               <div
                 key={`preview-ranked-${orderKey}`}
+                role="button"
+                tabIndex={0}
+                aria-label={`Rank ${displayIndex + 1}: ${option}. Drag to reorder.`}
                 draggable
                 onDragStart={() => handleDragStart(displayIndex)}
                 onDragOver={handleDragOver}
                 onDragLeave={handleDragLeave}
                 onDrop={(e) => handleDrop(e, displayIndex)}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter' || e.key === ' ') e.preventDefault();
+                }}
                 className="flex items-center gap-3 p-4 rounded-lg border-2 border-purple-200 bg-white shadow-sm hover:shadow-md transition-all cursor-move hover:border-purple-300 active:scale-[0.98]"
               >
                 <div className="flex-shrink-0 flex items-center justify-center w-10 h-10 rounded-full bg-gradient-to-br from-purple-100 to-purple-200 text-purple-700 font-bold text-sm shadow-sm">

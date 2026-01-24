@@ -11,9 +11,8 @@ import { logger } from '@/lib/utils/logger';
 
 import { useI18n } from '@/hooks/useI18n';
 
+import { usePollResults } from '../hooks/usePollResults';
 import { optimizedPollService } from '../lib/poll-service';
-
-import type { OptimizedPollResult } from '../lib/poll-service';
 
 
 type OptimizedPollResultsProps = {
@@ -41,14 +40,22 @@ export default function OptimizedPollResults({
   const resultsRegionId = useId();
   const resultsHeadingId = useId();
   const previousRefreshRef = useRef<number | null>(null);
-  const [results, setResults] = useState<OptimizedPollResult | null>(null)
-  const [loading, setLoading] = useState(true)
-  const [error, setError] = useState<string | null>(null)
-  const [performanceMetrics, setPerformanceMetrics] = useState<{
-    loadTime: number;
-    cacheHit: boolean;
-    timestamp: string;
-  } | null>(null)
+
+  const { data: queryData, isLoading: loading, error: queryError, refetch } = usePollResults({
+    pollId,
+    userId,
+    includePrivate,
+    pollStatus,
+    autoRefreshInterval,
+    enabled: !!pollId,
+  });
+
+  const results = queryData?.result ?? null;
+  const error = queryError ? (queryError instanceof Error ? queryError.message : 'Failed to load poll results') : null;
+  const performanceMetrics = queryData
+    ? { loadTime: queryData.loadTime, cacheHit: false, timestamp: new Date().toISOString() }
+    : null;
+
   const [cacheStats, setCacheStats] = useState<{
     size: number;
     hitRate: number;
@@ -56,9 +63,8 @@ export default function OptimizedPollResults({
     evictions: number;
     memoryUsage: number;
     averageAge: number;
-  } | null>(null)
+  } | null>(null);
 
-  // Use refs for stable callback props and translation function (optimized pattern)
   const onResultsLoadedRef = useRef(onResultsLoaded);
   useEffect(() => { onResultsLoadedRef.current = onResultsLoaded; }, [onResultsLoaded]);
   const onErrorRef = useRef(onError);
@@ -66,158 +72,19 @@ export default function OptimizedPollResults({
   const tRef = useRef(t);
   useEffect(() => { tRef.current = t; }, [t]);
 
-  // Memoized poll results loading function
-  const loadPollResults = useCallback(async () => {
-    if (!pollId) return
+  useEffect(() => { if (results) onResultsLoadedRef.current?.(); }, [results]);
+  useEffect(() => { if (queryError) onErrorRef.current?.(); }, [queryError]);
 
-    setLoading(true)
-    setError(null)
-
-    try {
-      const startTime = performance.now()
-
-      // Use real API endpoint instead of mock service
-      const response = await fetch(`/api/polls/${pollId}/results`)
-
-      if (!response.ok) {
-        throw new Error(response.status === 404 ? 'Poll not found' : 'Failed to fetch results')
-      }
-
-      const result = await response.json()
-      // API returns { success: true, data: { poll_id, voting_method, results: [...] } } structure
-      // OR for ranked: { success: true, data: { poll_id, voting_method, rounds, option_stats, ... } }
-      const data = result?.success && result?.data ? result.data : result
-
-      const endTime = performance.now()
-      const loadTime = endTime - startTime
-
-      // Transform API response to OptimizedPollResult format
-      let transformedResults: OptimizedPollResult | null = null
-
-      if (data?.results && Array.isArray(data.results)) {
-        // Standard voting method results
-        transformedResults = {
-          id: pollId,
-          title: data.poll_title || 'Poll Results',
-          options: data.results.map((r: any) => r.option_text || r.option_id),
-          totalVotes: data.total_votes || 0,
-          results: data.results.map((r: any) => ({
-            option: r.option_text || r.option_id,
-            optionId: r.option_id,
-            label: r.option_text,
-            votes: r.vote_count || 0,
-            voteCount: r.vote_count || 0,
-            percentage: r.percentage || 0,
-            votePercentage: r.percentage || 0,
-          })),
-          metadata: {
-            responseTime: loadTime,
-            cacheHit: false,
-            includePrivate,
-            userId,
-            votingMethod: data.voting_method,
-          },
-          pollStatus: 'active',
-          pollTitle: data.poll_title || 'Poll Results',
-          pollType: data.voting_method || 'single',
-          uniqueVoters: data.total_votes || 0,
-          canVote: true,
-          hasVoted: false,
-        }
-      } else if (data?.option_stats && Array.isArray(data.option_stats)) {
-        // Ranked choice results
-        transformedResults = {
-          id: pollId,
-          title: data.poll_title || 'Poll Results',
-          options: data.option_stats.map((s: any) => s.text || `Option ${s.option_index + 1}`),
-          totalVotes: data.total_votes || 0,
-          results: data.option_stats.map((s: any) => ({
-            option: s.text || `Option ${s.option_index + 1}`,
-            optionId: s.option_id || s.option_index?.toString(),
-            label: s.text,
-            votes: s.first_choice_votes || 0,
-            voteCount: s.first_choice_votes || 0,
-            percentage: s.first_choice_percentage || 0,
-            votePercentage: s.first_choice_percentage || 0,
-          })),
-          metadata: {
-            responseTime: loadTime,
-            cacheHit: false,
-            includePrivate,
-            userId,
-            votingMethod: 'ranked',
-            rounds: data.rounds,
-            winner: data.winner,
-          },
-          pollStatus: 'active',
-          pollTitle: data.poll_title || 'Poll Results',
-          pollType: 'ranked',
-          uniqueVoters: data.total_votes || 0,
-          canVote: true,
-          hasVoted: false,
-        }
-      }
-
-      if (!transformedResults) {
-        throw new Error('Invalid poll results format')
-      }
-
-      setResults(transformedResults)
-      setPerformanceMetrics({
-        loadTime,
-        cacheHit: false,
-        timestamp: new Date().toISOString()
-      })
-
-      onResultsLoadedRef.current?.()
-    } catch (err) {
-      const errorMessage = err instanceof Error ? err.message : 'Failed to load poll results'
-      setError(errorMessage)
-      onErrorRef.current?.()
-    } finally {
-      setLoading(false)
-    }
-  }, [pollId, userId, includePrivate])
-
-  // Load cache statistics
   const loadCacheStats = useCallback(() => {
     try {
-      const stats = optimizedPollService.getCacheStats()
-      setCacheStats(stats)
+      const stats = optimizedPollService.getCacheStats();
+      setCacheStats(stats);
     } catch (err) {
-      const error = err instanceof Error ? err : new Error(String(err))
-      logger.warn('Failed to load cache stats:', { error: error.message, stack: error.stack })
+      const e = err instanceof Error ? err : new Error(String(err));
+      logger.warn('Failed to load cache stats', { error: e.message, stack: e.stack });
     }
-  }, [])
-
-  // Load results on mount and when dependencies change
-  useEffect(() => {
-    void loadPollResults()
-    loadCacheStats()
-  }, [loadPollResults, loadCacheStats])
-
-  // Auto-refresh for active polls (5-10 minutes recommended)
-  useEffect(() => {
-    // Only auto-refresh active polls
-    if (pollStatus !== 'active') {
-      return;
-    }
-
-    // Default to 5 minutes if not specified
-    const interval = autoRefreshInterval ?? 5 * 60 * 1000; // 5 minutes
-
-    // Don't set up interval if disabled (0 or negative)
-    if (interval <= 0) {
-      return;
-    }
-
-    const intervalId = setInterval(() => {
-      logger.debug('Auto-refreshing poll results', { pollId, pollStatus });
-      void loadPollResults();
-    }, interval);
-
-    return () => clearInterval(intervalId);
-  }, [pollId, pollStatus, autoRefreshInterval, loadPollResults])
+  }, []);
+  useEffect(() => { loadCacheStats(); }, [loadCacheStats]);
 
   // Memoized sorted options for performance
   const sortedOptions = useMemo(() => {
@@ -247,12 +114,11 @@ export default function OptimizedPollResults({
 
   // Handle refresh
   const handleRefresh = useCallback(async () => {
-    const refreshTime = Date.now();
     ScreenReaderSupport.announce(tRef.current('polls.results.refreshing'), 'polite');
-    await loadPollResults()
-    loadCacheStats()
-    previousRefreshRef.current = refreshTime;
-  }, [loadPollResults, loadCacheStats])
+    await refetch();
+    loadCacheStats();
+    previousRefreshRef.current = Date.now();
+  }, [refetch, loadCacheStats])
 
   // Announce results updates
   useEffect(() => {

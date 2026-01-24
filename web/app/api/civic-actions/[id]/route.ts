@@ -21,6 +21,7 @@ import {
   parseBody,
   methodNotAllowed,
 } from '@/lib/api';
+import { CIVIC_ACTION_SELECT_COLUMNS } from '@/lib/api/response-builders';
 import { isFeatureEnabled } from '@/lib/core/feature-flags';
 import { apiRateLimiter } from '@/lib/rate-limiting/api-rate-limiter';
 import { logger } from '@/lib/utils/logger';
@@ -75,7 +76,7 @@ export const GET = withErrorHandling(async (
     // Build query
     const query = supabase
       .from('civic_actions')
-      .select('*')
+      .select(CIVIC_ACTION_SELECT_COLUMNS)
       .eq('id', id)
       .single();
 
@@ -216,7 +217,7 @@ export const PATCH = withErrorHandling(async (
       .from('civic_actions')
       .update(updateData)
       .eq('id', id)
-      .select()
+      .select(CIVIC_ACTION_SELECT_COLUMNS)
       .single();
 
     if (updateError) {

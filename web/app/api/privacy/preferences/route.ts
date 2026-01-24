@@ -1,7 +1,8 @@
 import { getSupabaseServerClient } from '@/utils/supabase/server'
 
 import { withErrorHandling, successResponse, authError, errorResponse, validationError } from '@/lib/api';
-import { devLog } from '@/lib/utils/logger'
+import { USER_PRIVACY_PREFERENCES_SELECT_COLUMNS } from '@/lib/api/response-builders';
+import { devLog } from '@/lib/utils/logger';
 
 import type { NextRequest } from 'next/server'
 
@@ -54,9 +55,9 @@ export const GET = withErrorHandling(async () => {
     // Get privacy preferences
     const { data: preferences, error: preferencesError } = await (supabase as any)
       .from('user_privacy_preferences')
-      .select('*')
+      .select(USER_PRIVACY_PREFERENCES_SELECT_COLUMNS)
       .eq('user_id', String(user.id))
-      .single()
+      .single();
 
   if (preferencesError && preferencesError.code !== 'PGRST116') {
     devLog('Error fetching privacy preferences:', preferencesError)
@@ -159,7 +160,7 @@ export const POST = withErrorHandling(async (request: NextRequest) => {
   const { data: updatedPreferences, error: upsertError } = await (supabase as any)
     .from('user_privacy_preferences')
     .upsert(preferencePayload, { onConflict: 'user_id' })
-    .select('*')
+    .select(USER_PRIVACY_PREFERENCES_SELECT_COLUMNS)
     .eq('user_id', String(user.id))
     .single();
 

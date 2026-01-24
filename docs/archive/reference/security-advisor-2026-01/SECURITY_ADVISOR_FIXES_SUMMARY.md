@@ -91,7 +91,7 @@
 - `performance_metrics`, `system_health`
 - `rate_limits`, `device_flow`
 
-**Note:** Most of these are intentional for a public civic engagement platform. See `docs/SECURITY_ADVISOR_WARNINGS_ANALYSIS.md` for complete categorization and recommendations.
+**Note:** Most of these are intentional for a public civic engagement platform. See `docs/archive/2026-01-24-docs-consolidation/SECURITY_ADVISOR_WARNINGS_ANALYSIS.md` for complete categorization and recommendations.
 
 ## Remaining Actions
 
@@ -111,7 +111,7 @@
 
 **Recommendation:** 
 - Many are intentional for public platform functionality
-- Review `docs/SECURITY_ADVISOR_WARNINGS_ANALYSIS.md` for categorization
+- Review `docs/archive/2026-01-24-docs-consolidation/SECURITY_ADVISOR_WARNINGS_ANALYSIS.md` for categorization
 - Consider owner-based restrictions for sensitive tables (user_profiles, votes, polls)
 - Document intentional permissive policies
 
@@ -133,9 +133,9 @@
 - ✅ `supabase/migrations/20260110140105_fix_security_definer_view_and_verify.sql`
 
 ### Documentation
-- ✅ `docs/SECURITY_ADVISOR_WARNINGS_ANALYSIS.md` - Complete analysis of all 61 warnings
-- ✅ `docs/SECURITY_ADVISOR_REVIEW_GUIDE.md` - Review process guide
-- ✅ `docs/SECURITY_ADVISOR_VERIFICATION_QUERIES.sql` - Verification queries
+- ✅ `docs/archive/2026-01-24-docs-consolidation/SECURITY_ADVISOR_WARNINGS_ANALYSIS.md` - Complete analysis of all 61 warnings
+- ✅ `docs/archive/2026-01-24-docs-consolidation/SECURITY_ADVISOR_REVIEW_GUIDE.md` - Review process guide
+- ✅ `docs/archive/2026-01-24-docs-consolidation/SECURITY_ADVISOR_VERIFICATION_QUERIES.sql` - Verification queries
 - ✅ `docs/SECURITY_ADVISOR_VERIFICATION_RESULTS.md` - Verification checklist
 - ✅ `docs/SECURITY_ADVISOR_VERIFICATION_COMPLETE.md` - Verification results
 - ✅ `docs/SECURITY_ADVISOR_MIGRATION_FIXES.md` - Migration documentation
@@ -166,5 +166,5 @@
 - ~38 RLS policy warnings (mostly intentional for public platform)
 - 1 Auth configuration warning (enable in dashboard)
 
-The Security Advisor review is **complete for critical fixes**. Remaining warnings are mostly intentional design decisions for a public civic engagement platform. See `docs/SECURITY_ADVISOR_WARNINGS_ANALYSIS.md` for detailed categorization and recommendations.
+The Security Advisor review is **complete for critical fixes**. Remaining warnings are mostly intentional design decisions for a public civic engagement platform. See `docs/archive/2026-01-24-docs-consolidation/SECURITY_ADVISOR_WARNINGS_ANALYSIS.md` for detailed categorization and recommendations.
 

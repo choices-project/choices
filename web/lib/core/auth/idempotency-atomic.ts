@@ -17,6 +17,10 @@
 
 import { getSupabaseServerClient } from '@/utils/supabase/server'
 
+import {
+  IDEMPOTENCY_KEYS_SELECT_COLUMNS,
+  IDEMPOTENCY_MONITOR_SELECT_COLUMNS,
+} from '@/lib/api/response-builders'
 import { logger } from '@/lib/utils/logger'
 
 import type { SupabaseClient } from '@supabase/supabase-js'
@@ -107,7 +111,7 @@ export async function withAtomicIdempotency<T>(
         expires_at: expiresAt,
         data: null // Will be updated when operation completes
       })
-      .select()
+      .select('key')
       .single()
 
     // Case 1: Insert succeeded - we got the lock!
@@ -238,7 +242,7 @@ async function waitForCompletion<T>(
     // Check current status
     const { data, error } = await supabaseClient
       .from('idempotency_keys')
-      .select('*')
+      .select(IDEMPOTENCY_KEYS_SELECT_COLUMNS)
       .eq('key', key)
       .single()
 
@@ -349,7 +353,7 @@ export async function getIdempotencyStats(): Promise<{
 
     const { data, error } = await supabaseClient
       .from('idempotency_monitor')
-      .select('*')
+      .select(IDEMPOTENCY_MONITOR_SELECT_COLUMNS)
 
     if (error || !data) {
       logger.error('Failed to get idempotency stats', error)

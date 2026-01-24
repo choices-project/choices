@@ -964,6 +964,11 @@
         "subtitle": "Choose how you'd like to authenticate. You can always change this later.",
         "continueWith": "Continue with {method}"
       },
+      "alreadySignedIn": {
+        "subtitle": "You're signed in with {label}.",
+        "continueHint": "Your account is secure. You can add a passkey later from Profile → Set up biometric login.",
+        "continue": "Continue"
+      },
       "setup": {
         "title": "Set Up Authentication",
         "subtitle": "Complete your authentication setup"

@@ -472,10 +472,12 @@ const AuthStep: React.FC<{
   onSkip: () => void;
   error?: string | null;
   isLoading?: boolean;
-}> = ({ onNext, onBack, onSkip, error, isLoading }) => {
+  user?: { email?: string | null; app_metadata?: { provider?: string } } | null;
+}> = ({ onNext, onBack, onSkip, error, isLoading, user }) => {
   const { t } = useI18n();
   const [authMethod, setAuthMethod] = useState<'email' | 'passkey' | 'google' | null>(null);
   const [success, setSuccess] = useState(false);
+  const isAlreadySignedIn = Boolean(user);
 
   const handleAuthMethodSelect = (method: 'email' | 'passkey' | 'google') => {
     setAuthMethod(method);
@@ -514,6 +516,46 @@ const AuthStep: React.FC<{
       logger.error('Failed to redirect to Google authentication');
     }
   };
+
+  // Already signed in (e.g. OAuth, then "Finish onboarding" from profile): skip auth choice, continue
+  if (isAlreadySignedIn) {
+    const provider = user?.app_metadata?.provider;
+    const label = provider === 'google' ? 'Google' : provider === 'github' ? 'GitHub' : user?.email ?? 'your account';
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 flex items-center justify-center">
+        <div className="max-w-2xl mx-auto p-8">
+          <div className="text-center mb-8">
+            <h2 className="text-4xl font-bold text-gray-900 mb-4">
+              {t('onboarding.auth.overview.title')}
+            </h2>
+            <p className="text-xl text-gray-600">
+              {t('onboarding.auth.alreadySignedIn.subtitle', { label })}
+            </p>
+          </div>
+          <div className="bg-white rounded-lg p-6 shadow-sm mb-8">
+            <div className="flex items-center justify-center gap-3 mb-6">
+              <span className="text-4xl">✅</span>
+              <p className="text-lg text-gray-700">
+                {t('onboarding.auth.alreadySignedIn.continueHint')}
+              </p>
+            </div>
+            <button
+              onClick={onNext}
+              data-testid="auth-already-signed-in-continue"
+              className="w-full py-4 px-6 bg-blue-600 text-white rounded-lg font-semibold hover:bg-blue-700 transition-colors"
+            >
+              {t('onboarding.auth.alreadySignedIn.continue')}
+            </button>
+          </div>
+          <div className="flex justify-between items-center">
+            <button onClick={onBack} className="text-gray-500 hover:text-gray-700 transition-colors">
+              {t('onboarding.auth.actions.back')}
+            </button>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   // If user has selected a method, show the appropriate interface
   if (authMethod === 'passkey') {
@@ -1313,7 +1355,14 @@ const BalancedOnboardingFlow: React.FC = () => {
         />
       )}
       {currentStep === 3 && (
-        <AuthStep onNext={handleNext} onBack={handleBack} onSkip={handleNext} error={error} isLoading={loading} />
+        <AuthStep
+          onNext={handleNext}
+          onBack={handleBack}
+          onSkip={handleNext}
+          error={error}
+          isLoading={loading}
+          user={user}
+        />
       )}
       {currentStep === 4 && (
         <ProfileStep

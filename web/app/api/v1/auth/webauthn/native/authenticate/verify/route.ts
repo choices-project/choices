@@ -88,6 +88,12 @@ export const POST = withErrorHandling(async (req: NextRequest) => {
       return forbiddenError('Unauthorized origin');
     }
 
+    const expectedOrigin = currentOrigin || allowedOrigins[0];
+    if (!expectedOrigin) {
+      logger.warn('WebAuthn auth verify: no origin available', { challengeId });
+      return forbiddenError('Origin required for verification');
+    }
+
     // Lookup credential
     const { data: creds, error: credsErr } = await supabase
       .from('webauthn_credentials')
@@ -108,7 +114,7 @@ export const POST = withErrorHandling(async (req: NextRequest) => {
     const { verified, authenticationInfo } = await verifyAuthenticationResponse({
       response: body,
       expectedChallenge: chal.challenge,
-      expectedOrigin: allowedOrigins,
+      expectedOrigin,
       expectedRPID: rpID,
       credential: {
         id: cred.credential_id,

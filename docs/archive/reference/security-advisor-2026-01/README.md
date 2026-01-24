@@ -21,12 +21,12 @@ This directory contains verification, summary, and migration documentation from 
 - `SECURITY_ADVISOR_REMAINING_WARNINGS.md` - Review of remaining warnings (superseded by comprehensive analysis)
 - `SECURITY_WARNINGS_ANALYSIS.md` - Initial warnings analysis (superseded by SECURITY_ADVISOR_WARNINGS_ANALYSIS.md)
 
-## Current Reference Files
+## Reference Files (archived 2026-01-24)
 
-The following files remain in `/docs` as current references:
-- `SECURITY_ADVISOR_WARNINGS_ANALYSIS.md` - Comprehensive analysis of all 61 warnings (current reference)
-- `SECURITY_ADVISOR_REVIEW_GUIDE.md` - Guide for reviewing Security Advisor warnings (current reference)
-- `SECURITY_ADVISOR_VERIFICATION_QUERIES.sql` - SQL queries for verification (useful reference)
+The following files were moved to `docs/archive/2026-01-24-docs-consolidation/`:
+- `SECURITY_ADVISOR_WARNINGS_ANALYSIS.md` - Comprehensive analysis of all 61 warnings
+- `SECURITY_ADVISOR_REVIEW_GUIDE.md` - Guide for reviewing Security Advisor warnings
+- `SECURITY_ADVISOR_VERIFICATION_QUERIES.sql` - SQL queries for verification
 
 ## Status
 
@@ -35,5 +35,5 @@ The following files remain in `/docs` as current references:
 - Security Definer View error: Fixed and verified
 - ~38 RLS policy warnings remain (mostly intentional for public platform)
 
-See `docs/SECURITY_ADVISOR_WARNINGS_ANALYSIS.md` for the comprehensive current analysis.
+See `docs/archive/2026-01-24-docs-consolidation/SECURITY_ADVISOR_WARNINGS_ANALYSIS.md` for the analysis.
 

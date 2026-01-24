@@ -83,12 +83,32 @@ export const POST = withErrorHandling(async (req: NextRequest) => {
       return forbiddenError('Unauthorized origin');
     }
 
-    const { verified, registrationInfo } = await verifyRegistrationResponse({
-      response: body,
-      expectedChallenge: chal.challenge,
-      expectedOrigin: allowedOrigins,
-      expectedRPID: rpID,
-    });
+    const expectedOrigin = currentOrigin || allowedOrigins[0];
+    if (!expectedOrigin) {
+      logger.warn('WebAuthn verify: no origin available', { userId: user.id });
+      return forbiddenError('Origin required for verification');
+    }
+
+    let verified: boolean;
+    let registrationInfo: Awaited<ReturnType<typeof verifyRegistrationResponse>>['registrationInfo'];
+    try {
+      const result = await verifyRegistrationResponse({
+        response: body,
+        expectedChallenge: chal.challenge,
+        expectedOrigin,
+        expectedRPID: rpID,
+      });
+      verified = result.verified;
+      registrationInfo = result.registrationInfo;
+    } catch (err) {
+      logger.warn('WebAuthn verifyRegistrationResponse threw', {
+        userId: user.id,
+        error: err instanceof Error ? err.message : String(err),
+      });
+      return validationError({
+        verification: 'Registration verification failed. Please try again.',
+      });
+    }
 
     if (!verified || !registrationInfo) {
       return validationError({
@@ -119,7 +139,18 @@ export const POST = withErrorHandling(async (req: NextRequest) => {
     );
 
     if (credErr) {
-      logger.error('Failed to store credential', { error: credErr });
+      logger.error('Failed to store credential', {
+        error: credErr,
+        code: credErr.code,
+        message: credErr.message,
+        details: credErr.details,
+        userId: user.id,
+      });
+      if (credErr.code === '23505') {
+        return validationError({
+          credential: 'This passkey is already registered. Try signing in with it instead.',
+        });
+      }
       return errorResponse('Failed to store credential', 500, undefined, 'WEBAUTHN_CREDENTIAL_STORE_FAILED');
     }
 

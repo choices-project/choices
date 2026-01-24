@@ -1,6 +1,7 @@
 import { getSupabaseServerClient } from '@/utils/supabase/server';
 
 import { withErrorHandling, successResponse, errorResponse, validationError } from '@/lib/api';
+import { HASHTAG_FLAG_SELECT_COLUMNS } from '@/lib/api/response-builders';
 import { logger } from '@/lib/utils/logger';
 
 import type { NextRequest } from 'next/server';
@@ -23,7 +24,7 @@ export const GET = withErrorHandling(async (request: NextRequest) => {
     if (action === 'moderation-queue') {
       const { data: flags, error } = await supabase
         .from('hashtag_flags')
-        .select('*')
+        .select(HASHTAG_FLAG_SELECT_COLUMNS)
         .eq('status', 'pending')
         .order('created_at', { ascending: false });
 
@@ -76,13 +77,13 @@ export const POST = withErrorHandling(async (request: NextRequest) => {
       const { data, error } = await supabase
         .from('hashtag_flags')
         .insert([{
-          hashtag_id: body.hashtag, // Changed from 'hashtag' to 'hashtag_id'
-          flag_type: 'inappropriate', // Added required field
+          hashtag_id: body.hashtag,
+          flag_type: 'inappropriate',
           reason: body.reason,
-          user_id: body.reporter_id, // Changed from 'reporter_id' to 'user_id'
+          user_id: body.reporter_id,
           status: 'pending'
         }])
-        .select();
+        .select(HASHTAG_FLAG_SELECT_COLUMNS);
 
       if (error) {
         logger.error('Failed to create hashtag flag', error instanceof Error ? error : new Error(String(error)));
@@ -101,7 +102,7 @@ export const POST = withErrorHandling(async (request: NextRequest) => {
         .from('hashtag_flags')
         .update({ status: 'approved' })
         .eq('id', flagId)
-        .select();
+        .select(HASHTAG_FLAG_SELECT_COLUMNS);
 
       if (error) {
         logger.error('Failed to approve hashtag flag', error instanceof Error ? error : new Error(String(error)));
@@ -120,7 +121,7 @@ export const POST = withErrorHandling(async (request: NextRequest) => {
         .from('hashtag_flags')
         .update({ status: 'rejected' })
         .eq('id', flagId)
-        .select();
+        .select(HASHTAG_FLAG_SELECT_COLUMNS);
 
       if (error) {
         logger.error('Failed to reject hashtag flag', error instanceof Error ? error : new Error(String(error)));

@@ -21,6 +21,7 @@ This index lists the canonical documentation set. Historical fix summaries, comp
 | Troubleshooting | [`TROUBLESHOOTING.md`](TROUBLESHOOTING.md) - Common issues |
 | Canonical utilities guide | [`UTILS_GUIDE.md`](UTILS_GUIDE.md) - Utility functions |
 | Security & privacy references | [`SECURITY.md`](SECURITY.md), [`PRIVACY_POLICY.md`](PRIVACY_POLICY.md) |
+| Agent setup (Cursor skills, MCP) | [`AGENT_SETUP.md`](AGENT_SETUP.md) |
 
 ---
 
@@ -59,6 +60,7 @@ Note: `docs/ROADMAP.md` is archived-in-place to preserve inbound links and point
 
 ```
 docs/archive/
+├─ 2026-01-24-docs-consolidation/  # Agent implementation, Security Advisor refs, completion reports (Jan 2026)
 ├─ release-notes/          # Changelog, API change logs, one-off status memos
 ├─ reference/              # Legacy guides, completed work summaries, historical docs
 │  ├─ fixes/               # Historical fix summaries (2025)

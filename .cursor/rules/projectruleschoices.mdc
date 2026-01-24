@@ -1,0 +1,27 @@
+# Choices project rules
+
+When working in this codebase, use the following guidance so agents apply consistent patterns.
+
+## React / Next.js (UI, hooks, API routes)
+
+- Use the **React Best Practices** skill: `.agents/skills/vercel-react-best-practices`
+- Avoid async waterfalls; minimize client bundle; optimize data fetching and re-renders
+- See [performance playbook](docs/guides/performance-utilities-playbook.md) for instrumentation and metrics
+
+## Postgres / Supabase (SQL, migrations, RLS)
+
+- Use the **Postgres Best Practices** skill: `.agents/skills/supabase-postgres-best-practices`
+- See [INDEX_OPTIMIZATION_GUIDE](docs/INDEX_OPTIMIZATION_GUIDE.md) for index review and Supabase Index Advisor
+- See [RLS_VERIFICATION_GUIDE](../../RLS_VERIFICATION_GUIDE.md) for RLS policy verification
+
+## Database inspection and ad-hoc queries
+
+- Use **Supabase MCP** tools for schema discovery, ad-hoc queries, and migration reasoning
+- Prefer MCP over hand-written SQL when exploring the database or validating schema
+- See [RLS_API_ALIGNMENT](docs/RLS_API_ALIGNMENT.md) for API ↔ RLS setup and client usage (admin vs server)
+
+## Application audit and deployment
+
+- Use **Vercel MCP** (when configured) for deployment context, project/deployment info, logs, and Vercel docs during Next.js/Vercel best-practices audit
+- **Do not use `deploy_to_vercel`.** Deployments are triggered by pushes to `main` (CI/CD). Keep the `deploy_to_vercel` tool disabled in Cursor Settings → Tools & MCP → Vercel.
+- See [AGENT_SETUP](docs/AGENT_SETUP.md) for Supabase + Vercel MCP config

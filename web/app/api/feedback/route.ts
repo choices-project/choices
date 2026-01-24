@@ -10,6 +10,7 @@ import {
   rateLimitError,
   parseBody,
 } from '@/lib/api';
+import { FEEDBACK_SELECT_COLUMNS } from '@/lib/api/response-builders';
 import { stripUndefinedDeep } from '@/lib/util/clean';
 import { devLog, logger } from '@/lib/utils/logger';
 
@@ -186,7 +187,7 @@ export const POST = withErrorHandling(async (request: NextRequest) => {
     const { data: cspResult, error: cspError } = await supabaseClient
       .from('feedback')
       .insert(stripUndefinedDeep(cspData) as any)
-      .select()
+      .select(FEEDBACK_SELECT_COLUMNS)
       .single();
 
     if (cspError) {
@@ -263,7 +264,7 @@ export const POST = withErrorHandling(async (request: NextRequest) => {
       : undefined,
   });
 
-  const { data, error } = await supabaseClient.from('feedback').insert([stripUndefinedDeep(feedbackData)]).select();
+  const { data, error } = await supabaseClient.from('feedback').insert([stripUndefinedDeep(feedbackData)]).select(FEEDBACK_SELECT_COLUMNS);
 
   if (error) {
     devLog('Database error inserting feedback:', { error });
@@ -303,7 +304,7 @@ export const POST = withErrorHandling(async (request: NextRequest) => {
         const { data: adminData, error: adminError } = await adminClient
           .from('feedback')
           .insert(stripUndefinedDeep(feedbackData))
-          .select()
+          .select(FEEDBACK_SELECT_COLUMNS)
           .single();
 
         if (adminError) {

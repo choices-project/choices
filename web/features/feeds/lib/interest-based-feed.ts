@@ -86,29 +86,29 @@ export class InterestBasedPollFeed {
     userLocation: string,
     userDemographics: any
   ): Promise<PersonalizedPollFeed> {
-    
+
     try {
       const supabase = await getSupabaseServerClient();
       this.supabase = supabase;
-      
+
       // 1. Get user's interest tags
       const userTags = await this.getUserInterestTags(userId);
-      
+
       // 2. Find polls matching user interests
       const matchingPolls = await this.findMatchingPolls(userTags, userLocation);
-      
+
       // 3. Apply demographic filtering
       const demographicFiltered = this.applyDemographicFiltering(
-        matchingPolls, 
+        matchingPolls,
         userDemographics
       );
-      
+
       // 4. Rank by relevance and recency
       const rankedPolls = this.rankPollsByRelevance(
         demographicFiltered,
         userInterests
       );
-      
+
       return {
         userId,
         generatedAt: new Date().toISOString(),
@@ -149,13 +149,13 @@ export class InterestBasedPollFeed {
     try {
       // Enhanced location-based filtering with civic district integration
       logger.debug('Location-based filtering enabled', { userLocation });
-      
+
       // Parse location data for district-based filtering
       const locationData = this.parseLocationData(userLocation);
       if (locationData) {
         return await this.getDistrictBasedPolls(userTags, locationData);
       }
-      
+
       if (userTags.length === 0) {
         // Return trending polls if no interests
         return await this.getTrendingPolls();
@@ -201,7 +201,7 @@ export class InterestBasedPollFeed {
   private parseLocationData(locationData: string): { state?: string; district?: string; county?: string } | null {
     try {
       if (!locationData) return null;
-      
+
       const parsed = JSON.parse(locationData);
       return {
         state: parsed.state,
@@ -215,7 +215,7 @@ export class InterestBasedPollFeed {
 
   // Get district-based polls for civic engagement
   private async getDistrictBasedPolls(
-    userTags: string[], 
+    userTags: string[],
     locationData: { state?: string; district?: string; county?: string }
   ): Promise<PollRecommendation[]> {
     try {
@@ -233,7 +233,7 @@ export class InterestBasedPollFeed {
       if (locationData.state) {
         query = query.or(`jurisdiction.eq.${locationData.state},jurisdiction.is.null`);
       }
-      
+
       if (locationData.district) {
         query = query.or(`district.eq.${locationData.district},district.is.null`);
       }
@@ -275,34 +275,34 @@ export class InterestBasedPollFeed {
   // Calculate civic relevance score for district-based polls
   private calculateCivicRelevance(poll: any, locationData: { state?: string; district?: string; county?: string }): number {
     let score = 0;
-    
+
     // Higher score for polls in user's jurisdiction
     if (locationData.state && poll.jurisdiction === locationData.state) {
       score += 0.4;
     }
-    
+
     // Highest score for polls in user's specific district
     if (locationData.district && poll.district === locationData.district) {
       score += 0.6;
     }
-    
+
     // Bonus for civic/political categories
     if (poll.category && ['civics', 'politics', 'government', 'elections'].includes(poll.category.toLowerCase())) {
       score += 0.3;
     }
-    
+
     return Math.min(score, 1.0);
   }
 
   // Calculate district-aware relevance score
   private calculateDistrictRelevanceScore(
-    poll: any, 
-    userTags: string[], 
+    poll: any,
+    userTags: string[],
     locationData: { state?: string; district?: string; county?: string }
   ): number {
     const baseScore = this.calculateRelevanceScore(poll.tags, userTags);
     const civicScore = this.calculateCivicRelevance(poll, locationData);
-    
+
     // Weight civic relevance higher for district-based feeds
     return (baseScore * 0.6) + (civicScore * 0.4);
   }
@@ -315,7 +315,7 @@ export class InterestBasedPollFeed {
     // Demographic filtering implementation
     logger.debug('Demographic filtering enabled', { userDemographics });
     // Demographic filtering is applied through relevance scoring
-    
+
     // For MVP, return all polls
     return polls;
   }
@@ -332,7 +332,7 @@ export class InterestBasedPollFeed {
       // Get representatives for user's district
       const { data: representatives, error: repError } = await this.supabase
         .from('representatives_core')
-        .select('*')
+        .select('id, name, district, state, office, party, is_current')
         .or(`district.eq.${parsedLocation.district},state.eq.${parsedLocation.state}`)
         .eq('is_current', true)
         .limit(5);
@@ -345,7 +345,7 @@ export class InterestBasedPollFeed {
       // Get civic-related polls for the district
       const { data: civicPolls, error: pollsError } = await this.supabase
         .from('polls')
-        .select('*')
+        .select('id, title, description, category, status, privacy_level, created_at, jurisdiction, district')
         .eq('status', 'active')
         .eq('privacy_level', 'public')
         .or(`jurisdiction.eq.${parsedLocation.state},district.eq.${parsedLocation.district}`)
@@ -403,7 +403,7 @@ export class InterestBasedPollFeed {
   // Calculate relevance score based on tag matches
   private calculateRelevanceScore(pollTags: string[], userInterests: string[]): number {
     if (pollTags?.length === 0) return 0;
-    
+
     const matches = pollTags.filter(tag => userInterests.includes(tag)).length;
     return matches / pollTags.length;
   }
@@ -423,9 +423,9 @@ export class InterestBasedPollFeed {
     // Trending analytics implementation (always enabled through hashtag system)
     logger.debug('Trending analytics enabled', { userTags });
     // Trending analytics are calculated through interest match counting
-    
+
     const interestCounts: { [key: string]: number } = {};
-    
+
     polls.forEach(poll => {
       poll.interestMatches.forEach(interest => {
         interestCounts[interest] = (interestCounts[interest] ?? 0) + 1;
@@ -538,18 +538,18 @@ export async function GET(request: NextRequest) {
     const { searchParams } = new URL(request.url);
     const userId = searchParams.get('userId');
     const includeTrending = searchParams.get('includeTrending') === 'true';
-    
+
     if (!userId) {
       return NextResponse.json({ error: 'User ID required' }, { status: 400 });
     }
 
     const feedService = new InterestBasedPollFeed();
-    
+
     // Get user profile data
     const supabase = await getSupabaseServerClient();
     const { data: userProfile } = await supabase
       .from('user_profiles')
-      .select('*')
+      .select('user_id, demographics')
       .eq('user_id', userId)
       .single();
 
@@ -569,7 +569,7 @@ export async function GET(request: NextRequest) {
           .from('user_hashtags')
           .select('hashtag_id')
           .eq('user_id', userId);
-        
+
         followedHashtagIds = userHashtags?.map(uh => uh.hashtag_id) ?? [];
       }
     } catch (error) {
@@ -583,7 +583,7 @@ export async function GET(request: NextRequest) {
         // Generate hashtag-based poll recommendations
         const locationData = (userProfile.demographics as any)?.location_data as LocationData | null;
         const demographics = userProfile.demographics as Demographics | null;
-        
+
         hashtagPollsFeed = await hashtagPollsIntegrationService.generateHashtagPollFeed(
           userId,
           {
@@ -613,7 +613,7 @@ export async function GET(request: NextRequest) {
         logger.warn('Failed to fetch hashtag names:', { error });
       }
     }
-    
+
     const personalizedFeed = await feedService.generatePersonalizedFeed(
       userId,
       followedHashtagNames,
@@ -661,13 +661,13 @@ export async function GET(request: NextRequest) {
 export async function POST(request: NextRequest) {
   try {
     const { hashtag, userId, action } = await request.json();
-    
+
     if (!hashtag || !userId || !action) {
       return NextResponse.json({ error: 'Missing required fields' }, { status: 400 });
     }
 
     const supabase = await getSupabaseServerClient();
-    
+
     switch (action) {
       case 'follow':
         await supabase.from('user_hashtags').upsert({
@@ -677,14 +677,14 @@ export async function POST(request: NextRequest) {
           followed_at: new Date().toISOString()
         });
         break;
-        
+
       case 'unfollow':
         await supabase.from('user_hashtags')
           .delete()
           .eq('user_id', userId)
           .eq('hashtag_id', hashtag);
         break;
-        
+
       case 'create':
         await supabase.from('user_hashtags').insert({
           user_id: userId,
@@ -693,7 +693,7 @@ export async function POST(request: NextRequest) {
           followed_at: new Date().toISOString()
         });
         break;
-        
+
       default:
         return NextResponse.json({ error: 'Invalid action' }, { status: 400 });
     }

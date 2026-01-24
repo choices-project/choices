@@ -1,6 +1,6 @@
-
 import { withErrorHandling, successResponse } from '@/lib/api';
-import { logger } from '@/lib/utils/logger'
+import { SITE_MESSAGE_SELECT_COLUMNS } from '@/lib/api/response-builders';
+import { logger } from '@/lib/utils/logger';
 
 import type { NextRequest} from 'next/server';
 
@@ -56,7 +56,7 @@ async function getActiveSiteMessages(includeExpired: boolean = false) {
     // Build query with correct column names
     let query = supabase
       .from('site_messages')
-      .select('*')
+      .select(SITE_MESSAGE_SELECT_COLUMNS)
       .eq('is_active', true);
 
     // Filter by date range if not including expired

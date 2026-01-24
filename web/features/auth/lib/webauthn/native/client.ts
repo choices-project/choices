@@ -312,7 +312,7 @@ export async function beginRegister(
       },
     };
 
-    const credential = await startRegistration(registrationOptions);
+    const credential = await startRegistration({ optionsJSON: registrationOptions });
 
     const verifyPayload = await fetcher('/api/v1/auth/webauthn/native/register/verify', {
       method: 'POST',
@@ -370,6 +370,7 @@ export async function beginAuthenticate(
       headers: {
         'Content-Type': 'application/json',
       },
+      credentials: 'include',
       body: JSON.stringify({
         userVerification: options?.userVerification,
         authenticatorAttachment: options?.authenticatorAttachment,
@@ -387,13 +388,14 @@ export async function beginAuthenticate(
       userVerification: options?.userVerification ?? opts.userVerification,
     };
 
-    const assertion = await startAuthentication(authOptions);
+    const assertion = await startAuthentication({ optionsJSON: authOptions });
 
     const verifyPayload = await fetcher('/api/v1/auth/webauthn/native/authenticate/verify', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
       },
+      credentials: 'include',
       body: JSON.stringify({ ...assertion, challengeId }),
     }).then(r => r.json());
 

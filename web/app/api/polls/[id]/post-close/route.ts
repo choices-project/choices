@@ -1,9 +1,9 @@
 /**
  * Poll Post-Close API Route
- * 
+ *
  * Handles enabling/disabling post-close voting for a poll.
  * Only the poll creator or admin can modify post-close settings.
- * 
+ *
  * Created: September 15, 2025
  * Updated: September 15, 2025
  */
@@ -31,31 +31,26 @@ export const POST = withErrorHandling(async (
   }
 
     const supabase = await getSupabaseServerClient();
-    
+
     if (!supabase) {
       throw new Error('Supabase client not available');
     }
 
-    // Check authentication
-    // Use Supabase native sessions
-    const { data: { session }, error: sessionError } = await supabase.auth.getSession();
-    
-    if (sessionError || !session?.user) {
-      return authError('Authentication required to modify post-close settings');
-    }
-    
-    const user = session.user;
-    if (!user) {
-      return authError('Authentication required to modify post-close settings');
-    }
+  const [sessionResult, pollResult] = await Promise.all([
+    supabase.auth.getSession(),
+    supabase.from('polls').select('id, title, status, created_by, allow_post_close, baseline_at').eq('id', pollId).single(),
+  ]);
 
-    // Get poll details
-    const { data: poll, error: pollError } = await supabase
-      .from('polls')
-      .select('id, title, status, created_by, allow_post_close, baseline_at')
-      .eq('id', pollId)
-      .single();
+  const { data: { session }, error: sessionError } = sessionResult;
+  if (sessionError || !session?.user) {
+    return authError('Authentication required to modify post-close settings');
+  }
+  const user = session.user;
+  if (!user) {
+    return authError('Authentication required to modify post-close settings');
+  }
 
+  const { data: poll, error: pollError } = pollResult;
   if (pollError || !poll) {
     return notFoundError('Poll not found');
   }
@@ -117,17 +112,17 @@ export const DELETE = withErrorHandling(async (
   }
 
   const supabase = await getSupabaseServerClient();
-  
+
   if (!supabase) {
     return errorResponse('Supabase client not available', 500);
   }
 
   const { data: { session }, error: sessionError } = await supabase.auth.getSession();
-  
+
   if (sessionError || !session?.user) {
     return authError('Authentication required to modify post-close settings');
   }
-  
+
   const user = session.user;
   if (!user) {
     return authError('Authentication required to modify post-close settings');

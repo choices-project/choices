@@ -140,7 +140,7 @@ FROM public.voter_registration_resources_view;
 - Authenticated user tables (user_profiles, analytics, etc.) - intentional for platform functionality
 - System/logging tables (cache_performance_log, etc.) - intentional for system operations
 
-**See:** `docs/SECURITY_ADVISOR_WARNINGS_ANALYSIS.md` for complete categorization
+**See:** `docs/archive/2026-01-24-docs-consolidation/SECURITY_ADVISOR_WARNINGS_ANALYSIS.md` for complete categorization
 
 ### ✅ 5. Function Execution Test
 
@@ -213,7 +213,7 @@ Many RLS policy "always true" warnings are intentional for a public civic engage
 
 ## Verification Queries File
 
-See `docs/SECURITY_ADVISOR_VERIFICATION_QUERIES.sql` for comprehensive verification queries you can run in Supabase SQL Editor.
+See `docs/archive/2026-01-24-docs-consolidation/SECURITY_ADVISOR_VERIFICATION_QUERIES.sql` for comprehensive verification queries you can run in Supabase SQL Editor.
 
 ## Next Steps
 

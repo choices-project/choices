@@ -389,7 +389,7 @@ function PollsPageContent() {
             polls.map((poll) => (
               <div
                 key={poll.id}
-                className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-6 hover:shadow-md transition-shadow"
+                className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-6 hover:shadow-md transition-shadow [content-visibility:auto] [contain-intrinsic-size:auto_200px]"
               >
                 <div className="flex items-start justify-between mb-4">
                   <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100 line-clamp-2">

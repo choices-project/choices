@@ -121,14 +121,7 @@ export const GET = withErrorHandling(async (request: NextRequest) => {
         pollsQuery = pollsQuery.order('trending_score', { ascending: false, nullsFirst: false });
     }
 
-    const { data: polls, error: pollsError} = await pollsQuery.limit(limit + offset);
-
-  if (pollsError) {
-    devLog('Error fetching polls:', { error: pollsError });
-    return errorResponse('Failed to fetch feed items', 500);
-  }
-
-    // Fetch civic actions (district-specific content)
+    // Build civic actions query (independent of polls)
     let civicActionsQuery = (supabaseClient as any)
       .from('civic_actions')
       .select(`
@@ -144,21 +137,29 @@ export const GET = withErrorHandling(async (request: NextRequest) => {
         required_signatures
       `)
       .in('status', ['active', 'open']);
-
-    // Apply district filter to civic actions
     if (district) {
-      // Show civic actions for user's district OR platform-wide actions (null district)
       civicActionsQuery = civicActionsQuery.or(`target_district.eq.${district},target_district.is.null`);
     }
-
-    const { data: civicActions, error: civicActionsError } = await civicActionsQuery
+    const civicActionsPromise = civicActionsQuery
       .order('created_at', { ascending: false })
-      .limit(limit + offset); // ensure pagination can include civic actions
+      .limit(limit + offset);
 
+    // Fetch polls and civic actions in parallel
+    const [pollsResult, civicActionsResult] = await Promise.all([
+      pollsQuery.limit(limit + offset),
+      civicActionsPromise,
+    ]);
+
+    const { data: polls, error: pollsError } = pollsResult;
+    if (pollsError) {
+      devLog('Error fetching polls:', { error: pollsError });
+      return errorResponse('Failed to fetch feed items', 500);
+    }
+
+    const { data: civicActions, error: civicActionsError } = civicActionsResult;
     if (civicActionsError) {
       logger.warn('Error fetching civic actions for feeds', { error: civicActionsError });
       devLog('Error fetching civic actions:', { error: civicActionsError });
-      // Don't fail the entire request if civic actions fail
     }
 
     // Transform polls into feed items

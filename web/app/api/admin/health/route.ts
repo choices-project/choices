@@ -15,7 +15,7 @@
  * Status: ✅ ACTIVE
  */
 
-import { getSupabaseServerClient } from '@/utils/supabase/server';
+import { getSupabaseAdminClient } from '@/utils/supabase/server';
 
 import { requireAdminOr401 } from '@/features/auth/lib/admin-auth';
 
@@ -63,16 +63,16 @@ export const GET = withErrorHandling(async (request: NextRequest) => {
   const { searchParams } = new URL(request.url);
   const type = searchParams.get('type') ?? 'metrics';
 
-  const supabase = await getSupabaseServerClient();
-  if (!supabase) {
+  const adminClient = await getSupabaseAdminClient();
+  if (!adminClient) {
     return errorResponse('Supabase client not available', 500);
   }
 
   const includeMetrics = type === 'metrics' || type === 'all';
   const includeStatus = type === 'status' || type === 'all';
 
-  const metrics = includeMetrics ? await buildMetricsSnapshot(supabase) : undefined;
-  const status = includeStatus ? await buildSystemStatus(supabase) : undefined;
+  const metrics = includeMetrics ? await buildMetricsSnapshot(adminClient) : undefined;
+  const status = includeStatus ? await buildSystemStatus(adminClient) : undefined;
 
   if (type === 'metrics') {
     return successResponse(

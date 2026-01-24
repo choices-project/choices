@@ -5,11 +5,13 @@
 
 ## Quick Verification
 
-Run `verify_rls_setup.sql` in your Supabase SQL Editor to check:
+Use **Supabase MCP** (`get_advisors` for security, schema tools) or run ad-hoc SQL in the Supabase SQL Editor to check:
 1. RLS is enabled on all voting-related tables
 2. All required policies exist
 3. Service role has proper access
 4. Table permissions are granted correctly
+
+*(Previously: `verify_rls_setup.sql`. That script was removed; use MCP or SQL Editor instead.)*
 
 ## Required RLS Policies
 
@@ -46,25 +48,31 @@ Run `verify_rls_setup.sql` in your Supabase SQL Editor to check:
 ### Option 1: Supabase SQL Editor (Recommended)
 1. Open your Supabase Dashboard
 2. Go to SQL Editor
-3. Copy and paste contents of `verify_rls_setup.sql`
-4. Run the query
-5. Review results - should show:
+3. Run ad-hoc verification queries (e.g. check `pg_policies`, RLS on voting tables)
+4. Review results - should show:
    - RLS enabled on all tables
    - All policies listed
    - Service role policies present
 
-### Option 2: Supabase CLI
+### Option 2: Supabase MCP
+
+Use **Supabase MCP** tools: schema discovery, `execute_sql` for ad-hoc verification, `apply_migration` for policy fixes. See [AGENT_SETUP](docs/AGENT_SETUP.md).
+
+### Option 3: Supabase CLI
+
 ```bash
 cd /Users/alaughingkitsune/src/Choices
-supabase db execute --file verify_rls_setup.sql
+supabase db execute --file <your-verification-query>.sql
 ```
 
 ## If Policies Are Missing
 
-Run `fix_rls_if_missing.sql` in Supabase SQL Editor. This will:
-- Enable RLS on all tables
-- Create all missing policies
-- Grant proper permissions to service_role
+Create a migration (or run SQL via MCP `apply_migration` / SQL Editor) to:
+- Enable RLS on the table
+- Create the missing policies
+- Grant proper permissions to `service_role`
+
+*(Previously: `fix_rls_if_missing.sql`. That script was removed; use migrations or MCP instead.)*
 
 ## Expected Results
 
@@ -107,8 +115,23 @@ If votes submit but don't appear:
 
 ## Migration Files
 
-The following migrations should be applied:
-- `20260120000001_add_poll_rankings_rls.sql` - RLS for poll_rankings
-- `20260120000002_add_vote_integrity_service_role_policy.sql` - Service role policies
+Relevant migrations:
+- `20260120000001_add_poll_rankings_rls.sql` — RLS for poll_rankings
+- `20260120000002_add_vote_integrity_service_role_policy.sql` — Service role policies
+- `20260124120000_add_polls_votes_indexes.sql` — Indexes for polls (created_at, status, created_by) and votes (poll_id, user_id)
 
-Run these migrations if policies are missing.
+Apply via Supabase MCP `apply_migration` or `supabase db push`.
+
+## WebAuthn (passkeys)
+
+See [WEBAUTHN_SUPABASE_AUDIT](docs/WEBAUTHN_SUPABASE_AUDIT.md) for RLS, indexes, config, and troubleshooting. Tables: `webauthn_challenges`, `webauthn_credentials`. Use Supabase MCP to verify policies and indexes.
+
+## Security Advisor — Deferred Items
+
+Supabase Database Advisors (Dashboard → Database → Advisors) may report **RLS policy always true** and similar warnings. The following are **intentionally deferred** or **accepted**:
+
+- **Service / system INSERT policies** (e.g. `advanced_analytics_usage`, `cache_performance_log`, `device_flow`, `feature_usage`, `performance_metrics`, `platform_analytics`, `query_performance_log`, `system_health`, `trust_tier_analytics_insert`): `WITH CHECK (true)` for service/system roles. These tables are written only by backend or admin; policies are scoped to those roles. No change planned.
+- **Authenticated full access** on other tables (e.g. `civic_action_metadata`, `hashtag_flags`, `representatives_core`, `poll_options`, `polls`, `votes`): Some are reference data or shared data. Tightening requires per-table access review and API alignment. Defer until explicit per-table audit.
+- **Auth: Leaked password protection disabled**: Configure in Supabase Dashboard → Authentication → Settings. Not a migration.
+
+**Addressed:** `user_profiles` — dropped "Authenticated full access"; own-data and service role policies remain. Admin dashboard and platform stats use admin client or `get_dashboard_data` / `get_platform_stats` RPCs.

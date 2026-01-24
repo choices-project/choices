@@ -110,11 +110,49 @@ export const POST = withErrorHandling(async (request: NextRequest, { params }: {
     return errorResponse('Database not available', 500);
   }
 
-  const user = await getUser().catch((error) => {
-    logger.warn('Vote submission authentication lookup failed', error);
-    return null;
-  });
+  const selectFieldsWithMetadata = `
+        id,
+        status,
+        privacy_level,
+        voting_method,
+        poll_settings,
+        metadata,
+        poll_options:poll_options (
+          id,
+          text,
+          option_text,
+          order_index
+        )
+      `;
+  const selectFieldsWithoutMetadata = `
+        id,
+        status,
+        privacy_level,
+        voting_method,
+        poll_settings,
+        poll_options:poll_options (
+          id,
+          text,
+          option_text,
+          order_index
+        )
+      `;
+  const loadPoll = (fields: string) =>
+    supabase
+      .from('polls')
+      .select(fields)
+      .eq('id', pollId)
+      .maybeSingle<PollRecord>();
 
+  const [userResult, initialPollResult] = await Promise.all([
+    getUser().catch((error) => {
+      logger.warn('Vote submission authentication lookup failed', error);
+      return null;
+    }),
+    loadPoll(selectFieldsWithMetadata),
+  ]);
+
+  const user = userResult;
   if (!user) {
     return authError('Authentication required to vote');
   }
@@ -170,43 +208,7 @@ export const POST = withErrorHandling(async (request: NextRequest, { params }: {
 
   const body: VoteRequestBody = validationResult.data;
 
-  const selectFieldsWithMetadata = `
-        id,
-        status,
-        privacy_level,
-        voting_method,
-        poll_settings,
-        metadata,
-        poll_options:poll_options (
-          id,
-          text,
-          option_text,
-          order_index
-        )
-      `;
-
-  const selectFieldsWithoutMetadata = `
-        id,
-        status,
-        privacy_level,
-        voting_method,
-        poll_settings,
-        poll_options:poll_options (
-          id,
-          text,
-          option_text,
-          order_index
-        )
-      `;
-
-  const loadPoll = async (fields: string) =>
-    supabase
-      .from('polls')
-      .select(fields)
-      .eq('id', pollId)
-      .maybeSingle<PollRecord>();
-
-  let { data: poll, error: pollError } = await loadPoll(selectFieldsWithMetadata);
+  let { data: poll, error: pollError } = initialPollResult;
 
   if (pollError?.code === '42703') {
     const fallback = await loadPoll(selectFieldsWithoutMetadata);
@@ -313,7 +315,7 @@ export const POST = withErrorHandling(async (request: NextRequest, { params }: {
       .delete()
       .eq('poll_id', pollId)
       .eq('user_id', user.id) // Explicit security check: user can only delete their own
-      .select(); // Select to get more info
+      .select('id')
 
     if (deleteExistingBallotError) {
       logger.error('Ranked vote delete failed', {
@@ -876,7 +878,7 @@ export const HEAD = withErrorHandling(async (_request: NextRequest, { params }: 
 
   const { error, count } = await supabase
     .from('votes')
-    .select('*', { head: true, count: 'exact' })
+    .select('id', { head: true, count: 'exact' })
     .eq('poll_id', pollId)
     .eq('user_id', user.id);
 

@@ -59,7 +59,9 @@ Indexes speed up queries by creating a sorted data structure that allows fast lo
 
 ### Step 2: Analyze Query Patterns
 
-Use the review script:
+**Option A — Supabase MCP (recommended):** Use `get_advisors` (performance) for index suggestions, then `apply_migration` to add indexes. No local script required.
+
+**Option B — Review script:** Run the index-recommendations script (queries `pg_stat_statements` via `exec_sql`):
 
 ```bash
 cd web
@@ -127,6 +129,15 @@ const migrationPath = createIndexMigration({
 4. Review and create
 
 **Note:** Dashboard-created indexes should still be added to migrations for version control.
+
+### Method 4: Via Supabase MCP
+
+If using [Supabase MCP](https://mcp.supabase.com):
+
+1. Call **`get_advisors`** (type: `performance`) for index-related recommendations.
+2. Use **`apply_migration`** to run `CREATE INDEX ...` DDL. Prefer migration files in `supabase/migrations/` for version control.
+
+See `scripts/README.md` for MCP setup.
 
 ---
 
@@ -368,7 +379,7 @@ Before applying an index recommendation:
 
 - [Supabase Index Advisor Docs](https://supabase.com/docs/guides/database/extensions/index-advisor)
 - [PostgreSQL Index Documentation](https://www.postgresql.org/docs/current/indexes.html)
-- [Query Performance Guide](./SUPABASE_AGENT_GUIDE.md#performance)
+- Postgres Best Practices skill (`.agents/skills/supabase-postgres-best-practices`) for query performance and index rules
 
 ---
 

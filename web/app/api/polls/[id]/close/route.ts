@@ -21,24 +21,22 @@ export const POST = withErrorHandling(async (
   }
 
   const supabase = await getSupabaseServerClient();
-  
+
   if (!supabase) {
     return errorResponse('Supabase client not available', 500);
   }
 
-  const { data: { user }, error: userError } = await supabase.auth.getUser();
-  
+  const [authResult, pollResult] = await Promise.all([
+    supabase.auth.getUser(),
+    supabase.from('polls').select('id, title, status, created_by, end_time, baseline_at, allow_post_close').eq('id', pollId).single(),
+  ]);
+
+  const { data: { user }, error: userError } = authResult;
   if (userError || !user) {
     return authError('Authentication required to close polls');
   }
 
-    // Get poll details
-            const { data: poll, error: pollError } = await supabase
-      .from('polls')
-      .select('id, title, status, created_by, end_time, baseline_at, allow_post_close')
-      .eq('id', pollId)
-      .single();
-
+  const { data: poll, error: pollError } = pollResult;
   if (pollError || !poll) {
     return notFoundError('Poll not found');
   }

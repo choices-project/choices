@@ -69,12 +69,12 @@ GRANT SELECT ON public.voter_registration_resources_view TO service_role, authen
 - ⚠️ **38 Warnings remain:** These are mostly intentional RLS policy "always true" warnings
 
 **Verification:**
-- Run verification queries from `docs/SECURITY_ADVISOR_VERIFICATION_QUERIES.sql`
+- Run verification queries from `docs/archive/2026-01-24-docs-consolidation/SECURITY_ADVISOR_VERIFICATION_QUERIES.sql`
 - Check Supabase Security Advisor dashboard - should show 0 errors, ~38 warnings
 
 ## Remaining Warnings (38)
 
-The remaining 38 warnings are categorized in `docs/SECURITY_ADVISOR_WARNINGS_ANALYSIS.md`:
+The remaining 38 warnings are categorized in `docs/archive/2026-01-24-docs-consolidation/SECURITY_ADVISOR_WARNINGS_ANALYSIS.md`:
 
 ### RLS Policy "Always True" Warnings (Most of the 38)
 
@@ -97,7 +97,7 @@ These warnings are **mostly intentional** for a public civic engagement platform
 - `performance_metrics`, `system_health`
 - `rate_limits`, `device_flow`
 
-**Note:** Many of these are intentional for platform functionality. See `docs/SECURITY_ADVISOR_WARNINGS_ANALYSIS.md` for detailed categorization and recommendations.
+**Note:** Many of these are intentional for platform functionality. See `docs/archive/2026-01-24-docs-consolidation/SECURITY_ADVISOR_WARNINGS_ANALYSIS.md` for detailed categorization and recommendations.
 
 ## Verification Steps
 
@@ -140,13 +140,13 @@ After running the migration, verify in Supabase Dashboard:
 ## Next Steps
 
 1. ✅ **Apply migration** `20260110140105_fix_security_definer_view_and_verify.sql`
-2. ⚠️ **Review RLS warnings** - Many are intentional, but some may need owner-based restrictions (see `docs/SECURITY_ADVISOR_WARNINGS_ANALYSIS.md`)
+2. ⚠️ **Review RLS warnings** - Many are intentional, but some may need owner-based restrictions (see `docs/archive/2026-01-24-docs-consolidation/SECURITY_ADVISOR_WARNINGS_ANALYSIS.md`)
 3. ⚠️ **Enable Auth feature** - Enable leaked password protection in Supabase Dashboard → Authentication → Password Settings
 
 ## Files Modified
 
 - ✅ `supabase/migrations/20260110140105_fix_security_definer_view_and_verify.sql` - Created
-- 📄 `docs/SECURITY_ADVISOR_WARNINGS_ANALYSIS.md` - Complete analysis of all warnings
+- 📄 `docs/archive/2026-01-24-docs-consolidation/SECURITY_ADVISOR_WARNINGS_ANALYSIS.md` - Complete analysis of all warnings
 - 📄 `docs/SECURITY_ADVISOR_REVIEW_GUIDE.md` - Review process guide
 
 ## Summary

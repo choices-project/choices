@@ -11,6 +11,10 @@ import {
   errorResponse,
   validationError,
 } from '@/lib/api';
+import {
+  CANDIDATE_EMAIL_CHALLENGE_SELECT_COLUMNS,
+  OFFICIAL_EMAIL_FAST_TRACK_SELECT_COLUMNS,
+} from '@/lib/api/response-builders';
 import { createRateLimiter, rateLimitMiddleware } from '@/lib/core/security/rate-limit';
 import { logger } from '@/lib/utils/logger';
 
@@ -153,7 +157,7 @@ export const POST = withErrorHandling(async (request: NextRequest) => {
   // Find the most recent challenge for this user
   const challengeQuery = supabase
     .from('candidate_email_challenges')
-    .select('*')
+    .select(CANDIDATE_EMAIL_CHALLENGE_SELECT_COLUMNS)
     .eq('user_id', user.id)
     .order('created_at', { ascending: false })
     .limit(1);
@@ -293,7 +297,7 @@ export const POST = withErrorHandling(async (request: NextRequest) => {
     // Check official_email_fast_track table
     const officialEmailBuilder = supabase
       .from('official_email_fast_track')
-      .select('*')
+      .select(OFFICIAL_EMAIL_FAST_TRACK_SELECT_COLUMNS)
       .or(`domain.eq.${emailDomain},email.eq.${challenge.email}`)
       .limit(1);
     if (officialEmailBuilder && typeof officialEmailBuilder.maybeSingle === 'function') {

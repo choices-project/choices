@@ -62,18 +62,6 @@ export const GET = withErrorHandling(async (
       return notFoundError('Poll not found');
     }
 
-    // Debug logging for created_by field (critical for close button visibility)
-    const { data: { user: currentUser } } = await supabaseClient.auth.getUser();
-    console.log('[Poll API] Debug created_by field', {
-      pollId,
-      pollCreatedBy: poll.created_by,
-      pollCreatedByType: typeof poll.created_by,
-      currentUserId: currentUser?.id,
-      currentUserIdType: typeof currentUser?.id,
-      idsMatch: currentUser?.id === poll.created_by,
-      isAuthenticated: !!currentUser,
-    });
-
     const options = Array.isArray(poll.poll_options)
       ? [...poll.poll_options]
           .sort((a, b) => (a.order_index ?? 0) - (b.order_index ?? 0))
@@ -108,14 +96,6 @@ export const GET = withErrorHandling(async (
         showResultsBeforeClose: Boolean(pollSettings?.show_results_before_close ?? false),
       },
     };
-
-    // Log the sanitized poll to verify createdBy is included
-    console.log('[Poll API] Returning poll with createdBy', {
-      pollId: sanitizedPoll.id,
-      createdBy: sanitizedPoll.createdBy,
-      createdByType: typeof sanitizedPoll.createdBy,
-      status: sanitizedPoll.status,
-    });
 
     return successResponse(sanitizedPoll);
 });

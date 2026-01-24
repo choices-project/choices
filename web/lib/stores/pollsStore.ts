@@ -723,8 +723,6 @@ export const createPollsActions = (
     });
 
   const loadPolls = async (options?: LoadPollsOptions) => {
-    // eslint-disable-next-line no-console
-    console.log('[POLLS STORE] loadPolls called', { options });
     setLoading(true);
     clearError();
 
@@ -781,9 +779,6 @@ export const createPollsActions = (
       }
 
       const apiUrl = `/api/polls?${params.toString()}`;
-      // Diagnostic logging for production debugging
-      // eslint-disable-next-line no-console
-      console.log('[POLLS STORE] Fetching polls from API', { url: apiUrl });
       // Add timeout to prevent infinite loading state
       const controller = new AbortController();
       const timeoutId = setTimeout(() => {
@@ -819,12 +814,12 @@ export const createPollsActions = (
           };
         };
       };
-      
+
       try {
         payload = (await response.json()) as typeof payload;
       } catch (jsonError) {
-        const errorMessage = jsonError instanceof Error 
-          ? jsonError.message 
+        const errorMessage = jsonError instanceof Error
+          ? jsonError.message
           : 'Failed to parse JSON response';
         logger.error('Failed to parse polls API JSON response', { error: jsonError, url: apiUrl });
         throw new Error(`Invalid response format: ${errorMessage}`);
@@ -882,9 +877,6 @@ export const createPollsActions = (
         setError('Request timeout - polls API took too long to respond');
       }
     } finally {
-      // Diagnostic logging for production debugging
-      // eslint-disable-next-line no-console
-      console.log('[POLLS STORE] loadPolls finally block - setting isLoading to false');
       setLoading(false);
     }
   };
@@ -901,17 +893,17 @@ export const createPollsActions = (
       }
 
       let payload: { success?: boolean; data?: PollRow };
-      
+
       try {
         payload = (await response.json()) as typeof payload;
       } catch (jsonError) {
-        const errorMessage = jsonError instanceof Error 
-          ? jsonError.message 
+        const errorMessage = jsonError instanceof Error
+          ? jsonError.message
           : 'Failed to parse JSON response';
         logger.error('Failed to parse poll API JSON response', { error: jsonError, pollId: id });
         throw new Error(`Invalid response format: ${errorMessage}`);
       }
-      
+
       const poll = payload?.data;
 
       if (!poll) {

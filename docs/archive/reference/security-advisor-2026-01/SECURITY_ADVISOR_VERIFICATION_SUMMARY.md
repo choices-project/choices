@@ -84,7 +84,7 @@ ORDER BY p.proname;
 
 1. **RLS Policy Warnings (~38 warnings)** - Mostly intentional
    - Many are intentional for public platform functionality
-   - See `docs/SECURITY_ADVISOR_WARNINGS_ANALYSIS.md` for categorization
+   - See `docs/archive/2026-01-24-docs-consolidation/SECURITY_ADVISOR_WARNINGS_ANALYSIS.md` for categorization
    - Some may need review for owner-based restrictions
 
 2. **Auth Configuration (1 warning)** - Configuration change needed

@@ -26,18 +26,17 @@ export const POST = withErrorHandling(async (
     return errorResponse('Supabase client not available', 500);
   }
 
-  const { data: { user }, error: userError } = await supabase.auth.getUser();
+  const [authResult, pollResult] = await Promise.all([
+    supabase.auth.getUser(),
+    supabase.from('polls').select('id, title, status, created_by, locked_at').eq('id', pollId).single(),
+  ]);
 
+  const { data: { user }, error: userError } = authResult;
   if (userError || !user) {
     return authError('Authentication required to lock polls');
   }
 
-  const { data: poll, error: pollError } = await supabase
-    .from('polls')
-    .select('id, title, status, created_by, locked_at')
-    .eq('id', pollId)
-    .single();
-
+  const { data: poll, error: pollError } = pollResult;
   if (pollError || !poll) {
     return notFoundError('Poll not found');
   }
@@ -105,18 +104,17 @@ export const DELETE = withErrorHandling(async (
     return errorResponse('Supabase client not available', 500);
   }
 
-  const { data: { user }, error: userError } = await supabase.auth.getUser();
+  const [authResult, pollResult] = await Promise.all([
+    supabase.auth.getUser(),
+    supabase.from('polls').select('id, title, status, created_by, locked_at').eq('id', pollId).single(),
+  ]);
 
+  const { data: { user }, error: userError } = authResult;
   if (userError || !user) {
     return authError('Authentication required to unlock polls');
   }
 
-  const { data: poll, error: pollError } = await supabase
-    .from('polls')
-    .select('id, title, status, created_by, locked_at')
-    .eq('id', pollId)
-    .single();
-
+  const { data: poll, error: pollError } = pollResult;
   if (pollError || !poll) {
     return notFoundError('Poll not found');
   }

@@ -11,6 +11,12 @@
 
 import { createClient } from '@supabase/supabase-js';
 
+import {
+  HASHTAG_ENGAGEMENT_SELECT_COLUMNS,
+  HASHTAGS_SELECT_COLUMNS,
+  HASHTAG_USAGE_SELECT_COLUMNS,
+} from '@/lib/api/response-builders';
+
 import { logger } from '../../../lib/utils/logger';
 import {
   calculateEngagementRate,
@@ -171,7 +177,7 @@ export async function calculateTrendingHashtags(
     const hashtagIds = Array.from(hashtagMetrics.keys());
     const { data: hashtags, error: hashtagError } = await supabase
       .from('hashtags')
-      .select('*')
+      .select(HASHTAGS_SELECT_COLUMNS)
       .in('id', hashtagIds);
 
     if (hashtagError) throw hashtagError;
@@ -376,7 +382,7 @@ function getPeriodStartDate(period: string): string {
 async function getHashtagUsageData(hashtagId: string, startDate: string, endDate: string) {
   const { data, error } = await supabase
     .from('hashtag_usage')
-    .select('*')
+    .select(HASHTAG_USAGE_SELECT_COLUMNS)
     .eq('hashtag_id', hashtagId)
     .gte('created_at', startDate)
     .lte('created_at', endDate);
@@ -385,7 +391,7 @@ async function getHashtagUsageData(hashtagId: string, startDate: string, endDate
 
   return {
     totalUsage: data?.length ?? 0,
-    totalViews: data?.reduce((sum, usage) => sum + (usage.views ?? 0), 0) ?? 0,
+    totalViews: 0,
     currentUsage: data?.length ?? 0,
     previousUsage: await getPreviousPeriodUsage(hashtagId, startDate, endDate),
     peakUsage: Math.max(...(data?.map(_d => 1) || [0])),
@@ -396,7 +402,7 @@ async function getHashtagUsageData(hashtagId: string, startDate: string, endDate
 async function getHashtagEngagementData(_hashtagId: string, _startDate: string, _endDate: string) {
   const { data, error } = await supabase
     .from('hashtag_engagement')
-    .select('*')
+    .select(HASHTAG_ENGAGEMENT_SELECT_COLUMNS)
     .eq('hashtag_id', _hashtagId)
     .gte('timestamp', _startDate)
     .lte('timestamp', _endDate);

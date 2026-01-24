@@ -1,4 +1,4 @@
-import { getSupabaseServerClient } from '@/utils/supabase/server';
+import { getSupabaseAdminClient, getSupabaseServerClient } from '@/utils/supabase/server';
 
 import {
   authError,
@@ -166,11 +166,16 @@ export const GET = withErrorHandling(async (request: NextRequest) => {
 
   logger.debug('Loading admin dashboard data from database');
 
+  const adminClient = await getSupabaseAdminClient();
+  if (!adminClient) {
+    return errorResponse('Admin database connection not available', 500);
+  }
+
   const [overview, analytics, systemHealth, recentActivity] = await Promise.all([
-    loadAdminOverview(supabase),
-    includeArray.includes('analytics') ? loadAdminAnalytics(supabase) : Promise.resolve(null),
-    includeArray.includes('health') ? loadSystemHealth(supabase) : Promise.resolve(null),
-    includeArray.includes('activity') ? loadRecentActivity(supabase) : Promise.resolve(null),
+    loadAdminOverview(adminClient),
+    includeArray.includes('analytics') ? loadAdminAnalytics(adminClient) : Promise.resolve(null),
+    includeArray.includes('health') ? loadSystemHealth(adminClient) : Promise.resolve(null),
+    includeArray.includes('activity') ? loadRecentActivity(adminClient) : Promise.resolve(null),
   ]);
 
   const dashboardData: AdminDashboardData = {

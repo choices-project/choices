@@ -11,6 +11,7 @@ This file defines the canonical documentation set under `docs/`. Everything else
 - `CODEBASE_NAVIGATION.md`
 - `ARCHITECTURE.md`
 - `VISION.md`
+- `AGENT_SETUP.md` — Agent Skills + Supabase MCP (Cursor)
 
 ### Current status & roadmap
 - `CURRENT_STATUS.md`
@@ -26,11 +27,10 @@ This file defines the canonical documentation set under `docs/`. Everything else
 - `DEPLOYMENT.md`
 - `ENVIRONMENT_VARIABLES.md`
 - `SECURITY.md`
-- `SECURITY_ADVISOR_WARNINGS_ANALYSIS.md` (only if actively used)
-- `SECURITY_ADVISOR_REVIEW_GUIDE.md` (only if actively used)
 
 ### Data & API
 - `DATABASE_SCHEMA.md`
+- `RLS_API_ALIGNMENT.md` — API ↔ RLS alignment, client usage (admin vs server)
 - `API/README.md`
 - `API/contracts.md`
 - `API/civic-actions.md`
@@ -44,6 +44,8 @@ This file defines the canonical documentation set under `docs/`. Everything else
 - `PRIVACY_POLICY.md`
 
 ## Supplemental docs (archive when stale)
-- Planning, summaries, and completion reports (e.g., `*_COMPLETE.md`, `*_SUMMARY.md`, `*_PRIORITY.md`)
+- Planning, summaries, and completion reports (e.g., `*_COMPLETE.md`, `*_SUMMARY.md`, `*_PRIORITY.md`) — see `docs/archive/`
 - One-off implementation notes
-- Guides that are not referenced by the canonical set
+- Guides not referenced by the canonical set
+
+Archived 2026-01-24: `AGENT_IMPLEMENTATION_*`, `AGENT_SKILLS_MCP_REMAINING_WORK`, `APPLY_SECURITY_FIX`, `SECURITY_ADVISOR_*` → `docs/archive/2026-01-24-docs-consolidation/`

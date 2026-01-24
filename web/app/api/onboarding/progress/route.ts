@@ -1,6 +1,7 @@
 import { getSupabaseServerClient } from '@/utils/supabase/server'
 
 import { withErrorHandling, successResponse, authError, errorResponse, validationError } from '@/lib/api';
+import { ONBOARDING_PROGRESS_SELECT_COLUMNS } from '@/lib/api/response-builders';
 import { devLog } from '@/lib/utils/logger'
 
 import type { NextRequest} from 'next/server';
@@ -27,7 +28,7 @@ export const GET = withErrorHandling(async (): Promise<any> => {
     // Get onboarding progress
     const { data: progress, error: progressError } = await (supabaseClient as any)
       .from('onboarding_progress')
-      .select('*')
+      .select(ONBOARDING_PROGRESS_SELECT_COLUMNS)
       .eq('user_id', String(user.id))
       .single()
 
@@ -104,7 +105,7 @@ export const POST = withErrorHandling(async (request: NextRequest) => {
             started_at: new Date().toISOString(),
             last_activity_at: new Date().toISOString()
           })
-          .select()
+          .select(ONBOARDING_PROGRESS_SELECT_COLUMNS)
           .single();
         updatedProgress = startData;
         progressError = startError;
@@ -121,7 +122,7 @@ export const POST = withErrorHandling(async (request: NextRequest) => {
             last_activity_at: new Date().toISOString()
           })
           .eq('user_id', user.id)
-          .select()
+          .select(ONBOARDING_PROGRESS_SELECT_COLUMNS)
           .single();
         updatedProgress = updateData;
         progressError = updateError;
@@ -136,7 +137,7 @@ export const POST = withErrorHandling(async (request: NextRequest) => {
             completed_at: new Date().toISOString()
           })
           .eq('user_id', user.id)
-          .select()
+          .select(ONBOARDING_PROGRESS_SELECT_COLUMNS)
           .single();
         updatedProgress = completeData;
         progressError = completeError;

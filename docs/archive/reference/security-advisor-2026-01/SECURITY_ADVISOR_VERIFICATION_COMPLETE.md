@@ -100,9 +100,9 @@ All 12 functions verified:
 
 - ✅ `supabase/migrations/20260110135747_fix_function_search_path_warnings.sql` - Function search_path fixes
 - ✅ `supabase/migrations/20260110140105_fix_security_definer_view_and_verify.sql` - View fix and verification
-- ✅ `docs/SECURITY_ADVISOR_WARNINGS_ANALYSIS.md` - Complete analysis of all 61 warnings
-- ✅ `docs/SECURITY_ADVISOR_VERIFICATION_QUERIES.sql` - Verification queries
+- ✅ `docs/archive/2026-01-24-docs-consolidation/SECURITY_ADVISOR_WARNINGS_ANALYSIS.md` - Complete analysis of all 61 warnings
+- ✅ `docs/archive/2026-01-24-docs-consolidation/SECURITY_ADVISOR_VERIFICATION_QUERIES.sql` - Verification queries
 - ✅ `docs/SECURITY_ADVISOR_VERIFICATION_RESULTS.md` - Verification checklist
-- ✅ `docs/SECURITY_ADVISOR_REVIEW_GUIDE.md` - Review process guide
+- ✅ `docs/archive/2026-01-24-docs-consolidation/SECURITY_ADVISOR_REVIEW_GUIDE.md` - Review process guide
 - ✅ `docs/SECURITY_ADVISOR_MIGRATION_FIXES.md` - Migration documentation
 

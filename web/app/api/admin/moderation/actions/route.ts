@@ -5,6 +5,7 @@ import { getSupabaseAdminClient } from '@/utils/supabase/server';
 import { requireAdminOr401, getAdminUser } from '@/features/auth/lib/admin-auth';
 
 import { withErrorHandling, successResponse, errorResponse, parseBody } from '@/lib/api';
+import { MODERATION_ACTION_SELECT_COLUMNS } from '@/lib/api/response-builders';
 import { logger } from '@/lib/utils/logger';
 
 import type { NextRequest } from 'next/server';
@@ -27,7 +28,7 @@ export const GET = withErrorHandling(async (_request: NextRequest) => {
   const supabase = await getSupabaseAdminClient();
   const { data, error } = await (supabase as any)
     .from('moderation_actions')
-    .select('*')
+    .select(MODERATION_ACTION_SELECT_COLUMNS)
     .order('created_at', { ascending: false });
 
   if (error) {
@@ -65,7 +66,7 @@ export const POST = withErrorHandling(async (request: NextRequest) => {
       status: 'active',
       expires_at: payload.expires_at ?? null,
     })
-    .select()
+    .select(MODERATION_ACTION_SELECT_COLUMNS)
     .single();
 
   if (error) {

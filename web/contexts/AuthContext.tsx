@@ -14,6 +14,7 @@ import { useShallow } from 'zustand/react/shallow'
 
 import { getSupabaseBrowserClient } from '@/utils/supabase/client'
 
+import { PROFILE_SELECT_COLUMNS } from '@/lib/api/response-builders'
 import { useUserStore } from '@/lib/stores/userStore'
 import logger from '@/lib/utils/logger'
 
@@ -83,7 +84,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       try {
         const { data, error } = await client
           .from('user_profiles')
-          .select('*')
+          .select(PROFILE_SELECT_COLUMNS)
           .eq('user_id', userId)
           .single()
 
@@ -130,7 +131,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
     // Check for E2E bypass flag (same logic as dashboard page)
     // This allows tests to bypass auth initialization
-    const shouldBypassAuth = typeof window !== 'undefined' && 
+    const shouldBypassAuth = typeof window !== 'undefined' &&
       window.localStorage.getItem('e2e-dashboard-bypass') === '1'
 
     if (IS_E2E_HARNESS || shouldBypassAuth) {
@@ -169,9 +170,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         const timeoutPromise = new Promise<{ data: { session: Session | null } }>((resolve) => {
           setTimeout(() => resolve({ data: { session: null } }), 5000) // 5 second timeout
         })
-        
+
         const { data: { session } } = await Promise.race([sessionPromise, timeoutPromise])
-        
+
         if (mounted) {
           setSession(session)
           setUser(session?.user ?? null)

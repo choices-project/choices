@@ -5,6 +5,7 @@ import { getSupabaseAdminClient } from '@/utils/supabase/server';
 import { requireAdminOr401, getAdminUser } from '@/features/auth/lib/admin-auth';
 
 import { withErrorHandling, successResponse, errorResponse, parseBody } from '@/lib/api';
+import { MODERATION_APPEAL_SELECT_COLUMNS } from '@/lib/api/response-builders';
 import { logger } from '@/lib/utils/logger';
 
 import type { NextRequest } from 'next/server';
@@ -42,7 +43,7 @@ export const PATCH = withErrorHandling(async (
       updated_at: new Date().toISOString(),
     })
     .eq('id', appealId)
-    .select()
+    .select(MODERATION_APPEAL_SELECT_COLUMNS)
     .single();
 
   if (error) {

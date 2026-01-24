@@ -17,6 +17,7 @@ import {
   authError,
   parseBody,
 } from '@/lib/api';
+import { DEVICE_FLOW_SELECT_COLUMNS } from '@/lib/api/response-builders';
 import { apiRateLimiter } from '@/lib/rate-limiting/api-rate-limiter';
 import { logger } from '@/lib/utils/logger';
 
@@ -107,7 +108,7 @@ export const POST = withErrorHandling(async (request: NextRequest) => {
   // Type assertion to avoid deep type inference issues with .single()
   const { data: deviceFlow, error: fetchError } = await (supabase
     .from('device_flow')
-    .select('*')
+    .select(DEVICE_FLOW_SELECT_COLUMNS)
     .eq('user_code', normalizedUserCode)
     .eq('provider', provider)
     .single() as unknown as Promise<{

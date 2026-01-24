@@ -8,6 +8,7 @@ import {
   validationError,
   withErrorHandling,
 } from '@/lib/api';
+import { SITE_MESSAGE_SELECT_COLUMNS } from '@/lib/api/response-builders';
 import { logger } from '@/lib/utils/logger';
 
 import type { NextRequest } from 'next/server';
@@ -46,7 +47,7 @@ export const GET = withErrorHandling(async (request: NextRequest) => {
   // Build query for site messages
   let query = adminSupabase
     .from('site_messages')
-    .select('*')
+    .select(SITE_MESSAGE_SELECT_COLUMNS)
     .order('created_at', { ascending: false })
     .limit(limit);
 

@@ -10,6 +10,7 @@
  */
 
 import { getSupabaseServerClient } from '@/utils/supabase/server';
+
 import { logger } from '@/lib/utils/logger';
 
 export type AnalyticsType = 'demographics' | 'geographic' | 'trust_tier' | 'temporal' | 'funnel';
@@ -85,7 +86,7 @@ export async function canRunAdvancedAnalytics(
     // Using any to avoid TypeScript errors with new table
     const result: any = await (supabase as any)
       .from('advanced_analytics_usage')
-      .select('*', { count: 'exact', head: true })
+      .select('id', { count: 'exact', head: true })
       .eq('user_id', userId)
       .gte('created_at', weekAgo.toISOString());
     const count: number | null = result?.count ?? null;
@@ -218,14 +219,14 @@ export async function getRemainingAnalyticsCount(userId: string): Promise<number
     // Type assertion needed since table may not be in Supabase types yet
     const result: any = await (supabase as any)
       .from('advanced_analytics_usage')
-      .select('*', { count: 'exact', head: true })
+      .select('id', { count: 'exact', head: true })
       .eq('user_id', userId)
       .gte('created_at', weekAgo.toISOString());
     const count: number | null = result?.count ?? null;
-    const error = result?.error;
+    const countError = result?.error;
 
-    if (error) {
-      logger.error('Failed to get remaining count', { userId, error });
+    if (countError) {
+      logger.error('Failed to get remaining count', { userId, error: countError });
       return 3; // Default to full limit
     }
 

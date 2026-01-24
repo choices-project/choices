@@ -213,7 +213,7 @@ export class FinalizePollManager {
     try {
       const result = await this.supabaseClient
         .from('polls')
-        .select('*')
+        .select('id, title, description, options, allow_postclose, status, created_at, updated_at, close_at, locked_at')
         .eq('id', pollId)
         .single();
 
@@ -254,7 +254,7 @@ export class FinalizePollManager {
       if (closeAt) {
         const result = await this.supabaseClient
           .from('votes')
-          .select('*')
+          .select('id, poll_id, user_id, vote_data, created_at')
           .eq('poll_id', pollId)
           .lte('created_at', closeAt.toISOString());
 
@@ -267,7 +267,7 @@ export class FinalizePollManager {
 
       const result = await this.supabaseClient
         .from('votes')
-        .select('*')
+        .select('id, poll_id, user_id, vote_data, created_at')
         .eq('poll_id', pollId);
 
       if (result.error) {
@@ -290,7 +290,7 @@ export class FinalizePollManager {
     try {
       const result = await this.supabaseClient
         .from('votes')
-        .select('*')
+        .select('id, poll_id, user_id, vote_data, created_at')
         .eq('poll_id', pollId)
         .gt('created_at', closeAt.toISOString());
 
@@ -475,7 +475,7 @@ export class FinalizePollManager {
           checksum: snapshotData.checksum,
           merkle_root: snapshotData.merkleRoot
         })
-        .select()
+        .select('id, poll_id, taken_at, results, total_ballots, checksum, created_at, merkle_root')
         .single();
 
       if (result.error) {
@@ -649,7 +649,7 @@ export class FinalizePollManager {
     try {
       const { data, error } = await this.supabaseClient
         .from('poll_snapshots')
-        .select('*')
+        .select('id, poll_id, taken_at, checksum, merkle_root')
         .eq('poll_id', pollId)
         .single();
 

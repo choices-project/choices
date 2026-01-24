@@ -60,6 +60,8 @@ export type PaginationMetadata = {
   hasMore: boolean;
   page?: number;
   totalPages?: number;
+  /** Set when using cursor-based pagination (e.g. GET /api/polls?cursor=...) */
+  nextCursor?: string;
 }
 
 // ============================================================================

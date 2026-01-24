@@ -1,6 +1,7 @@
 import { getSupabaseAdminClient, getSupabaseServerClient } from '@/utils/supabase/server';
 
 import { withErrorHandling, successResponse, authError, validationError, notFoundError, errorResponse } from '@/lib/api';
+import { REPRESENTATIVE_FOLLOW_SELECT_COLUMNS } from '@/lib/api/response-builders';
 import { logger } from '@/lib/utils/logger';
 
 import type { NextRequest } from 'next/server';
@@ -83,7 +84,7 @@ export const POST = withErrorHandling(async (
         notify_on_public_statements: false,
         notify_on_events: false
       })
-      .select()
+      .select(REPRESENTATIVE_FOLLOW_SELECT_COLUMNS)
       .single();
 
   if (followError) {
@@ -175,7 +176,7 @@ export const GET = withErrorHandling(async (
   // Check if following (avoid single() to prevent multi-row errors)
   const { data: followRows, error: followError } = await (adminSupabase as any)
     .from('representative_follows')
-    .select('*')
+    .select(REPRESENTATIVE_FOLLOW_SELECT_COLUMNS)
     .eq('user_id', user.id)
     .eq('representative_id', representativeId)
     .order('created_at', { ascending: false })

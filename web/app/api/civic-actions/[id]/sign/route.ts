@@ -16,6 +16,7 @@ import {
   notFoundError,
   methodNotAllowed,
 } from '@/lib/api';
+import { CIVIC_ACTION_SELECT_COLUMNS } from '@/lib/api/response-builders';
 import { isFeatureEnabled } from '@/lib/core/feature-flags';
 import { apiRateLimiter } from '@/lib/rate-limiting/api-rate-limiter';
 import { logger } from '@/lib/utils/logger';
@@ -118,7 +119,7 @@ export const POST = withErrorHandling(async (
         },
       })
       .eq('id', id)
-      .select()
+      .select(CIVIC_ACTION_SELECT_COLUMNS)
       .single();
 
     if (updateError) {

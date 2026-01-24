@@ -16,7 +16,7 @@ import { z } from 'zod';
 import { getSupabaseServerClient } from '@/utils/supabase/server';
 
 import { authError, errorResponse, successResponse, validationError, withErrorHandling, parseBody } from '@/lib/api';
-import { createProfilePayload } from '@/lib/api/response-builders';
+import { createProfilePayload, PROFILE_SELECT_COLUMNS } from '@/lib/api/response-builders';
 import { undefinedToNull } from '@/lib/util/clean';
 import { logger } from '@/lib/utils/logger';
 
@@ -107,10 +107,9 @@ export const GET = withErrorHandling(async (_request: NextRequest) => {
     return authError('Authentication required');
   }
 
-  // Fetch profile
   const { data: profile, error: profileError } = await supabase
     .from('user_profiles')
-    .select('*')
+    .select(PROFILE_SELECT_COLUMNS)
     .eq('user_id', user.id)
     .single();
 
@@ -176,7 +175,7 @@ export const POST = withErrorHandling(async (request: NextRequest) => {
 
   const { data: existingProfile, error: profileFetchError } = await supabase
     .from('user_profiles')
-    .select('*')
+    .select(PROFILE_SELECT_COLUMNS)
     .eq('user_id', user.id)
     .single();
 
@@ -214,7 +213,7 @@ export const POST = withErrorHandling(async (request: NextRequest) => {
       .from('user_profiles')
       .update(undefinedToNull(parsedProfile.data) as Record<string, unknown>)
       .eq('user_id', user.id)
-      .select();
+      .select(PROFILE_SELECT_COLUMNS);
     if (error) {
         logger.error('Error upserting profile', error);
         return errorResponse('Error updating profile', 500);
@@ -264,7 +263,7 @@ export const POST = withErrorHandling(async (request: NextRequest) => {
           updated_at: new Date().toISOString()
         })
         .eq('user_id', user.id)
-        .select();
+        .select(PROFILE_SELECT_COLUMNS);
 
       if (error) {
         logger.error('Error updating preferences', error);
@@ -298,7 +297,7 @@ export const POST = withErrorHandling(async (request: NextRequest) => {
         .from('user_profiles')
         .update(updateData)
         .eq('user_id', user.id)
-        .select();
+        .select(PROFILE_SELECT_COLUMNS);
       if (error) {
         logger.error('Error upserting interests', error);
         return errorResponse('Error updating interests', 500);
@@ -331,7 +330,7 @@ export const POST = withErrorHandling(async (request: NextRequest) => {
         updated_at: new Date().toISOString()
       })
       .eq('user_id', user.id)
-      .select();
+      .select(PROFILE_SELECT_COLUMNS);
     if (error) {
         logger.error('Error upserting onboarding progress', error);
         return errorResponse('Error updating onboarding progress', 500);
@@ -367,7 +366,7 @@ export const POST = withErrorHandling(async (request: NextRequest) => {
           .from('user_profiles')
           .update({ avatar_url: avatarUrl })
           .eq('user_id', user.id)
-          .select('*')
+          .select(PROFILE_SELECT_COLUMNS)
           .single();
 
         if (updateProfileError) {
@@ -433,7 +432,7 @@ export const PUT = withErrorHandling(async (request: NextRequest) => {
     .from('user_profiles')
     .update(undefinedToNull(parsedProfile.data) as Record<string, unknown>)
     .eq('user_id', user.id)
-    .select();
+    .select(PROFILE_SELECT_COLUMNS);
 
   if (error) {
     logger.error('Error updating profile via PUT', error);
@@ -545,7 +544,7 @@ export const PATCH = withErrorHandling(async (request: NextRequest) => {
     .from('user_profiles')
     .update(undefinedToNull({ ...parsedProfile.data, updated_at: new Date().toISOString() }) as Record<string, unknown>)
     .eq('user_id', user.id)
-    .select();
+    .select(PROFILE_SELECT_COLUMNS);
 
   if (error) {
     logger.error('Error updating profile via PATCH', error);

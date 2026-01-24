@@ -9,6 +9,7 @@ import {
   errorResponse,
   parseBody,
 } from '@/lib/api';
+import { MODERATION_APPEAL_SELECT_COLUMNS } from '@/lib/api/response-builders';
 import { logger } from '@/lib/utils/logger';
 
 import type { NextRequest } from 'next/server';
@@ -38,7 +39,7 @@ export const POST = withErrorHandling(async (request: NextRequest) => {
       message: parsedBody.data.message,
       status: 'open',
     })
-    .select()
+    .select(MODERATION_APPEAL_SELECT_COLUMNS)
     .single();
 
   if (error) {
@@ -58,7 +59,7 @@ export const GET = withErrorHandling(async (_request: NextRequest) => {
 
   const { data, error } = await (supabase as any)
     .from('moderation_appeals')
-    .select('*')
+    .select(MODERATION_APPEAL_SELECT_COLUMNS)
     .eq('user_id', user.id)
     .order('created_at', { ascending: false });
 

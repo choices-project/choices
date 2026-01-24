@@ -58,12 +58,12 @@ export const GET = withErrorHandling(async (_request: NextRequest) => {
         // Initialize privacy-aware query builder
         const queryBuilder = new PrivacyAwareQueryBuilder(supabase);
 
-        // Get opted-in users with trust tiers
-        const { users, totalUsers } = await queryBuilder.getDemographics();
-
-        // Get votes from opted-in users to calculate engagement
-        const votesQueryResult = await queryBuilder.getVoteAnalytics({});
-        const { data: votes } = await votesQueryResult;
+        // Get opted-in users and votes in parallel (independent fetches)
+        const [{ users, totalUsers }, votesResult] = await Promise.all([
+          queryBuilder.getDemographics(),
+          queryBuilder.getVoteAnalytics({}),
+        ]);
+        const { data: votes } = votesResult;
 
         // Group users by trust tier
         const tierGroups = new Map<string, any[]>();

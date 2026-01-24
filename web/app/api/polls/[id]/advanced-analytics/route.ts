@@ -14,16 +14,16 @@
 import { getSupabaseServerClient } from '@/utils/supabase/server';
 
 import {
+  canRunAdvancedAnalytics,
+  recordAnalyticsUsage,
+  type AnalyticsType,
+} from '@/lib/analytics/rate-limiter';
+import {
   errorResponse,
   successResponse,
   validationError,
   withErrorHandling,
 } from '@/lib/api';
-import {
-  canRunAdvancedAnalytics,
-  recordAnalyticsUsage,
-  type AnalyticsType,
-} from '@/lib/analytics/rate-limiter';
 import { logger } from '@/lib/utils/logger';
 
 import type { NextRequest } from 'next/server';
@@ -66,7 +66,7 @@ export const POST = withErrorHandling(async (
     const { data: profile, error: profileError } = await supabase
       .from('user_profiles')
       .select('is_admin')
-      .eq('id', user.id)
+      .eq('user_id', user.id)
       .single();
 
     if (profileError) {
@@ -87,7 +87,7 @@ export const POST = withErrorHandling(async (
 
     try {
       body = await request.json();
-    } catch (error) {
+    } catch {
       return validationError({ body: 'Invalid JSON in request body' });
     }
 
@@ -240,7 +240,7 @@ export const GET = withErrorHandling(async (
     const { data: profile } = await supabase
       .from('user_profiles')
       .select('is_admin')
-      .eq('id', user.id)
+      .eq('user_id', user.id)
       .single();
 
     const isAdmin = profile?.is_admin === true;

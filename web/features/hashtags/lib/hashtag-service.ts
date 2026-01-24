@@ -9,13 +9,14 @@
  * Status: ✅ ACTIVE
  */
 
+import {
+  HASHTAGS_SELECT_COLUMNS,
+  USER_HASHTAGS_SELECT_COLUMNS,
+} from '@/lib/api/response-builders';
 import { logger } from '@/lib/utils/logger';
 
-
 import { getSupabaseBrowserClient } from '../../../utils/supabase/client';
-import {
-  HASHTAG_CATEGORIES,
-} from '../types';
+import { HASHTAG_CATEGORIES } from '../types';
 
 import type {
   Hashtag,
@@ -279,7 +280,7 @@ export async function getHashtagById(id: string): Promise<HashtagApiResponse<Has
   try {
     const result = await supabase
       .from('hashtags')
-      .select('*')
+      .select(HASHTAGS_SELECT_COLUMNS)
       .eq('id', id)
       .single();
 
@@ -312,7 +313,7 @@ export async function getHashtagByName(name: string): Promise<HashtagApiResponse
 
     const result = await supabase
       .from('hashtags')
-      .select('*')
+      .select(HASHTAGS_SELECT_COLUMNS)
       .eq('name', normalizedName)
       .single();
 
@@ -364,7 +365,7 @@ export async function createHashtag(
     const result = await supabase
       .from('hashtags')
       .insert(insertData)
-      .select()
+      .select(HASHTAGS_SELECT_COLUMNS)
       .single();
 
     const { data, error } = result;
@@ -410,7 +411,7 @@ export async function updateHashtag(
       .from('hashtags')
       .update(dbUpdates)
       .eq('id', id)
-      .select()
+      .select(HASHTAGS_SELECT_COLUMNS)
       .single();
 
     const { data, error } = result;
@@ -465,7 +466,7 @@ export async function searchHashtags(query: HashtagSearchQuery): Promise<Hashtag
     const startTime = Date.now();
     let supabaseQuery = supabase
       .from('hashtags')
-      .select('*');
+      .select(HASHTAGS_SELECT_COLUMNS);
 
     // Apply text search
     if (query.query) {
@@ -614,7 +615,7 @@ export async function getHashtagSuggestions(
     // Search for matching hashtags
     const { data: hashtags, error } = await supabase
       .from('hashtags')
-      .select('*')
+      .select(HASHTAGS_SELECT_COLUMNS)
       .or(`name.ilike.%${normalizedInput}%,display_name.ilike.%${normalizedInput}%`)
       .order('usage_count', { ascending: false })
       .limit(limit);
@@ -645,7 +646,7 @@ export async function getHashtagSuggestions(
               // Fetch the related hashtag details
               const { data: relatedHashtag } = await supabase
                 .from('hashtags')
-                .select('*')
+                .select(HASHTAGS_SELECT_COLUMNS)
                 .eq('name', relatedName)
                 .single();
 
@@ -695,7 +696,7 @@ export async function followHashtag(hashtagId: string): Promise<HashtagApiRespon
     // Check if already following
     const { data: existing } = await supabase
       .from('user_hashtags')
-      .select('*')
+      .select(USER_HASHTAGS_SELECT_COLUMNS)
       .eq('user_id', user.id)
       .eq('hashtag_id', hashtagId)
       .single();
@@ -817,8 +818,8 @@ export async function getUserHashtags(): Promise<HashtagApiResponse<UserHashtag[
     const { data, error } = await supabase
       .from('user_hashtags')
       .select(`
-        *,
-        hashtag:hashtags(*)
+        ${USER_HASHTAGS_SELECT_COLUMNS},
+        hashtag:hashtags(${HASHTAGS_SELECT_COLUMNS})
       `)
       .eq('user_id', user.id)
       .order('followed_at', { ascending: false });
@@ -886,7 +887,7 @@ export async function getHashtagStats(): Promise<HashtagApiResponse<any>> {
   try {
     const { data: stats, error } = await supabase
       .from('hashtags')
-      .select('*')
+      .select(HASHTAGS_SELECT_COLUMNS)
       .order('usage_count', { ascending: false })
       .limit(100);
 
@@ -995,7 +996,7 @@ export async function getProfileHashtagIntegration(
   try {
     const { data: userHashtagRows, error: userHashtagsError } = await supabase
       .from('user_hashtags')
-      .select('*, hashtag:hashtags(*)')
+      .select(`${USER_HASHTAGS_SELECT_COLUMNS}, hashtag:hashtags(${HASHTAGS_SELECT_COLUMNS})`)
       .eq('user_id', userId);
 
     if (userHashtagsError) throw userHashtagsError;

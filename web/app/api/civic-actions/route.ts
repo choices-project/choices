@@ -19,6 +19,7 @@ import {
   parseBody,
   methodNotAllowed,
 } from '@/lib/api';
+import { CIVIC_ACTION_SELECT_COLUMNS } from '@/lib/api/response-builders';
 import { isFeatureEnabled } from '@/lib/core/feature-flags';
 import { apiRateLimiter } from '@/lib/rate-limiting/api-rate-limiter';
 import { logger } from '@/lib/utils/logger';
@@ -103,7 +104,7 @@ export const GET = withErrorHandling(async (request: NextRequest) => {
     // Build query
     let query = supabase
       .from('civic_actions')
-      .select('*', { count: 'exact' });
+      .select(CIVIC_ACTION_SELECT_COLUMNS, { count: 'exact' });
 
     // Apply filters
     if (status) {
@@ -254,7 +255,7 @@ export const POST = withErrorHandling(async (request: NextRequest) => {
     const { data: newAction, error: insertError } = await supabase
       .from('civic_actions')
       .insert(insertData)
-      .select()
+      .select(CIVIC_ACTION_SELECT_COLUMNS)
       .single();
 
     if (insertError) {

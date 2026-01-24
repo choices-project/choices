@@ -7,6 +7,7 @@
  * @created September 9, 2025
  */
 
+import { USER_CONSENT_SELECT_COLUMNS } from '@/lib/api/response-builders';
 import logger from '@/lib/utils/logger';
 
 import type { SupabaseClient } from '@supabase/supabase-js';
@@ -54,7 +55,7 @@ export class ConsentManager {
   async getUserConsent(): Promise<ConsentRecord[]> {
     const { data, error } = await this.supabase
       .from('user_consent')
-      .select('*')
+      .select(USER_CONSENT_SELECT_COLUMNS)
       .order('granted_at', { ascending: false });
 
     if (error) {

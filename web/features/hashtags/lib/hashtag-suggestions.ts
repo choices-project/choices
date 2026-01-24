@@ -11,6 +11,7 @@
 
 import { createClient } from '@supabase/supabase-js';
 
+import { HASHTAGS_SELECT_COLUMNS } from '@/lib/api/response-builders';
 import { logger } from '@/lib/utils/logger';
 
 import {
@@ -128,7 +129,7 @@ export async function getAutoCompleteSuggestions(
     // Get hashtags matching the query
     const { data: hashtags, error } = await supabase
       .from('hashtags')
-      .select('*')
+      .select(HASHTAGS_SELECT_COLUMNS)
       .ilike('name', `%${normalizedQuery}%`)
       .order('usage_count', { ascending: false })
       .limit(limit * 2); // Get more to filter and rank
@@ -137,15 +138,16 @@ export async function getAutoCompleteSuggestions(
     
     // Convert to suggestions
     const suggestions: HashtagSuggestion[] = (hashtags ?? []).map(hashtag => {
+      const row = hashtag as typeof hashtag & { trending_score?: number };
       const confidence = calculateMatchConfidence(normalizedQuery, String(hashtag.name));
       return {
-        hashtag: hashtag as Hashtag,
+        hashtag: { ...row, trend_score: row.trending_score ?? 0 } as Hashtag,
         reason: 'related',
         confidence,
         confidence_score: confidence,
         source: 'similar' as const,
         metadata: {
-          trending_score: Number(hashtag.trend_score),
+          trending_score: Number(row.trending_score),
           related_hashtags: [],
           category_match: true,
           user_history: false,
@@ -181,7 +183,7 @@ export async function getRelatedHashtags(
     // Get hashtag details
     const { data: hashtag, error: hashtagError } = await supabase
       .from('hashtags')
-      .select('*')
+      .select(HASHTAGS_SELECT_COLUMNS)
       .eq('id', hashtagId)
       .single();
     
@@ -190,7 +192,7 @@ export async function getRelatedHashtags(
     // Get hashtags from same category
     const { data: categoryHashtags, error: categoryError } = await supabase
       .from('hashtags')
-      .select('*')
+      .select(HASHTAGS_SELECT_COLUMNS)
       .eq('category', hashtag.category)
       .neq('id', hashtagId)
       .order('usage_count', { ascending: false })
@@ -201,7 +203,7 @@ export async function getRelatedHashtags(
     // Get co-occurring hashtags
     const { data: coOccurring, error: coOccurringError } = await supabase
       .from('hashtag_co_occurrence')
-      .select('related_hashtag_id, co_occurrence_count, hashtags(*)')
+      .select(`related_hashtag_id, co_occurrence_count, hashtags(${HASHTAGS_SELECT_COLUMNS})`)
       .eq('hashtag_id', hashtagId)
       .order('co_occurrence_count', { ascending: false })
       .limit(limit);
@@ -258,7 +260,7 @@ export async function getTrendingSuggestions(
     // Get trending hashtags from the last 24 hours
     const { data: trending, error } = await supabase
       .from('hashtags')
-      .select('*')
+      .select(HASHTAGS_SELECT_COLUMNS)
       .eq('is_trending', true)
       .not('id', 'in', `(${excludeHashtagIds.join(',')})`)
       .order('trending_score', { ascending: false })
@@ -266,20 +268,23 @@ export async function getTrendingSuggestions(
     
     if (error) throw error;
     
-    return (trending ?? []).map(hashtag => ({
-      hashtag: hashtag as Hashtag,
+    return (trending ?? []).map(hashtag => {
+      const row = hashtag as typeof hashtag & { trending_score?: number };
+      return {
+        hashtag: { ...row, trend_score: row.trending_score ?? 0 } as Hashtag,
         reason: 'trending',
-      confidence: 0.8,
-      confidence_score: 0.8,
-      source: 'trending' as const,
-      metadata: {
-        trending_score: hashtag.trend_score,
-        related_hashtags: [],
-        category_match: false,
-        user_history: false,
-        social_proof: hashtag.usage_count ?? 0
-      }
-    }));
+        confidence: 0.8,
+        confidence_score: 0.8,
+        source: 'trending' as const,
+        metadata: {
+          trending_score: row.trending_score,
+          related_hashtags: [],
+          category_match: false,
+          user_history: false,
+          social_proof: hashtag.usage_count ?? 0
+        }
+      };
+    });
   } catch (error) {
     logger.error('Failed to get trending suggestions:', error);
     throw error;
@@ -314,7 +319,7 @@ async function getContentBasedSuggestions(
   for (const keyword of keywords) {
     const { data: hashtags, error } = await supabase
       .from('hashtags')
-      .select('*')
+      .select(HASHTAGS_SELECT_COLUMNS)
       .or(`name.ilike.%${keyword}%,description.ilike.%${keyword}%`)
       .not('id', 'in', `(${userHashtags.join(',')})`)
       .order('usage_count', { ascending: false })
@@ -343,7 +348,7 @@ async function getCategoryBasedSuggestions(
 ): Promise<HashtagSuggestion[]> {
   const { data: hashtags, error } = await supabase
     .from('hashtags')
-    .select('*')
+    .select(HASHTAGS_SELECT_COLUMNS)
     .eq('category', category)
     .not('id', 'in', `(${userHashtags.join(',')})`)
     .order('usage_count', { ascending: false })
@@ -351,13 +356,16 @@ async function getCategoryBasedSuggestions(
   
   if (error) throw error;
   
-  return (hashtags ?? []).map(hashtag => ({
-    hashtag: hashtag as Hashtag,
-    reason: 'popular',
-    confidence: 0.7,
-    confidence_score: 0.7,
-    source: 'popular' as const
-  }));
+  return (hashtags ?? []).map(hashtag => {
+    const row = hashtag as typeof hashtag & { trending_score?: number };
+    return {
+      hashtag: { ...row, trend_score: row.trending_score ?? 0 } as Hashtag,
+      reason: 'popular',
+      confidence: 0.7,
+      confidence_score: 0.7,
+      source: 'popular' as const
+    };
+  });
 }
 
 async function getRelatedSuggestions(
@@ -369,7 +377,7 @@ async function getRelatedSuggestions(
   // Get co-occurring hashtags for user's hashtags
   const { data: coOccurring, error } = await supabase
     .from('hashtag_co_occurrence')
-    .select('related_hashtag_id, co_occurrence_count, hashtags(*)')
+    .select(`related_hashtag_id, co_occurrence_count, hashtags(${HASHTAGS_SELECT_COLUMNS})`)
     .in('hashtag_id', userHashtags)
     .not('related_hashtag_id', 'in', `(${userHashtags.join(',')})`)
     .order('co_occurrence_count', { ascending: false })
@@ -377,15 +385,17 @@ async function getRelatedSuggestions(
   
   if (error) throw error;
   
-  return (coOccurring ?? []).map(coOccur => {
-    const hashtag = Array.isArray(coOccur.hashtags) ? coOccur.hashtags[0] : coOccur.hashtags;
-    return {
-      hashtag: hashtag as Hashtag,
+  return (coOccurring ?? []).flatMap(coOccur => {
+    const raw = Array.isArray(coOccur.hashtags) ? coOccur.hashtags[0] : coOccur.hashtags;
+    const row = raw as (typeof raw & { trending_score?: number }) | null;
+    if (!row) return [];
+    return [{
+      hashtag: { ...row, trend_score: row.trending_score ?? 0 } as Hashtag,
       reason: 'personal',
       confidence: Math.min(0.9, coOccur.co_occurrence_count / 50),
       confidence_score: Math.min(0.9, coOccur.co_occurrence_count / 50),
       source: 'similar' as const
-    };
+    }];
   });
 }
 
@@ -419,13 +429,14 @@ async function getBehaviorBasedSuggestions(
     
     const { data: hashtag } = await supabase
       .from('hashtags')
-      .select('*')
+      .select(HASHTAGS_SELECT_COLUMNS)
       .eq('id', hashtagId)
       .single();
-    
+
     if (hashtag) {
+      const row = hashtag as typeof hashtag & { trending_score?: number };
       suggestions.push({
-        hashtag: hashtag as Hashtag,
+        hashtag: { ...row, trend_score: row.trending_score ?? 0 } as Hashtag,
         reason: 'personal',
         confidence: Math.min(0.8, engagementCount / 10),
         confidence_score: Math.min(0.8, engagementCount / 10),

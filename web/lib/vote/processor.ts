@@ -1,9 +1,9 @@
 /**
  * Vote Processor
- * 
+ *
  * Handles the processing and storage of votes, including validation,
  * rate limiting, and database operations.
- * 
+ *
  * Created: September 15, 2025
  * Updated: September 15, 2025
  */
@@ -13,9 +13,9 @@ import { devLog } from '@/lib/utils/logger';
 
 import { getSupabaseServerClient } from '../../utils/supabase/server';
 
-import type { 
-  VoteData, 
-  PollData, 
+import type {
+  VoteData,
+  PollData,
   VoteProcessor as IVoteProcessor,
   VoteSubmissionResult
 } from './types';
@@ -45,23 +45,47 @@ export class VoteProcessor implements IVoteProcessor {
    */
   async processVote(vote: VoteData): Promise<VoteSubmissionResult> {
     const startTime = Date.now();
-    
+
     try {
       // Get poll data from database
       const supabaseClient = await this.db();
 
-      const { data: pollData, error: pollError } = await supabaseClient
+      const { data: rawPoll, error: pollError } = await supabaseClient
         .from('polls')
-        .select('*')
+        .select('id, title, status, voting_method, end_time, end_date, allow_postclose, created_at, updated_at, created_by, options, poll_settings, metadata')
         .eq('id', vote.pollId)
         .single();
 
-      if (pollError || !pollData) {
+      if (pollError || !rawPoll) {
         return {
           success: false,
           error: 'Poll not found'
         };
       }
+
+      const r = rawPoll as Record<string, unknown>;
+      const settings = (r.poll_settings ?? r.metadata ?? {}) as Record<string, unknown>;
+      const pollData: PollData = {
+        id: String(r.id),
+        title: String(r.title ?? ''),
+        votingMethod: (String(r.voting_method ?? 'single') as PollData['votingMethod']),
+        options: Array.isArray(r.options) ? (r.options as PollData['options']) : [],
+        status: (r.status as PollData['status']) ?? 'active',
+        createdBy: String(r.created_by ?? ''),
+        createdAt: new Date(String(r.created_at)),
+        updatedAt: new Date(String(r.updated_at)),
+        votingConfig: {
+          allowMultipleVotes: Boolean(settings?.allow_multiple_votes),
+          maxChoices: typeof settings?.max_selections === 'number' ? settings.max_selections : undefined,
+          quadraticCredits: typeof settings?.quadratic_credits === 'number' ? settings.quadratic_credits : 100,
+          rangeMin: typeof settings?.range_min === 'number' ? settings.range_min : 0,
+          rangeMax: typeof settings?.range_max === 'number' ? settings.range_max : 10,
+        },
+      };
+      if (r.end_time != null || r.end_date != null) {
+        pollData.endTime = new Date(String(r.end_time ?? r.end_date));
+      }
+      if (r.allow_postclose != null) pollData.allowPostClose = Boolean(r.allow_postclose);
 
       // Validate vote data
       const isValid = await this.validateVoteData(vote, pollData);
@@ -224,13 +248,13 @@ export class VoteProcessor implements IVoteProcessor {
       // Get current vote count
       const { count } = await supabaseClient
         .from('votes')
-        .select('*', { count: 'exact', head: true })
+        .select('id', { count: 'exact', head: true })
         .eq('poll_id', pollId);
 
       // Update poll with new count
       await supabaseClient
         .from('polls')
-        .update({ 
+        .update({
           total_votes: count ?? 0,
           updated_at: new Date().toISOString()
         })
@@ -285,9 +309,9 @@ export class VoteProcessor implements IVoteProcessor {
    * Validate single choice vote
    */
   private validateSingleChoiceVote(vote: VoteData, poll: PollData): boolean {
-    return vote.choice !== undefined && 
-           typeof vote.choice === 'number' && 
-           vote.choice >= 0 && 
+    return vote.choice !== undefined &&
+           typeof vote.choice === 'number' &&
+           vote.choice >= 0 &&
            vote.choice < poll.options.length;
   }
 
@@ -299,10 +323,10 @@ export class VoteProcessor implements IVoteProcessor {
       return false;
     }
 
-    return vote.approvals.length > 0 && 
-           vote.approvals.every(approval => 
-             typeof approval === 'number' && 
-             approval >= 0 && 
+    return vote.approvals.length > 0 &&
+           vote.approvals.every(approval =>
+             typeof approval === 'number' &&
+             approval >= 0 &&
              approval < poll.options.length
            );
   }
@@ -316,9 +340,9 @@ export class VoteProcessor implements IVoteProcessor {
     }
 
     return vote.rankings.length === poll.options.length &&
-           vote.rankings.every(ranking => 
-             typeof ranking === 'number' && 
-             ranking >= 0 && 
+           vote.rankings.every(ranking =>
+             typeof ranking === 'number' &&
+             ranking >= 0 &&
              ranking < poll.options.length
            ) &&
            new Set(vote.rankings).size === vote.rankings.length; // No duplicates

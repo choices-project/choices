@@ -11,6 +11,7 @@
 
 import { getSupabaseServerClient } from '@/utils/supabase/server'
 
+import { IDEMPOTENCY_KEYS_SELECT_COLUMNS } from '@/lib/api/response-builders'
 import { logger } from '@/lib/utils/logger'
 
 import type { SupabaseClient } from '@supabase/supabase-js'
@@ -75,7 +76,7 @@ export async function checkIdempotencyKey<T = unknown>(
     
     const { data, error } = await supabaseClient
       .from('idempotency_keys')
-      .select('*')
+      .select(IDEMPOTENCY_KEYS_SELECT_COLUMNS)
       .eq('key', fullKey)
       .gt('expires_at', new Date().toISOString())
       .single()
@@ -204,19 +205,20 @@ export async function cleanupExpiredIdempotencyKeys(): Promise<{ deleted: number
       return { deleted: 0, error: 'Failed to initialize Supabase client' }
     }
     
-    const { count, error } = await client
+    const { data, error } = await client
       .from('idempotency_keys')
       .delete()
       .lt('expires_at', new Date().toISOString())
-      .select('*')
+      .select('key')
 
     if (error) {
       logger.error('Failed to cleanup expired idempotency keys', error)
       return { deleted: 0, error: 'Cleanup failed' }
     }
 
-    logger.info('Cleaned up expired idempotency keys', { deleted: count ?? 0 })
-    return { deleted: count ?? 0 }
+    const deleted = data?.length ?? 0
+    logger.info('Cleaned up expired idempotency keys', { deleted })
+    return { deleted }
   } catch (error) {
     logger.error('Idempotency cleanup exception', error instanceof Error ? error : new Error('Unknown error'))
     return { deleted: 0, error: 'System error' }

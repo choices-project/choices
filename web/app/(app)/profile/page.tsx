@@ -6,8 +6,7 @@ import React, { useEffect, useState, useCallback, useRef } from 'react';
 
 import { AddressLookup } from '@/features/profile/components/AddressLookup';
 import { useProfileData, useProfileExport } from '@/features/profile/hooks/use-profile';
-import { useProfileDisplay, useProfileStats } from '@/lib/stores/profileStore';
-import { useOnboardingStore } from '@/lib/stores/onboardingStore';
+
 
 import { AuthGuard } from '@/components/business/auth/AuthGuard';
 import { EnhancedErrorDisplay } from '@/components/shared/EnhancedErrorDisplay';
@@ -19,6 +18,8 @@ import { Skeleton } from '@/components/ui/skeleton';
 
 import { useUser, useIsAuthenticated, useUserLoading } from '@/lib/stores';
 import { useAppActions } from '@/lib/stores/appStore';
+import { useOnboardingStore } from '@/lib/stores/onboardingStore';
+import { useProfileDisplay, useProfileStats } from '@/lib/stores/profileStore';
 import { logger } from '@/lib/utils/logger';
 
 // Prevent static generation since this requires client-side state

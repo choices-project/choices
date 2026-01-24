@@ -1,14 +1,14 @@
 /**
  * Hashtag-Polls Integration Base Class
- * 
+ *
  * Abstract base class for hashtag-polls integration
  * Eliminates 1,200+ lines of code duplication between server and client versions
- * 
+ *
  * Created: November 5, 2025
  * Status: ✅ REFACTORED - Production Ready
  */
 
-import type { 
+import type {
   UserPreferences
 } from '@/features/civics/lib/types/civics-types';
 import type { FeedHashtagAnalytics, PollHashtagIntegration } from '@/features/hashtags/types';
@@ -50,10 +50,10 @@ export type PersonalizedHashtagFeed = {
 
 /**
  * Abstract Base Class for Hashtag-Polls Integration
- * 
+ *
  * Provides comprehensive hashtag-polls integration for feeds
  * with real-time analytics and personalization.
- * 
+ *
  * Subclasses must implement initializeSupabase() to provide
  * either server or client Supabase client.
  */
@@ -90,19 +90,19 @@ export abstract class BaseHashtagPollsIntegrationService {
 
       // Get user's hashtag interests
       const hashtagInterests = userPreferences.interests ?? [];
-      
+
       // Generate recommendations based on hashtags
       const recommendations = await this.getHashtagPollRecommendations(
         hashtagInterests,
         limit
       );
-      
+
       // Get trending hashtags
       const trendingHashtags = await this.getTrendingHashtags(10);
-      
+
       // Generate hashtag analytics
       const analytics = await this.getHashtagAnalytics(hashtagInterests);
-      
+
       const feed: PersonalizedHashtagFeed = {
         user_id: userId,
         hashtag_interests: hashtagInterests,
@@ -136,7 +136,7 @@ export abstract class BaseHashtagPollsIntegrationService {
       // Query polls that match user's hashtag interests
       const { data: polls, error } = await this.supabase
         .from('polls')
-        .select('*')
+        .select('id, title, description, hashtags, total_votes, engagement_score, created_at')
         .contains('hashtags', hashtags)
         .order('created_at', { ascending: false })
         .limit(limit);
@@ -152,7 +152,7 @@ export abstract class BaseHashtagPollsIntegrationService {
 
       // Transform and score recommendations
       return polls.map((poll: any) => {
-        const matchedHashtags = poll.hashtags?.filter((tag: string) => 
+        const matchedHashtags = poll.hashtags?.filter((tag: string) =>
           hashtags.includes(tag)
         ) ?? [];
 
@@ -206,11 +206,11 @@ export abstract class BaseHashtagPollsIntegrationService {
 
       // Count hashtag occurrences with engagement weighting
       const hashtagScores = new Map<string, number>();
-      
+
       polls.forEach((poll: any) => {
         const hashtags = poll.hashtags ?? [];
         const engagementWeight = (poll.engagement_score ?? 0) + 1;
-        
+
         hashtags.forEach((tag: string) => {
           const current = hashtagScores.get(tag) ?? 0;
           hashtagScores.set(tag, current + engagementWeight);
@@ -305,7 +305,7 @@ export abstract class BaseHashtagPollsIntegrationService {
 
       // This would update engagement metrics in a real implementation
       logger.debug('Tracking hashtag engagement:', { pollId, hashtag, engagementType });
-      
+
       // Invalidate relevant caches
       this.invalidateCache(`hashtag_analytics_${hashtag}`);
       this.invalidateCache('trending_hashtags');
@@ -330,7 +330,7 @@ export abstract class BaseHashtagPollsIntegrationService {
 
       const { data: polls, error } = await this.supabase
         .from('polls')
-        .select('*')
+        .select('id, title, description, hashtags, total_votes, engagement_score, created_at')
         .contains('hashtags', [hashtag])
         .order('created_at', { ascending: false })
         .range(offset, offset + limit - 1);
@@ -403,7 +403,7 @@ export abstract class BaseHashtagPollsIntegrationService {
 
       const { data: poll, error } = await this.supabase
         .from('polls')
-        .select('*')
+        .select('id, title, description, hashtags, primary_hashtag, total_votes, engagement_score, created_at, total_views')
         .eq('id', pollId)
         .single();
 
@@ -424,13 +424,11 @@ export abstract class BaseHashtagPollsIntegrationService {
         hashtags,
         primary_hashtag: primaryHashtag,
         hashtag_engagement: {
-          total_views: poll.view_count ?? 0,
-          hashtag_clicks: poll.hashtag_engagement?.hashtag_clicks ?? 0,
-          hashtag_shares: poll.hashtag_engagement?.hashtag_shares ?? 0,
+          total_views: poll.total_views ?? 0,
+          hashtag_clicks: 0,
+          hashtag_shares: 0,
         },
-        related_polls: Array.isArray(poll.related_polls)
-          ? poll.related_polls.filter((id: unknown): id is string => typeof id === 'string')
-          : [],
+        related_polls: [],
         hashtag_trending_score: this.calculateTrendingScore(poll),
         user_relevance_score: 0, // Calculated per-user in higher-level contexts
         feed_priority: this.calculateFeedPriority(poll),
@@ -482,12 +480,12 @@ export abstract class BaseHashtagPollsIntegrationService {
     analytics: FeedHashtagAnalytics[]
   ): number {
     if (recommendations.length === 0) return 0;
-    
+
     const avgRelevance = recommendations.reduce((sum, rec) => sum + rec.relevanceScore, 0) / recommendations.length;
     const avgInterestLevel = analytics.length > 0
       ? analytics.reduce((sum, a) => sum + a.user_interest_level, 0) / analytics.length
       : 0;
-    
+
     return (avgRelevance * SCORING_WEIGHTS.USER_RELEVANCE) + (avgInterestLevel * SCORING_WEIGHTS.INTEREST_LEVEL);
   }
 
@@ -498,7 +496,7 @@ export abstract class BaseHashtagPollsIntegrationService {
     const engagement = poll.engagement_score ?? 0;
     const votes = poll.total_votes ?? 0;
     const ageInHours = (Date.now() - new Date(poll.created_at).getTime()) / (1000 * 60 * 60);
-    
+
     // Higher score for recent, highly engaged polls
     return (engagement + votes * 10) / Math.max(ageInHours, 1);
   }
@@ -509,7 +507,7 @@ export abstract class BaseHashtagPollsIntegrationService {
   private calculateFeedPriority(poll: any): number {
     const trending = this.calculateTrendingScore(poll);
     const engagement = poll.engagement_score ?? 0;
-    
+
     return trending * SCORING_WEIGHTS.TRENDING + engagement * SCORING_WEIGHTS.PRIORITY_ENGAGEMENT;
   }
 

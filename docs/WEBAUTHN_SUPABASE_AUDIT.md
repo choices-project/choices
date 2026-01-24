@@ -82,6 +82,18 @@ Auth-verify lookup is by `id` (PK). Credential lookup is by `(rp_id, credential_
 
 ---
 
+## Onboarding: Secure Your Account & passkey flow
+
+**Secure Your Account** is the onboarding **auth step** (BalancedOnboardingFlow step 3). It asks users to *choose* how to authenticate: **Passkey**, **Email**, or **Continue with Google**. Purpose: first-time signup flow. Supabase **email verification** applies only to **email** sign-in (magic link); **OAuth** (Google, GitHub) verifies via the provider, so no Supabase email verification.
+
+**Passkey timing:** You add a passkey **after** you have an account. Auth (email or OAuth) must complete first. The **Add passkey** option appears on Profile → “Set up biometric login” (→ `/profile/biometric-setup`) only when **onboarding is completed**. Profile shows “Complete Your Profile” / “Finish Onboarding” until then, so passkey setup is gated.
+
+**OAuth + “Finish onboarding” loop (fixed):** If you signed in with Google (or GitHub) and go to Profile, you may see “Finish Onboarding” because the store’s `isCompleted` is false. Clicking it sends you to onboarding. The **auth step** used to only offer Email / Google / Passkey. Choosing Google again redirected to OAuth and **never** advanced the step, so you never reached Privacy → … → Complete. You were stuck.
+
+**Fix:** When the user is **already signed in** on the auth step (e.g. came from Profile after OAuth), we now show “You’re signed in with [Google/GitHub/email]. Your account is secure. You can add a passkey later from Profile → Set up biometric login.” and a **Continue** button that advances to the next step. Flow: Welcome → Privacy → Demographics → **Auth (already signed in → Continue)** → Profile → Complete. After **Complete**, you’re redirected to Profile; onboarding is done, and “Set up biometric login” is available.
+
+---
+
 ## Client implementation (auth page & profiles)
 
 **Auth page** ([`app/auth/AuthPageClient.tsx`](../web/app/auth/AuthPageClient.tsx))

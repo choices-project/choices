@@ -13,18 +13,18 @@
 
 'use client';
 
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { BarChart3, AlertCircle, Loader2, CheckCircle2 } from 'lucide-react';
-import { useState, useCallback, useEffect } from 'react';
+import { useCallback } from 'react';
 
-import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Badge } from '@/components/ui/badge';
-
-import { logger } from '@/lib/utils/logger';
-import { useUser } from '@/lib/stores';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 
 import type { AnalyticsType } from '@/lib/analytics/rate-limiter';
+import { useUser } from '@/lib/stores';
+import { logger } from '@/lib/utils/logger';
 
 type AdvancedAnalyticsProps = {
   pollId: string;
@@ -67,103 +67,87 @@ const ANALYTICS_TYPES: Array<{ type: AnalyticsType; label: string; description: 
   },
 ];
 
+type StatusData = { remaining: number | null; resetDate: Date | null; isAdmin: boolean };
+
+const STATUS_QUERY_KEY = ['advanced-analytics-status'] as const;
+
 export default function AdvancedAnalytics({
   pollId,
   pollStatus,
   className = '',
 }: AdvancedAnalyticsProps) {
   const user = useUser();
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-  const [remaining, setRemaining] = useState<number | null>(null);
-  const [resetDate, setResetDate] = useState<Date | null>(null);
-  const [results, setResults] = useState<AnalyticsResult | null>(null);
-  const [isAdmin, setIsAdmin] = useState(false);
+  const queryClient = useQueryClient();
 
-  // Check if user is admin and get rate limit status
-  useEffect(() => {
-    const checkStatus = async () => {
-      if (!user?.id) return;
+  const { data: statusData } = useQuery({
+    queryKey: [...STATUS_QUERY_KEY, pollId, user?.id],
+    queryFn: async (): Promise<StatusData> => {
+      const response = await fetch(`/api/polls/${pollId}/advanced-analytics?type=demographics`);
+      if (!response.ok) return { remaining: null, resetDate: null, isAdmin: false };
+      const json = await response.json();
+      if (!json.success || !json.data) return { remaining: null, resetDate: null, isAdmin: false };
+      return {
+        remaining: json.data.remaining ?? null,
+        resetDate: json.data.resetDate ? new Date(json.data.resetDate) : null,
+        isAdmin: json.data.isAdmin === true,
+      };
+    },
+    enabled: !!user?.id && !!pollId,
+  });
 
-      try {
-        const response = await fetch(`/api/polls/${pollId}/advanced-analytics?type=demographics`);
-        if (response.ok) {
-          const data = await response.json();
-          if (data.success && data.data) {
-            setRemaining(data.data.remaining ?? null);
-            setResetDate(data.data.resetDate ? new Date(data.data.resetDate) : null);
-            setIsAdmin(data.data.isAdmin === true);
-          }
-        }
-      } catch (err) {
-        logger.error('Failed to check rate limit status', { error: err });
+  const remaining = statusData?.remaining ?? null;
+  const resetDate = statusData?.resetDate ?? null;
+  const isAdmin = statusData?.isAdmin ?? false;
+
+  const runMutation = useMutation({
+    mutationFn: async (analyticsType: AnalyticsType) => {
+      const response = await fetch(`/api/polls/${pollId}/advanced-analytics`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          analyticsType,
+          aiProvider: 'rule-based',
+        }),
+      });
+      const json = await response.json();
+      if (!response.ok) {
+        const err = new Error(json.error || json.message || 'Failed to run analytics') as Error & {
+          remaining?: number;
+          resetDate?: string;
+        };
+        err.remaining = json.remaining;
+        err.resetDate = json.resetDate;
+        throw err;
       }
-    };
-
-    void checkStatus();
-  }, [pollId, user?.id]);
+      if (!json.success || !json.data) throw new Error('Invalid response from analytics API');
+      return {
+        data: json.data,
+        analyticsType,
+        remaining: json.remaining ?? 0,
+        resetDate: json.resetDate,
+      } as AnalyticsResult;
+    },
+    onSuccess: (_data, analyticsType) => {
+      logger.info('Advanced analytics completed', { pollId, analyticsType });
+    },
+    onSettled: () => {
+      void queryClient.invalidateQueries({ queryKey: [...STATUS_QUERY_KEY, pollId, user?.id] });
+    },
+  });
 
   const runAnalytics = useCallback(
-    async (analyticsType: AnalyticsType) => {
-      if (pollStatus !== 'closed' && !isAdmin) {
-        setError('Advanced analytics only available for closed polls');
-        return;
-      }
-
-      setLoading(true);
-      setError(null);
-
-      try {
-        const response = await fetch(`/api/polls/${pollId}/advanced-analytics`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            analyticsType,
-            aiProvider: 'rule-based', // Start with rule-based (fastest, no AI costs)
-          }),
-        });
-
-        const json = await response.json();
-
-        if (!response.ok) {
-          setError(json.error || json.message || 'Failed to run analytics');
-          if (json.remaining !== undefined) {
-            setRemaining(json.remaining);
-          }
-          if (json.resetDate) {
-            setResetDate(new Date(json.resetDate));
-          }
-          return;
-        }
-
-        if (json.success && json.data) {
-          setResults({
-            data: json.data,
-            analyticsType,
-            remaining: json.remaining ?? 0,
-            resetDate: json.resetDate,
-          });
-          setRemaining(json.remaining ?? null);
-          if (json.resetDate) {
-            setResetDate(new Date(json.resetDate));
-          }
-          logger.info('Advanced analytics completed', { pollId, analyticsType });
-        } else {
-          setError('Invalid response from analytics API');
-        }
-      } catch (err) {
-        const errorMessage = err instanceof Error ? err.message : 'Network error';
-        setError(errorMessage);
-        logger.error('Failed to run advanced analytics', { error: err, pollId, analyticsType });
-      } finally {
-        setLoading(false);
-      }
+    (analyticsType: AnalyticsType) => {
+      if (pollStatus !== 'closed' && !isAdmin) return;
+      runMutation.mutate(analyticsType);
     },
-    [pollId, pollStatus, isAdmin]
+    [pollId, pollStatus, isAdmin, runMutation]
   );
 
-  const isDisabled = pollStatus !== 'closed' && !isAdmin;
+  const results = runMutation.data ?? null;
+  const loading = runMutation.isPending;
+  const error = runMutation.error?.message ?? null;
   const hasRemaining = remaining !== null && (remaining > 0 || isAdmin);
+  const isDisabled = pollStatus !== 'closed' && !isAdmin;
 
   return (
     <Card className={className}>

@@ -12,9 +12,12 @@
  * Status: ✅ ACTIVE
  */
 
-// withOptional removed
 import { getSupabaseBrowserClient } from '@/utils/supabase/client';
 
+import {
+  HASHTAG_FLAG_SELECT_COLUMNS,
+  HASHTAGS_SELECT_COLUMNS,
+} from '@/lib/api/response-builders';
 import { logger } from '@/lib/utils/logger';
 
 import type {
@@ -78,7 +81,7 @@ export async function getHashtagModeration(hashtagId: string): Promise<HashtagAp
 
     const result = await supabase
       .from('hashtag_flags')
-      .select('*')
+      .select(HASHTAG_FLAG_SELECT_COLUMNS)
       .eq('hashtag', hashtagId)
       .order('created_at', { ascending: false });
 
@@ -378,7 +381,7 @@ export async function triggerAutoModeration(hashtagId: string): Promise<void> {
     // Get hashtag details
     const { data: hashtag } = await supabase
       .from('hashtags')
-      .select('*')
+      .select(HASHTAGS_SELECT_COLUMNS)
       .eq('id', hashtagId)
       .single();
 
@@ -477,7 +480,7 @@ export async function checkForDuplicates(hashtagName: string): Promise<HashtagAp
 
     const { data, error } = await supabase
       .from('hashtags')
-      .select('*')
+      .select(HASHTAGS_SELECT_COLUMNS)
       .ilike('name', `%${normalizedName}%`);
 
     if (error) {

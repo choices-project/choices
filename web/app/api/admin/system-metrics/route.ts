@@ -13,7 +13,7 @@
  * Logging: All operations logged for observability
  */
 
-import { getSupabaseServerClient } from '@/utils/supabase/server';
+import { getSupabaseAdminClient } from '@/utils/supabase/server';
 
 import { requireAdminOr401 } from '@/features/auth/lib/admin-auth';
 
@@ -38,17 +38,17 @@ export const GET = withErrorHandling(async (request: NextRequest) => {
     return authGate;
   }
 
-  const supabaseClient = await getSupabaseServerClient();
+  const adminClient = await getSupabaseAdminClient();
 
-  if (!supabaseClient) {
-    logger.error('Admin system-metrics: Supabase client unavailable');
+  if (!adminClient) {
+    logger.error('Admin system-metrics: Supabase admin client unavailable');
     return errorResponse('Supabase client unavailable', 500);
   }
 
   try {
     const [topicsResult, pollsResult] = await Promise.all([
-      supabaseClient.from('trending_topics').select('id, processing_status'),
-      supabaseClient.from('polls').select('id, status'),
+      adminClient.from('trending_topics').select('id, processing_status'),
+      adminClient.from('polls').select('id, status'),
     ]);
 
     // Log errors for observability
