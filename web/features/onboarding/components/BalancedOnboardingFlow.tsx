@@ -32,7 +32,6 @@ import ScreenReaderSupport from '@/lib/accessibility/screen-reader';
 import {
   useUser,
   useUserLoading,
-  useUserActions,
   useOnboardingStep,
   useOnboardingData,
   useOnboardingActions,
@@ -757,8 +756,8 @@ const ProfileStep: React.FC<{
   return (
     <div className="max-w-2xl mx-auto">
       <div className="text-center mb-8">
-        <h2 className="text-3xl font-bold text-gray-900 mb-4">{t('onboarding.profile.step.title')}</h2>
-        <p className="text-lg text-gray-600">
+        <h2 className="text-3xl font-bold text-gray-900 dark:text-white mb-4">{t('onboarding.profile.step.title')}</h2>
+        <p className="text-lg text-gray-600 dark:text-gray-300">
           {t('onboarding.profile.step.subtitle')}
         </p>
       </div>
@@ -766,7 +765,7 @@ const ProfileStep: React.FC<{
       <div className="space-y-6">
         {/* Display Name */}
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-2">
+          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
             {t('onboarding.profile.fields.displayName.label')}
           </label>
           <input
@@ -778,14 +777,14 @@ const ProfileStep: React.FC<{
               })
             }
             placeholder={t('onboarding.profile.fields.displayName.placeholder')}
-            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+            className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white dark:bg-gray-800 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400"
             autoComplete="name"
           />
         </div>
 
         {/* Bio */}
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-2">
+          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
             {t('onboarding.profile.fields.bio.label')}
           </label>
           <textarea
@@ -797,15 +796,18 @@ const ProfileStep: React.FC<{
             }
             placeholder={t('onboarding.profile.fields.bio.placeholder')}
             rows={3}
-            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+            className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white dark:bg-gray-800 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400"
           />
         </div>
 
-        {/* Participation Style */}
+        {/* Participation Style — optional; skip available */}
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-2">
+          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
             {t('onboarding.profile.participation.label')}
           </label>
+          <p className="text-xs text-gray-500 dark:text-gray-400 mb-3">
+            Optional. We use this to tailor your experience; we plan to add more useful demographic questions for analytics later.
+          </p>
           <div className="space-y-2">
             {[
               {
@@ -824,7 +826,7 @@ const ProfileStep: React.FC<{
                 desc: t('onboarding.profile.participation.options.leader.description'),
               }
             ].map((option) => (
-              <label key={option.value} className="flex items-center space-x-3 p-3 border rounded-md cursor-pointer hover:bg-gray-50">
+              <label key={option.value} className="flex items-center space-x-3 p-3 border border-gray-200 dark:border-gray-600 rounded-md cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-800/50 transition-colors">
                 <input
                   type="radio"
                   name="participation"
@@ -835,11 +837,11 @@ const ProfileStep: React.FC<{
                       participationStyle: e.target.value as 'observer' | 'contributor' | 'leader',
                     })
                   }
-                  className="h-4 w-4 text-blue-600"
+                  className="h-4 w-4 text-blue-600 dark:text-blue-400"
                 />
                 <div>
-                  <div className="font-medium">{option.label}</div>
-                  <div className="text-sm text-gray-500">{option.desc}</div>
+                  <div className="font-medium text-gray-900 dark:text-white">{option.label}</div>
+                  <div className="text-sm text-gray-500 dark:text-gray-400">{option.desc}</div>
                 </div>
               </label>
             ))}
@@ -850,20 +852,20 @@ const ProfileStep: React.FC<{
       <div className="flex justify-between mt-8">
         <button
           onClick={onBack}
-          className="px-4 py-2 text-gray-600 hover:text-gray-800"
+          className="px-4 py-2 text-gray-600 dark:text-gray-400 hover:text-gray-800 dark:hover:text-white transition-colors"
         >
           {t('onboarding.profile.actions.back')}
         </button>
         <div className="space-x-3">
           <button
             onClick={handleSkip}
-            className="px-4 py-2 text-gray-600 hover:text-gray-800"
+            className="px-4 py-2 text-gray-600 dark:text-gray-400 hover:text-gray-800 dark:hover:text-white transition-colors"
           >
             {t('onboarding.profile.actions.skip')}
           </button>
           <button
             onClick={handleNext}
-            className="px-6 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700"
+            className="px-6 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-md transition-colors dark:bg-blue-500 dark:hover:bg-blue-600"
           >
             {t('onboarding.profile.actions.completeSetup')}
           </button>
@@ -875,73 +877,76 @@ const ProfileStep: React.FC<{
 
 // Step 6: Complete & First Experience (30 seconds)
 const CompleteStep: React.FC<{
-  onFinish: () => void;
+  onFinish: () => Promise<void>;
   demographics: UserDemographics;
 }> = ({ onFinish, demographics }) => {
   const router = useRouter();
   const { t } = useI18n();
+  const [isNavigating, setIsNavigating] = useState(false);
 
-  const handleFindRepresentatives = () => {
-    onFinish();
-    router.push('/civics');
-  };
-
-  const handleBrowsePolls = () => {
-    onFinish();
-    router.push('/polls');
-  };
-
-  const handleExploreFeatures = () => {
-    onFinish();
-    router.push('/dashboard');
+  const handleCta = async (destination: string) => {
+    if (isNavigating) return;
+    setIsNavigating(true);
+    try {
+      await onFinish();
+      router.push(destination);
+    } catch (err) {
+      logger.error('Complete step CTA failed:', err);
+      setIsNavigating(false);
+    }
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 flex items-center justify-center">
+    <div
+      className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 dark:from-gray-900 dark:to-gray-800 flex items-center justify-center"
+      aria-busy={isNavigating}
+      role="region"
+      aria-label={isNavigating ? t('onboarding.loading') : undefined}
+    >
       <div className="max-w-2xl mx-auto text-center p-8">
         <div className="mb-8">
-          <div className="w-20 h-20 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-6">
-            <span className="text-4xl">🎉</span>
+          <div className="w-20 h-20 bg-green-100 dark:bg-green-900/30 rounded-full flex items-center justify-center mx-auto mb-6">
+            <span className="text-4xl" aria-hidden="true">🎉</span>
           </div>
-          <h2 className="text-4xl font-bold text-gray-900 mb-4">
+          <h2 className="text-4xl font-bold text-gray-900 dark:text-white mb-4">
             {t('onboarding.complete.success.title')}
           </h2>
-          <p className="text-xl text-gray-600">
+          <p className="text-xl text-gray-600 dark:text-gray-300">
             {t('onboarding.complete.success.subtitle')}
           </p>
         </div>
 
-        <div className="bg-white rounded-lg p-6 shadow-sm mb-8">
-          <h3 className="text-lg font-semibold text-gray-900 mb-4">
+        <div className="bg-white dark:bg-gray-800 rounded-lg p-6 shadow-sm mb-8 border border-gray-200 dark:border-gray-700">
+          <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">
             {t('onboarding.complete.dashboard.title')}
           </h3>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            <div className="text-center p-4 bg-blue-50 rounded-lg">
-              <div className="text-2xl mb-2">🏛️</div>
-              <h4 className="font-semibold text-gray-900">
+            <div className="text-center p-4 bg-blue-50 dark:bg-blue-900/20 rounded-lg">
+              <div className="text-2xl mb-2" aria-hidden="true">🏛️</div>
+              <h4 className="font-semibold text-gray-900 dark:text-white">
                 {t('onboarding.complete.dashboard.cards.representatives.title')}
               </h4>
-              <p className="text-sm text-gray-600">
+              <p className="text-sm text-gray-600 dark:text-gray-300">
                 {t('onboarding.complete.dashboard.cards.representatives.description', {
                   state: demographics?.location?.state ?? t('onboarding.complete.dashboard.cards.representatives.fallback'),
                 })}
               </p>
             </div>
-            <div className="text-center p-4 bg-green-50 rounded-lg">
-              <div className="text-2xl mb-2">🗳️</div>
-              <h4 className="font-semibold text-gray-900">
+            <div className="text-center p-4 bg-green-50 dark:bg-green-900/20 rounded-lg">
+              <div className="text-2xl mb-2" aria-hidden="true">🗳️</div>
+              <h4 className="font-semibold text-gray-900 dark:text-white">
                 {t('onboarding.complete.dashboard.cards.polls.title')}
               </h4>
-              <p className="text-sm text-gray-600">
+              <p className="text-sm text-gray-600 dark:text-gray-300">
                 {t('onboarding.complete.dashboard.cards.polls.description')}
               </p>
             </div>
-            <div className="text-center p-4 bg-purple-50 rounded-lg">
-              <div className="text-2xl mb-2">📊</div>
-              <h4 className="font-semibold text-gray-900">
+            <div className="text-center p-4 bg-purple-50 dark:bg-purple-900/20 rounded-lg">
+              <div className="text-2xl mb-2" aria-hidden="true">📊</div>
+              <h4 className="font-semibold text-gray-900 dark:text-white">
                 {t('onboarding.complete.dashboard.cards.finance.title')}
               </h4>
-              <p className="text-sm text-gray-600">
+              <p className="text-sm text-gray-600 dark:text-gray-300">
                 {t('onboarding.complete.dashboard.cards.finance.description')}
               </p>
             </div>
@@ -950,31 +955,34 @@ const CompleteStep: React.FC<{
 
         <div className="space-y-4 mb-8">
           <button
-            onClick={handleFindRepresentatives}
+            onClick={() => handleCta('/civics')}
+            disabled={isNavigating}
             data-testid="complete-onboarding"
-            className="w-full bg-blue-600 text-white py-4 px-8 rounded-lg font-semibold text-lg hover:bg-blue-700 transition-colors"
+            className="w-full bg-blue-600 hover:bg-blue-700 disabled:opacity-60 text-white py-4 px-8 rounded-lg font-semibold text-lg transition-colors dark:bg-blue-500 dark:hover:bg-blue-600"
           >
-            {t('onboarding.complete.actions.findRepresentatives')}
+            {isNavigating ? t('onboarding.loading') : t('onboarding.complete.actions.findRepresentatives')}
           </button>
           <button
-            onClick={handleBrowsePolls}
-            className="w-full bg-green-600 text-white py-4 px-8 rounded-lg font-semibold text-lg hover:bg-green-700 transition-colors"
+            onClick={() => handleCta('/polls')}
+            disabled={isNavigating}
+            className="w-full bg-green-600 hover:bg-green-700 disabled:opacity-60 text-white py-4 px-8 rounded-lg font-semibold text-lg transition-colors dark:bg-green-500 dark:hover:bg-green-600"
           >
             {t('onboarding.complete.actions.browsePolls')}
           </button>
           <button
-            onClick={handleExploreFeatures}
-            className="w-full bg-purple-600 text-white py-4 px-8 rounded-lg font-semibold text-lg hover:bg-purple-700 transition-colors"
+            onClick={() => handleCta('/dashboard')}
+            disabled={isNavigating}
+            className="w-full bg-purple-600 hover:bg-purple-700 disabled:opacity-60 text-white py-4 px-8 rounded-lg font-semibold text-lg transition-colors dark:bg-purple-500 dark:hover:bg-purple-600"
           >
             {t('onboarding.complete.actions.exploreFeatures')}
           </button>
         </div>
 
-        <div className="bg-gray-50 rounded-lg p-6">
-          <h3 className="text-lg font-semibold text-gray-900 mb-4">
+        <div className="bg-gray-50 dark:bg-gray-800/50 rounded-lg p-6 border border-gray-200 dark:border-gray-700">
+          <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">
             {t('onboarding.complete.next.title')}
           </h3>
-          <ul className="text-left text-gray-600 space-y-2">
+          <ul className="text-left text-gray-600 dark:text-gray-300 space-y-2">
             <li>• {t('onboarding.complete.next.steps.findCandidates')}</li>
             <li>• {t('onboarding.complete.next.steps.askQuestions')}</li>
             <li>• {t('onboarding.complete.next.steps.followMoney')}</li>
@@ -1069,15 +1077,12 @@ const BalancedOnboardingFlow: React.FC = () => {
     restartOnboarding,
     clearAllData,
   } = useOnboardingActions();
-  const { signOut: resetUserState } = useUserActions();
 
   // Refs for store actions used in useEffect/callbacks
   const restartOnboardingRef = useRef(restartOnboarding);
   const clearAllDataRef = useRef(clearAllData);
-  const resetUserStateRef = useRef(resetUserState);
   useEffect(() => { restartOnboardingRef.current = restartOnboarding; }, [restartOnboarding]);
   useEffect(() => { clearAllDataRef.current = clearAllData; }, [clearAllData]);
-  useEffect(() => { resetUserStateRef.current = resetUserState; }, [resetUserState]);
 
   const loading = useOnboardingLoading();
   const error = useOnboardingError();
@@ -1201,7 +1206,6 @@ const BalancedOnboardingFlow: React.FC = () => {
   };
 
   const handleSkip = () => {
-    resetUserStateRef.current();
     skipOnboarding();
     goToStep(5);
   };
@@ -1268,35 +1272,21 @@ const BalancedOnboardingFlow: React.FC = () => {
         }
       }
 
-      // Complete onboarding
+      // Complete onboarding and clear local store; navigation is done by the CTA handler
       completeOnboarding();
       clearAllData();
-
-      // Get redirect destination from URL parameters (stored in ref)
-      const redirectTo = redirectToRef.current || '/dashboard';
-      const redirectReason = searchParams.get('reason');
-
-      // Log redirect reason for debugging
-      if (redirectReason) {
-        logger.debug('Onboarding completed with redirect reason:', redirectReason);
-      }
-
-      // Redirect to requested destination or default to dashboard
-      window.location.href = redirectTo;
     } catch (error) {
       logger.error('Error completing onboarding:', error);
-      // Still redirect even if database update fails
-      const redirectTo = redirectToRef.current || '/dashboard';
-      window.location.href = redirectTo;
+      throw error;
     }
   };
 
   if (isLoading || profileLoading) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 flex items-center justify-center">
+      <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 dark:from-gray-900 dark:to-gray-800 flex items-center justify-center">
         <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4" />
-          <p className="text-gray-600">{t('onboarding.loading')}</p>
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 dark:border-blue-400 mx-auto mb-4" aria-hidden="true" />
+          <p className="text-gray-600 dark:text-gray-300">{t('onboarding.loading')}</p>
         </div>
       </div>
     );

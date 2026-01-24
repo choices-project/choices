@@ -19,6 +19,20 @@ async function main() {
   }
   console.log('Merge completed successfully.', data ?? '');
 
+  console.log('Deactivating non-current representatives...');
+  const { data: deactivated, error: deactivateError } = await client.rpc(
+    'deactivate_non_current_openstates_reps',
+  );
+  if (deactivateError) {
+    console.error('Deactivate non-current failed:', deactivateError.message);
+    process.exit(1);
+  }
+  const n =
+    typeof deactivated === 'number'
+      ? deactivated
+      : (deactivated as Record<string, number> | null)?.deactivate_non_current_openstates_reps ?? 0;
+  console.log(`Deactivated ${n} non-current representative(s).`);
+
   console.log('Refreshing representative_divisions from OpenStates roles...');
   const { data: divisionsInserted, error: divisionError } = await client.rpc(
     'refresh_divisions_from_openstates',

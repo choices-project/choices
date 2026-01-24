@@ -11,6 +11,8 @@ import { fileURLToPath } from 'url';
 import { createClient } from '@supabase/supabase-js';
 import { config } from 'dotenv';
 
+const PROFILE_SELECT = 'id, user_id, display_name, is_admin, created_at, updated_at';
+
 // Get __dirname equivalent for ES modules
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
@@ -24,7 +26,7 @@ const SUPABASE_SERVICE_ROLE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY;
 const ADMIN_EMAIL = process.env.E2E_ADMIN_EMAIL;
 
 async function verifyAdminUser() {
-  // eslint-disable-next-line no-console
+   
   console.log('🔍 Verifying admin user profile...\n');
 
   if (!SUPABASE_SERVICE_ROLE_KEY) {
@@ -51,7 +53,7 @@ async function verifyAdminUser() {
     },
   });
 
-  // eslint-disable-next-line no-console
+   
   console.log(`📧 Checking user: ${ADMIN_EMAIL}\n`);
 
   // First, get the user from auth.users
@@ -70,20 +72,20 @@ async function verifyAdminUser() {
     return;
   }
 
-  // eslint-disable-next-line no-console
+   
   console.log(`✅ Found user in auth.users: ${authUser.id}\n`);
 
   // Now check the user_profiles table
   const { data: profile, error: profileError } = await supabaseAdmin
     .from('user_profiles')
-    .select('*')
+    .select(PROFILE_SELECT)
     .eq('user_id', authUser.id)
     .single();
 
   if (profileError) {
     if (profileError.code === 'PGRST116') {
       // Profile doesn't exist - create it
-      // eslint-disable-next-line no-console
+       
       console.log('⚠️  Profile does not exist. Creating profile with is_admin=true...\n');
 
       const { data: newProfile, error: createError } = await supabaseAdmin
@@ -98,7 +100,7 @@ async function verifyAdminUser() {
             updated_at: new Date().toISOString(),
           },
         ])
-        .select()
+        .select(PROFILE_SELECT)
         .single();
 
       if (createError) {
@@ -106,13 +108,13 @@ async function verifyAdminUser() {
         return;
       }
 
-      // eslint-disable-next-line no-console
+       
       console.log('✅ Profile created with is_admin=true');
-      // eslint-disable-next-line no-console
+       
       console.log(`   Profile ID: ${newProfile.id}`);
-      // eslint-disable-next-line no-console
+       
       console.log(`   Display Name: ${newProfile.display_name}`);
-      // eslint-disable-next-line no-console
+       
       console.log(`   Is Admin: ${newProfile.is_admin}\n`);
       return;
     }
@@ -126,23 +128,23 @@ async function verifyAdminUser() {
     return;
   }
 
-  // eslint-disable-next-line no-console
+   
   console.log('📋 Current profile:');
-  // eslint-disable-next-line no-console
+   
   console.log(`   Profile ID: ${profile.id}`);
-  // eslint-disable-next-line no-console
+   
   console.log(`   Display Name: ${profile.display_name || 'N/A'}`);
-  // eslint-disable-next-line no-console
+   
   console.log(`   Is Admin: ${profile.is_admin ?? false}\n`);
 
   if (profile.is_admin === true) {
-    // eslint-disable-next-line no-console
+     
     console.log('✅ User already has is_admin=true. No changes needed.\n');
     return;
   }
 
   // Update profile to set is_admin=true
-  // eslint-disable-next-line no-console
+   
   console.log('⚠️  User does not have is_admin=true. Updating...\n');
 
   const { data: updatedProfile, error: updateError } = await supabaseAdmin
@@ -152,7 +154,7 @@ async function verifyAdminUser() {
       updated_at: new Date().toISOString(),
     })
     .eq('user_id', authUser.id)
-    .select()
+    .select(PROFILE_SELECT)
     .single();
 
   if (updateError) {
@@ -160,15 +162,15 @@ async function verifyAdminUser() {
     return;
   }
 
-  // eslint-disable-next-line no-console
+   
   console.log('✅ Profile updated successfully!');
-  // eslint-disable-next-line no-console
+   
   console.log(`   Profile ID: ${updatedProfile.id}`);
-  // eslint-disable-next-line no-console
+   
   console.log(`   Display Name: ${updatedProfile.display_name || 'N/A'}`);
-  // eslint-disable-next-line no-console
+   
   console.log(`   Is Admin: ${updatedProfile.is_admin}\n`);
-  // eslint-disable-next-line no-console
+   
   console.log('🎉 Admin user profile is now correctly configured!\n');
 }
 

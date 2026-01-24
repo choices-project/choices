@@ -16,10 +16,10 @@ export default function OnboardingPage() {
   return (
     <Suspense
       fallback={
-        <div className="min-h-screen bg-gray-50 flex items-center justify-center" role="status" aria-live="polite" aria-busy="true">
+        <div className="min-h-screen bg-gray-50 dark:bg-gray-900 flex items-center justify-center" role="status" aria-live="polite" aria-busy="true">
           <div className="text-center">
-            <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-blue-600 mx-auto mb-4" />
-            <p className="text-gray-600">{t('onboarding.loading')}</p>
+            <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-blue-600 dark:border-blue-400 mx-auto mb-4" aria-hidden="true" />
+            <p className="text-gray-600 dark:text-gray-300">{t('onboarding.loading')}</p>
           </div>
         </div>
       }

@@ -90,7 +90,7 @@ export default function ModerationPage() {
       await refreshAll();
     };
     void loadData();
-  }, []); // Only load once on mount
+  }, [refreshAll]);
 
   const handleReportStatusChange = async (reportId: string, status: string) => {
     try {

@@ -32,6 +32,7 @@ Staging / upstream: `openstates_people_*`, `openstates_people_data`, etc.
 | `get_table_columns(text)` | `tools:inspect:schema` | Column metadata for listed tables |
 | `get_duplicate_canonical_ids()` | `tools:report:duplicates`, `fix:duplicates` | Duplicate canonical IDs |
 | `sync_representatives_from_openstates` | `openstates:merge` | Merge staging → canonical |
+| `deactivate_non_current_openstates_reps()` | `openstates:merge` | Set `is_active=false` for reps no longer current |
 | `refresh_divisions_from_openstates()` | `state:sync:divisions` | Rebuild `representative_divisions` |
 | `get_upcoming_elections(divisions text[])` | Web `/api/v1/civics/elections` | Upcoming elections by OCD divisions |
 | `touch_representative_divisions()` | Trigger on `representative_divisions` | Maintain `updated_at` |

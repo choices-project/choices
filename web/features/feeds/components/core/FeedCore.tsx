@@ -18,7 +18,7 @@
  */
 
 import { HashtagIcon, MoonIcon, SunIcon } from '@heroicons/react/24/outline';
-import { MapPin, RefreshCw } from 'lucide-react';
+import { MapPin, Plus, RefreshCw } from 'lucide-react';
 import React, { useState, useCallback, useEffect, useRef } from 'react';
 
 import { DistrictIndicator } from '@/components/feeds/DistrictBadge';
@@ -470,8 +470,10 @@ export default function FeedCore({
           {isLoading && feeds.length === 0 ? (
             <div
               className="space-y-4 py-8"
-              aria-label="Loading feeds"
+              role="status"
               aria-busy="true"
+              aria-live="polite"
+              aria-label="Loading feeds"
               data-testid="feed-loading-skeleton"
             >
               {[1, 2, 3].map((i) => (
@@ -491,7 +493,7 @@ export default function FeedCore({
             <EnhancedEmptyState
               icon={
                 <svg
-                  className="h-12 w-12 text-gray-400"
+                  className="h-12 w-12 text-gray-400 dark:text-gray-500"
                   fill="none"
                   viewBox="0 0 24 24"
                   stroke="currentColor"
@@ -526,28 +528,36 @@ export default function FeedCore({
                   selectedHashtags.forEach(tag => onHashtagRemove(tag));
                 }
               } : {})}
-              primaryAction={{
-                label: selectedHashtags.length > 0
-                  ? (t('feeds.core.empty.filters.clear') || 'Clear Filters')
-                  : (t('feeds.core.empty.default.refresh') || 'Refresh Feed'),
-                onClick: selectedHashtags.length > 0
-                  ? () => {
-                      selectedHashtags.forEach(tag => onHashtagRemove(tag));
+              primaryAction={
+                selectedHashtags.length > 0
+                  ? {
+                      label: t('feeds.core.empty.filters.clear') || 'Clear Filters',
+                      onClick: () => {
+                        selectedHashtags.forEach(tag => onHashtagRemove(tag));
+                      },
                     }
-                  : onRefresh,
-                icon: selectedHashtags.length > 0 ? undefined : <RefreshCw className="h-4 w-4" />,
-              }}
-              {...(selectedHashtags.length === 0 && trendingHashtags.length > 0 ? {
-                secondaryAction: {
-                  label: t('feeds.core.empty.default.explore') || 'Explore',
-                  onClick: () => {
-                    const firstTag = trendingHashtags[0];
-                    if (firstTag) {
-                      onHashtagAdd(firstTag);
+                  : {
+                      label: t('feeds.core.empty.default.create') || 'Create poll',
+                      href: '/polls/create',
+                      icon: <Plus className="h-4 w-4" aria-hidden="true" />,
                     }
-                  },
-                }
-              } : {})}
+              }
+              secondaryAction={
+                selectedHashtags.length > 0
+                  ? undefined
+                  : trendingHashtags.length > 0
+                    ? {
+                        label: t('feeds.core.empty.default.explore') || 'Explore',
+                        onClick: () => {
+                          const firstTag = trendingHashtags[0];
+                          if (firstTag) onHashtagAdd(firstTag);
+                        },
+                      }
+                    : {
+                        label: t('feeds.core.empty.default.refresh') || 'Refresh Feed',
+                        onClick: onRefresh,
+                      }
+              }
             />
           ) : (
             <div className="space-y-4" role="feed">

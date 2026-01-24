@@ -145,9 +145,20 @@ export default function PollClient({ poll }: PollClientProps) {
       pollId: poll.id,
       pollTitle: poll.title,
       totalVotes: poll.totalvotes,
-      resultsTotalVotes: results?.totalVotes,
     });
-  }, [isPollCreator, isAuthenticated, userId, pollCreatedBy, poll.status, user?.id, poll.createdBy]);
+  }, [
+    isPollCreator,
+    isAuthenticated,
+    userId,
+    pollCreatedBy,
+    poll.status,
+    user?.id,
+    user,
+    poll.id,
+    poll.title,
+    poll.totalvotes,
+    poll.createdBy,
+  ]);
 
   // Track if component is mounted to prevent hydration mismatches from date formatting
   const [isMounted, setIsMounted] = useState(false);
@@ -766,6 +777,7 @@ export default function PollClient({ poll }: PollClientProps) {
     poll.id,
     poll.votingMethod,
     pollDetailsForBallot,
+    router,
   ]);
 
   const handleShare = async () => {
@@ -1317,7 +1329,7 @@ export default function PollClient({ poll }: PollClientProps) {
         {/* Loading State */}
         {loading && (
           <Card>
-            <CardContent className="text-center py-8" role="status" aria-live="polite" aria-busy="true">
+            <CardContent className="text-center py-8" role="status" aria-busy="true" aria-live="polite" aria-label="Loading poll results">
               <div className="flex flex-col items-center justify-center space-y-3">
                 <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 dark:border-blue-400" aria-hidden="true" />
                 <div>

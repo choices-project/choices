@@ -1,8 +1,8 @@
 /**
  * Civic Actions Integration Utilities
- * 
+ *
  * Utilities for integrating civic actions with feeds, representatives, and other features
- * 
+ *
  * Feature Flag: CIVIC_ENGAGEMENT_V2
  */
 

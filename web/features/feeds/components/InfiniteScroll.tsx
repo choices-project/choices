@@ -244,11 +244,12 @@ export default function InfiniteScroll({
       {/* Scroll to top button */}
       {enableScrollToTop && showScrollToTop && (
         <button
+          type="button"
           onClick={handleScrollToTop}
-          className="fixed bottom-4 right-4 p-3 bg-blue-500 text-white rounded-full shadow-lg hover:bg-blue-600 transition-all duration-200 z-20"
+          className="fixed bottom-4 right-4 flex items-center justify-center min-h-[44px] min-w-[44px] p-3 bg-blue-500 text-white rounded-full shadow-lg hover:bg-blue-600 dark:bg-blue-600 dark:hover:bg-blue-500 transition-all duration-200 z-20 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 dark:focus:ring-offset-gray-900"
           aria-label={t('feeds.infiniteScroll.scrollToTopAria')}
         >
-          <ChevronUpIcon className="w-6 h-6" />
+          <ChevronUpIcon className="w-6 h-6" aria-hidden="true" />
         </button>
       )}
     </div>

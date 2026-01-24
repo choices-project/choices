@@ -273,7 +273,7 @@ export class AnalyticsService {
       // Get voting history count
       const { count: votingHistory } = await supabase
         .from('votes')
-        .select('*', { count: 'exact', head: true })
+        .select('id', { count: 'exact', head: true })
         .eq('user_id', userId)
 
       // Calculate verification factors

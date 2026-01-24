@@ -270,7 +270,7 @@ export default function AdminFeedbackPage() {
     return () => {
       isMountedRef.current = false;
     };
-  }, [debouncedFilters]); // Only reload when filters change, not when fetchFeedback changes
+  }, [debouncedFilters, fetchFeedback]);
 
   const handleStatusUpdate = useCallback(async (feedbackId: string, newStatus: string) => {
     try {
@@ -322,6 +322,28 @@ export default function AdminFeedbackPage() {
     fetchFeedback({ current: true });
   }, [fetchFeedback]);
 
+  const hasActiveFilters = !!(
+    filters.type ||
+    filters.sentiment ||
+    filters.status ||
+    filters.priority ||
+    filters.dateRange !== 'all' ||
+    filters.search.trim()
+  );
+
+  const handleClearFilters = useCallback(() => {
+    setError(null);
+    setFilters({
+      type: '',
+      sentiment: '',
+      status: '',
+      priority: '',
+      dateRange: 'all',
+      search: '',
+    });
+    // useEffect will refetch when debouncedFilters updates
+  }, []);
+
   return (
     <ErrorBoundary
       fallback={
@@ -358,6 +380,8 @@ export default function AdminFeedbackPage() {
           isLoading={isLoading}
           error={error}
           onRetry={handleRetry}
+          onClearFilters={handleClearFilters}
+          hasActiveFilters={hasActiveFilters}
           onFeedbackSelect={handleFeedbackSelect}
           onStatusUpdate={handleStatusUpdate}
         />

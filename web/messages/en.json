@@ -2127,7 +2127,9 @@
         "default": {
           "title": "No feeds available",
           "description": "There are no feeds to display right now. Check back soon for new content, or explore trending hashtags to discover what's happening.",
+          "create": "Create poll",
           "refresh": "Refresh feed",
+          "explore": "Explore",
           "suggestions": "Explore trending topics:"
         },
         "polls": {

@@ -16,6 +16,7 @@ import {
 import React from 'react';
 
 import { EnhancedErrorDisplay } from '@/components/shared/EnhancedErrorDisplay';
+import { Button } from '@/components/ui/button';
 
 type Feedback = {
   id: string;
@@ -86,6 +87,8 @@ type FeedbackListProps = {
   isLoading: boolean;
   error?: string | null;
   onRetry?: () => void;
+  onClearFilters?: () => void;
+  hasActiveFilters?: boolean;
   onFeedbackSelect: (_item: Feedback) => void;
   onStatusUpdate: (_feedbackId: string, _newStatus: string) => void;
 };
@@ -95,6 +98,8 @@ export const FeedbackList: React.FC<FeedbackListProps> = ({
   isLoading,
   error = null,
   onRetry,
+  onClearFilters,
+  hasActiveFilters = false,
   onFeedbackSelect,
   onStatusUpdate,
 }) => {
@@ -180,8 +185,17 @@ export const FeedbackList: React.FC<FeedbackListProps> = ({
 
   if (isLoading) {
     return (
-      <div className="p-8 text-center">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto" />
+      <div
+        className="p-8 text-center"
+        role="status"
+        aria-busy="true"
+        aria-live="polite"
+        aria-label="Loading feedback"
+      >
+        <div
+          className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 dark:border-blue-400 mx-auto"
+          aria-hidden="true"
+        />
         <p className="text-gray-600 dark:text-gray-400 mt-2">Loading feedback...</p>
       </div>
     );
@@ -218,10 +232,39 @@ export const FeedbackList: React.FC<FeedbackListProps> = ({
         <tbody className="bg-white dark:bg-gray-900 divide-y divide-gray-200 dark:divide-gray-700">
           {feedback.length === 0 ? (
             <tr>
-              <td colSpan={7} className="px-6 py-12 text-center">
-                <MessageSquare className="w-12 h-12 text-gray-400 dark:text-gray-500 mx-auto mb-4" />
-                <h3 className="text-lg font-medium text-gray-900 dark:text-gray-100 mb-2">No feedback found</h3>
-                <p className="text-gray-600 dark:text-gray-400">No feedback submissions match your current filters.</p>
+              <td colSpan={7} className="px-6 py-12">
+                <div
+                  className="flex flex-col items-center justify-center text-center"
+                  role="region"
+                  aria-label="No feedback"
+                >
+                  <MessageSquare className="w-12 h-12 text-gray-400 dark:text-gray-500 mx-auto mb-4" aria-hidden="true" />
+                  <h3 className="text-lg font-medium text-gray-900 dark:text-gray-100 mb-2">No feedback found</h3>
+                  <p className="text-gray-600 dark:text-gray-400 mb-4">
+                    {hasActiveFilters
+                      ? 'No feedback submissions match your current filters.'
+                      : 'No feedback has been submitted yet.'}
+                  </p>
+                  <div className="flex flex-wrap gap-3 justify-center">
+                    {hasActiveFilters && onClearFilters ? (
+                      <Button
+                        variant="default"
+                        onClick={onClearFilters}
+                        className="bg-blue-600 hover:bg-blue-700 dark:bg-blue-500 dark:hover:bg-blue-600"
+                      >
+                        Clear filters
+                      </Button>
+                    ) : onRetry ? (
+                      <Button
+                        variant="default"
+                        onClick={onRetry}
+                        className="bg-blue-600 hover:bg-blue-700 dark:bg-blue-500 dark:hover:bg-blue-600"
+                      >
+                        Refresh
+                      </Button>
+                    ) : null}
+                  </div>
+                </div>
               </td>
             </tr>
           ) : (

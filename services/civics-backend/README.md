@@ -27,7 +27,7 @@ If you are new to the project or prefer a checklist-style walk-through, start wi
    ```bash
    npm install
    ```
-3. Confirm OpenStates YAML files exist under `data/openstates-people/data` (or set `OPENSTATES_PEOPLE_DIR` to a custom path).
+3. Confirm the OpenStates people submodule exists: `data/openstates-people` points at [openstates/people](https://github.com/openstates/people). Before each ingest, `openstates:sync-people` runs `git submodule update --remote` so we use **fresh repo data**, not a static snapshot. You can set `OPENSTATES_PEOPLE_DIR` to a custom path to override.
 
 > **Remember:** keep `.env` out of version control. Scripts load it via `dotenv/config`.
 
@@ -57,8 +57,9 @@ All commands accept `--states`, `--limit`, and `--dry-run` for safe testing. Fin
 
 ## 4. What happens under the hood
 - **Ingest-only.** This service fetches from external APIs (OpenStates, FEC, Google Civic) and **writes** into Supabase. The web app serves users **only** from Supabase (and from the address-lookup endpoint, which is the sole user-facing external API).
+- **Sync** (`openstates:sync-people`) updates the [openstates/people](https://github.com/openstates/people) submodule from the repo so we use fresh YAML, not old procured data.
 - **Stage loader** (`src/scripts/openstates/stage-openstates.ts`) ingests the raw YAML into staging tables.
-- **SQL merge** (`sync_representatives_from_openstates`) updates `representatives_core` plus contacts, social, photos, provenance, and quality metrics.
+- **SQL merge** (`sync_representatives_from_openstates`) updates `representatives_core`; then `deactivate_non_current_openstates_reps` marks reps no longer current as inactive; `refresh_divisions_from_openstates` rebuilds divisions.
 - **Post-merge activity sync** replays OpenStates bill data into `representative_activity` (unless you set `SKIP_ACTIVITY_SYNC`).
 - **Federal enrichers** (`src/scripts/federal/*`) hydrate Congress.gov IDs and FEC data separately from the YAML ingest.
 - **State refreshers** (`state:sync:contacts` / `social` / `photos` / `committees` / `activity` / `data-sources` / `google-civic` / `google-elections`) remain available for surgical reruns while we continue expanding the SQL-first flow.
@@ -78,7 +79,8 @@ Each writer uses replace-by-source semantics: rows inserted with `source = 'open
 
 | Command | Purpose (plain language) | Good to know |
 | --- | --- | --- |
-| `npm run openstates:ingest` | Pull latest OpenStates data, merge into Supabase, refresh bill activity | Requires `.env.local` and local YAML |
+| `npm run openstates:sync-people` | Update [openstates/people](https://github.com/openstates/people) submodule from repo (`git submodule update --remote`) | Run automatically before stage; use fresh repo data, not old procured data |
+| `npm run openstates:ingest` | Sync people repo → stage YAML → merge → deactivate non-current → divisions → optional bill activity | Runs `openstates:sync-people` first |
 | `npm run ingest:qa` | Verify schema alignment, duplicate canonicals, and preview records | Fails fast with actionable guidance |
 | `npm run preview` | Sample from `representatives_core` (total, by level, N rows). Used by `ingest:qa`. | `--limit=N`, `--states=X,Y`. Use `--pipeline` for pipeline-based federal/state preview. |
 | `npm run federal:enrich:finance` | Fetch FEC totals & contributors and update Supabase rows | Records “no data” placeholders when FEC has nothing |

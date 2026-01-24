@@ -140,7 +140,7 @@ export default function AdvancedAnalytics({
       if (pollStatus !== 'closed' && !isAdmin) return;
       runMutation.mutate(analyticsType);
     },
-    [pollId, pollStatus, isAdmin, runMutation]
+    [pollStatus, isAdmin, runMutation]
   );
 
   const results = runMutation.data ?? null;

@@ -1,17 +1,17 @@
 /**
  * District Heatmap API
- * 
+ *
  * Returns engagement metrics across congressional districts.
  * Shows which districts have the most user engagement.
- * 
+ *
  * Privacy Features:
  * - Only shows districts (never full addresses)
  * - K-anonymity enforcement (min 5 users per district)
  * - Only opted-in users included
  * - Aggregated data only
- * 
+ *
  * Access: Admin-only
- * 
+ *
  * Created: November 5, 2025
  * Status: ✅ Production-ready
  */
@@ -52,9 +52,9 @@ export const GET = withErrorHandling(async (request: NextRequest) => {
     const minCount = parseInt(searchParams.get('min_count') ?? String(K_ANONYMITY_THRESHOLD));
 
     // Generate cache key
-    const cacheKey = generateCacheKey(CACHE_PREFIX.DISTRICT_HEATMAP, { 
-      state: stateFilter, 
-      level: levelFilter 
+    const cacheKey = generateCacheKey(CACHE_PREFIX.DISTRICT_HEATMAP, {
+      state: stateFilter,
+      level: levelFilter
     });
 
     // Try to get from cache or fetch from database
@@ -87,25 +87,25 @@ export const GET = withErrorHandling(async (request: NextRequest) => {
 
     // Group by district
     const districtGroups = new Map<string, any[]>();
-    
+
     users.forEach(u => {
       const demographics = u.demographics;
       if (!demographics || typeof demographics !== 'object') return;
-      
+
       const location = demographics.location;
       if (!location || typeof location !== 'object') return;
-      
+
       const state = location.state;
       const district = location.district;
-      
+
       if (!state) return;
-      
+
       // Apply state filter if specified
       if (stateFilter && state !== stateFilter) return;
-      
+
       // Create district key
       const districtKey = district ? `${state}-${district}` : state;
-      
+
       if (!districtGroups.has(districtKey)) {
         districtGroups.set(districtKey, []);
       }
@@ -119,7 +119,7 @@ export const GET = withErrorHandling(async (request: NextRequest) => {
     const heatmap = Array.from(districtGroups.entries())
       .map(([districtKey, districtUsers]) => {
         const userCount = districtUsers.length;
-        
+
         // Apply k-anonymity filter
         if (userCount < minCount) {
           return null;
@@ -131,7 +131,7 @@ export const GET = withErrorHandling(async (request: NextRequest) => {
         const districtNum = parts[1] ?? 'At-Large';
 
         // Count civic actions for this district
-        const actionCount = (civicActions ?? []).filter((a: any) => 
+        const actionCount = (civicActions ?? []).filter((a: any) =>
           a.target_district === districtKey
         ).length;
 

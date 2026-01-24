@@ -118,12 +118,15 @@ export default function FeedContent() {
               <h2 className="text-xl font-semibold text-red-600 dark:text-red-400 mb-2">
                 Unable to load feed
               </h2>
-              <p className="text-gray-600 dark:text-gray-400 mb-4">
+              <p className="text-gray-600 dark:text-gray-400 mb-2">
                 We encountered an error while loading your feed. Please try again.
+              </p>
+              <p className="text-xs text-muted-foreground dark:text-gray-500 mb-4">
+                Check your connection. If the problem persists, refresh the page or try again.
               </p>
               <button
                 onClick={() => window.location.reload()}
-                className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition-colors"
+                className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition-colors dark:bg-blue-500 dark:hover:bg-blue-600"
                 aria-label="Try again to load feed"
                 data-testid="feed-error-boundary-retry"
               >

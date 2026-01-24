@@ -1,6 +1,7 @@
 import { getSupabaseServerClient } from '@/utils/supabase/server'
 
 import { withErrorHandling, successResponse, authError, errorResponse, validationError, forbiddenError } from '@/lib/api';
+import { CANDIDATE_PLATFORM_SELECT_COLUMNS } from '@/lib/api/response-builders';
 
 import type { NextRequest } from 'next/server'
 
@@ -28,7 +29,7 @@ export const GET = withErrorHandling(async (request: NextRequest) => {
     // Otherwise only get active verified platforms
     const { data: platforms, error } = await supabase
       .from('candidate_platforms')
-      .select('*')
+      .select(CANDIDATE_PLATFORM_SELECT_COLUMNS)
       .eq('user_id', userId)
       .order('created_at', { ascending: false })
 
@@ -91,7 +92,7 @@ export const PUT = withErrorHandling(async (request: NextRequest) => {
       .from('candidate_platforms')
       .update(updateData)
       .eq('id', id)
-      .select()
+      .select(CANDIDATE_PLATFORM_SELECT_COLUMNS)
       .single()
 
   if (error) {

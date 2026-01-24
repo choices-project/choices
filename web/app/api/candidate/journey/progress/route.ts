@@ -1,6 +1,7 @@
 import { getSupabaseServerClient } from '@/utils/supabase/server'
 
 import { withErrorHandling, successResponse, authError, errorResponse, validationError, notFoundError, forbiddenError } from '@/lib/api';
+import { CANDIDATE_PLATFORM_SELECT_COLUMNS } from '@/lib/api/response-builders';
 import type { 
   JourneyStage, 
   JourneyMilestone
@@ -37,7 +38,7 @@ export const GET = withErrorHandling(async (request: NextRequest) => {
     // Get platform
     const { data: platform, error: platformError } = await supabase
       .from('candidate_platforms')
-      .select('*')
+      .select(CANDIDATE_PLATFORM_SELECT_COLUMNS)
       .eq('id', platformId)
       .eq('user_id', authUser.id)
       .single()

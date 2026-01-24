@@ -246,7 +246,7 @@ function PollsPageContent() {
   // Use data attribute to help with debugging and ensure consistent SSR/client rendering
   if (!isMounted) {
     return (
-      <div className="container mx-auto px-4 py-8" data-testid="polls-loading-mount" aria-label="Loading polls" aria-busy="true">
+      <div className="container mx-auto px-4 py-8" data-testid="polls-loading-mount" role="status" aria-busy="true" aria-live="polite" aria-label="Loading polls">
         <div className="mb-8">
           <Skeleton className="h-10 w-64 mb-2" />
           <Skeleton className="h-5 w-96" />
@@ -274,7 +274,7 @@ function PollsPageContent() {
   // Show loading state if actually loading data
   if (isLoading) {
     return (
-      <div className="container mx-auto px-4 py-8" data-testid="polls-loading-data" aria-label="Loading polls" aria-busy="true">
+      <div className="container mx-auto px-4 py-8" data-testid="polls-loading-data" role="status" aria-busy="true" aria-live="polite" aria-label="Loading polls">
         <div className="mb-8">
           <Skeleton className="h-10 w-64 mb-2" />
           <Skeleton className="h-5 w-96" />

@@ -4,7 +4,8 @@ import { z } from 'zod'
 
 import { getSupabaseServerClient } from '@/utils/supabase/server'
 
-import { 
+import { PROFILE_SELECT_COLUMNS } from '@/lib/api/response-builders'
+import {
   createSecureServerAction,
   requireAdmin,
   logSecurityEvent,
@@ -43,7 +44,7 @@ export const systemStatus = createSecureServerAction(
           // Get system status
           const { data: systemConfig } = await supabaseClient
             .from('user_profiles')
-            .select('*')
+            .select(PROFILE_SELECT_COLUMNS)
             .order('created_at', { ascending: false })
             .limit(10)
 

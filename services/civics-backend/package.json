@@ -12,6 +12,7 @@
     "prioritize": "npm run build --silent && node build/prioritize-low-quality.js",
     "preview": "npm run build --silent && node build/run-preview.js",
 
+    "openstates:sync-people": "git -C \"$(git rev-parse --show-toplevel)\" submodule update --remote --init services/civics-backend/data/openstates-people",
     "openstates:stage": "npm run build --silent && node build/scripts/openstates/stage-openstates.js",
     "openstates:merge": "npm run build --silent && node build/scripts/openstates/run-openstates-merge.js",
     "state:sync:activity": "npm run build --silent && node build/scripts/state/sync-activity.js",
@@ -26,10 +27,12 @@
     "state:sync:divisions": "npm run build --silent && node build/scripts/state/sync-divisions.js",
     "state:refresh": "npm run build --silent && node build/scripts/state/refresh-state.js",
     "openstates:coverage": "npm run build --silent && node build/run-openstates-coverage.js",
-    "openstates:ingest": "npm run openstates:stage && npm run openstates:merge",
+    "openstates:ingest": "npm run openstates:sync-people && npm run openstates:stage && npm run openstates:merge",
 
     "federal:enrich:congress": "npm run build --silent && node build/scripts/federal/enrich-congress-ids.js",
     "federal:enrich:finance": "npm run build --silent && node build/scripts/federal/enrich-fec-finance.js",
+
+    "ingest:full": "npm run openstates:ingest && npm run federal:enrich:congress && npm run federal:enrich:finance",
 
     "tools:audit:crosswalk": "npm run build --silent && node build/audit/crosswalk.js",
     "tools:report:gaps": "npm run build --silent && node build/scripts/tools/report-gaps.js",
@@ -55,6 +58,7 @@
     "audit:terms": "npm run tools:audit:terms",
     "qa:openstates": "npm run openstates:coverage",
 
+    "sync:openstates-people": "npm run openstates:sync-people",
     "stage:openstates": "npm run openstates:stage",
     "merge:openstates": "npm run openstates:merge",
     "openstates:sync:activity": "npm run state:sync:activity",

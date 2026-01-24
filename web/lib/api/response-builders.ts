@@ -26,6 +26,14 @@ export const HASHTAG_USAGE_SELECT_COLUMNS =
 export const HASHTAG_ENGAGEMENT_SELECT_COLUMNS =
   'id, engagement_type, hashtag_id, timestamp, user_id, created_at, metadata';
 
+/** Explicit columns for hashtag_user_preferences select (avoid select('*')) */
+export const HASHTAG_USER_PREFERENCES_SELECT_COLUMNS =
+  'id, user_id, followed_hashtags, hashtag_filters, notification_preferences, created_at, updated_at';
+
+/** Explicit columns for feed_items select (avoid select('*')) */
+export const FEED_ITEMS_SELECT_COLUMNS =
+  'id, feed_id, item_type, item_data, poll_id, position, is_featured, created_at, updated_at';
+
 /** Explicit columns for audit_logs select (avoid select('*')) */
 export const AUDIT_LOGS_SELECT_COLUMNS =
   'id, event_type, event_name, severity, user_id, session_id, ip_address, user_agent, request_path, request_method, resource, action, status, granted, metadata, error_message, error_stack, created_at, expires_at';
@@ -92,6 +100,10 @@ export const CANDIDATE_EMAIL_CHALLENGE_SELECT_COLUMNS =
 /** Explicit columns for official_email_fast_track select (avoid select('*')) */
 export const OFFICIAL_EMAIL_FAST_TRACK_SELECT_COLUMNS =
   'id, domain, email, representative_id, verified, last_attempt_at';
+
+/** Explicit columns for candidate_platforms select (avoid select('*')) */
+export const CANDIDATE_PLATFORM_SELECT_COLUMNS =
+  'id, user_id, candidate_name, party, photo_url, experience, platform_positions, endorsements, campaign_website, campaign_email, campaign_phone, visibility, status, ballot_access_confirmed, campaign_funding, created_at, updated_at, district, election_date, filing_deadline, filing_document_url, filing_jurisdiction, filing_status, jurisdiction, last_active_at, level, office, official_filing_date, official_filing_id, state, verification_method, verified, verified_at, verified_by';
 
 /** Explicit columns for votes select (avoid select('*')) */
 export const VOTES_SELECT_COLUMNS =

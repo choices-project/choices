@@ -89,7 +89,7 @@ export default function PerformanceDashboard() {
     };
 
     loadData();
-  }, []); // Empty deps - only load once on mount
+  }, [loadPerformanceStats]);
 
   // Calculate performance insights
   const performanceInsights = {

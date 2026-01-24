@@ -167,18 +167,19 @@ export default function PrivacyPage() {
 
   if (profileLoading || loadingTimeout) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center" role="status" aria-live="polite">
+      <div className="min-h-screen bg-gray-50 dark:bg-gray-900 flex items-center justify-center" role="status" aria-busy="true" aria-live="polite" aria-label="Loading privacy settings">
         <div className="text-center">
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto mb-4" />
-          <p className="text-gray-600">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 dark:border-blue-400 mx-auto mb-4" aria-hidden="true" />
+          <p className="text-gray-600 dark:text-gray-400">
             {loadingTimeout ? 'Loading is taking longer than expected...' : 'Loading privacy settings...'}
           </p>
           {loadingTimeout && (
             <button
+              type="button"
               onClick={() => {
                 window.location.reload();
               }}
-              className="mt-4 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
+              className="mt-4 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 dark:bg-blue-500 dark:hover:bg-blue-600 min-h-[44px]"
               aria-label="Reload page to retry loading privacy settings"
             >
               Reload Page

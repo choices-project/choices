@@ -252,10 +252,10 @@ export default function PollAnalyticsPage() {
 
   if (isLoading) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center" role="status" aria-live="polite" aria-busy="true">
+      <div className="min-h-screen bg-gray-50 dark:bg-gray-900 flex items-center justify-center" role="status" aria-busy="true" aria-live="polite" aria-label="Loading analytics">
         <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto" />
-          <p className="mt-4 text-gray-600">Loading analytics data...</p>
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 dark:border-blue-400 mx-auto" aria-hidden="true" />
+          <p className="mt-4 text-gray-600 dark:text-gray-400">Loading analytics data...</p>
         </div>
       </div>
     )

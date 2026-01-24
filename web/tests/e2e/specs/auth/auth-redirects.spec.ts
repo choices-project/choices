@@ -178,7 +178,7 @@ test.describe('Authentication Redirects', () => {
       let urlAfterLogin = page.url();
       if (urlAfterLogin.includes('/auth')) {
         // Wait for redirect to complete
-        await page.waitForURL((url: URL) => !url.toString().includes('/auth'), { timeout: 10_000 }).catch(() => {});
+        await page.waitForURL((url: URL) => !url.toString().includes('/auth'), { timeout: 10_000 }).catch(() => undefined);
         await page.waitForTimeout(2_000);
         urlAfterLogin = page.url();
       }
@@ -196,9 +196,7 @@ test.describe('Authentication Redirects', () => {
           return logoutBtn !== null || profileLink !== null;
         },
         { timeout: 15_000 }
-      ).catch(() => {
-        // If function times out, check manually
-      });
+      ).catch(() => undefined);
 
       await page.waitForTimeout(2_000);
 
@@ -280,7 +278,7 @@ test.describe('Authentication Redirects', () => {
           return logoutBtn !== null || profileLink !== null;
         },
         { timeout: 15_000 }
-      ).catch(() => {});
+      ).catch(() => undefined);
 
       await page.waitForTimeout(2_000);
 

@@ -88,6 +88,10 @@ export async function logAgentOperation(
   }
 }
 
+/** Explicit columns for agent_operations select (avoid select('*')) */
+const AGENT_OPERATIONS_SELECT =
+  'id, agent_id, agent_version, operation_type, table_name, function_name, user_context, request_metadata, result_status, error_message, row_count, duration, created_at'
+
 /**
  * Query agent operations from audit log
  */
@@ -109,7 +113,7 @@ export async function queryAgentOperations(
     // Type assertion needed because agent_operations table may not be in generated types yet
     let query = (adminClient
       .from('agent_operations' as any)
-      .select('*')
+      .select(AGENT_OPERATIONS_SELECT)
       .order('created_at', { ascending: false }) as any)
 
     if (filters?.agentId) {

@@ -194,7 +194,7 @@ async function checkDatabaseTables() {
       try {
         const { error } = await supabaseAdmin
           .from(table)
-          .select('*')
+          .select('id')
           .limit(1);
 
         if (error && error.code === 'PGRST116') {
@@ -262,7 +262,7 @@ function checkFeatureFlags() {
 
 // Run all checks
 async function runChecks() {
-  // eslint-disable-next-line no-console
+   
   console.log('🔍 Running Production Readiness Checks...\n');
 
   checkEnvironmentVariables();
@@ -272,7 +272,7 @@ async function runChecks() {
   checkFeatureFlags();
 
   // Print results
-  // eslint-disable-next-line no-console
+   
   console.log('Results:\n');
   
   const passed = checks.filter(c => c.status === 'pass').length;
@@ -281,25 +281,25 @@ async function runChecks() {
 
   checks.forEach(check => {
     const icon = check.status === 'pass' ? '✅' : check.status === 'fail' ? '❌' : '⚠️';
-    // eslint-disable-next-line no-console
+     
     console.log(`${icon} ${check.name}: ${check.message}`);
   });
 
-  // eslint-disable-next-line no-console
+   
   console.log('\n---\n');
-  // eslint-disable-next-line no-console
+   
   console.log(`Summary: ${passed} passed, ${failed} failed, ${warnings} warnings\n`);
 
   if (failed > 0) {
-    // eslint-disable-next-line no-console
+     
     console.log('❌ Production readiness check FAILED. Please fix the issues above before deploying.\n');
     process.exit(1);
   } else if (warnings > 0) {
-    // eslint-disable-next-line no-console
+     
     console.log('⚠️  Production readiness check passed with warnings. Review warnings above.\n');
     process.exit(0);
   } else {
-    // eslint-disable-next-line no-console
+     
     console.log('✅ Production readiness check PASSED. All systems ready for deployment.\n');
     process.exit(0);
   }

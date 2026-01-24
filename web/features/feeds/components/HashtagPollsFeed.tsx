@@ -15,7 +15,8 @@
  */
 'use client';
 
-import { Hash, TrendingUp, Users, BarChart3, Clock } from 'lucide-react';
+import { Hash, Plus, TrendingUp, Users, BarChart3, Clock } from 'lucide-react';
+import Link from 'next/link';
 import React, { useState, useEffect, useCallback, useMemo, useRef } from 'react';
 
 import { Badge } from '@/components/ui/badge';
@@ -313,9 +314,18 @@ export default function HashtagPollsFeed({
 
   if (loadingState && pollItems.length === 0) {
     return (
-      <div className={cn('space-y-6', className)}>
+      <div
+        className={cn('space-y-6', className)}
+        role="status"
+        aria-busy="true"
+        aria-live="polite"
+        aria-label={t('feeds.hashtagPolls.loading') || 'Loading feed'}
+      >
         <div className="flex items-center justify-center py-12">
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600" />
+          <div
+            className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 dark:border-blue-400"
+            aria-hidden="true"
+          />
         </div>
       </div>
     );
@@ -323,10 +333,10 @@ export default function HashtagPollsFeed({
 
   if (storeError && pollItems.length === 0) {
     return (
-      <div className={cn('space-y-6', className)}>
+      <div className={cn('space-y-6', className)} role="alert">
         <Card>
           <CardContent className="p-6 text-center">
-            <p className="text-red-600 mb-4">{storeError}</p>
+            <p className="text-red-600 dark:text-red-400 mb-4">{storeError}</p>
             <Button onClick={() => void loadFeedsRef.current()} variant="outline">
               {t('feeds.hashtagPolls.error.retry')}
             </Button>
@@ -338,11 +348,17 @@ export default function HashtagPollsFeed({
 
   if (pollItems.length === 0) {
     return (
-      <div className={cn('space-y-6', className)}>
+      <div className={cn('space-y-6', className)} role="region" aria-label={t('feeds.hashtagPolls.empty.title') || 'No polls'}>
         <Card>
           <CardContent className="p-6 text-center">
-            <Hash className="h-12 w-12 text-gray-400 dark:text-gray-500 mx-auto mb-4" />
-            <p className="text-gray-600 dark:text-gray-400">{t('feeds.hashtagPolls.empty.title')}</p>
+            <Hash className="h-12 w-12 text-gray-400 dark:text-gray-500 mx-auto mb-4" aria-hidden="true" />
+            <p className="text-gray-600 dark:text-gray-400 mb-4">{t('feeds.hashtagPolls.empty.title')}</p>
+            <Button asChild>
+              <Link href="/polls/create" className="inline-flex items-center gap-2">
+                <Plus className="h-4 w-4" aria-hidden="true" />
+                {t('polls.page.cta.create') || 'Create poll'}
+              </Link>
+            </Button>
           </CardContent>
         </Card>
       </div>

@@ -145,7 +145,7 @@ export const POST = withErrorHandling(async (request: NextRequest) => {
       is_active: resolvedIsActive,
       created_by: user.id,
     })
-    .select()
+    .select(SITE_MESSAGE_SELECT_COLUMNS)
     .single();
 
   if (error) {

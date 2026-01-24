@@ -21,11 +21,14 @@ import {
   AlertTriangle,
   Clock,
   Eye,
+  RefreshCw,
   User,
   Calendar
 } from 'lucide-react';
 import React, { useState, useEffect, useCallback } from 'react';
 
+import { EnhancedEmptyState } from '@/components/shared/EnhancedEmptyState';
+import { EnhancedErrorDisplay } from '@/components/shared/EnhancedErrorDisplay';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -368,9 +371,18 @@ export function ModerationQueue({
     return (
       <Card className={className}>
         <CardContent className="p-6">
-          <div className="flex items-center justify-center">
-            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600" />
-            <span className="ml-2">Loading moderation queue...</span>
+          <div
+            className="flex items-center justify-center"
+            role="status"
+            aria-busy="true"
+            aria-live="polite"
+            aria-label="Loading moderation queue"
+          >
+            <div
+              className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 dark:border-blue-400"
+              aria-hidden="true"
+            />
+            <span className="ml-2 text-gray-600 dark:text-gray-300">Loading moderation queue...</span>
           </div>
         </CardContent>
       </Card>
@@ -381,10 +393,13 @@ export function ModerationQueue({
     return (
       <Card className={className}>
         <CardContent className="p-6">
-          <Alert variant="destructive">
-            <AlertTriangle className="w-4 h-4" />
-            <AlertDescription>{error}</AlertDescription>
-          </Alert>
+          <EnhancedErrorDisplay
+            title="Unable to load moderation queue"
+            message={error}
+            tip="Check your connection and try again. If the problem persists, refresh the page."
+            canRetry
+            onRetry={loadModerationQueue}
+          />
         </CardContent>
       </Card>
     );
@@ -403,9 +418,12 @@ export function ModerationQueue({
       </CardHeader>
       <CardContent>
         {hashtags.length === 0 ? (
-          <div className="text-center py-8 text-gray-500">
-            No hashtags in moderation queue
-          </div>
+          <EnhancedEmptyState
+            icon={<Shield className="h-12 w-12 text-gray-400 dark:text-gray-500" />}
+            title="No hashtags to review"
+            description="The moderation queue is empty. New flagged hashtags will appear here."
+            primaryAction={{ label: 'Refresh', onClick: loadModerationQueue, icon: <RefreshCw className="h-4 w-4" /> }}
+          />
         ) : (
           <div className="space-y-4">
             {hashtags.map((item) => (

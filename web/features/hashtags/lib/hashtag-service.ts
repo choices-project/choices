@@ -10,7 +10,12 @@
  */
 
 import {
+  FEED_ITEMS_SELECT_COLUMNS,
+  HASHTAG_ENGAGEMENT_SELECT_COLUMNS,
+  HASHTAG_USER_PREFERENCES_SELECT_COLUMNS,
   HASHTAGS_SELECT_COLUMNS,
+  HASHTAG_USAGE_SELECT_COLUMNS,
+  PROFILE_SELECT_COLUMNS,
   USER_HASHTAGS_SELECT_COLUMNS,
 } from '@/lib/api/response-builders';
 import { logger } from '@/lib/utils/logger';
@@ -536,7 +541,7 @@ export async function getTrendingHashtags(
   try {
     let supabaseQuery = supabase
       .from('hashtags')
-      .select('*')
+      .select(HASHTAGS_SELECT_COLUMNS)
       .eq('is_trending', true)
       .order('trending_score', { ascending: false })
       .limit(limit);
@@ -1005,7 +1010,7 @@ export async function getProfileHashtagIntegration(
     try {
       const result = await supabase
         .from('hashtag_user_preferences')
-        .select('*')
+        .select(HASHTAG_USER_PREFERENCES_SELECT_COLUMNS)
         .eq('user_id', userId)
         .single();
       preferencesRow = result.data;
@@ -1019,7 +1024,7 @@ export async function getProfileHashtagIntegration(
 
     const { data: engagementRows, error: activityError } = await supabase
       .from('hashtag_engagement')
-      .select('*')
+      .select(HASHTAG_ENGAGEMENT_SELECT_COLUMNS)
       .eq('user_id', userId)
       .order('timestamp', { ascending: false })
       .limit(50);
@@ -1157,7 +1162,7 @@ export async function getFeedHashtagIntegration(feedId: string): Promise<Hashtag
       logger.warn('feeds table not available, using user_profiles', { tableError });
       const result = await supabase
         .from('user_profiles')
-        .select('*')
+        .select(PROFILE_SELECT_COLUMNS)
         .eq('id', feedId)
         .single();
       const feedData = result.data as { hashtag_filters?: string[]; id: string } | null;
@@ -1185,7 +1190,7 @@ export async function getFeedHashtagIntegration(feedId: string): Promise<Hashtag
     try {
       const result = await supabase
         .from('feed_items')
-        .select('*')
+        .select(FEED_ITEMS_SELECT_COLUMNS)
         .eq('feed_id', feedId)
         .eq('item_type', 'hashtag')
         .order('created_at', { ascending: false })
@@ -1668,7 +1673,7 @@ async function getRecentActivity(): Promise<HashtagActivity[]> {
   try {
     const { data: recentUsage, error } = await supabase
       .from('hashtag_usage')
-      .select('*, hashtag:hashtags(name), user:profiles(username)')
+      .select(`${HASHTAG_USAGE_SELECT_COLUMNS}, hashtag:hashtags(name), user:profiles(username)`)
       .order('created_at', { ascending: false })
       .limit(20);
 
@@ -1745,7 +1750,7 @@ export async function updateUserPreferences(
 
     const { data: existingRow } = await supabase
       .from('hashtag_user_preferences')
-      .select('*')
+      .select(HASHTAG_USER_PREFERENCES_SELECT_COLUMNS)
       .eq('user_id', preferences.userId)
       .single();
 
@@ -1772,7 +1777,7 @@ export async function updateUserPreferences(
         created_at: existingRow?.created_at ?? now,
         updated_at: now,
       })
-      .select()
+      .select(HASHTAG_USER_PREFERENCES_SELECT_COLUMNS)
       .single();
 
     if (error) {
@@ -1811,7 +1816,7 @@ export async function getUserPreferences(): Promise<HashtagApiResponse<HashtagUs
   try {
     const { data, error } = await supabase
       .from('hashtag_user_preferences')
-      .select('*')
+      .select(HASHTAG_USER_PREFERENCES_SELECT_COLUMNS)
       .single();
 
     if (error) {

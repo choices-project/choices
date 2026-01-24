@@ -9,6 +9,7 @@ import {
   withErrorHandling,
   notFoundError,
 } from '@/lib/api';
+import { SITE_MESSAGE_SELECT_COLUMNS } from '@/lib/api/response-builders';
 import { logger } from '@/lib/utils/logger';
 
 import type { NextRequest } from 'next/server';
@@ -73,7 +74,7 @@ export const PATCH = withErrorHandling(async (
     .from('site_messages')
     .update(updateData)
     .eq('id', id)
-    .select()
+    .select(SITE_MESSAGE_SELECT_COLUMNS)
     .single();
 
   if (error) {
@@ -120,7 +121,7 @@ export const DELETE = withErrorHandling(async (
     .from('site_messages')
     .delete()
     .eq('id', id)
-    .select()
+    .select(SITE_MESSAGE_SELECT_COLUMNS)
     .single();
 
   if (error) {
