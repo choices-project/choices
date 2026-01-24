@@ -433,6 +433,14 @@ export default [
     },
   },
 
+  // Scripts (CLI, RLS/vote test runners): allow console
+  {
+    files: ['**/scripts/**/*.{js,jsx,ts,tsx}'],
+    rules: {
+      'no-console': 'off',
+    },
+  },
+
   // Test files configuration
   {
     files: [

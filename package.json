@@ -13,6 +13,7 @@
     "@testing-library/jest-dom": "~6.9.1",
     "@types/jest": "30.0.0",
     "@types/node": "22.10.2",
+    "dotenv": "~17.2.1",
     "husky": "9.1.7",
     "typescript": "5.7.2"
   },

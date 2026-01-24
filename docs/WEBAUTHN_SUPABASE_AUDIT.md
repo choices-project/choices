@@ -31,6 +31,9 @@
 
 - RLS: **enabled**
 - Policies: owner-based (`auth.uid() = user_id`) for authenticated users; service_role bypasses RLS via admin client.
+  - `Users can insert own credentials` (public) — INSERT with `user_id = auth.uid()`.
+  - `Users can view/update/delete own credentials`, `Users can manage their own credentials` (public); `webauthn_credentials_owner_access` (authenticated) — ALL / SELECT/UPDATE/DELETE where `user_id = auth.uid()`.
+- **Table grants:** `GRANT SELECT, INSERT, UPDATE, DELETE ON webauthn_credentials TO authenticated, service_role` (migration `20260124140000_grant_webauthn_credentials_table_access`). Without these, register/verify INSERT fails with "Failed to store credential" 500; RLS alone is not sufficient.
 
 **Client usage**
 
@@ -75,6 +78,7 @@ Auth-verify lookup is by `id` (PK). Credential lookup is by `(rp_id, credential_
 | "Failed to establish session" | Supabase `generateLink` / `verifyOtp`; Auth config, project keys, and redirect URLs. |
 | Cookies not set after auth | API-route cookie adapter (`getSupabaseApiRouteClient`), `setSession`, and `credentials: 'include'` (or same-origin fetch) on client. |
 | Register "Authentication required" or missing cookies | Register options/verify require an authenticated user. Use `credentials: 'include'` on register options and register verify fetches in the native client so cookies are sent. |
+| "Failed to store credential" 500 | **Table grants:** `authenticated` must have `INSERT` on `webauthn_credentials`. Apply migration `20260124140000_grant_webauthn_credentials_table_access` if missing. |
 
 ---
 
@@ -122,8 +126,17 @@ Auth-verify lookup is by `id` (PK). Credential lookup is by `(rp_id, credential_
 ## Verification
 
 1. **RLS & policies:** Use Supabase MCP `execute_sql` on `pg_policies` / `pg_class` for `webauthn_challenges` and `webauthn_credentials`, or run equivalent in SQL Editor.
-2. **Indexes:** `pg_indexes` for these tables; confirm composite `(user_id, kind, used_at)` exists after migration.
-3. **Config:** Confirm `RP_ID`, `ALLOWED_ORIGINS`, and `WEBAUTHN_CHALLENGE_TTL_SECONDS` in env; local dev uses `localhost` (or `127.0.0.1` when applicable).
+2. **Table grants:** Ensure `authenticated` and `service_role` have `SELECT, INSERT, UPDATE, DELETE` on `webauthn_credentials`. Missing grants cause "Failed to store credential" 500 on register/verify.
+3. **Indexes:** `pg_indexes` for these tables; confirm composite `(user_id, kind, used_at)` exists after migration.
+4. **Config:** Confirm `RP_ID`, `ALLOWED_ORIGINS`, and `WEBAUTHN_CHALLENGE_TTL_SECONDS` in env; local dev uses `localhost` (or `127.0.0.1` when applicable).
+
+### Verified via Supabase MCP (Jan 2026)
+
+- **RLS:** `webauthn_challenges` and `webauthn_credentials` have RLS enabled.
+- **Policies:** Challenges — anon INSERT (auth flow), authenticated INSERT/SELECT/UPDATE (registration), service_role ALL. Credentials — owner-based INSERT/SELECT/UPDATE/DELETE (public + authenticated).
+- **Table grants:** `webauthn_challenges` — anon, authenticated, service_role have full access. `webauthn_credentials` — **authenticated** and **service_role** granted via `20260124140000_grant_webauthn_credentials_table_access` (previously missing; caused register verify 500).
+- **Indexes:** Challenges — `(id)`, `(user_id, kind, used_at)`, `(kind, used_at)`, `(used_at)`. Credentials — `(id)`, `(credential_id)` unique, `(rp_id)`, `(user_handle)`, `(last_used_at)`.
+- **Security Advisor:** No advisories for `webauthn_challenges` or `webauthn_credentials`.
 
 ---
 

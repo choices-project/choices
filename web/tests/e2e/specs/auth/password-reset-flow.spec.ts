@@ -16,9 +16,7 @@ import { expect, test } from '@playwright/test';
 
 import {
   ensureLoggedOut,
-  loginWithPassword,
   waitForPageReady,
-  getE2ETestUserCredentials,
 } from '../../helpers/e2e-setup';
 
 const PRODUCTION_URL = process.env.PRODUCTION_URL || 'https://www.choices-app.com';
@@ -224,7 +222,7 @@ test.describe('Password Reset Flow', () => {
     }
   });
 
-  test('password reset flow end-to-end (requires manual email verification)', async ({ page }) => {
+  test('password reset flow end-to-end (requires manual email verification)', async () => {
     test.skip(
       true,
       'Full E2E password reset requires email delivery verification. Test manually in production: 1) Request reset 2) Check email 3) Click link 4) Set new password 5) Login with new password'

@@ -13,9 +13,8 @@
  */
 
 import { config } from 'dotenv'
-import { resolve } from 'path'
-import { readFileSync, writeFileSync } from 'fs'
-import { join } from 'path'
+import { writeFileSync } from 'fs'
+import { join, resolve } from 'path'
 
 // Load environment variables from .env.local in web directory
 const envPath = resolve(__dirname, '../web/.env.local')
@@ -79,7 +78,7 @@ async function reviewIndexRecommendations() {
     })
 
     if (!response.ok) {
-      const errorText = await response.text()
+      await response.text()
       console.log('⚠️  Could not query pg_stat_statements directly')
       console.log('')
       console.log('💡 Index recommendations are available in Supabase Dashboard:')
@@ -134,7 +133,7 @@ export function generateIndexMigration(
   concurrent = true
 ): string {
   const idxName = indexName || `idx_${tableName}_${columns.join('_')}`
-  const uniqueClause = unique ? 'UNIQUE' : ''
+  const uniqueModifier = unique ? 'UNIQUE ' : ''
   const concurrentClause = concurrent ? 'CONCURRENTLY' : ''
 
   return `-- migrate:up
@@ -143,7 +142,7 @@ export function generateIndexMigration(
 -- Columns: ${columns.join(', ')}
 -- Generated: ${new Date().toISOString()}
 
-CREATE INDEX ${concurrentClause} IF NOT EXISTS ${idxName}
+CREATE ${uniqueModifier}INDEX ${concurrentClause} IF NOT EXISTS ${idxName}
 ON public.${tableName}
 USING btree (${columns.join(', ')});
 

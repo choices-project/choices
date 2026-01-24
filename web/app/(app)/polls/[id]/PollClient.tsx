@@ -5,8 +5,8 @@ import { useParams, useRouter } from 'next/navigation';
 import React, { useState, useEffect, useCallback, useRef, useMemo } from 'react';
 
 import { PollShare } from '@/features/polls';
-import PostCloseBanner from '@/features/polls/components/PostCloseBanner';
 import AdvancedAnalytics from '@/features/polls/components/AdvancedAnalytics';
+import PostCloseBanner from '@/features/polls/components/PostCloseBanner';
 import { useRecordPollEvent } from '@/features/polls/hooks/usePollAnalytics';
 import {
   createBallotFromPoll,
@@ -123,13 +123,10 @@ export default function PollClient({ poll }: PollClientProps) {
   const pollCreatedBy = poll.createdBy ? String(poll.createdBy) : null;
   const isPollCreator = isAuthenticated && userId && pollCreatedBy && userId === pollCreatedBy;
 
-  // Debug logging for close button visibility - ALWAYS log to console for debugging
   useEffect(() => {
     const shouldShow = isPollCreator && poll.status === 'active';
 
-    // Always log to console (not just in dev) to help debug production issues
-    // Enhanced logging to help diagnose close button and vote count issues
-    console.log('[Close Button Debug]', {
+    logger.debug('Poll creator and close button check', {
       shouldShow,
       isPollCreator,
       isPollActive: poll.status === 'active',
@@ -149,24 +146,6 @@ export default function PollClient({ poll }: PollClientProps) {
       pollTitle: poll.title,
       totalVotes: poll.totalvotes,
       resultsTotalVotes: results?.totalVotes,
-    });
-
-    logger.debug('Poll creator and close button check', {
-      userId: user?.id,
-      userIdString: userId,
-      pollCreatedBy: poll.createdBy,
-      pollCreatedByString: pollCreatedBy,
-      pollStatus: poll.status,
-      isPollActive: poll.status === 'active',
-      isAuthenticated,
-      isPollCreator,
-      shouldShowCloseButton: shouldShow,
-      userExists: !!user,
-      pollCreatedByExists: !!poll.createdBy,
-      idsMatch: userId === pollCreatedBy,
-      idsMatchStrict: user?.id === poll.createdBy,
-      userType: typeof user?.id,
-      createdByType: typeof poll.createdBy,
     });
   }, [isPollCreator, isAuthenticated, userId, pollCreatedBy, poll.status, user?.id, poll.createdBy]);
 
@@ -727,13 +706,11 @@ export default function PollClient({ poll }: PollClientProps) {
 
       setHasVoted(true);
 
-      // Log vote submission for debugging
-      console.log('[Vote] Vote submitted successfully', { pollId: poll.id, votingMethod: poll.votingMethod });
+      logger.debug('Vote submitted successfully', { pollId: poll.id, votingMethod: poll.votingMethod });
 
       // The vote endpoint now waits for vote count update before returning,
       // but we need to wait a bit longer to ensure database transaction is fully committed
       // and any replication lag is accounted for
-      console.log('[Vote] Waiting for database commit...');
       await new Promise(resolve => setTimeout(resolve, 1000));
 
       // Refresh poll data to update vote counts immediately
@@ -742,14 +719,11 @@ export default function PollClient({ poll }: PollClientProps) {
       // Force a full page reload with cache-busting to ensure poll prop is updated from server
       // CRITICAL: Wait longer to ensure database transaction is committed and visible
       // Use router.refresh() first to try to revalidate, then fall back to full reload
-      console.log('[Vote] Attempting to refresh poll data...');
-
       // Try router.refresh() first (faster, but may not work if server component is cached)
       router.refresh();
 
       // Then do a full reload after a delay to ensure fresh data
       setTimeout(() => {
-        console.log('[Vote] Performing full page reload with cache-busting...');
         // Force a hard reload to bypass Next.js cache
         // Add timestamp AND a random value to ensure no caching
         const cacheBuster = `?t=${Date.now()}&r=${Math.random().toString(36).substr(2, 9)}`;
@@ -890,7 +864,7 @@ export default function PollClient({ poll }: PollClientProps) {
 
     setIsClosing(true);
     try {
-      console.log('[Close Poll] Attempting to close poll', { pollId, userId, pollCreatedBy });
+      logger.debug('Close poll attempt', { pollId, userId, pollCreatedBy });
       const response = await fetch(`/api/polls/${pollId}/close`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -903,7 +877,6 @@ export default function PollClient({ poll }: PollClientProps) {
       }
 
       const result = await response.json();
-      console.log('[Close Poll] Success', { pollId, result });
       logger.info('Poll closed successfully', { pollId, result });
 
       // Show success notification before reload
