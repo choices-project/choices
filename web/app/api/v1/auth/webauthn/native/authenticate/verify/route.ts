@@ -14,9 +14,10 @@ import { isoBase64URL } from '@simplewebauthn/server/helpers';
 import { getSupabaseApiRouteClient } from '@/utils/supabase/api-route';
 import { getSupabaseAdminClient } from '@/utils/supabase/server';
 
-import { getRPIDAndOrigins } from '@/features/auth/lib/webauthn/config';
+import { getRPIDAndOrigins, normalizeRequestOrigin } from '@/features/auth/lib/webauthn/config';
 
 import { withErrorHandling, forbiddenError, errorResponse, validationError, successResponse } from '@/lib/api';
+import { WEBAUTHN_CHALLENGE_SELECT_COLUMNS, WEBAUTHN_CREDENTIAL_SELECT_COLUMNS } from '@/lib/api/response-builders';
 import { logger } from '@/lib/utils/logger';
 
 import type { NextRequest } from 'next/server';
@@ -49,7 +50,7 @@ export const POST = withErrorHandling(async (req: NextRequest) => {
     // Get challenge from database
     const { data: chalRows } = await supabase
       .from('webauthn_challenges')
-      .select('*')
+      .select(WEBAUTHN_CHALLENGE_SELECT_COLUMNS)
       .eq('id', challengeId)
       .eq('kind', 'authentication')
       .is('used_at', null)
@@ -72,10 +73,11 @@ export const POST = withErrorHandling(async (req: NextRequest) => {
       return forbiddenError('Invalid relying party');
     }
 
-    // Get current request origin
-    const origin = req.headers.get('origin') ?? req.headers.get('referer') ?? '';
-    const currentOrigin = origin.replace(/\/$/, '');
-
+    // Get current request origin (scheme + host + port); use Origin or parse Referer
+    const currentOrigin = normalizeRequestOrigin(req);
+    if (!currentOrigin) {
+      logger.warn('WebAuthn verify with no Origin/Referer', { challengeId });
+    }
     // SECURITY: Validate origin against allowed origins
     if (currentOrigin && !allowedOrigins.includes(currentOrigin)) {
       logger.warn('WebAuthn authentication attempt from unauthorized origin', {
@@ -89,7 +91,7 @@ export const POST = withErrorHandling(async (req: NextRequest) => {
     // Lookup credential
     const { data: creds, error: credsErr } = await supabase
       .from('webauthn_credentials')
-      .select('*')
+      .select(WEBAUTHN_CREDENTIAL_SELECT_COLUMNS)
       .eq('rp_id', rpID)
       .eq('credential_id', body.id)
       .limit(1);

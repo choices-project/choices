@@ -23,6 +23,7 @@ import {
   notFoundError,
   parseBody
 } from '@/lib/api';
+import { NOTIFICATION_LOG_SELECT_COLUMNS } from '@/lib/api/response-builders';
 import { logger } from '@/lib/utils/logger';
 
 import type { NextRequest } from 'next/server';
@@ -91,7 +92,7 @@ export const GET = withErrorHandling(async (request: NextRequest) => {
     // Query notification_log (actual table schema)
     const { data: notifications, error } = await supabase
       .from('notification_log')
-      .select('*')
+      .select(NOTIFICATION_LOG_SELECT_COLUMNS)
       .eq('user_id', user.id)
       .order('created_at', { ascending: false })
       .limit(limit);
@@ -152,7 +153,7 @@ export const POST = withErrorHandling(async (request: NextRequest) => {
         payload: validatedData.metadata ?? {},
         status: 'sent'
       })
-      .select()
+      .select(NOTIFICATION_LOG_SELECT_COLUMNS)
       .single();
 
   if (createError) {
@@ -188,16 +189,13 @@ export const PUT = withErrorHandling(async (request: NextRequest) => {
     return authError('User not authenticated');
   }
 
-    // Mark notification as read in notification_log
+    // Mark notification as read in notification_log (status only; read_at not in schema)
     const { data: notification, error: updateError } = await supabase
       .from('notification_log')
-      .update({
-        status: 'read',
-        read_at: new Date().toISOString()
-      })
+      .update({ status: 'read' })
       .eq('id', notificationId)
       .eq('user_id', user.id)
-      .select()
+      .select(NOTIFICATION_LOG_SELECT_COLUMNS)
       .single();
 
   if (updateError) {
@@ -216,6 +214,6 @@ export const PUT = withErrorHandling(async (request: NextRequest) => {
 
   return successResponse({
     id: notification.id,
-    readAt: (notification as any).read_at ?? null
+    readAt: null
   });
 });

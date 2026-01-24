@@ -13,9 +13,10 @@ import { isoBase64URL } from '@simplewebauthn/server/helpers';
 
 import { getSupabaseServerClient } from '@/utils/supabase/server';
 
-import { getRPIDAndOrigins } from '@/features/auth/lib/webauthn/config';
+import { getRPIDAndOrigins, normalizeRequestOrigin } from '@/features/auth/lib/webauthn/config';
 
 import { withErrorHandling, authError, forbiddenError, errorResponse, validationError, successResponse } from '@/lib/api';
+import { WEBAUTHN_CHALLENGE_SELECT_COLUMNS } from '@/lib/api/response-builders';
 import { normalizeTrustTier } from '@/lib/trust/trust-tiers';
 import { stripUndefinedDeep } from '@/lib/util/clean';
 import { logger } from '@/lib/utils/logger';
@@ -46,7 +47,7 @@ export const POST = withErrorHandling(async (req: NextRequest) => {
     // Get challenge from database
     const { data: chalRows } = await supabase
       .from('webauthn_challenges')
-      .select('*')
+      .select(WEBAUTHN_CHALLENGE_SELECT_COLUMNS)
       .eq('user_id', user.id)
       .eq('kind', 'registration')
       .is('used_at', null)
@@ -67,10 +68,11 @@ export const POST = withErrorHandling(async (req: NextRequest) => {
       return validationError({ challenge: 'Challenge expired' });
     }
 
-    // Get current request origin
-    const origin = req.headers.get('origin') ?? req.headers.get('referer') ?? '';
-    const currentOrigin = origin.replace(/\/$/, '');
-
+    // Get current request origin (scheme + host + port); use Origin or parse Referer
+    const currentOrigin = normalizeRequestOrigin(req);
+    if (!currentOrigin) {
+      logger.warn('WebAuthn verify with no Origin/Referer', { userId: user.id });
+    }
     // SECURITY: Validate origin against allowed origins
     if (currentOrigin && !allowedOrigins.includes(currentOrigin)) {
       logger.warn('WebAuthn registration attempt from unauthorized origin', {

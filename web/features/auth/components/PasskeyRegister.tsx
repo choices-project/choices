@@ -22,6 +22,8 @@ import { Label } from '@/components/ui/label';
 import { useUserStore } from '@/lib/stores/userStore';
 import logger from '@/lib/utils/logger';
 
+import { useI18n } from '@/hooks/useI18n';
+
 import {
   useBiometricError,
   useBiometricRegistering,
@@ -45,6 +47,7 @@ export function PasskeyRegister({
   onError,
   className,
 }: PasskeyRegisterProps) {
+  const { t } = useI18n();
   const [showAdvanced, setShowAdvanced] = React.useState(false);
   const [username, setUsername] = React.useState('');
   const [displayName, setDisplayName] = React.useState('');
@@ -176,11 +179,10 @@ export function PasskeyRegister({
         <CardHeader>
           <CardTitle className="flex items-center space-x-2">
             <AlertCircle className="h-5 w-5 text-red-500" />
-            <span>WebAuthn Not Supported</span>
+            <span>{t('auth.passkey.notSupported')}</span>
           </CardTitle>
           <CardDescription>
-            Your browser does not support WebAuthn. Please use a modern browser or try a different
-            authentication method.
+            {t('auth.passkey.notSupportedDescription')}
           </CardDescription>
         </CardHeader>
       </Card>
@@ -192,10 +194,10 @@ export function PasskeyRegister({
       <CardHeader>
         <CardTitle className="flex items-center space-x-2">
           <Fingerprint className="h-5 w-5 text-blue-600" />
-          <span>Register Passkey</span>
+          <span>{t('auth.passkey.registerTitle')}</span>
         </CardTitle>
         <CardDescription>
-          Create a secure passkey using your device&apos;s biometric authentication or security key
+          {t('auth.passkey.registerDescription')}
         </CardDescription>
       </CardHeader>
 
@@ -204,18 +206,17 @@ export function PasskeyRegister({
           <div className="text-center space-y-4" data-testid="passkey-register-success">
             <CheckCircle className="h-12 w-12 text-green-500 mx-auto animate-in fade-in zoom-in duration-300" />
             <div className="space-y-2">
-              <h3 className="text-lg font-semibold text-green-700">Registration Successful!</h3>
+              <h3 className="text-lg font-semibold text-green-700">{t('auth.passkey.registrationSuccess')}</h3>
               <p className="text-gray-600">
-                Your passkey has been created and you can now use it to sign in.
+                {t('auth.passkey.createdAndCanSignIn')}
               </p>
               <p className="text-sm text-gray-500">
-                You can close this dialog and use your passkey to sign in next time.
+                {t('auth.passkey.closeAndUseNextTime')}
               </p>
             </div>
           </div>
         ) : (
           <>
-            {/* Advanced Options */}
             <div className="space-y-4">
               <Button
                 variant="ghost"
@@ -224,65 +225,62 @@ export function PasskeyRegister({
                 className="flex items-center space-x-2"
               >
                 {showAdvanced ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
-                <span>{showAdvanced ? 'Hide' : 'Show'} Advanced Options</span>
+                <span>{showAdvanced ? t('auth.passkey.hideAdvanced') : t('auth.passkey.showAdvanced')}</span>
               </Button>
 
               {showAdvanced && (
                 <div className="space-y-4 p-4 bg-gray-50 rounded-lg">
                   <div>
-                    <Label htmlFor="username">Username (Optional)</Label>
+                    <Label htmlFor="username">{t('auth.passkey.usernameOptional')}</Label>
                     <Input
                       id="username"
                       value={username}
                       onChange={(e) => setUsername(e.target.value)}
-                      placeholder="Enter a username"
+                      placeholder={t('auth.passkey.usernamePlaceholder')}
                       className="mt-1"
                     />
                     <p className="text-xs text-gray-500 mt-1">
-                      Leave empty for usernameless authentication
+                      {t('auth.passkey.usernamelessHint')}
                     </p>
                   </div>
 
                   <div>
-                    <Label htmlFor="displayName">Display Name (Optional)</Label>
+                    <Label htmlFor="displayName">{t('auth.passkey.displayNameOptional')}</Label>
                     <Input
                       id="displayName"
                       value={displayName}
                       onChange={(e) => setDisplayName(e.target.value)}
-                      placeholder="Enter a display name"
+                      placeholder={t('auth.passkey.displayNamePlaceholder')}
                       className="mt-1"
                     />
                     <p className="text-xs text-gray-500 mt-1">
-                      This will be shown when you sign in
+                      {t('auth.passkey.displayNameSignInHint')}
                     </p>
                   </div>
                 </div>
               )}
             </div>
 
-            {/* Device Information */}
             <div className="flex items-center space-x-3 p-3 bg-blue-50 rounded-lg">
               {getAuthenticatorIcon()}
               <div className="flex-1">
-                <p className="text-sm font-medium text-blue-900">Device Authentication</p>
+                <p className="text-sm font-medium text-blue-900">{t('auth.passkey.deviceAuth')}</p>
                 <p className="text-xs text-blue-700">
-                  Your device will prompt you to use biometric authentication or enter your device passcode
+                  {t('auth.passkey.deviceAuthDesc')}
                 </p>
               </div>
             </div>
 
-            {/* Error Display */}
             {error && (
               <Alert variant="destructive" className="animate-in fade-in slide-in-from-top-2 duration-300">
                 <AlertCircle className="h-4 w-4" />
                 <AlertDescription className="font-medium">{error}</AlertDescription>
                 <p className="mt-2 text-xs text-red-600">
-                  If this problem persists, try using email/password authentication instead.
+                  {t('auth.passkey.errorHint')}
                 </p>
               </Alert>
             )}
 
-            {/* Register Button */}
             <Button
               data-testid="webauthn-register"
               onClick={handleRegister}
@@ -293,22 +291,21 @@ export function PasskeyRegister({
               {isRegistering ? (
                 <>
                   <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                  <span>Creating Passkey...</span>
-                  <span className="ml-2 text-xs opacity-75">Follow your device prompt</span>
+                  <span>{t('auth.passkey.creatingPasskey')}</span>
+                  <span className="ml-2 text-xs opacity-75">{t('auth.passkey.followPrompt')}</span>
                 </>
               ) : (
                 <>
                   <Fingerprint className="h-4 w-4 mr-2" />
-                  <span>Create Passkey</span>
+                  <span>{t('auth.passkey.create')}</span>
                 </>
               )}
             </Button>
 
-            {/* Security Information */}
             <div className="text-xs text-gray-500 space-y-1">
-              <p>• Your passkey is stored securely on your device</p>
-              <p>• No passwords are transmitted or stored</p>
-              <p>• Works with Touch ID, Face ID, Windows Hello, and security keys</p>
+              <p>• {t('auth.passkey.storedSecurely')}</p>
+              <p>• {t('auth.passkey.noPasswordsTransmitted')}</p>
+              <p>• {t('auth.passkey.worksWith')}</p>
             </div>
           </>
         )}

@@ -294,6 +294,7 @@ export async function beginRegister(
       headers: {
         'Content-Type': 'application/json',
       },
+      credentials: 'include',
       body: JSON.stringify({
         username: options?.username,
         displayName: options?.displayName,
@@ -318,6 +319,7 @@ export async function beginRegister(
       headers: {
         'Content-Type': 'application/json',
       },
+      credentials: 'include',
       body: JSON.stringify(credential),
     }).then(r => r.json());
 

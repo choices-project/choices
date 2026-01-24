@@ -998,7 +998,9 @@ export default function AuthPageClient() {
             </div>
           </div>
           <div className="mt-4">
-            <PasskeyControls />
+            <PasskeyControls
+              onLoginSuccess={() => router.replace(redirectTarget)}
+            />
           </div>
         </div>
       </div>

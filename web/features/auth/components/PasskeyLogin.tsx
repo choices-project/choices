@@ -20,6 +20,8 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 
 import logger from '@/lib/utils/logger';
 
+import { useI18n } from '@/hooks/useI18n';
+
 import {
   useBiometricSupported,
   useInitializeBiometricState,
@@ -48,6 +50,7 @@ export function PasskeyLogin({
   onError,
   className,
 }: PasskeyLoginProps) {
+  const { t } = useI18n();
   const [isAuthenticating, setIsAuthenticating] = React.useState(false);
   const [error, setError] = React.useState<string | null>(null);
   const [success, setSuccess] = React.useState(false);
@@ -157,11 +160,10 @@ export function PasskeyLogin({
         <CardHeader>
           <CardTitle className="flex items-center space-x-2">
             <AlertCircle className="h-5 w-5 text-red-500" />
-            <span>WebAuthn Not Supported</span>
+            <span>{t('auth.passkey.notSupported')}</span>
           </CardTitle>
           <CardDescription>
-            Your browser does not support WebAuthn. Please use a modern browser or try a different
-            authentication method.
+            {t('auth.passkey.notSupportedDescription')}
           </CardDescription>
         </CardHeader>
       </Card>
@@ -173,10 +175,10 @@ export function PasskeyLogin({
       <CardHeader>
         <CardTitle className="flex items-center space-x-2">
           <Fingerprint className="h-5 w-5 text-blue-600" />
-          <span>Sign In with Passkey</span>
+          <span>{t('auth.passkey.loginTitle')}</span>
         </CardTitle>
         <CardDescription>
-          Use your registered passkey to sign in securely
+          {t('auth.passkey.loginDescription')}
         </CardDescription>
       </CardHeader>
 
@@ -185,51 +187,47 @@ export function PasskeyLogin({
           <div className="text-center space-y-4" data-testid="passkey-login-success">
             <CheckCircle className="h-12 w-12 text-green-500 mx-auto animate-in fade-in zoom-in duration-300" />
             <div className="space-y-2">
-              <h3 className="text-lg font-semibold text-green-700">Authentication Successful!</h3>
+              <h3 className="text-lg font-semibold text-green-700">{t('auth.passkey.authSuccessful')}</h3>
               <p className="text-gray-600">
-                You have been signed in successfully.
+                {t('auth.passkey.signedIn')}
               </p>
               <p className="text-sm text-gray-500">
-                Redirecting you to your dashboard...
+                {t('auth.passkey.redirecting')}
               </p>
             </div>
           </div>
         ) : (
           <>
-            {/* Device Information */}
             <div className="flex items-center space-x-3 p-3 bg-blue-50 rounded-lg">
               {getAuthenticatorIcon()}
               <div className="flex-1">
-                <p className="text-sm font-medium text-blue-900">Device Authentication</p>
+                <p className="text-sm font-medium text-blue-900">{t('auth.passkey.deviceAuth')}</p>
                 <p className="text-xs text-blue-700">
-                  Your device will prompt you to use biometric authentication or enter your device passcode
+                  {t('auth.passkey.deviceAuthDesc')}
                 </p>
               </div>
             </div>
 
-            {/* Available Credentials Info */}
             <div className="flex items-center space-x-3 p-3 bg-green-50 rounded-lg">
               <Key className="h-5 w-5 text-green-600" />
               <div className="flex-1">
-                <p className="text-sm font-medium text-green-900">Registered Passkeys</p>
+                <p className="text-sm font-medium text-green-900">{t('auth.passkey.registeredPasskeys')}</p>
                 <p className="text-xs text-green-700">
-                  We&apos;ll automatically detect and use your registered passkeys
+                  {t('auth.passkey.registeredPasskeysDesc')}
                 </p>
               </div>
             </div>
 
-            {/* Error Display */}
             {error && (
               <Alert variant="destructive" className="animate-in fade-in slide-in-from-top-2 duration-300">
                 <AlertCircle className="h-4 w-4" />
                 <AlertDescription className="font-medium">{error}</AlertDescription>
                 <p className="mt-2 text-xs text-red-600">
-                  If this problem persists, try using email/password authentication instead.
+                  {t('auth.passkey.errorHint')}
                 </p>
               </Alert>
             )}
 
-            {/* Login Button */}
             <Button
               onClick={handleLogin}
               disabled={isAuthenticating}
@@ -239,22 +237,21 @@ export function PasskeyLogin({
               {isAuthenticating ? (
                 <>
                   <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                  <span>Authenticating...</span>
-                  <span className="ml-2 text-xs opacity-75">Follow your device prompt</span>
+                  <span>{t('auth.passkey.authenticating')}</span>
+                  <span className="ml-2 text-xs opacity-75">{t('auth.passkey.followPrompt')}</span>
                 </>
               ) : (
                 <>
                   <Fingerprint className="h-4 w-4 mr-2" />
-                  <span>Sign In with Passkey</span>
+                  <span>{t('auth.passkey.signIn')}</span>
                 </>
               )}
             </Button>
 
-            {/* Security Information */}
             <div className="text-xs text-gray-500 space-y-1">
-              <p>• Your passkey is verified on your device</p>
-              <p>• No passwords or personal data are transmitted</p>
-              <p>• Works with Touch ID, Face ID, Windows Hello, and security keys</p>
+              <p>• {t('auth.passkey.verifiedOnDevice')}</p>
+              <p>• {t('auth.passkey.noPasswordsTransmitted')}</p>
+              <p>• {t('auth.passkey.worksWith')}</p>
             </div>
           </>
         )}

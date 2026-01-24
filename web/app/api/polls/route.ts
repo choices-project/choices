@@ -25,6 +25,7 @@ import {
   errorResponse,
   validationError,
 } from '@/lib/api';
+import type { PaginationMetadata } from '@/lib/api/types';
 import { logger } from '@/lib/utils/logger';
 
 import type { NextRequest } from 'next/server';
@@ -143,6 +144,19 @@ const parseNumberParam = (
 const ALLOWED_STATUSES = new Set(['active', 'closed', 'draft', 'trending', 'all']);
 const ALLOWED_SORTS = new Set(['popular', 'trending', 'engagement', 'newest']);
 
+const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
+
+function parseCursor(cursor: string): { created_at: string; id: string } | null {
+  const parts = cursor.split(',');
+  if (parts.length !== 2) return null;
+  const [created_at, id] = parts.map((s) => s.trim());
+  if (!created_at || !id) return null;
+  const t = new Date(created_at);
+  if (Number.isNaN(t.getTime())) return null;
+  if (!UUID_RE.test(id)) return null;
+  return { created_at, id };
+}
+
 /**
  * Get polls with filtering and sorting
  *
@@ -154,10 +168,12 @@ const ALLOWED_SORTS = new Set(['popular', 'trending', 'engagement', 'newest']);
  * @param {string} [request.searchParams.sort] - Sort order (newest, popular, trending, engagement)
  * @param {number} [request.searchParams.limit] - Number of polls to return (default: 20)
  * @param {number} [request.searchParams.offset] - Number of polls to skip (default: 0)
+ * @param {string} [request.searchParams.cursor] - Opaque cursor for keyset pagination (format: created_at,id). Use when sort=newest for deep pagination.
  * @returns {Promise<NextResponse>} Poll data response
  *
  * @example
  * GET /api/polls?status=trending&category=politics&sort=popular
+ * GET /api/polls?sort=newest&limit=20&cursor=2025-01-01T00:00:00.000Z,abc-uuid
  */
 export const GET = withErrorHandling(async (request: NextRequest) => {
   const supabase = await getSupabaseServerClient();
@@ -197,6 +213,7 @@ export const GET = withErrorHandling(async (request: NextRequest) => {
 
     const limit = limitResult.value;
     const offset = offsetResult.value;
+    const cursorRaw = searchParams.get('cursor') ?? undefined;
 
     if (status && !ALLOWED_STATUSES.has(status)) {
       return validationError({
@@ -205,6 +222,11 @@ export const GET = withErrorHandling(async (request: NextRequest) => {
     }
 
     const sort = ALLOWED_SORTS.has(sortRaw) ? sortRaw : 'newest';
+    const useCursor = !!cursorRaw && sort === 'newest';
+    const parsedCursor = useCursor && cursorRaw ? parseCursor(cursorRaw) : null;
+    if (useCursor && !parsedCursor) {
+      return validationError({ cursor: 'Invalid cursor format. Use created_at,id (ISO date, UUID).' });
+    }
 
     // Build enhanced query with hashtag support
     let selectFields = `
@@ -231,8 +253,15 @@ export const GET = withErrorHandling(async (request: NextRequest) => {
 
     let query = supabase
       .from('polls')
-      .select(selectFields, { count: 'exact' })
-      .range(offset, offset + limit - 1);
+      .select(selectFields, { count: useCursor ? 'exact' : 'exact' });
+
+    if (useCursor && parsedCursor) {
+      query = query
+        .or(`created_at.lt.${parsedCursor.created_at},and(created_at.eq.${parsedCursor.created_at},id.lt.${parsedCursor.id})`)
+        .limit(limit);
+    } else {
+      query = query.range(offset, offset + limit - 1);
+    }
 
     // Apply enhanced filters
     if (status && status !== 'all') {
@@ -254,21 +283,20 @@ export const GET = withErrorHandling(async (request: NextRequest) => {
       query = query.or(`title.ilike.%${search}%,description.ilike.%${search}%`);
     }
 
-    // Apply sorting
+    // Apply sorting (id secondary for deterministic cursor pagination)
     switch (sort) {
       case 'popular':
-        query = query.order('total_votes', { ascending: false });
+        query = query.order('total_votes', { ascending: false }).order('id', { ascending: false });
         break;
       case 'trending':
-        // Will be handled after getting data with hashtag analytics
-        query = query.order('created_at', { ascending: false });
+        query = query.order('created_at', { ascending: false }).order('id', { ascending: false });
         break;
       case 'engagement':
-        query = query.order('total_votes', { ascending: false });
+        query = query.order('total_votes', { ascending: false }).order('id', { ascending: false });
         break;
       case 'newest':
       default:
-        query = query.order('created_at', { ascending: false });
+        query = query.order('created_at', { ascending: false }).order('id', { ascending: false });
         break;
     }
 
@@ -279,30 +307,19 @@ export const GET = withErrorHandling(async (request: NextRequest) => {
       return errorResponse(`Failed to fetch polls: ${error.message}`, 500);
     }
 
-    // Fetch user profiles for polls that have created_by
-    let userProfiles: Record<string, any> = {};
-    if (polls && polls.length > 0) {
-      const userIds = [...new Set((polls as any[]).map((poll: any) => poll.created_by).filter(Boolean))];
-      if (userIds.length > 0) {
-        const { data: profiles, error: profilesError } = await supabase
+    const userIds = polls && polls.length > 0
+      ? [...new Set((polls as any[]).map((poll: any) => poll.created_by).filter(Boolean))]
+      : [];
+    const needTrending = sort === 'trending' || status === 'trending' || includeAnalytics;
+
+    const profilesPromise = userIds.length > 0
+      ? supabase
           .from('user_profiles')
           .select('user_id, username, display_name, is_admin')
-          .in('user_id', userIds);
-
-        if (!profilesError && profiles) {
-          userProfiles = profiles.reduce((acc, profile) => {
-            acc[profile.user_id] = profile;
-            return acc;
-          }, {} as Record<string, any>);
-        }
-      }
-    }
-
-    // Get trending hashtags for analytics if needed (server-side query)
-    let trendingHashtags: Array<{ hashtag: Hashtag }> = [];
-    if (sort === 'trending' || status === 'trending' || includeAnalytics) {
-      try {
-        const { data: hashtagData, error: hashtagError } = await supabase
+          .in('user_id', userIds)
+      : Promise.resolve({ data: null, error: null });
+    const trendingPromise = needTrending
+      ? supabase
           .from('hashtags')
           .select(
             [
@@ -323,10 +340,25 @@ export const GET = withErrorHandling(async (request: NextRequest) => {
           )
           .eq('is_trending', true)
           .order('trending_score', { ascending: false })
-          .limit(10);
+          .limit(10)
+      : Promise.resolve({ data: null, error: null });
 
-        if (!hashtagError && Array.isArray(hashtagData)) {
-          trendingHashtags = hashtagData.map((row) => {
+    const [profilesResult, trendingResult] = await Promise.all([profilesPromise, trendingPromise]);
+
+    let userProfiles: Record<string, any> = {};
+    if (userIds.length > 0 && profilesResult && !profilesResult.error && profilesResult.data) {
+      const profiles = profilesResult.data as any[];
+      userProfiles = profiles.reduce((acc, profile) => {
+        acc[profile.user_id] = profile;
+        return acc;
+      }, {} as Record<string, any>);
+    }
+
+    let trendingHashtags: Array<{ hashtag: Hashtag }> = [];
+    if (needTrending && trendingResult && !trendingResult.error && Array.isArray(trendingResult.data)) {
+      try {
+        const hashtagData = trendingResult.data;
+        trendingHashtags = hashtagData.map((row) => {
             const raw = row as unknown as Record<string, unknown>;
             const metadataValue = raw.metadata;
             const metadata =
@@ -376,10 +408,8 @@ export const GET = withErrorHandling(async (request: NextRequest) => {
 
             return { hashtag };
           });
-        }
-      } catch (error) {
-        logger.warn('Failed to get trending hashtags:', { error: error instanceof Error ? error.message : 'Unknown error' });
-        trendingHashtags = [];
+      } catch (err) {
+        logger.warn('Failed to get trending hashtags:', { error: err instanceof Error ? err.message : 'Unknown error' });
       }
     }
 
@@ -410,13 +440,22 @@ export const GET = withErrorHandling(async (request: NextRequest) => {
           ? count
           : offset + filteredPolls.length;
 
-    const pagination = {
+    const cursorHasMore = useCursor && filteredPolls.length === limit;
+    const last = cursorHasMore && filteredPolls.length > 0 ? filteredPolls[filteredPolls.length - 1] as Record<string, unknown> : null;
+    const nextCursor =
+      cursorHasMore && last?.id != null && last?.createdAt != null
+        ? `${typeof last.createdAt === 'string' ? last.createdAt : (last.createdAt as Date)?.toISOString?.() ?? ''},${last.id}`
+        : undefined;
+
+    const hasMore = useCursor ? cursorHasMore : offset + filteredPolls.length < effectiveTotal;
+    const pagination: PaginationMetadata = {
       limit,
-      offset,
+      offset: useCursor ? 0 : offset,
       total: effectiveTotal,
-      hasMore: offset + filteredPolls.length < effectiveTotal,
-      page: Math.floor(offset / limit) + 1,
+      hasMore,
+      page: useCursor ? 1 : Math.floor(offset / limit) + 1,
       totalPages: Math.max(1, Math.ceil(effectiveTotal / limit)),
+      ...(nextCursor ? { nextCursor } : {}),
     };
 
     logger.info('Polls fetched successfully', {
@@ -619,7 +658,7 @@ export const POST = withErrorHandling(async (request: NextRequest) => {
     const { data: poll, error: pollError } = await supabase
       .from('polls')
       .insert(pollData as any)
-      .select()
+      .select('id, title, description, category, status, poll_settings, auto_lock_at, moderation_status, privacy_level, is_verified, is_featured, engagement_score, created_at')
       .single();
 
     if (pollError) {
@@ -685,7 +724,7 @@ export const POST = withErrorHandling(async (request: NextRequest) => {
         user_agent: request.headers.get('user-agent'),
         created_at: new Date().toISOString()
       })
-      .select()
+      .select('id')
       .single();
 
     // Store detailed analytics data

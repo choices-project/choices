@@ -5,6 +5,8 @@ import * as React from 'react';
 import { useAccessibleDialog } from '@/lib/accessibility/useAccessibleDialog';
 import { useIsAuthenticated } from '@/lib/stores';
 
+import { useI18n } from '@/hooks/useI18n';
+
 import PasskeyLogin from './PasskeyLogin';
 import PasskeyRegister from './PasskeyRegister';
 import {
@@ -12,14 +14,21 @@ import {
   useUserActions,
 } from '../lib/store';
 
-export function PasskeyControls() {
-  // Check if user is authenticated - registration requires authentication
+type PasskeyControlsProps = {
+  /** Called after passkey login succeeds; e.g. redirect to feed/dashboard */
+  onLoginSuccess?: () => void;
+};
+
+export function PasskeyControls({ onLoginSuccess }: PasskeyControlsProps) {
+  const { t } = useI18n();
   const isAuthenticated = useIsAuthenticated();
 
   const [mode, setMode] = React.useState<
     'idle' | 'register' | 'login' | 'viewing' | 'crossDevice' | 'biometric'
   >('idle');
   const [credentials, setCredentials] = React.useState<Array<{ id: string; name: string }>>([]);
+  const [credentialsLoading, setCredentialsLoading] = React.useState(false);
+  const [credentialsError, setCredentialsError] = React.useState<string | null>(null);
   const [error, setError] = React.useState<string | null>(null);
   const [success, setSuccess] = React.useState<string | null>(null);
 
@@ -53,9 +62,6 @@ export function PasskeyControls() {
       if (nextSuccess === 'registration-success') {
         setBiometricSuccess(true);
         setBiometricCredentials(true);
-      } else if (nextSuccess === 'credential-removed-success') {
-        setBiometricCredentials(false);
-        setBiometricSuccess(false);
       } else if (!nextSuccess) {
         setBiometricSuccess(false);
       }
@@ -83,20 +89,69 @@ export function PasskeyControls() {
   const handleCompleteAuthentication = React.useCallback(() => {
     updateSuccess('login-success');
     setMode('idle');
-  }, [updateSuccess]);
+    onLoginSuccess?.();
+  }, [updateSuccess, onLoginSuccess]);
 
   // Note: These handlers are kept for potential future use but currently not used
   // as we're using PasskeyRegister/PasskeyLogin components directly
   // They may be used in the biometric/crossDevice dialogs if those are re-enabled
 
   const handleViewCredentials = React.useCallback(() => {
+    setCredentials([]);
+    setCredentialsError(null);
     setMode('viewing');
   }, []);
 
-  const handleRemoveCredential = React.useCallback(() => {
-    setCredentials([]);
-    updateSuccess('credential-removed-success');
-  }, [updateSuccess]);
+  const loadCredentials = React.useCallback((): Promise<void> => {
+    setCredentialsLoading(true);
+    setCredentialsError(null);
+    return fetch('/api/v1/auth/webauthn/credentials', { credentials: 'include' })
+      .then((res) => res.json())
+      .then((json) => {
+        const raw = json?.data?.credentials ?? json?.credentials ?? [];
+        setCredentials(
+          raw.map((c: { id: string; device_label?: string | null }) => ({
+            id: c.id,
+            name: c.device_label?.trim() || 'Passkey',
+          }))
+        );
+      })
+      .catch((err) => {
+        setCredentialsError(err instanceof Error ? err.message : 'Failed to load passkeys');
+      })
+      .finally(() => {
+        setCredentialsLoading(false);
+      });
+  }, []);
+
+  React.useEffect(() => {
+    if (mode !== 'viewing' || !isAuthenticated) return;
+    loadCredentials();
+  }, [mode, isAuthenticated, loadCredentials]);
+
+  const [removingId, setRemovingId] = React.useState<string | null>(null);
+  const handleRemoveCredential = React.useCallback(
+    async (id: string) => {
+      setRemovingId(id);
+      try {
+        const res = await fetch(`/api/v1/auth/webauthn/credentials/${id}`, {
+          method: 'DELETE',
+          credentials: 'include',
+        });
+        if (!res.ok) {
+          const json = await res.json().catch(() => ({}));
+          setCredentialsError((json?.error ?? json?.message) || 'Failed to remove passkey');
+          return;
+        }
+        await loadCredentials();
+      } catch (err) {
+        setCredentialsError(err instanceof Error ? err.message : 'Failed to remove passkey');
+      } finally {
+        setRemovingId(null);
+      }
+    },
+    [loadCredentials]
+  );
 
   const handleCancel = React.useCallback(() => {
     setMode('idle');
@@ -113,6 +168,8 @@ export function PasskeyControls() {
 
   const handleCloseDialog = React.useCallback(() => {
     setMode('idle');
+    setCredentials([]);
+    setCredentialsError(null);
   }, []);
 
   useAccessibleDialog({
@@ -178,7 +235,7 @@ export function PasskeyControls() {
           className="w-full px-4 py-2 text-sm text-gray-600 hover:text-gray-800 focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-offset-2 rounded-md transition-colors"
           onClick={handleCancel}
         >
-          Cancel
+          {t('auth.passkey.cancel')}
         </button>
       </div>
     );
@@ -200,7 +257,7 @@ export function PasskeyControls() {
           className="w-full px-4 py-2 text-sm text-gray-600 hover:text-gray-800 focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-offset-2 rounded-md transition-colors"
           onClick={handleCancel}
         >
-          Cancel
+          {t('auth.passkey.cancel')}
         </button>
       </div>
     );
@@ -220,7 +277,7 @@ export function PasskeyControls() {
             >
               <span className="flex items-center justify-center gap-2">
                 <span>🔐</span>
-                <span>Create Passkey</span>
+                <span>{t('auth.passkey.create')}</span>
               </span>
             </button>
           )}
@@ -231,39 +288,41 @@ export function PasskeyControls() {
           >
             <span className="flex items-center justify-center gap-2">
               <span>🔑</span>
-              <span>Sign In with Passkey</span>
+                <span>{t('auth.passkey.signIn')}</span>
             </span>
           </button>
         </div>
 
         {/* Helpful info text */}
         <p className="mt-3 text-xs text-gray-500 text-center">
-          Use your device&apos;s fingerprint, face ID, or security key for secure, passwordless authentication
+          {t('auth.passkey.hint')}
         </p>
       </div>
 
       {/* Advanced options - collapsible, less prominent */}
-      <details className="text-sm">
-        <summary className="cursor-pointer text-gray-500 hover:text-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 rounded px-2 py-1 text-xs">
-          Advanced options
-        </summary>
-        <div className="mt-2 space-y-2 pl-4">
-          <button
-            data-testid="register-additional-passkey-button"
-            className="block w-full text-left px-3 py-2 text-sm text-gray-700 hover:bg-gray-50 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition-colors"
-            onClick={handleRegister}
-          >
-            Register additional passkey
-          </button>
-          <button
-            data-testid="view-credentials-button"
-            className="block w-full text-left px-3 py-2 text-sm text-gray-700 hover:bg-gray-50 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition-colors"
-            onClick={handleViewCredentials}
-          >
-            View credentials
-          </button>
-        </div>
-      </details>
+      {isAuthenticated && (
+        <details className="text-sm">
+          <summary className="cursor-pointer text-gray-500 hover:text-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 rounded px-2 py-1 text-xs">
+            {t('auth.passkey.advancedOptions')}
+          </summary>
+          <div className="mt-2 space-y-2 pl-4">
+            <button
+              data-testid="register-additional-passkey-button"
+              className="block w-full text-left px-3 py-2 text-sm text-gray-700 hover:bg-gray-50 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition-colors"
+              onClick={handleRegister}
+            >
+              {t('auth.passkey.registerAdditional')}
+            </button>
+            <button
+              data-testid="view-credentials-button"
+              className="block w-full text-left px-3 py-2 text-sm text-gray-700 hover:bg-gray-50 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition-colors"
+              onClick={handleViewCredentials}
+            >
+              {t('auth.passkey.viewCredentials')}
+            </button>
+          </div>
+        </details>
+      )}
 
       {mode === 'biometric' && (
         <div
@@ -286,7 +345,7 @@ export function PasskeyControls() {
               Complete biometric auth
             </button>
             <button data-testid="cancel-webauthn" className="btn" onClick={handleCancel}>
-              Cancel
+              {t('auth.passkey.cancel')}
             </button>
           </div>
         </div>
@@ -317,7 +376,7 @@ export function PasskeyControls() {
               Complete cross-device auth
             </button>
             <button data-testid="cancel-webauthn" className="btn" onClick={handleCancel}>
-              Cancel
+              {t('auth.passkey.cancel')}
             </button>
           </div>
           <div data-testid="cross-device-prompt" className="mt-4 rounded bg-blue-50 p-2">
@@ -334,29 +393,45 @@ export function PasskeyControls() {
           aria-labelledby="passkey-credential-title"
           ref={credentialDialogRef}
         >
-          <h3>Manage Credentials</h3>
-          <div data-testid="credential-list" className="mt-4">
-            {credentials.map((cred) => (
-              <div key={cred.id} data-testid="credential-item" className="mb-2 rounded border p-2">
-                {cred.name}
-              </div>
-            ))}
-            {credentials.length === 0 && <p>No credentials found</p>}
-          </div>
+          <h3 id="passkey-credential-title">{t('auth.passkey.manageCredentials')}</h3>
+          {credentialsLoading ? (
+            <p className="mt-4 text-sm text-gray-600">{t('auth.passkey.loading')}</p>
+          ) : credentialsError ? (
+            <p className="mt-4 text-sm text-red-600" data-testid="credentials-error">
+              {credentialsError}
+            </p>
+          ) : (
+            <div data-testid="credential-list" className="mt-4">
+              {credentials.map((cred) => (
+                <div
+                  key={cred.id}
+                  data-testid="credential-item"
+                  className="mb-2 flex items-center justify-between gap-2 rounded border p-2"
+                >
+                  <span>{cred.name}</span>
+                  <button
+                    type="button"
+                    data-testid="remove-credential"
+                    aria-label={`${t('auth.passkey.remove')} ${cred.name}`}
+                    disabled={removingId === cred.id}
+                    onClick={() => handleRemoveCredential(cred.id)}
+                    className="rounded px-2 py-1 text-sm text-red-600 transition-colors hover:bg-red-50 disabled:opacity-50"
+                  >
+                    {removingId === cred.id ? t('auth.passkey.removing') : t('auth.passkey.remove')}
+                  </button>
+                </div>
+              ))}
+              {credentials.length === 0 && <p>{t('auth.passkey.noCredentials')}</p>}
+            </div>
+          )}
           <div className="mt-4 space-x-2">
-            <button data-testid="remove-credential" className="btn" onClick={handleRemoveCredential}>
-              Remove credential
-            </button>
             <button
-              data-testid="confirm-removal"
+              data-testid="view-credentials-close"
               className="btn"
-              onClick={handleRemoveCredential}
+              onClick={handleCloseDialog}
               ref={credentialPrimaryButtonRef}
             >
-              Confirm removal
-            </button>
-            <button className="btn" onClick={() => setMode('idle')}>
-              Close
+              {t('auth.passkey.close')}
             </button>
           </div>
         </div>
@@ -370,8 +445,8 @@ export function PasskeyControls() {
           <div className="flex items-center gap-2">
             <span className="text-green-600 text-xl">✓</span>
             <div>
-              <p className="font-semibold text-green-800">Registration successful!</p>
-              <p className="text-sm text-green-700">Your passkey has been created and saved.</p>
+              <p className="font-semibold text-green-800">{t('auth.passkey.registrationSuccess')}</p>
+              <p className="text-sm text-green-700">{t('auth.passkey.registrationSuccessBody')}</p>
             </div>
           </div>
         </div>
@@ -384,8 +459,8 @@ export function PasskeyControls() {
           <div className="flex items-center gap-2">
             <span className="text-green-600 text-xl">✓</span>
             <div>
-              <p className="font-semibold text-green-800">Login successful!</p>
-              <p className="text-sm text-green-700">You have been signed in successfully.</p>
+              <p className="font-semibold text-green-800">{t('auth.passkey.loginSuccess')}</p>
+              <p className="text-sm text-green-700">{t('auth.passkey.loginSuccessBody')}</p>
             </div>
           </div>
         </div>
@@ -406,15 +481,6 @@ export function PasskeyControls() {
           Cross-device authentication successful!
         </div>
       )}
-      {success === 'credential-removed-success' && (
-        <div
-          data-testid="credential-removed-success"
-          className="rounded border border-green-200 bg-green-50 p-4"
-        >
-          Credential removed successfully!
-        </div>
-      )}
-
       {error === 'operation-cancelled' && (
         <div
           data-testid="operation-cancelled"

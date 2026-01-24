@@ -9,7 +9,7 @@ import type { NextRequest } from 'next/server';
 // RP_ID should match the actual production domain (without protocol and www subdomain)
 // For www.choices-app.com, use 'choices-app.com' (RP ID should be the registrable domain)
 export const RP_ID = process.env.RP_ID ?? 'choices-app.com';
-export const ALLOWED_ORIGINS = (process.env.ALLOWED_ORIGINS ?? 'https://www.choices-app.com,https://choices-app.com,http://localhost:3000')
+export const ALLOWED_ORIGINS = (process.env.ALLOWED_ORIGINS ?? 'https://www.choices-app.com,https://choices-app.com,http://localhost:3000,http://127.0.0.1:3000')
   .split(',')
   .map(s => s.trim())
   .filter(Boolean);
@@ -27,6 +27,7 @@ export function getRPIDAndOrigins(req: NextRequest) {
   // Block previews: if host !== rpID and not localhost, disable passkeys
   const host = req.headers.get('x-forwarded-host') ?? req.headers.get('host') ?? '';
   const isLocal = host.startsWith('localhost:') || host === 'localhost';
+  const is127 = host.startsWith('127.0.0.1:') || host === '127.0.0.1';
 
   // RP ID is the registrable domain (e.g., 'choices-app.com'), but host might be 'www.choices-app.com'
   // So we need to check if host matches rpID or is a subdomain of rpID (like www.rpID)
@@ -34,13 +35,15 @@ export function getRPIDAndOrigins(req: NextRequest) {
   const isProdHost = hostWithoutWww === rpID || host === rpID;
   const isPreview = isVercelPreview(host) && !isProdHost;
 
-  // Ensure local development uses the correct rpID
+  // Ensure local development uses the correct rpID (WebAuthn allows localhost or 127.0.0.1 for non-HTTPS)
   if (isLocal) {
     rpID = 'localhost';
+  } else if (is127) {
+    rpID = '127.0.0.1';
   }
 
-  // Disable passkeys on previews, but allow on production domain and localhost
-  const enabled = (isProdHost || isLocal) && !isPreview;
+  // Disable passkeys on previews, but allow on production domain, localhost, and 127.0.0.1
+  const enabled = (isProdHost || isLocal || is127) && !isPreview;
 
   return { enabled, rpID, allowedOrigins };
 }
@@ -54,6 +57,25 @@ export function isVercelPreview(hostname: string): boolean {
     hostname.endsWith('.vercel.live') ||
     hostname.includes('vercel-preview')
   );
+}
+
+/**
+ * Derive request origin for WebAuthn verify (scheme + host + port).
+ * Use Origin when present; else parse Referer via new URL(referer).origin.
+ * Use '' when neither is available (allowed-origins check is skipped; SimpleWebAuthn still validates inside clientDataJSON).
+ */
+export function normalizeRequestOrigin(req: NextRequest): string {
+  const origin = req.headers.get('origin')?.trim();
+  if (origin) return origin.replace(/\/$/, '');
+  const referer = req.headers.get('referer')?.trim();
+  if (referer) {
+    try {
+      return new URL(referer).origin;
+    } catch {
+      return '';
+    }
+  }
+  return '';
 }
 
 /**

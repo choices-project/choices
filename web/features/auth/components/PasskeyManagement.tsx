@@ -2,7 +2,7 @@
 
 import React from 'react';
 
-import { logger } from '@/lib/utils/logger';
+import { useI18n } from '@/hooks/useI18n';
 
 import { WebAuthnPrivacyBadge } from './WebAuthnPrivacyBadge';
 import { useInitializeBiometricState, useUserActions } from '../lib/store';
@@ -17,6 +17,7 @@ type Passkey = {
 };
 
 export function PasskeyManagement() {
+  const { t } = useI18n();
   const [passkeys, setPasskeys] = React.useState<Passkey[]>([]);
   const [loading, setLoading] = React.useState(true);
   const [error, setError] = React.useState<string | null>(null);
@@ -27,10 +28,12 @@ export function PasskeyManagement() {
 
   const loadPasskeys = React.useCallback(async () => {
     try {
-      const response = await fetch('/api/v1/auth/webauthn/credentials');
+      const response = await fetch('/api/v1/auth/webauthn/credentials', {
+        credentials: 'include',
+      });
       if (response.ok) {
-        const data = await response.json();
-        const credentials: Passkey[] = data.credentials ?? [];
+        const json = await response.json();
+        const credentials: Passkey[] = json?.data?.credentials ?? json?.credentials ?? [];
         setPasskeys(credentials);
         setBiometricCredentials(credentials.length > 0);
       } else {
@@ -71,37 +74,70 @@ export function PasskeyManagement() {
     }
   }, [loadPasskeys, setBiometricError]);
 
-  const handleRenamePasskey = React.useCallback(async (id: string, newLabel: string) => {
-    try {
-      logger.info('Rename passkey', { id, newLabel });
-    } catch (err) {
-      const message = err instanceof Error ? err.message : 'Failed to rename passkey';
-      setError(message);
-      setBiometricError(message);
-    }
-  }, [setBiometricError]);
+  const handleRenamePasskey = React.useCallback(
+    async (id: string, newLabel: string) => {
+      try {
+        setError(null);
+        setBiometricError(null);
+        const res = await fetch(`/api/v1/auth/webauthn/credentials/${id}`, {
+          method: 'PATCH',
+          headers: { 'Content-Type': 'application/json' },
+          credentials: 'include',
+          body: JSON.stringify({ device_label: newLabel }),
+        });
+        if (!res.ok) {
+          const json = await res.json().catch(() => ({}));
+          const msg = (json?.error ?? json?.message) || 'Failed to rename passkey';
+          setError(msg);
+          setBiometricError(msg);
+          return;
+        }
+        await loadPasskeys();
+      } catch (err) {
+        const message = err instanceof Error ? err.message : 'Failed to rename passkey';
+        setError(message);
+        setBiometricError(message);
+      }
+    },
+    [loadPasskeys, setBiometricError]
+  );
 
-  const handleRevokePasskey = React.useCallback(async (id: string) => {
-    try {
-      logger.info('Revoke passkey', { id });
-      await loadPasskeys();
-    } catch (err) {
-      const message = err instanceof Error ? err.message : 'Failed to revoke passkey';
-      setError(message);
-      setBiometricError(message);
-    }
-  }, [loadPasskeys, setBiometricError]);
+  const handleRevokePasskey = React.useCallback(
+    async (id: string) => {
+      try {
+        setError(null);
+        setBiometricError(null);
+        const res = await fetch(`/api/v1/auth/webauthn/credentials/${id}`, {
+          method: 'DELETE',
+          credentials: 'include',
+        });
+        if (!res.ok) {
+          const json = await res.json().catch(() => ({}));
+          const msg = (json?.error ?? json?.message) || 'Failed to revoke passkey';
+          setError(msg);
+          setBiometricError(msg);
+          return;
+        }
+        await loadPasskeys();
+      } catch (err) {
+        const message = err instanceof Error ? err.message : 'Failed to revoke passkey';
+        setError(message);
+        setBiometricError(message);
+      }
+    },
+    [loadPasskeys, setBiometricError]
+  );
 
   if (loading) {
     return (
       <div className="passkey-management">
         <div className="mb-6 flex items-center justify-between">
-          <h3 className="text-lg font-semibold">Your Passkeys</h3>
+          <h3 className="text-lg font-semibold">{t('auth.passkey.yourPasskeys')}</h3>
           <WebAuthnPrivacyBadge />
         </div>
         <div className="py-8 text-center">
           <div className="mx-auto h-8 w-8 animate-spin rounded-full border-b-2 border-blue-600" />
-          <p className="mt-2 text-gray-600">Loading passkeys...</p>
+          <p className="mt-2 text-gray-600">{t('auth.passkey.loadingPasskeys')}</p>
         </div>
       </div>
     );
@@ -110,7 +146,7 @@ export function PasskeyManagement() {
   return (
     <div className="passkey-management">
       <div className="mb-6 flex items-center justify-between">
-        <h3 className="text-lg font-semibold">Your Passkeys</h3>
+        <h3 className="text-lg font-semibold">{t('auth.passkey.yourPasskeys')}</h3>
         <WebAuthnPrivacyBadge />
       </div>
 
@@ -124,13 +160,13 @@ export function PasskeyManagement() {
         <div className="py-8 text-center">
           <div className="mb-4 text-4xl text-gray-400">🔐</div>
           <p className="mb-4 text-gray-600">
-            No passkeys yet. Add one from this device—biometrics stay on your device.
+            {t('auth.passkey.noPasskeysYet')}
           </p>
           <button
             onClick={handleAddPasskey}
             className="rounded bg-blue-600 px-4 py-2 text-white transition-colors hover:bg-blue-700"
           >
-            Add Passkey
+            {t('auth.passkey.addPasskey')}
           </button>
         </div>
       ) : (
@@ -139,6 +175,7 @@ export function PasskeyManagement() {
             <PasskeyCard
               key={passkey.id}
               passkey={passkey}
+              t={t}
               onRename={(newLabel) => handleRenamePasskey(passkey.id, newLabel)}
               onRevoke={() => handleRevokePasskey(passkey.id)}
             />
@@ -147,7 +184,7 @@ export function PasskeyManagement() {
             onClick={handleAddPasskey}
             className="w-full rounded-lg border-2 border-dashed border-gray-300 p-4 text-gray-600 transition-colors hover:border-gray-400"
           >
-            + Add Another Passkey
+            {t('auth.passkey.addAnother')}
           </button>
         </div>
       )}
@@ -157,15 +194,17 @@ export function PasskeyManagement() {
 
 function PasskeyCard({
   passkey,
+  t,
   onRename,
   onRevoke
 }: {
   passkey: Passkey;
+  t: (key: string) => string;
   onRename: (label: string) => void;
   onRevoke: () => void;
 }) {
   const [isEditing, setIsEditing] = React.useState(false);
-  const [newLabel, setNewLabel] = React.useState(passkey.device_label ?? 'Unnamed Device');
+  const [newLabel, setNewLabel] = React.useState(passkey.device_label ?? t('auth.passkey.unnamedDevice'));
 
   const handleSave = () => {
     onRename(newLabel);
@@ -173,7 +212,7 @@ function PasskeyCard({
   };
 
   const formatDate = (dateString: string | null) => {
-    if (!dateString) return 'Never used';
+    if (!dateString) return t('auth.passkey.neverUsed');
     return new Date(dateString).toLocaleDateString();
   };
 
@@ -193,23 +232,23 @@ function PasskeyCard({
                 onClick={handleSave}
                 className="text-green-600 hover:text-green-700 text-sm"
               >
-                Save
+                {t('auth.passkey.save')}
               </button>
               <button
                 onClick={() => setIsEditing(false)}
                 className="text-gray-600 hover:text-gray-700 text-sm"
               >
-                Cancel
+                {t('auth.passkey.cancel')}
               </button>
             </div>
           ) : (
             <div>
-              <h4 className="font-medium">{passkey.device_label ?? 'Unnamed Device'}</h4>
+              <h4 className="font-medium">{passkey.device_label ?? t('auth.passkey.unnamedDevice')}</h4>
               <p className="text-sm text-gray-600">
-                Last used: {formatDate(passkey.last_used_at)}
+                {t('auth.passkey.lastUsed')}: {formatDate(passkey.last_used_at)}
               </p>
               <p className="text-sm text-gray-600">
-                Added: {formatDate(passkey.created_at)}
+                {t('auth.passkey.added')}: {formatDate(passkey.created_at)}
               </p>
             </div>
           )}
@@ -221,14 +260,14 @@ function PasskeyCard({
               onClick={() => setIsEditing(true)}
               className="text-blue-600 hover:text-blue-700 text-sm"
             >
-              Rename
+              {t('auth.passkey.rename')}
             </button>
           )}
           <button
             onClick={onRevoke}
             className="text-red-600 hover:text-red-700 text-sm"
           >
-            Revoke
+            {t('auth.passkey.revoke')}
           </button>
         </div>
       </div>
