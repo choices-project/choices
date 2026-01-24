@@ -24,6 +24,7 @@
 
 import { getSupabaseServerClient } from '@/utils/supabase/server';
 
+import { CIVIC_ACTION_SELECT_COLUMNS } from '@/lib/api/response-builders';
 import { isFeatureEnabled } from '@/lib/core/feature-flags';
 import { logger } from '@/lib/utils/logger';
 
@@ -278,7 +279,7 @@ export async function createSophisticatedCivicAction(
     const { data: civicAction, error } = await supabase
       .from('civic_actions')
       .insert(insertData as unknown as CivicAction)
-      .select()
+      .select(CIVIC_ACTION_SELECT_COLUMNS)
       .single();
 
     if (error) {

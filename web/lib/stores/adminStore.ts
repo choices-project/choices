@@ -253,9 +253,6 @@ const LOCKED_CORE_FLAGS = [
 
 const LOCKED_CIVICS_FLAGS = [
   'CIVICS_ADDRESS_LOOKUP',
-  'CIVICS_REPRESENTATIVE_DATABASE',
-  'CIVICS_CAMPAIGN_FINANCE',
-  'CIVICS_VOTING_RECORDS',
   'CANDIDATE_ACCOUNTABILITY',
   'CANDIDATE_CARDS',
   'ALTERNATIVE_CANDIDATES',
@@ -275,15 +272,12 @@ const CATEGORY_PRESETS: AdminFeatureFlagCategories = {
   civics: [...LOCKED_CIVICS_FLAGS],
   future: [
     'AUTOMATED_POLLS',
-    'ADVANCED_PRIVACY',
-    'SOCIAL_SIGNUP',
     'CONTACT_INFORMATION_SYSTEM',
     'CIVICS_TESTING_STRATEGY',
     'CIVIC_ENGAGEMENT_V2',
-    'DEVICE_FLOW_AUTH',
   ],
-  performance: ['PERFORMANCE_OPTIMIZATION', 'FEATURE_DB_OPTIMIZATION_SUITE', 'ANALYTICS'],
-  system: [...LOCKED_SYSTEM_FLAGS, 'PUSH_NOTIFICATIONS', 'THEMES', 'ACCESSIBILITY', 'INTERNATIONALIZATION'],
+  performance: ['FEATURE_DB_OPTIMIZATION_SUITE', 'ANALYTICS'],
+  system: [...LOCKED_SYSTEM_FLAGS, 'PUSH_NOTIFICATIONS'],
 };
 
 const computeMutableFlags = () => {
@@ -766,9 +760,9 @@ export const createAdminActions = (
             }
 
             const [usersResult, pollsResult, votesResult] = await Promise.all([
-              supabase.from('user_profiles').select('*', { count: 'exact', head: true }),
-              supabase.from('polls').select('*', { count: 'exact', head: true }).eq('status', 'active'),
-              supabase.from('votes').select('*', { count: 'exact', head: true }),
+              supabase.from('user_profiles').select('id', { count: 'exact', head: true }),
+              supabase.from('polls').select('id', { count: 'exact', head: true }).eq('status', 'active'),
+              supabase.from('votes').select('id', { count: 'exact', head: true }),
             ]);
 
             if (usersResult.error) {

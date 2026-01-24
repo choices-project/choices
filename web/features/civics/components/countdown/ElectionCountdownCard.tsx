@@ -2,14 +2,14 @@ import {
   CheckCircle2,
   Clock3,
 } from 'lucide-react';
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useMemo } from 'react';
 
 import { cn } from '@/lib/utils';
 
 import { useI18n } from '@/hooks/useI18n';
 
 import { ElectionCountdownBadge } from './ElectionCountdownBadge';
-import { formatElectionDate } from '../../utils/civicsCountdownUtils';
+import { formatElectionDateStable } from '../../utils/civicsCountdownUtils';
 
 import type { CivicElection } from '@/types/civic';
 
@@ -45,14 +45,7 @@ export function ElectionCountdownCard({
   maxItems = DEFAULT_MAX_ITEMS,
   ariaLabel
 }: ElectionCountdownCardProps) {
-  const { t, currentLanguage } = useI18n();
-  // CRITICAL: Only use formatElectionDate after mount to prevent hydration mismatch
-  // toLocaleDateString can produce different output on server vs client
-  const [isMounted, setIsMounted] = useState(false);
-
-  useEffect(() => {
-    setIsMounted(true);
-  }, []);
+  const { t } = useI18n();
   const resolvedTitle = title ?? t('civics.countdown.card.title');
   const resolvedDescription = description ?? t('civics.countdown.card.description');
   const hasElections = elections.length > 0 && nextElection;
@@ -116,9 +109,7 @@ export function ElectionCountdownCard({
                   {election.name}
                 </span>
                 <span className="text-xs text-blue-600 dark:text-blue-200/80">
-                  {isMounted
-                    ? formatElectionDate(election.election_day, currentLanguage)
-                    : election.election_day?.split('T')[0] ?? ''}
+                  {formatElectionDateStable(election.election_day)}
                 </span>
               </div>
             </li>

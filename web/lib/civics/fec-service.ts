@@ -316,6 +316,21 @@ export type FECIngestCursor = {
   created_at: string;
 }
 
+/** Explicit select columns for fec_* tables (avoid select('*')). */
+const FEC_CYCLES_SELECT =
+  'cycle, cycle_name, start_date, end_date, election_date, is_current, is_upcoming, is_completed, data_available';
+const FEC_CANDIDATES_SELECT =
+  'candidate_id, name, office, party, state, district, incumbent_challenge_status, candidate_status, candidate_inactive, election_years, election_districts, first_file_date, last_file_date, last_f2_date, active_through, principal_committees, authorized_committees, total_receipts, total_disbursements, cash_on_hand, debt, last_updated, created_at, data_source, is_efiling, is_processed';
+const FEC_COMMITTEES_SELECT =
+  'committee_id, committee_name, committee_type, committee_designation, committee_organization_type, committee_party, committee_state, committee_district, treasurer_name, treasurer_city, treasurer_state, treasurer_zip, custodian_name, custodian_city, custodian_state, custodian_zip, street_1, street_2, city, state, zip, candidate_id, candidate_name, candidate_office, candidate_state, candidate_district, candidate_party, candidate_status, candidate_incumbent_challenge_status, first_file_date, last_file_date, last_f1_date, organization_type, organization_type_full, designation, designation_full, committee_type_full, party_full, filing_frequency, filing_frequency_full, cycles, total_receipts, total_disbursements, cash_on_hand, debt, last_updated, created_at, data_source, is_efiling, is_processed';
+const FEC_CONTRIBUTIONS_SELECT =
+  'id, committee_id, candidate_id, contributor_name, contributor_name_normalized, contributor_city, contributor_state, contributor_zip, contributor_employer, contributor_occupation, contributor_organization_name, contributor_organization_type, contributor_committee_id, contributor_committee_name, contributor_committee_type, contributor_committee_designation, contributor_committee_organization_type, contributor_committee_party, contributor_committee_state, contributor_committee_district, amount, contribution_date, contribution_type, contribution_type_desc, memo_code, memo_text, receipt_type, receipt_type_desc, receipt_type_full, line_number, transaction_id, file_number, report_type, report_type_full, report_year, two_year_transaction_period, cycle, sub_id, link_id, image_number, file_number_raw, is_individual, is_corporate, is_pac, is_party, is_self_financing, sector, industry, last_updated, created_at, data_source, is_efiling, is_processed, provenance';
+const FEC_DISBURSEMENTS_SELECT =
+  'id, committee_id, candidate_id, recipient_name, recipient_name_normalized, recipient_city, recipient_state, recipient_zip, recipient_employer, recipient_occupation, recipient_organization_name, recipient_organization_type, recipient_committee_id, recipient_committee_name, recipient_committee_type, recipient_committee_designation, recipient_committee_organization_type, recipient_committee_party, recipient_committee_state, recipient_committee_district, amount, disbursement_date, disbursement_type, disbursement_type_desc, memo_code, memo_text, receipt_type, receipt_type_desc, receipt_type_full, line_number, transaction_id, file_number, report_type, report_type_full, report_year, two_year_transaction_period, cycle, sub_id, link_id, image_number, file_number_raw, purpose, purpose_desc, category, category_desc, last_updated, created_at, data_source, is_efiling, is_processed, provenance';
+const FEC_INDEPENDENT_EXPENDITURES_SELECT =
+  'id, committee_id, candidate_id, candidate_name, candidate_office, candidate_state, candidate_district, candidate_party, candidate_status, candidate_incumbent_challenge_status, spender_name, spender_city, spender_state, spender_zip, spender_employer, spender_occupation, spender_organization_name, spender_organization_type, spender_committee_id, spender_committee_name, spender_committee_type, spender_committee_designation, spender_committee_organization_type, spender_committee_party, spender_committee_state, spender_committee_district, amount, expenditure_date, expenditure_type, expenditure_type_desc, memo_code, memo_text, receipt_type, receipt_type_desc, receipt_type_full, line_number, transaction_id, file_number, report_type, report_type_full, report_year, two_year_transaction_period, cycle, sub_id, link_id, image_number, file_number_raw, purpose, purpose_desc, category, category_desc, support_oppose_indicator, support_oppose_indicator_desc, last_updated, created_at, data_source, is_efiling, is_processed, provenance';
+const FEC_INGEST_CURSORS_SELECT = 'source, cycle, cursor_type, cursor_value, last_updated, created_at';
+
 export class FECService {
   private _supabase: any = null;
 
@@ -340,7 +355,7 @@ export class FECService {
     try {
       const { data, error } = await this.supabase
         .from('fec_cycles')
-        .select('*')
+        .select(FEC_CYCLES_SELECT)
         .eq('cycle', cycle)
         .single();
 
@@ -364,7 +379,7 @@ export class FECService {
     try {
       const { data, error } = await this.supabase
         .from('fec_cycles')
-        .select('*')
+        .select(FEC_CYCLES_SELECT)
         .order('cycle', { ascending: false });
 
       if (error) {
@@ -384,7 +399,7 @@ export class FECService {
     try {
       const { data, error } = await this.supabase
         .from('fec_cycles')
-        .select('*')
+        .select(FEC_CYCLES_SELECT)
         .eq('is_current', true)
         .single();
 
@@ -408,7 +423,7 @@ export class FECService {
     try {
       const { data, error } = await this.supabase
         .from('fec_candidates')
-        .select('*')
+        .select(FEC_CANDIDATES_SELECT)
         .eq('candidate_id', candidateId)
         .single();
 
@@ -432,7 +447,7 @@ export class FECService {
     try {
       const { data, error } = await this.supabase
         .from('fec_committees')
-        .select('*')
+        .select(FEC_COMMITTEES_SELECT)
         .eq('committee_id', committeeId)
         .single();
 
@@ -540,7 +555,7 @@ export class FECService {
     try {
       let query = this.supabase
         .from('fec_contributions')
-        .select('*')
+        .select(FEC_CONTRIBUTIONS_SELECT)
         .eq('candidate_id', candidateId)
         .eq('cycle', cycle);
 
@@ -602,7 +617,7 @@ export class FECService {
     try {
       let query = this.supabase
         .from('fec_disbursements')
-        .select('*')
+        .select(FEC_DISBURSEMENTS_SELECT)
         .eq('candidate_id', candidateId)
         .eq('cycle', cycle);
 
@@ -658,7 +673,7 @@ export class FECService {
     try {
       let query = this.supabase
         .from('fec_independent_expenditures')
-        .select('*')
+        .select(FEC_INDEPENDENT_EXPENDITURES_SELECT)
         .eq('candidate_id', candidateId)
         .eq('cycle', cycle);
 
@@ -719,7 +734,7 @@ export class FECService {
     try {
       const { data, error } = await this.supabase
         .from('fec_ingest_cursors')
-        .select('*')
+        .select(FEC_INGEST_CURSORS_SELECT)
         .eq('source', source)
         .eq('cycle', cycle)
         .eq('cursor_type', cursorType)
@@ -779,11 +794,11 @@ export class FECService {
   }> {
     try {
       const [candidatesCount, committeesCount, contributionsCount, disbursementsCount, ieCount, currentCycle, cycles] = await Promise.all([
-        this.supabase.from('fec_candidates').select('*', { count: 'exact', head: true }),
-        this.supabase.from('fec_committees').select('*', { count: 'exact', head: true }),
-        this.supabase.from('fec_contributions').select('*', { count: 'exact', head: true }),
-        this.supabase.from('fec_disbursements').select('*', { count: 'exact', head: true }),
-        this.supabase.from('fec_independent_expenditures').select('*', { count: 'exact', head: true }),
+        this.supabase.from('fec_candidates').select('candidate_id', { count: 'exact', head: true }),
+        this.supabase.from('fec_committees').select('committee_id', { count: 'exact', head: true }),
+        this.supabase.from('fec_contributions').select('id', { count: 'exact', head: true }),
+        this.supabase.from('fec_disbursements').select('id', { count: 'exact', head: true }),
+        this.supabase.from('fec_independent_expenditures').select('id', { count: 'exact', head: true }),
         this.getCurrentFECCycle(),
         this.getAllFECCycles()
       ]);

@@ -94,10 +94,10 @@ export const GET = withErrorHandling(async (request: NextRequest) => {
   try {
     // Execute queries in parallel with error handling
     const [totalResult, publicResult, statusResult, fastTrackResult] = await Promise.allSettled([
-      (supabase as any).from('candidate_profiles').select('*', { count: 'exact', head: true }),
+      (supabase as any).from('candidate_profiles').select('id', { count: 'exact', head: true }),
       (supabase as any)
         .from('candidate_profiles')
-        .select('*', { count: 'exact', head: true })
+        .select('id', { count: 'exact', head: true })
         .eq('is_public', true),
       (supabase as any)
         .from('candidate_profiles')
@@ -105,7 +105,7 @@ export const GET = withErrorHandling(async (request: NextRequest) => {
         .group('filing_status'),
       (supabase as any)
         .from('candidate_profiles')
-        .select('*', { count: 'exact', head: true })
+        .select('id', { count: 'exact', head: true })
         .not('representative_id', 'is', null),
     ]);
 

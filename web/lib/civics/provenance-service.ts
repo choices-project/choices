@@ -414,9 +414,10 @@ export class ProvenanceService {
     try {
       const tableName = `staging.${source}_raw`;
 
+      const RAW_SELECT = 'id, retrieved_at, request_url, api_version, etag, payload, md5_hash, response_status, response_headers, processing_status, processing_started_at, processing_completed_at, processing_error, retry_count, max_retries, data_type, cycle, jurisdiction, address, congress, created_at, updated_at';
       const { data, error } = await this.supabase
         .from(tableName)
-        .select('*')
+        .select(RAW_SELECT)
         .eq('id', recordId)
         .single();
 
@@ -495,9 +496,10 @@ export class ProvenanceService {
     last_check: string;
   }>> {
     try {
+      const DQ_SUMMARY_SELECT = 'id, table_name, check_type, total_checks, passed_checks, failed_checks, pass_rate, error_count, warning_count, info_count, last_check, created_at';
       const { data, error } = await this.supabase
         .from('data_quality_summary')
-        .select('*');
+        .select(DQ_SUMMARY_SELECT);
 
       if (error) {
         throw new Error(`Failed to get data quality summary: ${error.message}`);
@@ -575,9 +577,10 @@ export class ProvenanceService {
     success_rate: number;
   }>> {
     try {
+      const STAGING_SUMMARY_SELECT = 'source, total_records, pending, processing, completed, failed, skipped, success_rate, last_updated';
       const { data, error } = await this.supabase
         .from('staging_processing_summary')
-        .select('*');
+        .select(STAGING_SUMMARY_SELECT);
 
       if (error) {
         throw new Error(`Failed to get staging summaries: ${error.message}`);

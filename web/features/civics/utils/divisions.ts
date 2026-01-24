@@ -41,5 +41,26 @@ export const getStateCodeFromDivision = (division: string | null | undefined): s
   return match ? match[1]?.toUpperCase() ?? null : null;
 };
 
+const COUNTRY_US = 'ocd-division/country:us';
+
+/**
+ * Filter division IDs for election lookups. Drops `ocd-division/country:us` when
+ * more specific divisions exist (state, district, etc.) so we avoid returning
+ * the same broad elections for every rep. Use when calling get_upcoming_elections.
+ */
+export const filterDivisionsForElections = (divisionIds: string[]): string[] => {
+  const normalized = divisionIds.filter((id) => typeof id === 'string' && id.trim().length > 0);
+  if (normalized.length <= 1) return normalized;
+  const hasCountryUs = normalized.some((id) => id.trim().toLowerCase() === COUNTRY_US);
+  const hasMoreSpecific = normalized.some((id) => {
+    const t = id.trim().toLowerCase();
+    return t !== COUNTRY_US && (t.includes('/state:') || t.includes('/district:') || t.includes('/place:'));
+  });
+  if (hasCountryUs && hasMoreSpecific) {
+    return normalized.filter((id) => id.trim().toLowerCase() !== COUNTRY_US);
+  }
+  return normalized;
+};
+
 
 

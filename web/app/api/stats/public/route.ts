@@ -26,7 +26,7 @@ export const GET = withErrorHandling(async () => {
 
   const { count: totalPolls, error: pollsError } = await supabase
     .from('polls')
-    .select('*', { count: 'exact', head: true })
+    .select('id', { count: 'exact', head: true })
     .eq('is_active', true);
 
   if (pollsError) {

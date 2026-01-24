@@ -49,6 +49,8 @@ async function countDependents(repId: number, client = getSupabaseClient()): Pro
     { table: 'representative_data_sources', column: 'representative_id' },
     { table: 'representative_data_quality', column: 'representative_id' },
     { table: 'representative_crosswalk_enhanced', column: 'representative_id' },
+    { table: 'representative_activity', column: 'representative_id' },
+    { table: 'representative_divisions', column: 'representative_id' },
   ] as const;
 
   const result = new Map<string, number>();

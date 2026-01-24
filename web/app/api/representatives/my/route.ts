@@ -82,7 +82,7 @@ export const GET = withErrorHandling(async (request: NextRequest) => {
     // Get total count
     const { count, error: countError } = await (supabase as any)
       .from('representative_follows')
-      .select('*', { count: 'exact', head: true })
+      .select('id', { count: 'exact', head: true })
       .eq('user_id', user.id);
 
     if (countError) {

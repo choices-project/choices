@@ -15,6 +15,28 @@ interface OpenStatesApiResponse<T> {
   result?: T[];
 }
 
+/** Vote event on a bill; per-voter option (yes/no/abstain/etc.) */
+export interface OpenStatesBillVoteEvent {
+  id?: string | null;
+  motion_text?: string | null;
+  start_date?: string | null;
+  result?: string | null;
+  votes?: Array<{
+    option?: string | null;
+    voter?: { id?: string | null; name?: string | null } | null;
+  }> | null;
+}
+
+/** Sponsorship of a bill by a person */
+export interface OpenStatesBillSponsorship {
+  id?: string | null;
+  name?: string | null;
+  entity_type?: string | null;
+  primary?: boolean | null;
+  classification?: string | null;
+  person?: { id?: string | null; name?: string | null } | null;
+}
+
 export interface OpenStatesBill {
   id: string;
   identifier?: string | null;
@@ -32,6 +54,8 @@ export interface OpenStatesBill {
   from_organization?: { name?: string | null } | null;
   extras?: Record<string, unknown> | null;
   openstates_url?: string | null;
+  votes?: OpenStatesBillVoteEvent[] | null;
+  sponsorships?: OpenStatesBillSponsorship[] | null;
 }
 
 let warnedForMissingApiKey = false;
@@ -72,7 +96,7 @@ async function scheduleOpenStatesRequest<T>(task: () => Promise<T>): Promise<T> 
 
 async function fetchFromOpenStates<T>(
   path: string,
-  params: Record<string, string | number | undefined> = {},
+  params: Record<string, string | number | string[] | undefined> = {},
 ): Promise<T[]> {
   const apiKey = getApiKey();
   if (!apiKey) {
@@ -82,6 +106,10 @@ async function fetchFromOpenStates<T>(
   const url = new URL(path, OPENSTATES_API_BASE);
   Object.entries(params).forEach(([key, value]) => {
     if (value === undefined || value === null) return;
+    if (Array.isArray(value)) {
+      for (const v of value) url.searchParams.append(key, String(v));
+      return;
+    }
     url.searchParams.set(key, String(value));
   });
 
@@ -122,14 +150,13 @@ export interface FetchBillsOptions {
 
 /**
  * Fetch the most recent bills associated with an OpenStates person identifier
- * using the live OpenStates API. This is typically called after the YAML ingest
- * completes so enrichers can attach activity data without re-processing the raw
- * archive.
+ * using the live OpenStates API. Uses `sponsor` (person ID) when provided; API
+ * requires either `jurisdiction` or `q`. Omit `query` when using `sponsor` + `jurisdiction`.
  *
- * @param openstatesPersonId The `ocd-person/...` identifier to query
+ * @param openstatesPersonId The `ocd-person/...` identifier (used as `sponsor` param)
  * @param options.limit Optional maximum number of bills to return (default 25)
- * @param options.jurisdiction Optional jurisdiction filter accepted by OpenStates
- * @param options.query Optional text query (OpenStates `q` parameter)
+ * @param options.jurisdiction Optional jurisdiction filter (e.g. ocd-jurisdiction/country:us/state:ak)
+ * @param options.query Optional full‑text search `q`; use only when no jurisdiction
  */
 export async function fetchRecentBillsForPerson(
   openstatesPersonId: string,
@@ -142,11 +169,11 @@ export async function fetchRecentBillsForPerson(
 
   try {
     const bills = await fetchFromOpenStates<OpenStatesBill>('/bills', {
-      person_id: openstatesPersonId,
+      sponsor: openstatesPersonId,
       sort: 'latest_action_desc',
       per_page: Math.min(limit, 50),
       page: 1,
-      include: 'actions',
+      include: ['actions', 'votes', 'sponsorships'],
       jurisdiction: jurisdiction ?? undefined,
       q: query ?? undefined,
     });

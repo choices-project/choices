@@ -1,19 +1,21 @@
 'use client';
 
-import { 
-  MessageSquare, 
-  Bug, 
-  Lightbulb, 
-  Smile, 
-  Frown, 
+import {
+  MessageSquare,
+  Bug,
+  Lightbulb,
+  Smile,
+  Frown,
   Meh,
   Eye,
   Star,
   Tag,
   Calendar,
-  AlertTriangle
+  AlertTriangle,
 } from 'lucide-react';
 import React from 'react';
+
+import { EnhancedErrorDisplay } from '@/components/shared/EnhancedErrorDisplay';
 
 type Feedback = {
   id: string;
@@ -82,15 +84,19 @@ type Feedback = {
 type FeedbackListProps = {
   feedback: Feedback[];
   isLoading: boolean;
+  error?: string | null;
+  onRetry?: () => void;
   onFeedbackSelect: (_item: Feedback) => void;
   onStatusUpdate: (_feedbackId: string, _newStatus: string) => void;
-}
+};
 
 export const FeedbackList: React.FC<FeedbackListProps> = ({
   feedback,
   isLoading,
+  error = null,
+  onRetry,
   onFeedbackSelect,
-  onStatusUpdate
+  onStatusUpdate,
 }) => {
   // Debug logging removed for production
   const getTypeIcon = (type: string) => {
@@ -153,6 +159,24 @@ export const FeedbackList: React.FC<FeedbackListProps> = ({
     if (text.length <= maxLength) return text;
     return `${text.substring(0, maxLength)  }...`;
   };
+
+  if (error) {
+    return (
+      <div className="p-6" data-testid="feedback-list-error">
+        <EnhancedErrorDisplay
+          title="Unable to load feedback"
+          message={error}
+          details="We couldn't load the feedback list. This might be a temporary network or server issue."
+          tip="Check your connection and try again. If the problem persists, refresh the page."
+          canRetry={!!onRetry}
+          onRetry={onRetry ?? undefined}
+          primaryAction={
+            onRetry ? undefined : { label: 'Refresh page', onClick: () => window.location.reload() }
+          }
+        />
+      </div>
+    );
+  }
 
   if (isLoading) {
     return (

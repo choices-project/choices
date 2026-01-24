@@ -79,11 +79,15 @@ class WidgetErrorBoundary extends React.Component<WidgetErrorBoundaryProps, Widg
           className="flex flex-col items-center justify-center p-8 text-center"
           data-testid={`widget-error-${this.props.widgetId}`}
           data-widget-id={this.props.widgetId}
+          role="alert"
         >
-          <AlertCircle className="w-12 h-12 text-destructive mb-4" />
+          <AlertCircle className="w-12 h-12 text-destructive mb-4" aria-hidden="true" />
           <h3 className="font-semibold text-lg mb-2">Widget Error</h3>
-          <p className="text-sm text-muted-foreground mb-4">
+          <p className="text-sm text-muted-foreground mb-2">
             {this.state.error?.message ?? `Something went wrong loading widget: ${this.props.widgetId}`}
+          </p>
+          <p className="text-xs text-muted-foreground mb-4">
+            Check your connection. If the problem persists, refresh the page or try again.
           </p>
           <Button
             variant="outline"

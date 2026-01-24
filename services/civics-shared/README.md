@@ -1,15 +1,15 @@
 # @choices/civics-shared
 
-Reusable helpers for Working with civics data in the Choices platform.
+Reusable helpers for working with civics data in the Choices platform.
 
 ## Overview
 
-This package gathers the election, campaign finance, and policy–issue utilities that power both:
+This package is the **single source of truth** for election, campaign finance, and policy–issue utilities. It powers:
 
-- The public web orchestrator (`web/lib/integrations/unified-orchestrator.ts`)
-- The standalone ingest service (`services/civics-backend`)
+- The **standalone ingest service** (`services/civics-backend`) – FEC office codes, district normalization, issue signals from bills, etc.
+- The **web app** (`web`) – unified orchestrator and civics features.
 
-Bundling the logic here keeps behaviour identical across the stack and makes it easy for other civic‑minded projects to reuse the same normalisation pipeline.
+Both consume `@choices/civics-shared` so behaviour stays identical across the stack. Civic‑minded projects can reuse this module with their own ingest or UI.
 
 ## Exposed helpers
 
@@ -38,4 +38,15 @@ The package ships as pure ESM with TypeScript declarations, so it can be importe
 ## Development
 
 The module is intentionally lightweight: plain JavaScript with type declarations. No build step is required, but you can run `npm install` from the package directory to add additional tooling if needed.
+
+## Keeping `web/services-civics-shared` aligned
+
+The web app keeps a copy at `web/services-civics-shared` for Vercel builds. When you change this package, sync the web copy:
+
+```bash
+cp -r services/civics-shared/index.js services/civics-shared/index.d.ts services/civics-shared/package.json web/services-civics-shared/
+cp services/civics-shared/tests/shared.test.mjs web/services-civics-shared/tests/
+```
+
+The deploy workflow overwrites the web copy from `services/civics-shared` on each production deploy, so CI keeps them aligned.
 

@@ -29,7 +29,7 @@ import {
   trackCivicsRepresentativeEvent,
   type CivicsRepresentativeEventBase
 } from '@/features/civics/analytics/civicsAnalyticsEvents';
-import { useElectionCountdown, formatElectionDate } from '@/features/civics/utils/civicsCountdownUtils';
+import { useElectionCountdown, formatElectionDateStable } from '@/features/civics/utils/civicsCountdownUtils';
 import { getRepresentativeDivisionIds } from '@/features/civics/utils/divisions';
 import { useFeatureFlag } from '@/features/pwa/hooks/useFeatureFlags';
 
@@ -223,7 +223,7 @@ export default function ContactRepresentativesSection({
                     <span className="font-medium">{election.name}</span>
                     <span className="ml-1 text-blue-700">
                       {t('contact.representatives.elections.date', {
-                        date: formatElectionDate(election.election_day, currentLanguage),
+                        date: formatElectionDateStable(election.election_day),
                       })}
                     </span>
                   </span>

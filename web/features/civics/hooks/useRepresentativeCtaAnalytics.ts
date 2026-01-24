@@ -12,7 +12,7 @@ import {
   trackCivicsRepresentativeEvent,
 } from '../analytics/civicsAnalyticsEvents';
 import { useElectionCountdown } from '../utils/civicsCountdownUtils';
-import { getRepresentativeDivisionIds } from '../utils/divisions';
+import { filterDivisionsForElections, getRepresentativeDivisionIds } from '../utils/divisions';
 
 import type { Representative } from '@/types/representative';
 
@@ -31,7 +31,12 @@ export const useRepresentativeCtaAnalytics = (
     () => getRepresentativeDivisionIds(representative),
     [representative],
   );
-  const divisionIds = storeDivisionIds.length > 0 ? storeDivisionIds : fallbackDivisions;
+  const divisionIds = useMemo(
+    () => filterDivisionsForElections(
+      storeDivisionIds.length > 0 ? storeDivisionIds : fallbackDivisions,
+    ),
+    [storeDivisionIds, fallbackDivisions],
+  );
 
   const {
     elections,
@@ -121,7 +126,8 @@ export const useRepresentativeCtaAnalytics = (
     daysUntilNextElection,
     loading,
     error,
-    analyticsPayload: baseEventData,
+    /** Rep-level "up for election" from representatives_core. Prefer over division-based when present. */
+    repNextElectionDate: representative?.next_election_date ?? null,
     trackCtaEvent,
   };
 };

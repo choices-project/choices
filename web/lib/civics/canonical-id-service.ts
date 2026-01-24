@@ -102,7 +102,7 @@ export class CanonicalIdService {
       }, {
         onConflict: 'source,source_id'
       })
-      .select()
+      .select('id, entity_type, canonical_id, source, source_id, attrs, created_at, updated_at')
       .single();
 
     if (error) {
@@ -116,9 +116,10 @@ export class CanonicalIdService {
    * Get all crosswalk entries for a canonical ID
    */
   async getCrosswalkEntries(canonicalId: string): Promise<IdCrosswalk[]> {
+    const CROSSWALK_SELECT = 'id, entity_type, canonical_id, source, source_id, attrs, created_at, updated_at';
     const { data, error } = await this.supabase
       .from('id_crosswalk')
-      .select('*')
+      .select(CROSSWALK_SELECT)
       .eq('canonical_id', canonicalId)
       .order('created_at', { ascending: true });
 
@@ -256,7 +257,7 @@ export class CanonicalIdService {
   }> {
     const { data, error } = await this.supabase
       .from('id_crosswalk')
-      .select('entity_type, source, attrs');
+      .select('canonical_id, entity_type, source, attrs');
 
     if (error) {
       throw new Error(`Failed to get crosswalk stats: ${error.message}`);

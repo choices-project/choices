@@ -55,12 +55,12 @@ export const PATCH = withErrorHandling(async (
 
   const { data: updatedFeedback, error: updateError } = await (supabaseClient as any)
     .from('feedback')
-    .update({ 
+    .update({
       status: newStatus,
-      updated_at: new Date().toISOString()
+      updated_at: new Date().toISOString(),
     })
     .eq('id', feedbackId)
-    .select()
+    .select('id, status, updated_at')
     .single();
 
   if (updateError) {

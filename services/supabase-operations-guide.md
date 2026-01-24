@@ -15,7 +15,7 @@ Store credentials securely—do **not** commit them to git.
 
 ## Environment configuration
 
-Populate `/Users/alaughingkitsune/src/Choices/.env.local` with the Supabase values. Critical keys:
+Populate `.env.local` in the **project root** with the Supabase values. Critical keys:
 
 ```
 SUPABASE_ACCESS_TOKEN=...
@@ -55,10 +55,10 @@ The CLI stores the reference under `supabase/.temp/project-ref`, so subsequent c
 
 ## Running manual SQL
 
-Use the pooled connection from `.env.local`:
+Use the pooled connection from `.env.local` (project root):
 
 ```
-cd /Users/alaughingkitsune/src/Choices
+cd <project-root>
 set -a && source .env.local && set +a
 psql "$DATABASE_URL"
 ```
@@ -75,7 +75,7 @@ select * from public.poll_rankings limit 5;
 After schema changes, regenerate the shared types used by the app:
 
 ```
-cd /Users/alaughingkitsune/src/Choices/web
+cd <project-root>/web
 npx supabase gen types typescript --project-id muqwrehywjrbaeerjgfb > types/supabase.ts
 ```
 

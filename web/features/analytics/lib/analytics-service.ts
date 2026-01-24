@@ -1,5 +1,9 @@
 import { getSupabaseServerClient } from '@/utils/supabase/server'
 
+import {
+  POLL_DEMOGRAPHIC_INSIGHTS_SELECT_COLUMNS,
+  TRUST_TIER_ANALYTICS_SELECT_COLUMNS,
+} from '@/lib/api/response-builders'
 import { normalizeTrustTier } from '@/lib/trust/trust-tiers'
 import { devLog } from '@/lib/utils/logger'
 
@@ -469,7 +473,7 @@ export class AnalyticsService {
       // Get user analytics summary
       const { data: analytics, error: analyticsError } = await supabase
         .from('trust_tier_analytics')
-        .select('*')
+        .select(TRUST_TIER_ANALYTICS_SELECT_COLUMNS)
         .eq('user_id', userId)
 
       if (analyticsError) {
@@ -579,7 +583,7 @@ export class AnalyticsService {
       // Get total users
       const { count: totalUsers } = await supabase
         .from('trust_tier_analytics')
-        .select('*', { count: 'exact', head: true })
+        .select('id', { count: 'exact', head: true })
 
       // Get trust tier distribution
       const { data: tierDistribution } = await supabase
@@ -597,7 +601,7 @@ export class AnalyticsService {
       // Get average confidence level
       const { data: confidenceData, error: confidenceError } = await supabase
         .from('trust_tier_analytics')
-        .select('*')
+        .select(TRUST_TIER_ANALYTICS_SELECT_COLUMNS)
 
       if (confidenceError) {
         throw new Error('Failed to load confidence analytics')
@@ -686,7 +690,7 @@ export class AnalyticsService {
       // Prefer precomputed demographic insights
       const { data: precomputed, error: preError } = await supabase
         .from('poll_demographic_insights')
-        .select('*')
+        .select(POLL_DEMOGRAPHIC_INSIGHTS_SELECT_COLUMNS)
         .eq('poll_id', pollId)
         .maybeSingle()
 
@@ -829,7 +833,7 @@ export class AnalyticsService {
       // Get analytics data
       const { data: analytics, error: analyticsError } = await supabase
         .from('trust_tier_analytics')
-        .select('*')
+        .select(TRUST_TIER_ANALYTICS_SELECT_COLUMNS)
         .eq('user_id', userId)
         .order('created_at', { ascending: false })
 

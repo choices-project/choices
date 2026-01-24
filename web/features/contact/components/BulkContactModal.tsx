@@ -21,7 +21,7 @@ import {
 import React, { useState, useEffect, useMemo, useCallback, useRef } from 'react';
 
 import { trackCivicsRepresentativeEvent } from '@/features/civics/analytics/civicsAnalyticsEvents';
-import { useElectionCountdown, formatElectionDate } from '@/features/civics/utils/civicsCountdownUtils';
+import { useElectionCountdown, formatElectionDateStable } from '@/features/civics/utils/civicsCountdownUtils';
 import { useFeatureFlag } from '@/features/pwa/hooks/useFeatureFlags';
 
 import { useAccessibleDialog } from '@/lib/accessibility/useAccessibleDialog';
@@ -514,7 +514,7 @@ export default function BulkContactModal({
                       <span className="font-medium">{election.name}</span>
                       <span className="ml-1">
                         {t('contact.bulkModal.elections.date', {
-                          date: formatElectionDate(election.election_day, currentLanguage),
+                          date: formatElectionDateStable(election.election_day),
                         })}
                       </span>
                     </span>

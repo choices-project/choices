@@ -1,5 +1,5 @@
 import { CalendarClock } from 'lucide-react';
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useMemo } from 'react';
 
 import { Badge } from '@/components/ui/badge';
 
@@ -7,7 +7,7 @@ import { cn } from '@/lib/utils';
 
 import { useI18n } from '@/hooks/useI18n';
 
-import { formatElectionDate } from '../../utils/civicsCountdownUtils';
+import { formatElectionDateStable } from '../../utils/civicsCountdownUtils';
 
 import type { CivicElection } from '@/types/civic';
 
@@ -62,14 +62,7 @@ export function ElectionCountdownBadge({
   loadingMessage: _loadingMessage,
   errorMessage: _errorMessage
 }: ElectionCountdownBadgeProps) {
-  const { t, currentLanguage } = useI18n();
-  // CRITICAL: Only use formatElectionDate after mount to prevent hydration mismatch
-  // toLocaleDateString can produce different output on server vs client
-  const [isMounted, setIsMounted] = useState(false);
-
-  useEffect(() => {
-    setIsMounted(true);
-  }, []);
+  const { t } = useI18n();
   const state = useMemo<'loading' | 'error' | 'empty' | 'active' | 'upcoming'>(() => {
     if (loading) return 'loading';
     if (error) return 'error';
@@ -113,9 +106,7 @@ export function ElectionCountdownBadge({
       )}
       {showDate && nextElection?.election_day && (
         <span className="text-blue-600/80">
-          · {isMounted
-              ? formatElectionDate(nextElection.election_day, currentLanguage)
-              : nextElection.election_day.split('T')[0]}
+          · {formatElectionDateStable(nextElection.election_day)}
         </span>
       )}
       {additionalCount && (

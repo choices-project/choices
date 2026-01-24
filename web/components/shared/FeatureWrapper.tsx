@@ -362,29 +362,7 @@ export function FeatureFlagDebugger(): React.ReactElement {
 }
 
 // Export convenience components
-export const AuthFeature = (props: Omit<FeatureWrapperProps, 'feature'>) => (
-  <FeatureWrapper feature="authentication" {...props} />
-);
-
-export const VotingFeature = (props: Omit<FeatureWrapperProps, 'feature'>) => (
-  <FeatureWrapper feature="voting" {...props} />
-);
-
-export const DatabaseFeature = (props: Omit<FeatureWrapperProps, 'feature'>) => (
-  <FeatureWrapper feature="database" {...props} />
-);
-
-export const APIFeature = (props: Omit<FeatureWrapperProps, 'feature'>) => (
-  <FeatureWrapper feature="api" {...props} />
-);
-
-export const UIFeature = (props: Omit<FeatureWrapperProps, 'feature'>) => (
-  <FeatureWrapper feature="ui" {...props} />
-);
-
-export const AdvancedPrivacyFeature = (props: Omit<FeatureWrapperProps, 'feature'>) => (
-  <FeatureWrapper feature="advancedPrivacy" {...props} />
-);
+// Note: Only valid feature flag IDs are used. Dead helpers removed per FEATURE_FLAGS_AUDIT.md §7.
 
 export const AnalyticsFeature = (props: Omit<FeatureWrapperProps, 'feature'>) => (
   <FeatureWrapper feature="analytics" {...props} />
@@ -396,14 +374,6 @@ export const PWAFeature = (props: Omit<FeatureWrapperProps, 'feature'>) => (
 
 export const AdminFeature = (props: Omit<FeatureWrapperProps, 'feature'>) => (
   <FeatureWrapper feature="admin" {...props} />
-);
-
-export const AuditFeature = (props: Omit<FeatureWrapperProps, 'feature'>) => (
-  <FeatureWrapper feature="audit" {...props} />
-);
-
-export const ExperimentalUIFeature = (props: Omit<FeatureWrapperProps, 'feature'>) => (
-  <FeatureWrapper feature="experimentalUI" {...props} />
 );
 
 export const AIFeaturesFeature = (props: Omit<FeatureWrapperProps, 'feature'>) => (

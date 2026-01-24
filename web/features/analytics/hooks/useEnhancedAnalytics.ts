@@ -7,6 +7,10 @@
 import { createClient } from '@supabase/supabase-js';
 import { useState, useEffect, useCallback, useMemo } from 'react';
 
+import {
+  SITE_MESSAGE_SELECT_COLUMNS,
+  SYSTEM_HEALTH_SELECT_COLUMNS,
+} from '@/lib/api/response-builders';
 import { useAnalyticsActions } from '@/lib/stores/analyticsStore';
 import { logger } from '@/lib/utils/logger';
 
@@ -744,7 +748,7 @@ export function useEnhancedAnalytics(options: UseEnhancedAnalyticsOptions = {}) 
       }
       const { data: healthData, error } = await supabase
         .from('system_health')
-        .select('*')
+        .select(SYSTEM_HEALTH_SELECT_COLUMNS)
         .order('last_check', { ascending: false })
         .returns<SystemHealthRow[]>();
 
@@ -764,7 +768,7 @@ export function useEnhancedAnalytics(options: UseEnhancedAnalyticsOptions = {}) 
       }
       const { data: messages, error } = await supabase
         .from('site_messages')
-        .select('*')
+        .select(SITE_MESSAGE_SELECT_COLUMNS)
         .eq('is_active', true)
         .eq('target_audience', targetAudience)
         .lte('start_date', new Date().toISOString())

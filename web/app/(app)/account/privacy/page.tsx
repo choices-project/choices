@@ -225,8 +225,7 @@ export default function PrivacyPage() {
       {/* 🔒 Cohesive Dashboard Navigation */}
       <DashboardNavigation />
 
-      <div className="min-h-screen bg-gray-50 pb-20 md:pb-8">
-        {/* Main Content */}
+      <main id="main-content" role="main" className="min-h-screen bg-gray-50 pb-20 md:pb-8" aria-label="Privacy and data management">
         <div className="max-w-7xl mx-auto px-4 py-8">
           <MyDataDashboard
             userId={userId}
@@ -235,7 +234,7 @@ export default function PrivacyPage() {
             isSaving={isUpdating}
           />
         </div>
-      </div>
+      </main>
 
       {/* 🔒 Mobile Navigation */}
       <MobileDashboardNav />

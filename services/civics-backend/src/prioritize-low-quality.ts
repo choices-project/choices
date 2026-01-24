@@ -2,40 +2,65 @@
 /**
  * Find representatives with the lowest data-quality scores so you can
  * prioritise enrichment runs. Safe to execute repeatedly; reads Supabase only.
+ *
+ * Uses representative_activity (type = 'bill') for issue signals. Canonical
+ * activity = bills only; see src/persist/activity.ts and npm run audit:activity.
  */
 import 'dotenv/config';
 
-import { createClient, type SupabaseClient } from '@supabase/supabase-js';
 import { deriveKeyIssuesFromBills } from '@choices/civics-shared';
-
-const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
-const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
-
-if (!url || !serviceKey) {
-  console.error('Missing NEXT_PUBLIC_SUPABASE_URL or SUPABASE_SERVICE_ROLE_KEY');
-  process.exit(1);
-}
+import { getSupabaseClient } from './clients/supabase.js';
 
 interface RepresentativeRow {
-  id: string;
+  id: number;
   name: string | null;
   data_quality_score: number | null;
   state: string | null;
 }
 
-interface BillRow {
-  metadata: Record<string, any> | null;
+interface ActivityRow {
+  title: string;
+  date: string | null;
+  metadata: { subjects?: string[] } | null;
 }
-
-const supabase: SupabaseClient = createClient(url, serviceKey, {
-  auth: { persistSession: false },
-});
 
 const TABLE = 'representatives_core';
 const SCORE_COLUMN = 'data_quality_score';
 
-try {
-  const { data, error } = await supabase
+async function lookupTopIssues(representativeId: number): Promise<string[]> {
+  try {
+    const client = getSupabaseClient();
+    const { data } = await client
+      .from('representative_activity')
+      .select('title, date, metadata')
+      .eq('representative_id', representativeId)
+      .eq('type', 'bill')
+      .limit(10);
+
+    if (!data || data.length === 0) {
+      return [];
+    }
+
+    const billLike = (data as ActivityRow[]).map((r) => ({
+      title: r.title,
+      subjects: r.metadata?.subjects ?? [],
+      updated_at: r.date ?? undefined,
+    }));
+
+    return deriveKeyIssuesFromBills(billLike, {
+      source: 'ingest-cache',
+      limit: 2,
+    }).map((issue) => issue.issue);
+  } catch (err) {
+    console.warn(`Unable to fetch bill activity for rep ${representativeId}:`, err);
+    return [];
+  }
+}
+
+async function main(): Promise<void> {
+  const client = getSupabaseClient();
+
+  const { data, error } = await client
     .from(TABLE)
     .select(`id,name,${SCORE_COLUMN},state`)
     .order(SCORE_COLUMN, { ascending: true })
@@ -51,50 +76,24 @@ try {
     process.exit(0);
   }
 
-  const typedData = (data ?? []) as RepresentativeRow[];
-
+  const typedData = data as RepresentativeRow[];
   const rows = await Promise.all(
-    typedData.map(async (row: RepresentativeRow) => {
-      const issues = await lookupTopIssues(row.id);
-
+    typedData.map(async (row) => {
+      const topIssues = await lookupTopIssues(row.id);
       return {
         id: row.id,
         name: row.name ?? 'Unknown',
         state: row.state ?? '—',
         score: row.data_quality_score ?? 'N/A',
-        topIssues: issues.join(', '),
+        topIssues: topIssues.join(', '),
       };
     }),
   );
 
   console.table(rows);
-} catch (error) {
-  console.error('Unexpected error reading low-quality representatives:', error);
+}
+
+main().catch((err) => {
+  console.error('Unexpected error reading low-quality representatives:', err);
   process.exit(1);
-}
-
-async function lookupTopIssues(representativeId: string): Promise<string[]> {
-  try {
-    const { data } = await supabase
-      .from('representative_bills')
-      .select('metadata')
-      .eq('representative_id', representativeId)
-      .limit(10);
-
-    if (!data || data.length === 0) {
-      return [];
-    }
-
-    const normalizedBills = (data as BillRow[])
-      .map((entry) => entry.metadata)
-      .filter(Boolean);
-    return deriveKeyIssuesFromBills(normalizedBills, {
-      source: 'ingest-cache',
-      limit: 2,
-    }).map((issue) => issue.issue);
-  } catch (error) {
-    console.warn(`Unable to fetch cached bills for ${representativeId}:`, error);
-    return [];
-  }
-}
-
+});

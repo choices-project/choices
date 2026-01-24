@@ -25,6 +25,7 @@ import React from 'react';
 
 import { ElectionCountdownBadge } from '@/features/civics/components/countdown/ElectionCountdownBadge';
 import { useRepresentativeCtaAnalytics } from '@/features/civics/hooks/useRepresentativeCtaAnalytics';
+import { formatElectionDateStable } from '@/features/civics/utils/civicsCountdownUtils';
 
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -61,8 +62,9 @@ export function RepresentativeCard({
     daysUntilNextElection,
     loading: electionLoading,
     error: electionError,
+    repNextElectionDate,
     trackCtaEvent,
-  } = useRepresentativeCtaAnalytics(representative, { source: 'representative_card' });
+  } = useRepresentativeCtaAnalytics(detailedRepresentative ?? representative, { source: 'representative_card' });
 
   const handleFollow = async (e: React.MouseEvent) => {
     e.stopPropagation(); // Prevent card click
@@ -171,14 +173,6 @@ export function RepresentativeCard({
   }, [detailsOpen, detailedRepresentative, getRepresentativeById, representative.id]);
 
   const displayRepresentative = detailedRepresentative ?? representative;
-  const formatDate = (value?: string | null) => {
-    if (!value) return null;
-    try {
-      return new Date(value).toLocaleDateString();
-    } catch {
-      return value;
-    }
-  };
 
   const socialChannels = [
     displayRepresentative.twitter_handle
@@ -298,6 +292,11 @@ export function RepresentativeCard({
                 })}`}
             </p>
 
+            {repNextElectionDate && (
+              <p className="text-xs text-gray-600 dark:text-gray-400 mt-1.5" role="status">
+                Next election: {formatElectionDateStable(repNextElectionDate)}
+              </p>
+            )}
             {divisionIds.length > 0 && (
               <div className="mt-2">
                 <ElectionCountdownBadge
@@ -446,30 +445,35 @@ export function RepresentativeCard({
                 </div>
               )}
 
-              {/* Recent Activity */}
-              {displayRepresentative.activities && displayRepresentative.activities.length > 0 && (
-                <div>
-                  <h4 className="text-sm font-semibold text-gray-900 dark:text-gray-100 mb-2">
-                    Recent Activity ({displayRepresentative.activities.length})
-                  </h4>
-                  <div className="space-y-2">
-                    {displayRepresentative.activities.slice(0, 5).map((activity, index) => (
-                      <div key={index} className="text-sm">
-                        <div className="font-medium text-gray-900 dark:text-gray-100">{activity.title}</div>
-                        {activity.description && (
-                          <div className="text-xs text-gray-600 dark:text-gray-400 mt-0.5">{activity.description}</div>
-                        )}
-                        {activity.type && (
-                          <div className="text-xs text-gray-500 dark:text-gray-500 mt-0.5 capitalize">{activity.type}</div>
-                        )}
-                        {activity.date && (
-                          <div className="text-xs text-gray-500 dark:text-gray-500 mt-0.5">{formatDate(activity.date)}</div>
-                        )}
-                      </div>
-                    ))}
+              {/* Recent Activity: bills only. Upcoming Elections are a separate section. */}
+              {(() => {
+                const billActivities = (displayRepresentative.activities ?? []).filter((a) => a.type === 'bill');
+                return billActivities.length > 0 ? (
+                  <div>
+                    <h4 className="text-sm font-semibold text-gray-900 dark:text-gray-100 mb-2">
+                      Recent Activity ({billActivities.length})
+                    </h4>
+                    <div className="space-y-2">
+                      {billActivities.slice(0, 5).map((activity, index) => (
+                        <div key={index} className="text-sm">
+                          <div className="font-medium text-gray-900 dark:text-gray-100">{activity.title}</div>
+                          {activity.description && (
+                            <div className="text-xs text-gray-600 dark:text-gray-400 mt-0.5">{activity.description}</div>
+                          )}
+                          {activity.type && (
+                            <div className="text-xs text-gray-500 dark:text-gray-500 mt-0.5 capitalize">{activity.type}</div>
+                          )}
+                          {activity.date && (
+                            <div className="text-xs text-gray-500 dark:text-gray-500 mt-0.5">
+                              Activity date: {formatElectionDateStable(activity.date)}
+                            </div>
+                          )}
+                        </div>
+                      ))}
+                    </div>
                   </div>
-                </div>
-              )}
+                ) : null;
+              })()}
 
               {/* Campaign Finance */}
               {displayRepresentative.campaign_finance && (
@@ -512,21 +516,23 @@ export function RepresentativeCard({
                     {displayRepresentative.term_start_date && (
                       <div className="flex justify-between">
                         <span className="text-gray-600 dark:text-gray-400">Term Start:</span>
-                        <span className="text-gray-900 dark:text-gray-100">{formatDate(displayRepresentative.term_start_date)}</span>
+                        <span className="text-gray-900 dark:text-gray-100">{formatElectionDateStable(displayRepresentative.term_start_date)}</span>
                       </div>
                     )}
                     {displayRepresentative.term_end_date && (
                       <div className="flex justify-between">
                         <span className="text-gray-600 dark:text-gray-400">Term End:</span>
-                        <span className="text-gray-900 dark:text-gray-100">{formatDate(displayRepresentative.term_end_date)}</span>
+                        <span className="text-gray-900 dark:text-gray-100">{formatElectionDateStable(displayRepresentative.term_end_date)}</span>
                       </div>
                     )}
-                    {displayRepresentative.next_election_date && (
-                      <div className="flex justify-between">
-                        <span className="text-gray-600 dark:text-gray-400">Next Election:</span>
-                        <span className="text-gray-900 dark:text-gray-100">{formatDate(displayRepresentative.next_election_date)}</span>
-                      </div>
-                    )}
+                    <div className="flex justify-between">
+                      <span className="text-gray-600 dark:text-gray-400">Next Election:</span>
+                      <span className="text-gray-900 dark:text-gray-100">
+                        {displayRepresentative.next_election_date
+                          ? formatElectionDateStable(displayRepresentative.next_election_date)
+                          : 'No upcoming election on file'}
+                      </span>
+                    </div>
                   </div>
                 </div>
               )}

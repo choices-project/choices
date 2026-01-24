@@ -8,6 +8,7 @@
 
 import { getSupabaseServerClient } from '@/utils/supabase/server';
 
+import { CIVIC_ACTION_SELECT_COLUMNS } from '@/lib/api/response-builders';
 import { isFeatureEnabled } from '@/lib/core/feature-flags';
 import { logger } from '@/lib/utils/logger';
 
@@ -43,7 +44,7 @@ export async function createCivicActionFeedItem(
     // Get the civic action
     const { data: actionData, error: actionError } = await supabase
       .from('civic_actions')
-      .select('*')
+      .select(CIVIC_ACTION_SELECT_COLUMNS)
       .eq('id', actionId)
       .single();
 
@@ -151,7 +152,7 @@ export async function getCivicActionsForRepresentative(
 
     const { data, error } = await supabase
       .from('civic_actions')
-      .select('*')
+      .select(CIVIC_ACTION_SELECT_COLUMNS)
       .contains('target_representatives', [representativeId])
       .eq('status', 'active')
       .eq('is_public', true)
@@ -189,7 +190,7 @@ export async function getTrendingCivicActionsForFeed(
 
     let query = supabase
       .from('civic_actions')
-      .select('*')
+      .select(CIVIC_ACTION_SELECT_COLUMNS)
       .eq('status', 'active')
       .eq('is_public', true)
       .order('current_signatures', { ascending: false })

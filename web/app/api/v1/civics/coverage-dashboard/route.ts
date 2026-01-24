@@ -43,15 +43,42 @@ export const GET = withErrorHandling(async (request: NextRequest) => {
   );
     // Log coverage dashboard request for audit trail
     logger.info('Coverage dashboard requested', { userAgent: request.headers.get('user-agent') ?? 'unknown' });
-    
-    // Get coverage by source
-    const { data: coverageData, error: coverageError } = await supabase
-      .from('civics_representatives')
-      .select('level, source, jurisdiction, last_updated')
-      .eq('valid_to', 'infinity');
+
+    const [
+      { data: coverageData, error: coverageError },
+      { error: fecError, count: fecCount },
+      { error: federalError, count: federalCount },
+      { error: contactError, count: contactCount }
+    ] = await Promise.all([
+      supabase
+        .from('civics_representatives')
+        .select('level, source, jurisdiction, last_updated')
+        .eq('valid_to', 'infinity'),
+      supabase.from('civics_fec_minimal').select('person_id', { count: 'exact', head: true }),
+      supabase
+        .from('civics_representatives')
+        .select('id', { count: 'exact', head: true })
+        .eq('level', 'federal')
+        .eq('valid_to', 'infinity'),
+      supabase
+        .from('civics_representatives')
+        .select('id', { count: 'exact', head: true })
+        .eq('level', 'federal')
+        .eq('valid_to', 'infinity')
+        .not('contact', 'is', null)
+    ]);
 
     if (coverageError) {
       return errorResponse('Failed to load coverage data', 502, { reason: coverageError.message });
+    }
+    if (fecError) {
+      return errorResponse('Failed to load FEC mapping stats', 502, { reason: fecError.message });
+    }
+    if (federalError) {
+      return errorResponse('Failed to load federal representative counts', 502, { reason: federalError.message });
+    }
+    if (contactError) {
+      return errorResponse('Failed to load contact enrichment stats', 502, { reason: contactError.message });
     }
 
     // Calculate coverage by source
@@ -67,63 +94,25 @@ export const GET = withErrorHandling(async (request: NextRequest) => {
     // Calculate freshness by level
     const now = new Date();
     const freshnessByLevel = (coverageData as RepresentativeData[] ?? []).reduce((acc: Record<string, FreshnessData>, rep: RepresentativeData) => {
-      if (!rep.level) return acc; // Skip if level is undefined
-      
+      if (!rep.level) return acc;
       if (!acc[rep.level]) {
         acc[rep.level] = { total: 0, fresh: 0, stale: 0 };
       }
       const levelStats = acc[rep.level];
       if (!levelStats) return acc;
       levelStats.total++;
-      
       const lastUpdated = new Date(rep.last_updated);
       const daysSinceUpdate = (now.getTime() - lastUpdated.getTime()) / (1000 * 60 * 60 * 24);
-      
-      // Freshness thresholds
       const thresholds = { federal: 7, state: 14, local: 30 };
       const threshold = thresholds[rep.level as keyof typeof thresholds] ?? 30;
-      
-      if (daysSinceUpdate <= threshold) {
-        levelStats.fresh++;
-      } else {
-        levelStats.stale++;
-      }
-      
+      if (daysSinceUpdate <= threshold) levelStats.fresh++;
+      else levelStats.stale++;
       return acc;
     }, {});
-
-    // Calculate FEC mapping rate
-    const { error: fecError, count: fecCount } = await supabase
-      .from('civics_fec_minimal')
-      .select('person_id', { count: 'exact', head: true });
-    if (fecError) {
-      return errorResponse('Failed to load FEC mapping stats', 502, { reason: fecError.message });
-    }
-
-    const { error: federalError, count: federalCount } = await supabase
-      .from('civics_representatives')
-      .select('id', { count: 'exact', head: true })
-      .eq('level', 'federal')
-      .eq('valid_to', 'infinity');
-    if (federalError) {
-      return errorResponse('Failed to load federal representative counts', 502, { reason: federalError.message });
-    }
 
     const fecMappingRate = (federalCount && federalCount > 0)
       ? (((fecCount ?? 0) / federalCount) * 100)
       : 0;
-
-    // Calculate contact enrichment rate
-    const { error: contactError, count: contactCount } = await supabase
-      .from('civics_representatives')
-      .select('id', { count: 'exact', head: true })
-      .eq('level', 'federal')
-      .eq('valid_to', 'infinity')
-      .not('contact', 'is', null);
-    if (contactError) {
-      return errorResponse('Failed to load contact enrichment stats', 502, { reason: contactError.message });
-    }
-
     const contactEnrichmentRate = (federalCount && federalCount > 0)
       ? (((contactCount ?? 0) / federalCount) * 100)
       : 0;

@@ -18,6 +18,9 @@ const TABLES = [
   'representative_crosswalk_enhanced',
   'representative_data_sources',
   'representative_data_quality',
+  'representative_activity',
+  'representative_divisions',
+  'civic_elections',
 ] as const;
 
 async function main(): Promise<void> {

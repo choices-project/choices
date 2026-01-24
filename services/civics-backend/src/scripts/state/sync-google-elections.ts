@@ -48,26 +48,36 @@ function parseCliOptions(): CliOptions {
   return options;
 }
 
-function normaliseDivisionId(value?: string): string {
-  if (!value || value.trim() === '') {
-    return 'ocd-division/country:us';
-  }
-  return value.trim();
+function normaliseDivisionId(value?: string): string | null {
+  const t = typeof value === 'string' ? value.trim() : '';
+  if (!t) return null;
+  return t;
 }
 
+/**
+ * Only include elections with a specific OCD division. Skip when the API returns
+ * none (avoids "same for everyone"). Do not default missing ocdDivisionId to
+ * ocd-division/country:us; store only when the API provides a division.
+ */
 function buildElectionRows(
   elections: Awaited<ReturnType<typeof fetchElections>>,
   includeRaw: boolean,
 ): ElectionRow[] {
   const timestamp = new Date().toISOString();
-  return elections.map((election) => ({
-    election_id: election.id,
-    name: election.name,
-    election_day: election.electionDay,
-    ocd_division_id: normaliseDivisionId(election.ocdDivisionId),
-    fetched_at: timestamp,
-    raw_payload: includeRaw ? election : undefined,
-  }));
+  const rows: ElectionRow[] = [];
+  for (const election of elections) {
+    const ocd = normaliseDivisionId((election as { ocdDivisionId?: string }).ocdDivisionId);
+    if (!ocd) continue;
+    rows.push({
+      election_id: election.id,
+      name: election.name,
+      election_day: election.electionDay,
+      ocd_division_id: ocd,
+      fetched_at: timestamp,
+      raw_payload: includeRaw ? election : undefined,
+    });
+  }
+  return rows;
 }
 
 async function upsertElections(rows: ElectionRow[]): Promise<void> {

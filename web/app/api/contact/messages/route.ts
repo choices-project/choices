@@ -404,36 +404,43 @@ export const GET = withErrorHandling(async (request: NextRequest) => {
       query = query.eq('priority', priority);
     }
 
-    const { data: messages, error: messagesError } = await query;
-
-    if (messagesError) {
-      logger.error('Failed to fetch messages', new Error(messagesError?.message ?? 'Unknown error'), { error: messagesError });
-      return errorResponse('Failed to fetch messages', 500);
-    }
-
     let countQuery = supabase
       .from('contact_messages')
-      .select('*', { count: 'exact', head: true });
+      .select('id', { count: 'exact', head: true });
 
     if (representativeIds.length > 0) {
       countQuery = countQuery.or(`sender_id.eq.${user.id},recipient_id.in.(${representativeIds.join(',')})`);
     } else {
       countQuery = countQuery.eq('sender_id', user.id);
     }
+    if (threadId) countQuery = countQuery.eq('thread_id', threadId);
+    if (status) countQuery = countQuery.eq('status', status);
+    if (priority) countQuery = countQuery.eq('priority', priority);
 
-    const { count: totalCount, error: countError } = await countQuery;
+    const [messagesResult, countResult] = await Promise.all([query, countQuery]);
+
+    const messagesError = messagesResult.error;
+    if (messagesError) {
+      logger.error('Failed to fetch messages', new Error(messagesError?.message ?? 'Unknown error'), { error: messagesError });
+      return errorResponse('Failed to fetch messages', 500);
+    }
+
+    const countError = countResult.error;
     if (countError) {
       logger.error('Failed to count messages', new Error(countError?.message ?? 'Unknown error'), { error: countError });
       return errorResponse('Failed to fetch messages', 500);
     }
 
+    const messages = messagesResult.data ?? [];
+    const totalCount = countResult.count ?? 0;
+
     return successResponse({
-      messages: messages ?? [],
+      messages,
       pagination: {
-        total: totalCount ?? 0,
+        total: totalCount,
         limit,
         offset,
-        hasMore: (totalCount ?? 0) > offset + limit,
+        hasMore: totalCount > offset + limit,
       },
     });
 });

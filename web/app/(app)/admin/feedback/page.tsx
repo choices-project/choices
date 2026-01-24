@@ -94,6 +94,7 @@ export default function AdminFeedbackPage() {
   const { setCurrentRoute, setSidebarActiveSection, setBreadcrumbs } = useAppActions();
   const [feedback, setFeedback] = useState<Feedback[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
   const [selectedFeedback, setSelectedFeedback] = useState<Feedback | null>(null);
   const [filters, setFilters] = useState<Filters>({
     type: '',
@@ -132,6 +133,7 @@ export default function AdminFeedbackPage() {
 
   const fetchFeedback = useCallback(async (isMountedRef?: { current: boolean }) => {
     if (isMountedRef && !isMountedRef.current) return; // Component unmounted, abort
+    setError(null);
     setIsLoading(true);
     try {
       const params = new URLSearchParams();
@@ -157,6 +159,7 @@ export default function AdminFeedbackPage() {
       if (!data.success) {
         logger.error('API returned error:', data.error || data);
         if (isMountedRef && !isMountedRef.current) return; // Component unmounted, abort
+        setError(data.error ?? 'Unable to load feedback. The server returned an error.');
         setFeedback([]);
         return;
       }
@@ -231,12 +234,13 @@ export default function AdminFeedbackPage() {
         if (isMountedRef && !isMountedRef.current) return; // Component unmounted, abort
         setFeedback([]);
       }
-    } catch (error) {
-      logger.error('Error fetching feedback:', error instanceof Error ? error : new Error(String(error)));
+    } catch (err) {
+      logger.error('Error fetching feedback:', err instanceof Error ? err : new Error(String(err)));
       if (isMountedRef && !isMountedRef.current) {
         setIsLoading(false);
         return; // Component unmounted, abort
       }
+      setError(err instanceof Error ? err.message : 'Failed to load feedback.');
       setFeedback([]);
     } finally {
       // Only set loading to false if component is still mounted
@@ -313,6 +317,11 @@ export default function AdminFeedbackPage() {
     setSelectedFeedback(null);
   }, []);
 
+  const handleRetry = useCallback(() => {
+    setError(null);
+    fetchFeedback({ current: true });
+  }, [fetchFeedback]);
+
   return (
     <ErrorBoundary
       fallback={
@@ -347,6 +356,8 @@ export default function AdminFeedbackPage() {
         <FeedbackList
           feedback={feedback}
           isLoading={isLoading}
+          error={error}
+          onRetry={handleRetry}
           onFeedbackSelect={handleFeedbackSelect}
           onStatusUpdate={handleStatusUpdate}
         />

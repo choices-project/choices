@@ -5,7 +5,7 @@
   "type": "module",
   "description": "Shared civics helpers for Choices ingest and web applications.",
   "scripts": {
-    "test": "node --test ./tests"
+    "test": "node --test ./tests/shared.test.mjs"
   },
   "main": "./index.js",
   "types": "./index.d.ts",

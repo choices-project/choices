@@ -99,7 +99,7 @@ export const GET = withErrorHandling(async (request: NextRequest) => {
              { ascending: sortOrder === 'asc' })
       .range(offset, offset + limit - 1);
 
-    // Apply filters
+    // Apply filters (same for data + count)
     if (status) {
       query = query.eq('status', status);
     }
@@ -110,34 +110,30 @@ export const GET = withErrorHandling(async (request: NextRequest) => {
       query = query.eq('representative_id', parseInt(representativeId));
     }
 
-    const { data: threads, error: threadsError } = await query;
+    let countQuery = supabase
+      .from('contact_threads')
+      .select('id', { count: 'exact', head: true })
+      .eq('user_id', user.id);
+    if (status) countQuery = countQuery.eq('status', status);
+    if (priority) countQuery = countQuery.eq('priority', priority);
+    if (representativeId) countQuery = countQuery.eq('representative_id', parseInt(representativeId));
 
+    const [threadsResult, countResult] = await Promise.all([query, countQuery]);
+
+    const threadsError = threadsResult.error;
     if (threadsError) {
       logger.error('Failed to fetch threads', new Error(threadsError?.message ?? 'Unknown error'), { error: threadsError });
       return errorResponse('Failed to fetch threads', 500);
     }
 
-    // Get total count for pagination with same filters
-    let countQuery = supabase
-      .from('contact_threads')
-      .select('*', { count: 'exact', head: true })
-      .eq('user_id', user.id);
-
-    if (status) {
-      countQuery = countQuery.eq('status', status);
-    }
-    if (priority) {
-      countQuery = countQuery.eq('priority', priority);
-    }
-    if (representativeId) {
-      countQuery = countQuery.eq('representative_id', parseInt(representativeId));
-    }
-
-    const { count: totalCount, error: countError } = await countQuery;
+    const countError = countResult.error;
     if (countError) {
       logger.error('Failed to count threads', new Error(countError?.message ?? 'Unknown error'), { error: countError });
       return errorResponse('Failed to fetch threads', 500);
     }
+
+    const threads = threadsResult.data;
+    const totalCount = countResult.count;
 
     // Transform response data with full thread information
     const transformedThreads = (threads ?? []).map((thread: any) => ({

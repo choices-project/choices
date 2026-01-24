@@ -36,7 +36,10 @@ export const GET = withErrorHandling(async (request: NextRequest) => {
     return errorResponse('Failed to load upcoming elections', 502, { reason: error.message });
   }
 
-  const elections = data ?? [];
+  const raw = (data ?? []) as Array<{ election_id: string; name: string; election_day: string; ocd_division_id: string }>;
+  // Exclude test/fixture data from production UI (e.g. "VIP Test Election").
+  const testPattern = /^(VIP Test|Test Election|Fixture)/i;
+  const elections = raw.filter((e) => !testPattern.test(String(e?.name ?? '')));
 
   return successResponse(
     {

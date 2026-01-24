@@ -1,21 +1,138 @@
 #!/usr/bin/env node
 /**
- * Preview ingest output for a small subset (federal and state) without writing to Supabase.
+ * Preview representatives data for QA.
+ *
+ * Default: sample from representatives_core (DB) — total count, breakdown by level,
+ * and a few sample rows. Use for ingest:qa to verify we can read from the DB.
+ *
+ * --pipeline: use pipeline-based preview (federal from DB + state from OpenStates YAML).
+ * --limit=N: max sample size (default 10 for DB; 12 for pipeline).
+ * --states=X,Y: filter by state codes (DB or pipeline).
  */
 import 'dotenv/config';
 
+import { getSupabaseClient } from './clients/supabase.js';
 import {
   buildFederalPipelineBatch,
   buildStatePipelineBatch,
   type UnifiedRepresentative,
 } from './pipeline/index.js';
 
-const states = process.argv.slice(2);
+const DEFAULT_LIMIT = 10;
 
-async function main() {
-  const stateFilter = states.length ? { states } : {};
+type PreviewOptions = {
+  limit: number;
+  states: string[];
+  pipeline: boolean;
+};
 
-  const federal = await buildFederalPipelineBatch({ ...stateFilter, limit: 12 });
+function parseArgs(): PreviewOptions {
+  const args = process.argv.slice(2);
+  const options: PreviewOptions = {
+    limit: DEFAULT_LIMIT,
+    states: [],
+    pipeline: false,
+  };
+
+  for (let i = 0; i < args.length; i += 1) {
+    const arg = args[i];
+    if (!arg?.startsWith('--')) continue;
+
+    const [flag, raw] = arg.includes('=') ? arg.slice(2).split('=') : [arg.slice(2), args[i + 1]];
+    const value = raw && !raw.startsWith('--') ? raw : undefined;
+
+    switch (flag) {
+      case 'limit':
+        if (value) {
+          const n = Number(value);
+          if (!Number.isNaN(n) && n > 0) options.limit = Math.min(Math.floor(n), 100);
+        }
+        break;
+      case 'states':
+        if (value) {
+          options.states = value.split(',').map((s) => s.trim().toUpperCase()).filter(Boolean);
+        }
+        break;
+      case 'pipeline':
+        options.pipeline = true;
+        break;
+      default:
+        break;
+    }
+    if (value && !arg.includes('=')) i += 1;
+  }
+
+  return options;
+}
+
+function baseCountQuery(
+  client: ReturnType<typeof getSupabaseClient>,
+  states: string[],
+) {
+  let q = client
+    .from('representatives_core')
+    .select('id', { head: true, count: 'exact' })
+    .not('name', 'ilike', '%test%');
+  if (states.length) q = q.in('state', states);
+  return q;
+}
+
+async function previewFromDb(options: PreviewOptions): Promise<void> {
+  const client = getSupabaseClient();
+  const base = () => baseCountQuery(client, options.states);
+
+  const [totalRes, federalRes, stateRes, localRes] = await Promise.all([
+    base(),
+    base().eq('level', 'federal'),
+    base().eq('level', 'state'),
+    base().eq('level', 'local'),
+  ]);
+
+  if (totalRes.error) {
+    throw new Error(`Failed to count representatives_core: ${totalRes.error.message}`);
+  }
+
+  const total = totalRes.count ?? 0;
+  const federal = federalRes.count ?? 0;
+  const state = stateRes.count ?? 0;
+  const local = localRes.count ?? 0;
+  const other = Math.max(0, total - federal - state - local);
+
+  const byLevel: Record<string, number> = {};
+  if (federal) byLevel.federal = federal;
+  if (state) byLevel.state = state;
+  if (local) byLevel.local = local;
+  if (other) byLevel.other = other;
+
+  let sampleQ = client
+    .from('representatives_core')
+    .select('id, name, office, level, state, district, is_active')
+    .not('name', 'ilike', '%test%')
+    .order('id', { ascending: true })
+    .limit(options.limit);
+
+  if (options.states.length) {
+    sampleQ = sampleQ.in('state', options.states);
+  }
+
+  const { data: sample, error: sampleErr } = await sampleQ;
+
+  if (sampleErr) {
+    throw new Error(`Failed to fetch sample: ${sampleErr.message}`);
+  }
+
+  console.log('representatives_core (DB preview)');
+  console.log(`  Total (excl. test): ${total}`);
+  console.log('  By level:', JSON.stringify(byLevel));
+  console.log(`  Sample (limit=${options.limit}):`);
+  console.log(JSON.stringify(sample ?? [], null, 2));
+}
+
+async function previewFromPipeline(options: PreviewOptions): Promise<void> {
+  const stateFilter = options.states.length ? { states: options.states } : {};
+  const limit = options.limit || 12;
+
+  const federal = await buildFederalPipelineBatch({ ...stateFilter, limit });
   console.log(`Federal sample (${federal.length} records):`);
   console.log(
     federal.slice(0, 10).map((record: UnifiedRepresentative) => ({
@@ -42,8 +159,8 @@ async function main() {
     })),
   );
 
-  const state = await buildStatePipelineBatch({ ...stateFilter, limit: 12 });
-  console.log(`State sample (${state.length} records):`);
+  const state = await buildStatePipelineBatch({ ...stateFilter, limit });
+  console.log(`\nState sample (${state.length} records):`);
   console.log(
     state.slice(0, 10).map((record: UnifiedRepresentative) => ({
       name: record.canonical.name,
@@ -69,11 +186,6 @@ async function main() {
     })),
   );
 }
-
-main().catch((error) => {
-  console.error('Preview failed:', error);
-  process.exit(1);
-});
 
 function summarizeBiography(biography: string | null): string | undefined {
   if (!biography) return undefined;
@@ -118,3 +230,17 @@ function truncate(value: string, max: number): string {
   return value.length > max ? `${value.slice(0, max - 1)}…` : value;
 }
 
+async function main(): Promise<void> {
+  const options = parseArgs();
+
+  if (options.pipeline) {
+    await previewFromPipeline(options);
+  } else {
+    await previewFromDb(options);
+  }
+}
+
+main().catch((error) => {
+  console.error('Preview failed:', error);
+  process.exit(1);
+});

@@ -93,6 +93,24 @@ export const CANDIDATE_EMAIL_CHALLENGE_SELECT_COLUMNS =
 export const OFFICIAL_EMAIL_FAST_TRACK_SELECT_COLUMNS =
   'id, domain, email, representative_id, verified, last_attempt_at';
 
+/** Explicit columns for votes select (avoid select('*')) */
+export const VOTES_SELECT_COLUMNS =
+  'id, poll_id, option_id, poll_option_id, user_id, vote_status, trust_tier, created_at, updated_at, ip_address, voter_session, linked_at, offline_synced, offline_timestamp, poll_question';
+
+/** Explicit columns for analytics tables (avoid select('*')) */
+export const TRUST_TIER_ANALYTICS_SELECT_COLUMNS =
+  'id, user_id, trust_tier, previous_tier, tier_change_reason, changed_by, created_at';
+export const POLL_DEMOGRAPHIC_INSIGHTS_SELECT_COLUMNS =
+  'poll_id, total_responses, average_confidence_level, age_group_breakdown, education_breakdown, geographic_breakdown, income_breakdown, political_breakdown, trust_tier_breakdown, demographic_by_trust_tier, trust_tier_by_demographic, data_quality_distribution, verification_method_distribution, created_at, updated_at';
+export const PLATFORM_ANALYTICS_SELECT_COLUMNS =
+  'id, metric_name, metric_type, metric_value, category, subcategory, dimensions, period_start, period_end, timestamp, source, metadata';
+export const USER_SESSIONS_SELECT_COLUMNS =
+  'id, session_id, user_id, is_active, last_activity, started_at, ended_at, actions_count, page_views, avg_page_load_time, bounce_rate, total_session_duration, device_info, location, metadata, conversion_events, user_agent, ip_address';
+export const FEATURE_USAGE_SELECT_COLUMNS =
+  'id, feature_name, action_type, session_id, user_id, timestamp, success, duration, error_message, context, metadata';
+export const SYSTEM_HEALTH_SELECT_COLUMNS =
+  'id, service_name, health_status, last_check, next_check, uptime_percentage, response_time, error_rate, alerts, details, metadata';
+
 /** Explicit columns for user_consent select (avoid select('*')) */
 export const USER_CONSENT_SELECT_COLUMNS =
   'id, user_id, consent_type, granted, granted_at, revoked_at, consent_version, purpose, data_types';

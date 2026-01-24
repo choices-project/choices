@@ -34,6 +34,8 @@ import {
   trackCivicsRepresentativeEvent,
   type CivicsRepresentativeEventBase
 } from '@/features/civics/analytics/civicsAnalyticsEvents';
+import { formatElectionDateStable } from '@/features/civics/utils/civicsCountdownUtils';
+import { filterDivisionsForElections } from '@/features/civics/utils/divisions';
 
 import { Badge } from '@/components/ui/badge';
 
@@ -55,37 +57,6 @@ import {
   useGetUserRepresentatives
 } from '@/lib/stores/representativeStore';
 import { logger } from '@/lib/utils/logger';
-
-// Format election date - only format on client to prevent hydration mismatch
-// toLocaleDateString() can produce different results on server vs client
-// Use a stable format that doesn't rely on locale during SSR
-const formatElectionDate = (isoDate: string | undefined, isClient: boolean = false) => {
-  if (!isoDate) {
-    return '';
-  }
-  // During SSR, return a stable format that doesn't use locale-dependent functions
-  if (!isClient) {
-    try {
-      const date = new Date(isoDate);
-      const year = date.getFullYear();
-      const monthNames = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
-      const month = monthNames[date.getMonth()];
-      const day = date.getDate();
-      return `${month} ${day}, ${year}`;
-    } catch {
-      return isoDate;
-    }
-  }
-  try {
-    return new Date(isoDate).toLocaleDateString(undefined, {
-      month: 'short',
-      day: 'numeric',
-      year: 'numeric',
-    });
-  } catch {
-    return isoDate;
-  }
-};
 
 // getElectionCountdown will be defined inside component to use isClient guard
 
@@ -153,9 +124,10 @@ function RepresentativeDetailPageContent() {
       : Array.isArray(fallback)
       ? fallback
       : [];
-    return source
+    const raw = source
       .map((value) => (typeof value === 'string' ? value.trim() : null))
       .filter((value): value is string => Boolean(value));
+    return filterDivisionsForElections(raw);
   }, [representative?.ocdDivisionIds, representative?.division_ids]);
 
   const elections = useElectionsForDivisions(divisionIds);
@@ -170,26 +142,29 @@ function RepresentativeDetailPageContent() {
   }, [elections]);
 
   const nextElection = upcomingElections[0];
+  /** Prefer rep-level "up for election" when available; else division-based. */
+  const primaryNextElectionDate =
+    representative?.next_election_date ?? nextElection?.election_day ?? null;
+
   // CRITICAL: Calculate countdown but use null initially to match server render
   // After mount, update to actual value - but render structure must remain consistent
   const [daysUntilNextElection, setDaysUntilNextElection] = React.useState<number | null>(null);
 
-  // CRITICAL: Use state for formatted date to prevent hydration mismatch
-  // formatElectionDate with isClient=false uses stable format, isClient=true uses locale format
-  // This causes hydration mismatch, so we use state to keep it stable initially
+  // Formatted next election date (single stable format everywhere)
   const [formattedNextElectionDate, setFormattedNextElectionDate] = React.useState<string>('');
 
   React.useEffect(() => {
-    if (isClient && nextElection?.election_day) {
-      const countdown = getElectionCountdown(nextElection.election_day);
-      setDaysUntilNextElection(countdown);
-      // Update formatted date after mount to use locale format
-      setFormattedNextElectionDate(formatElectionDate(nextElection.election_day, true));
-    } else if (nextElection?.election_day) {
-      // Initial render: use stable format
-      setFormattedNextElectionDate(formatElectionDate(nextElection.election_day, false));
+    if (!primaryNextElectionDate) {
+      setFormattedNextElectionDate('');
+      setDaysUntilNextElection(null);
+      return;
     }
-  }, [isClient, nextElection?.election_day, getElectionCountdown]);
+    if (isClient) {
+      const countdown = getElectionCountdown(primaryNextElectionDate);
+      setDaysUntilNextElection(countdown);
+    }
+    setFormattedNextElectionDate(formatElectionDateStable(primaryNextElectionDate));
+  }, [isClient, primaryNextElectionDate, getElectionCountdown]);
 
   const loading = detailLoading || globalLoading;
   const isFollowing =
@@ -451,15 +426,19 @@ function RepresentativeDetailPageContent() {
                 )}
               </div>
 
-              {divisionIds.length > 0 && nextElection && (
+              {primaryNextElectionDate && (
                 <div className="mt-4">
                   <Badge className="flex items-center gap-2 bg-white/15 text-white border-white/40 text-xs rounded-full shadow-sm">
                     <CalendarClock className="w-3 h-3" />
-                    <span className="truncate max-w-[220px]">{nextElection.name}</span>
-                    <span className="text-blue-100">
-                      · {formattedNextElectionDate || formatElectionDate(nextElection.election_day, false)}
+                    <span className="truncate max-w-[220px]">
+                      {representative?.next_election_date
+                        ? 'Next election'
+                        : nextElection?.name ?? 'Next election'}
                     </span>
-                    {upcomingElections.length > 1 && (
+                    <span className="text-blue-100">
+                      · {formattedNextElectionDate || formatElectionDateStable(primaryNextElectionDate)}
+                    </span>
+                    {!representative?.next_election_date && divisionIds.length > 0 && upcomingElections.length > 1 && (
                       <span className="text-blue-100/80">
                         (+{upcomingElections.length - 1})
                       </span>
@@ -467,9 +446,8 @@ function RepresentativeDetailPageContent() {
                   </Badge>
                 </div>
               )}
-              {/* Always render the container to maintain consistent DOM structure */}
               <div className="mt-2 text-xs text-blue-100">
-                {daysUntilNextElection != null && daysUntilNextElection <= 90 && (
+                {primaryNextElectionDate && daysUntilNextElection != null && daysUntilNextElection <= 90 && (
                   daysUntilNextElection === 0
                     ? 'Election is today'
                     : `Election in ${daysUntilNextElection} day${daysUntilNextElection === 1 ? '' : 's'}`
@@ -566,9 +544,9 @@ function RepresentativeDetailPageContent() {
             <div className="p-4 bg-gray-50 rounded-lg">
               <h3 className="text-lg font-semibold text-gray-900 mb-2">Term Details</h3>
               <div className="space-y-1 text-sm text-gray-600">
-                <div>Term start: {representative.term_start_date ?? 'Unknown'}</div>
-                <div>Term end: {representative.term_end_date ?? 'Unknown'}</div>
-                <div>Next election: {representative.next_election_date ?? 'Unknown'}</div>
+                <div>Term start: {representative.term_start_date ? formatElectionDateStable(representative.term_start_date) : '—'}</div>
+                <div>Term end: {representative.term_end_date ? formatElectionDateStable(representative.term_end_date) : '—'}</div>
+                <div>Next election: {representative.next_election_date ? formatElectionDateStable(representative.next_election_date) : 'No upcoming election on file'}</div>
               </div>
             </div>
             <div className="p-4 bg-gray-50 rounded-lg">
@@ -576,7 +554,7 @@ function RepresentativeDetailPageContent() {
               <div className="space-y-1 text-sm text-gray-600">
                 <div>Score: {Math.round(dataQualityScore)}%</div>
                 {verificationStatus && <div>Status: {verificationStatus}</div>}
-                {representative.last_verified && <div>Last verified: {representative.last_verified}</div>}
+                {representative.last_verified && <div>Last verified: {formatElectionDateStable(representative.last_verified)}</div>}
                 {dataSources.length > 0 && (
                   <div>Sources: {dataSources.slice(0, 4).join(', ')}</div>
                 )}
@@ -598,29 +576,40 @@ function RepresentativeDetailPageContent() {
             </div>
           )}
 
-          {representative.activities && representative.activities.length > 0 && (
-            <div className="mb-8">
-              <h3 className="text-lg font-semibold text-gray-900 mb-3">Recent Activity</h3>
-              <div className="space-y-3">
-                {representative.activities.slice(0, 5).map((activity) => (
-                  <div key={activity.id} className="p-3 border border-gray-200 rounded-lg">
-                    <div className="text-sm font-semibold text-gray-900">{activity.title}</div>
-                    {activity.description && (
-                      <div className="text-sm text-gray-600">{activity.description}</div>
-                    )}
-                    <div className="text-xs text-gray-500">
-                      {activity.type} {activity.date ? `• ${activity.date}` : ''} {activity.source ? `• ${activity.source}` : ''}
+          {(() => {
+            const billActivities = (representative.activities ?? []).filter((a) => a.type === 'bill');
+            return billActivities.length > 0 ? (
+              <div className="mb-8">
+                <h3 className="text-lg font-semibold text-gray-900 mb-3">Recent Activity</h3>
+                <p className="text-xs text-gray-500 mb-2">Bill activity from OpenStates (sponsorship, votes when available). Upcoming elections are listed separately below.</p>
+                <div className="space-y-3">
+                  {billActivities.slice(0, 5).map((activity) => (
+                    <div key={activity.id} className="p-3 border border-gray-200 rounded-lg">
+                      <div className="text-sm font-semibold text-gray-900">{activity.title}</div>
+                      {activity.description && (
+                        <div className="text-sm text-gray-600">{activity.description}</div>
+                      )}
+                      <div className="text-xs text-gray-500">
+                        {activity.type}
+                        {activity.date ? ` · ${formatElectionDateStable(activity.date)}` : ''}
+                        {activity.source ? ` · ${activity.source}` : ''}
+                      </div>
                     </div>
-                  </div>
-                ))}
+                  ))}
+                </div>
               </div>
-            </div>
-          )}
+            ) : null;
+          })()}
 
         {divisionIds.length > 0 && upcomingElections.length > 0 && (
           <div className="mb-8 rounded-xl border border-gray-200 bg-white shadow-sm dark:border-gray-700 dark:bg-gray-900">
             <div className="flex items-center justify-between border-b border-gray-100 px-5 py-4 dark:border-gray-800">
-              <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100">Upcoming Elections</h3>
+              <div>
+                <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100">Upcoming Elections</h3>
+                <p className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">
+                  Elections in your representative&apos;s districts. Dates from OpenStates / Google Civic API.
+                </p>
+              </div>
               <span className="text-xs text-gray-500 dark:text-gray-400">{upcomingElections.length} listed</span>
             </div>
             <div className="space-y-3 px-5 py-4">
@@ -632,12 +621,7 @@ function RepresentativeDetailPageContent() {
                   <div>
                     <p className="text-sm font-semibold text-blue-900 dark:text-blue-100">{election.name}</p>
                     <p className="text-xs text-blue-700 dark:text-blue-200/80">
-                      {/* Use stable format initially, update after mount to prevent hydration mismatch */}
-                      {isClient
-                        ? formatElectionDate(election.election_day, true)
-                        : formatElectionDate(election.election_day, false)
-                      }
-                      {/* Calculate countdown only after mount to prevent hydration mismatch */}
+                      {formatElectionDateStable(election.election_day)}
                       {isClient && (() => {
                         const countdown = getElectionCountdown(election.election_day);
                         if (countdown == null || countdown > 90) {
@@ -737,7 +721,7 @@ function RepresentativeDetailPageContent() {
                 {campaignFinance.total_raised != null && <div>Total raised: ${campaignFinance.total_raised.toLocaleString()}</div>}
                 {campaignFinance.total_spent != null && <div>Total spent: ${campaignFinance.total_spent.toLocaleString()}</div>}
                 {campaignFinance.cash_on_hand != null && <div>Cash on hand: ${campaignFinance.cash_on_hand.toLocaleString()}</div>}
-                {campaignFinance.last_filing_date && <div>Last filing: {campaignFinance.last_filing_date}</div>}
+                {campaignFinance.last_filing_date && <div>Last filing: {formatElectionDateStable(campaignFinance.last_filing_date)}</div>}
                 {campaignFinance.source && <div>Source: {campaignFinance.source}</div>}
               </div>
             </div>

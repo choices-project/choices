@@ -173,9 +173,10 @@ export class GeographicService {
     districtType?: 'congressional' | 'state_house' | 'state_senate'
   ): Promise<RedistrictingChange[]> {
     try {
+      const REDISTRICTING_SELECT = 'id, state, district_type, old_district, new_district, census_cycle_from, census_cycle_to, change_type, change_description, effective_date, created_at';
       let query = this.supabase
         .from('redistricting_history')
-        .select('*')
+        .select(REDISTRICTING_SELECT)
         .eq('state', stateCode.toUpperCase())
         .order('effective_date', { ascending: false });
 
@@ -225,9 +226,10 @@ export class GeographicService {
    */
   async getGeographicLookup(ocdId: string): Promise<GeographicLookup | null> {
     try {
+      const GEOGRAPHIC_LOOKUP_SELECT = 'ocd_division_id, address, latitude, longitude, district, state, county, zip_code, fips_state_code, fips_county_code, geoid, census_cycle, congress_number, created_at';
       const { data, error } = await this.supabase
         .from('geographic_lookups')
-        .select('*')
+        .select(GEOGRAPHIC_LOOKUP_SELECT)
         .eq('ocd_division_id', ocdId)
         .single();
 
@@ -271,10 +273,10 @@ export class GeographicService {
         throw new Error('Could not determine geographic location');
       }
 
-      // Build query for candidates
+      const CANDIDATES_SELECT = 'id, ocd_division_id, level, office, verified, quality_score, name, party, created_at';
       let query = this.supabase
         .from('candidates')
-        .select('*')
+        .select(CANDIDATES_SELECT)
         .eq('ocd_division_id', ocdDivisionId);
 
       if (options.level) {
@@ -328,10 +330,10 @@ export class GeographicService {
         throw new Error('Could not determine geographic location');
       }
 
-      // Build query for elections
+      const ELECTIONS_SELECT = 'id, ocd_division_id, type, status, election_date, name, office, created_at';
       let query = this.supabase
         .from('elections')
-        .select('*')
+        .select(ELECTIONS_SELECT)
         .eq('ocd_division_id', ocdDivisionId);
 
       if (options.type) {
@@ -435,10 +437,10 @@ export class GeographicService {
   }> {
     try {
       const [zipCount, latlonCount, districtsCount, redistrictingCount] = await Promise.all([
-        this.supabase.from('zip_to_ocd').select('*', { count: 'exact', head: true }),
-        this.supabase.from('latlon_to_ocd').select('*', { count: 'exact', head: true }),
-        this.supabase.from('state_districts').select('*', { count: 'exact', head: true }),
-        this.supabase.from('redistricting_history').select('*', { count: 'exact', head: true })
+        this.supabase.from('zip_to_ocd').select('zip5', { count: 'exact', head: true }),
+        this.supabase.from('latlon_to_ocd').select('ocd_division_id', { count: 'exact', head: true }),
+        this.supabase.from('state_districts').select('district_number', { count: 'exact', head: true }),
+        this.supabase.from('redistricting_history').select('id', { count: 'exact', head: true })
       ]);
 
       // Get coverage by state

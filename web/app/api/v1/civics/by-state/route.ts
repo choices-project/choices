@@ -124,55 +124,43 @@ export const GET = withErrorHandling(async (request: NextRequest) => {
           }
         }
 
-        // Include FEC data if requested
-        if (include.includes('fec') && rep.id) {
-          const { data: fecData, error: fecError } = await supabase
-            .from('representative_campaign_finance')
-            .select('total_raised, cash_on_hand, cycle, updated_at')
-            .eq('representative_id', rep.id)
-            .order('cycle', { ascending: false })
-            .limit(1)
-            .maybeSingle();
+        const wantFec = include.includes('fec') && !!rep.id;
+        const wantVotes = include.includes('votes') && !!rep.id;
+        const fecPromise = wantFec
+          ? supabase.from('representative_campaign_finance').select('total_raised, cash_on_hand, cycle, updated_at').eq('representative_id', rep.id).order('cycle', { ascending: false }).limit(1).maybeSingle()
+          : Promise.resolve({ data: null, error: null });
+        const votesPromise = wantVotes
+          ? supabase.from('representative_activity').select('id, title, description, date, metadata, url').eq('representative_id', rep.id).eq('type', 'vote').order('date', { ascending: false }).limit(5)
+          : Promise.resolve({ data: null, error: null });
 
-          if (!fecError && fecData) {
-            response.fec = {
-              total_receipts: fecData.total_raised ?? 0,
-              cash_on_hand: fecData.cash_on_hand ?? 0,
-              cycle: fecData.cycle ?? new Date().getFullYear(),
-              last_updated: fecData.updated_at ?? rep.updated_at
-            };
-          }
+        const [fecRes, votesRes] = await Promise.all([fecPromise, votesPromise]);
+
+        if (wantFec && !fecRes.error && fecRes.data) {
+          const fecData = fecRes.data;
+          response.fec = {
+            total_receipts: fecData.total_raised ?? 0,
+            cash_on_hand: fecData.cash_on_hand ?? 0,
+            cycle: fecData.cycle ?? new Date().getFullYear(),
+            last_updated: fecData.updated_at ?? rep.updated_at
+          };
         }
-
-        // Include voting data if requested (using representative_activity)
-        if (include.includes('votes') && rep.id) {
-          const { data: votesData, error: votesError } = await supabase
-            .from('representative_activity')
-            .select('id, title, description, date, metadata, url')
-            .eq('representative_id', rep.id)
-            .eq('type', 'vote')
-            .order('date', { ascending: false })
-            .limit(5);
-
-          if (!votesError && votesData && Array.isArray(votesData) && votesData.length > 0) {
-            response.votes = {
-              last_5: votesData.map(v => {
-                const metadata = v.metadata && typeof v.metadata === 'object' && !Array.isArray(v.metadata)
-                  ? v.metadata as Record<string, unknown>
-                  : {};
-                return {
-                  vote_id: String(v.id),
-                  bill_title: v.title ?? '',
-                  vote_date: v.date ?? '',
-                  vote_position: typeof metadata.vote_position === 'string' ? metadata.vote_position : null,
-                  party_position: null,
-                  last_updated: rep.updated_at
-                };
-              }),
-              party_alignment: null,
-              last_updated: rep.updated_at
-            };
-          }
+        if (wantVotes && !votesRes.error && votesRes.data && Array.isArray(votesRes.data) && votesRes.data.length > 0) {
+          const votesData = votesRes.data;
+          response.votes = {
+            last_5: votesData.map((v: { id: number; title?: string | null; date?: string | null; metadata?: unknown }) => {
+              const meta = v.metadata && typeof v.metadata === 'object' && !Array.isArray(v.metadata) ? (v.metadata as Record<string, unknown>) : {};
+              return {
+                vote_id: String(v.id),
+                bill_title: v.title ?? '',
+                vote_date: v.date ?? '',
+                vote_position: typeof meta.vote_position === 'string' ? meta.vote_position : null,
+                party_position: null,
+                last_updated: rep.updated_at
+              };
+            }),
+            party_alignment: null,
+            last_updated: rep.updated_at
+          };
         }
 
         // Include contact data if requested

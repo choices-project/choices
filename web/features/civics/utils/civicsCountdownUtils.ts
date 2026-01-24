@@ -37,6 +37,21 @@ export const getElectionCountdown = (isoDate: string | undefined): number | null
   return diffDays;
 };
 
+const MONTH_NAMES = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'] as const;
+
+/** SSR-safe format: "Jan 15, 2026". Use when not mounted to avoid hydration mismatch. */
+export const formatElectionDateStable = (isoDate: string | undefined): string => {
+  if (!isoDate) return '';
+  try {
+    const d = new Date(isoDate);
+    if (Number.isNaN(d.getTime())) return isoDate;
+    return `${MONTH_NAMES[d.getMonth()]} ${d.getDate()}, ${d.getFullYear()}`;
+  } catch {
+    return isoDate;
+  }
+};
+
+/** Locale-aware format. Use only after mount (client). */
 export const formatElectionDate = (
   isoDate: string | undefined,
   locale?: string,
@@ -84,7 +99,7 @@ export const useElectionCountdown = (
     analytics,
   }: ElectionCountdownOptions = {},
 ) => {
-  const { t, currentLanguage } = useI18n();
+  const { t } = useI18n();
   const fetchElections = useFetchElectionsForDivisions();
   const clearElections = useClearElections();
   const elections = useElectionsForDivisions(divisionIds);
@@ -144,7 +159,7 @@ export const useElectionCountdown = (
             : t('civics.countdown.notifications.countdown.inDays', {
                 count: daysUntil,
               });
-      const formattedDate = formatElectionDate(election.election_day, currentLanguage);
+      const formattedDate = formatElectionDateStable(election.election_day);
       const notificationTitle =
         election.name ?? t('civics.countdown.notifications.titleFallback');
 
@@ -170,7 +185,6 @@ export const useElectionCountdown = (
     notificationType,
     representativeNames,
     upcomingElections,
-    currentLanguage,
     t,
   ]);
 

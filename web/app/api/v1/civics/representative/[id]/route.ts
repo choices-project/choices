@@ -332,19 +332,53 @@ export const GET = withErrorHandling(async (
       }
     }
 
-    // Include FEC data if requested
+    // Include contact data if requested (from rep row only; no extra fetch)
+    if (include.includes('contact')) {
+      response.contact = {
+        ...(representativeRow.primary_phone ? { phone: representativeRow.primary_phone } : {}),
+        ...(representativeRow.primary_website ? { website: representativeRow.primary_website } : {}),
+        ...(representativeRow.primary_email ? { email: representativeRow.primary_email } : {}),
+        last_updated: representativeRow.updated_at
+      };
+      response.attribution.contact = 'ProPublica Congress API';
+    }
+
+    const fecPromise = include.includes('fec')
+      ? supabase.from('representative_campaign_finance').select('total_raised, cash_on_hand, cycle, updated_at').eq('representative_id', repId).order('cycle', { ascending: false }).limit(1).maybeSingle()
+      : Promise.resolve({ data: null, error: null });
+    const financePromise = includeCampaignFinance
+      ? supabase.from('representative_campaign_finance').select('total_raised, total_spent, cash_on_hand, cycle, last_filing_date, updated_at, source').eq('representative_id', repId).order('cycle', { ascending: false }).limit(1).maybeSingle()
+      : Promise.resolve({ data: null, error: null });
+    const votesPromise = include.includes('votes')
+      ? supabase.from('representative_activity').select('id, title, description, date, metadata, url').eq('representative_id', repId).eq('type', 'vote').order('date', { ascending: false }).limit(5)
+      : Promise.resolve({ data: null, error: null });
+    const contactsPromise = includeContacts
+      ? supabase.from('representative_contacts').select('id, contact_type, value, source, is_primary, is_verified').eq('representative_id', repId).order('is_primary', { ascending: false }).order('contact_type', { ascending: true })
+      : Promise.resolve({ data: null, error: null });
+    const socialPromise = includeSocial
+      ? supabase.from('representative_social_media').select('id, platform, handle, url, followers_count, is_primary, is_verified').eq('representative_id', repId).order('is_primary', { ascending: false }).order('platform', { ascending: true })
+      : Promise.resolve({ data: null, error: null });
+    const committeesPromise = includeCommittees
+      ? supabase.from('representative_committees').select('id, committee_name, role, is_current, start_date, end_date').eq('representative_id', repId).order('is_current', { ascending: false }).order('committee_name', { ascending: true })
+      : Promise.resolve({ data: null, error: null });
+    const activitiesPromise = includeActivities
+      ? supabase.from('representative_activity').select('id, type, title, description, date, source, source_url, url').eq('representative_id', repId).eq('type', 'bill').order('date', { ascending: false }).limit(10)
+      : Promise.resolve({ data: null, error: null });
+
+    const [fecRes, financeRes, votesRes, contactsRes, socialRes, committeesRes, activitiesRes] = await Promise.all([
+      fecPromise,
+      financePromise,
+      votesPromise,
+      contactsPromise,
+      socialPromise,
+      committeesPromise,
+      activitiesPromise
+    ]);
+
     if (include.includes('fec')) {
       response.attribution.fec = 'Federal Election Commission';
-
-      const { data: fecData, error: fecError } = await supabase
-        .from('representative_campaign_finance')
-        .select('total_raised, cash_on_hand, cycle, updated_at')
-        .eq('representative_id', representativeRow.id)
-        .order('cycle', { ascending: false })
-        .limit(1)
-        .maybeSingle();
-
-      if (!fecError && fecData) {
+      const fecData = fecRes.data;
+      if (!fecRes.error && fecData) {
         response.fec = {
           total_receipts: fecData.total_raised ?? 0,
           cash_on_hand: fecData.cash_on_hand ?? 0,
@@ -355,15 +389,8 @@ export const GET = withErrorHandling(async (
     }
 
     if (includeCampaignFinance) {
-      const { data: financeData, error: financeError } = await supabase
-        .from('representative_campaign_finance')
-        .select('total_raised, total_spent, cash_on_hand, cycle, last_filing_date, updated_at, source')
-        .eq('representative_id', representativeRow.id)
-        .order('cycle', { ascending: false })
-        .limit(1)
-        .maybeSingle();
-
-      if (!financeError && financeData) {
+      const financeData = financeRes.data;
+      if (!financeRes.error && financeData) {
         response.campaign_finance = {
           total_raised: financeData.total_raised ?? null,
           total_spent: financeData.total_spent ?? null,
@@ -376,27 +403,17 @@ export const GET = withErrorHandling(async (
       }
     }
 
-    // Include voting data if requested
     if (include.includes('votes')) {
-      const { data: votesData, error: votesError } = await supabase
-        .from('representative_activity')
-        .select('id, title, description, date, metadata, url')
-        .eq('representative_id', representativeRow.id)
-        .eq('type', 'vote')
-        .order('date', { ascending: false })
-        .limit(5);
-
-      if (!votesError && votesData && Array.isArray(votesData) && votesData.length > 0) {
+      const votesData = votesRes.data;
+      if (!votesRes.error && votesData && Array.isArray(votesData) && votesData.length > 0) {
         response.votes = {
-          last_5: votesData.map(v => {
-            const metadata = v.metadata && typeof v.metadata === 'object' && !Array.isArray(v.metadata)
-              ? v.metadata as Record<string, unknown>
-              : {};
+          last_5: votesData.map((v: { id: number; title?: string | null; date?: string | null; metadata?: unknown }) => {
+            const meta = v.metadata && typeof v.metadata === 'object' && !Array.isArray(v.metadata) ? (v.metadata as Record<string, unknown>) : {};
             return {
               vote_id: String(v.id),
               bill_title: v.title ?? '',
               vote_date: v.date ?? '',
-              vote_position: typeof metadata.vote_position === 'string' ? metadata.vote_position : null,
+              vote_position: typeof meta.vote_position === 'string' ? meta.vote_position : null,
               party_position: null,
               last_updated: representativeRow.updated_at
             };
@@ -408,67 +425,17 @@ export const GET = withErrorHandling(async (
       }
     }
 
-    // Include contact data if requested
-    if (include.includes('contact')) {
-      response.contact = {
-        ...(representativeRow.primary_phone ? { phone: representativeRow.primary_phone } : {}),
-        ...(representativeRow.primary_website ? { website: representativeRow.primary_website } : {}),
-        ...(representativeRow.primary_email ? { email: representativeRow.primary_email } : {}),
-        last_updated: representativeRow.updated_at
-      };
-      response.attribution.contact = 'ProPublica Congress API';
+    if (includeContacts && !contactsRes.error && Array.isArray(contactsRes.data)) {
+      response.contacts = contactsRes.data;
     }
-
-    if (includeContacts) {
-      const { data: contactsData, error: contactsError } = await supabase
-        .from('representative_contacts')
-        .select('id, contact_type, value, source, is_primary, is_verified')
-        .eq('representative_id', representativeRow.id)
-        .order('is_primary', { ascending: false })
-        .order('contact_type', { ascending: true });
-
-      if (!contactsError && Array.isArray(contactsData)) {
-        response.contacts = contactsData;
-      }
+    if (includeSocial && !socialRes.error && Array.isArray(socialRes.data)) {
+      response.social_media = socialRes.data;
     }
-
-    if (includeSocial) {
-      const { data: socialData, error: socialError } = await supabase
-        .from('representative_social_media')
-        .select('id, platform, handle, url, followers_count, is_primary, is_verified')
-        .eq('representative_id', representativeRow.id)
-        .order('is_primary', { ascending: false })
-        .order('platform', { ascending: true });
-
-      if (!socialError && Array.isArray(socialData)) {
-        response.social_media = socialData;
-      }
+    if (includeCommittees && !committeesRes.error && Array.isArray(committeesRes.data)) {
+      response.committees = committeesRes.data;
     }
-
-    if (includeCommittees) {
-      const { data: committeesData, error: committeesError } = await supabase
-        .from('representative_committees')
-        .select('id, committee_name, role, is_current, start_date, end_date')
-        .eq('representative_id', representativeRow.id)
-        .order('is_current', { ascending: false })
-        .order('committee_name', { ascending: true });
-
-      if (!committeesError && Array.isArray(committeesData)) {
-        response.committees = committeesData;
-      }
-    }
-
-    if (includeActivities) {
-      const { data: activityData, error: activityError } = await supabase
-        .from('representative_activity')
-        .select('id, type, title, description, date, source, source_url, url')
-        .eq('representative_id', representativeRow.id)
-        .order('date', { ascending: false })
-        .limit(10);
-
-      if (!activityError && Array.isArray(activityData)) {
-        response.activities = activityData;
-      }
+    if (includeActivities && !activitiesRes.error && Array.isArray(activitiesRes.data)) {
+      response.activities = activitiesRes.data;
     }
 
     // Filter fields if requested

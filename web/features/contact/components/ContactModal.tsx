@@ -26,7 +26,7 @@ import {
 import React, { useState, useEffect, useMemo, useCallback, useRef } from 'react';
 
 import { useRepresentativeCtaAnalytics } from '@/features/civics/hooks/useRepresentativeCtaAnalytics';
-import { formatElectionDate } from '@/features/civics/utils/civicsCountdownUtils';
+import { formatElectionDateStable } from '@/features/civics/utils/civicsCountdownUtils';
 import { useFeatureFlag } from '@/features/pwa/hooks/useFeatureFlags';
 
 import { useAccessibleDialog } from '@/lib/accessibility/useAccessibleDialog';
@@ -351,7 +351,7 @@ export default function ContactModal({
                       <span className="font-medium">{election.name}</span>
                       <span className="ml-1">
                         {t('contact.modal.elections.date', {
-                          date: formatElectionDate(election.election_day, currentLanguage),
+                          date: formatElectionDateStable(election.election_day),
                         })}
                       </span>
                     </span>

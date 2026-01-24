@@ -1,4 +1,5 @@
 import { fetchRecentBillsForPerson } from '../clients/openstates.js';
+import { deriveJurisdictionFilter } from '../enrich/state.js';
 import { collectActiveRepresentatives, type CollectOptions } from '../ingest/openstates/index.js';
 import type { CanonicalRepresentative } from '../ingest/openstates/people.js';
 import { fetchFederalRepresentatives, type FetchFederalOptions } from '../ingest/supabase/representatives.js';
@@ -101,7 +102,11 @@ export async function syncActivityForRepresentatives(
 
   for (const rep of eligible) {
     try {
-      const bills = await fetchRecentBillsForPerson(rep.openstatesId, { limit });
+      const jurisdiction = deriveJurisdictionFilter(rep);
+      const fetchOptions: { limit: number; jurisdiction?: string; query?: string } = { limit };
+      if (jurisdiction) fetchOptions.jurisdiction = jurisdiction;
+      if (!jurisdiction) fetchOptions.query = rep.name || rep.openstatesId || undefined;
+      const bills = await fetchRecentBillsForPerson(rep.openstatesId || '', fetchOptions);
       if (!dryRun) {
         await syncRepresentativeActivity(rep, { bills });
       }

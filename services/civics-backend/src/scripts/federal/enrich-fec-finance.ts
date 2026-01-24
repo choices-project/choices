@@ -393,7 +393,7 @@ async function upsertFinance(rows: FinanceUpsertRow[]) {
 
 async function updateRepresentativeMetadata(
   rep: RepresentativeRow,
-  finance: FinanceUpsertRow,
+  _finance: FinanceUpsertRow,
   qualityScore: number,
 ) {
   const client = getSupabaseClient();

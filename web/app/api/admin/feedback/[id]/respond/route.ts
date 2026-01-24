@@ -9,6 +9,7 @@ import {
   validationError,
   notFoundError,
 } from '@/lib/api';
+import { NOTIFICATION_LOG_SELECT_COLUMNS } from '@/lib/api/response-builders';
 import { devLog } from '@/lib/utils/logger';
 
 import type { NextRequest } from 'next/server';
@@ -93,7 +94,7 @@ export const POST = withErrorHandling(async (
       },
       status: 'sent',
     })
-    .select()
+    .select(NOTIFICATION_LOG_SELECT_COLUMNS)
     .single();
 
   if (notificationError) {

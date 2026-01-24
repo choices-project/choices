@@ -32,6 +32,12 @@ Deliverables: ✅ coverage report + TODO follow-ups logged inline where future w
 - [x] **Current-only guarantee**  
   Documented in the verification plan; SQL function already filters `is_current = true`.
 
+- [ ] **Term / next_election verification**  
+  `sync_representatives_from_openstates` sets `term_start_date` and `term_end_date` from OpenStates roles (`start_date` / `end_date`). `next_election_date` is **not** populated by the merge. Populate via state/federal enrich or derive from `term_end_date` where applicable. Validate that `term_end_date` and `next_election_date` are set for current terms when running QA (e.g. `ingest:qa`, `tools:inspect:schema`).
+
+- [x] **Representative activity audit**  
+  Canonical `representative_activity` = **bills only** (`type: 'bill'`). See `src/persist/activity.ts`. Run `npm run tools:audit:activity` to report non‑bill or `Election:…` rows; `npm run tools:audit:activity -- --fix` to delete them. Now included in `ingest:qa`. Activity rows store sponsorship (primary/cosponsor) and votes when available (see `persist/activity.ts`).
+
 Deliverables: docs updated; remaining work is to build fixture-driven staging tests and live smoke-test harness.
 
 ---
@@ -66,7 +72,8 @@ Deliverables: implementation merged; outstanding item is regenerating shared typ
 
 - [x] Refresh operator docs (`docs/civics-backend-quickstart.md`, operations guide) with preview/enrichment guidance.  
 - [x] Verification recipe lives in `docs/persistence-verification-plan.md`.  
-- [ ] Summarise ingest progress in `docs/CURRENT_STATUS.md` & backlog outstanding work.  
+- [x] Summarise ingest progress in `docs/CURRENT_STATUS.md` & backlog outstanding work.  
+  See `docs/CURRENT_STATUS.md`; update as backlog items close.  
 - [ ] Archive/deprecate legacy scripts once SQL-first replacements are ubiquitous.
 
 Deliverables: docs largely refreshed; need status roll-up + archival sweep.

@@ -5,9 +5,9 @@
  * This includes query optimization, connection management, and performance monitoring.
  */
 
-import { getSupabaseServerClient } from '@/utils/supabase/server'
-
+import { VOTES_SELECT_COLUMNS } from '@/lib/api/response-builders'
 import { isFeatureEnabled } from '@/lib/core/feature-flags'
+import { getSupabaseServerClient } from '@/utils/supabase/server'
 import { smartCache } from '@/lib/database/smart-cache'
 import { minimalTelemetry } from '@/lib/telemetry/minimal'
 import { logger } from '@/lib/utils/logger'
@@ -474,7 +474,7 @@ export class QueryOptimizer {
     const result = await this.supabase
       .from('votes')
       .insert(votes)
-      .select()
+      .select(VOTES_SELECT_COLUMNS)
 
     const duration = Date.now() - startTime
     queryMonitor.recordQuery('INSERT votes batch', duration)

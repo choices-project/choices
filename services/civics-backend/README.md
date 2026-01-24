@@ -1,8 +1,10 @@
 # Civics Backend Ingest
 
-The Civics Backend is a standalone service that keeps Supabase stocked with accurate representative data (contacts, committees, bill activity, finance) sourced from OpenStates and the FEC. You do not need to touch the web app to operate it—just load the environment file, run the provided scripts, and verify the results.
+The Civics Backend is a **standalone ingest-only service** that keeps Supabase stocked with accurate representative data (contacts, committees, bill activity, elections, finance) sourced from OpenStates, FEC, and Google Civic. It writes into Supabase; it does **not** serve users. All user-facing civics data comes from Supabase. The only external API users touch is **address lookup** (handled by the web app’s `/api/v1/civics/address-lookup` endpoint).
 
-If you are new to the project or prefer a checklist-style walk-through, start with **[`docs/civics-backend-quickstart.md`](../../docs/civics-backend-quickstart.md)**. The remainder of this README gives additional detail for operators who want to understand how pieces fit together.
+You do not need to touch the web app to operate the ingest—just load the environment file, run the provided scripts, and verify the results.
+
+If you are new to the project or prefer a checklist-style walk-through, start with **[`docs/archive/reference/civics/civics-backend-quickstart.md`](../../docs/archive/reference/civics/civics-backend-quickstart.md)**. The remainder of this README gives additional detail for operators who want to understand how pieces fit together.
 
 ---
 
@@ -14,7 +16,7 @@ If you are new to the project or prefer a checklist-style walk-through, start wi
 ---
 
 ## 2. Setup at a glance
-1. Copy `env.example` to `.env.local` and provide:
+1. Copy `env.example` to `.env` in `services/civics-backend/` and provide:
    - `NEXT_PUBLIC_SUPABASE_URL`
    - `SUPABASE_SERVICE_ROLE_KEY`
    - `OPENSTATES_API_KEY`, `FEC_API_KEY`, and any other API keys you have access to.
@@ -27,7 +29,7 @@ If you are new to the project or prefer a checklist-style walk-through, start wi
    ```
 3. Confirm OpenStates YAML files exist under `data/openstates-people/data` (or set `OPENSTATES_PEOPLE_DIR` to a custom path).
 
-> **Remember:** keep `.env.local` out of version control. The CLI automatically loads it via `dotenv`.
+> **Remember:** keep `.env` out of version control. Scripts load it via `dotenv/config`.
 
 ---
 
@@ -54,12 +56,13 @@ All commands accept `--states`, `--limit`, and `--dry-run` for safe testing. Fin
 ---
 
 ## 4. What happens under the hood
+- **Ingest-only.** This service fetches from external APIs (OpenStates, FEC, Google Civic) and **writes** into Supabase. The web app serves users **only** from Supabase (and from the address-lookup endpoint, which is the sole user-facing external API).
 - **Stage loader** (`src/scripts/openstates/stage-openstates.ts`) ingests the raw YAML into staging tables.
 - **SQL merge** (`sync_representatives_from_openstates`) updates `representatives_core` plus contacts, social, photos, provenance, and quality metrics.
 - **Post-merge activity sync** replays OpenStates bill data into `representative_activity` (unless you set `SKIP_ACTIVITY_SYNC`).
 - **Federal enrichers** (`src/scripts/federal/*`) hydrate Congress.gov IDs and FEC data separately from the YAML ingest.
 - **State refreshers** (`state:sync:contacts` / `social` / `photos` / `committees` / `activity` / `data-sources` / `google-civic` / `google-elections`) remain available for surgical reruns while we continue expanding the SQL-first flow.
-- **Shared helpers** live in `@choices/civics-shared` so the ingest service and orchestrator stay in lockstep.
+- **Shared helpers** live in `@choices/civics-shared` so the ingest service and web app stay in lockstep.
 
 The `src/scripts/` directory is now organised around the ingest lifecycle:
 - `openstates/` – people YAML staging and SQL merge orchestration.
@@ -77,7 +80,7 @@ Each writer uses replace-by-source semantics: rows inserted with `source = 'open
 | --- | --- | --- |
 | `npm run openstates:ingest` | Pull latest OpenStates data, merge into Supabase, refresh bill activity | Requires `.env.local` and local YAML |
 | `npm run ingest:qa` | Verify schema alignment, duplicate canonicals, and preview records | Fails fast with actionable guidance |
-| `npm run preview` | Show sample representatives without writing anything | Use `--states` / `--limit` |
+| `npm run preview` | Sample from `representatives_core` (total, by level, N rows). Used by `ingest:qa`. | `--limit=N`, `--states=X,Y`. Use `--pipeline` for pipeline-based federal/state preview. |
 | `npm run federal:enrich:finance` | Fetch FEC totals & contributors and update Supabase rows | Records “no data” placeholders when FEC has nothing |
 | `npm run federal:enrich:congress` | Hydrate missing bioguide, Congress.gov, and GovInfo IDs | Honors `--dry-run` for change previews |
 | `npm run state:sync:committees` | Rebuild committee memberships from OpenStates roles | Automatically run post-merge coverage coming soon |
@@ -91,6 +94,7 @@ Each writer uses replace-by-source semantics: rows inserted with `source = 'open
 | `npm run tools:report:duplicates` / `npm run tools:fix:duplicates` | Inspect and repair duplicate canonicals | Always re-run `ingest:qa` afterward |
 | `npm run tools:audit:crosswalk` / `npm run tools:fix:crosswalk` | Validate canonical ID mappings | Keeps external IDs aligned |
 | `npm run tools:inspect:schema` | Print live Supabase column definitions | Useful before changing ingest logic |
+| `npm run tools:audit:activity` | Report non‑bill / `Election:…` rows in `representative_activity` | Use `-- --fix` to delete them; canonical = bills only |
 | `npm run state:sync:social` / `npm run state:sync:contacts` / `npm run state:sync:photos` | Rebuild targeted tables from OpenStates YAML | Support `--dry-run`, `--states`, `--limit` |
 
 For the full list—including `openstates:stage`, `openstates:merge`, and development helpers—inspect `package.json` or the **Operations Guide** linked below.
@@ -98,7 +102,7 @@ For the full list—including `openstates:stage`, `openstates:merge`, and develo
 ---
 
 ## 6. Quality guarantees & troubleshooting
-- **QA is mandatory.** If `npm run ingest:qa` fails, follow the instructions it prints or consult the troubleshooting tables in `docs/civics-backend-operations.md`.
+- **QA is mandatory.** If `npm run ingest:qa` fails, follow the instructions it prints or consult the troubleshooting tables in `docs/archive/reference/civics/civics-backend-operations.md`.
 - **Dry-runs are your friend.** Every legacy sync/enrich command honors `--dry-run` for safe previews.
 - **Chunked Supabase queries** are built-in; large `.in()` calls won’t overflow URLs.
 - **Bill activity metrics** (`processed/total/failed`) appear after each merge so you can confirm OpenStates API calls succeeded.
@@ -106,12 +110,18 @@ For the full list—including `openstates:stage`, `openstates:merge`, and develo
 
 ---
 
-## 7. Further reading
-- [`docs/civics-backend-quickstart.md`](../../docs/civics-backend-quickstart.md) – step-by-step checklist for non-technical operators.
-- [`docs/civics-backend-operations.md`](../../docs/civics-backend-operations.md) – deeper architecture notes, command catalogue, troubleshooting.
-- [`docs/civics-ingest-checklist.md`](../../docs/civics-ingest-checklist.md) – printable pre-ingest → post-ingest checklist.
-- [`docs/civics-ingest-supabase-plan.md`](../../docs/civics-ingest-supabase-plan.md) – table-by-table roadmap for remaining Supabase integrations.
-- [`services/civics-backend/env.example`](./env.example) – reference environment file.
+## 7. Schema & RPC verification (Supabase MCP)
+Use **Supabase MCP** (`list_tables`, `execute_sql`, `get_advisors`) to verify civics schema, RPCs, and functions. See [`docs/supabase-mcp-verification.md`](./docs/supabase-mcp-verification.md) for the exact checks and SQL. Run after schema changes or before major ingest runs.
+
+---
+
+## 8. Further reading
+- [`docs/supabase-mcp-verification.md`](./docs/supabase-mcp-verification.md) – Supabase MCP checks for civics schema, RPCs, functions.
+- [`docs/archive/reference/civics/civics-backend-quickstart.md`](../../docs/archive/reference/civics/civics-backend-quickstart.md) – step-by-step checklist for non-technical operators.
+- [`docs/archive/reference/civics/civics-backend-operations.md`](../../docs/archive/reference/civics/civics-backend-operations.md) – deeper architecture notes, command catalogue, troubleshooting.
+- [`docs/archive/reference/civics/civics-ingest-checklist.md`](../../docs/archive/reference/civics/civics-ingest-checklist.md) – printable pre-ingest → post-ingest checklist.
+- [`docs/archive/reference/civics/civics-ingest-supabase-plan.md`](../../docs/archive/reference/civics/civics-ingest-supabase-plan.md) – table-by-table roadmap for remaining Supabase integrations.
+- [`env.example`](./env.example) – reference environment file (copy to `.env` in this directory; scripts load it via `dotenv`).
 
 Keep these resources updated whenever scripts gain new features or data contracts change—clarity for the next operator is part of the deliverable.
 

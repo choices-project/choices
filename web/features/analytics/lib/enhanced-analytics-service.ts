@@ -4,7 +4,15 @@
  * Created: 2025-10-27
  */
 
-
+import {
+  FEATURE_USAGE_SELECT_COLUMNS,
+  FEEDBACK_SELECT_COLUMNS,
+  PLATFORM_ANALYTICS_SELECT_COLUMNS,
+  POLL_DEMOGRAPHIC_INSIGHTS_SELECT_COLUMNS,
+  SITE_MESSAGE_SELECT_COLUMNS,
+  SYSTEM_HEALTH_SELECT_COLUMNS,
+  USER_SESSIONS_SELECT_COLUMNS,
+} from '@/lib/api/response-builders';
 import { logger } from '@/lib/utils/logger';
 
 import type { Database, Json } from '@/types/database';
@@ -92,7 +100,7 @@ export class EnhancedAnalyticsService {
       // Prefer precomputed demographic insights when available
       const { data: insights } = await this.supabase
         .from('poll_demographic_insights')
-        .select('*')
+        .select(POLL_DEMOGRAPHIC_INSIGHTS_SELECT_COLUMNS)
         .eq('poll_id', pollId)
         .maybeSingle();
 
@@ -171,14 +179,14 @@ export class EnhancedAnalyticsService {
       // Get session data from our new user_sessions table
       const { data: sessionData } = await this.supabase
         .from('user_sessions')
-        .select('*')
+        .select(USER_SESSIONS_SELECT_COLUMNS)
         .eq('session_id', sessionId)
         .single<UserSessionRow>();
 
       // Get feature usage for this session
       const { data: featureUsage } = await this.supabase
         .from('feature_usage')
-        .select('*')
+        .select(FEATURE_USAGE_SELECT_COLUMNS)
         .eq('session_id', sessionId)
         .order('timestamp', { ascending: false });
 
@@ -284,7 +292,7 @@ export class EnhancedAnalyticsService {
   private async getPlatformMetricsForPoll(pollId: string): Promise<PlatformAnalyticsRow[]> {
     const { data } = await this.supabase
       .from('platform_analytics')
-      .select('*')
+      .select(PLATFORM_ANALYTICS_SELECT_COLUMNS)
       .eq('dimensions->poll_id', pollId)
       .order('timestamp', { ascending: false })
       .limit(10);
@@ -295,7 +303,7 @@ export class EnhancedAnalyticsService {
   private async getSessionAnalytics(_pollId: string): Promise<UserSessionRow[]> {
     const { data } = await this.supabase
       .from('user_sessions')
-      .select('*')
+      .select(USER_SESSIONS_SELECT_COLUMNS)
       .gte('last_activity', new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString())
       .order('last_activity', { ascending: false });
 
@@ -305,7 +313,7 @@ export class EnhancedAnalyticsService {
   private async getFeatureUsageAnalytics(_pollId: string): Promise<FeatureUsageRow[]> {
     const { data } = await this.supabase
       .from('feature_usage')
-      .select('*')
+      .select(FEATURE_USAGE_SELECT_COLUMNS)
       .gte('timestamp', new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString())
       .order('timestamp', { ascending: false });
 
@@ -315,7 +323,7 @@ export class EnhancedAnalyticsService {
   async getSystemHealthContext(): Promise<SystemHealthRow[]> {
     const { data } = await this.supabase
       .from('system_health')
-      .select('*')
+      .select(SYSTEM_HEALTH_SELECT_COLUMNS)
       .order('last_check', { ascending: false });
 
     return (data ?? []) as SystemHealthRow[];
@@ -326,7 +334,7 @@ export class EnhancedAnalyticsService {
 
     const { data } = await this.supabase
       .from('user_sessions')
-      .select('*')
+      .select(USER_SESSIONS_SELECT_COLUMNS)
       .eq('user_id', userId)
       .order('started_at', { ascending: false })
       .limit(10);
@@ -339,7 +347,7 @@ export class EnhancedAnalyticsService {
 
     const { data } = await this.supabase
       .from('feature_usage')
-      .select('*')
+      .select(FEATURE_USAGE_SELECT_COLUMNS)
       .eq('user_id', userId)
       .order('timestamp', { ascending: false })
       .limit(20);
@@ -352,7 +360,7 @@ export class EnhancedAnalyticsService {
 
     const { data } = await this.supabase
       .from('platform_analytics')
-      .select('*')
+      .select(PLATFORM_ANALYTICS_SELECT_COLUMNS)
       .eq('dimensions->user_id', userId)
       .order('timestamp', { ascending: false })
       .limit(10);
@@ -498,7 +506,7 @@ export class EnhancedAnalyticsService {
     try {
       const { data, error } = await this.supabase
         .from('site_messages')
-        .select('*')
+        .select(SITE_MESSAGE_SELECT_COLUMNS)
         .eq('is_active', true)
         .contains('target_audience', [targetAudience])
         .lte('start_date', new Date().toISOString())
@@ -542,7 +550,7 @@ export class EnhancedAnalyticsService {
       const { data, error } = await this.supabase
         .from('user_sessions')
         .insert(payload)
-        .select();
+        .select(USER_SESSIONS_SELECT_COLUMNS);
 
       if (error) throw error;
       return (data ?? null) as UserSessionRow[] | null;
@@ -620,12 +628,12 @@ export class EnhancedAnalyticsService {
         recentFeedback,
         activeSiteMessages
       ] = await Promise.all([
-        this.supabase.from('platform_analytics').select('*'),
-        this.supabase.from('user_sessions').select('*').eq('is_active', true),
-        this.supabase.from('feature_usage').select('*'),
-        this.supabase.from('system_health').select('*'),
-        this.supabase.from('feedback').select('*').order('created_at', { ascending: false }).limit(5),
-        this.supabase.from('site_messages').select('*').eq('is_active', true)
+        this.supabase.from('platform_analytics').select(PLATFORM_ANALYTICS_SELECT_COLUMNS),
+        this.supabase.from('user_sessions').select(USER_SESSIONS_SELECT_COLUMNS).eq('is_active', true),
+        this.supabase.from('feature_usage').select(FEATURE_USAGE_SELECT_COLUMNS),
+        this.supabase.from('system_health').select(SYSTEM_HEALTH_SELECT_COLUMNS),
+        this.supabase.from('feedback').select(FEEDBACK_SELECT_COLUMNS).order('created_at', { ascending: false }).limit(5),
+        this.supabase.from('site_messages').select(SITE_MESSAGE_SELECT_COLUMNS).eq('is_active', true)
       ]);
 
       const eventRows = (analyticsEvents.data ?? []) as PlatformAnalyticsRow[];

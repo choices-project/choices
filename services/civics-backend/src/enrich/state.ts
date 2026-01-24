@@ -169,7 +169,11 @@ function buildContactSnapshot(
   };
 }
 
-function deriveJurisdictionFilter(canonical: CanonicalRepresentative): string | undefined {
+/**
+ * Derive OpenStates bills API jurisdiction filter from a canonical representative.
+ * Used when fetching bills for activity sync and state enrichment. Export for reuse.
+ */
+export function deriveJurisdictionFilter(canonical: CanonicalRepresentative): string | undefined {
   const primaryRole = canonical.currentRoles[0];
   const jurisdiction = primaryRole?.jurisdiction ?? null;
   if (jurisdiction) {
@@ -177,7 +181,7 @@ function deriveJurisdictionFilter(canonical: CanonicalRepresentative): string | 
   }
 
   if (canonical.state) {
-    return `state:${canonical.state.toLowerCase()}`;
+    return `ocd-jurisdiction/country:us/state:${canonical.state.toLowerCase()}`;
   }
 
   return undefined;

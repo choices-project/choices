@@ -403,6 +403,16 @@ Experts suggest this social media activity could influence traditional media cov
 ];
 
 // ============================================================================
+// EXPLICIT SELECT COLUMNS (avoid select('*'))
+// ============================================================================
+
+const BREAKING_NEWS_SELECT =
+  'id, headline, summary, full_story, source_url, source_name, source_reliability, category, urgency, sentiment, entities, metadata, created_at, updated_at';
+
+const NEWS_SOURCE_SELECT =
+  'id, name, domain, reliability, bias, type, api_endpoint, api_key, rate_limit, is_active, last_updated, error_count, success_rate';
+
+// ============================================================================
 // REAL-TIME NEWS SERVICE
 // ============================================================================
 
@@ -457,7 +467,7 @@ export class RealTimeNewsService {
       const { data, error } = await (supabaseClient as any)
         .from('breaking_news')
         .insert([this.mapBreakingNewsToDB(story as any)])
-        .select()
+        .select(BREAKING_NEWS_SELECT)
         .single();
 
       if (error) throw error;
@@ -498,7 +508,7 @@ export class RealTimeNewsService {
         .from('news_sources')
         .update(this.mapNewsSourceToDB(updates as any))
         .eq('id', id)
-        .select()
+        .select(NEWS_SOURCE_SELECT)
         .single();
 
       if (error) throw error;

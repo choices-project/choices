@@ -77,8 +77,13 @@ export const GET = withErrorHandling(async (request: NextRequest) => {
         // Initialize privacy-aware query builder
         const queryBuilder = new PrivacyAwareQueryBuilder(supabase);
 
-    // Get opted-in users with location data
-    const { users } = await queryBuilder.getDemographics();
+    const [demographicsRes, { data: civicActions }, { data: representatives }] = await Promise.all([
+      queryBuilder.getDemographics(),
+      supabase.from('civic_actions').select('id, target_district'),
+      supabase.from('representatives_core').select('id, district')
+    ]);
+
+    const { users } = demographicsRes;
 
     // Group by district
     const districtGroups = new Map<string, any[]>();
@@ -110,17 +115,7 @@ export const GET = withErrorHandling(async (request: NextRequest) => {
       }
     });
 
-    // Get civic actions count per district
-    const { data: civicActions } = await supabase
-      .from('civic_actions')
-      .select('id, target_district');
-
-    // Count representatives per district
-    const { data: representatives } = await supabase
-      .from('representatives_core')
-      .select('id, district');
-
-    // Build heatmap entries
+    // Build heatmap entries (civicActions, representatives from parallel fetch above)
     const heatmap = Array.from(districtGroups.entries())
       .map(([districtKey, districtUsers]) => {
         const userCount = districtUsers.length;

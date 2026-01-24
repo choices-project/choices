@@ -31,7 +31,10 @@ export const GET = withErrorHandling(async (request: NextRequest) => {
 
   const today = formatISODateOnly(nowISO());
 
-  const [{ data: elections, error: electionsErr }, { error: repsErr }] = await Promise.all([
+  const [
+    { data: elections, error: electionsErr },
+    { count: repsCount, error: repsCountErr }
+  ] = await Promise.all([
     (supabase as any)
       .from('civic_elections')
       .select('election_id, election_day')
@@ -39,13 +42,8 @@ export const GET = withErrorHandling(async (request: NextRequest) => {
       .order('election_day', { ascending: true }),
     (supabase as any)
       .from('representatives_core')
-      .select('id, name, office')
-      .limit(1) // count below
+      .select('id', { count: 'exact', head: true })
   ]);
-
-  const { count: repsCount } = await (supabase as any)
-    .from('representatives_core')
-    .select('*', { count: 'exact', head: true });
 
   const electionCount = Array.isArray(elections) ? elections.length : 0;
   const latestElection = Array.isArray(elections) && elections.length > 0 ? elections[elections.length - 1].election_day : null;
@@ -71,7 +69,7 @@ export const GET = withErrorHandling(async (request: NextRequest) => {
     },
     representatives: {
       count: repsCount ?? 0,
-      error: repsErr ? repsErr.message : null
+      error: repsCountErr ? repsCountErr.message : null
     }
   });
 });

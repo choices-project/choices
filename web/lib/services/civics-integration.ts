@@ -19,8 +19,9 @@ Representative,
   RepresentativeCommittee
 } from '@/types/representative';
 
-// Note: This service only queries Supabase - it does NOT call external APIs.
-// All external API calls are handled by the backend service at /services/civics-backend.
+// Note: This service only queries Supabase. All user-facing civics data comes from Supabase.
+// The civics-backend (services/civics-backend) is ingest-only: it writes to Supabase.
+// The only user-facing external API is address lookup (/api/v1/civics/address-lookup).
 
 export class CivicsIntegrationService {
   private cache: Map<string, { data: any; timestamp: number }> = new Map();
@@ -223,7 +224,7 @@ export class CivicsIntegrationService {
 
       const { data: crosswalk, error} = await supabase
         .from('id_crosswalk')
-        .select('*')
+        .select('id, entity_type, canonical_id, source, source_id, attrs, created_at, updated_at')
         .in('canonical_id', canonicalIds.filter((id): id is string => id !== null));
 
       if (error) {
@@ -332,20 +333,22 @@ export class CivicsIntegrationService {
         updated_at: photo.updated_at
       })) ?? [],
 
-      activities: rep.representative_activity?.map((activity: any) => ({
-        id: activity.id,
-        representative_id: activity.representative_id,
-        type: activity.type,
-        title: activity.title,
-        description: activity.description,
-        date: activity.date,
-        source: activity.source,
-        source_url: activity.source_url,
-        url: activity.url,
-        metadata: activity.metadata,
-        created_at: activity.created_at,
-        updated_at: activity.updated_at
-      })) ?? [],
+      activities: (rep.representative_activity ?? [])
+        .filter((a: { type?: string }) => a.type === 'bill')
+        .map((activity: any) => ({
+          id: activity.id,
+          representative_id: activity.representative_id,
+          type: activity.type,
+          title: activity.title,
+          description: activity.description,
+          date: activity.date,
+          source: activity.source,
+          source_url: activity.source_url,
+          url: activity.url,
+          metadata: activity.metadata,
+          created_at: activity.created_at,
+          updated_at: activity.updated_at
+        })),
 
       committees: committees.get(rep.id) ?? [],
 
