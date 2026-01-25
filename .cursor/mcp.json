@@ -5,6 +5,17 @@
     },
     "vercel": {
       "url": "https://mcp.vercel.com"
+    },
+    "govinfo": {
+      "command": "/Users/alaughingkitsune/src/Choices/.cursor/govinfo-mcp/.venv/bin/python3",
+      "args": [
+        "-m",
+        "app.server"
+      ],
+      "cwd": "/Users/alaughingkitsune/src/Choices/.cursor/govinfo-mcp",
+      "env": {
+        "GOVINFO_API_KEY": "${GOVINFO_API_KEY}"
+      }
     }
   }
 }

@@ -51,6 +51,13 @@ export type Representative = {
   term_end_date?: string;
   next_election_date?: string;
 
+  // Status Tracking
+  status?: 'active' | 'inactive' | 'historical';
+  replaced_by_id?: number;
+  status_reason?: string;
+  status_changed_at?: string;
+  is_active?: boolean; // Deprecated: use status instead
+
   // Data Quality
   data_quality_score: number;
   verification_status: 'verified' | 'pending' | 'failed';

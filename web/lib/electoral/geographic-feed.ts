@@ -139,7 +139,7 @@ export class GeographicElectoralFeed {
       const today = formatISODateOnly(nowISO());
 
       // civic_elections schema (columns): election_id, name, ocd_division_id, election_day, fetched_at, raw_payload
-      let query = (supabase as any)
+      let query: any = (supabase as any)
         .from('civic_elections')
         .select('election_id, name, ocd_division_id, election_day')
         .gte('election_day', today)
@@ -376,6 +376,8 @@ export class GeographicElectoralFeed {
           })
           .map((cp) => {
             const repId = cp.representative_id != null ? String(cp.representative_id) : `candidate:${cp.id}`;
+            const socialMedia: Record<string, string> =
+              cp.social != null && typeof cp.social === 'object' ? cp.social : {};
             return {
               id: repId,
               name: cp.display_name,
@@ -385,7 +387,7 @@ export class GeographicElectoralFeed {
               email: '',
               phone: '',
               website: cp.website ?? '',
-              socialMedia: cp.social ?? {},
+              socialMedia,
               votingRecord: {
                 totalVotes: 0,
                 partyLineVotes: 0,
@@ -445,11 +447,17 @@ export class GeographicElectoralFeed {
   }
 
   /**
-   * Generate comprehensive electoral feed for user location
+   * Generate comprehensive electoral feed for user location.
+   * We never save or use address. Prefer district (e.g. CA-11 from Civics lookup or manual);
+   * zipCode opt-in only for geocode when district missing; coordinates as fallback.
    */
   async generateElectoralFeed(
     userId: string,
-    locationInput: { zipCode?: string; address?: string; coordinates?: { lat: number; lng: number } }
+    locationInput: {
+      district?: string;
+      zipCode?: string;
+      coordinates?: { lat: number; lng: number };
+    }
   ): Promise<ElectoralFeed> {
     try {
       logger.info('Generating electoral feed', { userId, locationInput });
@@ -504,15 +512,43 @@ export class GeographicElectoralFeed {
   }
 
   /**
-   * Resolve location input to comprehensive jurisdiction data
+   * Resolve location input to jurisdiction data. We never save or use address.
+   * Prefer district (Civics lookup or manual); else zipCode (opt-in) or coordinates for geocode only.
    */
-  private async resolveLocation(locationInput: { zipCode?: string; address?: string; coordinates?: { lat: number; lng: number } }): Promise<UserLocation> {
-    // Prefer real geocoding via LocationService when possible
+  private async resolveLocation(locationInput: {
+    district?: string;
+    zipCode?: string;
+    coordinates?: { lat: number; lng: number };
+  }): Promise<UserLocation> {
+    const emptyState = {
+      governor: '',
+      legislature: { house: { district: '', representative: '' }, senate: { district: '', representative: '' } },
+    };
+    const emptyLocal = {
+      county: { executive: '', commissioners: [] },
+      city: { mayor: '', council: [] },
+      school: { board: [] },
+    };
+
+    // 1. District first (from Civics lookup or manual). Never use address.
+    const district = locationInput.district?.trim();
+    if (district && district.length > 0) {
+      const stateCode = district.includes('-')
+        ? (district.split('-')[0] ?? '').toUpperCase()
+        : '';
+      return {
+        ...(locationInput.zipCode && { zipCode: locationInput.zipCode }),
+        ...(stateCode ? { stateCode } : {}),
+        federal: { house: { district, representative: '' }, senate: { senators: [] } },
+        state: emptyState,
+        local: emptyLocal,
+      };
+    }
+
+    // 2. Geocode via zipCode (opt-in) or coordinates only
     try {
       const { locationService } = await import('../services/location-service');
-      const geocodeTarget =
-        locationInput.address ??
-        (locationInput.zipCode ? String(locationInput.zipCode) : undefined);
+      const geocodeTarget = locationInput.zipCode ? String(locationInput.zipCode) : undefined;
 
       let geo = null as Awaited<ReturnType<typeof locationService.geocodeAddress>> | null;
       if (geocodeTarget) {
@@ -526,48 +562,27 @@ export class GeographicElectoralFeed {
 
       if (geo) {
         const stateCode = geo.state;
-        const district = geo.district ? `${stateCode}-${geo.district}` : undefined;
-        const result: UserLocation = {
+        const federalDistrict = geo.district ? `${stateCode}-${geo.district}` : '';
+        return {
           ...(locationInput.zipCode && { zipCode: locationInput.zipCode }),
-          ...(locationInput.address && { address: locationInput.address }),
           ...(locationInput.coordinates && { coordinates: locationInput.coordinates }),
-          stateCode,
-          // Leave jurisdictional reps empty at this stage; will be filled by orchestrator calls
-          federal: {
-            house: { district: district ?? '', representative: '' },
-            senate: { senators: [] }
-          },
-          state: {
-            governor: '',
-            legislature: {
-              house: { district: '', representative: '' },
-              senate: { district: '', representative: '' }
-            }
-          },
-          local: {
-            county: { executive: '', commissioners: [] },
-            city: { mayor: '', council: [] },
-            school: { board: [] }
-          }
+          ...(stateCode ? { stateCode } : {}),
+          federal: { house: { district: federalDistrict, representative: '' }, senate: { senators: [] } },
+          state: emptyState,
+          local: emptyLocal,
         };
-        return result;
       }
     } catch {
-      // fall through to mock if imports or calls fail
+      // fall through to mock
     }
 
-    // Fallback mock structure (only if real geocoding unavailable)
     return {
       ...(locationInput.zipCode && { zipCode: locationInput.zipCode }),
-      ...(locationInput.address && { address: locationInput.address }),
       ...(locationInput.coordinates && { coordinates: locationInput.coordinates }),
       stateCode: 'CA',
       federal: { house: { district: 'CA-12', representative: '' }, senate: { senators: [] } },
-      state: {
-        governor: '',
-        legislature: { house: { district: '', representative: '' }, senate: { district: '', representative: '' } }
-      },
-      local: { county: { executive: '', commissioners: [] }, city: { mayor: '', council: [] }, school: { board: [] } }
+      state: emptyState,
+      local: emptyLocal,
     };
   }
 
@@ -594,11 +609,18 @@ export class GeographicElectoralFeed {
         }
       }
 
-      // Get state officials
-      if (location.state && typeof location.state === 'object' && 'legislature' in location.state) {
-        const state = location.state as { legislature: { house: { representative: string } } };
-        if (state.legislature.house.representative) {
-          const stateRep = await this.orchestrator.getRepresentative(state.legislature.house.representative);
+      // Get state officials (state is object with legislature; narrow to avoid string | undefined)
+      const stateLevel = location.state;
+      if (
+        stateLevel != null &&
+        typeof stateLevel === 'object' &&
+        'legislature' in stateLevel &&
+        stateLevel.legislature != null
+      ) {
+        const house = (stateLevel.legislature as { house?: { representative?: string } }).house;
+        const repId = house?.representative;
+        if (repId) {
+          const stateRep = await this.orchestrator.getRepresentative(repId);
           if (stateRep) {
             officials.state.push(await this.enrichRepresentative(stateRep, 'state', 'house'));
           }
@@ -814,7 +836,6 @@ export class GeographicElectoralFeed {
       stateCode: location.stateCode,
       zipCode: location.zipCode,
       hasCoordinates: Boolean(location.coordinates),
-      hasAddress: Boolean(location.address)
     };
   }
 
@@ -832,13 +853,9 @@ export class GeographicElectoralFeed {
   ): Promise<Array<{ type: 'question' | 'endorsement' | 'concern' | 'suggestion'; target: string; description: string; urgency: 'high' | 'medium' | 'low' }>> {
     const opportunities = [];
 
-    // Log location context for engagement opportunities
+    // Log location context for engagement opportunities (avoid logging full state object)
     logger.debug('Generating engagement opportunities', {
-      location: {
-        state: location.state,
-        city: location.city,
-        zipCode: location.zipCode
-      },
+      location: this.getLocationSummary(location),
       officialsCount: {
         federal: currentOfficials.federal.length,
         state: currentOfficials.state.length,
@@ -891,13 +908,17 @@ export class GeographicElectoralFeed {
     // Calculate "Walk the Talk" score
     const walkTheTalkScore = await this.calculateWalkTheTalkScore(representative.id);
 
+    const socialMedia: Record<string, string> =
+      representative.socialMedia != null && typeof representative.socialMedia === 'object'
+        ? (representative.socialMedia as Record<string, string>)
+        : {};
     return {
         id: representative.id,
         name: representative.name,
         party: representative.party,
         office: `${chamber} ${level}`,
         jurisdiction: representative.state,
-        socialMedia: representative.socialMedia ?? {},
+        socialMedia,
       votingRecord: {
         totalVotes: votes.length,
         partyLineVotes: votes.filter(v => v.partyLineVote).length,

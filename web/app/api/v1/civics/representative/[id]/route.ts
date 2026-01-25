@@ -229,7 +229,7 @@ export const GET = withErrorHandling(async (
       .from('representatives_core')
       .select(selectFields.join(','))
       .eq('id', repId)
-      .eq('is_active', true)
+      .eq('status', 'active') // Use status field instead of is_active
       .maybeSingle();
 
     if (repError) {

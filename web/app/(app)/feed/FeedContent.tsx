@@ -8,7 +8,8 @@ import { useFormattedDistrict } from '@/features/profile/hooks/useUserDistrict';
 import { AuthGuard } from '@/components/business/auth/AuthGuard';
 import { ErrorBoundary } from '@/components/shared/ErrorBoundary';
 
-import { useUser } from '@/lib/stores';
+
+import { useUser, useUserProfile } from '@/lib/stores';
 import { useAppActions } from '@/lib/stores/appStore';
 import { logger } from '@/lib/utils/logger';
 
@@ -35,7 +36,14 @@ export default function FeedContent() {
   // #endregion
 
   const user = useUser();
+  const profile = useUserProfile();
   const userDistrict = useFormattedDistrict();
+  const profileInterests = React.useMemo(() => {
+    if (!profile) return [];
+    const concerns = profile.primary_concerns ?? [];
+    const focus = profile.community_focus ?? [];
+    return [...new Set([...concerns, ...focus])].filter(Boolean).slice(0, 5);
+  }, [profile]);
 
   // #region agent log - Track FeedContent hydration
   React.useEffect(() => {
@@ -144,6 +152,7 @@ export default function FeedContent() {
                 maxItems: 50,
                 userDistrict,
                 ...(user?.id ? { userId: user.id } : {}),
+                ...(profileInterests.length ? { profileInterests } : {}),
               }}
             />
           </Suspense>

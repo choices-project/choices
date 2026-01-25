@@ -53,7 +53,7 @@ export class CivicsIntegrationService {
           representative_social_media(*),
           representative_activity(*)
         `)
-        .eq('is_active', true)
+        .eq('status', 'active') // Use status field instead of is_active
         .not('name', 'ilike', '%test%'); // Exclude test data
 
       // Apply filters

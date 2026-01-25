@@ -31,18 +31,18 @@ import type { Representative } from '@/types/representative';
 
 /**
  * User Profile Component
- * 
+ *
  * Enhanced profile management for onboarding:
  * - Address and state management
  * - Representative lookup and display
  * - Data persistence and updates
- * 
+ *
  * Features:
  * - Address input and validation
  * - State selection
  * - Representative data display
  * - State managed via shared stores
- * 
+ *
  * @param {UserProfileProps} props - Component props
  * @returns {JSX.Element} User profile interface
  */
@@ -55,7 +55,7 @@ export default function UserProfile({ onRepresentativesUpdate, onClose }: UserPr
   const newAddress = useUserNewAddress();
   const addressLoading = useUserAddressLoading();
   const savedSuccessfully = useUserSavedSuccessfully();
-  
+
   // Get actions from userStore
   const {
     setCurrentAddress,
@@ -66,7 +66,7 @@ export default function UserProfile({ onRepresentativesUpdate, onClose }: UserPr
     setAddressLoading,
     setSavedSuccessfully
   } = useUserActions();
-  
+
   // CRITICAL FIX: Use useShallow for store subscriptions to prevent infinite render loops
   const profileLocation = useProfileStore(
     useShallow((state) => profileSelectors.location(state))
@@ -92,7 +92,7 @@ export default function UserProfile({ onRepresentativesUpdate, onClose }: UserPr
     if (profileLocation?.state) {
       setCurrentStateRef.current(profileLocation.state);
     }
-  }, [profileLocation?.state]);  
+  }, [profileLocation?.state]);
 
   const handleAddressUpdateLocal = async () => {
     setAddressLoadingRef.current(true);
@@ -118,14 +118,17 @@ export default function UserProfile({ onRepresentativesUpdate, onClose }: UserPr
       if (!repsResponse.ok) throw new Error('Failed to load representatives');
       const repsResult = await repsResponse.json();
       const normalizedRepresentatives = extractRepresentatives(repsResult);
-      
-      // Update state
-      setCurrentAddressRef.current(newAddress);
+
+      const districtDisplay =
+        (jurisdiction.district
+          ? `${jurisdiction.state}-${jurisdiction.district}`
+          : jurisdiction.state) ?? '';
+
+      setCurrentAddressRef.current(districtDisplay);
       setRepresentativesRef.current(normalizedRepresentatives);
-      
-      // Notify parent component
+
       onRepresentativesUpdate(normalizedRepresentatives);
-      
+
       setShowAddressFormRef.current(false);
       setNewAddressRef.current('');
       setSavedSuccessfullyRef.current(true);
@@ -146,14 +149,14 @@ export default function UserProfile({ onRepresentativesUpdate, onClose }: UserPr
       if (!response.ok) throw new Error('State lookup failed');
       const result = await response.json();
       const normalizedRepresentatives = extractRepresentatives(result);
-      
+
       // Update state
       setCurrentStateRef.current(state);
       setRepresentativesRef.current(normalizedRepresentatives);
-      
+
       // Notify parent component
       onRepresentativesUpdate(normalizedRepresentatives);
-      
+
       setSavedSuccessfullyRef.current(true);
       setTimeout(() => setSavedSuccessfullyRef.current(false), 3000);
     } catch (error) {
@@ -205,12 +208,12 @@ export default function UserProfile({ onRepresentativesUpdate, onClose }: UserPr
               <MapPinIcon className="w-5 h-5 mr-2 text-blue-500" />
               Your Location
             </h3>
-            
+
             {currentAddress ? (
               <div className="space-y-3">
                 <div className="flex items-center justify-between">
                   <div>
-                    <p className="text-sm text-gray-600">Address</p>
+                    <p className="text-sm text-gray-600">District</p>
                     <p className="font-medium text-gray-900">{currentAddress}</p>
                   </div>
                   <button
@@ -256,13 +259,13 @@ export default function UserProfile({ onRepresentativesUpdate, onClose }: UserPr
                 <UserGroupIcon className="w-5 h-5 mr-2 text-green-500" />
                 Your Representatives ({representatives.length})
               </h3>
-              
+
               <div className="space-y-3">
                 {representatives.slice(0, 5).map((rep: Representative, index: number) => (
                   <div key={index} className="flex items-center space-x-3 p-3 bg-white rounded-lg">
                     {rep.primary_photo_url ? (
-                      <Image 
-                        src={rep.primary_photo_url} 
+                      <Image
+                        src={rep.primary_photo_url}
                         alt={rep.name}
                         width={40}
                         height={40}
@@ -280,8 +283,8 @@ export default function UserProfile({ onRepresentativesUpdate, onClose }: UserPr
                       <p className="text-sm text-gray-600">{rep.office}</p>
                     </div>
                     <span className={`px-2 py-1 rounded-full text-xs font-medium ${
-                      rep.party === 'Democratic' 
-                        ? 'bg-blue-100 text-blue-800' 
+                      rep.party === 'Democratic'
+                        ? 'bg-blue-100 text-blue-800'
                         : rep.party === 'Republican'
                         ? 'bg-red-100 text-red-800'
                         : 'bg-gray-100 text-gray-800'
@@ -332,11 +335,11 @@ export default function UserProfile({ onRepresentativesUpdate, onClose }: UserPr
           </div>
         </div>
 
-        {/* Address Update Form */}
+        {/* District lookup form — address used only for lookup; never stored */}
         {showAddressForm && (
           <div className="absolute inset-0 bg-white rounded-2xl p-6">
             <div className="flex items-center justify-between mb-6">
-              <h3 className="text-lg font-semibold text-gray-900">Update Address</h3>
+              <h3 className="text-lg font-semibold text-gray-900">Find your district</h3>
               <button
                 onClick={() => setShowAddressFormRef.current(false)}
                 className="text-gray-400 hover:text-gray-600"
@@ -346,14 +349,14 @@ export default function UserProfile({ onRepresentativesUpdate, onClose }: UserPr
                 </svg>
               </button>
             </div>
-            
+
             <form onSubmit={(e) => {
               e.preventDefault();
               handleAddressUpdateLocal();
             }} className="space-y-4">
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Your Address
+                  Address <span className="text-gray-500 font-normal">(used only to look up district; not stored)</span>
                 </label>
                 <input
                   type="text"
@@ -364,16 +367,16 @@ export default function UserProfile({ onRepresentativesUpdate, onClose }: UserPr
                   required
                 />
               </div>
-              
+
               <div className="flex space-x-3">
                 <button
                   type="submit"
                   disabled={addressLoading}
                   className="flex-1 bg-blue-600 text-white py-3 px-4 rounded-lg hover:bg-blue-700 disabled:opacity-50 transition-colors"
                 >
-                  {addressLoading ? 'Updating...' : 'Update Address'}
+                  {addressLoading ? 'Looking up...' : 'Find district'}
                 </button>
-                
+
                 <button
                   type="button"
                   onClick={() => setShowAddressFormRef.current(false)}

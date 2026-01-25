@@ -41,8 +41,19 @@ export const POST = withErrorHandling(async (
     return notFoundError('Poll not found');
   }
 
-  if (poll.created_by !== user.id) {
-    return forbiddenError('Only the poll creator can close this poll');
+  const isCreator = poll.created_by === user.id;
+  if (isCreator) {
+    // Creator may close; no profile check needed
+  } else {
+    const { data: profile } = await supabase
+      .from('user_profiles')
+      .select('is_admin')
+      .eq('user_id', user.id)
+      .maybeSingle();
+    const isAdmin = profile?.is_admin === true;
+    if (!isAdmin) {
+      return forbiddenError('Only the poll creator or an admin can close this poll');
+    }
   }
 
   if (poll.status === 'closed') {

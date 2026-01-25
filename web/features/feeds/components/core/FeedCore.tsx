@@ -18,8 +18,11 @@
  */
 
 import { HashtagIcon, MoonIcon, SunIcon } from '@heroicons/react/24/outline';
-import { MapPin, Plus, RefreshCw } from 'lucide-react';
+import { MapPin, Plus, RefreshCw, Users, Vote } from 'lucide-react';
+import Link from 'next/link';
 import React, { useState, useCallback, useEffect, useRef } from 'react';
+
+import type { ElectoralFeedUI } from '@/features/feeds/components/providers/FeedDataProvider';
 
 import { DistrictIndicator } from '@/components/feeds/DistrictBadge';
 import { EnhancedEmptyState } from '@/components/shared/EnhancedEmptyState';
@@ -33,6 +36,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { cn } from '@/lib/utils';
 
 import { useI18n } from '@/hooks/useI18n';
+
 
 type FeedItem = {
   id: string;
@@ -71,6 +75,10 @@ type FeedCoreProps = {
   className?: string;
   onLoadMore?: () => void;
   hasMore?: boolean;
+  electoralFeed?: ElectoralFeedUI | null;
+  electoralLoading?: boolean;
+  electoralError?: string | null;
+  onElectoralRefresh?: () => Promise<void>;
 };
 
 /**
@@ -95,7 +103,11 @@ export default function FeedCore({
   onDistrictFilterToggle,
   className = '',
   onLoadMore,
-  hasMore = false
+  hasMore = false,
+  electoralFeed = null,
+  electoralLoading = false,
+  electoralError = null,
+  onElectoralRefresh,
 }: FeedCoreProps) {
   const { t } = useI18n();
   const [hashtagInput, setHashtagInput] = useState('');
@@ -106,6 +118,9 @@ export default function FeedCore({
   const [isClient, setIsClient] = useState(false);
   const [isPulling, setIsPulling] = useState(false);
   const [pullDistance, setPullDistance] = useState(0);
+  // Electoral tab "load more" limits (officials and races)
+  const [officialsLimit, setOfficialsLimit] = useState(5);
+  const [racesLimit, setRacesLimit] = useState(5);
 
   const observerRef = useRef<IntersectionObserver | null>(null);
   const loadMoreRef = useRef<HTMLDivElement>(null);
@@ -134,6 +149,22 @@ export default function FeedCore({
       setIsDarkMode(isDark);
     }
   }, []);
+
+  // Auto-enable district filter when switching to Community tab (location-based feed)
+  useEffect(() => {
+    if (activeTab !== 'community' || !userDistrict || districtFilterEnabled) return;
+    onDistrictFilterToggle();
+  }, [activeTab, userDistrict, districtFilterEnabled, onDistrictFilterToggle]);
+
+  // Reset electoral "load more" limits when district changes (new feed)
+  const prevDistrictRef = useRef(userDistrict);
+  useEffect(() => {
+    if (prevDistrictRef.current !== userDistrict) {
+      prevDistrictRef.current = userDistrict ?? null;
+      setOfficialsLimit(5);
+      setRacesLimit(5);
+    }
+  }, [userDistrict]);
 
   // Infinite scroll
   useEffect(() => {
@@ -438,7 +469,7 @@ export default function FeedCore({
 
       {/* Tabs */}
       <Tabs value={activeTab} onValueChange={setActiveTab} className="mb-6">
-        <TabsList className="grid w-full grid-cols-3">
+        <TabsList className="grid w-full grid-cols-5">
           <TabsTrigger
             id="feed-tab"
             value="feed"
@@ -446,6 +477,14 @@ export default function FeedCore({
             aria-controls="feed-panel"
           >
             {t('feeds.core.tabs.feed')}
+          </TabsTrigger>
+          <TabsTrigger
+            id="community-tab"
+            value="community"
+            data-testid="community-tab"
+            aria-controls="community-panel"
+          >
+            {t('feeds.core.tabs.community') || 'Community'}
           </TabsTrigger>
           <TabsTrigger
             id="polls-tab"
@@ -462,6 +501,14 @@ export default function FeedCore({
             aria-controls="analytics-panel"
           >
             {t('feeds.core.tabs.analytics')}
+          </TabsTrigger>
+          <TabsTrigger
+            id="electoral-tab"
+            value="electoral"
+            data-testid="electoral-tab"
+            aria-controls="electoral-panel"
+          >
+            {t('feeds.core.tabs.electoral') || 'Electoral'}
           </TabsTrigger>
         </TabsList>
 
@@ -615,6 +662,89 @@ export default function FeedCore({
           )}
         </TabsContent>
 
+        <TabsContent value="community" id="community-panel" role="tabpanel" aria-labelledby="community-tab">
+          {!userDistrict ? (
+            <div className="text-center py-16 px-4" role="status" aria-live="polite">
+              <div className="max-w-lg mx-auto">
+                <div className="mb-6 flex justify-center">
+                  <div className="rounded-full bg-emerald-100 dark:bg-emerald-900/30 p-4">
+                    <Users className="h-12 w-12 text-emerald-600 dark:text-emerald-400" aria-hidden="true" />
+                  </div>
+                </div>
+                <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-2">
+                  {t('feeds.core.empty.community.noLocation.title') || 'Community feed'}
+                </h3>
+                <p className="text-gray-600 dark:text-gray-400 mb-6">
+                  {t('feeds.core.empty.community.noLocation.description') ||
+                    'Add your location or district to see polls and civic actions close to you.'}
+                </p>
+                <Button asChild variant="default" size="lg">
+                  <Link href="/civics" className="inline-flex items-center gap-2">
+                    <MapPin className="h-4 w-4" />
+                    {t('feeds.core.empty.community.noLocation.cta') || 'Set location in Civics'}
+                  </Link>
+                </Button>
+              </div>
+            </div>
+          ) : (
+            <>
+              {isLoading && feeds.length === 0 ? (
+                <div className="space-y-4 py-8" role="status" aria-busy="true" aria-live="polite" data-testid="community-loading-skeleton">
+                  {[1, 2, 3].map((i) => (
+                    <Card key={i} className="animate-pulse">
+                      <CardHeader>
+                        <div className="h-6 bg-gray-200 rounded w-3/4 dark:bg-gray-700" />
+                        <div className="h-4 bg-gray-200 rounded w-1/2 mt-2 dark:bg-gray-700" />
+                      </CardHeader>
+                      <CardContent>
+                        <div className="h-4 bg-gray-200 rounded w-full mb-2 dark:bg-gray-700" />
+                        <div className="h-4 bg-gray-200 rounded w-5/6 dark:bg-gray-700" />
+                      </CardContent>
+                    </Card>
+                  ))}
+                </div>
+              ) : feeds.length === 0 ? (
+                <EnhancedEmptyState
+                  icon={<Users className="h-12 w-12 text-gray-400 dark:text-gray-500" />}
+                  title={t('feeds.core.empty.community.noResults.title') || 'No community feeds yet'}
+                  description={t('feeds.core.empty.community.noResults.description') || 'No polls or civic actions in your area right now. Try the main Feed or add hashtags.'}
+                  tip="District filter is on — you can turn it off in Content Filters to see all feeds."
+                  isFiltered={true}
+                  primaryAction={{ label: t('feeds.core.empty.default.refresh') || 'Refresh', onClick: onRefresh }}
+                />
+              ) : (
+                <div className="space-y-4" role="feed">
+                  {feeds.map(feed => (
+                    <Card key={feed.id} className="hover:shadow-lg transition-shadow">
+                      <CardHeader>
+                        <div className="flex items-start justify-between gap-2">
+                          <CardTitle className="flex-1">{feed.title}</CardTitle>
+                          {feed.district && (
+                            <DistrictIndicator feedItemDistrict={feed.district} {...(userDistrict ? { userDistrict } : {})} size="sm" />
+                          )}
+                        </div>
+                        <div className="flex gap-2 mt-2">
+                          {feed.tags.map(tag => (
+                            <Badge key={tag} variant="secondary">#{tag}</Badge>
+                          ))}
+                        </div>
+                      </CardHeader>
+                      <CardContent>
+                        <p className="text-gray-700 dark:text-gray-300 mb-4">{feed.content}</p>
+                        <div className="flex gap-4 mt-4">
+                          <Button variant={feed.userInteraction.liked ? 'default' : 'outline'} size="sm" onClick={() => onLike(feed.id)}>👍 {feed.engagement.likes}</Button>
+                          <Button variant={feed.userInteraction.bookmarked ? 'default' : 'outline'} size="sm" onClick={() => onBookmark(feed.id)}>🔖 {t('feeds.core.actions.bookmark')}</Button>
+                          <Button variant="outline" size="sm" onClick={() => onShare(feed.id)}>🔗 {t('feeds.core.actions.share')}</Button>
+                        </div>
+                      </CardContent>
+                    </Card>
+                  ))}
+                </div>
+              )}
+            </>
+          )}
+        </TabsContent>
+
         <TabsContent value="polls" id="polls-panel" role="tabpanel" aria-labelledby="polls-tab">
           <div className="text-center py-16 px-4" role="status" aria-live="polite">
             <div className="max-w-md mx-auto">
@@ -671,6 +801,190 @@ export default function FeedCore({
               </p>
             </div>
           </div>
+        </TabsContent>
+
+        <TabsContent value="electoral" id="electoral-panel" role="tabpanel" aria-labelledby="electoral-tab">
+          {!userDistrict ? (
+            <div className="text-center py-16 px-4" role="status" aria-live="polite">
+              <div className="max-w-lg mx-auto">
+                <div className="mb-6 flex justify-center">
+                  <div className="rounded-full bg-blue-100 dark:bg-blue-900/30 p-4">
+                    <Vote className="h-12 w-12 text-blue-600 dark:text-blue-400" aria-hidden="true" />
+                  </div>
+                </div>
+                <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-2">
+                  {t('feeds.core.empty.electoral.title') || 'Electoral feed'}
+                </h3>
+                <p className="text-gray-600 dark:text-gray-400 mb-6">
+                  {t('feeds.core.empty.electoral.description') ||
+                    'Races, officials, and key issues in your district. Add your location or district in Civics to see your electoral feed.'}
+                </p>
+                <Button asChild variant="default" size="lg">
+                  <Link href="/civics" className="inline-flex items-center gap-2">
+                    <MapPin className="h-4 w-4" />
+                    {t('feeds.core.empty.electoral.cta') || 'Go to Civics'}
+                  </Link>
+                </Button>
+              </div>
+            </div>
+          ) : electoralLoading && !electoralFeed ? (
+            <div className="space-y-4 py-8" role="status" aria-busy="true" aria-label={t('feeds.core.electoral.loadingAria') || 'Loading electoral feed'}>
+              {[1, 2, 3].map((i) => (
+                <Card key={i} className="animate-pulse">
+                  <CardHeader>
+                    <div className="h-6 bg-gray-200 rounded w-3/4 dark:bg-gray-700" />
+                    <div className="h-4 bg-gray-200 rounded w-1/2 mt-2 dark:bg-gray-700" />
+                  </CardHeader>
+                  <CardContent>
+                    <div className="h-4 bg-gray-200 rounded w-full mb-2 dark:bg-gray-700" />
+                    <div className="h-4 bg-gray-200 rounded w-5/6 dark:bg-gray-700" />
+                  </CardContent>
+                </Card>
+              ))}
+            </div>
+          ) : electoralError && !electoralFeed ? (
+            <div className="py-8 px-4">
+              <EnhancedErrorDisplay
+                title={t('feeds.core.empty.electoral.title') || 'Electoral feed'}
+                message={electoralError}
+                onRetry={onElectoralRefresh ? () => void onElectoralRefresh() : undefined}
+              />
+            </div>
+          ) : electoralFeed ? (
+            <div className="space-y-6 py-6">
+              <div className="flex items-center justify-between px-1">
+                <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100">
+                  {t('feeds.core.empty.electoral.title') || 'Electoral feed'}
+                  {userDistrict && (
+                    <span className="ml-2 text-sm font-normal text-gray-500 dark:text-gray-400">
+                      {userDistrict}
+                    </span>
+                  )}
+                </h3>
+                {onElectoralRefresh && (
+                  <Button variant="outline" size="sm" onClick={() => void onElectoralRefresh()} aria-label={t('feeds.core.electoral.refresh')}>
+                    <RefreshCw className="h-4 w-4 mr-1" aria-hidden="true" />
+                    {t('feeds.core.electoral.refresh')}
+                  </Button>
+                )}
+              </div>
+              {(() => {
+                const off = electoralFeed.currentOfficials;
+                const federal = (off?.federal ?? []) as Array<{ id?: string; name?: string; party?: string; office?: string }>;
+                const state = (off?.state ?? []) as Array<{ id?: string; name?: string; party?: string; office?: string }>;
+                const allOfficials = [...federal, ...state];
+                const hasOfficials = allOfficials.length > 0;
+                const races = [...(electoralFeed.activeRaces ?? []), ...(electoralFeed.upcomingElections ?? [])] as Array<{ raceId?: string; office?: string; jurisdiction?: string; electionDate?: string }>;
+                const issues = (electoralFeed.keyIssues ?? []) as Array<{ issue: string; importance?: string; candidates?: string[] }>;
+                const opportunities = (electoralFeed.engagementOpportunities ?? []) as Array<{ type: string; target: string; description: string; urgency?: string }>;
+                const officialsVisible = allOfficials.slice(0, officialsLimit);
+                const racesVisible = races.slice(0, racesLimit);
+                const hasMoreOfficials = allOfficials.length > officialsLimit;
+                const hasMoreRaces = races.length > racesLimit;
+                return (
+                  <>
+                    {hasOfficials && (
+                      <Card>
+                        <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                          <CardTitle className="text-base">{t('feeds.core.electoral.officials')}</CardTitle>
+                          <Button variant="ghost" size="sm" asChild>
+                            <Link href="/civics" className="text-sm text-blue-600 dark:text-blue-400 hover:underline">
+                              {t('feeds.core.electoral.viewAllCivics')}
+                            </Link>
+                          </Button>
+                        </CardHeader>
+                        <CardContent className="space-y-3">
+                          {officialsVisible.map((r, i) => (
+                            <div key={r.id ?? `off-${i}`} className="flex justify-between items-start text-sm gap-2">
+                              {r.id ? (
+                                <Link
+                                  href={`/representatives/${r.id}`}
+                                  className="font-medium text-gray-900 dark:text-gray-100 hover:text-blue-600 dark:hover:text-blue-400 hover:underline truncate flex-1 min-w-0"
+                                  aria-label={t('feeds.core.electoral.viewRepresentative') + (r.name ? `: ${r.name}` : '')}
+                                >
+                                  {r.name ?? '—'}
+                                </Link>
+                              ) : (
+                                <span className="font-medium text-gray-900 dark:text-gray-100">{r.name ?? '—'}</span>
+                              )}
+                              <Badge variant="secondary" className="shrink-0">
+                                {r.office ?? r.party ?? '—'}
+                              </Badge>
+                            </div>
+                          ))}
+                          {hasMoreOfficials ? (
+                            <Button variant="outline" size="sm" onClick={() => setOfficialsLimit((n) => n + 5)} className="w-full">
+                              {t('feeds.core.electoral.loadMore')}
+                            </Button>
+                          ) : null}
+                        </CardContent>
+                      </Card>
+                    )}
+                    {races.length > 0 && (
+                      <Card>
+                        <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                          <CardTitle className="text-base">{t('feeds.core.electoral.races')}</CardTitle>
+                          <Button variant="ghost" size="sm" asChild>
+                            <Link href="/civics" className="text-sm text-blue-600 dark:text-blue-400 hover:underline">
+                              {t('feeds.core.electoral.viewAllCivics')}
+                            </Link>
+                          </Button>
+                        </CardHeader>
+                        <CardContent className="space-y-2">
+                          {racesVisible.map((r, i) => (
+                            <div key={r.raceId ?? `race-${i}`} className="text-sm text-gray-700 dark:text-gray-300">
+                              {r.office ?? 'Race'} — {r.jurisdiction ?? ''} {r.electionDate ?? ''}
+                            </div>
+                          ))}
+                          {hasMoreRaces ? (
+                            <Button variant="outline" size="sm" onClick={() => setRacesLimit((n) => n + 5)} className="w-full mt-2">
+                              {t('feeds.core.electoral.loadMore')}
+                            </Button>
+                          ) : null}
+                        </CardContent>
+                      </Card>
+                    )}
+                    {issues.length > 0 && (
+                      <Card>
+                        <CardHeader>
+                          <CardTitle className="text-base">{t('feeds.core.electoral.issues')}</CardTitle>
+                        </CardHeader>
+                        <CardContent className="space-y-2">
+                          {issues.slice(0, 5).map((issue, i) => (
+                            <div key={`issue-${i}-${(issue.issue ?? '').slice(0, 20)}`} className="text-sm">
+                              <span className="font-medium text-gray-900 dark:text-gray-100">{issue.issue}</span>
+                              {issue.candidates?.length ? (
+                                <span className="text-gray-600 dark:text-gray-400"> — {issue.candidates.slice(0, 3).join(', ')}</span>
+                              ) : null}
+                            </div>
+                          ))}
+                        </CardContent>
+                      </Card>
+                    )}
+                    {opportunities.length > 0 && (
+                      <Card>
+                        <CardHeader>
+                          <CardTitle className="text-base">{t('feeds.core.electoral.engagement')}</CardTitle>
+                        </CardHeader>
+                        <CardContent className="space-y-2">
+                          {opportunities.slice(0, 5).map((o, i) => (
+                            <div key={`opp-${i}-${o.target}`} className="text-sm text-gray-700 dark:text-gray-300">
+                              <span className="font-medium">{o.type}</span>: {o.description}
+                            </div>
+                          ))}
+                        </CardContent>
+                      </Card>
+                    )}
+                    {!hasOfficials && races.length === 0 && issues.length === 0 && opportunities.length === 0 && (
+                      <p className="text-sm text-gray-500 dark:text-gray-400 text-center py-4" role="status">
+                        {t('feeds.core.electoral.noData')}
+                      </p>
+                    )}
+                  </>
+                );
+              })()}
+            </div>
+          ) : null}
         </TabsContent>
       </Tabs>
 

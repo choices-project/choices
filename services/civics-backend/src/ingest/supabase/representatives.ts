@@ -13,6 +13,7 @@ export interface SupabaseRepresentativeRow {
   openstates_id: string | null;
   canonical_id: string | null;
   is_active: boolean | null;
+  status: 'active' | 'inactive' | 'historical' | null;
   bioguide_id: string | null;
   fec_id: string | null;
   google_civic_id: string | null;
@@ -167,7 +168,7 @@ function buildCanonicalFromRow(row: SupabaseRepresentativeRow): CanonicalReprese
     openstatesId: row.openstates_id ?? '',
     canonicalKey: deriveCanonicalKey(row),
     state: row.state ?? '',
-    isRetired: row.is_active === false,
+    isRetired: row.status === 'inactive' || row.status === 'historical' || row.is_active === false,
     supabaseRepresentativeId: row.id ?? null,
     name: row.name,
     givenName: null,
@@ -345,10 +346,10 @@ export async function fetchFederalRepresentatives(
   let query = client
     .from('representatives_core')
     .select(
-      `id,name,office,level,state,party,district,openstates_id,canonical_id,is_active,bioguide_id,fec_id,google_civic_id,congress_gov_id,wikipedia_url,ballotpedia_url,twitter_handle,facebook_url,instagram_handle,linkedin_url,youtube_channel,primary_email,primary_phone,primary_website,primary_photo_url,term_start_date,term_end_date,next_election_date`,
+      `id,name,office,level,state,party,district,openstates_id,canonical_id,is_active,status,bioguide_id,fec_id,google_civic_id,congress_gov_id,wikipedia_url,ballotpedia_url,twitter_handle,facebook_url,instagram_handle,linkedin_url,youtube_channel,primary_email,primary_phone,primary_website,primary_photo_url,term_start_date,term_end_date,next_election_date`,
     )
     .eq('level', 'federal')
-    .eq('is_active', true)
+    .eq('status', 'active')
     .order('state', { ascending: true })
     .limit(limit);
 

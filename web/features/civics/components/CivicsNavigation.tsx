@@ -73,11 +73,11 @@ export default function CivicsNavigation({
 
   const openAddressForm = useCallback(() => {
     setShowAddressFormRef.current(true);
-  }, []);  
+  }, []);
 
   const closeAddressForm = useCallback(() => {
     setShowAddressFormRef.current(false);
-  }, []);  
+  }, []);
 
   const toggleMobileMenu = useCallback(() => {
     setIsMobileMenuOpen((open) => !open);
@@ -94,28 +94,19 @@ export default function CivicsNavigation({
     }
 
     try {
-      const results = await Promise.allSettled([
-        handleAddressUpdateRef.current(trimmedAddress),
-        (async () => {
-          const response = await findByLocationRef.current({ address: trimmedAddress });
-          if (!response?.success) {
-            throw new Error(response?.error ?? t('civics.navigation.errors.fetchFailed'));
-          }
-        })()
-      ]);
-
-      const rejection = results.find((result) => result.status === 'rejected');
-      if (rejection && rejection.status === 'rejected') {
-        throw rejection.reason;
+      const districtResult = await handleAddressUpdateRef.current(trimmedAddress);
+      const response = await findByLocationRef.current({ address: trimmedAddress });
+      if (!response?.success) {
+        throw new Error(response?.error ?? t('civics.navigation.errors.fetchFailed'));
       }
 
-      onAddressUpdateRef.current?.(trimmedAddress);
+      onAddressUpdateRef.current?.(districtResult?.districtDisplay ?? '');
       setNewAddressRef.current('');
       setShowAddressFormRef.current(false);
     } catch (error) {
       logger.error('Address update failed:', error);
     }
-  }, [newAddress, t]);  
+  }, [newAddress, t]);
 
   useEffect(() => {
     if (isMobileMenuOpen) {
@@ -202,7 +193,7 @@ export default function CivicsNavigation({
                   <UserGroupIcon className="w-5 h-5" />
                   <span>{t('civics.navigation.links.representatives')}</span>
                 </button>
-                
+
                 <button
                   type="button"
                   onClick={openAddressForm}
@@ -368,7 +359,7 @@ export default function CivicsNavigation({
                   {t('civics.navigation.modal.description')}
                 </p>
               </div>
-              
+
               <form onSubmit={(e) => {
                 e.preventDefault();
                 void handleAddressSubmit();
@@ -387,7 +378,7 @@ export default function CivicsNavigation({
                     required
                   />
                 </div>
-                
+
                 <div className="flex space-x-3">
                   <button
                     type="submit"
@@ -398,7 +389,7 @@ export default function CivicsNavigation({
                       ? t('civics.navigation.modal.submitLoading')
                       : t('civics.navigation.modal.submit')}
                   </button>
-                  
+
                   <button
                     type="button"
                     onClick={closeAddressForm}

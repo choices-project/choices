@@ -1,22 +1,22 @@
 /**
  * FEEDS Feature Exports
- * 
+ *
  * Feature exports for feeds functionality
  * Types are now centralized in /web/types/
- * 
+ *
  * Updated: October 26, 2025
  * Status: ✅ REFACTORED
  */
 
 /**
  * Feeds Feature - Clean Exports
- * 
+ *
  * Centralized exports for all feed-related functionality
  * Provides clean API for consuming feed components and services
  */
 
 // Types - using civics types
-export type { 
+export type {
   FeedItemData,
   UserPreferences,
   EngagementData,
@@ -25,7 +25,7 @@ export type {
 } from '@/features/civics/lib/types/civics-types';
 
 // Local types
-export type { 
+export type {
   FeedItemWithScore,
   TrackEventData,
   EngagementMetadata,
@@ -52,7 +52,7 @@ export { default as HashtagPollsFeed } from './components/HashtagPollsFeed';
 // Unified Feed Component (RECOMMENDED)
 export { default as UnifiedFeedRefactored } from './components/UnifiedFeedRefactored';
 export { default as FeedCore } from './components/core/FeedCore';
-export { default as FeedDataProvider } from './components/providers/FeedDataProvider';
+export { default as FeedDataProvider, type ElectoralFeedUI } from './components/providers/FeedDataProvider';
 
 // Optional enhancers
 export { default as FeedPWAEnhancer } from './components/enhancers/FeedPWAEnhancer';
@@ -71,7 +71,7 @@ export { useFeedAnalytics } from './hooks/useFeedAnalytics';
 // InterestBasedPollFeed is server-side only (uses 'server-only' package)
 // Import directly from './lib/interest-based-feed' in API routes only
 // Types can be exported:
-export type { 
+export type {
   PersonalizedPollFeed,
   PollRecommendation,
   InterestMatch,

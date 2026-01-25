@@ -17,6 +17,7 @@ import {
   Zap,
   Flame,
 } from 'lucide-react';
+import Link from 'next/link';
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 
 import { useSystemMetrics } from '@/features/admin/lib/hooks';
@@ -278,6 +279,12 @@ export default function ComprehensiveAdminDashboard({ className = '' }: Comprehe
           </p>
         </div>
         <div className="flex items-center gap-2">
+          <Button variant="ghost" size="sm" asChild>
+            <Link href="/admin/dashboard/overview" className="inline-flex items-center gap-2">
+              <BarChart3 className="h-4 w-4" />
+              Metrics overview
+            </Link>
+          </Button>
           <Button variant="outline" onClick={handleRefresh} disabled={isRefreshing}>
             <RefreshCw className={`h-4 w-4 mr-2 ${isRefreshing ? 'animate-spin' : ''}`} />
             Refresh

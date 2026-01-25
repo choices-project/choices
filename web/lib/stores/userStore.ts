@@ -105,7 +105,7 @@ export type UserState = {
   isProfileEditing: boolean;
   profileEditErrors: ProfileEditErrorMap;
 
-  // Address and representatives
+  // Location (district only — we never store address). currentAddress holds district display e.g. "CA-11".
   currentAddress: string;
   currentState: string;
   representatives: Representative[];
@@ -173,8 +173,8 @@ export type UserActions = Pick<BaseStore, 'setLoading' | 'setError' | 'clearErro
   setNewAddress: (address: string) => void;
   setAddressLoading: (loading: boolean) => void;
   setSavedSuccessfully: (saved: boolean) => void;
-  lookupAddress: (address: string) => Promise<Representative[]>;
-  handleAddressUpdate: (address: string, temporary?: boolean) => Promise<void>;
+  lookupAddress: (address: string) => Promise<{ representatives: Representative[]; jurisdiction: { state: string; district: string | null } }>;
+  handleAddressUpdate: (address: string, temporary?: boolean) => Promise<{ districtDisplay: string } | void>;
 
   // Actions - Avatar
   setAvatarFile: (file: File | null) => void;
@@ -560,9 +560,10 @@ export const createUserActions = (
 
       const jurisdiction = result?.data?.jurisdiction ?? result?.jurisdiction ?? {};
       const stateCode = typeof jurisdiction.state === 'string' ? jurisdiction.state : null;
+      const district = typeof jurisdiction.district === 'string' ? jurisdiction.district : null;
 
       if (!stateCode) {
-        return [];
+        return { representatives: [], jurisdiction: { state: '', district: null } };
       }
 
       const repsResponse = await fetch(
@@ -574,7 +575,8 @@ export const createUserActions = (
       }
 
       const repsResult = await repsResponse.json();
-      return Array.isArray(repsResult?.data?.representatives) ? repsResult.data.representatives : [];
+      const representatives = Array.isArray(repsResult?.data?.representatives) ? repsResult.data.representatives : [];
+      return { representatives, jurisdiction: { state: stateCode, district } };
     },
 
     handleAddressUpdate: async (address: string, temporary = false) => {
@@ -584,27 +586,15 @@ export const createUserActions = (
       });
 
       try {
-        const representatives = await currentState.lookupAddress(address);
-
-        const canStoreLocation = Boolean(
-          (currentState.profile?.privacy_settings as Partial<PrivacySettings> | undefined)?.collectLocationData
-        );
+        const { representatives, jurisdiction } = await currentState.lookupAddress(address);
+        const districtDisplay = jurisdiction.district
+          ? `${jurisdiction.state}-${jurisdiction.district}`
+          : jurisdiction.state || '';
 
         setState((state) => {
           state.representatives = representatives;
-
-          if (canStoreLocation && !temporary) {
-            state.currentAddress = address;
-            logger.info('Location stored (user consented)', { address });
-          } else {
-            state.currentAddress = '';
-            if (temporary) {
-              logger.debug('Location used temporarily (not stored)', { address });
-            } else {
-              logger.debug('Location not stored (no consent)', { address });
-            }
-          }
-
+          state.currentAddress = temporary ? '' : districtDisplay;
+          state.currentState = jurisdiction.state || state.currentState;
           state.showAddressForm = false;
           state.newAddress = '';
           state.savedSuccessfully = true;
@@ -616,6 +606,11 @@ export const createUserActions = (
             state.savedSuccessfully = false;
           });
         }, 3000);
+
+        if (districtDisplay && !temporary) {
+          logger.debug('District stored (address never saved)', { state: jurisdiction.state, district: jurisdiction.district });
+        }
+        return { districtDisplay };
       } catch (error) {
         setState((state) => {
           state.addressLoading = false;

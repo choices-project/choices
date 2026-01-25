@@ -40,9 +40,12 @@
     "tools:fix:duplicates": "npm run build --silent && node build/scripts/tools/fix-duplicates.js",
     "tools:fix:crosswalk": "npm run build --silent && node build/scripts/tools/fix-crosswalk-corruption.js",
     "tools:inspect:schema": "npm run build --silent && node build/scripts/tools/inspect-schema.js",
+    "tools:investigate:ingest": "npm run build --silent && node build/scripts/tools/investigate-ingest-flows.js",
     "tools:audit:activity": "npm run build --silent && node build/scripts/tools/audit-activity.js",
     "tools:audit:terms": "npm run build --silent && node build/scripts/tools/audit-terms.js",
+    "tools:verify:migrations": "npm run build --silent && node build/scripts/tools/verify-migrations.js",
     "tools:test:bills": "npm run build --silent && node build/scripts/tools/test-bills-fetch.js",
+    "tools:test:congress": "npm run build --silent && node build/scripts/tools/test-congress.js",
 
     "ingest:openstates": "npm run openstates:ingest",
     "ingest:qa": "npm run tools:inspect:schema && npm run tools:report:duplicates && npm run tools:audit:activity && npm run tools:audit:terms && npm run openstates:coverage -- --limit=5 && npm run preview -- --limit=5",

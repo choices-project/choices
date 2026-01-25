@@ -51,7 +51,7 @@ const TIER_MATCHER = /^TIER[_-]?([0-4])$/i;
 export const TRUST_TIER_LABELS: Record<TrustTier, { name: string; description: string }> = {
   T0: { name: 'Guest', description: 'Anonymous/shared participant' },
   T1: { name: 'Verified', description: 'Email or social login verified' },
-  T2: { name: 'Trusted', description: 'Proof-of-personhood (e.g., WebAuthn)' },
+  T2: { name: 'Trusted', description: 'Passkey (WebAuthn) verified' },
   T3: { name: 'Community Leader', description: 'High-trust, highly engaged member' },
   T4: { name: 'Sentinel', description: 'Highest integrity tier with verified history' },
 };

@@ -1,6 +1,6 @@
 'use client';
 
-import PollClient from '@/app/(app)/polls/[id]/PollClient';
+import PollClient from '@/features/polls/pages/[id]/PollClient';
 
 import { AnalyticsTestBridge } from '../../_components/AnalyticsTestBridge';
 

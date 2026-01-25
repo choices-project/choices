@@ -52,6 +52,7 @@ export {
   useSession,
   useUserLoading,
   useIsAuthenticated,
+  useUserProfile,
   useUserProfileEditData,
   useUserAvatarFile,
   useUserAvatarPreview,

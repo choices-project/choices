@@ -84,7 +84,7 @@ async function fetchRepresentatives(): Promise<RepresentativeRow[]> {
     .select(
       'id,name,state,canonical_id,fec_id,bioguide_id,level',
     )
-    .eq('is_active', true)
+    .eq('status', 'active')
     .neq('level', 'local')
     .limit(2000);
 

@@ -9,7 +9,6 @@ import {
   useOnboardingStep,
   useUserActions,
   useUserAddressLoading,
-  useUserCurrentAddress,
   useUserCurrentState,
   useUserRepresentatives,
 } from '@/lib/stores';
@@ -60,8 +59,7 @@ export default function UserOnboarding({ onComplete, onSkip }: UserOnboardingPro
     clearAllData,
   } = useOnboardingActions();
 
-  // User store for address and representatives
-  const currentAddress = useUserCurrentAddress();
+  // User store for representatives and district display (we never store address)
   const currentStateValue = useUserCurrentState();
   const representatives = useUserRepresentatives();
   const addressLoading = useUserAddressLoading();
@@ -74,7 +72,7 @@ export default function UserOnboarding({ onComplete, onSkip }: UserOnboardingPro
 
   // Notification store for user feedback
   const { addNotification } = useNotificationActions();
-  
+
   // CRITICAL FIX: Use useShallow for store subscriptions to prevent infinite render loops
   const profileLocation = useProfileStore(
     useShallow((state) => profileSelectors.location(state))
@@ -87,6 +85,8 @@ export default function UserOnboarding({ onComplete, onSkip }: UserOnboardingPro
   useEffect(() => { clearAllDataRef.current = clearAllData; }, [clearAllData]);
   const setCurrentStateRef = useRef(setCurrentState);
   useEffect(() => { setCurrentStateRef.current = setCurrentState; }, [setCurrentState]);
+  const setCurrentAddressRef = useRef(setCurrentAddress);
+  useEffect(() => { setCurrentAddressRef.current = setCurrentAddress; }, [setCurrentAddress]);
   const goToStepRef = useRef(goToStep);
   useEffect(() => { goToStepRef.current = goToStep; }, [goToStep]);
   const markStepCompletedRef = useRef(markStepCompleted);
@@ -106,8 +106,9 @@ export default function UserOnboarding({ onComplete, onSkip }: UserOnboardingPro
   const completeOnboardingRef = useRef(completeOnboarding);
   useEffect(() => { completeOnboardingRef.current = completeOnboarding; }, [completeOnboarding]);
 
-  // ✅ Keep local state for component-specific concerns
+  // ✅ Keep local state for component-specific concerns. Address only for lookup; never stored.
   const selectedState = useMemo(() => profileLocation?.state ?? 'CA', [profileLocation?.state]);
+  const [addressInput, setAddressInput] = useState('');
   const [addressError, setAddressError] = useState<string | null>(null);
   const [completionPayload, setCompletionPayload] = useState<UserOnboardingResult | null>(null);
 
@@ -116,14 +117,14 @@ export default function UserOnboarding({ onComplete, onSkip }: UserOnboardingPro
     return () => {
       clearAllDataRef.current();
     };
-     
+
   }, []);
 
   useEffect(() => {
     if (profileLocation?.state) {
       setCurrentStateRef.current(profileLocation.state);
     }
-  }, [profileLocation?.state]);  
+  }, [profileLocation?.state]);
 
   const loadRepresentativesForState = async (
     state: string,
@@ -161,10 +162,6 @@ export default function UserOnboarding({ onComplete, onSkip }: UserOnboardingPro
         jurisdiction,
         representatives: representativesList,
       };
-
-      if (source === 'address' && currentAddress) {
-        payload.address = currentAddress;
-      }
 
       setCompletionPayload(payload);
 
@@ -218,7 +215,7 @@ export default function UserOnboarding({ onComplete, onSkip }: UserOnboardingPro
   };
 
   const handleAddressLookup = async () => {
-    if (!currentAddress?.trim()) {
+    if (!addressInput?.trim()) {
       setAddressError('Please enter a valid address before searching.');
       return;
     }
@@ -233,7 +230,7 @@ export default function UserOnboarding({ onComplete, onSkip }: UserOnboardingPro
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ address: currentAddress }),
+        body: JSON.stringify({ address: addressInput }),
       });
 
       const result = await response.json();
@@ -339,18 +336,18 @@ export default function UserOnboarding({ onComplete, onSkip }: UserOnboardingPro
             <p className="text-gray-600">Enter your address to see your local elected officials</p>
           </div>
 
-          <form onSubmit={(e) => {
-            e.preventDefault();
-            void handleAddressLookup();
-          }} className="space-y-4">
+            <form onSubmit={(e) => {
+              e.preventDefault();
+              void handleAddressLookup();
+            }} className="space-y-4">
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">
-                Your Address
+                Address <span className="text-gray-500 font-normal">(used only to find your district; not stored)</span>
               </label>
               <input
                 type="text"
-                value={currentAddress}
-                onChange={(e) => setCurrentAddress(e.target.value)}
+                value={addressInput}
+                onChange={(e) => setAddressInput(e.target.value)}
                 placeholder="Enter your full address"
                 className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                 required
@@ -423,7 +420,6 @@ export default function UserOnboarding({ onComplete, onSkip }: UserOnboardingPro
                   return;
                 }
                 const fallbackPayload: UserOnboardingResult = {
-                  address: currentAddress,
                   state: currentStateValue,
                   jurisdiction: null,
                   representatives,

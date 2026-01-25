@@ -19,7 +19,7 @@ async function main(): Promise<void> {
   const { count: activeTotal, error: totalErr } = await client
     .from('representatives_core')
     .select('id', { count: 'exact', head: true })
-    .eq('is_active', true);
+    .eq('status', 'active');
 
   if (totalErr) {
     console.error('Failed to count active reps:', totalErr.message);
@@ -29,7 +29,7 @@ async function main(): Promise<void> {
   const { count: missingTermEnd, error: termErr } = await client
     .from('representatives_core')
     .select('id', { count: 'exact', head: true })
-    .eq('is_active', true)
+    .eq('status', 'active')
     .is('term_end_date', null);
 
   if (termErr) {
@@ -40,7 +40,7 @@ async function main(): Promise<void> {
   const { count: missingNextElection, error: nextErr } = await client
     .from('representatives_core')
     .select('id', { count: 'exact', head: true })
-    .eq('is_active', true)
+    .eq('status', 'active')
     .is('next_election_date', null);
 
   if (nextErr) {
@@ -52,7 +52,7 @@ async function main(): Promise<void> {
   const missingTerm = missingTermEnd ?? 0;
   const missingNext = missingNextElection ?? 0;
 
-  console.log('Term / next_election audit (representatives_core, is_active=true)');
+  console.log('Term / next_election audit (representatives_core, status=active)');
   console.log(`  Active total: ${total}`);
   console.log(`  Missing term_end_date: ${missingTerm}${total > 0 ? ` (${((missingTerm / total) * 100).toFixed(1)}%)` : ''}`);
   console.log(`  Missing next_election_date: ${missingNext}${total > 0 ? ` (${((missingNext / total) * 100).toFixed(1)}%)` : ''}`);

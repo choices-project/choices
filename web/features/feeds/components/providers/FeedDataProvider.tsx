@@ -44,6 +44,7 @@ const IS_E2E_HARNESS = process.env.NEXT_PUBLIC_ENABLE_E2E_HARNESS === '1';
 
 function HarnessFeedDataProvider({
   userId,
+  profileInterests,
   enableInfiniteScroll = true,
   maxItems = 50,
   children,
@@ -82,6 +83,7 @@ function HarnessFeedDataProvider({
 
   const [selectedHashtags, setSelectedHashtags] = useState<string[]>([]);
   const [districtFilterEnabled, setDistrictFilterEnabled] = useState(false);
+  const hasPrefilledInterestsRef = useRef(false);
   const harnessEffectiveUserId = user?.id ?? userId ?? '';
   const harnessAnalyticsConfig = useMemo(
     () => ({ feedId: 'harness-feed', userId: harnessEffectiveUserId }),
@@ -179,12 +181,22 @@ function HarnessFeedDataProvider({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []); // Intentionally empty - one-time load with ref guard
 
+  // Pre-fill hashtags from profile interests (primary_concerns, community_focus) when none selected
+  useEffect(() => {
+    if (hasPrefilledInterestsRef.current || !profileInterests?.length) return;
+    setSelectedHashtags((prev) => {
+      if (prev.length > 0) return prev;
+      hasPrefilledInterestsRef.current = true;
+      return [...new Set(profileInterests)].slice(0, 5);
+    });
+  }, [profileInterests]);
+
   const handleLike = useCallback(async (itemId: string) => {
     clearErrorActionRef.current();
     try {
       const feed = feedsRef.current.find(f => f.id === itemId);
       const wasLiked = feed?.userInteraction?.liked ?? false;
-      
+
       if (wasLiked) {
         const unlikeFeedAction = useFeedsStore.getState().unlikeFeed;
         await unlikeFeedAction(itemId);
@@ -216,7 +228,7 @@ function HarnessFeedDataProvider({
     try {
       const feed = feedsRef.current.find(f => f.id === itemId);
       const wasBookmarked = feed?.userInteraction?.bookmarked ?? false;
-      
+
       if (wasBookmarked) {
         const unbookmarkFeedAction = useFeedsStore.getState().unbookmarkFeed;
         await unbookmarkFeedAction(itemId);
@@ -316,6 +328,10 @@ function HarnessFeedDataProvider({
     districtFilterEnabled,
     onDistrictFilterToggle: handleDistrictToggle,
     hasMore: showLoadMore,
+    electoralFeed: null as ElectoralFeedUI | null,
+    electoralLoading: false,
+    electoralError: null as string | null,
+    onElectoralRefresh: () => Promise.resolve(),
   };
 
   const renderedChildren = children(
@@ -363,9 +379,22 @@ function HarnessFeedDataProvider({
   );
 }
 
+/** Minimal type for electoral feed API response (avoids importing server-side electoral lib) */
+export type ElectoralFeedUI = {
+  userId: string;
+  location: { stateCode?: string; federal?: { house?: { district?: string } }; [k: string]: unknown };
+  generatedAt: string;
+  currentOfficials: { federal: unknown[]; state: unknown[]; local: unknown[] };
+  upcomingElections: unknown[];
+  activeRaces: unknown[];
+  keyIssues: Array<{ issue: string; importance: string; candidates: string[]; recentActivity: unknown[] }>;
+  engagementOpportunities: Array<{ type: string; target: string; description: string; urgency: string }>;
+};
+
 type FeedDataProviderProps = {
   userId?: string | null | undefined;
   userDistrict?: string | null;
+  profileInterests?: string[];
   enableInfiniteScroll?: boolean;
   maxItems?: number;
   children: (props: {
@@ -384,6 +413,10 @@ type FeedDataProviderProps = {
     onDistrictFilterToggle: () => void;
     onLoadMore?: () => Promise<void>;
     hasMore?: boolean;
+    electoralFeed: ElectoralFeedUI | null;
+    electoralLoading: boolean;
+    electoralError: string | null;
+    onElectoralRefresh: () => Promise<void>;
   }) => React.ReactNode;
 };
 
@@ -396,6 +429,7 @@ type FeedDataProviderProps = {
 function StandardFeedDataProvider({
   userId,
   userDistrict,
+  profileInterests,
   enableInfiniteScroll = true,
   maxItems = 50,
   children,
@@ -450,6 +484,13 @@ function StandardFeedDataProvider({
   const [liveMessage, setLiveMessage] = useState('');
   const previousFeedIdsRef = useRef<Set<string>>(new Set());
   const hasAnnouncedInitialRef = useRef(false);
+  const hasPrefilledInterestsRef = useRef(false);
+
+  // Electoral feed (when user has district)
+  const [electoralFeed, setElectoralFeed] = useState<ElectoralFeedUI | null>(null);
+  const [electoralLoading, setElectoralLoading] = useState(false);
+  const [electoralError, setElectoralError] = useState<string | null>(null);
+  const electoralFetchedForRef = useRef<string | null>(null);
 
   // Use refs for stable callbacks
   const addNotificationRef = useRef(addNotification);
@@ -477,6 +518,16 @@ function StandardFeedDataProvider({
     },
     [notifyFeedError],
   );
+
+  // Pre-fill hashtags from profile interests (primary_concerns, community_focus) when none selected
+  useEffect(() => {
+    if (hasPrefilledInterestsRef.current || !profileInterests?.length) return;
+    setSelectedHashtags((prev) => {
+      if (prev.length > 0) return prev;
+      hasPrefilledInterestsRef.current = true;
+      return [...new Set(profileInterests)].slice(0, 5);
+    });
+  }, [profileInterests]);
 
   const initialLoadRef = useRef(false);
 
@@ -545,7 +596,7 @@ function StandardFeedDataProvider({
     try {
       const feed = feedsRef.current.find(f => f.id === itemId);
       const wasLiked = feed?.userInteraction?.liked ?? false;
-      
+
       if (wasLiked) {
         const unlikeFeedAction = useFeedsStore.getState().unlikeFeed;
         await unlikeFeedAction(itemId);
@@ -583,7 +634,7 @@ function StandardFeedDataProvider({
     try {
       const feed = feedsRef.current.find(f => f.id === itemId);
       const wasBookmarked = feed?.userInteraction?.bookmarked ?? false;
-      
+
       if (wasBookmarked) {
         const unbookmarkFeedAction = useFeedsStore.getState().unbookmarkFeed;
         await unbookmarkFeedAction(itemId);
@@ -678,6 +729,59 @@ function StandardFeedDataProvider({
     });
   }, [notifyFeedError]);
 
+  const fetchElectoralFeed = useCallback(async (districtOverride?: string) => {
+    const district = (districtOverride ?? userDistrictRef.current)?.trim();
+    if (!district) {
+      setElectoralFeed(null);
+      setElectoralError(null);
+      return;
+    }
+    setElectoralLoading(true);
+    setElectoralError(null);
+    try {
+      const res = await fetch(
+        `/api/electoral/feed?district=${encodeURIComponent(district)}`,
+        { credentials: 'same-origin' }
+      );
+      const json = (await res.json()) as { success?: boolean; data?: { feed?: ElectoralFeedUI }; error?: string };
+      if (!res.ok) {
+        const err = json?.error ?? `Request failed: ${res.status}`;
+        setElectoralError(err);
+        setElectoralFeed(null);
+        return;
+      }
+      const feed = json?.data?.feed;
+      if (!feed) {
+        setElectoralError(tRef.current('feeds.core.electoral.errorNoData'));
+        setElectoralFeed(null);
+        return;
+      }
+      electoralFetchedForRef.current = district;
+      setElectoralFeed(feed as ElectoralFeedUI);
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : tRef.current('feeds.core.electoral.errorFailed');
+      setElectoralError(msg);
+      setElectoralFeed(null);
+      logger.error('Electoral feed fetch failed', err);
+    } finally {
+      setElectoralLoading(false);
+    }
+  }, []);
+
+  const onElectoralRefresh = useCallback(() => fetchElectoralFeed(), [fetchElectoralFeed]);
+
+  useEffect(() => {
+    const district = userDistrict ?? null;
+    if (!district?.trim()) {
+      electoralFetchedForRef.current = null;
+      setElectoralFeed(null);
+      setElectoralError(null);
+      return;
+    }
+    if (electoralFetchedForRef.current === district) return;
+    void fetchElectoralFeed(district);
+  }, [userDistrict, fetchElectoralFeed]);
+
   const handleLoadMore = useCallback(async () => {
     if (!enableInfiniteScroll) return;
     try {
@@ -738,7 +842,11 @@ function StandardFeedDataProvider({
     districtFilterEnabled,
     onDistrictFilterToggle: handleDistrictFilterToggle,
     ...(enableInfiniteScroll ? { onLoadMore: handleLoadMore } : {}),
-    ...(enableInfiniteScroll ? { hasMore } : {})
+    ...(enableInfiniteScroll ? { hasMore } : {}),
+    electoralFeed,
+    electoralLoading,
+    electoralError,
+    onElectoralRefresh,
   });
 
   const LiveRegion = () => (
@@ -760,6 +868,7 @@ export default function FeedDataProvider(props: FeedDataProviderProps) {
   if (IS_E2E_HARNESS) {
     const {
       userId,
+      profileInterests,
       enableInfiniteScroll = true,
       maxItems = 50,
       children,
@@ -768,6 +877,7 @@ export default function FeedDataProvider(props: FeedDataProviderProps) {
     return (
       <HarnessFeedDataProvider
         userId={userId}
+        profileInterests={profileInterests}
         enableInfiniteScroll={enableInfiniteScroll}
         maxItems={maxItems}
       >

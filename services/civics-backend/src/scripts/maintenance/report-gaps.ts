@@ -24,9 +24,9 @@ async function computeFecGaps() {
   const client = getSupabaseClient();
   const { data, error } = await client
     .from('representatives_core')
-    .select('id,name,state,district,fec_id,is_active')
+    .select('id,name,state,district,fec_id')
     .eq('level', 'federal')
-    .eq('is_active', true)
+    .eq('status', 'active')
     .not('fec_id', 'is', null)
     .not('fec_id', 'eq', '')
     .order('state', { ascending: true })

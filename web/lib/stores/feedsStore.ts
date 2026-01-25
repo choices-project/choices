@@ -162,10 +162,10 @@ const mergeUniqueFeeds = (current: FeedItem[], incoming: FeedItem[]): FeedItem[]
   return next;
 };
 
-// Default feed preferences
+// Default feed preferences — trending by default for main-facet visibility
 const defaultPreferences: FeedPreferences = {
   defaultView: 'list',
-  sortBy: 'newest',
+  sortBy: 'trending',
   itemsPerPage: 20,
   autoRefresh: true,
   refreshInterval: 15,

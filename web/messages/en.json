@@ -2115,8 +2115,10 @@
       },
       "tabs": {
         "feed": "Feed",
+        "community": "Community",
         "polls": "Polls",
-        "analytics": "Analytics"
+        "analytics": "Analytics",
+        "electoral": "Electoral"
       },
       "empty": {
         "filters": {
@@ -2139,7 +2141,26 @@
         "analytics": {
           "title": "Analytics not available",
           "description": "Feed analytics will be available once you start engaging with content. Like, share, and bookmark items to see your activity insights."
+        },
+        "electoral": {
+          "title": "Electoral feed",
+          "description": "Races, officials, and key issues in your district. Add your location or district in Civics to see your electoral feed.",
+          "cta": "Go to Civics"
         }
+      },
+      "electoral": {
+        "officials": "Current officials",
+        "races": "Races & elections",
+        "issues": "Key issues",
+        "engagement": "Engagement",
+        "refresh": "Refresh",
+        "noData": "No electoral data available for your district yet.",
+        "loadingAria": "Loading electoral feed",
+        "errorNoData": "No electoral data returned",
+        "errorFailed": "Failed to load electoral feed",
+        "viewRepresentative": "View representative",
+        "viewAllCivics": "View all in Civics",
+        "loadMore": "Load more"
       },
       "error": {
         "title": "Unable to load feed",

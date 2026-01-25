@@ -55,11 +55,6 @@ lib/governance/rfcs.ts(277,5): error TS2322: Type 'string | undefined' is not as
 lib/governance/rfcs.ts(310,5): error TS2322: Type 'string | undefined' is not assignable to type 'string'.
   Type 'undefined' is not assignable to type 'string'.
 lib/http/origin.ts(201,12): error TS2532: Object is possibly 'undefined'.
-lib/identity/proof-of-personhood.ts(404,37): error TS2345: Argument of type 'number | undefined' is not assignable to parameter of type 'number'.
-  Type 'undefined' is not assignable to type 'number'.
-lib/identity/proof-of-personhood.ts(416,21): error TS2532: Object is possibly 'undefined'.
-lib/identity/proof-of-personhood.ts(417,7): error TS2322: Type 'string | undefined' is not assignable to type 'string | null'.
-  Type 'undefined' is not assignable to type 'string | null'.
 lib/integrations/caching.ts(390,34): error TS2345: Argument of type 'CacheConfig | undefined' is not assignable to parameter of type 'CacheConfig'.
   Type 'undefined' is not assignable to type 'CacheConfig'.
 lib/integrations/google-civic/error-handling.ts(59,35): error TS2345: Argument of type 'unknown' is not assignable to parameter of type '{ status?: number; statusCode?: number; body?: unknown; data?: unknown; }'.

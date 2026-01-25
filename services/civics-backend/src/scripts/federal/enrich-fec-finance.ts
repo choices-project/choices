@@ -179,8 +179,8 @@ async function fetchRepresentatives(options: CliOptions) {
       'id,name,office,canonical_id,state,district,level,fec_id,primary_email,primary_phone,primary_website,data_sources,representative_campaign_finance!left(id,updated_at,last_filing_date,cycle,total_raised)',
     )
     .eq('level', 'federal')
-    .not('fec_id', 'is', null);
-  query = query.or('is_active.eq.true,is_active.is.null');
+    .not('fec_id', 'is', null)
+    .eq('status', 'active');
 
   if (options.state && options.state.length > 0) {
     query = query.in('state', options.state);

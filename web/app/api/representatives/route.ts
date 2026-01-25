@@ -233,7 +233,7 @@ export const GET = withErrorHandling(async (request: NextRequest) => {
   let query = supabase
     .from('representatives_core')
     .select(selectQuery, { count: 'exact' })
-    .eq('is_active', true)
+    .eq('status', 'active') // Use status field instead of is_active
     .not('name', 'ilike', '%test%');
 
   // Apply most selective filters first (better query performance)

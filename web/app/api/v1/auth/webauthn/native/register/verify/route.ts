@@ -162,7 +162,7 @@ export const POST = withErrorHandling(async (req: NextRequest) => {
         .eq('id', chal.id);
     }
 
-    // Upgrade trust tier to T2 (proof-of-personhood) if applicable
+    // Upgrade trust tier to T2 when passkey registered, if applicable
     const { data: profile } = await supabase
       .from('user_profiles')
       .select('trust_tier')
@@ -175,10 +175,7 @@ export const POST = withErrorHandling(async (req: NextRequest) => {
     if (profile && tierRank[currentTier] !== undefined && tierRank[currentTier] < targetRank) {
       await supabase
         .from('user_profiles')
-        .update(stripUndefinedDeep({
-          trust_tier: 'T2',
-          trust_tier_upgrade_date: new Date().toISOString(),
-        }))
+        .update(stripUndefinedDeep({ trust_tier: 'T2' }))
         .eq('user_id', user.id);
     }
 

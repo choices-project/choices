@@ -69,7 +69,7 @@ export const GET = withErrorHandling(async (request: NextRequest) => {
     let query = supabase
       .from('representatives_core')
       .select(selectFields.join(','))
-      .eq('is_active', true)
+      .eq('status', 'active') // Use status field instead of is_active
       .not('name', 'ilike', '%test%')
       .limit(limit);
 

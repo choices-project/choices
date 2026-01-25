@@ -1,6 +1,6 @@
 'use client';
 
-import { AlertCircle, BarChart3, Printer, Share2, Shield, Trash2, Trophy } from 'lucide-react';
+import { AlertCircle, BarChart3, Lock, Printer, Share2, Shield, Trash2, Trophy } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
@@ -34,6 +34,7 @@ import { Switch } from '@/components/ui/switch';
 
 import { useNotificationActions } from '@/lib/stores';
 import { useAppActions } from '@/lib/stores/appStore';
+import { useProfileStore } from '@/lib/stores/profileStore';
 import { cn } from '@/lib/utils';
 import { logger } from '@/lib/utils/logger';
 
@@ -105,6 +106,7 @@ export default function PollClient({ poll }: PollClientProps) {
   const { t } = useI18n();
   const { user } = useAuth();
   const router = useRouter();
+  const isAdmin = useProfileStore((s) => s.isAdmin?.() ?? false);
   const { addNotification } = useNotificationActions();
   const { setCurrentRoute, setSidebarActiveSection, setBreadcrumbs } = useAppActions();
 
@@ -170,8 +172,11 @@ export default function PollClient({ poll }: PollClientProps) {
   const [isReportOpen, setIsReportOpen] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  const [showCloseConfirm, setShowCloseConfirm] = useState(false);
+  const [isClosing, setIsClosing] = useState(false);
 
-  const isPollCreator = user?.id && poll.createdBy && user.id === poll.createdBy;
+  const isPollCreator = Boolean(user?.id && poll.createdBy && String(user.id) === String(poll.createdBy));
+  const canClosePoll = (isPollCreator || isAdmin) && (poll.status ?? 'active') === 'active';
 
   // Use refs for stable app store actions to prevent infinite re-renders
   const setCurrentRouteRef = useRef(setCurrentRoute);
@@ -574,7 +579,8 @@ export default function PollClient({ poll }: PollClientProps) {
         message: t('polls.view.notifications.voteRecorded.message'),
         duration: 3000,
       });
-      void fetchPollData();
+      await fetchPollData();
+      router.refresh();
 
       const voteId =
         typeof resultData.voteId === 'string'
@@ -618,7 +624,7 @@ export default function PollClient({ poll }: PollClientProps) {
     } finally {
       setVoting(false);
     }
-  }, [user, canVote, pollStatus, storeIsVoting, poll.id, pollDetailsForBallot, t, addNotification, recordPollEvent, fetchPollData, addVotingRecord, isMounted, setVoting, setError, setHasVoted, setHasVoteAttempted, clearVotingError, setVotingError]);
+  }, [user, canVote, pollStatus, storeIsVoting, poll.id, pollDetailsForBallot, t, addNotification, recordPollEvent, fetchPollData, addVotingRecord, isMounted, setVoting, setError, setHasVoted, setHasVoteAttempted, clearVotingError, setVotingError, router]);
 
   const handleCopyShareLink = async () => {
     if (!shareUrl) return;
@@ -700,6 +706,33 @@ export default function PollClient({ poll }: PollClientProps) {
     }
   }, [isPollCreator, poll.id, addNotification, recordPollEvent, router]);
 
+  const handleClosePoll = useCallback(async () => {
+    if (!canClosePoll || !poll.id || pollStatus !== 'active') return;
+    setIsClosing(true);
+    try {
+      const response = await fetch(`/api/polls/${poll.id}/close`, { method: 'POST', credentials: 'include' });
+      if (!response.ok) {
+        const data = await response.json().catch(() => ({}));
+        throw new Error(data?.error ?? `Failed to close poll (${response.status})`);
+      }
+      setShowCloseConfirm(false);
+      addNotification({
+        type: 'success',
+        title: 'Poll closed',
+        message: 'This poll is now closed. You can view advanced analytics.',
+        duration: 4000,
+      });
+      recordPollEvent('poll_closed', { label: poll.id, value: 1 });
+      router.refresh();
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : 'Failed to close poll';
+      addNotification({ type: 'error', title: 'Close failed', message: msg, duration: 6000 });
+      logger.error('Failed to close poll', { pollId: poll.id, error: msg });
+    } finally {
+      setIsClosing(false);
+    }
+  }, [canClosePoll, poll.id, pollStatus, addNotification, recordPollEvent, router]);
+
   return (
     <div className="max-w-4xl mx-auto p-6 space-y-6" aria-busy={loading} data-testid="poll-details">
       <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
@@ -726,6 +759,20 @@ export default function PollClient({ poll }: PollClientProps) {
           <Button type="button" variant="ghost" onClick={() => setIsReportOpen(true)}>
             <AlertCircle className="mr-2 h-4 w-4" /> Report
           </Button>
+          {canClosePoll && (
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              onClick={() => setShowCloseConfirm(true)}
+              className="gap-2 text-orange-600 hover:text-orange-700 hover:bg-orange-50 dark:text-orange-400 dark:hover:text-orange-300 dark:hover:bg-orange-900/20"
+              disabled={isClosing}
+              aria-label="Close poll"
+            >
+              <Lock className="h-4 w-4" aria-hidden="true" />
+              Close Poll
+            </Button>
+          )}
           {isPollCreator && (
             <Button
               type="button"
@@ -1013,10 +1060,10 @@ export default function PollClient({ poll }: PollClientProps) {
 
       {/* Delete Confirmation Dialog */}
       <AlertDialog open={showDeleteConfirm} onOpenChange={setShowDeleteConfirm}>
-        <AlertDialogContent>
+        <AlertDialogContent aria-describedby="delete-poll-description">
           <AlertDialogHeader>
             <AlertDialogTitle>Delete Poll</AlertDialogTitle>
-            <AlertDialogDescription>
+            <AlertDialogDescription id="delete-poll-description">
               Are you sure you want to delete &ldquo;{poll.title}&rdquo;? This action cannot be undone and will permanently remove the poll and all associated votes.
             </AlertDialogDescription>
           </AlertDialogHeader>
@@ -1028,6 +1075,28 @@ export default function PollClient({ poll }: PollClientProps) {
               className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
             >
               {isDeleting ? 'Deleting...' : 'Delete Poll'}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      {/* Close Poll Confirmation Dialog */}
+      <AlertDialog open={showCloseConfirm} onOpenChange={setShowCloseConfirm}>
+        <AlertDialogContent aria-describedby="close-poll-description">
+          <AlertDialogHeader>
+            <AlertDialogTitle>Close Poll</AlertDialogTitle>
+            <AlertDialogDescription id="close-poll-description">
+              Are you sure you want to close &ldquo;{poll.title}&rdquo;? Once closed, users will no longer be able to vote, but you&apos;ll be able to view advanced analytics. You can still delete the poll later if needed.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={isClosing}>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={handleClosePoll}
+              disabled={isClosing}
+              className="bg-orange-600 text-white hover:bg-orange-700 dark:bg-orange-500 dark:hover:bg-orange-600"
+            >
+              {isClosing ? 'Closing...' : 'Close Poll'}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>

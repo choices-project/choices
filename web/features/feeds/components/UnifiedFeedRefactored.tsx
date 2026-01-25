@@ -28,6 +28,7 @@ import FeedDataProvider from './providers/FeedDataProvider';
 type UnifiedFeedProps = {
   userId?: string;
   userDistrict?: string | null;
+  profileInterests?: string[];
   className?: string;
   enablePersonalization?: boolean;
   enableRealTimeUpdates?: boolean;
@@ -43,10 +44,12 @@ type UnifiedFeedProps = {
  * No complex state, no infinite loops
  * 
  * Enhanced: November 5, 2025 - Added district filtering support
+ * Enhanced: January 2026 - profileInterests for pre-filling hashtags (primary_concerns, community_focus)
  */
 export default function UnifiedFeedRefactored({
   userId,
   userDistrict,
+  profileInterests,
   className = '',
   enablePersonalization: _enablePersonalization = true,
   enableRealTimeUpdates: _enableRealTimeUpdates = true,
@@ -56,12 +59,13 @@ export default function UnifiedFeedRefactored({
   enableMobileOptimization: _enableMobileOptimization = true,
   showTrending: _showTrending = true,
 }: UnifiedFeedProps) {
-  logger.debug('[UnifiedFeedRefactored] Rendering', { userId, userDistrict });
+  logger.debug('[UnifiedFeedRefactored] Rendering', { userId, userDistrict, interestsCount: profileInterests?.length ?? 0 });
 
   return (
     <FeedDataProvider 
       {...(userId ? { userId } : {})}
       {...(userDistrict !== undefined ? { userDistrict } : {})}
+      {...(profileInterests?.length ? { profileInterests } : {})}
     >
       {(dataProps) => (
         <FeedCore

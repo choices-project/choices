@@ -65,11 +65,7 @@ import {
   methodNotAllowed,
 } from '@/lib/api';
 import { assertPepperConfig } from '@/lib/civics/env-guard';
-import {
-  generateAddressHMAC,
-  setJurisdictionCookie,
-  validateAddressInput,
-} from '@/lib/civics/privacy-utils';
+import { setJurisdictionCookie, validateAddressInput } from '@/lib/civics/privacy-utils';
 import { logger } from '@/lib/utils/logger';
 
 import type { NextRequest } from 'next/server';
@@ -85,17 +81,13 @@ type Jurisdiction = {
 };
 
 // -----------------------------------------------------------------------------
-// In-memory rate limiting + response cache (best-effort, per-runtime)
+// In-memory rate limiting only. We never cache by address or hash (no address saved).
 // -----------------------------------------------------------------------------
 const RATE_LIMIT_WINDOW_MS = 60_000; // 1 minute
 const RATE_LIMIT_MAX_REQUESTS = 30; // per IP per window
-const CACHE_TTL_MS = 5 * 60_000; // 5 minutes
-const CACHE_MAX_ENTRIES = 1000;
 
 type RateLimitBucket = { count: number; resetAt: number };
-const ipBuckets = new Map<string, RateLimitBucket>(); // ip -> bucket
-type CacheEntry = { value: Jurisdiction; expiresAt: number };
-const addressCache = new Map<string, CacheEntry>(); // key: hashed address
+const ipBuckets = new Map<string, RateLimitBucket>();
 
 type RateLimitResult = { allowed: boolean; retryAfterMs: number; remaining: number };
 
@@ -118,25 +110,6 @@ function applyRateLimit(ip: string): RateLimitResult {
     retryAfterMs: allowed ? 0 : Math.max(0, bucket.resetAt - now),
     remaining: Math.max(0, RATE_LIMIT_MAX_REQUESTS - bucket.count),
   };
-}
-
-function getFromCache(cacheKey: string): Jurisdiction | null {
-  const entry = addressCache.get(cacheKey);
-  if (!entry) return null;
-  if (Date.now() > entry.expiresAt) {
-    addressCache.delete(cacheKey);
-    return null;
-  }
-  return entry.value;
-}
-
-function setCache(cacheKey: string, value: Jurisdiction): void {
-  if (addressCache.size >= CACHE_MAX_ENTRIES) {
-    // drop oldest entry
-    const firstKey = addressCache.keys().next().value as string | undefined;
-    if (firstKey) addressCache.delete(firstKey);
-  }
-  addressCache.set(cacheKey, { value, expiresAt: Date.now() + CACHE_TTL_MS });
 }
 
 /**
@@ -308,9 +281,7 @@ export const POST = withErrorHandling(async (request: NextRequest) => {
     return validationError({ address: validation.error ?? 'Invalid address' });
   }
 
-  const addrHash = generateAddressHMAC(address);
-
-  // Rate limit by IP
+  // Rate limit by IP. We never cache by address or hash — no address saved.
   const clientIp = normalizeClientIp(request);
   const rateLimitResult = applyRateLimit(clientIp);
   if (!rateLimitResult.allowed) {
@@ -321,18 +292,8 @@ export const POST = withErrorHandling(async (request: NextRequest) => {
     });
   }
 
-  // Check cache
-  const cached = getFromCache(addrHash);
-  if (cached) {
-    return successResponse(
-      { jurisdiction: cached },
-      { cached: true, cacheTtlMs: Math.max(0, CACHE_TTL_MS) }
-    );
-  }
-
   try {
     const jurisdiction = await lookupJurisdictionFromExternalAPI(address);
-    setCache(addrHash, jurisdiction);
 
     const cookieData: Record<string, string> = {
       state: jurisdiction.state

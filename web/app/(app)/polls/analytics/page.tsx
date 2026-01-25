@@ -5,6 +5,7 @@ import { ArrowLeft, BarChart3, Users, Target, Award, Eye, Vote, Filter, Download
 import { useRouter } from 'next/navigation'
 import React, { useState, useEffect, useCallback } from 'react';
 
+import { EnhancedErrorDisplay } from '@/components/shared/EnhancedErrorDisplay'
 import { Alert, AlertDescription } from '@/components/ui/alert'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
@@ -263,12 +264,16 @@ export default function PollAnalyticsPage() {
 
   if (error) {
     return (
-      <div className="min-h-screen bg-gray-50">
+      <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
         <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-          <Alert>
-            <AlertCircle className="h-4 w-4" />
-            <AlertDescription>{error}</AlertDescription>
-          </Alert>
+          <EnhancedErrorDisplay
+            title="Unable to load analytics"
+            message={error}
+            details="We couldn't load poll analytics. This might be a temporary network or server issue."
+            tip="Check your connection and try again. If the problem persists, refresh the page or return to the polls list."
+            canRetry
+            onRetry={refreshAnalytics}
+          />
         </div>
       </div>
     )
