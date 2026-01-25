@@ -667,12 +667,14 @@ async function main() {
         if (!missingError && missingFecReps && missingFecReps.length > 0) {
           console.log(`   Found ${missingFecReps.length} representatives to lookup...`);
           let foundCount = 0;
+          let enrichedCount = 0;
+          const enrichedDuringLookup = new Set<number>(); // Track reps we've already enriched
           
           for (const rep of missingFecReps) {
             try {
               // Use combined function to get FEC ID + finance data in one optimized flow
               const fecOffice = rep.office === 'Senator' ? 'S' : rep.office === 'Representative' ? 'H' : undefined;
-              const { candidate } = await searchCandidateWithTotals({
+              const { candidate, totals } = await searchCandidateWithTotals({
                 name: rep.name,
                 office: fecOffice,
                 state: rep.state ?? undefined,
@@ -691,8 +693,54 @@ async function main() {
                   console.log(`   ✅ Found FEC ID for ${rep.name}: ${candidate.candidate_id}`);
                   foundCount++;
                   
-                  // If we also got totals, we can enrich immediately (optional optimization)
-                  // For now, just store the FEC ID and let the main loop handle enrichment
+                  // If we got totals, also store finance data immediately (big API savings!)
+                  if (totals) {
+                    try {
+                      // Fetch contributors (optional, but good to have)
+                      await new Promise((resolve) => setTimeout(resolve, FEC_THROTTLE_MS));
+                      let contributors: any[] = [];
+                      try {
+                        contributors = await fetchCandidateTopContributors(candidate.candidate_id, options.cycle, 5);
+                      } catch (contribError) {
+                        // Contributors are optional, continue without them
+                      }
+                      
+                      // Build finance record with the data we already have
+                      const repRow: RepresentativeRow = {
+                        id: rep.id,
+                        name: rep.name,
+                        office: rep.office ?? null,
+                        canonical_id: null,
+                        state: rep.state,
+                        district: rep.district ?? null,
+                        level: 'federal',
+                        fec_id: candidate.candidate_id,
+                        primary_email: null,
+                        primary_phone: null,
+                        primary_website: null,
+                        data_sources: null,
+                      };
+                      
+                      const { finance } = buildFinanceRecord({
+                        representative: repRow,
+                        cycle: options.cycle,
+                        totals,
+                        contributors,
+                        status: 'updated',
+                      });
+                      
+                      // Store finance data
+                      if (!options.dryRun) {
+                        await upsertFinance([finance]);
+                        enrichedDuringLookup.add(rep.id);
+                        enrichedCount++;
+                        console.log(`      💰 Also stored finance data (saved 1 API call!)`);
+                      }
+                    } catch (financeError) {
+                      // Finance storage failed, but FEC ID was saved - continue
+                      console.warn(`      ⚠️  FEC ID saved but finance data failed: ${(financeError as Error).message}`);
+                    }
+                  }
                 } else {
                   console.warn(`   ⚠️  Found FEC ID but failed to update: ${updateError.message}`);
                 }
@@ -707,11 +755,26 @@ async function main() {
           }
           
           console.log(`   ✅ Found ${foundCount} FEC IDs via API lookup`);
+          if (enrichedCount > 0) {
+            console.log(`   💰 Enriched ${enrichedCount} representatives during lookup (saved ${enrichedCount} API calls!)`);
+          }
+          
+          console.log(`   ✅ Found ${foundCount} FEC IDs via API lookup`);
           
           // Refresh representatives list after FEC ID lookups
           if (foundCount > 0) {
             console.log('   Refreshing representatives list with newly found FEC IDs...');
             reps = await fetchRepresentatives(options);
+            
+            // Filter out reps we already enriched during lookup to avoid duplicate API calls
+            if (enrichedDuringLookup.size > 0) {
+              const beforeCount = reps.length;
+              reps = reps.filter((r) => !enrichedDuringLookup.has(r.id));
+              const afterCount = reps.length;
+              if (beforeCount > afterCount) {
+                console.log(`   ⚡ Skipping ${beforeCount - afterCount} reps already enriched (saved ${(beforeCount - afterCount) * 2} API calls!)`);
+              }
+            }
           }
         }
       } else {
