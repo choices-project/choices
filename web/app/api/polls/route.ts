@@ -87,6 +87,23 @@ const mapPollRecord = (
     },
   };
 
+  // Include representative and bill metadata if available
+  if (poll.representative_id != null) {
+    basePoll.representativeId = poll.representative_id;
+  }
+  if (poll.bill_id) {
+    basePoll.billId = poll.bill_id;
+  }
+  if (poll.bill_title) {
+    basePoll.billTitle = poll.bill_title;
+  }
+  if (poll.bill_summary) {
+    basePoll.billSummary = poll.bill_summary;
+  }
+  if (poll.poll_type) {
+    basePoll.pollType = poll.poll_type;
+  }
+
   if (includeHashtagData) {
     const integration = buildPollHashtagIntegration(poll);
     if (integration) {
@@ -190,6 +207,8 @@ export const GET = withErrorHandling(async (request: NextRequest) => {
     const sortRaw = searchParams.get('sort') ?? 'newest';
     const includeHashtagData = searchParams.get('include_hashtag_data') === 'true';
     const includeAnalytics = searchParams.get('include_analytics') === 'true';
+    const representativeIdRaw = searchParams.get('representative_id');
+    const pollType = searchParams.get('poll_type') ?? undefined;
 
     const limitResult = parseNumberParam(searchParams.get('limit'), {
       paramName: 'limit',
@@ -239,7 +258,12 @@ export const GET = withErrorHandling(async (request: NextRequest) => {
       created_at,
       end_date,
       tags,
-      created_by
+      created_by,
+      representative_id,
+      bill_id,
+      bill_title,
+      bill_summary,
+      poll_type
     `;
 
     // Add hashtag fields if requested
@@ -281,6 +305,17 @@ export const GET = withErrorHandling(async (request: NextRequest) => {
     }
     if (search) {
       query = query.or(`title.ilike.%${search}%,description.ilike.%${search}%`);
+    }
+    if (representativeIdRaw) {
+      const representativeId = parseInt(representativeIdRaw, 10);
+      if (!isNaN(representativeId)) {
+        query = query.eq('representative_id', representativeId);
+      } else {
+        return validationError({ representative_id: 'representative_id must be a valid integer' });
+      }
+    }
+    if (pollType) {
+      query = query.eq('poll_type', pollType);
     }
 
     // Apply sorting (id secondary for deterministic cursor pagination)
@@ -544,6 +579,11 @@ export const POST = withErrorHandling(async (request: NextRequest) => {
       tags: z.array(z.string()).max(10, 'Maximum 10 tags allowed').optional(),
       settings: z.record(z.string(), z.unknown()).optional(),
       metadata: z.record(z.string(), z.unknown()).optional(),
+      representative_id: z.number().int().positive().optional(),
+      bill_id: z.string().optional(),
+      bill_title: z.string().optional(),
+      bill_summary: z.string().optional(),
+      poll_type: z.enum(['standard', 'constituent_will']).optional(),
     });
 
     // Validate with Zod schema
@@ -566,6 +606,11 @@ export const POST = withErrorHandling(async (request: NextRequest) => {
       tags,
       settings,
       metadata,
+      representative_id,
+      bill_id,
+      bill_title,
+      bill_summary,
+      poll_type,
     } = validationResult.data;
 
     const resolveVotingMethod = () => {
@@ -652,7 +697,13 @@ export const POST = withErrorHandling(async (request: NextRequest) => {
           require_authentication: typeof settings?.requireAuthentication === 'boolean' ? settings.requireAuthentication : false
         },
         created_at: new Date().toISOString(),
-        updated_at: new Date().toISOString()
+        updated_at: new Date().toISOString(),
+        // Representative and bill metadata
+        ...(representative_id ? { representative_id } : {}),
+        ...(bill_id ? { bill_id } : {}),
+        ...(bill_title ? { bill_title } : {}),
+        ...(bill_summary ? { bill_summary } : {}),
+        poll_type: poll_type ?? 'standard',
     };
 
     const { data: poll, error: pollError } = await supabase

@@ -11,6 +11,7 @@ export type CivicsRepresentativeEventName =
   | 'civics_representative_contact_template_select'
   | 'civics_representative_contact_template_clear'
   | 'civics_representative_contact_launch'
+  | 'civics_representative_create_poll_click'
   | 'civics_representative_bulk_contact_modal_open'
   | 'civics_representative_bulk_contact_modal_close'
   | 'civics_representative_bulk_contact_send'
@@ -79,6 +80,9 @@ export type CivicsRepresentativeEventMap = {
     lastTemplateId: string;
   };
   civics_representative_contact_launch: CivicsRepresentativeEventBase;
+  civics_representative_create_poll_click: CivicsRepresentativeEventBase & {
+    ctaLocation?: string;
+  };
   civics_representative_bulk_contact_modal_open: CivicsRepresentativeBulkEventBase;
   civics_representative_bulk_contact_modal_close: CivicsRepresentativeBulkEventBase & {
     hadDraftContent: boolean;
@@ -113,6 +117,7 @@ const CIVICS_REPRESENTATIVE_ACTION_MAP: Record<CivicsRepresentativeEventName, st
   civics_representative_contact_template_select: 'contact_template_select',
   civics_representative_contact_template_clear: 'contact_template_clear',
   civics_representative_contact_launch: 'contact_launch',
+  civics_representative_create_poll_click: 'create_poll_click',
   civics_representative_bulk_contact_modal_open: 'bulk_contact_modal_open',
   civics_representative_bulk_contact_modal_close: 'bulk_contact_modal_close',
   civics_representative_bulk_contact_send: 'bulk_contact_send',
@@ -143,6 +148,7 @@ export const CIVICS_REPRESENTATIVE_SINGLE_EVENT_SET: ReadonlySet<CivicsRepresent
     'civics_representative_contact_template_select',
     'civics_representative_contact_template_clear',
     'civics_representative_contact_launch',
+    'civics_representative_create_poll_click',
   ]);
 
 const isSingleEventData = (

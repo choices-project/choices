@@ -9,9 +9,10 @@ import {
   Lightbulb,
   Plus,
   Trash2,
+  User,
   X,
 } from "lucide-react"
-import { useRouter } from "next/navigation"
+import { useRouter, useSearchParams } from "next/navigation"
 import React, { useCallback, useEffect, useMemo, useRef, useState } from "react"
 
 import { useRecordPollEvent, type PollEventOptions } from '@/features/polls/hooks/usePollAnalytics';
@@ -68,6 +69,9 @@ type ShareModalState = {
 export default function CreatePollPage() {
   const { t } = useI18n();
   const router = useRouter()
+  const searchParams = useSearchParams()
+  const [representative, setRepresentative] = useState<{ id: number; name: string; office: string; party?: string } | null>(null)
+  const [representativeLoading, setRepresentativeLoading] = useState(false)
   const {
     data,
     errors,
@@ -82,6 +86,39 @@ export default function CreatePollPage() {
     goToPreviousStep,
     submit,
   } = usePollCreateController()
+
+  // Fetch representative data if representative_id is in query params
+  useEffect(() => {
+    const representativeIdParam = searchParams?.get('representative_id')
+    if (representativeIdParam) {
+      const repId = parseInt(representativeIdParam, 10)
+      if (!isNaN(repId)) {
+        // Store representative_id in wizard data
+        actions.updateData({ representative_id: repId })
+        
+        setRepresentativeLoading(true)
+        fetch(`/api/v1/civics/representative/${repId}?fields=id,name,office,party`)
+          .then(res => res.json())
+          .then(result => {
+            if (result.success && result.data?.representative) {
+              const rep = result.data.representative
+              setRepresentative({
+                id: parseInt(String(rep.id), 10),
+                name: rep.name,
+                office: rep.office,
+                party: rep.party
+              })
+            }
+          })
+          .catch(err => {
+            logger.error('Failed to fetch representative', err)
+          })
+          .finally(() => {
+            setRepresentativeLoading(false)
+          })
+      }
+    }
+  }, [searchParams, actions])
 
   // Helper function to safely get translations with fallback
   const safeT = useCallback((key: string, fallback: string, params?: Record<string, string | number>): string => {
@@ -810,6 +847,29 @@ export default function CreatePollPage() {
       case "details":
         return (
           <div className="space-y-6">
+            {representative && (
+              <Alert className="bg-blue-50 border-blue-200 dark:bg-blue-900/20 dark:border-blue-800">
+                <div className="flex items-start gap-3">
+                  <User className="h-5 w-5 text-blue-600 dark:text-blue-400 mt-0.5" />
+                  <div className="flex-1">
+                    <AlertTitle className="text-blue-900 dark:text-blue-100 font-semibold mb-1">
+                      Creating poll about {representative.name}
+                    </AlertTitle>
+                    <AlertDescription className="text-blue-800 dark:text-blue-200 text-sm">
+                      {representative.office}
+                      {representative.party && ` • ${representative.party}`}
+                    </AlertDescription>
+                  </div>
+                </div>
+              </Alert>
+            )}
+            {representativeLoading && (
+              <Alert className="bg-gray-50 border-gray-200">
+                <AlertDescription className="text-sm text-gray-600">
+                  Loading representative information...
+                </AlertDescription>
+              </Alert>
+            )}
             <fieldset>
               <Label htmlFor="title">Poll title</Label>
               <Input

@@ -252,6 +252,7 @@ export type RepresentativeCardProps = {
   showActions?: boolean;
   onFollow?: (representative: Representative) => void;
   onContact?: (representative: Representative) => void;
+  onCreatePoll?: (representative: Representative) => void;
   onClick?: (representative: Representative) => void;
   className?: string;
 }

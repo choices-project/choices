@@ -34,6 +34,7 @@ import {
   trackCivicsRepresentativeEvent,
   type CivicsRepresentativeEventBase
 } from '@/features/civics/analytics/civicsAnalyticsEvents';
+import { RepresentativeActivityFeed } from '@/features/civics/components/representative/RepresentativeActivityFeed';
 import { formatElectionDateStable } from '@/features/civics/utils/civicsCountdownUtils';
 import { filterDivisionsForElections } from '@/features/civics/utils/divisions';
 
@@ -724,6 +725,20 @@ function RepresentativeDetailPageContent() {
                 {campaignFinance.last_filing_date && <div>Last filing: {formatElectionDateStable(campaignFinance.last_filing_date)}</div>}
                 {campaignFinance.source && <div>Source: {campaignFinance.source}</div>}
               </div>
+            </div>
+          )}
+
+          {/* Unified Activity Feed: Polls, Bills, Votes */}
+          {numericRepresentativeId && (
+            <div className="mb-8">
+              <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-4">Activity Feed</h3>
+              <p className="text-sm text-gray-600 dark:text-gray-400 mb-4">
+                Polls, bills, and votes related to this representative
+              </p>
+              <RepresentativeActivityFeed
+                representativeId={numericRepresentativeId}
+                representative={representative ?? undefined}
+              />
             </div>
           )}
         </div>

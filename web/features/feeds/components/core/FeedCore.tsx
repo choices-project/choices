@@ -22,6 +22,9 @@ import { MapPin, Plus, RefreshCw, Users, Vote } from 'lucide-react';
 import Link from 'next/link';
 import React, { useState, useCallback, useEffect, useRef } from 'react';
 
+import { RepresentativeCard } from '@/features/civics/components/representative/RepresentativeCard';
+import { DistrictActivityFeed } from '@/features/civics/components/representative/DistrictActivityFeed';
+
 import type { ElectoralFeedUI } from '@/features/feeds/components/providers/FeedDataProvider';
 
 import { DistrictIndicator } from '@/components/feeds/DistrictBadge';
@@ -893,25 +896,49 @@ export default function FeedCore({
                             </Link>
                           </Button>
                         </CardHeader>
-                        <CardContent className="space-y-3">
-                          {officialsVisible.map((r, i) => (
-                            <div key={r.id ?? `off-${i}`} className="flex justify-between items-start text-sm gap-2">
-                              {r.id ? (
-                                <Link
-                                  href={`/representatives/${r.id}`}
-                                  className="font-medium text-gray-900 dark:text-gray-100 hover:text-blue-600 dark:hover:text-blue-400 hover:underline truncate flex-1 min-w-0"
-                                  aria-label={t('feeds.core.electoral.viewRepresentative') + (r.name ? `: ${r.name}` : '')}
-                                >
-                                  {r.name ?? '—'}
-                                </Link>
-                              ) : (
-                                <span className="font-medium text-gray-900 dark:text-gray-100">{r.name ?? '—'}</span>
-                              )}
-                              <Badge variant="secondary" className="shrink-0">
-                                {r.office ?? r.party ?? '—'}
-                              </Badge>
-                            </div>
-                          ))}
+                        <CardContent className="space-y-4">
+                          {officialsVisible.map((r, i) => {
+                            // Transform electoral feed representative to RepresentativeCard format
+                            const repId = r.id ? parseInt(String(r.id), 10) : null;
+                            if (!repId || isNaN(repId)) {
+                              // Fallback to simple display if ID is invalid
+                              return (
+                                <div key={`off-${i}`} className="flex justify-between items-start text-sm gap-2">
+                                  <span className="font-medium text-gray-900 dark:text-gray-100">{r.name ?? '—'}</span>
+                                  <Badge variant="secondary" className="shrink-0">
+                                    {r.office ?? r.party ?? '—'}
+                                  </Badge>
+                                </div>
+                              );
+                            }
+
+                            // Transform to Representative type for RepresentativeCard
+                            const representative = {
+                              id: repId,
+                              name: r.name ?? 'Unknown',
+                              office: r.office ?? 'Unknown Office',
+                              party: r.party ?? 'Unknown',
+                              level: (r as any).level ?? 'federal' as const,
+                              state: (r as any).state ?? (r as any).jurisdiction ?? '',
+                              district: (r as any).district,
+                              data_quality_score: 0,
+                              verification_status: 'pending' as const,
+                              data_sources: [],
+                              created_at: new Date().toISOString(),
+                              updated_at: new Date().toISOString(),
+                            };
+
+                            return (
+                              <div key={r.id ?? `off-${i}`}>
+                                <RepresentativeCard
+                                  representative={representative}
+                                  showDetails={false}
+                                  showActions={true}
+                                  className="border-0 shadow-none"
+                                />
+                              </div>
+                            );
+                          })}
                           {hasMoreOfficials ? (
                             <Button variant="outline" size="sm" onClick={() => setOfficialsLimit((n) => n + 5)} className="w-full">
                               {t('feeds.core.electoral.loadMore')}
@@ -920,6 +947,39 @@ export default function FeedCore({
                         </CardContent>
                       </Card>
                     )}
+
+                    {/* Unified Activity Feed for District Representatives */}
+                    {hasOfficials && (() => {
+                      // Get all valid representative IDs
+                      const validRepIds = allOfficials
+                        .map(r => {
+                          const repId = r.id ? parseInt(String(r.id), 10) : null;
+                          return repId && !isNaN(repId) ? repId : null;
+                        })
+                        .filter((id): id is number => id !== null);
+
+                      if (validRepIds.length === 0) return null;
+
+                      return (
+                        <Card className="mt-6">
+                          <CardHeader>
+                            <CardTitle className="text-base">
+                              {t('feeds.core.electoral.activityFeed') || 'District Activity Feed'}
+                            </CardTitle>
+                            <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">
+                              {t('feeds.core.electoral.activityFeedDescription') || 
+                                'Polls, bills, and votes from your district representatives'}
+                            </p>
+                          </CardHeader>
+                          <CardContent>
+                            <DistrictActivityFeed
+                              representativeIds={validRepIds}
+                              className="mt-4"
+                            />
+                          </CardContent>
+                        </Card>
+                      );
+                    })()}
                     {races.length > 0 && (
                       <Card>
                         <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">

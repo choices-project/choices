@@ -58,5 +58,10 @@ export type PollWizardData = {
   isTemplate: boolean;
   settings: PollWizardSettings;
   endDate?: string; // ISO datetime string for when poll should close
+  representative_id?: number; // Optional: ID of representative this poll is about
+  bill_id?: string; // Optional: GovInfo package ID for bill-related polls
+  bill_title?: string; // Optional: Bill title for display
+  bill_summary?: string; // Optional: Bill summary
+  poll_type?: 'standard' | 'constituent_will'; // Optional: Type of poll
 };
 

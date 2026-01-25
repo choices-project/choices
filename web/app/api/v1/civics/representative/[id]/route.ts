@@ -133,6 +133,7 @@ export const GET = withErrorHandling(async (
     const includeCommittees = include.includes('committees');
     const includeActivities = include.includes('activities');
     const includeCampaignFinance = include.includes('campaign_finance');
+    const includePolls = include.includes('polls');
 
     const representativeId = params.id?.trim();
     if (!representativeId) {
@@ -364,15 +365,31 @@ export const GET = withErrorHandling(async (
     const activitiesPromise = includeActivities
       ? supabase.from('representative_activity').select('id, type, title, description, date, source, source_url, url').eq('representative_id', repId).eq('type', 'bill').order('date', { ascending: false }).limit(10)
       : Promise.resolve({ data: null, error: null });
+    const pollsPromise = includePolls
+      ? supabase
+          .from('polls')
+          .select('id, title, description, status, total_votes, created_at, poll_type, bill_id, bill_title, bill_summary')
+          .eq('representative_id', repId)
+          .order('created_at', { ascending: false })
+          .limit(10)
+      : Promise.resolve({ data: null, error: null });
+    const pollsCountPromise = includePolls
+      ? supabase
+          .from('polls')
+          .select('id', { count: 'exact', head: true })
+          .eq('representative_id', repId)
+      : Promise.resolve({ data: null, error: null, count: null });
 
-    const [fecRes, financeRes, votesRes, contactsRes, socialRes, committeesRes, activitiesRes] = await Promise.all([
+    const [fecRes, financeRes, votesRes, contactsRes, socialRes, committeesRes, activitiesRes, pollsRes, pollsCountRes] = await Promise.all([
       fecPromise,
       financePromise,
       votesPromise,
       contactsPromise,
       socialPromise,
       committeesPromise,
-      activitiesPromise
+      activitiesPromise,
+      pollsPromise,
+      pollsCountPromise
     ]);
 
     if (include.includes('fec')) {
@@ -436,6 +453,28 @@ export const GET = withErrorHandling(async (
     }
     if (includeActivities && !activitiesRes.error && Array.isArray(activitiesRes.data)) {
       response.activities = activitiesRes.data;
+    }
+
+    if (includePolls) {
+      const pollsData = pollsRes.data;
+      const pollsCount = pollsCountRes.count ?? 0;
+      if (!pollsRes.error && Array.isArray(pollsData)) {
+        (response as any).polls = {
+          total: pollsCount,
+          recent: pollsData.map((poll: any) => ({
+            id: poll.id,
+            title: poll.title,
+            description: poll.description,
+            status: poll.status,
+            totalVotes: poll.total_votes ?? 0,
+            createdAt: poll.created_at,
+            pollType: poll.poll_type,
+            billId: poll.bill_id,
+            billTitle: poll.bill_title,
+            billSummary: poll.bill_summary,
+          })),
+        };
+      }
     }
 
     // Filter fields if requested

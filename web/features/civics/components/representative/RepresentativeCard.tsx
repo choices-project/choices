@@ -17,7 +17,8 @@ import {
   Heart,
   HeartOff,
   ExternalLink,
-  Loader2
+  Loader2,
+  Plus
 } from 'lucide-react';
 import Image from 'next/image';
 import { useRouter } from 'next/navigation';
@@ -44,6 +45,7 @@ export function RepresentativeCard({
   showActions = true,
   onFollow,
   onContact,
+  onCreatePoll,
   onClick,
   className = ''
 }: RepresentativeCardProps) {
@@ -89,6 +91,20 @@ export function RepresentativeCard({
     trackCtaEvent('civics_representative_contact_click', {
       ctaLocation: 'card',
     });
+  };
+
+  const handleCreatePoll = (e: React.MouseEvent) => {
+    e.stopPropagation(); // Prevent card click
+    trackCtaEvent('civics_representative_create_poll_click', {
+      ctaLocation: 'card',
+      representativeId: representative.id,
+    });
+    
+    if (onCreatePoll) {
+      onCreatePoll(representative);
+    } else {
+      router.push(`/polls/create?representative_id=${representative.id}`);
+    }
   };
 
   const handleCardClick = () => {
@@ -543,41 +559,53 @@ export function RepresentativeCard({
 
       {showActions && (
         <div className="px-6 pb-4">
-          <div className="flex space-x-2">
-            <Button
-              variant={following ? "outline" : "default"}
-              size="sm"
-              onClick={handleFollow}
-              disabled={loading}
-              className={`flex-1 ${following ? 'text-gray-700 dark:text-gray-300 border-gray-300 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-700' : 'text-white dark:text-gray-100'}`}
-            >
-              {loading ? (
-                <>
-                  <Loader2 className="w-4 h-4 mr-1 animate-spin" />
-                  {following
-                    ? t('civics.representatives.card.actions.unfollowing')
-                    : t('civics.representatives.card.actions.following')}
-                </>
-              ) : following ? (
-                <>
-                  <HeartOff className="w-4 h-4 mr-1" />
-                  {t('civics.representatives.card.actions.unfollow')}
-                </>
-              ) : (
-                <>
-                  <Heart className="w-4 h-4 mr-1" />
-                  {t('civics.representatives.card.actions.follow')}
-                </>
-              )}
-            </Button>
+          <div className="flex flex-col space-y-2">
+            <div className="flex space-x-2">
+              <Button
+                variant={following ? "outline" : "default"}
+                size="sm"
+                onClick={handleFollow}
+                disabled={loading}
+                className={`flex-1 ${following ? 'text-gray-700 dark:text-gray-300 border-gray-300 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-700' : 'text-white dark:text-gray-100'}`}
+              >
+                {loading ? (
+                  <>
+                    <Loader2 className="w-4 h-4 mr-1 animate-spin" />
+                    {following
+                      ? t('civics.representatives.card.actions.unfollowing')
+                      : t('civics.representatives.card.actions.following')}
+                  </>
+                ) : following ? (
+                  <>
+                    <HeartOff className="w-4 h-4 mr-1" />
+                    {t('civics.representatives.card.actions.unfollow')}
+                  </>
+                ) : (
+                  <>
+                    <Heart className="w-4 h-4 mr-1" />
+                    {t('civics.representatives.card.actions.follow')}
+                  </>
+                )}
+              </Button>
 
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={handleContact}
+                className="flex-1"
+              >
+                {t('civics.representatives.card.contact.button')}
+              </Button>
+            </div>
+            
             <Button
               variant="outline"
               size="sm"
-              onClick={handleContact}
-              className="flex-1"
+              onClick={handleCreatePoll}
+              className="w-full"
             >
-              {t('civics.representatives.card.contact.button')}
+              <Plus className="w-4 h-4 mr-1" />
+              Create Poll
             </Button>
           </div>
           {error && (

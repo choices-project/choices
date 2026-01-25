@@ -1,8 +1,8 @@
 'use client';
 
-import { Users, BarChart3, Eye, Clock, Calendar, User } from 'lucide-react';
+import { Users, BarChart3, Eye, Clock, Calendar, User, FileText } from 'lucide-react';
 import Link from 'next/link';
-import React, { useMemo, useCallback } from 'react';
+import React, { useMemo, useCallback, useState, useEffect } from 'react';
 
 import type { PollRow } from '@/features/polls/types';
 
@@ -130,6 +130,31 @@ const PollCard: React.FC<PollCardProps> = ({ poll, showActions = true, className
   const optionsPreview = optionsArray.slice(0, 3);
   const optionsCount = optionsArray.length;
 
+  // Extract representative and bill metadata
+  const representativeId = (poll as any).representative_id ?? (poll as any).representativeId ?? null;
+  const billId = (poll as any).bill_id ?? (poll as any).billId ?? null;
+  const billTitle = (poll as any).bill_title ?? (poll as any).billTitle ?? null;
+  const billSummary = (poll as any).bill_summary ?? (poll as any).billSummary ?? null;
+  const pollType = (poll as any).poll_type ?? (poll as any).pollType ?? 'standard';
+  const isConstituentWill = pollType === 'constituent_will';
+
+  // Fetch representative name if we have representative_id but no name
+  const [representativeName, setRepresentativeName] = useState<string | null>(null);
+  useEffect(() => {
+    if (representativeId && !representativeName) {
+      fetch(`/api/v1/civics/representative/${representativeId}?fields=id,name,office`)
+        .then(res => res.json())
+        .then(result => {
+          if (result.success && result.data?.representative) {
+            setRepresentativeName(result.data.representative.name);
+          }
+        })
+        .catch(() => {
+          // Silently fail - representative info is optional
+        });
+    }
+  }, [representativeId, representativeName]);
+
   return (
     <Card
       className={`hover:shadow-md transition-shadow duration-200 ${className}`}
@@ -143,6 +168,40 @@ const PollCard: React.FC<PollCardProps> = ({ poll, showActions = true, className
             <CardTitle className="text-lg font-semibold text-gray-900 dark:text-gray-100 line-clamp-2">{displayTitle}</CardTitle>
             {poll.description && (
               <p className="text-sm text-gray-600 dark:text-gray-400 mt-1 line-clamp-2">{poll.description}</p>
+            )}
+            {/* Representative context */}
+            {representativeId && (
+              <div className="mt-2 flex items-center gap-2">
+                <User className="w-4 h-4 text-blue-600 dark:text-blue-400" />
+                <Link
+                  href={`/representatives/${representativeId}`}
+                  className="text-sm text-blue-600 dark:text-blue-400 hover:underline"
+                  onClick={(e) => e.stopPropagation()}
+                >
+                  {representativeName || `Representative #${representativeId}`}
+                </Link>
+                {isConstituentWill && (
+                  <Badge variant="outline" className="text-xs">
+                    Constituent Will
+                  </Badge>
+                )}
+              </div>
+            )}
+            {/* Bill context */}
+            {billId && (
+              <div className="mt-2 flex items-start gap-2">
+                <FileText className="w-4 h-4 text-purple-600 dark:text-purple-400 mt-0.5" />
+                <div className="flex-1 min-w-0">
+                  {billTitle ? (
+                    <p className="text-sm font-medium text-gray-900 dark:text-gray-100">{billTitle}</p>
+                  ) : (
+                    <p className="text-sm text-gray-600 dark:text-gray-400">Bill #{billId}</p>
+                  )}
+                  {billSummary && (
+                    <p className="text-xs text-gray-500 dark:text-gray-500 mt-1 line-clamp-2">{billSummary}</p>
+                  )}
+                </div>
+              </div>
             )}
           </div>
           <Badge className={`ml-2 shrink-0 ${getStatusColor(status)}`}>{statusLabels[status] ?? status}</Badge>

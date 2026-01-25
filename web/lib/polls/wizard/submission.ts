@@ -78,6 +78,11 @@ const pollWizardSubmissionSchema = z
     privacyLevel: privacyLevelSchema.default('public'),
     settings: wizardSettingsSchema,
     endDate: z.string().datetime().optional(), // ISO datetime string
+    representative_id: z.number().int().positive().optional(),
+    bill_id: z.string().optional(),
+    bill_title: z.string().optional(),
+    bill_summary: z.string().optional(),
+    poll_type: z.enum(['standard', 'constituent_will']).optional(),
   })
   .transform((data) => {
     const tags = Array.from(new Set(data.tags)).slice(0, MAX_TAGS);
@@ -175,6 +180,11 @@ export type PollCreatePayload = {
     privacyLevel: 'public' | 'private' | 'unlisted';
   };
   metadata: Record<string, unknown>;
+  representative_id?: number;
+  bill_id?: string;
+  bill_title?: string;
+  bill_summary?: string;
+  poll_type?: 'standard' | 'constituent_will';
 };
 
 export type PollCreateResponse = {
@@ -226,6 +236,11 @@ export const buildPollCreatePayload = (data: SanitizedWizardData): PollCreatePay
       ...metadata,
       endDate: data.endDate, // Include end date in metadata
     },
+    ...(data.representative_id ? { representative_id: data.representative_id } : {}),
+    ...(data.bill_id ? { bill_id: data.bill_id } : {}),
+    ...(data.bill_title ? { bill_title: data.bill_title } : {}),
+    ...(data.bill_summary ? { bill_summary: data.bill_summary } : {}),
+    poll_type: data.poll_type ?? 'standard',
   } satisfies PollCreatePayload;
 };
 
