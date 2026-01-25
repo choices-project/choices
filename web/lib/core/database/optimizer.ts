@@ -7,7 +7,7 @@
 
 import { getSupabaseServerClient } from '@/utils/supabase/server'
 
-import { VOTES_SELECT_COLUMNS } from '@/lib/api/response-builders'
+import { PROFILE_SELECT_COLUMNS, VOTES_SELECT_COLUMNS } from '@/lib/api/response-builders'
 import { isFeatureEnabled } from '@/lib/core/feature-flags'
 import { smartCache } from '@/lib/database/smart-cache'
 import { minimalTelemetry } from '@/lib/telemetry/minimal'
@@ -252,7 +252,7 @@ export class QueryOptimizer {
     const startTime = Date.now()
     const { data, error } = await this.supabase
       .from('user_profiles')
-      .select('user_id, username, email, trust_tier, created_at, updated_at')
+      .select(PROFILE_SELECT_COLUMNS)
       .eq('user_id', userId)
       .single()
 

@@ -70,6 +70,14 @@ export const UserProfileSchema = z.object({
   avatar_url: z.string().nullable(),
   /** User's trust tier level */
   trust_tier: TrustTierSchema.nullable(),
+  /** Trust tier score (numeric) */
+  trust_tier_score: z.number().nullable(),
+  /** Trust tier version (numeric) */
+  trust_tier_version: z.number().nullable(),
+  /** Integrity consent timestamp */
+  integrity_consent_at: TimestampSchema.nullable(),
+  /** Integrity consent scope */
+  integrity_consent_scope: z.string().nullable(),
   /** Preferred analytics dashboard mode */
   analytics_dashboard_mode: z.string().nullable(),
   /** Saved dashboard layout JSON */

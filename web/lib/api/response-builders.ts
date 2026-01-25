@@ -4,7 +4,7 @@ import type { PrivacySettings, UserProfile } from './types';
 
 /** Explicit columns for user_profiles select (avoid select('*')) */
 export const PROFILE_SELECT_COLUMNS =
-  'id, user_id, email, display_name, username, avatar_url, bio, trust_tier, is_admin, is_active, created_at, updated_at, demographics, privacy_settings, primary_concerns, community_focus, participation_style, dashboard_layout, analytics_dashboard_mode';
+  'id, user_id, email, display_name, username, avatar_url, bio, trust_tier, trust_tier_score, trust_tier_version, integrity_consent_at, integrity_consent_scope, is_admin, is_active, created_at, updated_at, demographics, privacy_settings, primary_concerns, community_focus, participation_style, dashboard_layout, analytics_dashboard_mode';
 
 /** Explicit columns for hashtag_flags select (avoid select('*')) */
 export const HASHTAG_FLAG_SELECT_COLUMNS =
