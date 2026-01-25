@@ -38,20 +38,48 @@ export const POST = withErrorHandling(async (
 
   const { data: poll, error: pollError } = pollResult;
   if (pollError || !poll) {
+    devLog('Poll not found or error fetching poll', { pollId, error: pollError });
     return notFoundError('Poll not found');
   }
 
-  const isCreator = poll.created_by === user.id;
+  // Normalize IDs to strings for comparison (handle UUID vs string)
+  const pollCreatorId = poll.created_by ? String(poll.created_by).trim() : null;
+  const userId = user.id ? String(user.id).trim() : null;
+  
+  devLog('Checking poll close permissions', {
+    pollId,
+    pollCreatorId,
+    userId,
+    pollTitle: poll.title,
+    pollStatus: poll.status
+  });
+
+  const isCreator = pollCreatorId && userId && pollCreatorId === userId;
   if (isCreator) {
+    devLog('User is poll creator, allowing close', { pollId, userId });
     // Creator may close; no profile check needed
   } else {
-    const { data: profile } = await supabase
+    devLog('User is not creator, checking admin status', { pollId, userId, pollCreatorId });
+    const { data: profile, error: profileError } = await supabase
       .from('user_profiles')
       .select('is_admin')
       .eq('user_id', user.id)
       .maybeSingle();
+    
+    if (profileError) {
+      devLog('Error fetching user profile', { error: profileError, userId });
+    }
+    
     const isAdmin = profile?.is_admin === true;
+    devLog('Admin check result', { isAdmin, userId, pollId });
+    
     if (!isAdmin) {
+      devLog('Access denied: User is neither creator nor admin', {
+        pollId,
+        userId,
+        pollCreatorId,
+        isAdmin
+      });
       return forbiddenError('Only the poll creator or an admin can close this poll');
     }
   }
