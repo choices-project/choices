@@ -29,9 +29,9 @@
     "openstates:coverage": "npm run build --silent && node build/run-openstates-coverage.js",
     "openstates:ingest": "npm run openstates:sync-people && npm run openstates:stage && npm run openstates:merge",
 
-    "federal:enrich:congress": "npm run build --silent && node build/scripts/federal/enrich-congress-ids.js",
-    "federal:enrich:finance": "npm run build --silent && node build/scripts/federal/enrich-fec-finance.js",
-    "federal:enrich:google-civic": "npm run build --silent && node build/scripts/federal/enrich-google-civic.js",
+    "federal:enrich:congress": "npm run build --silent && node build/federal/enrich-congress-ids.js",
+    "federal:enrich:finance": "npm run build --silent && node build/federal/enrich-fec-finance.js",
+    "federal:enrich:google-civic": "npm run build --silent && node build/federal/enrich-google-civic.js",
     "federal:test:finance": "npm run build --silent && node build/scripts/federal/test-fec-enrichment.js",
 
     "ingest:full": "npm run openstates:ingest && npm run federal:enrich:congress && npm run federal:enrich:finance",
