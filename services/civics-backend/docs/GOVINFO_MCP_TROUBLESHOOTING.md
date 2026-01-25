@@ -7,14 +7,21 @@ The GovInfo MCP server was failing to start with errors like:
 - `AttributeError: 'str' object has no attribute 'get_tools'`
 - `asyncio.run()` called at module import time
 - Server trying to run async code during import
+- `import_server()` parameter order incorrect
 
-### Root Cause
+### Root Causes
+
+#### 1. Async Code at Import Time
 The `app/server.py` file was calling `asyncio.run(setup())` at module import time (line 144), which caused the server to try to run async code when the module was imported. This is problematic for MCP servers because they need to be importable without executing code.
 
-### Fix Applied
+#### 2. Incorrect Parameter Order in `import_server()`
+The `import_server()` method signature is `(server: FastMCP, prefix: str | None)`, but the code was calling it as `import_server(prefix, server)`, causing the string prefix to be passed where a FastMCP instance was expected.
+
+### Fixes Applied
+
 **File:** `.cursor/govinfo-mcp/app/server.py`
 
-**Change:** Moved `asyncio.run(setup())` from module-level to inside the `main()` function:
+**Fix 1:** Moved `asyncio.run(setup())` from module-level to inside the `main()` function:
 
 ```python
 # BEFORE (line 144):
@@ -27,6 +34,25 @@ def main() -> None:
     # Run setup before starting the server
     asyncio.run(setup())  # ✅ Runs when server starts
     mcp.run()
+```
+
+**Fix 2:** Corrected `import_server()` parameter order:
+
+```python
+# BEFORE:
+await mcp.import_server("collections", collections_server)  # ❌ Wrong order
+
+# AFTER:
+await mcp.import_server(collections_server, "collections")  # ✅ Correct order
+```
+
+The `import_server()` method signature is:
+```python
+async def import_server(
+    self,
+    server: FastMCP[LifespanResultT],  # Server instance FIRST
+    prefix: str | None = None,          # Prefix SECOND (optional)
+) -> None:
 ```
 
 ### Verification
