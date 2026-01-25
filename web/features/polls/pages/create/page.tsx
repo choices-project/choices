@@ -98,7 +98,13 @@ export default function CreatePollPage() {
         
         setRepresentativeLoading(true)
         fetch(`/api/v1/civics/representative/${repId}?fields=id,name,office,party`)
-          .then(res => res.json())
+          .then(async (res) => {
+            if (!res.ok) {
+              const errorText = await res.text().catch(() => 'Unknown error');
+              throw new Error(`API error (${res.status}): ${errorText}`);
+            }
+            return res.json();
+          })
           .then(result => {
             if (result.success && result.data?.representative) {
               const rep = result.data.representative
@@ -108,10 +114,18 @@ export default function CreatePollPage() {
                 office: rep.office,
                 party: rep.party
               })
+            } else {
+              logger.warn('Representative fetch returned unsuccessful result', { result, repId });
             }
           })
           .catch(err => {
-            logger.error('Failed to fetch representative', err)
+            logger.error('Failed to fetch representative', { 
+              error: err instanceof Error ? err.message : String(err),
+              repId,
+              stack: err instanceof Error ? err.stack : undefined
+            });
+            // Don't crash - just log the error and continue without representative data
+            // The poll can still be created without the representative info pre-filled
           })
           .finally(() => {
             setRepresentativeLoading(false)
@@ -222,8 +236,10 @@ export default function CreatePollPage() {
 
   useEffect(() => {
     if (!hasCopiedShareLink) return
-    const timeout = window.setTimeout(() => setHasCopiedShareLink(false), 2000)
-    return () => window.clearTimeout(timeout)
+    if (typeof window !== 'undefined') {
+      const timeout = window.setTimeout(() => setHasCopiedShareLink(false), 2000)
+      return () => window.clearTimeout(timeout)
+    }
   }, [hasCopiedShareLink])
 
   const errorMessages = useMemo(() => {

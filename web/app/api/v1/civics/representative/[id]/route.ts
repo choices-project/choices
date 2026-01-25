@@ -215,10 +215,10 @@ export const GET = withErrorHandling(async (
     ];
 
     if (includeDivisions) {
-      selectFields.push('representative_divisions:representative_divisions(division_id)');
+      selectFields.push('representative_divisions!fk_representative_divisions_representative_id(division_id)');
     }
     if (includePhotos) {
-      selectFields.push('representative_photos(id,url,source,is_primary,alt_text,attribution)');
+      selectFields.push('representative_photos!fk_representative_photos_representative_id(id,url,source,is_primary,alt_text,attribution)');
     }
 
     const repId = parseInt(representativeId, 10);
