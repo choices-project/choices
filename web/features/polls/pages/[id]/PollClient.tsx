@@ -59,10 +59,19 @@ type PollResultsResponse = {
   poll_id: string;
   total_votes: number;
   trust_tier_filter: number | null;
-  results: Array<{
+  voting_method?: string;
+  results?: Array<{
     option_id: string | number;
     option_text?: string;
     vote_count: number;
+  }>;
+  option_stats?: Array<{
+    option_id: string | number;
+    option_index?: number;
+    text?: string;
+    first_choice_votes: number;
+    first_choice_percentage?: number;
+    borda_score?: number;
   }>;
   integrity?: {
     mode: 'all' | 'verified';
@@ -320,12 +329,19 @@ export default function PollClient({ poll }: PollClientProps) {
       pollDetailsForBallot.totalVotes ??
       (typeof poll.totalvotes === 'number' ? poll.totalvotes : undefined);
 
+    // Handle both regular polls (results) and ranked polls (option_stats)
     const optionVoteCounts =
-      results?.results.reduce<Record<string, number>>((acc, row) => {
+      results?.results?.reduce<Record<string, number>>((acc, row) => {
         const key = String(row.option_id);
         acc[key] = Number(row.vote_count ?? 0);
         return acc;
-      }, {}) ?? undefined;
+      }, {}) ??
+      results?.option_stats?.reduce<Record<string, number>>((acc, row) => {
+        const key = String(row.option_id);
+        acc[key] = Number(row.first_choice_votes ?? 0);
+        return acc;
+      }, {}) ??
+      undefined;
 
     const ballotContext: PollBallotContext = {
       ...(typeof totalVotesContext === 'number' ? { totalVotes: totalVotesContext } : {}),
@@ -350,10 +366,20 @@ export default function PollClient({ poll }: PollClientProps) {
 
   const optionVoteLookup = useMemo(() => {
     const map = new Map<string, number>();
-    results?.results.forEach((row) => {
-      const key = String(row.option_id);
-      map.set(key, row.vote_count ?? 0);
-    });
+    // Handle regular polls (results array)
+    if (results?.results) {
+      results.results.forEach((row) => {
+        const key = String(row.option_id);
+        map.set(key, row.vote_count ?? 0);
+      });
+    }
+    // Handle ranked polls (option_stats array)
+    if (results?.option_stats) {
+      results.option_stats.forEach((row) => {
+        const key = String(row.option_id);
+        map.set(key, row.first_choice_votes ?? 0);
+      });
+    }
     return map;
   }, [results]);
 
