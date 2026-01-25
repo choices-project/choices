@@ -428,22 +428,6 @@ export default function PollClient({ poll }: PollClientProps) {
     };
   }, [pollStatus, fetchPollData, computedTotalVotes]);
 
-  // Auto-refresh poll results for active polls
-  useEffect(() => {
-    if (pollStatus !== 'active') {
-      return; // Don't poll for closed or draft polls
-    }
-
-    // Set up polling interval (refresh every 5 seconds for active polls)
-    const pollInterval = setInterval(() => {
-      void fetchPollData();
-    }, 5000);
-
-    return () => {
-      clearInterval(pollInterval);
-    };
-  }, [pollStatus, fetchPollData]);
-
   useEffect(() => {
     const totalVotesContext =
       results?.total_votes ??
