@@ -661,8 +661,8 @@ async function main() {
           .select('id, name, office, state, district')
           .eq('level', 'federal')
           .eq('status', 'active')
-          .is('fec_id', null)
-          .limit(50); // Limit to avoid too many API calls
+          .is('fec_id', null);
+          // No limit - process all until rate limited
 
         if (!missingError && missingFecReps && missingFecReps.length > 0) {
           console.log(`   Found ${missingFecReps.length} representatives to lookup...`);
