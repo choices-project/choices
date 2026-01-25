@@ -216,16 +216,16 @@ export const GET = withErrorHandling(async (request: NextRequest) => {
   let selectQuery = '*';
 
   if (includePhotos) {
-    selectQuery += ', representative_photos(*)';
+    selectQuery += ', representative_photos!fk_representative_photos_representative_id(*)';
   }
   if (includeContacts) {
-    selectQuery += ', representative_contacts(*)';
+    selectQuery += ', representative_contacts!fk_representative_contacts_representative_id(*)';
   }
   if (includeSocial) {
-    selectQuery += ', representative_social_media(*)';
+    selectQuery += ', representative_social_media!fk_representative_social_media_representative_id(*)';
   }
   if (includeDivisions) {
-    selectQuery += ', representative_divisions(division_id)';
+    selectQuery += ', representative_divisions!fk_representative_divisions_representative_id(division_id)';
   }
 
   // Build optimized query with proper filtering order (most selective filters first)
