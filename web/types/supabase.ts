@@ -47,6 +47,86 @@ export type Database = {
         }
         Relationships: []
       }
+      advanced_analytics_usage: {
+        Row: {
+          analytics_type: string
+          created_at: string
+          id: string
+          poll_id: string
+          user_id: string
+        }
+        Insert: {
+          analytics_type: string
+          created_at?: string
+          id?: string
+          poll_id: string
+          user_id: string
+        }
+        Update: {
+          analytics_type?: string
+          created_at?: string
+          id?: string
+          poll_id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "advanced_analytics_usage_poll_id_fkey"
+            columns: ["poll_id"]
+            isOneToOne: false
+            referencedRelation: "polls"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      agent_operations: {
+        Row: {
+          agent_id: string
+          agent_version: string | null
+          created_at: string | null
+          duration: number | null
+          error_message: string | null
+          function_name: string | null
+          id: string
+          operation_type: string
+          request_metadata: Json | null
+          result_status: string
+          row_count: number | null
+          table_name: string | null
+          user_context: string | null
+        }
+        Insert: {
+          agent_id: string
+          agent_version?: string | null
+          created_at?: string | null
+          duration?: number | null
+          error_message?: string | null
+          function_name?: string | null
+          id?: string
+          operation_type: string
+          request_metadata?: Json | null
+          result_status: string
+          row_count?: number | null
+          table_name?: string | null
+          user_context?: string | null
+        }
+        Update: {
+          agent_id?: string
+          agent_version?: string | null
+          created_at?: string | null
+          duration?: number | null
+          error_message?: string | null
+          function_name?: string | null
+          id?: string
+          operation_type?: string
+          request_metadata?: Json | null
+          result_status?: string
+          row_count?: number | null
+          table_name?: string | null
+          user_context?: string | null
+        }
+        Relationships: []
+      }
       analytics_event_data: {
         Row: {
           created_at: string | null
@@ -1512,6 +1592,42 @@ export type Database = {
         }
         Relationships: []
       }
+      integrity_signals: {
+        Row: {
+          consent_scope: string
+          created_at: string | null
+          expires_at: string
+          id: string
+          poll_id: string
+          signal_type: string
+          signals: Json
+          user_id: string
+          vote_id: string | null
+        }
+        Insert: {
+          consent_scope: string
+          created_at?: string | null
+          expires_at?: string
+          id?: string
+          poll_id: string
+          signal_type: string
+          signals: Json
+          user_id: string
+          vote_id?: string | null
+        }
+        Update: {
+          consent_scope?: string
+          created_at?: string | null
+          expires_at?: string
+          id?: string
+          poll_id?: string
+          signal_type?: string
+          signals?: Json
+          user_id?: string
+          vote_id?: string | null
+        }
+        Relationships: []
+      }
       message_delivery_logs: {
         Row: {
           created_at: string | null
@@ -1549,6 +1665,117 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      moderation_actions: {
+        Row: {
+          action: string
+          actor_id: string
+          created_at: string | null
+          expires_at: string | null
+          id: string
+          metadata: Json | null
+          reason: string | null
+          status: string
+          target_id: string
+          target_type: string
+        }
+        Insert: {
+          action: string
+          actor_id: string
+          created_at?: string | null
+          expires_at?: string | null
+          id?: string
+          metadata?: Json | null
+          reason?: string | null
+          status?: string
+          target_id: string
+          target_type: string
+        }
+        Update: {
+          action?: string
+          actor_id?: string
+          created_at?: string | null
+          expires_at?: string | null
+          id?: string
+          metadata?: Json | null
+          reason?: string | null
+          status?: string
+          target_id?: string
+          target_type?: string
+        }
+        Relationships: []
+      }
+      moderation_appeals: {
+        Row: {
+          action_id: string
+          created_at: string | null
+          id: string
+          message: string
+          resolution: string | null
+          status: string
+          updated_at: string | null
+          user_id: string
+        }
+        Insert: {
+          action_id: string
+          created_at?: string | null
+          id?: string
+          message: string
+          resolution?: string | null
+          status?: string
+          updated_at?: string | null
+          user_id: string
+        }
+        Update: {
+          action_id?: string
+          created_at?: string | null
+          id?: string
+          message?: string
+          resolution?: string | null
+          status?: string
+          updated_at?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
+      moderation_reports: {
+        Row: {
+          created_at: string | null
+          details: string | null
+          id: string
+          metadata: Json | null
+          reason: string
+          reporter_id: string
+          status: string
+          target_id: string
+          target_type: string
+          updated_at: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          details?: string | null
+          id?: string
+          metadata?: Json | null
+          reason: string
+          reporter_id: string
+          status?: string
+          target_id: string
+          target_type: string
+          updated_at?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          details?: string | null
+          id?: string
+          metadata?: Json | null
+          reason?: string
+          reporter_id?: string
+          status?: string
+          target_id?: string
+          target_type?: string
+          updated_at?: string | null
+        }
+        Relationships: []
       }
       narrative_analysis_results: {
         Row: {
@@ -2327,6 +2554,9 @@ export type Database = {
           allow_reopen: boolean | null
           auto_lock_at: string | null
           baseline_at: string | null
+          bill_id: string | null
+          bill_summary: string | null
+          bill_title: string | null
           category: string | null
           close_reason: string | null
           closed_at: string | null
@@ -2365,10 +2595,12 @@ export type Database = {
           participation_rate: number | null
           poll_question: string | null
           poll_settings: Json | null
+          poll_type: string | null
           primary_hashtag: string | null
           privacy_level: string | null
           question: string | null
           reopened_at: string | null
+          representative_id: number | null
           settings: Json | null
           sponsors: string[] | null
           start_date: string | null
@@ -2389,6 +2621,9 @@ export type Database = {
           allow_reopen?: boolean | null
           auto_lock_at?: string | null
           baseline_at?: string | null
+          bill_id?: string | null
+          bill_summary?: string | null
+          bill_title?: string | null
           category?: string | null
           close_reason?: string | null
           closed_at?: string | null
@@ -2427,10 +2662,12 @@ export type Database = {
           participation_rate?: number | null
           poll_question?: string | null
           poll_settings?: Json | null
+          poll_type?: string | null
           primary_hashtag?: string | null
           privacy_level?: string | null
           question?: string | null
           reopened_at?: string | null
+          representative_id?: number | null
           settings?: Json | null
           sponsors?: string[] | null
           start_date?: string | null
@@ -2451,6 +2688,9 @@ export type Database = {
           allow_reopen?: boolean | null
           auto_lock_at?: string | null
           baseline_at?: string | null
+          bill_id?: string | null
+          bill_summary?: string | null
+          bill_title?: string | null
           category?: string | null
           close_reason?: string | null
           closed_at?: string | null
@@ -2489,10 +2729,12 @@ export type Database = {
           participation_rate?: number | null
           poll_question?: string | null
           poll_settings?: Json | null
+          poll_type?: string | null
           primary_hashtag?: string | null
           privacy_level?: string | null
           question?: string | null
           reopened_at?: string | null
+          representative_id?: number | null
           settings?: Json | null
           sponsors?: string[] | null
           start_date?: string | null
@@ -2700,6 +2942,13 @@ export type Database = {
         }
         Relationships: [
           {
+            foreignKeyName: "fk_representative_activity_representative_id"
+            columns: ["representative_id"]
+            isOneToOne: false
+            referencedRelation: "representatives_core"
+            referencedColumns: ["id"]
+          },
+          {
             foreignKeyName: "representative_activity_representative_id_fkey"
             columns: ["representative_id"]
             isOneToOne: false
@@ -2762,6 +3011,13 @@ export type Database = {
         }
         Relationships: [
           {
+            foreignKeyName: "fk_representative_campaign_finance_representative_id"
+            columns: ["representative_id"]
+            isOneToOne: true
+            referencedRelation: "representatives_core"
+            referencedColumns: ["id"]
+          },
+          {
             foreignKeyName: "representative_campaign_finance_representative_id_fkey"
             columns: ["representative_id"]
             isOneToOne: true
@@ -2805,6 +3061,13 @@ export type Database = {
           updated_at?: string | null
         }
         Relationships: [
+          {
+            foreignKeyName: "fk_representative_committees_representative_id"
+            columns: ["representative_id"]
+            isOneToOne: false
+            referencedRelation: "representatives_core"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "representative_committees_representative_id_fkey"
             columns: ["representative_id"]
@@ -2850,6 +3113,13 @@ export type Database = {
         }
         Relationships: [
           {
+            foreignKeyName: "fk_representative_contacts_representative_id"
+            columns: ["representative_id"]
+            isOneToOne: false
+            referencedRelation: "representatives_core"
+            referencedColumns: ["id"]
+          },
+          {
             foreignKeyName: "representative_contacts_representative_id_fkey"
             columns: ["representative_id"]
             isOneToOne: false
@@ -2893,6 +3163,13 @@ export type Database = {
           updated_at?: string | null
         }
         Relationships: [
+          {
+            foreignKeyName: "fk_representative_crosswalk_enhanced_representative_id"
+            columns: ["representative_id"]
+            isOneToOne: false
+            referencedRelation: "representatives_core"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "representative_crosswalk_enhanced_representative_id_fkey"
             columns: ["representative_id"]
@@ -2944,6 +3221,13 @@ export type Database = {
         }
         Relationships: [
           {
+            foreignKeyName: "fk_representative_data_quality_representative_id"
+            columns: ["representative_id"]
+            isOneToOne: true
+            referencedRelation: "representatives_core"
+            referencedColumns: ["id"]
+          },
+          {
             foreignKeyName: "representative_data_quality_representative_id_fkey"
             columns: ["representative_id"]
             isOneToOne: true
@@ -2991,6 +3275,13 @@ export type Database = {
         }
         Relationships: [
           {
+            foreignKeyName: "fk_representative_data_sources_representative_id"
+            columns: ["representative_id"]
+            isOneToOne: false
+            referencedRelation: "representatives_core"
+            referencedColumns: ["id"]
+          },
+          {
             foreignKeyName: "representative_data_sources_representative_id_fkey"
             columns: ["representative_id"]
             isOneToOne: false
@@ -3025,6 +3316,13 @@ export type Database = {
           updated_at?: string
         }
         Relationships: [
+          {
+            foreignKeyName: "fk_representative_divisions_representative_id"
+            columns: ["representative_id"]
+            isOneToOne: false
+            referencedRelation: "representatives_core"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "representative_divisions_representative_id_fkey"
             columns: ["representative_id"]
@@ -3258,6 +3556,13 @@ export type Database = {
         }
         Relationships: [
           {
+            foreignKeyName: "fk_representative_photos_representative_id"
+            columns: ["representative_id"]
+            isOneToOne: false
+            referencedRelation: "representatives_core"
+            referencedColumns: ["id"]
+          },
+          {
             foreignKeyName: "representative_photos_representative_id_fkey"
             columns: ["representative_id"]
             isOneToOne: false
@@ -3308,6 +3613,13 @@ export type Database = {
         }
         Relationships: [
           {
+            foreignKeyName: "fk_representative_social_media_representative_id"
+            columns: ["representative_id"]
+            isOneToOne: false
+            referencedRelation: "representatives_core"
+            referencedColumns: ["id"]
+          },
+          {
             foreignKeyName: "representative_social_media_representative_id_fkey"
             columns: ["representative_id"]
             isOneToOne: false
@@ -3322,8 +3634,8 @@ export type Database = {
           bioguide_id: string | null
           canonical_id: string | null
           congress_gov_id: string | null
-          created_at: string | null
-          data_quality_score: number | null
+          created_at: string
+          data_quality_score: number
           data_sources: Json | null
           district: string | null
           facebook_url: string | null
@@ -3332,7 +3644,7 @@ export type Database = {
           govinfo_id: string | null
           id: number
           instagram_handle: string | null
-          is_active: boolean | null
+          is_active: boolean
           last_verified: string | null
           legiscan_id: string | null
           level: string
@@ -3346,11 +3658,15 @@ export type Database = {
           primary_phone: string | null
           primary_photo_url: string | null
           primary_website: string | null
+          replaced_by_id: number | null
           state: string
+          status: Database["public"]["Enums"]["representative_status"]
+          status_changed_at: string | null
+          status_reason: string | null
           term_end_date: string | null
           term_start_date: string | null
           twitter_handle: string | null
-          updated_at: string | null
+          updated_at: string
           verification_status: string | null
           wikipedia_url: string | null
           youtube_channel: string | null
@@ -3360,8 +3676,8 @@ export type Database = {
           bioguide_id?: string | null
           canonical_id?: string | null
           congress_gov_id?: string | null
-          created_at?: string | null
-          data_quality_score?: number | null
+          created_at?: string
+          data_quality_score?: number
           data_sources?: Json | null
           district?: string | null
           facebook_url?: string | null
@@ -3370,7 +3686,7 @@ export type Database = {
           govinfo_id?: string | null
           id?: number
           instagram_handle?: string | null
-          is_active?: boolean | null
+          is_active?: boolean
           last_verified?: string | null
           legiscan_id?: string | null
           level: string
@@ -3384,11 +3700,15 @@ export type Database = {
           primary_phone?: string | null
           primary_photo_url?: string | null
           primary_website?: string | null
+          replaced_by_id?: number | null
           state: string
+          status?: Database["public"]["Enums"]["representative_status"]
+          status_changed_at?: string | null
+          status_reason?: string | null
           term_end_date?: string | null
           term_start_date?: string | null
           twitter_handle?: string | null
-          updated_at?: string | null
+          updated_at?: string
           verification_status?: string | null
           wikipedia_url?: string | null
           youtube_channel?: string | null
@@ -3398,8 +3718,8 @@ export type Database = {
           bioguide_id?: string | null
           canonical_id?: string | null
           congress_gov_id?: string | null
-          created_at?: string | null
-          data_quality_score?: number | null
+          created_at?: string
+          data_quality_score?: number
           data_sources?: Json | null
           district?: string | null
           facebook_url?: string | null
@@ -3408,7 +3728,7 @@ export type Database = {
           govinfo_id?: string | null
           id?: number
           instagram_handle?: string | null
-          is_active?: boolean | null
+          is_active?: boolean
           last_verified?: string | null
           legiscan_id?: string | null
           level?: string
@@ -3422,16 +3742,28 @@ export type Database = {
           primary_phone?: string | null
           primary_photo_url?: string | null
           primary_website?: string | null
+          replaced_by_id?: number | null
           state?: string
+          status?: Database["public"]["Enums"]["representative_status"]
+          status_changed_at?: string | null
+          status_reason?: string | null
           term_end_date?: string | null
           term_start_date?: string | null
           twitter_handle?: string | null
-          updated_at?: string | null
+          updated_at?: string
           verification_status?: string | null
           wikipedia_url?: string | null
           youtube_channel?: string | null
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "fk_representatives_core_replaced_by"
+            columns: ["replaced_by_id"]
+            isOneToOne: false
+            referencedRelation: "representatives_core"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       role_permissions: {
         Row: {
@@ -3821,12 +4153,16 @@ export type Database = {
           display_name: string | null
           email: string
           id: string
+          integrity_consent_at: string | null
+          integrity_consent_scope: string | null
           is_active: boolean | null
           is_admin: boolean | null
           participation_style: string | null
           primary_concerns: string[] | null
           privacy_settings: Json | null
           trust_tier: string | null
+          trust_tier_score: number | null
+          trust_tier_version: number | null
           updated_at: string | null
           user_id: string
           username: string
@@ -3842,12 +4178,16 @@ export type Database = {
           display_name?: string | null
           email: string
           id: string
+          integrity_consent_at?: string | null
+          integrity_consent_scope?: string | null
           is_active?: boolean | null
           is_admin?: boolean | null
           participation_style?: string | null
           primary_concerns?: string[] | null
           privacy_settings?: Json | null
           trust_tier?: string | null
+          trust_tier_score?: number | null
+          trust_tier_version?: number | null
           updated_at?: string | null
           user_id: string
           username: string
@@ -3863,12 +4203,16 @@ export type Database = {
           display_name?: string | null
           email?: string
           id?: string
+          integrity_consent_at?: string | null
+          integrity_consent_scope?: string | null
           is_active?: boolean | null
           is_admin?: boolean | null
           participation_style?: string | null
           primary_concerns?: string[] | null
           privacy_settings?: Json | null
           trust_tier?: string | null
+          trust_tier_score?: number | null
+          trust_tier_version?: number | null
           updated_at?: string | null
           user_id?: string
           username?: string
@@ -3967,6 +4311,45 @@ export type Database = {
           total_session_duration?: number | null
           user_agent?: string | null
           user_id?: string | null
+        }
+        Relationships: []
+      }
+      vote_integrity_scores: {
+        Row: {
+          created_at: string | null
+          expires_at: string
+          id: string
+          metadata: Json | null
+          poll_id: string
+          reason_codes: string[]
+          score: number
+          user_id: string | null
+          vote_id: string
+          vote_type: string
+        }
+        Insert: {
+          created_at?: string | null
+          expires_at?: string
+          id?: string
+          metadata?: Json | null
+          poll_id: string
+          reason_codes?: string[]
+          score: number
+          user_id?: string | null
+          vote_id: string
+          vote_type?: string
+        }
+        Update: {
+          created_at?: string | null
+          expires_at?: string
+          id?: string
+          metadata?: Json | null
+          poll_id?: string
+          reason_codes?: string[]
+          score?: number
+          user_id?: string | null
+          vote_id?: string
+          vote_type?: string
         }
         Relationships: []
       }
@@ -4389,19 +4772,6 @@ export type Database = {
         | {
             Args: {
               end_time: string
-              metric_name_param?: string
-              start_time: string
-            }
-            Returns: {
-              metric_name: string
-              metric_value: number
-              period_end: string
-              period_start: string
-            }[]
-          }
-        | {
-            Args: {
-              end_time: string
               metric_name_param: string
               start_time: string
             }
@@ -4414,6 +4784,20 @@ export type Database = {
               total_value: number
             }[]
           }
+        | {
+            Args: {
+              end_time: string
+              metric_name_param?: string
+              start_time: string
+            }
+            Returns: {
+              metric_name: string
+              metric_value: number
+              period_end: string
+              period_start: string
+            }[]
+          }
+      analyze_database: { Args: never; Returns: undefined }
       analyze_geographic_intelligence:
         | {
             Args: never
@@ -4536,12 +4920,20 @@ export type Database = {
         }
         Returns: string
       }
+      deactivate_non_current_openstates_reps: { Args: never; Returns: number }
       detect_bot_behavior:
-        | { Args: { p_user_id: string }; Returns: Json }
         | {
             Args: { p_poll_id: string; p_time_window?: unknown }
             Returns: Json
           }
+        | { Args: { p_user_id: string }; Returns: Json }
+      determine_status_from_active: {
+        Args: {
+          p_existing_status?: Database["public"]["Enums"]["representative_status"]
+          p_is_active: boolean
+        }
+        Returns: Database["public"]["Enums"]["representative_status"]
+      }
       exec_sql: { Args: { sql: string }; Returns: string }
       get_audit_log_stats: {
         Args: { p_end_date?: string; p_start_date?: string }
@@ -4562,6 +4954,28 @@ export type Database = {
             Args: { p_poll_id: string; p_trust_tiers?: number[] }
             Returns: Json
           }
+      get_dashboard_data: {
+        Args: { p_user_id: string }
+        Returns: {
+          active_polls: number
+          participation_score: number
+          platform_active_polls: number
+          platform_total_polls: number
+          platform_total_users: number
+          platform_total_votes: number
+          polls_created_last_30_days: number
+          show_elected_officials: boolean
+          show_engagement_score: boolean
+          show_quick_actions: boolean
+          show_recent_activity: boolean
+          total_polls_created: number
+          total_votes: number
+          total_votes_on_user_polls: number
+          user_email: string
+          user_name: string
+          votes_last_30_days: number
+        }[]
+      }
       get_duplicate_canonical_ids: {
         Args: never
         Returns: {
@@ -4607,6 +5021,15 @@ export type Database = {
       get_personalized_recommendations: {
         Args: { p_limit?: number; p_user_id: string }
         Returns: Json
+      }
+      get_platform_stats: {
+        Args: never
+        Returns: {
+          active_polls: number
+          total_polls: number
+          total_users: number
+          total_votes: number
+        }[]
       }
       get_poll_results_by_trust_tier: {
         Args: { p_poll_id: string; p_trust_tiers?: number[] }
@@ -4667,13 +5090,43 @@ export type Database = {
           status: string
         }[]
       }
+      perform_maintenance_on_tables: {
+        Args: never
+        Returns: {
+          error_message: string
+          operation: string
+          success: boolean
+          table_name: string
+        }[]
+      }
       rebuild_poll_indexes: { Args: never; Returns: undefined }
+      refresh_all_materialized_views: {
+        Args: never
+        Returns: {
+          error_message: string
+          refreshed: boolean
+          view_name: string
+        }[]
+      }
       refresh_divisions_from_openstates: { Args: never; Returns: number }
+      refresh_materialized_view: {
+        Args: { view_name: string }
+        Returns: undefined
+      }
       refresh_poll_statistics_view: { Args: never; Returns: undefined }
       run_maintenance_job: {
         Args: { p_job_name: string; p_job_type: string }
         Returns: Json
       }
+      set_status_from_active: {
+        Args: {
+          p_existing_status?: Database["public"]["Enums"]["representative_status"]
+          p_is_active: boolean
+        }
+        Returns: Database["public"]["Enums"]["representative_status"]
+      }
+      show_limit: { Args: never; Returns: number }
+      show_trgm: { Args: { "": string }; Returns: string[] }
       sync_representatives_from_openstates: { Args: never; Returns: undefined }
       update_cache_performance_metrics: {
         Args: {
@@ -4692,7 +5145,21 @@ export type Database = {
         Returns: undefined
       }
       update_poll_statistics: { Args: never; Returns: undefined }
+      update_poll_vote_count: {
+        Args: { poll_id_param: string }
+        Returns: undefined
+      }
+      update_representative_status: {
+        Args: {
+          p_new_status: Database["public"]["Enums"]["representative_status"]
+          p_replaced_by_id?: number
+          p_representative_id: number
+          p_status_reason?: string
+        }
+        Returns: undefined
+      }
       update_trending_scores: { Args: never; Returns: undefined }
+      vacuum_analyze_table: { Args: { table_name: string }; Returns: undefined }
     }
     Enums: {
       audit_event_type:
@@ -4706,6 +5173,7 @@ export type Database = {
         | "system_event"
         | "user_action"
       audit_severity: "info" | "warning" | "error" | "critical"
+      representative_status: "active" | "inactive" | "historical"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -4845,6 +5313,7 @@ export const Constants = {
         "user_action",
       ],
       audit_severity: ["info", "warning", "error", "critical"],
+      representative_status: ["active", "inactive", "historical"],
     },
   },
 } as const
