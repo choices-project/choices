@@ -54,6 +54,7 @@ export function RepresentativeCard({
   const { following, loading, error, toggle } = useFollowRepresentative(representative.id);
   const [detailsOpen, setDetailsOpen] = React.useState(false);
   const [detailsLoading, setDetailsLoading] = React.useState(false);
+  const detailsOpenRef = React.useRef(false);
   const detailedRepresentative = useRepresentativeById(representative.id);
   const getRepresentativeById = useGetRepresentativeById();
   const [photoError, setPhotoError] = React.useState(false);
@@ -147,6 +148,11 @@ export function RepresentativeCard({
   React.useEffect(() => {
     setPhotoError(false);
   }, [representative.id, representative.primary_photo_url]);
+
+  // Sync ref with state
+  React.useEffect(() => {
+    detailsOpenRef.current = detailsOpen;
+  }, [detailsOpen]);
 
   React.useEffect(() => {
     if (!detailsOpen) {

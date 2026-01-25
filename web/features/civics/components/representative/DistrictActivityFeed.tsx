@@ -74,10 +74,11 @@ export function DistrictActivityFeed({
 
           const repActivities: UnifiedActivity[] = [];
           let repName = `Representative #${repId}`;
+          let repData: any = null;
 
-          // Get representative name
+          // Get representative data (only read once!)
           if (activitiesRes.ok) {
-            const repData = await activitiesRes.json();
+            repData = await activitiesRes.json();
             if (repData.success && repData.data?.representative) {
               repName = repData.data.representative.name || repName;
             }
@@ -109,9 +110,8 @@ export function DistrictActivityFeed({
             }
           }
 
-          // Process bills/activities
-          if (activitiesRes.ok) {
-            const repData = await activitiesRes.json();
+          // Process bills/activities (use already-read repData)
+          if (activitiesRes.ok && repData) {
             if (repData.success && repData.data?.representative?.activities) {
               repData.data.representative.activities.forEach((activity: any) => {
                 if (activity.type === 'bill') {

@@ -644,14 +644,21 @@ export class GeographicElectoralFeed {
       const federalDistrict = location.federal?.house?.district;
 
       // Get federal officials by district (e.g., CA-11)
+      // Extract district number from "CA-11" format (database stores just "11")
       if (federalDistrict && stateCode) {
         try {
+          // Extract district number from "CA-11" format
+          const districtNumber = federalDistrict.includes('-') 
+            ? federalDistrict.split('-')[1] 
+            : federalDistrict;
+          
           const { data: federalReps, error: federalError } = await supabase
             .from('representatives_core')
             .select('id, name, office, party, state, district, level')
             .eq('status', 'active')
             .eq('level', 'federal')
-            .or(`district.eq.${federalDistrict},district.ilike.%${federalDistrict}%`)
+            .eq('state', stateCode)
+            .eq('district', districtNumber)
             .limit(10);
 
           if (!federalError && federalReps && Array.isArray(federalReps)) {
