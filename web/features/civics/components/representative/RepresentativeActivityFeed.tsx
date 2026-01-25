@@ -73,13 +73,17 @@ export function RepresentativeActivityFeed({
         // Process polls
         if (pollsRes.ok) {
           const pollsData = await pollsRes.json();
-          if (pollsData.success && Array.isArray(pollsData.data?.representatives || pollsData.data)) {
-            // Handle both old format (data as array) and new format (data.representatives)
-            const polls = Array.isArray(pollsData.data?.representatives) 
-              ? pollsData.data.representatives 
-              : Array.isArray(pollsData.data) 
-                ? pollsData.data 
-                : [];
+          if (pollsData.success) {
+            // Handle different response formats: data.polls (current), data as array (legacy), or data.representatives
+            let polls: any[] = [];
+            if (Array.isArray(pollsData.data?.polls)) {
+              polls = pollsData.data.polls;
+            } else if (Array.isArray(pollsData.data)) {
+              polls = pollsData.data;
+            } else if (Array.isArray(pollsData.data?.representatives)) {
+              polls = pollsData.data.representatives;
+            }
+            
             polls.forEach((poll: any) => {
               activitiesList.push({
                 id: poll.id,
@@ -98,17 +102,18 @@ export function RepresentativeActivityFeed({
               });
             });
           } else {
-            logger.warn('RepresentativeActivityFeed: Unexpected polls API response format', {
+            logger.warn('RepresentativeActivityFeed: Polls API returned unsuccessful response', {
               success: pollsData.success,
-              hasData: !!pollsData.data,
-              dataType: typeof pollsData.data,
-              isArray: Array.isArray(pollsData.data),
+              error: pollsData.error,
+              representativeId,
             });
           }
         } else {
+          const errorText = await pollsRes.text().catch(() => 'Unknown error');
           logger.warn('RepresentativeActivityFeed: Failed to fetch polls', {
             status: pollsRes.status,
             statusText: pollsRes.statusText,
+            error: errorText,
             representativeId,
           });
         }
