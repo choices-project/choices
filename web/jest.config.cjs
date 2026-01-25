@@ -109,7 +109,8 @@ module.exports = {
         ".*/tests\\.disabled/.*",
         ".*/scripts\\.disabled/.*",
         ".*/archive/.*",
-        "<rootDir>/tests/e2e/" // ← keep Playwright out of Jest
+        "<rootDir>/tests/e2e/",
+        "<rootDir>/tests/unit/services/govinfo-mcp-service.test" // node-only; run in govinfo project
       ],
       collectCoverageFrom: [
         'lib/**/*.{js,jsx,ts,tsx}',
@@ -125,6 +126,20 @@ module.exports = {
       ],
     }
     ,
+    {
+      displayName: 'govinfo',
+      testEnvironment: 'node',
+      testTimeout: 25000,
+      transform: { '^.+\\.(js|jsx|ts|tsx)$': 'babel-jest' },
+      setupFiles: ['<rootDir>/jest.setup.js', '<rootDir>/tests/setup-govinfo-env.js'],
+      setupFilesAfterEnv: ['<rootDir>/jest.setup.after.js', '<rootDir>/tests/setup.ts'],
+      testMatch: ['<rootDir>/tests/unit/services/govinfo-mcp-service.test.{js,jsx,ts,tsx}'],
+      moduleNameMapper: {
+        '^@/(.*)$': '<rootDir>/$1',
+        '^@/lib/(.*)$': '<rootDir>/lib/$1',
+      },
+      testPathIgnorePatterns: ['/node_modules/', '/\\.next/', '/out/', '/build/', '/dist/'],
+    },
     {
       displayName: 'contracts',
       testEnvironment: 'node',

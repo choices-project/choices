@@ -188,7 +188,8 @@ export default function PollClient({ poll }: PollClientProps) {
   const isPollCreator = Boolean(user?.id && poll.createdBy && String(user.id) === String(poll.createdBy));
   const pollStatus = localPollStatus ?? poll.status ?? 'active';
   const canClosePoll = (isPollCreator || isAdmin) && pollStatus === 'active';
-  
+  const canVote = poll.canVote ?? (pollStatus === 'active');
+
   // Debug logging for close/delete button visibility and voting status
   useEffect(() => {
     if (process.env.NODE_ENV === 'development') {
@@ -530,8 +531,7 @@ export default function PollClient({ poll }: PollClientProps) {
     }, normalizedOptions[0]);
   }, [normalizedOptions]);
 
-  // pollStatus is already defined above using localPollStatus
-  const canVote = poll.canVote ?? false;
+  // pollStatus and canVote are already defined above
   const participationCount = typeof poll.participation === 'number' ? poll.participation : 0;
   const privacyLabel = PRIVACY_LABELS[poll.privacyLevel ?? 'public'] ?? (poll.privacyLevel ?? 'Public');
   const votingLabel = VOTING_LABELS[poll.votingMethod ?? 'single'] ?? (poll.votingMethod ?? 'Single choice');

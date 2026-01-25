@@ -1035,50 +1035,48 @@ export const useAnalyticsTemporal = () => useAnalyticsStore((state) => state.tem
 export const useAnalyticsPollHeatmap = () => useAnalyticsStore((state) => state.pollHeatmap);
 export const useAnalyticsTrustTiers = () => useAnalyticsStore((state) => state.trustTiers);
 
-export const useAnalyticsActions = () =>
-  useMemo(() => {
-    const state = useAnalyticsStore.getState();
+const selectAnalyticsActions = (state: AnalyticsStore) => ({
+  trackEvent: state.trackEvent,
+  trackPageView: state.trackPageView,
+  trackUserAction: state.trackUserAction,
+  trackError: state.trackError,
+  trackPerformance: state.trackPerformance,
+  setEvents: state.setEvents,
+  addEvent: state.addEvent,
+  clearEvents: state.clearEvents,
+  setPerformanceMetrics: state.setPerformanceMetrics,
+  updateUserBehavior: state.updateUserBehavior,
+  setDashboard: state.setDashboard,
+  setChartData: state.setChartData,
+  setChartConfig: state.setChartConfig,
+  updateChartConfig: state.updateChartConfig,
+  setChartMaxValue: state.setChartMaxValue,
+  setChartShowTrends: state.setChartShowTrends,
+  setChartShowConfidence: state.setChartShowConfidence,
+  clearChartData: state.clearChartData,
+  updatePreferences: state.updatePreferences,
+  setTrackingEnabled: state.setTrackingEnabled,
+  resetPreferences: state.resetPreferences,
+  resetChartState: state.resetChartState,
+  resetAnalyticsState: state.resetAnalyticsState,
+  sendAnalytics: state.sendAnalytics,
+  exportAnalytics: state.exportAnalytics,
+  importAnalytics: state.importAnalytics,
+  generateReport: state.generateReport,
+  fetchDemographics: state.fetchDemographics,
+  fetchTrends: state.fetchTrends,
+  fetchTemporal: state.fetchTemporal,
+  fetchPollHeatmap: state.fetchPollHeatmap,
+  fetchTrustTierComparison: state.fetchTrustTierComparison,
+  setLoading: state.setLoading,
+  setTracking: state.setTracking,
+  setSending: state.setSending,
+  setError: state.setError,
+  clearError: state.clearError,
+});
 
-    return {
-      trackEvent: state.trackEvent,
-      trackPageView: state.trackPageView,
-      trackUserAction: state.trackUserAction,
-      trackError: state.trackError,
-      trackPerformance: state.trackPerformance,
-      setEvents: state.setEvents,
-      addEvent: state.addEvent,
-      clearEvents: state.clearEvents,
-      setPerformanceMetrics: state.setPerformanceMetrics,
-      updateUserBehavior: state.updateUserBehavior,
-      setDashboard: state.setDashboard,
-      setChartData: state.setChartData,
-      setChartConfig: state.setChartConfig,
-      updateChartConfig: state.updateChartConfig,
-      setChartMaxValue: state.setChartMaxValue,
-      setChartShowTrends: state.setChartShowTrends,
-      setChartShowConfidence: state.setChartShowConfidence,
-      clearChartData: state.clearChartData,
-      updatePreferences: state.updatePreferences,
-      setTrackingEnabled: state.setTrackingEnabled,
-      resetPreferences: state.resetPreferences,
-      resetChartState: state.resetChartState,
-      resetAnalyticsState: state.resetAnalyticsState,
-      sendAnalytics: state.sendAnalytics,
-      exportAnalytics: state.exportAnalytics,
-      importAnalytics: state.importAnalytics,
-      generateReport: state.generateReport,
-      fetchDemographics: state.fetchDemographics,
-      fetchTrends: state.fetchTrends,
-      fetchTemporal: state.fetchTemporal,
-      fetchPollHeatmap: state.fetchPollHeatmap,
-      fetchTrustTierComparison: state.fetchTrustTierComparison,
-      setLoading: state.setLoading,
-      setTracking: state.setTracking,
-      setSending: state.setSending,
-      setError: state.setError,
-      clearError: state.clearError,
-    };
-  }, []);
+export const useAnalyticsActions = () =>
+  useAnalyticsStore(useShallow(selectAnalyticsActions));
 
 export const useAnalyticsStats = () => {
   const { totalEvents, sessionId, trackingEnabled, preferences, hasPerformanceMetrics, hasUserBehavior, hasDashboard } = useAnalyticsStore(

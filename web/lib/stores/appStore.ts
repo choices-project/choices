@@ -10,6 +10,7 @@ import { useMemo } from 'react';
 import { create } from 'zustand';
 import { devtools, persist } from 'zustand/middleware';
 import { immer } from 'zustand/middleware/immer';
+import { useShallow } from 'zustand/react/shallow';
 
 import { logger } from '@/lib/utils/logger';
 
@@ -631,46 +632,43 @@ export const useBreadcrumbs = () => useAppStore((state) => state.breadcrumbs);
 export const useAppLoading = () => useAppStore((state) => state.isLoading);
 export const useAppError = () => useAppStore((state) => state.error);
 
-export const useAppActions = () =>
-  useMemo(() => {
-    const state = useAppStore.getState();
+const selectAppActions = (state: AppStore) => ({
+  setLoading: state.setLoading,
+  setError: state.setError,
+  clearError: state.clearError,
+  setTheme: state.setTheme,
+  toggleTheme: state.toggleTheme,
+  updateSystemTheme: state.updateSystemTheme,
+  toggleSidebar: state.toggleSidebar,
+  setSidebarCollapsed: state.setSidebarCollapsed,
+  setSidebarWidth: state.setSidebarWidth,
+  setSidebarPinned: state.setSidebarPinned,
+  setSidebarActiveSection: state.setSidebarActiveSection,
+  openModal: state.openModal,
+  closeModal: state.closeModal,
+  closeAllModals: state.closeAllModals,
+  pushModal: state.pushModal,
+  popModal: state.popModal,
+  setDeviceInfo: state.setDeviceInfo,
+  setFeatureFlag: state.setFeatureFlag,
+  toggleFeatureFlag: state.toggleFeatureFlag,
+  setFeatureFlags: state.setFeatureFlags,
+  loadFeatureFlags: state.loadFeatureFlags,
+  updateSettings: state.updateSettings,
+  resetSettings: state.resetSettings,
+  setLanguage: state.setLanguage,
+  setI18nLoading: state.setI18nLoading,
+  setI18nError: state.setI18nError,
+  setCurrentRoute: state.setCurrentRoute,
+  setBreadcrumbs: state.setBreadcrumbs,
+  addBreadcrumb: state.addBreadcrumb,
+  removeBreadcrumb: state.removeBreadcrumb,
+  setInitializing: state.setInitializing,
+  setUpdating: state.setUpdating,
+  resetAppState: state.resetAppState,
+});
 
-    return {
-      setLoading: state.setLoading,
-      setError: state.setError,
-      clearError: state.clearError,
-      setTheme: state.setTheme,
-      toggleTheme: state.toggleTheme,
-      updateSystemTheme: state.updateSystemTheme,
-      toggleSidebar: state.toggleSidebar,
-      setSidebarCollapsed: state.setSidebarCollapsed,
-      setSidebarWidth: state.setSidebarWidth,
-      setSidebarPinned: state.setSidebarPinned,
-      setSidebarActiveSection: state.setSidebarActiveSection,
-      openModal: state.openModal,
-      closeModal: state.closeModal,
-      closeAllModals: state.closeAllModals,
-      pushModal: state.pushModal,
-      popModal: state.popModal,
-      setDeviceInfo: state.setDeviceInfo,
-      setFeatureFlag: state.setFeatureFlag,
-      toggleFeatureFlag: state.toggleFeatureFlag,
-      setFeatureFlags: state.setFeatureFlags,
-      loadFeatureFlags: state.loadFeatureFlags,
-      updateSettings: state.updateSettings,
-      resetSettings: state.resetSettings,
-      setLanguage: state.setLanguage,
-      setI18nLoading: state.setI18nLoading,
-      setI18nError: state.setI18nError,
-      setCurrentRoute: state.setCurrentRoute,
-      setBreadcrumbs: state.setBreadcrumbs,
-      addBreadcrumb: state.addBreadcrumb,
-      removeBreadcrumb: state.removeBreadcrumb,
-      setInitializing: state.setInitializing,
-      setUpdating: state.setUpdating,
-      resetAppState: state.resetAppState,
-    };
-  }, []);
+export const useAppActions = () => useAppStore(useShallow(selectAppActions));
 
 export const appSelectors = {
   theme: (state: AppStore) => state.theme,

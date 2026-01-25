@@ -12,7 +12,7 @@
 
 import { useEffect, useRef } from 'react';
 
-import { useAppStore } from '@/lib/stores/appStore';
+import { useAppActions } from '@/lib/stores/appStore';
 import { useDarkMode } from '@/lib/stores/deviceStore';
 
 /**
@@ -22,8 +22,7 @@ import { useDarkMode } from '@/lib/stores/deviceStore';
  */
 export function useSystemThemeSync() {
   const systemPrefersDark = useDarkMode();
-  // Get updateSystemTheme directly from store for stable reference
-  const updateSystemTheme = useAppStore((state) => state.updateSystemTheme);
+  const { updateSystemTheme } = useAppActions();
   const hasInitialized = useRef(false);
 
   // Initial system theme detection and sync - run once

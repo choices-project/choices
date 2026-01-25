@@ -1,16 +1,18 @@
 /**
  * App Store Selector Verification Tests
- * 
+ *
  * Verifies that appStore is accessed only through selectors and hooks,
  * not through direct state access. This ensures proper reactivity and
  * prevents stale state issues.
- * 
+ *
  * Created: January 2025
  */
 
-import { describe, it, expect } from '@jest/globals';
+import { describe, it, expect, beforeEach } from '@jest/globals';
+import { act, renderHook } from '@testing-library/react';
 
 import {
+  useAppStore,
   useTheme,
   useResolvedTheme,
   useSidebarCollapsed,
@@ -57,8 +59,9 @@ describe('App Store Selector Verification', () => {
   });
 
   it('verifies store provides action hooks', () => {
-    const actions = useAppActions();
-    
+    const { result } = renderHook(() => useAppActions());
+    const actions = result.current;
+
     // Verify action hooks return actions
     expect(actions).toBeDefined();
     expect(typeof actions.setTheme).toBe('function');
@@ -73,9 +76,53 @@ describe('App Store Selector Verification', () => {
     // This is verified by the useMemo in the store implementation
     const selector1 = useTheme;
     const selector2 = useTheme;
-    
+
     // Same function reference (stable)
     expect(selector1).toBe(selector2);
+  });
+});
+
+describe('App Store theme and sidebar persistence', () => {
+  beforeEach(() => {
+    useAppStore.getState().resetAppState();
+  });
+
+  it('theme actions update theme state', () => {
+    const { result: actionsResult } = renderHook(() => useAppActions());
+    const { result: themeResult } = renderHook(() => useTheme());
+
+    expect(themeResult.current).toBe('system');
+
+    act(() => {
+      actionsResult.current.setTheme('dark');
+    });
+
+    expect(themeResult.current).toBe('dark');
+
+    act(() => {
+      actionsResult.current.setTheme('light');
+    });
+
+    expect(themeResult.current).toBe('light');
+  });
+
+  it('sidebar actions update sidebar state', () => {
+    const { result: actionsResult } = renderHook(() => useAppActions());
+    const { result: sidebarResult } = renderHook(() => useSidebarCollapsed());
+
+    expect(sidebarResult.current).toBe(false);
+
+    act(() => {
+      actionsResult.current.setSidebarCollapsed(true);
+    });
+
+    expect(sidebarResult.current).toBe(true);
+
+    act(() => {
+      actionsResult.current.toggleSidebar();
+    });
+
+    expect(sidebarResult.current).toBe(false);
   });
 });
 

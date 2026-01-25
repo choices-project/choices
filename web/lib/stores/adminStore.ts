@@ -1813,116 +1813,107 @@ export const useAdminSelectedUsers = () =>
   useAdminStore((state) => state.userFilters.selectedUsers);
 export const useAdminShowBulkActions = () =>
   useAdminStore((state) => state.userFilters.showBulkActions);
-export const useAdminUserActions = () =>
-  useMemo(() => {
-    const state = useAdminStore.getState();
+const selectAdminUserActions = (state: AdminStore) => ({
+  setUserFilters: state.setUserFilters,
+  selectUser: state.selectUser,
+  deselectUser: state.deselectUser,
+  selectAllUsers: state.selectAllUsers,
+  deselectAllUsers: state.deselectAllUsers,
+  updateUserRole: state.updateUserRole,
+  updateUserStatus: state.updateUserStatus,
+  deleteUser: state.deleteUser,
+});
 
-    return {
-      setUserFilters: state.setUserFilters,
-      selectUser: state.selectUser,
-      deselectUser: state.deselectUser,
-      selectAllUsers: state.selectAllUsers,
-      deselectAllUsers: state.deselectAllUsers,
-      updateUserRole: state.updateUserRole,
-      updateUserStatus: state.updateUserStatus,
-      deleteUser: state.deleteUser,
-    };
-  }, []);
+export const useAdminUserActions = () =>
+  useAdminStore(useShallow(selectAdminUserActions));
 
 export const useAdminActiveTab = () => useAdminStore((state) => state.activeTab);
 export const useAdminDashboardStats = () => useAdminStore(useShallow((state) => state.dashboardStats));
-export const useAdminDashboardActions = () =>
-  useMemo(() => {
-    const state = useAdminStore.getState();
 
-    return {
-      setActiveTab: state.setActiveTab,
-      loadDashboardStats: state.loadDashboardStats,
-    };
-  }, []);
+const selectAdminDashboardActions = (state: AdminStore) => ({
+  setActiveTab: state.setActiveTab,
+  loadDashboardStats: state.loadDashboardStats,
+});
+
+export const useAdminDashboardActions = () =>
+  useAdminStore(useShallow(selectAdminDashboardActions));
 
 export const useAdminSystemSettings = () => useAdminStore((state) => state.systemSettings);
 export const useAdminSettingsTab = () => useAdminStore((state) => state.settingsTab);
 export const useAdminIsSavingSettings = () => useAdminStore((state) => state.isSavingSettings);
-export const useAdminSystemSettingsActions = () =>
-  useMemo(() => {
-    const state = useAdminStore.getState();
 
-    return {
-      setSystemSettings: state.setSystemSettings,
-      updateSystemSetting: state.updateSystemSetting,
-      setSettingsTab: state.setSettingsTab,
-      saveSystemSettings: state.saveSystemSettings,
-      loadSystemSettings: state.loadSystemSettings,
-    };
-  }, []);
+const selectAdminSystemSettingsActions = (state: AdminStore) => ({
+  setSystemSettings: state.setSystemSettings,
+  updateSystemSetting: state.updateSystemSetting,
+  setSettingsTab: state.setSettingsTab,
+  saveSystemSettings: state.saveSystemSettings,
+  loadSystemSettings: state.loadSystemSettings,
+});
+
+export const useAdminSystemSettingsActions = () =>
+  useAdminStore(useShallow(selectAdminSystemSettingsActions));
 
 export const useAdminReimportProgress = () =>
   useAdminStore((state) => state.reimportProgress);
 export const useAdminReimportLogs = () => useAdminStore((state) => state.reimportLogs);
 export const useAdminIsReimportRunning = () =>
   useAdminStore((state) => state.isReimportRunning);
-export const useAdminReimportActions = () =>
-  useMemo(() => {
-    const state = useAdminStore.getState();
 
-    return {
-      setReimportProgress: state.setReimportProgress,
-      addReimportLog: state.addReimportLog,
-      clearReimportLogs: state.clearReimportLogs,
-      setIsReimportRunning: state.setIsReimportRunning,
-      startReimport: state.startReimport,
-    };
-  }, []);
+const selectAdminReimportActions = (state: AdminStore) => ({
+  setReimportProgress: state.setReimportProgress,
+  addReimportLog: state.addReimportLog,
+  clearReimportLogs: state.clearReimportLogs,
+  setIsReimportRunning: state.setIsReimportRunning,
+  startReimport: state.startReimport,
+});
+
+export const useAdminReimportActions = () =>
+  useAdminStore(useShallow(selectAdminReimportActions));
+
+const selectAdminActions = (state: AdminStore) => ({
+  addNotification: state.addNotification,
+  toggleSidebar: state.toggleSidebar,
+  loadUsers: state.loadUsers,
+  loadDashboardStats: state.loadDashboardStats,
+  loadSystemSettings: state.loadSystemSettings,
+  setTrendingTopics: state.setTrendingTopics,
+  setGeneratedPolls: state.setGeneratedPolls,
+  setSystemMetrics: state.setSystemMetrics,
+  updateActivityFeed: state.updateActivityFeed,
+  addActivityItem: state.addActivityItem,
+  clearActivityItems: state.clearActivityItems,
+  addAdminNotification: state.addAdminNotification,
+  clearAdminNotifications: state.clearAdminNotifications,
+  markNotificationAsRead: state.markNotificationAsRead,
+  markNotificationRead: state.markNotificationRead,
+  setLoading: state.setLoading,
+  setUpdating: state.setUpdating,
+  setError: state.setError,
+  clearError: state.clearError,
+  refreshData: state.refreshData,
+  syncData: state.syncData,
+  resetAdminState: state.resetAdminState,
+});
 
 export const useAdminActions = () =>
-  useMemo(() => {
-    const state = useAdminStore.getState();
+  useAdminStore(useShallow(selectAdminActions));
 
-    return {
-      addNotification: state.addNotification,
-      toggleSidebar: state.toggleSidebar,
-      loadUsers: state.loadUsers,
-      loadDashboardStats: state.loadDashboardStats,
-      loadSystemSettings: state.loadSystemSettings,
-      setTrendingTopics: state.setTrendingTopics,
-      setGeneratedPolls: state.setGeneratedPolls,
-      setSystemMetrics: state.setSystemMetrics,
-      updateActivityFeed: state.updateActivityFeed,
-      addActivityItem: state.addActivityItem,
-      clearActivityItems: state.clearActivityItems,
-      addAdminNotification: state.addAdminNotification,
-      clearAdminNotifications: state.clearAdminNotifications,
-      markNotificationAsRead: state.markNotificationAsRead,
-      markNotificationRead: state.markNotificationRead,
-      setLoading: state.setLoading,
-      setUpdating: state.setUpdating,
-      setError: state.setError,
-      clearError: state.clearError,
-      refreshData: state.refreshData,
-      syncData: state.syncData,
-      resetAdminState: state.resetAdminState,
-    };
-  }, []);
+const selectAdminFeatureFlagActions = (state: AdminStore) => ({
+  enableFeatureFlag: state.enableFeatureFlag,
+  disableFeatureFlag: state.disableFeatureFlag,
+  toggleFeatureFlag: state.toggleFeatureFlag,
+  isFeatureFlagEnabled: state.isFeatureFlagEnabled,
+  getFeatureFlag: state.getFeatureFlag,
+  getAllFeatureFlags: state.getAllFeatureFlags,
+  exportFeatureFlagConfig: state.exportFeatureFlagConfig,
+  importFeatureFlagConfig: state.importFeatureFlagConfig,
+  resetFeatureFlags: state.resetFeatureFlags,
+  setFeatureFlagLoading: state.setFeatureFlagLoading,
+  setFeatureFlagError: state.setFeatureFlagError,
+});
 
 export const useAdminFeatureFlagActions = () =>
-  useMemo(() => {
-    const state = useAdminStore.getState();
-
-    return {
-      enableFeatureFlag: state.enableFeatureFlag,
-      disableFeatureFlag: state.disableFeatureFlag,
-      toggleFeatureFlag: state.toggleFeatureFlag,
-      isFeatureFlagEnabled: state.isFeatureFlagEnabled,
-      getFeatureFlag: state.getFeatureFlag,
-      getAllFeatureFlags: state.getAllFeatureFlags,
-      exportFeatureFlagConfig: state.exportFeatureFlagConfig,
-      importFeatureFlagConfig: state.importFeatureFlagConfig,
-      resetFeatureFlags: state.resetFeatureFlags,
-      setFeatureFlagLoading: state.setFeatureFlagLoading,
-      setFeatureFlagError: state.setFeatureFlagError,
-    };
-  }, []);
+  useAdminStore(useShallow(selectAdminFeatureFlagActions));
 
 export const useAdminStats = () => {
   const { totalUsers, totalNotifications, unreadNotifications, totalActivity } = useAdminStore(

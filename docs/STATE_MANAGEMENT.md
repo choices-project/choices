@@ -174,6 +174,9 @@ export const useNotificationActions = () => {
 - Without `useMemo`, components using `useNotificationActions()` will re-render even when actions haven't changed
 - This pattern ensures optimal performance and prevents cascading re-renders
 
+**Alternative: `useShallow(selectActions)`**
+Many stores (notification, feeds, polls, app, admin, analytics) use `const selectXActions = (state) => ({ ... });` plus `useXStore(useShallow(selectXActions))` instead of per-action selectors and `useMemo`. This is equivalent: `useShallow` keeps the returned object referentially stable when action refs are unchanged. Prefer one pattern consistently per store.
+
 **Alternative for simple cases:**
 If a store has only a few actions, you can return them directly without `useMemo`, but the memoized pattern is preferred for consistency and future-proofing.
 
@@ -181,6 +184,10 @@ If a store has only a few actions, you can return them directly without `useMemo
 
 - Use `createBaseStoreActions(setDraft)` from `web/lib/stores/baseStoreActions.ts` whenever a store exposes the standard loading/error trio. It keeps behaviour consistent across stores and lets us add cross-cutting instrumentation in one place later.
 - Add store-specific status setters (e.g., `setVoting`, `setSending`) in addition to—rather than instead of—the shared helper.
+
+**Stores using `createBaseStoreActions`:** userStore, feedsStore, pollsStore, performanceStore, pollWizardStore, profileStore, electionStore, representativeStore, pwaStore, deviceStore, analyticsStore, hashtagStore, hashtagModerationStore, contactStore, votingStore, voterRegistrationStore. (adminStore, appStore, and notificationStore implement their own loading/error helpers.)
+
+**Persisted stores and `partialize`:** Each persisted store must define `partialize` in its persist config. Document what is stored vs excluded (see "Persistence with partialize" above). Current stores with `partialize`: appStore (theme, sidebar, settings), adminStore, pollsStore (preferences, filters, search, voteHistory), notificationStore (settings), feedsStore, performanceStore, pollWizardStore, profileStore, representativeStore, pwaStore, deviceStore, analyticsStore, hashtagStore, hashtagModerationStore, votingStore, onboardingStore, userStore, widgetStore. `voterRegistrationStore` uses `partialize: () => ({})` (no persistence). Keep payloads small and exclude loading/error/transient state.
 - Export selector bundles when a store has complex consumers (e.g., `analyticsSelectors`, `analyticsChartSelectors`, `analyticsStatusSelectors`). Re-export them via `web/lib/stores/index.ts` so features do not import the store module directly.
 - When a feature owns multiple surfaces (web + PWA + harness), add a thin façade under `features/<feature>/lib/store.ts` that re-exports only the selectors/actions that surface needs. This keeps feature code from depending on the entire store module and matches the pattern now used by `features/voting/lib/store.ts`.
 - Feature-level hook bundles should wrap store selectors/actions rather than duplicating state locally. The profile feature (`features/profile/hooks/use-profile.ts`) now mirrors this approach—components such as `ProfileEdit`, `ProfileAvatar`, and `MyDataDashboard` consume only the selectors/actions exposed by the hooks, keeping store usage consistent across the UI.

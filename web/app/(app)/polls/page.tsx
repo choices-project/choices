@@ -21,7 +21,6 @@ import {
   usePollsActions,
   usePollsError,
   usePollsLoading,
-  usePollsStore,
 } from '@/lib/stores/pollsStore';
 import logger from '@/lib/utils/logger';
 
@@ -49,8 +48,8 @@ function PollsPageContent() {
     setFilters,
     setTrendingOnly,
     setCurrentPage,
+    clearSearch,
   } = usePollsActions();
-  const clearSearch = usePollsStore((state) => state.clearSearch);
   const clearSearchRef = useRef(clearSearch);
   React.useEffect(() => { clearSearchRef.current = clearSearch; }, [clearSearch]);
 

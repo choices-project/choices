@@ -87,6 +87,9 @@ export type RelatedPackage = {
  * 
  * The GovInfo API provides the same data as MCP but via standard HTTP REST API.
  */
+const GOVINFO_RETRY_MAX = 3;
+const GOVINFO_RETRY_BASE_MS = 1000;
+
 class GovInfoRestClient {
   private apiKey: string;
   private baseUrl = 'https://api.govinfo.gov';
@@ -150,61 +153,176 @@ class GovInfoRestClient {
     }
   }
 
+  /** Retry fetch on 429 or 5xx with exponential backoff. */
+  private async fetchWithRetry(
+    attemptFn: () => Promise<Response>,
+    ctx: { endpoint?: string; label?: string }
+  ): Promise<Response> {
+    let lastError: Error | null = null;
+    for (let attempt = 0; attempt <= GOVINFO_RETRY_MAX; attempt++) {
+      try {
+        const response = await attemptFn();
+        if (response.ok) {
+          return response;
+        }
+        const status = response.status;
+        const retryable = status === 429 || (status >= 500 && status < 600);
+        const errorText = await response.text().catch(() => 'Unknown error');
+        lastError = new Error(`GovInfo API error: ${status} ${errorText}`);
+        logger.warn('GovInfo API request failed', {
+          ...ctx,
+          status,
+          attempt: attempt + 1,
+          maxRetries: GOVINFO_RETRY_MAX
+        });
+        if (!retryable || attempt === GOVINFO_RETRY_MAX) {
+          throw lastError;
+        }
+        const delay = GOVINFO_RETRY_BASE_MS * Math.pow(2, attempt);
+        await new Promise((r) => setTimeout(r, delay));
+      } catch (e) {
+        if (e instanceof Error && e.message.startsWith('GovInfo API error:')) {
+          throw e;
+        }
+        lastError = e instanceof Error ? e : new Error(String(e));
+        if (attempt === GOVINFO_RETRY_MAX) {
+          throw lastError;
+        }
+        const delay = GOVINFO_RETRY_BASE_MS * Math.pow(2, attempt);
+        await new Promise((r) => setTimeout(r, delay));
+      }
+    }
+    throw lastError ?? new Error('GovInfo API request failed');
+  }
+
   private async makeRequest<T>(endpoint: string, params: Record<string, unknown> = {}): Promise<T> {
     const url = new URL(`${this.baseUrl}${endpoint}`);
     url.searchParams.set('api_key', this.apiKey);
-    
+
     Object.entries(params).forEach(([key, value]) => {
       if (value !== undefined && value !== null && value !== '') {
         url.searchParams.set(key, String(value));
       }
     });
 
-    const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), this.timeout);
-
     try {
-      logger.debug('Making GovInfo API request', {
-        endpoint,
-        hasApiKey: !!this.apiKey
-      });
+      logger.debug('Making GovInfo API request', { endpoint, hasApiKey: !!this.apiKey });
 
-      const response = await fetch(url.toString(), {
-        method: 'GET',
-        headers: {
-          'Accept': 'application/json',
-          'User-Agent': 'Choices-Platform/1.0'
+      const response = await this.fetchWithRetry(
+        () => {
+          const controller = new AbortController();
+          const timeoutId = setTimeout(() => controller.abort(), this.timeout);
+          return fetch(url.toString(), {
+            method: 'GET',
+            headers: {
+              Accept: 'application/json',
+              'User-Agent': 'Choices-Platform/1.0'
+            },
+            signal: controller.signal
+          }).finally(() => clearTimeout(timeoutId));
         },
-        signal: controller.signal
-      });
+        { endpoint }
+      );
 
-      clearTimeout(timeoutId);
-
-      if (!response.ok) {
-        const errorText = await response.text().catch(() => 'Unknown error');
-        logger.warn('GovInfo API request failed', {
-          endpoint,
-          status: response.status,
-          statusText: response.statusText
-        });
-        throw new Error(`GovInfo API error: ${response.status} ${errorText}`);
-      }
-
-      const data = await response.json();
-      logger.debug('GovInfo API request successful', {
-        endpoint,
-        status: response.status
-      });
-
+      const data = (await response.json()) as T;
+      logger.debug('GovInfo API request successful', { endpoint, status: response.status });
       return data;
     } catch (error) {
-      clearTimeout(timeoutId);
       logger.error('GovInfo API request error', {
         endpoint,
         error: error instanceof Error ? error.message : String(error)
       });
       throw error;
     }
+  }
+
+  /**
+   * POST /search — GovInfo Search API requires POST with JSON body.
+   * Uses Lucene-style query (collection:X AND congress:Y AND publishdate:>=... AND query).
+   * X-Api-Key header per GovInfo Search convention.
+   */
+  private async makeSearchRequest<T>(body: Record<string, unknown>): Promise<T> {
+    const url = `${this.baseUrl}/search`;
+
+    try {
+      logger.debug('Making GovInfo Search API request', { hasApiKey: !!this.apiKey });
+
+      const response = await this.fetchWithRetry(
+        () => {
+          const controller = new AbortController();
+          const timeoutId = setTimeout(() => controller.abort(), this.timeout);
+          return fetch(url, {
+            method: 'POST',
+            headers: {
+              Accept: 'application/json',
+              'Content-Type': 'application/json',
+              'User-Agent': 'Choices-Platform/1.0',
+              'X-Api-Key': this.apiKey
+            },
+            body: JSON.stringify(body),
+            signal: controller.signal
+          }).finally(() => clearTimeout(timeoutId));
+        },
+        { label: 'search' }
+      );
+
+      const data = (await response.json()) as T;
+      logger.debug('GovInfo Search API request successful', { status: response.status });
+      return data;
+    } catch (error) {
+      logger.error('GovInfo Search API request error', {
+        error: error instanceof Error ? error.message : String(error)
+      });
+      throw error;
+    }
+  }
+
+  /** Build Lucene-style query string from filters (matches Python MCP search_packages). */
+  private buildSearchQuery(args: {
+    query: string;
+    collection?: string;
+    congress?: number | null;
+    doc_class?: string;
+    title?: string;
+    start_date?: string;
+    end_date?: string;
+    title_number?: string;
+    section?: string;
+    law_type?: string;
+    law_number?: string;
+  }): string {
+    let q = args.query?.trim() || '*';
+    if (args.collection) {
+      q = `collection:${args.collection} AND ${q}`;
+    }
+    if (args.congress != null) {
+      q = `congress:${args.congress} AND ${q}`;
+    }
+    if (args.doc_class) {
+      q = `docClass:${args.doc_class} AND ${q}`;
+    }
+    if (args.title) {
+      q = `title:"${args.title.replace(/"/g, '\\"')}" AND ${q}`;
+    }
+    if (args.start_date) {
+      q = `publishdate:>=${args.start_date} AND ${q}`;
+    }
+    if (args.end_date) {
+      q = `publishdate:<=${args.end_date} AND ${q}`;
+    }
+    if (args.title_number) {
+      q = `titlenum:${args.title_number} AND ${q}`;
+    }
+    if (args.section) {
+      q = `section:${args.section} AND ${q}`;
+    }
+    if (args.law_type) {
+      q = `lawtype:${args.law_type} AND ${q}`;
+    }
+    if (args.law_number) {
+      q = `lawnum:${args.law_number} AND ${q}`;
+    }
+    return q;
   }
 
   private async getPackageContent(packageId: string, contentType: string): Promise<{ result?: unknown }> {
@@ -221,31 +339,35 @@ class GovInfoRestClient {
     const endpoint = `/packages/${packageId}/${format}`;
     
     try {
-      // For text-based formats, fetch as text
+      // For text-based formats, fetch as text with retry
       if (contentType === 'html' || contentType === 'xml' || contentType === 'text') {
         const url = new URL(`${this.baseUrl}${endpoint}`);
         url.searchParams.set('api_key', this.apiKey);
         
-        const response = await fetch(url.toString(), {
-          headers: {
-            'Accept': contentType === 'html' ? 'text/html' : contentType === 'xml' ? 'application/xml' : 'text/plain',
-            'User-Agent': 'Choices-Platform/1.0'
-          }
-        });
-        
-        if (!response.ok) {
-          throw new Error(`HTTP ${response.status}: ${response.statusText}`);
-        }
+        const response = await this.fetchWithRetry(
+          () => {
+            const controller = new AbortController();
+            const timeoutId = setTimeout(() => controller.abort(), this.timeout);
+            return fetch(url.toString(), {
+              headers: {
+                Accept: contentType === 'html' ? 'text/html' : contentType === 'xml' ? 'application/xml' : 'text/plain',
+                'User-Agent': 'Choices-Platform/1.0'
+              },
+              signal: controller.signal
+            }).finally(() => clearTimeout(timeoutId));
+          },
+          { endpoint: `/packages/${packageId}/${format}` }
+        );
         
         const content = await response.text();
         return { result: content };
       } else {
-        // For PDF or other binary, would need different handling
+        // For PDF or other binary, use makeRequest which has retry
         const content = await this.makeRequest<string>(endpoint);
         return { result: content };
       }
     } catch (error) {
-      logger.warn('Failed to get package content, trying summary', {
+      logger.warn('Failed to get package content', {
         packageId,
         contentType,
         error: error instanceof Error ? error.message : String(error)
@@ -271,26 +393,37 @@ class GovInfoRestClient {
   }
 
   private async searchPackages(args: Record<string, unknown>): Promise<{ result?: unknown }> {
-    // GovInfo search API: /search
-    const endpoint = '/search';
-    const params: Record<string, unknown> = {
-      query: args.query || '',
-      collection: args.collection || 'BILLS',
-      pageSize: args.page_size || 50,
-      offsetMark: args.offset_mark || '*'
-    };
-    
-    if (args.start_date) params.startDate = args.start_date;
-    if (args.end_date) params.endDate = args.end_date;
-    
+    const collection = (args.collection as string) || 'BILLS';
+    const pageSize = Math.min(100, Math.max(1, Number(args.page_size) || 50));
+    const offsetMark = (args.offset_mark as string) || '*';
+
+    const query = this.buildSearchQuery({
+      query: (args.query as string) || '',
+      collection,
+      congress: args.congress as number | null | undefined,
+      start_date: (args.start_date as string) || undefined,
+      end_date: (args.end_date as string) || undefined
+    });
+
     try {
-      const data = await this.makeRequest<{ packages?: BillPackage[]; nextPage?: string }>(endpoint, params);
-      // Transform to match expected format
-      return { 
+      const data = await this.makeSearchRequest<{
+        packages?: BillPackage[];
+        nextPage?: string;
+        count?: number;
+      }>({
+        query,
+        pageSize: String(pageSize),
+        offsetMark,
+        resultLevel: 'default',
+        sorts: [{ field: 'score', sortOrder: 'DESC' }]
+      });
+
+      const packages = (data.packages || []) as BillPackage[];
+      return {
         result: {
-          packages: (data.packages || []) as BillPackage[],
+          packages,
           nextPage: data.nextPage,
-          count: (data.packages || []).length
+          count: data.count ?? packages.length
         }
       };
     } catch (error) {
@@ -303,11 +436,52 @@ class GovInfoRestClient {
   }
 
   private async getRelatedPackages(packageId: string): Promise<{ result?: unknown }> {
-    // GovInfo related packages API
-    const endpoint = `/packages/${packageId}/related`;
+    // GovInfo Related API: GET /related/{accessId}; optionally GET /related/{accessId}/{collection} for package lists
+    const listUrl = `/related/${packageId}`;
     try {
-      const data = await this.makeRequest<{ packages?: unknown[] }>(endpoint);
-      return { result: { packages: data.packages || [] } };
+      const list = await this.makeRequest<{
+        relatedId?: string;
+        relationships?: Array<{
+          relationship: string;
+          collection: string;
+          relationshipLink: string;
+        }>;
+      }>(listUrl);
+
+      const rels = list.relationships || [];
+      const billsRel = rels.find((r) => r.collection === 'BILLS');
+
+      if (billsRel) {
+        const resultsUrl = `/related/${packageId}/BILLS`;
+        try {
+          const data = await this.makeRequest<{
+            results?: Array<{
+              packageId?: string;
+              title?: string;
+              lastModified?: string;
+            }>;
+          }>(resultsUrl);
+          const results = data.results || [];
+          const packages: RelatedPackage[] = results.map((r) => ({
+            packageId: r.packageId || '',
+            relationship: billsRel.relationship,
+            title: r.title
+          }));
+          return { result: { packages } };
+        } catch (followErr) {
+          logger.warn('Failed to fetch BILLS related results, using relationship list', {
+            packageId,
+            error: followErr instanceof Error ? followErr.message : String(followErr)
+          });
+        }
+      }
+
+      const packages: RelatedPackage[] = rels.map((r) => ({
+        packageId: r.relationshipLink,
+        relationship: r.relationship,
+        title: r.relationship
+      }));
+      return { result: { packages } };
     } catch (error) {
       logger.warn('Failed to get related packages', {
         packageId,
@@ -318,38 +492,75 @@ class GovInfoRestClient {
   }
 
   private async searchStatutes(args: Record<string, unknown>): Promise<{ result?: unknown }> {
-    const endpoint = '/search';
-    const params: Record<string, unknown> = {
-      query: args.query || '',
-      collection: args.collection || 'USCODE',
-      pageSize: args.page_size || 50
-    };
-    
-    if (args.congress) params.congress = args.congress;
-    if (args.title_number) params.titleNumber = args.title_number;
-    if (args.section) params.section = args.section;
-    if (args.start_date) params.startDate = args.start_date;
-    if (args.end_date) params.endDate = args.end_date;
-    
-    const data = await this.makeRequest(endpoint, params);
-    return { result: data };
+    const collection = (args.collection as string) || 'USCODE';
+    const pageSize = Math.min(100, Math.max(1, Number(args.page_size) || 50));
+    const offsetMark = (args.offset_mark as string) || '*';
+
+    const query = this.buildSearchQuery({
+      query: (args.query as string) || '',
+      collection,
+      congress: args.congress as number | null | undefined,
+      title_number: (args.title_number as string) || undefined,
+      section: (args.section as string) || undefined,
+      start_date: (args.start_date as string) || undefined,
+      end_date: (args.end_date as string) || undefined
+    });
+
+    try {
+      const data = await this.makeSearchRequest<{ packages?: BillPackage[]; count?: number }>({
+        query,
+        pageSize: String(pageSize),
+        offsetMark,
+        resultLevel: 'default',
+        sorts: [{ field: 'score', sortOrder: 'DESC' }]
+      });
+      const packages = data.packages || [];
+      return {
+        result: { packages, count: data.count ?? packages.length }
+      };
+    } catch (error) {
+      logger.warn('GovInfo statutes search failed', {
+        query: args.query,
+        error: error instanceof Error ? error.message : String(error)
+      });
+      return { result: { packages: [], count: 0 } };
+    }
   }
 
   private async getPublicLawsByCongress(args: Record<string, unknown>): Promise<{ result?: unknown }> {
-    const endpoint = '/search';
-    const params: Record<string, unknown> = {
+    const congress = args.congress as number;
+    const pageSize = Math.min(100, Math.max(1, Number(args.page_size) || 50));
+    const offsetMark = (args.offset_mark as string) || '*';
+
+    const query = this.buildSearchQuery({
+      query: '*',
       collection: 'PLAW',
-      congress: args.congress,
-      pageSize: args.page_size || 50
-    };
-    
-    if (args.law_type) params.lawType = args.law_type;
-    if (args.law_number) params.lawNumber = args.law_number;
-    if (args.start_date) params.startDate = args.start_date;
-    if (args.end_date) params.endDate = args.end_date;
-    
-    const data = await this.makeRequest(endpoint, params);
-    return { result: data };
+      congress,
+      law_type: (args.law_type as string) || undefined,
+      law_number: (args.law_number as string) || undefined,
+      start_date: (args.start_date as string) || undefined,
+      end_date: (args.end_date as string) || undefined
+    });
+
+    try {
+      const data = await this.makeSearchRequest<{ packages?: BillPackage[]; count?: number }>({
+        query,
+        pageSize: String(pageSize),
+        offsetMark,
+        resultLevel: 'default',
+        sorts: [{ field: 'publishdate', sortOrder: 'DESC' }]
+      });
+      const packages = data.packages || [];
+      return {
+        result: { packages, count: data.count ?? packages.length }
+      };
+    } catch (error) {
+      logger.warn('GovInfo public laws search failed', {
+        congress,
+        error: error instanceof Error ? error.message : String(error)
+      });
+      return { result: { packages: [], count: 0 } };
+    }
   }
 }
 
@@ -498,6 +709,7 @@ export class GovInfoMCPService {
         arguments: {
           query,
           collection: filters.collection || 'BILLS',
+          congress: filters.congress ?? null,
           start_date: filters.start_date || '',
           end_date: filters.end_date || '',
           page_size: filters.page_size || 50,

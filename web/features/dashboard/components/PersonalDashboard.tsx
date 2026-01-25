@@ -36,8 +36,9 @@ import { Separator } from '@/components/ui/separator';
 import { Switch } from '@/components/ui/switch';
 
 import {
+  usePolls,
   usePollsActions,
-  usePollsStore,
+  usePollsError,
   useAnalyticsStore,
 } from '@/lib/stores';
 import type { AnalyticsEvent } from '@/lib/stores/analyticsStore';
@@ -148,37 +149,9 @@ function StandardPersonalDashboard({ userId: _fallbackUserId }: PersonalDashboar
     }
   }, [isMounted]);
 
-  // PHASE 4.3: Data Hooks - FIXED with useShallow pattern (like useFilteredPollCards)
-  // CRITICAL: useShallow ensures stable object references - arrays come from stable object
-  // Pattern matches useFilteredPollCards: useShallow for subscription, useMemo only if computation needed
-
-  // Polls data - useShallow pattern (EXACTLY like useFilteredPollCards)
-  // CRITICAL FIX: Only select data properties, NOT loading/error states
-  // Loading/error states change frequently and cause unnecessary re-renders
-  // Pattern matches useFilteredPollCards: select only data, access error separately if needed
-  // #region agent log
-  const pollsStoreDataPrevRef = useRef<{ polls: unknown[] } | null>(null);
-  const pollsStoreDataCallCountRef = useRef(0);
-  // #endregion
-  const pollsStoreData = usePollsStore(
-    useShallow((state) => {
-      // #region agent log
-      pollsStoreDataCallCountRef.current += 1;
-      pollsStoreDataPrevRef.current = { polls: state.polls };
-      // #endregion
-      return {
-        polls: state.polls,
-        // Don't include isLoading, error, lastFetchedAt - these change frequently
-        // Access error separately if needed (but prefer not subscribing to it)
-      };
-    })
-  );
-  const polls = pollsStoreData.polls; // useShallow ensures stable reference
-
-  // Access error separately - use useShallow for consistency even for primitive values
-  // CRITICAL: This selector runs independently and won't cause unnecessary re-renders of the main component
-  // Note: For primitive values like strings, useShallow isn't strictly necessary, but it's consistent with our pattern
-  const pollsError = usePollsStore((state) => state.error);
+  // PHASE 4.3: Data Hooks - use selector hooks (usePolls, usePollsError) per store modernization
+  const polls = usePolls();
+  const pollsError = usePollsError();
 
   // Analytics data - useShallow pattern (EXACTLY like useFilteredPollCards)
   // CRITICAL: Select object with events array inside, not array directly
