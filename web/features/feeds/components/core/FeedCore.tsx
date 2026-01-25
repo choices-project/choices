@@ -22,9 +22,8 @@ import { MapPin, Plus, RefreshCw, Users, Vote } from 'lucide-react';
 import Link from 'next/link';
 import React, { useState, useCallback, useEffect, useRef } from 'react';
 
-import { RepresentativeCard } from '@/features/civics/components/representative/RepresentativeCard';
 import { DistrictActivityFeed } from '@/features/civics/components/representative/DistrictActivityFeed';
-
+import { RepresentativeCard } from '@/features/civics/components/representative/RepresentativeCard';
 import type { ElectoralFeedUI } from '@/features/feeds/components/providers/FeedDataProvider';
 
 import { DistrictIndicator } from '@/components/feeds/DistrictBadge';

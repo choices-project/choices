@@ -334,11 +334,7 @@ export default function PollClient({ poll }: PollClientProps) {
     }
 
     let pollInterval: NodeJS.Timeout | null = null;
-    let pollTimeout: NodeJS.Timeout | null = null;
-    let lastVoteCount = computedTotalVotes;
     let pollIntervalMs = 30000; // Start with 30 seconds
-    let consecutiveNoChangeCount = 0;
-    const MAX_NO_CHANGE_COUNT = 4; // Stop polling after 4 consecutive no-change checks (2 minutes at 30s intervals)
 
     const startPolling = () => {
       // Only poll if tab is visible (don't waste resources on background tabs)
@@ -353,38 +349,8 @@ export default function PollClient({ poll }: PollClientProps) {
         }
 
         void (async () => {
-          const previousVoteCount = lastVoteCount;
           await fetchPollData(false); // false = don't show loading state
-          
-          // Check if votes changed
-          const currentVoteCount = computedTotalVotes;
-          if (currentVoteCount !== previousVoteCount) {
-            // Votes changed! Reset to aggressive polling
-            lastVoteCount = currentVoteCount;
-            consecutiveNoChangeCount = 0;
-            pollIntervalMs = 10000; // Poll every 10 seconds when active
-            if (pollInterval) {
-              clearInterval(pollInterval);
-            }
-            startPolling();
-          } else {
-            // No change - back off
-            consecutiveNoChangeCount++;
-            if (consecutiveNoChangeCount >= MAX_NO_CHANGE_COUNT) {
-              // No activity for a while - stop polling
-              if (pollInterval) {
-                clearInterval(pollInterval);
-                pollInterval = null;
-              }
-            } else if (consecutiveNoChangeCount >= 2) {
-              // Back off to 30 seconds after 2 no-change checks
-              pollIntervalMs = 30000;
-              if (pollInterval) {
-                clearInterval(pollInterval);
-              }
-              startPolling();
-            }
-          }
+          // Vote count changes are detected in a separate effect that watches results
         })();
       }, pollIntervalMs);
     };
@@ -403,8 +369,6 @@ export default function PollClient({ poll }: PollClientProps) {
       } else {
         // Tab visible - resume polling
         if (!pollInterval) {
-          lastVoteCount = computedTotalVotes;
-          consecutiveNoChangeCount = 0;
           pollIntervalMs = 10000; // Start fresh with 10s interval
           startPolling();
         }
@@ -419,46 +383,11 @@ export default function PollClient({ poll }: PollClientProps) {
       if (pollInterval) {
         clearInterval(pollInterval);
       }
-      if (pollTimeout) {
-        clearTimeout(pollTimeout);
-      }
       if (typeof document !== 'undefined') {
         document.removeEventListener('visibilitychange', handleVisibilityChange);
       }
     };
-  }, [pollStatus, fetchPollData]);
-
-  // Watch for vote count changes and adjust polling accordingly
-  const lastVoteCountRef = useRef(results?.total_votes ?? computedTotalVotes);
-  const consecutiveNoChangeRef = useRef(0);
-  const pollIntervalRef = useRef<NodeJS.Timeout | null>(null);
-
-  useEffect(() => {
-    if (pollStatus !== 'active' || !results) {
-      return;
-    }
-
-    const currentVoteCount = results.total_votes ?? 0;
-    const previousVoteCount = lastVoteCountRef.current;
-
-    if (currentVoteCount !== previousVoteCount) {
-      // Votes changed! Reset counters
-      lastVoteCountRef.current = currentVoteCount;
-      consecutiveNoChangeRef.current = 0;
-      // Polling will continue at current interval (10s when active)
-    } else {
-      // No change - increment counter
-      consecutiveNoChangeRef.current++;
-      
-      // After 4 consecutive no-change checks (2 minutes at 30s intervals), stop polling
-      if (consecutiveNoChangeRef.current >= 4) {
-        if (pollIntervalRef.current) {
-          clearInterval(pollIntervalRef.current);
-          pollIntervalRef.current = null;
-        }
-      }
-    }
-  }, [results, pollStatus, computedTotalVotes]);
+  }, [pollStatus, fetchPollData, results]);
 
   useEffect(() => {
     const totalVotesContext =

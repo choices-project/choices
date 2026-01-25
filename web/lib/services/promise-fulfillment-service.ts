@@ -14,9 +14,10 @@
  * @date 2026-01-25
  */
 
-import { govInfoMCPService, type BillPackage } from './govinfo-mcp-service';
-import { logger } from '@/lib/utils/logger';
 import { createUnifiedDataOrchestrator } from '@/lib/integrations/unified-orchestrator';
+import { logger } from '@/lib/utils/logger';
+
+import { govInfoMCPService, type BillPackage } from './govinfo-mcp-service';
 
 // Runtime assertion to prevent client-side usage
 function assertServerOnly() {

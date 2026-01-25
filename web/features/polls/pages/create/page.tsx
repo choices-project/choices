@@ -235,11 +235,12 @@ export default function CreatePollPage() {
   }, [shareInfo?.pollId])
 
   useEffect(() => {
-    if (!hasCopiedShareLink) return
+    if (!hasCopiedShareLink) return undefined;
     if (typeof window !== 'undefined') {
       const timeout = window.setTimeout(() => setHasCopiedShareLink(false), 2000)
       return () => window.clearTimeout(timeout)
     }
+    return undefined;
   }, [hasCopiedShareLink])
 
   const errorMessages = useMemo(() => {
