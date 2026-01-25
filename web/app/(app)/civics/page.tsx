@@ -155,7 +155,17 @@ export default function Civics2Page() {
         throw new Error(`Failed to load representatives: ${response.status}`);
       }
 
-      const data = await response.json();
+      let data;
+      try {
+        data = await response.json();
+      } catch (parseError) {
+        logger.error('Failed to parse API response', { 
+          status: response.status,
+          statusText: response.statusText,
+          error: parseError 
+        });
+        throw new Error(`Invalid response from server: ${response.status}`);
+      }
       
       // Enhanced error logging
       if (!data || !data.success) {
@@ -164,7 +174,8 @@ export default function Civics2Page() {
           status: response.status,
           statusText: response.statusText 
         });
-        throw new Error(data?.error || `API error: ${response.status}`);
+        const errorMessage = data?.error || data?.message || `API error: ${response.status}`;
+        throw new Error(errorMessage);
       }
       
       const apiRepresentatives: Representative[] = Array.isArray(data?.data?.representatives)

@@ -174,9 +174,11 @@ export default function PollClient({ poll }: PollClientProps) {
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [showCloseConfirm, setShowCloseConfirm] = useState(false);
   const [isClosing, setIsClosing] = useState(false);
+  const [localPollStatus, setLocalPollStatus] = useState(poll.status ?? 'active');
 
   const isPollCreator = Boolean(user?.id && poll.createdBy && String(user.id) === String(poll.createdBy));
-  const canClosePoll = (isPollCreator || isAdmin) && (poll.status ?? 'active') === 'active';
+  const pollStatus = localPollStatus ?? poll.status ?? 'active';
+  const canClosePoll = (isPollCreator || isAdmin) && pollStatus === 'active';
 
   // Use refs for stable app store actions to prevent infinite re-renders
   const setCurrentRouteRef = useRef(setCurrentRoute);
@@ -414,7 +416,7 @@ export default function PollClient({ poll }: PollClientProps) {
     }, normalizedOptions[0]);
   }, [normalizedOptions]);
 
-  const pollStatus = poll.status ?? 'active';
+  // pollStatus is already defined above using localPollStatus
   const canVote = poll.canVote ?? false;
   const participationCount = typeof poll.participation === 'number' ? poll.participation : 0;
   const privacyLabel = PRIVACY_LABELS[poll.privacyLevel ?? 'public'] ?? (poll.privacyLevel ?? 'Public');
@@ -712,9 +714,11 @@ export default function PollClient({ poll }: PollClientProps) {
     try {
       const response = await fetch(`/api/polls/${poll.id}/close`, { method: 'POST', credentials: 'include' });
       if (!response.ok) {
-        const data = await response.json().catch(() => ({}));
-        throw new Error(data?.error ?? `Failed to close poll (${response.status})`);
+        const errorData = await response.json().catch(() => ({}));
+        throw new Error(errorData?.error ?? `Failed to close poll (${response.status})`);
       }
+      // Update local state immediately
+      setLocalPollStatus('closed');
       setShowCloseConfirm(false);
       addNotification({
         type: 'success',
@@ -723,6 +727,7 @@ export default function PollClient({ poll }: PollClientProps) {
         duration: 4000,
       });
       recordPollEvent('poll_closed', { label: poll.id, value: 1 });
+      // Refresh to get latest data from server
       router.refresh();
     } catch (err) {
       const msg = err instanceof Error ? err.message : 'Failed to close poll';

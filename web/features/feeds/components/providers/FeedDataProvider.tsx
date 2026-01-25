@@ -748,16 +748,20 @@ function StandardFeedDataProvider({
         const err = json?.error ?? `Request failed: ${res.status}`;
         setElectoralError(err);
         setElectoralFeed(null);
+        logger.error('Electoral feed API error', { status: res.status, error: err, district });
         return;
       }
       const feed = json?.data?.feed;
       if (!feed) {
-        setElectoralError(tRef.current('feeds.core.electoral.errorNoData'));
+        const errorMsg = json?.error ?? tRef.current('feeds.core.electoral.errorNoData') ?? 'No electoral data available';
+        setElectoralError(errorMsg);
         setElectoralFeed(null);
+        logger.warn('Electoral feed returned no data', { district, response: json });
         return;
       }
       electoralFetchedForRef.current = district;
       setElectoralFeed(feed as ElectoralFeedUI);
+      logger.info('Electoral feed loaded successfully', { district, hasOfficials: Boolean(feed.currentOfficials) });
     } catch (err) {
       const msg = err instanceof Error ? err.message : tRef.current('feeds.core.electoral.errorFailed');
       setElectoralError(msg);
