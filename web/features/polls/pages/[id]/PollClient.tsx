@@ -426,7 +426,39 @@ export default function PollClient({ poll }: PollClientProps) {
         document.removeEventListener('visibilitychange', handleVisibilityChange);
       }
     };
-  }, [pollStatus, fetchPollData, computedTotalVotes]);
+  }, [pollStatus, fetchPollData]);
+
+  // Watch for vote count changes and adjust polling accordingly
+  const lastVoteCountRef = useRef(results?.total_votes ?? computedTotalVotes);
+  const consecutiveNoChangeRef = useRef(0);
+  const pollIntervalRef = useRef<NodeJS.Timeout | null>(null);
+
+  useEffect(() => {
+    if (pollStatus !== 'active' || !results) {
+      return;
+    }
+
+    const currentVoteCount = results.total_votes ?? 0;
+    const previousVoteCount = lastVoteCountRef.current;
+
+    if (currentVoteCount !== previousVoteCount) {
+      // Votes changed! Reset counters
+      lastVoteCountRef.current = currentVoteCount;
+      consecutiveNoChangeRef.current = 0;
+      // Polling will continue at current interval (10s when active)
+    } else {
+      // No change - increment counter
+      consecutiveNoChangeRef.current++;
+      
+      // After 4 consecutive no-change checks (2 minutes at 30s intervals), stop polling
+      if (consecutiveNoChangeRef.current >= 4) {
+        if (pollIntervalRef.current) {
+          clearInterval(pollIntervalRef.current);
+          pollIntervalRef.current = null;
+        }
+      }
+    }
+  }, [results, pollStatus, computedTotalVotes]);
 
   useEffect(() => {
     const totalVotesContext =
