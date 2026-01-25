@@ -76,8 +76,50 @@ See `../docs/` for:
 - `GOVINFO_MCP_BENEFITS_ANALYSIS.md` - MCP evaluation
 - `GOVINFO_MCP_SETUP.md` - MCP server setup guide
 
+## FEC Enrichment (Ready ✅)
+
+### Overview
+- **Script:** `enrich-fec-finance.ts` (optimized and enhanced)
+- **Client:** `../clients/fec.ts` (with retry logic and candidate search)
+- **FEC ID Source:** OpenStates YAML data (`other_identifiers` with `scheme: fec`)
+- **Note:** FEC IDs do NOT come from Congress.gov - they come from OpenStates ingestion
+
+### Features
+- ✅ Pre-enrichment FEC ID coverage check
+- ✅ Optional FEC ID lookup fallback (`--lookup-missing-fec-ids`)
+- ✅ Progress reporting with ETA
+- ✅ Post-enrichment verification
+- ✅ Retry logic with exponential backoff
+- ✅ Enhanced error handling and rate limit detection
+- ✅ Summary statistics and coverage validation
+
+### Usage
+```bash
+cd services/civics-backend
+npm run federal:enrich:finance
+
+# Options:
+# --limit 10              # Limit to 10 representatives
+# --cycle 2024            # Use specific cycle (default: current even year)
+# --state CA,TX           # Filter by states
+# --lookup-missing-fec-ids # Attempt to find missing FEC IDs via API
+# --dry-run               # Test without database updates
+```
+
+### FEC API Details
+- **Base URL:** `https://api.open.fec.gov/v1`
+- **Rate Limits:**
+  - Standard key: 1,000 calls/hour
+  - Enhanced key: 7,200 calls/hour (request from APIinfo@fec.gov)
+- **Throttle:** 1200ms between requests (configurable via `FEC_THROTTLE_MS`)
+
+### Expected Results
+- **Coverage:** ~80-90% of active federal reps with FEC IDs should have finance data
+- **Data:** Total raised, total spent, cash on hand, top contributors, small donor percentage
+- **Cycle:** Uses current even year (e.g., 2024 for 2024-2025 cycle)
+
 ## Next Steps
 
-- [ ] FEC enrichment (requires FEC IDs from Congress.gov)
+- [ ] Run FEC enrichment for current cycle
 - [ ] Retry GovInfo enrichment when API stabilizes
 - [ ] Evaluate GovInfo MCP for document access features

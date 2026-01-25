@@ -204,7 +204,7 @@ All 10 migrations have been applied using the Supabase MCP `apply_migration` too
 - [x] **Verify migrations** - ✅ All aspects verified
 - [x] **OpenStates People Ingestion** - ✅ Complete (8,108 representatives loaded)
 - [x] **Congress.gov Enrichment** - ✅ Complete (547 federal representatives, 102 Senators, 445 Representatives)
-- [ ] **FEC Enrichment** - Add FEC campaign finance data (requires FEC IDs from Congress.gov)
+- [x] **FEC Enrichment** - ✅ Optimized and ready (FEC IDs from OpenStates YAML, not Congress.gov)
 - [ ] **State Enrichment** - Optional API-based refreshes
 - [ ] **Verify data** - Test queries, status tracking, constraints with real data
 
@@ -323,7 +323,103 @@ All representative tables have been cleared for a fresh start:
 - 📋 See `GOVINFO_MCP_BENEFITS_ANALYSIS.md` for detailed evaluation
 - 📋 Documentation: https://github.com/usgpo/api/blob/main/docs/mcp.md
 
-**Ready for:** FEC enrichment (next step)
+---
+
+## FEC Enrichment (OPTIMIZED ✅)
+
+**Status:** Script optimized and enhanced, ready for execution
+
+### Overview
+FEC enrichment fetches campaign finance data (totals, contributors) from the FEC API and stores it in `representative_campaign_finance` table.
+
+### Important Notes
+- **FEC ID Source:** FEC IDs come from **OpenStates YAML** data (`other_identifiers` with `scheme: fec`), **NOT** from Congress.gov
+- **Prerequisites:** 
+  - OpenStates ingestion must complete first (populates FEC IDs)
+  - Congress.gov enrichment recommended (for complete representative data)
+  - `FEC_API_KEY` environment variable required
+
+### Optimizations Applied
+
+**FEC API Client (`src/clients/fec.ts`):**
+- ✅ Enhanced error handling with `FecApiError` class
+- ✅ Retry logic with exponential backoff (3 retries for transient errors)
+- ✅ Response validation to catch API changes early
+- ✅ Better rate limit detection and error messages
+- ✅ Added `searchCandidates()` endpoint for FEC ID lookup fallback
+- ✅ Parameter validation (cycle must be even year, 2000-2100)
+
+**Enrichment Script (`src/scripts/federal/enrich-fec-finance.ts`):**
+- ✅ Pre-enrichment FEC ID coverage check
+- ✅ Optional FEC ID lookup fallback (`--lookup-missing-fec-ids`)
+- ✅ Progress reporting with percentage, ETA, and elapsed time
+- ✅ Post-enrichment verification (coverage validation)
+- ✅ Enhanced error handling with context
+- ✅ Summary statistics (updated, no-data, rate-limited, errors)
+- ✅ Cycle validation (must be even year)
+- ✅ Uses `status = 'active'` filter (new schema compatible)
+
+### FEC API Details
+- **Base URL:** `https://api.open.fec.gov/v1`
+- **Rate Limits:**
+  - Standard key: 1,000 calls/hour (100 results/page max)
+  - Enhanced key: 7,200 calls/hour (120 calls/minute) - request from APIinfo@fec.gov
+- **Throttle:** 1200ms between requests (configurable via `FEC_THROTTLE_MS`)
+- **Key Endpoints:**
+  - `/candidate/{candidate_id}/totals/` - Finance totals
+  - `/schedules/schedule_a/by_employer/` - Top contributors
+  - `/candidates/` - Candidate search (for FEC ID lookup)
+
+### Usage
+```bash
+cd services/civics-backend
+npm run federal:enrich:finance
+
+# Options:
+# --limit 10              # Limit to 10 representatives
+# --cycle 2024            # Use specific cycle (default: current even year)
+# --state CA,TX           # Filter by states
+# --fec H8ID01124         # Filter by specific FEC IDs
+# --lookup-missing-fec-ids # Attempt to find missing FEC IDs via API
+# --dry-run               # Test without database updates
+# --include-existing      # Re-enrich representatives with existing finance data
+# --stale-days 30         # Include finance rows stale for >= 30 days
+```
+
+### Expected Results
+- **Coverage:** ~80-90% of active federal reps with FEC IDs should have finance data
+- **Data Captured:**
+  - Total raised, total spent, cash on hand
+  - Small donor percentage
+  - Top 5 contributors (by employer)
+  - Last filing date
+  - Cycle (election cycle year)
+- **Data Quality:** Script updates `data_quality_score` and `data_sources` in `representatives_core`
+
+### Troubleshooting
+
+**Rate Limit Issues:**
+- If hitting rate limits frequently, consider:
+  - Requesting enhanced API key from APIinfo@fec.gov
+  - Increasing `FEC_THROTTLE_MS` environment variable
+  - Running enrichment in smaller batches (use `--limit`)
+
+**Missing FEC IDs:**
+- FEC IDs come from OpenStates YAML, not Congress.gov
+- Use `--lookup-missing-fec-ids` to attempt API lookup (limited to 50 reps)
+- Check OpenStates ingestion completed successfully
+
+**Low Coverage:**
+- Expected: 80-90% of reps with FEC IDs should have finance data
+- Lower coverage may indicate:
+  - Many candidates not filing for current cycle
+  - API issues (check FEC API status)
+  - FEC ID mismatches
+
+**Files:**
+- Script: `src/scripts/federal/enrich-fec-finance.ts`
+- Client: `src/clients/fec.ts`
+- Documentation: `NEW_civics_ingest/federal/README.md`
 
 ---
 

@@ -31,6 +31,7 @@
 
     "federal:enrich:congress": "npm run build --silent && node build/scripts/federal/enrich-congress-ids.js",
     "federal:enrich:finance": "npm run build --silent && node build/scripts/federal/enrich-fec-finance.js",
+    "federal:test:finance": "npm run build --silent && node build/scripts/federal/test-fec-enrichment.js",
 
     "ingest:full": "npm run openstates:ingest && npm run federal:enrich:congress && npm run federal:enrich:finance",
 

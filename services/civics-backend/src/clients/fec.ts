@@ -7,12 +7,53 @@ export interface FecTotals {
   cash_on_hand_end_period?: number | null;
   individual_unitemized_contributions?: number | null;
   individual_contributions?: number | null;
+  last_filing_date?: string | null;
+  coverage_end_date?: string | null;
+  report_year?: number | null;
 }
 
 export interface FecContributor {
   employer?: string | null;
+  committee_name?: string | null;
   total?: number | null;
+  sum?: number | null;
   state?: string | null;
+  industry?: string | null;
+  entity_type?: string | null;
+}
+
+export interface FecCandidate {
+  candidate_id: string;
+  name: string;
+  office?: string;
+  office_full?: string;
+  state?: string;
+  district?: string;
+  party?: string;
+  party_full?: string;
+  candidate_status?: string;
+  election_years?: number[];
+}
+
+interface FecApiResponse<T> {
+  results?: T[];
+  pagination?: {
+    page?: number;
+    per_page?: number;
+    count?: number;
+    pages?: number;
+  };
+}
+
+export class FecApiError extends Error {
+  constructor(
+    message: string,
+    public statusCode: number,
+    public responseData?: unknown,
+  ) {
+    super(message);
+    this.name = 'FecApiError';
+  }
 }
 
 function getApiKey(): string {
@@ -25,43 +66,188 @@ function getApiKey(): string {
   return key;
 }
 
-export async function fetchCandidateTotals(candidateId: string, cycle: number): Promise<FecTotals | null> {
-  const url = new URL(`${FEC_API_BASE}/candidate/${candidateId}/totals/`);
-  url.searchParams.set('cycle', String(cycle));
-  url.searchParams.set('per_page', '1');
-  url.searchParams.set('api_key', getApiKey());
+/**
+ * Retry logic with exponential backoff for transient errors
+ */
+async function retryWithBackoff<T>(
+  fn: () => Promise<T>,
+  maxRetries = 3,
+  baseDelayMs = 1000,
+): Promise<T> {
+  let lastError: Error | null = null;
+  for (let attempt = 0; attempt <= maxRetries; attempt++) {
+    try {
+      return await fn();
+    } catch (error) {
+      lastError = error as Error;
+      const isTransient = (error as FecApiError).statusCode >= 500 ||
+        (error as FecApiError).statusCode === 429;
 
-  const response = await fetch(url);
-  if (!response.ok) {
-    throw new Error(
-      `FEC totals request failed (${response.status}): ${await response.text()}`,
-    );
+      if (!isTransient || attempt === maxRetries) {
+        throw error;
+      }
+
+      // Exponential backoff: 1s, 2s, 4s
+      const delayMs = baseDelayMs * Math.pow(2, attempt);
+      console.warn(
+        `FEC API transient error (attempt ${attempt + 1}/${maxRetries + 1}), retrying in ${delayMs}ms:`,
+        (error as Error).message,
+      );
+      await new Promise((resolve) => setTimeout(resolve, delayMs));
+    }
   }
-
-  const json = (await response.json()) as { results?: FecTotals[] };
-  return json?.results?.[0] ?? null;
+  throw lastError ?? new Error('Retry failed');
 }
 
+/**
+ * Make FEC API request with error handling and retry logic
+ */
+async function makeFecRequest<T>(
+  endpoint: string,
+  params: Record<string, string | number> = {},
+): Promise<T> {
+  const url = new URL(`${FEC_API_BASE}${endpoint}`);
+  url.searchParams.set('api_key', getApiKey());
+  Object.entries(params).forEach(([key, value]) => {
+    if (value !== undefined && value !== null) {
+      url.searchParams.set(key, String(value));
+    }
+  });
+
+  return retryWithBackoff(async () => {
+    const response = await fetch(url.toString(), {
+      headers: {
+        'Accept': 'application/json',
+        'User-Agent': 'Choices-Platform/1.0',
+      },
+    });
+
+    if (!response.ok) {
+      let errorData: unknown;
+      try {
+        errorData = await response.json();
+      } catch {
+        errorData = await response.text();
+      }
+
+      const errorMessage = `FEC API error (${response.status} ${response.statusText}): ${
+        typeof errorData === 'string' ? errorData : JSON.stringify(errorData)
+      }`;
+
+      if (response.status === 429) {
+        throw new FecApiError(
+          `FEC API rate limit exceeded. ${errorMessage} Consider requesting an enhanced API key from APIinfo@fec.gov for higher limits (7,200 calls/hour).`,
+          response.status,
+          errorData,
+        );
+      }
+
+      throw new FecApiError(errorMessage, response.status, errorData);
+    }
+
+    const json = (await response.json()) as FecApiResponse<T>;
+    
+    // Validate response structure
+    if (!json || typeof json !== 'object') {
+      throw new FecApiError(
+        'Invalid FEC API response: expected object',
+        0,
+        json,
+      );
+    }
+
+    return json as T;
+  });
+}
+
+/**
+ * Fetch candidate finance totals for a specific cycle
+ */
+export async function fetchCandidateTotals(
+  candidateId: string,
+  cycle: number,
+): Promise<FecTotals | null> {
+  if (!candidateId || !candidateId.trim()) {
+    throw new Error('candidateId is required');
+  }
+  if (!cycle || cycle < 2000 || cycle > 2100 || cycle % 2 !== 0) {
+    throw new Error(`Invalid cycle: ${cycle}. Must be an even year between 2000-2100`);
+  }
+
+  const response = await makeFecRequest<FecTotals[]>('/candidate/' + encodeURIComponent(candidateId) + '/totals/', {
+    cycle: String(cycle),
+    per_page: '1',
+  });
+
+  const results = (response as unknown as FecApiResponse<FecTotals>).results;
+  return results?.[0] ?? null;
+}
+
+/**
+ * Fetch top contributors by employer for a candidate
+ */
 export async function fetchCandidateTopContributors(
   candidateId: string,
   cycle: number,
   limit = 5,
 ): Promise<FecContributor[]> {
-  const url = new URL(`${FEC_API_BASE}/schedules/schedule_a/by_employer/`);
-  url.searchParams.set('candidate_id', candidateId);
-  url.searchParams.set('two_year_transaction_period', String(cycle));
-  url.searchParams.set('per_page', String(limit));
-  url.searchParams.set('sort', '-total');
-  url.searchParams.set('api_key', getApiKey());
-
-  const response = await fetch(url);
-  if (!response.ok) {
-    throw new Error(
-      `FEC top contributors request failed (${response.status}): ${await response.text()}`,
-    );
+  if (!candidateId || !candidateId.trim()) {
+    throw new Error('candidateId is required');
+  }
+  if (!cycle || cycle < 2000 || cycle > 2100 || cycle % 2 !== 0) {
+    throw new Error(`Invalid cycle: ${cycle}. Must be an even year between 2000-2100`);
+  }
+  if (limit < 1 || limit > 100) {
+    throw new Error(`Invalid limit: ${limit}. Must be between 1-100`);
   }
 
-  const json = (await response.json()) as { results?: FecContributor[] };
-  return json?.results ?? [];
+  const response = await makeFecRequest<FecContributor[]>('/schedules/schedule_a/by_employer/', {
+    candidate_id: candidateId,
+    two_year_transaction_period: String(cycle),
+    per_page: String(limit),
+    sort: '-total',
+  });
+
+  const results = (response as unknown as FecApiResponse<FecContributor>).results;
+  return results ?? [];
+}
+
+/**
+ * Search for candidates by name, office, state, party, or election year
+ * Useful for finding FEC IDs when they're missing from OpenStates data
+ */
+export async function searchCandidates(params: {
+  name?: string;
+  office?: 'H' | 'S' | 'P';
+  state?: string;
+  party?: string;
+  election_year?: number;
+  per_page?: number;
+}): Promise<FecCandidate[]> {
+  const searchParams: Record<string, string | number> = {};
+  
+  if (params.name) {
+    searchParams.name = params.name;
+  }
+  if (params.office) {
+    searchParams.office = params.office;
+  }
+  if (params.state) {
+    searchParams.state = params.state.toUpperCase();
+  }
+  if (params.party) {
+    searchParams.party = params.party.toUpperCase();
+  }
+  if (params.election_year) {
+    if (params.election_year < 2000 || params.election_year > 2100 || params.election_year % 2 !== 0) {
+      throw new Error(`Invalid election_year: ${params.election_year}. Must be an even year between 2000-2100`);
+    }
+    searchParams.election_year = params.election_year;
+  }
+  searchParams.per_page = params.per_page ?? 20;
+
+  const response = await makeFecRequest<FecCandidate[]>('/candidates/', searchParams);
+  const results = (response as unknown as FecApiResponse<FecCandidate>).results;
+  return results ?? [];
 }
 

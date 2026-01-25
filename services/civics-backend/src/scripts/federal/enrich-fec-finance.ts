@@ -14,6 +14,8 @@ import { getSupabaseClient } from '../../clients/supabase.js';
 import {
   fetchCandidateTotals,
   fetchCandidateTopContributors,
+  searchCandidates,
+  type FecApiError,
 } from '../../clients/fec.js';
 import { evaluateDataQuality } from '../../utils/data-quality.js';
 import type { FederalEnrichment } from '../../enrich/federal.js';
@@ -100,6 +102,7 @@ type CliOptions = {
   includeExisting?: boolean;
   staleDays?: number;
   cycle?: number;
+  lookupMissingFecIds?: boolean;
 };
 
 const FEC_THROTTLE_MS = Number(process.env.FEC_THROTTLE_MS ?? '1200');
@@ -153,6 +156,9 @@ function parseArgs(): CliOptions {
         break;
       case 'stale-days':
         if (value) options.staleDays = Number(value);
+        break;
+      case 'lookup-missing-fec-ids':
+        options.lookupMissingFecIds = true;
         break;
       default:
         break;
@@ -422,20 +428,27 @@ async function enrichRepresentative(
   }
 
   const cycle = options.cycle ?? getDefaultCycle();
+  validateCycle(cycle);
 
+  // Throttle API calls
   await new Promise((resolve) => setTimeout(resolve, FEC_THROTTLE_MS));
+  
   let totals: any;
   try {
     totals = await fetchCandidateTotals(rep.fec_id, cycle);
   } catch (error) {
-    const message = (error as Error).message ?? '';
-    if (message.includes('OVER_RATE_LIMIT') || message.includes('429')) {
-      console.warn(
-        `Rate limit hit for ${rep.name} (${rep.fec_id}). Try re-running later with a slower throttle or upgraded key.`,
-      );
+    const fecError = error as FecApiError;
+    const message = fecError.message ?? '';
+    
+    // Handle rate limits - client already retried, but we still hit limit
+    if (fecError.statusCode === 429 || message.includes('rate limit')) {
       return { representative: rep, status: 'rate-limited' };
     }
-    throw error;
+    
+    // Re-throw other errors with context
+    throw new Error(
+      `Failed to fetch FEC totals for ${rep.name} (${rep.fec_id}, cycle ${cycle}): ${message}`,
+    );
   }
 
   const status: 'updated' | 'no-data' = totals ? 'updated' : 'no-data';
@@ -446,15 +459,19 @@ async function enrichRepresentative(
     try {
       contributorsRaw = await fetchCandidateTopContributors(rep.fec_id, cycle, 5);
     } catch (error) {
-      const message = (error as Error).message ?? '';
-      if (message.includes('OVER_RATE_LIMIT') || message.includes('429')) {
-        console.warn(`Rate limit hit fetching contributors for ${rep.name} (${rep.fec_id}).`);
+      const fecError = error as FecApiError;
+      const message = fecError.message ?? '';
+      
+      // Rate limits on contributors are non-fatal - continue without them
+      if (fecError.statusCode === 429 || message.includes('rate limit')) {
+        // Silently continue - we have totals, just missing contributors
       } else {
-        throw error;
+        // Log other errors but continue - contributors are optional
+        console.warn(
+          `Failed to fetch contributors for ${rep.name} (${rep.fec_id}): ${message}`,
+        );
       }
     }
-  } else {
-    console.warn(`No FEC totals found for ${rep.name} (${rep.fec_id}) – recording empty row.`);
   }
 
   const { finance, enrichment } = buildFinanceRecord({
@@ -493,10 +510,85 @@ async function enrichRepresentative(
   };
 }
 
+/**
+ * Validate cycle parameter
+ */
+function validateCycle(cycle: number): void {
+  if (!cycle || cycle < 2000 || cycle > 2100 || cycle % 2 !== 0) {
+    throw new Error(`Invalid cycle: ${cycle}. Must be an even year between 2000-2100`);
+  }
+}
+
+/**
+ * Check FEC ID coverage for active federal representatives
+ */
+async function checkFecIdCoverage(): Promise<{
+  total: number;
+  withFecId: number;
+  missingFecId: number;
+  coveragePercent: number;
+}> {
+  const client = getSupabaseClient();
+  const { data: allFederal, error: allError } = await client
+    .from('representatives_core')
+    .select('id, fec_id')
+    .eq('level', 'federal')
+    .eq('status', 'active');
+
+  if (allError) {
+    throw new Error(`Failed to check FEC ID coverage: ${allError.message}`);
+  }
+
+  const total = allFederal?.length ?? 0;
+  const withFecId = allFederal?.filter((r) => r.fec_id)?.length ?? 0;
+  const missingFecId = total - withFecId;
+  const coveragePercent = total > 0 ? Math.round((withFecId / total) * 100) : 0;
+
+  return { total, withFecId, missingFecId, coveragePercent };
+}
+
+/**
+ * Format elapsed time for progress reporting
+ */
+function formatElapsed(startTime: number): string {
+  const elapsed = Date.now() - startTime;
+  const seconds = Math.floor(elapsed / 1000);
+  const minutes = Math.floor(seconds / 60);
+  if (minutes > 0) {
+    return `${minutes}m ${seconds % 60}s`;
+  }
+  return `${seconds}s`;
+}
+
+/**
+ * Estimate time remaining based on current progress
+ */
+function estimateTimeRemaining(
+  completed: number,
+  total: number,
+  elapsedMs: number,
+): string {
+  if (completed === 0) return 'calculating...';
+  const avgTimePerItem = elapsedMs / completed;
+  const remaining = total - completed;
+  const remainingMs = avgTimePerItem * remaining;
+  const remainingSeconds = Math.floor(remainingMs / 1000);
+  const remainingMinutes = Math.floor(remainingSeconds / 60);
+  if (remainingMinutes > 0) {
+    return `~${remainingMinutes}m ${remainingSeconds % 60}s`;
+  }
+  return `~${remainingSeconds}s`;
+}
+
 async function main() {
+  const startTime = Date.now();
   try {
     const options = parseArgs();
     options.cycle = options.cycle ?? getDefaultCycle();
+    validateCycle(options.cycle);
+
+    console.log('\n📊 FEC Finance Enrichment');
+    console.log('='.repeat(50));
 
     if (options.limit) {
       console.log(`Limiting enrichment to ${options.limit} representatives.`);
@@ -523,42 +615,222 @@ async function main() {
     }
     console.log(`Using FEC cycle ${options.cycle}.`);
 
-    const reps = await fetchRepresentatives(options);
+    // Pre-enrichment: Check FEC ID coverage
+    console.log('\n🔍 Pre-enrichment checks...');
+    const coverage = await checkFecIdCoverage();
+    console.log(
+      `   FEC ID coverage: ${coverage.withFecId}/${coverage.total} (${coverage.coveragePercent}%)`,
+    );
+    if (coverage.missingFecId > 0) {
+      console.warn(
+        `   ⚠️  ${coverage.missingFecId} active federal representatives missing FEC IDs.`,
+      );
+      console.warn(
+        '   Note: FEC IDs come from OpenStates YAML data (other_identifiers with scheme: fec)',
+      );
+      
+      if (options.lookupMissingFecIds) {
+        console.log('\n🔍 Attempting to lookup missing FEC IDs via FEC API...');
+        const client = getSupabaseClient();
+        const { data: missingFecReps, error: missingError } = await client
+          .from('representatives_core')
+          .select('id, name, office, state, district')
+          .eq('level', 'federal')
+          .eq('status', 'active')
+          .is('fec_id', null)
+          .limit(50); // Limit to avoid too many API calls
+
+        if (!missingError && missingFecReps && missingFecReps.length > 0) {
+          console.log(`   Found ${missingFecReps.length} representatives to lookup...`);
+          let foundCount = 0;
+          
+          for (const rep of missingFecReps) {
+            try {
+              // Map office to FEC office code
+              const officeCode = rep.office === 'Senator' ? 'S' : rep.office === 'Representative' ? 'H' : undefined;
+              if (!officeCode || !rep.state) continue;
+
+              await new Promise((resolve) => setTimeout(resolve, FEC_THROTTLE_MS));
+              const candidates = await searchCandidates({
+                name: rep.name.split(' ').slice(-1)[0], // Last name only for better matching
+                office: officeCode as 'H' | 'S',
+                state: rep.state,
+                election_year: options.cycle,
+                per_page: 5,
+              });
+
+              // Find best match
+              const match = candidates.find(
+                (c) => c.name.toLowerCase().includes(rep.name.toLowerCase().split(' ')[0]) &&
+                  c.name.toLowerCase().includes(rep.name.toLowerCase().split(' ').slice(-1)[0]),
+              );
+
+              if (match && match.candidate_id) {
+                const { error: updateError } = await client
+                  .from('representatives_core')
+                  .update({ fec_id: match.candidate_id })
+                  .eq('id', rep.id);
+
+                if (!updateError) {
+                  foundCount += 1;
+                  console.log(`   ✅ Found FEC ID for ${rep.name}: ${match.candidate_id}`);
+                }
+              }
+            } catch (error) {
+              // Silently continue - lookup is optional
+            }
+          }
+
+          if (foundCount > 0) {
+            console.log(`   ✅ Found ${foundCount} FEC IDs via API lookup`);
+          }
+        }
+      } else {
+        console.log('   💡 Tip: Use --lookup-missing-fec-ids to attempt FEC ID lookup via API');
+      }
+    }
+
+    let reps = await fetchRepresentatives(options);
     if (reps.length === 0) {
-      console.log('No representatives with FEC IDs found.');
+      console.log('\n❌ No representatives with FEC IDs found.');
       return;
     }
 
-    console.log(`Fetching FEC finance for ${reps.length} representatives...`);
+    console.log(`\n📥 Fetching FEC finance for ${reps.length} representatives...`);
+    console.log(`   Estimated time: ~${Math.ceil((reps.length * FEC_THROTTLE_MS * 2) / 1000 / 60)} minutes (${FEC_THROTTLE_MS}ms throttle)`);
 
     let updatedCount = 0;
     let noDataCount = 0;
     let rateLimited = 0;
-    for (const rep of reps) {
+    let errorCount = 0;
+    const enrichedIds: number[] = [];
+    const errors: Array<{ name: string; fecId: string; error: string }> = [];
+
+    for (let i = 0; i < reps.length; i++) {
+      const rep = reps[i];
+      const progress = i + 1;
+      const percent = Math.round((progress / reps.length) * 100);
+      const elapsed = formatElapsed(startTime);
+      const eta = estimateTimeRemaining(progress, reps.length, Date.now() - startTime);
+
       try {
         const output = await enrichRepresentative(rep, options);
         if (!output) continue;
+
         if (output.status === 'updated') {
-          if (!options.dryRun) updatedCount += 1;
+          if (!options.dryRun) {
+            updatedCount += 1;
+            enrichedIds.push(rep.id);
+          }
+          process.stdout.write(
+            `\r[${percent}%] ${progress}/${reps.length} | ✅ ${rep.name} (${rep.fec_id}) | ${elapsed} | ETA: ${eta}`,
+          );
         } else if (output.status === 'no-data') {
-          if (!options.dryRun) noDataCount += 1;
+          if (!options.dryRun) {
+            noDataCount += 1;
+            enrichedIds.push(rep.id);
+          }
+          process.stdout.write(
+            `\r[${percent}%] ${progress}/${reps.length} | ⚠️  ${rep.name} (${rep.fec_id}) - no data | ${elapsed} | ETA: ${eta}`,
+          );
         } else if (output.status === 'rate-limited') {
           rateLimited += 1;
+          process.stdout.write(
+            `\r[${percent}%] ${progress}/${reps.length} | ⏸️  ${rep.name} (${rep.fec_id}) - rate limited | ${elapsed} | ETA: ${eta}`,
+          );
         }
       } catch (error) {
-        console.error(`Failed to enrich ${rep.name} (${rep.fec_id}):`, (error as Error).message);
+        errorCount += 1;
+        const errorMessage = (error as Error).message;
+        errors.push({
+          name: rep.name,
+          fecId: rep.fec_id ?? 'unknown',
+          error: errorMessage,
+        });
+        process.stdout.write(
+          `\r[${percent}%] ${progress}/${reps.length} | ❌ ${rep.name} (${rep.fec_id}) - error | ${elapsed} | ETA: ${eta}`,
+        );
+        console.error(`\n   Error: ${errorMessage}`);
       }
     }
 
-    if (options.dryRun) {
-      console.log('✅ Dry-run complete.');
-    } else {
+    // Clear progress line
+    process.stdout.write('\r' + ' '.repeat(100) + '\r');
+
+    // Post-enrichment verification
+    if (!options.dryRun && enrichedIds.length > 0) {
+      console.log('\n📊 Post-enrichment verification...');
+      const client = getSupabaseClient();
+      const { data: financeData, error: verificationError } = await client
+        .from('representative_campaign_finance')
+        .select('representative_id, total_raised, cycle')
+        .in('representative_id', enrichedIds)
+        .eq('cycle', options.cycle);
+
+      if (!verificationError && financeData) {
+        const withData = financeData.filter((f) => f.total_raised != null).length;
+        const totalEnriched = financeData.length;
+        const coveragePercent = totalEnriched > 0
+          ? Math.round((withData / totalEnriched) * 100)
+          : 0;
+
+        console.log(`   Representatives with finance data: ${withData}/${totalEnriched} (${coveragePercent}%)`);
+        console.log(`   Expected coverage: ~80-90% of active federal reps with FEC IDs`);
+
+        if (coveragePercent < 70) {
+          console.warn(
+            `   ⚠️  Warning: Coverage (${coveragePercent}%) is lower than expected (80-90%).`,
+          );
+          console.warn('   This may indicate API issues or many candidates not filing for this cycle.');
+        } else if (coveragePercent >= 80) {
+          console.log(`   ✅ Coverage within expected range.`);
+        }
+      }
+    }
+
+    // Summary statistics
+    console.log('\n📈 Summary Statistics');
+    console.log('='.repeat(50));
+    console.log(`   Total processed: ${reps.length}`);
+    console.log(`   ✅ Successfully updated: ${updatedCount}`);
+    console.log(`   ⚠️  No data recorded: ${noDataCount}`);
+    console.log(`   ⏸️  Rate limited: ${rateLimited}`);
+    console.log(`   ❌ Errors: ${errorCount}`);
+    console.log(`   ⏱️  Total time: ${formatElapsed(startTime)}`);
+
+    if (errors.length > 0) {
+      console.log('\n❌ Errors encountered:');
+      errors.slice(0, 10).forEach((e) => {
+        console.log(`   - ${e.name} (${e.fecId}): ${e.error}`);
+      });
+      if (errors.length > 10) {
+        console.log(`   ... and ${errors.length - 10} more errors`);
+      }
+    }
+
+    if (rateLimited > 0) {
+      console.log('\n⚠️  Rate Limit Warnings:');
       console.log(
-        `✅ Finance enrichment complete. Updated: ${updatedCount}, recorded no-data: ${noDataCount}, rate-limited: ${rateLimited}.`,
+        `   ${rateLimited} representatives hit rate limits. Consider:`,
       );
+      console.log('   - Requesting enhanced API key from APIinfo@fec.gov (7,200 calls/hour)');
+      console.log(`   - Increasing FEC_THROTTLE_MS (current: ${FEC_THROTTLE_MS}ms)`);
+      console.log('   - Running enrichment in smaller batches');
+    }
+
+    if (options.dryRun) {
+      console.log('\n✅ Dry-run complete (no database changes made).');
+    } else {
+      console.log('\n✅ Finance enrichment complete!');
     }
   } catch (error) {
-    console.error('Finance enrichment failed:', error);
+    console.error('\n❌ Finance enrichment failed:', error);
+    if (error instanceof Error) {
+      console.error('   Error details:', error.message);
+      if (error.stack) {
+        console.error('   Stack:', error.stack);
+      }
+    }
     process.exit(1);
   }
 }
