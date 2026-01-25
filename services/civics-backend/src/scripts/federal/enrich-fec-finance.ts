@@ -48,12 +48,6 @@ type RepresentativeRecord = RepresentativeRow & {
   representative_campaign_finance: RepresentativeFinanceRow | null;
 };
 
-type SupabaseRepresentativeRecord = RepresentativeRow & {
-  representative_campaign_finance?:
-    | RepresentativeFinanceRow
-    | RepresentativeFinanceRow[]
-    | null;
-};
 
 type EnrichmentStatus = 'updated' | 'no-data' | 'rate-limited' | 'skipped';
 
@@ -179,11 +173,11 @@ function getDefaultCycle(): number {
 
 async function fetchRepresentatives(options: CliOptions) {
   const client = getSupabaseClient();
+  
+  // Query representatives first, then fetch finance data separately to avoid relationship ambiguity
   let query = client
     .from('representatives_core')
-    .select(
-      'id,name,office,canonical_id,state,district,level,fec_id,primary_email,primary_phone,primary_website,data_sources,representative_campaign_finance!left(id,updated_at,last_filing_date,cycle,total_raised)',
-    )
+    .select('id,name,office,canonical_id,state,district,level,fec_id,primary_email,primary_phone,primary_website,data_sources')
     .eq('level', 'federal')
     .not('fec_id', 'is', null)
     .eq('status', 'active');
@@ -211,18 +205,45 @@ async function fetchRepresentatives(options: CliOptions) {
     throw new Error(`Failed to fetch representatives: ${error.message}`);
   }
 
-  const rows = (data ?? []) as SupabaseRepresentativeRecord[];
+  const rows = (data ?? []) as RepresentativeRow[];
 
-  const normalizedRows = rows.map((row) => {
-    const finance = row.representative_campaign_finance;
-    const normalizedFinance = Array.isArray(finance)
-      ? finance[0] ?? null
-      : (finance ?? null);
+  // Fetch finance data separately to avoid relationship ambiguity
+  const representativeIds = rows.map((r) => r.id);
+  let financeMap = new Map<number, RepresentativeFinanceRow | null>();
+  
+  if (representativeIds.length > 0) {
+    const { data: financeData, error: financeError } = await client
+      .from('representative_campaign_finance')
+      .select('representative_id, id, updated_at, last_filing_date, cycle, total_raised')
+      .in('representative_id', representativeIds);
+    
+    if (!financeError && financeData) {
+      // Create a map of representative_id -> finance row
+      // If multiple finance rows exist per rep, take the most recent one
+      for (const finance of financeData) {
+        const repId = finance.representative_id;
+        const existing = financeMap.get(repId);
+        
+        if (!existing || !finance.updated_at) {
+          financeMap.set(repId, finance as RepresentativeFinanceRow);
+        } else if (finance.updated_at && existing.updated_at) {
+          // Keep the more recent one
+          const existingDate = new Date(existing.updated_at);
+          const newDate = new Date(finance.updated_at);
+          if (newDate > existingDate) {
+            financeMap.set(repId, finance as RepresentativeFinanceRow);
+          }
+        }
+      }
+    }
+  }
 
+  const normalizedRows: RepresentativeRecord[] = rows.map((row) => {
+    const finance = financeMap.get(row.id) ?? null;
     return {
       ...row,
-      representative_campaign_finance: normalizedFinance,
-    } as RepresentativeRecord;
+      representative_campaign_finance: finance,
+    };
   });
 
   normalizedRows.sort((a, b) => {
