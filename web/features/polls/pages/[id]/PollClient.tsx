@@ -188,6 +188,21 @@ export default function PollClient({ poll }: PollClientProps) {
   const isPollCreator = Boolean(user?.id && poll.createdBy && String(user.id) === String(poll.createdBy));
   const pollStatus = localPollStatus ?? poll.status ?? 'active';
   const canClosePoll = (isPollCreator || isAdmin) && pollStatus === 'active';
+  
+  // Debug logging for close/delete button visibility
+  if (process.env.NODE_ENV === 'development') {
+    logger.debug('PollClient: Button visibility check', {
+      pollId: poll.id,
+      userId: user?.id,
+      pollCreatedBy: poll.createdBy,
+      isPollCreator,
+      isAdmin,
+      pollStatus,
+      canClosePoll,
+      hasCloseButton: canClosePoll,
+      hasDeleteButton: isPollCreator,
+    });
+  }
 
   // Use refs for stable app store actions to prevent infinite re-renders
   const setCurrentRouteRef = useRef(setCurrentRoute);
@@ -988,11 +1003,17 @@ export default function PollClient({ poll }: PollClientProps) {
           <CardHeader>
             <CardTitle data-testid="poll-options-title">Poll Options</CardTitle>
             <CardDescription>
-              {pollStatus === 'active' && !hasVoted && user
+              {pollStatus === 'active' && canVote && !hasVoted && user
                 ? 'View the options below'
                 : hasVoted
                   ? 'You have already voted on this poll'
-                  : 'This poll is no longer accepting votes'}
+                  : pollStatus !== 'active'
+                    ? 'This poll is closed'
+                    : !user
+                      ? 'Sign in to vote'
+                      : !canVote
+                        ? 'Voting is restricted for this poll'
+                        : 'This poll is no longer accepting votes'}
             </CardDescription>
           </CardHeader>
           <CardContent>

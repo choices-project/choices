@@ -88,7 +88,7 @@ export const GET = withErrorHandling(async (
       votingMethod: poll.voting_method ?? 'single',
       createdAt: poll.created_at,
       createdBy: poll.created_by ?? null, // CRITICAL: This must not be null for close button to work
-      canVote: (poll.status ?? 'active') === 'active',
+      canVote: (poll.status ?? 'active') === 'active' && (poll.poll_settings as Record<string, unknown>)?.require_authentication !== true, // Allow voting unless explicitly restricted
       settings: {
         allowMultipleVotes: Boolean(pollSettings?.allow_multiple_votes),
         allowAnonymousVotes: Boolean(pollSettings?.allow_anonymous_votes ?? true),
