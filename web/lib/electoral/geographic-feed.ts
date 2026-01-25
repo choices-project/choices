@@ -634,35 +634,101 @@ export class GeographicElectoralFeed {
     };
 
     try {
-      // Get federal officials
-      if (location.federal.house.representative) {
-        const houseRep = await this.orchestrator.getRepresentative(location.federal.house.representative);
-        if (houseRep) {
-          officials.federal.push(await this.enrichRepresentative(houseRep, 'federal', 'house'));
+      const supabase = await getSupabaseServerClient();
+      if (!supabase) {
+        logger.warn('Supabase not available for getCurrentOfficials');
+        return officials;
+      }
+
+      const stateCode = location.stateCode ?? this.resolveStateCode(location);
+      const federalDistrict = location.federal?.house?.district;
+
+      // Get federal officials by district (e.g., CA-11)
+      if (federalDistrict && stateCode) {
+        try {
+          const { data: federalReps, error: federalError } = await supabase
+            .from('representatives_core')
+            .select('id, name, office, party, state, district, level')
+            .eq('status', 'active')
+            .eq('level', 'federal')
+            .or(`district.eq.${federalDistrict},district.ilike.%${federalDistrict}%`)
+            .limit(10);
+
+          if (!federalError && federalReps && Array.isArray(federalReps)) {
+            for (const rep of federalReps) {
+              try {
+                const enriched = await this.enrichRepresentative(
+                  {
+                    id: String(rep.id),
+                    name: rep.name,
+                    party: rep.party ?? 'Unknown',
+                    office: rep.office,
+                    jurisdiction: federalDistrict,
+                  } as Representative,
+                  'federal',
+                  'house'
+                );
+                officials.federal.push(enriched);
+              } catch (enrichError) {
+                logger.warn('Failed to enrich federal representative', { repId: rep.id, error: enrichError });
+              }
+            }
+          } else if (federalError) {
+            logger.warn('Failed to fetch federal officials', { error: federalError.message, district: federalDistrict });
+          }
+        } catch (error) {
+          logger.error('Error fetching federal officials', { error, district: federalDistrict });
         }
       }
 
-      // Get state officials (state is object with legislature; narrow to avoid string | undefined)
-      const stateLevel = location.state;
-      if (
-        stateLevel != null &&
-        typeof stateLevel === 'object' &&
-        'legislature' in stateLevel &&
-        stateLevel.legislature != null
-      ) {
-        const house = (stateLevel.legislature as { house?: { representative?: string } }).house;
-        const repId = house?.representative;
-        if (repId) {
-          const stateRep = await this.orchestrator.getRepresentative(repId);
-          if (stateRep) {
-            officials.state.push(await this.enrichRepresentative(stateRep, 'state', 'house'));
+      // Get state officials by state code
+      if (stateCode) {
+        try {
+          const { data: stateReps, error: stateError } = await supabase
+            .from('representatives_core')
+            .select('id, name, office, party, state, district, level')
+            .eq('status', 'active')
+            .eq('level', 'state')
+            .eq('state', stateCode)
+            .limit(20);
+
+          if (!stateError && stateReps && Array.isArray(stateReps)) {
+            for (const rep of stateReps) {
+              try {
+                const enriched = await this.enrichRepresentative(
+                  {
+                    id: String(rep.id),
+                    name: rep.name,
+                    party: rep.party ?? 'Unknown',
+                    office: rep.office,
+                    jurisdiction: `${stateCode}-${rep.district ?? ''}`,
+                  } as Representative,
+                  'state',
+                  'house'
+                );
+                officials.state.push(enriched);
+              } catch (enrichError) {
+                logger.warn('Failed to enrich state representative', { repId: rep.id, error: enrichError });
+              }
+            }
+          } else if (stateError) {
+            logger.warn('Failed to fetch state officials', { error: stateError.message, state: stateCode });
           }
+        } catch (error) {
+          logger.error('Error fetching state officials', { error, state: stateCode });
         }
       }
 
       // Get local officials (would need additional data sources)
       // This would integrate with local government APIs or manual data collection
 
+      logger.info('Fetched current officials', {
+        federal: officials.federal.length,
+        state: officials.state.length,
+        local: officials.local.length,
+        district: federalDistrict,
+        stateCode
+      });
     } catch (error) {
       logger.error('Failed to get current officials', { error });
     }
