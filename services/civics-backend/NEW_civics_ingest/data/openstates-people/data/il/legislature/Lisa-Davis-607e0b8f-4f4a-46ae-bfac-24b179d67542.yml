@@ -1,0 +1,35 @@
+id: ocd-person/607e0b8f-4f4a-46ae-bfac-24b179d67542
+name: Lisa Davis
+given_name: Lisa
+family_name: Davis
+gender: Female
+email: districtdirector32@gmail.com
+image: https://images.squarespace-cdn.com/content/v1/65bbdb61df5dfe26e91c299a/9f48b1b6-db6d-445a-9144-966d387170c6/Unknown-3+copy.jpg?format=750w
+party:
+- name: Democratic
+roles:
+- start_date: 2025-01-08
+  type: lower
+  jurisdiction: ocd-jurisdiction/country:us/state:il/government
+  district: '32'
+offices:
+- classification: capitol
+  address: Room 252-W, Stratton Building, Springfield, IL 62706
+  voice: 217-782-1702
+- classification: district
+  address: 8620 S. Pulaski Road, Chicago, IL 60652
+  voice: 872-267-7915
+links:
+- url: https://www.ilga.gov/House/Members/Details/3458
+- url: https://www.ilga.gov/house/Rep.asp?GA=104&MemberID=3458
+other_names:
+- name: Davis, L.
+- name: Davis, Lisa
+- name: L. Davis
+- name: L.J. Davis
+sources:
+- url: https://ballotpedia.org/Lisa_Davis_(Illinois)
+- url: https://justfacts.votesmart.org/candidate/biography/213068/lisa-davis
+- url: https://www.ilga.gov/House/Members/Details/3458
+- url: https://www.ilga.gov/house/Rep.asp?GA=104&MemberID=3458
+- url: https://www.linkedin.com/in/lisa-davis-35683029b

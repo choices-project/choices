@@ -7,10 +7,10 @@
  */
 import 'dotenv/config';
 
-import { collectActiveRepresentatives, type CollectOptions } from '../../ingest/openstates/index.js';
-import { fetchFederalRepresentatives, type FetchFederalOptions } from '../../ingest/supabase/representatives.js';
-import type { CanonicalRepresentative } from '../../ingest/openstates/people.js';
-import { syncRepresentativeContacts } from '../../persist/contacts.js';
+import { collectActiveRepresentatives, type CollectOptions } from '../ingest/openstates/index.js';
+import { fetchFederalRepresentatives, type FetchFederalOptions } from '../ingest/supabase/representatives.js';
+import type { CanonicalRepresentative } from '../ingest/openstates/people.js';
+import { syncRepresentativeContacts } from '../persist/contacts.js';
 
 type CliOptions = {
   states?: string[];
@@ -141,7 +141,7 @@ async function main() {
         totalAdded += result.contactsAdded;
         totalSkipped += result.contactsSkipped;
         if (result.warnings.length > 0) {
-          warnings.push(...result.warnings.map((w) => `${rep.name}: ${w}`));
+          warnings.push(...result.warnings.map((w: string) => `${rep.name}: ${w}`));
         }
       } else {
         errors.push(`${rep.name} (${rep.supabaseRepresentativeId ?? 'unknown'}): ${result.errors.join('; ')}`);

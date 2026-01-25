@@ -156,9 +156,27 @@ export default function Civics2Page() {
       }
 
       const data = await response.json();
+      
+      // Enhanced error logging
+      if (!data || !data.success) {
+        logger.error('API returned error response', { 
+          data, 
+          status: response.status,
+          statusText: response.statusText 
+        });
+        throw new Error(data?.error || `API error: ${response.status}`);
+      }
+      
       const apiRepresentatives: Representative[] = Array.isArray(data?.data?.representatives)
         ? data.data.representatives
         : [];
+      
+      logger.info('📊 Received representatives from API', { 
+        count: apiRepresentatives.length,
+        hasData: data?.data != null,
+        hasRepresentatives: Array.isArray(data?.data?.representatives)
+      });
+      
       const mapped = apiRepresentatives.map((rep) => {
         const photoUrl =
           rep.primary_photo_url ??
@@ -237,8 +255,22 @@ export default function Civics2Page() {
       setRepresentatives(mapped);
       logger.info('🎯 Representatives state updated');
     } catch (error) {
-      logger.error('❌ Error loading representatives:', error);
-      setErrorMessage('We could not load representatives right now. Please try again.');
+      const errorMessage = error instanceof Error ? error.message : String(error);
+      logger.error('❌ Error loading representatives:', { 
+        error: errorMessage,
+        state: selectedState,
+        level: selectedLevel,
+        stack: error instanceof Error ? error.stack : undefined
+      });
+      
+      // Provide more specific error messages
+      if (errorMessage.includes('Failed to load representatives')) {
+        setErrorMessage('We could not load representatives right now. Please try again.');
+      } else if (errorMessage.includes('API error')) {
+        setErrorMessage('Service temporarily unavailable. Please try again in a moment.');
+      } else {
+        setErrorMessage('We could not load representatives right now. Please try again.');
+      }
     } finally {
       setIsLoading(false);
     }

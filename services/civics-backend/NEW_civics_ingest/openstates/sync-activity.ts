@@ -7,7 +7,7 @@
  */
 import 'dotenv/config';
 
-import { syncActivityForRepresentatives, type ActivitySyncOptions } from '../../workflows/activity-sync.js';
+import { syncActivityForRepresentatives, type ActivitySyncOptions } from '../workflows/activity-sync.js';
 
 type CliOptions = {
   states?: string[];

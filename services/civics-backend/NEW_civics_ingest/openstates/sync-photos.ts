@@ -7,10 +7,10 @@
  */
 import 'dotenv/config';
 
-import { collectActiveRepresentatives, type CollectOptions } from '../../ingest/openstates/index.js';
-import { fetchFederalRepresentatives, type FetchFederalOptions } from '../../ingest/supabase/representatives.js';
-import type { CanonicalRepresentative } from '../../ingest/openstates/people.js';
-import { syncRepresentativePhotos } from '../../persist/photos.js';
+import { collectActiveRepresentatives, type CollectOptions } from '../ingest/openstates/index.js';
+import { fetchFederalRepresentatives, type FetchFederalOptions } from '../ingest/supabase/representatives.js';
+import type { CanonicalRepresentative } from '../ingest/openstates/people.js';
+import { syncRepresentativePhotos } from '../persist/photos.js';
 
 type CliOptions = {
   states?: string[];

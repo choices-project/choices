@@ -1,0 +1,83 @@
+id: ocd-organization/bf20c2cd-04ae-43eb-87ce-00b9773b9ca2
+jurisdiction: ocd-jurisdiction/country:us/state:la/government
+classification: committee
+name: Ways and Means
+chamber: lower
+sources:
+- url: https://house.louisiana.gov/H_Cmtes/WaysAndMeans
+- url: https://house.louisiana.gov/H_Cmtes/WaysAndMeans.aspx
+  note: Committee Detail Page
+- url: https://www.legis.la.gov/legis/Committees.aspx?c=H
+  note: Committees List Page
+links:
+- url: https://house.louisiana.gov/H_Cmtes/WaysAndMeans
+- url: https://house.louisiana.gov/H_Cmtes/WaysAndMeans.aspx
+  note: homepage
+members:
+- name: Julie Emerson
+  role: chair
+  person_id: ocd-person/0e515629-c907-4618-9ae1-4e4457ea25ea
+- name: Ken Brass
+  role: vice chair
+  person_id: ocd-person/43a80737-e614-475d-aace-2d1324cb516a
+- name: Mike Johnson
+  role: ex officio
+  person_id: ocd-person/0e901294-3718-49df-9922-0ac4503acee2
+- name: Phillip DeVillier
+  role: ex officio
+  person_id: ocd-person/ee23b4bf-f5f7-498c-9fcc-f3b2d6f8fb1d
+- name: Mark Wright
+  role: interim member
+  person_id: ocd-person/d3ecec03-0408-46f0-8c82-b775f787e6e1
+- name: Beth Billings
+  role: member
+  person_id: ocd-person/5d15439d-4139-448a-8f61-25ab54e68b19
+- name: Chance Henry
+  role: member
+  person_id: ocd-person/75101b55-81b9-465a-8ec6-297fa75cdd07
+- name: Dennis Bamburg
+  role: member
+  person_id: ocd-person/a900feca-75c7-434e-8d00-dd67170f2b01
+- name: "Jay Gall\xE9"
+  role: member
+  person_id: ocd-person/ef1c54d6-d162-48d3-b3b5-b02da086c1ee
+- name: Jeremy LaCombe
+  role: member
+  person_id: ocd-person/9ae6b490-4fe0-435c-93fd-ad316e474204
+- name: Joe Orgeron
+  role: member
+  person_id: ocd-person/9002c3a7-c0d9-4112-ad34-e0c6fa909ce1
+- name: Les Farnum
+  role: member
+  person_id: ocd-person/81379952-373b-4e6e-a29f-b9bb60e7593b
+- name: Mandie Landry
+  role: member
+  person_id: ocd-person/6e106343-c9e7-4993-aca8-201210f61d64
+- name: Marcus Bryant
+  role: member
+  person_id: ocd-person/4d1c2a6e-0339-4b7a-ac52-dfd9064bfbbf
+- name: Matt Willard
+  role: member
+  person_id: ocd-person/834e887f-c79d-44ed-be47-74571a792249
+- name: Michael Echols
+  role: member
+  person_id: ocd-person/22590bd7-29fe-454d-b61d-2c54c4562274
+- name: Mike Bayham
+  role: member
+  person_id: ocd-person/e06c4ec7-9051-4489-b572-5b55e5fd4a68
+- name: Rashid Young
+  role: member
+  person_id: ocd-person/17cf7c94-788b-49f9-bca2-2f413974a927
+- name: Roger Wilder
+  role: member
+  person_id: ocd-person/c6f00cae-9826-4be6-934e-1a9516b20c4d
+- name: Travis Johnson
+  role: member
+  person_id: ocd-person/871d5c01-9710-46f4-aeba-b321bdf11e30
+- name: Wayne McMahen
+  role: member
+  person_id: ocd-person/c3e1299d-034f-4e70-9c86-c003c6e35964
+other_names:
+- name: House Committee on Ways and Means
+- name: House Ways and Means
+- name: House Ways and Means Committee

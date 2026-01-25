@@ -1,0 +1,33 @@
+id: ocd-person/359eaeba-903c-42b4-b9e3-5c5b4e9d721d
+name: Rae Cousins
+given_name: Rae
+family_name: Cousins
+gender: Female
+email: delrcousins@house.virginia.gov
+image: https://static.wixstatic.com/media/3afe7f_6e3f3bb3374b4f20ac2f776006dc2122~mv2.jpg/v1/fill/w_319,h_410,al_c,q_80,usm_0.66_1.00_0.01,enc_auto/DSC_8060%20(1).jpg
+party:
+- name: Democratic
+roles:
+- start_date: 2024-01-10
+  type: lower
+  jurisdiction: ocd-jurisdiction/country:us/state:va/government
+  district: '79'
+offices:
+- classification: capitol
+  address: Room 917, General Assembly Building 201 N. 9th St., Richmond, VA 23219
+  voice: 804-698-1079
+- classification: district-mail
+  address: P.O. Box 406, Richmond, VA 23218
+links:
+- url: https://lis.virginia.gov/cgi-bin/legp604.exe?241+mbr+H356
+- url: https://virginiageneralassembly.gov/house/members/members.php?id=H0356
+other_names:
+- name: Cousins, R.
+- name: Cousins, Rae
+- name: R. Cousins
+sources:
+- url: https://ballotpedia.org/Rae_Cousins
+- url: https://lis.virginia.gov/cgi-bin/legp604.exe?241+mbr+H356
+- url: https://virginiageneralassembly.gov/house/members/members.php?id=H0356
+- url: https://www.browngreer.com/people/rae-cousins
+- url: https://www.linkedin.com/in/rae-cousins-202070b3

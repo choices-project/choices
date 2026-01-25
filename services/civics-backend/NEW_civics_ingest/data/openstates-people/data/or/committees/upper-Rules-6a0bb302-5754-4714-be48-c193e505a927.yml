@@ -1,0 +1,46 @@
+id: ocd-organization/6a0bb302-5754-4714-be48-c193e505a927
+jurisdiction: ocd-jurisdiction/country:us/state:or/government
+classification: committee
+name: Rules Committees
+chamber: upper
+sources:
+- url: https://olis.oregonlegislature.gov/liz/2023R1/Committees/SRULES/CommitteeMembers
+  note: Committee details page
+- url: https://olis.oregonlegislature.gov/liz/2024R1/Committees/SRULES/CommitteeMembers
+  note: Committee details page
+- url: https://olis.oregonlegislature.gov/liz/2025R1/Committees/SRULES/Overview
+links:
+- url: https://olis.oregonlegislature.gov/liz/2023R1/Committees/SRULES/CommitteeMembers
+  note: homepage
+- url: https://olis.oregonlegislature.gov/liz/2024R1/Committees/SRULES/CommitteeMembers
+  note: homepage
+- url: https://olis.oregonlegislature.gov/liz/2024R1/Committees/SRULES/Overview
+- url: https://olis.oregonlegislature.gov/liz/2025R1/Committees/SRULES/Overview
+members:
+- name: Kayse Jama
+  role: chair
+  person_id: ocd-person/7532bf1f-c85e-4683-a401-ca87af088e5e
+- name: Daniel Bonham
+  role: vice chair
+  person_id: ocd-person/9bb85e98-3001-46d7-85fb-5843675d17ba
+- name: Cedric Hayden
+  role: member
+  person_id: ocd-person/95da50da-34df-41f5-8900-ff8bec038272
+- name: James Manning
+  role: member
+  person_id: ocd-person/f1be7436-8ea5-48b2-8997-53dd566633b9
+- name: Jeff Golden
+  role: member
+  person_id: ocd-person/0240017c-38e7-45da-8841-c40b007965dc
+other_names:
+- name: Rules
+- name: Rules and Executive Appointments
+- name: Senate Committee on Rules
+- name: Senate Committee on Rules and Executive Appointments
+- name: Senate Committee on Rules Committees
+- name: Senate Rules
+- name: Senate Rules and Executive Appointments
+- name: Senate Rules and Executive Appointments Committee
+- name: Senate Rules Committee
+- name: Senate Rules Committees
+- name: Senate Rules Committees Committee

@@ -1,0 +1,30 @@
+id: ocd-person/0b93e4f5-9d81-4c35-a9d3-04ad1375bae9
+name: Kevin Harris
+given_name: Kevin
+family_name: Harris
+birth_date: 1981-10-24
+gender: Male
+email: kevin.harris@house.maryland.gov
+image: https://mgaleg.maryland.gov/2023RS/images/harris02.jpg
+party:
+- name: Democratic
+roles:
+- start_date: 2023-01-11
+  type: lower
+  jurisdiction: ocd-jurisdiction/country:us/state:md/government
+  district: 27A
+offices:
+- classification: capitol
+  address: Room 225, Lowe House Office Building 6 Bladen St., Annapolis, MD 21401
+  voice: 410-841-3257
+links:
+- url: https://mgaleg.maryland.gov/mgawebsite/Members/Details/harris02
+other_names:
+- name: Harris, K.
+- name: K. Harris
+- name: K.M. Harris
+- name: Kevin M. Harris
+sources:
+- url: https://ballotpedia.org/Kevin_Harris_(Maryland)
+- url: https://mgaleg.maryland.gov/mgawebsite/Members/Details/harris02
+- url: https://www.linkedin.com/in/thekevinmharris

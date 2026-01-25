@@ -10,10 +10,10 @@ import 'dotenv/config';
 import {
   fetchCongressMembers,
   fetchMemberByBioguide,
-} from '../../clients/congress.js';
-import type { CongressMember } from '../../clients/congress.js';
-import { fetchGovInfoMember } from '../../clients/govinfo.js';
-import { getSupabaseClient } from '../../clients/supabase.js';
+} from '../clients/congress.js';
+import type { CongressMember } from '../clients/congress.js';
+import { fetchGovInfoMember } from '../clients/govinfo.js';
+import { getSupabaseClient } from '../clients/supabase.js';
 
 interface CliOptions {
   limit?: number;

@@ -104,7 +104,7 @@ export const POST = withErrorHandling(async (request: NextRequest) => {
       .from('representatives_core')
       .select(selectQuery, { count: 'exact' })
       .in('id', validIds)
-      .eq('is_active', true)
+      .eq('status', 'active') // Use status field instead of is_active
       .not('name', 'ilike', '%test%');
 
     const { data: representatives, error } = await query;
@@ -207,7 +207,8 @@ export const POST = withErrorHandling(async (request: NextRequest) => {
         division_ids: (rep.representative_divisions ?? []).map((d: any) => d.division_id).filter(Boolean),
         committees,
         data_quality_score: rep.data_quality_score,
-        is_active: rep.is_active,
+        status: rep.status, // Use status field
+        is_active: rep.is_active, // Keep for backward compatibility
         created_at: rep.created_at,
         updated_at: rep.updated_at,
         last_verified: rep.last_verified

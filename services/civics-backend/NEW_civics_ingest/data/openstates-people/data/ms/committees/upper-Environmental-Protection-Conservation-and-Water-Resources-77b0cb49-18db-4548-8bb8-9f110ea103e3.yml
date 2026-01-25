@@ -1,0 +1,43 @@
+id: ocd-organization/77b0cb49-18db-4548-8bb8-9f110ea103e3
+jurisdiction: ocd-jurisdiction/country:us/state:ms/government
+classification: committee
+name: Environmental Protection, Conservation and Water Resources
+chamber: upper
+sources: []
+members:
+- name: Jason Barrett
+  role: chair
+  person_id: ocd-person/c664f98f-0d57-4d32-abf1-a95dcec7fa31
+- name: Mike Thompson
+  role: vice chair
+  person_id: ocd-person/eaa39996-c8a7-4568-b01e-d7685667227b
+- name: Andy Berry
+  role: member
+  person_id: ocd-person/80fca1ba-017c-4941-990c-a5e2ff34aea0
+- name: Angela Turner-Ford
+  role: member
+  person_id: ocd-person/74d0c9b2-58a2-41a7-b2a0-582924a45adf
+- name: Ben Suber
+  role: member
+  person_id: ocd-person/ba13036f-790b-4745-b008-eeb74f1c86a1
+- name: John Polk
+  role: member
+  person_id: ocd-person/3594f477-2f29-4875-8352-eb8d01775a88
+- name: Josh Harkins
+  role: member
+  person_id: ocd-person/13163ae5-a55d-4eff-8b23-b9f7df9e354a
+- name: Michael McLendon
+  role: member
+  person_id: ocd-person/017dec88-1105-454d-b55b-eeb3a3c85b55
+- name: Reginald Jackson
+  role: member
+  person_id: ocd-person/0fde8bcf-e43a-4b39-a9a5-b7869424e2d9
+- name: Scott DeLano
+  role: member
+  person_id: ocd-person/8467b994-f651-446b-b77f-0632ff790ff8
+other_names:
+- name: Committee on Environmental Protection, Conservation and Water Resources
+- name: Environmental Protection, Conservation and Water Resources Committee
+- name: Senate Committee on Environmental Protection, Conservation and Water Resources
+- name: Senate Environmental Protection, Conservation and Water Resources
+- name: Senate Environmental Protection, Conservation and Water Resources Committee

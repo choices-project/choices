@@ -1,0 +1,41 @@
+id: ocd-organization/6f6e9350-f510-4164-bd38-a9c2ac88837a
+jurisdiction: ocd-jurisdiction/country:us/state:or/government
+classification: committee
+name: Information Management and Technology
+chamber: legislature
+sources:
+- url: https://olis.oregonlegislature.gov/liz/2023R1/Committees/JLCIMT/CommitteeMembers
+  note: Committee details page
+- url: https://olis.oregonlegislature.gov/liz/2024R1/Committees/JLCIMT/CommitteeMembers
+  note: Committee details page
+- url: https://olis.oregonlegislature.gov/liz/2025R1/Committees/JLCIMT/Overview
+links:
+- url: https://olis.oregonlegislature.gov/liz/2023R1/Committees/JLCIMT/CommitteeMembers
+  note: homepage
+- url: https://olis.oregonlegislature.gov/liz/2024R1/Committees/JLCIMT/CommitteeMembers
+  note: homepage
+- url: https://olis.oregonlegislature.gov/liz/2024R1/Committees/JLCIMT/Overview
+- url: https://olis.oregonlegislature.gov/liz/2025R1/Committees/JLCIMT/Overview
+members:
+- name: Nancy Nathanson
+  role: co-chair
+  person_id: ocd-person/dd5774a0-d6fe-44cc-86b3-b197225666eb
+- name: Daniel Nguyen
+  role: member
+  person_id: ocd-person/4b30682c-7833-4375-815b-2412cb9c61c7
+- name: Darcey Edwards
+  role: member
+  person_id: ocd-person/e8deb6b6-9cd0-498d-9422-81d731972da5
+- name: James Manning
+  role: member
+  person_id: ocd-person/f1be7436-8ea5-48b2-8997-53dd566633b9
+- name: Janeen Sollman
+  role: member
+  person_id: ocd-person/9d3f5669-f452-4926-91ec-a74a4c4a48e5
+- name: Noah Robinson
+  role: member
+  person_id: ocd-person/15862ba2-3cdd-4a2e-a22e-28acdea73055
+other_names:
+- name: Joint Committee on Information Management and Technology
+- name: Joint Information Management and Technology
+- name: Joint Information Management and Technology Committee

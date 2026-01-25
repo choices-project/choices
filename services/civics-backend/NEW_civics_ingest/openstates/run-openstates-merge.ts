@@ -6,8 +6,8 @@
  */
 import 'dotenv/config';
 
-import { getSupabaseClient } from '../../clients/supabase.js';
-import { syncActivityForRepresentatives } from '../../workflows/activity-sync.js';
+import { getSupabaseClient } from '../clients/supabase.js';
+import { syncActivityForRepresentatives } from '../workflows/activity-sync.js';
 
 async function main() {
   const client = getSupabaseClient();

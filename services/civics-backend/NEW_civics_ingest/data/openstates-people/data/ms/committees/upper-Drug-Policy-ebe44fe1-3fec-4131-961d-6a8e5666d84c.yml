@@ -1,0 +1,46 @@
+id: ocd-organization/ebe44fe1-3fec-4131-961d-6a8e5666d84c
+jurisdiction: ocd-jurisdiction/country:us/state:ms/government
+classification: committee
+name: Drug Policy
+chamber: upper
+sources:
+- url: https://billstatus.ls.state.ms.us/htms/s_cmtememb.xml
+  note: Committees List Page
+links:
+- url: https://billstatus.ls.state.ms.us/htms/s_cmtememb.xml
+  note: homepage
+members:
+- name: Angela Turner-Ford
+  role: chair
+  person_id: ocd-person/74d0c9b2-58a2-41a7-b2a0-582924a45adf
+- name: Angela Hill
+  role: vice chair
+  person_id: ocd-person/4004cf9a-6d23-4323-b158-00f22078d2b4
+- name: Brian Rhodes
+  role: member
+  person_id: ocd-person/77852654-cea4-4555-899c-641494605220
+- name: Daniel Sparks
+  role: member
+  person_id: ocd-person/32153f0b-aa40-4989-9787-e2608c55a87e
+- name: David Parker
+  role: member
+  person_id: ocd-person/18630d08-6afc-4892-ac2f-e13f0d9932f6
+- name: Joey Fillingane
+  role: member
+  person_id: ocd-person/bc0bd61c-da9a-40db-bf66-a0108b01275e
+- name: Nicole Boyd
+  role: member
+  person_id: ocd-person/befe53fc-f95d-49df-93f4-9985e00151e6
+- name: Reginald Jackson
+  role: member
+  person_id: ocd-person/0fde8bcf-e43a-4b39-a9a5-b7869424e2d9
+- name: Robin Robinson
+  role: member
+  person_id: ocd-person/33bd801c-d704-46a8-b60f-5929bc412479
+- name: Rod Hickman
+  role: member
+  person_id: ocd-person/eb5bde8b-1497-4a27-9806-128cf68cb00d
+other_names:
+- name: Senate Committee on Drug Policy
+- name: Senate Drug Policy
+- name: Senate Drug Policy Committee

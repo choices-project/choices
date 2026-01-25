@@ -118,6 +118,15 @@ npm run federal:enrich:finance
 - **Data:** Total raised, total spent, cash on hand, top contributors, small donor percentage
 - **Cycle:** Uses current even year (e.g., 2024 for 2024-2025 cycle)
 
+### Test Scripts
+- **`test-fec-enrichment.ts`** - Comprehensive test suite
+- **`test-fec-cycles.ts`** - Test cycle data availability
+- **`monitor-fec-enrichment.ts`** - Monitor enrichment progress
+
+### Documentation
+- **`../docs/FEC_ENRICHMENT_TEST.md`** - Test guide and troubleshooting
+- **`../docs/FEC_ENRICHMENT_DATA_VERIFICATION.md`** - Data verification results
+
 ## Next Steps
 
 - [ ] Run FEC enrichment for current cycle

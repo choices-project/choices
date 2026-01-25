@@ -1,0 +1,79 @@
+id: ocd-organization/bc33570b-f281-4fd5-8135-b63a3c65b26a
+jurisdiction: ocd-jurisdiction/country:us/state:ia/government
+classification: committee
+name: Legislative Council
+chamber: legislature
+sources:
+- url: https://www.legis.iowa.gov/committees
+  note: Committee list page
+- url: https://www.legis.iowa.gov/committees/committee?ga=90&groupID=703
+- url: https://www.legis.iowa.gov/committees/committee?ga=91&groupID=703
+links:
+- url: https://www.legis.iowa.gov/committees/committee?ga=90&groupID=703
+  note: homepage
+- url: https://www.legis.iowa.gov/committees/committee?ga=91&groupID=703
+members:
+- name: Jack Whitver
+  role: vice chair
+  person_id: ocd-person/9da58039-06dd-451e-835c-c406a493a21c
+- name: Pat Grassley
+  role: vice chair
+  person_id: ocd-person/43530aa9-bb74-4e1b-845c-e9491c9a410c
+- name: Amy Sinclair
+  role: member
+  person_id: ocd-person/8e969687-4903-4f3c-a76f-2e35a2232d09
+- name: Bobby Kaufmann
+  role: member
+  person_id: ocd-person/657c7d2d-2444-4809-93fb-d1701d77f528
+- name: Brian Meyer
+  role: member
+  person_id: ocd-person/141dec61-26f0-4155-a86b-9b2179c9546c
+- name: Carrie Koelker
+  role: member
+  person_id: ocd-person/9b68d2a2-ead2-401e-a225-1edae68f6099
+- name: Dan Dawson
+  role: member
+  person_id: ocd-person/79384252-69ca-43c7-bda1-46b6abe5873e
+- name: Gary Mohr
+  role: member
+  person_id: ocd-person/98672aab-5ba5-4994-964a-f53d8bcdd108
+- name: Heather Matson
+  role: member
+  person_id: ocd-person/ba713234-dc5e-4646-9f74-c25d84f648cc
+- name: Herman Quirmbach
+  role: member
+  person_id: ocd-person/d3b3bc8e-ab0c-4ee2-ba3d-de78040274af
+- name: Jane Bloomingdale
+  role: member
+  person_id: ocd-person/37952941-d329-4c96-8458-654fa495ec76
+- name: Jennifer Konfrst
+  role: member
+  person_id: ocd-person/522b14b8-b82f-4336-a7fb-a0f782d5509a
+- name: John Wills
+  role: member
+  person_id: ocd-person/955a4d7c-a378-4bd2-8a74-dac94f74ba52
+- name: Ken Rozenboom
+  role: member
+  person_id: ocd-person/1cfc824d-740a-4e35-a4e2-3728e2d43056
+- name: Matt Windschitl
+  role: member
+  person_id: ocd-person/be1898a3-30da-45c6-810f-4751158daefc
+- name: Sarah Garriott
+  role: member
+  person_id: ocd-person/ce66871e-57e7-471d-b231-d772dd41eb63
+- name: Sean Bagniewski
+  role: member
+  person_id: ocd-person/8ee06272-1977-4810-8c40-5d007fb31ac8
+- name: Shannon Lundgren
+  role: member
+  person_id: ocd-person/82dcdad5-7974-4b38-a44c-7007e8111a5c
+- name: Tim Kraayenbrink
+  role: member
+  person_id: ocd-person/293487d6-a28b-48a2-8cfc-c3daabb8abbe
+- name: Timi Brown-Powers
+  role: member
+  person_id: ocd-person/7467e822-4c62-4cd2-b8e1-6f72a9204fce
+other_names:
+- name: Joint Committee on Legislative Council
+- name: Joint Legislative Council
+- name: Joint Legislative Council Committee

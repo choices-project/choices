@@ -1,0 +1,29 @@
+id: ocd-person/cc78d0ae-544c-4b45-8073-4aed3ee1a513
+name: Tim Walburg
+given_name: Tim
+family_name: Walburg
+gender: Male
+email: tim.walburg@sdlegislature.gov
+image: https://assets.civicengine.com/uploads/candidate/headshot/208150/208150.jpg
+party:
+- name: Republican
+roles:
+- start_date: 2025-01-14
+  type: lower
+  jurisdiction: ocd-jurisdiction/country:us/state:sd/government
+  district: '8'
+offices:
+- classification: capitol
+  address: Capitol Building 500 E. Capitol Ave., Pierre, SD 57501
+  voice: 605-773-3851
+- classification: district-mail
+  address: 1135 N. West Ave., Madison, SD 57042
+links:
+- url: https://sdlegislature.gov/Legislators/Profile/4687/Detail
+other_names:
+- name: T. Walburg
+- name: Walburg, T.
+sources:
+- url: https://ballotpedia.org/Tim_Walburg
+- url: https://sdlegislature.gov/Legislators/Profile/4687/Detail
+- url: https://www.linkedin.com/in/tim-walburg-7453416b

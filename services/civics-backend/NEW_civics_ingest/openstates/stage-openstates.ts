@@ -16,7 +16,7 @@ import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import yaml from 'js-yaml';
 
-import { getSupabaseClient } from '../../clients/supabase.js';
+import { getSupabaseClient } from '../clients/supabase.js';
 
 async function withRetry<T>(fn: () => Promise<T>, label: string, attempts = 3, delayMs = 500): Promise<T> {
   let lastError: unknown;

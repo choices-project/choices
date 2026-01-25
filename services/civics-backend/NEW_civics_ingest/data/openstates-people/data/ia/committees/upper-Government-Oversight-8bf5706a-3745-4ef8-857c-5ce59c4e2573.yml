@@ -1,0 +1,34 @@
+id: ocd-organization/8bf5706a-3745-4ef8-857c-5ce59c4e2573
+jurisdiction: ocd-jurisdiction/country:us/state:ia/government
+classification: committee
+name: Government Oversight
+chamber: upper
+sources:
+- url: https://www.legis.iowa.gov/committees
+  note: Committee list page
+- url: https://www.legis.iowa.gov/committees/committee?ga=90&groupID=588
+- url: https://www.legis.iowa.gov/committees/committee?ga=91&groupID=588
+links:
+- url: https://www.legis.iowa.gov/committees/committee?ga=90&groupID=588
+  note: homepage
+- url: https://www.legis.iowa.gov/committees/committee?ga=91&groupID=588
+members:
+- name: Kerry Gruenhagen
+  role: chair
+  person_id: ocd-person/2ff1622d-f1f4-4344-8821-57bcf8d99b83
+- name: Lynn Evans
+  role: vice chair
+  person_id: ocd-person/0f7d8e8f-ab3e-4a0f-bde0-2ef776cdb27d
+- name: Claire Celsi
+  role: ranking member
+  person_id: ocd-person/c8fe9d62-630f-427b-8f17-3bd2ff82a33a
+- name: Bill Dotzler
+  role: member
+  person_id: ocd-person/c1174a56-68c9-4103-aaee-fa3f1a2b25ca
+- name: Tim Kraayenbrink
+  role: member
+  person_id: ocd-person/293487d6-a28b-48a2-8cfc-c3daabb8abbe
+other_names:
+- name: Senate Committee on Government Oversight
+- name: Senate Government Oversight
+- name: Senate Government Oversight Committee

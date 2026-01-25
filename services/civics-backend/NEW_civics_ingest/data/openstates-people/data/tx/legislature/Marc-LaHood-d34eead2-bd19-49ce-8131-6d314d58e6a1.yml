@@ -1,0 +1,31 @@
+id: ocd-person/d34eead2-bd19-49ce-8131-6d314d58e6a1
+name: Marc LaHood
+given_name: Marc
+family_name: LaHood
+gender: Male
+email: marc.lahood@house.texas.gov
+image: https://sanantonioreport.org/wp-content/uploads/2022/09/Marc-LaHood.jpeg
+party:
+- name: Republican
+roles:
+- start_date: 2025-01-14
+  type: lower
+  jurisdiction: ocd-jurisdiction/country:us/state:tx/government
+  district: '121'
+offices:
+- classification: capitol
+  address: Room E2.804, P.O. Box 12910, Austin, TX 78711
+  voice: 512-463-0686
+links:
+- url: https://www.house.texas.gov/members/121
+other_names:
+- name: LaHood, M.
+- name: LaHood, Marc
+- name: M. LaHood
+- name: M.A. LaHood
+sources:
+- url: https://ballotpedia.org/Marc_LaHood
+- url: https://en.wikipedia.org/wiki/Marc_LaHood
+- url: https://justfacts.votesmart.org/candidate/biography/213492/marc-lahood
+- url: https://www.house.texas.gov/members/121
+- url: https://www.linkedin.com/in/marc-lahood-b944149

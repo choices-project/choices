@@ -1,0 +1,28 @@
+id: ocd-person/5236ee6e-a57c-4d81-90b4-50a9abde8e5e
+name: Vince Perez
+given_name: Vince
+family_name: Perez
+gender: Male
+email: vincent.perez@house.texas.gov
+image: https://www.vinceperez.com/images/about.jpg
+party:
+- name: Democratic
+roles:
+- start_date: 2025-01-14
+  type: lower
+  jurisdiction: ocd-jurisdiction/country:us/state:tx/government
+  district: '77'
+offices:
+- classification: capitol
+  address: Room E2.312, P.O. Box 12910, Austin, TX 78711
+  voice: 512-463-0638
+links:
+- url: https://www.house.texas.gov/members/77
+other_names:
+- name: Perez, V.
+- name: Perez, Vince
+- name: V. Perez
+- name: V.M. Perez
+sources:
+- url: https://justfacts.votesmart.org/candidate/biography/163449/vincent-perez
+- url: https://www.house.texas.gov/members/77

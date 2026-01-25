@@ -1,0 +1,36 @@
+id: ocd-organization/70959630-ae3b-475b-b89c-225cfffdfb34
+jurisdiction: ocd-jurisdiction/country:us/state:sd/government
+classification: committee
+name: Bonding
+chamber: legislature
+sources:
+- url: https://sdlegislature.gov/Interim/Committee/487/Detail
+links:
+- url: https://sdlegislature.gov/Interim/Committee/473/Detail
+- url: https://sdlegislature.gov/Interim/Committee/487/Detail
+members:
+- name: Jon Hansen
+  role: chair
+  person_id: ocd-person/912b0c53-5674-42b0-8f22-8ccd01c3264c
+- name: Chris Karr
+  role: vice chair
+  person_id: ocd-person/85616a5d-63b7-4794-8eb0-63ab7b121761
+- name: Erin Healy
+  role: member
+  person_id: ocd-person/85bda678-d416-4caa-b439-8a579288f2ec
+- name: Jim Mehlhaff
+  role: member
+  person_id: ocd-person/c8ca77f5-97e7-4604-aec3-fe4ee5e7dc31
+- name: Karla Lems
+  role: member
+  person_id: ocd-person/0c864308-04a8-4b22-af5b-5d718046b99f
+- name: Liz Larson
+  role: member
+  person_id: ocd-person/81df3498-7677-4749-9753-c1ae9799e444
+- name: Scott Odenbach
+  role: member
+  person_id: ocd-person/18602d7b-fb7f-495b-bf94-2b0da2aae00f
+other_names:
+- name: Joint Bonding
+- name: Joint Bonding Committee
+- name: Joint Committee on Bonding

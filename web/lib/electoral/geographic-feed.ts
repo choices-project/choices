@@ -171,33 +171,66 @@ export class GeographicElectoralFeed {
       const divisionToReps = new Map<string, Array<{ id: number; name: string; party: string | null; office: string }>>();
       if (divisionIds.length > 0) {
         try {
-          const { data: repRows, error: repErr } = await (supabase as any)
+          // First, get all representatives that match the divisions and are active
+          // Query representative_divisions to get rep IDs for these divisions
+          const { data: divRows, error: divErr } = await (supabase as any)
             .from('representative_divisions')
-            .select('division_id, representative:representatives_core(id, name, party, office)')
+            .select('division_id, representative_id')
             .in('division_id', divisionIds)
             .limit(5000);
-          if (!repErr && Array.isArray(repRows)) {
-            for (const row of repRows as Array<{ division_id?: string; representative?: { id: number; name: string; party: string | null; office: string } }>) {
-              const key = String(row.division_id ?? '');
-              if (!key) continue;
-              if (!divisionToReps.has(key)) {
-                divisionToReps.set(key, []);
-              }
-              if (row.representative) {
-                const list = divisionToReps.get(key);
-                if (list) {
-                  list.push({
-                  id: row.representative.id,
-                  name: row.representative.name,
-                  party: row.representative.party ?? null,
-                  office: row.representative.office,
+          
+          if (divErr) {
+            logger.warn('representative_divisions prefetch failed', { error: divErr.message });
+          } else if (Array.isArray(divRows)) {
+            // Get unique representative IDs
+            const repIds = Array.from(new Set(
+              divRows
+                .map((r: any) => r.representative_id)
+                .filter((id: any): id is number => id != null && typeof id === 'number')
+            ));
+            
+            if (repIds.length > 0) {
+              // Query representatives_core with status filter
+              const { data: repRows, error: repErr } = await (supabase as any)
+                .from('representatives_core')
+                .select('id, name, party, office')
+                .eq('status', 'active') // Filter by status field
+                .in('id', repIds)
+                .limit(5000);
+              
+              if (!repErr && Array.isArray(repRows)) {
+                // Create a map of rep ID to rep data
+                const repMap = new Map<number, { id: number; name: string; party: string | null; office: string }>();
+                for (const rep of repRows) {
+                  repMap.set(rep.id, {
+                    id: rep.id,
+                    name: rep.name,
+                    party: rep.party ?? null,
+                    office: rep.office,
                   });
-                  divisionToReps.set(key, list);
                 }
+                
+                // Now map divisions to representatives
+                for (const divRow of divRows) {
+                  const divisionId = String(divRow.division_id ?? '');
+                  const repId = divRow.representative_id;
+                  if (!divisionId || !repId) continue;
+                  
+                  const rep = repMap.get(repId);
+                  if (rep) {
+                    if (!divisionToReps.has(divisionId)) {
+                      divisionToReps.set(divisionId, []);
+                    }
+                    const list = divisionToReps.get(divisionId);
+                    if (list && !list.some(r => r.id === rep.id)) {
+                      list.push(rep);
+                    }
+                  }
+                }
+              } else if (repErr) {
+                logger.warn('representatives_core prefetch failed', { error: repErr.message });
               }
             }
-          } else if (repErr) {
-            logger.warn('representative_divisions prefetch failed', { error: repErr.message });
           }
         } catch (e) {
           logger.warn('representative_divisions prefetch exception', { error: e instanceof Error ? e.message : 'unknown' });

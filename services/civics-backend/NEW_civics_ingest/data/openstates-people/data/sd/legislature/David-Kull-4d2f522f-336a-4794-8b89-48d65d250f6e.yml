@@ -1,0 +1,33 @@
+id: ocd-person/4d2f522f-336a-4794-8b89-48d65d250f6e
+name: David Kull
+given_name: David
+family_name: Kull
+gender: Male
+email: david.kull@sdlegislature.gov
+image: https://cityofbrandon.org/vertical/Sites/%7B23CB10F0-8C35-4CA4-9AD1-B693F0F58E76%7D/uploads/Dave_Kull_Web.jpg
+party:
+- name: Republican
+roles:
+- start_date: 2023-01-10
+  type: lower
+  jurisdiction: ocd-jurisdiction/country:us/state:sd/government
+  district: '2'
+offices:
+- classification: capitol
+  address: Capitol Building 500 E. Capitol Ave., Pierre, SD 57501
+  voice: 605-773-3851
+links:
+- url: https://sdlegislature.gov/Legislators/Profile/4438/Detail
+- url: https://sdlegislature.gov/Legislators/Profile/4521/Detail
+- url: https://sdlegislature.gov/Legislators/Profile/4628/Detail
+other_names:
+- name: D. Kull
+- name: Kull, D.
+sources:
+- url: https://ballotpedia.org/David_Kull
+- url: https://sdlegislature.gov/Legislators/Profile/4438/Detail
+- url: https://sdlegislature.gov/Legislators/Profile/4521/Detail
+- url: https://sdlegislature.gov/Legislators/Profile/4628/Detail
+- url: https://www.linkedin.com/in/david-kull-8ab183b4
+extras:
+  occupation: Retired Law Enforcement/City Council Member

@@ -430,7 +430,10 @@ export const GET = withErrorHandling(async (request: NextRequest) => {
       } : {}),
       committees,
       data_quality_score: rep.data_quality_score,
-      is_active: rep.is_active,
+      data_sources: rep.data_sources,
+      status: rep.status, // Use status field
+      is_active: rep.is_active, // Keep for backward compatibility
+      verification_status: rep.verification_status,
       created_at: rep.created_at,
       updated_at: rep.updated_at,
       last_verified: rep.last_verified
@@ -440,14 +443,27 @@ export const GET = withErrorHandling(async (request: NextRequest) => {
     if (requestedFields.length > 0) {
       const filtered: Record<string, any> = {};
       // Always include id for reference
-      if (requestedFields.includes('id') || requestedFields.length === 0) {
-        filtered.id = fullRep.id;
-      }
+      filtered.id = fullRep.id;
+      
+      // Include requested fields that exist in fullRep
       requestedFields.forEach(field => {
         if (field in fullRep) {
           filtered[field] = fullRep[field];
         }
       });
+      
+      // Always include essential fields even if not explicitly requested
+      // This ensures the frontend always has the data it needs
+      if (!requestedFields.includes('status') && 'status' in fullRep) {
+        filtered.status = fullRep.status;
+      }
+      if (!requestedFields.includes('data_sources') && 'data_sources' in fullRep) {
+        filtered.data_sources = fullRep.data_sources;
+      }
+      if (!requestedFields.includes('verification_status') && 'verification_status' in fullRep) {
+        filtered.verification_status = fullRep.verification_status;
+      }
+      
       return filtered;
     }
 

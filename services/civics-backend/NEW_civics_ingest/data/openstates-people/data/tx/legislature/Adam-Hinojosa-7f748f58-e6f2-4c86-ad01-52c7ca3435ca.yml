@@ -1,0 +1,41 @@
+id: ocd-person/7f748f58-e6f2-4c86-ad01-52c7ca3435ca
+name: Adam Hinojosa
+given_name: Adam
+family_name: Hinojosa
+gender: Male
+email: adam.hinojosa@senate.texas.gov
+image: https://mr.cdn.ignitecdn.com/client_assets/texasinsider/media/picture/671f/bb04/9228/b138/0738/814c/original_State.Senator.Adam.Hinojosa.jpg?1730132741
+party:
+- name: Republican
+roles:
+- start_date: 2025-01-14
+  type: upper
+  jurisdiction: ocd-jurisdiction/country:us/state:tx/government
+  district: '27'
+offices:
+- classification: capitol
+  address: Room E1.712, P.O. Box 12068 Capitol Station, Austin, TX 78711
+  voice: 512-463-0127
+- classification: district
+  address: 1211 U.S. Highway 181, Portland, TX 78102
+  voice: 361-643-0026
+- classification: district
+  address: 255 S. Kansas Ave., Weslaco, TX 78596
+  voice: 956-447-1094
+- classification: district
+  address: 700 F.M. 3168, Raymondville, TX 78580
+  voice: 956-447-1094
+- classification: district
+  address: Webb Martinez Building 1324 E. Madison St., Brownsville, TX 78520
+  voice: 956-542-2211
+links:
+- url: https://senate.texas.gov/member.php?d=27
+other_names:
+- name: A. Hinojosa
+- name: Hinojosa, A.
+- name: Hinojosa, Adam
+sources:
+- url: https://ballotpedia.org/Adam_Hinojosa
+- url: https://en.wikipedia.org/wiki/Adam_Hinojosa
+- url: https://senate.texas.gov/member.php?d=27
+- url: https://www.linkedin.com/in/electadamhinojosa
