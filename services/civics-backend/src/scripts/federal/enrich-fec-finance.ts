@@ -759,8 +759,6 @@ async function main() {
             console.log(`   💰 Enriched ${enrichedCount} representatives during lookup (saved ${enrichedCount} API calls!)`);
           }
           
-          console.log(`   ✅ Found ${foundCount} FEC IDs via API lookup`);
-          
           // Refresh representatives list after FEC ID lookups
           if (foundCount > 0) {
             console.log('   Refreshing representatives list with newly found FEC IDs...');
