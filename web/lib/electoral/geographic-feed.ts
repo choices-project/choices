@@ -655,23 +655,24 @@ export class GeographicElectoralFeed {
             .limit(10);
 
           if (!federalError && federalReps && Array.isArray(federalReps)) {
+            // Return basic representative data without expensive enrichment for performance
+            // Enrichment can be done on-demand when viewing individual representative pages
             for (const rep of federalReps) {
-              try {
-                const enriched = await this.enrichRepresentative(
-                  {
-                    id: String(rep.id),
-                    name: rep.name,
-                    party: rep.party ?? 'Unknown',
-                    office: rep.office,
-                    jurisdiction: federalDistrict,
-                  } as Representative,
-                  'federal',
-                  'house'
-                );
-                officials.federal.push(enriched);
-              } catch (enrichError) {
-                logger.warn('Failed to enrich federal representative', { repId: rep.id, error: enrichError });
-              }
+              officials.federal.push({
+                id: String(rep.id),
+                name: rep.name,
+                party: rep.party ?? 'Unknown',
+                office: rep.office,
+                jurisdiction: federalDistrict,
+                district: rep.district ?? undefined,
+                socialMedia: {},
+                votingRecord: { totalVotes: 0, partyLineVotes: 0, constituentAlignment: 0, keyVotes: [] },
+                campaignFinance: null,
+                engagement: { responseRate: 0, averageResponseTime: 0, constituentQuestions: 0, publicStatements: 0 },
+                walk_the_talk_score: { overall: 0, promise_fulfillment: 0, constituentAlignment: 0, financial_independence: 0 },
+                recentActivity: [],
+                platform: []
+              } as Representative);
             }
           } else if (federalError) {
             logger.warn('Failed to fetch federal officials', { error: federalError.message, district: federalDistrict });
@@ -693,23 +694,24 @@ export class GeographicElectoralFeed {
             .limit(20);
 
           if (!stateError && stateReps && Array.isArray(stateReps)) {
+            // Return basic representative data without expensive enrichment for performance
+            // Enrichment can be done on-demand when viewing individual representative pages
             for (const rep of stateReps) {
-              try {
-                const enriched = await this.enrichRepresentative(
-                  {
-                    id: String(rep.id),
-                    name: rep.name,
-                    party: rep.party ?? 'Unknown',
-                    office: rep.office,
-                    jurisdiction: `${stateCode}-${rep.district ?? ''}`,
-                  } as Representative,
-                  'state',
-                  'house'
-                );
-                officials.state.push(enriched);
-              } catch (enrichError) {
-                logger.warn('Failed to enrich state representative', { repId: rep.id, error: enrichError });
-              }
+              officials.state.push({
+                id: String(rep.id),
+                name: rep.name,
+                party: rep.party ?? 'Unknown',
+                office: rep.office,
+                jurisdiction: `${stateCode}-${rep.district ?? ''}`,
+                district: rep.district ?? undefined,
+                socialMedia: {},
+                votingRecord: { totalVotes: 0, partyLineVotes: 0, constituentAlignment: 0, keyVotes: [] },
+                campaignFinance: null,
+                engagement: { responseRate: 0, averageResponseTime: 0, constituentQuestions: 0, publicStatements: 0 },
+                walk_the_talk_score: { overall: 0, promise_fulfillment: 0, constituentAlignment: 0, financial_independence: 0 },
+                recentActivity: [],
+                platform: []
+              } as Representative);
             }
           } else if (stateError) {
             logger.warn('Failed to fetch state officials', { error: stateError.message, state: stateCode });
