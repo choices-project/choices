@@ -189,20 +189,27 @@ export default function PollClient({ poll }: PollClientProps) {
   const pollStatus = localPollStatus ?? poll.status ?? 'active';
   const canClosePoll = (isPollCreator || isAdmin) && pollStatus === 'active';
   
-  // Debug logging for close/delete button visibility
-  if (process.env.NODE_ENV === 'development') {
-    logger.debug('PollClient: Button visibility check', {
-      pollId: poll.id,
-      userId: user?.id,
-      pollCreatedBy: poll.createdBy,
-      isPollCreator,
-      isAdmin,
-      pollStatus,
-      canClosePoll,
-      hasCloseButton: canClosePoll,
-      hasDeleteButton: isPollCreator,
-    });
-  }
+  // Debug logging for close/delete button visibility and voting status
+  useEffect(() => {
+    if (process.env.NODE_ENV === 'development') {
+      logger.debug('PollClient: Button visibility and voting status', {
+        pollId: poll.id,
+        userId: user?.id,
+        pollCreatedBy: poll.createdBy,
+        isPollCreator,
+        isAdmin,
+        pollStatus,
+        canClosePoll,
+        canVote,
+        hasVoted,
+        hasUser: !!user,
+        authLoading,
+        hasCloseButton: canClosePoll,
+        hasDeleteButton: isPollCreator,
+        votingInterfaceShown: pollStatus === 'active' && canVote && user && !hasVoted && normalizedOptions.length > 0,
+      });
+    }
+  }, [poll.id, user?.id, poll.createdBy, isPollCreator, isAdmin, pollStatus, canClosePoll, canVote, hasVoted, user, authLoading, normalizedOptions.length]);
 
   // Use refs for stable app store actions to prevent infinite re-renders
   const setCurrentRouteRef = useRef(setCurrentRoute);

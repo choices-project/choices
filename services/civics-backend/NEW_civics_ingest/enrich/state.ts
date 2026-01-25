@@ -72,7 +72,7 @@ async function deriveIssueSignals(
     fetchOptions.query = canonical.name;
   }
 
-  const bills = await fetchRecentBillsForPerson(canonical.openstatesId, fetchOptions);
+  const bills = await fetchRecentBillsForPerson(canonical.openstatesId || null, fetchOptions);
 
   if (bills.length === 0) {
     return [];

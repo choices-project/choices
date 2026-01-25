@@ -66,8 +66,13 @@ async function main() {
     );
   } else {
     console.log(
-      `✅ Activity sync complete (${result.processed}/${result.total}, failed: ${result.failed}). Activity rows written: ${result.activityRows}.`,
+      `✅ Activity sync complete (${result.processed}/${result.total}, failed: ${result.failed}, rate limited: ${result.rateLimited}). Activity rows written: ${result.activityRows}.`,
     );
+    if (result.apiUsage) {
+      console.log(
+        `   API usage: ${result.apiUsage.dailyRequests}/${result.apiUsage.dailyLimit} (${result.apiUsage.remaining} remaining)`,
+      );
+    }
   }
 }
 

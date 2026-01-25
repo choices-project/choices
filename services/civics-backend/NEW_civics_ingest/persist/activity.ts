@@ -227,8 +227,12 @@ export async function syncRepresentativeActivity(
     const jurisdiction = deriveJurisdictionFilter(rep);
     const fetchOpts: { limit: number; jurisdiction?: string; query?: string } = { limit: MAX_BILLS };
     if (jurisdiction) fetchOpts.jurisdiction = jurisdiction;
-    if (!jurisdiction) fetchOpts.query = rep.name || rep.openstatesId || undefined;
-    bills = await fetchRecentBillsForPerson(rep.openstatesId, fetchOpts);
+    // Use fallback query if no openstatesId but have name
+    if (!rep.openstatesId && rep.name) {
+      fetchOpts.query = rep.name;
+    }
+    // fetchRecentBillsForPerson now handles null openstatesId with fallback
+    bills = await fetchRecentBillsForPerson(rep.openstatesId || null, fetchOpts);
   }
 
   if (bills.length === 0) {
