@@ -113,7 +113,7 @@ type NormalizedOption = {
 
 export default function PollClient({ poll }: PollClientProps) {
   const { t } = useI18n();
-  const { user } = useAuth();
+  const { user, isLoading: authLoading } = useAuth();
   const router = useRouter();
   const isAdmin = useProfileStore((s) => s.isAdmin?.() ?? false);
   const { addNotification } = useNotificationActions();
@@ -523,7 +523,8 @@ export default function PollClient({ poll }: PollClientProps) {
       return { title, description };
     }
 
-    if (!user) {
+    // Only show sign in required if auth has finished loading and user is still null
+    if (!authLoading && !user) {
       return {
         title: t('polls.view.status.signInRequired.title'),
         description: t('polls.view.status.signInRequired.description'),

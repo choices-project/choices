@@ -859,6 +859,9 @@ export default function CreatePollPage() {
       votingMethod: data.settings.votingMethod,
     });
 
+    // Reset wizard after successful submission to clear form for next poll
+    actions.resetWizard();
+
     if (typeof window !== 'undefined') {
       window.dispatchEvent(
         new CustomEvent('choices:poll-created', {

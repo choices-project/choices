@@ -73,8 +73,14 @@ export function RepresentativeActivityFeed({
         // Process polls
         if (pollsRes.ok) {
           const pollsData = await pollsRes.json();
-          if (pollsData.success && Array.isArray(pollsData.data)) {
-            pollsData.data.forEach((poll: any) => {
+          if (pollsData.success && Array.isArray(pollsData.data?.representatives || pollsData.data)) {
+            // Handle both old format (data as array) and new format (data.representatives)
+            const polls = Array.isArray(pollsData.data?.representatives) 
+              ? pollsData.data.representatives 
+              : Array.isArray(pollsData.data) 
+                ? pollsData.data 
+                : [];
+            polls.forEach((poll: any) => {
               activitiesList.push({
                 id: poll.id,
                 type: 'poll',
@@ -91,7 +97,20 @@ export function RepresentativeActivityFeed({
                 }
               });
             });
+          } else {
+            logger.warn('RepresentativeActivityFeed: Unexpected polls API response format', {
+              success: pollsData.success,
+              hasData: !!pollsData.data,
+              dataType: typeof pollsData.data,
+              isArray: Array.isArray(pollsData.data),
+            });
           }
+        } else {
+          logger.warn('RepresentativeActivityFeed: Failed to fetch polls', {
+            status: pollsRes.status,
+            statusText: pollsRes.statusText,
+            representativeId,
+          });
         }
 
         // Process bills/activities
