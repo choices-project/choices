@@ -277,12 +277,14 @@ export default function PollClient({ poll }: PollClientProps) {
     };
   }, [pollId]);
 
-  const fetchPollData = useCallback(async () => {
+  const fetchPollData = useCallback(async (showLoading = true) => {
     try {
       const generalError = tRef.current('polls.view.errors.loadResultsFailed');
 
-      setLoading(true);
-      setVotingLoadingRef.current(true);
+      if (showLoading) {
+        setLoading(true);
+        setVotingLoadingRef.current(true);
+      }
       setError(null);
       clearVotingErrorRef.current();
 
@@ -314,8 +316,10 @@ export default function PollClient({ poll }: PollClientProps) {
       setError(errorMessage);
       setVotingErrorRef.current(errorMessage);
     } finally {
-      setLoading(false);
-      setVotingLoadingRef.current(false);
+      if (showLoading) {
+        setLoading(false);
+        setVotingLoadingRef.current(false);
+      }
     }
   }, [pollId]);
 
@@ -324,13 +328,14 @@ export default function PollClient({ poll }: PollClientProps) {
   }, [fetchPollData]);
 
   // Auto-refresh poll results for active polls (every 5 seconds)
+  // Don't show loading state on background refreshes to avoid UI flickering
   useEffect(() => {
     if (pollStatus !== 'active') {
       return; // Don't poll for closed or draft polls
     }
 
     const pollInterval = setInterval(() => {
-      void fetchPollData();
+      void fetchPollData(false); // false = don't show loading state
     }, 5000); // Refresh every 5 seconds
 
     return () => {
