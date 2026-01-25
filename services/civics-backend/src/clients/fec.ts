@@ -251,3 +251,60 @@ export async function searchCandidates(params: {
   return results ?? [];
 }
 
+/**
+ * Combined function: Search for candidate by name/office/state and fetch their finance totals in one optimized flow.
+ * This eliminates the need for separate search + fetch calls when you don't have a FEC ID yet.
+ * 
+ * Returns both the candidate info (with FEC ID) and their finance totals for the specified cycle.
+ * If multiple candidates match, returns the first one with finance data, or the first match if none have data.
+ */
+export async function searchCandidateWithTotals(params: {
+  name: string;
+  office?: 'H' | 'S' | 'P';
+  state?: string;
+  party?: string;
+  cycle: number;
+  per_page?: number;
+}): Promise<{
+  candidate: FecCandidate | null;
+  totals: FecTotals | null;
+}> {
+  if (!params.name || !params.name.trim()) {
+    throw new Error('name is required for candidate search');
+  }
+  if (!params.cycle || params.cycle < 2000 || params.cycle > 2100 || params.cycle % 2 !== 0) {
+    throw new Error(`Invalid cycle: ${params.cycle}. Must be an even year between 2000-2100`);
+  }
+
+  // Step 1: Search for candidates matching the criteria
+  const candidates = await searchCandidates({
+    name: params.name,
+    office: params.office,
+    state: params.state,
+    party: params.party,
+    election_year: params.cycle,
+    per_page: params.per_page ?? 10,
+  });
+
+  if (candidates.length === 0) {
+    return { candidate: null, totals: null };
+  }
+
+  // Step 2: For each candidate found, try to get their totals
+  // Return the first one that has finance data, or the first match if none have data
+  for (const candidate of candidates) {
+    try {
+      const totals = await fetchCandidateTotals(candidate.candidate_id, params.cycle);
+      if (totals) {
+        return { candidate, totals };
+      }
+    } catch (error) {
+      // If this candidate fails, try the next one
+      continue;
+    }
+  }
+
+  // If we found candidates but none have totals for this cycle, return the first candidate with null totals
+  return { candidate: candidates[0] ?? null, totals: null };
+}
+

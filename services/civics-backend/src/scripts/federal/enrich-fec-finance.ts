@@ -14,7 +14,7 @@ import { getSupabaseClient } from '../../clients/supabase.js';
 import {
   fetchCandidateTotals,
   fetchCandidateTopContributors,
-  searchCandidates,
+  searchCandidateWithTotals,
   type FecApiError,
 } from '../../clients/fec.js';
 import { evaluateDataQuality } from '../../utils/data-quality.js';
@@ -621,6 +621,9 @@ async function main() {
     console.log(
       `   FEC ID coverage: ${coverage.withFecId}/${coverage.total} (${coverage.coveragePercent}%)`,
     );
+    // Fetch representatives (will be refreshed after FEC ID lookup if needed)
+    let reps = await fetchRepresentatives(options);
+    
     if (coverage.missingFecId > 0) {
       console.warn(
         `   ⚠️  ${coverage.missingFecId} active federal representatives missing FEC IDs.`,
@@ -646,43 +649,48 @@ async function main() {
           
           for (const rep of missingFecReps) {
             try {
-              // Map office to FEC office code
-              const officeCode = rep.office === 'Senator' ? 'S' : rep.office === 'Representative' ? 'H' : undefined;
-              if (!officeCode || !rep.state) continue;
-
-              await new Promise((resolve) => setTimeout(resolve, FEC_THROTTLE_MS));
-              const candidates = await searchCandidates({
-                name: rep.name.split(' ').slice(-1)[0], // Last name only for better matching
-                office: officeCode as 'H' | 'S',
-                state: rep.state,
-                election_year: options.cycle,
+              // Use combined function to get FEC ID + finance data in one optimized flow
+              const fecOffice = rep.office === 'Senator' ? 'S' : rep.office === 'Representative' ? 'H' : undefined;
+              const { candidate } = await searchCandidateWithTotals({
+                name: rep.name,
+                office: fecOffice,
+                state: rep.state ?? undefined,
+                cycle: options.cycle,
                 per_page: 5,
               });
 
-              // Find best match
-              const match = candidates.find(
-                (c) => c.name.toLowerCase().includes(rep.name.toLowerCase().split(' ')[0]) &&
-                  c.name.toLowerCase().includes(rep.name.toLowerCase().split(' ').slice(-1)[0]),
-              );
-
-              if (match && match.candidate_id) {
+              if (candidate && candidate.candidate_id) {
+                // Update FEC ID in database
                 const { error: updateError } = await client
                   .from('representatives_core')
-                  .update({ fec_id: match.candidate_id })
+                  .update({ fec_id: candidate.candidate_id })
                   .eq('id', rep.id);
 
                 if (!updateError) {
-                  foundCount += 1;
-                  console.log(`   ✅ Found FEC ID for ${rep.name}: ${match.candidate_id}`);
+                  console.log(`   ✅ Found FEC ID for ${rep.name}: ${candidate.candidate_id}`);
+                  foundCount++;
+                  
+                  // If we also got totals, we can enrich immediately (optional optimization)
+                  // For now, just store the FEC ID and let the main loop handle enrichment
+                } else {
+                  console.warn(`   ⚠️  Found FEC ID but failed to update: ${updateError.message}`);
                 }
               }
             } catch (error) {
-              // Silently continue - lookup is optional
+              // Continue to next rep if lookup fails
+              continue;
             }
+            
+            // Throttle API calls
+            await new Promise((resolve) => setTimeout(resolve, FEC_THROTTLE_MS));
           }
-
+          
+          console.log(`   ✅ Found ${foundCount} FEC IDs via API lookup`);
+          
+          // Refresh representatives list after FEC ID lookups
           if (foundCount > 0) {
-            console.log(`   ✅ Found ${foundCount} FEC IDs via API lookup`);
+            console.log('   Refreshing representatives list with newly found FEC IDs...');
+            reps = await fetchRepresentatives(options);
           }
         }
       } else {
@@ -690,139 +698,92 @@ async function main() {
       }
     }
 
-    let reps = await fetchRepresentatives(options);
-    if (reps.length === 0) {
-      console.log('\n❌ No representatives with FEC IDs found.');
+    if (!reps || reps.length === 0) {
+      console.log('\n✅ No representatives to enrich.');
       return;
     }
 
-    console.log(`\n📥 Fetching FEC finance for ${reps.length} representatives...`);
-    console.log(`   Estimated time: ~${Math.ceil((reps.length * FEC_THROTTLE_MS * 2) / 1000 / 60)} minutes (${FEC_THROTTLE_MS}ms throttle)`);
+    console.log(`\n📊 Enriching ${reps.length} representative(s)...`);
+    console.log('='.repeat(50));
 
+    const results: EnrichmentResult[] = [];
     let updatedCount = 0;
     let noDataCount = 0;
-    let rateLimited = 0;
+    let rateLimitedCount = 0;
     let errorCount = 0;
-    const enrichedIds: number[] = [];
-    const errors: Array<{ name: string; fecId: string; error: string }> = [];
+    const errors: string[] = [];
 
     for (let i = 0; i < reps.length; i++) {
       const rep = reps[i];
       const progress = i + 1;
-      const percent = Math.round((progress / reps.length) * 100);
       const elapsed = formatElapsed(startTime);
       const eta = estimateTimeRemaining(progress, reps.length, Date.now() - startTime);
+      
+      process.stdout.write(
+        `\r   [${progress}/${reps.length}] ${rep.name}${rep.fec_id ? ` (${rep.fec_id})` : ''}... ${elapsed} elapsed, ${eta} remaining`
+      );
 
       try {
-        const output = await enrichRepresentative(rep, options);
-        if (!output) continue;
+        const result = await enrichRepresentative(rep, options);
+        results.push(result);
 
-        if (output.status === 'updated') {
-          if (!options.dryRun) {
-            updatedCount += 1;
-            enrichedIds.push(rep.id);
-          }
-          process.stdout.write(
-            `\r[${percent}%] ${progress}/${reps.length} | ✅ ${rep.name} (${rep.fec_id}) | ${elapsed} | ETA: ${eta}`,
-          );
-        } else if (output.status === 'no-data') {
-          if (!options.dryRun) {
-            noDataCount += 1;
-            enrichedIds.push(rep.id);
-          }
-          process.stdout.write(
-            `\r[${percent}%] ${progress}/${reps.length} | ⚠️  ${rep.name} (${rep.fec_id}) - no data | ${elapsed} | ETA: ${eta}`,
-          );
-        } else if (output.status === 'rate-limited') {
-          rateLimited += 1;
-          process.stdout.write(
-            `\r[${percent}%] ${progress}/${reps.length} | ⏸️  ${rep.name} (${rep.fec_id}) - rate limited | ${elapsed} | ETA: ${eta}`,
-          );
+        if (result.status === 'updated') {
+          updatedCount++;
+        } else if (result.status === 'no-data') {
+          noDataCount++;
+        } else if (result.status === 'rate-limited') {
+          rateLimitedCount++;
         }
       } catch (error) {
-        errorCount += 1;
-        const errorMessage = (error as Error).message;
-        errors.push({
-          name: rep.name,
-          fecId: rep.fec_id ?? 'unknown',
-          error: errorMessage,
-        });
-        process.stdout.write(
-          `\r[${percent}%] ${progress}/${reps.length} | ❌ ${rep.name} (${rep.fec_id}) - error | ${elapsed} | ETA: ${eta}`,
-        );
-        console.error(`\n   Error: ${errorMessage}`);
+        errorCount++;
+        const errorMsg = error instanceof Error ? error.message : String(error);
+        errors.push(`${rep.name} (${rep.fec_id ?? 'no FEC ID'}): ${errorMsg}`);
+        console.error(`\n   ❌ Error enriching ${rep.name}: ${errorMsg}`);
       }
     }
 
     // Clear progress line
     process.stdout.write('\r' + ' '.repeat(100) + '\r');
 
+    // Summary
+    console.log('\n📊 Enrichment Summary');
+    console.log('='.repeat(50));
+    console.log(`   Total processed: ${reps.length}`);
+    console.log(`   ✅ Updated: ${updatedCount}`);
+    console.log(`   ⚠️  No data: ${noDataCount}`);
+    console.log(`   🚦 Rate limited: ${rateLimitedCount}`);
+    console.log(`   ❌ Errors: ${errorCount}`);
+    
+    if (errors.length > 0) {
+      console.log('\n   Error details:');
+      errors.forEach((err) => console.log(`     - ${err}`));
+    }
+
+    const totalTime = formatElapsed(startTime);
+    console.log(`\n⏱️  Total time: ${totalTime}`);
+
     // Post-enrichment verification
-    if (!options.dryRun && enrichedIds.length > 0) {
-      console.log('\n📊 Post-enrichment verification...');
+    if (!options.dryRun && updatedCount > 0) {
+      console.log('\n🔍 Post-enrichment verification...');
       const client = getSupabaseClient();
-      const { data: financeData, error: verificationError } = await client
+      const postCoverage = await checkFecIdCoverage();
+      const { count: financeCount, error: financeError } = await client
         .from('representative_campaign_finance')
-        .select('representative_id, total_raised, cycle')
-        .in('representative_id', enrichedIds)
-        .eq('cycle', options.cycle);
+        .select('*', { count: 'exact', head: true });
 
-      if (!verificationError && financeData) {
-        const withData = financeData.filter((f) => f.total_raised != null).length;
-        const totalEnriched = financeData.length;
-        const coveragePercent = totalEnriched > 0
-          ? Math.round((withData / totalEnriched) * 100)
+      if (!financeError) {
+        const financePercent = postCoverage.total > 0
+          ? Math.round(((financeCount ?? 0) / postCoverage.total) * 100)
           : 0;
-
-        console.log(`   Representatives with finance data: ${withData}/${totalEnriched} (${coveragePercent}%)`);
-        console.log(`   Expected coverage: ~80-90% of active federal reps with FEC IDs`);
-
-        if (coveragePercent < 70) {
-          console.warn(
-            `   ⚠️  Warning: Coverage (${coveragePercent}%) is lower than expected (80-90%).`,
-          );
-          console.warn('   This may indicate API issues or many candidates not filing for this cycle.');
-        } else if (coveragePercent >= 80) {
-          console.log(`   ✅ Coverage within expected range.`);
+        console.log(`   Finance data coverage: ${financeCount ?? 0}/${postCoverage.total} (${financePercent}%)`);
+        
+        if (financePercent < 50) {
+          console.warn('   ⚠️  Low finance data coverage. Consider running enrichment again or checking for issues.');
         }
       }
     }
 
-    // Summary statistics
-    console.log('\n📈 Summary Statistics');
-    console.log('='.repeat(50));
-    console.log(`   Total processed: ${reps.length}`);
-    console.log(`   ✅ Successfully updated: ${updatedCount}`);
-    console.log(`   ⚠️  No data recorded: ${noDataCount}`);
-    console.log(`   ⏸️  Rate limited: ${rateLimited}`);
-    console.log(`   ❌ Errors: ${errorCount}`);
-    console.log(`   ⏱️  Total time: ${formatElapsed(startTime)}`);
-
-    if (errors.length > 0) {
-      console.log('\n❌ Errors encountered:');
-      errors.slice(0, 10).forEach((e) => {
-        console.log(`   - ${e.name} (${e.fecId}): ${e.error}`);
-      });
-      if (errors.length > 10) {
-        console.log(`   ... and ${errors.length - 10} more errors`);
-      }
-    }
-
-    if (rateLimited > 0) {
-      console.log('\n⚠️  Rate Limit Warnings:');
-      console.log(
-        `   ${rateLimited} representatives hit rate limits. Consider:`,
-      );
-      console.log('   - Requesting enhanced API key from APIinfo@fec.gov (7,200 calls/hour)');
-      console.log(`   - Increasing FEC_THROTTLE_MS (current: ${FEC_THROTTLE_MS}ms)`);
-      console.log('   - Running enrichment in smaller batches');
-    }
-
-    if (options.dryRun) {
-      console.log('\n✅ Dry-run complete (no database changes made).');
-    } else {
-      console.log('\n✅ Finance enrichment complete!');
-    }
+    console.log('\n✅ Enrichment complete!');
   } catch (error) {
     console.error('\n❌ Finance enrichment failed:', error);
     if (error instanceof Error) {
@@ -836,6 +797,9 @@ async function main() {
 }
 
 if (import.meta.url === `file://${process.argv[1]}`) {
-  main();
+  main().catch((error) => {
+    console.error('Unhandled error:', error);
+    process.exit(1);
+  });
 }
 
