@@ -286,7 +286,7 @@ export default function PollClient({ poll }: PollClientProps) {
       setError(null);
       clearVotingErrorRef.current();
 
-      const resultsResponse = await fetch(`/api/polls/${pollId}/results`, {
+      const resultsResponse = await fetch(`/api/polls/${pollId}/results?t=${Date.now()}`, {
         cache: 'no-store',
         credentials: 'include',
       });
@@ -322,6 +322,37 @@ export default function PollClient({ poll }: PollClientProps) {
   useEffect(() => {
     void fetchPollData();
   }, [fetchPollData]);
+
+  // Auto-refresh poll results for active polls (every 5 seconds)
+  useEffect(() => {
+    if (pollStatus !== 'active') {
+      return; // Don't poll for closed or draft polls
+    }
+
+    const pollInterval = setInterval(() => {
+      void fetchPollData();
+    }, 5000); // Refresh every 5 seconds
+
+    return () => {
+      clearInterval(pollInterval);
+    };
+  }, [pollStatus, fetchPollData]);
+
+  // Auto-refresh poll results for active polls
+  useEffect(() => {
+    if (pollStatus !== 'active') {
+      return; // Don't poll for closed or draft polls
+    }
+
+    // Set up polling interval (refresh every 5 seconds for active polls)
+    const pollInterval = setInterval(() => {
+      void fetchPollData();
+    }, 5000);
+
+    return () => {
+      clearInterval(pollInterval);
+    };
+  }, [pollStatus, fetchPollData]);
 
   useEffect(() => {
     const totalVotesContext =
