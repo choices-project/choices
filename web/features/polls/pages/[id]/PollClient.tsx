@@ -327,21 +327,106 @@ export default function PollClient({ poll }: PollClientProps) {
     void fetchPollData();
   }, [fetchPollData]);
 
-  // Auto-refresh poll results for active polls (every 5 seconds)
-  // Don't show loading state on background refreshes to avoid UI flickering
+  // Smart polling: only refresh when needed and adapt to activity
   useEffect(() => {
     if (pollStatus !== 'active') {
       return; // Don't poll for closed or draft polls
     }
 
-    const pollInterval = setInterval(() => {
-      void fetchPollData(false); // false = don't show loading state
-    }, 5000); // Refresh every 5 seconds
+    let pollInterval: NodeJS.Timeout | null = null;
+    let pollTimeout: NodeJS.Timeout | null = null;
+    let lastVoteCount = computedTotalVotes;
+    let pollIntervalMs = 30000; // Start with 30 seconds
+    let consecutiveNoChangeCount = 0;
+    const MAX_NO_CHANGE_COUNT = 4; // Stop polling after 4 consecutive no-change checks (2 minutes at 30s intervals)
+
+    const startPolling = () => {
+      // Only poll if tab is visible (don't waste resources on background tabs)
+      if (typeof document !== 'undefined' && document.hidden) {
+        return;
+      }
+
+      pollInterval = setInterval(() => {
+        // Check if tab is still visible
+        if (typeof document !== 'undefined' && document.hidden) {
+          return;
+        }
+
+        void (async () => {
+          const previousVoteCount = lastVoteCount;
+          await fetchPollData(false); // false = don't show loading state
+          
+          // Check if votes changed
+          const currentVoteCount = computedTotalVotes;
+          if (currentVoteCount !== previousVoteCount) {
+            // Votes changed! Reset to aggressive polling
+            lastVoteCount = currentVoteCount;
+            consecutiveNoChangeCount = 0;
+            pollIntervalMs = 10000; // Poll every 10 seconds when active
+            if (pollInterval) {
+              clearInterval(pollInterval);
+            }
+            startPolling();
+          } else {
+            // No change - back off
+            consecutiveNoChangeCount++;
+            if (consecutiveNoChangeCount >= MAX_NO_CHANGE_COUNT) {
+              // No activity for a while - stop polling
+              if (pollInterval) {
+                clearInterval(pollInterval);
+                pollInterval = null;
+              }
+            } else if (consecutiveNoChangeCount >= 2) {
+              // Back off to 30 seconds after 2 no-change checks
+              pollIntervalMs = 30000;
+              if (pollInterval) {
+                clearInterval(pollInterval);
+              }
+              startPolling();
+            }
+          }
+        })();
+      }, pollIntervalMs);
+    };
+
+    // Start with initial polling
+    startPolling();
+
+    // Handle page visibility changes
+    const handleVisibilityChange = () => {
+      if (document.hidden) {
+        // Tab hidden - stop polling
+        if (pollInterval) {
+          clearInterval(pollInterval);
+          pollInterval = null;
+        }
+      } else {
+        // Tab visible - resume polling
+        if (!pollInterval) {
+          lastVoteCount = computedTotalVotes;
+          consecutiveNoChangeCount = 0;
+          pollIntervalMs = 10000; // Start fresh with 10s interval
+          startPolling();
+        }
+      }
+    };
+
+    if (typeof document !== 'undefined') {
+      document.addEventListener('visibilitychange', handleVisibilityChange);
+    }
 
     return () => {
-      clearInterval(pollInterval);
+      if (pollInterval) {
+        clearInterval(pollInterval);
+      }
+      if (pollTimeout) {
+        clearTimeout(pollTimeout);
+      }
+      if (typeof document !== 'undefined') {
+        document.removeEventListener('visibilitychange', handleVisibilityChange);
+      }
     };
-  }, [pollStatus, fetchPollData]);
+  }, [pollStatus, fetchPollData, computedTotalVotes]);
 
   // Auto-refresh poll results for active polls
   useEffect(() => {
@@ -643,7 +728,7 @@ export default function PollClient({ poll }: PollClientProps) {
         message: t('polls.view.notifications.voteRecorded.message'),
         duration: 3000,
       });
-      await fetchPollData();
+      await fetchPollData(true); // true = show loading state after vote
       router.refresh();
 
       const voteId =
