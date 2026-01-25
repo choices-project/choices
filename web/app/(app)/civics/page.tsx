@@ -336,12 +336,18 @@ export default function Civics2Page() {
     logger.info('Contacting representative', { id, type });
   };
 
-  const filteredRepresentatives = representatives.filter(rep => {
-    if (!debouncedSearchQuery) return true;
-    return rep.name.toLowerCase().includes(debouncedSearchQuery.toLowerCase()) ||
-           (rep.office ?? '').toLowerCase().includes(debouncedSearchQuery.toLowerCase()) ||
-           (rep.party ?? '').toLowerCase().includes(debouncedSearchQuery.toLowerCase());
-  });
+  // Filter representatives - API already filters by state/level, so only filter by search query client-side
+  const filteredRepresentatives = useMemo(() => {
+    return representatives.filter(rep => {
+      // API already filtered by state and level, so we only need to filter by search query
+      if (!debouncedSearchQuery) return true;
+      const query = debouncedSearchQuery.toLowerCase();
+      return rep.name.toLowerCase().includes(query) ||
+             (rep.office ?? '').toLowerCase().includes(query) ||
+             (rep.party ?? '').toLowerCase().includes(query) ||
+             (rep.district ?? '').toLowerCase().includes(query);
+    });
+  }, [representatives, debouncedSearchQuery]);
 
 
   const selectedStateName = useMemo(() => {
@@ -466,8 +472,10 @@ export default function Civics2Page() {
                     className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 focus:border-transparent"
                     value={selectedState}
                     onChange={(e) => {
-                      setSelectedState(e.target.value);
+                      const newState = e.target.value;
+                      setSelectedState(newState);
                       setIsLoading(true);
+                      // loadRepresentatives will be called via useEffect when selectedState changes
                     }}
                     disabled={isLoading}
                   >
@@ -488,8 +496,10 @@ export default function Civics2Page() {
                     className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 focus:border-transparent"
                     value={selectedLevel}
                     onChange={(e) => {
-                      setSelectedLevel(e.target.value as 'all' | 'federal' | 'state' | 'local');
-                      // Trigger reload when level changes
+                      const newLevel = e.target.value as 'all' | 'federal' | 'state' | 'local';
+                      setSelectedLevel(newLevel);
+                      setIsLoading(true);
+                      // loadRepresentatives will be called via useEffect when selectedLevel changes
                     }}
                   >
                     <option value="all">All Levels</option>

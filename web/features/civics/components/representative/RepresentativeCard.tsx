@@ -96,14 +96,26 @@ export function RepresentativeCard({
 
   const handleCreatePoll = (e: React.MouseEvent) => {
     e.stopPropagation(); // Prevent card click
+    e.preventDefault(); // Prevent any default behavior
     trackCtaEvent('civics_representative_create_poll_click', {
       ctaLocation: 'card',
       representativeId: representative.id,
     });
     
-    if (onCreatePoll) {
-      onCreatePoll(representative);
-    } else {
+    try {
+      if (onCreatePoll) {
+        onCreatePoll(representative);
+      } else {
+        // Use window.location for more reliable navigation
+        if (typeof window !== 'undefined') {
+          window.location.href = `/polls/create?representative_id=${representative.id}`;
+        } else {
+          router.push(`/polls/create?representative_id=${representative.id}`);
+        }
+      }
+    } catch (error) {
+      console.error('Failed to navigate to create poll:', error);
+      // Fallback to router if window.location fails
       router.push(`/polls/create?representative_id=${representative.id}`);
     }
   };
@@ -149,19 +161,21 @@ export function RepresentativeCard({
     setPhotoError(false);
   }, [representative.id, representative.primary_photo_url]);
 
-  // Sync ref with state
+  // Sync ref with state to persist across re-renders
   React.useEffect(() => {
     detailsOpenRef.current = detailsOpen;
   }, [detailsOpen]);
 
+  // Fetch details when opened, but only if not already loaded
   React.useEffect(() => {
-    if (!detailsOpen) {
+    // Only fetch if details are open AND we don't have detailed data yet
+    if (!detailsOpen || detailedRepresentative) {
+      if (detailedRepresentative) {
+        setDetailsLoading(false);
+      }
       return;
     }
-    if (detailedRepresentative) {
-      setDetailsLoading(false);
-      return;
-    }
+    
     let cancelled = false;
     setDetailsLoading(true);
 
@@ -343,7 +357,10 @@ export function RepresentativeCard({
               size="sm"
               onClick={(event) => {
                 event.stopPropagation();
-                setDetailsOpen((prev) => !prev);
+                event.preventDefault();
+                const newState = !detailsOpenRef.current;
+                detailsOpenRef.current = newState;
+                setDetailsOpen(newState);
               }}
             >
               {detailsOpen ? 'Hide details' : 'Show details'}
