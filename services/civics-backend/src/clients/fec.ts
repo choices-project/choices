@@ -2,14 +2,19 @@ const FEC_API_BASE = 'https://api.open.fec.gov/v1';
 
 export interface FecTotals {
   candidate_id?: string;
-  total_receipts?: number | null;
-  total_disbursements?: number | null;
-  cash_on_hand_end_period?: number | null;
+  // FEC API field names (what API actually returns)
+  receipts?: number | null;
+  disbursements?: number | null;
+  last_cash_on_hand_end_period?: number | null;
   individual_unitemized_contributions?: number | null;
   individual_contributions?: number | null;
   last_filing_date?: string | null;
   coverage_end_date?: string | null;
   report_year?: number | null;
+  // Legacy/computed fields for backward compatibility
+  total_receipts?: number | null; // Maps to receipts
+  total_disbursements?: number | null; // Maps to disbursements
+  cash_on_hand_end_period?: number | null; // Maps to last_cash_on_hand_end_period
 }
 
 export interface FecContributor {
@@ -180,7 +185,19 @@ export async function fetchCandidateTotals(
   });
 
   const results = (response as unknown as FecApiResponse<FecTotals>).results;
-  return results?.[0] ?? null;
+  const rawTotals = results?.[0];
+  
+  if (!rawTotals) {
+    return null;
+  }
+  
+  // Map FEC API field names to our expected field names for backward compatibility
+  return {
+    ...rawTotals,
+    total_receipts: rawTotals.receipts ?? rawTotals.total_receipts ?? null,
+    total_disbursements: rawTotals.disbursements ?? rawTotals.total_disbursements ?? null,
+    cash_on_hand_end_period: rawTotals.last_cash_on_hand_end_period ?? rawTotals.cash_on_hand_end_period ?? null,
+  } as FecTotals;
 }
 
 /**

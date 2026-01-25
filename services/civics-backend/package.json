@@ -47,6 +47,7 @@
     "tools:verify:migrations": "npm run build --silent && node build/scripts/tools/verify-migrations.js",
     "tools:test:bills": "npm run build --silent && node build/scripts/tools/test-bills-fetch.js",
     "tools:test:congress": "npm run build --silent && node build/scripts/tools/test-congress.js",
+    "tools:test:fec-cycles": "npm run build --silent && node build/scripts/tools/test-fec-cycles.js",
 
     "ingest:openstates": "npm run openstates:ingest",
     "ingest:qa": "npm run tools:inspect:schema && npm run tools:report:duplicates && npm run tools:audit:activity && npm run tools:audit:terms && npm run openstates:coverage -- --limit=5 && npm run preview -- --limit=5",
