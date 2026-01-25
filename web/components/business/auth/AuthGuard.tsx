@@ -39,7 +39,29 @@ export function AuthGuard({
   const isLoading = useUserLoading();
   const router = useRouter();
   const routerRef = useRef(router);
+  const loadingTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  
   useEffect(() => { routerRef.current = router; }, [router]);
+
+  // Add timeout to prevent infinite loading (10 seconds max)
+  useEffect(() => {
+    if (isLoading) {
+      loadingTimeoutRef.current = setTimeout(() => {
+        logger.warn('AuthGuard - Loading timeout exceeded, proceeding with current auth state');
+      }, 10000);
+    } else {
+      if (loadingTimeoutRef.current) {
+        clearTimeout(loadingTimeoutRef.current);
+        loadingTimeoutRef.current = null;
+      }
+    }
+    
+    return () => {
+      if (loadingTimeoutRef.current) {
+        clearTimeout(loadingTimeoutRef.current);
+      }
+    };
+  }, [isLoading]);
 
   useEffect(() => {
     if (!isLoading && !isAuthenticated) {
@@ -48,7 +70,7 @@ export function AuthGuard({
     }
   }, [isAuthenticated, isLoading, redirectTo]);
 
-  // Show loading while checking authentication
+  // Show loading while checking authentication (but with timeout protection)
   if (isLoading) {
     return <>{fallback}</>;
   }

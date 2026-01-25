@@ -87,52 +87,65 @@ export default function CreatePollPage() {
     submit,
   } = usePollCreateController()
 
+  // Store actions in ref to prevent infinite loops - actions object is recreated on every render
+  const actionsRef = React.useRef(actions);
+  React.useEffect(() => {
+    actionsRef.current = actions;
+  }, [actions]);
+
   // Fetch representative data if representative_id is in query params
   useEffect(() => {
     const representativeIdParam = searchParams?.get('representative_id')
     if (representativeIdParam) {
       const repId = parseInt(representativeIdParam, 10)
       if (!isNaN(repId)) {
-        // Store representative_id in wizard data
-        actions.updateData({ representative_id: repId })
+        // Only update if representative_id hasn't been set yet to prevent infinite loops
+        const currentRepId = data.representative_id;
+        if (currentRepId !== repId) {
+          // Store representative_id in wizard data
+          actionsRef.current.updateData({ representative_id: repId })
+        }
         
-        setRepresentativeLoading(true)
-        fetch(`/api/v1/civics/representative/${repId}?fields=id,name,office,party`)
-          .then(async (res) => {
-            if (!res.ok) {
-              const errorText = await res.text().catch(() => 'Unknown error');
-              throw new Error(`API error (${res.status}): ${errorText}`);
-            }
-            return res.json();
-          })
-          .then(result => {
-            if (result.success && result.data?.representative) {
-              const rep = result.data.representative
-              setRepresentative({
-                id: parseInt(String(rep.id), 10),
-                name: rep.name,
-                office: rep.office,
-                party: rep.party
-              })
-            } else {
-              logger.warn('Representative fetch returned unsuccessful result', { result, repId });
-            }
-          })
-          .catch(err => {
-            logger.error('Failed to fetch representative', { 
-              error: err instanceof Error ? err.message : String(err),
-              repId,
-              stack: err instanceof Error ? err.stack : undefined
-            });
-            // Don't crash - just log the error and continue without representative data
-            // The poll can still be created without the representative info pre-filled
-          })
-          .finally(() => {
-            setRepresentativeLoading(false)
-          })
+        // Only fetch if we don't already have representative data
+        if (!representative || representative.id !== repId) {
+          setRepresentativeLoading(true)
+          fetch(`/api/v1/civics/representative/${repId}?fields=id,name,office,party`)
+            .then(async (res) => {
+              if (!res.ok) {
+                const errorText = await res.text().catch(() => 'Unknown error');
+                throw new Error(`API error (${res.status}): ${errorText}`);
+              }
+              return res.json();
+            })
+            .then(result => {
+              if (result.success && result.data?.representative) {
+                const rep = result.data.representative
+                setRepresentative({
+                  id: parseInt(String(rep.id), 10),
+                  name: rep.name,
+                  office: rep.office,
+                  party: rep.party
+                })
+              } else {
+                logger.warn('Representative fetch returned unsuccessful result', { result, repId });
+              }
+            })
+            .catch(err => {
+              logger.error('Failed to fetch representative', { 
+                error: err instanceof Error ? err.message : String(err),
+                repId,
+                stack: err instanceof Error ? err.stack : undefined
+              });
+              // Don't crash - just log the error and continue without representative data
+              // The poll can still be created without the representative info pre-filled
+            })
+            .finally(() => {
+              setRepresentativeLoading(false)
+            })
+        }
       }
     }
-  }, [searchParams, actions])
+  }, [searchParams, data.representative_id, representative])
 
   // Helper function to safely get translations with fallback
   const safeT = useCallback((key: string, fallback: string, params?: Record<string, string | number>): string => {

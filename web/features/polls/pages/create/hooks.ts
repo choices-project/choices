@@ -141,6 +141,37 @@ export const usePollCreateController = () => {
     }
   }, [clearAllErrors, setFieldError, submitPoll]);
 
+  // Memoize actions object to prevent infinite loops in useEffect dependencies
+  const actions = useMemo(() => ({
+    updateData,
+    updateSettings,
+    addOption,
+    removeOption,
+    updateOption,
+    addTag,
+    removeTag,
+    updateTags,
+    setFieldError,
+    clearFieldError,
+    clearAllErrors,
+    resetWizard,
+    goToStep,
+  }), [
+    updateData,
+    updateSettings,
+    addOption,
+    removeOption,
+    updateOption,
+    addTag,
+    removeTag,
+    updateTags,
+    setFieldError,
+    clearFieldError,
+    clearAllErrors,
+    resetWizard,
+    goToStep,
+  ]);
+
   return {
     data,
     errors,
@@ -153,21 +184,7 @@ export const usePollCreateController = () => {
     isLoading,
     steps: progress.steps,
     categories: CATEGORIES,
-    actions: {
-      updateData,
-      updateSettings,
-      addOption,
-      removeOption,
-      updateOption,
-      addTag,
-      removeTag,
-      updateTags,
-      setFieldError,
-      clearFieldError,
-      clearAllErrors,
-      resetWizard,
-      goToStep,
-    },
+    actions,
     goToNextStep,
     goToPreviousStep,
     submit,
