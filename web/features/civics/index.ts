@@ -49,6 +49,9 @@ export { default as ProgressiveDisclosure } from './components/ProgressiveDisclo
 /** Touch interaction handlers for mobile devices */
 export { default as TouchInteractions } from './components/TouchInteractions'
 
+/** Share button component for civics content */
+export { default as ShareButton } from './components/ShareButton'
+
 // ============================================================================
 // TYPE EXPORTS
 // ============================================================================

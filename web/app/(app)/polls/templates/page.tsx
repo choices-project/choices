@@ -52,8 +52,8 @@ const SAMPLETEMPLATES: PollTemplate[] = [
     steps: [],
     defaultSettings: {
       allowMultipleVotes: false,
-      allowAnonymousVotes: true,
-      requireAuthentication: false,
+      // allowAnonymousVotes removed
+      // requireAuthentication removed
       requireEmail: false,
       showResults: true,
       allowWriteIns: false,
@@ -88,8 +88,7 @@ const SAMPLETEMPLATES: PollTemplate[] = [
     steps: [],
     defaultSettings: {
       allowMultipleVotes: true,
-      allowAnonymousVotes: false,
-      requireAuthentication: true,
+      // allowAnonymousVotes removed
       requireEmail: true,
       showResults: false,
       allowWriteIns: false,
@@ -124,8 +123,8 @@ const SAMPLETEMPLATES: PollTemplate[] = [
     steps: [],
     defaultSettings: {
       allowMultipleVotes: true,
-      allowAnonymousVotes: true,
-      requireAuthentication: false,
+      // allowAnonymousVotes removed
+      // requireAuthentication removed
       requireEmail: false,
       showResults: true,
       allowWriteIns: false,
@@ -160,8 +159,8 @@ const SAMPLETEMPLATES: PollTemplate[] = [
     steps: [],
     defaultSettings: {
       allowMultipleVotes: false,
-      allowAnonymousVotes: true,
-      requireAuthentication: false,
+      // allowAnonymousVotes removed
+      // requireAuthentication removed
       requireEmail: false,
       showResults: false,
       allowWriteIns: false,
@@ -196,8 +195,8 @@ const SAMPLETEMPLATES: PollTemplate[] = [
     steps: [],
     defaultSettings: {
       allowMultipleVotes: false,
-      allowAnonymousVotes: true,
-      requireAuthentication: false,
+      // allowAnonymousVotes removed
+      // requireAuthentication removed
       requireEmail: false,
       showResults: true,
       allowWriteIns: false,
@@ -232,8 +231,7 @@ const SAMPLETEMPLATES: PollTemplate[] = [
     steps: [],
     defaultSettings: {
       allowMultipleVotes: true,
-      allowAnonymousVotes: false,
-      requireAuthentication: true,
+      // allowAnonymousVotes removed
       requireEmail: true,
       showResults: false,
       allowWriteIns: false,

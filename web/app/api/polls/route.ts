@@ -664,6 +664,9 @@ export const POST = withErrorHandling(async (request: NextRequest) => {
         lock_type: autoLockDuration ? 'automatic' : null,
         moderation_status: typeof settings?.requireModeration === 'boolean' && settings.requireModeration ? 'pending' : 'approved',
         privacy_level: typeof settings?.privacyLevel === 'string' ? settings.privacyLevel : 'public',
+        // is_shareable controls whether poll can be shared via /api/shared/vote endpoint
+        // Default to true to enable anonymous voting for user acquisition
+        is_shareable: typeof settings?.allowSharing === 'boolean' ? settings.allowSharing !== false : true,
         is_verified: false,
         is_featured: false,
         is_trending: false,
