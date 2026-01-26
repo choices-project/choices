@@ -13,7 +13,8 @@ import { queryAgentOperations, getAgentOperationStats } from '@/lib/core/agent/a
 const SKIP_INTEGRATION = !process.env.NEXT_PUBLIC_SUPABASE_URL ||
                          process.env.NEXT_PUBLIC_SUPABASE_URL.includes('example')
 
-(SKIP_INTEGRATION ? describe.skip : describe)('Agent Operations Integration', () => {
+const describeTest = SKIP_INTEGRATION ? describe.skip : describe;
+describeTest('Agent Operations Integration', () => {
   let testAgentId: string
 
   beforeAll(() => {
