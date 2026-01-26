@@ -15,10 +15,10 @@ export type PollCreatePayload = {
   tags: string[];
   settings: {
     allowMultipleVotes: boolean;
-    allowAnonymousVotes: boolean;
-    requireAuthentication: boolean;
+    // allowAnonymousVotes removed - was saved but never checked
+    // requireAuthentication removed - redundant, main vote endpoint always requires auth
     showResultsBeforeClose: boolean;
-    allowComments: boolean;
+    // allowComments removed - feature not implemented
     allowSharing: boolean;
     privacyLevel: 'public' | 'private' | 'unlisted';
   };

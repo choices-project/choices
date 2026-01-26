@@ -47,10 +47,11 @@ export type StepValidation = {
 
 export type PollSettings = {
   allowMultipleVotes: boolean;
-  allowAnonymousVotes: boolean;
+  // allowAnonymousVotes removed - was saved but never checked
+  // requireAuthentication removed - redundant, main vote endpoint always requires auth
   requireEmail: boolean;
   showResults: boolean;
-  allowComments: boolean;
+  // allowComments removed - feature not implemented
   enableNotifications: boolean;
   expirationDate?: Date;
   maxVotes?: number;

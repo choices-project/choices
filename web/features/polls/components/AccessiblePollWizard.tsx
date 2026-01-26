@@ -37,9 +37,7 @@ type ShareInfo = {
 type BooleanSettingKey = Extract<
   keyof PollWizardSettings,
   | 'allowMultipleVotes'
-  | 'allowAnonymousVotes'
   | 'showResults'
-  | 'requireAuthentication'
   | 'preventDuplicateVotes'
 >;
 
@@ -142,9 +140,7 @@ export function AccessiblePollWizard() {
 
   const booleanSettingConfigs = useMemo<Array<{ key: BooleanSettingKey; label: string }>>(() => [
     { key: 'allowMultipleVotes', label: t('polls.create.wizard.audience.settings.allowMultipleVotes.label') },
-    { key: 'allowAnonymousVotes', label: t('polls.create.wizard.audience.settings.allowAnonymousVotes.label') },
     { key: 'showResults', label: t('polls.create.wizard.audience.settings.showResults.label') },
-    { key: 'requireAuthentication', label: t('polls.create.wizard.audience.settings.requireAuthentication.label') },
     { key: 'preventDuplicateVotes', label: t('polls.create.wizard.audience.settings.preventDuplicateVotes.label') },
   ], [t]);
 

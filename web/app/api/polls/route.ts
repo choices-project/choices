@@ -676,7 +676,8 @@ export const POST = withErrorHandling(async (request: NextRequest) => {
 
         // Advanced settings (type-safe extraction)
         poll_settings: {
-          allow_anonymous: typeof settings?.allowAnonymousVotes === 'boolean' ? settings.allowAnonymousVotes !== false : true,
+          // allow_anonymous removed from UI - set to false for new polls (backward compatible)
+          allow_anonymous: false,
           require_verification: typeof settings?.requireVerification === 'boolean' ? settings.requireVerification : false,
           auto_lock_duration: autoLockDuration ?? null,
           moderation_required: typeof settings?.requireModeration === 'boolean' ? settings.requireModeration : false,
@@ -688,15 +689,20 @@ export const POST = withErrorHandling(async (request: NextRequest) => {
           // Kept in DB schema for backward compatibility with existing polls
           allow_comments: false,
           allow_sharing: typeof settings?.allowSharing === 'boolean' ? settings.allowSharing !== false : true,
-          require_authentication: typeof settings?.requireAuthentication === 'boolean' ? settings.requireAuthentication : false
+          // require_authentication removed from UI - set to false for new polls (backward compatible)
+          // Main vote endpoint always requires auth. Shared polls allow anonymous voting.
+          require_authentication: false
         },
         settings: {
           allow_multiple_votes: typeof settings?.allowMultipleVotes === 'boolean' ? settings.allowMultipleVotes : false,
-          allow_anonymous_votes: typeof settings?.allowAnonymousVotes === 'boolean' ? settings.allowAnonymousVotes : true,
+          // allow_anonymous_votes removed from UI - set to false for new polls (backward compatible)
+          allow_anonymous_votes: false,
           show_results_before_close: typeof settings?.showResultsBeforeClose === 'boolean' ? settings.showResultsBeforeClose : false,
           allow_comments: typeof settings?.allowComments === 'boolean' ? settings.allowComments : true,
           allow_sharing: typeof settings?.allowSharing === 'boolean' ? settings.allowSharing !== false : true,
-          require_authentication: typeof settings?.requireAuthentication === 'boolean' ? settings.requireAuthentication : false
+          // require_authentication removed from UI - set to false for new polls (backward compatible)
+          // Main vote endpoint always requires auth. Shared polls allow anonymous voting.
+          require_authentication: false
         },
         created_at: new Date().toISOString(),
         updated_at: new Date().toISOString(),

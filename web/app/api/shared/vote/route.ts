@@ -27,13 +27,14 @@ export const POST = withErrorHandling(async (request: NextRequest) => {
       supabaseKey
     );
 
-    // Check if poll exists and is shareable
+    // Check if poll exists and is shareable (allows both public and private shared polls)
+    // Private polls can be shared via link and allow anonymous voting for user acquisition
     const { data: poll, error: pollError } = await supabase
       .from('polls')
-      .select('id, is_public, is_shareable')
+      .select('id, is_public, is_shareable, privacy_level, status')
       .eq('id', poll_id)
-      .eq('is_public', true)
       .eq('is_shareable', true)
+      .eq('status', 'active')
       .single();
 
   if (pollError || !poll) {

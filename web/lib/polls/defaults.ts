@@ -23,8 +23,9 @@ export const createDefaultPollPreferences = (): PollPreferences => ({
 
 export const createDefaultPollWizardSettings = (): PollWizardSettings => ({
   allowMultipleVotes: false,
-  allowAnonymousVotes: true,
-  requireAuthentication: false,
+  // allowAnonymousVotes removed - was saved but never checked. Anonymous voting is controlled
+  // by is_shareable (sharing feature) via /api/shared/vote endpoint, not this setting.
+  // requireAuthentication removed - redundant, main vote endpoint always requires auth.
   requireEmail: false,
   showResults: true,
   allowWriteIns: false,

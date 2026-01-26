@@ -38,8 +38,8 @@ const votingMethodSchema = z.enum(['single', 'multiple', 'approval', 'ranked']);
 
 const wizardSettingsSchema = z.object({
   allowMultipleVotes: z.boolean().default(false),
-  allowAnonymousVotes: z.boolean().default(true),
-  requireAuthentication: z.boolean().default(false),
+  // allowAnonymousVotes removed - was saved but never checked
+  // requireAuthentication removed - redundant, main vote endpoint always requires auth
   requireEmail: z.boolean().default(false),
   showResults: z.boolean().default(true),
   allowWriteIns: z.boolean().default(false),
@@ -106,8 +106,8 @@ export const validateWizardDataForSubmission = (data: PollWizardSnapshot) => {
   const normalizedSettings = {
     ...incomingSettings,
     allowMultipleVotes: incomingSettings.allowMultipleVotes ?? false,
-    allowAnonymousVotes: incomingSettings.allowAnonymousVotes ?? true,
-    requireAuthentication: incomingSettings.requireAuthentication ?? false,
+    // allowAnonymousVotes removed - was saved but never checked
+    // requireAuthentication removed
     requireEmail: incomingSettings.requireEmail ?? false,
     showResults: incomingSettings.showResults ?? true,
     allowWriteIns: incomingSettings.allowWriteIns ?? false,
@@ -172,8 +172,8 @@ export type PollCreatePayload = {
   tags: string[];
   settings: {
     allowMultipleVotes: boolean;
-    allowAnonymousVotes: boolean;
-    requireAuthentication: boolean;
+    // allowAnonymousVotes removed
+    // requireAuthentication removed
     showResultsBeforeClose: boolean;
     // allowComments removed
     allowSharing: boolean;
@@ -199,8 +199,8 @@ export const buildPollCreatePayload = (data: SanitizedWizardData): PollCreatePay
   const options = data.options.map((option) => ({ text: option }));
   const settings = {
     allowMultipleVotes: data.settings.allowMultipleVotes,
-    allowAnonymousVotes: data.settings.allowAnonymousVotes,
-    requireAuthentication: data.settings.requireAuthentication,
+    // allowAnonymousVotes removed
+    // requireAuthentication removed
     showResultsBeforeClose: data.settings.showResults,
     // allowComments removed - set to false
     allowSharing: true,

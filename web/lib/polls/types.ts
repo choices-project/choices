@@ -31,8 +31,10 @@ export type PollPreferences = {
 
 export type PollWizardSettings = {
   allowMultipleVotes: boolean;
-  allowAnonymousVotes: boolean;
-  requireAuthentication: boolean;
+  // allowAnonymousVotes removed - was saved but never checked. Anonymous voting is controlled
+  // by is_shareable (sharing feature) via /api/shared/vote endpoint, not this setting.
+  // requireAuthentication removed - redundant, main vote endpoint always requires auth.
+  // Shared polls allow anonymous voting via /api/shared/vote for user acquisition.
   requireEmail: boolean;
   showResults: boolean;
   allowWriteIns: boolean;

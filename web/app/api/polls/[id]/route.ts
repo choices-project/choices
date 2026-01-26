@@ -92,7 +92,8 @@ export const GET = withErrorHandling(async (
       settings: {
         allowMultipleVotes: Boolean(pollSettings?.allow_multiple_votes),
         allowAnonymousVotes: Boolean(pollSettings?.allow_anonymous_votes ?? true),
-        requireAuthentication: Boolean(pollSettings?.require_authentication ?? false),
+        // requireAuthentication removed - always false (main endpoint always requires auth)
+        requireAuthentication: false,
         showResultsBeforeClose: Boolean(pollSettings?.show_results_before_close ?? false),
       },
     };

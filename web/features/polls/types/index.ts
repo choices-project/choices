@@ -88,8 +88,8 @@ export type PollSettings = {
 
 export type TemplateSettings = {
   allowMultipleVotes: boolean;
-  allowAnonymousVotes: boolean;
-  requireAuthentication: boolean;
+  // allowAnonymousVotes removed - was saved but never checked
+  // requireAuthentication removed - redundant, main vote endpoint always requires auth
   requireEmail: boolean;
   showResults: boolean;
   allowWriteIns: boolean;

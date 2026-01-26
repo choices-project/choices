@@ -1287,20 +1287,15 @@ export default function CreatePollPage() {
                 )}
               </div>
 
-              <SettingToggle
-                id="allow-anonymous-votes"
-                label={safeT('polls.create.wizard.audience.settings.allowAnonymousVotes.label', 'Allow anonymous votes')}
-                description={safeT('polls.create.wizard.audience.settings.allowAnonymousVotes.description', 'Allow voters to vote without revealing their identity. This encourages participation but reduces accountability. Results will not show individual voter information.')}
-                      checked={data.settings.allowAnonymousVotes}
-                onCheckedChange={(checked) => actions.updateSettings({ allowAnonymousVotes: checked })}
-              />
-              <SettingToggle
-                id="require-authentication"
-                label={safeT('polls.create.wizard.audience.settings.requireAuthentication.label', 'Require authentication')}
-                description={safeT('polls.create.wizard.audience.settings.requireAuthentication.description', 'Only authenticated users can vote on this poll. This ensures each person can only vote once and helps prevent spam or manipulation.')}
-                checked={data.settings.requireAuthentication}
-                onCheckedChange={(checked) => actions.updateSettings({ requireAuthentication: checked })}
-              />
+              {/* Info about anonymous voting for shared polls */}
+              <div className="rounded-lg border bg-muted/30 p-4 text-sm">
+                <p className="font-medium mb-1">
+                  {safeT('polls.create.wizard.audience.settings.anonymousVotingInfo.title', 'About Anonymous Voting')}
+                </p>
+                <p className="text-muted-foreground">
+                  {safeT('polls.create.wizard.audience.settings.anonymousVotingInfo.description', 'When you share a poll via link, unregistered users can vote anonymously. This helps promote the app to new users. All votes via the main poll page require authentication.')}
+                </p>
+              </div>
               <SettingToggle
                 id="show-results"
                 label={safeT('polls.create.wizard.audience.settings.showResults.label', 'Show results')}
@@ -1379,18 +1374,6 @@ export default function CreatePollPage() {
                     <span className="font-medium text-foreground">{safeT('polls.create.wizard.review.multipleVotes', 'Multiple Votes')}</span>
                     <span className={cn("font-semibold", data.settings.allowMultipleVotes ? "text-green-600" : "text-muted-foreground")}>
                       {data.settings.allowMultipleVotes ? safeT('polls.create.wizard.review.enabled', 'Enabled') : safeT('polls.create.wizard.review.disabled', 'Disabled')}
-                    </span>
-                  </div>
-                  <div className="flex items-center justify-between p-3 rounded-lg bg-muted/30 border">
-                    <span className="font-medium text-foreground">{safeT('polls.create.wizard.review.anonymousVotes', 'Anonymous Votes')}</span>
-                    <span className={cn("font-semibold", data.settings.allowAnonymousVotes ? "text-green-600" : "text-muted-foreground")}>
-                      {data.settings.allowAnonymousVotes ? safeT('polls.create.wizard.review.allowed', 'Allowed') : safeT('polls.create.wizard.review.disabled', 'Disabled')}
-                    </span>
-                  </div>
-                  <div className="flex items-center justify-between p-3 rounded-lg bg-muted/30 border">
-                    <span className="font-medium text-foreground">{safeT('polls.create.wizard.review.requireSignIn', 'Require Sign In')}</span>
-                    <span className={cn("font-semibold", data.settings.requireAuthentication ? "text-green-600" : "text-muted-foreground")}>
-                      {data.settings.requireAuthentication ? safeT('polls.create.wizard.review.yes', 'Yes') : safeT('polls.create.wizard.review.no', 'No')}
                     </span>
                   </div>
                 </section>
