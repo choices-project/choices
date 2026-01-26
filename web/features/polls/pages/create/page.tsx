@@ -16,7 +16,8 @@ import { useRouter, useSearchParams } from "next/navigation"
 import React, { useCallback, useEffect, useMemo, useRef, useState } from "react"
 
 import { useRecordPollEvent, type PollEventOptions } from '@/features/polls/hooks/usePollAnalytics';
-import { usePollMilestoneNotifications, type PollMilestone } from '@/features/polls/hooks/usePollMilestones';
+// Vote Milestones - Commented out per user request
+// import { usePollMilestoneNotifications, type PollMilestone } from '@/features/polls/hooks/usePollMilestones';
 
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
 import {
@@ -188,16 +189,17 @@ export default function CreatePollPage() {
 
   const recordPollEvent = useRecordPollEvent();
 
-  const {
-    milestones,
-    preferences: milestonePreferences,
-    enabledMilestones,
-    nextMilestone,
-    updatePreference: updateMilestonePreference,
-  } = usePollMilestoneNotifications({
-    pollId: shareInfo?.pollId ?? null,
-    totalVotes: 0,
-  });
+  // Vote Milestones - Commented out per user request
+  // const {
+  //   milestones,
+  //   preferences: milestonePreferences,
+  //   enabledMilestones,
+  //   nextMilestone,
+  //   updatePreference: updateMilestonePreference,
+  // } = usePollMilestoneNotifications({
+  //   pollId: shareInfo?.pollId ?? null,
+  //   totalVotes: 0,
+  // });
 
   useEffect(() => {
     if (shareInfo) {
@@ -230,8 +232,9 @@ export default function CreatePollPage() {
       payload.label = shareInfo.pollId
     }
 
-    recordPollEvent('milestone_pref_summary', payload);
-  }, [enabledMilestones, nextMilestone, recordPollEvent, shareInfo]);
+    // Vote Milestones - Commented out per user request
+    // recordPollEvent('milestone_pref_summary', payload);
+  }, [/* enabledMilestones, nextMilestone, */ recordPollEvent, shareInfo]);
 
   const hasErrors = Object.keys(errors ?? {}).length > 0
 
@@ -309,23 +312,24 @@ export default function CreatePollPage() {
     }
   }, []);
 
-  const handleMilestoneToggle = (milestone: PollMilestone, enabled: boolean) => {
-    updateMilestonePreference(milestone, enabled)
-    const payload: PollEventOptions = {
-      value: enabled ? 1 : 0,
-      metadata: {
-        pollId: shareInfo?.pollId,
-        milestone,
-        enabled,
-      },
-    }
+  // Vote Milestones - Commented out per user request
+  // const handleMilestoneToggle = (milestone: PollMilestone, enabled: boolean) => {
+  //   updateMilestonePreference(milestone, enabled)
+  //   const payload: PollEventOptions = {
+  //     value: enabled ? 1 : 0,
+  //     metadata: {
+  //       pollId: shareInfo?.pollId,
+  //       milestone,
+  //       enabled,
+  //     },
+  //   }
 
-    if (shareInfo?.pollId) {
-      payload.label = shareInfo.pollId
-    }
+  //   if (shareInfo?.pollId) {
+  //     payload.label = shareInfo.pollId
+  //   }
 
-    recordPollEvent('milestone_pref_updated', payload)
-  }
+  //   recordPollEvent('milestone_pref_updated', payload)
+  // }
 
   const handleCopyShareLink = async () => {
     if (!shareUrl) return
@@ -1521,12 +1525,14 @@ export default function CreatePollPage() {
                       <p className="text-xs font-semibold uppercase text-foreground/70">{safeT('polls.create.share.dialog.category', 'Category')}</p>
                       <p className="capitalize font-medium text-foreground">{shareInfo.category}</p>
                     </div>
+                    {/* Vote Milestones - Commented out per user request (unnecessary visual clutter)
                     {nextMilestone && (
                       <div>
                         <p className="text-xs font-semibold uppercase text-foreground/70">{safeT('polls.create.share.dialog.nextMilestone', 'Next Milestone')}</p>
                         <p className="font-medium text-foreground">{safeT('polls.create.share.dialog.milestoneVotes', `${nextMilestone} votes`, { count: nextMilestone })}</p>
                       </div>
                     )}
+                    */}
                   </div>
                 </div>
               </div>
@@ -1602,7 +1608,7 @@ export default function CreatePollPage() {
               </Button>
             </div>
 
-            {/* Milestones - Collapsible and less prominent (collapsed by default) */}
+            {/* Vote Milestones - Commented out per user request (unnecessary visual clutter)
             <details className="rounded-lg border border-border/40 bg-muted/20" open={false}>
               <summary className="cursor-pointer p-3 text-sm font-medium text-foreground hover:bg-muted/30 transition-colors">
               <div className="flex items-center justify-between">
@@ -1636,6 +1642,7 @@ export default function CreatePollPage() {
               </div>
               </div>
             </details>
+            */}
           </div>
 
           <DialogFooter className="pt-4">

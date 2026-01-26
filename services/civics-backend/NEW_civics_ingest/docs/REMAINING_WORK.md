@@ -73,11 +73,12 @@ This document outlines remaining work to organize, optimize, and harden the civi
 **Status:** Identifiers captured, dedupe logic needed
 
 **Tasks:**
-- [ ] **Automated crosswalk verification**
+- [x] **Automated crosswalk verification** ✅
   - Verify all identifiers link correctly (bioguide ↔ openstates ↔ fec ↔ canonical)
   - Flag broken crosswalks
   - Create `tools:verify:crosswalk` script
   - **Impact:** Ensures data integrity across systems
+  - **Status:** Implemented and tested
 
 - [ ] **Deduplication automation**
   - Identify representatives with multiple `canonical_id` entries
@@ -102,11 +103,12 @@ This document outlines remaining work to organize, optimize, and harden the civi
   - Unit tests for staging → merge flow
   - **Impact:** Prevents regressions, enables safe refactoring
 
-- [ ] **CLI smoke-test template**
+- [x] **CLI smoke-test template** ✅
   - Live Supabase smoke tests (with env var guards)
   - Verify data integrity after ingest
   - Create `tools:smoke-test` script
   - **Impact:** Catches issues before production
+  - **Status:** Implemented and tested
 
 - [ ] **CI ingest smoke test**
   - Fixture-driven tests in CI pipeline

@@ -24,8 +24,9 @@ type StorageShape = Record<string, StoredPollMilestoneState>;
 
 const createDefaultPreferences = (): MilestonePreferences => {
   const base = {} as MilestonePreferences;
+  // Disabled by default per user request - can be enabled via user settings in the future
   DEFAULT_MILESTONES.forEach((milestone) => {
-    base[milestone] = milestone <= 50;
+    base[milestone] = false; // Changed from milestone <= 50 to false
   });
   return base;
 };
@@ -196,25 +197,28 @@ export const usePollMilestoneNotifications = ({
   const onMilestoneReachedRef = useRef(onMilestoneReached);
   useEffect(() => { onMilestoneReachedRef.current = onMilestoneReached; }, [onMilestoneReached]);
 
+  // Disabled milestone notifications by default per user request
+  // Can be re-enabled via user settings in the future
   useEffect(() => {
-    if (!activePollId || !isReady) return;
+    // Commented out - milestone notifications disabled
+    // if (!activePollId || !isReady) return;
 
-    milestones.forEach((milestone) => {
-      const thresholdMet = totalVotes >= milestone;
-      const optedIn = preferences[milestone];
-      const alreadyAcknowledged = acknowledged.includes(milestone);
+    // milestones.forEach((milestone) => {
+    //   const thresholdMet = totalVotes >= milestone;
+    //   const optedIn = preferences[milestone];
+    //   const alreadyAcknowledged = acknowledged.includes(milestone);
 
-      if (thresholdMet && optedIn && !alreadyAcknowledged) {
-        acknowledgeMilestone(milestone);
-        addNotificationRef.current({
-          type: 'success',
-          title: `Milestone reached: ${milestone} votes`,
-          message: `Your poll just crossed ${milestone.toLocaleString()} votes. Keep momentum going by sharing again.`,
-          duration: 6000,
-        });
-        onMilestoneReachedRef.current?.(milestone);
-      }
-    });
+    //   if (thresholdMet && optedIn && !alreadyAcknowledged) {
+    //     acknowledgeMilestone(milestone);
+    //     addNotificationRef.current({
+    //       type: 'success',
+    //       title: `Milestone reached: ${milestone} votes`,
+    //       message: `Your poll just crossed ${milestone.toLocaleString()} votes. Keep momentum going by sharing again.`,
+    //       duration: 6000,
+    //     });
+    //     onMilestoneReachedRef.current?.(milestone);
+    //   }
+    // });
   }, [acknowledgeMilestone, acknowledged, isReady, milestones, preferences, totalVotes, activePollId]);
 
   const reachedMilestones = useMemo(

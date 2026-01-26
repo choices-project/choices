@@ -6,7 +6,8 @@ import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 
 import ReportModal from '@/features/moderation/components/ReportModal';
 import { useRecordPollEvent } from '@/features/polls/hooks/usePollAnalytics';
-import { usePollMilestoneNotifications, POLL_MILESTONES, type PollMilestone } from '@/features/polls/hooks/usePollMilestones';
+// Vote Milestones - Commented out per user request
+// import { usePollMilestoneNotifications, POLL_MILESTONES, type PollMilestone } from '@/features/polls/hooks/usePollMilestones';
 import VotingInterface, { type VoteSubmission } from '@/features/voting/components/VotingInterface';
 import {
   createBallotFromPoll,
@@ -580,43 +581,44 @@ export default function PollClient({ poll }: PollClientProps) {
     window.print();
   };
 
-  const {
-    enabledMilestones,
-    reachedMilestones,
-    nextMilestone,
-    preferences: milestonePreferences,
-    updatePreference: updateMilestonePreference,
-  } = usePollMilestoneNotifications({
-    pollId: poll.id,
-    totalVotes: computedTotalVotes,
-    onMilestoneReached: (milestone) => {
-      recordPollEvent('milestone_reached', {
-        label: poll.id,
-        value: milestone,
-        metadata: {
-          milestone,
-          totalVotes: computedTotalVotes,
-        },
-      });
-    },
-  });
+  // Vote Milestones - Commented out per user request
+  // const {
+  //   enabledMilestones,
+  //   reachedMilestones,
+  //   nextMilestone,
+  //   preferences: milestonePreferences,
+  //   updatePreference: updateMilestonePreference,
+  // } = usePollMilestoneNotifications({
+  //   pollId: poll.id,
+  //   totalVotes: computedTotalVotes,
+  //   onMilestoneReached: (milestone) => {
+  //     recordPollEvent('milestone_reached', {
+  //       label: poll.id,
+  //       value: milestone,
+  //       metadata: {
+  //         milestone,
+  //         totalVotes: computedTotalVotes,
+  //       },
+  //     });
+  //   },
+  // });
 
-  const handleMilestoneToggle = useCallback(
-    (milestone: PollMilestone, enabled: boolean) => {
-      updateMilestonePreference(milestone, enabled);
-      recordPollEvent('milestone_pref_updated', {
-        label: poll.id,
-        value: enabled ? 1 : 0,
-        metadata: {
-          pollId: poll.id,
-          milestone,
-          enabled,
-          context: 'poll_detail',
-        },
-      });
-    },
-    [poll.id, recordPollEvent, updateMilestonePreference],
-  );
+  // const handleMilestoneToggle = useCallback(
+  //   (milestone: PollMilestone, enabled: boolean) => {
+  //     updateMilestonePreference(milestone, enabled);
+  //     recordPollEvent('milestone_pref_updated', {
+  //       label: poll.id,
+  //       value: enabled ? 1 : 0,
+  //       metadata: {
+  //         pollId: poll.id,
+  //         milestone,
+  //         enabled,
+  //         context: 'poll_detail',
+  //       },
+  //     });
+  //   },
+  //   [poll.id, recordPollEvent, updateMilestonePreference],
+  // );
 
   const handleVote = useCallback(async (submission: VoteSubmission): Promise<{ ok: boolean; id?: string; error?: string }> => {
     if (!user || !canVote || pollStatus !== 'active' || storeIsVoting) {
@@ -1062,6 +1064,7 @@ export default function PollClient({ poll }: PollClientProps) {
       {/* Secondary Information - Moved to bottom */}
 
       {/* Milestones - Collapsible and less prominent (collapsed by default) */}
+      {/* Vote Milestones - Commented out per user request (unnecessary visual clutter)
       <details className="rounded-lg border border-border/40 bg-muted/20 mb-4" open={false}>
         <summary className="cursor-pointer p-3 text-sm font-semibold text-foreground hover:bg-muted/30 transition-colors">
           <div className="flex items-center justify-between">
@@ -1124,6 +1127,7 @@ export default function PollClient({ poll }: PollClientProps) {
           </div>
         </div>
       </details>
+      */}
 
       {/* Integrity Check - Moved to bottom (incomplete feature) */}
       {integrityInfo && (
