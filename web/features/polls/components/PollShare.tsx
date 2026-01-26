@@ -8,6 +8,7 @@ import React, { useState, useEffect, useCallback } from 'react';
 
 import { isFeatureEnabled } from '@/lib/core/feature-flags'
 import { devLog } from '@/lib/utils/logger';
+import { useNotificationActions } from '@/lib/stores';
 
 import { useI18n } from '@/hooks/useI18n';
 
@@ -23,6 +24,7 @@ export default function PollShare({ pollId, poll }: PollShareProps) {
   const { t } = useI18n();
   const [copied, setCopied] = useState(false)
   const [showQR, setShowQR] = useState(false)
+  const notificationActions = useNotificationActions();
   const [pollUrl, setPollUrl] = useState('')
   const [qrCodeDataUrl, setQrCodeDataUrl] = useState('')
 
@@ -123,8 +125,42 @@ export default function PollShare({ pollId, poll }: PollShareProps) {
     }
   }, [pollTitle, pollUrl, t, trackShare])
 
-  const handleSocialShare = useCallback((platform: string) => {
+  const handleSocialShare = useCallback(async (platform: string) => {
     if (!socialSharingEnabled) return
+    
+    if (platform === 'instagram') {
+      // Instagram doesn't support direct web sharing to stories/posts
+      // Best approach: Copy link and show helpful notification
+      try {
+        const { safeNavigator } = await import('@/lib/utils/ssr-safe');
+        const clipboard = safeNavigator(n => n.clipboard);
+        if (clipboard?.writeText) {
+          await clipboard.writeText(pollUrl);
+          setCopied(true);
+          setTimeout(() => setCopied(false), 3000);
+          
+          // Show helpful notification
+          notificationActions.addNotification({
+            type: 'success',
+            title: 'Link copied!',
+            message: 'Open Instagram and paste the link in your story or post.',
+            duration: 5000,
+            source: 'system',
+          });
+        }
+      } catch (error) {
+        devLog('Failed to copy link for Instagram:', { error });
+        notificationActions.addNotification({
+          type: 'error',
+          title: 'Failed to copy link',
+          message: 'Please copy the link manually.',
+          duration: 3000,
+          source: 'system',
+        });
+      }
+      void trackShare(platform, 'poll_share_social');
+      return;
+    }
     
     const encodedUrl = encodeURIComponent(pollUrl)
     const encodedTitle = encodeURIComponent(pollTitle)
@@ -142,11 +178,6 @@ export default function PollShare({ pollId, poll }: PollShareProps) {
         break
       case 'email':
         shareUrl = `mailto:?subject=${encodedTitle}&body=${encodeURIComponent(t('polls.share.emailBody', { url: pollUrl }))}`
-        break
-      case 'instagram':
-        // Instagram doesn't support direct web sharing, so we open Instagram
-        // Users can paste the link manually in their post
-        shareUrl = 'https://www.instagram.com/'
         break
     }
     
@@ -226,7 +257,7 @@ export default function PollShare({ pollId, poll }: PollShareProps) {
               className="flex items-center justify-center space-x-2 p-3 bg-gradient-to-r from-purple-500 to-pink-500 text-white rounded-lg hover:from-purple-600 hover:to-pink-600 transition-colors"
             >
               <Instagram className="w-5 h-5" />
-              <span className="text-sm font-medium">{t('polls.share.social.instagram', 'Instagram')}</span>
+              <span className="text-sm font-medium">Instagram</span>
             </button>
           </div>
         )}

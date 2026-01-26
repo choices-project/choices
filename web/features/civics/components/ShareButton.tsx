@@ -5,6 +5,7 @@ import React, { useCallback, useState } from 'react';
 
 import { isFeatureEnabled } from '@/lib/core/feature-flags';
 import { devLog } from '@/lib/utils/logger';
+import { useNotificationActions } from '@/lib/stores';
 
 import { Button } from '@/components/ui/button';
 
@@ -42,6 +43,7 @@ export default function ShareButton({
 }: ShareButtonProps) {
   const [copied, setCopied] = useState(false);
   const socialSharingEnabled = isFeatureEnabled('SOCIAL_SHARING');
+  const notificationActions = useNotificationActions();
 
   const trackShare = useCallback(
     async (platform: string, placement: string) => {
@@ -79,12 +81,44 @@ export default function ShareButton({
   }, [url, placement, trackShare]);
 
   const handleSocialShare = useCallback(
-    (platform: string) => {
+    async (platform: string) => {
       if (!socialSharingEnabled) return;
 
       const encodedUrl = encodeURIComponent(url);
       const encodedTitle = encodeURIComponent(title);
       const encodedDescription = description ? encodeURIComponent(description) : '';
+
+      if (platform === 'instagram') {
+        // Instagram doesn't support direct web sharing to stories/posts
+        // Best approach: Copy link and show helpful notification
+        try {
+          if (typeof navigator !== 'undefined' && navigator.clipboard?.writeText) {
+            await navigator.clipboard.writeText(url);
+            setCopied(true);
+            setTimeout(() => setCopied(false), 3000);
+            
+            // Show helpful notification
+            notificationActions.addNotification({
+              type: 'success',
+              title: 'Link copied!',
+              message: 'Open Instagram and paste the link in your story or post.',
+              duration: 5000,
+              source: 'system',
+            });
+          }
+        } catch (error) {
+          devLog('Failed to copy link for Instagram:', { error });
+          notificationActions.addNotification({
+            type: 'error',
+            title: 'Failed to copy link',
+            message: 'Please copy the link manually.',
+            duration: 3000,
+            source: 'system',
+          });
+        }
+        void trackShare(platform, placement);
+        return;
+      }
 
       let shareUrl = '';
       switch (platform) {
@@ -99,11 +133,6 @@ export default function ShareButton({
           break;
         case 'email':
           shareUrl = `mailto:?subject=${encodedTitle}&body=${encodedDescription ? `${encodedDescription}%0A%0A` : ''}${encodedUrl}`;
-          break;
-        case 'instagram':
-          // Instagram doesn't support direct web sharing, so we open Instagram
-          // Users can paste the link manually in their post
-          shareUrl = 'https://www.instagram.com/';
           break;
       }
 
