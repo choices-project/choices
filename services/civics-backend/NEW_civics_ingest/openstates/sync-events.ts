@@ -99,9 +99,15 @@ async function main() {
 
   let totalEvents = 0;
   let totalStored = 0;
+  let totalSkipped = 0;
 
   // Fetch events for each jurisdiction
+  const client = getSupabaseClient();
+  const timestamp = new Date().toISOString();
+  const seenEvents = new Set<string>(); // Deduplicate across jurisdictions
+
   for (const jurisdiction of jurisdictions.size > 0 ? Array.from(jurisdictions) : [undefined]) {
+    let jurisdictionSkipped = 0;
     try {
       const events = await fetchEvents({
         jurisdiction,
@@ -112,15 +118,27 @@ async function main() {
       totalEvents += events.length;
 
       if (options.dryRun) {
-        console.log(`[dry-run] Would store ${events.length} events for ${jurisdiction || 'all jurisdictions'}`);
+        let wouldStore = 0;
+        for (const event of events) {
+          const participants = event.participants || [];
+          for (const participant of participants) {
+            if (participant.person?.id) {
+              wouldStore += 1;
+            }
+          }
+        }
+        console.log(`[dry-run] Would store ${wouldStore} event assignments for ${events.length} events (${jurisdiction || 'all jurisdictions'})`);
         continue;
       }
 
       // Store events in representative_activity table
-      const client = getSupabaseClient();
-      const timestamp = new Date().toISOString();
-
       for (const event of events) {
+        // Deduplicate events by ID
+        if (seenEvents.has(event.id)) {
+          continue;
+        }
+        seenEvents.add(event.id);
+
         // Find participants who are representatives
         const participants = event.participants || [];
         for (const participant of participants) {
@@ -135,9 +153,13 @@ async function main() {
             .limit(1)
             .single();
 
-          if (!rep) continue;
+          if (!rep) {
+            jurisdictionSkipped += 1;
+            continue;
+          }
 
           // Store as activity
+          // Use metadata.openstates_event_id + representative_id for deduplication
           const { error } = await client.from('representative_activity').upsert({
             representative_id: rep.id,
             type: 'event',
@@ -158,13 +180,17 @@ async function main() {
             updated_at: timestamp,
           }, {
             onConflict: 'representative_id,type,date,source',
+            ignoreDuplicates: false, // Update existing records
           });
 
           if (!error) {
             totalStored += 1;
+          } else {
+            console.warn(`Failed to store event for rep ${rep.id}:`, error.message);
           }
         }
       }
+      totalSkipped += jurisdictionSkipped;
     } catch (error) {
       console.error(`Failed to fetch events for ${jurisdiction || 'all'}:`, (error as Error).message);
     }
@@ -173,7 +199,10 @@ async function main() {
   const finalStats = getOpenStatesUsageStats();
   console.log(`\n✅ Events sync complete.`);
   console.log(`   Events fetched: ${totalEvents}`);
-  console.log(`   Events stored: ${totalStored}`);
+  console.log(`   Event assignments stored: ${totalStored}`);
+  if (totalSkipped > 0) {
+    console.log(`   Skipped (no matching rep): ${totalSkipped}`);
+  }
   console.log(`   Final API usage: ${finalStats.dailyRequests}/${finalStats.dailyLimit} (${finalStats.remaining} remaining)\n`);
 }
 

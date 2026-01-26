@@ -127,33 +127,53 @@ async function main() {
     return;
   }
 
+  // Use API by default to get current committee data (supplements YAML)
+  const useAPI = process.env.OPENSTATES_USE_API_COMMITTEES !== 'false';
+
   if (options.dryRun) {
     let totalAssignments = 0;
+    let apiAssignments = 0;
+    let yamlAssignments = 0;
     for (const rep of eligible) {
-      const assignments = await fetchCommitteeAssignments(rep);
+      const assignments = await fetchCommitteeAssignments(rep, { useAPI });
       if (assignments.length > 0) {
         totalAssignments += assignments.length;
+        const apiCount = assignments.filter(a => a.source === 'openstates:api').length;
+        apiAssignments += apiCount;
+        yamlAssignments += assignments.length - apiCount;
       }
     }
 
     console.log(
       `[dry-run] Would sync committee assignments for ${eligible.length} representatives (total rows: ${totalAssignments}).`,
     );
+    if (useAPI) {
+      console.log(`   API assignments: ${apiAssignments}, YAML assignments: ${yamlAssignments}`);
+    }
     return;
   }
 
   console.log(
     `Syncing committee assignments for ${eligible.length} representatives${options.states?.length ? ` filtered by ${options.states.join(', ')}` : ''}...`,
   );
+  if (useAPI) {
+    console.log('   Using OpenStates API to supplement YAML data (current committees)...');
+  } else {
+    console.log('   Using YAML data only (API disabled)...');
+  }
 
   let processed = 0;
   let assignmentsCount = 0;
+  let apiCount = 0;
+  let yamlCount = 0;
   for (const rep of eligible) {
     try {
-      const assignments = await fetchCommitteeAssignments(rep);
+      const assignments = await fetchCommitteeAssignments(rep, { useAPI });
       await syncRepresentativeCommittees(rep, { assignments });
       processed += 1;
       assignmentsCount += assignments.length;
+      apiCount += assignments.filter(a => a.source === 'openstates:api').length;
+      yamlCount += assignments.filter(a => a.source === 'openstates:yaml').length;
     } catch (error) {
       console.error(
         `Failed to sync committees for ${rep.name} (${rep.supabaseRepresentativeId ?? 'unknown id'}):`,
@@ -163,6 +183,9 @@ async function main() {
   }
 
   console.log(`✅ Committee sync complete (${processed}/${eligible.length}). Rows written: ${assignmentsCount}.`);
+  if (useAPI) {
+    console.log(`   API: ${apiCount}, YAML: ${yamlCount}`);
+  }
 }
 
 main().catch((error) => {

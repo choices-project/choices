@@ -57,7 +57,7 @@ const SAMPLETEMPLATES: PollTemplate[] = [
       requireEmail: false,
       showResults: true,
       allowWriteIns: false,
-      allowComments: true,
+      // allowComments removed
       enableNotifications: true,
       maxSelections: 1,
       votingMethod: 'single',
@@ -93,7 +93,7 @@ const SAMPLETEMPLATES: PollTemplate[] = [
       requireEmail: true,
       showResults: false,
       allowWriteIns: false,
-      allowComments: true,
+      // allowComments removed
       enableNotifications: true,
       maxSelections: 3,
       votingMethod: 'ranked',
@@ -129,7 +129,7 @@ const SAMPLETEMPLATES: PollTemplate[] = [
       requireEmail: false,
       showResults: true,
       allowWriteIns: false,
-      allowComments: true,
+      // allowComments removed
       enableNotifications: false,
       maxSelections: 5,
       votingMethod: 'multiple',
@@ -165,7 +165,7 @@ const SAMPLETEMPLATES: PollTemplate[] = [
       requireEmail: false,
       showResults: false,
       allowWriteIns: false,
-      allowComments: true,
+      // allowComments removed
       enableNotifications: true,
       maxSelections: 1,
       votingMethod: 'single',
@@ -201,7 +201,7 @@ const SAMPLETEMPLATES: PollTemplate[] = [
       requireEmail: false,
       showResults: true,
       allowWriteIns: false,
-      allowComments: true,
+      // allowComments removed
       enableNotifications: false,
       maxSelections: 1,
       votingMethod: 'single',
@@ -237,7 +237,7 @@ const SAMPLETEMPLATES: PollTemplate[] = [
       requireEmail: true,
       showResults: false,
       allowWriteIns: false,
-      allowComments: true,
+      // allowComments removed
       enableNotifications: true,
       maxSelections: 3,
       votingMethod: 'ranked',

@@ -93,7 +93,7 @@ export type TemplateSettings = {
   requireEmail: boolean;
   showResults: boolean;
   allowWriteIns: boolean;
-  allowComments: boolean;
+  // allowComments removed - feature not implemented
   enableNotifications?: boolean;
   maxSelections?: number;
   votingMethod?: string;

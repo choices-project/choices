@@ -21,6 +21,7 @@ import {
 } from '@/lib/api';
 import { validateAndNormalizeContact, validateContactType, type ContactType } from '@/lib/contact/contact-validation';
 import { logger } from '@/lib/utils/logger';
+import { isFeatureEnabled } from '@/lib/core/feature-flags';
 
 import type { NextRequest } from 'next/server';
 
@@ -44,6 +45,11 @@ export const GET = withErrorHandling(async (
   _request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) => {
+  // Check feature flag
+  if (!isFeatureEnabled('CONTACT_INFORMATION_SYSTEM')) {
+    return forbiddenError('Contact Information System is currently disabled');
+  }
+
   const { id } = await params;
   const contactId = parseInt(id, 10);
 
@@ -121,6 +127,11 @@ export const PATCH = withErrorHandling(async (
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) => {
+  // Check feature flag
+  if (!isFeatureEnabled('CONTACT_INFORMATION_SYSTEM')) {
+    return forbiddenError('Contact Information System is currently disabled');
+  }
+
   const { id } = await params;
   const contactId = parseInt(id, 10);
 
@@ -239,6 +250,11 @@ export const DELETE = withErrorHandling(async (
   _request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) => {
+  // Check feature flag
+  if (!isFeatureEnabled('CONTACT_INFORMATION_SYSTEM')) {
+    return forbiddenError('Contact Information System is currently disabled');
+  }
+
   const { id } = await params;
   const contactId = parseInt(id, 10);
 

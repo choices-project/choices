@@ -18,6 +18,7 @@ import { usePathname } from 'next/navigation';
 import React from 'react';
 
 import { useSystemMetrics } from '@/features/admin/lib/hooks';
+import { useFeatureFlag } from '@/features/pwa/hooks/useFeatureFlags';
 
 import { useAdminSidebarCollapsed, useAdminActions } from '@/lib/stores';
 import { useSidebarActiveSection } from '@/lib/stores/appStore';
@@ -92,6 +93,7 @@ export const Sidebar: React.FC = () => {
   const { toggleSidebar } = useAdminActions();
   const { data: metrics } = useSystemMetrics();
   const sidebarNavigationId = 'admin-sidebar-navigation';
+  const { enabled: contactSystemEnabled } = useFeatureFlag('CONTACT_INFORMATION_SYSTEM');
 
   // CRITICAL: Guard usePathname() usage to prevent hydration mismatch
   // usePathname() can return different values on server vs client
@@ -100,6 +102,17 @@ export const Sidebar: React.FC = () => {
   React.useEffect(() => {
     setIsMounted(true);
   }, []);
+
+  // Filter navigation items based on feature flags
+  const visibleNavigationItems = React.useMemo(() => {
+    return navigationItems.filter((item) => {
+      // Hide Contact System if feature flag is disabled
+      if (item.section === 'admin-contact' && !contactSystemEnabled) {
+        return false;
+      }
+      return true;
+    });
+  }, [contactSystemEnabled]);
 
   return (
     <>
@@ -148,7 +161,7 @@ export const Sidebar: React.FC = () => {
           className="mt-6 px-3"
         >
           <ul className="space-y-2">
-            {navigationItems.map((item: { name: string; href: string; icon: React.ComponentType; section?: string }) => {
+            {visibleNavigationItems.map((item: { name: string; href: string; icon: React.ComponentType; section?: string }) => {
               const matchesSection = activeSection && item.section
                 ? item.section === activeSection
                 : false;

@@ -11,8 +11,9 @@ import { getSupabaseServerClient } from '@/utils/supabase/server';
 
 import { requireAdminOr401, getAdminUser } from '@/features/auth/lib/admin-auth';
 
-import { successResponse, errorResponse, withErrorHandling } from '@/lib/api';
+import { successResponse, errorResponse, withErrorHandling, forbiddenError } from '@/lib/api';
 import { logger } from '@/lib/utils/logger';
+import { isFeatureEnabled } from '@/lib/core/feature-flags';
 
 import type { NextRequest } from 'next/server';
 
@@ -23,6 +24,11 @@ export const dynamic = 'force-dynamic';
 // ============================================================================
 
 export const GET = withErrorHandling(async (request: NextRequest) => {
+  // Check feature flag
+  if (!isFeatureEnabled('CONTACT_INFORMATION_SYSTEM')) {
+    return forbiddenError('Contact Information System is currently disabled');
+  }
+
   try {
     const authGate = await requireAdminOr401();
     if (authGate) return authGate;

@@ -21,6 +21,8 @@ import {
 } from '@/lib/api';
 import { notifyUserContactRejected } from '@/lib/contact/contact-notifications';
 import { logger } from '@/lib/utils/logger';
+import { isFeatureEnabled } from '@/lib/core/feature-flags';
+import { forbiddenError } from '@/lib/api';
 
 import type { NextRequest } from 'next/server';
 
@@ -42,6 +44,11 @@ export const POST = withErrorHandling(async (
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) => {
+  // Check feature flag
+  if (!isFeatureEnabled('CONTACT_INFORMATION_SYSTEM')) {
+    return forbiddenError('Contact Information System is currently disabled');
+  }
+
   try {
     const authGate = await requireAdminOr401();
     if (authGate) return authGate;

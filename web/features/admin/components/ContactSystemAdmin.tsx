@@ -51,6 +51,7 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { Textarea } from '@/components/ui/textarea';
 
 import { logger } from '@/lib/utils/logger';
+import { useFeatureFlag } from '@/features/pwa/hooks/useFeatureFlags';
 
 import { useDebounce } from '@/hooks/useDebounce';
 
@@ -80,6 +81,9 @@ type Filters = {
 };
 
 export default function ContactSystemAdmin() {
+  // Feature flag check
+  const { enabled: contactSystemEnabled } = useFeatureFlag('CONTACT_INFORMATION_SYSTEM');
+
   const [contacts, setContacts] = useState<ContactSubmission[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -95,6 +99,27 @@ export default function ContactSystemAdmin() {
 
   // Debounce search filter
   const debouncedSearch = useDebounce(filters.search, 500);
+
+  // Show disabled message if feature flag is off
+  if (!contactSystemEnabled) {
+    return (
+      <Card>
+        <CardHeader>
+          <CardTitle>Contact System</CardTitle>
+          <CardDescription>
+            The Contact Information System is currently disabled.
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <Alert>
+            <AlertDescription>
+              This feature is currently unavailable. Please contact an administrator if you believe this is an error.
+            </AlertDescription>
+          </Alert>
+        </CardContent>
+      </Card>
+    );
+  }
 
   // Create debounced filters object for API calls
   const debouncedFilters = useMemo(

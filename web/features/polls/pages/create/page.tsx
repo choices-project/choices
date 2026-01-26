@@ -1308,13 +1308,6 @@ export default function CreatePollPage() {
                       checked={data.settings.showResults}
                 onCheckedChange={(checked) => actions.updateSettings({ showResults: checked })}
               />
-              <SettingToggle
-                id="allow-comments"
-                label={safeT('polls.create.wizard.audience.settings.allowComments.label', 'Allow comments')}
-                description={safeT('polls.create.wizard.audience.settings.allowComments.description', 'Let voters comment on this poll. Comments enable discussion and allow voters to share their reasoning, which can enrich the voting experience and provide context for decisions.')}
-                      checked={data.settings.allowComments}
-                onCheckedChange={(checked) => actions.updateSettings({ allowComments: checked })}
-              />
             </fieldset>
 
           </div>
@@ -1398,12 +1391,6 @@ export default function CreatePollPage() {
                     <span className="font-medium text-foreground">{safeT('polls.create.wizard.review.requireSignIn', 'Require Sign In')}</span>
                     <span className={cn("font-semibold", data.settings.requireAuthentication ? "text-green-600" : "text-muted-foreground")}>
                       {data.settings.requireAuthentication ? safeT('polls.create.wizard.review.yes', 'Yes') : safeT('polls.create.wizard.review.no', 'No')}
-                    </span>
-                  </div>
-                  <div className="flex items-center justify-between p-3 rounded-lg bg-muted/30 border">
-                    <span className="font-medium text-foreground">{safeT('polls.create.wizard.review.comments', 'Comments')}</span>
-                    <span className={cn("font-semibold", data.settings.allowComments ? "text-green-600" : "text-muted-foreground")}>
-                      {data.settings.allowComments ? safeT('polls.create.wizard.review.enabled', 'Enabled') : safeT('polls.create.wizard.review.disabled', 'Disabled')}
                     </span>
                   </div>
                 </section>

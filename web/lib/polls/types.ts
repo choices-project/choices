@@ -36,7 +36,7 @@ export type PollWizardSettings = {
   requireEmail: boolean;
   showResults: boolean;
   allowWriteIns: boolean;
-  allowComments: boolean;
+  // allowComments removed - feature not implemented, moderation concerns
   enableNotifications: boolean;
   preventDuplicateVotes: boolean;
   maxSelections: number;

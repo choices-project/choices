@@ -43,7 +43,7 @@ const wizardSettingsSchema = z.object({
   requireEmail: z.boolean().default(false),
   showResults: z.boolean().default(true),
   allowWriteIns: z.boolean().default(false),
-  allowComments: z.boolean().default(true),
+  // allowComments removed - feature not implemented
   enableNotifications: z.boolean().default(true),
   maxSelections: z.number().int().min(1).max(MAX_OPTIONS).default(1),
   votingMethod: votingMethodSchema.default('single'),
@@ -111,7 +111,7 @@ export const validateWizardDataForSubmission = (data: PollWizardSnapshot) => {
     requireEmail: incomingSettings.requireEmail ?? false,
     showResults: incomingSettings.showResults ?? true,
     allowWriteIns: incomingSettings.allowWriteIns ?? false,
-    allowComments: incomingSettings.allowComments ?? true,
+        // allowComments removed
     enableNotifications: incomingSettings.enableNotifications ?? true,
     maxSelections: incomingSettings.maxSelections ?? 1,
     votingMethod: incomingSettings.votingMethod ?? 'single',
@@ -175,7 +175,7 @@ export type PollCreatePayload = {
     allowAnonymousVotes: boolean;
     requireAuthentication: boolean;
     showResultsBeforeClose: boolean;
-    allowComments: boolean;
+    // allowComments removed
     allowSharing: boolean;
     privacyLevel: 'public' | 'private' | 'unlisted';
   };
@@ -202,7 +202,7 @@ export const buildPollCreatePayload = (data: SanitizedWizardData): PollCreatePay
     allowAnonymousVotes: data.settings.allowAnonymousVotes,
     requireAuthentication: data.settings.requireAuthentication,
     showResultsBeforeClose: data.settings.showResults,
-    allowComments: data.settings.allowComments,
+    // allowComments removed - set to false
     allowSharing: true,
     privacyLevel: data.settings.privacyLevel,
   } satisfies PollCreatePayload['settings'];

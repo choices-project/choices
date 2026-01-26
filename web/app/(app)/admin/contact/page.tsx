@@ -3,7 +3,10 @@
 import React, { useEffect, useRef } from 'react';
 
 import ContactSystemAdmin from '@/features/admin/components/ContactSystemAdmin';
+import { useFeatureFlag } from '@/features/pwa/hooks/useFeatureFlags';
 
+import { Alert, AlertDescription } from '@/components/ui/alert';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { ErrorBoundary } from '@/components/shared/ErrorBoundary';
 
 import { useAppActions } from '@/lib/stores/appStore';
@@ -13,7 +16,8 @@ export const dynamic = 'force-dynamic';
 
 export default function AdminContactPage() {
   const { setCurrentRoute, setSidebarActiveSection, setBreadcrumbs } = useAppActions();
-  
+  const { enabled: contactSystemEnabled } = useFeatureFlag('CONTACT_INFORMATION_SYSTEM');
+
   // Refs for stable app store actions
   const setCurrentRouteRef = useRef(setCurrentRoute);
   useEffect(() => { setCurrentRouteRef.current = setCurrentRoute; }, [setCurrentRoute]);
@@ -39,7 +43,25 @@ export default function AdminContactPage() {
   return (
     <ErrorBoundary>
       <div className="container mx-auto py-6">
-        <ContactSystemAdmin />
+        {contactSystemEnabled ? (
+          <ContactSystemAdmin />
+        ) : (
+          <Card>
+            <CardHeader>
+              <CardTitle>Contact System</CardTitle>
+              <CardDescription>
+                The Contact Information System is currently disabled.
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <Alert>
+                <AlertDescription>
+                  This feature is currently unavailable. Please contact an administrator if you believe this is an error.
+                </AlertDescription>
+              </Alert>
+            </CardContent>
+          </Card>
+        )}
       </div>
     </ErrorBoundary>
   );

@@ -34,6 +34,7 @@ export interface FecCandidate {
   office_full?: string;
   state?: string;
   district?: string;
+  district_number?: number;
   party?: string;
   party_full?: string;
   candidate_status?: string;
@@ -237,6 +238,7 @@ export async function searchCandidates(params: {
   name?: string;
   office?: 'H' | 'S' | 'P';
   state?: string;
+  district?: string;
   party?: string;
   election_year?: number;
   per_page?: number;
@@ -251,6 +253,13 @@ export async function searchCandidates(params: {
   }
   if (params.state) {
     searchParams.state = params.state.toUpperCase();
+  }
+  if (params.district && params.office === 'H') {
+    // FEC API expects district as a number (1-56 for House)
+    const districtNum = parseInt(params.district, 10);
+    if (!Number.isNaN(districtNum) && districtNum > 0) {
+      searchParams.district = districtNum;
+    }
   }
   if (params.party) {
     searchParams.party = params.party.toUpperCase();
@@ -279,6 +288,7 @@ export async function searchCandidateWithTotals(params: {
   name: string;
   office?: 'H' | 'S' | 'P';
   state?: string;
+  district?: string;
   party?: string;
   cycle: number;
   per_page?: number;
@@ -294,20 +304,23 @@ export async function searchCandidateWithTotals(params: {
   }
 
   // Step 1: Search for candidates matching the criteria
+  // Note: Don't filter by election_year initially - many candidates may not have that year set
+  // We'll filter by cycle when fetching totals instead
   const candidates = await searchCandidates({
     name: params.name,
     office: params.office,
     state: params.state,
+    district: params.district,
     party: params.party,
-    election_year: params.cycle,
-    per_page: params.per_page ?? 10,
+    // Don't use election_year filter - it's too restrictive
+    per_page: params.per_page ?? 20,
   });
 
   if (candidates.length === 0) {
     return { candidate: null, totals: null };
   }
 
-  // Step 2: For each candidate found, try to get their totals
+  // Step 2: For each candidate found, try to get their totals for the specified cycle
   // Return the first one that has finance data, or the first match if none have data
   for (const candidate of candidates) {
     try {
@@ -322,5 +335,6 @@ export async function searchCandidateWithTotals(params: {
   }
 
   // If we found candidates but none have totals for this cycle, return the first candidate with null totals
+  // This is still useful - we have the FEC ID even if no finance data for this cycle
   return { candidate: candidates[0] ?? null, totals: null };
 }

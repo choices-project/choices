@@ -10,6 +10,7 @@
  */
 
 import { readFile, readdir } from 'node:fs/promises';
+import { existsSync } from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import yaml from 'js-yaml';
@@ -103,10 +104,26 @@ interface ParseOptions {
   includeInactive?: boolean;
 }
 
-const PACKAGE_ROOT = path.resolve(
-  path.dirname(fileURLToPath(import.meta.url)),
-  '../../..',
-);
+// Resolve path relative to source directory (NEW_civics_ingest), not build directory
+// From build/ingest/openstates/people.js, we need to go to NEW_civics_ingest/data/openstates-people/data
+// From source NEW_civics_ingest/ingest/openstates/people.ts, we need to go to NEW_civics_ingest/data/openstates-people/data
+const PACKAGE_ROOT = (() => {
+  const currentDir = path.dirname(fileURLToPath(import.meta.url));
+  // If running from build/ingest/openstates/people.js, go up to project root then into NEW_civics_ingest
+  const fromBuild = path.resolve(currentDir, '../../../NEW_civics_ingest');
+  // If running from source NEW_civics_ingest/ingest/openstates/people.ts, go up two levels
+  const fromSource = path.resolve(currentDir, '../..');
+  
+  // Check which one has the data directory
+  if (existsSync(path.resolve(fromBuild, 'data/openstates-people/data'))) {
+    return fromBuild;
+  }
+  if (existsSync(path.resolve(fromSource, 'data/openstates-people/data'))) {
+    return fromSource;
+  }
+  // Default to source path
+  return fromSource;
+})();
 
 const PEOPLE_ROOT = path.resolve(PACKAGE_ROOT, 'data/openstates-people/data');
 

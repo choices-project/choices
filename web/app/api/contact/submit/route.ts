@@ -25,6 +25,8 @@ import { validateAndNormalizeContact, validateContactType, type ContactType } fr
 import { apiRateLimiter } from '@/lib/rate-limiting/api-rate-limiter';
 import { validateRepresentativeId } from '@/lib/security/input-sanitization';
 import { logger } from '@/lib/utils/logger';
+import { isFeatureEnabled } from '@/lib/core/feature-flags';
+import { forbiddenError } from '@/lib/api';
 
 import type { NextRequest } from 'next/server';
 
@@ -46,6 +48,11 @@ type SubmitContactRequest = {
 // ============================================================================
 
 export const POST = withErrorHandling(async (request: NextRequest) => {
+  // Check feature flag
+  if (!isFeatureEnabled('CONTACT_INFORMATION_SYSTEM')) {
+    return forbiddenError('Contact Information System is currently disabled');
+  }
+
   const startTime = Date.now();
 
   // Rate limiting: 5 submissions per minute per user

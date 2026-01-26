@@ -39,7 +39,6 @@ type BooleanSettingKey = Extract<
   | 'allowMultipleVotes'
   | 'allowAnonymousVotes'
   | 'showResults'
-  | 'allowComments'
   | 'requireAuthentication'
   | 'preventDuplicateVotes'
 >;
@@ -145,7 +144,6 @@ export function AccessiblePollWizard() {
     { key: 'allowMultipleVotes', label: t('polls.create.wizard.audience.settings.allowMultipleVotes.label') },
     { key: 'allowAnonymousVotes', label: t('polls.create.wizard.audience.settings.allowAnonymousVotes.label') },
     { key: 'showResults', label: t('polls.create.wizard.audience.settings.showResults.label') },
-    { key: 'allowComments', label: t('polls.create.wizard.audience.settings.allowComments.label') },
     { key: 'requireAuthentication', label: t('polls.create.wizard.audience.settings.requireAuthentication.label') },
     { key: 'preventDuplicateVotes', label: t('polls.create.wizard.audience.settings.preventDuplicateVotes.label') },
   ], [t]);

@@ -19,6 +19,8 @@ import {
 } from '@/lib/api';
 import { validateRepresentativeId } from '@/lib/security/input-sanitization';
 import { logger } from '@/lib/utils/logger';
+import { isFeatureEnabled } from '@/lib/core/feature-flags';
+import { forbiddenError } from '@/lib/api';
 
 import type { NextRequest } from 'next/server';
 
@@ -32,6 +34,11 @@ export const GET = withErrorHandling(async (
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) => {
+  // Check feature flag
+  if (!isFeatureEnabled('CONTACT_INFORMATION_SYSTEM')) {
+    return forbiddenError('Contact Information System is currently disabled');
+  }
+
   const { id } = await params;
 
   // Validate representative ID

@@ -139,14 +139,12 @@ describe('Poll Wizard Store Persistence', () => {
     // Settings are part of data, which is persisted, so they should persist in memory
     const store = usePollWizardStore.getState();
     store.updateSettings({
-      allowComments: true,
       privacyLevel: 'private',
     });
     
     // Read state after update
     const state = usePollWizardStore.getState();
     const settings = state.data.settings;
-    expect(settings?.allowComments).toBe(true);
     expect(settings?.privacyLevel).toBe('private');
     
     // Note: privacyLevel is also a top-level field in data, but updateSettings only updates settings
@@ -159,7 +157,6 @@ describe('Poll Wizard Store Persistence', () => {
     store.nextStep();
     const stateAfterNav = usePollWizardStore.getState();
     const settingsAfterNav = stateAfterNav.data.settings;
-    expect(settingsAfterNav?.allowComments).toBe(true);
     expect(settingsAfterNav?.privacyLevel).toBe('private');
     expect(stateAfterNav.data.privacyLevel).toBe('private');
   });

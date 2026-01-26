@@ -1,5 +1,7 @@
 import { getSupabaseClient } from '../clients/supabase.js';
 import type { CanonicalRepresentative } from '../ingest/openstates/people.js';
+import { fetchCommittees } from '../clients/openstates.js';
+import { deriveJurisdictionFilter } from './state.js';
 
 export interface CommitteeAssignment {
   committeeName: string;
@@ -8,6 +10,7 @@ export interface CommitteeAssignment {
   endDate: string | null;
   isCurrent: boolean;
   source: string;
+  openstatesCommitteeId?: string | null;
 }
 
 const COMMITTEE_ROLE_TYPES = new Set([
@@ -53,7 +56,10 @@ function normaliseRoleType(value: string | null | undefined): string | null {
   return null;
 }
 
-export async function fetchCommitteeAssignments(
+/**
+ * Fetch committee assignments from YAML data (baseline)
+ */
+async function fetchCommitteeAssignmentsFromYAML(
   canonical: CanonicalRepresentative,
 ): Promise<CommitteeAssignment[]> {
   if (!canonical.supabaseRepresentativeId) {
@@ -125,11 +131,128 @@ export async function fetchCommitteeAssignments(
       startDate,
       endDate,
       isCurrent: isCurrent(endDate),
-      source: 'openstates:roles',
+      source: 'openstates:yaml',
     });
   }
 
   return assignments;
+}
+
+/**
+ * Fetch committee assignments from OpenStates API (current data)
+ */
+async function fetchCommitteeAssignmentsFromAPI(
+  canonical: CanonicalRepresentative,
+): Promise<CommitteeAssignment[]> {
+  if (!canonical.openstatesId) {
+    return [];
+  }
+
+  try {
+    const jurisdiction = deriveJurisdictionFilter(canonical);
+    if (!jurisdiction) {
+      return [];
+    }
+
+    // Fetch committees for jurisdiction
+    const committees = await fetchCommittees({ jurisdiction });
+    if (committees.length === 0) {
+      return [];
+    }
+
+    const assignments: CommitteeAssignment[] = [];
+    const seen = new Set<string>();
+
+    // Find committees where this person is a member
+    for (const committee of committees) {
+      const memberships = committee.memberships || [];
+      for (const membership of memberships) {
+        if (membership.person?.id !== canonical.openstatesId) {
+          continue;
+        }
+
+        const committeeName = committee.name?.trim();
+        if (!committeeName) continue;
+
+        const role = membership.role?.trim() || null;
+        const startDate = membership.start_date || null;
+        const endDate = membership.end_date || null;
+
+        const key = `${committeeName.toLowerCase()}|${role?.toLowerCase() ?? ''}|${startDate ?? ''}|${endDate ?? ''}`;
+        if (seen.has(key)) {
+          continue;
+        }
+        seen.add(key);
+
+        assignments.push({
+          committeeName,
+          role,
+          startDate,
+          endDate,
+          isCurrent: isCurrent(endDate),
+          source: 'openstates:api',
+          openstatesCommitteeId: committee.id || null,
+        });
+      }
+    }
+
+    return assignments;
+  } catch (error) {
+    console.warn(
+      `Unable to fetch committee assignments from API for ${canonical.openstatesId}:`,
+      (error as Error).message,
+    );
+    return [];
+  }
+}
+
+/**
+ * Fetch committee assignments, merging YAML (baseline) with API (current) data.
+ * API data takes precedence for current assignments, YAML provides historical context.
+ */
+export async function fetchCommitteeAssignments(
+  canonical: CanonicalRepresentative,
+  options: { useAPI?: boolean } = {},
+): Promise<CommitteeAssignment[]> {
+  const { useAPI = true } = options;
+
+  // Always fetch YAML baseline (historical data)
+  const yamlAssignments = await fetchCommitteeAssignmentsFromYAML(canonical);
+
+  // If API is enabled and we have an openstatesId, fetch current data
+  if (useAPI && canonical.openstatesId) {
+    try {
+      const apiAssignments = await fetchCommitteeAssignmentsFromAPI(canonical);
+
+      // Merge: API assignments take precedence for current committees
+      // YAML provides historical context for committees not in API
+      const merged = new Map<string, CommitteeAssignment>();
+
+      // Add all YAML assignments first (historical baseline)
+      for (const assignment of yamlAssignments) {
+        const key = `${assignment.committeeName.toLowerCase()}|${assignment.role?.toLowerCase() ?? ''}`;
+        merged.set(key, assignment);
+      }
+
+      // Override with API assignments (current data)
+      for (const assignment of apiAssignments) {
+        const key = `${assignment.committeeName.toLowerCase()}|${assignment.role?.toLowerCase() ?? ''}`;
+        merged.set(key, assignment);
+      }
+
+      return Array.from(merged.values());
+    } catch (error) {
+      console.warn(
+        `Failed to fetch API committee data for ${canonical.openstatesId}, using YAML only:`,
+        (error as Error).message,
+      );
+      // Fall back to YAML only
+      return yamlAssignments;
+    }
+  }
+
+  // Return YAML only if API is disabled or unavailable
+  return yamlAssignments;
 }
 
 

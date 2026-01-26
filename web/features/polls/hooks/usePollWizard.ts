@@ -201,7 +201,7 @@ export function usePollWizard() {
         category: wizardState.data.category,
         allowMultipleVotes: wizardState.data.settings.allowMultipleVotes,
         showResults: wizardState.data.settings.showResults,
-        allowComments: wizardState.data.settings.allowComments,
+        // allowComments removed
         tags: wizardState.data.tags
       };
 

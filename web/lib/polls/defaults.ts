@@ -28,7 +28,7 @@ export const createDefaultPollWizardSettings = (): PollWizardSettings => ({
   requireEmail: false,
   showResults: true,
   allowWriteIns: false,
-  allowComments: true,
+  // allowComments removed - feature not implemented, moderation concerns
   enableNotifications: true,
   preventDuplicateVotes: true,
   maxSelections: 1,

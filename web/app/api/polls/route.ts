@@ -684,7 +684,9 @@ export const POST = withErrorHandling(async (request: NextRequest) => {
           max_selections: (typeof metadata?.maxSelections === 'number' ? metadata.maxSelections : typeof settings?.maxSelections === 'number' ? settings.maxSelections : null),
           voting_method: normalizedVotingMethod,
           show_results_before_close: typeof settings?.showResultsBeforeClose === 'boolean' ? settings.showResultsBeforeClose : false,
-          allow_comments: typeof settings?.allowComments === 'boolean' ? settings.allowComments !== false : true,
+          // allow_comments removed from UI - set to false for new polls
+          // Kept in DB schema for backward compatibility with existing polls
+          allow_comments: false,
           allow_sharing: typeof settings?.allowSharing === 'boolean' ? settings.allowSharing !== false : true,
           require_authentication: typeof settings?.requireAuthentication === 'boolean' ? settings.requireAuthentication : false
         },

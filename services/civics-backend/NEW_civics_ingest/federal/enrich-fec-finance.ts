@@ -14,9 +14,10 @@ import { getSupabaseClient } from '../clients/supabase.js';
 import {
   fetchCandidateTotals,
   fetchCandidateTopContributors,
-  searchCandidateWithTotals,
+  searchCandidates,
   type FecApiError,
 } from '../clients/fec.js';
+import { findFecCandidateByMultipleStrategies } from '../utils/fec-name-matching.js';
 import { evaluateDataQuality } from '../utils/data-quality.js';
 import type { FederalEnrichment } from '../enrich/federal.js';
 import { upsertFinanceDataQuality } from '../persist/data-quality.js';
@@ -672,17 +673,40 @@ async function main() {
           
           for (const rep of missingFecReps) {
             try {
-              // Use combined function to get FEC ID + finance data in one optimized flow
+              // Use multiple search strategies to find FEC ID
               const fecOffice = rep.office === 'Senator' ? 'S' : rep.office === 'Representative' ? 'H' : undefined;
-              const { candidate, totals } = await searchCandidateWithTotals({
-                name: rep.name,
-                office: fecOffice,
-                state: rep.state ?? undefined,
-                cycle: options.cycle,
-                per_page: 5,
-              });
+              
+              // Try multiple name formats and search strategies
+              const fecMatch = await findFecCandidateByMultipleStrategies(
+                async (searchParams) => {
+                  const candidates = await searchCandidates({
+                    name: searchParams.name,
+                    office: searchParams.office,
+                    state: searchParams.state,
+                    district: searchParams.district,
+                    per_page: searchParams.per_page ?? 10,
+                  });
+                  return candidates;
+                },
+                rep.name,
+                fecOffice,
+                rep.state ?? undefined,
+                rep.district ?? undefined,
+              );
 
-              if (candidate && candidate.candidate_id) {
+              if (fecMatch) {
+                // Found FEC ID, now get finance totals
+                let totals: any = null;
+                try {
+                  totals = await fetchCandidateTotals(fecMatch.candidate_id, options.cycle);
+                } catch (totalsError) {
+                  // Totals fetch failed, but we still have the FEC ID
+                }
+                
+                const candidate = {
+                  candidate_id: fecMatch.candidate_id,
+                  name: fecMatch.name,
+                };
                 // Update FEC ID in database
                 const { error: updateError } = await client
                   .from('representatives_core')
@@ -690,7 +714,7 @@ async function main() {
                   .eq('id', rep.id);
 
                 if (!updateError) {
-                  console.log(`   ✅ Found FEC ID for ${rep.name}: ${candidate.candidate_id}`);
+                  console.log(`   ✅ Found FEC ID for ${rep.name}: ${candidate.candidate_id} (matched as: ${fecMatch.name})`);
                   foundCount++;
                   
                   // If we got totals, also store finance data immediately (big API savings!)
