@@ -34,7 +34,7 @@ export const POST = withErrorHandling(async (request: NextRequest) => {
   const contentTypeRaw = typeof body?.content_type === 'string' ? body.content_type : undefined;
 
   // Validate platform/content_type via allowlists; coerce unknowns
-  const allowedPlatforms = new Set(['twitter','facebook','reddit','copy','link','whatsapp','telegram','email','unknown']);
+  const allowedPlatforms = new Set(['twitter','facebook','reddit','copy','link','whatsapp','telegram','email','instagram','unknown']);
   const allowedContentTypes = new Set(['poll','candidate','representative','other']);
   const platform = allowedPlatforms.has(platformRaw.toLowerCase()) ? platformRaw.toLowerCase() : 'unknown';
   const content_type = contentTypeRaw && allowedContentTypes.has(contentTypeRaw.toLowerCase())

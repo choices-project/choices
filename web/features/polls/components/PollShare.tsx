@@ -1,7 +1,7 @@
 'use client'
 
 
-import { Share2, Copy, Link, Twitter, Facebook, Linkedin, Mail, QrCode, Download } from 'lucide-react'
+import { Share2, Copy, Link, Twitter, Facebook, Linkedin, Mail, Instagram, QrCode, Download } from 'lucide-react'
 import Image from 'next/image'
 import QRCode from 'qrcode'
 import React, { useState, useEffect, useCallback } from 'react';
@@ -143,6 +143,11 @@ export default function PollShare({ pollId, poll }: PollShareProps) {
       case 'email':
         shareUrl = `mailto:?subject=${encodedTitle}&body=${encodeURIComponent(t('polls.share.emailBody', { url: pollUrl }))}`
         break
+      case 'instagram':
+        // Instagram doesn't support direct web sharing, so we open Instagram
+        // Users can paste the link manually in their post
+        shareUrl = 'https://www.instagram.com/'
+        break
     }
     
     if (shareUrl) {
@@ -214,6 +219,14 @@ export default function PollShare({ pollId, poll }: PollShareProps) {
             >
               <Mail className="w-5 h-5" />
               <span className="text-sm font-medium">{t('polls.share.social.email')}</span>
+            </button>
+            
+            <button
+              onClick={() => handleSocialShare('instagram')}
+              className="flex items-center justify-center space-x-2 p-3 bg-gradient-to-r from-purple-500 to-pink-500 text-white rounded-lg hover:from-purple-600 hover:to-pink-600 transition-colors"
+            >
+              <Instagram className="w-5 h-5" />
+              <span className="text-sm font-medium">{t('polls.share.social.instagram', 'Instagram')}</span>
             </button>
           </div>
         )}

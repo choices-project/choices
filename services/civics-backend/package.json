@@ -54,6 +54,9 @@
     "tools:check:fec-status": "npm run build --silent && node build/scripts/check-fec-status.js",
     "tools:check:openstates-status": "npm run build --silent && node build/scripts/check-openstates-status.js",
     "tools:test:fec-lookup": "npm run build --silent && node build/scripts/test-fec-lookup.js",
+    "tools:update:quality-scores": "npm run build --silent && node build/scripts/tools/update-quality-scores.js",
+    "tools:audit:duplicates": "npm run build --silent && node build/scripts/tools/audit-duplicates.js",
+    "tools:validate:term-dates": "npm run build --silent && node build/scripts/tools/validate-term-dates.js",
 
     "ingest:openstates": "npm run openstates:ingest",
     "ingest:qa": "npm run tools:inspect:schema && npm run tools:report:duplicates && npm run tools:audit:activity && npm run tools:audit:terms && npm run openstates:coverage -- --limit=5 && npm run preview -- --limit=5",

@@ -1,6 +1,6 @@
 'use client';
 
-import { Share2, Copy, Twitter, Facebook, Linkedin, Mail } from 'lucide-react';
+import { Share2, Copy, Twitter, Facebook, Linkedin, Mail, Instagram } from 'lucide-react';
 import React, { useCallback, useState } from 'react';
 
 import { isFeatureEnabled } from '@/lib/core/feature-flags';
@@ -100,6 +100,11 @@ export default function ShareButton({
         case 'email':
           shareUrl = `mailto:?subject=${encodedTitle}&body=${encodedDescription ? `${encodedDescription}%0A%0A` : ''}${encodedUrl}`;
           break;
+        case 'instagram':
+          // Instagram doesn't support direct web sharing, so we open Instagram
+          // Users can paste the link manually in their post
+          shareUrl = 'https://www.instagram.com/';
+          break;
       }
 
       if (shareUrl) {
@@ -190,6 +195,14 @@ export default function ShareButton({
             aria-label="Share via email"
           >
             <Mail className="h-4 w-4" />
+          </Button>
+          <Button
+            variant={variant}
+            size={size}
+            onClick={() => handleSocialShare('instagram')}
+            aria-label="Share on Instagram"
+          >
+            <Instagram className="h-4 w-4" />
           </Button>
         </>
       )}

@@ -198,6 +198,7 @@ export default function ShareAnalyticsPanel({ refreshInterval = 30000 }: ShareAn
                 <SelectItem value="reddit">Reddit</SelectItem>
                 <SelectItem value="copy">Copy Link</SelectItem>
                 <SelectItem value="email">Email</SelectItem>
+                <SelectItem value="instagram">Instagram</SelectItem>
                 <SelectItem value="whatsapp">WhatsApp</SelectItem>
                 <SelectItem value="telegram">Telegram</SelectItem>
               </SelectContent>
