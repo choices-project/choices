@@ -10,7 +10,7 @@ import type { NextRequest } from 'next/server';
 export const dynamic = 'force-dynamic';
 
 export const POST = withErrorHandling(async (
-  _request: NextRequest,
+  request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) => {
   const { id } = await params;
@@ -26,15 +26,35 @@ export const POST = withErrorHandling(async (
     return errorResponse('Supabase client not available', 500);
   }
 
-  const [authResult, pollResult] = await Promise.all([
+  // Try both getUser() and getSession() for better compatibility
+  const [authResult, sessionResult, pollResult] = await Promise.all([
     supabase.auth.getUser(),
+    supabase.auth.getSession(),
     supabase.from('polls').select('id, title, status, created_by, end_time, baseline_at, allow_post_close').eq('id', pollId).single(),
   ]);
-
-  const { data: { user }, error: userError } = authResult;
-  if (userError || !user) {
+  
+  // Use session user if getUser() fails (better cookie handling)
+  const sessionUser = sessionResult.data?.session?.user;
+  const { data: { user: authUser }, error: userError } = authResult;
+  
+  // Fallback to session user if getUser() fails
+  const user = authUser || sessionUser;
+  
+  if (!user) {
+    devLog('Authentication failed - no user found', {
+      getUserError: userError,
+      hasSessionUser: !!sessionUser,
+      pollId,
+      cookies: request.headers.get('cookie') ? 'present' : 'missing',
+    });
     return authError('Authentication required to close polls');
   }
+  
+  devLog('User authenticated for poll close', {
+    userId: user.id,
+    userEmail: user.email,
+    pollId,
+  });
 
   const { data: poll, error: pollError } = pollResult;
   if (pollError || !poll) {
@@ -43,18 +63,29 @@ export const POST = withErrorHandling(async (
   }
 
   // Normalize IDs to strings for comparison (handle UUID vs string)
-  const pollCreatorId = poll.created_by ? String(poll.created_by).trim() : null;
-  const userId = user.id ? String(user.id).trim() : null;
+  // UUIDs are case-insensitive but we'll compare as-is first, then try normalized
+  const pollCreatorIdRaw = poll.created_by ? String(poll.created_by).trim() : null;
+  const userIdRaw = user.id ? String(user.id).trim() : null;
+  const pollCreatorId = pollCreatorIdRaw?.toLowerCase() ?? null;
+  const userId = userIdRaw?.toLowerCase() ?? null;
   
   devLog('Checking poll close permissions', {
     pollId,
     pollCreatorId,
     userId,
+    pollCreatorIdRaw: poll.created_by,
+    userIdRaw: user.id,
     pollTitle: poll.title,
-    pollStatus: poll.status
+    pollStatus: poll.status,
+    idsMatch: pollCreatorId === userId,
+    pollCreatorIdType: typeof poll.created_by,
+    userIdType: typeof user.id,
   });
 
-  const isCreator = pollCreatorId && userId && pollCreatorId === userId;
+  // Try both exact match and normalized match
+  const isCreatorExact = pollCreatorIdRaw && userIdRaw && pollCreatorIdRaw === userIdRaw;
+  const isCreatorNormalized = pollCreatorId && userId && pollCreatorId === userId;
+  const isCreator = isCreatorExact || isCreatorNormalized;
   if (isCreator) {
     devLog('User is poll creator, allowing close', { pollId, userId });
     // Creator may close; no profile check needed
