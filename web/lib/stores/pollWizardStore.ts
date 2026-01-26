@@ -104,18 +104,24 @@ export type PollWizardStore = PollWizardState & PollWizardActions;
 
 type PollWizardStoreCreator = StateCreator<PollWizardStore>;
 
-export const createInitialPollWizardState = (): PollWizardState => ({
-  currentStep: 0,
-  totalSteps: POLL_WIZARD_TOTAL_STEPS,
-  data: createInitialPollWizardData(),
-  isLoading: false,
-  error: null,
-  errors: {},
-  progress: 0,
-  canGoBack: false,
-  canProceed: false,
-  isComplete: false,
-});
+export const createInitialPollWizardState = (): PollWizardState => {
+  const currentStep = 0;
+  const totalSteps = POLL_WIZARD_TOTAL_STEPS;
+  const progress = ((currentStep + 1) / totalSteps) * 100;
+  
+  return {
+    currentStep,
+    totalSteps,
+    data: createInitialPollWizardData(),
+    isLoading: false,
+    error: null,
+    errors: {},
+    progress,
+    canGoBack: false,
+    canProceed: false, // Will be updated by validation when data changes
+    isComplete: false,
+  };
+};
 
 const mergeWizardData = (data: PollWizardData, updates: Partial<PollWizardData>) => ({
   ...data,
@@ -140,12 +146,17 @@ export const createPollWizardActions = (
   const applyStepResult = (step: number) => {
     const totalSteps = get().totalSteps;
     const progress = ((step + 1) / totalSteps) * 100;
+    const isLastStep = step === totalSteps - 1;
     setState((state) => {
       state.currentStep = step;
       state.progress = progress;
       state.canGoBack = step > 0;
-      state.canProceed = step < totalSteps - 1;
-      state.isComplete = step === totalSteps - 1;
+      // For non-last steps, canProceed is true (can navigate forward)
+      // For last step, canProceed will be set by validateCurrentStep based on validation
+      if (!isLastStep) {
+        state.canProceed = true;
+      }
+      state.isComplete = isLastStep;
       state.errors = {};
       state.error = null;
     });
@@ -447,9 +458,12 @@ export const createPollWizardActions = (
     validateCurrentStep: () => {
       const state = get();
       const errors = runValidation(state.currentStep, state.data);
+      const isValid = Object.keys(errors).length === 0;
       setState((draft) => {
         draft.errors = errors;
-        draft.canProceed = Object.keys(errors).length === 0;
+        // canProceed means "can proceed" (either to next step or submit)
+        // It's true when current step is valid
+        draft.canProceed = isValid;
       });
     },
 
