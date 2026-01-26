@@ -14,6 +14,7 @@ type CliOptions = {
   limit?: number;
   dryRun?: boolean;
   includeFederalOnly?: boolean;
+  resume?: boolean;
 };
 
 function parseArgs(): CliOptions {
@@ -44,6 +45,9 @@ function parseArgs(): CliOptions {
         break;
       case 'federal-only':
         options.includeFederalOnly = true;
+        break;
+      case 'resume':
+        options.resume = true;
         break;
       default:
         break;

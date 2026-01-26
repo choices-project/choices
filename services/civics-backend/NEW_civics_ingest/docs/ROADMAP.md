@@ -150,7 +150,7 @@ Deliverables: docs largely refreshed; need status roll-up + archival sweep.
 ## Phase 6 — Future Enhancements (Backlog)
 
 - [ ] Automate ingest smoke test in CI (fixture-driven).  
-- [ ] Add metrics/logging (processed counts, error surfacing) to scripts.  
+- [x] ✅ Add metrics/logging (processed counts, error surfacing) to scripts - **Complete** (Phase 3)
 - [ ] Explore storing raw YAML snapshots or hashes for audit in `representative_data_sources`.  
 - [ ] Prep scaffolding for next APIs (Congress committees, state bill activity) once baseline is locked.
 

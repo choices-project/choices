@@ -59,6 +59,8 @@
     "tools:validate:term-dates": "npm run build --silent && node build/scripts/tools/validate-term-dates.js",
     "tools:verify:crosswalk": "npm run build --silent && node build/scripts/tools/verify-crosswalk.js",
     "tools:smoke-test": "npm run build --silent && node build/scripts/tools/smoke-test.js",
+    "tools:resume:sync": "npm run build --silent && node build/scripts/tools/resume-sync.js",
+    "tools:metrics:dashboard": "npm run build --silent && node build/scripts/tools/metrics-dashboard.js",
 
     "ingest:openstates": "npm run openstates:ingest",
     "ingest:qa": "npm run tools:inspect:schema && npm run tools:report:duplicates && npm run tools:audit:activity && npm run tools:audit:terms && npm run openstates:coverage -- --limit=5 && npm run preview -- --limit=5",

@@ -1,6 +1,26 @@
 # OpenStates Comprehensive Sync Guide
 
-**Last Updated:** 2026-01-26
+**Last Updated:** 2026-01-27
+
+## ⚠️ Important: OpenStates People (YAML) vs OpenStates API
+
+**This guide covers both data sources:**
+
+### OpenStates People (YAML) 📁
+- **Source:** Git submodule (`data/openstates-people/`)
+- **No API calls** - Reads from local YAML files
+- **Data:** Contacts, photos, social media, committees (baseline)
+- **Scripts:** `openstates:sync:contacts`, `openstates:sync:photos`, etc.
+
+### OpenStates API 🌐
+- **Source:** Live REST API (`https://v3.openstates.org`)
+- **Requires API key** - Rate limited (10,000 requests/day)
+- **Data:** Bill activity, sponsorships, votes (live data)
+- **Scripts:** `openstates:sync:activity`
+
+**See `INGEST_FLOWS.md` for more details on the distinction.**
+
+---
 
 ## Overview
 
@@ -133,16 +153,18 @@ The sync scripts populate the following database tables:
 
 ### "No representatives with Supabase IDs found"
 
-This means the baseline OpenStates YAML data hasn't been merged yet. Run:
+This means the baseline **OpenStates People (YAML)** data hasn't been merged yet. Run:
 
 ```bash
 npm run openstates:ingest
 ```
 
 This will:
-1. Sync OpenStates people YAML submodule
-2. Stage the data
+1. Sync OpenStates People YAML submodule (📁 no API calls)
+2. Stage the YAML data
 3. Merge into Supabase
+
+**Note:** This is different from the OpenStates API - YAML ingestion has no rate limits.
 
 ### Rate Limit Errors
 

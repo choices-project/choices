@@ -4,12 +4,14 @@ import { collectActiveRepresentatives, type CollectOptions } from '../ingest/ope
 import type { CanonicalRepresentative } from '../ingest/openstates/people.js';
 import { fetchFederalRepresentatives, type FetchFederalOptions } from '../ingest/supabase/representatives.js';
 import { syncRepresentativeActivity } from '../persist/activity.js';
+import { saveCheckpoint, loadCheckpoint, deleteCheckpoint } from '../utils/checkpoint.js';
 
 export interface ActivitySyncOptions {
   states?: string[];
   limit?: number;
   dryRun?: boolean;
   includeFederalOnly?: boolean;
+  resume?: boolean;
   logger?: Pick<typeof console, 'log' | 'warn' | 'error'>;
 }
 
@@ -85,6 +87,27 @@ export async function syncActivityForRepresentatives(
   options: ActivitySyncOptions = {},
 ): Promise<ActivitySyncResult> {
   const logger = options.logger ?? console;
+  const operationName = 'openstates-activity-sync';
+  
+  // Load checkpoint if resuming
+  let startIndex = 0;
+  let initialProcessed = 0;
+  let initialFailed = 0;
+  let initialActivityRows = 0;
+  let initialRateLimited = 0;
+  
+  if (options.resume) {
+    const checkpoint = await loadCheckpoint(operationName);
+    if (checkpoint) {
+      logger.log(`Resuming from checkpoint: ${checkpoint.processed}/${checkpoint.total} processed`);
+      initialProcessed = checkpoint.processed;
+      initialFailed = checkpoint.failed;
+      initialActivityRows = checkpoint.metadata?.activityRows as number || 0;
+      initialRateLimited = checkpoint.metadata?.rateLimited as number || 0;
+      startIndex = checkpoint.processed;
+    }
+  }
+  
   const reps = await loadRepresentatives(options);
   const eligible = reps.filter((rep) => rep.supabaseRepresentativeId != null);
 
@@ -103,10 +126,10 @@ export async function syncActivityForRepresentatives(
   const limit = DEFAULT_ACTIVITY_LIMIT;
   const dryRun = Boolean(options.dryRun);
 
-  let processed = 0;
-  let failed = 0;
-  let activityRows = 0;
-  let rateLimited = 0;
+  let processed = initialProcessed;
+  let failed = initialFailed;
+  let activityRows = initialActivityRows;
+  let rateLimited = initialRateLimited;
 
   // Check initial API usage
   const initialStats = getOpenStatesUsageStats();
@@ -124,24 +147,36 @@ export async function syncActivityForRepresentatives(
     };
   }
 
-  logger.log(
-    `Starting activity sync for ${eligible.length} representatives. API usage: ${initialStats.dailyRequests}/${initialStats.dailyLimit} (${initialStats.remaining} remaining)`,
-  );
+  // Filter to unprocessed reps if resuming
+  const repsToProcess = options.resume && startIndex > 0
+    ? eligible.slice(startIndex)
+    : eligible;
+  
+  if (startIndex === 0) {
+    logger.log(
+      `Starting activity sync for ${eligible.length} representatives. API usage: ${initialStats.dailyRequests}/${initialStats.dailyLimit} (${initialStats.remaining} remaining)`,
+    );
+  } else {
+    logger.log(
+      `Resuming activity sync from index ${startIndex}/${eligible.length}. API usage: ${initialStats.dailyRequests}/${initialStats.dailyLimit} (${initialStats.remaining} remaining)`,
+    );
+  }
 
-  for (let i = 0; i < eligible.length; i += 1) {
-    const rep = eligible[i];
+  for (let i = 0; i < repsToProcess.length; i += 1) {
+    const actualIndex = startIndex + i;
+    const rep = repsToProcess[i];
     
     // Check API usage periodically
-    if (i % 10 === 0 && i > 0) {
+    if (actualIndex % 10 === 0 && actualIndex > 0) {
       const stats = getOpenStatesUsageStats();
       if (stats.remaining <= 0) {
         logger.warn(
-          `OpenStates API daily limit reached after ${i} representatives. Stopping sync. Processed: ${processed}, Failed: ${failed}, Rate limited: ${rateLimited}`,
+          `OpenStates API daily limit reached after ${actualIndex} representatives. Stopping sync. Processed: ${processed}, Failed: ${failed}, Rate limited: ${rateLimited}`,
         );
         break;
       }
       logger.log(
-        `Progress: ${i}/${eligible.length} (${Math.round((i / eligible.length) * 100)}%). API usage: ${stats.dailyRequests}/${stats.dailyLimit} (${stats.remaining} remaining)`,
+        `Progress: ${actualIndex}/${eligible.length} (${Math.round((actualIndex / eligible.length) * 100)}%). API usage: ${stats.dailyRequests}/${stats.dailyLimit} (${stats.remaining} remaining)`,
       );
     }
 
@@ -192,10 +227,43 @@ export async function syncActivityForRepresentatives(
         );
       }
     }
+    
+    // Save checkpoint every 50 representatives
+    const currentIndex = startIndex + i;
+    if (currentIndex > 0 && currentIndex % 50 === 0 && !dryRun) {
+      try {
+        await saveCheckpoint(operationName, {
+          total: eligible.length,
+          processed,
+          failed,
+          rateLimited,
+          lastProcessedId: rep.supabaseRepresentativeId ?? undefined,
+          metadata: {
+            startedAt: new Date().toISOString(),
+            activityRows,
+            rateLimited,
+          },
+        });
+      } catch (checkpointError) {
+        // Don't fail the sync if checkpoint save fails
+        logger.warn(`Failed to save checkpoint: ${(checkpointError as Error).message}`);
+      }
+    }
   }
 
   // Final stats
   const finalStats = getOpenStatesUsageStats();
+  
+  // Delete checkpoint if completed successfully
+  if (processed >= eligible.length && !dryRun) {
+    try {
+      await deleteCheckpoint(operationName);
+    } catch (checkpointError) {
+      // Don't fail if checkpoint delete fails
+      logger.warn(`Failed to delete checkpoint: ${(checkpointError as Error).message}`);
+    }
+  }
+  
   logger.log(
     `Activity sync complete. Processed: ${processed}/${eligible.length}, Failed: ${failed}, Rate limited: ${rateLimited}, Activity rows: ${activityRows}. Final API usage: ${finalStats.dailyRequests}/${finalStats.dailyLimit} (${finalStats.remaining} remaining)`,
   );
