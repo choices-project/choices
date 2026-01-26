@@ -540,36 +540,34 @@ export const usePollWizardCanProceed = () => usePollWizardStore((state) => state
 export const usePollWizardCanGoBack = () => usePollWizardStore((state) => state.canGoBack);
 export const usePollWizardIsComplete = () => usePollWizardStore((state) => state.isComplete);
 
-export const usePollWizardActions = () =>
-  useMemo(() => {
-    const state = usePollWizardStore.getState();
+const selectPollWizardActions = (state: PollWizardStore) => ({
+  nextStep: state.nextStep,
+  prevStep: state.prevStep,
+  goToStep: state.goToStep,
+  resetWizard: state.resetWizard,
+  updateData: state.updateData,
+  updateSettings: state.updateSettings,
+  addOption: state.addOption,
+  removeOption: state.removeOption,
+  updateOption: state.updateOption,
+  addTag: state.addTag,
+  removeTag: state.removeTag,
+  updateTags: state.updateTags,
+  validateCurrentStep: state.validateCurrentStep,
+  setLoading: state.setLoading,
+  setFieldError: state.setFieldError,
+  clearFieldError: state.clearFieldError,
+  clearAllErrors: state.clearAllErrors,
+  getStepData: state.getStepData,
+  getProgress: state.getProgress,
+  canProceedToNextStep: state.canProceedToNextStep,
+  isStepValid: state.isStepValid,
+  getStepErrors: state.getStepErrors,
+  submitPoll: state.submitPoll,
+});
 
-    return {
-      nextStep: state.nextStep,
-      prevStep: state.prevStep,
-      goToStep: state.goToStep,
-      resetWizard: state.resetWizard,
-      updateData: state.updateData,
-      updateSettings: state.updateSettings,
-      addOption: state.addOption,
-      removeOption: state.removeOption,
-      updateOption: state.updateOption,
-      addTag: state.addTag,
-      removeTag: state.removeTag,
-      updateTags: state.updateTags,
-      validateCurrentStep: state.validateCurrentStep,
-      setLoading: state.setLoading,
-      setFieldError: state.setFieldError,
-      clearFieldError: state.clearFieldError,
-      clearAllErrors: state.clearAllErrors,
-      getStepData: state.getStepData,
-      getProgress: state.getProgress,
-      canProceedToNextStep: state.canProceedToNextStep,
-      isStepValid: state.isStepValid,
-      getStepErrors: state.getStepErrors,
-      submitPoll: state.submitPoll,
-    };
-  }, []);
+export const usePollWizardActions = () =>
+  usePollWizardStore(useShallow(selectPollWizardActions));
 
 export const usePollWizardStats = () =>
   usePollWizardStore(
