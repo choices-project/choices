@@ -923,9 +923,12 @@ export default function PollClient({ poll }: PollClientProps) {
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-3 mb-6">
         <div className="rounded-lg border border-border bg-card p-4 shadow-sm">
           <p className="text-xs uppercase font-semibold text-foreground/80">{t('polls.view.stats.totalVotes')}</p>
-          <p className="mt-2 text-2xl font-semibold text-foreground">
+          <p className="mt-2 text-2xl font-bold text-foreground">
             {isMounted ? computedTotalVotes.toLocaleString() : computedTotalVotes.toString()}
           </p>
+          {computedTotalVotes === 0 && pollStatus === 'active' && (
+            <p className="mt-1 text-xs text-muted-foreground">No votes yet</p>
+          )}
         </div>
         <div className="rounded-lg border border-border bg-card p-4 shadow-sm">
           <p className="text-xs uppercase font-semibold text-foreground/80">{t('polls.view.stats.participation')}</p>

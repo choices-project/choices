@@ -1134,6 +1134,17 @@ export default function CreatePollPage() {
                     {safeT('polls.create.wizard.audience.votingMethod.hint', 'Choose how votes are counted and ranked. Single allows one choice, Multiple allows several, Approval lets voters approve multiple options, and Ranked uses instant runoff voting to find majority support.')}
                   </p>
                 </div>
+
+                {/* Multiple Votes Setting */}
+                <div className="mt-4">
+                  <SettingToggle
+                    id="allow-multiple-votes"
+                    label={safeT('polls.create.wizard.audience.settings.allowMultipleVotes.label', 'Allow Multiple Votes')}
+                    description={safeT('polls.create.wizard.audience.settings.allowMultipleVotes.description', 'When enabled, voters can change their vote after submitting. When disabled, each voter can only vote once and cannot change their vote. This helps ensure poll integrity and prevents manipulation.')}
+                    checked={data.settings.allowMultipleVotes}
+                    onCheckedChange={(checked) => actions.updateSettings({ allowMultipleVotes: checked })}
+                  />
+                </div>
               </fieldset>
             </div>
 
@@ -1862,13 +1873,13 @@ const InteractivePreview = ({ votingMethod, options }: InteractivePreviewProps) 
                 onKeyDown={(e) => {
                   if (e.key === 'Enter' || e.key === ' ') e.preventDefault();
                 }}
-                className="flex items-center gap-3 p-4 rounded-lg border-2 border-purple-200 bg-white shadow-sm hover:shadow-md transition-all cursor-move hover:border-purple-300 active:scale-[0.98]"
+                className="flex items-center gap-3 p-4 rounded-lg border-2 border-purple-200 bg-white dark:bg-gray-800 shadow-sm hover:shadow-md transition-all cursor-move hover:border-purple-300 active:scale-[0.98]"
               >
                 <div className="flex-shrink-0 flex items-center justify-center w-10 h-10 rounded-full bg-gradient-to-br from-purple-100 to-purple-200 text-purple-700 font-bold text-sm shadow-sm">
                   {displayIndex + 1}
                 </div>
                 <div className="flex-1">
-                  <span className="text-base font-semibold text-foreground">{option}</span>
+                  <span className="text-base font-semibold text-gray-900 dark:text-gray-100">{option}</span>
                 </div>
                 <div className="flex-shrink-0 flex items-center gap-2">
                   <GripVertical className="h-4 w-4 text-purple-400" />
@@ -1899,7 +1910,7 @@ const InteractivePreview = ({ votingMethod, options }: InteractivePreviewProps) 
         {options.map((option, index) => (
           <label
             key={`preview-single-${index}`}
-            className="flex items-center gap-3 p-4 rounded-lg border-2 border-border bg-card shadow-sm hover:shadow-md transition-all cursor-pointer hover:border-primary/60"
+            className="flex items-center gap-3 p-4 rounded-lg border-2 border-border bg-card dark:bg-gray-800 shadow-sm hover:shadow-md transition-all cursor-pointer hover:border-primary/60"
           >
             <input
               type="radio"
@@ -1911,7 +1922,7 @@ const InteractivePreview = ({ votingMethod, options }: InteractivePreviewProps) 
             <span className="flex h-8 w-8 items-center justify-center rounded-full border-2 border-primary bg-primary/10 text-primary text-sm font-bold shrink-0 shadow-sm" aria-hidden>
               {index + 1}
             </span>
-            <span className="text-base font-semibold text-foreground flex-1">{option}</span>
+            <span className="text-base font-semibold text-gray-900 dark:text-gray-100 flex-1">{option}</span>
           </label>
         ))}
         {options.length === 0 && (
@@ -1927,7 +1938,7 @@ const InteractivePreview = ({ votingMethod, options }: InteractivePreviewProps) 
         {options.map((option, index) => (
           <label
             key={`preview-multiple-${index}`}
-            className="flex items-center gap-3 p-4 rounded-lg border-2 border-border bg-card shadow-sm hover:shadow-md transition-all cursor-pointer hover:border-primary/60"
+            className="flex items-center gap-3 p-4 rounded-lg border-2 border-border bg-card dark:bg-gray-800 shadow-sm hover:shadow-md transition-all cursor-pointer hover:border-primary/60"
           >
             <input
               type="checkbox"
@@ -1944,7 +1955,7 @@ const InteractivePreview = ({ votingMethod, options }: InteractivePreviewProps) 
             <span className="flex h-8 w-8 items-center justify-center rounded-full border-2 border-primary bg-primary/10 text-primary text-sm font-bold shrink-0 shadow-sm" aria-hidden>
               {index + 1}
             </span>
-            <span className="text-base font-semibold text-foreground flex-1">{option}</span>
+            <span className="text-base font-semibold text-gray-900 dark:text-gray-100 flex-1">{option}</span>
           </label>
         ))}
         {options.length === 0 && (
@@ -1960,7 +1971,7 @@ const InteractivePreview = ({ votingMethod, options }: InteractivePreviewProps) 
         {options.map((option, index) => (
           <label
             key={`preview-approval-${index}`}
-            className="flex items-center gap-3 p-4 rounded-lg border-2 border-border bg-card shadow-sm hover:shadow-md transition-all cursor-pointer hover:border-primary/60"
+            className="flex items-center gap-3 p-4 rounded-lg border-2 border-border bg-card dark:bg-gray-800 shadow-sm hover:shadow-md transition-all cursor-pointer hover:border-primary/60"
           >
             <input
               type="checkbox"
@@ -1977,7 +1988,7 @@ const InteractivePreview = ({ votingMethod, options }: InteractivePreviewProps) 
             <span className="flex h-8 w-8 items-center justify-center rounded-full border-2 border-primary bg-primary/10 text-primary text-sm font-bold shrink-0 shadow-sm" aria-hidden>
               {index + 1}
             </span>
-            <span className="text-base font-semibold text-foreground flex-1">{option}</span>
+            <span className="text-base font-semibold text-gray-900 dark:text-gray-100 flex-1">{option}</span>
           </label>
         ))}
         {options.length === 0 && (
@@ -1991,11 +2002,11 @@ const InteractivePreview = ({ votingMethod, options }: InteractivePreviewProps) 
   return (
     <div className="space-y-3">
       {options.map((option, index) => (
-        <div key={`preview-default-${index}`} className="flex items-center gap-3 p-4 rounded-lg border-2 border-border bg-card shadow-sm hover:shadow-md transition-shadow">
+        <div key={`preview-default-${index}`} className="flex items-center gap-3 p-4 rounded-lg border-2 border-border bg-card dark:bg-gray-800 shadow-sm hover:shadow-md transition-shadow">
           <span className="flex h-8 w-8 items-center justify-center rounded-full border-2 border-primary bg-primary/10 text-primary text-sm font-bold shrink-0 shadow-sm" aria-hidden>
             {index + 1}
           </span>
-          <span className="text-base font-semibold text-foreground">{option}</span>
+          <span className="text-base font-semibold text-gray-900 dark:text-gray-100">{option}</span>
         </div>
       ))}
       {options.length === 0 && (
