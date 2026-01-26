@@ -37,7 +37,6 @@ import {
   Info
 } from 'lucide-react';
 import React, { useCallback, useEffect, useRef, useState } from 'react';
-import { useShallow } from 'zustand/react/shallow';
 
 import { useProfileDelete, useProfileExport } from '@/features/profile/hooks/use-profile';
 
@@ -47,7 +46,10 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Switch } from '@/components/ui/switch';
 
 import { useUserActions } from '@/lib/stores';
-import { profileSelectors, useProfileStore } from '@/lib/stores/profileStore';
+import {
+  useProfilePrivacySettings,
+  useProfileActions,
+} from '@/lib/stores/profileStore';
 import { logger } from '@/lib/utils/logger';
 
 import type { PrivacySettings } from '@/types/profile';
@@ -92,15 +94,9 @@ export default function MyDataDashboard({
   const { deleteProfile } = useProfileDelete();
   const { signOut: resetUserStore } = useUserActions();
 
-  // CRITICAL FIX: Use useShallow for store subscriptions to prevent infinite render loops
-  // This ensures stable object references from Zustand stores
-  const storePrivacySettings = useProfileStore(
-    useShallow((state) => profileSelectors.privacySettings(state))
-  );
-
-  // Store actions in refs to prevent dependency issues in useCallback/useEffect
-  const updatePrivacySettingsAction = useProfileStore((state) => state.updatePrivacySettings);
-  const resetProfileState = useProfileStore((state) => state.resetProfile);
+  const storePrivacySettings = useProfilePrivacySettings();
+  const { updatePrivacySettings: updatePrivacySettingsAction, resetProfile: resetProfileState } =
+    useProfileActions();
 
   const updatePrivacySettingsActionRef = useRef(updatePrivacySettingsAction);
   const resetProfileStateRef = useRef(resetProfileState);

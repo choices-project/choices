@@ -19,7 +19,6 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 
-import { useUserStore } from '@/lib/stores/userStore';
 import logger from '@/lib/utils/logger';
 
 import { useI18n } from '@/hooks/useI18n';
@@ -58,6 +57,8 @@ export function PasskeyRegister({
   const isRegistering = useBiometricRegistering();
   const error = useBiometricError();
   const success = useBiometricSuccess();
+  const errorRef = React.useRef(error);
+  React.useEffect(() => { errorRef.current = error; }, [error]);
 
   const {
     setBiometricRegistering,
@@ -140,9 +141,7 @@ export function PasskeyRegister({
 
       onSuccess?.(result.data);
     } catch (err) {
-      // Set error state if not already set (for unexpected errors)
-      const currentError = useUserStore.getState().biometric.error;
-      if (!currentError) {
+      if (!errorRef.current) {
         const message = err instanceof Error ? err.message : 'Registration failed';
         setBiometricError(message);
         setBiometricSuccess(false);

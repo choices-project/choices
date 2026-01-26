@@ -25,23 +25,17 @@ jest.mock('@/lib/stores', () => ({
 }));
 
 const mockStoreState = {
-  privacySettings: null,
+  privacySettings: null as PrivacySettings | null,
   updatePrivacySettings: mockUpdatePrivacySettings,
   resetProfile: mockResetProfile,
 };
 
-const mockUseProfileStore = jest.fn((selector: any) => {
-  if (typeof selector === 'function') {
-    return selector(mockStoreState);
-  }
-  return mockStoreState;
-});
-
 jest.mock('@/lib/stores/profileStore', () => ({
-  profileSelectors: {
-    privacySettings: (state: typeof mockStoreState) => state.privacySettings,
-  },
-  useProfileStore: (selector: any) => mockUseProfileStore(selector),
+  useProfilePrivacySettings: () => mockStoreState.privacySettings,
+  useProfileActions: () => ({
+    updatePrivacySettings: mockStoreState.updatePrivacySettings,
+    resetProfile: mockStoreState.resetProfile,
+  }),
 }));
 
 const buildPrivacySettings = (overrides: Partial<PrivacySettings> = {}): PrivacySettings => ({

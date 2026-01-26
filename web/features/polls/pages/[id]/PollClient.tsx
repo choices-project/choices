@@ -14,7 +14,6 @@ import {
   type PollBallotContext,
 } from '@/features/voting/lib/pollAdapters';
 import { useVotingActions, useVotingError, useVotingIsVoting } from '@/features/voting/lib/store';
-import { useProfileDisplay } from '@/lib/stores/profileStore';
 
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import {
@@ -35,6 +34,7 @@ import { Switch } from '@/components/ui/switch';
 
 import { useNotificationActions } from '@/lib/stores';
 import { useAppActions } from '@/lib/stores/appStore';
+import { useProfileDisplay } from '@/lib/stores/profileStore';
 import { cn } from '@/lib/utils';
 import { logger } from '@/lib/utils/logger';
 

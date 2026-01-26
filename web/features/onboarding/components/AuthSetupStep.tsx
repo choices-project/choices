@@ -22,7 +22,7 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 
 
-import { useUserActions, useUserError, useUserLoading, useUserStore } from '@/lib/stores';
+import { useUserActions, useUserError, useUserLoading } from '@/lib/stores';
 import { logger } from '@/lib/utils/logger';
 
 import { useI18n } from '@/hooks/useI18n'
@@ -81,9 +81,13 @@ export default function AuthSetupStep({
 
   const userError = useUserError();
   const isLoading = useUserLoading();
-  const { setLoading, setError, clearError } = useUserActions();
-  const initializeAuth = useUserStore((state) => state.initializeAuth);
-  const setSessionAndDerived = useUserStore((state) => state.setSessionAndDerived);
+  const {
+    setLoading,
+    setError,
+    clearError,
+    initializeAuth,
+    setSessionAndDerived,
+  } = useUserActions();
 
   useEffect(() => {
     clearError();

@@ -831,6 +831,7 @@ export const useProfileDisplay = () => useProfileStore(
   useShallow((state) => ({
     displayName: state.getDisplayName(),
     initials: state.getInitials(),
+    trustTier: (state.profile ?? state.userProfile)?.trust_tier ?? 'T0',
     trustTierDisplay: state.getTrustTierDisplay(),
     isAdmin: state.isAdmin()
   }))
@@ -856,6 +857,8 @@ export const useProfileActions = () => useProfileStore(
     refreshProfile: state.refreshProfile,
     exportProfile: state.exportProfile,
     deleteProfile: state.deleteProfile,
+    resetProfile: state.resetProfile,
+    setUserProfile: state.setUserProfile,
     validateProfile: state.validateProfile,
     setValidationErrors: state.setValidationErrors,
     clearValidation: state.clearValidation
@@ -881,6 +884,9 @@ export const useProfilePrivacySettings = () =>
 
 export const useProfileLocation = () =>
   useProfileStore(profileSelectors.location);
+
+export const useProfileCurrentProfile = () =>
+  useProfileStore(profileSelectors.currentProfile);
 
 // Profile store utilities
 export const profileStoreUtils = {

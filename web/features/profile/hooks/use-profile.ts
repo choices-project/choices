@@ -8,11 +8,16 @@
 'use client';
 
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { useShallow } from 'zustand/react/shallow';
 
-import { useUserProfileEditData } from '@/lib/stores';
-import { profileSelectors, useProfileStore } from '@/lib/stores/profileStore';
-import { useUserStore } from '@/lib/stores/userStore';
+import { useUserProfileEditData, useUserActions } from '@/lib/stores';
+import {
+  useProfileActions,
+  useProfileCurrentProfile,
+  useProfileError,
+  useProfileLoading,
+  useProfileStats,
+  useProfileDisplay as useProfileDisplayStore,
+} from '@/lib/stores/profileStore';
 import logger from '@/lib/utils/logger';
 
 import type {
@@ -35,23 +40,11 @@ export const profileQueryKeys = {
 } as const;
 
 export function useProfile(): UseProfileReturn {
-  const {
-    currentProfile,
-    isProfileLoaded,
-    isProfileLoading,
-    error,
-    loadProfile,
-    refreshProfile,
-  } = useProfileStore(
-    useShallow((state) => ({
-      currentProfile: profileSelectors.currentProfile(state),
-      isProfileLoaded: state.isProfileLoaded,
-      isProfileLoading: state.isProfileLoading,
-      error: state.error,
-      loadProfile: state.loadProfile,
-      refreshProfile: state.refreshProfile,
-    })),
-  );
+  const currentProfile = useProfileCurrentProfile();
+  const { isProfileLoaded } = useProfileStats();
+  const { isLoading: isProfileLoading } = useProfileLoading();
+  const { error } = useProfileError();
+  const { loadProfile, refreshProfile } = useProfileActions();
 
   // CRITICAL: Use useState instead of useMemo to prevent hydration mismatch
   // Initialize to false, then check localStorage in useEffect after mount
@@ -120,13 +113,9 @@ export function useProfile(): UseProfileReturn {
 }
 
 export function useProfileUpdate(): UseProfileUpdateReturn {
-  const { updateProfile: updateProfileAction, isUpdating, error } = useProfileStore(
-    useShallow((state) => ({
-      updateProfile: state.updateProfile,
-      isUpdating: state.isUpdating,
-      error: state.error,
-    })),
-  );
+  const { updateProfile: updateProfileAction } = useProfileActions();
+  const { isUpdating } = useProfileLoading();
+  const { error } = useProfileError();
 
   // Use ref for store action to prevent infinite re-renders
   const updateProfileActionRef = useRef(updateProfileAction);
@@ -147,14 +136,9 @@ export function useProfileUpdate(): UseProfileUpdateReturn {
 }
 
 export function useProfileAvatar(): UseProfileAvatarReturn {
-  const { updateAvatar, removeAvatar, isUploadingAvatar, error } = useProfileStore(
-    useShallow((state) => ({
-      updateAvatar: state.updateAvatar,
-      removeAvatar: state.removeAvatar,
-      isUploadingAvatar: state.isUploadingAvatar,
-      error: state.error,
-    })),
-  );
+  const { updateAvatar, removeAvatar } = useProfileActions();
+  const { isUploadingAvatar } = useProfileLoading();
+  const { error } = useProfileError();
 
   // Use refs for store actions to prevent infinite re-renders
   const updateAvatarRef = useRef(updateAvatar);
@@ -169,12 +153,15 @@ export function useProfileAvatar(): UseProfileAvatarReturn {
     [],
   );
 
-  return useMemo(() => ({
-    uploadAvatar,
-    removeAvatar: removeAvatarRef.current,
-    isUploading: isUploadingAvatar,
-    error,
-  }), [uploadAvatar, isUploadingAvatar, error]);
+  return useMemo(
+    () => ({
+      uploadAvatar,
+      removeAvatar,
+      isUploading: isUploadingAvatar,
+      error,
+    }),
+    [uploadAvatar, removeAvatar, isUploadingAvatar, error],
+  );
 }
 
 export function useProfileDraft() {
@@ -182,15 +169,17 @@ export function useProfileDraft() {
 }
 
 export function useProfileDraftActions() {
-  const setProfileEditData = useUserStore((state) => state.setProfileEditData);
-  const updateProfileEditData = useUserStore((state) => state.updateProfileEditData);
-  const updateProfileField = useUserStore((state) => state.updateProfileField);
-  const updateArrayField = useUserStore((state) => state.updateArrayField);
-  const updatePrivacySetting = useUserStore((state) => state.updatePrivacySetting);
-  const setProfileEditing = useUserStore((state) => state.setProfileEditing);
-  const clearAllProfileEditErrors = useUserStore((state) => state.clearAllProfileEditErrors);
-  const setProfileEditError = useUserStore((state) => state.setProfileEditError);
-  const clearProfileEditError = useUserStore((state) => state.clearProfileEditError);
+  const {
+    setProfileEditData,
+    updateProfileEditData,
+    updateProfileField,
+    updateArrayField,
+    updatePrivacySetting,
+    setProfileEditing,
+    clearAllProfileEditErrors,
+    setProfileEditError,
+    clearProfileEditError,
+  } = useUserActions();
 
   return useMemo(
     () => ({
@@ -220,13 +209,9 @@ export function useProfileDraftActions() {
 }
 
 export function useProfileExport(): UseProfileExportReturn {
-  const { exportProfile: exportProfileAction, isExporting, error } = useProfileStore(
-    useShallow((state) => ({
-      exportProfile: state.exportProfile,
-      isExporting: state.isExporting,
-      error: state.error,
-    })),
-  );
+  const { exportProfile: exportProfileAction } = useProfileActions();
+  const { isExporting } = useProfileLoading();
+  const { error } = useProfileError();
 
   // Use ref for store action to prevent infinite re-renders
   const exportProfileActionRef = useRef(exportProfileAction);
@@ -255,13 +240,9 @@ export function useProfileExport(): UseProfileExportReturn {
 }
 
 export function useProfileDelete() {
-  const { deleteProfile: deleteProfileAction, isUpdating, error } = useProfileStore(
-    useShallow((state) => ({
-      deleteProfile: state.deleteProfile,
-      isUpdating: state.isUpdating,
-      error: state.error,
-    })),
-  );
+  const { deleteProfile: deleteProfileAction } = useProfileActions();
+  const { isUpdating } = useProfileLoading();
+  const { error } = useProfileError();
 
   // Use ref for store action to prevent infinite re-renders
   const deleteProfileActionRef = useRef(deleteProfileAction);
@@ -279,14 +260,12 @@ export function useProfileDelete() {
 }
 
 export function useProfileLoadingStates() {
-  const { isProfileLoading, isUpdating, isUploadingAvatar, isExporting } = useProfileStore(
-    useShallow((state) => ({
-      isProfileLoading: state.isProfileLoading,
-      isUpdating: state.isUpdating,
-      isUploadingAvatar: state.isUploadingAvatar,
-      isExporting: state.isExporting,
-    })),
-  );
+  const {
+    isLoading: isProfileLoading,
+    isUpdating,
+    isUploadingAvatar,
+    isExporting,
+  } = useProfileLoading();
 
   return useMemo(
     () => ({
@@ -301,7 +280,7 @@ export function useProfileLoadingStates() {
 }
 
 export function useProfileErrorStates() {
-  const error = useProfileStore((state) => state.error);
+  const { error } = useProfileError();
 
   return useMemo(
     () => ({
@@ -327,13 +306,11 @@ export function useProfileData() {
 }
 
 export function useProfileCompleteness() {
-  const { isComplete, missingFields, completionPercentage } = useProfileStore(
-    useShallow((state) => ({
-      isComplete: state.isProfileComplete,
-      missingFields: state.missingFields,
-      completionPercentage: state.profileCompleteness,
-    })),
-  );
+  const {
+    isProfileComplete: isComplete,
+    missingFields,
+    profileCompleteness: completionPercentage,
+  } = useProfileStats();
 
   return useMemo(
     () => ({
@@ -346,28 +323,7 @@ export function useProfileCompleteness() {
 }
 
 export function useProfileDisplay() {
-  // Use a single selector with useShallow to get all display-related data at once
-  // This reduces subscriptions from 5 to 1 and ensures stable object reference
-  const { displayName, initials, trustTier, trustTierDisplay, isAdmin } = useProfileStore(
-    useShallow((state) => ({
-      displayName: state.getDisplayName(),
-      initials: state.getInitials(),
-      trustTier: (state.profile ?? state.userProfile)?.trust_tier ?? 'T0',
-      trustTierDisplay: state.getTrustTierDisplay(),
-      isAdmin: state.isAdmin(),
-    })),
-  );
-
-  return useMemo(
-    () => ({
-      displayName,
-      initials,
-      trustTier,
-      trustTierDisplay,
-      isAdmin,
-    }),
-    [displayName, initials, trustTier, trustTierDisplay, isAdmin],
-  );
+  return useProfileDisplayStore();
 }
 
 

@@ -23,7 +23,6 @@ import {
   CheckCircle
 } from 'lucide-react';
 import { useEffect, useMemo, useRef, useState } from 'react';
-import { useShallow } from 'zustand/react/shallow';
 
 import { PROFILE_DEFAULTS } from '@/types/profile';
 
@@ -43,9 +42,15 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Switch } from '@/components/ui/switch';
 import { Textarea } from '@/components/ui/textarea';
 
-import { useUserAvatarFile, useUserAvatarPreview } from '@/lib/stores';
-import { profileSelectors, useProfileStore } from '@/lib/stores/profileStore';
-import { useUserStore } from '@/lib/stores/userStore';
+import {
+  useUserAvatarFile,
+  useUserAvatarPreview,
+  useUserActions,
+} from '@/lib/stores';
+import {
+  useProfileCurrentProfile,
+  useProfileActions,
+} from '@/lib/stores/profileStore';
 import type {
   ProfileEditDraft,
   ProfileEditErrorKey,
@@ -270,13 +275,8 @@ export default function ProfileEdit({
   const { uploadAvatar, isUploading: isUploadingAvatar } = useProfileAvatar();
   const { displayName, initials } = useProfileDisplay();
 
-  // CRITICAL FIX: Use useShallow for store subscriptions to prevent infinite render loops
-  const storeProfile = useProfileStore(
-    useShallow((state) => profileSelectors.currentProfile(state))
-  );
-
-  // Store actions in refs to prevent dependency issues
-  const setUserProfileInStore = useProfileStore((state) => state.setUserProfile);
+  const storeProfile = useProfileCurrentProfile();
+  const { setUserProfile: setUserProfileInStore } = useProfileActions();
   const setUserProfileInStoreRef = useRef(setUserProfileInStore);
 
   useEffect(() => {
@@ -300,9 +300,11 @@ export default function ProfileEdit({
 
   const avatarFile = useUserAvatarFile();
   const avatarPreview = useUserAvatarPreview();
-  const setAvatarFile = useUserStore((state) => state.setAvatarFile);
-  const setAvatarPreview = useUserStore((state) => state.setAvatarPreview);
-  const clearAvatar = useUserStore((state) => state.clearAvatar);
+  const {
+    setAvatarFile,
+    setAvatarPreview,
+    clearAvatar,
+  } = useUserActions();
 
   const lastProfileKeyRef = useRef<string | null>(null);
 

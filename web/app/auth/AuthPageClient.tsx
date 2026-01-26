@@ -10,7 +10,7 @@ import { getSupabaseBrowserClient } from '@/utils/supabase/client';
 import PasskeyControls from '@/features/auth/components/PasskeyControls';
 import { loginWithPassword, registerUser } from '@/features/auth/lib/api';
 import { getAvailableProviders } from '@/features/auth/lib/social-auth-config';
-import { useUserStore } from '@/features/auth/lib/store';
+import { useUserActions, useUserLoading, useUserError } from '@/features/auth/lib/store';
 
 import { EnhancedErrorDisplay } from '@/components/shared/EnhancedErrorDisplay';
 
@@ -39,17 +39,18 @@ export default function AuthPageClient() {
   const confirmPasswordRef = React.useRef<HTMLInputElement | null>(null);
   const formRef = React.useRef<HTMLFormElement | null>(null);
   const submitInFlightRef = React.useRef(false);
-  const [storeStatus, setStoreStatus] = useState({ isLoading: false, userError: null as string | null });
   const {
     setLoading: setAuthLoading,
     setError: setAuthError,
     clearError: clearAuthError,
     initializeAuth,
     setSessionAndDerived,
-  } = useUserStore.getState();
+  } = useUserActions();
+  const storeIsLoading = useUserLoading();
+  const storeUserError = useUserError();
 
-  const safeIsLoading = storeStatus.isLoading;
-  const safeUserError = storeStatus.userError;
+  const safeIsLoading = storeIsLoading;
+  const safeUserError = storeUserError ?? null;
   const safeMessage = message;
   const safeIsRateLimited = isRateLimited;
 
@@ -125,19 +126,6 @@ export default function AuthPageClient() {
     return () => clearTimeout(timer);
   }, []);
 
-  React.useEffect(() => {
-    const updateStatus = () => {
-      const { isLoading, error } = useUserStore.getState();
-      setStoreStatus({ isLoading, userError: error });
-    };
-
-    updateStatus();
-    const unsubscribe = useUserStore.subscribe(() => updateStatus());
-
-    return () => {
-      unsubscribe();
-    };
-  }, []);
 
   React.useEffect(() => {
     if (typeof window === 'undefined') {

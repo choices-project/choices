@@ -8,7 +8,7 @@ import { register as serverRegister } from '@/app/actions/register'
 import { getSupabaseBrowserClient } from '@/utils/supabase/client'
 
 import { PasskeyButton } from '@/features/auth/components/PasskeyButton'
-import { useUserStore } from '@/features/auth/lib/store'
+import { useUserActions } from '@/features/auth/lib/store'
 
 import { logger } from '@/lib/utils/logger'
 
@@ -19,10 +19,8 @@ export default function RegisterPage() {
   const [success, setSuccess] = React.useState(false)
   const [registrationMethod, setRegistrationMethod] = React.useState<'password' | 'passkey'>('passkey')
   const [hydrated, setHydrated] = React.useState(false)
-  const initializeAuth = useUserStore((state) => state.initializeAuth)
-  const setSessionAndDerived = useUserStore((state) => state.setSessionAndDerived)
+  const { initializeAuth, setSessionAndDerived } = useUserActions()
 
-  // Refs for stable store actions
   const initializeAuthRef = React.useRef(initializeAuth)
   React.useEffect(() => { initializeAuthRef.current = initializeAuth; }, [initializeAuth])
   const setSessionAndDerivedRef = React.useRef(setSessionAndDerived)
