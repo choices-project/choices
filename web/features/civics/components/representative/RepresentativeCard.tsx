@@ -321,7 +321,9 @@ export function RepresentativeCard({
               </Badge>
             </div>
             <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">
-              {displayRepresentative.state}
+              {displayRepresentative.office_city
+                ? `${displayRepresentative.office_city}, ${displayRepresentative.state}`
+                : displayRepresentative.state}
               {displayRepresentative.district &&
                 ` • ${t('civics.representatives.card.district', {
                   district: displayRepresentative.district,

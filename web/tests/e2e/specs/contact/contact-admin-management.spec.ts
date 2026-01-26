@@ -17,29 +17,41 @@
 import { test, expect } from '@playwright/test';
 
 import {
-  loginWithPassword,
   getE2EAdminCredentials,
   getE2EUserCredentials,
   waitForPageReady,
   ensureLoggedOut,
 } from '../../helpers/e2e-setup';
 
+/**
+ * Authenticate via API and set cookies for API tests
+ */
+async function authenticateViaAPI(page: any, email: string, password: string): Promise<void> {
+  const response = await page.request.post('/api/auth/login', {
+    data: {
+      email,
+      password,
+    },
+  });
+
+  if (response.status() !== 200) {
+    throw new Error(`Login failed with status ${response.status()}`);
+  }
+
+  await page.waitForTimeout(500);
+}
+
 test.describe('Contact Admin Management', () => {
   test.describe('Admin UI', () => {
     test.beforeEach(async ({ page }) => {
-      // Login as admin
+      // Login as admin via API
       const adminCreds = getE2EAdminCredentials();
       if (!adminCreds) {
         test.skip(true, 'Admin credentials not available');
         return;
       }
 
-      await loginWithPassword(page, adminCreds, {
-        path: '/auth',
-        timeoutMs: 30_000,
-      });
-
-      await page.waitForTimeout(2_000);
+      await authenticateViaAPI(page, adminCreds.email, adminCreds.password);
     });
 
     test('admin contact page loads without errors', async ({ page }) => {
@@ -68,33 +80,28 @@ test.describe('Contact Admin Management', () => {
     });
 
     test('admin contact page shows pending submissions', async ({ page }) => {
-      // First, create a submission as a regular user
-      const userCreds = getE2EUserCredentials();
-      if (userCreds) {
-        // Create submission via API (simulating user submission)
-        await ensureLoggedOut(page);
-        await loginWithPassword(page, userCreds, {
-          path: '/auth',
-          timeoutMs: 30_000,
-        });
-        await page.waitForTimeout(1_000);
+        // First, create a submission as a regular user
+        const userCreds = getE2EUserCredentials();
+        if (userCreds) {
+          // Create submission via API (simulating user submission)
+          await ensureLoggedOut(page);
+          await authenticateViaAPI(page, userCreds.email, userCreds.password);
 
-        await page.request.post('/api/contact/submit', {
-          data: {
-            representative_id: 1,
-            contact_type: 'email',
-            value: `admin-test-${Date.now()}@example.com`,
-          },
-        });
+          await page.request.post('/api/contact/submit', {
+            data: {
+              representative_id: 1,
+              contact_type: 'email',
+              value: `admin-test-${Date.now()}@example.com`,
+            },
+          });
 
-        // Switch back to admin
-        await ensureLoggedOut(page);
-        await loginWithPassword(page, getE2EAdminCredentials()!, {
-          path: '/auth',
-          timeoutMs: 30_000,
-        });
-        await page.waitForTimeout(2_000);
-      }
+          // Switch back to admin
+          await ensureLoggedOut(page);
+          const adminCreds = getE2EAdminCredentials();
+          if (adminCreds) {
+            await authenticateViaAPI(page, adminCreds.email, adminCreds.password);
+          }
+        }
 
       await page.goto('/admin/contact', { waitUntil: 'domcontentloaded', timeout: 30_000 });
       await waitForPageReady(page);
@@ -143,27 +150,19 @@ test.describe('Contact Admin Management', () => {
       const userContext = await browser.newContext();
       userPage = await userContext.newPage();
 
-      // Login as admin
+      // Login as admin via API
       const adminCreds = getE2EAdminCredentials();
       if (!adminCreds) {
         test.skip(true, 'Admin credentials not available');
         return;
       }
 
-      await loginWithPassword(adminPage, adminCreds, {
-        path: '/auth',
-        timeoutMs: 30_000,
-      });
-      await adminPage.waitForTimeout(2_000);
+      await authenticateViaAPI(adminPage, adminCreds.email, adminCreds.password);
 
-      // Login as user and create a submission
+      // Login as user and create a submission via API
       const userCreds = getE2EUserCredentials();
       if (userCreds) {
-        await loginWithPassword(userPage, userCreds, {
-          path: '/auth',
-          timeoutMs: 30_000,
-        });
-        await userPage.waitForTimeout(1_000);
+        await authenticateViaAPI(userPage, userCreds.email, userCreds.password);
 
         const response = await userPage.request.post('/api/contact/submit', {
           data: {
@@ -330,11 +329,7 @@ test.describe('Contact Admin Management', () => {
         return;
       }
 
-      await loginWithPassword(page, userCreds, {
-        path: '/auth',
-        timeoutMs: 30_000,
-      });
-      await page.waitForTimeout(2_000);
+      await authenticateViaAPI(page, userCreds.email, userCreds.password);
 
       const response = await page.request.get('/api/admin/contact/pending');
 

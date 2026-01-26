@@ -31,7 +31,11 @@ import DashboardNavigation, { MobileDashboardNav } from '@/components/shared/Das
 
 import { useUser } from '@/lib/stores';
 import { useAppActions } from '@/lib/stores/appStore';
-import { useProfileStore } from '@/lib/stores/profileStore';
+import {
+  useProfilePrivacySettings,
+  useProfileActions,
+  useProfileLoading,
+} from '@/lib/stores/profileStore';
 import { logger } from '@/lib/utils/logger';
 import { getDefaultPrivacySettings } from '@/lib/utils/privacy-guard';
 
@@ -40,9 +44,9 @@ import type { PrivacySettings } from '@/types/profile';
 export default function PrivacyPage() {
   const { profile, isLoading: profileLoading, error: profileError } = useProfileData();
   const user = useUser();
-  const privacySettingsFromStore = useProfileStore((state) => state.privacySettings);
-  const updatePrivacySettings = useProfileStore((state) => state.updatePrivacySettings);
-  const isUpdating = useProfileStore((state) => state.isUpdating);
+  const privacySettingsFromStore = useProfilePrivacySettings();
+  const { updatePrivacySettings } = useProfileActions();
+  const { isUpdating } = useProfileLoading();
   const draft = useProfileDraft();
   const { mergeDraft, setProfileEditing } = useProfileDraftActions();
   const { setCurrentRoute, setBreadcrumbs, setSidebarActiveSection } = useAppActions();

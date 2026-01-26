@@ -11,7 +11,7 @@
 
 import { useMemo } from 'react';
 
-import { profileSelectors, useProfileStore } from '@/lib/stores/profileStore';
+import { useProfileLocation } from '@/lib/stores/profileStore';
 
 import type { ProfileLocation } from '@/types/profile';
 
@@ -35,7 +35,7 @@ export type UserDistrict = {
  * }
  */
 export function useUserDistrict(): UserDistrict | null {
-  const location = useProfileStore(profileSelectors.location) as ProfileLocation | null;
+  const location = useProfileLocation() as ProfileLocation | null;
 
   // Memoize to prevent creating new object on every render
   return useMemo(() => {

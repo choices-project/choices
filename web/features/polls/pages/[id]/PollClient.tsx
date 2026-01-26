@@ -14,6 +14,7 @@ import {
   type PollBallotContext,
 } from '@/features/voting/lib/pollAdapters';
 import { useVotingActions, useVotingError, useVotingIsVoting } from '@/features/voting/lib/store';
+import { useProfileDisplay } from '@/lib/stores/profileStore';
 
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import {
@@ -34,7 +35,6 @@ import { Switch } from '@/components/ui/switch';
 
 import { useNotificationActions } from '@/lib/stores';
 import { useAppActions } from '@/lib/stores/appStore';
-import { useProfileStore } from '@/lib/stores/profileStore';
 import { cn } from '@/lib/utils';
 import { logger } from '@/lib/utils/logger';
 
@@ -115,7 +115,8 @@ export default function PollClient({ poll }: PollClientProps) {
   const { t } = useI18n();
   const { user, isLoading: authLoading } = useAuth();
   const router = useRouter();
-  const isAdmin = useProfileStore((s) => s.isAdmin?.() ?? false);
+  const { isAdmin } = useProfileDisplay();
+  const isAdminFlag = isAdmin ?? false;
   const { addNotification } = useNotificationActions();
   const { setCurrentRoute, setSidebarActiveSection, setBreadcrumbs } = useAppActions();
 
@@ -187,7 +188,7 @@ export default function PollClient({ poll }: PollClientProps) {
 
   const isPollCreator = Boolean(user?.id && poll.createdBy && String(user.id) === String(poll.createdBy));
   const pollStatus = localPollStatus ?? poll.status ?? 'active';
-  const canClosePoll = (isPollCreator || isAdmin) && pollStatus === 'active';
+  const canClosePoll = (isPollCreator || isAdminFlag) && pollStatus === 'active';
   const canVote = poll.canVote ?? (pollStatus === 'active');
 
   // Debug logging for close/delete button visibility and voting status
@@ -198,7 +199,7 @@ export default function PollClient({ poll }: PollClientProps) {
         userId: user?.id,
         pollCreatedBy: poll.createdBy,
         isPollCreator,
-        isAdmin,
+        isAdmin: isAdminFlag,
         pollStatus,
         canClosePoll,
         canVote,
@@ -208,7 +209,7 @@ export default function PollClient({ poll }: PollClientProps) {
         hasDeleteButton: isPollCreator,
       });
     }
-  }, [poll.id, user?.id, poll.createdBy, isPollCreator, isAdmin, pollStatus, canClosePoll, canVote, user, authLoading]);
+  }, [poll.id, user?.id, poll.createdBy, isPollCreator, isAdminFlag, pollStatus, canClosePoll, canVote, user, authLoading]);
 
   // Use refs for stable app store actions to prevent infinite re-renders
   const setCurrentRouteRef = useRef(setCurrentRoute);

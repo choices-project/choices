@@ -1,23 +1,26 @@
 #!/usr/bin/env node
 /**
- * Master script to sync all OpenStates data for representatives.
+ * Master script to sync all OpenStates data for STATE/LOCAL representatives.
+ * 
+ * NOTE: OpenStates only covers state and local representatives, NOT federal.
+ * Federal data comes from Congress.gov, FEC, and GovInfo.
  * 
  * Runs all sync operations in the correct order:
  * 1. Contacts (no API calls, from YAML)
  * 2. Social media (no API calls, from YAML)
  * 3. Photos (no API calls, from YAML)
  * 4. Data sources (no API calls, from YAML)
- * 5. Committees (no API calls, from YAML)
+ * 5. Committees (no API calls, from YAML - could enhance with API)
  * 6. Activity (uses OpenStates API - rate limited)
+ * 7. Events (uses OpenStates API - optional, can skip with --skip-events)
  * 
  * Usage:
- *   npm run openstates:sync:all [--states=CA,NY] [--limit=500] [--dry-run] [--skip-activity]
+ *   npm run openstates:sync:all [--states=CA,NY] [--limit=500] [--dry-run] [--skip-activity] [--skip-events]
  */
 
 import 'dotenv/config';
 
 import { collectActiveRepresentatives, type CollectOptions } from '../ingest/openstates/index.js';
-import { fetchFederalRepresentatives, type FetchFederalOptions } from '../ingest/supabase/representatives.js';
 import type { CanonicalRepresentative } from '../ingest/openstates/people.js';
 import { syncRepresentativeContacts } from '../persist/contacts.js';
 import { syncRepresentativeSocial } from '../persist/social.js';
@@ -32,7 +35,7 @@ type CliOptions = {
   limit?: number;
   dryRun?: boolean;
   skipActivity?: boolean;
-  includeFederalOnly?: boolean;
+  skipEvents?: boolean;
 };
 
 function parseArgs(): CliOptions {
@@ -66,8 +69,8 @@ function parseArgs(): CliOptions {
       case 'skip-activity':
         options.skipActivity = true;
         break;
-      case 'federal-only':
-        options.includeFederalOnly = true;
+      case 'skip-events':
+        options.skipEvents = true;
         break;
       default:
         break;
@@ -81,58 +84,23 @@ function parseArgs(): CliOptions {
   return options;
 }
 
-function dedupeRepresentatives(reps: CanonicalRepresentative[]): CanonicalRepresentative[] {
-  const seenIds = new Set<number>();
-  const fallbackKeys = new Set<string>();
-  const result: CanonicalRepresentative[] = [];
-
-  for (const rep of reps) {
-    const supabaseId = rep.supabaseRepresentativeId ?? undefined;
-    if (supabaseId && seenIds.has(supabaseId)) {
-      continue;
-    }
-    if (!supabaseId) {
-      if (fallbackKeys.has(rep.canonicalKey)) continue;
-      fallbackKeys.add(rep.canonicalKey);
-    } else {
-      seenIds.add(supabaseId);
-    }
-    result.push(rep);
-  }
-
-  return result;
-}
-
 async function loadRepresentatives(options: CliOptions): Promise<CanonicalRepresentative[]> {
-  const federalOptions: FetchFederalOptions = {};
+  // OpenStates only covers state/local representatives, not federal
+  const stateOptions: CollectOptions = {};
   if (options.states && options.states.length > 0) {
-    federalOptions.states = options.states;
+    stateOptions.states = options.states;
   }
-
-  const reps: CanonicalRepresentative[] = [];
-
-  const federalReps = await fetchFederalRepresentatives(federalOptions);
-  reps.push(...federalReps);
-
-  if (!options.includeFederalOnly) {
-    const stateOptions: CollectOptions = {};
-    if (options.states && options.states.length > 0) {
-      stateOptions.states = options.states;
-    }
-    if (typeof options.limit === 'number') {
-      stateOptions.limit = options.limit;
-    }
-
-    const stateReps = await collectActiveRepresentatives(stateOptions);
-    reps.push(...stateReps);
-  }
-
-  const deduped = dedupeRepresentatives(reps);
   if (typeof options.limit === 'number') {
-    return deduped.slice(0, options.limit);
+    stateOptions.limit = options.limit;
   }
 
-  return deduped;
+  const stateReps = await collectActiveRepresentatives(stateOptions);
+  
+  if (typeof options.limit === 'number') {
+    return stateReps.slice(0, options.limit);
+  }
+
+  return stateReps;
 }
 
 interface SyncResult {
@@ -281,7 +249,7 @@ async function main() {
   }
 
   console.log(
-    `\n🚀 Starting comprehensive OpenStates sync for ${eligible.length} representatives${
+    `\n🚀 Starting OpenStates sync for ${eligible.length} STATE/LOCAL representatives${
       options.states?.length ? ` in ${options.states.join(', ')}` : ''
     }${options.dryRun ? ' (DRY RUN)' : ''}...\n`,
   );
@@ -303,7 +271,6 @@ async function main() {
         states: options.states,
         limit: options.limit,
         dryRun: options.dryRun,
-        includeFederalOnly: options.includeFederalOnly,
       } as ActivitySyncOptions);
 
       results.push({
@@ -326,6 +293,14 @@ async function main() {
     }
   } else {
     console.log('\n⏭️  Skipping activity sync (--skip-activity flag set)');
+  }
+
+  // Events sync (requires OpenStates API - rate limited)
+  // Note: Events sync is separate script - can be run independently
+  // Skipping in sync-all to avoid complexity, but available via: npm run openstates:sync:events
+  if (!options.skipEvents) {
+    console.log('\n📅 Events sync available separately: npm run openstates:sync:events');
+    console.log('   (Skipping in sync-all to avoid rate limit issues - run separately if needed)');
   }
 
   // Summary

@@ -156,6 +156,40 @@ console.log(`Remaining: ${stats.remaining}/${stats.dailyLimit}`);
 - Throws errors for daily limit (allows scripts to stop gracefully)
 - Automatic retry for 429 errors with exponential backoff
 
+## Additional Functions
+
+### `fetchCommittees(options?)`
+
+Fetch committees for a jurisdiction.
+
+**Parameters:**
+- `options.jurisdiction` (string, optional): Jurisdiction filter
+- `options.chamber` (string, optional): Chamber filter (lower, upper)
+- `options.parent` (string, optional): Parent committee ID
+
+**Returns:** `Promise<OpenStatesCommittee[]>`
+
+### `fetchCommitteeDetails(committeeId)`
+
+Fetch detailed committee information by ID.
+
+**Parameters:**
+- `committeeId` (string): Committee ID
+
+**Returns:** `Promise<OpenStatesCommittee | null>`
+
+### `fetchEvents(options?)`
+
+Fetch legislative events (hearings, floor sessions, etc.).
+
+**Parameters:**
+- `options.jurisdiction` (string, optional): Jurisdiction filter
+- `options.startDate` (string, optional): Start date (YYYY-MM-DD)
+- `options.endDate` (string, optional): End date (YYYY-MM-DD)
+- `options.eventType` (string, optional): Event type filter
+
+**Returns:** `Promise<OpenStatesEvent[]>`
+
 ## Notes
 
 - API is rate-limited: 10,000 requests/day
@@ -163,7 +197,8 @@ console.log(`Remaining: ${stats.remaining}/${stats.dailyLimit}`);
 - Fallback method available when person ID missing (uses jurisdiction + query)
 - Daily counter resets every 24 hours
 - Request queue ensures serial execution to prevent rate limit issues
+- **OpenStates covers STATE/LOCAL only** - Federal data comes from GovInfo MCP
 
 ## Related
 
-See `GOVINFO_MCP.md` for information about the GovInfo MCP server, which provides document access capabilities beyond bill metadata.
+See `GOVINFO_MCP.md` for information about the GovInfo MCP server, which provides **federal** bill data. OpenStates API provides **state/local** bill data - they are complementary, not overlapping.

@@ -16,11 +16,28 @@
 import { test, expect } from '@playwright/test';
 
 import {
-  loginWithPassword,
   getE2EUserCredentials,
   getE2EAdminCredentials,
   ensureLoggedOut,
 } from '../../helpers/e2e-setup';
+
+/**
+ * Authenticate via API and set cookies for API tests
+ */
+async function authenticateViaAPI(page: any, email: string, password: string): Promise<void> {
+  const response = await page.request.post('/api/auth/login', {
+    data: {
+      email,
+      password,
+    },
+  });
+
+  if (response.status() !== 200) {
+    throw new Error(`Login failed with status ${response.status()}`);
+  }
+
+  await page.waitForTimeout(500);
+}
 
 test.describe('Contact System Edge Cases', () => {
   test.describe('Security', () => {
@@ -64,11 +81,7 @@ test.describe('Contact System Edge Cases', () => {
         return;
       }
 
-      await loginWithPassword(page, userCreds, {
-        path: '/auth',
-        timeoutMs: 30_000,
-      });
-      await page.waitForTimeout(2_000);
+      await authenticateViaAPI(page, userCreds.email, userCreds.password);
 
       const adminEndpoints = [
         { method: 'GET', url: '/api/admin/contact/pending' },
@@ -98,11 +111,7 @@ test.describe('Contact System Edge Cases', () => {
         return;
       }
 
-      await loginWithPassword(page, userCreds, {
-        path: '/auth',
-        timeoutMs: 30_000,
-      });
-      await page.waitForTimeout(2_000);
+      await authenticateViaAPI(page, userCreds.email, userCreds.password);
 
       const xssAttempts = [
         '<script>alert("xss")</script>',
@@ -139,11 +148,7 @@ test.describe('Contact System Edge Cases', () => {
         return;
       }
 
-      await loginWithPassword(page, userCreds, {
-        path: '/auth',
-        timeoutMs: 30_000,
-      });
-      await page.waitForTimeout(2_000);
+      await authenticateViaAPI(page, userCreds.email, userCreds.password);
 
       const sqlInjectionAttempts = [
         "'; DROP TABLE representative_contacts; --",
@@ -178,11 +183,7 @@ test.describe('Contact System Edge Cases', () => {
         return;
       }
 
-      await loginWithPassword(page, userCreds, {
-        path: '/auth',
-        timeoutMs: 30_000,
-      });
-      await page.waitForTimeout(2_000);
+      await authenticateViaAPI(page, userCreds.email, userCreds.password);
     });
 
     test('rejects extremely long email addresses', async ({ page }) => {
@@ -290,11 +291,7 @@ test.describe('Contact System Edge Cases', () => {
         return;
       }
 
-      await loginWithPassword(page, userCreds, {
-        path: '/auth',
-        timeoutMs: 30_000,
-      });
-      await page.waitForTimeout(2_000);
+      await authenticateViaAPI(page, userCreds.email, userCreds.password);
 
       // Create submission
       const submitResponse = await page.request.post('/api/contact/submit', {
@@ -319,11 +316,7 @@ test.describe('Contact System Edge Cases', () => {
         const adminContext = await page.context().browser()?.newContext();
         if (adminContext) {
           const adminPage = await adminContext.newPage();
-          await loginWithPassword(adminPage, adminCreds, {
-            path: '/auth',
-            timeoutMs: 30_000,
-          });
-          await adminPage.waitForTimeout(2_000);
+          await authenticateViaAPI(adminPage, adminCreds.email, adminCreds.password);
 
           await adminPage.request.post(`/api/admin/contact/${contactId}/approve`);
           await adminPage.close();
@@ -347,11 +340,7 @@ test.describe('Contact System Edge Cases', () => {
         return;
       }
 
-      await loginWithPassword(page, userCreds, {
-        path: '/auth',
-        timeoutMs: 30_000,
-      });
-      await page.waitForTimeout(2_000);
+      await authenticateViaAPI(page, userCreds.email, userCreds.password);
 
       // Create and approve submission (similar to above)
       const submitResponse = await page.request.post('/api/contact/submit', {
@@ -376,11 +365,7 @@ test.describe('Contact System Edge Cases', () => {
         const adminContext = await page.context().browser()?.newContext();
         if (adminContext) {
           const adminPage = await adminContext.newPage();
-          await loginWithPassword(adminPage, adminCreds, {
-            path: '/auth',
-            timeoutMs: 30_000,
-          });
-          await adminPage.waitForTimeout(2_000);
+          await authenticateViaAPI(adminPage, adminCreds.email, adminCreds.password);
 
           await adminPage.request.post(`/api/admin/contact/${contactId}/approve`);
           await adminPage.close();
@@ -401,11 +386,7 @@ test.describe('Contact System Edge Cases', () => {
         return;
       }
 
-      await loginWithPassword(page, userCreds, {
-        path: '/auth',
-        timeoutMs: 30_000,
-      });
-      await page.waitForTimeout(2_000);
+      await authenticateViaAPI(page, userCreds.email, userCreds.password);
 
       const nonExistentId = 999999;
 
@@ -428,11 +409,7 @@ test.describe('Contact System Edge Cases', () => {
         return;
       }
 
-      await loginWithPassword(page, userCreds, {
-        path: '/auth',
-        timeoutMs: 30_000,
-      });
-      await page.waitForTimeout(2_000);
+      await authenticateViaAPI(page, userCreds.email, userCreds.password);
 
       const invalidIds = ['not-a-number', 'abc', '-1', '0'];
 
@@ -449,11 +426,7 @@ test.describe('Contact System Edge Cases', () => {
         return;
       }
 
-      await loginWithPassword(page, userCreds, {
-        path: '/auth',
-        timeoutMs: 30_000,
-      });
-      await page.waitForTimeout(2_000);
+      await authenticateViaAPI(page, userCreds.email, userCreds.password);
 
       const invalidRepIds = [-1, 0, 999999, 'not-a-number'];
 
@@ -479,11 +452,7 @@ test.describe('Contact System Edge Cases', () => {
         return;
       }
 
-      await loginWithPassword(page, userCreds, {
-        path: '/auth',
-        timeoutMs: 30_000,
-      });
-      await page.waitForTimeout(2_000);
+      await authenticateViaAPI(page, userCreds.email, userCreds.password);
     });
 
     test('handles minimum valid email length', async ({ page }) => {

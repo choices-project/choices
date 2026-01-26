@@ -873,6 +873,15 @@ export const useProfileStats = () => useProfileStore(
   }))
 );
 
+export const useProfilePreferences = () =>
+  useProfileStore((state) => state.preferences);
+
+export const useProfilePrivacySettings = () =>
+  useProfileStore((state) => state.privacySettings);
+
+export const useProfileLocation = () =>
+  useProfileStore(profileSelectors.location);
+
 // Profile store utilities
 export const profileStoreUtils = {
   // Initialize profile store

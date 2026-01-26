@@ -1,0 +1,183 @@
+#!/usr/bin/env node
+/**
+ * Sync legislative events (hearings, floor sessions, etc.) from OpenStates API.
+ * 
+ * Usage:
+ *   npm run openstates:sync:events [--states=CA,NY] [--start-date=2024-01-01] [--end-date=2024-12-31] [--dry-run]
+ */
+import 'dotenv/config';
+
+import { fetchEvents, getOpenStatesUsageStats } from '../clients/openstates.js';
+import { deriveJurisdictionFilter } from '../enrich/state.js';
+import { collectActiveRepresentatives, type CollectOptions } from '../ingest/openstates/index.js';
+import { getSupabaseClient } from '../clients/supabase.js';
+
+type CliOptions = {
+  states?: string[];
+  startDate?: string;
+  endDate?: string;
+  dryRun?: boolean;
+};
+
+function parseArgs(): CliOptions {
+  const options: CliOptions = {};
+  const args = process.argv.slice(2);
+
+  for (let i = 0; i < args.length; i += 1) {
+    const arg = args[i];
+    if (!arg || !arg.startsWith('--')) continue;
+
+    const [flag, raw] = arg.includes('=') ? arg.slice(2).split('=') : [arg.slice(2), args[i + 1]];
+    const value = raw && !raw.startsWith('--') ? raw : undefined;
+
+    switch (flag) {
+      case 'states':
+        if (value) {
+          options.states = value
+            .split(',')
+            .map((state) => state.trim().toUpperCase())
+            .filter(Boolean);
+        }
+        break;
+      case 'start-date':
+        if (value) options.startDate = value;
+        break;
+      case 'end-date':
+        if (value) options.endDate = value;
+        break;
+      case 'dry-run':
+        options.dryRun = true;
+        break;
+      default:
+        break;
+    }
+
+    if (raw && !arg.includes('=')) {
+      i += 1;
+    }
+  }
+
+  return options;
+}
+
+async function main() {
+  const options = parseArgs();
+  
+  // Default to next 30 days if no dates provided
+  const today = new Date();
+  const endDate = options.endDate || new Date(today.getTime() + 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0];
+  const startDate = options.startDate || today.toISOString().split('T')[0];
+
+  console.log(
+    `\n📅 Syncing legislative events from ${startDate} to ${endDate}${
+      options.states?.length ? ` for ${options.states.join(', ')}` : ''
+    }${options.dryRun ? ' (DRY RUN)' : ''}...\n`,
+  );
+
+  // Check API usage
+  const stats = getOpenStatesUsageStats();
+  if (stats.remaining <= 0) {
+    console.warn(`OpenStates API daily limit reached (${stats.dailyRequests}/${stats.dailyLimit}). Cannot proceed.`);
+    return;
+  }
+
+  console.log(`API usage: ${stats.dailyRequests}/${stats.dailyLimit} (${stats.remaining} remaining)\n`);
+
+  const jurisdictions = new Set<string>();
+  
+  // If states specified, get jurisdictions
+  if (options.states && options.states.length > 0) {
+    const stateOptions: CollectOptions = { states: options.states };
+    const reps = await collectActiveRepresentatives(stateOptions);
+    for (const rep of reps) {
+      const jurisdiction = deriveJurisdictionFilter(rep);
+      if (jurisdiction) {
+        jurisdictions.add(jurisdiction);
+      }
+    }
+  }
+
+  let totalEvents = 0;
+  let totalStored = 0;
+
+  // Fetch events for each jurisdiction
+  for (const jurisdiction of jurisdictions.size > 0 ? Array.from(jurisdictions) : [undefined]) {
+    try {
+      const events = await fetchEvents({
+        jurisdiction,
+        startDate,
+        endDate,
+      });
+
+      totalEvents += events.length;
+
+      if (options.dryRun) {
+        console.log(`[dry-run] Would store ${events.length} events for ${jurisdiction || 'all jurisdictions'}`);
+        continue;
+      }
+
+      // Store events in representative_activity table
+      const client = getSupabaseClient();
+      const timestamp = new Date().toISOString();
+
+      for (const event of events) {
+        // Find participants who are representatives
+        const participants = event.participants || [];
+        for (const participant of participants) {
+          if (!participant.person?.id) continue;
+
+          // Find representative by openstates_id
+          const { data: rep } = await client
+            .from('representatives_core')
+            .select('id')
+            .eq('openstates_id', participant.person.id)
+            .eq('status', 'active')
+            .limit(1)
+            .single();
+
+          if (!rep) continue;
+
+          // Store as activity
+          const { error } = await client.from('representative_activity').upsert({
+            representative_id: rep.id,
+            type: 'event',
+            title: event.name,
+            description: event.description || null,
+            date: event.start_date || null,
+            source: 'openstates',
+            source_url: event.id ? `https://openstates.org/events/${event.id}` : null,
+            url: event.id ? `https://openstates.org/events/${event.id}` : null,
+            metadata: {
+              openstates_event_id: event.id,
+              event_type: event.extras?.event_type || null,
+              location: event.location || null,
+              participant_role: participant.role || null,
+              agenda: event.agenda || null,
+            },
+            created_at: timestamp,
+            updated_at: timestamp,
+          }, {
+            onConflict: 'representative_id,type,date,source',
+          });
+
+          if (!error) {
+            totalStored += 1;
+          }
+        }
+      }
+    } catch (error) {
+      console.error(`Failed to fetch events for ${jurisdiction || 'all'}:`, (error as Error).message);
+    }
+  }
+
+  const finalStats = getOpenStatesUsageStats();
+  console.log(`\n✅ Events sync complete.`);
+  console.log(`   Events fetched: ${totalEvents}`);
+  console.log(`   Events stored: ${totalStored}`);
+  console.log(`   Final API usage: ${finalStats.dailyRequests}/${finalStats.dailyLimit} (${finalStats.remaining} remaining)\n`);
+}
+
+main().catch((error) => {
+  console.error('Events sync failed:', error);
+  process.exit(1);
+});

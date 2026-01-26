@@ -24,8 +24,12 @@ export type SuperiorRepresentativeData = {
   state: string;
   party: string;
   district?: string;
+  /** Office city from primary address (display on cards). */
+  office_city?: string;
+  /** Office ZIP from primary address (data only, not shown on cards). */
+  office_zip?: string;
   openstatesId?: string;
-  
+
   // External identifiers
   bioguide_id?: string;
   fec_id?: string;

@@ -21,7 +21,11 @@ import { Button } from '@/components/ui/button';
 
 import { useIsAuthenticated, useUserLoading, useUserStore } from '@/lib/stores';
 import { useAppActions } from '@/lib/stores/appStore';
-import { profileSelectors, useProfileStore } from '@/lib/stores/profileStore';
+import {
+  profileSelectors,
+  useProfileDisplay,
+  useProfileStore,
+} from '@/lib/stores/profileStore';
 import { logger } from '@/lib/utils/logger';
 
 import { useAuth } from '@/hooks/useAuth';
@@ -339,7 +343,7 @@ export default function DashboardContent() {
 
   const [isCheckingAdmin, setIsCheckingAdmin] = useState(false);
   const adminCheckRef = useRef<boolean>(false);
-  const isAdmin = useProfileStore(profileSelectors.isAdmin);
+  const { isAdmin } = useProfileDisplay();
   const authRetryTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const [hasCookies, setHasCookies] = useState<boolean | null>(null); // null = checking, true = has cookies, false = no cookies
   const cookieCheckRef = useRef<Promise<boolean> | null>(null);

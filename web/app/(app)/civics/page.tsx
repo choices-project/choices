@@ -105,25 +105,50 @@ export default function Civics2Page() {
   const debouncedSearchQuery = useDebounce(searchQuery, 300);
   const [selectedState, setSelectedState] = useState<string>('CA');
   const [selectedLevel, setSelectedLevel] = useState<'all' | 'federal' | 'state' | 'local'>('all');
+  const [selectedCity, setSelectedCity] = useState<string>('');
+  const [selectedZip, setSelectedZip] = useState<string>('');
+  const debouncedCity = useDebounce(selectedCity, 400);
+  const debouncedZip = useDebounce(selectedZip, 400);
   const [_followedRepresentatives, setFollowedRepresentatives] = useState<Set<string>>(new Set());
   const [cardVariant, setCardVariant] = useState<'default' | 'compact' | 'detailed'>('default');
 
+  const PAGE_SIZE = 20;
+
   // Data state (local for now due to type mismatch)
   const [representatives, setRepresentatives] = useState<SuperiorRepresentativeData[]>([]);
+  const [total, setTotal] = useState(0);
+  const [hasMore, setHasMore] = useState(false);
   const isMobile = useIsMobile();
   const { setCurrentRoute, setSidebarActiveSection, setBreadcrumbs } = useAppActions();
   const [isLoading, setIsLoading] = useState(true);
+  const [isLoadingMore, setIsLoadingMore] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
-  const loadRepresentatives = useCallback(async () => {
-    setIsLoading(true);
-    setErrorMessage(null);
-    logger.info('🔄 Loading representatives...', { state: selectedState, level: selectedLevel });
+  const representativesLengthRef = React.useRef(0);
+  representativesLengthRef.current = representatives.length;
+
+  const loadRepresentatives = useCallback(async (append: boolean) => {
+    if (append) {
+      setIsLoadingMore(true);
+    } else {
+      setIsLoading(true);
+      setErrorMessage(null);
+      setRepresentatives([]);
+    }
+    logger.info('🔄 Loading representatives...', {
+      state: selectedState,
+      level: selectedLevel,
+      city: debouncedCity || undefined,
+      zip: debouncedZip || undefined,
+      append
+    });
 
     try {
+      const offset = append ? representativesLengthRef.current : 0;
       const params = new URLSearchParams({
         state: selectedState,
-        limit: '20',
+        limit: String(PAGE_SIZE),
+        offset: String(offset),
         include: 'photos,divisions',
         fields: [
           'id',
@@ -132,6 +157,8 @@ export default function Civics2Page() {
           'level',
           'state',
           'district',
+          'office_city',
+          'office_zip',
           'party',
           'primary_email',
           'primary_phone',
@@ -147,6 +174,12 @@ export default function Civics2Page() {
       });
       if (selectedLevel !== 'all') {
         params.set('level', selectedLevel);
+      }
+      if (debouncedCity.trim()) {
+        params.set('city', debouncedCity.trim());
+      }
+      if (debouncedZip.trim()) {
+        params.set('zip', debouncedZip.trim().replace(/\D/g, '').slice(0, 5));
       }
       const response = await fetch(`/api/representatives?${params.toString()}`);
       logger.info('📡 Response status', { status: response.status });
@@ -181,13 +214,17 @@ export default function Civics2Page() {
       const apiRepresentatives: Representative[] = Array.isArray(data?.data?.representatives)
         ? data.data.representatives
         : [];
-      
-      logger.info('📊 Received representatives from API', { 
+      const resTotal = typeof data?.data?.total === 'number' ? data.data.total : apiRepresentatives.length;
+      const resHasMore = Boolean(data?.data?.hasMore);
+
+      logger.info('📊 Received representatives from API', {
         count: apiRepresentatives.length,
+        total: resTotal,
+        hasMore: resHasMore,
         hasData: data?.data != null,
         hasRepresentatives: Array.isArray(data?.data?.representatives)
       });
-      
+
       const mapped = apiRepresentatives.map((rep) => {
         const photoUrl =
           rep.primary_photo_url ??
@@ -251,6 +288,12 @@ export default function Civics2Page() {
         if (rep.district) {
           mapped.district = rep.district;
         }
+        if (rep.office_city) {
+          mapped.office_city = rep.office_city;
+        }
+        if (rep.office_zip) {
+          mapped.office_zip = rep.office_zip;
+        }
 
         if (photoUrl) {
           mapped.photoUrl = photoUrl;
@@ -262,9 +305,15 @@ export default function Civics2Page() {
 
         return mapped;
       });
-      logger.info('📊 Setting representatives:', mapped.length);
-      setRepresentatives(mapped);
-      logger.info('🎯 Representatives state updated');
+
+      setTotal(resTotal);
+      setHasMore(resHasMore);
+      if (append) {
+        setRepresentatives((prev) => [...prev, ...mapped]);
+      } else {
+        setRepresentatives(mapped);
+      }
+      logger.info('📊 Representatives updated', { count: mapped.length, append, total: resTotal, hasMore: resHasMore });
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : String(error);
       logger.error('❌ Error loading representatives:', { 
@@ -283,13 +332,17 @@ export default function Civics2Page() {
         setErrorMessage('We could not load representatives right now. Please try again.');
       }
     } finally {
-      setIsLoading(false);
+      if (append) {
+        setIsLoadingMore(false);
+      } else {
+        setIsLoading(false);
+      }
     }
-  }, [selectedState, selectedLevel]);
+  }, [selectedState, selectedLevel, debouncedCity, debouncedZip]);
 
-  // Load representatives on component mount
+  // Load representatives on mount and when filters change
   useEffect(() => {
-    loadRepresentatives();
+    loadRepresentatives(false);
   }, [loadRepresentatives]);
 
   useEffect(() => {
@@ -336,16 +389,16 @@ export default function Civics2Page() {
     logger.info('Contacting representative', { id, type });
   };
 
-  // Filter representatives - API already filters by state/level, so only filter by search query client-side
+  // Filter representatives - API already filters by state/level/city/zip, so only filter by search query client-side
   const filteredRepresentatives = useMemo(() => {
     return representatives.filter(rep => {
-      // API already filtered by state and level, so we only need to filter by search query
       if (!debouncedSearchQuery) return true;
       const query = debouncedSearchQuery.toLowerCase();
       return rep.name.toLowerCase().includes(query) ||
              (rep.office ?? '').toLowerCase().includes(query) ||
              (rep.party ?? '').toLowerCase().includes(query) ||
-             (rep.district ?? '').toLowerCase().includes(query);
+             (rep.district ?? '').toLowerCase().includes(query) ||
+             (rep.office_city ?? '').toLowerCase().includes(query);
     });
   }, [representatives, debouncedSearchQuery]);
 
@@ -474,8 +527,9 @@ export default function Civics2Page() {
                     onChange={(e) => {
                       const newState = e.target.value;
                       setSelectedState(newState);
+                      setSelectedCity('');
+                      setSelectedZip('');
                       setIsLoading(true);
-                      // loadRepresentatives will be called via useEffect when selectedState changes
                     }}
                     disabled={isLoading}
                   >
@@ -499,7 +553,6 @@ export default function Civics2Page() {
                       const newLevel = e.target.value as 'all' | 'federal' | 'state' | 'local';
                       setSelectedLevel(newLevel);
                       setIsLoading(true);
-                      // loadRepresentatives will be called via useEffect when selectedLevel changes
                     }}
                   >
                     <option value="all">All Levels</option>
@@ -507,6 +560,39 @@ export default function Civics2Page() {
                     <option value="state">State</option>
                     <option value="local">Local</option>
                   </select>
+                </div>
+                <div className="sm:w-36">
+                  <label className="sr-only" htmlFor="civics-city-filter">
+                    Filter by office city
+                  </label>
+                  <input
+                    id="civics-city-filter"
+                    type="text"
+                    placeholder="City"
+                    aria-label="Filter by office city"
+                    className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 placeholder-gray-500 dark:placeholder-gray-400 focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 focus:border-transparent"
+                    value={selectedCity}
+                    onChange={(e) => setSelectedCity(e.target.value)}
+                  />
+                </div>
+                <div className="sm:w-28">
+                  <label className="sr-only" htmlFor="civics-zip-filter">
+                    Filter by ZIP
+                  </label>
+                  <input
+                    id="civics-zip-filter"
+                    type="text"
+                    inputMode="numeric"
+                    placeholder="ZIP"
+                    aria-label="Filter by ZIP code"
+                    maxLength={5}
+                    className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 placeholder-gray-500 dark:placeholder-gray-400 focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 focus:border-transparent"
+                    value={selectedZip}
+                    onChange={(e) => {
+                      const v = e.target.value.replace(/\D/g, '').slice(0, 5);
+                      setSelectedZip(v);
+                    }}
+                  />
                 </div>
                 <div className="sm:w-32">
                   <label className="sr-only" htmlFor="civics-card-variant">
@@ -542,7 +628,7 @@ export default function Civics2Page() {
                   <p className="text-sm text-red-600 dark:text-red-400 mb-4">{errorMessage}</p>
                   <button
                     type="button"
-                    onClick={() => void loadRepresentatives()}
+                    onClick={() => void loadRepresentatives(false)}
                     className="bg-red-600 dark:bg-red-700 text-white px-4 py-2 rounded-lg hover:bg-red-700 dark:hover:bg-red-600 transition-colors"
                   >
                     Try again
@@ -569,7 +655,7 @@ export default function Civics2Page() {
                     </button>
                     <button
                       type="button"
-                      onClick={() => void loadRepresentatives()}
+                      onClick={() => void loadRepresentatives(false)}
                       className="bg-blue-600 dark:bg-blue-700 text-white px-6 py-2 rounded-lg hover:bg-blue-700 dark:hover:bg-blue-600 transition-colors"
                     >
                       Try again
@@ -581,12 +667,17 @@ export default function Civics2Page() {
               <div className="space-y-8">
                 {/* Results Header */}
                 <div className="text-center">
-                  <h2 className="text-2xl font-bold text-gray-900 mb-2">
+                  <h2 className="text-2xl font-bold text-gray-900 dark:text-gray-100 mb-2">
                     Your {selectedStateName} Representatives
                   </h2>
-                  <p className="text-gray-600">
+                  <p className="text-gray-600 dark:text-gray-400">
                     Current elected officials serving your community
                   </p>
+                  {total > 0 && (
+                    <p className="text-sm text-gray-500 dark:text-gray-500 mt-1" role="status">
+                      Showing {representatives.length} of {total} representatives
+                    </p>
+                  )}
                 </div>
 
                 {/* Superior Representative Feed */}
@@ -617,6 +708,8 @@ export default function Civics2Page() {
                     updated_at: new Date().toISOString(),
                     last_verified: representative.lastVerified ?? new Date().toISOString(),
                     ...(representative.district ? { district: representative.district } : {}),
+                    ...(representative.office_city ? { office_city: representative.office_city } : {}),
+                    ...(representative.office_zip ? { office_zip: representative.office_zip } : {}),
                     primary_email: representative.enhancedContacts?.find(c => c.type === 'email')?.value ?? '',
                     primary_phone: representative.enhancedContacts?.find(c => c.type === 'phone')?.value ?? '',
                     primary_website: representative.enhancedContacts?.find(c => c.type === 'website')?.value ?? '',
@@ -639,6 +732,21 @@ export default function Civics2Page() {
                   );
                 })}
               </div>
+
+                  {/* Load more */}
+                  {hasMore && !isLoading && (
+                    <div className="flex justify-center pt-4">
+                      <button
+                        type="button"
+                        onClick={() => void loadRepresentatives(true)}
+                        disabled={isLoadingMore}
+                        className="px-6 py-3 rounded-lg bg-blue-600 dark:bg-blue-700 text-white font-medium hover:bg-blue-700 dark:hover:bg-blue-600 disabled:opacity-60 disabled:cursor-not-allowed transition-colors"
+                        data-testid="civics-load-more"
+                      >
+                        {isLoadingMore ? 'Loading...' : 'Load more'}
+                      </button>
+                    </div>
+                  )}
                 </div>
               </div>
             )}

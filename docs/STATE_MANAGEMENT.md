@@ -135,6 +135,8 @@ const persistConfig = {
 - Keep payloads small (< 10KB) for performance
 - Test persistence/restoration in both unit tests and E2E harnesses
 
+Store-level tracking (which stores persist, creator patterns, consumer alignment): see `scratch/storeModernization/README.md`.
+
 ---
 
 ## Action Hooks vs. Raw State Access

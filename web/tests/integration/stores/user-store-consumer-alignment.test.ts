@@ -8,6 +8,7 @@
  */
 
 import { describe, it, expect } from '@jest/globals';
+import { renderHook } from '@testing-library/react';
 
 import {
   useUser,
@@ -37,9 +38,9 @@ describe('User Store Consumer Alignment', () => {
   });
 
   it('verifies store provides action hooks', () => {
-    const actions = useUserActions();
-    
-    // Verify action hooks return actions
+    const { result } = renderHook(() => useUserActions());
+    const actions = result.current;
+
     expect(actions).toBeDefined();
     expect(typeof actions.updateProfile).toBe('function');
     expect(typeof actions.signOut).toBe('function');

@@ -1,9 +1,12 @@
 /**
  * Lightweight OpenStates API client used for live state-level enrichment
- * (recent bills, committee updates, etc.). This client is intentionally
+ * (recent bills, committee updates, legislative events, etc.). This client is intentionally
  * separate from the YAML ingest helpers so we can clearly distinguish between
  * static "people" data sourced from the vendored archive and dynamic data
  * fetched from the V3 REST API.
+ * 
+ * NOTE: OpenStates API covers STATE/LOCAL representatives only, NOT federal.
+ * Federal data comes from Congress.gov, FEC, and GovInfo.
  */
 
 const OPENSTATES_API_BASE =
@@ -56,6 +59,43 @@ export interface OpenStatesBill {
   openstates_url?: string | null;
   votes?: OpenStatesBillVoteEvent[] | null;
   sponsorships?: OpenStatesBillSponsorship[] | null;
+}
+
+/** Committee from OpenStates API */
+export interface OpenStatesCommittee {
+  id: string;
+  name: string;
+  chamber?: string | null;
+  jurisdiction?: { id?: string | null; name?: string | null } | null;
+  parent?: { id?: string | null; name?: string | null } | null;
+  memberships?: Array<{
+    person?: { id?: string | null; name?: string | null } | null;
+    role?: string | null;
+    start_date?: string | null;
+    end_date?: string | null;
+  }> | null;
+  extras?: Record<string, unknown> | null;
+}
+
+/** Legislative event from OpenStates API */
+export interface OpenStatesEvent {
+  id: string;
+  name: string;
+  description?: string | null;
+  start_date?: string | null;
+  end_date?: string | null;
+  location?: string | null;
+  jurisdiction?: { id?: string | null; name?: string | null } | null;
+  participants?: Array<{
+    person?: { id?: string | null; name?: string | null } | null;
+    role?: string | null;
+  }> | null;
+  agenda?: Array<{
+    description?: string | null;
+    order?: number | null;
+    related_entities?: unknown[] | null;
+  }> | null;
+  extras?: Record<string, unknown> | null;
 }
 
 let warnedForMissingApiKey = false;
@@ -361,6 +401,107 @@ export function getOpenStatesUsageStats(): {
     resetAt: new Date(dailyRequestResetAt),
     consecutive429Errors,
   };
+}
+
+export interface FetchCommitteesOptions {
+  jurisdiction?: string;
+  chamber?: string;
+  parent?: string;
+}
+
+/**
+ * Fetch committees for a jurisdiction using OpenStates API.
+ * 
+ * @param options.jurisdiction Optional jurisdiction filter (e.g. ocd-jurisdiction/country:us/state:ca)
+ * @param options.chamber Optional chamber filter (lower, upper)
+ * @param options.parent Optional parent committee ID
+ */
+export async function fetchCommittees(
+  options: FetchCommitteesOptions = {},
+): Promise<OpenStatesCommittee[]> {
+  const { jurisdiction, chamber, parent } = options;
+
+  // Check daily limit
+  const { canProceed } = checkDailyLimit();
+  if (!canProceed) {
+    console.warn('OpenStates API daily limit reached. Skipping committee fetch.');
+    return [];
+  }
+
+  try {
+    const params: Record<string, string | undefined> = {};
+    if (jurisdiction) params.jurisdiction = jurisdiction;
+    if (chamber) params.chamber = chamber;
+    if (parent) params.parent = parent;
+
+    const committees = await fetchFromOpenStates<OpenStatesCommittee>('/committees', params);
+    return committees;
+  } catch (error) {
+    console.warn('Unable to fetch OpenStates committees:', (error as Error).message);
+    return [];
+  }
+}
+
+/**
+ * Fetch committee details by ID.
+ */
+export async function fetchCommitteeDetails(committeeId: string): Promise<OpenStatesCommittee | null> {
+  // Check daily limit
+  const { canProceed } = checkDailyLimit();
+  if (!canProceed) {
+    console.warn('OpenStates API daily limit reached. Skipping committee details fetch.');
+    return null;
+  }
+
+  try {
+    const committees = await fetchFromOpenStates<OpenStatesCommittee>(`/committees/${committeeId}`, {});
+    return committees[0] || null;
+  } catch (error) {
+    console.warn(`Unable to fetch OpenStates committee ${committeeId}:`, (error as Error).message);
+    return null;
+  }
+}
+
+export interface FetchEventsOptions {
+  jurisdiction?: string;
+  startDate?: string; // YYYY-MM-DD
+  endDate?: string; // YYYY-MM-DD
+  eventType?: string;
+}
+
+/**
+ * Fetch legislative events (hearings, floor sessions, etc.) using OpenStates API.
+ * 
+ * @param options.jurisdiction Optional jurisdiction filter
+ * @param options.startDate Optional start date (YYYY-MM-DD)
+ * @param options.endDate Optional end date (YYYY-MM-DD)
+ * @param options.eventType Optional event type filter
+ */
+export async function fetchEvents(
+  options: FetchEventsOptions = {},
+): Promise<OpenStatesEvent[]> {
+  const { jurisdiction, startDate, endDate, eventType } = options;
+
+  // Check daily limit
+  const { canProceed } = checkDailyLimit();
+  if (!canProceed) {
+    console.warn('OpenStates API daily limit reached. Skipping events fetch.');
+    return [];
+  }
+
+  try {
+    const params: Record<string, string | undefined> = {};
+    if (jurisdiction) params.jurisdiction = jurisdiction;
+    if (startDate) params.start = startDate;
+    if (endDate) params.end = endDate;
+    if (eventType) params.event_type = eventType;
+
+    const events = await fetchFromOpenStates<OpenStatesEvent>('/events', params);
+    return events;
+  } catch (error) {
+    console.warn('Unable to fetch OpenStates events:', (error as Error).message);
+    return [];
+  }
 }
 
 

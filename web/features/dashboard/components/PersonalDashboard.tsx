@@ -43,7 +43,10 @@ import {
 } from '@/lib/stores';
 import type { AnalyticsEvent } from '@/lib/stores/analyticsStore';
 import { useHashtagActions } from '@/lib/stores/hashtagStore';
-import { useProfileStore } from '@/lib/stores/profileStore';
+import {
+  useProfilePreferences,
+  useProfileActions,
+} from '@/lib/stores/profileStore';
 import {
   useGetUserRepresentatives,
   useRepresentativeStore,
@@ -89,16 +92,10 @@ function StandardPersonalDashboard({ userId: _fallbackUserId }: PersonalDashboar
   // CRITICAL: Stable empty array reference to prevent infinite loops
   // Defined as module-level constant to ensure same reference across all renders and instances
 
-  // CRITICAL FIX: Use useShallow for store subscription to prevent new object references
-  // This was the root cause - without useShallow, this creates a new object every render
   const profilePreferencesRef = useRef<unknown>(null);
 
-  const { preferences: profilePreferences, updatePreferences } = useProfileStore(
-    useShallow((state) => ({
-      preferences: state.preferences,
-      updatePreferences: state.updatePreferences,
-    })),
-  );
+  const profilePreferences = useProfilePreferences();
+  const { updatePreferences } = useProfileActions();
 
   // Track store subscription changes (for ref update only, no logging needed)
   const preferencesChanged = profilePreferences !== profilePreferencesRef.current;

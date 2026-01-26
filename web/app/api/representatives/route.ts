@@ -14,7 +14,9 @@ import { getSupabaseServerClient } from '@/utils/supabase/server';
 
 import { withErrorHandling, successResponse, errorResponse } from '@/lib/api';
 import { apiRateLimiter } from '@/lib/rate-limiting/api-rate-limiter';
+import { CivicsCache } from '@/lib/utils/civics-cache';
 import logger from '@/lib/utils/logger';
+import { parseOfficeCityZip } from '@/lib/utils/parse-office-address';
 
 import type { NextRequest } from 'next/server';
 
@@ -138,8 +140,40 @@ export const GET = withErrorHandling(async (request: NextRequest) => {
   }
 
   // Support filtering by OCD division ID (from Google API lookup)
-  const ocdDivisionId = searchParams.get('ocd_division_id') || searchParams.get('division_id');
+  let ocdDivisionId = searchParams.get('ocd_division_id') || searchParams.get('division_id');
   const district = searchParams.get('district');
+  const cityParam = searchParams.get('city')?.trim() || null;
+  const zipParam = searchParams.get('zip')?.trim() || null;
+
+  if (cityParam && !state) {
+    return errorResponse(
+      'state is required when filtering by city (e.g. ?city=Annapolis&state=MD)',
+      400,
+      { suggestion: 'Add state to your query.' },
+      'VALIDATION_ERROR'
+    );
+  }
+
+  // ?zip= → resolve via zip_to_ocd → ocd_division_id (table may not be in generated types)
+  if (zipParam && !ocdDivisionId) {
+    const zip5 = zipParam.replace(/\D/g, '').slice(0, 5);
+    if (zip5.length === 5) {
+      try {
+        const { data: zipRow, error: zipErr } = await (supabase as any)
+          .from('zip_to_ocd')
+          .select('ocd_division_id')
+          .eq('zip5', zip5)
+          .order('confidence', { ascending: false })
+          .limit(1)
+          .maybeSingle();
+        if (!zipErr && zipRow?.ocd_division_id) {
+          ocdDivisionId = zipRow.ocd_division_id as string;
+        }
+      } catch (e) {
+        logger.warn('ZIP lookup failed', { zip: zip5, error: e instanceof Error ? e.message : String(e) });
+      }
+    }
+  }
 
   // Support sorting parameter (Issue #5)
   const sortBy = searchParams.get('sort_by') || 'data_quality_score'; // default: quality score
@@ -218,9 +252,8 @@ export const GET = withErrorHandling(async (request: NextRequest) => {
   if (includePhotos) {
     selectQuery += ', representative_photos!fk_representative_photos_representative_id(*)';
   }
-  if (includeContacts) {
-    selectQuery += ', representative_contacts!fk_representative_contacts_representative_id(*)';
-  }
+  // Always join contacts so we can parse office_city/office_zip from primary address
+  selectQuery += ', representative_contacts!fk_representative_contacts_representative_id(*)';
   if (includeSocial) {
     selectQuery += ', representative_social_media!fk_representative_social_media_representative_id(*)';
   }
@@ -263,6 +296,58 @@ export const GET = withErrorHandling(async (request: NextRequest) => {
 
   // Note: Filters are already applied above in optimal order for query performance
 
+  // City filter: fetch up to CITY_CAP, then filter by office_city in-memory and paginate
+  const CITY_CAP = 2000;
+  const useCityFilter = Boolean(cityParam && state);
+  const queryOffset = useCityFilter ? 0 : offset;
+  const queryLimit = useCityFilter ? CITY_CAP : limit;
+
+  const repListCacheKey = CivicsCache.getRepListKey({
+    state: state || null,
+    level: level || null,
+    city: cityParam,
+    zip: zipParam,
+    offset,
+    limit,
+    search,
+    ocdDivisionId: ocdDivisionId || null,
+    district: district || null,
+    party: party || null,
+    sortBy: finalSortBy,
+    sortOrder: finalSortOrder,
+    include: includeParam || null,
+    fields: fieldsParam || null
+  });
+  const cachedList = CivicsCache.getCachedRepList<{
+    representatives: any[];
+    total: number;
+    page: number;
+    limit: number;
+    hasMore: boolean;
+  }>(repListCacheKey);
+  if (cachedList) {
+    const queryHash = `${state || ''}-${party || ''}-${level || ''}-${search || ''}-${ocdDivisionId || ''}-${district || ''}-${cityParam || ''}-${zipParam || ''}`;
+    const etagVal = `reps-${cachedList.total}-${cachedList.page}-${limit}-${finalSortBy}-${finalSortOrder}-${queryHash.substring(0, 20)}`;
+    const etag = `"${etagVal}"`;
+    const res = successResponse({
+      representatives: cachedList.representatives,
+      total: cachedList.total,
+      page: cachedList.page,
+      limit: cachedList.limit,
+      hasMore: cachedList.hasMore
+    });
+    res.headers.set('Cache-Control', 'public, max-age=86400, stale-while-revalidate=86400');
+    res.headers.set('ETag', etag);
+    const ifNoneMatch = request.headers.get('if-none-match');
+    if (ifNoneMatch === etag) {
+      const headers = new Headers();
+      headers.set('Cache-Control', 'public, max-age=86400, stale-while-revalidate=86400');
+      headers.set('ETag', etag);
+      return new NextResponse(null, { status: 304, headers });
+    }
+    return res;
+  }
+
   // Apply custom sorting (Issue #5)
   if (finalSortBy === 'data_quality_score') {
     query = query.order('data_quality_score', {
@@ -292,7 +377,7 @@ export const GET = withErrorHandling(async (request: NextRequest) => {
   }
 
   // Apply pagination after filters and sorting
-  query = query.range(offset, offset + limit - 1);
+  query = query.range(queryOffset, queryOffset + queryLimit - 1);
 
   const { data: representatives, error, count } = await query;
 
@@ -383,6 +468,13 @@ export const GET = withErrorHandling(async (request: NextRequest) => {
     const primaryPhotoFromSet =
       photos.find((photo: any) => photo.is_primary)?.url ?? photos[0]?.url ?? null;
 
+    // Parse office city/zip from primary address (contact_type=address)
+    const contacts = rep.representative_contacts ?? [];
+    const primaryAddress = contacts
+      .filter((c: any) => (c.contact_type || '').toLowerCase() === 'address')
+      .sort((a: any, b: any) => (b.is_primary ? 1 : 0) - (a.is_primary ? 1 : 0))[0];
+    const officeLocation = primaryAddress?.value ? parseOfficeCityZip(primaryAddress.value) : null;
+
     const fullRep: Record<string, any> = {
       id: rep.id,
       name: rep.name,
@@ -400,12 +492,13 @@ export const GET = withErrorHandling(async (request: NextRequest) => {
       instagram_handle: rep.instagram_handle,
       youtube_channel: rep.youtube_channel,
       linkedin_url: rep.linkedin_url,
+      ...(officeLocation ? { office_city: officeLocation.city, office_zip: officeLocation.zip } : {}),
       // Include related data only if requested or if no include parameter (default behavior)
       ...(includePhotos ? {
         photos
       } : {}),
       ...(includeContacts ? {
-        contacts: (rep.representative_contacts ?? []).map((contact: any) => ({
+        contacts: contacts.map((contact: any) => ({
           id: contact.id,
           contact_type: contact.contact_type,
           value: contact.value,
@@ -470,21 +563,40 @@ export const GET = withErrorHandling(async (request: NextRequest) => {
     return fullRep;
   });
 
-  const finalTotal = count ?? 0;
+  let outputReps = transformed;
+  let finalTotal = count ?? 0;
+  let hasMore = (representatives ?? []).length === queryLimit && (queryOffset + queryLimit) < finalTotal;
+
+  if (useCityFilter && cityParam) {
+    const cityNorm = cityParam.trim().toLowerCase();
+    const filtered = transformed.filter((r: any) => {
+      const oc = (r.office_city as string)?.trim().toLowerCase();
+      return oc && oc === cityNorm;
+    });
+    finalTotal = filtered.length;
+    outputReps = filtered.slice(offset, offset + limit);
+    hasMore = offset + limit < finalTotal;
+  }
+
   const page = Math.floor(offset / limit) + 1;
-  // Calculate hasMore: we have more if we got a full page AND there are more results
-  const hasMore = representatives.length === limit && (offset + limit) < finalTotal;
+
+  CivicsCache.cacheRepList(repListCacheKey, {
+    representatives: outputReps,
+    total: finalTotal,
+    page,
+    limit,
+    hasMore
+  });
 
   // Generate ETag for caching (Issue #2)
   // Include query parameters in ETag for proper cache invalidation
-  const queryHash = `${state || ''}-${party || ''}-${level || ''}-${search || ''}-${ocdDivisionId || ''}-${district || ''}`;
-  // Use hash of query parameters (without timestamp) for stable ETags that change when data changes
+  const queryHash = `${state || ''}-${party || ''}-${level || ''}-${search || ''}-${ocdDivisionId || ''}-${district || ''}-${cityParam || ''}-${zipParam || ''}`;
   const etagValue = `${finalTotal}-${page}-${limit}-${finalSortBy}-${finalSortOrder}-${queryHash.substring(0, 20)}`;
   const etag = `"reps-${etagValue}"`;
 
   // Create response with cache headers (Issue #2)
   const response = successResponse({
-    representatives: transformed,
+    representatives: outputReps,
     total: finalTotal,
     page,
     limit,
@@ -545,7 +657,7 @@ export const GET = withErrorHandling(async (request: NextRequest) => {
   // Include performance metrics for optimization tracking
   logger.info('Representatives API request completed', {
     total: finalTotal,
-    returned: transformed.length,
+    returned: outputReps.length,
     responseTimeMs: responseTime,
     handlerTimeMs: handlerTime,
     query: {

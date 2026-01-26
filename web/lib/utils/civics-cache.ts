@@ -49,6 +49,13 @@ const CACHE_CONFIG = {
     ttl: ONE_WEEK_MS,
     maxSize: 500,
     keyPrefix: 'civics:votes:'
+  },
+
+  // Full representative list (card payload) per request params. Ingest-updated.
+  repList: {
+    ttl: ONE_DAY_MS,
+    maxSize: 200,
+    keyPrefix: 'civics:repslist:'
   }
 };
 
@@ -85,6 +92,59 @@ export class CivicsCache {
   static getVotesKey(representativeId: string, congress?: number): string {
     const suffix = congress != null ? `:${congress}` : ':all';
     return `${CACHE_CONFIG.votes.keyPrefix}${representativeId}${suffix}`;
+  }
+
+  /**
+   * Generate cache key for representative list (full card payload) per request params.
+   * Include `include` and `fields` so different response shapes do not share cache entries.
+   */
+  static getRepListKey(params: {
+    state: string | null;
+    level: string | null;
+    city: string | null;
+    zip: string | null;
+    offset: number;
+    limit: number;
+    search: string | null;
+    ocdDivisionId: string | null;
+    district: string | null;
+    party: string | null;
+    sortBy: string;
+    sortOrder: string;
+    include: string | null;
+    fields: string | null;
+  }): string {
+    const parts = [
+      params.state ?? '',
+      params.level ?? 'all',
+      params.city ?? '',
+      params.zip ?? '',
+      String(params.offset),
+      String(params.limit),
+      params.search ?? '',
+      params.ocdDivisionId ?? '',
+      params.district ?? '',
+      params.party ?? '',
+      params.sortBy,
+      params.sortOrder,
+      params.include ?? '',
+      params.fields ?? ''
+    ];
+    return `${CACHE_CONFIG.repList.keyPrefix}${parts.join(':')}`;
+  }
+
+  /**
+   * Get cached representative list if available and not expired.
+   */
+  static getCachedRepList<T>(key: string): T | null {
+    return this.get<T>(key);
+  }
+
+  /**
+   * Cache representative list (full card payload).
+   */
+  static cacheRepList<T>(key: string, data: T): void {
+    this.set(key, data, CACHE_CONFIG.repList.ttl);
   }
 
   /**
