@@ -45,6 +45,8 @@ const buildPrivacySettings = (overrides: Partial<PrivacySettings> = {}): Privacy
   trackFeedActivity: false,
   collectAnalytics: false,
   trackRepresentativeInteractions: false,
+  collectIntegritySignals: false,
+  collectIntegrityAdvancedSignals: false,
   showReadHistory: false,
   showBookmarks: false,
   showLikes: false,

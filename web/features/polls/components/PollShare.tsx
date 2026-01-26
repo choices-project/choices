@@ -7,8 +7,8 @@ import QRCode from 'qrcode'
 import React, { useState, useEffect, useCallback } from 'react';
 
 import { isFeatureEnabled } from '@/lib/core/feature-flags'
-import { devLog } from '@/lib/utils/logger';
 import { useNotificationActions } from '@/lib/stores';
+import { devLog } from '@/lib/utils/logger';
 
 import { useI18n } from '@/hooks/useI18n';
 

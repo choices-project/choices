@@ -18,11 +18,10 @@ import {
   validationError,
   withErrorHandling,
   parseBody,
-} from '@/lib/api';
+ forbiddenError } from '@/lib/api';
 import { notifyUserContactRejected } from '@/lib/contact/contact-notifications';
-import { logger } from '@/lib/utils/logger';
 import { isFeatureEnabled } from '@/lib/core/feature-flags';
-import { forbiddenError } from '@/lib/api';
+import { logger } from '@/lib/utils/logger';
 
 import type { NextRequest } from 'next/server';
 

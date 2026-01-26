@@ -13,9 +13,13 @@
 import { Mail, Phone, MapPin, FileText, CheckCircle, AlertCircle, Loader2 } from 'lucide-react';
 import React, { useState, useCallback } from 'react';
 
+import { useFeatureFlag } from '@/features/pwa/hooks/useFeatureFlags';
+
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
 import {
   Select,
   SelectContent,
@@ -23,9 +27,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { useFeatureFlag } from '@/features/pwa/hooks/useFeatureFlags';
+
 import { useContactNotifications } from '@/lib/hooks/useContactNotifications';
 import { logger } from '@/lib/utils/logger';
 
@@ -54,11 +56,6 @@ export default function ContactSubmissionForm({
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState(false);
-
-  // Don't render if feature flag is disabled
-  if (!contactSystemEnabled) {
-    return null;
-  }
 
   const handleSubmit = useCallback(
     async (e: React.FormEvent) => {
@@ -147,12 +144,17 @@ export default function ContactSubmissionForm({
 
   const ContactIcon = getContactIcon(contactType);
 
+  // Don't render if feature flag is disabled
+  if (!contactSystemEnabled) {
+    return null;
+  }
+
   return (
     <Card className={className}>
       <CardHeader>
         <CardTitle>Submit Contact Information</CardTitle>
-        <CardDescription>
-          Help keep {representativeName}'s contact information up to date. Your submission will be reviewed by administrators.
+          <CardDescription>
+          Help keep {representativeName}&apos;s contact information up to date. Your submission will be reviewed by administrators.
         </CardDescription>
       </CardHeader>
       <CardContent>
@@ -276,7 +278,7 @@ export default function ContactSubmissionForm({
 
           {/* Help Text */}
           <p className="text-sm text-gray-500">
-            Your submission will be reviewed before being added to the representative's profile. You'll be notified when it's approved or rejected.
+            Your submission will be reviewed before being added to the representative&apos;s profile. You&apos;ll be notified when it&apos;s approved or rejected.
           </p>
         </form>
       </CardContent>

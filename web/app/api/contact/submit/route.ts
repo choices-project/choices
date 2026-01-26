@@ -19,14 +19,13 @@ import {
   validationError,
   withErrorHandling,
   parseBody,
-} from '@/lib/api';
+ forbiddenError } from '@/lib/api';
 import { notifyAdminNewContactSubmission } from '@/lib/contact/contact-notifications';
 import { validateAndNormalizeContact, validateContactType, type ContactType } from '@/lib/contact/contact-validation';
+import { isFeatureEnabled } from '@/lib/core/feature-flags';
 import { apiRateLimiter } from '@/lib/rate-limiting/api-rate-limiter';
 import { validateRepresentativeId } from '@/lib/security/input-sanitization';
 import { logger } from '@/lib/utils/logger';
-import { isFeatureEnabled } from '@/lib/core/feature-flags';
-import { forbiddenError } from '@/lib/api';
 
 import type { NextRequest } from 'next/server';
 

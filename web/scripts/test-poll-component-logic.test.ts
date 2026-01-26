@@ -70,16 +70,16 @@ function createOptionVoteLookup(results: any): Map<string, number> {
 // Simulate the optionVoteCounts logic from PollClient
 function createOptionVoteCounts(results: any): Record<string, number> | undefined {
   return (
-    results?.results?.reduce<Record<string, number>>((acc: Record<string, number>, row: any) => {
+    results?.results?.reduce((acc: Record<string, number>, row: any) => {
       const key = String(row.option_id);
       acc[key] = Number(row.vote_count ?? 0);
       return acc;
-    }, {}) ??
-    results?.option_stats?.reduce<Record<string, number>>((acc: Record<string, number>, row: any) => {
+    }, {} as Record<string, number>) ??
+    results?.option_stats?.reduce((acc: Record<string, number>, row: any) => {
       const key = String(row.option_id);
       acc[key] = Number(row.first_choice_votes ?? 0);
       return acc;
-    }, {}) ??
+    }, {} as Record<string, number>) ??
     undefined
   );
 }

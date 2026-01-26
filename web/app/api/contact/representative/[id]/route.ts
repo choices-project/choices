@@ -16,11 +16,10 @@ import {
   successResponse,
   validationError,
   withErrorHandling,
-} from '@/lib/api';
+ forbiddenError } from '@/lib/api';
+import { isFeatureEnabled } from '@/lib/core/feature-flags';
 import { validateRepresentativeId } from '@/lib/security/input-sanitization';
 import { logger } from '@/lib/utils/logger';
-import { isFeatureEnabled } from '@/lib/core/feature-flags';
-import { forbiddenError } from '@/lib/api';
 
 import type { NextRequest } from 'next/server';
 

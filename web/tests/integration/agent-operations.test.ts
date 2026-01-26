@@ -13,7 +13,7 @@ import { queryAgentOperations, getAgentOperationStats } from '@/lib/core/agent/a
 const SKIP_INTEGRATION = !process.env.NEXT_PUBLIC_SUPABASE_URL ||
                          process.env.NEXT_PUBLIC_SUPABASE_URL.includes('example')
 
-describe.skipIf(SKIP_INTEGRATION)('Agent Operations Integration', () => {
+(SKIP_INTEGRATION ? describe.skip : describe)('Agent Operations Integration', () => {
   let testAgentId: string
 
   beforeAll(() => {
@@ -57,7 +57,7 @@ describe.skipIf(SKIP_INTEGRATION)('Agent Operations Integration', () => {
       })
 
       // Perform a simple SELECT operation
-      const { data, error } = await agent.client
+      const { error } = await agent.client
         .from('polls')
         .select('id')
         .limit(1)

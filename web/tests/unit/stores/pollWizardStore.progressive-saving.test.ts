@@ -135,9 +135,8 @@ describe('PollWizardStore Progressive Saving', () => {
       expect(storedRaw).toBeTruthy();
 
       // Wait for hydration using onRehydrateStorage callback
-      let hydrationPromise: Promise<void>;
       let hydrationResolve: () => void;
-      hydrationPromise = new Promise((resolve) => {
+      const hydrationPromise = new Promise<void>((resolve) => {
         hydrationResolve = resolve;
       });
 
@@ -232,9 +231,8 @@ describe('PollWizardStore Progressive Saving', () => {
       expect(storedRaw).toBeTruthy();
 
       // Wait for hydration using onRehydrateStorage callback
-      let hydrationPromise: Promise<void>;
       let hydrationResolve: () => void;
-      hydrationPromise = new Promise((resolve) => {
+      const hydrationPromise = new Promise<void>((resolve) => {
         hydrationResolve = resolve;
       });
 

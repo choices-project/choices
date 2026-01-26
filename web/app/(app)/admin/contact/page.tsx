@@ -5,9 +5,9 @@ import React, { useEffect, useRef } from 'react';
 import ContactSystemAdmin from '@/features/admin/components/ContactSystemAdmin';
 import { useFeatureFlag } from '@/features/pwa/hooks/useFeatureFlags';
 
+import { ErrorBoundary } from '@/components/shared/ErrorBoundary';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { ErrorBoundary } from '@/components/shared/ErrorBoundary';
 
 import { useAppActions } from '@/lib/stores/appStore';
 

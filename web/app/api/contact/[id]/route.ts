@@ -20,8 +20,8 @@ import {
   parseBody,
 } from '@/lib/api';
 import { validateAndNormalizeContact, validateContactType, type ContactType } from '@/lib/contact/contact-validation';
-import { logger } from '@/lib/utils/logger';
 import { isFeatureEnabled } from '@/lib/core/feature-flags';
+import { logger } from '@/lib/utils/logger';
 
 import type { NextRequest } from 'next/server';
 

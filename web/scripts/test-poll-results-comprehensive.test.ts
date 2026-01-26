@@ -39,6 +39,7 @@ const testCases = [
     response: {
       poll_id: 'ranked-1',
       total_votes: 15,
+      trust_tier_filter: null,
       voting_method: 'ranked',
       option_stats: [
         { option_id: '0', option_index: 0, text: 'Option A', first_choice_votes: 8, first_choice_percentage: 53.3 },
@@ -83,6 +84,7 @@ const testCases = [
     response: {
       poll_id: 'ranked-empty',
       total_votes: 0,
+      trust_tier_filter: null,
       voting_method: 'ranked',
       option_stats: [],
       integrity: {
@@ -186,7 +188,7 @@ testCases.forEach((testCase, index) => {
   
   // Verify lookup map
   const lookupMatch = Array.from(optionVoteLookup.entries()).every(([key, value]) => {
-    return testCase.expectedVoteCounts[key] === value;
+    return (testCase.expectedVoteCounts as Record<string, number>)[key] === value;
   });
   console.log(`Lookup Map:  ${lookupMatch ? '✅' : '❌'} All entries match`);
   
