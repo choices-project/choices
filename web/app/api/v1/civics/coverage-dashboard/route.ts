@@ -156,7 +156,7 @@ export const GET = withErrorHandling(async (request: NextRequest) => {
 
   const response = successResponse(dashboard);
   response.headers.set('ETag', `"dashboard-${Date.now()}"`);
-  response.headers.set('Cache-Control', 'public, max-age=300, stale-while-revalidate=3600');
+  response.headers.set('Cache-Control', 'public, max-age=86400, stale-while-revalidate=86400');
   
   return response;
 });

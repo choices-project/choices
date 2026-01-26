@@ -8,9 +8,10 @@
  * Status: ✅ ACTIVE
  */
 
+import { logger } from '@/lib/utils/logger';
+
 import type { SupabaseClient } from '@supabase/supabase-js';
 
-import { logger } from '@/lib/utils/logger';
 
 export type ContactSubmission = {
   id: number;

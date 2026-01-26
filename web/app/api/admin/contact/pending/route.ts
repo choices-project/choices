@@ -60,7 +60,7 @@ export const GET = withErrorHandling(async (request: NextRequest) => {
         source,
         created_at,
         updated_at,
-        representatives_core (
+        representatives_core!representative_contacts_representative_id_fkey (
           id,
           name,
           office,

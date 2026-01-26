@@ -202,15 +202,13 @@ export default function PollClient({ poll }: PollClientProps) {
         pollStatus,
         canClosePoll,
         canVote,
-        hasVoted,
         hasUser: !!user,
         authLoading,
         hasCloseButton: canClosePoll,
         hasDeleteButton: isPollCreator,
-        votingInterfaceShown: pollStatus === 'active' && canVote && user && !hasVoted && normalizedOptions.length > 0,
       });
     }
-  }, [poll.id, user?.id, poll.createdBy, isPollCreator, isAdmin, pollStatus, canClosePoll, canVote, hasVoted, user, authLoading, normalizedOptions.length]);
+  }, [poll.id, user?.id, poll.createdBy, isPollCreator, isAdmin, pollStatus, canClosePoll, canVote, user, authLoading]);
 
   // Use refs for stable app store actions to prevent infinite re-renders
   const setCurrentRouteRef = useRef(setCurrentRoute);
@@ -561,7 +559,7 @@ export default function PollClient({ poll }: PollClientProps) {
     }
 
     return null;
-  }, [canVote, pollStatus, t, user]);
+  }, [authLoading, canVote, pollStatus, t, user]);
 
   const [hasVoted, setHasVoted] = useState(Boolean(poll.userVote));
 

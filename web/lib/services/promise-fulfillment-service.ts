@@ -14,6 +14,7 @@
  * @date 2026-01-25
  */
 
+import { billIdsMatch } from '@/lib/integrations/bill-id-crosswalk';
 import { createUnifiedDataOrchestrator } from '@/lib/integrations/unified-orchestrator';
 import { logger } from '@/lib/utils/logger';
 
@@ -160,20 +161,22 @@ export class PromiseFulfillmentService {
         }
       );
 
-      // 4. Get voting record
+      // 4. Get voting record (use bill-id crosswalk for matching)
       const votes = await this.orchestrator.getVotingRecord(promise.candidateId);
+      const billIdsToMatch = [
+        ...(promise.billIds ?? []),
+        ...relatedBillsResult.packages.map((b: BillPackage) => b.packageId)
+      ];
       const relevantVotes = votes
-        .filter((v: any) => {
-          // Match votes to bills related to promise
+        .filter((v: { billId?: string; congress?: number }) => {
           if (!v.billId) return false;
-          return promise.billIds?.includes(v.billId) || 
-                 relatedBillsResult.packages.some((b: BillPackage) => b.packageId === v.billId);
+          return billIdsToMatch.some((bid) => billIdsMatch(v.billId, bid, v.congress));
         })
-        .map((v: any) => ({
-          voteId: String(v.id || ''),
-          vote: (v.vote || 'abstain') as 'yes' | 'no' | 'abstain',
+        .map((v: { id?: unknown; vote?: string; billId?: string }) => ({
+          voteId: String(v.id ?? ''),
+          vote: (v.vote ?? 'abstain') as 'yes' | 'no' | 'abstain',
           billId: v.billId,
-          alignment: this.calculateVoteAlignment(v.vote || 'abstain', promise.position)
+          alignment: this.calculateVoteAlignment(v.vote ?? 'abstain', promise.position)
         }));
 
       // 5. Calculate fulfillment score
@@ -236,9 +239,11 @@ export class PromiseFulfillmentService {
       // 1. Get poll results (need to fetch from database)
       const pollResults = await this.getPollResults(pollId);
       
-      // 2. Get actual vote
+      // 2. Get actual vote (use bill-id crosswalk for matching)
       const votes = await this.orchestrator.getVotingRecord(representativeId);
-      const actualVote = votes.find((v: any) => v.billId === billId);
+      const actualVote = votes.find(
+        (v: { billId?: string; congress?: number }) => billIdsMatch(v.billId, billId, v.congress)
+      );
 
       // 3. Get bill context
       const billContent = await govInfoMCPService.getBillContent(billId, 'html');
@@ -248,17 +253,15 @@ export class PromiseFulfillmentService {
       // 4. Calculate constituent preference from poll
       const constituentPreference = this.calculateConstituentPreference(pollResults);
       
-      // 5. Calculate alignment
+      // 5. Calculate alignment (UnifiedVote uses 'not_voting'; we normalize to 'not_voted' for analysis)
       const actualVoteValue = (actualVote?.vote as string) || 'not_voted';
-      const alignment = this.calculateVoteAlignment(
-        actualVoteValue === 'not_voting' ? 'not_voted' : actualVoteValue,
-        constituentPreference
-      );
+      const normalizedVote = this.normalizeNoVote(actualVoteValue);
+      const alignment = this.calculateVoteAlignment(normalizedVote, constituentPreference);
 
       // 6. Calculate accountability score
       const accountabilityScore = this.calculateAccountabilityScore(
         constituentPreference,
-        actualVoteValue === 'not_voting' ? 'not_voted' : (actualVoteValue as 'yes' | 'no' | 'abstain' | 'not_voted'),
+        normalizedVote,
         pollResults.totalVotes
       );
 
@@ -276,8 +279,8 @@ export class PromiseFulfillmentService {
           percentageAbstain: pollResults.percentageAbstain
         },
         actualVote: {
-          vote: (actualVoteValue === 'not_voting' ? 'not_voted' : actualVoteValue) as 'yes' | 'no' | 'abstain' | 'not_voted',
-          date: (actualVote as any)?.date,
+          vote: normalizedVote,
+          date: (actualVote as { date?: string })?.date,
           alignment
         },
         billContext: {
@@ -300,6 +303,16 @@ export class PromiseFulfillmentService {
   }
 
   // Helper methods
+
+  /** Normalize UnifiedVote 'not_voting' to 'not_voted' for analysis output. */
+  private normalizeNoVote(v: string): 'yes' | 'no' | 'abstain' | 'not_voted' {
+    const s = (v || '').trim().toLowerCase();
+    if (s === 'not_voting') return 'not_voted';
+    if (s === 'yes') return 'yes';
+    if (s === 'no') return 'no';
+    if (s === 'abstain') return 'abstain';
+    return 'not_voted';
+  }
 
   private analyzeAlignment(billText: string, position: string): number {
     // Simple keyword-based alignment analysis

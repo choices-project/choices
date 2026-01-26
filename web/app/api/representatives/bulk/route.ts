@@ -227,8 +227,8 @@ export const POST = withErrorHandling(async (request: NextRequest) => {
       found: orderedReps.length
     });
 
-    // Add cache headers (shorter TTL for bulk requests)
-    response.headers.set('Cache-Control', 'public, max-age=180, stale-while-revalidate=3600');
+    // Rep data is ingest-updated; cache 24h
+    response.headers.set('Cache-Control', 'public, max-age=86400, stale-while-revalidate=86400');
     response.headers.set('X-RateLimit-Limit', '50');
     response.headers.set('X-RateLimit-Remaining', String(rateLimitResult.remaining));
     response.headers.set('X-RateLimit-Reset', new Date(Date.now() + (15 * 60 * 1000)).toISOString());

@@ -72,7 +72,8 @@ type CachedLocationResult = {
 
 export class LocationService {
   private cache: Map<string, CachedLocationResult> = new Map();
-  private cacheTimeout = 5 * 60 * 1000; // 5 minutes
+  /** Geocode → jurisdiction stable until redistricting; align with ingest cadence. */
+  private cacheTimeout = 24 * 60 * 60 * 1000; // 24 hours
 
   /**
    * Geocode an address to get coordinates and location details

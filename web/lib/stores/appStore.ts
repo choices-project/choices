@@ -6,7 +6,6 @@
  * Modernized to align with the 2025 Zustand store standards (typed creator, helpers, tests).
  */
 
-import { useMemo } from 'react';
 import { create } from 'zustand';
 import { devtools, persist } from 'zustand/middleware';
 import { immer } from 'zustand/middleware/immer';

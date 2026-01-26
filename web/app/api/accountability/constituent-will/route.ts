@@ -8,6 +8,8 @@
  * @date 2026-01-26
  */
 
+import { getSupabaseServerClient } from '@/utils/supabase/server';
+
 import {
   withErrorHandling,
   successResponse,
@@ -17,7 +19,6 @@ import {
   notFoundError
 } from '@/lib/api';
 import { promiseFulfillmentService } from '@/lib/services/promise-fulfillment-service';
-import { getSupabaseServerClient } from '@/utils/supabase/server';
 import { logger } from '@/lib/utils/logger';
 
 import type { NextRequest } from 'next/server';

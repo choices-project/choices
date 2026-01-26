@@ -17,6 +17,12 @@ import {
   PWA_SUBSCRIPTION_FIXTURE,
 } from '../fixtures/api/pwa';
 import { buildShareAnalytics } from '../fixtures/api/share';
+import {
+  CONTACT_FIXTURES,
+  createContactSubmission,
+  buildContactList,
+  type MockContactSubmission,
+} from '../fixtures/api/contact';
 
 import { mockError, mockSuccess } from './utils/envelope';
 
@@ -58,6 +64,11 @@ const buildPaginationMetadata = () => ({
 });
 
 const getPollById = (id: string | undefined) => polls.find((poll) => poll.id === id);
+
+// Contact submissions store (mutable for testing)
+const contacts: MockContactSubmission[] = [...CONTACT_FIXTURES];
+
+const getContactById = (id: number) => contacts.find((contact) => contact.id === id);
 
 export const apiHandlers = [
   http.get('/api/polls', () =>
@@ -251,6 +262,231 @@ export const apiHandlers = [
         optionId: body?.option_id ?? 'shared-option',
       }),
       201,
+    );
+  }),
+
+  // Contact Information APIs
+  http.post('/api/contact/submit', async ({ request }) => {
+    const payload: any = await request.json().catch(() => ({}));
+    const contact = createContactSubmission({
+      representative_id: payload?.representative_id ?? 1,
+      contact_type: payload?.contact_type ?? 'email',
+      value: payload?.value ?? `contact-${Date.now()}@example.com`,
+      is_primary: payload?.is_primary ?? false,
+      is_verified: false,
+      source: 'user_submission',
+    });
+    contacts.push(contact);
+    return json(
+      mockSuccess({
+        contact: {
+          id: contact.id,
+          representative_id: contact.representative_id,
+          contact_type: contact.contact_type,
+          value: contact.value,
+          is_primary: contact.is_primary,
+          is_verified: contact.is_verified,
+          source: contact.source,
+          created_at: contact.created_at,
+          updated_at: contact.updated_at,
+        },
+        message: 'Contact information submitted successfully. It will be reviewed by an administrator.',
+      }),
+      201,
+    );
+  }),
+
+  http.get('/api/contact/:id', ({ params }) => {
+    const contactId = parseInt(params.id as string, 10);
+    const contact = getContactById(contactId);
+    if (!contact) {
+      return json(mockError('Contact not found', { code: 'NOT_FOUND' }), 404);
+    }
+    return json(
+      mockSuccess({
+        contact: {
+          ...contact,
+          representative: contact.representative,
+        },
+      })
+    );
+  }),
+
+  http.get('/api/contact/representative/:id', ({ params, request }) => {
+    const representativeId = parseInt(params.id as string, 10);
+    const url = new URL(request.url);
+    const contactType = url.searchParams.get('contact_type');
+    const isVerified = url.searchParams.get('is_verified');
+    const source = url.searchParams.get('source');
+
+    let filteredContacts = contacts.filter((c) => c.representative_id === representativeId);
+
+    if (contactType) {
+      filteredContacts = filteredContacts.filter((c) => c.contact_type === contactType);
+    }
+    if (isVerified !== null) {
+      filteredContacts = filteredContacts.filter((c) => c.is_verified === (isVerified === 'true'));
+    }
+    if (source) {
+      filteredContacts = filteredContacts.filter((c) => c.source === source);
+    }
+
+    return json(
+      mockSuccess({
+        representative: {
+          id: representativeId,
+          name: 'Mock Representative',
+          office: 'State Senator',
+        },
+        contacts: filteredContacts,
+        count: filteredContacts.length,
+      })
+    );
+  }),
+
+  http.patch('/api/contact/:id', async ({ params, request }) => {
+    const contactId = parseInt(params.id as string, 10);
+    const contact = getContactById(contactId);
+    if (!contact) {
+      return json(mockError('Contact not found', { code: 'NOT_FOUND' }), 404);
+    }
+
+    const payload: any = await request.json().catch(() => ({}));
+    const updatedContact = {
+      ...contact,
+      ...(payload.contact_type && { contact_type: payload.contact_type }),
+      ...(payload.value && { value: payload.value }),
+      ...(payload.is_primary !== undefined && { is_primary: payload.is_primary }),
+      updated_at: new Date().toISOString(),
+    };
+
+    const index = contacts.findIndex((c) => c.id === contactId);
+    if (index !== -1) {
+      contacts[index] = updatedContact;
+    }
+
+    return json(
+      mockSuccess({
+        contact: updatedContact,
+        message: 'Contact information updated successfully',
+      })
+    );
+  }),
+
+  http.delete('/api/contact/:id', ({ params }) => {
+    const contactId = parseInt(params.id as string, 10);
+    const index = contacts.findIndex((c) => c.id === contactId);
+    if (index === -1) {
+      return json(mockError('Contact not found', { code: 'NOT_FOUND' }), 404);
+    }
+    contacts.splice(index, 1);
+    return json(
+      mockSuccess({
+        message: 'Contact information deleted successfully',
+      })
+    );
+  }),
+
+  // Admin Contact APIs
+  http.get('/api/admin/contact/pending', ({ request }) => {
+    const url = new URL(request.url);
+    const representativeId = url.searchParams.get('representative_id');
+    const contactType = url.searchParams.get('contact_type');
+    const search = url.searchParams.get('search') ?? '';
+    const limit = parseInt(url.searchParams.get('limit') ?? '50', 10);
+    const offset = parseInt(url.searchParams.get('offset') ?? '0', 10);
+
+    let filteredContacts = contacts.filter(
+      (c) => c.is_verified === false && c.source === 'user_submission'
+    );
+
+    if (representativeId) {
+      const repId = parseInt(representativeId, 10);
+      if (!isNaN(repId)) {
+        filteredContacts = filteredContacts.filter((c) => c.representative_id === repId);
+      }
+    }
+
+    if (contactType) {
+      filteredContacts = filteredContacts.filter((c) => c.contact_type === contactType);
+    }
+
+    if (search) {
+      const searchLower = search.toLowerCase();
+      filteredContacts = filteredContacts.filter(
+        (c) =>
+          c.value.toLowerCase().includes(searchLower) ||
+          c.representative?.name.toLowerCase().includes(searchLower)
+      );
+    }
+
+    const result = buildContactList(filteredContacts, {
+      limit,
+      offset,
+      total: filteredContacts.length,
+    });
+
+    return json(
+      mockSuccess({
+        contacts: result.contacts,
+        pagination: result.pagination,
+      })
+    );
+  }),
+
+  http.post('/api/admin/contact/:id/approve', ({ params }) => {
+    const contactId = parseInt(params.id as string, 10);
+    const contact = getContactById(contactId);
+    if (!contact) {
+      return json(mockError('Contact not found', { code: 'NOT_FOUND' }), 404);
+    }
+
+    const updatedContact = {
+      ...contact,
+      is_verified: true,
+      updated_at: new Date().toISOString(),
+    };
+
+    const index = contacts.findIndex((c) => c.id === contactId);
+    if (index !== -1) {
+      contacts[index] = updatedContact;
+    }
+
+    return json(
+      mockSuccess({
+        contact: updatedContact,
+        message: 'Contact information approved successfully',
+      })
+    );
+  }),
+
+  http.post('/api/admin/contact/:id/reject', async ({ params, request }) => {
+    const contactId = parseInt(params.id as string, 10);
+    const contact = getContactById(contactId);
+    if (!contact) {
+      return json(mockError('Contact not found', { code: 'NOT_FOUND' }), 404);
+    }
+
+    const payload: any = await request.json().catch(() => ({}));
+    const reason = payload?.reason;
+
+    // Remove from contacts array
+    const index = contacts.findIndex((c) => c.id === contactId);
+    if (index !== -1) {
+      contacts.splice(index, 1);
+    }
+
+    return json(
+      mockSuccess({
+        message: 'Contact information rejected successfully',
+        rejected_contact: {
+          id: contact.id,
+          representative_id: contact.representative_id,
+          contact_type: contact.contact_type,
+          value: contact.value,
+        },
+        reason: reason || null,
+      })
     );
   }),
 ];

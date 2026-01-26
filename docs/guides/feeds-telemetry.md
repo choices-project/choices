@@ -67,35 +67,14 @@ Located in `feedsStore.ts`:
 
 ## Success Toast Analytics Wiring
 
-**Status:** ⏳ Pending
+**Status:** ✅ Complete (January 2026)
 
-The feeds store should emit analytics events when:
-- Feed successfully loaded
-- Feed refresh completed
-- Feed bookmark added/removed
-- Feed filter applied
+The feeds store uses `showFeedSuccessToast()` (which checks `hasFeedActivityConsent`) and `notificationStoreUtils.createSuccess()` for:
 
-### Planned Implementation
+- **Feed successfully loaded** — `loadFeeds` success handler
+- **Feed refresh completed** — `refreshFeeds` success handler
 
-```typescript
-// In loadFeeds success handler
-if (hasPrivacyConsent(PrivacyDataType.FEED_ANALYTICS)) {
-  recordFeedEvent('feed_loaded', {
-    category: 'feed_loading',
-    label: 'success',
-    metadata: { count: feeds.length, filters: currentFilters }
-  });
-}
-
-// In refreshFeeds success handler
-if (hasPrivacyConsent(PrivacyDataType.FEED_ANALYTICS)) {
-  recordFeedEvent('feed_refreshed', {
-    category: 'feed_refresh',
-    label: 'success',
-    metadata: { count: feeds.length, timestamp: Date.now() }
-  });
-}
-```
+Toast display is gated by `hasFeedActivityConsent(privacySettings)`. See `feedsStore.ts` (`showFeedSuccessToast`, `loadFeeds`, `refreshFeeds`).
 
 ## Testing
 

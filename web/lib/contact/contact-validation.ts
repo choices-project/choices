@@ -29,7 +29,7 @@ function isValidPhone(phone: string): boolean {
   const trimmed = phone.trim();
   if (trimmed.length === 0) return false;
   // Remove common phone formatting characters
-  const digitsOnly = trimmed.replace(/[\s\-\(\)\.\+]/g, '');
+  const digitsOnly = trimmed.replace(/[\s\-().+]/g, '');
   // Must have 10-15 digits (allowing international formats)
   return /^\d{10,15}$/.test(digitsOnly);
 }
@@ -78,13 +78,14 @@ export function validateAndNormalizeContact(
       return { isValid: true, normalized: trimmed.toLowerCase() };
     
     case 'phone':
-    case 'fax':
+    case 'fax': {
       if (!isValidPhone(trimmed)) {
         return { isValid: false, error: 'Invalid phone/fax format' };
       }
       // Normalize phone: remove formatting, keep digits and +
-      const normalized = trimmed.replace(/[\s\-\(\)\.]/g, '').replace(/^\+?1/, '');
+      const normalized = trimmed.replace(/[\s\-().]/g, '').replace(/^\+?1/, '');
       return { isValid: true, normalized };
+    }
     
     case 'address':
       if (!isValidAddress(trimmed)) {

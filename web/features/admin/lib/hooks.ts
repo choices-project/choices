@@ -1,7 +1,7 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import React from 'react';
 
-import { useAdminActions, useAdminStore, useNotificationActions } from '@/lib/stores';
+import { useAdminActions, useNotificationActions } from '@/lib/stores';
 import { logger, devLog } from '@/lib/utils/logger';
 
 import { realTimeService } from './real-time-service';
@@ -244,7 +244,7 @@ export const useGeneratedPolls = () => {
 };
 
 export const useSystemMetrics = () => {
-  const setSystemMetrics = useAdminStore((state) => state.setSystemMetrics);
+  const { setSystemMetrics } = useAdminActions();
   const lastMetricsRef = React.useRef<string | null>(null);
   const setSystemMetricsRef = React.useRef(setSystemMetrics);
 

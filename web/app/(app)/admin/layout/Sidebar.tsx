@@ -11,6 +11,7 @@ import {
   Users,
   Zap,
   Flag,
+  Contact,
 } from 'lucide-react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
@@ -39,6 +40,12 @@ const navigationItems = [
     href: '/admin/feedback',
     icon: MessageCircle,
     section: 'admin-feedback',
+  },
+  {
+    name: 'Contact System',
+    href: '/admin/contact',
+    icon: Contact,
+    section: 'admin-contact',
   },
   {
     name: 'Moderation',

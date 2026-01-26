@@ -14,6 +14,7 @@ export { default as AdminDashboard } from './components/AdminDashboard';
 export { default as PerformanceDashboard } from './components/PerformanceDashboard';
 export { default as AnalyticsPanel } from './components/AnalyticsPanel';
 export { default as DistrictHeatmap } from './components/DistrictHeatmap';
+export { default as ContactSystemAdmin } from './components/ContactSystemAdmin';
 
 // Admin Hooks
 export * from './lib/hooks';

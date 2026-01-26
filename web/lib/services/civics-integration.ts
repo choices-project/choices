@@ -25,7 +25,8 @@ Representative,
 
 export class CivicsIntegrationService {
   private cache: Map<string, { data: any; timestamp: number }> = new Map();
-  private cacheTimeout = 5 * 60 * 1000; // 5 minutes
+  /** Ingest-updated; cache until next ingest (24h). */
+  private cacheTimeout = 24 * 60 * 60 * 1000; // 24 hours
 
   /**
    * Get representatives from civics backend with full data integration

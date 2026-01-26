@@ -31,6 +31,7 @@ import type {
   Representative,
   CampaignFinance,
 } from '@/lib/types/electoral-unified';
+import { CivicsCache } from '@/lib/utils/civics-cache';
 import { logger } from '@/lib/utils/logger';
 
 import { createCongressGovClient } from './congress-gov/client';
@@ -356,82 +357,77 @@ export class UnifiedDataOrchestrator {
   }
 
   /**
-   * Get voting record for a representative
+   * Get voting record for a representative (member-specific).
+   * Uses Supabase representative_activity (type=vote) when representativeId is DB id.
+   * Results are cached (CivicsCache) for 7 days.
+   * Congress.gov/Open States generic roll-call APIs are not used (they are not member-specific).
    */
   async getVotingRecord(representativeId: string, congress?: number): Promise<UnifiedVote[]> {
-    const votes: UnifiedVote[] = [];
+    const repIdNum = parseInt(representativeId, 10);
+    const useSupabase = !Number.isNaN(repIdNum) && repIdNum >= 1;
 
-    try {
-      // Get votes from Congress.gov (primary source)
-      if (this.clients.congressGov) {
-        try {
-          const congressVotes = await this.clients.congressGov.getVotes({
-            ...(congress !== undefined && { congress }),
-            limit: 100
-          });
+    if (useSupabase) {
+      const cached = CivicsCache.getCachedVotes<UnifiedVote[]>(representativeId, congress);
+      if (cached != null) return cached;
 
-          for (const vote of congressVotes) {
-            votes.push({
-              id: `${vote.congress}-${vote.session}-${vote.rollCall}`,
-              representativeId,
-              ...(vote.documentNumber && { billId: vote.documentNumber }),
-              ...(vote.documentTitle && { billTitle: vote.documentTitle }),
-              question: vote.question,
-              description: vote.description,
-              vote: this.mapVoteResult(vote.result),
-              result: this.mapVoteOutcome(vote.result),
-              chamber: vote.chamber,
-              congress: vote.congress,
-              session: vote.session.toString(),
-              date: vote.date,
-              partyLineVote: false, // Would need additional analysis
-              partyAlignment: 0, // Would need additional analysis
-              sources: ['congress-gov'],
-              lastUpdated: new Date().toISOString(),
-              dataQuality: 'high'
-            });
-          }
-        } catch (error) {
-          logger.debug('Congress.gov voting record failed', { representativeId, error });
+      try {
+        const { getSupabaseServerClient } = await import('@/utils/supabase/server');
+        const supabase = await getSupabaseServerClient();
+        if (!supabase) return [];
+
+        const { data: rows, error } = await supabase
+          .from('representative_activity')
+          .select('id, title, description, date, metadata, url')
+          .eq('representative_id', repIdNum)
+          .eq('type', 'vote')
+          .order('date', { ascending: false })
+          .limit(200);
+
+        if (error) {
+          logger.debug('representative_activity votes fetch failed', { representativeId, error: error.message });
+          return [];
         }
-      }
 
-      // Get votes from Open States (for state legislators)
-      if (this.clients.openStates) {
-        try {
-          const openStatesVotes = await this.clients.openStates.getVotes({
-            limit: 100
-          });
+        let mapped = (rows ?? []).map((row: { id: number; title?: string | null; description?: string | null; date?: string | null; metadata?: unknown; url?: string | null }) => {
+          const meta = row.metadata && typeof row.metadata === 'object' && !Array.isArray(row.metadata) ? (row.metadata as Record<string, unknown>) : {};
+          const myVotes = Array.isArray(meta.my_votes) ? (meta.my_votes as Array<{ option?: string }>) : [];
+          const votePosition = typeof meta.vote_position === 'string' ? meta.vote_position : (myVotes[0]?.option ?? '');
+          const billId = typeof meta.govinfo_bill_id === 'string' ? meta.govinfo_bill_id : (typeof meta.openstates_bill_id === 'string' ? meta.openstates_bill_id : (typeof meta.identifier === 'string' ? meta.identifier : undefined));
 
-          for (const vote of openStatesVotes) {
-            votes.push({
-              id: vote.id,
-              representativeId,
-              billId: vote.bill_id,
-              question: vote.motion,
-              description: vote.motion,
-              vote: this.mapVoteResult(vote.result),
-              result: this.mapVoteOutcome(vote.result),
-              chamber: vote.chamber,
-              date: vote.date,
-              partyLineVote: false,
-              partyAlignment: 0,
-              sources: ['open-states'],
-              lastUpdated: new Date().toISOString(),
-              dataQuality: 'high'
-            });
-          }
-        } catch (error) {
-          logger.debug('Open States voting record failed', { representativeId, error });
+          return {
+            id: String(row.id),
+            representativeId,
+            ...(billId && { billId }),
+            billTitle: row.title ?? undefined,
+            question: row.title ?? '',
+            description: row.description ?? row.title ?? '',
+            vote: this.mapVoteResult(votePosition),
+            result: 'tabled' as const,
+            chamber: '',
+            ...(typeof meta.congress === 'number' && { congress: meta.congress }),
+            date: row.date ?? new Date().toISOString().slice(0, 10),
+            partyLineVote: false,
+            partyAlignment: 0,
+            sources: ['representative_activity'],
+            lastUpdated: new Date().toISOString(),
+            dataQuality: 'medium' as const
+          };
+        });
+
+        if (congress != null) {
+          mapped = mapped.filter((v) => (v as { congress?: number }).congress === congress);
         }
+
+        CivicsCache.cacheVotes(representativeId, mapped, congress);
+        return mapped;
+      } catch (e) {
+        logger.debug('getVotingRecord Supabase path failed', { representativeId, error: e instanceof Error ? e.message : String(e) });
+        return [];
       }
-
-      return votes;
-
-    } catch (error) {
-      logger.error('Failed to get voting record', { representativeId, error });
-      return [];
     }
+
+    logger.debug('getVotingRecord: representativeId must be a positive integer (DB representative_id) for member-specific votes');
+    return [];
   }
 
   /**
@@ -668,13 +664,6 @@ export class UnifiedDataOrchestrator {
     if (lower.includes('nay') || lower.includes('no')) return 'no';
     if (lower.includes('abstain') || lower.includes('present')) return 'abstain';
     return 'not_voting';
-  }
-
-  private mapVoteOutcome(result: string): 'passed' | 'failed' | 'tabled' {
-    const lower = result.toLowerCase();
-    if (lower.includes('passed') || lower.includes('agreed')) return 'passed';
-    if (lower.includes('failed') || lower.includes('rejected')) return 'failed';
-    return 'tabled';
   }
 
   private calculateCompleteness(representative: Partial<UnifiedRepresentative>): number {

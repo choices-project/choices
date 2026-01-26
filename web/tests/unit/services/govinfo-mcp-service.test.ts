@@ -14,10 +14,10 @@ let fetchMock: jest.SpiedFunction<typeof fetch>;
 beforeEach(() => {
   fetchMock = jest.spyOn(global, 'fetch').mockImplementation((input: RequestInfo | URL, init?: RequestInit) => {
     const url = typeof input === 'string' ? input : input instanceof URL ? input.href : (input as Request).url;
+    const path = url.split('?')[0];
     const method = init?.method ?? 'GET';
 
-    if (url.includes('/search') && method === 'POST') {
-      const body = init?.body ? JSON.parse(init.body as string) : {};
+    if (path.includes('/search') && method === 'POST') {
       return Promise.resolve({
         ok: true,
         status: 200,
@@ -31,22 +31,7 @@ beforeEach(() => {
       } as Response);
     }
 
-    if (url.includes('/related/') && !url.includes('/BILLS')) {
-      return Promise.resolve({
-        ok: true,
-        status: 200,
-        json: async () => ({
-          relatedId: 'BILLS-119hr1-ih',
-          relationships: [
-            { relationship: 'Bill versions', collection: 'BILLS', relationshipLink: 'https://api.govinfo.gov/related/BILLS-119hr1-ih/BILLS' },
-          ],
-        }),
-        text: async () => '',
-        headers: new Headers(),
-      } as Response);
-    }
-
-    if (url.includes('/related/') && url.endsWith('/BILLS')) {
+    if (path.match(/\/related\/[^/]+\/BILLS$/)) {
       return Promise.resolve({
         ok: true,
         status: 200,
@@ -54,6 +39,21 @@ beforeEach(() => {
           relatedId: 'BILLS-119hr1-ih',
           results: [
             { packageId: 'BILLS-119hr1-is', title: 'Test Bill Senate', lastModified: '' },
+          ],
+        }),
+        text: async () => '',
+        headers: new Headers(),
+      } as Response);
+    }
+
+    if (path.includes('/related/')) {
+      return Promise.resolve({
+        ok: true,
+        status: 200,
+        json: async () => ({
+          relatedId: 'BILLS-119hr1-ih',
+          relationships: [
+            { relationship: 'Bill versions', collection: 'BILLS', relationshipLink: 'https://api.govinfo.gov/related/BILLS-119hr1-ih/BILLS' },
           ],
         }),
         text: async () => '',

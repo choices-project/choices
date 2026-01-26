@@ -11,7 +11,7 @@ import {
   useSidebarPinned,
   useSidebarWidth,
 } from '@/lib/stores/appStore';
-import { useDeviceStore } from '@/lib/stores/deviceStore';
+import { useDeviceActions } from '@/lib/stores/deviceStore';
 import { logger } from '@/lib/utils/logger';
 
 import { useSystemThemeSync } from '@/hooks/useSystemThemeSync';
@@ -145,8 +145,7 @@ export function AppShell({ navigation, siteMessages, feedback, children }: AppSh
       });
     }
   }, [resolvedTheme, sidebarCollapsed, sidebarWidth, sidebarPinned]);
-  // Get initialize directly from store for stable reference
-  const initializeDevice = useDeviceStore((state) => state.initialize);
+  const { initialize: initializeDevice } = useDeviceActions();
   const initRef = useRef(false);
 
   // Initialize app store

@@ -144,6 +144,33 @@ function selectActivityDate(bill: OpenStatesBill): string | null {
   return null;
 }
 
+const FEDERAL_TYPE_RE = /^(hr|s|hjres|sjres|hconres|sconres)\s*(\d+)$/i;
+
+function sessionToCongress(session: string | null | undefined): number | null {
+  if (session == null || typeof session !== 'string') return null;
+  const s = session.trim();
+  const n = parseInt(s, 10);
+  if (Number.isNaN(n)) return null;
+  if (n >= 80 && n <= 150) return n;
+  if (n >= 1933 && n <= 2030) return 73 + Math.floor((n - 1933) / 2);
+  return null;
+}
+
+function identifierToGovInfoPackageId(
+  identifier: string | null | undefined,
+  congress: number,
+): string | null {
+  if (identifier == null || typeof identifier !== 'string') return null;
+  const norm = identifier.replace(/\s+/g, ' ').trim();
+  const m = norm.match(FEDERAL_TYPE_RE);
+  if (!m) return null;
+  const type = m[1].toLowerCase();
+  const num = m[2];
+  const house = ['hr', 'hjres', 'hconres'].includes(type);
+  const suffix = house ? 'ih' : 'is';
+  return `BILLS-${congress}${type}${num}-${suffix}`;
+}
+
 function buildActivityMetadata(
   bill: OpenStatesBill,
   openstatesId: string | undefined,
@@ -174,6 +201,14 @@ function buildActivityMetadata(
     const votes = myVotesOnBill(bill, openstatesId);
     if (votes.length > 0) metadata.my_votes = votes;
   }
+
+  const session = bill.legislative_session?.identifier ?? null;
+  const congress = sessionToCongress(session);
+  const govinfoId =
+    bill.identifier && congress != null
+      ? identifierToGovInfoPackageId(bill.identifier, congress)
+      : null;
+  if (govinfoId) metadata.govinfo_bill_id = govinfoId;
 
   return metadata;
 }

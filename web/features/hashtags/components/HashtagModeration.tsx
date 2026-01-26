@@ -35,8 +35,10 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 
 import {
-  useHashtagModerationStore,
-  type HashtagFlagType
+  useModerationModal,
+  useModerationForm,
+  useModerationActions,
+  type HashtagFlagType,
 } from '@/lib/stores/hashtagModerationStore';
 import { logger } from '@/lib/utils/logger';
 
@@ -77,32 +79,16 @@ export type FlagHashtagProps = {
 // ============================================================================
 
 export function FlagHashtag({ hashtagId, onFlag, className }: FlagHashtagProps) {
-  // Zustand store integration
+  const isOpen = useModerationModal();
+  const { flagType, reason, isSubmitting, error } = useModerationForm();
   const {
-    isOpen,
-    flagType,
-    reason,
-    isSubmitting,
-    error,
     setIsOpen,
     setFlagType,
     setReason,
     setIsSubmitting,
     setError,
-    submitFlag
-  } = useHashtagModerationStore(state => ({
-    isOpen: state.isOpen,
-    flagType: state.flagType,
-    reason: state.reason,
-    isSubmitting: state.isSubmitting,
-    error: state.error,
-    setIsOpen: state.setIsOpen,
-    setFlagType: state.setFlagType,
-    setReason: state.setReason,
-    setIsSubmitting: state.setIsSubmitting,
-    setError: state.setError,
-    submitFlag: state.submitFlag
-  }));
+    submitFlag,
+  } = useModerationActions();
 
   const flagTypes: Array<{ value: HashtagFlagType; label: string; icon: any }> = [
     { value: 'inappropriate', label: 'Inappropriate Content', icon: AlertTriangle },

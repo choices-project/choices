@@ -492,15 +492,15 @@ export const GET = withErrorHandling(async (request: NextRequest) => {
   });
 
   // Add cache headers for public data (Issue #2)
-  // Cache for 5 minutes, stale-while-revalidate for 24 hours
-  response.headers.set('Cache-Control', 'public, max-age=300, stale-while-revalidate=86400');
+  // Rep data is ingest-updated; cache 24h, stale-while-revalidate 24h
+  response.headers.set('Cache-Control', 'public, max-age=86400, stale-while-revalidate=86400');
   response.headers.set('ETag', etag);
 
   // Check if client has cached version (Issue #2)
   const ifNoneMatch = request.headers.get('if-none-match');
   if (ifNoneMatch === etag) {
     const headers = new Headers();
-    headers.set('Cache-Control', 'public, max-age=300, stale-while-revalidate=86400');
+    headers.set('Cache-Control', 'public, max-age=86400, stale-while-revalidate=86400');
     headers.set('ETag', etag);
     return new NextResponse(null, { status: 304, headers });
   }

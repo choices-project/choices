@@ -41,7 +41,7 @@ type UpdateContactRequest = {
 // ============================================================================
 
 export const GET = withErrorHandling(async (
-  request: NextRequest,
+  _request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) => {
   const { id } = await params;
@@ -64,6 +64,7 @@ export const GET = withErrorHandling(async (
   }
 
   // Get contact with representative info
+  // Use relationship hint to avoid ambiguity
   const { data: contact, error: contactError } = await supabase
     .from('representative_contacts')
     .select(`
@@ -76,7 +77,7 @@ export const GET = withErrorHandling(async (
       source,
       created_at,
       updated_at,
-      representatives_core (
+      representatives_core!representative_contacts_representative_id_fkey (
         id,
         name,
         office,
@@ -235,7 +236,7 @@ export const PATCH = withErrorHandling(async (
 // ============================================================================
 
 export const DELETE = withErrorHandling(async (
-  request: NextRequest,
+  _request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) => {
   const { id } = await params;

@@ -68,7 +68,7 @@ export function useContactNotifications() {
       message: `New ${contactType} contact information submitted for ${representativeName}`,
       action: {
         label: 'Review',
-        href: '/admin/contact',
+        url: '/admin/contact',
       },
     });
   }, [addAdminNotification]);

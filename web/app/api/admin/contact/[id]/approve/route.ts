@@ -18,6 +18,7 @@ import {
   validationError,
   withErrorHandling,
 } from '@/lib/api';
+import { notifyUserContactApproved } from '@/lib/contact/contact-notifications';
 import { logger } from '@/lib/utils/logger';
 
 import type { NextRequest } from 'next/server';
@@ -29,7 +30,7 @@ export const dynamic = 'force-dynamic';
 // ============================================================================
 
 export const POST = withErrorHandling(async (
-  request: NextRequest,
+  _request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) => {
   try {
@@ -54,10 +55,10 @@ export const POST = withErrorHandling(async (
       return errorResponse('Database connection not available', 500);
     }
 
-    // Get existing contact
+    // Get existing contact with submitter info
     const { data: existingContact, error: fetchError } = await supabase
       .from('representative_contacts')
-      .select('id, representative_id, contact_type, value, is_verified, source')
+      .select('id, representative_id, contact_type, value, is_verified, source, submitted_by_user_id')
       .eq('id', contactId)
       .single();
 
@@ -91,7 +92,7 @@ export const POST = withErrorHandling(async (
         source,
         created_at,
         updated_at,
-        representatives_core (
+        representatives_core!representative_contacts_representative_id_fkey (
           id,
           name,
           office,
@@ -103,6 +104,22 @@ export const POST = withErrorHandling(async (
     if (updateError || !updatedContact) {
       logger.error('Error approving contact', { contactId, error: updateError });
       return errorResponse('Failed to approve contact information', 500);
+    }
+
+    // Notify user if they submitted this contact
+    if (existingContact.submitted_by_user_id) {
+      await notifyUserContactApproved(supabase, {
+        id: updatedContact.id,
+        representative_id: updatedContact.representative_id,
+        contact_type: updatedContact.contact_type,
+        value: updatedContact.value,
+        representative: (updatedContact.representatives_core as any) ? {
+          id: (updatedContact.representatives_core as any).id,
+          name: (updatedContact.representatives_core as any).name,
+          office: (updatedContact.representatives_core as any).office,
+          party: (updatedContact.representatives_core as any).party,
+        } : undefined,
+      }, existingContact.submitted_by_user_id);
     }
 
     logger.info('Contact approved', {

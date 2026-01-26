@@ -284,7 +284,8 @@ export const REPRESENTATIVE_CONSTANTS = {
   MAX_SEARCH_RESULTS: 50,
   DEFAULT_PAGE_SIZE: 20,
   MAX_FOLLOWED_REPRESENTATIVES: 10,
-  CACHE_DURATION: 5 * 60 * 1000, // 5 minutes
+  /** Ingest-updated; cache until next ingest (24h). */
+  CACHE_DURATION: 24 * 60 * 60 * 1000, // 24 hours
 } as const;
 
 export const REPRESENTATIVE_OFFICES = {

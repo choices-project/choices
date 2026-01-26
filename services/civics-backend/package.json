@@ -78,6 +78,8 @@
     "openstates:sync:google-civic": "npm run state:sync:google-civic",
     "openstates:sync:google-elections": "npm run state:sync:google-elections",
     "openstates:sync:divisions": "npm run state:sync:divisions",
+    "openstates:sync:all": "npm run build --silent && node build/openstates/sync-all.js",
+    "sync:all": "npm run openstates:sync:all",
     "sync:activity": "npm run state:sync:activity",
     "refresh:state": "npm run state:refresh",
     "sync:committees": "npm run state:sync:committees",

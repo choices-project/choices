@@ -494,7 +494,7 @@ export const GET = withErrorHandling(async (
       );
 
       responsePayload.headers.set('ETag', `"${representativeRow.id}-${representativeRow.updated_at}"`);
-      responsePayload.headers.set('Cache-Control', 'public, max-age=300, stale-while-revalidate=86400');
+      responsePayload.headers.set('Cache-Control', 'public, max-age=86400, stale-while-revalidate=86400');
 
       return responsePayload;
     }
@@ -507,7 +507,7 @@ export const GET = withErrorHandling(async (
     );
 
     apiResponse.headers.set('ETag', `"${representativeRow.id}-${representativeRow.updated_at}"`);
-    apiResponse.headers.set('Cache-Control', 'public, max-age=300, stale-while-revalidate=86400');
+    apiResponse.headers.set('Cache-Control', 'public, max-age=86400, stale-while-revalidate=86400');
 
     return apiResponse;
 

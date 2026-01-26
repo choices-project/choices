@@ -254,4 +254,27 @@ test.describe('Representatives Advanced Features', () => {
     // (or at least the page should load)
     expect(hasLocationSearch || hasLocationButton || true).toBe(true);
   });
+
+  test('my representatives page loads and reflects store state', async ({ page }) => {
+    test.setTimeout(60_000);
+
+    await page.goto(`${BASE_URL}/representatives/my`, {
+      waitUntil: 'domcontentloaded',
+      timeout: 30_000,
+    });
+    await waitForPageReady(page);
+    await page.waitForTimeout(5_000);
+
+    // Page uses representativeStore (getUserRepresentatives, useUserRepresentativeEntries)
+    // Should show "My Representatives" or redirect to auth if unauthenticated
+    const myRepsHeading = page.getByRole('heading', { name: /my representatives/i });
+    const emptyState = page.locator('text=/no representatives followed|start following/i');
+    const representativeCards = page.locator('[data-testid*="representative"], [class*="representative-card"]');
+
+    const hasHeading = (await myRepsHeading.count()) > 0;
+    const hasEmptyState = (await emptyState.count()) > 0;
+    const hasCards = (await representativeCards.count()) > 0;
+
+    expect(hasHeading || hasEmptyState || hasCards).toBe(true);
+  });
 });

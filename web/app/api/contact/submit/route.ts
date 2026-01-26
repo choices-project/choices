@@ -20,9 +20,10 @@ import {
   withErrorHandling,
   parseBody,
 } from '@/lib/api';
+import { notifyAdminNewContactSubmission } from '@/lib/contact/contact-notifications';
+import { validateAndNormalizeContact, validateContactType, type ContactType } from '@/lib/contact/contact-validation';
 import { apiRateLimiter } from '@/lib/rate-limiting/api-rate-limiter';
 import { validateRepresentativeId } from '@/lib/security/input-sanitization';
-import { validateAndNormalizeContact, validateContactType, type ContactType } from '@/lib/contact/contact-validation';
 import { logger } from '@/lib/utils/logger';
 
 import type { NextRequest } from 'next/server';
@@ -160,6 +161,7 @@ export const POST = withErrorHandling(async (request: NextRequest) => {
         .update({
           value: contactValidation.normalized,
           is_primary: is_primary,
+          submitted_by_user_id: user.id, // Update submitter if user resubmits
           updated_at: new Date().toISOString(),
         })
         .eq('id', existingContact.id)
@@ -207,6 +209,7 @@ export const POST = withErrorHandling(async (request: NextRequest) => {
       is_primary: is_primary,
       is_verified: false, // Requires admin approval
       source: 'user_submission',
+      submitted_by_user_id: user.id, // Track who submitted for notifications
       updated_at: new Date().toISOString(),
     })
     .select()
@@ -216,6 +219,19 @@ export const POST = withErrorHandling(async (request: NextRequest) => {
     logger.error('Error creating contact submission', { error: insertError });
     return errorResponse('Failed to submit contact information', 500);
   }
+
+  // Notify admins of new submission
+  await notifyAdminNewContactSubmission(supabase, {
+    id: newContact.id,
+    representative_id: newContact.representative_id,
+    contact_type: newContact.contact_type,
+    value: newContact.value,
+    representative: {
+      id: representative.id,
+      name: representative.name,
+      office: representative.office,
+    },
+  });
 
   const responseTime = Date.now() - startTime;
   logger.info('Contact submission created', {

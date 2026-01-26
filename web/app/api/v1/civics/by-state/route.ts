@@ -210,7 +210,7 @@ export const GET = withErrorHandling(async (request: NextRequest) => {
   );
 
     response.headers.set('ETag', `"${state}-${level}-${Date.now()}"`);
-    response.headers.set('Cache-Control', 'public, max-age=300, stale-while-revalidate=86400');
+    response.headers.set('Cache-Control', 'public, max-age=86400, stale-while-revalidate=86400');
 
     return response;
   } catch (error) {

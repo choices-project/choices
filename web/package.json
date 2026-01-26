@@ -48,6 +48,8 @@
     "test:e2e:verify": "tsx tests/e2e/setup/verify-admin.ts",
     "test:e2e:check": "tsx tests/e2e/setup/check-env.ts",
     "cache:report": "tsx scripts/cache/report.ts",
+    "backfill:govinfo-bill-ids": "tsx scripts/backfill-govinfo-bill-ids.ts",
+    "backfill:govinfo-bill-ids:dry": "tsx scripts/backfill-govinfo-bill-ids.ts --dry-run",
     "test:e2e:staging": "node ./scripts/run-with-timeout.js 600 npx playwright test --config=playwright.staging.config.ts --reporter=line",
     "test:e2e:production": "PLAYWRIGHT_USE_MOCKS=0 BASE_URL=https://www.choices-app.com node ./scripts/run-with-timeout.js 1800 npx playwright test --config=playwright.production.config.ts --reporter=line",
     "test:performance": "node ./scripts/run-with-timeout.js 600 npx playwright test --config=playwright.monitoring.config.ts --grep=performance --reporter=line",

@@ -18,26 +18,37 @@ import logger from '@/lib/utils/logger';
 
 
 // Cache configuration
+// Rep/state/address/votes all change on ingest. Cache until next ingest (daily/weekly).
+const ONE_DAY_MS = 24 * 60 * 60 * 1000;
+const ONE_WEEK_MS = 7 * ONE_DAY_MS;
+
 const CACHE_CONFIG = {
-  // Representative data cache (longer TTL for stable data)
+  // Representative data: ingest-updated. Cache until next ingest.
   representative: {
-    ttl: 15 * 60 * 1000, // 15 minutes
+    ttl: ONE_DAY_MS,
     maxSize: 1000,
     keyPrefix: 'civics:rep:'
   },
-  
-  // Address lookup cache (medium TTL for electoral data)
+
+  // Address → jurisdiction: stable until redistricting. Ingest-adjacent.
   address: {
-    ttl: 5 * 60 * 1000, // 5 minutes
+    ttl: ONE_DAY_MS,
     maxSize: 500,
     keyPrefix: 'civics:addr:'
   },
-  
-  // State lookup cache (longer TTL for stable state data)
+
+  // State-level rep lists: ingest-updated.
   state: {
-    ttl: 30 * 60 * 1000, // 30 minutes
+    ttl: ONE_DAY_MS,
     maxSize: 100,
     keyPrefix: 'civics:state:'
+  },
+
+  // Vote lookup (rep votes on bills): historical, ingest-updated. Walk-the-Talk is after-the-fact.
+  votes: {
+    ttl: ONE_WEEK_MS,
+    maxSize: 500,
+    keyPrefix: 'civics:votes:'
   }
 };
 
@@ -66,6 +77,14 @@ export class CivicsCache {
   static getStateKey(state: string, level?: string, chamber?: string): string {
     const params = [state, level ?? 'all', chamber ?? 'all'].join(':');
     return `${CACHE_CONFIG.state.keyPrefix}${params}`;
+  }
+
+  /**
+   * Generate cache key for vote lookup (representative_activity type=vote)
+   */
+  static getVotesKey(representativeId: string, congress?: number): string {
+    const suffix = congress != null ? `:${congress}` : ':all';
+    return `${CACHE_CONFIG.votes.keyPrefix}${representativeId}${suffix}`;
   }
 
   /**
@@ -156,6 +175,32 @@ export class CivicsCache {
   }
 
   /**
+   * Cache vote lookup data (getVotingRecord)
+   */
+  static cacheVotes(representativeId: string, data: unknown, congress?: number): void {
+    const key = this.getVotesKey(representativeId, congress);
+    this.set(key, data, CACHE_CONFIG.votes.ttl);
+  }
+
+  /**
+   * Get cached vote lookup data
+   */
+  static getCachedVotes<T>(representativeId: string, congress?: number): T | null {
+    const key = this.getVotesKey(representativeId, congress);
+    return this.get<T>(key);
+  }
+
+  /**
+   * Clear vote cache for a representative (e.g. after activity backfill)
+   */
+  static clearVotes(representativeId: string): void {
+    const prefix = CACHE_CONFIG.votes.keyPrefix + representativeId;
+    for (const k of Array.from(cacheStore.keys())) {
+      if (k.startsWith(prefix)) cacheStore.delete(k);
+    }
+  }
+
+  /**
    * Clear cache for specific representative
    */
   static clearRepresentative(id: string): void {
@@ -178,12 +223,14 @@ export class CivicsCache {
     representativeEntries: number;
     addressEntries: number;
     stateEntries: number;
+    voteEntries: number;
     memoryUsage: string;
   } {
     const totalEntries = cacheStore.size;
     let representativeEntries = 0;
     let addressEntries = 0;
     let stateEntries = 0;
+    let voteEntries = 0;
 
     for (const key of cacheStore.keys()) {
       if (key.startsWith(CACHE_CONFIG.representative.keyPrefix)) {
@@ -192,6 +239,8 @@ export class CivicsCache {
         addressEntries++;
       } else if (key.startsWith(CACHE_CONFIG.state.keyPrefix)) {
         stateEntries++;
+      } else if (key.startsWith(CACHE_CONFIG.votes.keyPrefix)) {
+        voteEntries++;
       }
     }
 
@@ -200,6 +249,7 @@ export class CivicsCache {
       representativeEntries,
       addressEntries,
       stateEntries,
+      voteEntries,
       memoryUsage: `${Math.round(process.memoryUsage().heapUsed / 1024 / 1024)}MB`
     };
   }

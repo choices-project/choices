@@ -19,6 +19,7 @@ import {
   withErrorHandling,
   parseBody,
 } from '@/lib/api';
+import { notifyUserContactRejected } from '@/lib/contact/contact-notifications';
 import { logger } from '@/lib/utils/logger';
 
 import type { NextRequest } from 'next/server';
@@ -70,10 +71,10 @@ export const POST = withErrorHandling(async (
       return errorResponse('Database connection not available', 500);
     }
 
-    // Get existing contact
+    // Get existing contact with submitter info
     const { data: existingContact, error: fetchError } = await supabase
       .from('representative_contacts')
-      .select('id, representative_id, contact_type, value, is_verified, source')
+      .select('id, representative_id, contact_type, value, is_verified, source, submitted_by_user_id, representatives_core!representative_contacts_representative_id_fkey (id, name, office, party)')
       .eq('id', contactId)
       .single();
 
@@ -99,6 +100,22 @@ export const POST = withErrorHandling(async (
     if (deleteError) {
       logger.error('Error rejecting contact', { contactId, error: deleteError });
       return errorResponse('Failed to reject contact information', 500);
+    }
+
+    // Notify user if they submitted this contact (before deleting)
+    if (existingContact.submitted_by_user_id) {
+      await notifyUserContactRejected(supabase, {
+        id: existingContact.id,
+        representative_id: existingContact.representative_id,
+        contact_type: existingContact.contact_type,
+        value: existingContact.value,
+        representative: (existingContact.representatives_core as any) ? {
+          id: (existingContact.representatives_core as any).id,
+          name: (existingContact.representatives_core as any).name,
+          office: (existingContact.representatives_core as any).office,
+          party: (existingContact.representatives_core as any).party,
+        } : undefined,
+      }, reason, existingContact.submitted_by_user_id);
     }
 
     logger.info('Contact rejected', {

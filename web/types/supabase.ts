@@ -3086,6 +3086,7 @@ export type Database = {
           is_verified: boolean | null
           representative_id: number
           source: string | null
+          submitted_by_user_id: string | null
           updated_at: string | null
           value: string
         }
@@ -3097,6 +3098,7 @@ export type Database = {
           is_verified?: boolean | null
           representative_id: number
           source?: string | null
+          submitted_by_user_id?: string | null
           updated_at?: string | null
           value: string
         }
@@ -3108,6 +3110,7 @@ export type Database = {
           is_verified?: boolean | null
           representative_id?: number
           source?: string | null
+          submitted_by_user_id?: string | null
           updated_at?: string | null
           value?: string
         }

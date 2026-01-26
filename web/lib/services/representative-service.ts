@@ -33,7 +33,8 @@ import type {
 
 export class RepresentativeService {
   private cache: Map<string, unknown> = new Map();
-  private cacheTimeout = CACHE_DURATIONS.MEDIUM; // 5 minutes
+  /** Rep data is ingest-updated; cache until next ingest (24h). */
+  private cacheTimeout = CACHE_DURATIONS.DAY;
 
   private isChallengeResponse(response: Response): boolean {
     const mitigated = response.headers.get('x-vercel-mitigated');
