@@ -270,7 +270,7 @@ export function RepresentativeActivityFeed({
                             {activity.url ? (
                               <Link
                                 href={activity.url}
-                                className="hover:underline"
+                                className="hover:underline text-blue-600 dark:text-blue-400"
                                 target={activity.url.startsWith('http') ? '_blank' : undefined}
                                 rel={activity.url.startsWith('http') ? 'noopener noreferrer' : undefined}
                               >
@@ -287,6 +287,11 @@ export function RepresentativeActivityFeed({
                         {activity.description && (
                           <p className="text-sm text-gray-600 dark:text-gray-400 mt-1 line-clamp-2">
                             {activity.description}
+                          </p>
+                        )}
+                        {activity.type === 'poll' && _representative && (
+                          <p className="text-xs text-gray-500 dark:text-gray-500 mt-1">
+                            Poll about <span className="font-medium">{_representative.name}</span>
                           </p>
                         )}
                         <div className="flex items-center gap-4 mt-2 text-xs text-gray-500 dark:text-gray-500">

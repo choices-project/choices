@@ -336,9 +336,6 @@ function RepresentativeDetailPageContent() {
   );
 
   const campaignFinance = representative?.campaign_finance ?? null;
-  const dataSources = Array.isArray(representative?.data_sources) ? representative?.data_sources : [];
-  const dataQualityScore = representative?.data_quality_score ?? 0;
-  const verificationStatus = representative?.verification_status ?? null;
 
   // Loading state
   if (loading) {
@@ -541,24 +538,13 @@ function RepresentativeDetailPageContent() {
             )}
           </div>
 
-          <div className="grid md:grid-cols-2 gap-6 mb-8">
+          <div className="mb-8">
             <div className="p-4 bg-gray-50 rounded-lg">
               <h3 className="text-lg font-semibold text-gray-900 mb-2">Term Details</h3>
               <div className="space-y-1 text-sm text-gray-600">
                 <div>Term start: {representative.term_start_date ? formatElectionDateStable(representative.term_start_date) : '—'}</div>
                 <div>Term end: {representative.term_end_date ? formatElectionDateStable(representative.term_end_date) : '—'}</div>
                 <div>Next election: {representative.next_election_date ? formatElectionDateStable(representative.next_election_date) : 'No upcoming election on file'}</div>
-              </div>
-            </div>
-            <div className="p-4 bg-gray-50 rounded-lg">
-              <h3 className="text-lg font-semibold text-gray-900 mb-2">Data Quality</h3>
-              <div className="space-y-1 text-sm text-gray-600">
-                <div>Score: {Math.round(dataQualityScore)}%</div>
-                {verificationStatus && <div>Status: {verificationStatus}</div>}
-                {representative.last_verified && <div>Last verified: {formatElectionDateStable(representative.last_verified)}</div>}
-                {dataSources.length > 0 && (
-                  <div>Sources: {dataSources.slice(0, 4).join(', ')}</div>
-                )}
               </div>
             </div>
           </div>
@@ -691,28 +677,6 @@ function RepresentativeDetailPageContent() {
             </div>
           )}
 
-          <div className="mb-8">
-            <h3 className="text-lg font-semibold text-gray-900 mb-4">External IDs</h3>
-            <div className="grid md:grid-cols-2 gap-2 text-sm text-gray-600">
-              {representative.bioguide_id && <div>Bioguide: {representative.bioguide_id}</div>}
-              {representative.fec_id && <div>FEC: {representative.fec_id}</div>}
-              {representative.google_civic_id && <div>Google Civic: {representative.google_civic_id}</div>}
-              {representative.congress_gov_id && <div>Congress.gov: {representative.congress_gov_id}</div>}
-              {representative.legiscan_id && <div>LegiScan: {representative.legiscan_id}</div>}
-              {representative.govinfo_id && <div>GovInfo: {representative.govinfo_id}</div>}
-              {representative.openstates_id && <div>OpenStates: {representative.openstates_id}</div>}
-              {representative.ballotpedia_url && (
-                <a
-                  href={representative.ballotpedia_url}
-                  className="text-blue-600 hover:underline"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                >
-                  Ballotpedia profile
-                </a>
-              )}
-            </div>
-          </div>
 
           {campaignFinance && (
             <div className="mb-8 p-4 bg-gray-50 rounded-lg">
@@ -739,6 +703,32 @@ function RepresentativeDetailPageContent() {
                 representativeId={numericRepresentativeId}
                 representative={representative ?? undefined}
               />
+            </div>
+          )}
+
+          {/* External IDs - Moved to bottom, least prominent */}
+          {(representative.bioguide_id || representative.fec_id || representative.congress_gov_id || representative.google_civic_id || representative.legiscan_id || representative.govinfo_id || representative.openstates_id || representative.ballotpedia_url) && (
+            <div className="mt-8 pt-6 border-t border-gray-200 dark:border-gray-700">
+              <h3 className="text-sm font-medium text-gray-500 dark:text-gray-400 mb-3">External Identifiers</h3>
+              <div className="grid md:grid-cols-2 gap-2 text-xs text-gray-500 dark:text-gray-500">
+                {representative.bioguide_id && <div>Bioguide: {representative.bioguide_id}</div>}
+                {representative.fec_id && <div>FEC: {representative.fec_id}</div>}
+                {representative.congress_gov_id && <div>Congress.gov: {representative.congress_gov_id}</div>}
+                {representative.google_civic_id && <div>Google Civic: {representative.google_civic_id}</div>}
+                {representative.legiscan_id && <div>LegiScan: {representative.legiscan_id}</div>}
+                {representative.govinfo_id && <div>GovInfo: {representative.govinfo_id}</div>}
+                {representative.openstates_id && <div>OpenStates: {representative.openstates_id}</div>}
+                {representative.ballotpedia_url && (
+                  <a
+                    href={representative.ballotpedia_url}
+                    className="text-blue-600 hover:underline dark:text-blue-400"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                  >
+                    Ballotpedia profile
+                  </a>
+                )}
+              </div>
             </div>
           )}
         </div>
