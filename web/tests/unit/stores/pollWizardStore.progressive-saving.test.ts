@@ -10,7 +10,7 @@
 
 import { create } from 'zustand';
 import { immer } from 'zustand/middleware/immer';
-import { persist } from 'zustand/middleware';
+import { createJSONStorage, persist } from 'zustand/middleware';
 
 import type { PollWizardStore } from '@/lib/stores/pollWizardStore';
 import {
@@ -23,12 +23,10 @@ const createMockStorage = () => {
 
   return {
     getItem: (key: string): string | null => {
-      const value = storage[key];
-      if (value === undefined || value === null) return null;
-      return typeof value === 'string' ? value : JSON.stringify(value);
+      return storage[key] ?? null;
     },
     setItem: (key: string, value: string): void => {
-      storage[key] = typeof value === 'string' ? value : JSON.stringify(value);
+      storage[key] = value;
     },
     removeItem: (key: string): void => {
       delete storage[key];
@@ -46,16 +44,18 @@ type PersistStore = ReturnType<typeof create<PollWizardStore>> & {
 
 const createTestPollWizardStore = (
   storage?: ReturnType<typeof createMockStorage>,
+  onRehydrateStorage?: () => void | Promise<void>,
 ): PersistStore => {
   const mockStorage = storage ?? createMockStorage();
   return create<PollWizardStore>()(
     persist(immer(pollWizardStoreCreator), {
       name: 'poll-wizard-store',
-      storage: mockStorage as unknown as Storage,
+      storage: createJSONStorage(() => mockStorage),
       partialize: (state) => ({
         currentStep: state.currentStep,
         data: state.data,
       }),
+      onRehydrateStorage,
     }),
   ) as PersistStore;
 };
@@ -111,34 +111,65 @@ describe('PollWizardStore Progressive Saving', () => {
       expect(stored.state?.data?.category).toBe('civics');
     });
 
-    it.skip('restores state from storage on initialization', async () => {
-      mockStorage.setItem(
-        'poll-wizard-store',
-        JSON.stringify({
-          state: {
-            currentStep: 2,
-            data: {
-              title: 'Restored Poll',
-              description: 'Restored Description',
-              category: 'politics',
-              options: ['Option 1', 'Option 2'],
-              tags: ['test'],
-              privacyLevel: 'public',
-              settings: {},
-            },
+    it('restores state from storage on initialization', async () => {
+      // Pre-populate storage before creating store
+      const storedData = {
+        state: {
+          currentStep: 2,
+          data: {
+            title: 'Restored Poll',
+            description: 'Restored Description',
+            category: 'politics',
+            options: ['Option 1', 'Option 2'],
+            tags: ['test'],
+            privacyLevel: 'public' as const,
+            settings: {},
           },
-          version: 0,
-        }),
-      );
+        },
+        version: 0,
+      };
+      mockStorage.setItem('poll-wizard-store', JSON.stringify(storedData));
 
-      const store = createTestPollWizardStore(mockStorage);
-      if (store.persist?.rehydrate) await store.persist.rehydrate();
+      // Verify storage is set correctly
+      const storedRaw = mockStorage.getItem('poll-wizard-store');
+      expect(storedRaw).toBeTruthy();
 
-      expect(store.getState().currentStep).toBe(2);
-      expect(store.getState().data.title).toBe('Restored Poll');
-      expect(store.getState().data.description).toBe('Restored Description');
-      expect(store.getState().data.category).toBe('politics');
-      expect(store.getState().data.options).toEqual(['Option 1', 'Option 2']);
+      // Wait for hydration using onRehydrateStorage callback
+      let hydrationPromise: Promise<void>;
+      let hydrationResolve: () => void;
+      hydrationPromise = new Promise((resolve) => {
+        hydrationResolve = resolve;
+      });
+
+      const store = createTestPollWizardStore(mockStorage, () => {
+        hydrationResolve();
+      });
+
+      // Manually trigger rehydration if persist API is available
+      if (store.persist?.rehydrate) {
+        await store.persist.rehydrate();
+        hydrationResolve(); // Resolve in case callback doesn't fire
+      } else {
+        // If no persist API, wait a bit for async hydration
+        await new Promise((resolve) => setTimeout(resolve, 100));
+        hydrationResolve();
+      }
+
+      // Wait for hydration to complete (with timeout)
+      await Promise.race([
+        hydrationPromise,
+        new Promise((resolve) => setTimeout(resolve, 200)),
+      ]);
+
+      // Give a small delay for state to settle
+      await new Promise((resolve) => setTimeout(resolve, 50));
+
+      const state = store.getState();
+      expect(state.currentStep).toBe(2);
+      expect(state.data.title).toBe('Restored Poll');
+      expect(state.data.description).toBe('Restored Description');
+      expect(state.data.category).toBe('politics');
+      expect(state.data.options).toEqual(['Option 1', 'Option 2']);
     });
 
     it('persists step navigation', async () => {
@@ -177,32 +208,63 @@ describe('PollWizardStore Progressive Saving', () => {
   });
 
   describe('Data Recovery', () => {
-    it.skip('recovers partial data entry', async () => {
-      mockStorage.setItem(
-        'poll-wizard-store',
-        JSON.stringify({
-          state: {
-            currentStep: 1,
-            data: {
-              title: 'Incomplete Poll',
-              description: 'User started but did not finish',
-              category: 'civics',
-              options: ['Option A'],
-              tags: [],
-              privacyLevel: 'public',
-              settings: {},
-            },
+    it('recovers partial data entry', async () => {
+      // Pre-populate storage before creating store
+      const storedData = {
+        state: {
+          currentStep: 1,
+          data: {
+            title: 'Incomplete Poll',
+            description: 'User started but did not finish',
+            category: 'civics',
+            options: ['Option A'],
+            tags: [],
+            privacyLevel: 'public' as const,
+            settings: {},
           },
-          version: 0,
-        }),
-      );
+        },
+        version: 0,
+      };
+      mockStorage.setItem('poll-wizard-store', JSON.stringify(storedData));
 
-      const store = createTestPollWizardStore(mockStorage);
-      if (store.persist?.rehydrate) await store.persist.rehydrate();
+      // Verify storage is set correctly
+      const storedRaw = mockStorage.getItem('poll-wizard-store');
+      expect(storedRaw).toBeTruthy();
 
-      expect(store.getState().currentStep).toBe(1);
-      expect(store.getState().data.title).toBe('Incomplete Poll');
-      expect(store.getState().data.options).toEqual(['Option A']);
+      // Wait for hydration using onRehydrateStorage callback
+      let hydrationPromise: Promise<void>;
+      let hydrationResolve: () => void;
+      hydrationPromise = new Promise((resolve) => {
+        hydrationResolve = resolve;
+      });
+
+      const store = createTestPollWizardStore(mockStorage, () => {
+        hydrationResolve();
+      });
+
+      // Manually trigger rehydration if persist API is available
+      if (store.persist?.rehydrate) {
+        await store.persist.rehydrate();
+        hydrationResolve(); // Resolve in case callback doesn't fire
+      } else {
+        // If no persist API, wait a bit for async hydration
+        await new Promise((resolve) => setTimeout(resolve, 100));
+        hydrationResolve();
+      }
+
+      // Wait for hydration to complete (with timeout)
+      await Promise.race([
+        hydrationPromise,
+        new Promise((resolve) => setTimeout(resolve, 200)),
+      ]);
+
+      // Give a small delay for state to settle
+      await new Promise((resolve) => setTimeout(resolve, 50));
+
+      const state = store.getState();
+      expect(state.currentStep).toBe(1);
+      expect(state.data.title).toBe('Incomplete Poll');
+      expect(state.data.options).toEqual(['Option A']);
     });
   });
 
