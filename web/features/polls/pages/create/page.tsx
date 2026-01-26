@@ -219,22 +219,22 @@ export default function CreatePollPage() {
     }
   }, [recordPollEvent, shareInfo]);
 
-  useEffect(() => {
-    if (!shareInfo) return;
-    const payload: PollEventOptions = {
-      metadata: {
-        enabledMilestones,
-        nextMilestone,
-      },
-    }
+  // Vote Milestones - Commented out per user request
+  // useEffect(() => {
+  //   if (!shareInfo) return;
+  //   const payload: PollEventOptions = {
+  //     metadata: {
+  //       enabledMilestones,
+  //       nextMilestone,
+  //     },
+  //   }
 
-    if (shareInfo.pollId) {
-      payload.label = shareInfo.pollId
-    }
+  //   if (shareInfo.pollId) {
+  //     payload.label = shareInfo.pollId
+  //   }
 
-    // Vote Milestones - Commented out per user request
-    // recordPollEvent('milestone_pref_summary', payload);
-  }, [/* enabledMilestones, nextMilestone, */ recordPollEvent, shareInfo]);
+  //   recordPollEvent('milestone_pref_summary', payload);
+  // }, [enabledMilestones, nextMilestone, recordPollEvent, shareInfo]);
 
   const hasErrors = Object.keys(errors ?? {}).length > 0
 
