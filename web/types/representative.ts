@@ -250,9 +250,12 @@ export type RepresentativeListResponse = {
 // COMPONENT PROPS TYPES
 // ============================================================================
 
+export type RepresentativeCardVariant = 'compact' | 'detailed' | 'default';
+
 export type RepresentativeCardProps = {
   representative: Representative;
-  showDetails?: boolean;
+  /** Layout density. Default/compact = minimal; detailed = + contact line + View full profile. */
+  variant?: RepresentativeCardVariant;
   showActions?: boolean;
   onFollow?: (representative: Representative) => void;
   onContact?: (representative: Representative) => void;
@@ -266,7 +269,8 @@ export type RepresentativeListProps = {
   loading?: boolean;
   error?: string;
   showActions?: boolean;
-  showDetails?: boolean;
+  /** Card density. Default/compact = minimal; detailed = + contact line + View full profile. */
+  variant?: RepresentativeCardVariant;
   onRepresentativeClick?: (representative: Representative) => void;
   onRepresentativeContact?: (representative: Representative) => void;
   onRepresentativeFollow?: (representative: Representative) => void;

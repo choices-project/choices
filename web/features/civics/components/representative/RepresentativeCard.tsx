@@ -12,27 +12,25 @@
 
 import {
   Mail,
-  Phone,
   Globe,
   Heart,
   HeartOff,
-  ExternalLink,
   Loader2,
   Plus
 } from 'lucide-react';
 import Image from 'next/image';
+import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import React from 'react';
 
 import { ElectionCountdownBadge } from '@/features/civics/components/countdown/ElectionCountdownBadge';
 import { useRepresentativeCtaAnalytics } from '@/features/civics/hooks/useRepresentativeCtaAnalytics';
 import { formatElectionDateStable } from '@/features/civics/utils/civicsCountdownUtils';
+import { formatRepresentativeLocation } from '@/features/civics/utils/formatRepresentativeLocation';
 
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader } from '@/components/ui/card';
-
-import { useGetRepresentativeById, useRepresentativeById } from '@/lib/stores/representativeStore';
 
 import { useFollowRepresentative } from '@/hooks/useFollowRepresentative';
 import { useI18n } from '@/hooks/useI18n';
@@ -41,7 +39,7 @@ import type { RepresentativeCardProps } from '@/types/representative';
 
 export function RepresentativeCard({
   representative,
-  showDetails = true,
+  variant = 'default',
   showActions = true,
   onFollow,
   onContact,
@@ -52,12 +50,8 @@ export function RepresentativeCard({
   const router = useRouter();
   const { t } = useI18n();
   const { following, loading, error, toggle } = useFollowRepresentative(representative.id);
-  const [detailsOpen, setDetailsOpen] = React.useState(false);
-  const [detailsLoading, setDetailsLoading] = React.useState(false);
-  const detailsOpenRef = React.useRef(false);
-  const detailedRepresentative = useRepresentativeById(representative.id);
-  const getRepresentativeById = useGetRepresentativeById();
   const [photoError, setPhotoError] = React.useState(false);
+  const effectiveVariant = variant === 'default' ? 'compact' : variant;
   const {
     divisionIds,
     elections: upcomingElections,
@@ -67,7 +61,7 @@ export function RepresentativeCard({
     error: electionError,
     repNextElectionDate,
     trackCtaEvent,
-  } = useRepresentativeCtaAnalytics(detailedRepresentative ?? representative, { source: 'representative_card' });
+  } = useRepresentativeCtaAnalytics(representative, { source: 'representative_card' });
 
   const handleFollow = async (e: React.MouseEvent) => {
     e.stopPropagation(); // Prevent card click
@@ -162,123 +156,11 @@ export function RepresentativeCard({
   }, [representative.id, representative.primary_photo_url]);
 
   // Sync ref with state to persist across re-renders
-  React.useEffect(() => {
-    detailsOpenRef.current = detailsOpen;
-  }, [detailsOpen]);
-
-  // Fetch details when opened, but only if not already loaded
-  React.useEffect(() => {
-    // Only fetch if details are open AND we don't have detailed data yet
-    if (!detailsOpen || detailedRepresentative) {
-      if (detailedRepresentative) {
-        setDetailsLoading(false);
-      }
-      return;
-    }
-    
-    let cancelled = false;
-    setDetailsLoading(true);
-
-    // Add timeout to prevent infinite loading
-    const timeoutId = setTimeout(() => {
-      if (!cancelled) {
-        setDetailsLoading(false);
-      }
-    }, 10000); // 10 second timeout
-
-    const fetchDetails = async () => {
-      try {
-        await getRepresentativeById(representative.id, { forceRefresh: true });
-      } catch (error) {
-        // Silently handle errors - user can retry by toggling details
-        console.error('Failed to load representative details:', error);
-      } finally {
-        clearTimeout(timeoutId);
-        if (!cancelled) {
-          setDetailsLoading(false);
-        }
-      }
-    };
-
-    void fetchDetails();
-
-    return () => {
-      cancelled = true;
-      clearTimeout(timeoutId);
-    };
-  }, [detailsOpen, detailedRepresentative, getRepresentativeById, representative.id]);
-
-  const displayRepresentative = detailedRepresentative ?? representative;
-
-  const socialChannels = [
-    displayRepresentative.twitter_handle
-      ? {
-          label: 'Twitter',
-          value: `@${displayRepresentative.twitter_handle.replace(/^@/, '')}`,
-          url: `https://twitter.com/${displayRepresentative.twitter_handle.replace(/^@/, '')}`,
-        }
-      : null,
-    displayRepresentative.facebook_url
-      ? {
-          label: 'Facebook',
-          value: 'Facebook',
-          url: displayRepresentative.facebook_url,
-        }
-      : null,
-    displayRepresentative.instagram_handle
-      ? {
-          label: 'Instagram',
-          value: `@${displayRepresentative.instagram_handle.replace(/^@/, '')}`,
-          url: `https://instagram.com/${displayRepresentative.instagram_handle.replace(/^@/, '')}`,
-        }
-      : null,
-    displayRepresentative.youtube_channel
-      ? {
-          label: 'YouTube',
-          value: 'YouTube',
-          url: displayRepresentative.youtube_channel,
-        }
-      : null,
-    displayRepresentative.linkedin_url
-      ? {
-          label: 'LinkedIn',
-          value: 'LinkedIn',
-          url: displayRepresentative.linkedin_url,
-        }
-      : null,
-  ].filter(Boolean) as Array<{ label: string; value: string; url: string }>;
-
-  const extraSocial = (displayRepresentative.social_media ?? [])
-    .map((entry) => ({
-      label: entry.platform,
-      value: entry.handle,
-      url: entry.url ?? null,
-    }))
-    .filter((entry) => entry.value);
-
-  const contactItems = [
-    displayRepresentative.primary_email
-      ? { label: 'Email', value: displayRepresentative.primary_email, href: `mailto:${displayRepresentative.primary_email}` }
-      : null,
-    displayRepresentative.primary_phone
-      ? { label: 'Phone', value: displayRepresentative.primary_phone, href: `tel:${displayRepresentative.primary_phone}` }
-      : null,
-    displayRepresentative.primary_website
-      ? { label: 'Website', value: displayRepresentative.primary_website, href: displayRepresentative.primary_website }
-      : null,
-  ].filter(Boolean) as Array<{ label: string; value: string; href: string }>;
-
-  const extraContacts = (displayRepresentative.contacts ?? []).map((contact) => ({
-    label: contact.contact_type,
-    value: contact.value,
-    href: contact.contact_type === 'email'
-      ? `mailto:${contact.value}`
-      : contact.contact_type === 'phone'
-      ? `tel:${contact.value}`
-      : contact.value.startsWith('http')
-      ? contact.value
-      : undefined,
-  }));
+  const locationLine = formatRepresentativeLocation({
+    state: representative.state,
+    office_city: representative.office_city,
+    district: representative.district,
+  });
 
   return (
     <Card
@@ -291,10 +173,10 @@ export function RepresentativeCard({
         <div className="flex items-start space-x-4">
           {/* Representative Photo */}
           <div className="relative w-16 h-16 rounded-full overflow-hidden bg-gray-200 dark:bg-gray-700">
-            {displayRepresentative.primary_photo_url && !photoError ? (
+            {representative.primary_photo_url && !photoError ? (
               <Image
-                src={displayRepresentative.primary_photo_url}
-                alt={displayRepresentative.name}
+                src={representative.primary_photo_url}
+                alt={representative.name}
                 fill
                 className="object-cover"
                 sizes="64px"
@@ -302,7 +184,7 @@ export function RepresentativeCard({
               />
             ) : (
               <div className="w-full h-full bg-gray-300 dark:bg-gray-600 flex items-center justify-center text-gray-700 dark:text-gray-300 text-sm font-medium">
-                {displayRepresentative.name.split(' ').map(n => n[0]).join('')}
+                {representative.name.split(' ').map(n => n[0]).join('')}
               </div>
             )}
           </div>
@@ -310,24 +192,18 @@ export function RepresentativeCard({
           {/* Representative Info */}
           <div className="flex-1 min-w-0">
             <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100 truncate">
-              {displayRepresentative.name}
+              {representative.name}
             </h3>
             <div className="flex flex-wrap gap-2 mt-1">
-              <Badge className={`text-xs ${getPartyColor(displayRepresentative.party)} dark:opacity-90`}>
-                {displayRepresentative.party}
+              <Badge className={`text-xs ${getPartyColor(representative.party)} dark:opacity-90`}>
+                {representative.party}
               </Badge>
-              <Badge className={`text-xs ${getOfficeColor(displayRepresentative.office)} dark:opacity-90`}>
-                {displayRepresentative.office}
+              <Badge className={`text-xs ${getOfficeColor(representative.office)} dark:opacity-90`}>
+                {representative.office}
               </Badge>
             </div>
             <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">
-              {displayRepresentative.office_city
-                ? `${displayRepresentative.office_city}, ${displayRepresentative.state}`
-                : displayRepresentative.state}
-              {displayRepresentative.district &&
-                ` • ${t('civics.representatives.card.district', {
-                  district: displayRepresentative.district,
-                })}`}
+              {locationLine}
             </p>
 
             {repNextElectionDate && (
@@ -350,235 +226,41 @@ export function RepresentativeCard({
         </div>
       </CardHeader>
 
-      {showDetails && (
+      {effectiveVariant === 'detailed' && (
         <CardContent className="pt-0">
-          <div className="flex items-center justify-between mb-4">
-            <Button
-              type="button"
-              variant="outline"
-              size="sm"
-              onClick={(event) => {
-                event.stopPropagation();
-                event.preventDefault();
-                const newState = !detailsOpenRef.current;
-                detailsOpenRef.current = newState;
-                setDetailsOpen(newState);
-              }}
-            >
-              {detailsOpen ? 'Hide details' : 'Show details'}
-            </Button>
-            {detailsLoading && (
-              <span className="text-xs text-gray-500 flex items-center">
-                <Loader2 className="h-3 w-3 mr-1 animate-spin" />
-                Loading details
-              </span>
-            )}
-          </div>
-
-          {detailsOpen && (
-            <div className="space-y-4">
-              {/* Social Media */}
-              {(socialChannels.length > 0 || extraSocial.length > 0) && (
-                <div>
-                  <h4 className="text-sm font-semibold text-gray-900 dark:text-gray-100 mb-2">Social Media</h4>
-                  <div className="flex flex-wrap gap-2">
-                    {socialChannels.map((channel) => (
-                      <a
-                        key={`${channel.label}-${channel.url}`}
-                        href={channel.url}
-                        className="inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-md bg-gray-100 dark:bg-gray-800 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors"
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        onClick={(event) => event.stopPropagation()}
-                      >
-                        <ExternalLink className="w-3.5 h-3.5" />
-                        <span className="font-medium">{channel.label}</span>
-                        <span className="text-gray-500 dark:text-gray-400">{channel.value}</span>
-                      </a>
-                    ))}
-                    {extraSocial.map((channel, index) => (
-                      channel.url ? (
-                        <a
-                          key={`${channel.label}-${index}`}
-                          href={channel.url}
-                          className="inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-md bg-gray-100 dark:bg-gray-800 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors"
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          onClick={(event) => event.stopPropagation()}
-                        >
-                          <ExternalLink className="w-3.5 h-3.5" />
-                          <span className="font-medium">{channel.label}</span>
-                          <span className="text-gray-500 dark:text-gray-400">{channel.value}</span>
-                        </a>
-                      ) : (
-                        <span
-                          key={`${channel.label}-${index}`}
-                          className="inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-md bg-gray-100 dark:bg-gray-800 text-sm text-gray-700 dark:text-gray-300"
-                        >
-                          <span className="font-medium">{channel.label}</span>
-                          <span className="text-gray-500 dark:text-gray-400">{channel.value}</span>
-                        </span>
-                      )
-                    ))}
-                  </div>
-                </div>
+          {(representative.primary_email || representative.primary_website) && (
+            <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-sm text-gray-600 dark:text-gray-400 mb-3">
+              {representative.primary_email && (
+                <a
+                  href={`mailto:${representative.primary_email}`}
+                  className="inline-flex items-center gap-1.5 text-blue-600 dark:text-blue-400 hover:underline"
+                  onClick={(e) => e.stopPropagation()}
+                >
+                  <Mail className="w-4 h-4 shrink-0" />
+                  <span className="truncate">{representative.primary_email}</span>
+                </a>
               )}
-
-              {/* Committees */}
-              {displayRepresentative.committees && displayRepresentative.committees.length > 0 && (
-                <div>
-                  <h4 className="text-sm font-semibold text-gray-900 dark:text-gray-100 mb-2">
-                    Committees {displayRepresentative.committees.length > 0 && `(${displayRepresentative.committees.length})`}
-                  </h4>
-                  <div className="space-y-2">
-                    {displayRepresentative.committees.map((committee, index) => (
-                      <div key={index} className="flex items-start gap-2 text-sm">
-                        <div className="flex-1">
-                          <div className="font-medium text-gray-900 dark:text-gray-100">{committee.committee_name}</div>
-                          {committee.role && (
-                            <div className="text-xs text-gray-600 dark:text-gray-400 mt-0.5">{committee.role}</div>
-                          )}
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              )}
-
-              {/* Contact Information */}
-              {contactItems.length > 0 && (
-                <div>
-                  <h4 className="text-sm font-semibold text-gray-900 dark:text-gray-100 mb-2">Contact</h4>
-                  <div className="space-y-2">
-                    {contactItems.map((item) => (
-                      <div key={item.label} className="flex items-center space-x-2 text-sm">
-                        {item.label === 'Email' ? <Mail className="w-4 h-4 text-gray-500" /> : item.label === 'Phone' ? <Phone className="w-4 h-4 text-gray-500" /> : <Globe className="w-4 h-4 text-gray-500" />}
-                        <a
-                          href={item.href}
-                          className="text-blue-600 dark:text-blue-400 hover:underline truncate"
-                          onClick={(event) => event.stopPropagation()}
-                        >
-                          {item.value}
-                        </a>
-                      </div>
-                    ))}
-                    {extraContacts.length > 0 && (
-                      <div className="space-y-1.5 pt-1">
-                        {extraContacts.map((contact, index) => (
-                          <div key={`${contact.label}-${index}`} className="flex items-center space-x-2 text-xs text-gray-600 dark:text-gray-400">
-                            <ExternalLink className="w-3 h-3" />
-                            {contact.href ? (
-                              <a
-                                href={contact.href}
-                                className="text-blue-600 dark:text-blue-400 hover:underline truncate"
-                                onClick={(event) => event.stopPropagation()}
-                              >
-                                {contact.label}: {contact.value}
-                              </a>
-                            ) : (
-                              <span className="truncate">{contact.label}: {contact.value}</span>
-                            )}
-                          </div>
-                        ))}
-                      </div>
-                    )}
-                  </div>
-                </div>
-              )}
-
-              {/* Recent Activity: bills only. Upcoming Elections are a separate section. */}
-              {(() => {
-                const billActivities = (displayRepresentative.activities ?? []).filter((a) => a.type === 'bill');
-                return billActivities.length > 0 ? (
-                  <div>
-                    <h4 className="text-sm font-semibold text-gray-900 dark:text-gray-100 mb-2">
-                      Recent Activity ({billActivities.length})
-                    </h4>
-                    <div className="space-y-2">
-                      {billActivities.slice(0, 5).map((activity, index) => (
-                        <div key={index} className="text-sm">
-                          <div className="font-medium text-gray-900 dark:text-gray-100">{activity.title}</div>
-                          {activity.description && (
-                            <div className="text-xs text-gray-600 dark:text-gray-400 mt-0.5">{activity.description}</div>
-                          )}
-                          {activity.type && (
-                            <div className="text-xs text-gray-500 dark:text-gray-500 mt-0.5 capitalize">{activity.type}</div>
-                          )}
-                          {activity.date && (
-                            <div className="text-xs text-gray-500 dark:text-gray-500 mt-0.5">
-                              Activity date: {formatElectionDateStable(activity.date)}
-                            </div>
-                          )}
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                ) : null;
-              })()}
-
-              {/* Campaign Finance */}
-              {displayRepresentative.campaign_finance && (
-                <div>
-                  <h4 className="text-sm font-semibold text-gray-900 dark:text-gray-100 mb-2">Campaign Finance</h4>
-                  <div className="space-y-1.5 text-sm">
-                    {displayRepresentative.campaign_finance.total_raised && (
-                      <div className="flex justify-between">
-                        <span className="text-gray-600 dark:text-gray-400">Total Raised:</span>
-                        <span className="font-medium text-gray-900 dark:text-gray-100">
-                          ${Number(displayRepresentative.campaign_finance.total_raised).toLocaleString()}
-                        </span>
-                      </div>
-                    )}
-                    {displayRepresentative.campaign_finance.total_spent && (
-                      <div className="flex justify-between">
-                        <span className="text-gray-600 dark:text-gray-400">Total Spent:</span>
-                        <span className="font-medium text-gray-900 dark:text-gray-100">
-                          ${Number(displayRepresentative.campaign_finance.total_spent).toLocaleString()}
-                        </span>
-                      </div>
-                    )}
-                    {displayRepresentative.campaign_finance.cash_on_hand && (
-                      <div className="flex justify-between">
-                        <span className="text-gray-600 dark:text-gray-400">Cash on Hand:</span>
-                        <span className="font-medium text-gray-900 dark:text-gray-100">
-                          ${Number(displayRepresentative.campaign_finance.cash_on_hand).toLocaleString()}
-                        </span>
-                      </div>
-                    )}
-                  </div>
-                </div>
-              )}
-
-              {/* Term Information */}
-              {(displayRepresentative.term_start_date || displayRepresentative.term_end_date || displayRepresentative.next_election_date) && (
-                <div>
-                  <h4 className="text-sm font-semibold text-gray-900 dark:text-gray-100 mb-2">Term Information</h4>
-                  <div className="space-y-1 text-sm">
-                    {displayRepresentative.term_start_date && (
-                      <div className="flex justify-between">
-                        <span className="text-gray-600 dark:text-gray-400">Term Start:</span>
-                        <span className="text-gray-900 dark:text-gray-100">{formatElectionDateStable(displayRepresentative.term_start_date)}</span>
-                      </div>
-                    )}
-                    {displayRepresentative.term_end_date && (
-                      <div className="flex justify-between">
-                        <span className="text-gray-600 dark:text-gray-400">Term End:</span>
-                        <span className="text-gray-900 dark:text-gray-100">{formatElectionDateStable(displayRepresentative.term_end_date)}</span>
-                      </div>
-                    )}
-                    <div className="flex justify-between">
-                      <span className="text-gray-600 dark:text-gray-400">Next Election:</span>
-                      <span className="text-gray-900 dark:text-gray-100">
-                        {displayRepresentative.next_election_date
-                          ? formatElectionDateStable(displayRepresentative.next_election_date)
-                          : 'No upcoming election on file'}
-                      </span>
-                    </div>
-                  </div>
-                </div>
+              {representative.primary_website && (
+                <a
+                  href={representative.primary_website}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="inline-flex items-center gap-1.5 text-blue-600 dark:text-blue-400 hover:underline"
+                  onClick={(e) => e.stopPropagation()}
+                >
+                  <Globe className="w-4 h-4 shrink-0" />
+                  <span className="truncate">Website</span>
+                </a>
               )}
             </div>
           )}
+          <Link
+            href={`/representatives/${representative.id}`}
+            className="text-sm font-medium text-blue-600 dark:text-blue-400 hover:underline"
+            onClick={(e) => e.stopPropagation()}
+          >
+            View full profile →
+          </Link>
         </CardContent>
       )}
 

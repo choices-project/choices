@@ -32,7 +32,7 @@ export function RepresentativeList({
   loading = false,
   error,
   showActions = true,
-  showDetails = true,
+  variant = 'default',
   onRepresentativeContact,
   onRepresentativeFollow,
   onRepresentativeClick,
@@ -142,17 +142,17 @@ export function RepresentativeList({
             }
           >
             <RepresentativeCard
-            representative={representative}
-            showActions={showActions}
-            showDetails={showDetails}
-            onFollow={handleFollow}
-            onContact={handleContact}
-            onClick={() => {
-              if (onRepresentativeClick) {
-                onRepresentativeClick(representative);
-              }
-            }}
-          />
+              representative={representative}
+              variant={variant}
+              showActions={showActions}
+              onFollow={handleFollow}
+              onContact={handleContact}
+              onClick={() => {
+                if (onRepresentativeClick) {
+                  onRepresentativeClick(representative);
+                }
+              }}
+            />
           </Suspense>
         ))}
       </div>
@@ -170,7 +170,7 @@ export function RepresentativeGrid({
   loading = false,
   error,
   showActions = false,
-  showDetails = false,
+  variant = 'compact',
   onRepresentativeContact,
   onRepresentativeFollow,
   onRepresentativeClick,
@@ -253,13 +253,13 @@ export function RepresentativeGrid({
           }
         >
           <RepresentativeCard
-          representative={representative}
-          showDetails={showDetails}
-          showActions={showActions}
-          onFollow={handleFollow}
-          onContact={handleContact}
-          {...(onRepresentativeClick && { onClick: () => onRepresentativeClick(representative) })}
-        />
+            representative={representative}
+            variant={variant}
+            showActions={showActions}
+            onFollow={handleFollow}
+            onContact={handleContact}
+            {...(onRepresentativeClick && { onClick: () => onRepresentativeClick(representative) })}
+          />
         </Suspense>
       ))}
     </div>

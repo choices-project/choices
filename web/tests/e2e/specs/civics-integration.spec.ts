@@ -277,6 +277,49 @@ test.describe('Civics Integration Tests', () => {
         cleanupMocks();
       }
     });
+
+    test('Compact vs Detailed variant shows View full profile in Detailed mode', async ({ page }) => {
+      test.setTimeout(60_000);
+
+      const useMocks = process.env.PLAYWRIGHT_USE_MOCKS !== '0';
+      test.skip(useMocks, 'Civics page tests require production environment or E2E harness');
+
+      const cleanupMocks = await setupExternalAPIMocks(page, {
+        feeds: true,
+        notifications: true,
+        analytics: true,
+        auth: true,
+        civics: true,
+      });
+
+      try {
+        await page.goto('/civics', { waitUntil: 'domcontentloaded', timeout: 30_000 });
+        await waitForPageReady(page);
+
+        const authForm = page.locator('[data-testid="login-form"]');
+        const authHeading = page.locator('h1, h2').filter({ hasText: /sign in|log in|login/i });
+        const needsAuth =
+          page.url().includes('/auth') ||
+          page.url().includes('/login') ||
+          (await authForm.count()) > 0 ||
+          (await authHeading.count()) > 0;
+        test.skip(needsAuth, 'Civics page requires authentication in production.');
+
+        const representativesTab = page.locator('[data-testid="civics-tab-representatives"]');
+        await expect(representativesTab).toBeVisible({ timeout: 10_000 });
+        await representativesTab.click();
+
+        await page.waitForSelector('[data-testid="civics-card-variant"]', { timeout: 10_000 });
+        await page.selectOption('[data-testid="civics-card-variant"]', 'detailed');
+
+        await page.waitForTimeout(1_000);
+
+        const viewFullProfile = page.getByRole('link', { name: /view full profile/i });
+        await expect(viewFullProfile.first()).toBeVisible({ timeout: 10_000 });
+      } finally {
+        cleanupMocks();
+      }
+    });
   });
 
   test.describe('Component Optimization Verification', () => {

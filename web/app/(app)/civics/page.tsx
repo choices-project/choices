@@ -498,7 +498,13 @@ export default function Civics2Page() {
           <div id="civics-representatives-panel" role="tabpanel" className="space-y-6">
             {/* Search and Filters */}
             <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-gray-200 dark:border-gray-700 p-6">
-              <div className="flex flex-col sm:flex-row gap-4">
+              <form
+                onSubmit={(e) => {
+                  e.preventDefault();
+                  void loadRepresentatives(false);
+                }}
+                className="flex flex-col sm:flex-row gap-4"
+              >
                 <div className="flex-1">
                   <label className="sr-only" htmlFor="civics-search">
                     Search representatives
@@ -600,6 +606,7 @@ export default function Civics2Page() {
                   </label>
                   <select
                     id="civics-card-variant"
+                    data-testid="civics-card-variant"
                     className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 focus:border-transparent"
                     value={cardVariant}
                     onChange={(e) => setCardVariant(e.target.value as 'default' | 'compact' | 'detailed')}
@@ -609,7 +616,28 @@ export default function Civics2Page() {
                     <option value="detailed">Detailed</option>
                   </select>
                 </div>
-              </div>
+                <div className="flex gap-2">
+                  <button
+                    type="submit"
+                    disabled={isLoading}
+                    className="px-4 py-2 rounded-lg bg-blue-600 dark:bg-blue-700 text-white font-medium hover:bg-blue-700 dark:hover:bg-blue-600 disabled:opacity-60 disabled:cursor-not-allowed transition-colors shrink-0"
+                    data-testid="civics-search-button"
+                  >
+                    Search
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setSearchQuery('');
+                      setSelectedCity('');
+                      setSelectedZip('');
+                    }}
+                    className="px-4 py-2 rounded-lg border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 font-medium hover:bg-gray-50 dark:hover:bg-gray-700 disabled:opacity-60 transition-colors shrink-0"
+                  >
+                    Clear
+                  </button>
+                </div>
+              </form>
             </div>
 
             {/* Representatives Grid */}
@@ -725,6 +753,7 @@ export default function Civics2Page() {
                     <RepresentativeCard
                       key={representative.id}
                       representative={transformedRep}
+                      variant={cardVariant === 'default' ? 'default' : cardVariant}
                       onFollow={(rep: Representative) => handleFollow(rep.id.toString())}
                       onContact={(rep: Representative) => handleContact(rep.id.toString(), 'email')}
                       className="group bg-white dark:bg-gray-800 rounded-2xl shadow-lg hover:shadow-xl transition-all duration-300 overflow-hidden border border-gray-100 dark:border-gray-700"

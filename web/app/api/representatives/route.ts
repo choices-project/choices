@@ -155,8 +155,10 @@ export const GET = withErrorHandling(async (request: NextRequest) => {
   }
 
   // ?zip= → resolve via zip_to_ocd → ocd_division_id (table may not be in generated types)
+  // Keep zip5 for fallback filter by office_zip when zip_to_ocd has no match
+  let zip5: string | null = null;
   if (zipParam && !ocdDivisionId) {
-    const zip5 = zipParam.replace(/\D/g, '').slice(0, 5);
+    zip5 = zipParam.replace(/\D/g, '').slice(0, 5);
     if (zip5.length === 5) {
       try {
         const { data: zipRow, error: zipErr } = await (supabase as any)
@@ -296,11 +298,14 @@ export const GET = withErrorHandling(async (request: NextRequest) => {
 
   // Note: Filters are already applied above in optimal order for query performance
 
-  // City filter: fetch up to CITY_CAP, then filter by office_city in-memory and paginate
+  // City filter: fetch up to CAP, then filter by office_city in-memory and paginate.
+  // Zip fallback: when zip provided but zip_to_ocd has no match, filter by office_zip instead.
   const CITY_CAP = 2000;
   const useCityFilter = Boolean(cityParam && state);
-  const queryOffset = useCityFilter ? 0 : offset;
-  const queryLimit = useCityFilter ? CITY_CAP : limit;
+  const useZipFallbackFilter = Boolean(zip5 && zip5.length === 5 && state && !ocdDivisionId);
+  const useInMemoryFilter = useCityFilter || useZipFallbackFilter;
+  const queryOffset = useInMemoryFilter ? 0 : offset;
+  const queryLimit = useInMemoryFilter ? CITY_CAP : limit;
 
   const repListCacheKey = CivicsCache.getRepListKey({
     state: state || null,
@@ -567,12 +572,23 @@ export const GET = withErrorHandling(async (request: NextRequest) => {
   let finalTotal = count ?? 0;
   let hasMore = (representatives ?? []).length === queryLimit && (queryOffset + queryLimit) < finalTotal;
 
+  let filtered = transformed;
   if (useCityFilter && cityParam) {
-    const cityNorm = cityParam.trim().toLowerCase();
-    const filtered = transformed.filter((r: any) => {
-      const oc = (r.office_city as string)?.trim().toLowerCase();
-      return oc && oc === cityNorm;
+    const cityNorm = cityParam.trim().toLowerCase().replace(/\s+/g, ' ');
+    filtered = filtered.filter((r: any) => {
+      const oc = (r.office_city as string)?.trim().toLowerCase().replace(/\s+/g, ' ');
+      if (!oc) return false;
+      // Partial match: "san francis" matches "san francisco", "san francisco" matches "san francis"
+      return oc.includes(cityNorm) || cityNorm.includes(oc);
     });
+  }
+  if (useZipFallbackFilter && zip5) {
+    filtered = filtered.filter((r: any) => {
+      const oz = (r.office_zip as string)?.replace(/\D/g, '').slice(0, 5);
+      return oz && oz === zip5;
+    });
+  }
+  if (useInMemoryFilter) {
     finalTotal = filtered.length;
     outputReps = filtered.slice(offset, offset + limit);
     hasMore = offset + limit < finalTotal;

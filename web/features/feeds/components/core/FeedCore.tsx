@@ -931,7 +931,7 @@ export default function FeedCore({
                               <div key={r.id ?? `off-${i}`}>
                                 <RepresentativeCard
                                   representative={representative}
-                                  showDetails={false}
+                                  variant="compact"
                                   showActions={true}
                                   className="border-0 shadow-none"
                                 />
