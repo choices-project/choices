@@ -8,6 +8,7 @@ import { useVotingCountdown } from '@/features/voting/hooks/useVotingCountdown'
 import { useVotingIsVoting, useVotingRecords } from '@/features/voting/lib/store'
 
 import { useNotificationActions, useNotificationSettings } from '@/lib/stores/notificationStore'
+import { useI18n } from '@/hooks/useI18n'
 
 import ApprovalVoting from './ApprovalVoting'
 import MultipleChoiceVoting from './MultipleChoiceVoting'
@@ -78,6 +79,7 @@ export default function VotingInterface({
   verificationTier = 'T1',
   onAnalyticsEvent,
 }: VotingInterfaceProps) {
+  const { t } = useI18n();
   const storeIsVoting = useVotingIsVoting()
   const votingRecords = useVotingRecords()
   const timeRemaining = useVotingCountdown(poll.endtime)
@@ -124,24 +126,24 @@ export default function VotingInterface({
     (message: string) => {
       addNotificationRef.current({
         type: 'success',
-        title: 'Vote submitted',
-        message,
+        title: t('polls.voting.notifications.submitted.title') || 'Vote submitted',
+        message: message || (t('polls.voting.notifications.submitted.message') || 'Your vote has been recorded.'),
         duration: notificationSettings.duration,
       })
     },
-    [notificationSettings.duration]
+    [notificationSettings.duration, t]
   )
 
   const notifyError = useCallback(
     (message: string) => {
       addNotificationRef.current({
         type: 'error',
-        title: 'Vote failed',
-        message,
+        title: t('polls.voting.notifications.failed.title') || 'Vote failed',
+        message: message || (t('polls.voting.notifications.failed.message') || 'Failed to submit vote'),
         duration: notificationSettings.duration,
       })
     },
-    [notificationSettings.duration]
+    [notificationSettings.duration, t]
   )
 
   const handleVoteResult = useCallback(
@@ -185,7 +187,7 @@ export default function VotingInterface({
         notifyError(result.error ?? 'Failed to submit vote')
         throw new Error(result.error ?? 'Failed to submit vote')
       }
-      notifySuccess('Your vote has been recorded.')
+      notifySuccess(t('polls.voting.notifications.submitted.message') || 'Your vote has been recorded.')
     },
     [handleVoteResult, notifyError, notifySuccess, onVote]
   );
@@ -202,7 +204,7 @@ export default function VotingInterface({
         notifyError(result.error ?? 'Failed to submit vote')
         throw new Error(result.error ?? 'Failed to submit vote')
       }
-      notifySuccess('Your vote has been recorded.')
+      notifySuccess(t('polls.voting.notifications.submitted.message') || 'Your vote has been recorded.')
     },
     [handleVoteResult, notifyError, notifySuccess, onVote]
   );
@@ -219,7 +221,7 @@ export default function VotingInterface({
         notifyError(result.error ?? 'Failed to submit vote')
         throw new Error(result.error ?? 'Failed to submit vote')
       }
-      notifySuccess('Your vote has been recorded.')
+      notifySuccess(t('polls.voting.notifications.submitted.message') || 'Your vote has been recorded.')
     },
     [handleVoteResult, notifyError, notifySuccess, onVote]
   );
@@ -236,7 +238,7 @@ export default function VotingInterface({
         notifyError(result.error ?? 'Failed to submit vote')
         throw new Error(result.error ?? 'Failed to submit vote')
       }
-      notifySuccess('Your vote has been recorded.')
+      notifySuccess(t('polls.voting.notifications.submitted.message') || 'Your vote has been recorded.')
     },
     [handleVoteResult, notifyError, notifySuccess, onVote]
   );
@@ -253,7 +255,7 @@ export default function VotingInterface({
         notifyError(result.error ?? 'Failed to submit vote')
         throw new Error(result.error ?? 'Failed to submit vote')
       }
-      notifySuccess('Your vote has been recorded.')
+      notifySuccess(t('polls.voting.notifications.submitted.message') || 'Your vote has been recorded.')
     },
     [handleVoteResult, notifyError, notifySuccess, onVote]
   );
@@ -270,7 +272,7 @@ export default function VotingInterface({
         notifyError(result.error ?? 'Failed to submit vote')
         throw new Error(result.error ?? 'Failed to submit vote')
       }
-      notifySuccess('Your vote has been recorded.')
+      notifySuccess(t('polls.voting.notifications.submitted.message') || 'Your vote has been recorded.')
     },
     [handleVoteResult, notifyError, notifySuccess, onVote]
   );
@@ -338,7 +340,7 @@ export default function VotingInterface({
         return (
           <ApprovalVoting
             pollId={poll.id}
-            title={poll.title ?? 'Vote'}
+            title={poll.title ?? (t('polls.voting.interface.titleFallback') || 'Vote')}
             options={poll.options.map(option => ({
               id: option.id,
               text: option.text,
@@ -360,7 +362,7 @@ export default function VotingInterface({
         return (
           <QuadraticVoting
             pollId={poll.id}
-            title={poll.title ?? 'Vote'}
+            title={poll.title ?? (t('polls.voting.interface.titleFallback') || 'Vote')}
             options={poll.options.map(option => ({
               id: option.id,
               text: option.text,
@@ -382,7 +384,7 @@ export default function VotingInterface({
         return (
           <RangeVoting
             pollId={poll.id}
-            title={poll.title ?? 'Vote'}
+            title={poll.title ?? (t('polls.voting.interface.titleFallback') || 'Vote')}
             options={poll.options.map(option => ({
               id: option.id,
               text: option.text,
@@ -404,7 +406,7 @@ export default function VotingInterface({
         return (
           <RankedChoiceVoting
             pollId={poll.id}
-            title={poll.title ?? 'Vote'}
+            title={poll.title ?? (t('polls.voting.interface.titleFallback') || 'Vote')}
             options={poll.options.map(option => ({
               id: option.id,
               text: option.text,
@@ -426,7 +428,7 @@ export default function VotingInterface({
         return (
           <MultipleChoiceVoting
             pollId={poll.id}
-            title={poll.title ?? 'Vote'}
+            title={poll.title ?? (t('polls.voting.interface.titleFallback') || 'Vote')}
             options={poll.options.map(option => ({
               id: option.id,
               text: option.text,
@@ -448,7 +450,7 @@ export default function VotingInterface({
         return (
           <SingleChoiceVoting
             pollId={poll.id}
-            title={poll.title ?? 'Vote'}
+            title={poll.title ?? (t('polls.voting.interface.titleFallback') || 'Vote')}
             options={poll.options.map(option => ({
               id: option.id,
               text: option.text,
@@ -497,7 +499,7 @@ export default function VotingInterface({
             {/* Verification tier badge */}
             <div className={`flex items-center space-x-2 px-3 py-1 rounded-full border text-sm font-medium ${getVerificationTierColor(verificationTier)}`}>
               {getVerificationTierIcon(verificationTier)}
-              <span>Tier {verificationTier.slice(1)}</span>
+              <span>{t('polls.voting.interface.verificationTier', { tier: String(verificationTier.slice(1)) })}</span>
             </div>
           </div>
         </div>

@@ -21,8 +21,13 @@ const normalizeOptions = (options: Array<{ id: string; text?: string | null; opt
 
 export const GET = withErrorHandling(async (
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) => {
+    const { id } = await params;
+    if (!id) {
+      return validationError({ pollId: 'Poll ID is required' });
+    }
+
     const url = new URL(request.url);
     const tierParam = url.searchParams.get('tier');
     const integrityParam = url.searchParams.get('integrity');
@@ -33,11 +38,6 @@ export const GET = withErrorHandling(async (
 
     if (tierParam && Number.isNaN(trustTier)) {
       return validationError({ tier: 'tier must be a number' });
-    }
-
-    const { id } = params;
-    if (!id) {
-      return validationError({ pollId: 'Poll ID is required' });
     }
 
     const supabase = await getSupabaseAdminClient();

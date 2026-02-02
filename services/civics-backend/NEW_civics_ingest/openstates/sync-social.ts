@@ -8,7 +8,6 @@
 import 'dotenv/config';
 
 import { collectActiveRepresentatives, type CollectOptions } from '../ingest/openstates/index.js';
-import { fetchFederalRepresentatives, type FetchFederalOptions } from '../ingest/supabase/representatives.js';
 import type { CanonicalRepresentative } from '../ingest/openstates/people.js';
 import { syncRepresentativeSocial } from '../persist/social.js';
 
@@ -82,11 +81,7 @@ function dedupeRepresentatives(reps: CanonicalRepresentative[]): CanonicalRepres
 }
 
 async function loadRepresentatives(options: CliOptions): Promise<CanonicalRepresentative[]> {
-  const federalOptions: FetchFederalOptions = {};
-  if (options.states && options.states.length > 0) {
-    federalOptions.states = options.states;
-  }
-
+  // OpenStates only has state/local data - never fetch federal reps
   const stateOptions: CollectOptions = {};
   if (options.states && options.states.length > 0) {
     stateOptions.states = options.states;
@@ -94,13 +89,8 @@ async function loadRepresentatives(options: CliOptions): Promise<CanonicalRepres
   if (typeof options.limit === 'number') {
     stateOptions.limit = options.limit;
   }
-
-  const [federalReps, stateReps] = await Promise.all([
-    fetchFederalRepresentatives(federalOptions),
-    collectActiveRepresentatives(stateOptions),
-  ]);
-
-  return dedupeRepresentatives([...federalReps, ...stateReps]);
+  const reps = await collectActiveRepresentatives(stateOptions);
+  return dedupeRepresentatives(reps);
 }
 
 async function main() {

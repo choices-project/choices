@@ -13,6 +13,7 @@ import {
 } from '@/lib/stores';
 import { useProfileLocation } from '@/lib/stores/profileStore';
 import logger from '@/lib/utils/logger';
+import { useI18n } from '@/hooks/useI18n';
 
 import { extractRepresentatives, normalizeJurisdiction } from '../lib/representatives';
 
@@ -73,6 +74,9 @@ export default function UserOnboarding({ onComplete, onSkip }: UserOnboardingPro
   const { addNotification } = useNotificationActions();
 
   const profileLocation = useProfileLocation();
+
+  // i18n
+  const { t } = useI18n();
 
   // Refs for stable store actions
   const restartOnboardingRef = useRef(restartOnboarding);
@@ -296,10 +300,9 @@ export default function UserOnboarding({ onComplete, onSkip }: UserOnboardingPro
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
               </svg>
             </div>
-            <h1 className="text-2xl font-bold text-gray-900 mb-4">Welcome to Civics!</h1>
+            <h1 className="text-2xl font-bold text-gray-900 mb-4">{t('onboarding.userOnboarding.welcome.title') || 'Welcome to Civics!'}</h1>
             <p className="text-gray-600 mb-8">
-              Let&apos;s personalize your experience by finding your local representatives.
-              This helps us show you the most relevant political information.
+              {t('onboarding.userOnboarding.welcome.description') || "Let's personalize your experience by finding your local representatives. This helps us show you the most relevant political information."}
             </p>
 
             <div className="space-y-4">
@@ -307,14 +310,14 @@ export default function UserOnboarding({ onComplete, onSkip }: UserOnboardingPro
                 onClick={() => goToStepRef.current(1)}
                 className="w-full bg-blue-600 text-white py-3 px-6 rounded-lg hover:bg-blue-700 transition-colors font-medium"
               >
-                Find My Representatives
+                {t('onboarding.userOnboarding.welcome.findRepresentatives') || 'Find My Representatives'}
               </button>
 
               <button
                 onClick={handleStateLookup}
                 className="w-full bg-gray-100 text-gray-700 py-3 px-6 rounded-lg hover:bg-gray-200 transition-colors font-medium"
               >
-                Skip - Show General Representatives
+                {t('onboarding.userOnboarding.welcome.skipToGeneral') || 'Skip - Show General Representatives'}
               </button>
             </div>
           </div>
@@ -328,8 +331,8 @@ export default function UserOnboarding({ onComplete, onSkip }: UserOnboardingPro
       <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
         <div className="bg-white rounded-2xl shadow-2xl max-w-md w-full mx-4 p-8">
           <div className="text-center mb-6">
-            <h2 className="text-xl font-bold text-gray-900 mb-2">Find Your Representatives</h2>
-            <p className="text-gray-600">Enter your address to see your local elected officials</p>
+            <h2 className="text-xl font-bold text-gray-900 mb-2">{t('onboarding.userOnboarding.findRepresentatives.title') || 'Find Your Representatives'}</h2>
+            <p className="text-gray-600">{t('onboarding.userOnboarding.findRepresentatives.description') || 'Enter your address to see your local elected officials'}</p>
           </div>
 
             <form onSubmit={(e) => {
@@ -338,13 +341,13 @@ export default function UserOnboarding({ onComplete, onSkip }: UserOnboardingPro
             }} className="space-y-4">
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">
-                Address <span className="text-gray-500 font-normal">(used only to find your district; not stored)</span>
+                {t('onboarding.userOnboarding.findRepresentatives.addressLabel') || 'Address'} <span className="text-gray-500 font-normal">{t('onboarding.userOnboarding.findRepresentatives.addressHint') || '(used only to find your district; not stored)'}</span>
               </label>
               <input
                 type="text"
                 value={addressInput}
                 onChange={(e) => setAddressInput(e.target.value)}
-                placeholder="Enter your full address"
+                placeholder={t('onboarding.userOnboarding.findRepresentatives.addressPlaceholder') || 'Enter your full address'}
                 className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                 required
               />
@@ -361,7 +364,7 @@ export default function UserOnboarding({ onComplete, onSkip }: UserOnboardingPro
                 disabled={addressLoading}
                 className="flex-1 bg-blue-600 text-white py-3 px-4 rounded-lg hover:bg-blue-700 disabled:opacity-50 transition-colors"
               >
-                {addressLoading ? 'Finding...' : 'Find Representatives'}
+                {addressLoading ? (t('onboarding.userOnboarding.findRepresentatives.finding') || 'Finding...') : (t('onboarding.userOnboarding.findRepresentatives.findButton') || 'Find Representatives')}
               </button>
 
               <button
@@ -369,7 +372,7 @@ export default function UserOnboarding({ onComplete, onSkip }: UserOnboardingPro
                 onClick={() => goToStepRef.current(0)}
                 className="px-4 py-3 text-gray-600 hover:text-gray-800 transition-colors"
               >
-                Back
+                {t('onboarding.profile.actions.back') || 'Back'}
               </button>
             </div>
           </form>
@@ -384,8 +387,8 @@ export default function UserOnboarding({ onComplete, onSkip }: UserOnboardingPro
         <div className="bg-white rounded-2xl shadow-2xl max-w-md w-full mx-4 p-8">
           <div className="text-center">
             <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500 mx-auto mb-4" />
-            <h2 className="text-xl font-bold text-gray-900 mb-2">Finding Your Representatives</h2>
-            <p className="text-gray-600">Searching for your local elected officials...</p>
+            <h2 className="text-xl font-bold text-gray-900 mb-2">{t('onboarding.userOnboarding.searching.title') || 'Finding Your Representatives'}</h2>
+            <p className="text-gray-600">{t('onboarding.userOnboarding.searching.description') || 'Searching for your local elected officials...'}</p>
           </div>
         </div>
       </div>

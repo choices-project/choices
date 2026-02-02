@@ -36,6 +36,7 @@ import {
 } from '@/features/civics/analytics/civicsAnalyticsEvents';
 import { RepresentativeActivityFeed } from '@/features/civics/components/representative/RepresentativeActivityFeed';
 import { formatElectionDateStable } from '@/features/civics/utils/civicsCountdownUtils';
+import { formatRepresentativeLocation } from '@/features/civics/utils/formatRepresentativeLocation';
 import { filterDivisionsForElections } from '@/features/civics/utils/divisions';
 
 import { Badge } from '@/components/ui/badge';
@@ -59,10 +60,13 @@ import {
 } from '@/lib/stores/representativeStore';
 import { logger } from '@/lib/utils/logger';
 
+import { useI18n } from '@/hooks/useI18n';
+
 // getElectionCountdown will be defined inside component to use isClient guard
 
 // Internal component - will be dynamically imported with ssr: false
 function RepresentativeDetailPageContent() {
+  const { t } = useI18n();
   const { trackEvent } = useAnalyticsActions();
   const params = useParams();
   const router = useRouter();
@@ -364,13 +368,13 @@ function RepresentativeDetailPageContent() {
           Back to Representatives
         </button>
         <div className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg p-6 text-center">
-          <p className="text-red-800 dark:text-red-200 font-semibold mb-2">Representative Not Found</p>
+          <p className="text-red-800 dark:text-red-200 font-semibold mb-2">{t('civics.representatives.detail.notFound.title')}</p>
           <p className="text-red-600 dark:text-red-300">
-            {error ?? 'The representative you are looking for does not exist.'}
+            {error ?? t('civics.representatives.detail.notFound.message')}
           </p>
           {error?.includes('Security challenge') && (
             <p className="text-red-600 dark:text-red-300 text-sm mt-2">
-              Please refresh the page. If the issue continues, your network or security settings may be blocking access.
+              {t('civics.representatives.detail.notFound.securityNote')}
             </p>
           )}
         </div>
@@ -384,14 +388,14 @@ function RepresentativeDetailPageContent() {
       {/* Back Button */}
       <button
         onClick={handleBack}
-        className="flex items-center text-blue-600 hover:text-blue-800 mb-6 transition-colors"
+        className="flex items-center text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-300 mb-6 transition-colors"
       >
         <ArrowLeft className="w-5 h-5 mr-2" />
-        Back to Representatives
+        {t('civics.representatives.detail.back')}
       </button>
 
       {/* Representative Card */}
-      <div className="bg-white rounded-lg shadow-lg overflow-hidden">
+      <div className="bg-white dark:bg-gray-900 rounded-lg shadow-lg overflow-hidden">
         {/* Header with Photo */}
         <div className="bg-gradient-to-r from-blue-600 to-blue-800 p-8 text-white">
           <div className="flex items-start gap-6">
@@ -412,17 +416,21 @@ function RepresentativeDetailPageContent() {
 
             <div className="flex-1">
               <h1 className="text-3xl font-bold mb-2">{representative.name}</h1>
-              <p className="text-xl text-blue-100 mb-1">{representative.office}</p>
-              <div className="flex items-center gap-4 text-blue-100">
-                {representative.party && (
-                  <span className="px-3 py-1 bg-blue-700 rounded-full text-sm">
-                    {representative.party}
-                  </span>
-                )}
-                {representative.level && (
-                  <span className="text-sm capitalize">{representative.level} Level</span>
-                )}
-              </div>
+              {representative.party && (
+                <p className="text-lg text-blue-100 mb-1">{representative.party}</p>
+              )}
+              {representative.office && (
+                <p className="text-lg text-blue-100 mb-1">{representative.office}</p>
+              )}
+              {representative.state && (
+                <p className="text-base text-blue-100/90">
+                  {formatRepresentativeLocation({
+                    state: representative.state,
+                    office_city: representative.office_city,
+                    district: representative.district,
+                  })}
+                </p>
+              )}
 
               {primaryNextElectionDate && (
                 <div className="mt-4">
@@ -430,15 +438,15 @@ function RepresentativeDetailPageContent() {
                     <CalendarClock className="w-3 h-3" />
                     <span className="truncate max-w-[220px]">
                       {representative?.next_election_date
-                        ? 'Next election'
-                        : nextElection?.name ?? 'Next election'}
+                        ? t('civics.representatives.detail.election.nextElection')
+                        : nextElection?.name ?? t('civics.representatives.detail.election.nextElection')}
                     </span>
                     <span className="text-blue-100">
                       · {formattedNextElectionDate || formatElectionDateStable(primaryNextElectionDate)}
                     </span>
                     {!representative?.next_election_date && divisionIds.length > 0 && upcomingElections.length > 1 && (
                       <span className="text-blue-100/80">
-                        (+{upcomingElections.length - 1})
+                        {t('civics.representatives.detail.election.additional', { count: upcomingElections.length - 1 })}
                       </span>
                     )}
                   </Badge>
@@ -447,8 +455,10 @@ function RepresentativeDetailPageContent() {
               <div className="mt-2 text-xs text-blue-100">
                 {primaryNextElectionDate && daysUntilNextElection != null && daysUntilNextElection <= 90 && (
                   daysUntilNextElection === 0
-                    ? 'Election is today'
-                    : `Election in ${daysUntilNextElection} day${daysUntilNextElection === 1 ? '' : 's'}`
+                    ? t('civics.representatives.detail.election.isToday')
+                    : daysUntilNextElection === 1
+                    ? t('civics.representatives.detail.election.inDays', { count: daysUntilNextElection })
+                    : t('civics.representatives.detail.election.inDaysPlural', { count: daysUntilNextElection })
                 )}
               </div>
             </div>
@@ -457,29 +467,29 @@ function RepresentativeDetailPageContent() {
               onClick={handleFollow}
               className={`px-6 py-2 rounded-lg font-semibold transition-colors ${
                 isFollowing
-                  ? 'bg-white text-blue-600 hover:bg-blue-50'
-                  : 'bg-blue-500 text-white hover:bg-blue-400'
+                  ? 'bg-white dark:bg-gray-800 text-blue-600 dark:text-blue-400 hover:bg-blue-50 dark:hover:bg-gray-700'
+                  : 'bg-blue-500 dark:bg-blue-600 text-white hover:bg-blue-400 dark:hover:bg-blue-500'
               }`}
               disabled={followLoading}
             >
-              {followLoading ? 'Updating...' : isFollowing ? 'Following' : 'Follow'}
+              {followLoading ? t('civics.representatives.detail.actions.updating') : isFollowing ? t('civics.representatives.detail.actions.following') : t('civics.representatives.detail.actions.follow')}
             </button>
           </div>
         </div>
 
         {/* Contact Information */}
         <div className="p-8">
-          <h2 className="text-2xl font-bold text-gray-900 mb-6">Contact Information</h2>
+          <h2 className="text-2xl font-bold text-gray-900 dark:text-gray-100 mb-6">{t('civics.representatives.detail.sections.contactInformation')}</h2>
 
           <div className="grid md:grid-cols-2 gap-6 mb-8">
             {contactEmail && (
               <div className="flex items-start gap-3">
-                <Mail className="w-5 h-5 text-blue-600 mt-1" />
+                <Mail className="w-5 h-5 text-blue-600 dark:text-blue-400 mt-1" />
                 <div>
-                  <p className="font-semibold text-gray-700 mb-1">Email</p>
+                  <p className="font-semibold text-gray-700 dark:text-gray-300 mb-1">Email</p>
                   <a
                     href={`mailto:${contactEmail}`}
-                    className="text-blue-600 hover:underline"
+                    className="text-blue-600 dark:text-blue-400 hover:underline"
                   >
                     {contactEmail}
                   </a>
@@ -489,12 +499,12 @@ function RepresentativeDetailPageContent() {
 
             {contactPhone && (
               <div className="flex items-start gap-3">
-                <Phone className="w-5 h-5 text-blue-600 mt-1" />
+                <Phone className="w-5 h-5 text-blue-600 dark:text-blue-400 mt-1" />
                 <div>
-                  <p className="font-semibold text-gray-700 mb-1">Phone</p>
+                  <p className="font-semibold text-gray-700 dark:text-gray-300 mb-1">Phone</p>
                   <a
                     href={`tel:${contactPhone}`}
-                    className="text-blue-600 hover:underline"
+                    className="text-blue-600 dark:text-blue-400 hover:underline"
                   >
                     {contactPhone}
                   </a>
@@ -502,13 +512,17 @@ function RepresentativeDetailPageContent() {
               </div>
             )}
 
-            {(representative.state || representative.district) && (
+            {representative.state && (
               <div className="flex items-start gap-3 md:col-span-2">
-                <MapPin className="w-5 h-5 text-blue-600 mt-1" />
+                <MapPin className="w-5 h-5 text-blue-600 dark:text-blue-400 mt-1" />
                 <div>
-                  <p className="font-semibold text-gray-700 mb-1">Represents</p>
-                  <p className="text-gray-600">
-                    {[representative.district, representative.state].filter(Boolean).join(', ')}
+                  <p className="font-semibold text-gray-700 dark:text-gray-300 mb-1">{t('civics.representatives.detail.sections.represents')}</p>
+                  <p className="text-gray-600 dark:text-gray-400">
+                    {formatRepresentativeLocation({
+                      state: representative.state,
+                      office_city: representative.office_city,
+                      district: representative.district,
+                    })}
                   </p>
                 </div>
               </div>
@@ -516,20 +530,20 @@ function RepresentativeDetailPageContent() {
 
             {extraContacts.length > 0 && (
               <div className="md:col-span-2">
-                <p className="font-semibold text-gray-700 mb-2">Additional Contacts</p>
+                <p className="font-semibold text-gray-700 dark:text-gray-300 mb-2">Additional Contacts</p>
                 <div className="grid gap-2">
                   {extraContacts.slice(0, 6).map((contact, index) => (
-                    <div key={`${contact.label}-${index}`} className="flex items-center gap-2 text-sm text-gray-600">
-                      <ExternalLink className="w-4 h-4 text-blue-600" />
+                    <div key={`${contact.label}-${index}`} className="flex items-center gap-2 text-sm text-gray-600 dark:text-gray-400">
+                      <ExternalLink className="w-4 h-4 text-blue-600 dark:text-blue-400" />
                       {contact.href ? (
-                        <a href={contact.href} className="text-blue-600 hover:underline">
+                        <a href={contact.href} className="text-blue-600 dark:text-blue-400 hover:underline">
                           {contact.label}: {contact.value}
                         </a>
                       ) : (
                         <span>{contact.label}: {contact.value}</span>
                       )}
                       {contact.source && (
-                        <span className="text-xs text-gray-400">({contact.source})</span>
+                        <span className="text-xs text-gray-400 dark:text-gray-500">({contact.source})</span>
                       )}
                     </div>
                   ))}
@@ -539,24 +553,24 @@ function RepresentativeDetailPageContent() {
           </div>
 
           <div className="mb-8">
-            <div className="p-4 bg-gray-50 rounded-lg">
-              <h3 className="text-lg font-semibold text-gray-900 mb-2">Term Details</h3>
-              <div className="space-y-1 text-sm text-gray-600">
-                <div>Term start: {representative.term_start_date ? formatElectionDateStable(representative.term_start_date) : '—'}</div>
-                <div>Term end: {representative.term_end_date ? formatElectionDateStable(representative.term_end_date) : '—'}</div>
-                <div>Next election: {representative.next_election_date ? formatElectionDateStable(representative.next_election_date) : 'No upcoming election on file'}</div>
+            <div className="p-4 bg-gray-50 dark:bg-gray-800 rounded-lg">
+              <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-2">{t('civics.representatives.detail.sections.termDetails')}</h3>
+              <div className="space-y-1 text-sm text-gray-600 dark:text-gray-400">
+                <div>{t('civics.representatives.detail.termDetails.termStart')} {representative.term_start_date ? formatElectionDateStable(representative.term_start_date) : t('common.placeholders.emDash')}</div>
+                <div>{t('civics.representatives.detail.termDetails.termEnd')} {representative.term_end_date ? formatElectionDateStable(representative.term_end_date) : t('common.placeholders.emDash')}</div>
+                <div>{t('civics.representatives.detail.termDetails.nextElection')} {representative.next_election_date ? formatElectionDateStable(representative.next_election_date) : t('civics.representatives.detail.termDetails.noElection')}</div>
               </div>
             </div>
           </div>
 
           {representative.committees && representative.committees.length > 0 && (
             <div className="mb-8">
-              <h3 className="text-lg font-semibold text-gray-900 mb-3">Committees</h3>
+              <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-3">{t('civics.representatives.detail.sections.committees')}</h3>
               <div className="grid gap-2">
                 {representative.committees.slice(0, 8).map((committee) => (
-                  <div key={committee.id} className="text-sm text-gray-600">
+                  <div key={committee.id} className="text-sm text-gray-600 dark:text-gray-400">
                     {committee.committee_name} {committee.role ? `• ${committee.role}` : ''}
-                    {committee.is_current ? ' • Current' : ''}
+                    {committee.is_current ? ` • ${t('civics.representatives.detail.committees.current')}` : ''}
                   </div>
                 ))}
               </div>
@@ -567,16 +581,16 @@ function RepresentativeDetailPageContent() {
             const billActivities = (representative.activities ?? []).filter((a) => a.type === 'bill');
             return billActivities.length > 0 ? (
               <div className="mb-8">
-                <h3 className="text-lg font-semibold text-gray-900 mb-3">Recent Activity</h3>
-                <p className="text-xs text-gray-500 mb-2">Bill activity from OpenStates (sponsorship, votes when available). Upcoming elections are listed separately below.</p>
+                <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-3">{t('civics.representatives.detail.sections.recentActivity')}</h3>
+                <p className="text-xs text-gray-500 dark:text-gray-400 mb-2">{t('civics.representatives.detail.recentActivity.description')}</p>
                 <div className="space-y-3">
                   {billActivities.slice(0, 5).map((activity) => (
-                    <div key={activity.id} className="p-3 border border-gray-200 rounded-lg">
-                      <div className="text-sm font-semibold text-gray-900">{activity.title}</div>
+                    <div key={activity.id} className="p-3 border border-gray-200 dark:border-gray-700 rounded-lg">
+                      <div className="text-sm font-semibold text-gray-900 dark:text-gray-100">{activity.title}</div>
                       {activity.description && (
-                        <div className="text-sm text-gray-600">{activity.description}</div>
+                        <div className="text-sm text-gray-600 dark:text-gray-400">{activity.description}</div>
                       )}
-                      <div className="text-xs text-gray-500">
+                      <div className="text-xs text-gray-500 dark:text-gray-400">
                         {activity.type}
                         {activity.date ? ` · ${formatElectionDateStable(activity.date)}` : ''}
                         {activity.source ? ` · ${activity.source}` : ''}
@@ -592,12 +606,12 @@ function RepresentativeDetailPageContent() {
           <div className="mb-8 rounded-xl border border-gray-200 bg-white shadow-sm dark:border-gray-700 dark:bg-gray-900">
             <div className="flex items-center justify-between border-b border-gray-100 px-5 py-4 dark:border-gray-800">
               <div>
-                <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100">Upcoming Elections</h3>
+                <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100">{t('civics.representatives.detail.sections.upcomingElections')}</h3>
                 <p className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">
-                  Elections in your representative&apos;s districts. Dates from OpenStates / Google Civic API.
+                  {t('civics.representatives.detail.upcomingElections.description')}
                 </p>
               </div>
-              <span className="text-xs text-gray-500 dark:text-gray-400">{upcomingElections.length} listed</span>
+              <span className="text-xs text-gray-500 dark:text-gray-400">{t('civics.representatives.detail.upcomingElections.listed', { count: upcomingElections.length })}</span>
             </div>
             <div className="space-y-3 px-5 py-4">
               {upcomingElections.slice(0, 5).map((election) => (
@@ -607,7 +621,7 @@ function RepresentativeDetailPageContent() {
                 >
                   <div>
                     <p className="text-sm font-semibold text-blue-900 dark:text-blue-100">{election.name}</p>
-                    <p className="text-xs text-blue-700 dark:text-blue-200/80">
+                    <p className="text-xs text-blue-800 dark:text-blue-200">
                       {formatElectionDateStable(election.election_day)}
                       {isClient && (() => {
                         const countdown = getElectionCountdown(election.election_day);
@@ -629,13 +643,13 @@ function RepresentativeDetailPageContent() {
 
           {/* Official Website */}
           {website && (
-            <div className="mb-8 p-4 bg-gray-50 rounded-lg">
-              <h3 className="text-lg font-semibold text-gray-900 mb-2">Official Website</h3>
+            <div className="mb-8 p-4 bg-gray-50 dark:bg-gray-800 rounded-lg">
+              <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-2">{t('civics.representatives.detail.sections.officialWebsite')}</h3>
               <a
                 href={website}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="inline-flex items-center gap-2 text-blue-600 hover:text-blue-500"
+                className="inline-flex items-center gap-2 text-blue-600 dark:text-blue-400 hover:text-blue-500 dark:hover:text-blue-300"
               >
                 <ExternalLink className="w-4 h-4" />
                 {website}
@@ -646,7 +660,7 @@ function RepresentativeDetailPageContent() {
           {/* Social Media & Links */}
           {(socialChannels.length > 0 || extraSocialChannels.length > 0) && (
             <div className="mb-8">
-              <h3 className="text-lg font-semibold text-gray-900 mb-4">Social Media</h3>
+              <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-4">{t('civics.representatives.detail.sections.socialMedia')}</h3>
               <div className="flex flex-wrap gap-3">
                 {socialChannels.map((channel) => (
                   <a
@@ -654,7 +668,7 @@ function RepresentativeDetailPageContent() {
                     href={channel.url}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="flex items-center gap-2 px-4 py-2 bg-blue-50 text-blue-700 rounded-lg hover:bg-blue-100 transition-colors"
+                    className="flex items-center gap-2 px-4 py-2 bg-blue-50 dark:bg-blue-900/30 text-blue-900 dark:text-blue-200 rounded-lg hover:bg-blue-100 dark:hover:bg-blue-900/50 transition-colors"
                   >
                     <ExternalLink className="w-4 h-4" />
                     <span>{channel.value}</span>
@@ -663,14 +677,14 @@ function RepresentativeDetailPageContent() {
                 {extraSocialChannels.map((channel, index) => (
                   <div
                     key={`${channel.label}-${index}`}
-                    className="flex items-center gap-2 px-4 py-2 bg-gray-50 text-gray-700 rounded-lg"
+                    className="flex items-center gap-2 px-4 py-2 bg-gray-50 dark:bg-gray-800 text-gray-700 dark:text-gray-300 rounded-lg"
                   >
                     <ExternalLink className="w-4 h-4" />
                     <span>{channel.label}: {channel.value}</span>
                     {channel.followers ? (
-                      <span className="text-xs text-gray-500">({channel.followers.toLocaleString()} followers)</span>
+                      <span className="text-xs text-gray-500 dark:text-gray-400">({channel.followers.toLocaleString()} followers)</span>
                     ) : null}
-                    {channel.verified ? <span className="text-xs text-green-600">Verified</span> : null}
+                    {channel.verified ? <span className="text-xs text-green-600 dark:text-green-400">Verified</span> : null}
                   </div>
                 ))}
               </div>
@@ -679,15 +693,15 @@ function RepresentativeDetailPageContent() {
 
 
           {campaignFinance && (
-            <div className="mb-8 p-4 bg-gray-50 rounded-lg">
-              <h3 className="text-lg font-semibold text-gray-900 mb-2">Campaign Finance</h3>
-              <div className="grid md:grid-cols-2 gap-2 text-sm text-gray-600">
-                {campaignFinance.cycle && <div>Cycle: {campaignFinance.cycle}</div>}
-                {campaignFinance.total_raised != null && <div>Total raised: ${campaignFinance.total_raised.toLocaleString()}</div>}
-                {campaignFinance.total_spent != null && <div>Total spent: ${campaignFinance.total_spent.toLocaleString()}</div>}
-                {campaignFinance.cash_on_hand != null && <div>Cash on hand: ${campaignFinance.cash_on_hand.toLocaleString()}</div>}
-                {campaignFinance.last_filing_date && <div>Last filing: {formatElectionDateStable(campaignFinance.last_filing_date)}</div>}
-                {campaignFinance.source && <div>Source: {campaignFinance.source}</div>}
+            <div className="mb-8 p-4 bg-gray-50 dark:bg-gray-800 rounded-lg">
+              <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-2">{t('civics.representatives.detail.sections.campaignFinance')}</h3>
+              <div className="grid md:grid-cols-2 gap-2 text-sm text-gray-600 dark:text-gray-400">
+                {campaignFinance.cycle && <div>{t('civics.representatives.detail.campaignFinance.cycle')} {campaignFinance.cycle}</div>}
+                {campaignFinance.total_raised != null && <div>{t('civics.representatives.detail.campaignFinance.totalRaised')} ${campaignFinance.total_raised.toLocaleString()}</div>}
+                {campaignFinance.total_spent != null && <div>{t('civics.representatives.detail.campaignFinance.totalSpent')} ${campaignFinance.total_spent.toLocaleString()}</div>}
+                {campaignFinance.cash_on_hand != null && <div>{t('civics.representatives.detail.campaignFinance.cashOnHand')} ${campaignFinance.cash_on_hand.toLocaleString()}</div>}
+                {campaignFinance.last_filing_date && <div>{t('civics.representatives.detail.campaignFinance.lastFiling')} {formatElectionDateStable(campaignFinance.last_filing_date)}</div>}
+                {campaignFinance.source && <div>{t('civics.representatives.detail.campaignFinance.source')} {campaignFinance.source}</div>}
               </div>
             </div>
           )}
@@ -695,9 +709,9 @@ function RepresentativeDetailPageContent() {
           {/* Unified Activity Feed: Polls, Bills, Votes */}
           {numericRepresentativeId && (
             <div className="mb-8">
-              <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-4">Activity Feed</h3>
+              <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-4">{t('civics.representatives.detail.sections.activityFeed')}</h3>
               <p className="text-sm text-gray-600 dark:text-gray-400 mb-4">
-                Polls, bills, and votes related to this representative
+                {t('civics.representatives.detail.activityFeed.description')}
               </p>
               <RepresentativeActivityFeed
                 representativeId={numericRepresentativeId}
@@ -709,15 +723,15 @@ function RepresentativeDetailPageContent() {
           {/* External IDs - Moved to bottom, least prominent */}
           {(representative.bioguide_id || representative.fec_id || representative.congress_gov_id || representative.google_civic_id || representative.legiscan_id || representative.govinfo_id || representative.openstates_id || representative.ballotpedia_url) && (
             <div className="mt-8 pt-6 border-t border-gray-200 dark:border-gray-700">
-              <h3 className="text-sm font-medium text-gray-500 dark:text-gray-400 mb-3">External Identifiers</h3>
+              <h3 className="text-sm font-medium text-gray-500 dark:text-gray-400 mb-3">{t('civics.representatives.detail.sections.externalIdentifiers')}</h3>
               <div className="grid md:grid-cols-2 gap-2 text-xs text-gray-500 dark:text-gray-500">
-                {representative.bioguide_id && <div>Bioguide: {representative.bioguide_id}</div>}
-                {representative.fec_id && <div>FEC: {representative.fec_id}</div>}
-                {representative.congress_gov_id && <div>Congress.gov: {representative.congress_gov_id}</div>}
-                {representative.google_civic_id && <div>Google Civic: {representative.google_civic_id}</div>}
-                {representative.legiscan_id && <div>LegiScan: {representative.legiscan_id}</div>}
-                {representative.govinfo_id && <div>GovInfo: {representative.govinfo_id}</div>}
-                {representative.openstates_id && <div>OpenStates: {representative.openstates_id}</div>}
+                {representative.bioguide_id && <div>{t('civics.representatives.detail.externalIdentifiers.bioguide')} {representative.bioguide_id}</div>}
+                {representative.fec_id && <div>{t('civics.representatives.detail.externalIdentifiers.fec')} {representative.fec_id}</div>}
+                {representative.congress_gov_id && <div>{t('civics.representatives.detail.externalIdentifiers.congressGov')} {representative.congress_gov_id}</div>}
+                {representative.google_civic_id && <div>{t('civics.representatives.detail.externalIdentifiers.googleCivic')} {representative.google_civic_id}</div>}
+                {representative.legiscan_id && <div>{t('civics.representatives.detail.externalIdentifiers.legiscan')} {representative.legiscan_id}</div>}
+                {representative.govinfo_id && <div>{t('civics.representatives.detail.externalIdentifiers.govinfo')} {representative.govinfo_id}</div>}
+                {representative.openstates_id && <div>{t('civics.representatives.detail.externalIdentifiers.openstates')} {representative.openstates_id}</div>}
                 {representative.ballotpedia_url && (
                   <a
                     href={representative.ballotpedia_url}
@@ -725,7 +739,7 @@ function RepresentativeDetailPageContent() {
                     target="_blank"
                     rel="noopener noreferrer"
                   >
-                    Ballotpedia profile
+                    {t('civics.representatives.detail.externalIdentifiers.ballotpedia')}
                   </a>
                 )}
               </div>

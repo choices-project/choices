@@ -1,6 +1,7 @@
 'use client';
 
 import { AlertCircle, BarChart3, Lock, Printer, Share2, Shield, Trash2, Trophy } from 'lucide-react';
+import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
@@ -37,6 +38,8 @@ import { useAppActions } from '@/lib/stores/appStore';
 import { useProfileDisplay } from '@/lib/stores/profileStore';
 import { cn } from '@/lib/utils';
 import { logger } from '@/lib/utils/logger';
+
+import { formatRepresentativeLocation } from '@/features/civics/utils/formatRepresentativeLocation';
 
 import { useAuth } from '@/hooks/useAuth';
 import { useI18n } from '@/hooks/useI18n';
@@ -101,6 +104,7 @@ type PollClientProps = {
     userVote?: string;
     canVote?: boolean;
     createdBy?: string | null;
+    representativeId?: number | null;
   };
 };
 
@@ -120,12 +124,60 @@ export default function PollClient({ poll }: PollClientProps) {
   const { addNotification } = useNotificationActions();
   const { setCurrentRoute, setSidebarActiveSection, setBreadcrumbs } = useAppActions();
 
-  // Track if component is mounted to prevent hydration mismatches from date formatting
   const [isMounted, setIsMounted] = useState(false);
+  const [representativeData, setRepresentativeData] = useState<{
+    name?: string;
+    party?: string;
+    office?: string;
+    state?: string;
+    office_city?: string | null;
+    district?: string | null;
+  } | null>(null);
 
   useEffect(() => {
     setIsMounted(true);
   }, []);
+
+  const repId = poll.representativeId ?? null;
+  useEffect(() => {
+    if (!repId || typeof repId !== 'number') return;
+    let cancelled = false;
+    (async () => {
+      try {
+        const res = await fetch(`/api/v1/civics/representative/${repId}?fields=id,name,party,office,state,office_city,district`);
+        if (!res.ok || cancelled) return;
+        const json = (await res.json()) as {
+          data?: {
+            representative?: {
+              name?: string;
+              party?: string;
+              office?: string;
+              state?: string;
+              office_city?: string | null;
+              district?: string | null;
+            };
+            name?: string;
+            party?: string;
+            office?: string;
+            state?: string;
+            office_city?: string | null;
+            district?: string | null;
+          };
+          name?: string;
+          party?: string;
+          office?: string;
+          state?: string;
+          office_city?: string | null;
+          district?: string | null;
+        };
+        const rep = json?.data?.representative ?? json?.data ?? json ?? null;
+        if (!cancelled && rep) setRepresentativeData(rep);
+      } catch {
+        if (!cancelled) setRepresentativeData(null);
+      }
+    })();
+    return () => { cancelled = true; };
+  }, [repId]);
 
   const PRIVACY_LABELS: Record<string, string> = useMemo(() => ({
     public: t('polls.view.privacy.public'),
@@ -500,25 +552,22 @@ export default function PollClient({ poll }: PollClientProps) {
     [pollOptions],
   );
 
-  const computedTotalVotes = useMemo(() => {
-    if (results?.total_votes !== undefined) {
-      return results.total_votes;
-    }
-    if (typeof poll.totalVotes === 'number') {
-      return poll.totalVotes;
-    }
-    if (typeof poll.totalvotes === 'number') {
-      return poll.totalvotes;
-    }
-    return initialVoteTotal;
-  }, [poll.totalVotes, poll.totalvotes, results, initialVoteTotal]);
-
-  const integrityInfo = results?.integrity;
-
   const totalRecordedVotes = useMemo(
     () => normalizedOptions.reduce((sum, option) => sum + option.votes, 0),
     [normalizedOptions],
   );
+
+  const computedTotalVotes = useMemo(() => {
+    const fromResults = results?.total_votes;
+    const fromPoll = typeof poll.totalVotes === 'number' ? poll.totalVotes : typeof poll.totalvotes === 'number' ? poll.totalvotes : undefined;
+    const fromOptions = initialVoteTotal;
+    let total = fromResults ?? fromPoll ?? fromOptions;
+    // If we have option-level votes but total is 0, use the sum so votes always show when present
+    if (total === 0 && totalRecordedVotes > 0) total = totalRecordedVotes;
+    return total;
+  }, [poll.totalVotes, poll.totalvotes, results, initialVoteTotal, totalRecordedVotes]);
+
+  const integrityInfo = results?.integrity;
 
   const topOption = useMemo(() => {
     if (normalizedOptions.length === 0) return null;
@@ -917,6 +966,38 @@ export default function PollClient({ poll }: PollClientProps) {
         <p className="text-foreground font-medium leading-relaxed mb-6" data-testid="poll-description">
           {poll.description}
         </p>
+      )}
+
+      {repId != null && (
+        <div className="mb-6 p-4 rounded-lg border border-border bg-card">
+          <p className="text-xs uppercase font-semibold text-muted-foreground mb-2">Poll about</p>
+          <Link
+            href={`/representatives/${repId}`}
+            className="block hover:opacity-80 transition-opacity"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="space-y-1">
+              <p className="text-lg font-semibold text-foreground">
+                {representativeData?.name ?? `Representative #${repId}`}
+              </p>
+              {representativeData?.party && (
+                <p className="text-sm text-foreground/80">{representativeData.party}</p>
+              )}
+              {representativeData?.office && (
+                <p className="text-sm text-foreground/80">{representativeData.office}</p>
+              )}
+              {representativeData?.state && (
+                <p className="text-sm text-foreground/60">
+                  {formatRepresentativeLocation({
+                    state: representativeData.state,
+                    office_city: representativeData.office_city,
+                    district: representativeData.district,
+                  })}
+                </p>
+              )}
+            </div>
+          </Link>
+        </div>
       )}
 
       {/* Quick Stats - Compact summary */}

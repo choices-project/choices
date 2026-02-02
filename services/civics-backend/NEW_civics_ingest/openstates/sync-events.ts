@@ -106,7 +106,16 @@ async function main() {
   const timestamp = new Date().toISOString();
   const seenEvents = new Set<string>(); // Deduplicate across jurisdictions
 
-  for (const jurisdiction of jurisdictions.size > 0 ? Array.from(jurisdictions) : [undefined]) {
+  // If no jurisdictions found and no states specified, we need to fetch all jurisdictions
+  // OpenStates API requires jurisdiction parameter, so we can't fetch without it
+  if (jurisdictions.size === 0 && (!options.states || options.states.length === 0)) {
+    console.warn('⚠️  No jurisdictions found. Events sync requires either --states parameter or representatives with jurisdictions.');
+    console.warn('   Skipping events sync. Use --states=CA,NY to specify states.');
+    console.log(`\n✅ Events sync complete (skipped - no jurisdictions).\n`);
+    return;
+  }
+
+  for (const jurisdiction of Array.from(jurisdictions)) {
     let jurisdictionSkipped = 0;
     try {
       const events = await fetchEvents({
@@ -192,7 +201,7 @@ async function main() {
       }
       totalSkipped += jurisdictionSkipped;
     } catch (error) {
-      console.error(`Failed to fetch events for ${jurisdiction || 'all'}:`, (error as Error).message);
+      console.error(`Failed to fetch events for ${jurisdiction}:`, (error as Error).message);
     }
   }
 

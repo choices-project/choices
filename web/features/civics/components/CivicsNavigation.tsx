@@ -230,7 +230,7 @@ export default function CivicsNavigation({
                 type="button"
                 ref={mobileMenuButtonRef}
                 onClick={toggleMobileMenu}
-                className="inline-flex items-center justify-center rounded-md p-2 text-gray-500 hover:text-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="inline-flex items-center justify-center rounded-md p-2 text-gray-500 hover:text-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 dark:focus:ring-offset-gray-900"
                 aria-label={
                   isMobileMenuOpen
                     ? t('civics.navigation.mobileMenu.close')
@@ -289,7 +289,7 @@ export default function CivicsNavigation({
                 openAddressForm();
                 closeMobileMenu();
               }}
-              className="flex w-full items-center justify-between rounded-lg border border-gray-200 px-4 py-3 text-left text-sm font-semibold text-gray-800 focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="flex w-full items-center justify-between rounded-lg border border-gray-200 px-4 py-3 text-left text-sm font-semibold text-gray-800 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 dark:focus:ring-offset-gray-900"
             >
               <span className="flex items-center space-x-2">
                 <MapPinIcon className="h-5 w-5" aria-hidden="true" />
@@ -347,7 +347,7 @@ export default function CivicsNavigation({
                 type="button"
                 onClick={closeAddressForm}
                 aria-label={t('civics.navigation.modal.close')}
-                className="absolute right-4 top-4 rounded-full p-2 text-gray-500 hover:text-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="absolute right-4 top-4 rounded-full p-2 text-gray-500 hover:text-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 dark:focus:ring-offset-gray-900"
               >
                 <XMarkIcon className="h-5 w-5" />
               </button>

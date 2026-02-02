@@ -45,6 +45,7 @@ export const GET = withErrorHandling(async (
           voting_method,
           created_at,
           created_by,
+          representative_id,
           poll_settings,
           poll_options:poll_options (
             id,
@@ -87,8 +88,9 @@ export const GET = withErrorHandling(async (
       category: poll.category,
       votingMethod: poll.voting_method ?? 'single',
       createdAt: poll.created_at,
-      createdBy: poll.created_by ?? null, // CRITICAL: This must not be null for close button to work
-      canVote: (poll.status ?? 'active') === 'active', // Allow voting for active polls
+      createdBy: poll.created_by ?? null,
+      representativeId: poll.representative_id ?? null,
+      canVote: (poll.status ?? 'active') === 'active',
       settings: {
         allowMultipleVotes: Boolean(pollSettings?.allow_multiple_votes),
         allowAnonymousVotes: Boolean(pollSettings?.allow_anonymous_votes ?? true),

@@ -79,8 +79,31 @@ export async function syncRepresentativeSocial(rep: CanonicalRepresentative): Pr
     return;
   }
 
+  // Filter out rows without valid handles
+  // Database constraint requires handle to be NOT NULL
+  // We only insert records where we have a legitimate handle (either provided or extractable from URL)
   const rows = buildSocialRows(representativeId, rep.social ?? []).filter(
-    (row) => row.handle || row.url,
+    (row) => {
+      // If we already have a handle, keep the row
+      if (row.handle) return true;
+      
+      // If we have a URL but no handle, try to extract the handle from the URL
+      // This is legitimate - social media URLs contain the handle in the path
+      if (!row.handle && row.url) {
+        // Extract handle from common social media URL patterns:
+        // twitter.com/username, instagram.com/username, linkedin.com/in/username, etc.
+        const urlMatch = row.url.match(/(?:twitter\.com|instagram\.com|linkedin\.com\/in|facebook\.com|youtube\.com\/channel\/|youtube\.com\/c\/|youtube\.com\/user\/|youtube\.com\/@|tiktok\.com\/@)\/([^\/\?]+)/);
+        if (urlMatch && urlMatch[1]) {
+          // Successfully extracted handle from URL - this is real data, not fake
+          row.handle = urlMatch[1].replace(/^@/, '').trim();
+          return true;
+        }
+      }
+      
+      // If we can't get a handle (no handle provided and can't extract from URL), skip this record
+      // We don't insert fake data just to satisfy the constraint
+      return false;
+    },
   );
 
   const client = getSupabaseClient();

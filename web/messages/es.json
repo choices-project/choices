@@ -2533,6 +2533,13 @@
       "moreOptions": "+{count} opciones adicionales",
       "votes": "{formattedCount} {count, plural, one {voto} other {votos}}",
       "participation": "{formattedCount} {count, plural, one {participante} other {participantes}}",
+      "representative": {
+        "fallback": "Representante #{id}",
+        "constituentWill": "Voluntad del Constituyente"
+      },
+      "bill": {
+        "fallback": "Proyecto de Ley #{id}"
+      },
       "actions": {
         "view": "Ver encuesta",
         "vote": "Votar ahora"
@@ -3725,6 +3732,47 @@
         "heading": "Hashtags en tendencia",
         "headingWithCount": "Hashtags en tendencia ({count})",
         "count": "{formattedCount} hashtags en tendencia"
+      }
+    },
+    "create": {
+      "representative": {
+        "creatingAbout": "Creando encuesta sobre {name}",
+        "loading": "Cargando información del representante...",
+        "fallback": "Representante #{id}"
+      },
+      "audience": {
+        "votingPrivacySettings": {
+          "title": "Configuración de votación y privacidad",
+          "description": "Decide cómo participan las personas y qué pueden ver."
+        }
+      },
+      "wizard": {
+        "review": {
+          "rankedChoice": {
+            "title": "Voto Preferencial",
+            "description": "Los votantes clasificarán cada opción del 1 (más preferida) al último (menos preferida).",
+            "howItWorks": "Cómo funciona: Arrastra las opciones para reordenarlas, siendo el 1 tu primera opción. El sistema usa segunda vuelta instantánea para encontrar la opción con apoyo mayoritario.",
+            "rankLabel": "Rango {rank}"
+          },
+          "noOptions": "Aún no se han agregado opciones."
+        }
+      }
+    },
+    "voting": {
+      "interface": {
+        "titleFallback": "Votar",
+        "votesCount": "{count, plural, one {# voto} other {# votos}}",
+        "verificationTier": "Nivel {tier}"
+      },
+      "notifications": {
+        "submitted": {
+          "title": "Voto enviado",
+          "message": "Tu voto ha sido registrado."
+        },
+        "failed": {
+          "title": "Error al votar",
+          "message": "No se pudo enviar el voto"
+        }
       }
     }
   },

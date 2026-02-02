@@ -546,16 +546,16 @@ export default function AuthPageClient() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50 flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8">
+    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50 dark:from-gray-900 dark:via-gray-900 dark:to-gray-800 flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8">
       <div className="max-w-md w-full space-y-6">
         {/* Hydration sentinel for E2E tests */}
         <div data-testid="auth-hydrated" hidden>{'1'}</div>
 
         <div className="text-center">
-          <h1 className="text-3xl font-bold text-gray-900">
+          <h1 className="text-3xl font-bold text-gray-900 dark:text-gray-100">
             {isSignUp ? t('auth.heading.signUp') : t('auth.heading.signIn')}
           </h1>
-          <p className="mt-2 text-sm text-gray-600">
+          <p className="mt-2 text-sm text-gray-600 dark:text-gray-400">
             {isSignUp ? t('auth.subheading.signUp') : t('auth.subheading.signIn')}
           </p>
         </div>
@@ -570,7 +570,7 @@ export default function AuthPageClient() {
                 button.addEventListener('click', handleToggle);
               }
             }}
-            className="text-blue-600 hover:text-blue-700 text-sm font-medium focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 rounded px-2 py-1"
+            className="text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300 text-sm font-medium focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 dark:focus:ring-offset-gray-900 rounded px-2 py-1"
             data-testid="auth-toggle"
             tabIndex={0}
           >
@@ -605,15 +605,15 @@ export default function AuthPageClient() {
               )}
 
               {/* Error Summary */}
-              <div data-testid="error-summary" className="bg-red-50 border border-red-200 rounded-md p-4 hidden" role="alert">
-                <p className="text-sm text-red-700">{t('auth.form.errorSummaryTitle')}</p>
-                <div data-testid="error-count" className="text-xs text-red-600 mt-1">{t('auth.form.errorSummaryCount', { count: '3' })}</div>
+              <div data-testid="error-summary" className="bg-red-50 dark:bg-red-900/30 border border-red-200 dark:border-red-800 rounded-md p-4 hidden" role="alert">
+                <p className="text-sm text-red-700 dark:text-red-300">{t('auth.form.errorSummaryTitle')}</p>
+                <div data-testid="error-count" className="text-xs text-red-600 dark:text-red-400 mt-1">{t('auth.form.errorSummaryCount', { count: '3' })}</div>
               </div>
 
               {/* Rate Limit Message */}
               <div
                 data-testid="rate-limit-message"
-                className={`bg-yellow-50 border border-yellow-200 rounded-md p-4 transition-all duration-200 ${
+                className={`bg-yellow-50 dark:bg-yellow-900/30 border border-yellow-200 dark:border-yellow-800 rounded-md p-4 transition-all duration-200 ${
                   safeIsRateLimited ? 'opacity-100 visible' : 'opacity-0 invisible h-0 p-0 border-0 overflow-hidden'
                 }`}
                 role="alert"
@@ -627,12 +627,12 @@ export default function AuthPageClient() {
                     </svg>
                   </div>
                   <div className="ml-3 flex-1">
-                    <p className="text-sm font-medium text-yellow-800">
+                    <p className="text-sm font-medium text-yellow-800 dark:text-yellow-200">
                       {safeUserError && safeIsRateLimited
                         ? safeUserError
                         : t('auth.form.rateLimited') || 'Too many requests. Please try again later.'}
                     </p>
-                    <p className="mt-1 text-xs text-yellow-700">
+                    <p className="mt-1 text-xs text-yellow-700 dark:text-yellow-300">
                       {t('auth.form.rateLimitedHelp') || 'Please wait a moment before trying again. This helps us prevent abuse and ensure service availability for all users.'}
                     </p>
                   </div>
@@ -641,7 +641,7 @@ export default function AuthPageClient() {
 
           {safeMessage && (
             <div
-              className="bg-green-50 border border-green-200 rounded-md p-4"
+              className="bg-green-50 dark:bg-green-900/30 border border-green-200 dark:border-green-800 rounded-md p-4"
               data-testid="auth-success"
               role="status"
               aria-live="polite"
@@ -649,7 +649,7 @@ export default function AuthPageClient() {
               <div className="flex">
                 <CheckCircle2 className="h-5 w-5 text-green-400" />
                 <div className="ml-3">
-                  <p className="text-sm text-green-700">{safeMessage}</p>
+                  <p className="text-sm text-green-700 dark:text-green-300">{safeMessage}</p>
                 </div>
               </div>
             </div>
@@ -659,7 +659,7 @@ export default function AuthPageClient() {
                 {/* Display Name (Sign Up only) */}
                 {isSignUp && (
             <div>
-                    <label htmlFor="displayName" className="block text-sm font-medium text-gray-700 mb-1">
+                    <label htmlFor="displayName" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                       {t('auth.form.displayNameLabel')}
                     </label>
                     <div className="relative">
@@ -681,7 +681,7 @@ export default function AuthPageClient() {
                         }}
                         onKeyDown={handleKeySubmit}
                         required={isSignUp}
-                        className="w-full pl-10 pr-3 py-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500 focus-visible:ring-2 focus-visible:ring-blue-500"
+                        className="w-full pl-10 pr-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 placeholder-gray-500 dark:placeholder-gray-400 focus:ring-blue-500 focus:border-blue-500 focus-visible:ring-2 focus-visible:ring-blue-500"
                         placeholder={t('auth.form.displayNamePlaceholder')}
                         data-testid="auth-display-name"
                         aria-label={t('auth.form.displayNameAria')}
@@ -690,11 +690,11 @@ export default function AuthPageClient() {
                       <UserPlus className="absolute left-3 top-2.5 h-5 w-5 text-gray-400" />
                     </div>
                     {formData.displayName && (
-                      <div data-testid="display-name-validation" className="mt-1 text-xs text-green-600">
+                      <div data-testid="display-name-validation" className="mt-1 text-xs text-green-600 dark:text-green-400">
                         {t('auth.form.displayNameValidation')}
                       </div>
                     )}
-                    <div data-testid="display-name-error" className="mt-1 text-xs text-red-600 hidden">
+                    <div data-testid="display-name-error" className="mt-1 text-xs text-red-600 dark:text-red-400 hidden">
                       {t('auth.form.displayNameError')}
                     </div>
                   </div>
@@ -702,7 +702,7 @@ export default function AuthPageClient() {
 
             {/* Email */}
             <div>
-              <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-1">
+              <label htmlFor="email" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                 {t('auth.form.emailLabel')}
                 <span className="text-red-500 ml-1" aria-label="required">*</span>
               </label>
@@ -725,12 +725,12 @@ export default function AuthPageClient() {
                   }}
                   onKeyDown={handleKeySubmit}
                   required
-                  className={`w-full pl-10 pr-3 py-2 border rounded-md focus:ring-blue-500 focus:border-blue-500 focus-visible:ring-2 focus-visible:ring-blue-500 transition-colors ${
+                  className={`w-full pl-10 pr-3 py-2 border rounded-md bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 placeholder-gray-500 dark:placeholder-gray-400 focus:ring-blue-500 focus:border-blue-500 focus-visible:ring-2 focus-visible:ring-blue-500 transition-colors ${
                     formData.email && !formData.email.includes('@')
-                      ? 'border-red-300 focus:border-red-500 focus:ring-red-500'
+                      ? 'border-red-300 dark:border-red-600 focus:border-red-500 focus:ring-red-500'
                       : formData.email && formData.email.includes('@')
-                      ? 'border-green-300'
-                      : 'border-gray-300'
+                      ? 'border-green-300 dark:border-green-600'
+                      : 'border-gray-300 dark:border-gray-600'
                   }`}
                   placeholder={t('auth.form.emailPlaceholder')}
                   data-testid="login-email"
@@ -746,13 +746,13 @@ export default function AuthPageClient() {
                 <Mail className="absolute left-3 top-2.5 h-5 w-5 text-gray-400" />
               </div>
               {formData.email && formData.email.includes('@') && (
-                <div id="email-success" data-testid="email-validation" className="mt-1 text-xs text-green-600 flex items-center gap-1" role="status">
+                <div id="email-success" data-testid="email-validation" className="mt-1 text-xs text-green-600 dark:text-green-400 flex items-center gap-1" role="status">
                   <CheckCircle2 className="h-3 w-3" aria-hidden="true" />
                   <span>{t('auth.form.emailValidation')}</span>
                 </div>
               )}
               {formData.email && !formData.email.includes('@') && (
-                <div id="email-error" data-testid="email-error" className="mt-1 text-xs text-red-600 flex items-center gap-1" role="alert">
+                <div id="email-error" data-testid="email-error" className="mt-1 text-xs text-red-600 dark:text-red-400 flex items-center gap-1" role="alert">
                   <AlertCircle className="h-3 w-3" aria-hidden="true" />
                   <span>{t('auth.form.emailError')}</span>
                 </div>
@@ -761,7 +761,7 @@ export default function AuthPageClient() {
 
             {/* Password */}
             <div>
-              <label htmlFor="password" className="block text-sm font-medium text-gray-700 mb-1">
+              <label htmlFor="password" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                 {t('auth.form.passwordLabel')}
                 <span className="text-red-500 ml-1" aria-label="required">*</span>
               </label>
@@ -784,12 +784,12 @@ export default function AuthPageClient() {
                   }}
                   onKeyDown={handleKeySubmit}
                   required
-                  className={`w-full pl-10 pr-10 py-2 border rounded-md focus:ring-blue-500 focus:border-blue-500 focus-visible:ring-2 focus-visible:ring-blue-500 transition-colors ${
+                  className={`w-full pl-10 pr-10 py-2 border rounded-md bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 placeholder-gray-500 dark:placeholder-gray-400 focus:ring-blue-500 focus:border-blue-500 focus-visible:ring-2 focus-visible:ring-blue-500 transition-colors ${
                     formData.password && formData.password.length < minPasswordLength
-                      ? 'border-red-300 focus:border-red-500 focus:ring-red-500'
+                      ? 'border-red-300 dark:border-red-600 focus:border-red-500 focus:ring-red-500'
                       : formData.password && formData.password.length >= minPasswordLength
-                      ? 'border-green-300'
-                      : 'border-gray-300'
+                      ? 'border-green-300 dark:border-green-600'
+                      : 'border-gray-300 dark:border-gray-600'
                   }`}
                   placeholder={t('auth.form.passwordPlaceholder')}
                   data-testid="login-password"
@@ -806,7 +806,7 @@ export default function AuthPageClient() {
                     <button
                       type="button"
                       onClick={() => setShowPassword(!showPassword)}
-                      className="absolute right-3 top-2.5 rounded-full p-1 text-gray-400 hover:text-gray-600 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2"
+                      className="absolute right-3 top-2.5 rounded-full p-1 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2 dark:focus-visible:ring-offset-gray-800"
                       aria-label={t(showPassword ? 'auth.form.hidePassword' : 'auth.form.showPassword')}
                       aria-pressed={showPassword}
                       aria-controls="password"
@@ -816,13 +816,13 @@ export default function AuthPageClient() {
                     </button>
               </div>
               {formData.password && formData.password.length >= minPasswordLength && (
-                <div id="password-success" data-testid="password-validation" className="mt-1 text-xs text-green-600 flex items-center gap-1" role="status">
+                <div id="password-success" data-testid="password-validation" className="mt-1 text-xs text-green-600 dark:text-green-400 flex items-center gap-1" role="status">
                   <CheckCircle2 className="h-3 w-3" aria-hidden="true" />
                   <span>{t('auth.form.passwordValidation', { length: minPasswordLength })}</span>
                 </div>
               )}
               {formData.password && formData.password.length < minPasswordLength && formData.password.length > 0 && (
-                <div id="password-error" data-testid="password-error" className="mt-1 text-xs text-red-600 flex items-center gap-1" role="alert">
+                <div id="password-error" data-testid="password-error" className="mt-1 text-xs text-red-600 dark:text-red-400 flex items-center gap-1" role="alert">
                   <AlertCircle className="h-3 w-3" aria-hidden="true" />
                   <span>{t('auth.form.passwordLengthError', { length: minPasswordLength })}</span>
                 </div>
@@ -831,7 +831,7 @@ export default function AuthPageClient() {
             {/* Confirm Password (Sign Up only) */}
             {isSignUp && (
               <div>
-                <label htmlFor="confirmPassword" className="block text-sm font-medium text-gray-700 mb-1">
+                <label htmlFor="confirmPassword" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                   {t('auth.form.confirmPasswordLabel')}
                 </label>
                 <div className="relative">
@@ -853,7 +853,7 @@ export default function AuthPageClient() {
                     }}
                     onKeyDown={handleKeySubmit}
                     required={isSignUp}
-                    className="w-full pl-10 pr-10 py-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500 focus-visible:ring-2 focus-visible:ring-blue-500"
+                    className="w-full pl-10 pr-10 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 placeholder-gray-500 dark:placeholder-gray-400 focus:ring-blue-500 focus:border-blue-500 focus-visible:ring-2 focus-visible:ring-blue-500"
                     placeholder={t('auth.form.passwordPlaceholder')}
                     data-testid="auth-confirm-password"
                     aria-label={t('auth.form.confirmPasswordAria')}
@@ -863,7 +863,7 @@ export default function AuthPageClient() {
                       <button
                         type="button"
                         onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-                        className="absolute right-3 top-2.5 rounded-full p-1 text-gray-400 hover:text-gray-600 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2"
+                        className="absolute right-3 top-2.5 rounded-full p-1 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2 dark:focus-visible:ring-offset-gray-800"
                         aria-label={t(showConfirmPassword ? 'auth.form.hidePassword' : 'auth.form.showPassword')}
                         aria-pressed={showConfirmPassword}
                         aria-controls="confirmPassword"
@@ -873,7 +873,7 @@ export default function AuthPageClient() {
                       </button>
                 </div>
                 {formData.confirmPassword && formData.password === formData.confirmPassword && (
-                  <div data-testid="password-match" className="mt-1 text-xs text-green-600">
+                  <div data-testid="password-match" className="mt-1 text-xs text-green-600 dark:text-green-400">
                     {t('auth.form.passwordsMatch')}
                   </div>
                 )}
@@ -894,7 +894,7 @@ export default function AuthPageClient() {
             return (
               <button
                 type="button"
-                className="w-full bg-blue-600 text-white py-2 px-4 rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition duration-150 ease-in-out disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                className="w-full bg-blue-600 text-white py-2 px-4 rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 dark:focus:ring-offset-gray-900 transition duration-150 ease-in-out disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
                 data-testid="login-submit"
                 aria-busy={safeIsLoading}
                 disabled={isDisabled}
@@ -917,10 +917,10 @@ export default function AuthPageClient() {
           <div className="mt-6">
             <div className="relative">
               <div className="absolute inset-0 flex items-center">
-                <div className="w-full border-t border-gray-300" />
+                <div className="w-full border-t border-gray-300 dark:border-gray-600" />
               </div>
               <div className="relative flex justify-center text-sm">
-                <span className="px-2 bg-gradient-to-br from-blue-50 via-white to-purple-50 text-gray-500">
+                <span className="px-2 bg-gradient-to-br from-blue-50 via-white to-purple-50 dark:from-gray-800 dark:via-gray-900 dark:to-gray-800 text-gray-500 dark:text-gray-400">
                   {t('auth.form.orContinueWith') || 'Or continue with'}
                 </span>
               </div>
@@ -933,7 +933,7 @@ export default function AuthPageClient() {
                   type="button"
                   onClick={() => handleSocialAuth(provider.provider as any)}
                   disabled={safeIsLoading}
-                  className={`w-full inline-flex justify-center items-center py-2.5 px-4 border rounded-md shadow-sm text-sm font-medium transition-colors focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed ${provider.bgColor} ${provider.borderColor} ${provider.textColor} ${provider.hoverBgColor} ${provider.hoverTextColor}`}
+                  className={`w-full inline-flex justify-center items-center py-2.5 px-4 border rounded-md shadow-sm text-sm font-medium transition-colors focus:outline-none focus:ring-2 focus:ring-offset-2 dark:focus:ring-offset-gray-900 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed ${provider.bgColor} ${provider.borderColor} ${provider.textColor} ${provider.hoverBgColor} ${provider.hoverTextColor}`}
                   data-testid={`social-auth-${provider.provider}`}
                   aria-label={provider.label}
                 >
@@ -963,7 +963,7 @@ export default function AuthPageClient() {
               <div className="mt-2 flex justify-end">
                 <Link
                   href={resetPasswordHref}
-                  className="text-sm text-blue-600 hover:text-blue-700 focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2 rounded"
+                  className="text-sm text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300 focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2 dark:focus-visible:ring-offset-gray-900 rounded"
                   data-testid="auth-reset-link"
                 >
                   {t('auth.form.forgotPassword')}
@@ -974,13 +974,13 @@ export default function AuthPageClient() {
         )}
 
         {/* Passkey Authentication */}
-        <div className="border-t border-gray-200 pt-6 mt-6">
+        <div className="border-t border-gray-200 dark:border-gray-700 pt-6 mt-6">
           <div className="relative mb-4">
             <div className="absolute inset-0 flex items-center">
-              <div className="w-full border-t border-gray-200" />
+              <div className="w-full border-t border-gray-200 dark:border-gray-700" />
             </div>
             <div className="relative flex justify-center text-sm">
-              <span className="px-3 bg-gradient-to-br from-blue-50 via-white to-purple-50 text-gray-500">
+              <span className="px-3 bg-gradient-to-br from-blue-50 via-white to-purple-50 dark:from-gray-900 dark:via-gray-900 dark:to-gray-800 text-gray-500 dark:text-gray-400">
                 {t('auth.form.altSignInDivider')}
               </span>
             </div>

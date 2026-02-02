@@ -305,7 +305,7 @@ export default function GlobalNavigation() {
                             ? 'home-nav'
                             : undefined
                     }
-                    className={`flex items-center space-x-1 px-3 py-2 rounded-md text-sm font-medium transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 ${
+                    className={`flex items-center space-x-1 px-3 py-2 rounded-md text-sm font-medium transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 dark:focus:ring-offset-gray-900 ${
                       isActive(item.href)
                         ? 'text-blue-600 bg-blue-50 dark:bg-blue-900/20 dark:text-blue-400'
                         : 'text-gray-700 dark:text-gray-300 hover:text-blue-600 dark:hover:text-blue-400 hover:bg-gray-50 dark:hover:bg-gray-800'
@@ -327,7 +327,7 @@ export default function GlobalNavigation() {
                 <div className="flex items-center space-x-4">
                   <Link
                     href="/profile"
-                    className={`flex items-center space-x-1 px-3 py-2 rounded-md text-sm font-medium transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 ${
+                    className={`flex items-center space-x-1 px-3 py-2 rounded-md text-sm font-medium transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 dark:focus:ring-offset-gray-900 ${
                       isActive('/profile')
                         ? 'text-blue-600 bg-blue-50 dark:bg-blue-900/20 dark:text-blue-400'
                         : 'text-gray-700 dark:text-gray-300 hover:text-blue-600 dark:hover:text-blue-400 hover:bg-gray-50 dark:hover:bg-gray-800'
@@ -339,7 +339,7 @@ export default function GlobalNavigation() {
                   </Link>
                   <Link
                     href="/account/privacy"
-                    className={`flex items-center space-x-1 px-3 py-2 rounded-md text-sm font-medium transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 ${
+                    className={`flex items-center space-x-1 px-3 py-2 rounded-md text-sm font-medium transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 dark:focus:ring-offset-gray-900 ${
                       isActive('/account/privacy')
                         ? 'text-blue-600 bg-blue-50 dark:bg-blue-900/20 dark:text-blue-400'
                         : 'text-gray-700 dark:text-gray-300 hover:text-blue-600 dark:hover:text-blue-400 hover:bg-gray-50 dark:hover:bg-gray-800'
@@ -413,7 +413,7 @@ export default function GlobalNavigation() {
                               ? 'home-nav'
                               : undefined
                       }
-                      className={`flex items-center space-x-2 px-3 py-2 rounded-md text-base font-medium transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 ${
+                      className={`flex items-center space-x-2 px-3 py-2 rounded-md text-base font-medium transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 dark:focus:ring-offset-gray-900 ${
                         isActive(item.href)
                           ? 'text-blue-600 bg-blue-50 dark:bg-blue-900/20 dark:text-blue-400'
                           : 'text-gray-700 dark:text-gray-300 hover:text-blue-600 dark:hover:text-blue-400 hover:bg-gray-50 dark:hover:bg-gray-800'
@@ -439,7 +439,7 @@ export default function GlobalNavigation() {
                       <Link
                         href="/profile"
                         onClick={closeMobileMenu}
-                        className={`flex items-center space-x-2 px-3 py-2 rounded-md text-base font-medium transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 ${
+                        className={`flex items-center space-x-2 px-3 py-2 rounded-md text-base font-medium transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 dark:focus:ring-offset-gray-900 ${
                           isActive('/profile')
                             ? 'text-blue-600 bg-blue-50 dark:bg-blue-900/20 dark:text-blue-400'
                             : 'text-gray-700 dark:text-gray-300 hover:text-blue-600 dark:hover:text-blue-400 hover:bg-gray-50 dark:hover:bg-gray-800'

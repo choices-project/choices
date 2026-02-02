@@ -558,13 +558,19 @@ async function addNewFederalRepsFromCongress(
       continue;
     }
 
+    // Skip records without a name - data integrity: name is NOT NULL
+    if (!member.name || member.name.trim().length === 0) {
+      console.warn(`Skipping add for member with bioguide ${bioguide}: missing name.`);
+      continue;
+    }
+
     const canonicalId = `congress:${bioguide}`;
     const congressGovId = normaliseId(member.memberId) ?? bioguide;
     const office = deriveOffice(member);
     const now = new Date().toISOString();
 
     const row = {
-      name: (member.name ?? 'Unknown').slice(0, 255),
+      name: member.name.slice(0, 255),
       office: office.slice(0, 255),
       level: 'federal',
       state,

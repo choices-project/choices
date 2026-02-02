@@ -11,6 +11,7 @@ import {
   LOCALE_COOKIE_NAME,
   type SupportedLocale,
   resolveLocale,
+  getTextDirection,
 } from '@/lib/i18n/config';
 
 import { Providers } from './providers';
@@ -124,6 +125,7 @@ export default async function RootLayout({
   const locale = resolveLocale(cookieLocale, acceptLanguage);
 
   const messages = await loadMessages(locale);
+  const textDirection = getTextDirection(locale ?? DEFAULT_LOCALE);
 
   // CRITICAL: Set default attributes that match ThemeScript defaults
   // This ensures server and client HTML match initially
@@ -133,6 +135,7 @@ export default async function RootLayout({
   return (
     <html
       lang={locale ?? DEFAULT_LOCALE}
+      dir={textDirection}
       data-theme="light"
       data-sidebar-collapsed="false"
       data-sidebar-width="280"

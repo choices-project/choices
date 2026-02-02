@@ -56,11 +56,11 @@ export default function PollRouteError({ error }: { error: Error & { digest?: st
           }}
         />
         {process.env.NODE_ENV === 'development' && (
-          <details className="mt-4 text-sm text-gray-600">
-            <summary className="cursor-pointer font-medium hover:text-gray-800 focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2 rounded">
+          <details className="mt-4 text-sm text-gray-600 dark:text-gray-400">
+            <summary className="cursor-pointer font-medium hover:text-gray-800 dark:hover:text-gray-200 focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2 dark:focus:ring-offset-gray-900 rounded">
               Error Details (Development Only)
             </summary>
-            <pre className="mt-2 p-3 bg-gray-100 rounded overflow-auto text-xs">
+            <pre className="mt-2 p-3 bg-gray-100 dark:bg-gray-800 dark:text-gray-300 rounded overflow-auto text-xs">
               {error.message}
               {error.digest && `\nDigest: ${error.digest}`}
             </pre>

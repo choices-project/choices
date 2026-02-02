@@ -178,11 +178,11 @@ const PollCard: React.FC<PollCardProps> = ({ poll, showActions = true, className
                   className="text-sm text-blue-600 dark:text-blue-400 hover:underline"
                   onClick={(e) => e.stopPropagation()}
                 >
-                  {representativeName || `Representative #${representativeId}`}
+                  {representativeName || t('polls.card.representative.fallback', { id: String(representativeId) })}
                 </Link>
                 {isConstituentWill && (
                   <Badge variant="outline" className="text-xs">
-                    Constituent Will
+                    {t('polls.card.representative.constituentWill') || 'Constituent Will'}
                   </Badge>
                 )}
               </div>
@@ -195,7 +195,7 @@ const PollCard: React.FC<PollCardProps> = ({ poll, showActions = true, className
                   {billTitle ? (
                     <p className="text-sm font-medium text-gray-900 dark:text-gray-100">{billTitle}</p>
                   ) : (
-                    <p className="text-sm text-gray-600 dark:text-gray-400">Bill #{billId}</p>
+                    <p className="text-sm text-gray-600 dark:text-gray-400">{t('polls.card.bill.fallback', { id: String(billId) })}</p>
                   )}
                   {billSummary && (
                     <p className="text-xs text-gray-500 dark:text-gray-500 mt-1 line-clamp-2">{billSummary}</p>

@@ -134,7 +134,7 @@ export default function RegisterPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 flex items-center justify-center p-4">
+    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 dark:from-gray-900 dark:to-gray-800 flex items-center justify-center p-4">
       <div className="max-w-md w-full space-y-8">
         {/* Hydration sentinel so the test can safely proceed */}
         <div
@@ -155,10 +155,10 @@ export default function RegisterPage() {
         </div>
 
         <div className="text-center">
-          <h1 className="mt-6 text-4xl font-extrabold text-gray-900">
+          <h1 className="mt-6 text-4xl font-extrabold text-gray-900 dark:text-gray-100">
             Create your account
           </h1>
-          <p className="mt-2 text-sm text-gray-600">
+          <p className="mt-2 text-sm text-gray-600 dark:text-gray-400">
             Join Choices and start making better decisions
           </p>
         </div>
@@ -166,7 +166,7 @@ export default function RegisterPage() {
         {/* Registration Method Selection */}
         <div className="space-y-4">
           <div className="text-center">
-            <p className="text-sm text-gray-600 mb-4">Choose how you&apos;d like to sign up:</p>
+            <p className="text-sm text-gray-600 dark:text-gray-400 mb-4">Choose how you&apos;d like to sign up:</p>
           </div>
 
           <div className="grid grid-cols-1 gap-3">
@@ -176,15 +176,15 @@ export default function RegisterPage() {
               onClick={() => setRegistrationMethod('passkey')}
               className={`relative p-4 border-2 rounded-lg transition-all duration-200 ${
                 registrationMethod === 'passkey'
-                  ? 'border-green-500 bg-green-50'
-                  : 'border-gray-200 bg-white hover:border-gray-300'
+                  ? 'border-green-500 bg-green-50 dark:bg-green-900/30'
+                  : 'border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-800 hover:border-gray-300 dark:hover:border-gray-500'
               }`}
             >
               <div className="flex items-center space-x-3">
                 <Smartphone className={`h-5 w-5 ${registrationMethod === 'passkey' ? 'text-green-600' : 'text-gray-400'}`} />
                 <div className="text-left">
-                  <div className="font-medium text-gray-900">Passkey Account (Recommended)</div>
-                  <div className="text-sm text-gray-500">Secure, passwordless authentication with biometrics</div>
+                  <div className="font-medium text-gray-900 dark:text-gray-100">Passkey Account (Recommended)</div>
+                  <div className="text-sm text-gray-500 dark:text-gray-400">Secure, passwordless authentication with biometrics</div>
                 </div>
                 {registrationMethod === 'passkey' && (
                   <div className="ml-auto">
@@ -215,15 +215,15 @@ export default function RegisterPage() {
               }}
               className={`relative p-4 border-2 rounded-lg transition-all duration-200 ${
                 registrationMethod === 'password'
-                  ? 'border-blue-500 bg-blue-50'
-                  : 'border-gray-200 bg-white hover:border-gray-300'
+                  ? 'border-blue-500 bg-blue-50 dark:bg-blue-900/30'
+                  : 'border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-800 hover:border-gray-300 dark:hover:border-gray-500'
               }`}
             >
               <div className="flex items-center space-x-3">
                 <Lock className={`h-5 w-5 ${registrationMethod === 'password' ? 'text-blue-600' : 'text-gray-400'}`} />
                 <div className="text-left">
-                  <div className="font-medium text-gray-900">Password Account</div>
-                  <div className="text-sm text-gray-500">Traditional username and password</div>
+                  <div className="font-medium text-gray-900 dark:text-gray-100">Password Account</div>
+                  <div className="text-sm text-gray-500 dark:text-gray-400">Traditional username and password</div>
                 </div>
               </div>
             </button>
@@ -244,7 +244,7 @@ export default function RegisterPage() {
           )}
 
           {success && (
-            <div className="bg-green-50 border border-green-200 text-green-700 px-4 py-3 rounded-md">
+            <div className="bg-green-50 dark:bg-green-900/30 border border-green-200 dark:border-green-800 text-green-700 dark:text-green-300 px-4 py-3 rounded-md">
               <div className="flex">
                 <div className="flex-shrink-0">
                   <svg className="h-5 w-5 text-green-400" viewBox="0 0 20 20" fill="currentColor">
@@ -252,7 +252,7 @@ export default function RegisterPage() {
                   </svg>
                 </div>
                 <div className="ml-3">
-                  <p className="text-sm font-medium text-green-800">
+                  <p className="text-sm font-medium text-green-800 dark:text-green-200">
                     Account created successfully! Redirecting to onboarding...
                   </p>
                 </div>
@@ -261,24 +261,24 @@ export default function RegisterPage() {
           )}
 
           <div>
-            <label className="block mb-1">Username</label>
-            <input name="username" data-testid="username" required className="input" />
+            <label className="block mb-1 text-gray-700 dark:text-gray-300">Username</label>
+            <input name="username" data-testid="username" required className="input dark:bg-gray-800 dark:border-gray-600 dark:text-gray-100" />
           </div>
           <div>
-            <label className="block mb-1">Display Name</label>
-            <input name="displayName" data-testid="displayName" required className="input" />
+            <label className="block mb-1 text-gray-700 dark:text-gray-300">Display Name</label>
+            <input name="displayName" data-testid="displayName" required className="input dark:bg-gray-800 dark:border-gray-600 dark:text-gray-100" />
           </div>
           <div>
-            <label className="block mb-1">Email</label>
-            <input name="email" type="email" data-testid="email" required className="input" />
+            <label className="block mb-1 text-gray-700 dark:text-gray-300">Email</label>
+            <input name="email" type="email" data-testid="email" required className="input dark:bg-gray-800 dark:border-gray-600 dark:text-gray-100" />
           </div>
           <div>
-            <label className="block mb-1">Password</label>
-            <input name="password" type="password" data-testid="password" required className="input" />
+            <label className="block mb-1 text-gray-700 dark:text-gray-300">Password</label>
+            <input name="password" type="password" data-testid="password" required className="input dark:bg-gray-800 dark:border-gray-600 dark:text-gray-100" />
           </div>
           <div>
-            <label className="block mb-1">Confirm password</label>
-            <input name="confirmPassword" type="password" data-testid="confirmPassword" required className="input" />
+            <label className="block mb-1 text-gray-700 dark:text-gray-300">Confirm password</label>
+            <input name="confirmPassword" type="password" data-testid="confirmPassword" required className="input dark:bg-gray-800 dark:border-gray-600 dark:text-gray-100" />
           </div>
 
           <button type="submit" data-testid="register-submit" className="btn btn-primary">
@@ -286,9 +286,9 @@ export default function RegisterPage() {
           </button>
 
           <div className="text-center">
-            <p className="text-sm text-gray-600">
+            <p className="text-sm text-gray-600 dark:text-gray-400">
               Already have an account?{' '}
-              <a href="/login" className="font-medium text-indigo-600 hover:text-indigo-500">
+              <a href="/login" className="font-medium text-indigo-600 dark:text-indigo-400 hover:text-indigo-500 dark:hover:text-indigo-300">
                 Sign in
               </a>
             </p>
@@ -300,35 +300,35 @@ export default function RegisterPage() {
         {registrationMethod === 'passkey' && (
           <div className="mt-8 space-y-6">
             {error && (
-              <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-md" data-testid="register-error">
+              <div className="bg-red-50 dark:bg-red-900/30 border border-red-200 dark:border-red-800 text-red-700 dark:text-red-300 px-4 py-3 rounded-md" data-testid="register-error">
                 {error}
               </div>
             )}
 
             {success && (
-              <div className="bg-green-50 border border-green-200 text-green-700 px-4 py-3 rounded-md">
+              <div className="bg-green-50 dark:bg-green-900/30 border border-green-200 dark:border-green-800 text-green-700 dark:text-green-300 px-4 py-3 rounded-md">
                 <div className="flex">
                   <div className="flex-shrink-0">
                     <Shield className="h-5 w-5 text-green-400" />
                   </div>
                   <div className="ml-3">
-                    <p className="text-sm font-medium text-green-800">
-                      Passkey created successfully! Redirecting to onboarding...
-                    </p>
+<p className="text-sm font-medium text-green-800 dark:text-green-200">
+                    Passkey created successfully! Redirecting to onboarding...
+                  </p>
                   </div>
                 </div>
               </div>
             )}
 
-            <div className="bg-blue-50 border border-blue-200 rounded-lg p-6">
+            <div className="bg-blue-50 dark:bg-blue-900/30 border border-blue-200 dark:border-blue-800 rounded-lg p-6">
               <div className="flex items-start space-x-3">
-                <Smartphone className="h-6 w-6 text-blue-600 mt-0.5" />
+                <Smartphone className="h-6 w-6 text-blue-600 dark:text-blue-400 mt-0.5" />
                 <div>
-                  <h3 className="font-semibold text-blue-900 mb-2">What is a Passkey?</h3>
-                  <p className="text-sm text-blue-800 mb-3">
+                  <h3 className="font-semibold text-blue-900 dark:text-blue-100 mb-2">What is a Passkey?</h3>
+                  <p className="text-sm text-blue-800 dark:text-blue-200 mb-3">
                     A passkey is a secure, passwordless way to sign in using your device&apos;s built-in security features like fingerprint, face recognition, or PIN.
                   </p>
-                  <ul className="text-sm text-blue-800 space-y-1">
+                  <ul className="text-sm text-blue-800 dark:text-blue-200 space-y-1">
                     <li>• More secure than passwords</li>
                     <li>• Works across all your devices</li>
                     <li>• No need to remember complex passwords</li>

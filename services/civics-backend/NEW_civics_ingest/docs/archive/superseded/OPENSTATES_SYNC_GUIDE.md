@@ -52,16 +52,14 @@ npm run openstates:sync:all
 - `--limit=100` - Limit number of representatives to process
 - `--dry-run` - Preview what would be synced without making changes
 - `--skip-activity` - Skip activity sync (API rate limited)
-- `--federal-only` - Only sync federal representatives
+
+**Note:** OpenStates only has state/local data. Federal representatives are never included (that would waste API calls).
 
 ### Examples
 
 ```bash
 # Dry run to see what would be synced
 npm run openstates:sync:all -- --dry-run --limit=10
-
-# Sync only federal representatives
-npm run openstates:sync:all -- --federal-only
 
 # Sync specific states
 npm run openstates:sync:all -- --states=CA,NY,TX
@@ -89,18 +87,13 @@ The script will:
 
 ### Best Practices
 
-1. **Start with Federal:** Federal representatives are fewer and easier to sync
-   ```bash
-   npm run openstates:sync:all -- --federal-only
-   ```
-
-2. **Sync by State:** Process states in batches to avoid rate limits
+1. **Sync by State:** Process states in batches to avoid rate limits
    ```bash
    npm run openstates:sync:all -- --states=CA
    npm run openstates:sync:all -- --states=NY
    ```
 
-3. **Skip Activity Initially:** Sync all other data first, then run activity separately
+2. **Skip Activity Initially:** Sync all other data first, then run activity separately
    ```bash
    # Sync everything except activity
    npm run openstates:sync:all -- --skip-activity
@@ -109,7 +102,7 @@ The script will:
    npm run openstates:sync:activity
    ```
 
-4. **Monitor Progress:** Check logs for API usage and errors
+3. **Monitor Progress:** Check logs for API usage and rate limits
    ```bash
    npm run openstates:sync:all -- --limit=100 2>&1 | tee sync.log
    ```

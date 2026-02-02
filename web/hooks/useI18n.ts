@@ -5,7 +5,7 @@ import { useTranslations, useLocale } from 'next-intl';
 import { useCallback, useMemo, useRef } from 'react';
 
 import { setLocaleCookie } from '@/lib/i18n/client';
-import { isSupportedLocale, type SupportedLocale } from '@/lib/i18n/config';
+import { isSupportedLocale, type SupportedLocale, getTextDirection } from '@/lib/i18n/config';
 import { logger } from '@/lib/utils/logger';
 
 type TranslationParamValue = string | number | boolean | null | undefined;
@@ -82,19 +82,32 @@ export const useI18n = () => {
       }
 
       setLocaleCookie(nextLocale as SupportedLocale);
+      
+      // Update dir attribute on HTML element when locale changes
+      if (typeof document !== 'undefined') {
+        const direction = getTextDirection(nextLocale);
+        document.documentElement.setAttribute('dir', direction);
+        document.documentElement.setAttribute('lang', nextLocale);
+      }
+      
       // Refresh to pick up new messages during the next render pass
       router.refresh();
     },
     [locale, router],
   );
 
+  const direction = getTextDirection(locale);
+  const isRtl = direction === 'rtl';
+
   return useMemo(
     () => ({
       t,
       changeLanguage,
       currentLanguage: locale,
+      direction,
+      isRtl,
       isReady: true,
     }),
-    [t, changeLanguage, locale]
+    [t, changeLanguage, locale, direction, isRtl]
   );
 };

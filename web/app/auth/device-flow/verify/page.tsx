@@ -157,12 +157,12 @@ export default function DeviceFlowVerifyPage() {
 
   if (success) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50 flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8">
+      <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50 dark:from-gray-900 dark:via-gray-900 dark:to-gray-800 flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8">
         <div className="max-w-md w-full space-y-8 text-center">
           <CheckCircle2 className="h-16 w-16 text-green-500 mx-auto" />
           <div>
-            <h1 className="text-3xl font-bold text-gray-900">Authorization Complete!</h1>
-            <p className="mt-2 text-sm text-gray-600">
+            <h1 className="text-3xl font-bold text-gray-900 dark:text-gray-100">Authorization Complete!</h1>
+            <p className="mt-2 text-sm text-gray-600 dark:text-gray-400">
               You can now return to your device.
             </p>
           </div>
@@ -172,20 +172,20 @@ export default function DeviceFlowVerifyPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50 flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8">
+    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50 dark:from-gray-900 dark:via-gray-900 dark:to-gray-800 flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8">
       <div className="max-w-md w-full space-y-8">
         <div>
-          <h1 className="mt-6 text-center text-4xl font-extrabold text-gray-900">
+          <h1 className="mt-6 text-center text-4xl font-extrabold text-gray-900 dark:text-gray-100">
             Enter Your Code
           </h1>
-          <p className="mt-2 text-center text-sm text-gray-600">
+          <p className="mt-2 text-center text-sm text-gray-600 dark:text-gray-400">
             Enter the code displayed on your device to complete authorization.
           </p>
         </div>
 
         <form onSubmit={handleSubmit} className="mt-8 space-y-6">
           <div>
-            <label htmlFor="userCode" className="block text-sm font-medium text-gray-700 mb-2">
+            <label htmlFor="userCode" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
               User Code
             </label>
             <input
@@ -197,32 +197,32 @@ export default function DeviceFlowVerifyPage() {
               onChange={(e) => handleCodeChange(e.target.value)}
               placeholder="XXXX-XXXX"
               maxLength={9}
-              className="appearance-none relative block w-full px-3 py-3 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 focus:z-10 text-center text-2xl font-mono tracking-wider"
+              className="appearance-none relative block w-full px-3 py-3 border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 placeholder-gray-500 dark:placeholder-gray-400 text-gray-900 dark:text-gray-100 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 focus:z-10 text-center text-2xl font-mono tracking-wider"
               autoComplete="off"
             />
-            <p className="mt-2 text-xs text-gray-500 text-center">
+            <p className="mt-2 text-xs text-gray-500 dark:text-gray-400 text-center">
               Enter the 8-character code from your device
             </p>
           </div>
 
           {error && (
-            <div className="bg-red-50 border border-red-200 rounded-lg p-4">
+            <div className="bg-red-50 dark:bg-red-900/30 border border-red-200 dark:border-red-800 rounded-lg p-4">
               <div className="flex items-center space-x-2">
                 <AlertCircle className="h-5 w-5 text-red-500" />
-                <p className="text-sm text-red-800">{error}</p>
+                <p className="text-sm text-red-800 dark:text-red-300">{error}</p>
               </div>
             </div>
           )}
 
           {needsAuth && (
-            <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+            <div className="bg-blue-50 dark:bg-blue-900/30 border border-blue-200 dark:border-blue-800 rounded-lg p-4">
               <div className="flex items-center space-x-2">
                 <AlertCircle className="h-5 w-5 text-blue-500" />
                 <div className="flex-1">
-                  <p className="text-sm text-blue-800 font-medium mb-2">
+                  <p className="text-sm text-blue-800 dark:text-blue-200 font-medium mb-2">
                     Sign in required
                   </p>
-                  <p className="text-xs text-blue-700 mb-3">
+                  <p className="text-xs text-blue-700 dark:text-blue-300 mb-3">
                     You need to sign in with {provider} to complete device authorization.
                   </p>
                   <button
@@ -255,9 +255,9 @@ export default function DeviceFlowVerifyPage() {
         </form>
 
         <div className="text-center">
-          <p className="text-xs text-gray-500">
+          <p className="text-xs text-gray-500 dark:text-gray-400">
             Don&rsquo;t have a code?{' '}
-            <a href="/auth" className="text-blue-600 hover:text-blue-700 underline">
+            <a href="/auth" className="text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300 underline">
               Sign in normally
             </a>
           </p>

@@ -954,6 +954,27 @@
         "continue": "Continue"
       }
     },
+    "userOnboarding": {
+      "welcome": {
+        "title": "Welcome to Civics!",
+        "description": "Let's personalize your experience by finding your local representatives. This helps us show you the most relevant political information.",
+        "findRepresentatives": "Find My Representatives",
+        "skipToGeneral": "Skip - Show General Representatives"
+      },
+      "findRepresentatives": {
+        "title": "Find Your Representatives",
+        "description": "Enter your address to see your local elected officials",
+        "addressLabel": "Address",
+        "addressHint": "(used only to find your district; not stored)",
+        "addressPlaceholder": "Enter your full address",
+        "findButton": "Find Representatives",
+        "finding": "Finding..."
+      },
+      "searching": {
+        "title": "Finding Your Representatives",
+        "description": "Searching for your local elected officials..."
+      }
+    },
     "auth": {
       "test": {
         "title": "Authentication Setup",
@@ -1390,6 +1411,13 @@
       "moreOptions": "+{count} more options",
       "votes": "{formattedCount} {count, plural, one {vote} other {votes}}",
       "participation": "{formattedCount} {count, plural, one {participant} other {participants}}",
+      "representative": {
+        "fallback": "Representative #{id}",
+        "constituentWill": "Constituent Will"
+      },
+      "bill": {
+        "fallback": "Bill #{id}"
+      },
       "actions": {
         "view": "View Poll",
         "vote": "Vote Now"
@@ -1619,6 +1647,7 @@
         "review": {
           "title": "Preview your poll",
           "description": "Review everything voters will see before you publish.",
+          "previewDescription": "This is what voters will see.",
           "untitled": "Untitled poll",
           "noDescription": "Add a description to help voters understand the context.",
           "optionsHeading": "Options",
@@ -1632,7 +1661,25 @@
           "disabled": "Disabled",
           "allowed": "Allowed",
           "yes": "Yes",
-          "no": "No"
+          "no": "No",
+          "rankedChoice": {
+            "title": "Ranked Choice Voting",
+            "description": "Voters will rank each option from 1st (most preferred) to last (least preferred).",
+            "howItWorks": "How it works: Drag options to reorder them, with 1st being your top choice. The system uses instant runoff to find the option with majority support.",
+            "rankLabel": "Rank {rank}"
+          },
+          "noOptions": "No options added yet."
+        },
+        "representative": {
+          "creatingAbout": "Creating poll about {name}",
+          "loading": "Loading representative information...",
+          "fallback": "Representative #{id}"
+        },
+        "audience": {
+          "votingPrivacySettings": {
+            "title": "Voting & privacy settings",
+            "description": "Decide how people participate and what they can see."
+          }
         },
         "progress": {
           "ariaLabel": "Poll creation progress"
@@ -1673,7 +1720,25 @@
             "emailLink": "Email link",
             "shareOnX": "Share on X",
             "createAnother": "Create another poll",
-            "done": "Done"
+            "done": "Done",
+            "delete": "Delete Poll"
+          },
+          "delete": {
+            "confirm": {
+              "title": "Delete Poll",
+              "description": "Are you sure you want to delete \"{title}\"? This action cannot be undone and will permanently remove the poll and all associated votes.",
+              "cancel": "Cancel",
+              "delete": "Delete Poll",
+              "deleting": "Deleting..."
+            },
+            "success": {
+              "title": "Poll deleted",
+              "message": "Your poll has been deleted successfully."
+            },
+            "error": {
+              "title": "Delete failed",
+              "message": "Failed to delete poll"
+            }
           },
           "email": {
             "subject": "Check out this poll"
@@ -1875,6 +1940,7 @@
           "no": "No",
           "cacheSize": "Cache Size",
           "items": "{count, plural, one {# item} other {# items}}",
+          "hitRate": "Hit Rate",
           "cacheKeys": "Cache Keys"
         },
         "privacy": {
@@ -1890,7 +1956,16 @@
           "cannotVote": "Cannot Vote",
           "hasVoted": "Has Voted",
           "notVoted": "Not Voted"
-        }
+        },
+        "optionVotes": "{votes, number} votes ({percentage}%)",
+        "optionSummary": "{option} received {votes, number} votes ({percentage}%), representing {uniqueVoters, plural, one {# unique voter} other {# unique voters}}",
+        "uniqueVoters": "{count, plural, one {# unique voter} other {# unique voters}}",
+        "empty": {
+          "title": "No poll results available",
+          "description": "Poll results are not yet available. Results may be processing or the poll may not have received any votes yet."
+        },
+        "refresh": "Refresh Results",
+        "refreshLabel": "Refresh poll results"
       },
       "card": {
         "untitled": "Untitled Poll",
@@ -2077,6 +2152,23 @@
           "featuredPolls": "Featured Polls",
           "thisWeek": "This week",
           "categoryBreakdown": "Category Breakdown"
+        }
+      }
+    },
+    "voting": {
+      "interface": {
+        "titleFallback": "Vote",
+        "votesCount": "{count, plural, one {# vote} other {# votes}}",
+        "verificationTier": "Tier {tier}"
+      },
+      "notifications": {
+        "submitted": {
+          "title": "Vote submitted",
+          "message": "Your vote has been recorded."
+        },
+        "failed": {
+          "title": "Vote failed",
+          "message": "Failed to submit vote"
         }
       }
     }
@@ -2703,6 +2795,76 @@
         "empty": {
           "title": "No representatives found",
           "subtitle": "Try adjusting your search criteria or location."
+        }
+      },
+      "detail": {
+        "back": "Back to Representatives",
+        "notFound": {
+          "title": "Representative Not Found",
+          "message": "The representative you are looking for does not exist.",
+          "securityNote": "Please refresh the page. If the issue continues, your network or security settings may be blocking access."
+        },
+        "election": {
+          "nextElection": "Next election",
+          "isToday": "Election is today",
+          "inDays": "Election in {count} day",
+          "inDaysPlural": "Election in {count} days",
+          "additional": "(+{count})"
+        },
+        "actions": {
+          "follow": "Follow",
+          "following": "Following",
+          "updating": "Updating..."
+        },
+        "sections": {
+          "contactInformation": "Contact Information",
+          "represents": "Represents",
+          "termDetails": "Term Details",
+          "committees": "Committees",
+          "recentActivity": "Recent Activity",
+          "upcomingElections": "Upcoming Elections",
+          "officialWebsite": "Official Website",
+          "socialMedia": "Social Media",
+          "campaignFinance": "Campaign Finance",
+          "activityFeed": "Activity Feed",
+          "externalIdentifiers": "External Identifiers"
+        },
+        "termDetails": {
+          "termStart": "Term start:",
+          "termEnd": "Term end:",
+          "nextElection": "Next election:",
+          "noElection": "No upcoming election on file"
+        },
+        "committees": {
+          "current": "Current"
+        },
+        "recentActivity": {
+          "description": "Bill activity from OpenStates (sponsorship, votes when available). Upcoming elections are listed separately below."
+        },
+        "upcomingElections": {
+          "description": "Elections in your representative's districts. Dates from OpenStates / Google Civic API.",
+          "listed": "{count} listed"
+        },
+        "campaignFinance": {
+          "cycle": "Cycle:",
+          "totalRaised": "Total raised:",
+          "totalSpent": "Total spent:",
+          "cashOnHand": "Cash on hand:",
+          "lastFiling": "Last filing:",
+          "source": "Source:"
+        },
+        "activityFeed": {
+          "description": "Polls, bills, and votes related to this representative"
+        },
+        "externalIdentifiers": {
+          "bioguide": "Bioguide:",
+          "fec": "FEC:",
+          "congressGov": "Congress.gov:",
+          "googleCivic": "Google Civic:",
+          "legiscan": "LegiScan:",
+          "govinfo": "GovInfo:",
+          "openstates": "OpenStates:",
+          "ballotpedia": "Ballotpedia profile"
         }
       },
       "search": {

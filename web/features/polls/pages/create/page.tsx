@@ -890,7 +890,7 @@ export default function CreatePollPage() {
                   <User className="h-5 w-5 text-blue-600 dark:text-blue-400 mt-0.5" />
                   <div className="flex-1">
                     <AlertTitle className="text-blue-900 dark:text-blue-100 font-semibold mb-1">
-                      Creating poll about {representative.name}
+                      {t('polls.create.representative.creatingAbout', { name: representative.name })}
                     </AlertTitle>
                     <AlertDescription className="text-blue-800 dark:text-blue-200 text-sm">
                       {representative.office}
@@ -903,12 +903,12 @@ export default function CreatePollPage() {
             {representativeLoading && (
               <Alert className="bg-gray-50 border-gray-200">
                 <AlertDescription className="text-sm text-gray-600">
-                  Loading representative information...
+                  {t('polls.create.representative.loading')}
                 </AlertDescription>
               </Alert>
             )}
             <fieldset>
-              <Label htmlFor="title">Poll title</Label>
+              <Label htmlFor="title">{safeT('polls.create.wizard.details.title.label', 'Poll title')}</Label>
               <Input
                 id="title"
                 value={data.title}
@@ -1085,10 +1085,10 @@ export default function CreatePollPage() {
               <div>
                 <h3 className="text-base font-semibold mb-1 flex items-center gap-2">
                   <Lightbulb className="h-4 w-4 text-primary" />
-                  Voting & privacy settings
+                  {safeT('polls.create.audience.votingPrivacySettings.title', 'Voting & privacy settings')}
                 </h3>
                 <p className="text-sm text-muted-foreground mb-4">
-                  Decide how people participate and what they can see.
+                  {safeT('polls.create.audience.votingPrivacySettings.description', 'Decide how people participate and what they can see.')}
                 </p>
               </div>
 
@@ -1331,7 +1331,7 @@ export default function CreatePollPage() {
             <div className="mb-6">
               <h3 className="text-base font-semibold mb-1 text-foreground">Preview</h3>
               <p className="text-sm text-muted-foreground mb-4">
-                This is what voters will see.
+                {safeT('polls.create.wizard.review.previewDescription', 'This is what voters will see.')}
               </p>
             </div>
 
@@ -1796,6 +1796,7 @@ type InteractivePreviewProps = {
 };
 
 const InteractivePreview = ({ votingMethod, options }: InteractivePreviewProps) => {
+  const { t } = useI18n();
   const [rankedOrder, setRankedOrder] = React.useState<string[]>(() =>
     options.map((_, index) => `option-${index}`)
   );
@@ -1847,10 +1848,10 @@ const InteractivePreview = ({ votingMethod, options }: InteractivePreviewProps) 
         <div className="rounded-lg border-2 border-purple-300 bg-gradient-to-br from-purple-50 to-purple-100/50 p-4 mb-4 shadow-sm">
           <div className="flex items-center gap-2 mb-2">
             <span className="text-xl">🏆</span>
-            <span className="text-sm font-bold text-purple-900">Ranked Choice Voting</span>
+            <span className="text-sm font-bold text-purple-900">{t('polls.create.wizard.review.rankedChoice.title') || 'Ranked Choice Voting'}</span>
           </div>
           <p className="text-xs text-purple-800 leading-relaxed">
-            Voters will rank each option from 1st (most preferred) to last (least preferred).
+            {t('polls.create.wizard.review.rankedChoice.description') || 'Voters will rank each option from 1st (most preferred) to last (least preferred).'}
           </p>
         </div>
         <div className="space-y-3">
@@ -1884,20 +1885,19 @@ const InteractivePreview = ({ votingMethod, options }: InteractivePreviewProps) 
                 <div className="flex-shrink-0 flex items-center gap-2">
                   <GripVertical className="h-4 w-4 text-purple-400" />
                   <div className="text-xs font-medium text-purple-600 bg-purple-50 px-2 py-1 rounded">
-                    Rank {displayIndex + 1}
+                    {t('polls.create.wizard.review.rankedChoice.rankLabel', { rank: String(displayIndex + 1) }) || `Rank ${displayIndex + 1}`}
                   </div>
                 </div>
               </div>
             );
           })}
           {options.length === 0 && (
-            <p className="text-sm text-muted-foreground italic text-center py-4">No options added yet.</p>
+            <p className="text-sm text-muted-foreground italic text-center py-4">{t('polls.create.wizard.review.noOptions') || 'No options added yet.'}</p>
           )}
         </div>
         <div className="mt-4 p-4 rounded-lg bg-purple-50/30 border border-purple-200">
           <p className="text-xs text-purple-900 leading-relaxed">
-            <strong className="font-semibold">How it works:</strong> Drag options to reorder them, with 1st being your top choice.
-            The system uses instant runoff to find the option with majority support.
+            <strong className="font-semibold">{t('polls.create.wizard.review.rankedChoice.howItWorks') || 'How it works: Drag options to reorder them, with 1st being your top choice. The system uses instant runoff to find the option with majority support.'}</strong>
           </p>
         </div>
       </div>

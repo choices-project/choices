@@ -18,6 +18,8 @@ import { UserStoreProvider } from '@/lib/providers/UserStoreProvider';
 import { markReactHydrationStarted } from '@/lib/stores/appStore';
 import { logger } from '@/lib/utils/logger';
 
+import { useI18n } from '@/hooks/useI18n';
+
 // H40: Make OfflineIndicator client-only to prevent getServerSnapshot infinite loop
 // OfflineIndicator uses Zustand stores with persist middleware, which internally uses useSyncExternalStore
 // React 18.3.1 requires getServerSnapshot to return a cached value, but Zustand's internal implementation
@@ -54,6 +56,8 @@ export default function AppLayout({
 }: {
   children: React.ReactNode;
 }) {
+  const { direction, currentLanguage } = useI18n();
+  
   // CRITICAL: Track if this is the initial hydration to prevent attribute changes during hydration
   // React hydration happens synchronously, and changing attributes during hydration causes error #185
   const isHydratingRef = React.useRef(true);
@@ -129,6 +133,23 @@ export default function AppLayout({
     void document.documentElement.offsetHeight;
     attributesSetRef.current = true;
   }, []);
+
+  // Set dir and lang attributes after hydration to support RTL languages
+  React.useEffect(() => {
+    if (typeof document === 'undefined' || isHydratingRef.current) {
+      return;
+    }
+    
+    const currentDir = document.documentElement.getAttribute('dir');
+    const currentLang = document.documentElement.getAttribute('lang');
+    
+    if (currentDir !== direction) {
+      document.documentElement.setAttribute('dir', direction);
+    }
+    if (currentLang !== currentLanguage) {
+      document.documentElement.setAttribute('lang', currentLanguage);
+    }
+  }, [direction, currentLanguage]);
 
   // Create QueryClient instance for TanStack Query with memory optimization
   const [queryClient] = useState(
