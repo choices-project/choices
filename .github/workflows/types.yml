@@ -6,7 +6,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
-        with: { node-version: '24', cache: 'npm' }
+        with: { node-version: '24', cache: 'npm', cache-dependency-path: 'web/package-lock.json' }
       - name: Setup gtimeout compatibility (Linux uses 'timeout')
         run: |
           if ! command -v gtimeout &> /dev/null; then

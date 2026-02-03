@@ -22,6 +22,11 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+
+      - name: Git safe directory (avoid Post Checkout exit 128)
+        run: git config --global --add safe.directory "$GITHUB_WORKSPACE"
 
       - name: Setup Node.js
         uses: actions/setup-node@v4
@@ -39,6 +44,6 @@ jobs:
       - name: OpenStates scheduled sync
         run: npm run openstates:sync:scheduled
         env:
-          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_URL: ${{ secrets.NEXT_PUBLIC_SUPABASE_URL }}
           SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
-          OPENSTATES_API_KEY: ${{ secrets.OPENSTATES_API_KEY }}
+          OPENSTATES_API_KEY: ${{ secrets.OPEN_STATES_API_KEY }}

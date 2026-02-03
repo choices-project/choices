@@ -2,7 +2,7 @@ name: Civics Smoke Test
 
 on:
   pull_request:
-    paths: 
+    paths:
       - 'web/app/api/v1/civics/**'
       - 'web/lib/civics/**'
       - 'web/tests/civics.*.spec.ts'
@@ -13,7 +13,7 @@ on:
 jobs:
   civics-smoke-test:
     runs-on: ubuntu-latest
-    
+
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -37,8 +37,8 @@ jobs:
 
       - name: Install K6
         run: |
-          sudo apt-key adv --keyserver hkp://keyserver.ubuntu.com:80 --recv-keys C5AD17C747E3415A3642D57D77C6C491D6AC1D69
-          echo "deb https://dl.k6.io/deb stable main" | sudo tee /etc/apt/sources.list.d/k6.list
+          sudo gpg --no-default-keyring --keyring /usr/share/keyrings/k6-archive-keyring.gpg --keyserver keyserver.ubuntu.com --recv-keys C5AD17C747E3415A3642D57D77C6C491D6AC1D69
+          echo "deb [signed-by=/usr/share/keyrings/k6-archive-keyring.gpg] https://dl.k6.io/deb stable main" | sudo tee /etc/apt/sources.list.d/k6.list
           sudo apt-get update
           sudo apt-get install k6
 
@@ -109,9 +109,9 @@ jobs:
           script: |
             const fs = require('fs');
             const path = require('path');
-            
+
             let comment = '## 🧪 Civics Smoke Test Results\n\n';
-            
+
             // Check if tests passed
             if (process.env.GITHUB_JOB_STATUS === 'success') {
               comment += '✅ **All tests passed!**\n\n';
@@ -124,7 +124,7 @@ jobs:
               comment += '❌ **Some tests failed**\n\n';
               comment += 'Please check the test results and fix any issues before merging.';
             }
-            
+
             github.rest.issues.createComment({
               issue_number: context.issue.number,
               owner: context.repo.owner,
