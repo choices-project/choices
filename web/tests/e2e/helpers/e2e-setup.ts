@@ -1,4 +1,4 @@
-import type { Page } from '@playwright/test';
+import { expect, type Page } from '@playwright/test';
 
 import { CIVICS_ADDRESS_LOOKUP, CIVICS_STATE_FIXTURE } from '../../fixtures/api/civics';
 import { buildDashboardData } from '../../fixtures/api/dashboard';
@@ -229,10 +229,32 @@ export async function loginWithPassword(page: Page, credentials: TestUser, optio
   const { emailField, passwordField, submitButton } = await locateAuthInputs(page);
   await emailField.fill(credentials.email, { timeout: DEFAULT_TIMEOUTS.element });
   await passwordField.fill(credentials.password, { timeout: DEFAULT_TIMEOUTS.element });
-  await Promise.all([
-    page.waitForLoadState('networkidle', { timeout: timeoutMs }).catch(() => undefined),
-    submitButton.click(),
-  ]);
+
+  // Ensure React-controlled state updates after programmatic fill (sync runs on interval/focus).
+  // Trigger native value setter + input/change so auth page sync sees the values.
+  await page.evaluate(
+    ({ email, password }: { email: string; password: string }) => {
+      const setNativeValue = (input: HTMLInputElement | null, value: string) => {
+        if (!input) return;
+        const setter = Object.getOwnPropertyDescriptor(HTMLInputElement.prototype, 'value')?.set;
+        setter?.call(input, value);
+        input.dispatchEvent(new Event('input', { bubbles: true }));
+        input.dispatchEvent(new Event('change', { bubbles: true }));
+      };
+      const emailEl = document.getElementById('email') as HTMLInputElement | null;
+      const passwordEl = document.getElementById('password') as HTMLInputElement | null;
+      if (emailEl) setNativeValue(emailEl, email);
+      if (passwordEl) setNativeValue(passwordEl, password);
+    },
+    { email: credentials.email, password: credentials.password }
+  );
+
+  await page.waitForLoadState('networkidle', { timeout: timeoutMs }).catch(() => undefined);
+
+  // Wait for submit to become enabled (React state sync can be async) before clicking.
+  await submitButton.waitFor({ state: 'visible', timeout: timeoutMs });
+  await expect(submitButton).toBeEnabled({ timeout: Math.min(timeoutMs, 15_000) });
+  await submitButton.click();
 
   if (expectRedirect) {
     await page.waitForURL(expectRedirect, { timeout: timeoutMs });

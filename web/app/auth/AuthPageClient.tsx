@@ -898,6 +898,7 @@ export default function AuthPageClient() {
                 data-testid="login-submit"
                 aria-busy={safeIsLoading}
                 disabled={isDisabled}
+                {...(isDisabled ? { 'aria-describedby': 'form-validation-hint' } : {})}
                 onClick={(event) => handleSubmit(event)}
               >
                 {safeIsLoading && <Loader2 className="h-4 w-4 animate-spin" aria-hidden="true" />}

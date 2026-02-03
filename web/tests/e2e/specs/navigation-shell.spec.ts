@@ -2,7 +2,14 @@ import { test, expect } from '@playwright/test';
 
 import { waitForPageReady } from '../helpers/e2e-setup';
 
+const isProduction = () => {
+  const base = process.env.BASE_URL ?? '';
+  return base.includes('choices-app.com') || base.includes('production');
+};
+
 test.describe('App/Admin navigation shell', () => {
+  test.skip(() => isProduction(), 'E2E harness route /e2e/navigation-shell is not deployed to production');
+
   test('updates AppShell data attributes and admin sidebar selection', async ({ page }) => {
     await page.goto('/e2e/navigation-shell', { waitUntil: 'domcontentloaded', timeout: 60_000 });
     await waitForPageReady(page);

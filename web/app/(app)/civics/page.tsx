@@ -192,25 +192,25 @@ export default function Civics2Page() {
       try {
         data = await response.json();
       } catch (parseError) {
-        logger.error('Failed to parse API response', { 
+        logger.error('Failed to parse API response', {
           status: response.status,
           statusText: response.statusText,
-          error: parseError 
+          error: parseError
         });
         throw new Error(`Invalid response from server: ${response.status}`);
       }
-      
+
       // Enhanced error logging
       if (!data || !data.success) {
-        logger.error('API returned error response', { 
-          data, 
+        logger.error('API returned error response', {
+          data,
           status: response.status,
-          statusText: response.statusText 
+          statusText: response.statusText
         });
         const errorMessage = data?.error || data?.message || `API error: ${response.status}`;
         throw new Error(errorMessage);
       }
-      
+
       const apiRepresentatives: Representative[] = Array.isArray(data?.data?.representatives)
         ? data.data.representatives
         : [];
@@ -316,13 +316,13 @@ export default function Civics2Page() {
       logger.info('📊 Representatives updated', { count: mapped.length, append, total: resTotal, hasMore: resHasMore });
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : String(error);
-      logger.error('❌ Error loading representatives:', { 
+      logger.error('❌ Error loading representatives:', {
         error: errorMessage,
         state: selectedState,
         level: selectedLevel,
         stack: error instanceof Error ? error.stack : undefined
       });
-      
+
       // Provide more specific error messages
       if (errorMessage.includes('Failed to load representatives')) {
         setErrorMessage('We could not load representatives right now. Please try again.');
@@ -423,7 +423,7 @@ export default function Civics2Page() {
                 </div>
                 <div>
                   <h1 className="text-2xl font-bold text-white">Civics</h1>
-                  <p className="text-blue-100 text-sm">Your Democratic Voice</p>
+                  <p className="text-blue-50 text-sm">Your Democratic Voice</p>
                 </div>
               </div>
             </div>
@@ -435,7 +435,7 @@ export default function Civics2Page() {
                 </svg>
                 <div>
                   <p className="text-sm font-medium">{selectedStateName}</p>
-                  <p className="text-xs text-blue-200">Your State</p>
+                  <p className="text-xs text-blue-50">Your State</p>
                 </div>
               </div>
             </div>
@@ -456,7 +456,7 @@ export default function Civics2Page() {
               className={`py-4 px-1 border-b-3 font-semibold text-sm transition-all duration-200 ${
                 activeTab === 'representatives'
                   ? 'border-blue-500 text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-900/30'
-                  : 'border-transparent text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200 hover:border-gray-300 dark:hover:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-700'
+                  : 'border-transparent text-gray-600 dark:text-gray-400 hover:text-gray-800 dark:hover:text-gray-200 hover:border-gray-300 dark:hover:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-700'
               }`}
             >
               <div className="flex items-center space-x-2">
@@ -479,7 +479,7 @@ export default function Civics2Page() {
               className={`py-4 px-1 border-b-3 font-semibold text-sm transition-all duration-200 ${
                 activeTab === 'feed'
                   ? 'border-blue-500 text-blue-600 bg-blue-50'
-                  : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300 hover:bg-gray-50'
+                  : 'border-transparent text-gray-600 hover:text-gray-800 hover:border-gray-300 hover:bg-gray-50'
               }`}
             >
               <div className="flex items-center space-x-2">
@@ -646,7 +646,7 @@ export default function Civics2Page() {
                 <div className="text-center">
                   <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500 dark:border-blue-400 mx-auto mb-4" />
                   <p className="text-lg text-gray-600 dark:text-gray-400 font-medium">Loading your representatives...</p>
-                  <p className="text-sm text-gray-500 dark:text-gray-500 mt-2">Gathering the most current information</p>
+                  <p className="text-sm text-gray-600 dark:text-gray-400 mt-2">Gathering the most current information</p>
                 </div>
               </div>
             ) : errorMessage ? (
@@ -702,7 +702,7 @@ export default function Civics2Page() {
                     Current elected officials serving your community
                   </p>
                   {total > 0 && (
-                    <p className="text-sm text-gray-500 dark:text-gray-500 mt-1" role="status">
+                    <p className="text-sm text-gray-600 dark:text-gray-400 mt-1" role="status">
                       Showing {representatives.length} of {total} representatives
                     </p>
                   )}
@@ -793,8 +793,8 @@ export default function Civics2Page() {
       <div className="bg-white dark:bg-gray-800 border-t border-gray-200 dark:border-gray-700 mt-12">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
           <div className="text-center">
-            <p className="text-sm text-gray-500 dark:text-gray-400">Powered by FREE APIs: Google Civic, OpenStates, Congress.gov, FEC, Wikipedia</p>
-            <p className="text-xs text-gray-400 dark:text-gray-500 mt-2">Data updated in real-time • Zero API costs • Open source</p>
+            <p className="text-sm text-gray-600 dark:text-gray-400">Powered by FREE APIs: Google Civic, OpenStates, Congress.gov, FEC, Wikipedia</p>
+            <p className="text-xs text-gray-500 dark:text-gray-400 mt-2">Data updated in real-time • Zero API costs • Open source</p>
           </div>
         </div>
       </div>

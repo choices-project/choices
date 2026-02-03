@@ -4,7 +4,7 @@ import type { Page } from '@playwright/test';
 import { runAxeAudit } from '../helpers/accessibility';
 import { waitForPageReady } from '../helpers/e2e-setup';
 
- 
+
 declare global {
   interface Window {
     __navigationShellHarness?: {
@@ -13,7 +13,7 @@ declare global {
     };
   }
 }
- 
+
 
 const gotoNavigationShellHarness = async (page: Page) => {
   await page.goto('/e2e/navigation-shell', { waitUntil: 'domcontentloaded', timeout: 90_000 });
@@ -76,7 +76,14 @@ const setNavigationShellState = async (
   );
 };
 
+const isProduction = () => {
+  const base = process.env.BASE_URL ?? '';
+  return base.includes('choices-app.com') || base.includes('production');
+};
+
 test.describe('@axe Admin navigation accessibility and routing', () => {
+  test.skip(() => isProduction(), 'E2E harness route /e2e/navigation-shell is not deployed to production');
+
   test.beforeEach(async ({ page }) => {
     await gotoNavigationShellHarness(page);
   });

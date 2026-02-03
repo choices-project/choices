@@ -24,7 +24,14 @@ const gotoHarness = async (page: Page) => {
   }
 };
 
+const isProduction = () => {
+  const base = process.env.BASE_URL ?? '';
+  return base.includes('choices-app.com') || base.includes('production');
+};
+
 test.describe('Admin Store E2E', () => {
+  test.skip(() => isProduction(), 'E2E harness route /e2e/admin-store is not deployed to production');
+
   test.beforeEach(async ({ page }) => {
     await gotoHarness(page);
   });
