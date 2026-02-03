@@ -1,15 +1,15 @@
 /**
  * Promise Fulfillment Analysis Service
- * 
+ *
  * Analyzes how well representatives fulfill campaign promises by comparing
  * promises to actual votes and bill text using GovInfo MCP
- * 
+ *
  * ⚠️ SERVER-ONLY: This service MUST only be used in API routes and server actions.
  * It uses GovInfo MCP which is server-only.
- * 
+ *
  * Note: 'use server' directive removed - this is a service class, not a server action.
  * Runtime checks ensure server-only usage.
- * 
+ *
  * @author Choices Platform Team
  * @date 2026-01-25
  */
@@ -92,6 +92,7 @@ export type ConstituentWillAnalysis = {
     summary?: string;
     keyProvisions?: string[];
     relatedBills?: string[];
+    relatedBillsWithTitles?: Array<{ packageId: string; title?: string }>;
   };
   accountabilityScore: number; // 0-100, higher = more aligned with constituents
   lastUpdated: string;
@@ -112,9 +113,9 @@ export class PromiseFulfillmentService {
   ): Promise<PromiseFulfillmentAnalysis> {
     assertServerOnly();
     try {
-      logger.info('Analyzing promise fulfillment', { 
-        candidateId: promise.candidateId, 
-        issue: promise.issue 
+      logger.info('Analyzing promise fulfillment', {
+        candidateId: promise.candidateId,
+        issue: promise.issue
       });
 
       // 1. Search for bills related to promise
@@ -131,7 +132,7 @@ export class PromiseFulfillmentService {
       const billsWithText = await Promise.all(
         (promise.billIds || []).map(async (billId) => {
           const content = await govInfoMCPService.getBillContent(billId, 'html');
-          
+
           if (!content) {
             return null;
           }
@@ -211,9 +212,9 @@ export class PromiseFulfillmentService {
         lastUpdated: new Date().toISOString()
       };
     } catch (error) {
-      logger.error('Failed to analyze promise fulfillment', { 
-        promise, 
-        error: error instanceof Error ? error.message : String(error) 
+      logger.error('Failed to analyze promise fulfillment', {
+        promise,
+        error: error instanceof Error ? error.message : String(error)
       });
       throw new Error(`Failed to analyze promise fulfillment: ${error instanceof Error ? error.message : 'Unknown error'}`);
     }
@@ -230,15 +231,15 @@ export class PromiseFulfillmentService {
   ): Promise<ConstituentWillAnalysis> {
     assertServerOnly();
     try {
-      logger.info('Analyzing constituent will vs actual vote', { 
-        representativeId, 
-        billId, 
-        pollId 
+      logger.info('Analyzing constituent will vs actual vote', {
+        representativeId,
+        billId,
+        pollId
       });
 
       // 1. Get poll results (need to fetch from database)
       const pollResults = await this.getPollResults(pollId);
-      
+
       // 2. Get actual vote (use bill-id crosswalk for matching)
       const votes = await this.orchestrator.getVotingRecord(representativeId);
       const actualVote = votes.find(
@@ -252,7 +253,7 @@ export class PromiseFulfillmentService {
 
       // 4. Calculate constituent preference from poll
       const constituentPreference = this.calculateConstituentPreference(pollResults);
-      
+
       // 5. Calculate alignment (UnifiedVote uses 'not_voting'; we normalize to 'not_voted' for analysis)
       const actualVoteValue = (actualVote?.vote as string) || 'not_voted';
       const normalizedVote = this.normalizeNoVote(actualVoteValue);
@@ -286,17 +287,18 @@ export class PromiseFulfillmentService {
         billContext: {
           summary: this.extractSummary(billContent?.content || ''),
           keyProvisions: billContent ? this.extractKeyProvisions(billContent.content, '') : undefined,
-          relatedBills: relatedBills.map(b => b.packageId)
+          relatedBills: relatedBills.map(b => b.packageId),
+          relatedBillsWithTitles: relatedBills.map(b => ({ packageId: b.packageId, title: b.title }))
         },
         accountabilityScore,
         lastUpdated: new Date().toISOString()
       };
     } catch (error) {
-      logger.error('Failed to analyze constituent will', { 
-        representativeId, 
-        billId, 
-        pollId, 
-        error: error instanceof Error ? error.message : String(error) 
+      logger.error('Failed to analyze constituent will', {
+        representativeId,
+        billId,
+        pollId,
+        error: error instanceof Error ? error.message : String(error)
       });
       throw new Error(`Failed to analyze constituent will: ${error instanceof Error ? error.message : 'Unknown error'}`);
     }
@@ -319,10 +321,10 @@ export class PromiseFulfillmentService {
     // In production, this would use NLP/AI for better analysis
     const supportKeywords = ['support', 'favor', 'endorse', 'back', 'advocate'];
     const opposeKeywords = ['oppose', 'against', 'reject', 'block', 'prevent'];
-    
+
     const text = billText.toLowerCase();
     const positionLower = position.toLowerCase();
-    
+
     if (positionLower.includes('support')) {
       const supportCount = supportKeywords.filter(kw => text.includes(kw)).length;
       const opposeCount = opposeKeywords.filter(kw => text.includes(kw)).length;
@@ -332,7 +334,7 @@ export class PromiseFulfillmentService {
       const supportCount = supportKeywords.filter(kw => text.includes(kw)).length;
       return opposeCount > supportCount ? -50 - (opposeCount * 10) : 50;
     }
-    
+
     return 0; // Neutral
   }
 
@@ -342,7 +344,7 @@ export class PromiseFulfillmentService {
   ): number {
     const voteLower = (vote || '').toLowerCase();
     const prefLower = (preference || '').toLowerCase();
-    
+
     if (prefLower.includes('support')) {
       if (voteLower === 'yes') return 100;
       if (voteLower === 'no') return -100;
@@ -352,7 +354,7 @@ export class PromiseFulfillmentService {
       if (voteLower === 'yes') return -100;
       return 0; // abstain
     }
-    
+
     return 0;
   }
 
@@ -362,18 +364,18 @@ export class PromiseFulfillmentService {
     _position: string
   ): number {
     if (billsWithText.length === 0 && votes.length === 0) return 0;
-    
+
     const billScore = billsWithText.length > 0
       ? billsWithText.reduce((sum, b) => sum + b.alignment, 0) / billsWithText.length
       : 0;
-    
+
     const voteScore = votes.length > 0
       ? votes.reduce((sum, v) => sum + v.alignment, 0) / votes.length
       : 0;
-    
+
     // Combine scores (weighted average)
     const combinedScore = (billScore * 0.6 + voteScore * 0.4);
-    
+
     // Normalize to 0-100
     return Math.max(0, Math.min(100, (combinedScore + 100) / 2));
   }
@@ -386,9 +388,9 @@ export class PromiseFulfillmentService {
       ...billsWithText.map(b => b.alignment),
       ...votes.map(v => v.alignment)
     ];
-    
+
     if (allAlignments.length === 0) return 0;
-    
+
     return allAlignments.reduce((sum, a) => sum + a, 0) / allAlignments.length;
   }
 
@@ -396,7 +398,7 @@ export class PromiseFulfillmentService {
     // Simple extraction - in production would use NLP
     const sentences = billText.split(/[.!?]+/).filter(s => s.trim().length > 20);
     const issueLower = issue.toLowerCase();
-    
+
     return sentences
       .filter(s => s.toLowerCase().includes(issueLower))
       .slice(0, 5)
@@ -420,12 +422,12 @@ export class PromiseFulfillmentService {
     percentageAbstain: number;
   }> {
     assertServerOnly();
-    
+
     try {
       // Dynamic import to avoid client-side bundling
       const { getSupabaseServerClient } = await import('@/utils/supabase/server');
       const supabase = await getSupabaseServerClient();
-      
+
       if (!supabase) {
         throw new Error('Supabase client not available');
       }
@@ -434,8 +436,8 @@ export class PromiseFulfillmentService {
       const { data: poll, error: pollError } = await supabase
         .from('polls')
         .select(`
-          id, 
-          title, 
+          id,
+          title,
           poll_options(id, text, option_text, order_index)
         `)
         .eq('id', pollId)
@@ -456,7 +458,7 @@ export class PromiseFulfillmentService {
       }
 
       const totalVotes = votes?.length || 0;
-      
+
       if (totalVotes === 0) {
         return {
           title: poll.title || 'Constituent Poll',
@@ -466,27 +468,27 @@ export class PromiseFulfillmentService {
           percentageAbstain: 0
         };
       }
-      
+
       // For yes/no/abstain polls, we need to map options to these categories
       // Assuming poll has options like "Yes", "No", "Abstain" or similar
-      const options = (poll.poll_options as Array<{ 
-        id: string; 
-        text?: string | null; 
+      const options = (poll.poll_options as Array<{
+        id: string;
+        text?: string | null;
         option_text?: string | null;
         order_index?: number | null;
       }>) || [];
-      
+
       // Find yes/no/abstain options (case-insensitive matching)
       const yesOption = options.find(opt => {
         const text = (opt.text || opt.option_text || '').toLowerCase();
         return text.includes('yes') || text.includes('support') || text.includes('favor');
       });
-      
+
       const noOption = options.find(opt => {
         const text = (opt.text || opt.option_text || '').toLowerCase();
         return text.includes('no') || text.includes('oppose') || text.includes('against');
       });
-      
+
       const abstainOption = options.find(opt => {
         const text = (opt.text || opt.option_text || '').toLowerCase();
         return text.includes('abstain') || text.includes('neutral');
@@ -500,13 +502,13 @@ export class PromiseFulfillmentService {
         return String(v.option_id) === String(yesOption.id) ||
                (v.rankings && Array.isArray(v.rankings) && v.rankings[0] === 0);
       }).length || 0;
-      
+
       const noVotes = votes?.filter((v: any) => {
         if (!noOption) return false;
         return String(v.option_id) === String(noOption.id) ||
                (v.rankings && Array.isArray(v.rankings) && v.rankings[0] === 1);
       }).length || 0;
-      
+
       const abstainVotes = votes?.filter((v: any) => {
         if (!abstainOption) return false;
         return String(v.option_id) === String(abstainOption.id) ||
@@ -521,9 +523,9 @@ export class PromiseFulfillmentService {
         percentageAbstain: totalVotes > 0 ? (abstainVotes / totalVotes) * 100 : 0
       };
     } catch (error) {
-      logger.error('Failed to get poll results', { 
-        pollId, 
-        error: error instanceof Error ? error.message : String(error) 
+      logger.error('Failed to get poll results', {
+        pollId,
+        error: error instanceof Error ? error.message : String(error)
       });
       // Return empty results on error
       return {
@@ -542,7 +544,7 @@ export class PromiseFulfillmentService {
     percentageAbstain: number;
   }): 'yes' | 'no' | 'abstain' | 'mixed' {
     const { percentageYes, percentageNo, percentageAbstain } = pollResults;
-    
+
     if (percentageYes > percentageNo && percentageYes > percentageAbstain) {
       return 'yes';
     } else if (percentageNo > percentageYes && percentageNo > percentageAbstain) {
@@ -550,7 +552,7 @@ export class PromiseFulfillmentService {
     } else if (percentageAbstain > percentageYes && percentageAbstain > percentageNo) {
       return 'abstain';
     }
-    
+
     return 'mixed';
   }
 
@@ -561,11 +563,11 @@ export class PromiseFulfillmentService {
   ): number {
     // Base score: alignment
     let score = 0;
-    
+
     if (actualVote === 'not_voted') {
       return 0; // No vote = no accountability
     }
-    
+
     if (constituentPreference === actualVote) {
       score = 100;
     } else if (constituentPreference === 'mixed') {
@@ -573,11 +575,11 @@ export class PromiseFulfillmentService {
     } else {
       score = 0; // Misaligned
     }
-    
+
     // Adjust based on participation (more votes = more weight)
     const participationFactor = Math.min(1, totalVotes / 1000); // Max at 1000 votes
     score = score * (0.7 + 0.3 * participationFactor);
-    
+
     return Math.round(score);
   }
 }

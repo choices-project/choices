@@ -1,17 +1,17 @@
 /**
  * GovInfo MCP Service
- * 
+ *
  * Service wrapper for GovInfo MCP (Model Context Protocol) server
  * Provides access to U.S. government documents including bills, laws, regulations
- * 
+ *
  * ⚠️ SERVER-ONLY: This service MUST only be used in API routes and server actions.
  * It is NOT safe for client-side use and will throw if accessed from the client.
- * 
+ *
  * MCP tools are only available in agent/server context, not to end users.
- * 
+ *
  * Note: 'use server' directive removed - this is a service class, not a server action.
  * Runtime checks ensure server-only usage.
- * 
+ *
  * @author Choices Platform Team
  * @date 2026-01-25
  */
@@ -81,14 +81,59 @@ export type RelatedPackage = {
 
 /**
  * GovInfo REST API Client (Primary Implementation)
- * 
+ *
  * Uses GovInfo REST API directly for server-side access to government documents.
  * This is the primary implementation - MCP can be added as an enhancement later.
- * 
+ *
  * The GovInfo API provides the same data as MCP but via standard HTTP REST API.
  */
 const GOVINFO_RETRY_MAX = 3;
 const GOVINFO_RETRY_BASE_MS = 1000;
+
+/** 30-day TTL for bill summary/content (bills don't change after publication). */
+const GOVINFO_CACHE_TTL_MS = 30 * 24 * 60 * 60 * 1000;
+const GOVINFO_CACHE_MAX_ENTRIES = 500;
+
+type CacheEntry<T> = { data: T; expires: number };
+
+const govinfoSummaryCache = new Map<string, CacheEntry<BillSummary>>();
+const govinfoContentCache = new Map<string, CacheEntry<BillContent>>();
+
+function getCachedSummary(packageId: string): BillSummary | null {
+  const entry = govinfoSummaryCache.get(packageId);
+  if (!entry || Date.now() > entry.expires) {
+    if (entry) govinfoSummaryCache.delete(packageId);
+    return null;
+  }
+  return entry.data;
+}
+
+function setCachedSummary(packageId: string, data: BillSummary): void {
+  if (govinfoSummaryCache.size >= GOVINFO_CACHE_MAX_ENTRIES) {
+    const first = govinfoSummaryCache.keys().next().value;
+    if (first) govinfoSummaryCache.delete(first);
+  }
+  govinfoSummaryCache.set(packageId, { data, expires: Date.now() + GOVINFO_CACHE_TTL_MS });
+}
+
+function getCachedContent(packageId: string, format: string): BillContent | null {
+  const key = `${packageId}:${format}`;
+  const entry = govinfoContentCache.get(key);
+  if (!entry || Date.now() > entry.expires) {
+    if (entry) govinfoContentCache.delete(key);
+    return null;
+  }
+  return entry.data;
+}
+
+function setCachedContent(packageId: string, format: string, data: BillContent): void {
+  const key = `${packageId}:${format}`;
+  if (govinfoContentCache.size >= GOVINFO_CACHE_MAX_ENTRIES) {
+    const first = govinfoContentCache.keys().next().value;
+    if (first) govinfoContentCache.delete(first);
+  }
+  govinfoContentCache.set(key, { data, expires: Date.now() + GOVINFO_CACHE_TTL_MS });
+}
 
 class GovInfoRestClient {
   private apiKey: string;
@@ -96,21 +141,21 @@ class GovInfoRestClient {
   private timeout = 30000; // 30 seconds
 
   constructor() {
-    const apiKey = process.env.GOVINFO_API_KEY || 
-                   process.env.GPO_API_KEY || 
+    const apiKey = process.env.GOVINFO_API_KEY ||
+                   process.env.GPO_API_KEY ||
                    process.env.GOVINFO_APIKEY ||
                    process.env.GOVINFO_KEY;
-    
+
     if (!apiKey) {
       logger.warn('GovInfo API key not found - bill content features will be limited');
     }
-    
+
     this.apiKey = apiKey || '';
   }
 
   async callTool(toolName: string, args: Record<string, unknown>): Promise<{ result?: unknown }> {
     assertServerOnly();
-    
+
     if (!this.apiKey) {
       logger.warn('GovInfo API key not configured', { toolName });
       return { result: null };
@@ -124,22 +169,22 @@ class GovInfoRestClient {
             args.package_id as string,
             (args.content_type as string) || 'html'
           );
-        
+
         case 'packages_get_package_summary':
           return await this.getPackageSummary(args.package_id as string);
-        
+
         case 'search_search_packages':
           return await this.searchPackages(args);
-        
+
         case 'related_get_related_packages':
           return await this.getRelatedPackages(args.package_id as string);
-        
+
         case 'statutes_search_statutes':
           return await this.searchStatutes(args);
-        
+
         case 'statutes_get_public_laws_by_congress':
           return await this.getPublicLawsByCongress(args);
-        
+
         default:
           logger.warn('Unknown MCP tool name', { toolName });
           return { result: null };
@@ -334,16 +379,16 @@ class GovInfoRestClient {
       'pdf': 'pdf',
       'text': 'txt'
     };
-    
+
     const format = formatMap[contentType] || 'htm';
     const endpoint = `/packages/${packageId}/${format}`;
-    
+
     try {
       // For text-based formats, fetch as text with retry
       if (contentType === 'html' || contentType === 'xml' || contentType === 'text') {
         const url = new URL(`${this.baseUrl}${endpoint}`);
         url.searchParams.set('api_key', this.apiKey);
-        
+
         const response = await this.fetchWithRetry(
           () => {
             const controller = new AbortController();
@@ -358,7 +403,7 @@ class GovInfoRestClient {
           },
           { endpoint: `/packages/${packageId}/${format}` }
         );
-        
+
         const content = await response.text();
         return { result: content };
       } else {
@@ -372,7 +417,7 @@ class GovInfoRestClient {
         contentType,
         error: error instanceof Error ? error.message : String(error)
       });
-      
+
       // Fallback: return null if content not available
       return { result: null };
     }
@@ -569,7 +614,7 @@ const govInfoRestClient = new GovInfoRestClient();
 
 /**
  * MCP Tool Call Wrapper
- * 
+ *
  * Uses GovInfo REST API as primary implementation.
  * MCP can be added as enhancement later for agent-specific features.
  */
@@ -579,7 +624,7 @@ async function callMCPTool(params: {
   arguments: Record<string, unknown>;
 }): Promise<{ result?: unknown }> {
   assertServerOnly();
-  
+
   // Use REST API client (works from any server context)
   return await govInfoRestClient.callTool(params.toolName, params.arguments);
 }
@@ -587,7 +632,8 @@ async function callMCPTool(params: {
 export class GovInfoMCPService {
   /**
    * Get bill content in specified format
-   * Always checks package summary first to verify format availability
+   * Always checks package summary first to verify format availability.
+   * Results are cached 30 days.
    */
   async getBillContent(
     packageId: string,
@@ -595,9 +641,12 @@ export class GovInfoMCPService {
   ): Promise<BillContent | null> {
     assertServerOnly();
     try {
+      const cached = getCachedContent(packageId, format);
+      if (cached) return cached;
+
       // First, get package summary to check available formats
       const summary = await this.getPackageSummary(packageId);
-      
+
       if (!summary) {
         logger.warn('Package summary not found', { packageId });
         return null;
@@ -606,19 +655,19 @@ export class GovInfoMCPService {
       // Check if requested format is available
       const availableFormats = summary.download?.map((d: { type: string }) => d.type) || [];
       const requestedFormat = format;
-      
+
       // Fallback to HTML if requested format not available
-      const useFormat = availableFormats.includes(requestedFormat) 
-        ? requestedFormat 
-        : availableFormats.includes('html') 
-          ? 'html' 
+      const useFormat = availableFormats.includes(requestedFormat)
+        ? requestedFormat
+        : availableFormats.includes('html')
+          ? 'html'
           : availableFormats[0] || 'html';
 
       if (!availableFormats.includes(useFormat)) {
-        logger.warn('No suitable format available', { 
-          packageId, 
-          requested: format, 
-          available: availableFormats 
+        logger.warn('No suitable format available', {
+          packageId,
+          requested: format,
+          available: availableFormats
         });
         return null;
       }
@@ -637,7 +686,7 @@ export class GovInfoMCPService {
         return null;
       }
 
-      return {
+      const billContent: BillContent = {
         packageId,
         content: typeof result.result === 'string' ? result.result : JSON.stringify(result.result),
         format: useFormat as BillContentFormat,
@@ -647,22 +696,27 @@ export class GovInfoMCPService {
           availableFormats
         }
       };
+      setCachedContent(packageId, useFormat, billContent);
+      return billContent;
     } catch (error) {
-      logger.error('Failed to get bill content', { 
-        packageId, 
-        format, 
-        error: error instanceof Error ? error.message : String(error) 
+      logger.error('Failed to get bill content', {
+        packageId,
+        format,
+        error: error instanceof Error ? error.message : String(error)
       });
       return null;
     }
   }
 
   /**
-   * Get package summary/metadata
+   * Get package summary/metadata. Results are cached 30 days.
    */
   async getPackageSummary(packageId: string): Promise<BillSummary | null> {
     assertServerOnly();
     try {
+      const cached = getCachedSummary(packageId);
+      if (cached) return cached;
+
       const result = await callMCPTool({
         server: MCP_SERVER,
         toolName: 'packages_get_package_summary',
@@ -676,8 +730,8 @@ export class GovInfoMCPService {
       }
 
       const summary = result.result as Record<string, unknown>;
-      
-      return {
+
+      const billSummary: BillSummary = {
         packageId,
         title: (summary.title as string) || packageId,
         summary: summary.summary as string | undefined,
@@ -685,10 +739,12 @@ export class GovInfoMCPService {
         download: summary.download as Array<{ type: string; link: string }> | undefined,
         ...summary
       };
+      setCachedSummary(packageId, billSummary);
+      return billSummary;
     } catch (error) {
-      logger.error('Failed to get package summary', { 
-        packageId, 
-        error: error instanceof Error ? error.message : String(error) 
+      logger.error('Failed to get package summary', {
+        packageId,
+        error: error instanceof Error ? error.message : String(error)
       });
       return null;
     }
@@ -734,10 +790,10 @@ export class GovInfoMCPService {
         count: packages.length
       };
     } catch (error) {
-      logger.error('Failed to search bills', { 
-        query, 
-        filters, 
-        error: error instanceof Error ? error.message : String(error) 
+      logger.error('Failed to search bills', {
+        query,
+        filters,
+        error: error instanceof Error ? error.message : String(error)
       });
       return { packages: [] };
     }
@@ -767,9 +823,9 @@ export class GovInfoMCPService {
       }
       return (relatedResult.packages as RelatedPackage[]) || [];
     } catch (error) {
-      logger.error('Failed to get related bills', { 
-        packageId, 
-        error: error instanceof Error ? error.message : String(error) 
+      logger.error('Failed to get related bills', {
+        packageId,
+        error: error instanceof Error ? error.message : String(error)
       });
       return [];
     }
@@ -833,11 +889,11 @@ export class GovInfoMCPService {
         count: packages.length
       };
     } catch (error) {
-      logger.error('Failed to search statutes', { 
-        query, 
-        collection, 
-        filters, 
-        error: error instanceof Error ? error.message : String(error) 
+      logger.error('Failed to search statutes', {
+        query,
+        collection,
+        filters,
+        error: error instanceof Error ? error.message : String(error)
       });
       return { packages: [] };
     }
@@ -883,10 +939,10 @@ export class GovInfoMCPService {
         count: packages.length
       };
     } catch (error) {
-      logger.error('Failed to get public laws', { 
-        congress, 
-        filters, 
-        error: error instanceof Error ? error.message : String(error) 
+      logger.error('Failed to get public laws', {
+        congress,
+        filters,
+        error: error instanceof Error ? error.message : String(error)
       });
       return { packages: [] };
     }

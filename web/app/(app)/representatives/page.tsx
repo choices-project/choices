@@ -98,11 +98,11 @@ export default function RepresentativesPage() {
     <div className="container mx-auto px-4 py-8 max-w-7xl">
       {/* Header */}
       <div className="mb-8">
-        <h1 className="text-3xl font-bold text-gray-900 mb-2">
+        <h1 className="text-3xl font-bold text-gray-900 dark:text-gray-100 mb-2">
           Find Your Representatives
         </h1>
         <h2 className="sr-only">Representative search and results</h2>
-        <p className="text-gray-600">
+        <p className="text-gray-600 dark:text-gray-400">
           Search and connect with your federal, state, and local representatives.
         </p>
         <div className="mt-4 flex space-x-2">
@@ -136,7 +136,7 @@ export default function RepresentativesPage() {
                   <div className="space-y-1">
                     <div>{errorMessage || 'We could not load representatives right now.'}</div>
                     {errorMessage.includes('Security challenge') && (
-                      <div className="text-xs text-red-700">
+                      <div className="text-xs text-red-700 dark:text-red-300">
                         Please refresh the page and try again. If the issue persists, check your network or security settings.
                       </div>
                     )}
@@ -222,7 +222,7 @@ export default function RepresentativesPage() {
                       onRepresentativeClick={handleRepresentativeClick}
                     />
                   ) : (
-                    <div className="text-center py-8 text-gray-500 space-y-3">
+                    <div className="text-center py-8 text-gray-500 dark:text-gray-400 space-y-3">
                       <p>
                         {allLoading
                           ? 'Looking up representatives for your location...'
@@ -252,28 +252,28 @@ export default function RepresentativesPage() {
         <CardContent>
           <div className="grid grid-cols-1 md:grid-cols-4 gap-4 text-center">
             <div>
-              <div className="text-2xl font-bold text-blue-600">
+              <div className="text-2xl font-bold text-blue-600 dark:text-blue-400">
                 {searchResults?.data?.total ?? 0}
               </div>
-              <div className="text-sm text-gray-600">Total Representatives</div>
+              <div className="text-sm text-gray-600 dark:text-gray-400">Total Representatives</div>
             </div>
             <div>
-              <div className="text-2xl font-bold text-green-600">
+              <div className="text-2xl font-bold text-green-600 dark:text-green-400">
                 {searchResults?.data?.representatives?.filter(r => r.data_quality_score >= 90).length ?? 0}
               </div>
-              <div className="text-sm text-gray-600">High Quality Records</div>
+              <div className="text-sm text-gray-600 dark:text-gray-400">High Quality Records</div>
             </div>
             <div>
-              <div className="text-2xl font-bold text-purple-600">
+              <div className="text-2xl font-bold text-purple-600 dark:text-purple-400">
                 {new Set(searchResults?.data?.representatives?.map(r => r.state) ?? []).size}
               </div>
-              <div className="text-sm text-gray-600">States Covered</div>
+              <div className="text-sm text-gray-600 dark:text-gray-400">States Covered</div>
             </div>
             <div>
-              <div className="text-2xl font-bold text-orange-600">
+              <div className="text-2xl font-bold text-orange-600 dark:text-orange-400">
                 {new Set(searchResults?.data?.representatives?.map(r => r.party) ?? []).size}
               </div>
-              <div className="text-sm text-gray-600">Political Parties</div>
+              <div className="text-sm text-gray-600 dark:text-gray-400">Political Parties</div>
             </div>
           </div>
         </CardContent>

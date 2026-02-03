@@ -1,10 +1,11 @@
 'use client';
 
-import { AlertCircle, BarChart3, Lock, Printer, Share2, Shield, Trash2, Trophy } from 'lucide-react';
+import { AlertCircle, BarChart3, Lock, Printer, Scale, Share2, Shield, Trash2, Trophy } from 'lucide-react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
+import { formatRepresentativeLocation } from '@/features/civics/utils/formatRepresentativeLocation';
 import ReportModal from '@/features/moderation/components/ReportModal';
 import { useRecordPollEvent } from '@/features/polls/hooks/usePollAnalytics';
 // Vote Milestones - Commented out per user request
@@ -39,7 +40,6 @@ import { useProfileDisplay } from '@/lib/stores/profileStore';
 import { cn } from '@/lib/utils';
 import { logger } from '@/lib/utils/logger';
 
-import { formatRepresentativeLocation } from '@/features/civics/utils/formatRepresentativeLocation';
 
 import { useAuth } from '@/hooks/useAuth';
 import { useI18n } from '@/hooks/useI18n';
@@ -105,6 +105,10 @@ type PollClientProps = {
     canVote?: boolean;
     createdBy?: string | null;
     representativeId?: number | null;
+    billId?: string | null;
+    billTitle?: string | null;
+    billSummary?: string | null;
+    pollType?: string | null;
   };
 };
 
@@ -997,6 +1001,14 @@ export default function PollClient({ poll }: PollClientProps) {
               )}
             </div>
           </Link>
+          {poll.pollType === 'constituent_will' && repId != null && poll.billId && (
+            <Button asChild variant="outline" size="sm" className="mt-3 gap-2 min-h-[2.25rem]">
+              <Link href={`/representatives/${repId}/accountability`} onClick={(e) => e.stopPropagation()}>
+                <Scale className="w-4 h-4 shrink-0" aria-hidden />
+                {t('polls.view.buttons.compareToVote')}
+              </Link>
+            </Button>
+          )}
         </div>
       )}
 

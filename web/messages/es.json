@@ -732,6 +732,43 @@
           "subtitle": "Ajusta tus criterios de búsqueda o ubicación."
         }
       },
+      "detail": {
+        "back": "Volver a representantes",
+        "notFound": {
+          "message": "El representante que buscas no existe."
+        },
+        "actions": {
+          "createBillVotePoll": "Crear encuesta de voto sobre proyecto de ley",
+          "viewAccountability": "Ver rendición de cuentas"
+        }
+      },
+      "accountability": {
+        "title": "Rendición de cuentas",
+        "subtitle": "Voluntad de los constituyentes vs. votos reales",
+        "empty": "Aún no hay encuestas de votación sobre proyectos de ley para este representante.",
+        "emptyHint": "Crea una encuesta de voto sobre un proyecto de ley para comparar cómo quieren los constituyentes que vote con cómo votó realmente.",
+        "constituentWill": "Preferencia de los constituyentes",
+        "actualVote": "Voto real",
+        "alignment": "Alineación",
+        "score": "Puntuación",
+        "billContext": "Contexto del proyecto",
+        "viewPoll": "Ver encuesta",
+        "aligned": "Alineado",
+        "notAligned": "No alineado",
+        "notVoted": "No votó",
+        "signInRequired": "Inicia sesión para ver los datos de rendición de cuentas.",
+        "loadingComparison": "Cargando comparación…",
+        "loadError": "No se pudieron cargar los datos. Inténtalo de nuevo.",
+        "retry": "Reintentar",
+        "backToRep": "Volver al representante",
+        "billText": "Texto del proyecto",
+        "relatedBills": "Proyectos relacionados",
+        "share": "Compartir",
+        "exportCsv": "Exportar CSV",
+        "copyLink": "Copiar enlace",
+        "linkCopied": "Enlace copiado",
+        "loadingBillText": "Cargando texto del proyecto…"
+      },
       "search": {
         "title": "Buscar representantes",
         "inputs": {
@@ -2911,7 +2948,8 @@
           "printSummary": "Imprimir resumen",
           "vote": "Votar",
           "voting": "Votando…",
-          "voted": "Votado"
+          "voted": "Votado",
+          "compareToVote": "Comparar con el voto del representante"
         },
         "loading": "Actualizando resultados…",
         "leadingOption": {
@@ -3654,7 +3692,8 @@
         "printSummary": "Imprimir resumen",
         "vote": "Votar",
         "voted": "Votado",
-        "voting": "Votando…"
+        "voting": "Votando…",
+        "compareToVote": "Comparar con el voto del representante"
       },
       "notifications": {
         "voteRecorded": {

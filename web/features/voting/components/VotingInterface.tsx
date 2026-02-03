@@ -8,6 +8,7 @@ import { useVotingCountdown } from '@/features/voting/hooks/useVotingCountdown'
 import { useVotingIsVoting, useVotingRecords } from '@/features/voting/lib/store'
 
 import { useNotificationActions, useNotificationSettings } from '@/lib/stores/notificationStore'
+
 import { useI18n } from '@/hooks/useI18n'
 
 import ApprovalVoting from './ApprovalVoting'

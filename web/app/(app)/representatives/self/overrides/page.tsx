@@ -59,7 +59,7 @@ export default function RepresentativeOverridesPage() {
   return (
     <div className="max-w-2xl mx-auto p-6 space-y-4">
       <h1 className="text-2xl font-semibold">Representative Public Overrides</h1>
-      <p className="text-gray-600 text-sm">
+      <p className="text-gray-600 dark:text-gray-400 text-sm">
         For fast-tracked representatives only. Edits are limited to public-facing details and are audited. Official records remain immutable.
       </p>
 

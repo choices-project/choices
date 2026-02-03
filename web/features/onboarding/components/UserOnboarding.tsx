@@ -13,6 +13,7 @@ import {
 } from '@/lib/stores';
 import { useProfileLocation } from '@/lib/stores/profileStore';
 import logger from '@/lib/utils/logger';
+
 import { useI18n } from '@/hooks/useI18n';
 
 import { extractRepresentatives, normalizeJurisdiction } from '../lib/representatives';

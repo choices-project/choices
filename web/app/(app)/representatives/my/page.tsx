@@ -129,11 +129,11 @@ export default function MyRepresentativesPage() {
   return (
     <div className="container mx-auto px-4 py-8">
       <div className="mb-6">
-        <h1 className="text-3xl font-bold text-gray-900 mb-2 flex items-center space-x-2">
-          <Heart className="w-8 h-8 text-red-500" />
+        <h1 className="text-3xl font-bold text-gray-900 dark:text-gray-100 mb-2 flex items-center space-x-2">
+          <Heart className="w-8 h-8 text-red-500 dark:text-red-400" />
           <span>My Representatives</span>
         </h1>
-            <p className="text-gray-600">
+            <p className="text-gray-600 dark:text-gray-400">
           Representatives you&apos;re following. You&apos;ll be notified about their activity.
         </p>
         <div className="mt-2 flex space-x-4">
@@ -148,7 +148,7 @@ export default function MyRepresentativesPage() {
 
       {representativeCount === 0 ? (
         <EnhancedEmptyState
-          icon={<Users className="h-12 w-12 text-gray-400" />}
+          icon={<Users className="h-12 w-12 text-gray-400 dark:text-gray-500" />}
           title="No representatives followed"
           description="Start following representatives to see them here and get notified about their activity."
           tip="Browse representatives by location, office, or search to find the ones you want to follow."
@@ -160,7 +160,7 @@ export default function MyRepresentativesPage() {
       ) : (
         <>
           <div className="mb-4 flex items-center justify-between">
-            <p className="text-sm text-gray-600">
+            <p className="text-sm text-gray-600 dark:text-gray-400">
               {representativeCount} {representativeCount === 1 ? 'representative' : 'representatives'}
             </p>
             <div className="flex space-x-2">

@@ -46,6 +46,10 @@ export const GET = withErrorHandling(async (
           created_at,
           created_by,
           representative_id,
+          bill_id,
+          bill_title,
+          bill_summary,
+          poll_type,
           poll_settings,
           poll_options:poll_options (
             id,
@@ -90,6 +94,10 @@ export const GET = withErrorHandling(async (
       createdAt: poll.created_at,
       createdBy: poll.created_by ?? null,
       representativeId: poll.representative_id ?? null,
+      billId: poll.bill_id ?? null,
+      billTitle: poll.bill_title ?? null,
+      billSummary: poll.bill_summary ?? null,
+      pollType: poll.poll_type ?? 'standard',
       canVote: (poll.status ?? 'active') === 'active',
       settings: {
         allowMultipleVotes: Boolean(pollSettings?.allow_multiple_votes),

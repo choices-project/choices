@@ -2814,7 +2814,9 @@
         "actions": {
           "follow": "Follow",
           "following": "Following",
-          "updating": "Updating..."
+          "updating": "Updating...",
+          "createBillVotePoll": "Create bill vote poll",
+          "viewAccountability": "View accountability"
         },
         "sections": {
           "contactInformation": "Contact Information",
@@ -2866,6 +2868,33 @@
           "openstates": "OpenStates:",
           "ballotpedia": "Ballotpedia profile"
         }
+      },
+      "accountability": {
+        "title": "Accountability",
+        "subtitle": "Constituent will vs. actual votes",
+        "empty": "No bill vote polls yet for this representative.",
+        "emptyHint": "Create a bill vote poll to compare how constituents want them to vote with how they actually voted.",
+        "constituentWill": "Constituent preference",
+        "actualVote": "Actual vote",
+        "alignment": "Alignment",
+        "score": "Score",
+        "billContext": "Bill context",
+        "viewPoll": "View poll",
+        "aligned": "Aligned",
+        "notAligned": "Not aligned",
+        "notVoted": "Not voted",
+        "signInRequired": "Sign in to view accountability data.",
+        "loadingComparison": "Loading comparison…",
+        "loadError": "Couldn’t load accountability data. Try again.",
+        "retry": "Try again",
+        "backToRep": "Back to representative",
+        "billText": "Bill text",
+        "relatedBills": "Related bills",
+        "share": "Share",
+        "exportCsv": "Export CSV",
+        "copyLink": "Copy link",
+        "linkCopied": "Link copied",
+        "loadingBillText": "Loading bill text…"
       },
       "search": {
         "title": "Find representatives",
@@ -3932,7 +3961,8 @@
         "printSummary": "Print summary",
         "vote": "Vote",
         "voted": "Voted",
-        "voting": "Voting…"
+        "voting": "Voting…",
+        "compareToVote": "Compare to representative's vote"
       },
       "notifications": {
         "voteRecorded": {
