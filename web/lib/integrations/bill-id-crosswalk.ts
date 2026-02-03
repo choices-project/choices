@@ -23,12 +23,12 @@ export function parseGovInfoPackageId(
   packageId: string
 ): { congress: number; billType: string; number: string; version?: string } | null {
   const m = packageId?.trim().match(GOVINFO_BILLS_RE);
-  if (!m) return null;
+  if (!m || m[1] === undefined || m[2] === undefined || m[3] === undefined) return null;
   return {
     congress: parseInt(m[1], 10),
     billType: m[2].toLowerCase(),
     number: m[3],
-    version: m[4] ?? undefined
+    ...(m[4] !== undefined && { version: m[4] }),
   };
 }
 
@@ -46,7 +46,7 @@ export function normalizeBillIdForMatch(id: string | null | undefined): string |
   }
 
   const congressDoc = /^(\d{2,3})(hr|s|hjres|sjres|hconres|sconres)(\d+)$/i.exec(s);
-  if (congressDoc) {
+  if (congressDoc && congressDoc[1] !== undefined && congressDoc[2] !== undefined && congressDoc[3] !== undefined) {
     return `${congressDoc[1]}${congressDoc[2]}${congressDoc[3]}`.toLowerCase();
   }
 
@@ -121,7 +121,7 @@ export function identifierToGovInfoPackageId(
   if (identifier == null || typeof identifier !== 'string') return null;
   const norm = identifier.replace(/\s+/g, ' ').trim();
   const m = norm.match(FEDERAL_TYPE_RE);
-  if (!m) return null;
+  if (!m || m[1] === undefined || m[2] === undefined) return null;
   const type = m[1].toLowerCase();
   const num = m[2];
   const house = ['hr', 'hjres', 'hconres'].includes(type);

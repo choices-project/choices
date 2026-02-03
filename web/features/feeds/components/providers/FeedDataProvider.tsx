@@ -881,7 +881,7 @@ export default function FeedDataProvider(props: FeedDataProviderProps) {
     return (
       <HarnessFeedDataProvider
         userId={userId}
-        profileInterests={profileInterests}
+        profileInterests={profileInterests ?? []}
         enableInfiniteScroll={enableInfiniteScroll}
         maxItems={maxItems}
       >

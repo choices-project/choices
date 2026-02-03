@@ -178,7 +178,7 @@ export class GeographicElectoralFeed {
             .select('division_id, representative_id')
             .in('division_id', divisionIds)
             .limit(5000);
-          
+
           if (divErr) {
             logger.warn('representative_divisions prefetch failed', { error: divErr.message });
           } else if (Array.isArray(divRows)) {
@@ -188,7 +188,7 @@ export class GeographicElectoralFeed {
                 .map((r: any) => r.representative_id)
                 .filter((id: any): id is number => id != null && typeof id === 'number')
             ));
-            
+
             if (repIds.length > 0) {
               // Query representatives_core with status filter
               const { data: repRows, error: repErr } = await (supabase as any)
@@ -197,7 +197,7 @@ export class GeographicElectoralFeed {
                 .eq('status', 'active') // Filter by status field
                 .in('id', repIds)
                 .limit(5000);
-              
+
               if (!repErr && Array.isArray(repRows)) {
                 // Create a map of rep ID to rep data
                 const repMap = new Map<number, { id: number; name: string; party: string | null; office: string }>();
@@ -209,13 +209,13 @@ export class GeographicElectoralFeed {
                     office: rep.office,
                   });
                 }
-                
+
                 // Now map divisions to representatives
                 for (const divRow of divRows) {
                   const divisionId = String(divRow.division_id ?? '');
                   const repId = divRow.representative_id;
                   if (!divisionId || !repId) continue;
-                  
+
                   const rep = repMap.get(repId);
                   if (rep) {
                     if (!divisionToReps.has(divisionId)) {
@@ -648,10 +648,10 @@ export class GeographicElectoralFeed {
       if (federalDistrict && stateCode) {
         try {
           // Extract district number from "CA-11" format
-          const districtNumber = federalDistrict.includes('-') 
-            ? federalDistrict.split('-')[1] 
+          const districtNumber = federalDistrict.includes('-')
+            ? (federalDistrict.split('-')[1] ?? federalDistrict)
             : federalDistrict;
-          
+
           const { data: federalReps, error: federalError } = await supabase
             .from('representatives_core')
             .select('id, name, office, party, state, district, level')
@@ -669,8 +669,8 @@ export class GeographicElectoralFeed {
                 id: String(rep.id),
                 name: rep.name,
                 party: rep.party ?? 'Unknown',
-                office: rep.office,
-                jurisdiction: federalDistrict,
+                office: rep.office ?? '',
+                jurisdiction: federalDistrict ?? '',
                 district: rep.district ?? undefined,
                 socialMedia: {},
                 votingRecord: { totalVotes: 0, partyLineVotes: 0, constituentAlignment: 0, keyVotes: [] },

@@ -110,17 +110,13 @@ export const POST = withErrorHandling(async (
 
     // Notify user if they submitted this contact (before deleting)
     if (existingContact.submitted_by_user_id) {
+      const core = existingContact.representatives_core as { id: number; name: string; office: string; party?: string } | null | undefined;
       await notifyUserContactRejected(supabase, {
         id: existingContact.id,
         representative_id: existingContact.representative_id,
         contact_type: existingContact.contact_type,
         value: existingContact.value,
-        representative: (existingContact.representatives_core as any) ? {
-          id: (existingContact.representatives_core as any).id,
-          name: (existingContact.representatives_core as any).name,
-          office: (existingContact.representatives_core as any).office,
-          party: (existingContact.representatives_core as any).party,
-        } : undefined,
+        ...(core ? { representative: { id: core.id, name: core.name, office: core.office, ...(core.party !== undefined ? { party: core.party } : {}) } } : {}),
       }, reason, existingContact.submitted_by_user_id);
     }
 

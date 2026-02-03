@@ -426,8 +426,8 @@ function RepresentativeDetailPageContent() {
                 <p className="text-base text-blue-100/90">
                   {formatRepresentativeLocation({
                     state: representative.state,
-                    office_city: representative.office_city,
-                    district: representative.district,
+                    office_city: representative.office_city ?? null,
+                    district: representative.district ?? null,
                   })}
                 </p>
               )}
@@ -541,8 +541,8 @@ function RepresentativeDetailPageContent() {
                   <p className="text-gray-600 dark:text-gray-400">
                     {formatRepresentativeLocation({
                       state: representative.state,
-                      office_city: representative.office_city,
-                      district: representative.district,
+                      office_city: representative.office_city ?? null,
+                      district: representative.district ?? null,
                     })}
                   </p>
                 </div>

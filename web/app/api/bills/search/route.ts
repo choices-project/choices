@@ -32,11 +32,9 @@ export const GET = withErrorHandling(async (request: NextRequest) => {
   }
 
   try {
-    const result = await govInfoMCPService.searchBills(q, {
-      collection: 'BILLS',
-      congress,
-      page_size
-    });
+    const filters: { collection: 'BILLS'; page_size: number; congress?: number } = { collection: 'BILLS', page_size };
+    if (congress != null) filters.congress = congress;
+    const result = await govInfoMCPService.searchBills(q, filters);
 
     return successResponse({
       packages: result.packages,

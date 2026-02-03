@@ -994,8 +994,8 @@ export default function PollClient({ poll }: PollClientProps) {
                 <p className="text-sm text-foreground/60">
                   {formatRepresentativeLocation({
                     state: representativeData.state,
-                    office_city: representativeData.office_city,
-                    district: representativeData.district,
+                    office_city: representativeData.office_city ?? null,
+                    district: representativeData.district ?? null,
                   })}
                 </p>
               )}

@@ -67,13 +67,13 @@ export async function getSupabaseAgentClient(
 
   // Create agent context
   const context = createAgentContext(options.agentId, {
-    agentVersion: options.agentVersion,
-    purpose: options.purpose,
-    userId: options.userId,
     metadata: {
       useServiceRole: options.useServiceRole ?? false,
       enableAudit: options.enableAudit ?? true,
     },
+    ...(options.agentVersion !== undefined && { agentVersion: options.agentVersion }),
+    ...(options.purpose !== undefined && { purpose: options.purpose }),
+    ...(options.userId !== undefined && { userId: options.userId }),
   })
 
   // Validate context
@@ -235,8 +235,8 @@ function wrapTableWithAudit(
             {
               status,
               error: result.error?.message,
-              rowCount,
               duration,
+              ...(rowCount !== undefined && { rowCount }),
             }
           )
         }
@@ -357,12 +357,12 @@ export async function getAnalyticsAgentClient(userId?: string): Promise<AgentCli
     agentVersion: '1.0.0',
     purpose: 'Analyze poll and vote data',
     useServiceRole: true,
-    userId,
     enableAudit: true,
     rateLimit: {
       maxRequests: 100,
       windowMs: 60 * 1000, // 1 minute
     },
+    ...(userId !== undefined && { userId }),
   })
 }
 
@@ -375,12 +375,12 @@ export async function getIntegrityAgentClient(userId?: string): Promise<AgentCli
     agentVersion: '1.0.0',
     purpose: 'Vote integrity analysis and bot detection',
     useServiceRole: true,
-    userId,
     enableAudit: true,
     rateLimit: {
       maxRequests: 50,
       windowMs: 60 * 1000, // 1 minute
     },
+    ...(userId !== undefined && { userId }),
   })
 }
 

@@ -442,13 +442,17 @@ class GovInfoRestClient {
     const pageSize = Math.min(100, Math.max(1, Number(args.page_size) || 50));
     const offsetMark = (args.offset_mark as string) || '*';
 
-    const query = this.buildSearchQuery({
-      query: (args.query as string) || '',
-      collection,
-      congress: args.congress as number | null | undefined,
-      start_date: (args.start_date as string) || undefined,
-      end_date: (args.end_date as string) || undefined
-    });
+    const searchArgs: {
+      query: string;
+      collection?: string;
+      congress?: number | null;
+      start_date?: string;
+      end_date?: string;
+    } = { query: (args.query as string) || '', collection };
+    if (args.congress != null) searchArgs.congress = args.congress as number | null;
+    if ((args.start_date as string) !== undefined) searchArgs.start_date = (args.start_date as string) || '';
+    if ((args.end_date as string) !== undefined) searchArgs.end_date = (args.end_date as string) || '';
+    const query = this.buildSearchQuery(searchArgs);
 
     try {
       const data = await this.makeSearchRequest<{
@@ -510,7 +514,7 @@ class GovInfoRestClient {
           const packages: RelatedPackage[] = results.map((r) => ({
             packageId: r.packageId || '',
             relationship: billsRel.relationship,
-            title: r.title
+            ...(r.title !== undefined && r.title !== '' ? { title: r.title } : {}),
           }));
           return { result: { packages } };
         } catch (followErr) {
@@ -541,15 +545,21 @@ class GovInfoRestClient {
     const pageSize = Math.min(100, Math.max(1, Number(args.page_size) || 50));
     const offsetMark = (args.offset_mark as string) || '*';
 
-    const query = this.buildSearchQuery({
-      query: (args.query as string) || '',
-      collection,
-      congress: args.congress as number | null | undefined,
-      title_number: (args.title_number as string) || undefined,
-      section: (args.section as string) || undefined,
-      start_date: (args.start_date as string) || undefined,
-      end_date: (args.end_date as string) || undefined
-    });
+    const searchArgs: {
+      query: string;
+      collection?: string;
+      congress?: number | null;
+      title_number?: string;
+      section?: string;
+      start_date?: string;
+      end_date?: string;
+    } = { query: (args.query as string) || '', collection };
+    if (args.congress != null) searchArgs.congress = args.congress as number | null;
+    if ((args.title_number as string) !== undefined) searchArgs.title_number = (args.title_number as string) || '';
+    if ((args.section as string) !== undefined) searchArgs.section = (args.section as string) || '';
+    if ((args.start_date as string) !== undefined) searchArgs.start_date = (args.start_date as string) || '';
+    if ((args.end_date as string) !== undefined) searchArgs.end_date = (args.end_date as string) || '';
+    const query = this.buildSearchQuery(searchArgs);
 
     try {
       const data = await this.makeSearchRequest<{ packages?: BillPackage[]; count?: number }>({
@@ -577,15 +587,20 @@ class GovInfoRestClient {
     const pageSize = Math.min(100, Math.max(1, Number(args.page_size) || 50));
     const offsetMark = (args.offset_mark as string) || '*';
 
-    const query = this.buildSearchQuery({
-      query: '*',
-      collection: 'PLAW',
-      congress,
-      law_type: (args.law_type as string) || undefined,
-      law_number: (args.law_number as string) || undefined,
-      start_date: (args.start_date as string) || undefined,
-      end_date: (args.end_date as string) || undefined
-    });
+    const searchArgs: {
+      query: string;
+      collection?: string;
+      congress?: number | null;
+      law_type?: string;
+      law_number?: string;
+      start_date?: string;
+      end_date?: string;
+    } = { query: '*', collection: 'PLAW', congress };
+    if ((args.law_type as string) !== undefined) searchArgs.law_type = (args.law_type as string) || '';
+    if ((args.law_number as string) !== undefined) searchArgs.law_number = (args.law_number as string) || '';
+    if ((args.start_date as string) !== undefined) searchArgs.start_date = (args.start_date as string) || '';
+    if ((args.end_date as string) !== undefined) searchArgs.end_date = (args.end_date as string) || '';
+    const query = this.buildSearchQuery(searchArgs);
 
     try {
       const data = await this.makeSearchRequest<{ packages?: BillPackage[]; count?: number }>({
@@ -734,9 +749,9 @@ export class GovInfoMCPService {
       const billSummary: BillSummary = {
         packageId,
         title: (summary.title as string) || packageId,
-        summary: summary.summary as string | undefined,
         lastModified: (summary.lastModified as string) || new Date().toISOString(),
-        download: summary.download as Array<{ type: string; link: string }> | undefined,
+        ...(summary.summary !== undefined && { summary: summary.summary as string }),
+        ...(summary.download !== undefined && { download: summary.download as Array<{ type: string; link: string }> }),
         ...summary
       };
       setCachedSummary(packageId, billSummary);
@@ -782,12 +797,12 @@ export class GovInfoMCPService {
         return { packages: [] };
       }
       const packages = (searchResult.packages as BillPackage[]) || [];
-      const nextPage = (searchResult.nextPage as string | undefined) || undefined;
+      const nextPage = searchResult.nextPage as string | undefined;
 
       return {
         packages,
-        nextPage,
-        count: packages.length
+        count: packages.length,
+        ...(nextPage !== undefined && nextPage !== '' && { nextPage }),
       };
     } catch (error) {
       logger.error('Failed to search bills', {

@@ -163,7 +163,7 @@ export function createIndexMigration(
     reason?: string
   }
 ): string {
-  const timestamp = new Date().toISOString().replace(/[-:]/g, '').split('.')[0].replace('T', '')
+  const timestamp = (new Date().toISOString().replace(/[-:]/g, '').split('.')[0] ?? '').replace('T', '')
   const migrationName = `add_index_${recommendation.table}_${recommendation.columns.join('_')}`
   const migrationPath = join(
     __dirname,

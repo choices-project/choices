@@ -76,7 +76,7 @@ export class VoteProcessor implements IVoteProcessor {
         updatedAt: new Date(String(r.updated_at)),
         votingConfig: {
           allowMultipleVotes: Boolean(settings?.allow_multiple_votes),
-          maxChoices: typeof settings?.max_selections === 'number' ? settings.max_selections : undefined,
+          ...(typeof settings?.max_selections === 'number' ? { maxChoices: settings.max_selections } : {}),
           quadraticCredits: typeof settings?.quadratic_credits === 'number' ? settings.quadratic_credits : 100,
           rangeMin: typeof settings?.range_min === 'number' ? settings.range_min : 0,
           rangeMax: typeof settings?.range_max === 'number' ? settings.range_max : 10,

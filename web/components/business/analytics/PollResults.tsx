@@ -5,7 +5,7 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { EnhancedEmptyState } from '@/components/shared/EnhancedEmptyState';
 import { EnhancedErrorDisplay } from '@/components/shared/EnhancedErrorDisplay';
 
-import { getErrorMessageWithFallback, ERROR_MESSAGES } from '@/lib/constants/error-messages';
+import { getErrorMessageWithFallback, ERROR_MESSAGES, type ErrorMessageConfig } from '@/lib/constants/error-messages';
 
 type PollResult = {
   option_id: string;
@@ -85,10 +85,14 @@ export function PollResults({ pollId, trustTiers }: PollResultsProps) {
     } catch (err) {
       const errorKey = err instanceof Error ? err.message : 'NETWORK_ERROR';
       // Use standardized error messages
-      const errorConfig = getErrorMessageWithFallback(
-        errorKey,
-        ERROR_MESSAGES.NETWORK_ERROR
-      );
+      const fallback: ErrorMessageConfig = ERROR_MESSAGES.NETWORK_ERROR ?? {
+        title: 'Error',
+        message: 'An error occurred',
+        details: '',
+        tip: '',
+        severity: 'error',
+      };
+      const errorConfig = getErrorMessageWithFallback(errorKey, fallback);
       setError(errorConfig.message);
       console.error('Poll results fetch error:', err);
     } finally {
@@ -126,17 +130,31 @@ export function PollResults({ pollId, trustTiers }: PollResultsProps) {
       ? 'TIMEOUT_ERROR'
       : 'NETWORK_ERROR';
 
-    const errorConfig = getErrorMessageWithFallback(errorKey, ERROR_MESSAGES.NETWORK_ERROR);
+    const fallback: ErrorMessageConfig = ERROR_MESSAGES.NETWORK_ERROR ?? {
+      title: 'Error',
+      message: 'An error occurred',
+      details: '',
+      tip: '',
+      severity: 'error',
+    };
+    const errorConfig = getErrorMessageWithFallback(errorKey, fallback);
+    const config = errorConfig ?? {
+      title: 'Error',
+      message: 'An error occurred',
+      details: 'We encountered an issue while loading poll results.',
+      tip: 'Check your connection and try again.',
+      severity: 'error' as const,
+    };
 
     return (
       <EnhancedErrorDisplay
-        title={errorConfig.title}
-        message={errorConfig.message}
-        details={errorConfig.details || "We encountered an issue while loading poll results. This might be a temporary network problem."}
-        tip={errorConfig.tip || "Check your internet connection and try again. If the problem persists, the poll may not exist or may have been removed."}
+        title={config.title}
+        message={config.message}
+        details={config.details ?? "We encountered an issue while loading poll results. This might be a temporary network problem."}
+        tip={config.tip ?? "Check your internet connection and try again. If the problem persists, the poll may not exist or may have been removed."}
         canRetry={true}
         onRetry={handleRetry}
-        severity={errorConfig.severity}
+        {...(config.severity !== undefined ? { severity: config.severity } : {})}
       />
     );
   }

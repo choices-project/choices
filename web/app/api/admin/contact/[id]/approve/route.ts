@@ -114,17 +114,13 @@ export const POST = withErrorHandling(async (
 
     // Notify user if they submitted this contact
     if (existingContact.submitted_by_user_id) {
+      const core = updatedContact.representatives_core as { id: number; name: string; office: string; party?: string } | null | undefined;
       await notifyUserContactApproved(supabase, {
         id: updatedContact.id,
         representative_id: updatedContact.representative_id,
         contact_type: updatedContact.contact_type,
         value: updatedContact.value,
-        representative: (updatedContact.representatives_core as any) ? {
-          id: (updatedContact.representatives_core as any).id,
-          name: (updatedContact.representatives_core as any).name,
-          office: (updatedContact.representatives_core as any).office,
-          party: (updatedContact.representatives_core as any).party,
-        } : undefined,
+        ...(core ? { representative: { id: core.id, name: core.name, office: core.office, ...(core.party !== undefined ? { party: core.party } : {}) } } : {}),
       }, existingContact.submitted_by_user_id);
     }
 

@@ -398,7 +398,7 @@ export class UnifiedDataOrchestrator {
             id: String(row.id),
             representativeId,
             ...(billId && { billId }),
-            billTitle: row.title ?? undefined,
+            billTitle: row.title ?? '',
             question: row.title ?? '',
             description: row.description ?? row.title ?? '',
             vote: this.mapVoteResult(votePosition),

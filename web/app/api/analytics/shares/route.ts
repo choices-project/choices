@@ -75,8 +75,8 @@ export const GET = withErrorHandling(async (request: NextRequest) => {
     const eventData = event.event_data as Record<string, unknown> | null;
     const eventPlatform = (eventData?.platform as string) || 'unknown';
     const eventContentType = (eventData?.content_type as string) || 'poll';
-    const eventContentId = (eventData?.poll_id as string) || (eventData?.content_id as string) || 'unknown';
-    const eventDate = event.created_at ? new Date(event.created_at).toISOString().split('T')[0] : 'unknown';
+    const eventContentId: string = (eventData?.poll_id as string) || (eventData?.content_id as string) || 'unknown';
+    const eventDate: string = event.created_at ? (new Date(event.created_at).toISOString().split('T')[0] ?? 'unknown') : 'unknown';
 
     // Platform breakdown
     platformBreakdown[eventPlatform] = (platformBreakdown[eventPlatform] || 0) + 1;

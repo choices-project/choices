@@ -591,22 +591,22 @@ export default function FeedCore({
                       icon: <Plus className="h-4 w-4" aria-hidden="true" />,
                     }
               }
-              secondaryAction={
-                selectedHashtags.length > 0
-                  ? undefined
-                  : trendingHashtags.length > 0
-                    ? {
-                        label: t('feeds.core.empty.default.explore') || 'Explore',
-                        onClick: () => {
-                          const firstTag = trendingHashtags[0];
-                          if (firstTag) onHashtagAdd(firstTag);
+              {...(selectedHashtags.length > 0
+                ? {}
+                : {
+                    secondaryAction: trendingHashtags.length > 0
+                      ? {
+                          label: t('feeds.core.empty.default.explore') || 'Explore',
+                          onClick: () => {
+                            const firstTag = trendingHashtags[0];
+                            if (firstTag) onHashtagAdd(firstTag);
+                          },
+                        }
+                      : {
+                          label: t('feeds.core.empty.default.refresh') || 'Refresh Feed',
+                          onClick: onRefresh,
                         },
-                      }
-                    : {
-                        label: t('feeds.core.empty.default.refresh') || 'Refresh Feed',
-                        onClick: onRefresh,
-                      }
-              }
+                  })}
             />
           ) : (
             <div className="space-y-4" role="feed">
@@ -849,7 +849,7 @@ export default function FeedCore({
               <EnhancedErrorDisplay
                 title={t('feeds.core.empty.electoral.title') || 'Electoral feed'}
                 message={electoralError}
-                onRetry={onElectoralRefresh ? () => void onElectoralRefresh() : undefined}
+                {...(onElectoralRefresh ? { onRetry: () => void onElectoralRefresh() } : {})}
               />
             </div>
           ) : electoralFeed ? (
@@ -966,7 +966,7 @@ export default function FeedCore({
                               {t('feeds.core.electoral.activityFeed') || 'District Activity Feed'}
                             </CardTitle>
                             <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">
-                              {t('feeds.core.electoral.activityFeedDescription') || 
+                              {t('feeds.core.electoral.activityFeedDescription') ||
                                 'Polls, bills, and votes from your district representatives'}
                             </p>
                           </CardHeader>

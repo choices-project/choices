@@ -23,11 +23,11 @@ export function createAgentContext(
 ): AgentContext {
   const context: AgentContext = {
     agentId,
-    agentVersion: options?.agentVersion,
-    purpose: options?.purpose,
-    userId: options?.userId,
     requestId: options?.requestId || generateRequestId(),
     metadata: options?.metadata || {},
+    ...(options?.agentVersion !== undefined && { agentVersion: options.agentVersion }),
+    ...(options?.purpose !== undefined && { purpose: options.purpose }),
+    ...(options?.userId !== undefined && { userId: options.userId }),
   }
 
   logger.debug('Agent context created', {

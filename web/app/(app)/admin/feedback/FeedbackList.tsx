@@ -174,10 +174,7 @@ export const FeedbackList: React.FC<FeedbackListProps> = ({
           details="We couldn't load the feedback list. This might be a temporary network or server issue."
           tip="Check your connection and try again. If the problem persists, refresh the page."
           canRetry={!!onRetry}
-          onRetry={onRetry ?? undefined}
-          primaryAction={
-            onRetry ? undefined : { label: 'Refresh page', onClick: () => window.location.reload() }
-          }
+          {...(onRetry ? { onRetry } : { primaryAction: { label: 'Refresh page', onClick: () => window.location.reload() } })}
         />
       </div>
     );

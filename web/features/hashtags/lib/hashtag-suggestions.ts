@@ -1,10 +1,10 @@
 /**
  * Hashtag Suggestions Service
- * 
+ *
  * Smart hashtag suggestions based on user behavior, content analysis,
  * and trending patterns. Includes auto-complete, related hashtags,
  * and intelligent recommendations.
- * 
+ *
  * Created: October 10, 2025
  * Status: ✅ ACTIVE
  */
@@ -51,19 +51,19 @@ export async function getSmartSuggestions(
 ): Promise<HashtagSuggestion[]> {
   try {
     const { text, category, contentType = 'poll', limit = 10 } = context;
-    
+
     // Extract hashtags from text if provided
     const extractedHashtags = text ? extractHashtagsFromText(text) : [];
-    
+
     // Get user's current hashtags for context
     const userHashtags = await getUserHashtags(userId);
-    
+
     // Filter out already extracted hashtags from suggestions
     const extractedHashtagNames = new Set(extractedHashtags.map(h => h.toLowerCase()));
-    
+
     // Get suggestions from multiple sources
     const suggestions: HashtagSuggestion[] = [];
-    
+
     // 1. Content-based suggestions (excluding already extracted hashtags)
     if (text) {
       const contentSuggestions = await getContentBasedSuggestions(text, userHashtags, limit);
@@ -73,25 +73,25 @@ export async function getSmartSuggestions(
       );
       suggestions.push(...filteredContentSuggestions);
     }
-    
+
     // 2. Category-based suggestions
     if (category) {
       const categorySuggestions = await getCategoryBasedSuggestions(category, userHashtags, limit);
       suggestions.push(...categorySuggestions);
     }
-    
+
     // 3. Trending suggestions
     const trendingSuggestions = await getTrendingSuggestions(userHashtags, limit);
     suggestions.push(...trendingSuggestions);
-    
+
     // 4. Related hashtag suggestions
     const relatedSuggestions = await getRelatedSuggestions(userHashtags, limit);
     suggestions.push(...relatedSuggestions);
-    
+
     // 5. User behavior-based suggestions
     const behaviorSuggestions = await getBehaviorBasedSuggestions(userId, userHashtags, limit);
     suggestions.push(...behaviorSuggestions);
-    
+
     // Remove duplicates and rank by relevance
     const uniqueSuggestions = deduplicateSuggestions(suggestions);
     const rankedSuggestions = rankSuggestions(uniqueSuggestions, {
@@ -100,7 +100,7 @@ export async function getSmartSuggestions(
       ...(contentType && { contentType }),
       ...(text && { text })
     });
-    
+
     return rankedSuggestions.slice(0, limit);
   } catch (error) {
     logger.error('Failed to get smart suggestions:', error instanceof Error ? error : new Error(String(error)));
@@ -118,14 +118,14 @@ export async function getAutoCompleteSuggestions(
 ): Promise<HashtagSuggestion[]> {
   try {
     if (!query || query.length < 1) return [];
-    
+
     const normalizedQuery = query.toLowerCase().replace(/^#/, '');
-    
+
     // Log for analytics if userId is provided
     if (userId) {
       logger.debug('Auto-complete suggestions requested', { userId, query: normalizedQuery, limit });
     }
-    
+
     // Get hashtags matching the query
     const { data: hashtags, error } = await supabase
       .from('hashtags')
@@ -133,9 +133,9 @@ export async function getAutoCompleteSuggestions(
       .ilike('name', `%${normalizedQuery}%`)
       .order('usage_count', { ascending: false })
       .limit(limit * 2); // Get more to filter and rank
-    
+
     if (error) throw error;
-    
+
     // Convert to suggestions
     const suggestions: HashtagSuggestion[] = (hashtags ?? []).map(hashtag => {
       const row = hashtag as typeof hashtag & { trending_score?: number };
@@ -155,7 +155,7 @@ export async function getAutoCompleteSuggestions(
         }
       };
     });
-    
+
     // Sort by confidence and usage
     const rankedSuggestions = suggestions
       .sort((a, b) => {
@@ -164,7 +164,7 @@ export async function getAutoCompleteSuggestions(
         return (b.confidence ?? 0) - (a.confidence ?? 0);
       })
       .slice(0, limit);
-    
+
     return rankedSuggestions;
   } catch (error) {
     logger.error('Failed to get auto-complete suggestions:', error instanceof Error ? error : new Error(String(error)));
@@ -186,9 +186,9 @@ export async function getRelatedHashtags(
       .select(HASHTAGS_SELECT_COLUMNS)
       .eq('id', hashtagId)
       .single();
-    
+
     if (hashtagError) throw hashtagError;
-    
+
     // Get hashtags from same category
     const { data: categoryHashtags, error: categoryError } = await supabase
       .from('hashtags')
@@ -197,9 +197,9 @@ export async function getRelatedHashtags(
       .neq('id', hashtagId)
       .order('usage_count', { ascending: false })
       .limit(limit);
-    
+
     if (categoryError) throw categoryError;
-    
+
     // Get co-occurring hashtags
     const { data: coOccurring, error: coOccurringError } = await supabase
       .from('hashtag_co_occurrence')
@@ -207,12 +207,12 @@ export async function getRelatedHashtags(
       .eq('hashtag_id', hashtagId)
       .order('co_occurrence_count', { ascending: false })
       .limit(limit);
-    
+
     if (coOccurringError) throw coOccurringError;
-    
+
     // Combine and rank suggestions
     const suggestions: HashtagSuggestion[] = [];
-    
+
     // Add category-based suggestions
     (categoryHashtags ?? []).forEach(relatedHashtag => {
       suggestions.push({
@@ -223,21 +223,23 @@ export async function getRelatedHashtags(
         source: 'similar' as const
       });
     });
-    
+
     // Add co-occurring suggestions
     (coOccurring ?? []).forEach(coOccur => {
       if (coOccur.hashtags && Array.isArray(coOccur.hashtags) && coOccur.hashtags.length > 0) {
         const hashtag = coOccur.hashtags[0];
-        suggestions.push({
-          hashtag,
-          reason: 'related',
-          confidence: Math.min(0.9, coOccur.co_occurrence_count / 100),
-          confidence_score: Math.min(0.9, coOccur.co_occurrence_count / 100),
-          source: 'similar' as const
-        });
+        if (hashtag !== undefined) {
+          suggestions.push({
+            hashtag,
+            reason: 'related',
+            confidence: Math.min(0.9, coOccur.co_occurrence_count / 100),
+            confidence_score: Math.min(0.9, coOccur.co_occurrence_count / 100),
+            source: 'similar' as const
+          });
+        }
       }
     });
-    
+
     // Remove duplicates and rank
     const uniqueSuggestions = deduplicateSuggestions(suggestions);
     return uniqueSuggestions
@@ -265,9 +267,9 @@ export async function getTrendingSuggestions(
       .not('id', 'in', `(${excludeHashtagIds.join(',')})`)
       .order('trending_score', { ascending: false })
       .limit(limit);
-    
+
     if (error) throw error;
-    
+
     return (trending ?? []).map(hashtag => {
       const row = hashtag as typeof hashtag & { trending_score?: number };
       return {
@@ -300,7 +302,7 @@ async function getUserHashtags(userId: string): Promise<string[]> {
     .from('user_hashtags')
     .select('hashtag_id')
     .eq('user_id', userId);
-  
+
   if (error) throw error;
   return data?.map(uh => uh.hashtag_id) ?? [];
 }
@@ -312,10 +314,10 @@ async function getContentBasedSuggestions(
 ): Promise<HashtagSuggestion[]> {
   // Extract keywords from text
   const keywords = extractKeywordsFromText(text);
-  
+
   // Find hashtags related to keywords
   const suggestions: HashtagSuggestion[] = [];
-  
+
   for (const keyword of keywords) {
     const { data: hashtags, error } = await supabase
       .from('hashtags')
@@ -324,9 +326,9 @@ async function getContentBasedSuggestions(
       .not('id', 'in', `(${userHashtags.join(',')})`)
       .order('usage_count', { ascending: false })
       .limit(3);
-    
+
     if (error) continue;
-    
+
     (hashtags ?? []).forEach(hashtag => {
       suggestions.push({
         hashtag: hashtag as Hashtag,
@@ -337,7 +339,7 @@ async function getContentBasedSuggestions(
       });
     });
   }
-  
+
   return suggestions.slice(0, limit);
 }
 
@@ -353,9 +355,9 @@ async function getCategoryBasedSuggestions(
     .not('id', 'in', `(${userHashtags.join(',')})`)
     .order('usage_count', { ascending: false })
     .limit(limit);
-  
+
   if (error) throw error;
-  
+
   return (hashtags ?? []).map(hashtag => {
     const row = hashtag as typeof hashtag & { trending_score?: number };
     return {
@@ -373,7 +375,7 @@ async function getRelatedSuggestions(
   limit: number
 ): Promise<HashtagSuggestion[]> {
   if (userHashtags.length === 0) return [];
-  
+
   // Get co-occurring hashtags for user's hashtags
   const { data: coOccurring, error } = await supabase
     .from('hashtag_co_occurrence')
@@ -382,9 +384,9 @@ async function getRelatedSuggestions(
     .not('related_hashtag_id', 'in', `(${userHashtags.join(',')})`)
     .order('co_occurrence_count', { ascending: false })
     .limit(limit);
-  
+
   if (error) throw error;
-  
+
   return (coOccurring ?? []).flatMap(coOccur => {
     const raw = Array.isArray(coOccur.hashtags) ? coOccur.hashtags[0] : coOccur.hashtags;
     const row = raw as (typeof raw & { trending_score?: number }) | null;
@@ -411,22 +413,22 @@ async function getBehaviorBasedSuggestions(
     .eq('user_id', userId)
     .gte('timestamp', new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString())
     .order('timestamp', { ascending: false });
-  
+
   if (error) throw error;
-  
+
   // Find patterns in user behavior
   const hashtagEngagement = new Map<string, number>();
   (engagement ?? []).forEach(eng => {
     const count = hashtagEngagement.get(eng.hashtag_id) ?? 0;
     hashtagEngagement.set(eng.hashtag_id, count + 1);
   });
-  
+
   // Get suggested hashtags based on behavior
   const suggestions: HashtagSuggestion[] = [];
-  
+
   for (const [hashtagId, engagementCount] of hashtagEngagement) {
     if (userHashtags.includes(hashtagId)) continue;
-    
+
     const { data: hashtag } = await supabase
       .from('hashtags')
       .select(HASHTAGS_SELECT_COLUMNS)
@@ -444,7 +446,7 @@ async function getBehaviorBasedSuggestions(
       });
     }
   }
-  
+
   return suggestions.slice(0, limit);
 }
 
@@ -456,13 +458,13 @@ function extractKeywordsFromText(text: string): string[] {
     .split(/\s+/)
     .filter(word => word.length > 3)
     .filter(word => !STOP_WORDS.has(word));
-  
+
   // Count word frequency
   const wordCount = new Map<string, number>();
   words.forEach(word => {
     wordCount.set(word, (wordCount.get(word) ?? 0) + 1);
   });
-  
+
   // Return top keywords
   return Array.from(wordCount.entries())
     .sort((a, b) => b[1] - a[1])
@@ -473,11 +475,11 @@ function extractKeywordsFromText(text: string): string[] {
 function calculateMatchConfidence(query: string, hashtagName: string): number {
   const queryLower = query.toLowerCase();
   const hashtagLower = hashtagName.toLowerCase();
-  
+
   if (hashtagLower === queryLower) return 1.0;
   if (hashtagLower.startsWith(queryLower)) return 0.9;
   if (hashtagLower.includes(queryLower)) return 0.7;
-  
+
   // Calculate edit distance for fuzzy matching
   const editDistance = calculateEditDistance(queryLower, hashtagLower);
   const maxLength = Math.max(queryLower.length, hashtagLower.length);
@@ -486,7 +488,7 @@ function calculateMatchConfidence(query: string, hashtagName: string): number {
 
 function calculateEditDistance(str1: string, str2: string): number {
   const matrix: number[][] = Array(str2.length + 1).fill(0).map(() => Array(str1.length + 1).fill(0));
-  
+
   for (let i = 0; i <= str1.length; i++) {
     const row = matrix[0];
     if (row) row[i] = i;
@@ -495,7 +497,7 @@ function calculateEditDistance(str1: string, str2: string): number {
     const row = matrix[j];
     if (row) row[0] = j;
   }
-  
+
   for (let j = 1; j <= str2.length; j++) {
     const row = matrix[j];
     if (!row) continue;
@@ -511,7 +513,7 @@ function calculateEditDistance(str1: string, str2: string): number {
       );
     }
   }
-  
+
   return matrix[str2.length]?.[str1.length] ?? 0;
 }
 
@@ -537,17 +539,17 @@ function rankSuggestions(
     // Primary: confidence score
     const confidenceDiff = b.confidence - a.confidence;
     if (Math.abs(confidenceDiff) > 0.1) return confidenceDiff;
-    
+
     // Secondary: usage count
     const usageDiff = (b.hashtag.usage_count ?? 0) - (a.hashtag.usage_count ?? 0);
     if (Math.abs(usageDiff) > 100) return usageDiff;
-    
+
     // Tertiary: trending status
     if (a.hashtag.is_trending !== b.hashtag.is_trending) return a.hashtag.is_trending ? -1 : 1;
-    
+
     // Quaternary: verified status
     if (a.hashtag.is_verified !== b.hashtag.is_verified) return a.hashtag.is_verified ? -1 : 1;
-    
+
     return 0;
   });
 }

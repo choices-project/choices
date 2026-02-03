@@ -190,7 +190,7 @@ export default function VotingInterface({
       }
       notifySuccess(t('polls.voting.notifications.submitted.message') || 'Your vote has been recorded.')
     },
-    [handleVoteResult, notifyError, notifySuccess, onVote]
+    [handleVoteResult, notifyError, notifySuccess, onVote, t]
   );
 
   const onQuadratic = useCallback(
@@ -207,7 +207,7 @@ export default function VotingInterface({
       }
       notifySuccess(t('polls.voting.notifications.submitted.message') || 'Your vote has been recorded.')
     },
-    [handleVoteResult, notifyError, notifySuccess, onVote]
+    [handleVoteResult, notifyError, notifySuccess, onVote, t]
   );
 
   const onRange = useCallback(
@@ -224,7 +224,7 @@ export default function VotingInterface({
       }
       notifySuccess(t('polls.voting.notifications.submitted.message') || 'Your vote has been recorded.')
     },
-    [handleVoteResult, notifyError, notifySuccess, onVote]
+    [handleVoteResult, notifyError, notifySuccess, onVote, t]
   );
 
   const onRanked = useCallback(
@@ -241,7 +241,7 @@ export default function VotingInterface({
       }
       notifySuccess(t('polls.voting.notifications.submitted.message') || 'Your vote has been recorded.')
     },
-    [handleVoteResult, notifyError, notifySuccess, onVote]
+    [handleVoteResult, notifyError, notifySuccess, onVote, t]
   );
 
   const onSingle = useCallback(
@@ -258,7 +258,7 @@ export default function VotingInterface({
       }
       notifySuccess(t('polls.voting.notifications.submitted.message') || 'Your vote has been recorded.')
     },
-    [handleVoteResult, notifyError, notifySuccess, onVote]
+    [handleVoteResult, notifyError, notifySuccess, onVote, t]
   );
 
   const onMultiple = useCallback(
@@ -275,7 +275,7 @@ export default function VotingInterface({
       }
       notifySuccess(t('polls.voting.notifications.submitted.message') || 'Your vote has been recorded.')
     },
-    [handleVoteResult, notifyError, notifySuccess, onVote]
+    [handleVoteResult, notifyError, notifySuccess, onVote, t]
   );
 
   // Calculate time remaining with useCallback for optimization

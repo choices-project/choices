@@ -106,7 +106,7 @@ export default function CreatePollPage() {
           // Store representative_id in wizard data
           actionsRef.current.updateData({ representative_id: repId })
         }
-        
+
         // Only fetch if we don't already have representative data
         if (!representative || representative.id !== repId) {
           setRepresentativeLoading(true)
@@ -132,7 +132,7 @@ export default function CreatePollPage() {
               }
             })
             .catch(err => {
-              logger.error('Failed to fetch representative', { 
+              logger.error('Failed to fetch representative', {
                 error: err instanceof Error ? err.message : String(err),
                 repId,
                 stack: err instanceof Error ? err.stack : undefined
@@ -1286,7 +1286,7 @@ export default function CreatePollPage() {
                       const localDate = new Date(value);
                       handleDataUpdate({ endDate: localDate.toISOString() });
                     } else {
-                      handleDataUpdate({ endDate: undefined });
+                      handleDataUpdate({ endDate: undefined } as unknown as Partial<typeof data>);
                     }
                   }}
                   min={new Date().toISOString().slice(0, 16)}

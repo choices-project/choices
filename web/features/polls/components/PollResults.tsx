@@ -43,10 +43,10 @@ export default function OptimizedPollResults({
 
   const { data: queryData, isLoading: loading, error: queryError, refetch } = usePollResults({
     pollId,
-    userId,
+    ...(userId !== undefined ? { userId } : {}),
     includePrivate,
     pollStatus,
-    autoRefreshInterval,
+    ...(autoRefreshInterval !== undefined ? { autoRefreshInterval } : {}),
     enabled: !!pollId,
   });
 

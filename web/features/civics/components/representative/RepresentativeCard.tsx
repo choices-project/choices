@@ -95,7 +95,7 @@ export function RepresentativeCard({
       ctaLocation: 'card',
       representativeId: representative.id,
     });
-    
+
     try {
       if (onCreatePoll) {
         onCreatePoll(representative);
@@ -158,8 +158,8 @@ export function RepresentativeCard({
   // Sync ref with state to persist across re-renders
   const locationLine = formatRepresentativeLocation({
     state: representative.state,
-    office_city: representative.office_city,
-    district: representative.district,
+    office_city: representative.office_city ?? null,
+    district: representative.district ?? null,
   });
 
   return (
@@ -304,7 +304,7 @@ export function RepresentativeCard({
                 {t('civics.representatives.card.contact.button')}
               </Button>
             </div>
-            
+
             <Button
               variant="outline"
               size="sm"

@@ -143,7 +143,7 @@ export async function canRunAdvancedAnalytics(
       allowed,
       remaining,
       resetDate,
-      reason: allowed ? undefined : `You have used all 3 advanced analytics this week. Reset date: ${resetDate.toLocaleDateString()}`
+      ...(allowed ? {} : { reason: `You have used all 3 advanced analytics this week. Reset date: ${resetDate.toLocaleDateString()}` }),
     };
   } catch (error) {
     logger.error('Error checking rate limit', { userId, pollId, error });

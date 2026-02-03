@@ -176,7 +176,7 @@ export class PromiseFulfillmentService {
         .map((v: { id?: unknown; vote?: string; billId?: string }) => ({
           voteId: String(v.id ?? ''),
           vote: (v.vote ?? 'abstain') as 'yes' | 'no' | 'abstain',
-          billId: v.billId,
+          ...(v.billId !== undefined ? { billId: v.billId } : {}),
           alignment: this.calculateVoteAlignment(v.vote ?? 'abstain', promise.position)
         }));
 
@@ -281,14 +281,14 @@ export class PromiseFulfillmentService {
         },
         actualVote: {
           vote: normalizedVote,
-          date: (actualVote as { date?: string })?.date,
-          alignment
+          alignment,
+          ...((actualVote as { date?: string })?.date !== undefined ? { date: (actualVote as { date?: string }).date } : {}),
         },
         billContext: {
           summary: this.extractSummary(billContent?.content || ''),
-          keyProvisions: billContent ? this.extractKeyProvisions(billContent.content, '') : undefined,
+          ...(billContent ? { keyProvisions: this.extractKeyProvisions(billContent.content, '') } : {}),
           relatedBills: relatedBills.map(b => b.packageId),
-          relatedBillsWithTitles: relatedBills.map(b => ({ packageId: b.packageId, title: b.title }))
+          relatedBillsWithTitles: relatedBills.map(b => ({ packageId: b.packageId, ...(b.title !== undefined ? { title: b.title } : {}) }))
         },
         accountabilityScore,
         lastUpdated: new Date().toISOString()
@@ -408,8 +408,9 @@ export class PromiseFulfillmentService {
   private extractSummary(billText: string): string {
     // Extract first paragraph or first 500 characters
     const paragraphs = billText.split('\n\n').filter(p => p.trim().length > 50);
-    if (paragraphs.length > 0) {
-      return paragraphs[0].substring(0, 500);
+    const first = paragraphs[0];
+    if (first !== undefined) {
+      return first.substring(0, 500);
     }
     return billText.substring(0, 500);
   }

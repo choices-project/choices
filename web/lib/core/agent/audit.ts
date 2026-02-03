@@ -30,11 +30,7 @@ export async function logAgentOperation(
 
     const logEntry: Omit<AgentOperationLog, 'id' | 'createdAt'> = {
       agentId: context.agentId,
-      agentVersion: context.agentVersion,
       operationType: operation.operationType,
-      tableName: operation.tableName,
-      functionName: operation.functionName,
-      userContext: context.userId,
       requestMetadata: {
         ...context.metadata,
         ...operation.metadata,
@@ -42,9 +38,13 @@ export async function logAgentOperation(
         purpose: context.purpose,
       },
       resultStatus: result.status,
-      errorMessage: result.error,
-      rowCount: result.rowCount,
-      duration: result.duration,
+      ...(context.agentVersion !== undefined && { agentVersion: context.agentVersion }),
+      ...(operation.tableName !== undefined && { tableName: operation.tableName }),
+      ...(operation.functionName !== undefined && { functionName: operation.functionName }),
+      ...(context.userId !== undefined && { userContext: context.userId }),
+      ...(result.error !== undefined && { errorMessage: result.error }),
+      ...(result.rowCount !== undefined && { rowCount: result.rowCount }),
+      ...(result.duration !== undefined && { duration: result.duration }),
     }
 
     // Type assertion needed because agent_operations table may not be in generated types yet
@@ -187,30 +187,26 @@ export async function getAgentOperationStats(
   try {
     const operations = await queryAgentOperations({
       agentId,
-      startDate: timeWindow?.start,
-      endDate: timeWindow?.end,
       limit: 10000, // Get enough for stats
+      ...(timeWindow?.start !== undefined && { startDate: timeWindow.start }),
+      ...(timeWindow?.end !== undefined && { endDate: timeWindow.end }),
     })
 
-    const stats = {
+    const durations = operations
+      .filter((op) => op.duration !== undefined && op.duration !== null)
+      .map((op) => op.duration as number)
+    const averageDuration = durations.length > 0
+      ? durations.reduce((sum, d) => sum + d, 0) / durations.length
+      : undefined
+
+    return {
       total: operations.length,
       success: operations.filter((op) => op.resultStatus === 'success').length,
       errors: operations.filter((op) => op.resultStatus === 'error').length,
       rateLimited: operations.filter((op) => op.resultStatus === 'rate_limited').length,
       unauthorized: operations.filter((op) => op.resultStatus === 'unauthorized').length,
-      averageDuration: undefined as number | undefined,
+      ...(averageDuration !== undefined && { averageDuration }),
     }
-
-    const durations = operations
-      .filter((op) => op.duration !== undefined && op.duration !== null)
-      .map((op) => op.duration as number)
-
-    if (durations.length > 0) {
-      stats.averageDuration =
-        durations.reduce((sum, d) => sum + d, 0) / durations.length
-    }
-
-    return stats
   } catch (error) {
     logger.error('Exception getting agent operation stats', {
       error: error instanceof Error ? error.message : String(error),

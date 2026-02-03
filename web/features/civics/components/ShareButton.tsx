@@ -97,7 +97,7 @@ export default function ShareButton({
             await navigator.clipboard.writeText(url);
             setCopied(true);
             setTimeout(() => setCopied(false), 3000);
-            
+
             // Show helpful notification
             notificationActions.addNotification({
               type: 'success',
@@ -142,7 +142,7 @@ export default function ShareButton({
         void trackShare(platform, placement);
       }
     },
-    [socialSharingEnabled, url, title, description, placement, trackShare],
+    [socialSharingEnabled, url, title, description, placement, trackShare, notificationActions],
   );
 
   const handleNativeShare = useCallback(async () => {

@@ -35,7 +35,7 @@ export default function PollShare({ pollId, poll }: PollShareProps) {
       const origin = safeWindow(w => w.location?.origin, '');
       const url = `${origin}/polls/${pollId}`;
       setPollUrl(url);
-      
+
       // Generate QR code
       try {
         const qrDataUrl = await QRCode.toDataURL(url, {
@@ -93,7 +93,7 @@ export default function PollShare({ pollId, poll }: PollShareProps) {
       devLog('QR code not available for download', {})
       return
     }
-    
+
     try {
       const { safeDocument } = await import('@/lib/utils/ssr-safe');
       const link = safeDocument(d => d.createElement?.('a')) as HTMLAnchorElement;
@@ -101,7 +101,7 @@ export default function PollShare({ pollId, poll }: PollShareProps) {
         devLog('Link element not available')
         return
       }
-      
+
       link.href = qrCodeDataUrl
       link.download = `poll-${pollId}-qr-code.png`
       link.click()
@@ -127,7 +127,7 @@ export default function PollShare({ pollId, poll }: PollShareProps) {
 
   const handleSocialShare = useCallback(async (platform: string) => {
     if (!socialSharingEnabled) return
-    
+
     if (platform === 'instagram') {
       // Instagram doesn't support direct web sharing to stories/posts
       // Best approach: Copy link and show helpful notification
@@ -138,7 +138,7 @@ export default function PollShare({ pollId, poll }: PollShareProps) {
           await clipboard.writeText(pollUrl);
           setCopied(true);
           setTimeout(() => setCopied(false), 3000);
-          
+
           // Show helpful notification
           notificationActions.addNotification({
             type: 'success',
@@ -161,10 +161,10 @@ export default function PollShare({ pollId, poll }: PollShareProps) {
       void trackShare(platform, 'poll_share_social');
       return;
     }
-    
+
     const encodedUrl = encodeURIComponent(pollUrl)
     const encodedTitle = encodeURIComponent(pollTitle)
-    
+
     let shareUrl = ''
     switch (platform) {
       case 'twitter':
@@ -180,19 +180,19 @@ export default function PollShare({ pollId, poll }: PollShareProps) {
         shareUrl = `mailto:?subject=${encodedTitle}&body=${encodeURIComponent(t('polls.share.emailBody', { url: pollUrl }))}`
         break
     }
-    
+
     if (shareUrl) {
       window.open(shareUrl, 'blank', 'width=600,height=400')
       void trackShare(platform, 'poll_share_social');
     }
-  }, [socialSharingEnabled, pollUrl, pollTitle, t, trackShare])
+  }, [socialSharingEnabled, pollUrl, pollTitle, t, trackShare, notificationActions])
 
   return (
     <div className="space-y-6">
       {/* Share Options */}
       <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
         <h3 className="text-xl font-semibold text-gray-900 mb-4">{t('polls.share.title')}</h3>
-        
+
         {/* Direct Link */}
         <div className="mb-6">
           <label htmlFor="poll-share-url-input" className="block text-sm font-medium text-gray-700 mb-2">
@@ -227,7 +227,7 @@ export default function PollShare({ pollId, poll }: PollShareProps) {
               <Twitter className="w-5 h-5" />
               <span className="text-sm font-medium">{t('polls.share.social.twitter')}</span>
             </button>
-            
+
             <button
               onClick={() => handleSocialShare('facebook')}
               className="flex items-center justify-center space-x-2 p-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
@@ -235,7 +235,7 @@ export default function PollShare({ pollId, poll }: PollShareProps) {
               <Facebook className="w-5 h-5" />
               <span className="text-sm font-medium">{t('polls.share.social.facebook')}</span>
             </button>
-            
+
             <button
               onClick={() => handleSocialShare('linkedin')}
               className="flex items-center justify-center space-x-2 p-3 bg-blue-700 text-white rounded-lg hover:bg-blue-800 transition-colors"
@@ -243,7 +243,7 @@ export default function PollShare({ pollId, poll }: PollShareProps) {
               <Linkedin className="w-5 h-5" />
               <span className="text-sm font-medium">{t('polls.share.social.linkedin')}</span>
             </button>
-            
+
             <button
               onClick={() => handleSocialShare('email')}
               className="flex items-center justify-center space-x-2 p-3 bg-gray-600 text-white rounded-lg hover:bg-gray-700 transition-colors"
@@ -251,7 +251,7 @@ export default function PollShare({ pollId, poll }: PollShareProps) {
               <Mail className="w-5 h-5" />
               <span className="text-sm font-medium">{t('polls.share.social.email')}</span>
             </button>
-            
+
             <button
               onClick={() => handleSocialShare('instagram')}
               className="flex items-center justify-center space-x-2 p-3 bg-gradient-to-r from-purple-500 to-pink-500 text-white rounded-lg hover:from-purple-600 hover:to-pink-600 transition-colors"
@@ -288,15 +288,15 @@ export default function PollShare({ pollId, poll }: PollShareProps) {
             <span className="text-sm font-medium">{showQR ? t('polls.share.qrCode.hide') : t('polls.share.qrCode.show')}</span>
           </button>
         </div>
-        
+
         {showQR && (
           <div className="text-center">
             <div className="inline-block p-4 bg-gray-100 rounded-lg">
               <div className="w-48 h-48 bg-white border-2 border-gray-300 rounded-lg flex items-center justify-center">
                 {qrCodeDataUrl ? (
-                  <Image 
-                    src={qrCodeDataUrl} 
-                    alt={t('polls.share.qrCode.alt')} 
+                  <Image
+                    src={qrCodeDataUrl}
+                    alt={t('polls.share.qrCode.alt')}
                     width={192}
                     height={192}
                     className="w-full h-full object-contain"
@@ -335,7 +335,7 @@ export default function PollShare({ pollId, poll }: PollShareProps) {
       {/* Embed Options */}
       <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
         <h3 className="text-lg font-semibold text-gray-900 mb-4">{t('polls.share.embed.title')}</h3>
-        
+
         <div className="space-y-3">
           <div>
             <label htmlFor="embed-code-textarea" className="block text-sm font-medium text-gray-700 mb-2">
@@ -350,7 +350,7 @@ export default function PollShare({ pollId, poll }: PollShareProps) {
               aria-label={t('polls.share.embed.codeLabel')}
             />
           </div>
-          
+
           <button
             onClick={() => {
               void navigator.clipboard.writeText(`<iframe src="${pollUrl}/embed" width="100%" height="600" frameborder="0"></iframe>`)
