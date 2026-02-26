@@ -23,7 +23,37 @@ Object.defineProperty(global, 'crypto', {
   }
 });
 
-// Mock Supabase client
+// Mock Supabase client - must include all chainable Postgrest methods (order, limit, gte, lte, etc.)
+// used by lib/core/agent/audit, API routes, and other code. Omitting any method causes "X is not a function".
+const createChainableQueryBuilder = () => {
+  const result = { data: [], error: null };
+  const chain = jest.fn().mockImplementation(function () { return this; });
+  return {
+    select: chain,
+    insert: chain,
+    update: chain,
+    upsert: chain,
+    delete: chain,
+    eq: chain,
+    neq: chain,
+    gt: chain,
+    gte: chain,
+    lt: chain,
+    lte: chain,
+    like: chain,
+    ilike: chain,
+    is: chain,
+    in: chain,
+    order: chain,
+    limit: chain,
+    range: chain,
+    single: jest.fn().mockResolvedValue(result),
+    maybeSingle: jest.fn().mockResolvedValue(result),
+    then: (resolve) => Promise.resolve(result).then(resolve),
+    catch: (reject) => Promise.resolve(result).catch(reject),
+  };
+};
+
 jest.mock('@supabase/supabase-js', () => ({
   createClient: jest.fn(() => ({
     auth: {
@@ -34,15 +64,7 @@ jest.mock('@supabase/supabase-js', () => ({
       signOut: jest.fn().mockResolvedValue({ error: null }),
       onAuthStateChange: jest.fn().mockReturnValue({ data: { subscription: { unsubscribe: jest.fn() } } })
     },
-    from: jest.fn(() => ({
-      select: jest.fn().mockReturnThis(),
-      insert: jest.fn().mockReturnThis(),
-      update: jest.fn().mockReturnThis(),
-      delete: jest.fn().mockReturnThis(),
-      eq: jest.fn().mockReturnThis(),
-      single: jest.fn().mockResolvedValue({ data: null, error: null }),
-      then: jest.fn().mockResolvedValue({ data: [], error: null })
-    })),
+    from: jest.fn(() => createChainableQueryBuilder()),
     rpc: jest.fn().mockResolvedValue({ data: null, error: null })
   }))
 }));

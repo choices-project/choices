@@ -10,7 +10,8 @@ import { describe, it, expect, beforeAll, afterAll } from '@jest/globals'
 import { getSupabaseAgentClient, getAnalyticsAgentClient } from '@/utils/supabase/agent'
 import { queryAgentOperations, getAgentOperationStats } from '@/lib/core/agent/audit'
 
-// Skip integration tests if test database is not configured
+// Skip integration tests only when no Supabase URL is configured
+// (With Jest's Supabase mock, tests run against mocked client - no real DB needed)
 const SKIP_INTEGRATION = !process.env.NEXT_PUBLIC_SUPABASE_URL ||
                          process.env.NEXT_PUBLIC_SUPABASE_URL.includes('example')
 
@@ -58,11 +59,8 @@ describeTest('Agent Operations Integration', () => {
         enableAudit: true,
       })
 
-      // Perform a simple SELECT operation
-      const { error } = await agent.client
-        .from('polls')
-        .select('id')
-        .limit(1)
+      // Perform a simple SELECT operation (agent wrapper returns Promise from select, no chaining)
+      const { error } = await agent.client.from('polls').select('id')
 
       // Operation should succeed (or fail gracefully if no data)
       expect(error).toBeNull() // Or handle gracefully if table doesn't exist in test DB
@@ -92,10 +90,7 @@ describeTest('Agent Operations Integration', () => {
       })
 
       // Try to select from a non-existent table
-      const { error } = await agent.client
-        .from('non_existent_table_xyz')
-        .select('*')
-        .limit(1)
+      const { error } = await agent.client.from('non_existent_table_xyz').select('*')
 
       // Should handle error gracefully
       if (error) {
@@ -175,26 +170,17 @@ describeTest('Agent Operations Integration', () => {
       })
 
       // First request should succeed
-      const { error: error1 } = await agent.client
-        .from('polls')
-        .select('id')
-        .limit(1)
+      const { error: error1 } = await agent.client.from('polls').select('id')
 
       expect(error1).toBeNull()
 
       // Second request should succeed
-      const { error: error2 } = await agent.client
-        .from('polls')
-        .select('id')
-        .limit(1)
+      const { error: error2 } = await agent.client.from('polls').select('id')
 
       expect(error2).toBeNull()
 
       // Third request might hit rate limit (depending on timing)
-      const { error: error3 } = await agent.client
-        .from('polls')
-        .select('id')
-        .limit(1)
+      const { error: error3 } = await agent.client.from('polls').select('id')
 
       // Either succeeds or rate limited
       if (error3) {

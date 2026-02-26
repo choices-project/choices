@@ -52,8 +52,8 @@ jest.mock('@/lib/core/agent/audit', () => ({
   })),
 }))
 
-// Mock rate limiter
-jest.mock('@/lib/core/auth/server-actions', () => ({
+// Mock rate limiter (agent imports from api-rate-limiter)
+jest.mock('@/lib/rate-limiting/api-rate-limiter', () => ({
   apiRateLimiter: {
     checkLimit: jest.fn(() => Promise.resolve({
       allowed: true,
@@ -172,7 +172,6 @@ describe('Agent Client', () => {
       const { data, error } = await agent.client
         .from('polls')
         .select('*')
-        .limit(1)
 
       expect(data).toBeDefined()
       expect(error).toBeNull()
@@ -241,7 +240,7 @@ describe('Agent Client', () => {
 
   describe('Rate Limiting', () => {
     it('should respect rate limits', async () => {
-      const { apiRateLimiter } = require('@/lib/core/auth/server-actions')
+      const { apiRateLimiter } = require('@/lib/rate-limiting/api-rate-limiter')
       apiRateLimiter.checkLimit.mockReturnValueOnce(Promise.resolve({
         allowed: false,
         totalHits: 100,
