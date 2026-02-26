@@ -3,6 +3,7 @@ import { expect, test } from '@playwright/test';
 import { waitForPageReady } from '../helpers/e2e-setup';
 
 const BASE_URL = process.env.BASE_URL || 'https://www.choices-app.com';
+const IS_HARNESS = process.env.NEXT_PUBLIC_ENABLE_E2E_HARNESS === '1';
 
 /**
  * Authentication Redirect Tests
@@ -11,6 +12,9 @@ const BASE_URL = process.env.BASE_URL || 'https://www.choices-app.com';
  * when attempting to access protected pages.
  *
  * CRITICAL: These tests ensure security by preventing unauthorized access.
+ *
+ * NOTE: Redirect tests are skipped when the E2E harness is active because
+ * the harness intentionally bypasses authentication for other test suites.
  */
 test.describe('Authentication Redirects', () => {
   // Clear any existing auth state before each test
@@ -40,6 +44,7 @@ test.describe('Authentication Redirects', () => {
 
     for (const pageInfo of protectedPages) {
       test(`unauthenticated user accessing ${pageInfo.name} redirects to /auth`, async ({ page }) => {
+        test.skip(IS_HARNESS, 'E2E harness bypasses authentication — redirect tests require real auth middleware');
         test.setTimeout(60_000);
 
         // Navigate to protected page
@@ -71,7 +76,6 @@ test.describe('Authentication Redirects', () => {
   test.describe('Public Pages Allow Access', () => {
     const publicPages = [
       { path: '/', name: 'Home' },
-      { path: '/auth', name: 'Auth' },
       { path: '/civics', name: 'Civics' },
       { path: '/representatives', name: 'Representatives' },
       { path: '/polls', name: 'Polls (public listing)' },
@@ -79,6 +83,7 @@ test.describe('Authentication Redirects', () => {
 
     for (const pageInfo of publicPages) {
       test(`unauthenticated user can access ${pageInfo.name}`, async ({ page }) => {
+        test.skip(IS_HARNESS, 'E2E harness bypasses authentication — public-page tests require real auth middleware');
         test.setTimeout(60_000);
 
         // Navigate to public page

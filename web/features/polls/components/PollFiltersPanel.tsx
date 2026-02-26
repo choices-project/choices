@@ -339,7 +339,7 @@ export function PollFiltersPanel({ actions }: PollFiltersPanelProps) {
         <div className="mt-4 rounded-lg border border-blue-100 bg-gradient-to-r from-blue-50 to-indigo-50 p-4">
           <div className="mb-3 flex items-center gap-2">
             <Flame className="h-5 w-5 text-orange-500" />
-            <h3 className="text-sm font-semibold text-gray-900">{trendingHeading}</h3>
+            <h2 className="text-sm font-semibold text-gray-900">{trendingHeading}</h2>
           </div>
           <div className="mb-2 flex items-center text-sm text-gray-600">
             <BarChart3 className="mr-2 h-4 w-4" />

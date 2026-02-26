@@ -24,8 +24,7 @@
     "web/types/**/*",
     "web/utils/**/*",
     "web/middleware.ts",
-    "web/next.config.js",
-    "scripts/**/*"
+    "web/next.config.js"
   ],
   "exclude": [
     "**/*.test.ts",

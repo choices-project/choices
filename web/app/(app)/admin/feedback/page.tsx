@@ -348,7 +348,7 @@ export default function AdminFeedbackPage() {
     <ErrorBoundary
       fallback={
         <div className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg p-6 m-8">
-          <h3 className="text-lg font-medium text-red-800 dark:text-red-300">Feedback Page Error</h3>
+          <h1 className="text-lg font-medium text-red-800 dark:text-red-300">Feedback Page Error</h1>
           <p className="text-red-600 dark:text-red-400 mt-2">
             An error occurred while loading the feedback page. Please try refreshing the page.
           </p>

@@ -18,9 +18,14 @@ import { createNextRequest } from '@/tests/contracts/helpers/request';
 import type { getSupabaseServerClient } from '@/utils/supabase/server';
 
 // Mock dependencies
-jest.mock('@/lib/core/feature-flags', () => ({
-  isFeatureEnabled: jest.fn(() => true),
-}));
+jest.mock('@/lib/core/feature-flags', () => {
+  const mockIsFeatureEnabled = jest.fn(() => true);
+  return {
+    __esModule: true,
+    isFeatureEnabled: mockIsFeatureEnabled,
+    getFeatureFlag: mockIsFeatureEnabled,
+  };
+});
 
 jest.mock('@/lib/rate-limiting/api-rate-limiter', () => ({
   apiRateLimiter: {
@@ -94,6 +99,10 @@ describe('Civic Actions API', () => {
     featureFlagsMock.isFeatureEnabled.mockReturnValue(true);
     mockSupabaseClient = createMockSupabaseClient();
     mockSupabase.getSupabaseServerClient.mockResolvedValue(mockSupabaseClient);
+    const featureFlags = jest.requireMock('@/lib/core/feature-flags') as {
+      isFeatureEnabled: jest.Mock;
+    };
+    featureFlags.isFeatureEnabled.mockReturnValue(true);
   });
 
   describe('GET /api/civic-actions', () => {

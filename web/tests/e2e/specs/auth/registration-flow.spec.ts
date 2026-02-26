@@ -95,6 +95,10 @@ test.describe('Registration Flow', () => {
 
   test.describe('Registration Success Flow', () => {
     test('user can register and profile is created (CRITICAL: Verifies RLS fix)', async ({ page }) => {
+      test.skip(
+        process.env.PLAYWRIGHT_USE_MOCKS === '1',
+        'Registration requires a real Supabase backend — skipped in mock mode',
+      );
       test.setTimeout(120_000);
 
       // Create unique test user

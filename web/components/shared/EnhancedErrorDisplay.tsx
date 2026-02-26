@@ -92,9 +92,9 @@ export function EnhancedErrorDisplay({
         <AlertCircle className={`h-5 w-5 flex-shrink-0 mt-0.5 ${styles.icon}`} aria-hidden="true" />
         <div className="flex-1 min-w-0">
           {title && (
-            <h3 className={`font-semibold mb-1 ${styles.title}`}>
+            <p className={`font-semibold mb-1 ${styles.title}`}>
               {title}
-            </h3>
+            </p>
           )}
           <p className={`text-sm mb-2 ${styles.text}`}>
             {message}

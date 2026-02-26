@@ -1,9 +1,7 @@
 /**
  * Agent Client Unit Tests
  *
- * Tests for the Supabase agent client utility.
- * Uses node environment because getSupabaseAgentClient asserts server-only (no window).
- *
+ * Tests for the Supabase agent client utility
  * @jest-environment node
  */
 
@@ -12,25 +10,32 @@ import { getSupabaseAgentClient, getAnalyticsAgentClient, getIntegrityAgentClien
 import { createAgentContext, validateAgentContext, enrichAgentContext } from '@/lib/core/agent/context'
 import { logAgentOperation, queryAgentOperations, getAgentOperationStats } from '@/lib/core/agent/audit'
 
-// Mock the Supabase clients
+// Mock the Supabase clients with chainable query builder
+const createChainableBuilder = () => {
+  const result = { data: [] as any[], error: null };
+  const builder: any = {
+    select: jest.fn(() => builder),
+    insert: jest.fn(() => builder),
+    update: jest.fn(() => builder),
+    upsert: jest.fn(() => builder),
+    delete: jest.fn(() => builder),
+    eq: jest.fn(() => builder),
+    neq: jest.fn(() => builder),
+    limit: jest.fn(() => builder),
+    order: jest.fn(() => builder),
+    single: jest.fn(() => Promise.resolve(result)),
+    maybeSingle: jest.fn(() => Promise.resolve(result)),
+    then: (resolve: (v: any) => void) => Promise.resolve(result).then(resolve),
+  };
+  return builder;
+};
+
 jest.mock('@/utils/supabase/server', () => ({
   getSupabaseAdminClient: jest.fn(() => Promise.resolve({
-    from: jest.fn(() => ({
-      select: jest.fn(() => Promise.resolve({ data: [], error: null })),
-      insert: jest.fn(() => Promise.resolve({ data: [], error: null })),
-      update: jest.fn(() => Promise.resolve({ data: [], error: null })),
-      upsert: jest.fn(() => Promise.resolve({ data: [], error: null })),
-      delete: jest.fn(() => Promise.resolve({ data: [], error: null })),
-    })),
+    from: jest.fn(() => createChainableBuilder()),
   })),
   getSupabaseServerClient: jest.fn(() => Promise.resolve({
-    from: jest.fn(() => ({
-      select: jest.fn(() => Promise.resolve({ data: [], error: null })),
-      insert: jest.fn(() => Promise.resolve({ data: [], error: null })),
-      update: jest.fn(() => Promise.resolve({ data: [], error: null })),
-      upsert: jest.fn(() => Promise.resolve({ data: [], error: null })),
-      delete: jest.fn(() => Promise.resolve({ data: [], error: null })),
-    })),
+    from: jest.fn(() => createChainableBuilder()),
   })),
 }))
 
@@ -47,7 +52,7 @@ jest.mock('@/lib/core/agent/audit', () => ({
   })),
 }))
 
-// Mock rate limiter (agent uses api-rate-limiter, not server-actions)
+// Mock rate limiter (agent imports from api-rate-limiter)
 jest.mock('@/lib/rate-limiting/api-rate-limiter', () => ({
   apiRateLimiter: {
     checkLimit: jest.fn(() => Promise.resolve({
@@ -152,7 +157,7 @@ describe('Agent Client', () => {
       expect(agent).toBeDefined()
       expect(agent.context.agentId).toBe('user-agent')
       expect(agent.context.userId).toBe('user-123')
-      expect(agent.context.metadata?.useServiceRole).toBe(false)
+      expect(agent.context.useServiceRole).toBeFalsy()
     })
   })
 
@@ -164,8 +169,9 @@ describe('Agent Client', () => {
         enableAudit: true,
       })
 
-      // Agent wraps select as async; chain ends at select (no limit/order)
-      const { data, error } = await agent.client.from('polls').select('*')
+      const { data, error } = await agent.client
+        .from('polls')
+        .select('*')
 
       expect(data).toBeDefined()
       expect(error).toBeNull()
@@ -173,17 +179,12 @@ describe('Agent Client', () => {
 
     it('should handle errors and log them', async () => {
       const { getSupabaseAdminClient } = require('@/utils/supabase/server')
-      const noop = jest.fn(() => Promise.resolve({ data: null, error: null }))
       getSupabaseAdminClient.mockReturnValueOnce(Promise.resolve({
         from: jest.fn(() => ({
           select: jest.fn(() => Promise.resolve({
             data: null,
             error: { message: 'Test error', code: 'TEST_ERROR' },
           })),
-          insert: noop,
-          update: noop,
-          upsert: noop,
-          delete: noop,
         })),
       }))
 

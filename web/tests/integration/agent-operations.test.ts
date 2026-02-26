@@ -1,9 +1,8 @@
 /**
  * Agent Operations Integration Tests
  *
- * Integration tests for agent operations with Supabase.
- * Uses node environment because getSupabaseAgentClient asserts server-only (no window).
- *
+ * Integration tests for agent operations with Supabase
+ * These tests require a test database connection
  * @jest-environment node
  */
 
@@ -11,14 +10,12 @@ import { describe, it, expect, beforeAll, afterAll } from '@jest/globals'
 import { getSupabaseAgentClient, getAnalyticsAgentClient } from '@/utils/supabase/agent'
 import { queryAgentOperations, getAgentOperationStats } from '@/lib/core/agent/audit'
 
-// Skip integration tests unless explicitly opted in (requires real Supabase + RUN_AGENT_INTEGRATION=true)
-// These tests hit a real DB and can timeout in CI; run locally with: RUN_AGENT_INTEGRATION=true npm test
-const SKIP_INTEGRATION =
-  process.env.RUN_AGENT_INTEGRATION !== 'true' ||
-  !process.env.NEXT_PUBLIC_SUPABASE_URL ||
-  process.env.NEXT_PUBLIC_SUPABASE_URL.includes('example')
+// Skip integration tests only when no Supabase URL is configured
+// (With Jest's Supabase mock, tests run against mocked client - no real DB needed)
+const SKIP_INTEGRATION = !process.env.NEXT_PUBLIC_SUPABASE_URL ||
+                         process.env.NEXT_PUBLIC_SUPABASE_URL.includes('example')
 
-const describeTest = SKIP_INTEGRATION ? describe.skip : describe
+const describeTest = SKIP_INTEGRATION ? describe.skip : describe;
 describeTest('Agent Operations Integration', () => {
   let testAgentId: string
 
@@ -62,7 +59,7 @@ describeTest('Agent Operations Integration', () => {
         enableAudit: true,
       })
 
-      // Perform a simple SELECT operation (agent wraps select as async; no limit chain)
+      // Perform a simple SELECT operation (agent wrapper returns Promise from select, no chaining)
       const { error } = await agent.client.from('polls').select('id')
 
       // Operation should succeed (or fail gracefully if no data)

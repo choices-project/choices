@@ -204,8 +204,8 @@ export default function UserManagement({ onUserUpdate, onUserDelete }: UserManag
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
           </svg>
           <div>
-            <h3 className="text-lg font-medium text-red-800 dark:text-red-300">Error Loading Users</h3>
-            <p className="text-red-600 dark:text-red-400">{error}</p>
+            <h1 className="text-lg font-medium text-red-800 dark:text-red-300">Error Loading Users</h1>
+            <p className="text-red-700 dark:text-red-400">{error}</p>
             <button
               onClick={() => {
                 hasLoadedRef.current = false;
@@ -230,7 +230,7 @@ export default function UserManagement({ onUserUpdate, onUserDelete }: UserManag
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z" />
           </svg>
           <div>
-            <h3 className="text-lg font-medium text-yellow-800 dark:text-yellow-300">Too Many Users</h3>
+            <h1 className="text-lg font-medium text-yellow-800 dark:text-yellow-300">Too Many Users</h1>
             <p className="text-yellow-600 dark:text-yellow-400">
               There are {filteredUsers.length} users matching your filters. Please refine your search to view results. Only the first 100 users are displayed.
             </p>
@@ -244,7 +244,7 @@ export default function UserManagement({ onUserUpdate, onUserDelete }: UserManag
     <div className="space-y-6" data-testid="user-management">
       {/* Header */}
       <div className="flex items-center justify-between">
-        <h2 className="text-2xl font-bold text-gray-900 dark:text-gray-100" data-testid="user-management-title">User Management</h2>
+        <h1 className="text-2xl font-bold text-gray-900 dark:text-gray-100" data-testid="user-management-title">User Management</h1>
         <div className="flex items-center space-x-4">
           <span className="text-sm text-gray-600 dark:text-gray-400">
             {visibleUsers.length} of {filteredUsers.length} shown ({totalUsers} total)
@@ -463,7 +463,7 @@ export default function UserManagement({ onUserUpdate, onUserDelete }: UserManag
           <svg className="mx-auto h-12 w-12 text-gray-400 dark:text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197m13.5-9a2.5 2.5 0 11-5 0 2.5 2.5 0 015 0z" />
           </svg>
-          <h3 className="mt-2 text-sm font-medium text-gray-900 dark:text-gray-100">No users found</h3>
+          <h2 className="mt-2 text-sm font-medium text-gray-900 dark:text-gray-100">No users found</h2>
           <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">
             Try adjusting your search or filter criteria.
           </p>

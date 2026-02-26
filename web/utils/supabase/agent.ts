@@ -155,24 +155,21 @@ function wrapTableWithAudit(
   context: AgentContext,
   options: AgentClientOptions
 ): any {
-  const operations: Record<string, Function | undefined> = {
-    select: table.select?.bind(table),
-    insert: table.insert?.bind(table),
-    update: table.update?.bind(table),
-    upsert: table.upsert?.bind(table),
-    delete: table.delete?.bind(table),
+  const operations: Record<string, Function> = {}
+  for (const opName of ['select', 'insert', 'update', 'upsert', 'delete'] as const) {
+    const fn = table[opName]
+    if (typeof fn === 'function') {
+      operations[opName] = fn.bind(table)
+    }
   }
 
-  // Wrap each operation
   const wrapped: any = {}
 
   for (const [opName, opFn] of Object.entries(operations)) {
-    if (!opFn) continue
     wrapped[opName] = async (...args: any[]) => {
       const startTime = Date.now()
       const operationType = mapOperationType(opName)
 
-      // Check rate limiting if configured
       if (options.rateLimit) {
         const rateLimitKey = `agent:${context.agentId}:${tableName}:${operationType}`
         const rateLimitResult = await apiRateLimiter.checkLimit(
@@ -204,24 +201,16 @@ function wrapTableWithAudit(
       }
 
       try {
-        // Execute the operation
         const result = await opFn(...args)
         const duration = Date.now() - startTime
 
-        // Determine result status
         const status: ResultStatus = result.error ? 'error' : 'success'
 
-        // Extract row count if available
         let rowCount: number | undefined
         if (result.data) {
-          if (Array.isArray(result.data)) {
-            rowCount = result.data.length
-          } else if (result.data && typeof result.data === 'object') {
-            rowCount = 1
-          }
+          rowCount = Array.isArray(result.data) ? result.data.length : 1
         }
 
-        // Log the operation
         if (options.enableAudit !== false) {
           await logAgentOperation(
             context,
@@ -242,21 +231,12 @@ function wrapTableWithAudit(
           )
         }
 
-        // Log errors
         if (result.error) {
           logger.error('Agent operation error', {
             agentId: context.agentId,
             operationType,
             tableName,
             error: result.error.message,
-            duration,
-          })
-        } else {
-          logger.debug('Agent operation completed', {
-            agentId: context.agentId,
-            operationType,
-            tableName,
-            rowCount,
             duration,
           })
         }
@@ -266,7 +246,6 @@ function wrapTableWithAudit(
         const duration = Date.now() - startTime
         const errorMessage = error instanceof Error ? error.message : String(error)
 
-        // Log the error
         if (options.enableAudit !== false) {
           await logAgentOperation(
             context,

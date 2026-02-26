@@ -2,13 +2,11 @@ import { test, expect } from '@playwright/test';
 import { loginTestUser, getE2EUserCredentials } from '../helpers/e2e-setup';
 
 test.describe('Poll Creation Flow', () => {
+  const credentials = getE2EUserCredentials();
+
   test.beforeEach(async ({ page }) => {
-    // Login before each test
-    const credentials = getE2EUserCredentials();
-    if (!credentials) {
-      throw new Error('E2E_USER_EMAIL and E2E_USER_PASSWORD must be set');
-    }
-    await loginTestUser(page, credentials);
+    test.skip(!credentials, 'E2E_USER_EMAIL and E2E_USER_PASSWORD must be set');
+    await loginTestUser(page, credentials!);
     await page.goto('/polls/create');
     await page.waitForLoadState('networkidle');
   });
