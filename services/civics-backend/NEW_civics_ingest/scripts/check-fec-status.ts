@@ -5,7 +5,8 @@
  * Usage:
  *   npm run tools:check:fec-status
  */
-import 'dotenv/config';
+import { loadEnv } from '../utils/load-env.js';
+loadEnv();
 
 import { getSupabaseClient } from '../clients/supabase.js';
 

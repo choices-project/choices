@@ -20,6 +20,9 @@ import React, { useMemo, useState, useEffect, useCallback } from 'react';
 
 import type { SuperiorRepresentativeData } from '@/features/civics/lib/types/superior-types';
 
+import { EnhancedEmptyState } from '@/components/shared/EnhancedEmptyState';
+import { EnhancedErrorDisplay } from '@/components/shared/EnhancedErrorDisplay';
+
 import { useIsMobile, useAppActions } from '@/lib/stores/appStore';
 import { logger } from '@/lib/utils/logger';
 
@@ -650,47 +653,32 @@ export default function Civics2Page() {
                 </div>
               </div>
             ) : errorMessage ? (
-              <div className="flex items-center justify-center py-12" role="alert" aria-live="assertive">
-                <div className="bg-white dark:bg-gray-800 rounded-2xl border border-red-200 dark:border-red-800 p-6 max-w-lg text-center">
-                  <h2 className="text-lg font-semibold text-red-700 dark:text-red-400 mb-2">We hit a snag</h2>
-                  <p className="text-sm text-red-600 dark:text-red-400 mb-4">{errorMessage}</p>
-                  <button
-                    type="button"
-                    onClick={() => void loadRepresentatives(false)}
-                    className="bg-red-600 dark:bg-red-700 text-white px-4 py-2 rounded-lg hover:bg-red-700 dark:hover:bg-red-600 transition-colors"
-                  >
-                    Try again
-                  </button>
-                </div>
+              <div className="flex items-center justify-center py-12">
+                <EnhancedErrorDisplay
+                  title="We hit a snag"
+                  message={errorMessage}
+                  canRetry
+                  onRetry={() => void loadRepresentatives(false)}
+                  primaryAction={{
+                    label: 'Try again',
+                    onClick: () => void loadRepresentatives(false),
+                  }}
+                />
               </div>
             ) : filteredRepresentatives.length === 0 ? (
-              <div className="flex items-center justify-center py-16" role="status" aria-live="polite">
-                <div className="text-center max-w-md">
-                  <div className="w-24 h-24 bg-gradient-to-br from-blue-100 to-indigo-100 dark:from-blue-900 dark:to-indigo-900 rounded-full flex items-center justify-center mx-auto mb-6">
-                    <svg className="w-12 h-12 text-blue-500 dark:text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 0 0 9.288 0M15 7a3 3 0 1 1-6 0 3 3 0 0 1 6 0zm6 3a2 2 0 1 1-4 0 2 2 0 0 1 4 0Zm-13.5 0a2 2 0 1 1-4.5 0 2 2 0 0 1 4.5 0Z" />
-                    </svg>
-                  </div>
-                  <h2 className="text-xl font-semibold text-gray-900 dark:text-gray-100 mb-3">No representatives found</h2>
-                  <p className="text-gray-600 dark:text-gray-400 mb-6">Try adjusting your search criteria or check back later for updated information.</p>
-                  <div className="flex flex-col sm:flex-row gap-3 justify-center">
-                    <button
-                      type="button"
-                      onClick={() => setSearchQuery('')}
-                      className="bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 px-6 py-2 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
-                    >
-                      Clear search
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => void loadRepresentatives(false)}
-                      className="bg-blue-600 dark:bg-blue-700 text-white px-6 py-2 rounded-lg hover:bg-blue-700 dark:hover:bg-blue-600 transition-colors"
-                    >
-                      Try again
-                    </button>
-                  </div>
-                </div>
-              </div>
+              <EnhancedEmptyState
+                icon={<UserGroupIcon className="h-12 w-12 text-blue-500 dark:text-blue-400" />}
+                title="No representatives found"
+                description="Try adjusting your search criteria or check back later for updated information."
+                primaryAction={{
+                  label: 'Try again',
+                  onClick: () => void loadRepresentatives(false),
+                }}
+                secondaryAction={{
+                  label: 'Clear search',
+                  onClick: () => setSearchQuery(''),
+                }}
+              />
             ) : (
               <div className="space-y-8">
                 {/* Results Header */}

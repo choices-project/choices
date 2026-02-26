@@ -52,7 +52,7 @@ From FEC. One row per representative (unique on `representative_id`).
 | top_contributors | jsonb |
 
 ### `representative_contacts`
-Contact_type: `email` | `phone` | `address` | `fax`. Unique: `(representative_id, contact_type)`.
+Contact_type: `email` | `phone` | `address` | `fax`. Unique: `(representative_id, contact_type)`. User submissions: `submitted_by_user_id`, `rejected_at`, `rejection_reason` (migration `20260224000000`).
 
 ### `representative_social_media`
 Platform, handle, url. From YAML.

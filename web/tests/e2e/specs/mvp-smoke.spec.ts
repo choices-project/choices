@@ -47,6 +47,8 @@ test.describe('@smoke MVP core pages', () => {
       'h1:has-text("Poll Analytics")',
       'text=Please log in to view poll analytics.',
       'text=No analytics data available yet.',
+      'text=Poll analytics are currently available to admins only.',
+      'text=Loading analytics data...',
       '[data-testid="login-form"]',
       'text=/sign in|log in/i',
       'h1:has-text("Sign In")',

@@ -232,7 +232,8 @@ export default function LandingPageClient() {
             <div className="flex items-center gap-4">
               <Link
                 href="/auth"
-                className="text-sm font-medium text-slate-700 hover:text-slate-900 transition-colors focus:outline-none focus:ring-2 focus:ring-blue-600 focus:ring-offset-2 rounded px-3 py-2"
+                className="inline-flex items-center min-h-[44px] min-w-[44px] text-sm font-medium text-slate-700 hover:text-slate-900 transition-colors focus:outline-none focus:ring-2 focus:ring-blue-600 focus:ring-offset-2 rounded px-3 py-2"
+                aria-label={t('landing.nav.login')}
               >
                 {t('landing.nav.login')}
               </Link>
@@ -273,7 +274,8 @@ export default function LandingPageClient() {
             </Link>
             <Link
               href="/auth"
-              className="inline-flex items-center justify-center rounded-lg border-2 border-slate-300 bg-white px-8 py-3.5 text-base font-semibold text-slate-900 hover:border-slate-400 hover:bg-slate-50 transition-all focus:outline-none focus:ring-2 focus:ring-slate-600 focus:ring-offset-2"
+              className="inline-flex items-center justify-center min-h-[44px] rounded-lg border-2 border-slate-300 bg-white px-8 py-3.5 text-base font-semibold text-slate-900 hover:border-slate-400 hover:bg-slate-50 transition-all focus:outline-none focus:ring-2 focus:ring-slate-600 focus:ring-offset-2"
+              aria-label={t('landing.hero.ctaSecondary')}
             >
               {t('landing.hero.ctaSecondary')}
             </Link>

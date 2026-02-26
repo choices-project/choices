@@ -227,9 +227,11 @@ export function CreateCivicActionForm({
               placeholder={t('civics.actions.create.fields.title.placeholder')}
               maxLength={200}
               required
+              aria-invalid={Boolean(errors.title)}
+              aria-describedby={errors.title ? 'title-error' : undefined}
             />
             {errors.title && (
-              <p className="text-sm text-red-600 mt-1">{errors.title}</p>
+              <p id="title-error" className="text-sm text-red-600 mt-1" role="alert">{errors.title}</p>
             )}
             <p className="text-xs text-gray-500 mt-1">
               {t('civics.actions.create.fields.commonCounter', {
@@ -249,9 +251,11 @@ export function CreateCivicActionForm({
               placeholder={t('civics.actions.create.fields.description.placeholder')}
               rows={4}
               maxLength={5000}
+              aria-invalid={Boolean(errors.description)}
+              aria-describedby={errors.description ? 'description-error' : undefined}
             />
             {errors.description && (
-              <p className="text-sm text-red-600 mt-1">{errors.description}</p>
+              <p id="description-error" className="text-sm text-red-600 mt-1" role="alert">{errors.description}</p>
             )}
             <p className="text-xs text-gray-500 mt-1">
               {t('civics.actions.create.fields.commonCounter', {

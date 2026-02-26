@@ -2,6 +2,39 @@ import { URL } from 'node:url';
 
 const BASE_URL = 'https://api.congress.gov/v3';
 const DEFAULT_PAGE_SIZE = 250;
+const CONGRESS_GOV_THROTTLE_MS = Number(process.env.CONGRESS_GOV_THROTTLE_MS ?? '1500');
+const CONGRESS_GOV_MAX_RETRIES = 3;
+
+let lastCongressRequestAt = 0;
+
+async function throttleCongressRequest(): Promise<void> {
+  if (CONGRESS_GOV_THROTTLE_MS <= 0) return;
+  const now = Date.now();
+  const wait = Math.max(0, lastCongressRequestAt + CONGRESS_GOV_THROTTLE_MS - now);
+  if (wait > 0) {
+    await new Promise((resolve) => setTimeout(resolve, wait));
+  }
+  lastCongressRequestAt = Date.now();
+}
+
+async function fetchWithRetry(
+  url: string,
+  headers: Record<string, string>,
+  retryCount = 0,
+): Promise<Response> {
+  await throttleCongressRequest();
+  const response = await fetch(url, { headers });
+  if (response.status === 429 && retryCount < CONGRESS_GOV_MAX_RETRIES) {
+    const retryAfter = response.headers.get('Retry-After');
+    const backoffMs = retryAfter ? parseInt(retryAfter, 10) * 1000 : Math.pow(2, retryCount) * 5000;
+    console.warn(
+      `Congress.gov rate limit (429). Retrying in ${backoffMs / 1000}s (attempt ${retryCount + 1}/${CONGRESS_GOV_MAX_RETRIES})...`,
+    );
+    await new Promise((resolve) => setTimeout(resolve, backoffMs));
+    return fetchWithRetry(url, headers, retryCount + 1);
+  }
+  return response;
+}
 
 /**
  * Current Congress (119th, Jan 2025–).
@@ -181,11 +214,7 @@ export async function fetchCongressMembers(): Promise<CongressMember[]> {
   let safetyCounter = 0;
 
   while (nextUrl) {
-    const response = await fetch(nextUrl, {
-      headers: {
-        'X-API-Key': apiKey,
-      },
-    });
+    const response = await fetchWithRetry(nextUrl, { 'X-API-Key': apiKey });
     if (!response.ok) {
       const body = await safeJson(response);
       throw new Error(
@@ -242,9 +271,7 @@ export async function fetchMemberByBioguideRaw(bioguideId: string): Promise<any>
   const url = new URL(`${BASE_URL}/member/${encodeURIComponent(bioguide)}`);
   url.searchParams.set('format', 'json');
 
-  const response = await fetch(url.toString(), {
-    headers: { 'X-API-Key': apiKey },
-  });
+  const response = await fetchWithRetry(url.toString(), { 'X-API-Key': apiKey });
   if (!response.ok) {
     if (response.status === 404) return null;
     const body = await safeJson(response);

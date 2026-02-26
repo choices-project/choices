@@ -98,6 +98,9 @@ jspm_packages/
 tmp/
 temp/
 
+# Civics ingest checkpoints (when CHECKPOINT_DIR=.civics-checkpoints)
+.civics-checkpoints/
+
 # Editor directories and files
 .vscode/*
 !.vscode/extensions.json

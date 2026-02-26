@@ -305,7 +305,7 @@ export default function SiteMessages({
                     {showDismiss && (
                       <button
                         onClick={() => handleDismiss(message.id, message.title)}
-                        className="flex-shrink-0 rounded p-1 text-gray-500 dark:text-gray-400 transition-colors hover:text-gray-700 dark:hover:text-gray-200 hover:bg-white/50 dark:hover:bg-gray-800/50 focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2"
+                        className="flex-shrink-0 rounded p-1 min-h-[44px] min-w-[44px] flex items-center justify-center text-gray-500 dark:text-gray-400 transition-colors hover:text-gray-700 dark:hover:text-gray-200 hover:bg-white/50 dark:hover:bg-gray-800/50 focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2"
                         aria-label={`Dismiss message titled ${message.title}`}
                       >
                         <X className="h-4 w-4" aria-hidden="true" />

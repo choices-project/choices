@@ -60,10 +60,10 @@ const rules = [
     triggers: [/^web\/lib\/stores\//, /^scratch\/gpt5-codex\/store-roadmaps\//],
     requireAll: [
       'scratch/store-modernization-roadmap.md',
-      'docs/ARCHITECTURE/stores.md',
+      'docs/STATE_MANAGEMENT.md',
     ],
     message:
-      'Store changes require updating `scratch/store-modernization-roadmap.md` (owner/status) and `docs/ARCHITECTURE/stores.md` (selector contract).',
+      'Store changes require updating `scratch/store-modernization-roadmap.md` (owner/status) and `docs/STATE_MANAGEMENT.md` (selector contract).',
   },
   {
     name: 'api-contracts',

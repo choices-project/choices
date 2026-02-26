@@ -172,6 +172,63 @@ export async function notifyUserContactApproved(
 }
 
 /**
+ * Batch notify users when their contact submissions are approved.
+ * Fetches user preferences once, then inserts all notifications in a single query.
+ */
+export async function notifyUsersContactApprovedBatch(
+  supabase: SupabaseClient,
+  items: Array<{ contact: ContactSubmission; userId: string }>
+): Promise<void> {
+  if (items.length === 0) return;
+
+  const userIds = [...new Set(items.map((i) => i.userId))];
+  const { data: profiles } = await supabase
+    .from('user_profiles')
+    .select('user_id, privacy_settings, notification_preferences')
+    .in('user_id', userIds);
+
+  const enabledUserIds = new Set<string>();
+  for (const p of profiles ?? []) {
+    const privacy = p.privacy_settings as Record<string, unknown> | null;
+    const prefs = p.notification_preferences as Record<string, unknown> | null;
+    const contactNotificationsEnabled =
+      privacy?.contact_messages !== false && privacy?.contact_notifications !== false;
+    const pushContactEnabled = prefs?.contact_messages !== false;
+    if (contactNotificationsEnabled || pushContactEnabled) {
+      enabledUserIds.add(p.user_id);
+    }
+  }
+
+  const notifications = items
+    .filter((i) => enabledUserIds.has(i.userId))
+    .map(({ contact, userId }) => {
+      const representativeName = contact.representative?.name || 'Unknown Representative';
+      const contactTypeLabel = contact.contact_type.charAt(0).toUpperCase() + contact.contact_type.slice(1);
+      return {
+        user_id: userId,
+        type: 'contact_submission_approved',
+        title: 'Contact Information Approved',
+        body: `Your ${contactTypeLabel} contact information for ${representativeName} has been approved and is now visible.`,
+        payload: {
+          contactId: contact.id,
+          representativeId: contact.representative_id,
+          representativeName,
+          contactType: contact.contact_type,
+          contactValue: contact.value,
+        },
+        status: 'sent',
+      };
+    });
+
+  if (notifications.length > 0) {
+    const { error } = await supabase.from('notification_log').insert(notifications);
+    if (error) {
+      logger.warn('Batch contact approval notifications failed', { error, count: notifications.length });
+    }
+  }
+}
+
+/**
  * Notify user when their contact submission is rejected
  */
 export async function notifyUserContactRejected(
@@ -250,3 +307,64 @@ export async function notifyUserContactRejected(
     // Don't fail the rejection if notification fails
   }
 }
+
+/**
+ * Batch notify users when their contact submissions are rejected.
+ * Fetches user preferences once, then inserts all notifications in a single query.
+ */
+export async function notifyUsersContactRejectedBatch(
+  supabase: SupabaseClient,
+  items: Array<{ contact: ContactSubmission; userId: string }>,
+  reason?: string
+): Promise<void> {
+  if (items.length === 0) return;
+
+  const userIds = [...new Set(items.map((i) => i.userId))];
+  const { data: profiles } = await supabase
+    .from('user_profiles')
+    .select('user_id, privacy_settings, notification_preferences')
+    .in('user_id', userIds);
+
+  const enabledUserIds = new Set<string>();
+  for (const p of profiles ?? []) {
+    const privacy = p.privacy_settings as Record<string, unknown> | null;
+    const prefs = p.notification_preferences as Record<string, unknown> | null;
+    const contactNotificationsEnabled =
+      privacy?.contact_messages !== false && privacy?.contact_notifications !== false;
+    const pushContactEnabled = prefs?.contact_messages !== false;
+    if (contactNotificationsEnabled || pushContactEnabled) {
+      enabledUserIds.add(p.user_id);
+    }
+  }
+
+  const notifications = items
+    .filter((i) => enabledUserIds.has(i.userId))
+    .map(({ contact, userId }) => {
+      const representativeName = contact.representative?.name || 'Unknown Representative';
+      const contactTypeLabel = contact.contact_type.charAt(0).toUpperCase() + contact.contact_type.slice(1);
+      return {
+        user_id: userId,
+        type: 'contact_submission_rejected',
+        title: 'Contact Information Rejected',
+        body: `Your ${contactTypeLabel} contact information for ${representativeName} was not approved.${reason ? ` Reason: ${reason}` : ''}`,
+        payload: {
+          contactId: contact.id,
+          representativeId: contact.representative_id,
+          representativeName,
+          contactType: contact.contact_type,
+          contactValue: contact.value,
+          reason: reason || null,
+        },
+        status: 'sent',
+      };
+    });
+
+  if (notifications.length > 0) {
+    const { error } = await supabase.from('notification_log').insert(notifications);
+    if (error) {
+      logger.warn('Batch contact rejection notifications failed', { error, count: notifications.length });
+    }
+  }
+}
+
+

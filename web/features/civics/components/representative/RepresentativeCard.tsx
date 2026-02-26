@@ -81,8 +81,13 @@ export function RepresentativeCard({
     }
   };
 
-  const handleContact = () => {
-    onContact?.(representative);
+  const handleContact = (e?: React.MouseEvent) => {
+    e?.stopPropagation?.();
+    if (onContact) {
+      onContact(representative);
+    } else {
+      router.push(`/representatives/${representative.id}`);
+    }
     trackCtaEvent('civics_representative_contact_click', {
       ctaLocation: 'card',
     });

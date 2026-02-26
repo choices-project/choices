@@ -14,10 +14,9 @@ Node.js service for ingesting representative data from OpenStates, Congress.gov,
 ```bash
 cd services/civics-backend
 npm install
-# Copy env.example to .env; set SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY
-npm run openstates:ingest
-npm run openstates:sync:committees
-npm run openstates:sync:activity -- --resume
-npm run federal:enrich:congress
-npm run federal:enrich:finance
+npm run ingest:setup    # Creates .env, runs pre-flight check
+# Edit .env with SUPABASE_URL and SUPABASE_SERVICE_ROLE_KEY
+npm run ingest         # Full pipeline (baseline + committees/activity + federal)
 ```
+
+See [docs/GETTING_STARTED.md](docs/GETTING_STARTED.md) for the 3-step guide.

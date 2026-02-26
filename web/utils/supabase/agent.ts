@@ -155,18 +155,19 @@ function wrapTableWithAudit(
   context: AgentContext,
   options: AgentClientOptions
 ): any {
-  const operations: Record<string, Function> = {
-    select: table.select.bind(table),
-    insert: table.insert.bind(table),
-    update: table.update.bind(table),
-    upsert: table.upsert.bind(table),
-    delete: table.delete.bind(table),
+  const operations: Record<string, Function | undefined> = {
+    select: table.select?.bind(table),
+    insert: table.insert?.bind(table),
+    update: table.update?.bind(table),
+    upsert: table.upsert?.bind(table),
+    delete: table.delete?.bind(table),
   }
 
   // Wrap each operation
   const wrapped: any = {}
 
   for (const [opName, opFn] of Object.entries(operations)) {
+    if (!opFn) continue
     wrapped[opName] = async (...args: any[]) => {
       const startTime = Date.now()
       const operationType = mapOperationType(opName)

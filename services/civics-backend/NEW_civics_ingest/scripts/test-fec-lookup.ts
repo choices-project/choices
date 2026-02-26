@@ -5,7 +5,8 @@
  * Usage:
  *   npm run tools:test:fec-lookup [--name="John Smith"] [--state=CA] [--office=H]
  */
-import 'dotenv/config';
+import { loadEnv } from '../utils/load-env.js';
+loadEnv();
 
 import { searchCandidates, searchCandidateWithTotals } from '../clients/fec.js';
 import { getSupabaseClient } from '../clients/supabase.js';

@@ -21,13 +21,16 @@ import { useProfileData } from '@/features/profile/hooks/use-profile';
 import { Button } from '@/components/ui/button';
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/components/ui/card';
 
+import { useI18n } from '@/hooks/useI18n';
+
 export default function BiometricSetupPage() {
+  const { t } = useI18n();
   const router = useRouter();
   const routerRef = useRef(router);
   useEffect(() => { routerRef.current = router; }, [router]);
   const isAuthenticated = useIsAuthenticated();
   const isUserLoading = useUserLoading();
-  const { isLoading: profileLoading } = useProfileData();
+  const { isLoading: profileLoading, refetch: refetchProfile } = useProfileData();
 
   useInitializeBiometricState();
 
@@ -50,13 +53,14 @@ export default function BiometricSetupPage() {
 
   useEffect(() => {
     if (biometricSuccess) {
+      void refetchProfile();
       const timeout = window.setTimeout(() => {
         routerRef.current.push('/profile');
       }, 2000);
       return () => window.clearTimeout(timeout);
     }
     return undefined;
-  }, [biometricSuccess]);
+  }, [biometricSuccess, refetchProfile]);
 
   const handleSuccess = useCallback(() => {
     // Success state handled by store; effect above triggers redirect.
@@ -68,25 +72,24 @@ export default function BiometricSetupPage() {
 
   if (isSupported === null || isAvailable === null || profileLoading || isUserLoading) {
     return (
-      <main id="main-content" role="main" className="min-h-screen bg-background flex items-center justify-center">
+      <div className="min-h-screen bg-background flex items-center justify-center">
         <div className="text-center">
           <Loader2 className="h-8 w-8 animate-spin mx-auto mb-4 text-primary" />
-          <p className="text-muted-foreground">Checking device support...</p>
+          <p className="text-muted-foreground">{t('auth.passkey.checkingDeviceSupport')}</p>
         </div>
-      </main>
+      </div>
     );
   }
 
   if (!isSupported || !isAvailable) {
     return (
-      <main id="main-content" role="main" className="min-h-screen bg-background flex items-center justify-center py-12 px-4">
+      <div className="min-h-screen bg-background flex items-center justify-center py-12 px-4">
         <Card className="max-w-md w-full bg-card dark:bg-card border-border">
           <CardHeader className="text-center">
             <AlertCircle className="h-12 w-12 text-destructive mx-auto mb-4" />
-            <CardTitle className="text-2xl text-foreground">Biometric Authentication Not Supported</CardTitle>
+            <CardTitle className="text-2xl text-foreground">{t('auth.passkey.biometricNotSupported')}</CardTitle>
             <CardDescription className="mt-2 text-muted-foreground">
-              Your device or browser doesn&apos;t support biometric authentication. You can still use
-              email and password login.
+              {t('auth.passkey.biometricNotSupportedDesc')}
             </CardDescription>
           </CardHeader>
           <CardContent>
@@ -94,27 +97,32 @@ export default function BiometricSetupPage() {
               onClick={() => routerRef.current.push('/profile')}
               className="w-full"
             >
-              Back to Profile
+              {t('auth.passkey.backToProfile')}
             </Button>
           </CardContent>
         </Card>
-      </main>
+      </div>
     );
   }
 
   return (
-    <main id="main-content" role="main" className="min-h-screen bg-background flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8">
+    <div className="min-h-screen bg-background flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8">
       <Card className="max-w-md w-full bg-card dark:bg-card border-border">
         <CardHeader className="text-center">
           <Fingerprint className="h-12 w-12 text-primary mx-auto mb-4" />
-          <CardTitle className="text-3xl text-foreground">Set Up Biometric Authentication</CardTitle>
+          <CardTitle className="text-3xl text-foreground">{t('auth.passkey.setUpBiometricTitle')}</CardTitle>
           <CardDescription className="mt-2 text-muted-foreground">
-            Use your fingerprint, face, or other biometric to sign in securely
+            {t('auth.passkey.setUpBiometricDesc')}
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-6">
           {biometricError && (
-            <div className="bg-destructive/10 border border-destructive/20 rounded-md p-4">
+            <div
+              className="bg-destructive/10 border border-destructive/20 rounded-md p-4"
+              role="alert"
+              aria-live="assertive"
+              aria-atomic="true"
+            >
               <div className="flex">
                 <AlertCircle className="h-5 w-5 text-destructive shrink-0" />
                 <div className="ml-3">
@@ -125,12 +133,17 @@ export default function BiometricSetupPage() {
           )}
 
           {biometricSuccess && (
-            <div className="bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 rounded-md p-4">
+            <div
+              className="bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 rounded-md p-4"
+              role="status"
+              aria-live="polite"
+              aria-atomic="true"
+            >
               <div className="flex">
                 <CheckCircle2 className="h-5 w-5 text-green-600 dark:text-green-400 shrink-0" />
                 <div className="ml-3">
                   <p className="text-sm text-green-700 dark:text-green-300">
-                    Biometric authentication is ready to use. Redirecting…
+                    {t('auth.passkey.passkeyAddedSuccess')}
                   </p>
                 </div>
               </div>
@@ -138,12 +151,16 @@ export default function BiometricSetupPage() {
           )}
 
           <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-md p-4">
-            <h3 className="text-sm font-medium text-blue-900 dark:text-blue-100 mb-2">How it works:</h3>
+            <h3 className="text-sm font-medium text-blue-900 dark:text-blue-100 mb-2">{t('auth.passkey.trustAndSecurity')}</h3>
+            <ul className="text-sm text-blue-700 dark:text-blue-300 space-y-1 mb-2">
+              <li>• {t('auth.passkey.trustBenefit')}</li>
+            </ul>
+            <h3 className="text-sm font-medium text-blue-900 dark:text-blue-100 mb-2 mt-3">{t('auth.passkey.howItWorks')}</h3>
             <ul className="text-sm text-blue-700 dark:text-blue-300 space-y-1">
-              <li>• Touch your fingerprint sensor or use face recognition</li>
-              <li>• Your biometric data stays on your device</li>
-              <li>• No passwords needed for future logins</li>
-              <li>• Works across supported devices</li>
+              <li>• {t('auth.passkey.howItWorksTouch')}</li>
+              <li>• {t('auth.passkey.howItWorksStays')}</li>
+              <li>• {t('auth.passkey.howItWorksNoPasswords')}</li>
+              <li>• {t('auth.passkey.howItWorksDevices')}</li>
             </ul>
           </div>
 
@@ -155,7 +172,7 @@ export default function BiometricSetupPage() {
 
           {hasCredentials && (
             <p className="text-sm text-green-600 dark:text-green-400 text-center">
-              You already have a passkey registered. Registering again will add another credential.
+              {t('auth.passkey.alreadyHavePasskey')}
             </p>
           )}
 
@@ -165,10 +182,10 @@ export default function BiometricSetupPage() {
             className="w-full text-muted-foreground hover:text-foreground"
             disabled={isRegistering}
           >
-            Skip for now
+            {t('auth.passkey.skipForNow')}
           </Button>
         </CardContent>
       </Card>
-    </main>
+    </div>
   );
 }

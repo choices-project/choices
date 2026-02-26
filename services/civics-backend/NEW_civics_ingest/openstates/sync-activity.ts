@@ -3,10 +3,16 @@
  * Populate `representative_activity` with OpenStates bill activity.
  *
  * Usage:
- *   npm run openstates:sync:activity [--states=CA,NY] [--limit=200] [--dry-run]
+ *   npm run openstates:sync:activity [--resume] [--max-reps=1500] [--states=CA,NY] [--limit=200] [--dry-run]
+ *
+ * For rate-limit-aware re-ingest (run daily when limit resets):
+ *   npm run openstates:sync:activity -- --resume --max-reps=1500
  */
-import 'dotenv/config';
+import { loadEnv } from '../utils/load-env.js';
+loadEnv();
 
+import { getOpenStatesUsageStats } from '../clients/openstates.js';
+import { logger } from '../utils/logger.js';
 import { syncActivityForRepresentatives, type ActivitySyncOptions } from '../workflows/activity-sync.js';
 
 type CliOptions = {
@@ -14,6 +20,7 @@ type CliOptions = {
   limit?: number;
   dryRun?: boolean;
   resume?: boolean;
+  maxReps?: number;
 };
 
 function parseArgs(): CliOptions {
@@ -45,6 +52,9 @@ function parseArgs(): CliOptions {
       case 'resume':
         options.resume = true;
         break;
+      case 'max-reps':
+        if (value) options.maxReps = Number(value);
+        break;
       default:
         break;
     }
@@ -59,25 +69,42 @@ function parseArgs(): CliOptions {
 
 async function main() {
   const options = parseArgs();
-  const result = await syncActivityForRepresentatives(options as ActivitySyncOptions);
+
+  // For rate-limit-aware runs: use env OPENSTATES_ACTIVITY_MAX_REPS or derive from remaining - reserve
+  let maxReps = options.maxReps ?? Number(process.env.OPENSTATES_ACTIVITY_MAX_REPS || '0');
+  if (maxReps <= 0 && process.env.OPENSTATES_BUDGET_AWARE === '1') {
+    const stats = getOpenStatesUsageStats();
+    const reserve = 100;
+    maxReps = Math.max(0, stats.remaining - reserve);
+    if (maxReps > 0) {
+      logger.info(`Budget-aware: max ${maxReps} reps this run (${stats.remaining} - ${reserve} reserve)`);
+    }
+  }
+
+  const syncOptions: ActivitySyncOptions = {
+    ...options,
+    maxReps: maxReps > 0 ? maxReps : undefined,
+  };
+
+  const result = await syncActivityForRepresentatives(syncOptions);
   if (result.dryRun) {
-    console.log(
+    logger.info(
       `[dry-run] Would sync activity entries for ${result.total} representatives (total bills: ${result.activityRows}).`,
     );
   } else {
-    console.log(
-      `✅ Activity sync complete (${result.processed}/${result.total}, failed: ${result.failed}, rate limited: ${result.rateLimited}). Activity rows written: ${result.activityRows}.`,
+    logger.info(
+      `Activity sync complete (${result.processed}/${result.total}, failed: ${result.failed}, rate limited: ${result.rateLimited}). Activity rows written: ${result.activityRows}.`,
     );
     if (result.apiUsage) {
-      console.log(
-        `   API usage: ${result.apiUsage.dailyRequests}/${result.apiUsage.dailyLimit} (${result.apiUsage.remaining} remaining)`,
+      logger.info(
+        `API usage: ${result.apiUsage.dailyRequests}/${result.apiUsage.dailyLimit} (${result.apiUsage.remaining} remaining)`,
       );
     }
   }
 }
 
 main().catch((error) => {
-  console.error('Activity sync failed:', error);
+  logger.error('Activity sync failed', { error: error instanceof Error ? error.message : String(error) });
   process.exit(1);
 });
 

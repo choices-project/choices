@@ -284,9 +284,13 @@ test.describe('Contact Admin Management', () => {
       const rejectBody = await rejectResponse.json();
       expect(rejectBody.success).toBe(true);
 
-      // Verify it's deleted (404 on get)
-      const getResponse = await adminPage.request.get(`/api/contact/${contactId}`);
-      expect(getResponse.status()).toBe(404);
+      // Verify it's no longer in pending (rejected contacts are stored, not deleted)
+      const pendingAfter = await adminPage.request.get('/api/admin/contact/pending');
+      const pendingBody = await pendingAfter.json();
+      const stillPending = pendingBody.data?.contacts?.find(
+        (c: any) => c.id === contactId
+      );
+      expect(stillPending).toBeUndefined();
     });
 
     test('admin can reject a contact submission without reason', async () => {
@@ -316,9 +320,13 @@ test.describe('Contact Admin Management', () => {
 
       expect(rejectResponse.status()).toBe(200);
 
-      // Verify it's deleted
-      const getResponse = await adminPage.request.get(`/api/contact/${contactId}`);
-      expect(getResponse.status()).toBe(404);
+      // Verify it's no longer in pending (rejected contacts are stored, not deleted)
+      const pendingAfter = await adminPage.request.get('/api/admin/contact/pending');
+      const pendingBody = await pendingAfter.json();
+      const stillPending = pendingBody.data?.contacts?.find(
+        (c: any) => c.id === contactId
+      );
+      expect(stillPending).toBeUndefined();
     });
 
     test('admin endpoints require admin authentication', async ({ page }) => {

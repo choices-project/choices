@@ -16,8 +16,9 @@ import { getSupabaseAdminClient } from '@/utils/supabase/server';
 
 import { getRPIDAndOrigins, normalizeRequestOrigin } from '@/features/auth/lib/webauthn/config';
 
-import { withErrorHandling, forbiddenError, errorResponse, validationError, successResponse } from '@/lib/api';
+import { withErrorHandling, forbiddenError, errorResponse, validationError, successResponse, rateLimitError } from '@/lib/api';
 import { WEBAUTHN_CHALLENGE_SELECT_COLUMNS, WEBAUTHN_CREDENTIAL_SELECT_COLUMNS } from '@/lib/api/response-builders';
+import { apiRateLimiter } from '@/lib/rate-limiting/api-rate-limiter';
 import { logger } from '@/lib/utils/logger';
 
 import type { NextRequest } from 'next/server';
@@ -34,6 +35,15 @@ export const POST = withErrorHandling(async (req: NextRequest) => {
     const { enabled, rpID, allowedOrigins } = getRPIDAndOrigins(req);
     if (!enabled) {
       return validationError({ enabled: 'Passkeys disabled on preview' });
+    }
+
+    const isE2E = process.env.NEXT_PUBLIC_ENABLE_E2E_HARNESS === '1' || process.env.PLAYWRIGHT_USE_MOCKS === '0';
+    if (!isE2E) {
+      const ip = req.headers.get('x-forwarded-for')?.split(',')[0]?.trim() ?? req.headers.get('x-real-ip') ?? 'unknown';
+      const result = await apiRateLimiter.checkLimit(ip, '/api/v1/auth/webauthn', { maxRequests: 30, windowMs: 15 * 60 * 1000 });
+      if (!result.allowed) {
+        return rateLimitError('Too many passkey attempts. Please try again later.', result.retryAfter);
+      }
     }
 
     const body = await req.json();

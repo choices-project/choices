@@ -180,8 +180,8 @@ describe('GET /api/v1/civics/heatmap', () => {
       level: 'federal',
     });
     expect(payload.metadata?.cache).toMatchObject({ hit: false });
-    expect(mockCanAccessAnalytics).toHaveBeenCalledWith(expect.any(Object), false);
-    expect(mockLogAnalyticsAccess).toHaveBeenCalledWith(expect.any(Object), 'district-heatmap-api', true);
+    expect(mockCanAccessAnalytics).toHaveBeenCalledWith(expect.any(Object), false, expect.any(Object));
+    expect(mockLogAnalyticsAccess).toHaveBeenCalledWith(expect.any(Object), 'district-heatmap-api', true, expect.any(Object));
   });
 
   it('honors filters and propagates cache key generation', async () => {
@@ -201,7 +201,7 @@ describe('GET /api/v1/civics/heatmap', () => {
     const payload = await response.json();
 
     expect(payload.error).toMatch(/Unauthorized/);
-    expect(mockLogAnalyticsAccess).toHaveBeenCalledWith(expect.any(Object), 'district-heatmap-api', false);
+    expect(mockLogAnalyticsAccess).toHaveBeenCalledWith(expect.any(Object), 'district-heatmap-api', false, expect.any(Object));
   });
 
   it('returns empty dataset when Supabase RPC reports an error', async () => {

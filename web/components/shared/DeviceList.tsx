@@ -77,6 +77,16 @@ export const DeviceList: React.FC<DeviceListProps> = ({
     }
   }, [onGenerateQR])
 
+  // Close QR modal on Escape (document-level to avoid a11y lint on div)
+  useEffect(() => {
+    if (!showQRCode) return;
+    const handleEscape = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') setShowQRCode(null);
+    };
+    document.addEventListener('keydown', handleEscape);
+    return () => document.removeEventListener('keydown', handleEscape);
+  }, [showQRCode]);
+
   // Generate QR code when showQRCode changes
   useEffect(() => {
     if (showQRCode) {
@@ -290,16 +300,10 @@ export const DeviceList: React.FC<DeviceListProps> = ({
       {showQRCode && (
         <div
           className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50"
-          role="button"
-          tabIndex={0}
-          aria-label="Close QR code modal"
+          role="presentation"
+          aria-hidden="true"
           onClick={(e) => {
             if (e.target === e.currentTarget) {
-              setShowQRCode(null)
-            }
-          }}
-          onKeyDown={(e) => {
-            if (e.key === 'Escape') {
               setShowQRCode(null)
             }
           }}

@@ -14,7 +14,7 @@
 - [ ] Verified ScreenReaderSupport announcements / live regions for interactive changes
 
 ## Docs / Contracts / Release Notes
-- [ ] Updated relevant docs (`docs/ARCHITECTURE/stores.md`, `docs/API/contracts.md`, playbooks) if contracts, stores, or governance patterns changed
+- [ ] Updated relevant docs (`docs/STATE_MANAGEMENT.md`, `docs/API/contracts.md`, playbooks) if contracts, stores, or governance patterns changed
 - [ ] Added/updated MSW fixtures + contract suites (`npm run test:contracts`) when API payloads changed
 - [ ] Added an entry to `docs/archive/release-notes/CHANGELOG.md` for user-facing changes
 - [ ] Included links to issues / roadmap items (PHASE-* labels) in the PR description

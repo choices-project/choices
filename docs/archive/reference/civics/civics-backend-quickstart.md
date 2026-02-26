@@ -1,5 +1,7 @@
 # Civics Backend Quickstart (Non-Technical Operators)
 
+> **ARCHIVED.** Use [GETTING_STARTED.md](../../../services/civics-backend/NEW_civics_ingest/docs/GETTING_STARTED.md). This file is historical only.
+
 This guide explains, in plain language, how to refresh civic representative data using the standalone ingest service. Follow the checklist each time you run an update; no deep technical knowledge is required—just a terminal and valid credentials.
 
 ---

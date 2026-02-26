@@ -54,7 +54,7 @@ See **[docs/DEPLOYMENT.md](./docs/DEPLOYMENT.md)** for the complete guide.
 
 ### For Developers
 - **[docs/GETTING_STARTED.md](./docs/GETTING_STARTED.md)** - Quick start (5 minutes)
-- **[docs/DEVELOPMENT.md](./docs/DEVELOPMENT.md)** - Detailed setup and development
+- **[docs/GETTING_STARTED.md](./docs/GETTING_STARTED.md)** - Setup and development runbook
 - **[docs/ARCHITECTURE.md](./docs/ARCHITECTURE.md)** - System architecture
 - **[docs/CODEBASE_NAVIGATION.md](./docs/CODEBASE_NAVIGATION.md)** - Codebase structure guide
 - **[docs/CONTRIBUTING.md](./CONTRIBUTING.md)** - Contribution workflow
@@ -116,11 +116,10 @@ See **[docs/DEPLOYMENT.md](./docs/DEPLOYMENT.md)** for the complete guide.
 - `NEXT_PUBLIC_BASE_URL` – Application base URL
 
 **Complete Documentation:**
-- Full list: `docs/ENVIRONMENT_VARIABLES.md`
-- Current status: `ENV_VARS_STATUS.md`
-- Email setup: `scratch/final_work_TODO/EMAIL_FROM_SETUP.md`
+- Full list: [`docs/ENVIRONMENT_VARIABLES.md`](./docs/ENVIRONMENT_VARIABLES.md)
+- Email setup: [`docs/archive/runbooks/operations/email-deliverability-setup.md`](./docs/archive/runbooks/operations/email-deliverability-setup.md)
 
-If you don’t have a domain yet, see the freemium/sandbox guidance in [email-and-verification-setup.md](./docs/OPERATIONS/email-and-verification-setup.md).
+If you don’t have a domain yet, see the freemium/sandbox guidance in [email-deliverability-setup.md](./docs/archive/runbooks/operations/email-deliverability-setup.md).
 
 Admin endpoints:
 - `GET /api/admin/candidates/stats`
@@ -209,9 +208,9 @@ This platform is built with care for democracy and transparency.
 
 ## 📞 Support
 
-- **Documentation**: See `/docs` directory
-- **Deployment**: See `DEPLOYMENT_READY.md`
-- **Issues**: Check current status in `docs/CURRENT_STATUS.md`
+- **Documentation**: See [`docs/README.md`](./docs/README.md)
+- **Deployment**: See [`docs/DEPLOYMENT.md`](./docs/DEPLOYMENT.md)
+- **Status**: See [`docs/CURRENT_STATUS.md`](./docs/CURRENT_STATUS.md)
 
 ---
 

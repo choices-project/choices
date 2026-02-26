@@ -85,9 +85,13 @@ const createRequest = (
 
 describe('Civic Actions API', () => {
   let mockSupabaseClient: ReturnType<typeof createMockSupabaseClient>;
+  const featureFlagsMock = jest.requireMock('@/lib/core/feature-flags') as {
+    isFeatureEnabled: jest.Mock;
+  };
 
   beforeEach(() => {
     jest.clearAllMocks();
+    featureFlagsMock.isFeatureEnabled.mockReturnValue(true);
     mockSupabaseClient = createMockSupabaseClient();
     mockSupabase.getSupabaseServerClient.mockResolvedValue(mockSupabaseClient);
   });
@@ -373,15 +377,15 @@ describe('Civic Actions API', () => {
         error: null,
       });
       mockSupabaseClient.select.mockReturnValue(mockSupabaseClient);
-      mockSupabaseClient.eq.mockReturnValue(mockSupabaseClient);
       mockSupabaseClient.single.mockResolvedValue({
         data: existingAction,
         error: null,
       });
       mockSupabaseClient.delete.mockReturnValue(mockSupabaseClient);
-      mockSupabaseClient.eq.mockResolvedValue({
-        error: null,
-      });
+      // eq is used twice: first in select chain (needs to return mock for .single()), then in delete chain (needs to return awaitable)
+      mockSupabaseClient.eq
+        .mockReturnValueOnce(mockSupabaseClient)
+        .mockResolvedValueOnce({ data: null, error: null });
 
       const request = createRequest('DELETE', 'http://localhost:3000/api/civic-actions/1');
       const response = await DELETE(request, { params: Promise.resolve({ id: '1' }) });

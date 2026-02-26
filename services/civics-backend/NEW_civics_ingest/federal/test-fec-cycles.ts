@@ -7,7 +7,8 @@
  * Usage:
  *   npm run build && node build/scripts/tools/test-fec-cycles.js
  */
-import 'dotenv/config';
+import { loadEnv } from '../utils/load-env.js';
+loadEnv();
 
 import { fetchCandidateTotals } from '../clients/fec.js';
 

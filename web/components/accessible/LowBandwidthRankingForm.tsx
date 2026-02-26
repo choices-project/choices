@@ -392,11 +392,12 @@ export function LowBandwidthRankingForm({
             {state.isSubmitting ? 'Submitting...' : 'Submit My Ranking'}
           </button>
           
-          <button 
-            type="button" 
-            className="clear-button" 
+          <button
+            type="button"
+            className="clear-button"
             onClick={clearForm}
             disabled={state.isSubmitting}
+            aria-label="Clear all rankings"
           >
             Clear All
           </button>

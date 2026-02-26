@@ -144,7 +144,8 @@ export default function FeedContent() {
           </div>
         }
       >
-        <main id="main-content" role="main" className="container mx-auto px-4 py-8 bg-white dark:bg-gray-900 min-h-screen">
+        {/* Root layout SkipNavTarget provides <main>; avoid nested main for a11y */}
+        <div className="container mx-auto px-4 py-8 bg-white dark:bg-gray-900 min-h-screen" aria-label="Feed content">
           <Suspense fallback={loadingFallback}>
             <UnifiedFeedRefactored
               {...{
@@ -156,7 +157,7 @@ export default function FeedContent() {
               }}
             />
           </Suspense>
-        </main>
+        </div>
       </ErrorBoundary>
     </AuthGuard>
   );

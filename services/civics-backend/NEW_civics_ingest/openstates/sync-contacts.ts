@@ -5,11 +5,13 @@
  * Usage:
  *   npm run openstates:sync:contacts [--states=CA,NY] [--limit=500] [--dry-run]
  */
-import 'dotenv/config';
+import { loadEnv } from '../utils/load-env.js';
+loadEnv();
 
 import { collectActiveRepresentatives, type CollectOptions } from '../ingest/openstates/index.js';
 import type { CanonicalRepresentative } from '../ingest/openstates/people.js';
 import { syncRepresentativeContacts } from '../persist/contacts.js';
+import { logger } from '../utils/logger.js';
 
 type CliOptions = {
   states?: string[];
@@ -100,18 +102,18 @@ async function main() {
 
   const eligible = reps.filter((rep) => rep.supabaseRepresentativeId != null);
   if (eligible.length === 0) {
-    console.log('No representatives with Supabase IDs found; nothing to sync.');
+    logger.info('No representatives with Supabase IDs found; nothing to sync.');
     return;
   }
 
   if (options.dryRun) {
-    console.log(
+    logger.info(
       `[dry-run] Would sync contacts for ${eligible.length} representatives${options.states?.length ? ` in ${options.states.join(', ')}` : ''}.`,
     );
     return;
   }
 
-  console.log(
+  logger.info(
     `Syncing contact records for ${eligible.length} representatives${
       options.states?.length ? ` filtered by ${options.states.join(', ')}` : ''
     }...`,
@@ -143,26 +145,28 @@ async function main() {
     }
   }
 
-  console.log(`✅ Contact sync complete (${succeeded}/${eligible.length} succeeded).`);
-  console.log(`   Contacts added: ${totalAdded}, skipped: ${totalSkipped}`);
+  logger.info(`✅ Contact sync complete (${succeeded}/${eligible.length} succeeded).`);
+  logger.info(`   Contacts added: ${totalAdded}, skipped: ${totalSkipped}`);
   if (warnings.length > 0) {
-    console.log(`   Warnings: ${warnings.length}`);
-    warnings.slice(0, 5).forEach((w) => console.log(`     - ${w}`));
+    logger.info(`   Warnings: ${warnings.length}`);
+    warnings.slice(0, 5).forEach((w) => logger.info(`     - ${w}`));
     if (warnings.length > 5) {
-      console.log(`     ... and ${warnings.length - 5} more warnings`);
+      logger.info(`     ... and ${warnings.length - 5} more warnings`);
     }
   }
   if (errors.length > 0) {
-    console.log(`   Errors: ${errors.length}`);
-    errors.slice(0, 5).forEach((e) => console.error(`     - ${e}`));
+    logger.info(`   Errors: ${errors.length}`);
+    errors.slice(0, 5).forEach((e) => logger.error(`     - ${e}`));
     if (errors.length > 5) {
-      console.error(`     ... and ${errors.length - 5} more errors`);
+      logger.error(`     ... and ${errors.length - 5} more errors`);
     }
   }
 }
 
 main().catch((error) => {
-  console.error('Contact sync failed:', error);
+  logger.error('Contact sync failed', {
+    error: error instanceof Error ? error.message : String(error),
+  });
   process.exit(1);
 });
 

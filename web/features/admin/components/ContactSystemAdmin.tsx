@@ -32,6 +32,7 @@ import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Checkbox } from '@/components/ui/checkbox';
 import {
   Dialog,
   DialogContent,
@@ -79,6 +80,7 @@ type Filters = {
   contact_type: string;
   dateRange: string;
   search: string;
+  rep_name: string;
 };
 
 export default function ContactSystemAdmin() {
@@ -89,25 +91,32 @@ export default function ContactSystemAdmin() {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [selectedContact, setSelectedContact] = useState<ContactSubmission | null>(null);
+  const [selectedIds, setSelectedIds] = useState<Set<number>>(new Set());
   const [showRejectDialog, setShowRejectDialog] = useState(false);
+  const [showBulkRejectDialog, setShowBulkRejectDialog] = useState(false);
   const [rejectReason, setRejectReason] = useState('');
+  const [bulkRejectReason, setBulkRejectReason] = useState('');
+  const [bulkLoading, setBulkLoading] = useState(false);
   const [filters, setFilters] = useState<Filters>({
     representative_id: '',
     contact_type: '',
     dateRange: 'all',
     search: '',
+    rep_name: '',
   });
 
-  // Debounce search filter
+  // Debounce search and rep name filters
   const debouncedSearch = useDebounce(filters.search, 500);
+  const debouncedRepName = useDebounce(filters.rep_name, 500);
 
   // Create debounced filters object for API calls
   const debouncedFilters = useMemo(
     () => ({
       ...filters,
       search: debouncedSearch,
+      rep_name: debouncedRepName,
     }),
-    [filters, debouncedSearch]
+    [filters, debouncedSearch, debouncedRepName]
   );
 
   const fetchContacts = useCallback(async () => {
@@ -126,6 +135,9 @@ export default function ContactSystemAdmin() {
       }
       if (debouncedFilters.search) {
         params.append('search', debouncedFilters.search);
+      }
+      if (debouncedFilters.rep_name) {
+        params.append('rep_name', debouncedFilters.rep_name);
       }
 
       const url = `/api/admin/contact/pending?${params.toString()}`;
@@ -178,6 +190,81 @@ export default function ContactSystemAdmin() {
     }
   }, [selectedContact]);
 
+  const handleSelectChange = useCallback((id: number, checked: boolean | 'indeterminate') => {
+    setSelectedIds((prev) => {
+      const next = new Set(prev);
+      if (checked === true) next.add(id);
+      else next.delete(id);
+      return next;
+    });
+  }, []);
+
+  const handleSelectAllChange = useCallback(
+    (checked: boolean | 'indeterminate') => {
+      if (checked === true) {
+        setSelectedIds(new Set(contacts.map((c) => c.id)));
+      } else {
+        setSelectedIds(new Set());
+      }
+    },
+    [contacts]
+  );
+
+  const allSelected = contacts.length > 0 && selectedIds.size === contacts.length;
+  const someSelected = selectedIds.size > 0;
+
+  const handleBulkApprove = useCallback(async () => {
+    if (selectedIds.size === 0) return;
+    setBulkLoading(true);
+    setError(null);
+    try {
+      const response = await fetch('/api/admin/contact/bulk-approve', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ ids: Array.from(selectedIds) }),
+      });
+      const result = await response.json();
+      if (!response.ok) {
+        throw new Error(result.error || 'Failed to approve');
+      }
+      setSelectedIds(new Set());
+      setSelectedContact(null);
+      await fetchContacts();
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to approve');
+      logger.error('Bulk approve error:', err);
+    } finally {
+      setBulkLoading(false);
+    }
+  }, [selectedIds, fetchContacts]);
+
+  const handleBulkReject = useCallback(async () => {
+    if (selectedIds.size === 0) return;
+    setBulkLoading(true);
+    setError(null);
+    try {
+      const response = await fetch('/api/admin/contact/bulk-reject', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ ids: Array.from(selectedIds), reason: bulkRejectReason || undefined }),
+      });
+      const result = await response.json();
+      if (!response.ok) {
+        throw new Error(result.error || 'Failed to reject');
+      }
+      setSelectedIds(new Set());
+      setSelectedContact(null);
+      setShowBulkRejectDialog(false);
+      setBulkRejectReason('');
+      await fetchContacts();
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to reject');
+      logger.error('Bulk reject error:', err);
+    } finally {
+      setBulkLoading(false);
+    }
+  }, [selectedIds, bulkRejectReason, fetchContacts]);
+
   const handleReject = useCallback(async (contactId: number, reason?: string) => {
     try {
       const response = await fetch(`/api/admin/contact/${contactId}/reject`, {
@@ -228,7 +315,8 @@ export default function ContactSystemAdmin() {
     filters.representative_id ||
     filters.contact_type ||
     filters.dateRange !== 'all' ||
-    filters.search.trim()
+    filters.search.trim() ||
+    filters.rep_name.trim()
   );
 
   const handleClearFilters = useCallback(() => {
@@ -237,6 +325,7 @@ export default function ContactSystemAdmin() {
       contact_type: '',
       dateRange: 'all',
       search: '',
+      rep_name: '',
     });
   }, []);
 
@@ -280,16 +369,30 @@ export default function ContactSystemAdmin() {
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
               <div className="space-y-2">
-                <Label htmlFor="search">Search</Label>
+                <Label htmlFor="search">Search value</Label>
                 <div className="relative">
                   <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
                   <Input
                     id="search"
-                    placeholder="Search by value or representative..."
+                    placeholder="Email, phone, address..."
                     value={filters.search}
                     onChange={(e) => setFilters((prev) => ({ ...prev, search: e.target.value }))}
+                    className="pl-8"
+                  />
+                </div>
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="rep_name">Representative name</Label>
+                <div className="relative">
+                  <User className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
+                  <Input
+                    id="rep_name"
+                    placeholder="Filter by rep name..."
+                    value={filters.rep_name}
+                    onChange={(e) => setFilters((prev) => ({ ...prev, rep_name: e.target.value }))}
                     className="pl-8"
                   />
                 </div>
@@ -357,10 +460,51 @@ export default function ContactSystemAdmin() {
         {/* Contacts List */}
         <Card>
           <CardHeader>
-            <CardTitle>Pending Submissions ({contacts.length})</CardTitle>
-            <CardDescription>
-              Contact information awaiting admin review and approval
-            </CardDescription>
+            <div className="flex flex-wrap items-center justify-between gap-4">
+              <div>
+                <CardTitle>Pending Submissions ({contacts.length})</CardTitle>
+                <CardDescription>
+                  Contact information awaiting admin review and approval
+                </CardDescription>
+              </div>
+              {contacts.length > 0 && (
+                <div className="flex items-center gap-2">
+                  <div className="flex items-center gap-2" role="group" aria-label="Bulk selection">
+                    <Checkbox
+                      id="select-all-contacts"
+                      checked={allSelected ? true : someSelected ? 'indeterminate' : false}
+                      onCheckedChange={handleSelectAllChange}
+                      aria-label={allSelected ? 'Deselect all' : 'Select all'}
+                    />
+                    <Label htmlFor="select-all-contacts" className="text-sm font-medium cursor-pointer">
+                      {allSelected ? 'Deselect all' : 'Select all'}
+                    </Label>
+                  </div>
+                  {selectedIds.size > 0 && (
+                    <>
+                      <Button
+                        size="sm"
+                        variant="default"
+                        disabled={bulkLoading}
+                        onClick={handleBulkApprove}
+                      >
+                        <CheckCircle className="w-4 h-4 mr-1" />
+                        Approve {selectedIds.size}
+                      </Button>
+                      <Button
+                        size="sm"
+                        variant="destructive"
+                        disabled={bulkLoading}
+                        onClick={() => setShowBulkRejectDialog(true)}
+                      >
+                        <XCircle className="w-4 h-4 mr-1" />
+                        Reject {selectedIds.size}
+                      </Button>
+                    </>
+                  )}
+                </div>
+              )}
+            </div>
           </CardHeader>
           <CardContent>
             {isLoading ? (
@@ -393,7 +537,14 @@ export default function ContactSystemAdmin() {
                   >
                     <CardContent className="p-4">
                       <div className="flex items-start justify-between">
-                        <div className="flex-1 space-y-2">
+                        <div className="flex items-start gap-3 flex-1">
+                          <Checkbox
+                            checked={selectedIds.has(contact.id)}
+                            onCheckedChange={(checked) => handleSelectChange(contact.id, checked)}
+                            onClick={(e) => e.stopPropagation()}
+                            aria-label={`Select ${contact.value} for ${contact.representative?.name ?? 'representative'}`}
+                          />
+                          <div className="flex-1 space-y-2">
                           <div className="flex items-center gap-2">
                             {getContactTypeIcon(contact.contact_type)}
                             <Badge variant="outline">
@@ -417,6 +568,7 @@ export default function ContactSystemAdmin() {
                             <span>
                               Submitted {new Date(contact.created_at || '').toLocaleDateString()}
                             </span>
+                          </div>
                           </div>
                         </div>
                         <div className="flex gap-2 ml-4">
@@ -452,6 +604,42 @@ export default function ContactSystemAdmin() {
             )}
           </CardContent>
         </Card>
+
+        {/* Bulk Reject Dialog */}
+        <Dialog open={showBulkRejectDialog} onOpenChange={setShowBulkRejectDialog}>
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle>Reject {selectedIds.size} Contact Submission(s)</DialogTitle>
+              <DialogDescription>
+                Are you sure you want to reject this contact information? Submitters will be notified.
+              </DialogDescription>
+            </DialogHeader>
+            <div className="space-y-4 py-4">
+              <div className="space-y-2">
+                <Label htmlFor="bulk-reject-reason">Rejection Reason (Optional)</Label>
+                <Textarea
+                  id="bulk-reject-reason"
+                  placeholder="Provide a reason for rejection..."
+                  value={bulkRejectReason}
+                  onChange={(e) => setBulkRejectReason(e.target.value)}
+                  rows={3}
+                />
+              </div>
+            </div>
+            <DialogFooter>
+              <Button variant="outline" onClick={() => setShowBulkRejectDialog(false)}>
+                Cancel
+              </Button>
+              <Button
+                variant="destructive"
+                disabled={bulkLoading}
+                onClick={handleBulkReject}
+              >
+                Reject {selectedIds.size}
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
 
         {/* Reject Dialog */}
         <Dialog open={showRejectDialog} onOpenChange={setShowRejectDialog}>

@@ -1,6 +1,6 @@
 # Choices Platform - Database Schema Documentation
 
-**Last Updated**: November 16, 2025  
+**Last Updated**: February 2026  
 **Source of Truth**: `/web/types/supabase.ts` (Supabase-generated types)  
 **Status**: ✅ Current (synced to latest generated types)
 
@@ -576,7 +576,10 @@ Stores phone/email/address/contact rows with a uniqueness constraint on `(repres
 | `contact_type` | `varchar(50)` | Normalised category (`phone`, `email`, `website`, `address`, `fax`) |
 | `value` | `text` | Raw contact string |
 | `is_primary`, `is_verified` | `boolean` | Flags from source or ingest |
-| `source` | `varchar(100)` | Provenance (`openstates_yaml`, etc.) |
+| `source` | `varchar(100)` | Provenance (`openstates_yaml`, `user_submission`, etc.) |
+| `submitted_by_user_id` | `uuid` | User who submitted (nullable; for `user_submission` source) |
+| `rejected_at` | `timestamptz` | When admin rejected (nullable; user submissions only) |
+| `rejection_reason` | `text` | Optional reason from admin |
 | `created_at`, `updated_at` | `timestamptz` | Audit columns |
 
 ### `representative_activity`

@@ -38,13 +38,16 @@ import { RepresentativeActivityFeed } from '@/features/civics/components/represe
 import { formatElectionDateStable } from '@/features/civics/utils/civicsCountdownUtils';
 import { filterDivisionsForElections } from '@/features/civics/utils/divisions';
 import { formatRepresentativeLocation } from '@/features/civics/utils/formatRepresentativeLocation';
+import { ContactSubmissionForm } from '@/features/contact';
 
+import { EnhancedErrorDisplay } from '@/components/shared/EnhancedErrorDisplay';
 import { Badge } from '@/components/ui/badge';
 
 import {
   useElectionsForDivisions,
   useFetchElectionsForDivisions,
   useAnalyticsActions,
+  useAppActions,
 } from '@/lib/stores';
 import {
   useRepresentativeById,
@@ -68,6 +71,7 @@ import { useI18n } from '@/hooks/useI18n';
 function RepresentativeDetailPageContent() {
   const { t } = useI18n();
   const { trackEvent } = useAnalyticsActions();
+  const { setCurrentRoute, setSidebarActiveSection, setBreadcrumbs } = useAppActions();
   const params = useParams();
   const router = useRouter();
 
@@ -112,6 +116,22 @@ function RepresentativeDetailPageContent() {
 
   const representative = useRepresentativeById(numericRepresentativeId);
   const detailLoading = useRepresentativeDetailLoading();
+
+  useEffect(() => {
+    if (numericRepresentativeId == null) return;
+    const repPath = `/representatives/${numericRepresentativeId}`;
+    setCurrentRoute(repPath);
+    setSidebarActiveSection('civics');
+    setBreadcrumbs([
+      { label: 'Home', href: '/' },
+      { label: 'Representatives', href: '/representatives' },
+      { label: representative?.name ?? 'Representative', href: repPath },
+    ]);
+    return () => {
+      setSidebarActiveSection(null);
+      setBreadcrumbs([]);
+    };
+  }, [numericRepresentativeId, representative?.name, setBreadcrumbs, setCurrentRoute, setSidebarActiveSection]);
   const globalLoading = useRepresentativeGlobalLoading();
   const followLoading = useRepresentativeFollowLoading();
   const error = useRepresentativeError();
@@ -357,27 +377,18 @@ function RepresentativeDetailPageContent() {
   // Error state
   if (!representative || numericRepresentativeId == null) {
     return (
-      <div className="container mx-auto px-4 py-8 max-w-4xl">
-        <button
-          onClick={handleBack}
-          className="flex items-center text-blue-600 hover:text-blue-800 mb-6 transition-colors"
-          data-testid="representative-detail-back-button"
-          aria-label="Back to Representatives"
-        >
-          <ArrowLeft className="w-5 h-5 mr-2" />
-          Back to Representatives
-        </button>
-        <div className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg p-6 text-center">
-          <p className="text-red-800 dark:text-red-200 font-semibold mb-2">{t('civics.representatives.detail.notFound.title')}</p>
-          <p className="text-red-600 dark:text-red-300">
-            {error ?? t('civics.representatives.detail.notFound.message')}
-          </p>
-          {error?.includes('Security challenge') && (
-            <p className="text-red-600 dark:text-red-300 text-sm mt-2">
-              {t('civics.representatives.detail.notFound.securityNote')}
-            </p>
-          )}
-        </div>
+      <div className="container mx-auto px-4 py-8 max-w-4xl" data-testid="representative-detail-error">
+        <EnhancedErrorDisplay
+          title={t('civics.representatives.detail.notFound.title')}
+          message={error ?? t('civics.representatives.detail.notFound.message')}
+          {...(error?.includes('Security challenge') && {
+            details: t('civics.representatives.detail.notFound.securityNote'),
+          })}
+          secondaryAction={{
+            label: t('civics.representatives.detail.back'),
+            onClick: handleBack,
+          }}
+        />
       </div>
     );
   }
@@ -572,6 +583,14 @@ function RepresentativeDetailPageContent() {
               </div>
             )}
           </div>
+
+          {numericRepresentativeId != null && representative?.name && (
+            <ContactSubmissionForm
+              representativeId={numericRepresentativeId}
+              representativeName={representative.name}
+              className="mt-6"
+            />
+          )}
 
           <div className="mb-8">
             <div className="p-4 bg-gray-50 dark:bg-gray-800 rounded-lg">

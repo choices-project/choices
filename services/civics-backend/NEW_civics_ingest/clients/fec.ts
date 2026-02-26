@@ -62,6 +62,20 @@ export class FecApiError extends Error {
   }
 }
 
+const FEC_THROTTLE_MS = Number(process.env.FEC_THROTTLE_MS ?? '3600');
+
+let lastFecRequestAt = 0;
+
+async function throttleFecRequest(): Promise<void> {
+  if (FEC_THROTTLE_MS <= 0) return;
+  const now = Date.now();
+  const wait = Math.max(0, lastFecRequestAt + FEC_THROTTLE_MS - now);
+  if (wait > 0) {
+    await new Promise((resolve) => setTimeout(resolve, wait));
+  }
+  lastFecRequestAt = Date.now();
+}
+
 function getApiKey(): string {
   const key = process.env.FEC_API_KEY;
   if (!key) {
@@ -121,6 +135,7 @@ async function makeFecRequest<T>(
   });
 
   return retryWithBackoff(async () => {
+    await throttleFecRequest();
     const response = await fetch(url.toString(), {
       headers: {
         'Accept': 'application/json',

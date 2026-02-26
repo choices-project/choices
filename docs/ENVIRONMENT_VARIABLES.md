@@ -6,7 +6,7 @@
 This document lists all environment variables required for the Choices application.
 
 > **Current Status:** All 6 critical (P0) environment variables are configured in Vercel.  
-> See `ENV_VARS_STATUS.md` in project root for complete audit and verification checklist.
+> See [`docs/DEPLOYMENT.md`](./DEPLOYMENT.md) for deployment checklist.
 
 ## Required Environment Variables
 
@@ -198,6 +198,10 @@ web-push generate-vapid-keys
 ### Authentication
 - **Supabase Auth**: `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_ANON_KEY`
 - **Session Management**: Automatically handled by Supabase client
+- **WebAuthn (Passkeys)**:
+  - `RP_ID` (optional) — Relying Party ID; defaults to `choices-app.com` (production) or `localhost` (dev). Use `127.0.0.1` when host is `127.0.0.1`.
+  - `ALLOWED_ORIGINS` (optional) — Comma-separated origins for WebAuthn (e.g. `https://choices-app.com,http://localhost:3000`). Include `http://127.0.0.1:3000` for local dev.
+  - `WEBAUTHN_CHALLENGE_TTL_SECONDS` (optional) — Challenge validity; defaults to 300 (5 minutes).
  - `AUTH_RATE_LIMIT_ENABLED` (optional)
    - Controls whether the **login API** (`/api/auth/login`) enforces per‑IP rate limiting.
    - When set to `1`, email/password logins are limited to **10 attempts per 15 minutes per IP**.
@@ -280,6 +284,11 @@ NEXT_PUBLIC_SENTRY_DSN=https://your-dsn@sentry.io/project-id
 
 # Optional: Admin
 ADMIN_MONITORING_KEY=your-admin-key
+
+# WebAuthn (Passkeys) - Optional; defaults work for localhost
+# RP_ID=localhost
+# ALLOWED_ORIGINS=http://localhost:3000,http://127.0.0.1:3000
+# WEBAUTHN_CHALLENGE_TTL_SECONDS=300
 
 # Privacy Peppers (Development)
 PRIVACY_PEPPER_DEV=dev-pepper-for-hmac-hashing

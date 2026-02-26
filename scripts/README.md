@@ -32,7 +32,7 @@ npx tsx ../scripts/review-index-recommendations.ts
 - Identifies index candidates
 - Generates migration files for recommended indexes
 
-**Alternative:** Use Supabase MCP `get_advisors` (performance) and `apply_migration` to add indexes. See `docs/INDEX_OPTIMIZATION_GUIDE.md`.
+**Alternative:** Use Supabase MCP `get_advisors` (performance) and `apply_migration` to add indexes. See `docs/archive/2026-02-docs-consolidation/INDEX_OPTIMIZATION_GUIDE.md`.
 
 ## RLS smoke test
 

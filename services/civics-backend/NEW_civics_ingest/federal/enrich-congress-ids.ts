@@ -5,7 +5,8 @@
  *
  * Run via: `npm run federal:enrich:congress`
  */
-import 'dotenv/config';
+import { loadEnv } from '../utils/load-env.js';
+loadEnv();
 
 import {
   fetchCongressMembers,
@@ -14,6 +15,7 @@ import {
 import type { CongressMember } from '../clients/congress.js';
 import { fetchGovInfoMember } from '../clients/govinfo.js';
 import { getSupabaseClient } from '../clients/supabase.js';
+import { logger } from '../utils/logger.js';
 
 interface CliOptions {
   limit?: number;
@@ -833,7 +835,14 @@ async function main(): Promise<void> {
   let skippedUnchanged = 0;
   let bioguideOnly = 0;
 
+  let processed = 0;
+  const reportInterval = Math.max(1, Math.floor(targets.length / 10));
+
   for (const row of targets) {
+    processed += 1;
+    if (processed % reportInterval === 0 || processed === targets.length) {
+      logger.progress(processed, targets.length, 'Congress enrichment');
+    }
     let bioguide = normaliseId(row.bioguide_id);
     const originalBioguide = bioguide;
     let member: CongressMember | null = null;

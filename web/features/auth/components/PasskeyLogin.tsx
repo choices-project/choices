@@ -54,8 +54,16 @@ export function PasskeyLogin({
   const [isAuthenticating, setIsAuthenticating] = React.useState(false);
   const [error, setError] = React.useState<string | null>(null);
   const [success, setSuccess] = React.useState(false);
+  const errorRegionRef = React.useRef<HTMLDivElement>(null);
 
   useInitializeBiometricState({ fetchCredentials: false });
+
+  // Focus error region on failure for keyboard/screen-reader users
+  React.useEffect(() => {
+    if (error && errorRegionRef.current) {
+      errorRegionRef.current.focus({ preventScroll: true });
+    }
+  }, [error]);
 
   const isSupported = useBiometricSupported();
   const { setBiometricSuccess, setBiometricError } = useUserActions();
@@ -184,7 +192,13 @@ export function PasskeyLogin({
 
       <CardContent className="space-y-4">
         {success ? (
-          <div className="text-center space-y-4" data-testid="passkey-login-success">
+          <div
+            className="text-center space-y-4"
+            data-testid="passkey-login-success"
+            role="status"
+            aria-live="polite"
+            aria-atomic="true"
+          >
             <CheckCircle className="h-12 w-12 text-green-500 mx-auto animate-in fade-in zoom-in duration-300" />
             <div className="space-y-2">
               <h3 className="text-lg font-semibold text-green-700">{t('auth.passkey.authSuccessful')}</h3>
@@ -219,9 +233,18 @@ export function PasskeyLogin({
             </div>
 
             {error && (
-              <Alert variant="destructive" className="animate-in fade-in slide-in-from-top-2 duration-300">
+              <Alert
+                ref={errorRegionRef}
+                variant="destructive"
+                className="animate-in fade-in slide-in-from-top-2 duration-300"
+                role="alert"
+                aria-live="assertive"
+                aria-atomic="true"
+                id="passkey-login-error"
+                tabIndex={-1}
+              >
                 <AlertCircle className="h-4 w-4" />
-                <AlertDescription className="font-medium">{error}</AlertDescription>
+                <AlertDescription className="font-medium" id="passkey-login-error-message">{error}</AlertDescription>
                 <p className="mt-2 text-xs text-red-600">
                   {t('auth.passkey.errorHint')}
                 </p>
@@ -233,6 +256,8 @@ export function PasskeyLogin({
               disabled={isAuthenticating}
               className="w-full transition-all duration-200 hover:scale-[1.02] active:scale-[0.98]"
               size="lg"
+              aria-busy={isAuthenticating}
+              aria-describedby={error ? 'passkey-login-error-message' : undefined}
             >
               {isAuthenticating ? (
                 <>

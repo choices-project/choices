@@ -171,6 +171,11 @@ features/[feature-name]/
 - Documentation: [`docs/DATABASE_SCHEMA.md`](DATABASE_SCHEMA.md)
 - Migrations: `supabase/migrations/`
 
+**Civics ingest (representative data)?**
+- Service: `services/civics-backend/`
+- Docs: [`GETTING_STARTED.md`](../services/civics-backend/NEW_civics_ingest/docs/GETTING_STARTED.md), [`OPERATOR_RUNBOOK.md`](../services/civics-backend/NEW_civics_ingest/docs/OPERATOR_RUNBOOK.md)
+- Commands: `npm run ingest:setup` then `npm run ingest` (from `services/civics-backend/`)
+
 ## Code Patterns
 
 ### Adding a New Feature
@@ -237,6 +242,20 @@ import type { Database } from '@/types/database';
 - `web/lib/api/index.ts` - API response helpers
 - `web/lib/core/feature-flags.ts` - Feature flag system
 
+## Canonical Utilities (Prefer Over Ad-Hoc)
+
+| Task | Import From | Notes |
+|------|-------------|-------|
+| Date/time | `@/lib/utils/format-utils` | `nowISO`, `formatISODateOnly` |
+| Browser detection | `@/lib/utils/browser-utils` | `detectBrowser`, `getRedirectStrategy`, `navigateTo` |
+| SSR-safe DOM | `@/lib/utils/ssr-safe` | `isBrowser`, `safeNavigate` |
+| API responses | `@/lib/api` | `withErrorHandling`, `successResponse`, `errorResponse` |
+| CORS | `@/lib/api/response-utils` | `corsPreflightResponse`, `withCors` |
+| Origin validation | `@/lib/http/origin` | `requireTrustedOrigin` |
+| Logging | `@/lib/utils/logger` | `logger`, `devLog`, `logError` |
+
+Do not use deprecated paths: `@/lib/utils/http`, `@/lib/utils/cors`, `@/lib/utils/csrf*` (ESLint blocks them).
+
 ## Tips for Navigation
 
 1. **Use your IDE's "Go to Definition"** - Most code has JSDoc comments
@@ -248,7 +267,7 @@ import type { Database } from '@/types/database';
 ## Still Lost?
 
 - Check [`ARCHITECTURE.md`](ARCHITECTURE.md) for system design
-- Read [`DEVELOPMENT.md`](DEVELOPMENT.md) for development patterns
+- Read [`GETTING_STARTED.md`](GETTING_STARTED.md) for setup and runbook
 - See [`TESTING.md`](TESTING.md) for testing patterns
 - Review [`STATE_MANAGEMENT.md`](STATE_MANAGEMENT.md) for state patterns
 

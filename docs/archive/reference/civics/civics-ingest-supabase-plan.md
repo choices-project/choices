@@ -1,6 +1,6 @@
 # Civics Ingest → Supabase Utilization Plan
 
-> **Reference status:** This is a roadmap for engineering work on the SQL merge. Day-to-day operators should rely on [`docs/civics-backend-quickstart.md`](./civics-backend-quickstart.md) and [`docs/civics-backend-operations.md`](./civics-backend-operations.md) for run instructions.
+> **ARCHIVED.** Use [OPERATOR_RUNBOOK.md](../../../services/civics-backend/NEW_civics_ingest/docs/OPERATOR_RUNBOOK.md) and [DATABASE_SCHEMA.md](../../../services/civics-backend/NEW_civics_ingest/docs/DATABASE_SCHEMA.md). This file is historical only.
 
 This document enumerates the outstanding work needed to ensure the rebuilt civics ingest service fully exercises the Supabase schema. The existing ingest and enrichment flows still focus on `representatives_core`; the goal is to persist normalized, auditable data across every related table whenever we load or refresh representatives.
 

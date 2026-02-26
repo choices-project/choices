@@ -41,8 +41,14 @@ jobs:
       - name: Build
         run: npm run build --silent
 
+      - name: Pre-flight check
+        run: npm run ingest:check
+        env:
+          SUPABASE_URL: ${{ secrets.NEXT_PUBLIC_SUPABASE_URL }}
+          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+
       - name: OpenStates scheduled sync
-        run: npm run openstates:sync:scheduled
+        run: npm run reingest:scheduled
         env:
           SUPABASE_URL: ${{ secrets.NEXT_PUBLIC_SUPABASE_URL }}
           SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}

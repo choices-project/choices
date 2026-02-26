@@ -14,12 +14,13 @@
 | **types** (`types.yml`) | pull_request | TypeScript config check, types:strict, lint (non-blocking) |
 | **Continuous Deployment** (`deploy.yml`) | push → main; manual | Pre-deploy validation, Vercel deploy, production checks |
 | **Civics Smoke Test** (`civics-smoke-test.yml`) | PR (civics paths); manual | Civics-specific: build, Playwright + K6 smoke tests |
+| **Civics Backend CI** (`civics-backend-ci.yml`) | PR/push (services/civics-backend/**) | Build + `ingest:check` for civics ingest pre-flight |
 | **CodeQL** (`codeql-js.yml`) | push/PR → main; weekly schedule | JS/TS analysis, SARIF upload |
 | **CodeQL Alert Summary** (`codeql-alert-summary.yml`) | PR open/sync | Summarizes CodeQL alerts on PR |
 | **GitLeaks** (`gitleaks.yml`) | push/PR → main; weekly Mon | Secret scanning (requires `GITLEAKS_LICENSE`) |
 | **Production Testing** (`production-tests.yml`) | push (paths), schedule */6h; manual | Production smoke/expanded tests against live URL |
 | **Security Watch** (`security-watch.yml`) | daily + weekly Mon; manual | npm audit (high/critical), OSV scanner |
-| **OpenStates Scheduled Sync** (`openstates-scheduled-sync.yml`) | 06:00 UTC daily; manual | Civics ingest: committees → activity → events (resume). Secrets: `NEXT_PUBLIC_SUPABASE_URL`, `SUPABASE_SERVICE_ROLE_KEY`, `OPEN_STATES_API_KEY` |
+| **OpenStates Scheduled Sync** (`openstates-scheduled-sync.yml`) | 06:00 UTC daily; manual | Civics ingest: rate-limit-aware re-ingest (committees → activity). Secrets: `NEXT_PUBLIC_SUPABASE_URL` (or `SUPABASE_URL`), `SUPABASE_SERVICE_ROLE_KEY`, `OPEN_STATES_API_KEY` (GitHub secret name — workflow maps to `OPENSTATES_API_KEY`) |
 
 ---
 
@@ -37,7 +38,8 @@
    - K6 install: replaced deprecated `apt-key` with keyring-based repo setup.
 
 4. **openstates-scheduled-sync.yml**
-   - Uses `NEXT_PUBLIC_SUPABASE_URL` and `OPEN_STATES_API_KEY` to match repo secrets (no `SUPABASE_URL`).
+   - Runs `reingest:scheduled` (rate-limit-aware) via shell script when built. Env: `SUPABASE_URL` (from `NEXT_PUBLIC_SUPABASE_URL`), `SUPABASE_SERVICE_ROLE_KEY`, `OPENSTATES_API_KEY` (from secret `OPEN_STATES_API_KEY`).
+   - **Secret name:** GitHub secret must be `OPEN_STATES_API_KEY` (underscore) — workflow maps it to `OPENSTATES_API_KEY`.
 
 ---
 

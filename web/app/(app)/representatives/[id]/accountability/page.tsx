@@ -8,16 +8,18 @@
 
 'use client';
 
-import { Scale, ArrowLeft, ExternalLink, RotateCcw, Share2, Download, FileText, Link2 } from 'lucide-react';
+import { Scale, ArrowLeft, ExternalLink, Share2, Download, FileText, Link2 } from 'lucide-react';
 import Link from 'next/link';
 import { useParams } from 'next/navigation';
 import React, { useCallback, useEffect, useState } from 'react';
 
+import { EnhancedEmptyState } from '@/components/shared/EnhancedEmptyState';
+import { EnhancedErrorDisplay } from '@/components/shared/EnhancedErrorDisplay';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 
-import { useAnalyticsActions } from '@/lib/stores';
+import { useAnalyticsActions, useAppActions } from '@/lib/stores';
 import { cn } from '@/lib/utils';
 
 import { useAuth } from '@/hooks/useAuth';
@@ -63,6 +65,7 @@ export default function RepresentativeAccountabilityPage() {
   const { t } = useI18n();
   const { user, isLoading: authLoading } = useAuth();
   const { trackPageView, trackUserAction } = useAnalyticsActions();
+  const { setCurrentRoute, setSidebarActiveSection, setBreadcrumbs } = useAppActions();
   const params = useParams();
   const repIdParam = params?.id as string | undefined;
   const repId = repIdParam ? parseInt(repIdParam, 10) : null;
@@ -106,6 +109,22 @@ export default function RepresentativeAccountabilityPage() {
     const name = payload?.data?.representative?.name ?? payload?.data?.name ?? null;
     if (name) setRepName(name);
   }, [isValidRepId, repId]);
+
+  useEffect(() => {
+    if (!isValidRepId) return;
+    setCurrentRoute(`/representatives/${repId}/accountability`);
+    setSidebarActiveSection('civics');
+    setBreadcrumbs([
+      { label: 'Home', href: '/' },
+      { label: 'Representatives', href: '/representatives' },
+      { label: repName ?? 'Representative', href: `/representatives/${repId}` },
+      { label: 'Accountability', href: `/representatives/${repId}/accountability` },
+    ]);
+    return () => {
+      setSidebarActiveSection(null);
+      setBreadcrumbs([]);
+    };
+  }, [isValidRepId, repId, repName, setBreadcrumbs, setCurrentRoute, setSidebarActiveSection]);
 
   useEffect(() => {
     if (!isValidRepId) {
@@ -227,7 +246,7 @@ export default function RepresentativeAccountabilityPage() {
 
   if (!isValidRepId) {
     return (
-      <main id="main-content" className="container max-w-3xl mx-auto py-8 px-4" aria-label={t('civics.representatives.accountability.title')}>
+      <div className="container max-w-3xl mx-auto py-8 px-4" aria-label={t('civics.representatives.accountability.title')}>
         <Alert variant="destructive">
           <AlertTitle>{t('civics.representatives.detail.notFound.title')}</AlertTitle>
           <AlertDescription>{t('civics.representatives.detail.notFound.message')}</AlertDescription>
@@ -235,13 +254,19 @@ export default function RepresentativeAccountabilityPage() {
         <Button asChild variant="outline" className="mt-4">
           <Link href="/representatives">{t('civics.representatives.detail.back')}</Link>
         </Button>
-      </main>
+      </div>
     );
   }
 
   if (authLoading || (loading && !error)) {
     return (
-      <main id="main-content" className="container max-w-3xl mx-auto py-8 px-4" aria-label={t('civics.representatives.accountability.title')} aria-busy="true">
+      <div
+        className="container max-w-3xl mx-auto py-8 px-4"
+        aria-label={t('civics.representatives.accountability.title')}
+        aria-busy="true"
+        aria-live="polite"
+        role="status"
+      >
         <div className="animate-pulse space-y-6">
           <div className="h-6 bg-muted rounded w-48" aria-hidden />
           <div className="h-9 bg-muted rounded w-3/4 max-w-md" aria-hidden />
@@ -249,13 +274,13 @@ export default function RepresentativeAccountabilityPage() {
           <div className="h-40 bg-muted rounded-lg" aria-hidden />
           <div className="h-40 bg-muted rounded-lg" aria-hidden />
         </div>
-      </main>
+      </div>
     );
   }
 
   if (!user) {
     return (
-      <main id="main-content" className="container max-w-3xl mx-auto py-8 px-4" aria-label={t('civics.representatives.accountability.title')}>
+      <div className="container max-w-3xl mx-auto py-8 px-4" aria-label={t('civics.representatives.accountability.title')}>
         <Button asChild variant="ghost" size="sm" className="mb-6 -ml-2 text-muted-foreground hover:text-foreground focus:ring-2 focus:ring-primary focus:ring-offset-2 rounded-md">
           <Link href={`/representatives/${repId}`} className="inline-flex items-center gap-2">
             <ArrowLeft className="w-4 h-4" aria-hidden />
@@ -280,14 +305,14 @@ export default function RepresentativeAccountabilityPage() {
             </Button>
           </CardContent>
         </Card>
-      </main>
+      </div>
     );
   }
 
   const someLoading = polls.length > 0 && Object.keys(analyses).length < polls.filter((p) => p.billId).length;
 
   return (
-    <main id="main-content" className="container max-w-3xl mx-auto py-8 px-4" aria-label={t('civics.representatives.accountability.title')} aria-busy={someLoading}>
+    <div className="container max-w-3xl mx-auto py-8 px-4" aria-label={t('civics.representatives.accountability.title')} aria-busy={someLoading}>
       <Button asChild variant="ghost" size="sm" className="mb-6 -ml-2 text-muted-foreground hover:text-foreground focus:ring-2 focus:ring-primary focus:ring-offset-2 rounded-md">
         <Link href={`/representatives/${repId}`} className="inline-flex items-center gap-2">
           <ArrowLeft className="w-4 h-4" aria-hidden />
@@ -322,28 +347,34 @@ export default function RepresentativeAccountabilityPage() {
       </header>
 
       {error && (
-        <Alert variant="destructive" className="mb-6">
-          <AlertTitle>{t('civics.representatives.accountability.loadError')}</AlertTitle>
-          <AlertDescription>{error}</AlertDescription>
-          <Button variant="outline" size="sm" className="mt-3 gap-2" onClick={retryLoad}>
-            <RotateCcw className="w-4 h-4" aria-hidden />
-            {t('civics.representatives.accountability.retry')}
-          </Button>
-        </Alert>
+        <div className="mb-6">
+          <EnhancedErrorDisplay
+            title={t('civics.representatives.accountability.loadError')}
+            message={error}
+            canRetry
+            onRetry={retryLoad}
+            secondaryAction={{
+              label: t('civics.representatives.accountability.backToRep'),
+              href: `/representatives/${repId}`,
+            }}
+          />
+        </div>
       )}
 
       {polls.length === 0 && !loading && (
-        <Card className="border-2">
-          <CardContent className="pt-6 pb-6 px-6">
-            <p className="text-muted-foreground text-base">{t('civics.representatives.accountability.empty')}</p>
-            <p className="text-muted-foreground text-sm mt-2">{t('civics.representatives.accountability.emptyHint')}</p>
-            <Button asChild size="lg" className="mt-6">
-              <Link href={`/polls/create/constituent-will?representative_id=${repId}`}>
-                {t('civics.representatives.detail.actions.createBillVotePoll')}
-              </Link>
-            </Button>
-          </CardContent>
-        </Card>
+        <EnhancedEmptyState
+          icon={<Scale className="h-12 w-12 text-muted-foreground" />}
+          title={t('civics.representatives.accountability.empty')}
+          description={t('civics.representatives.accountability.emptyHint')}
+          primaryAction={{
+            label: t('civics.representatives.detail.actions.createBillVotePoll'),
+            href: `/polls/create/constituent-will?representative_id=${repId}`,
+          }}
+          secondaryAction={{
+            label: t('navigation.polls'),
+            href: '/polls',
+          }}
+        />
       )}
 
       <section className="space-y-6" aria-label={t('civics.representatives.accountability.subtitle')}>
@@ -491,6 +522,6 @@ export default function RepresentativeAccountabilityPage() {
           );
         })}
       </section>
-    </main>
+    </div>
   );
 }

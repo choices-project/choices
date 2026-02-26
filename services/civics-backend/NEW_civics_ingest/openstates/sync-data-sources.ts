@@ -5,11 +5,13 @@
  * Usage:
  *   npm run openstates:sync:data-sources [--states=CA,NY] [--limit=500] [--dry-run]
  */
-import 'dotenv/config';
+import { loadEnv } from '../utils/load-env.js';
+loadEnv();
 
 import { collectActiveRepresentatives, type CollectOptions } from '../ingest/openstates/index.js';
 import type { CanonicalRepresentative } from '../ingest/openstates/people.js';
 import { syncRepresentativeDataSources } from '../persist/data-sources.js';
+import { logger } from '../utils/logger.js';
 
 type CliOptions = {
   states?: string[];
@@ -99,12 +101,12 @@ async function main() {
 
   const eligible = reps.filter((rep) => rep.supabaseRepresentativeId != null);
   if (eligible.length === 0) {
-    console.log('No representatives with Supabase IDs found; nothing to sync.');
+    logger.info('No representatives with Supabase IDs found; nothing to sync.');
     return;
   }
 
   if (options.dryRun) {
-    console.log(
+    logger.info(
       `[dry-run] Would sync provenance for ${eligible.length} representatives${
         options.states?.length ? ` in ${options.states.join(', ')}` : ''
       }.`,
@@ -112,7 +114,7 @@ async function main() {
     return;
   }
 
-  console.log(
+  logger.info(
     `Syncing data source provenance for ${eligible.length} representatives${
       options.states?.length ? ` filtered by ${options.states.join(', ')}` : ''
     }...`,
@@ -124,18 +126,20 @@ async function main() {
       await syncRepresentativeDataSources(rep);
       succeeded += 1;
     } catch (error) {
-      console.error(
-        `Failed to sync data sources for ${rep.name} (${rep.supabaseRepresentativeId ?? 'unknown id'}):`,
-        (error as Error).message,
+      logger.error(
+        `Failed to sync data sources for ${rep.name} (${rep.supabaseRepresentativeId ?? 'unknown id'})`,
+        { error: (error as Error).message },
       );
     }
   }
 
-  console.log(`✅ Data source sync complete (${succeeded}/${eligible.length}).`);
+  logger.info(`✅ Data source sync complete (${succeeded}/${eligible.length}).`);
 }
 
 main().catch((error) => {
-  console.error('Data source sync failed:', error);
+  logger.error('Data source sync failed', {
+    error: error instanceof Error ? error.message : String(error),
+  });
   process.exit(1);
 });
 

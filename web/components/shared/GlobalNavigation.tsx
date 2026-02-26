@@ -377,7 +377,7 @@ export default function GlobalNavigation() {
                 variant="ghost"
                 size="sm"
                 onClick={toggleMobileMenu}
-                className="p-2 text-gray-700 dark:text-gray-300 hover:text-gray-900 dark:hover:text-gray-100 hover:bg-gray-100 dark:hover:bg-gray-800"
+                className="p-2 min-h-[44px] min-w-[44px] text-gray-700 dark:text-gray-300 hover:text-gray-900 dark:hover:text-gray-100 hover:bg-gray-100 dark:hover:bg-gray-800"
                 aria-label={
                   isMobileMenuOpen
                     ? t('navigation.mobileMenu.close')

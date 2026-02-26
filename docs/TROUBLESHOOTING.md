@@ -281,7 +281,7 @@ See [`docs/archive/reference/push-notifications/push-notifications-testing-2025.
 ### Check Documentation
 
 1. [`docs/README.md`](README.md) - Documentation index
-2. [`docs/DEVELOPMENT.md`](DEVELOPMENT.md) - Development setup
+2. [`docs/GETTING_STARTED.md`](GETTING_STARTED.md) - Development setup
 3. [`docs/ARCHITECTURE.md`](ARCHITECTURE.md) - System architecture
 4. [`docs/TESTING.md`](TESTING.md) - Testing guide
 

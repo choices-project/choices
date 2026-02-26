@@ -1,0 +1,50 @@
+# Civics backend ingest: build + pre-flight check.
+# Runs on PRs when civics-backend changes.
+name: Civics Backend CI
+
+on:
+  pull_request:
+    paths:
+      - 'services/civics-backend/**'
+      - 'services/civics-shared/**'
+  push:
+    branches: [main, develop]
+    paths:
+      - 'services/civics-backend/**'
+      - 'services/civics-shared/**'
+
+defaults:
+  run:
+    working-directory: services/civics-backend
+
+jobs:
+  ingest-check:
+    name: Build & Ingest Check
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '24.11.0'
+          cache: 'npm'
+          cache-dependency-path: services/civics-backend/package-lock.json
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Build
+        run: npm run build --silent
+
+      - name: Ingest pre-flight check
+        run: npm run ingest:check
+        env:
+          SUPABASE_URL: ${{ secrets.NEXT_PUBLIC_SUPABASE_URL || 'https://example.supabase.co' }}
+          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY || 'dev-only-secret' }}
+
+      - name: Unit tests
+        run: npm run test

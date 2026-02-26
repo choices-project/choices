@@ -135,7 +135,7 @@ const persistConfig = {
 - Keep payloads small (< 10KB) for performance
 - Test persistence/restoration in both unit tests and E2E harnesses
 
-Store-level tracking (which stores persist, creator patterns, consumer alignment): see `scratch/storeModernization/README.md`.
+Store-level tracking: see `scratch/roadmap.md` § Tech Debt & Ops.
 
 ---
 
@@ -396,9 +396,9 @@ function MyComponent() {
 
 - Notification store modernization PRs — see `web/lib/stores/notificationStore.ts`, `web/features/civics/utils/civicsCountdownUtils.ts` (election notification hook), and tests covering analytics + countdown notifications (`web/tests/unit/stores/notification.integration.test.tsx`, `web/tests/unit/features/civics/useElectionCountdown.test.ts`).
 - Voter registration store example — see `web/lib/stores/voterRegistrationStore.ts` and `tests/unit/stores/voter-registration.store.test.ts` for a fetch-centric pattern that still fits the shared helpers.
-- Development setup & testing commands — `docs/DEVELOPMENT.md`, `docs/TESTING.md`.
+- Development setup & testing commands — `docs/GETTING_STARTED.md`, `docs/TESTING.md`.
 - Technical backlog — `docs/ROADMAP.md`.  
-- Canonical utilities — `docs/UTILS_GUIDE.md`.
+- Canonical utilities — `docs/CODEBASE_NAVIGATION.md` § Canonical Utilities.
 
 ---
 

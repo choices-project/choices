@@ -1,19 +1,24 @@
 /**
  * Agent Operations Integration Tests
  *
- * Integration tests for agent operations with Supabase
- * These tests require a test database connection
+ * Integration tests for agent operations with Supabase.
+ * Uses node environment because getSupabaseAgentClient asserts server-only (no window).
+ *
+ * @jest-environment node
  */
 
 import { describe, it, expect, beforeAll, afterAll } from '@jest/globals'
 import { getSupabaseAgentClient, getAnalyticsAgentClient } from '@/utils/supabase/agent'
 import { queryAgentOperations, getAgentOperationStats } from '@/lib/core/agent/audit'
 
-// Skip integration tests if test database is not configured
-const SKIP_INTEGRATION = !process.env.NEXT_PUBLIC_SUPABASE_URL ||
-                         process.env.NEXT_PUBLIC_SUPABASE_URL.includes('example')
+// Skip integration tests unless explicitly opted in (requires real Supabase + RUN_AGENT_INTEGRATION=true)
+// These tests hit a real DB and can timeout in CI; run locally with: RUN_AGENT_INTEGRATION=true npm test
+const SKIP_INTEGRATION =
+  process.env.RUN_AGENT_INTEGRATION !== 'true' ||
+  !process.env.NEXT_PUBLIC_SUPABASE_URL ||
+  process.env.NEXT_PUBLIC_SUPABASE_URL.includes('example')
 
-const describeTest = SKIP_INTEGRATION ? describe.skip : describe;
+const describeTest = SKIP_INTEGRATION ? describe.skip : describe
 describeTest('Agent Operations Integration', () => {
   let testAgentId: string
 
@@ -57,11 +62,8 @@ describeTest('Agent Operations Integration', () => {
         enableAudit: true,
       })
 
-      // Perform a simple SELECT operation
-      const { error } = await agent.client
-        .from('polls')
-        .select('id')
-        .limit(1)
+      // Perform a simple SELECT operation (agent wraps select as async; no limit chain)
+      const { error } = await agent.client.from('polls').select('id')
 
       // Operation should succeed (or fail gracefully if no data)
       expect(error).toBeNull() // Or handle gracefully if table doesn't exist in test DB
@@ -91,10 +93,7 @@ describeTest('Agent Operations Integration', () => {
       })
 
       // Try to select from a non-existent table
-      const { error } = await agent.client
-        .from('non_existent_table_xyz')
-        .select('*')
-        .limit(1)
+      const { error } = await agent.client.from('non_existent_table_xyz').select('*')
 
       // Should handle error gracefully
       if (error) {
@@ -174,26 +173,17 @@ describeTest('Agent Operations Integration', () => {
       })
 
       // First request should succeed
-      const { error: error1 } = await agent.client
-        .from('polls')
-        .select('id')
-        .limit(1)
+      const { error: error1 } = await agent.client.from('polls').select('id')
 
       expect(error1).toBeNull()
 
       // Second request should succeed
-      const { error: error2 } = await agent.client
-        .from('polls')
-        .select('id')
-        .limit(1)
+      const { error: error2 } = await agent.client.from('polls').select('id')
 
       expect(error2).toBeNull()
 
       // Third request might hit rate limit (depending on timing)
-      const { error: error3 } = await agent.client
-        .from('polls')
-        .select('id')
-        .limit(1)
+      const { error: error3 } = await agent.client.from('polls').select('id')
 
       // Either succeeds or rate limited
       if (error3) {

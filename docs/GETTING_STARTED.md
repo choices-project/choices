@@ -87,8 +87,7 @@ git checkout -b feature/your-feature-name
 
 ### 2. Make Your Changes
 
-- Write code following the patterns in [`DEVELOPMENT.md`](DEVELOPMENT.md)
-- Use the utilities from [`UTILS_GUIDE.md`](UTILS_GUIDE.md)
+- Write code following the patterns in [`STATE_MANAGEMENT.md`](STATE_MANAGEMENT.md) and [`CODEBASE_NAVIGATION.md`](CODEBASE_NAVIGATION.md)
 - Follow state management patterns from [`STATE_MANAGEMENT.md`](STATE_MANAGEMENT.md)
 
 ### 3. Run Quality Checks
@@ -186,11 +185,20 @@ web/
 
 For detailed structure, see [`CODEBASE_NAVIGATION.md`](CODEBASE_NAVIGATION.md).
 
+## Day-to-Day Runbook
+
+```bash
+cd web
+npm run types:generate   # After migrations change
+npm run check            # Lint + type-check (matches CI)
+npm run i18n:extract     # Before committing i18n changes
+npm run governance:check # Before PR (store/API changes require doc updates)
+```
+
 ## Getting Help
 
 - **Documentation**: See [`docs/README.md`](README.md) for the full index
 - **Architecture**: See [`ARCHITECTURE.md`](ARCHITECTURE.md) for system design
-- **Development**: See [`DEVELOPMENT.md`](DEVELOPMENT.md) for detailed setup
 - **Testing**: See [`TESTING.md`](TESTING.md) for testing strategies
 - **Issues**: Check existing issues or create a new one
 
@@ -199,7 +207,7 @@ For detailed structure, see [`CODEBASE_NAVIGATION.md`](CODEBASE_NAVIGATION.md).
 1. ✅ You've got the app running locally
 2. ✅ You understand the basic workflow
 3. 🎯 **Pick a task**: Look for `good first issue` labels or improve documentation
-4. 🎯 **Read the guides**: [`DEVELOPMENT.md`](DEVELOPMENT.md), [`TESTING.md`](TESTING.md), [`STATE_MANAGEMENT.md`](STATE_MANAGEMENT.md)
+4. 🎯 **Read the guides**: [`TESTING.md`](TESTING.md), [`STATE_MANAGEMENT.md`](STATE_MANAGEMENT.md), [`CODEBASE_NAVIGATION.md`](CODEBASE_NAVIGATION.md)
 5. 🎯 **Explore the codebase**: Start with [`CODEBASE_NAVIGATION.md`](CODEBASE_NAVIGATION.md)
 
 Welcome to the Choices platform! 🎉

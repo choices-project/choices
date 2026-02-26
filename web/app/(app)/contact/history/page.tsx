@@ -157,14 +157,22 @@ export default function ContactHistoryPage() {
 
   return (
     <div className="container mx-auto px-4 py-8">
-      <div className="mb-6">
-        <h1 className="text-3xl font-bold text-gray-900 mb-2 flex items-center space-x-2">
-          <ChatBubbleLeftRightIcon className="w-8 h-8 text-blue-600" />
-          <span>Communication History</span>
-        </h1>
-        <p className="text-gray-600">
-          View all your messages and conversations with representatives
-        </p>
+      <div className="mb-6 flex flex-wrap items-start justify-between gap-4">
+        <div>
+          <h1 className="text-3xl font-bold text-gray-900 mb-2 flex items-center space-x-2">
+            <ChatBubbleLeftRightIcon className="w-8 h-8 text-blue-600" />
+            <span>Communication History</span>
+          </h1>
+          <p className="text-gray-600">
+            View all your messages and conversations with representatives
+          </p>
+        </div>
+        <Link
+          href="/contact/submissions"
+          className="text-sm font-medium text-blue-600 hover:text-blue-700 hover:underline"
+        >
+          My Submissions →
+        </Link>
       </div>
 
       {/* Filters */}

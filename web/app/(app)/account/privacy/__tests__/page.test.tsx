@@ -22,9 +22,20 @@ jest.mock('@/lib/stores', () => ({
   useUser: jest.fn(),
 }));
 
-jest.mock('@/lib/stores/profileStore', () => ({
-  useProfileStore: jest.fn(),
-}));
+jest.mock('@/lib/stores/profileStore', () => {
+  const settings = { data_sharing: 'minimal', allow_messages: true };
+  return {
+    useProfileStore: jest.fn(),
+    useProfilePrivacySettings: jest.fn(() => settings),
+    useProfileActions: jest.fn(() => ({ updatePrivacySettings: jest.fn() })),
+    useProfileLoading: jest.fn(() => ({
+      isLoading: false,
+      isUpdating: false,
+      isUploadingAvatar: false,
+      isExporting: false,
+    })),
+  };
+});
 
 jest.mock('@/components/shared/DashboardNavigation', () => {
   const DashboardNavigation = () => <div data-testid="dashboard-navigation" />;

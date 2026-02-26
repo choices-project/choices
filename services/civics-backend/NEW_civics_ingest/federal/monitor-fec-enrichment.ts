@@ -5,7 +5,8 @@
  * Usage:
  *   npm run build && node build/scripts/tools/monitor-fec-enrichment.js
  */
-import 'dotenv/config';
+import { loadEnv } from '../utils/load-env.js';
+loadEnv();
 
 import { getSupabaseClient } from '../clients/supabase.js';
 

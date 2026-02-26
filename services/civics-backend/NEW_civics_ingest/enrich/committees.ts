@@ -1,7 +1,13 @@
 import { getSupabaseClient } from '../clients/supabase.js';
 import type { CanonicalRepresentative } from '../ingest/openstates/people.js';
-import { fetchCommittees } from '../clients/openstates.js';
+import {
+  fetchCommittees,
+  type OpenStatesCommittee,
+} from '../clients/openstates.js';
 import { deriveJurisdictionFilter } from './state.js';
+
+/** Cache of committees by jurisdiction. Reduces API calls from ~8000 to ~50. */
+export type CommitteesByJurisdictionCache = Map<string, OpenStatesCommittee[]>;
 
 export interface CommitteeAssignment {
   committeeName: string;
@@ -139,82 +145,101 @@ async function fetchCommitteeAssignmentsFromYAML(
 }
 
 /**
- * Fetch committee assignments from OpenStates API (current data)
+ * Resolve committee assignments from pre-fetched committees (no API call).
+ */
+function resolveAssignmentsFromCommittees(
+  openstatesId: string,
+  committees: OpenStatesCommittee[],
+): CommitteeAssignment[] {
+  const assignments: CommitteeAssignment[] = [];
+  const seen = new Set<string>();
+
+  for (const committee of committees) {
+    const memberships = committee.memberships || [];
+    for (const membership of memberships) {
+      if (membership.person?.id !== openstatesId) {
+        continue;
+      }
+
+      const committeeName = committee.name?.trim();
+      if (!committeeName) continue;
+
+      const role = membership.role?.trim() || null;
+      const startDate = membership.start_date || null;
+      const endDate = membership.end_date || null;
+
+      const key = `${committeeName.toLowerCase()}|${role?.toLowerCase() ?? ''}|${startDate ?? ''}|${endDate ?? ''}`;
+      if (seen.has(key)) continue;
+      seen.add(key);
+
+      assignments.push({
+        committeeName,
+        role,
+        startDate,
+        endDate,
+        isCurrent: isCurrent(endDate),
+        source: 'openstates:api',
+        openstatesCommitteeId: committee.id || null,
+      });
+    }
+  }
+
+  return assignments;
+}
+
+/**
+ * Fetch committee assignments from OpenStates API (current data).
+ * When cache is provided, uses cached committees per jurisdiction (no API call).
  */
 async function fetchCommitteeAssignmentsFromAPI(
   canonical: CanonicalRepresentative,
+  cache?: CommitteesByJurisdictionCache,
 ): Promise<CommitteeAssignment[]> {
   if (!canonical.openstatesId) {
     return [];
   }
 
-  try {
-    const jurisdiction = deriveJurisdictionFilter(canonical);
-    if (!jurisdiction) {
-      return [];
-    }
-
-    // Fetch committees for jurisdiction
-    const committees = await fetchCommittees({ jurisdiction });
-    if (committees.length === 0) {
-      return [];
-    }
-
-    const assignments: CommitteeAssignment[] = [];
-    const seen = new Set<string>();
-
-    // Find committees where this person is a member
-    for (const committee of committees) {
-      const memberships = committee.memberships || [];
-      for (const membership of memberships) {
-        if (membership.person?.id !== canonical.openstatesId) {
-          continue;
-        }
-
-        const committeeName = committee.name?.trim();
-        if (!committeeName) continue;
-
-        const role = membership.role?.trim() || null;
-        const startDate = membership.start_date || null;
-        const endDate = membership.end_date || null;
-
-        const key = `${committeeName.toLowerCase()}|${role?.toLowerCase() ?? ''}|${startDate ?? ''}|${endDate ?? ''}`;
-        if (seen.has(key)) {
-          continue;
-        }
-        seen.add(key);
-
-        assignments.push({
-          committeeName,
-          role,
-          startDate,
-          endDate,
-          isCurrent: isCurrent(endDate),
-          source: 'openstates:api',
-          openstatesCommitteeId: committee.id || null,
-        });
-      }
-    }
-
-    return assignments;
-  } catch (error) {
-    console.warn(
-      `Unable to fetch committee assignments from API for ${canonical.openstatesId}:`,
-      (error as Error).message,
-    );
+  const jurisdiction = deriveJurisdictionFilter(canonical);
+  if (!jurisdiction) {
     return [];
   }
+
+  let committees: OpenStatesCommittee[];
+
+  if (cache?.has(jurisdiction)) {
+    committees = cache.get(jurisdiction)!;
+  } else {
+    try {
+      committees = await fetchCommittees({ jurisdiction });
+      cache?.set(jurisdiction, committees);
+    } catch (error) {
+      console.warn(
+        `Unable to fetch committee assignments from API for ${canonical.openstatesId}:`,
+        (error as Error).message,
+      );
+      return [];
+    }
+  }
+
+  if (committees.length === 0) {
+    return [];
+  }
+
+  return resolveAssignmentsFromCommittees(canonical.openstatesId, committees);
 }
 
 /**
  * Fetch committee assignments, merging YAML (baseline) with API (current) data.
  * API data takes precedence for current assignments, YAML provides historical context.
+ *
+ * @param cache Optional jurisdiction -> committees cache. When provided, committees
+ *   are looked up from cache instead of making API calls (reduces ~8000 calls to ~50).
  */
 export async function fetchCommitteeAssignments(
   canonical: CanonicalRepresentative,
-  options: { useAPI?: boolean } = {},
+  options: { useAPI?: boolean; committeesCache?: CommitteesByJurisdictionCache } = {},
 ): Promise<CommitteeAssignment[]> {
-  const { useAPI = true } = options;
+  const { useAPI = true, committeesCache } = options;
 
   // Always fetch YAML baseline (historical data)
   const yamlAssignments = await fetchCommitteeAssignmentsFromYAML(canonical);
@@ -222,7 +247,10 @@ export async function fetchCommitteeAssignments(
   // If API is enabled and we have an openstatesId, fetch current data
   if (useAPI && canonical.openstatesId) {
     try {
-      const apiAssignments = await fetchCommitteeAssignmentsFromAPI(canonical);
+      const apiAssignments = await fetchCommitteeAssignmentsFromAPI(
+        canonical,
+        committeesCache,
+      );
 
       // Merge: API assignments take precedence for current committees
       // YAML provides historical context for committees not in API
@@ -253,6 +281,32 @@ export async function fetchCommitteeAssignments(
 
   // Return YAML only if API is disabled or unavailable
   return yamlAssignments;
+}
+
+/**
+ * Pre-fetch committees for all jurisdictions present in the representative list.
+ * Returns a cache that can be passed to fetchCommitteeAssignments to avoid N+1 API calls.
+ * Reduces API calls from ~8000 (one per rep) to ~50 (one per jurisdiction).
+ */
+export async function buildCommitteesCache(
+  reps: CanonicalRepresentative[],
+): Promise<CommitteesByJurisdictionCache> {
+  const cache = new Map<string, OpenStatesCommittee[]>();
+  const jurisdictions = new Set<string>();
+
+  for (const rep of reps) {
+    const jurisdiction = deriveJurisdictionFilter(rep);
+    if (jurisdiction && rep.openstatesId) {
+      jurisdictions.add(jurisdiction);
+    }
+  }
+
+  for (const jurisdiction of jurisdictions) {
+    const committees = await fetchCommittees({ jurisdiction });
+    cache.set(jurisdiction, committees);
+  }
+
+  return cache;
 }
 
 

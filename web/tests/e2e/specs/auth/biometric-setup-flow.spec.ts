@@ -227,4 +227,65 @@ test.describe('Biometric Setup Flow', () => {
 
     expect(isAuthPage).toBe(true);
   });
+
+  test('profile shows trust tier and biometric button', async ({ page }) => {
+    test.setTimeout(60_000);
+
+    const testUser = getE2EUserCredentials();
+    if (!testUser) {
+      test.skip(true, 'E2E credentials not available');
+      return;
+    }
+
+    await page.goto(`${BASE_URL}/auth`, { waitUntil: 'domcontentloaded', timeout: 30_000 });
+    await loginWithPassword(page, testUser, { path: '/auth', timeoutMs: 30_000 });
+    await waitForPageReady(page);
+    await page.waitForTimeout(2_000);
+
+    await page.goto(`${BASE_URL}/profile`, { waitUntil: 'domcontentloaded', timeout: 30_000 });
+    await waitForPageReady(page);
+    await page.waitForTimeout(3_000);
+
+    const currentUrl = page.url();
+    if (currentUrl.includes('/auth')) return;
+
+    // Should see trust tier in Account & Security
+    const trustTierText = page.locator('text=/Trust tier:|trust tier/i');
+    await expect(trustTierText.first()).toBeVisible({ timeout: 5_000 });
+
+    // Should see Set Up Biometric Login or Manage Passkeys button
+    const biometricButton = page.getByRole('button', {
+      name: /Set up biometric|Manage passkeys/i,
+    });
+    await expect(biometricButton).toBeVisible({ timeout: 5_000 });
+  });
+
+  test('biometric setup page shows trust benefit copy', async ({ page }) => {
+    test.setTimeout(60_000);
+
+    const testUser = getE2EUserCredentials();
+    if (!testUser) {
+      test.skip(true, 'E2E credentials not available');
+      return;
+    }
+
+    await page.goto(`${BASE_URL}/auth`, { waitUntil: 'domcontentloaded', timeout: 30_000 });
+    await loginWithPassword(page, testUser, { path: '/auth', timeoutMs: 30_000 });
+    await waitForPageReady(page);
+    await page.waitForTimeout(2_000);
+
+    await page.goto(`${BASE_URL}/profile/biometric-setup`, {
+      waitUntil: 'domcontentloaded',
+      timeout: 30_000,
+    });
+    await waitForPageReady(page);
+    await page.waitForTimeout(4_000);
+
+    const currentUrl = page.url();
+    if (currentUrl.includes('/auth')) return;
+
+    // Should see trust & security benefit copy
+    const trustCopy = page.locator('text=/raises your trust tier|proof of personhood/i');
+    await expect(trustCopy.first()).toBeVisible({ timeout: 5_000 });
+  });
 });

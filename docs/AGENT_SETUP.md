@@ -2,7 +2,7 @@
 
 **Purpose:** Single place for setting up Agent Skills and Supabase MCP in Cursor so AI agents use React/Postgres best practices and can query the database directly.
 
-**See also:** [INDEX_OPTIMIZATION_GUIDE](./INDEX_OPTIMIZATION_GUIDE.md) (indexes), [RLS_VERIFICATION_GUIDE](../RLS_VERIFICATION_GUIDE.md) (RLS).
+**See also:** [INDEX_OPTIMIZATION_GUIDE](./archive/2026-02-docs-consolidation/INDEX_OPTIMIZATION_GUIDE.md) (indexes), [RLS_VERIFICATION_GUIDE](../RLS_VERIFICATION_GUIDE.md) (RLS).
 
 ---
 

@@ -1,8 +1,12 @@
 #!/usr/bin/env sh
 #
-# Scheduled OpenStates API sync: committees → activity → events.
-# Run from services/civics-backend/. Uses --resume so each run continues from
-# checkpoint; safe to run repeatedly (cron, GitHub Actions).
+# Scheduled OpenStates API sync. Run from services/civics-backend/.
+#
+# PREFERRED: Use rate-limit-aware re-ingest (budget checks, maxReps, resume):
+#   npm run reingest:scheduled
+#
+# LEGACY: This script runs committees → activity → events without budget awareness.
+# For initial intake or when you want to run until rate limited.
 #
 # Env: LOGFILE (optional) — append logs to this file.
 # Usage: sh NEW_civics_ingest/scripts/run-openstates-scheduled-sync.sh
@@ -19,7 +23,15 @@ log() {
   echo "$(date -u +%Y-%m-%dT%H:%M:%SZ) $*"
 }
 
-log "OpenStates scheduled sync starting (committees → activity → events)."
+# Use rate-limit-aware scheduler when available (checks budget, uses maxReps)
+if [ -f "build/scripts/run-rate-limit-aware-reingest.js" ]; then
+  log "Using rate-limit-aware re-ingest (recommended for daily cron)..."
+  npm run reingest:scheduled || true
+  log "Re-ingest finished."
+  exit 0
+fi
+
+log "OpenStates scheduled sync (legacy) starting (committees → activity → events)."
 
 log "Step 1/3: Committees (--resume)..."
 npm run openstates:sync:committees -- --resume || true

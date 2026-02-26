@@ -13,7 +13,8 @@
  *   OR
  *   tsx src/scripts/federal/test-fec-enrichment.ts
  */
-import 'dotenv/config';
+import { loadEnv } from '../utils/load-env.js';
+loadEnv();
 
 import { getSupabaseClient } from '../clients/supabase.js';
 import {

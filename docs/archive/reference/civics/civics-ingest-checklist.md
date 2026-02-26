@@ -1,5 +1,7 @@
 # Civics Ingest Checklist
 
+> **ARCHIVED.** Use [GETTING_STARTED.md](../../../services/civics-backend/NEW_civics_ingest/docs/GETTING_STARTED.md) and [OPERATOR_RUNBOOK.md](../../../services/civics-backend/NEW_civics_ingest/docs/OPERATOR_RUNBOOK.md). This file is historical only.
+
 Print or duplicate this checklist when running the civics ingest service. Tick every box before marking a data load complete.  
 Need more context? Start with [`docs/civics-backend-quickstart.md`](./civics-backend-quickstart.md).
 

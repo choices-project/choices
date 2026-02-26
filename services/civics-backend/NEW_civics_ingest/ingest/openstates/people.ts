@@ -4,6 +4,9 @@
  * talk to the live OpenStates API – it only reads the vendored YAML snapshots that
  * describe state, executive, and municipal officials.
  *
+ * CRITICAL: OpenStates (YAML + API) contains ONLY state and local representatives.
+ * There is never any federal representative data from OpenStates.
+ *
  * The code here is intentionally file-system oriented so that state-level ingest runs
  * can operate without network access. API-based enrichment lives in
  * `src/clients/openstates.ts` and related enrichers.

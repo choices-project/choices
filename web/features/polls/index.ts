@@ -238,5 +238,5 @@ export const pollsFeatureStatus = {
  * 3. **Analytics Integration**: Add poll analytics and insights
  * 4. **Component Integration**: Add poll components to existing features
  *
- * @see /docs/features/POLLS.md for detailed integration guide
+ * @see docs/TESTING.md and docs/CODEBASE_NAVIGATION.md for integration patterns
  */

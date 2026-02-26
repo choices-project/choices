@@ -49,4 +49,4 @@
 
 - Run Security Advisor (Supabase Dashboard → Database → Advisors) and address any RLS lint.
 - Use Supabase MCP `list_tables`, `execute_sql` to inspect `pg_policies` and confirm no remaining `USING (true)` for writes.
-- See `RLS_VERIFICATION_GUIDE.md` and `INDEX_OPTIMIZATION_GUIDE.md` for detailed checks.
+- See `RLS_VERIFICATION_GUIDE.md` and `archive/2026-02-docs-consolidation/INDEX_OPTIMIZATION_GUIDE.md` for detailed checks.

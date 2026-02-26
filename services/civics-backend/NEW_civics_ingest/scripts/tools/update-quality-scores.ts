@@ -12,7 +12,8 @@
  * Usage:
  *   npm run tools:update:quality-scores [--limit=N] [--dry-run] [--status=active]
  */
-import 'dotenv/config';
+import { loadEnv } from '../../utils/load-env.js';
+loadEnv();
 
 import { getSupabaseClient } from '../../clients/supabase.js';
 

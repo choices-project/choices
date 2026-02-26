@@ -1,12 +1,12 @@
 # Archived Documentation Index
 
-This directory contains legacy documentation that has been superseded by the refreshed November 2025 doc set. Files are retained for historical context but should not be treated as source of truth.
+**Historical only.** This directory contains legacy documentation that has been superseded by the current doc set. Files are retained for historical context and reference; do not treat them as source of truth. Use `docs/README.md` and the linked active docs for current guidance.
 
 ```
 docs/archive/
 ├─ legacy-status/           # Outdated status reports & feature rundowns
 ├─ release-notes/           # One-off status memos and completion announcements
-├─ reference/               # Miscellaneous guides (see civics/, guides/, testing/)
+├─ reference/               # Miscellaneous guides (civics/ = ARCHIVED; use services/civics-backend/NEW_civics_ingest/docs/)
 └─ runbooks/                # Operational playbooks and emergency procedures
 ```
 

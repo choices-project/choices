@@ -5,14 +5,20 @@
  * Usage:
  *   npm run openstates:sync:committees [--states=CA,NY] [--limit=500] [--dry-run]
  */
-import 'dotenv/config';
+import { loadEnv } from '../utils/load-env.js';
+loadEnv();
 
 import { collectActiveRepresentatives, type CollectOptions } from '../ingest/openstates/index.js';
 import type { CanonicalRepresentative } from '../ingest/openstates/people.js';
-import { fetchCommitteeAssignments } from '../enrich/committees.js';
+import {
+  fetchCommitteeAssignments,
+  buildCommitteesCache,
+  type CommitteesByJurisdictionCache,
+} from '../enrich/committees.js';
 import { syncRepresentativeCommittees } from '../persist/committees.js';
 import { saveCheckpoint, loadCheckpoint, deleteCheckpoint } from '../utils/checkpoint.js';
 import { getOpenStatesUsageStats } from '../clients/openstates.js';
+import { logger } from '../utils/logger.js';
 
 type CliOptions = {
   states?: string[];
@@ -107,19 +113,31 @@ async function main() {
 
   const eligible = reps.filter((rep) => rep.supabaseRepresentativeId != null);
   if (eligible.length === 0) {
-    console.log('No representatives with Supabase IDs found; nothing to sync.');
+    logger.info('No representatives with Supabase IDs found; nothing to sync.');
     return;
   }
 
   // Use API by default to get current committee data (supplements YAML)
   const useAPI = process.env.OPENSTATES_USE_API_COMMITTEES !== 'false';
 
+  // Build jurisdiction-level cache to reduce API calls from ~8000 to ~50
+  let committeesCache: CommitteesByJurisdictionCache | undefined;
+  if (useAPI) {
+    logger.info('Pre-fetching committees by jurisdiction (optimized: ~1 API call per state)...');
+    committeesCache = await buildCommitteesCache(eligible);
+    const jurisdictionCount = committeesCache.size;
+    logger.info(`Cached committees for ${jurisdictionCount} jurisdictions.`);
+  }
+
   if (options.dryRun) {
     let totalAssignments = 0;
     let apiAssignments = 0;
     let yamlAssignments = 0;
     for (const rep of eligible) {
-      const assignments = await fetchCommitteeAssignments(rep, { useAPI });
+      const assignments = await fetchCommitteeAssignments(rep, {
+        useAPI,
+        committeesCache,
+      });
       if (assignments.length > 0) {
         totalAssignments += assignments.length;
         const apiCount = assignments.filter(a => a.source === 'openstates:api').length;
@@ -128,22 +146,20 @@ async function main() {
       }
     }
 
-    console.log(
+    logger.info(
       `[dry-run] Would sync committee assignments for ${eligible.length} representatives (total rows: ${totalAssignments}).`,
     );
     if (useAPI) {
-      console.log(`   API assignments: ${apiAssignments}, YAML assignments: ${yamlAssignments}`);
+      logger.info(`API assignments: ${apiAssignments}, YAML assignments: ${yamlAssignments}`);
     }
     return;
   }
 
-  console.log(
+  logger.info(
     `Syncing committee assignments for ${eligible.length} representatives${options.states?.length ? ` filtered by ${options.states.join(', ')}` : ''}...`,
   );
-  if (useAPI) {
-    console.log('   Using OpenStates API to supplement YAML data (current committees)...');
-  } else {
-    console.log('   Using YAML data only (API disabled)...');
+  if (!useAPI) {
+    logger.info('Using YAML data only (API disabled)...');
   }
 
   // Checkpoint support
@@ -168,7 +184,7 @@ async function main() {
         const foundIdx = eligible.findIndex((r) => r.supabaseRepresentativeId === lastId);
         startIndex = foundIdx >= 0 ? foundIdx + 1 : 0;
       }
-      console.log(`📋 Resuming from checkpoint: ${startIndex}/${eligible.length} (${initialProcessed} processed)`);
+      logger.info(`Resuming from checkpoint: ${startIndex}/${eligible.length} (${initialProcessed} processed)`);
     }
   }
 
@@ -186,7 +202,10 @@ async function main() {
   for (let i = startIndex; i < eligible.length; i += 1) {
     const rep = eligible[i];
     try {
-      const assignments = await fetchCommitteeAssignments(rep, { useAPI });
+      const assignments = await fetchCommitteeAssignments(rep, {
+        useAPI,
+        committeesCache,
+      });
       await syncRepresentativeCommittees(rep, { assignments });
       processed += 1;
       assignmentsCount += assignments.length;
@@ -195,8 +214,7 @@ async function main() {
 
       // Progress reporting
       if ((i + 1) % reportInterval === 0 || (i + 1) === eligible.length) {
-        const percent = Math.round(((i + 1) / eligible.length) * 100);
-        console.log(`   Progress: ${i + 1}/${eligible.length} (${percent}%) - ${assignmentsCount} assignments so far`);
+        logger.progress(i + 1, eligible.length, `Committees (${assignmentsCount} assignments)`);
       }
 
       // Save checkpoint periodically
@@ -222,9 +240,8 @@ async function main() {
       errorCount += 1;
       const errorMsg = (error as Error).message;
       errors.push({ rep: `${rep.name} (${rep.supabaseRepresentativeId ?? 'unknown'})`, error: errorMsg });
-      console.error(
-        `Failed to sync committees for ${rep.name} (${rep.supabaseRepresentativeId ?? 'unknown id'}):`,
-        errorMsg,
+      logger.error(
+        `Failed to sync committees for ${rep.name} (${rep.supabaseRepresentativeId ?? 'unknown id'}): ${errorMsg}`,
       );
     }
   }
@@ -233,24 +250,24 @@ async function main() {
   await deleteCheckpoint(operationName);
 
   const apiStats = getOpenStatesUsageStats();
-  console.log(`✅ Committee sync complete (${processed}/${eligible.length}). Rows written: ${assignmentsCount}.`);
+  logger.info(`Committee sync complete (${processed}/${eligible.length}). Rows written: ${assignmentsCount}.`);
   if (useAPI) {
-    console.log(`   API: ${apiCount}, YAML: ${yamlCount}`);
+    logger.info(`API: ${apiCount}, YAML: ${yamlCount}`);
   }
-  console.log(`   API usage: ${apiStats.dailyRequests}/${apiStats.dailyLimit} (${apiStats.remaining} remaining)`);
+  logger.info(`API usage: ${apiStats.dailyRequests}/${apiStats.dailyLimit} (${apiStats.remaining} remaining)`);
   if (errorCount > 0) {
-    console.log(`   ⚠️  Errors: ${errorCount}`);
+    logger.warn(`Errors: ${errorCount}`);
     if (errors.length <= 10) {
-      errors.forEach(e => console.log(`      - ${e.rep}: ${e.error}`));
+      errors.forEach(e => logger.warn(`  - ${e.rep}: ${e.error}`));
     } else {
-      console.log(`      (Showing first 10 of ${errors.length} errors)`);
-      errors.slice(0, 10).forEach(e => console.log(`      - ${e.rep}: ${e.error}`));
+      logger.warn(`(Showing first 10 of ${errors.length} errors)`);
+      errors.slice(0, 10).forEach(e => logger.warn(`  - ${e.rep}: ${e.error}`));
     }
   }
 }
 
 main().catch((error) => {
-  console.error('Committee sync failed:', error);
+  logger.error('Committee sync failed: ' + (error as Error).message);
   process.exit(1);
 });
 

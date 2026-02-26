@@ -11,11 +11,12 @@
  * - Constraint violations
  * 
  * Usage:
- *   npm run tools:smoke-test [--quick]
+ *   npm run tools:smoke-test [--quick] [--json]
  * 
  * Note: Requires live Supabase connection (guarded by env vars)
  */
-import 'dotenv/config';
+import { loadEnv } from '../../utils/load-env.js';
+loadEnv();
 
 import { getSupabaseClient } from '../../clients/supabase.js';
 
@@ -26,17 +27,20 @@ interface SmokeTestResult {
   details?: Record<string, unknown>;
 }
 
-async function runSmokeTests(options: { quick?: boolean }): Promise<void> {
-  const { quick = false } = options;
+async function runSmokeTests(options: { quick?: boolean; json?: boolean }): Promise<SmokeTestResult[] | void> {
+  const { quick = false, json = false } = options;
   
-  console.log('\n🧪 Data Integrity Smoke Test');
-  console.log('='.repeat(60));
-  console.log('⚠️  This test uses LIVE Supabase connection');
+  if (!json) {
+    console.log('\n🧪 Data Integrity Smoke Test');
+    console.log('='.repeat(60));
+    console.log('⚠️  This test uses LIVE Supabase connection');
+  }
   
-  // Guard: Check env vars
-  if (!process.env.NEXT_PUBLIC_SUPABASE_URL || !process.env.SUPABASE_SERVICE_ROLE_KEY) {
+  // Guard: Check env vars (accept SUPABASE_URL or NEXT_PUBLIC_SUPABASE_URL)
+  const supabaseUrl = process.env.SUPABASE_URL ?? process.env.NEXT_PUBLIC_SUPABASE_URL;
+  if (!supabaseUrl || !process.env.SUPABASE_SERVICE_ROLE_KEY) {
     console.error('❌ Missing required environment variables:');
-    console.error('   NEXT_PUBLIC_SUPABASE_URL');
+    console.error('   SUPABASE_URL or NEXT_PUBLIC_SUPABASE_URL');
     console.error('   SUPABASE_SERVICE_ROLE_KEY');
     process.exit(1);
   }
@@ -45,7 +49,7 @@ async function runSmokeTests(options: { quick?: boolean }): Promise<void> {
   const results: SmokeTestResult[] = [];
   
   // Test 1: Representative counts
-  console.log('\n📊 Test 1: Representative counts...');
+  if (!json) console.log('\n📊 Test 1: Representative counts...');
   try {
     const { count: totalCount } = await client
       .from('representatives_core')
@@ -82,7 +86,7 @@ async function runSmokeTests(options: { quick?: boolean }): Promise<void> {
   }
   
   // Test 2: Data quality score distribution
-  console.log('📊 Test 2: Data quality scores...');
+  if (!json) console.log('📊 Test 2: Data quality scores...');
   try {
     const { data: qualityStats } = await client
       .from('representatives_core')
@@ -120,7 +124,7 @@ async function runSmokeTests(options: { quick?: boolean }): Promise<void> {
   }
   
   // Test 3: Identifier coverage
-  console.log('📊 Test 3: Identifier coverage...');
+  if (!json) console.log('📊 Test 3: Identifier coverage...');
   try {
     const { data: allReps } = await client
       .from('representatives_core')
@@ -177,7 +181,7 @@ async function runSmokeTests(options: { quick?: boolean }): Promise<void> {
   }
   
   // Test 4: Foreign key integrity
-  console.log('📊 Test 4: Foreign key integrity...');
+  if (!json) console.log('📊 Test 4: Foreign key integrity...');
   try {
     // Check for orphaned replaced_by_id references
     const { data: orphaned } = await client
@@ -226,7 +230,7 @@ async function runSmokeTests(options: { quick?: boolean }): Promise<void> {
   
   // Test 5: Constraint violations (check for data that violates constraints)
   if (!quick) {
-    console.log('📊 Test 5: Constraint violations...');
+    if (!json) console.log('📊 Test 5: Constraint violations...');
     try {
       // Check for invalid state codes
       const { data: invalidStates } = await client
@@ -262,31 +266,35 @@ async function runSmokeTests(options: { quick?: boolean }): Promise<void> {
     }
   }
   
-  // Print results
+  const passCount = results.filter((r) => r.status === 'pass').length;
+  const warnCount = results.filter((r) => r.status === 'warn').length;
+  const failCount = results.filter((r) => r.status === 'fail').length;
+
+  if (json) {
+    const payload = {
+      ok: failCount === 0,
+      summary: { pass: passCount, warn: warnCount, fail: failCount },
+      results,
+    };
+    console.log(JSON.stringify(payload));
+    if (failCount > 0) process.exit(1);
+    return;
+  }
+
+  // Print results (human-readable)
   console.log('\n📋 Test Results:');
   console.log('='.repeat(60));
-  
-  let passCount = 0;
-  let warnCount = 0;
-  let failCount = 0;
-  
   for (const result of results) {
     const icon = result.status === 'pass' ? '✅' : result.status === 'warn' ? '⚠️ ' : '❌';
     console.log(`${icon} ${result.name}: ${result.message}`);
     if (result.details && !quick) {
       console.log(`   Details: ${JSON.stringify(result.details, null, 2).split('\n').join('\n   ')}`);
     }
-    
-    if (result.status === 'pass') passCount++;
-    else if (result.status === 'warn') warnCount++;
-    else failCount++;
   }
-  
   console.log('\n📊 Summary:');
   console.log(`   ✅ Pass: ${passCount}`);
   console.log(`   ⚠️  Warn: ${warnCount}`);
   console.log(`   ❌ Fail: ${failCount}`);
-  
   if (failCount > 0) {
     console.log('\n❌ Smoke test failed! Review issues above.');
     process.exit(1);
@@ -299,12 +307,11 @@ async function runSmokeTests(options: { quick?: boolean }): Promise<void> {
 
 // CLI
 const args = process.argv.slice(2);
-const options: { quick?: boolean } = {};
+const options: { quick?: boolean; json?: boolean } = {};
 
 for (const arg of args) {
-  if (arg === '--quick') {
-    options.quick = true;
-  }
+  if (arg === '--quick') options.quick = true;
+  if (arg === '--json') options.json = true;
 }
 
 runSmokeTests(options).catch((error) => {

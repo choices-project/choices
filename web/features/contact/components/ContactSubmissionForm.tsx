@@ -226,13 +226,15 @@ export default function ContactSubmissionForm({
                 className="pl-10"
                 disabled={isSubmitting || success}
                 required
+                aria-invalid={Boolean(error)}
+                aria-describedby={error ? 'contact-value-error' : undefined}
               />
             </div>
           </div>
 
           {/* Error Message */}
           {error && (
-            <Alert variant="destructive">
+            <Alert id="contact-value-error" variant="destructive" role="alert">
               <AlertCircle className="h-4 w-4" />
               <AlertDescription>{error}</AlertDescription>
             </Alert>

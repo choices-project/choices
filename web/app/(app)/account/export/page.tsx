@@ -37,7 +37,7 @@ export default function DataExportPage() {
   const { setCurrentRoute, setSidebarActiveSection, setBreadcrumbs } = useAppActions()
   const user = useUser()
   const isLoading = useUserLoading()
-  
+
   // All hooks must be called at the top level
   const [exportOptions, setExportOptions] = useState<ExportOptions>({
     profile: true,
@@ -198,7 +198,7 @@ export default function DataExportPage() {
         <div className="text-center">
           <h1 className="text-2xl font-bold text-gray-900 mb-4">Data Export</h1>
           <p className="text-gray-600 mb-6">Please log in to access this page.</p>
-          <a 
+          <a
             href="/auth?redirectTo=/account/export"
             className="bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700"
           >
@@ -210,7 +210,8 @@ export default function DataExportPage() {
   }
 
   return (
-    <main id="main-content" role="main" className="min-h-screen bg-gray-50" aria-label="Data export">
+    <div className="min-h-screen bg-gray-50" aria-label="Data export">
+      <h2 className="sr-only">Export settings</h2>
       {/* Header */}
       <div className="bg-white shadow-sm border-b">
         <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -218,7 +219,8 @@ export default function DataExportPage() {
             <div className="flex items-center space-x-4">
               <button
                 onClick={() => router.push('/account/privacy')}
-                className="flex items-center text-gray-600 hover:text-gray-900"
+                className="flex items-center text-gray-600 hover:text-gray-900 min-h-[44px] min-w-[44px]"
+                aria-label="Navigate back to Privacy & Data settings"
               >
                 <ArrowLeft className="h-5 w-5 mr-2" />
                 Back to Privacy & Data
@@ -242,7 +244,7 @@ export default function DataExportPage() {
             </div>
           </div>
         )}
-        
+
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
           {/* Main Content */}
           <div className="lg:col-span-2 space-y-6">
@@ -260,7 +262,7 @@ export default function DataExportPage() {
               <CardContent className="space-y-6">
                 {/* Data Types */}
                 <div>
-                  <h4 className="font-medium mb-3">Data Types</h4>
+                  <h3 className="font-medium mb-3">Data Types</h3>
                   <div className="space-y-3">
                     <div className="flex items-center justify-between p-3 border rounded-lg">
                       <div className="flex items-center space-x-3">
@@ -351,7 +353,7 @@ export default function DataExportPage() {
 
                 {/* Export Format */}
                 <div>
-                  <h4 className="font-medium mb-3">Export Format</h4>
+                  <h3 className="font-medium mb-3">Export Format</h3>
                   <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
                     {(['json', 'csv', 'pdf'] as const).map((format) => (
                       <button
@@ -372,7 +374,7 @@ export default function DataExportPage() {
 
                 {/* Date Range */}
                 <div>
-                  <h4 className="font-medium mb-3">Date Range</h4>
+                  <h3 className="font-medium mb-3">Date Range</h3>
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                     {(['all', '30d', '90d', '1y'] as const).map((dateRange) => (
                       <button
@@ -385,7 +387,7 @@ export default function DataExportPage() {
                         }`}
                       >
                         <div className="font-medium">
-                          {dateRange === 'all' ? 'All Time' : 
+                          {dateRange === 'all' ? 'All Time' :
                            dateRange === '30d' ? 'Last 30 Days' :
                            dateRange === '90d' ? 'Last 90 Days' : 'Last Year'}
                         </div>
@@ -446,8 +448,8 @@ export default function DataExportPage() {
                             </p>
                           </div>
                         </div>
-                        <Badge 
-                          variant={exportItem.status === 'completed' ? 'default' : 
+                        <Badge
+                          variant={exportItem.status === 'completed' ? 'default' :
                                   exportItem.status === 'processing' ? 'secondary' : 'destructive'}
                         >
                           {exportItem.status}
@@ -506,7 +508,7 @@ export default function DataExportPage() {
               </CardHeader>
               <CardContent>
                 <p className="text-sm text-gray-600">
-                  Your exported data contains only the information you&apos;ve shared with the platform. 
+                  Your exported data contains only the information you&apos;ve shared with the platform.
                   We never include sensitive information like passwords or payment details.
                 </p>
               </CardContent>
@@ -544,6 +546,6 @@ export default function DataExportPage() {
           </div>
         </div>
       </div>
-    </main>
+    </div>
   )
 }

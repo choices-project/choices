@@ -10,6 +10,7 @@ The Choices API is a RESTful API built on Next.js API routes. All endpoints retu
 
 ## Quick Links
 
+- **[API Response Guide](response-guide.md)** - successResponse, error handling, client patterns
 - **[API Contracts](contracts.md)** - Response formats, error codes, and standards
 - **[Civic Actions API](civic-actions.md)** - Civic engagement endpoints
 

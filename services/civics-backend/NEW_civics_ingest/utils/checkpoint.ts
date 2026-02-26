@@ -6,7 +6,9 @@ import { readFile, writeFile, mkdir, unlink, readdir } from 'node:fs/promises';
 import { existsSync } from 'node:fs';
 import path from 'node:path';
 
-const CHECKPOINT_DIR = process.env.CHECKPOINT_DIR || '/tmp/civics-checkpoints';
+const CHECKPOINT_DIR =
+  process.env.CHECKPOINT_DIR ||
+  (process.env.CI === 'true' ? '.civics-checkpoints' : '/tmp/civics-checkpoints');
 
 interface Checkpoint {
   operation: string;

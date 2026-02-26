@@ -18,7 +18,8 @@
  *   npm run openstates:sync:all [--states=CA,NY] [--limit=500] [--dry-run] [--skip-activity] [--skip-events]
  */
 
-import 'dotenv/config';
+import { loadEnv } from '../utils/load-env.js';
+loadEnv();
 
 import { collectActiveRepresentatives, type CollectOptions } from '../ingest/openstates/index.js';
 import type { CanonicalRepresentative } from '../ingest/openstates/people.js';
@@ -26,9 +27,14 @@ import { syncRepresentativeContacts } from '../persist/contacts.js';
 import { syncRepresentativeSocial } from '../persist/social.js';
 import { syncRepresentativePhotos } from '../persist/photos.js';
 import { syncRepresentativeDataSources } from '../persist/data-sources.js';
-import { fetchCommitteeAssignments } from '../enrich/committees.js';
+import {
+  fetchCommitteeAssignments,
+  buildCommitteesCache,
+  type CommitteesByJurisdictionCache,
+} from '../enrich/committees.js';
 import { syncRepresentativeCommittees } from '../persist/committees.js';
 import { syncActivityForRepresentatives, type ActivitySyncOptions } from '../workflows/activity-sync.js';
+import { logger } from '../utils/logger.js';
 
 type CliOptions = {
   states?: string[];
@@ -111,7 +117,7 @@ interface SyncResult {
 }
 
 async function syncContacts(reps: CanonicalRepresentative[], dryRun: boolean): Promise<SyncResult> {
-  console.log('\n📞 Syncing contacts...');
+  logger.info('\n📞 Syncing contacts...');
   let succeeded = 0;
   let failed = 0;
   let totalAdded = 0;
@@ -134,7 +140,7 @@ async function syncContacts(reps: CanonicalRepresentative[], dryRun: boolean): P
       }
     } catch (error) {
       failed += 1;
-      console.error(`  Failed for ${rep.name}:`, (error as Error).message);
+      logger.error(`Failed for ${rep.name}`, { error: (error as Error).message });
     }
   }
 
@@ -147,7 +153,7 @@ async function syncContacts(reps: CanonicalRepresentative[], dryRun: boolean): P
 }
 
 async function syncSocial(reps: CanonicalRepresentative[], dryRun: boolean): Promise<SyncResult> {
-  console.log('\n📱 Syncing social media...');
+  logger.info('\n📱 Syncing social media...');
   let succeeded = 0;
   let failed = 0;
 
@@ -159,7 +165,7 @@ async function syncSocial(reps: CanonicalRepresentative[], dryRun: boolean): Pro
       succeeded += 1;
     } catch (error) {
       failed += 1;
-      console.error(`  Failed for ${rep.name}:`, (error as Error).message);
+      logger.error(`Failed for ${rep.name}`, { error: (error as Error).message });
     }
   }
 
@@ -167,7 +173,7 @@ async function syncSocial(reps: CanonicalRepresentative[], dryRun: boolean): Pro
 }
 
 async function syncPhotos(reps: CanonicalRepresentative[], dryRun: boolean): Promise<SyncResult> {
-  console.log('\n📷 Syncing photos...');
+  logger.info('\n📷 Syncing photos...');
   let succeeded = 0;
   let failed = 0;
 
@@ -179,7 +185,7 @@ async function syncPhotos(reps: CanonicalRepresentative[], dryRun: boolean): Pro
       succeeded += 1;
     } catch (error) {
       failed += 1;
-      console.error(`  Failed for ${rep.name}:`, (error as Error).message);
+      logger.error(`Failed for ${rep.name}`, { error: (error as Error).message });
     }
   }
 
@@ -187,7 +193,7 @@ async function syncPhotos(reps: CanonicalRepresentative[], dryRun: boolean): Pro
 }
 
 async function syncDataSources(reps: CanonicalRepresentative[], dryRun: boolean): Promise<SyncResult> {
-  console.log('\n📊 Syncing data sources...');
+  logger.info('\n📊 Syncing data sources...');
   let succeeded = 0;
   let failed = 0;
 
@@ -199,34 +205,43 @@ async function syncDataSources(reps: CanonicalRepresentative[], dryRun: boolean)
       succeeded += 1;
     } catch (error) {
       failed += 1;
-      console.error(`  Failed for ${rep.name}:`, (error as Error).message);
+      logger.error(`Failed for ${rep.name}`, { error: (error as Error).message });
     }
   }
 
   return { name: 'Data Sources', succeeded, failed };
 }
 
-async function syncCommittees(reps: CanonicalRepresentative[], dryRun: boolean): Promise<SyncResult> {
-  console.log('\n🏛️  Syncing committees...');
+async function syncCommittees(
+  reps: CanonicalRepresentative[],
+  dryRun: boolean,
+): Promise<SyncResult> {
+  logger.info('\n🏛️  Syncing committees (jurisdiction cache: ~1 API call per state)...');
   let succeeded = 0;
   let failed = 0;
   let totalAssignments = 0;
 
+  const useAPI = process.env.OPENSTATES_USE_API_COMMITTEES !== 'false';
+  let committeesCache: CommitteesByJurisdictionCache | undefined;
+  if (useAPI) {
+    committeesCache = await buildCommitteesCache(reps);
+    logger.info(`   Cached ${committeesCache.size} jurisdictions`);
+  }
+
   for (const rep of reps) {
     try {
-      if (dryRun) {
-        const assignments = await fetchCommitteeAssignments(rep);
-        totalAssignments += assignments.length;
-        succeeded += 1;
-        continue;
+      const assignments = await fetchCommitteeAssignments(rep, {
+        useAPI,
+        committeesCache,
+      });
+      if (!dryRun) {
+        await syncRepresentativeCommittees(rep, { assignments });
       }
-      const assignments = await fetchCommitteeAssignments(rep);
-      await syncRepresentativeCommittees(rep, { assignments });
       succeeded += 1;
       totalAssignments += assignments.length;
     } catch (error) {
       failed += 1;
-      console.error(`  Failed for ${rep.name}:`, (error as Error).message);
+      logger.error(`Failed for ${rep.name}`, { error: (error as Error).message });
     }
   }
 
@@ -244,11 +259,11 @@ async function main() {
 
   const eligible = reps.filter((rep) => rep.supabaseRepresentativeId != null);
   if (eligible.length === 0) {
-    console.log('No representatives with Supabase IDs found; nothing to sync.');
+    logger.info('No representatives with Supabase IDs found; nothing to sync.');
     return;
   }
 
-  console.log(
+  logger.info(
     `\n🚀 Starting OpenStates sync for ${eligible.length} STATE/LOCAL representatives${
       options.states?.length ? ` in ${options.states.join(', ')}` : ''
     }${options.dryRun ? ' (DRY RUN)' : ''}...\n`,
@@ -265,7 +280,7 @@ async function main() {
 
   // Activity sync (requires OpenStates API - rate limited)
   if (!options.skipActivity) {
-    console.log('\n📜 Syncing activity (OpenStates API - may take time due to rate limits)...');
+    logger.info('\n📜 Syncing activity (OpenStates API - may take time due to rate limits)...');
     try {
       const activityResult = await syncActivityForRepresentatives({
         states: options.states,
@@ -284,7 +299,7 @@ async function main() {
         },
       });
     } catch (error) {
-      console.error('Activity sync failed:', (error as Error).message);
+      logger.error('Activity sync failed', { error: (error as Error).message });
       results.push({
         name: 'Activity',
         succeeded: 0,
@@ -292,45 +307,45 @@ async function main() {
       });
     }
   } else {
-    console.log('\n⏭️  Skipping activity sync (--skip-activity flag set)');
+    logger.info('\n⏭️  Skipping activity sync (--skip-activity flag set)');
   }
 
   // Events sync (requires OpenStates API - rate limited)
   // Note: Events sync is separate script - can be run independently
   // Skipping in sync-all to avoid complexity, but available via: npm run openstates:sync:events
   if (!options.skipEvents) {
-    console.log('\n📅 Events sync available separately: npm run openstates:sync:events');
-    console.log('   (Skipping in sync-all to avoid rate limit issues - run separately if needed)');
+    logger.info('\n📅 Events sync available separately: npm run openstates:sync:events');
+    logger.info('   (Skipping in sync-all to avoid rate limit issues - run separately if needed)');
   }
 
   // Summary
-  console.log('\n' + '='.repeat(60));
-  console.log('📊 SYNC SUMMARY');
-  console.log('='.repeat(60));
+  logger.info('\n' + '='.repeat(60));
+  logger.info('📊 SYNC SUMMARY');
+  logger.info('='.repeat(60));
 
   let totalSucceeded = 0;
   let totalFailed = 0;
 
   for (const result of results) {
     const status = result.failed === 0 ? '✅' : result.succeeded === 0 ? '❌' : '⚠️';
-    console.log(
+    logger.info(
       `${status} ${result.name}: ${result.succeeded} succeeded, ${result.failed} failed`,
     );
     if (result.details) {
       Object.entries(result.details).forEach(([key, value]) => {
-        console.log(`   ${key}: ${value}`);
+        logger.info(`   ${key}: ${value}`);
       });
     }
     totalSucceeded += result.succeeded;
     totalFailed += result.failed;
   }
 
-  console.log('='.repeat(60));
-  console.log(`Total: ${totalSucceeded} succeeded, ${totalFailed} failed`);
-  console.log('='.repeat(60) + '\n');
+  logger.info('='.repeat(60));
+  logger.info(`Total: ${totalSucceeded} succeeded, ${totalFailed} failed`);
+  logger.info('='.repeat(60) + '\n');
 }
 
 main().catch((error) => {
-  console.error('Sync failed:', error);
+  logger.error('Sync failed', { error: error instanceof Error ? error.message : String(error) });
   process.exit(1);
 });

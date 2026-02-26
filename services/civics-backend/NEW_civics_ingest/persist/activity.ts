@@ -2,7 +2,7 @@
  * Representative activity persist: OpenStates bill activity only.
  *
  * Canonical representative_activity = type 'bill', from OpenStates. No "Election:…"
- * or other non-bill rows. Audit via: npm run tools:audit:activity [-- --fix].
+ * or other non-bill rows. Audit via: npm run tools:smoke-test or manual query.
  *
  * We fetch bills with include=actions,votes,sponsorships. For each bill we store:
  * - description: subjects, latest action, Sponsor (primary/cosponsor), Voted (when available).
@@ -300,14 +300,18 @@ export async function syncRepresentativeActivity(
     return;
   }
 
-  const { error: insertError } = await client
-    .from('representative_activity')
-    .insert(rows);
+  const BATCH_SIZE = 100;
+  for (let i = 0; i < rows.length; i += BATCH_SIZE) {
+    const batch = rows.slice(i, i + BATCH_SIZE);
+    const { error: insertError } = await client
+      .from('representative_activity')
+      .insert(batch);
 
-  if (insertError) {
-    throw new Error(
-      `Failed to upsert activity rows for representative ${representativeId}: ${insertError.message}`,
-    );
+    if (insertError) {
+      throw new Error(
+        `Failed to upsert activity rows for representative ${representativeId}: ${insertError.message}`,
+      );
+    }
   }
 }
 

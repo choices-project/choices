@@ -96,15 +96,17 @@ export const POST = withErrorHandling(async (
       );
     }
 
-    // Delete the contact (soft delete by removing it)
-    // In the future, we could add a status field for "rejected" instead of deleting
-    const { error: deleteError } = await supabase
+    // Mark as rejected instead of deleting (enables My Submissions to show rejected)
+    const { error: updateError } = await supabase
       .from('representative_contacts')
-      .delete()
+      .update({
+        rejected_at: new Date().toISOString(),
+        rejection_reason: reason || null,
+      })
       .eq('id', contactId);
 
-    if (deleteError) {
-      logger.error('Error rejecting contact', { contactId, error: deleteError });
+    if (updateError) {
+      logger.error('Error rejecting contact', { contactId, error: updateError });
       return errorResponse('Failed to reject contact information', 500);
     }
 

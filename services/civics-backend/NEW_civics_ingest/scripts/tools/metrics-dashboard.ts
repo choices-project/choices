@@ -9,9 +9,10 @@
  * - Data quality distribution
  * 
  * Usage:
- *   npm run tools:metrics:dashboard [--format=table|json]
+ *   npm run tools:metrics:dashboard [--json] [--format=table|json]
  */
-import 'dotenv/config';
+import { loadEnv } from '../../utils/load-env.js';
+loadEnv();
 
 import { getSupabaseClient } from '../../clients/supabase.js';
 import { getOpenStatesUsageStats } from '../../clients/openstates.js';
@@ -343,7 +344,9 @@ function formatTable(metrics: Metrics): void {
 
 async function main() {
   const args = process.argv.slice(2);
-  const format = args.find(a => a.startsWith('--format='))?.split('=')[1] || 'table';
+  const hasJson = args.includes('--json');
+  const formatArg = args.find(a => a.startsWith('--format='))?.split('=')[1];
+  const format = hasJson ? 'json' : (formatArg || 'table');
   
   try {
     const metrics = await collectMetrics();

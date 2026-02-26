@@ -44,7 +44,7 @@ export function PasskeyControls({ onLoginSuccess }: PasskeyControlsProps) {
   const crossDevicePrimaryButtonRef = React.useRef<HTMLButtonElement>(null);
   const credentialPrimaryButtonRef = React.useRef<HTMLButtonElement>(null);
 
-  useInitializeBiometricState();
+  useInitializeBiometricState({ fetchCredentials: isAuthenticated });
 
   const { setBiometricError, setBiometricSuccess, setBiometricCredentials } = useUserActions();
 
@@ -112,7 +112,7 @@ export function PasskeyControls({ onLoginSuccess }: PasskeyControlsProps) {
         setCredentials(
           raw.map((c: { id: string; device_label?: string | null }) => ({
             id: c.id,
-            name: c.device_label?.trim() || 'Passkey',
+            name: c.device_label?.trim() || t('auth.passkey.unnamedDevice'),
           }))
         );
       })
@@ -122,7 +122,7 @@ export function PasskeyControls({ onLoginSuccess }: PasskeyControlsProps) {
       .finally(() => {
         setCredentialsLoading(false);
       });
-  }, []);
+  }, [t]);
 
   React.useEffect(() => {
     if (mode !== 'viewing' || !isAuthenticated) return;
@@ -397,7 +397,12 @@ export function PasskeyControls({ onLoginSuccess }: PasskeyControlsProps) {
           {credentialsLoading ? (
             <p className="mt-4 text-sm text-gray-600">{t('auth.passkey.loading')}</p>
           ) : credentialsError ? (
-            <p className="mt-4 text-sm text-red-600" data-testid="credentials-error">
+            <p
+              className="mt-4 text-sm text-red-600"
+              data-testid="credentials-error"
+              role="alert"
+              aria-live="assertive"
+            >
               {credentialsError}
             </p>
           ) : (
@@ -441,6 +446,9 @@ export function PasskeyControls({ onLoginSuccess }: PasskeyControlsProps) {
         <div
           data-testid="registration-success"
           className="rounded-lg border border-green-300 bg-green-50 p-4 animate-in fade-in slide-in-from-top-2 duration-300"
+          role="status"
+          aria-live="polite"
+          aria-atomic="true"
         >
           <div className="flex items-center gap-2">
             <span className="text-green-600 text-xl">✓</span>
@@ -455,6 +463,9 @@ export function PasskeyControls({ onLoginSuccess }: PasskeyControlsProps) {
         <div
           data-testid="login-success"
           className="rounded-lg border border-green-300 bg-green-50 p-4 animate-in fade-in slide-in-from-top-2 duration-300"
+          role="status"
+          aria-live="polite"
+          aria-atomic="true"
         >
           <div className="flex items-center gap-2">
             <span className="text-green-600 text-xl">✓</span>
@@ -488,7 +499,7 @@ export function PasskeyControls({ onLoginSuccess }: PasskeyControlsProps) {
         >
           <div className="flex items-center gap-2">
             <span className="text-yellow-600">⚠</span>
-            <p className="text-sm font-medium text-yellow-800">Operation cancelled</p>
+            <p className="text-sm font-medium text-yellow-800">{t('auth.passkey.operationCancelled')}</p>
           </div>
         </div>
       )}
@@ -500,8 +511,8 @@ export function PasskeyControls({ onLoginSuccess }: PasskeyControlsProps) {
           <div className="flex items-center gap-2">
             <span className="text-red-600">✗</span>
             <div>
-              <p className="text-sm font-medium text-red-800">Operation timed out</p>
-              <p className="text-xs text-red-700 mt-1">Please try again or use email/password authentication.</p>
+              <p className="text-sm font-medium text-red-800">{t('auth.passkey.operationTimeout')}</p>
+              <p className="text-xs text-red-700 mt-1">{t('auth.passkey.operationTimeoutHelp')}</p>
             </div>
           </div>
         </div>
@@ -514,8 +525,8 @@ export function PasskeyControls({ onLoginSuccess }: PasskeyControlsProps) {
           <div className="flex items-center gap-2">
             <span className="text-red-600">✗</span>
             <div>
-              <p className="text-sm font-medium text-red-800">No credentials found</p>
-              <p className="text-xs text-red-700 mt-1">Please register a passkey first or use email/password authentication.</p>
+              <p className="text-sm font-medium text-red-800">{t('auth.passkey.authenticationError')}</p>
+              <p className="text-xs text-red-700 mt-1">{t('auth.passkey.authenticationErrorHelp')}</p>
             </div>
           </div>
         </div>
@@ -528,8 +539,8 @@ export function PasskeyControls({ onLoginSuccess }: PasskeyControlsProps) {
           <div className="flex items-center gap-2">
             <span className="text-red-600">✗</span>
             <div>
-              <p className="text-sm font-medium text-red-800">Network error</p>
-              <p className="text-xs text-red-700 mt-1">Please check your connection and try again.</p>
+              <p className="text-sm font-medium text-red-800">{t('auth.passkey.networkError')}</p>
+              <p className="text-xs text-red-700 mt-1">{t('auth.passkey.networkErrorHelp')}</p>
             </div>
           </div>
         </div>
@@ -542,8 +553,8 @@ export function PasskeyControls({ onLoginSuccess }: PasskeyControlsProps) {
           <div className="flex items-center gap-2">
             <span className="text-red-600">✗</span>
             <div>
-              <p className="text-sm font-medium text-red-800">Server error</p>
-              <p className="text-xs text-red-700 mt-1">Please try again later or use email/password authentication.</p>
+              <p className="text-sm font-medium text-red-800">{t('auth.passkey.serverError')}</p>
+              <p className="text-xs text-red-700 mt-1">{t('auth.passkey.serverErrorHelp')}</p>
             </div>
           </div>
         </div>

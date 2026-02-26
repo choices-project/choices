@@ -10,7 +10,8 @@
  * Usage:
  *   npm run tools:resume:sync [operation] [--checkpoint=path]
  */
-import 'dotenv/config';
+import { loadEnv } from '../../utils/load-env.js';
+loadEnv();
 
 import { listCheckpoints, loadCheckpoint, getProgress, estimateTimeRemaining } from '../../utils/checkpoint.js';
 

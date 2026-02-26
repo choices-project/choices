@@ -80,7 +80,18 @@ class Logger {
   }
   
   metrics(operation: string, metrics: Record<string, number | string>): void {
-    this.info(`Metrics for ${operation}`, { operation, ...metrics });
+    if (this.structured) {
+      const entry = {
+        timestamp: new Date().toISOString(),
+        level: 'info' as const,
+        type: 'metrics',
+        operation,
+        ...metrics,
+      };
+      console.log(JSON.stringify(entry));
+    } else if (this.shouldLog('info')) {
+      this.info(`Metrics for ${operation}`, { operation, ...metrics });
+    }
   }
 }
 

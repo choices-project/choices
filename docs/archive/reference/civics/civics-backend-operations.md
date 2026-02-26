@@ -1,5 +1,7 @@
 # Civics Backend Operations Guide
 
+> **ARCHIVED.** Use [GETTING_STARTED.md](../../../services/civics-backend/NEW_civics_ingest/docs/GETTING_STARTED.md) for setup and [OPERATOR_RUNBOOK.md](../../../services/civics-backend/NEW_civics_ingest/docs/OPERATOR_RUNBOOK.md) for operations. This file is historical only.
+
 This guide explains how the rebuilt ingest service is structured, how data flows from civic sources into Supabase, and the exact commands to operate or extend the pipeline. Use it as the runbook when onboarding new contributors or running ingest jobs in production.  
 If you need a concise checklist, start with [`docs/civics-backend-quickstart.md`](./civics-backend-quickstart.md) and come back here for deeper context.
 

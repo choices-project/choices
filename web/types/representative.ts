@@ -274,6 +274,8 @@ export type RepresentativeListProps = {
   onRepresentativeClick?: (representative: Representative) => void;
   onRepresentativeContact?: (representative: Representative) => void;
   onRepresentativeFollow?: (representative: Representative) => void;
+  /** Retry callback for error and empty states */
+  onRetry?: () => void;
   className?: string;
 }
 

@@ -1,9 +1,9 @@
 /**
  * Critical Pages Accessibility Tests
- * 
+ *
  * Comprehensive accessibility testing for all critical user-facing pages
  * Uses axe-core to ensure WCAG 2.1 AA compliance
- * 
+ *
  * Created: January 10, 2026
  * Status: ✅ ACTIVE
  */
@@ -16,7 +16,7 @@ import {
 } from '../../helpers/e2e-setup';
 import { runAxeAudit } from '../../helpers/accessibility';
 
-test.describe('Critical Pages Accessibility (WCAG 2.1 AA)', () => {
+test.describe('@axe Critical Pages Accessibility (WCAG 2.1 AA)', () => {
   test.beforeEach(async ({ page }) => {
     // Set up E2E bypass for auth
     await page.addInitScript(() => {
@@ -47,6 +47,7 @@ test.describe('Critical Pages Accessibility (WCAG 2.1 AA)', () => {
   });
 
   const criticalPages = [
+    { path: '/landing', name: 'Landing' },
     { path: '/dashboard', name: 'Dashboard' },
     { path: '/feed', name: 'Feed' },
     { path: '/representatives', name: 'Representatives' },

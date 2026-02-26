@@ -4,6 +4,9 @@
  * existing Supabase rows and crosswalk entries so other flows can operate without worrying
  * about the raw YAML layout.
  *
+ * CRITICAL: OpenStates (YAML + API) contains ONLY state and local representatives.
+ * There is never any federal representative data from OpenStates.
+ *
  * ⚠️  This module is **separate** from the OpenStates HTTP client. If you need live API
  *      data (bills, votes, committees) see `src/clients/openstates.ts`.
  */

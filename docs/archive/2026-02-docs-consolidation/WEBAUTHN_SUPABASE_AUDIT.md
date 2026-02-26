@@ -2,7 +2,9 @@
 
 **Purpose:** Align WebAuthn implementation with Supabase/Postgres best practices and document verification, indexes, and troubleshooting. Supabase Auth does not provide native passkeys; we use custom tables + SimpleWebAuthn.
 
-**References:** [Supabase Postgres Best Practices](.agents/skills/supabase-postgres-best-practices/AGENTS.md), [RLS_VERIFICATION_GUIDE](../RLS_VERIFICATION_GUIDE.md), [INDEX_OPTIMIZATION_GUIDE](INDEX_OPTIMIZATION_GUIDE.md).
+**References:** [Supabase Postgres Best Practices](../../../.agents/skills/supabase-postgres-best-practices/AGENTS.md), [RLS_VERIFICATION_GUIDE](../../../RLS_VERIFICATION_GUIDE.md), [INDEX_OPTIMIZATION_GUIDE](INDEX_OPTIMIZATION_GUIDE.md).
+
+> **Design doc:** For trust tier visibility, TrustScoreCard, UX improvements, and recommendations, see [WEBAUTHN_DESIGN.md](../../WEBAUTHN_DESIGN.md).
 
 ---
 
@@ -154,7 +156,7 @@ Auth-verify lookup is by `id` (PK). Credential lookup is by `(rp_id, credential_
 
 ## References
 
-- [WebAuthn config](../web/features/auth/lib/webauthn/config.ts) — `normalizeRequestOrigin`, rpID, origins
-- [Native client](../web/features/auth/lib/webauthn/native/client.ts) — `beginRegister`, `beginAuthenticate`, `credentials: 'include'` for register
-- [PasskeyControls](../web/features/auth/components/PasskeyControls.tsx) (optional `onLoginSuccess`), [PasskeyLogin](../web/features/auth/components/PasskeyLogin.tsx), [PasskeyRegister](../web/features/auth/components/PasskeyRegister.tsx), [PasskeyManagement](../web/features/auth/components/PasskeyManagement.tsx) (credentials fetch with `credentials: 'include'`)
-- [RLS_VERIFICATION_GUIDE](../RLS_VERIFICATION_GUIDE.md), [INDEX_OPTIMIZATION_GUIDE](INDEX_OPTIMIZATION_GUIDE.md)
+- [WebAuthn config](../../../web/features/auth/lib/webauthn/config.ts) — `normalizeRequestOrigin`, rpID, origins
+- [Native client](../../../web/features/auth/lib/webauthn/native/client.ts) — `beginRegister`, `beginAuthenticate`, `credentials: 'include'` for register
+- [PasskeyControls](../../../web/features/auth/components/PasskeyControls.tsx) (optional `onLoginSuccess`), [PasskeyLogin](../web/features/auth/components/PasskeyLogin.tsx), [PasskeyRegister](../web/features/auth/components/PasskeyRegister.tsx), [PasskeyManagement](../web/features/auth/components/PasskeyManagement.tsx) (credentials fetch with `credentials: 'include'`)
+- [RLS_VERIFICATION_GUIDE](../../../RLS_VERIFICATION_GUIDE.md), [INDEX_OPTIMIZATION_GUIDE](INDEX_OPTIMIZATION_GUIDE.md)

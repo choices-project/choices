@@ -1,5 +1,6 @@
 /** @type {import('jest').Config} */
 module.exports = {
+  forceExit: true, // Prevent worker exit warnings from open handles (timers, SW registration)
   // Global timeout settings
   testTimeout: 30000, // 30 seconds per test
   slowTestThreshold: 10, // Mark tests as slow if they take more than 10 seconds
@@ -68,9 +69,6 @@ module.exports = {
       displayName: 'server',
       testEnvironment: 'jsdom',
       testTimeout: 25000, // 25 seconds for server tests
-      // Force Jest to exit after tests complete to prevent hanging
-      // This ensures tests timeout properly instead of hanging indefinitely
-      bail: false, // Don't bail on first failure, but ensure proper cleanup
       // Use separate Babel config for Jest (allows Next.js to use SWC)
       // babel-jest will automatically find .babelrc.cjs in the root
       transform: {

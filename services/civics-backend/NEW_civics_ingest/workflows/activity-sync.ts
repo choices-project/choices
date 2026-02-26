@@ -10,6 +10,10 @@ export interface ActivitySyncOptions {
   limit?: number;
   dryRun?: boolean;
   resume?: boolean;
+  /** Max reps to process this run. For rate-limit-aware re-ingest: set to remaining API budget - reserve. */
+  maxReps?: number;
+  /** Stop when API remaining drops below this. Default 100. */
+  minRemaining?: number;
   logger?: Pick<typeof console, 'log' | 'warn' | 'error'>;
 }
 
@@ -114,9 +118,11 @@ export async function syncActivityForRepresentatives(
 
   // Check initial API usage
   const initialStats = getOpenStatesUsageStats();
+  const minRemaining = options.minRemaining ?? 100;
+
   if (initialStats.remaining <= 0) {
     logger.warn(
-      `OpenStates API daily limit reached (${initialStats.dailyRequests}/${initialStats.dailyLimit}). Cannot proceed.`,
+      `OpenStates API daily limit reached (${initialStats.dailyRequests}/${initialStats.dailyLimit}). Run again when limit resets.`,
     );
     return {
       total: eligible.length,
@@ -125,13 +131,44 @@ export async function syncActivityForRepresentatives(
       rateLimited: 0,
       activityRows: 0,
       dryRun,
+      apiUsage: {
+        dailyRequests: initialStats.dailyRequests,
+        dailyLimit: initialStats.dailyLimit,
+        remaining: initialStats.remaining,
+      },
+    };
+  }
+
+  if (initialStats.remaining < minRemaining) {
+    logger.warn(
+      `API remaining (${initialStats.remaining}) below reserve (${minRemaining}). Run again when limit resets.`,
+    );
+    return {
+      total: eligible.length,
+      processed: 0,
+      failed: 0,
+      rateLimited: 0,
+      activityRows: 0,
+      dryRun,
+      apiUsage: {
+        dailyRequests: initialStats.dailyRequests,
+        dailyLimit: initialStats.dailyLimit,
+        remaining: initialStats.remaining,
+      },
     };
   }
 
   // Filter to unprocessed reps if resuming
-  const repsToProcess = options.resume && startIndex > 0
+  let repsToProcess = options.resume && startIndex > 0
     ? eligible.slice(startIndex)
     : eligible;
+
+  // Apply maxReps for rate-limit-aware runs (e.g. daily re-ingest)
+  const maxReps = options.maxReps;
+  if (typeof maxReps === 'number' && maxReps > 0 && repsToProcess.length > maxReps) {
+    repsToProcess = repsToProcess.slice(0, maxReps);
+    logger.log(`Budget: processing at most ${maxReps} reps this run (${repsToProcess.length} available).`);
+  }
 
   if (startIndex === 0) {
     logger.log(
@@ -147,17 +184,23 @@ export async function syncActivityForRepresentatives(
     const actualIndex = startIndex + i;
     const rep = repsToProcess[i];
 
-    // Check API usage periodically
+    // Check API usage periodically - stop before hitting limit
     if (actualIndex % 10 === 0 && actualIndex > 0) {
       const stats = getOpenStatesUsageStats();
       if (stats.remaining <= 0) {
         logger.warn(
-          `OpenStates API daily limit reached after ${actualIndex} representatives. Stopping sync. Processed: ${processed}, Failed: ${failed}, Rate limited: ${rateLimited}`,
+          `OpenStates API daily limit reached. Stopping. Processed: ${processed}, Failed: ${failed}. Run again when limit resets.`,
+        );
+        break;
+      }
+      if (stats.remaining < minRemaining) {
+        logger.warn(
+          `API remaining (${stats.remaining}) below reserve (${minRemaining}). Stopping. Processed: ${processed}. Run again when limit resets.`,
         );
         break;
       }
       logger.log(
-        `Progress: ${actualIndex}/${eligible.length} (${Math.round((actualIndex / eligible.length) * 100)}%). API usage: ${stats.dailyRequests}/${stats.dailyLimit} (${stats.remaining} remaining)`,
+        `Progress: ${actualIndex}/${eligible.length} (${Math.round((actualIndex / eligible.length) * 100)}%). API: ${stats.dailyRequests}/${stats.dailyLimit} (${stats.remaining} left)`,
       );
     }
 

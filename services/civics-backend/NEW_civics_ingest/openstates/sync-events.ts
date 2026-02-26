@@ -5,10 +5,12 @@
  * Usage:
  *   npm run openstates:sync:events [--states=CA,NY] [--start-date=2024-01-01] [--end-date=2024-12-31] [--dry-run]
  */
-import 'dotenv/config';
+import { loadEnv } from '../utils/load-env.js';
+loadEnv();
 
 import { fetchEvents, getOpenStatesUsageStats } from '../clients/openstates.js';
 import { deriveJurisdictionFilter } from '../enrich/state.js';
+import { logger } from '../utils/logger.js';
 import { collectActiveRepresentatives, type CollectOptions } from '../ingest/openstates/index.js';
 import { getSupabaseClient } from '../clients/supabase.js';
 
@@ -68,20 +70,20 @@ async function main() {
   const endDate = options.endDate || new Date(today.getTime() + 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0];
   const startDate = options.startDate || today.toISOString().split('T')[0];
 
-  console.log(
-    `\n📅 Syncing legislative events from ${startDate} to ${endDate}${
+  logger.info(
+    `Syncing legislative events from ${startDate} to ${endDate}${
       options.states?.length ? ` for ${options.states.join(', ')}` : ''
-    }${options.dryRun ? ' (DRY RUN)' : ''}...\n`,
+    }${options.dryRun ? ' (DRY RUN)' : ''}`,
   );
 
   // Check API usage
   const stats = getOpenStatesUsageStats();
   if (stats.remaining <= 0) {
-    console.warn(`OpenStates API daily limit reached (${stats.dailyRequests}/${stats.dailyLimit}). Cannot proceed.`);
+    logger.warn(`OpenStates API daily limit reached (${stats.dailyRequests}/${stats.dailyLimit}). Cannot proceed.`);
     return;
   }
 
-  console.log(`API usage: ${stats.dailyRequests}/${stats.dailyLimit} (${stats.remaining} remaining)\n`);
+  logger.info(`API usage: ${stats.dailyRequests}/${stats.dailyLimit} (${stats.remaining} remaining)`);
 
   const jurisdictions = new Set<string>();
   
@@ -109,9 +111,9 @@ async function main() {
   // If no jurisdictions found and no states specified, we need to fetch all jurisdictions
   // OpenStates API requires jurisdiction parameter, so we can't fetch without it
   if (jurisdictions.size === 0 && (!options.states || options.states.length === 0)) {
-    console.warn('⚠️  No jurisdictions found. Events sync requires either --states parameter or representatives with jurisdictions.');
-    console.warn('   Skipping events sync. Use --states=CA,NY to specify states.');
-    console.log(`\n✅ Events sync complete (skipped - no jurisdictions).\n`);
+    logger.warn('No jurisdictions found. Events sync requires either --states parameter or representatives with jurisdictions.');
+    logger.warn('Skipping events sync. Use --states=CA,NY to specify states.');
+    logger.info('Events sync complete (skipped - no jurisdictions).');
     return;
   }
 
@@ -136,7 +138,7 @@ async function main() {
             }
           }
         }
-        console.log(`[dry-run] Would store ${wouldStore} event assignments for ${events.length} events (${jurisdiction || 'all jurisdictions'})`);
+        logger.info(`[dry-run] Would store ${wouldStore} event assignments for ${events.length} events (${jurisdiction || 'all jurisdictions'})`);
         continue;
       }
 
@@ -195,27 +197,26 @@ async function main() {
           if (!error) {
             totalStored += 1;
           } else {
-            console.warn(`Failed to store event for rep ${rep.id}:`, error.message);
+            logger.warn(`Failed to store event for rep ${rep.id}`, { error: error.message });
           }
         }
       }
       totalSkipped += jurisdictionSkipped;
     } catch (error) {
-      console.error(`Failed to fetch events for ${jurisdiction}:`, (error as Error).message);
+      logger.error(`Failed to fetch events for ${jurisdiction}`, { error: (error as Error).message });
     }
   }
 
   const finalStats = getOpenStatesUsageStats();
-  console.log(`\n✅ Events sync complete.`);
-  console.log(`   Events fetched: ${totalEvents}`);
-  console.log(`   Event assignments stored: ${totalStored}`);
-  if (totalSkipped > 0) {
-    console.log(`   Skipped (no matching rep): ${totalSkipped}`);
-  }
-  console.log(`   Final API usage: ${finalStats.dailyRequests}/${finalStats.dailyLimit} (${finalStats.remaining} remaining)\n`);
+  logger.info('Events sync complete.', {
+    eventsFetched: totalEvents,
+    eventAssignmentsStored: totalStored,
+    skipped: totalSkipped,
+    apiUsage: `${finalStats.dailyRequests}/${finalStats.dailyLimit} (${finalStats.remaining} remaining)`,
+  });
 }
 
 main().catch((error) => {
-  console.error('Events sync failed:', error);
+  logger.error('Events sync failed', { error: error instanceof Error ? error.message : String(error) });
   process.exit(1);
 });

@@ -1,13 +1,13 @@
 # Choices – Single Source Roadmap (Outstanding Work Only)
 
-Last updated: 2025‑12‑23  
+Last updated: 2026‑02‑24  
 **Canonical location:** `docs/ROADMAP_SINGLE_SOURCE.md`
 
 Quick links: [Recurring Runbooks](#recurring-runbooks) • [Ownership & Updates](#ownership--updates)
 
-This document consolidates all remaining work items from `scratch/`, service roadmaps, production‑readiness, feature status, and code comments. Treat this file as the single source of truth for outstanding work. When closing an item, link the PR and update status here.
+This document consolidates all remaining work items from `scratch/roadmap.md`, service roadmaps, production‑readiness, feature status, and code comments. Treat this file as the single source of truth for outstanding work. When closing an item, link the PR and update status here.
 
-See also: `docs/UTILS_GUIDE.md` for canonical utilities and import paths.
+See also: `docs/CODEBASE_NAVIGATION.md` § Canonical Utilities for import paths.
 
 Legend: [P0]=blocking, [P1]=launch‑critical, [P2]=post‑launch
 
@@ -65,7 +65,7 @@ Source: `docs/FEATURE_STATUS.md`
 - [P1] Social Sharing (master + polls): persist events to Supabase; expose metrics; admin dashboards
   - Implemented: API persists to `analytics_events` (typed) in `web/app/api/share/route.ts`; GET aggregates by `event_type='share'`
 - [P2] Social Sharing (civics/visual/OG): decide keep or delete flags; scope if kept
-- [P1] Contact Information System: complete ingestion + notification flows; clarify CRM vs MVP
+- [P1] Contact Information System: ingestion + admin UI + My Submissions + rejected-status storage + bulk approve/reject (API + UI); production verification before GA
 - [P2] Device Flow Auth: OAuth 2.0 Device Authorization handlers + polling UX + rate limiting
 - [P2] Themes/Dark Mode: decide or remove flag
 - [P1] Internationalisation: finish extraction tooling; expand catalogue coverage; enable lint job
@@ -113,12 +113,12 @@ Immediate P0/P1 from code/TODO reconciliation:
 ## D) Analytics, Admin, Accessibility & I18N [mixed]
 Sources: `docs/ROADMAP.md`, `docs/qa/i18n-accessibility-playbook.md`, `scratch/gpt5-codex/roadmaps/2025-11-17-outstanding-backlog-roadmap.md`, inclusive archive
 
-- [P1] Analytics real data: ✅ COMPLETE (Jan 2026) — `/api/analytics/**` + unified routes now source Supabase data with `PrivacyAwareQueryBuilder`, Redis cache helpers, and documented pipeline (`docs/features/analytics.md`)
-- [P1] Analytics features backlog (funnels, KPIs, admin flag coverage): ✅ COMPLETE (Jan 2026) — see `docs/features/analytics.md` for the shipped summary + references
+- [P1] Analytics real data: ✅ COMPLETE (Jan 2026) — `/api/analytics/**` + unified routes now source Supabase data with `PrivacyAwareQueryBuilder`, Redis cache helpers, and documented pipeline (see `docs/archive/reference/civics/` for analytics context)
+- [P1] Analytics features backlog (funnels, KPIs, admin flag coverage): ✅ COMPLETE (Jan 2026) — see `docs/archive/reference/civics/` for shipped summary
 - [P1] Admin feature flags + audit logging: expand Playwright coverage for toggles and logging once modernized
-- [P1] Accessibility – Analytics dashboards: textual summaries; axis labels; re‑run NVDA; enable axe gating in CI
+- [P1] Accessibility – Analytics dashboards: textual summaries; axis labels; re‑run NVDA; axe gating in CI ✅ (accessibility-axe job in ci.yml)
 - [P1] Notification alignment: ensure all surfaces use `useNotificationActions`; finalize Playwright specs
-- [P1] Test coverage: stabilize feeds/admin harness suites; add RTL for voting/notification stores; nav breadcrumbs/sidebar E2E
+- [P1] Test coverage: stabilize feeds/admin harness suites; add RTL for voting/notification stores; nav breadcrumbs/sidebar E2E — breadcrumbs on deep routes ✅ (representatives, poll results)
 - [P2] Governance/process: keep owner columns updated where used; prefer this file as the single source; archive superseded docs
 
 ---

@@ -129,6 +129,7 @@ describe('FeedDataProvider integration', () => {
           district: null,
           sort: 'trending',
         },
+        pagination: { hasMore: true, total: 2, limit: 20, offset: 0 },
       },
     };
 
@@ -147,6 +148,7 @@ describe('FeedDataProvider integration', () => {
           district: null,
           sort: 'trending',
         },
+        pagination: { hasMore: false, total: 2, limit: 20, offset: 1 },
       },
     };
 
@@ -172,7 +174,10 @@ describe('FeedDataProvider integration', () => {
     });
 
     expect(screen.getByTestId('loading')).toHaveTextContent('loaded');
-    expect(fetchSpy).toHaveBeenCalledWith('/api/feeds', expect.any(Object));
+    expect(fetchSpy).toHaveBeenCalledWith(
+      expect.stringContaining('/api/feeds'),
+      expect.any(Object)
+    );
 
     act(() => {
       screen.getByText('Load More').click();

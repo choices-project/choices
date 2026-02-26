@@ -1,12 +1,20 @@
-# Project Status — January 2026
+# Project Status — February 2026
 
-_Last updated: January 2026_
+_Last updated: February 2026_
 
 The Choices platform MVP is **complete and production-ready**. All core features are implemented, tested, and documented. Active development continues on enhancements and optimizations.
 
 **MVP Status: ✅ Complete**
 
 All MVP features are implemented, tested, and production-ready. The platform is ready for deployment.
+
+**Recent Updates (February 2026):**
+- ✅ **WebAuthn trust visibility** — Profile Account & Security shows trust tier (e.g. "Trusted (passkey verified)"); TrustScoreCard displays trust score and recommendations; dynamic "Set Up" vs "Manage Passkeys" button; ARIA on error/success regions; E2E tests for biometric setup flow
+- ✅ **Contact system** — Bulk approve/reject (API + UI), batch notifications; rejected-status storage; admin rep-name search; My Submissions with rejected badge
+- ✅ **Breadcrumbs** — Deep routes (representatives/[id], representatives/[id]/accountability, poll results)
+- ✅ **E2E expansion** — poll-templates.spec.ts, civics-navigation.spec.ts; auth, account, profile, poll analytics specs
+- ✅ **Axe CI** — accessibility-axe job in ci.yml; fail on violations
+- ✅ **EnhancedEmptyState/EnhancedErrorDisplay** — Civics page, RepresentativeList, representatives page
 
 **Recent Updates (January 2026):**
 - ✅ **P0 Production Readiness Complete** - All critical production readiness items completed
@@ -28,8 +36,8 @@ All MVP features are implemented, tested, and production-ready. The platform is 
 | --- | --- | --- |
 | Store modernization | 🔄 In progress | Notification store complete with integration + E2E coverage; profile/user stores partially migrated; app/admin/polls stores queued. |
 | Documentation | ✅ Current | Core docs refreshed; scratch materials archived; single-source roadmap established. |
-| Testing | 🚧 Needs expansion | Jest suites cover key stores; Playwright harnesses exist for profile + notification stores; analytics and civic flows still lack modern coverage. |
-| Analytics dashboard | ✅ Real data live | Supabase-backed endpoints (`/api/analytics/**`, unified API) with privacy-aware queries, Redis caching, and admin gating; see `docs/features/analytics.md`. |
+| Testing | 🔄 Improved | Jest suites cover key stores; Playwright: poll-templates, civics-navigation, account-settings, poll-analytics; analytics and civic flows have expanded coverage. |
+| Analytics dashboard | ✅ Real data live | Supabase-backed endpoints (`/api/analytics/**`, unified API) with privacy-aware queries, Redis caching, and admin gating; see `docs/archive/reference/civics/civic-engagement-v2/` for analytics context. |
 | Admin tooling | ✅ Enhanced | Feature flag UI and notification system now consume shared hooks; audit tooling enhanced with diff functionality, filtering, and comprehensive logging. |
 | Civic/notifications UX | ✅ Stable surface | Poll creation, onboarding, and notifications flows run on refactored APIs but still need ongoing regression coverage. |
 

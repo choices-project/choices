@@ -8,7 +8,8 @@
  * Usage:
  *   npm run ingest:committees-events [--states=CA,NY] [--skip-committees] [--skip-events] [--dry-run]
  */
-import 'dotenv/config';
+import { loadEnv } from '../utils/load-env.js';
+loadEnv();
 
 import { execSync } from 'child_process';
 

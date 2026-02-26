@@ -4,8 +4,9 @@
  * separate from the YAML ingest helpers so we can clearly distinguish between
  * static "people" data sourced from the vendored archive and dynamic data
  * fetched from the V3 REST API.
- * 
- * NOTE: OpenStates API covers STATE/LOCAL representatives only, NOT federal.
+ *
+ * CRITICAL: OpenStates (YAML + API) contains ONLY state and local representatives.
+ * There is never and will never be any federal representative data from OpenStates.
  * Federal data comes from Congress.gov, FEC, and GovInfo.
  */
 
@@ -116,7 +117,7 @@ function getApiKey(): string | null {
 
 const OPENSTATES_THROTTLE_MS = Number(process.env.OPENSTATES_THROTTLE_MS ?? '6500');
 const OPENSTATES_MAX_RETRIES = Number(process.env.OPENSTATES_MAX_RETRIES ?? '3');
-const OPENSTATES_DAILY_LIMIT = Number(process.env.OPENSTATES_DAILY_LIMIT ?? '10000');
+const OPENSTATES_DAILY_LIMIT = Number(process.env.OPENSTATES_DAILY_LIMIT ?? '250');
 
 // Rate limit tracking
 let requestQueue: Promise<unknown> = Promise.resolve();
@@ -260,7 +261,7 @@ async function fetchFromOpenStates<T>(
     );
   }
 
-  const json = (await response.json()) as OpenStatesApiResponse<T>;
+  const json = (await response.json()) as OpenStatesApiResponse<T> & Record<string, unknown>;
   if (Array.isArray(json.results)) {
     return json.results;
   }
@@ -269,6 +270,14 @@ async function fetchFromOpenStates<T>(
   }
   if (Array.isArray(json.result)) {
     return json.result;
+  }
+  // Single-object response (e.g. /committees/{id} returns one object)
+  if (json && typeof json === 'object' && !Array.isArray(json) && 'id' in json) {
+    return [json as T];
+  }
+  const obj = json?.data ?? json?.result;
+  if (obj && typeof obj === 'object' && !Array.isArray(obj) && 'id' in obj) {
+    return [obj as T];
   }
   return [];
 }
@@ -429,7 +438,10 @@ export async function fetchCommittees(
   }
 
   try {
-    const params: Record<string, string | undefined> = {};
+    const params: Record<string, string | string[] | undefined> = {
+      per_page: '20', // OpenStates committees API: per_page must be in [1, 20]
+      include: ['memberships'],
+    };
     if (jurisdiction) params.jurisdiction = jurisdiction;
     if (chamber) params.chamber = chamber;
     if (parent) params.parent = parent;

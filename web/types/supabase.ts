@@ -3084,6 +3084,8 @@ export type Database = {
           id: number
           is_primary: boolean | null
           is_verified: boolean | null
+          rejection_reason: string | null
+          rejected_at: string | null
           representative_id: number
           source: string | null
           submitted_by_user_id: string | null
@@ -3096,6 +3098,8 @@ export type Database = {
           id?: number
           is_primary?: boolean | null
           is_verified?: boolean | null
+          rejection_reason?: string | null
+          rejected_at?: string | null
           representative_id: number
           source?: string | null
           submitted_by_user_id?: string | null
@@ -3108,6 +3112,8 @@ export type Database = {
           id?: number
           is_primary?: boolean | null
           is_verified?: boolean | null
+          rejection_reason?: string | null
+          rejected_at?: string | null
           representative_id?: number
           source?: string | null
           submitted_by_user_id?: string | null

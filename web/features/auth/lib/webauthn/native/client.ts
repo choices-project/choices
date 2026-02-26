@@ -66,7 +66,9 @@ export async function isPlatformAuthenticatorAvailable(): Promise<boolean> {
 }
 
 /**
- * Check if biometric authentication is available
+ * Check if biometric / platform authenticator is available.
+ * Uses isUserVerifyingPlatformAuthenticatorAvailable() — does NOT trigger a credential prompt.
+ * Calling navigator.credentials.get() to "check" would incorrectly prompt the user.
  */
 export async function isBiometricAvailable(): Promise<boolean> {
   if (!isWebAuthnSupported()) {
@@ -74,19 +76,9 @@ export async function isBiometricAvailable(): Promise<boolean> {
   }
 
   try {
-    // Check if the device supports biometric authentication
-    const available = await window.navigator.credentials.get({
-      publicKey: {
-        challenge: new Uint8Array(32),
-        allowCredentials: [],
-        timeout: 1000,
-        userVerification: 'required'
-      }
-    }).catch(() => null);
-
-    return available !== null;
+    return await isPlatformAuthenticatorAvailable();
   } catch (error) {
-    logger.error('Error checking WebAuthn support', error instanceof Error ? error : new Error(String(error)));
+    logger.error('Error checking biometric availability', error instanceof Error ? error : new Error(String(error)));
     return false;
   }
 }
@@ -462,17 +454,24 @@ export async function registerBiometric(): Promise<{ success: boolean; error?: s
 }
 
 /**
- * Get user credentials (placeholder - credentials are managed by browser)
+ * Get user's registered passkey credentials from the backend.
+ * Requires an active session. Returns [] when not authenticated or on error.
  */
-export async function getUserCredentials(): Promise<Credential[]> {
+export async function getUserCredentials(fetcher = fetch): Promise<Array<{ id: string }>> {
   try {
     if (!isWebAuthnSupported()) {
       return [];
     }
 
-    // This would typically fetch from a secure storage or API
-    // For now, we'll return an empty array as credentials are managed by the browser
-    return [];
+    const res = await fetcher('/api/v1/auth/webauthn/credentials', { credentials: 'include' });
+    if (!res.ok) {
+      // 401 = not logged in; treat as no credentials
+      return [];
+    }
+
+    const json = await res.json();
+    const raw = json?.data?.credentials ?? json?.credentials ?? [];
+    return Array.isArray(raw) ? raw : [];
   } catch (error) {
     logger.error('Error getting user credentials', error instanceof Error ? error : new Error(String(error)));
     return [];

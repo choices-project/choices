@@ -1,7 +1,10 @@
 /**
  * Agent Client Unit Tests
  *
- * Tests for the Supabase agent client utility
+ * Tests for the Supabase agent client utility.
+ * Uses node environment because getSupabaseAgentClient asserts server-only (no window).
+ *
+ * @jest-environment node
  */
 
 import { describe, it, expect, beforeEach, jest } from '@jest/globals'
@@ -16,12 +19,17 @@ jest.mock('@/utils/supabase/server', () => ({
       select: jest.fn(() => Promise.resolve({ data: [], error: null })),
       insert: jest.fn(() => Promise.resolve({ data: [], error: null })),
       update: jest.fn(() => Promise.resolve({ data: [], error: null })),
+      upsert: jest.fn(() => Promise.resolve({ data: [], error: null })),
       delete: jest.fn(() => Promise.resolve({ data: [], error: null })),
     })),
   })),
   getSupabaseServerClient: jest.fn(() => Promise.resolve({
     from: jest.fn(() => ({
       select: jest.fn(() => Promise.resolve({ data: [], error: null })),
+      insert: jest.fn(() => Promise.resolve({ data: [], error: null })),
+      update: jest.fn(() => Promise.resolve({ data: [], error: null })),
+      upsert: jest.fn(() => Promise.resolve({ data: [], error: null })),
+      delete: jest.fn(() => Promise.resolve({ data: [], error: null })),
     })),
   })),
 }))
@@ -39,8 +47,8 @@ jest.mock('@/lib/core/agent/audit', () => ({
   })),
 }))
 
-// Mock rate limiter
-jest.mock('@/lib/core/auth/server-actions', () => ({
+// Mock rate limiter (agent uses api-rate-limiter, not server-actions)
+jest.mock('@/lib/rate-limiting/api-rate-limiter', () => ({
   apiRateLimiter: {
     checkLimit: jest.fn(() => Promise.resolve({
       allowed: true,
@@ -144,7 +152,7 @@ describe('Agent Client', () => {
       expect(agent).toBeDefined()
       expect(agent.context.agentId).toBe('user-agent')
       expect(agent.context.userId).toBe('user-123')
-      expect(agent.context.useServiceRole).toBe(false)
+      expect(agent.context.metadata?.useServiceRole).toBe(false)
     })
   })
 
@@ -156,10 +164,8 @@ describe('Agent Client', () => {
         enableAudit: true,
       })
 
-      const { data, error } = await agent.client
-        .from('polls')
-        .select('*')
-        .limit(1)
+      // Agent wraps select as async; chain ends at select (no limit/order)
+      const { data, error } = await agent.client.from('polls').select('*')
 
       expect(data).toBeDefined()
       expect(error).toBeNull()
@@ -167,12 +173,17 @@ describe('Agent Client', () => {
 
     it('should handle errors and log them', async () => {
       const { getSupabaseAdminClient } = require('@/utils/supabase/server')
+      const noop = jest.fn(() => Promise.resolve({ data: null, error: null }))
       getSupabaseAdminClient.mockReturnValueOnce(Promise.resolve({
         from: jest.fn(() => ({
           select: jest.fn(() => Promise.resolve({
             data: null,
             error: { message: 'Test error', code: 'TEST_ERROR' },
           })),
+          insert: noop,
+          update: noop,
+          upsert: noop,
+          delete: noop,
         })),
       }))
 
@@ -228,7 +239,7 @@ describe('Agent Client', () => {
 
   describe('Rate Limiting', () => {
     it('should respect rate limits', async () => {
-      const { apiRateLimiter } = require('@/lib/core/auth/server-actions')
+      const { apiRateLimiter } = require('@/lib/rate-limiting/api-rate-limiter')
       apiRateLimiter.checkLimit.mockReturnValueOnce(Promise.resolve({
         allowed: false,
         totalHits: 100,

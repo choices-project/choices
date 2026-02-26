@@ -250,7 +250,7 @@ export default function PollTemplatesPage() {
   const router = useRouter();
   const routerRef = useRef(router);
   useEffect(() => { routerRef.current = router; }, [router]);
-  
+
   const [searchQuery, setSearchQuery] = useState('');
   const debouncedSearchQuery = useDebounce(searchQuery, 300);
   const [selectedCategory, setSelectedCategory] = useState<PollCategory | 'all'>('all');
@@ -282,22 +282,22 @@ export default function PollTemplatesPage() {
       setSidebarActiveSectionRef.current(null);
       setBreadcrumbsRef.current([]);
     };
-  }, []);  
+  }, []);
 
   const filteredTemplates = templates.filter(template => {
     const matchesSearch = template.name.toLowerCase().includes(debouncedSearchQuery.toLowerCase()) ||
                          template.description.toLowerCase().includes(debouncedSearchQuery.toLowerCase()) ||
                          template.tags.some((tag: string) => tag.toLowerCase().includes(debouncedSearchQuery.toLowerCase()));
-    
-    const matchesCategory = selectedCategory === 'all' || 
+
+    const matchesCategory = selectedCategory === 'all' ||
       (typeof selectedCategory === 'object' ? template.category === selectedCategory.id : template.category === selectedCategory);
-    
+
     return matchesSearch && matchesCategory;
   });
 
   const sortedTemplates = [...filteredTemplates].filter(template => template !== undefined).sort((a, b) => {
     let comparison = 0;
-    
+
     switch (sortBy) {
       case 'popular':
         comparison = b.usageCount - a.usageCount;
@@ -315,7 +315,7 @@ export default function PollTemplatesPage() {
         comparison = a.name.localeCompare(b.name);
         break;
     }
-    
+
     return sortOrder === 'desc' ? comparison : -comparison;
   });
 
@@ -471,9 +471,9 @@ export default function PollTemplatesPage() {
         </div>
 
         {/* Templates Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6" data-testid="templates-grid">
           {sortedTemplates.map((template) => (
-            <Card key={template.id} className="hover:shadow-lg transition-shadow">
+            <Card key={template.id} className="hover:shadow-lg transition-shadow" data-testid={`template-card-${template.id}`}>
               <CardHeader>
                 <div className="flex items-start justify-between">
                   <div className="flex-1">
@@ -486,7 +486,7 @@ export default function PollTemplatesPage() {
                     {template.difficulty}
                   </Badge>
                 </div>
-                
+
                 <div className="flex items-center gap-4 text-sm text-gray-500">
                   <div className="flex items-center gap-1">
                     <Clock className="h-4 w-4" />
@@ -502,7 +502,7 @@ export default function PollTemplatesPage() {
                   </div>
                 </div>
               </CardHeader>
-              
+
               <CardContent>
                 <div className="flex flex-wrap gap-1 mb-4">
                   {template.tags.map((tag: string) => (
@@ -511,13 +511,14 @@ export default function PollTemplatesPage() {
                     </Badge>
                   ))}
                 </div>
-                
+
                 <Separator className="mb-4" />
-                
+
                 <div className="flex gap-2">
                   <Button
                     onClick={() => handleUseTemplate(template)}
                     className="flex-1"
+                    data-testid={`use-template-${template.id}`}
                   >
                     <Plus className="h-4 w-4 mr-2" />
                     Use Template

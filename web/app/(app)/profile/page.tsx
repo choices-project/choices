@@ -4,17 +4,20 @@ import { User, Shield, Download, Edit, Settings, CheckCircle, MapPin, RefreshCw,
 import { useRouter } from 'next/navigation';
 import React, { useEffect, useState, useCallback, useRef } from 'react';
 
+import { TrustScoreCard } from '@/features/auth/components/TrustScoreCard';
+import { useBiometricCredentials, useInitializeBiometricState } from '@/features/auth/lib/store';
 import { AddressLookup } from '@/features/profile/components/AddressLookup';
 import { useProfileData, useProfileExport } from '@/features/profile/hooks/use-profile';
-
 
 import { AuthGuard } from '@/components/business/auth/AuthGuard';
 import { EnhancedErrorDisplay } from '@/components/shared/EnhancedErrorDisplay';
 import { ErrorBoundary } from '@/components/shared/ErrorBoundary';
+import { TrustTierBadge } from '@/components/shared/TrustTierBadge';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
+
 
 import { useUser, useIsAuthenticated, useUserLoading } from '@/lib/stores';
 import { useAppActions } from '@/lib/stores/appStore';
@@ -42,6 +45,8 @@ function ProfilePageContent() {
   const { displayName, isAdmin } = useProfileDisplay();
   const { isProfileComplete } = useProfileStats();
   const onboardingIsCompleted = useOnboardingStore((state) => state.isCompleted);
+  useInitializeBiometricState({ fetchCredentials: true });
+  const hasCredentials = useBiometricCredentials();
 
   // Refs for stable app store actions
   const setCurrentRouteRef = useRef(setCurrentRoute);
@@ -162,7 +167,7 @@ function ProfilePageContent() {
   // Show loading state until component is mounted or while loading
   if (!isMounted || isUserLoading || profileLoading) {
     return (
-      <main id="main-content" role="main" className="container mx-auto px-4 py-8" data-testid="profile-loading" aria-label="Loading profile" aria-busy="true">
+      <div className="container mx-auto px-4 py-8" data-testid="profile-loading" aria-label="Loading profile" aria-busy="true">
         <div className="max-w-4xl mx-auto space-y-8">
           <Card className="bg-card dark:bg-card border-border">
             <CardHeader className="text-center">
@@ -198,18 +203,18 @@ function ProfilePageContent() {
             </Card>
           </div>
         </div>
-      </main>
+      </div>
     );
   }
 
   if (!isAuthenticated) {
     return (
-      <main id="main-content" role="main" className="flex items-center justify-center min-h-screen">
+      <div className="flex items-center justify-center min-h-screen">
         <div className="text-center">
           <h1 className="text-2xl font-bold mb-4 text-foreground">Sign in to your account</h1>
           <p className="text-muted-foreground">Please sign in to view your profile.</p>
         </div>
-      </main>
+      </div>
     );
   }
 
@@ -221,7 +226,7 @@ function ProfilePageContent() {
   if (needsOnboarding) {
     return (
       <ErrorBoundary>
-        <main id="main-content" role="main" className="container mx-auto px-4 py-8">
+        <div className="container mx-auto px-4 py-8">
           <div className="max-w-2xl mx-auto">
             <Card className="bg-card dark:bg-card border-border">
               <CardHeader className="text-center">
@@ -263,7 +268,7 @@ function ProfilePageContent() {
               </CardContent>
             </Card>
           </div>
-        </main>
+        </div>
       </ErrorBoundary>
     );
   }
@@ -272,7 +277,7 @@ function ProfilePageContent() {
     // Show loading state with timeout message if taking too long
     return (
       <ErrorBoundary>
-        <main id="main-content" role="main" className="flex items-center justify-center min-h-screen" aria-label="Loading profile" aria-busy="true">
+        <div className="flex items-center justify-center min-h-screen" aria-label="Loading profile" aria-busy="true">
           <div className="text-center space-y-4 max-w-md">
             <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto" aria-hidden="true" />
             <p className="text-muted-foreground">
@@ -291,7 +296,7 @@ function ProfilePageContent() {
               </Button>
             )}
           </div>
-        </main>
+        </div>
       </ErrorBoundary>
     );
   }
@@ -304,7 +309,7 @@ function ProfilePageContent() {
 
     return (
       <ErrorBoundary>
-        <main id="main-content" role="main" className="container mx-auto px-4 py-8">
+        <div className="container mx-auto px-4 py-8">
           {isOnboardingError ? (
             <div className="max-w-2xl mx-auto">
               <Card className="bg-card dark:bg-card border-border">
@@ -355,7 +360,7 @@ function ProfilePageContent() {
               }}
             />
           )}
-        </main>
+        </div>
       </ErrorBoundary>
     );
   }
@@ -364,7 +369,7 @@ function ProfilePageContent() {
   return (
     <AuthGuard redirectTo="/auth">
       <ErrorBoundary>
-        <main id="main-content" role="main" className="container mx-auto px-4 py-8">
+        <div className="container mx-auto px-4 py-8">
           <div className="max-w-4xl mx-auto space-y-6">
             {/* Profile Header */}
             <Card className="bg-card dark:bg-card border-border">
@@ -478,6 +483,12 @@ function ProfilePageContent() {
                       <span className="text-foreground">Profile {isProfileComplete ? 'Complete' : 'Incomplete'}</span>
                     </div>
                   </div>
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                      <span className="text-sm font-medium text-muted-foreground">Trust tier</span>
+                      <TrustTierBadge tier={profile?.trust_tier ?? 'T0'} showPasskeyHint size="md" />
+                    </div>
+                  </div>
                   {isAdmin && (
                     <div className="flex items-center justify-between">
                       <div className="flex items-center">
@@ -490,11 +501,12 @@ function ProfilePageContent() {
                     onClick={handleBiometricSetup}
                     variant="outline"
                     className="w-full justify-start border-border text-foreground hover:bg-muted mt-4"
-                    aria-label="Set up biometric authentication"
+                    aria-label={hasCredentials ? 'Manage passkeys' : 'Set up biometric authentication'}
                   >
                     <Fingerprint className="h-4 w-4 mr-2" aria-hidden="true" />
-                    Set Up Biometric Login
+                    {hasCredentials ? 'Manage Passkeys' : 'Set Up Biometric Login'}
                   </Button>
+                  <TrustScoreCard />
                 </CardContent>
               </Card>
             </div>
@@ -565,7 +577,7 @@ function ProfilePageContent() {
               </CardContent>
             </Card>
           </div>
-        </main>
+        </div>
       </ErrorBoundary>
     </AuthGuard>
   );

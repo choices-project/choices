@@ -448,7 +448,10 @@ export default function PollHeatmap({
         )}
 
         {/* Summary Stats */}
-        <div className="mb-6 grid grid-cols-3 gap-4">
+        <div className="mb-6 grid grid-cols-3 gap-4" role="group" aria-label="Poll engagement summary">
+          <p className="sr-only" aria-live="polite">
+            Total votes: {formatNumber(totalVotes)}. Average engagement: {formatDecimal(avgEngagement)}. Active polls: {formatNumber(activePolls)}.
+          </p>
           <div className="text-center p-4 bg-gradient-to-br from-blue-50 to-blue-100 rounded-lg">
             <p className="text-sm text-gray-600">Total Votes</p>
             <p className="text-2xl font-bold text-blue-700">{formatNumber(totalVotes)}</p>

@@ -47,7 +47,7 @@ export const fetchFeedsFromApi = async (
   });
 
   if (!response.ok) {
-    throw new Error(`Failed to fetch feeds (status ${response.status})`);
+    throw new Error('Failed to load feeds');
   }
 
   const raw = await response.json();

@@ -7,7 +7,7 @@ We welcome contributions! This project is licensed under MIT and uses the Develo
 1. **Read the docs**: Start with [`docs/GETTING_STARTED.md`](docs/GETTING_STARTED.md) to set up your environment
 2. **Find a task**: Look for issues labeled `good first issue` or `help wanted`
 3. **Create a branch**: `git checkout -b feature/your-feature-name`
-4. **Make changes**: Follow the patterns in [`docs/DEVELOPMENT.md`](docs/DEVELOPMENT.md)
+4. **Make changes**: Follow the patterns in [`docs/GETTING_STARTED.md`](docs/GETTING_STARTED.md)
 5. **Test**: Run `npm run lint`, `npm run type-check`, and `npm run test`
 6. **Sign commits**: Use `git commit -s` (DCO requirement)
 7. **Open a PR**: Fill out the PR template checklist
@@ -37,7 +37,7 @@ git checkout -b fix/issue-description
 
 **Code Standards:**
 - Follow TypeScript best practices
-- Use the utilities from [`docs/UTILS_GUIDE.md`](docs/UTILS_GUIDE.md)
+- Use the utilities from [`docs/CODEBASE_NAVIGATION.md`](docs/CODEBASE_NAVIGATION.md) § Canonical Utilities
 - Follow state management patterns from [`docs/STATE_MANAGEMENT.md`](docs/STATE_MANAGEMENT.md)
 - Write self-documenting code with JSDoc comments
 - Keep functions small and focused
@@ -158,7 +158,7 @@ Closes #123
 
 ## Code Style and Utilities
 
-**Prefer canonical utilities** over ad-hoc implementations. See [`docs/UTILS_GUIDE.md`](docs/UTILS_GUIDE.md) for:
+**Prefer canonical utilities** over ad-hoc implementations. See [`docs/CODEBASE_NAVIGATION.md`](docs/CODEBASE_NAVIGATION.md) § Canonical Utilities for:
 - Date helpers (`nowISO`, `formatISODateOnly`)
 - Browser/SSR-safe helpers (`browser-utils`, `ssr-safe`)
 - API response/CORS helpers (`@/lib/api`, `response-utils`)
@@ -202,7 +202,7 @@ By contributing, you agree that your contributions will be licensed under the MI
 
 - **Documentation**: See [`docs/README.md`](docs/README.md) for the full index
 - **Architecture**: See [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md) for system design
-- **Development**: See [`docs/DEVELOPMENT.md`](docs/DEVELOPMENT.md) for detailed setup
+- **Development**: See [`docs/GETTING_STARTED.md`](docs/GETTING_STARTED.md) for setup and runbook
 - **Testing**: See [`docs/TESTING.md`](docs/TESTING.md) for testing strategies
 - **Codebase**: See [`docs/CODEBASE_NAVIGATION.md`](docs/CODEBASE_NAVIGATION.md) for structure
 

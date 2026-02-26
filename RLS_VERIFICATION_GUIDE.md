@@ -124,7 +124,7 @@ Apply via Supabase MCP `apply_migration` or `supabase db push`.
 
 ## WebAuthn (passkeys)
 
-See [WEBAUTHN_SUPABASE_AUDIT](docs/WEBAUTHN_SUPABASE_AUDIT.md) for RLS, indexes, config, and troubleshooting. Tables: `webauthn_challenges`, `webauthn_credentials`. Use Supabase MCP to verify policies and indexes.
+See [WEBAUTHN_SUPABASE_AUDIT](docs/archive/2026-02-docs-consolidation/WEBAUTHN_SUPABASE_AUDIT.md) for RLS, indexes, config, and troubleshooting. Tables: `webauthn_challenges`, `webauthn_credentials`. Use Supabase MCP to verify policies and indexes.
 
 ## Security Advisor — Deferred Items
 

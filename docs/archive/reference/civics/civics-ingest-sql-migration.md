@@ -1,6 +1,6 @@
-# Civics Ingest — SQL Migration Plan _(archived planning notes)_
+# Civics Ingest — SQL Migration Plan
 
-> **Reference only:** This historical plan documents the migration from REST writers to the SQL-first merge. For current operating instructions see [`docs/civics-backend-quickstart.md`](./civics-backend-quickstart.md) and [`docs/civics-backend-operations.md`](./civics-backend-operations.md).
+> **ARCHIVED.** Use [OPERATOR_RUNBOOK.md](../../../services/civics-backend/NEW_civics_ingest/docs/OPERATOR_RUNBOOK.md) and [DATABASE_SCHEMA.md](../../../services/civics-backend/NEW_civics_ingest/docs/DATABASE_SCHEMA.md). This file is historical only.
 
 This document outlines how we graduate the current per-representative REST ingest into a Supabase-native, set-based workflow. It will serve as the working blueprint while we refactor the pipeline.
 

@@ -17,7 +17,7 @@ import React, { useEffect } from 'react';
 import { RepresentativeList  } from '@/features/civics/components/representative/RepresentativeList';
 import { RepresentativeSearch } from '@/features/civics/components/representative/RepresentativeSearch';
 
-import { Alert, AlertDescription } from '@/components/ui/alert';
+import { EnhancedErrorDisplay } from '@/components/shared/EnhancedErrorDisplay';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -130,23 +130,17 @@ export default function RepresentativesPage() {
         {/* Results Area */}
         <div className="lg:col-span-3">
           {error && (
-            <Alert variant="destructive" className="mb-6">
-              <AlertDescription>
-                <div className="flex items-center justify-between gap-4">
-                  <div className="space-y-1">
-                    <div>{errorMessage || 'We could not load representatives right now.'}</div>
-                    {errorMessage.includes('Security challenge') && (
-                      <div className="text-xs text-red-700 dark:text-red-300">
-                        Please refresh the page and try again. If the issue persists, check your network or security settings.
-                      </div>
-                    )}
-                  </div>
-                  <Button variant="outline" size="sm" onClick={() => searchRepresentatives({ limit: 50 })}>
-                    Retry
-                  </Button>
-                </div>
-              </AlertDescription>
-            </Alert>
+            <EnhancedErrorDisplay
+              title="Unable to load representatives"
+              message={errorMessage || 'We could not load representatives right now.'}
+              {...(errorMessage.includes('Security challenge') && {
+                details: 'Please refresh the page and try again. If the issue persists, check your network or security settings.',
+              })}
+              canRetry
+              onRetry={() => searchRepresentatives({ limit: 50 })}
+              primaryAction={{ label: 'Retry', onClick: () => searchRepresentatives({ limit: 50 }) }}
+              className="mb-6"
+            />
           )}
           <Tabs defaultValue="search" className="w-full">
             <TabsList className="grid w-full grid-cols-2">
@@ -197,6 +191,7 @@ export default function RepresentativesPage() {
                     representatives={searchResults?.data?.representatives ?? []}
                     loading={loading}
                     {...(error && { error })}
+                    onRetry={() => searchRepresentatives({ limit: 50 })}
                     onRepresentativeClick={handleRepresentativeClick}
                   />
                 </CardContent>
@@ -219,6 +214,7 @@ export default function RepresentativesPage() {
                       representatives={locationRepresentatives}
                       loading={allLoading}
                       {...(error && { error })}
+                      onRetry={() => searchRepresentatives({ limit: 50 })}
                       onRepresentativeClick={handleRepresentativeClick}
                     />
                   ) : (

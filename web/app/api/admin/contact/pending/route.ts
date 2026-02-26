@@ -50,6 +50,7 @@ export const GET = withErrorHandling(async (request: NextRequest) => {
     const contactType = searchParams.get('contact_type');
     const dateRange = searchParams.get('dateRange') ?? 'all';
     const search = searchParams.get('search') ?? '';
+    const repName = searchParams.get('rep_name') ?? searchParams.get('representative_name') ?? '';
     const limit = parseInt(searchParams.get('limit') ?? '50', 10);
     const offset = parseInt(searchParams.get('offset') ?? '0', 10);
 
@@ -75,6 +76,7 @@ export const GET = withErrorHandling(async (request: NextRequest) => {
       `)
       .eq('is_verified', false)
       .eq('source', 'user_submission')
+      .is('rejected_at', null)
       .order('created_at', { ascending: false })
       .range(offset, offset + limit - 1);
 
@@ -86,8 +88,33 @@ export const GET = withErrorHandling(async (request: NextRequest) => {
       }
     }
 
+    // Filter by representative name (subquery for rep IDs, reused for count)
+    let repIdsFilter: number[] | null = null;
+    if (repName.trim()) {
+      const repNamePattern = `%${repName.trim().replace(/%/g, '\\%')}%`;
+      const { data: matchingReps, error: repError } = await supabase
+        .from('representatives_core')
+        .select('id')
+        .ilike('name', repNamePattern);
+
+      if (!repError) {
+        repIdsFilter = matchingReps && matchingReps.length > 0 ? matchingReps.map((r) => r.id) : [];
+        if (repIdsFilter.length > 0) {
+          query = query.in('representative_id', repIdsFilter);
+        } else {
+          query = query.eq('representative_id', -1);
+        }
+      }
+    }
+
     if (contactType) {
       query = query.eq('contact_type', contactType.toLowerCase());
+    }
+
+    // Server-side search: value (email, phone, etc.)
+    if (search.trim()) {
+      const searchPattern = `%${search.trim().replace(/%/g, '\\%')}%`;
+      query = query.ilike('value', searchPattern);
     }
 
     // Apply date range filter
@@ -112,7 +139,7 @@ export const GET = withErrorHandling(async (request: NextRequest) => {
       query = query.gte('created_at', startDate.toISOString());
     }
 
-    // Execute query
+    // Execute query (search applied server-side above)
     const { data: contacts, error: contactsError } = await query;
 
     if (contactsError) {
@@ -120,23 +147,15 @@ export const GET = withErrorHandling(async (request: NextRequest) => {
       return errorResponse('Failed to fetch pending contact submissions', 500);
     }
 
-    // Apply search filter (client-side for now, could be moved to DB)
-    let filteredContacts = contacts || [];
-    if (search.trim()) {
-      const searchLower = search.toLowerCase();
-      filteredContacts = filteredContacts.filter((contact) => {
-        const valueMatch = contact.value?.toLowerCase().includes(searchLower);
-        const repNameMatch = (contact.representatives_core as any)?.name?.toLowerCase().includes(searchLower);
-        return valueMatch || repNameMatch;
-      });
-    }
+    const filteredContacts = contacts || [];
 
     // Get total count for pagination
     let countQuery = supabase
       .from('representative_contacts')
       .select('id', { count: 'exact', head: true })
       .eq('is_verified', false)
-      .eq('source', 'user_submission');
+      .eq('source', 'user_submission')
+      .is('rejected_at', null);
 
     if (representativeId) {
       const repId = parseInt(representativeId, 10);
@@ -145,8 +164,19 @@ export const GET = withErrorHandling(async (request: NextRequest) => {
       }
     }
 
+    if (repIdsFilter !== null) {
+      countQuery = repIdsFilter.length > 0
+        ? countQuery.in('representative_id', repIdsFilter)
+        : countQuery.eq('representative_id', -1);
+    }
+
     if (contactType) {
       countQuery = countQuery.eq('contact_type', contactType.toLowerCase());
+    }
+
+    if (search.trim()) {
+      const searchPattern = `%${search.trim().replace(/%/g, '\\%')}%`;
+      countQuery = countQuery.ilike('value', searchPattern);
     }
 
     if (dateRange !== 'all') {

@@ -95,8 +95,9 @@ export async function isBiometricAvailable(): Promise<boolean> {
 }
 
 /**
- * Get user credentials
+ * Get user credentials (fetches from API; requires session).
+ * Returns [] when not authenticated or on error.
  */
-export async function getUserCredentials(): Promise<Credential[]> {
-  return nativeGetUserCredentials();
+export async function getUserCredentials(fetcher = fetch): Promise<Array<{ id: string }>> {
+  return nativeGetUserCredentials(fetcher);
 }

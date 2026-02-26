@@ -241,15 +241,20 @@ export async function loginWithPassword(page: Page, credentials: TestUser, optio
         input.dispatchEvent(new Event('input', { bubbles: true }));
         input.dispatchEvent(new Event('change', { bubbles: true }));
       };
-      const emailEl = document.getElementById('email') as HTMLInputElement | null;
-      const passwordEl = document.getElementById('password') as HTMLInputElement | null;
+      const emailEl = (document.getElementById('email') || document.querySelector('[data-testid="login-email"]')) as HTMLInputElement | null;
+      const passwordEl = (document.getElementById('password') || document.querySelector('[data-testid="login-password"]')) as HTMLInputElement | null;
       if (emailEl) setNativeValue(emailEl, email);
       if (passwordEl) setNativeValue(passwordEl, password);
+      // Blur to trigger auth page sync (runs on focus/blur)
+      if (passwordEl) passwordEl.blur();
     },
     { email: credentials.email, password: credentials.password }
   );
 
   await page.waitForLoadState('networkidle', { timeout: timeoutMs }).catch(() => undefined);
+
+  // Allow auth page DOM-to-React sync to run (runs every 100ms, or on blur)
+  await page.waitForTimeout(800);
 
   // Wait for submit to become enabled (React state sync can be async) before clicking.
   await submitButton.waitFor({ state: 'visible', timeout: timeoutMs });

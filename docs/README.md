@@ -1,6 +1,6 @@
 # Choices Platform — Documentation Index
 
-_Last updated: January 2026_
+_Last updated: February 2026_
 
 This index lists the canonical documentation set. Historical fix summaries, completed work documentation, and outdated status files are archived under `docs/archive/`. The files below reflect the current, essential documentation.
 
@@ -14,22 +14,24 @@ This index lists the canonical documentation set. Historical fix summaries, comp
 | Project vision & roadmap | [`VISION.md`](VISION.md) - MVP status and future plans |
 | Project status snapshot | [`CURRENT_STATUS.md`](CURRENT_STATUS.md) - Current work and status |
 | High-level architecture | [`ARCHITECTURE.md`](ARCHITECTURE.md) - System design |
-| Development setup | [`DEVELOPMENT.md`](DEVELOPMENT.md) - Detailed setup |
+| Development setup | [`GETTING_STARTED.md`](GETTING_STARTED.md) - Quick start + runbook |
 | Codebase navigation | [`CODEBASE_NAVIGATION.md`](CODEBASE_NAVIGATION.md) - Find code quickly |
 | Testing strategy | [`TESTING.md`](TESTING.md) - Testing guide |
 | State management standards | [`STATE_MANAGEMENT.md`](STATE_MANAGEMENT.md) - Zustand patterns |
 | Troubleshooting | [`TROUBLESHOOTING.md`](TROUBLESHOOTING.md) - Common issues |
-| Canonical utilities guide | [`UTILS_GUIDE.md`](UTILS_GUIDE.md) - Utility functions |
+| Canonical utilities | [`CODEBASE_NAVIGATION.md`](CODEBASE_NAVIGATION.md) § Canonical Utilities |
 | Security & privacy references | [`SECURITY.md`](SECURITY.md), [`PRIVACY_POLICY.md`](PRIVACY_POLICY.md) |
 | Agent setup (Cursor skills, MCP) | [`AGENT_SETUP.md`](AGENT_SETUP.md) |
+| **Civics data ingest** | [`services/civics-backend/NEW_civics_ingest/docs/GETTING_STARTED.md`](../services/civics-backend/NEW_civics_ingest/docs/GETTING_STARTED.md) — 3 steps to load representative data |
 
 ---
 
 ## Operational Docs
 
 - [`ENVIRONMENT_VARIABLES.md`](ENVIRONMENT_VARIABLES.md) — Required configuration keys.
+- [`WEBAUTHN_DESIGN.md`](WEBAUTHN_DESIGN.md) — Passkey architecture, trust tier, proof-of-personhood.
 - [`DEPLOYMENT.md`](DEPLOYMENT.md) — Deployment checklist and process.
-- [`PRODUCTION_TESTING.md`](PRODUCTION_TESTING.md) — Production testing guide.
+- Production testing — See [`TESTING.md`](TESTING.md) § Production Testing.
 - [`DATABASE_SCHEMA.md`](DATABASE_SCHEMA.md) — Table & function summary.
 - [`SECURITY.md`](SECURITY.md) / [`PRIVACY_POLICY.md`](PRIVACY_POLICY.md) — Compliance references.
 - [`TROUBLESHOOTING.md`](TROUBLESHOOTING.md) — General troubleshooting guide.
@@ -60,6 +62,7 @@ Note: `docs/ROADMAP.md` is archived-in-place to preserve inbound links and point
 
 ```
 docs/archive/
+├─ 2026-02-docs-consolidation/  # Non-canonical docs (audits, GovInfo, constituent will, etc.)
 ├─ 2026-01-24-docs-consolidation/  # Agent implementation, Security Advisor refs, completion reports (Jan 2026)
 ├─ release-notes/          # Changelog, API change logs, one-off status memos
 ├─ reference/              # Legacy guides, completed work summaries, historical docs

@@ -10,7 +10,8 @@
  * Usage:
  *   npm run tools:verify:crosswalk [--limit=N] [--fix] [--dry-run]
  */
-import 'dotenv/config';
+import { loadEnv } from '../../utils/load-env.js';
+loadEnv();
 
 import { getSupabaseClient } from '../../clients/supabase.js';
 

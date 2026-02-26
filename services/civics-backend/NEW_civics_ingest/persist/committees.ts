@@ -15,7 +15,6 @@ interface CommitteeInsertRow {
   is_current: boolean;
   created_at: string;
   updated_at: string;
-  openstates_committee_id?: string | null;
 }
 
 function buildInsertRows(
@@ -43,7 +42,6 @@ function buildInsertRows(
       is_current: assignment.isCurrent,
       created_at: timestamp,
       updated_at: timestamp,
-      openstates_committee_id: assignment.openstatesCommitteeId || null,
     });
   }
 

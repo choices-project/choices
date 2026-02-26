@@ -1,6 +1,6 @@
 # Testing Guide
 
-_Last updated: January 2026 (RTL component integration patterns, consent guard testing, accessibility testing)_
+_Last updated: February 2026 (E2E: poll-templates, civics-navigation, contact-admin-management; axe CI)_
 
 This guide explains how we exercise the Choices web app and where to add coverage when working on new features or store refactors.
 
@@ -56,9 +56,7 @@ cd web && npx playwright test --config=playwright.config.ts tests/e2e/specs/user
     - Ensure the CI jobs reference only existing `projects` names.
     - Tag performance-sensitive specs with `@performance` to participate in the `Performance Tests` job.
 
-See also:
-- `docs/technical/testing-harness-playbooks.md` for quick-reference workflows
-- `docs/ROADMAP_SINGLE_SOURCE.md` for in-flight test gaps and priorities
+See also: `docs/ROADMAP_SINGLE_SOURCE.md` for in-flight test gaps and priorities.
 
 ### Quick Runbook (Copy/Paste)
 
@@ -73,7 +71,7 @@ npm run lint:locale
 # I18N extraction refresh
 npm run i18n:extract
 
-# Full workflow + guardrails live in `docs/INTERNATIONALIZATION.md`.
+# I18n workflow: `npm run lint:locale` then `npm run i18n:extract`; see GETTING_STARTED.
 
 # E2E smoke (Chromium, key suites)
 npm run test:e2e           # autostarts Next dev server via webServer config
@@ -90,6 +88,17 @@ Utilities:
 - `npm run lint:locale` — FormatJS literal-string enforcement for `/app/(app)/candidates/**` and `features/civics/**`; blocks CI if untranslated copy slips in.
 - `npm run type-check` — TypeScript project references check.
 - `npm run governance:check` — Verifies store/API changes have the required roadmap/doc/changelog updates (CI gate).
+
+## Accessibility Guidelines
+
+When building or updating UI:
+
+- **Heading hierarchy** — Use logical h1→h2→h3→h4; no skipped levels. Add `sr-only` h2 when the first visible section is h3.
+- **ARIA** — Icon-only buttons need `aria-label`. Expandable regions need `aria-expanded` and `aria-controls`. Loading regions need `role="status"`, `aria-busy`, `aria-live="polite"`.
+- **Forms** — Use `aria-invalid` and `aria-describedby` when errors exist. Give error messages `id` and `role="alert"`.
+- **Touch targets** — Interactive elements ≥44×44px (`min-h-[44px] min-w-[44px]`) for mobile.
+- **Error/empty states** — Use `EnhancedErrorDisplay` and `EnhancedEmptyState` for consistent recovery actions and retry.
+- **Modals** — Close on Escape. Use `useAccessibleDialog` for focus trap and keyboard handling.
 
 ## Accessibility Regression (Axe + Screen Readers)
 
@@ -109,7 +118,7 @@ Utilities:
 | --- | --- | --- | --- |
 | Unit | Jest + ts-jest | Pure functions, store actions, Supabase helpers | `tests/unit/stores/notification.store.test.ts`, `tests/unit/stores/deviceStore.test.ts`, `tests/unit/stores/pwaStore.test.ts`, `tests/unit/stores/widgetStore.keyboard.test.ts`, `tests/unit/features/civics/useElectionCountdown.test.ts`, `tests/unit/api/analytics/election-notifications.test.ts` |
 | RTL integration | React Testing Library + Jest | Components that interact with stores, timers, or async flows | `tests/unit/features/analytics/AnalyticsPanel.test.tsx`, `tests/unit/components/PWAStatus.test.tsx`, `tests/unit/components/AppShell.test.tsx` |
-| Playwright harness | Playwright | Cross-store and UI journeys, feature flags, notification flows | `tests/e2e/specs/analytics-store.spec.ts`, `tests/e2e/specs/notification-store.spec.ts`, `tests/e2e/specs/pwa-store.spec.ts`, `tests/e2e/specs/widget-dashboard-keyboard.spec.ts` |
+| Playwright harness | Playwright | Cross-store and UI journeys, feature flags, notification flows | `tests/e2e/specs/analytics-store.spec.ts`, `tests/e2e/specs/notification-store.spec.ts`, `tests/e2e/specs/pwa-store.spec.ts`, `tests/e2e/specs/widget-dashboard-keyboard.spec.ts`, `tests/e2e/specs/polls/poll-templates.spec.ts`, `tests/e2e/specs/civics/civics-navigation.spec.ts`, `tests/e2e/specs/contact/contact-admin-management.spec.ts` |
 | API integration | Jest + supertest (when needed) | Next.js API routes with Supabase mocks | `tests/unit/api/pwa/notifications/subscribe.test.ts`, `tests/unit/api/pwa/notifications/send.test.ts`, `tests/unit/api/analytics/election-notifications.test.ts` |
 
 ---
@@ -324,6 +333,19 @@ The `validationError()` function from `@/lib/api` returns responses with this st
 - Specific field errors are in `data.details[fieldName]`
 
 These conventions are enforced by the repo ESLint configuration and should keep test suites lint‑clean and consistent.
+
+## Production Testing
+
+Production tests run against the deployed app to validate real-world UX. Key areas:
+
+| Area | What to Test | Specs |
+|------|--------------|-------|
+| **Core Web Vitals** | LCP &lt; 2.5s, FID &lt; 100ms, CLS &lt; 0.1 | `production/production-ux-excellence.spec.ts` |
+| **Accessibility** | Keyboard nav, screen reader, ARIA, focus | `production-ux-excellence`, `analytics-dashboard-axe`, `analytics-dashboard-screen-reader` |
+| **Error recovery** | API failures, retry buttons, network disconnect | `production-ux-excellence`, `production-ux-improvements` |
+| **Edge cases** | Long content, rapid clicks, empty states | `production-ux-excellence` |
+
+Philosophy: tests reveal issues → fix code → better UX. Do not weaken tests to make them pass.
 
 ## Ownership & Update Cadence
 

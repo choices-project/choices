@@ -9,7 +9,8 @@
  *
  * Run via: `npm run openstates:stage`
  */
-import 'dotenv/config';
+import { loadEnv } from '../utils/load-env.js';
+loadEnv();
 
 import { readdir, readFile, stat } from 'node:fs/promises';
 import path from 'node:path';
@@ -17,6 +18,7 @@ import { fileURLToPath } from 'node:url';
 import yaml from 'js-yaml';
 
 import { getSupabaseClient } from '../clients/supabase.js';
+import { logger } from '../utils/logger.js';
 
 async function withRetry<T>(fn: () => Promise<T>, label: string, attempts = 3, delayMs = 500): Promise<T> {
   let lastError: unknown;
@@ -28,7 +30,7 @@ async function withRetry<T>(fn: () => Promise<T>, label: string, attempts = 3, d
       if (attempt < attempts) {
         const wait = delayMs * attempt;
         const message = error instanceof Error ? error.message : String(error);
-        console.warn(`${label} failed (attempt ${attempt}/${attempts}): ${message}. Retrying in ${wait}ms...`);
+        logger.warn(`${label} failed (attempt ${attempt}/${attempts}): ${message}. Retrying in ${wait}ms...`);
         await new Promise((resolve) => setTimeout(resolve, wait));
       }
     }
@@ -171,16 +173,17 @@ interface StagedPerson {
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
-const SERVICE_ROOT = path.resolve(__dirname, '../../..');
-const WORKSPACE_ROOT = path.resolve(SERVICE_ROOT, '..');
+// From build/openstates/ __dirname → civics-backend/build/openstates; ../.. → civics-backend
+const CIVICS_BACKEND_ROOT = path.resolve(__dirname, '../..');
 const DEFAULT_CANDIDATES = [
-  path.resolve(SERVICE_ROOT, 'data/openstates-people/data'),
-  path.resolve(WORKSPACE_ROOT, 'data/openstates-people/data'),
+  path.resolve(CIVICS_BACKEND_ROOT, 'NEW_civics_ingest/data/openstates-people/data'),
+  path.resolve(CIVICS_BACKEND_ROOT, 'data/openstates-people/data'),
+  path.resolve(CIVICS_BACKEND_ROOT, '../data/openstates-people/data'),
 ];
 
-const UPSERT_BATCH_SIZE = Number(process.env.OPENSTATES_STAGE_UPSERT_SIZE ?? '50');
-const SELECT_BATCH_SIZE = Number(process.env.OPENSTATES_STAGE_SELECT_SIZE ?? '50');
-const INSERT_BATCH_SIZE = Number(process.env.OPENSTATES_STAGE_INSERT_SIZE ?? '80');
+const UPSERT_BATCH_SIZE = Number(process.env.OPENSTATES_STAGE_UPSERT_SIZE ?? '100');
+const SELECT_BATCH_SIZE = Number(process.env.OPENSTATES_STAGE_SELECT_SIZE ?? '100');
+const INSERT_BATCH_SIZE = Number(process.env.OPENSTATES_STAGE_INSERT_SIZE ?? '100');
 
 const CONTACT_TYPE_NORMALISATION: Record<string, string> = {
   voice: 'voice',
@@ -487,7 +490,7 @@ async function loadAllPeople(peopleRoot: string): Promise<StagedPerson[]> {
         try {
           records.push(parsePerson(filePath, parsed));
         } catch (error) {
-          console.warn(`Skipping ${filePath}: ${(error as Error).message}`);
+          logger.warn(`Skipping ${filePath}`, { error: (error as Error).message });
         }
       }
     }
@@ -509,9 +512,14 @@ async function upsertPeopleData(people: StagedPerson[]) {
   const chunks = chunk(rows, UPSERT_BATCH_SIZE);
   const idMap = new Map<string, number>();
 
+  let batchNum = 0;
   for (const batch of chunks) {
+    batchNum += 1;
+    if (batchNum % 50 === 0 || batchNum === chunks.length) {
+      logger.info(`  Batch ${batchNum}/${chunks.length}...`);
+    }
     await withRetry(async () => {
-      const upsertOptions = { onConflict: 'openstates_id', returning: 'minimal' } as any;
+      const upsertOptions = { onConflict: 'openstates_id', returning: 'minimal' } as const;
       const { error: upsertError } = await client
         .from('openstates_people_data')
         .upsert(batch, upsertOptions);
@@ -545,10 +553,11 @@ async function replaceChildRows<T extends { openstates_person_id: number }>(
   rows: T[],
   representativeIds: number[],
 ) {
-  const idChunks = chunk(representativeIds, 100);
-  for (const ids of idChunks) {
+  logger.info(`  ${table}: clearing ${representativeIds.length} person rows...`);
+  const idChunks = chunk(representativeIds, 500);
+  for (let i = 0; i < idChunks.length; i++) {
     await withRetry(async () => {
-      const { error } = await client.from(table).delete().in('openstates_person_id', ids);
+      const { error } = await client.from(table).delete().in('openstates_person_id', idChunks[i]);
       if (error) {
         throw error;
       }
@@ -556,7 +565,11 @@ async function replaceChildRows<T extends { openstates_person_id: number }>(
   }
 
   const rowChunks = chunk(rows, INSERT_BATCH_SIZE);
-  for (const batch of rowChunks) {
+  for (let i = 0; i < rowChunks.length; i++) {
+    const batch = rowChunks[i];
+    if ((i + 1) % 100 === 0 || i === rowChunks.length - 1) {
+      logger.info(`  ${table}: insert ${Math.min((i + 1) * INSERT_BATCH_SIZE, rows.length)}/${rows.length}...`);
+    }
     if (batch.length === 0) continue;
     const insertOptions = { returning: 'minimal' } as any;
     await withRetry(async () => {
@@ -564,11 +577,16 @@ async function replaceChildRows<T extends { openstates_person_id: number }>(
       if (error) {
         throw error;
       }
-    }, `insert ${table}`).catch((error) => {
+    }, `insert ${table}`).catch((err: unknown) => {
+      const error = err as { message?: string; details?: string; hint?: string; code?: string };
       const sample = batch[0] ?? {};
-      console.error(`Insert error for ${table}:`, JSON.stringify(error, null, 2));
+      const msg =
+        error?.message ??
+        (typeof err === 'object' && err !== null ? JSON.stringify(err) : String(err));
+      const details = error?.details ? ` (${error.details})` : '';
+      logger.error(`Insert error for ${table}`, { message: msg, details });
       throw new Error(
-        `Failed to insert into ${table}: ${error.message ?? error}\nSample row: ${JSON.stringify(sample).slice(0, 500)}`,
+        `Failed to insert into ${table}: ${msg}${details}\nSample row: ${JSON.stringify(sample).slice(0, 500)}`,
       );
     });
   }
@@ -588,9 +606,9 @@ async function stageContacts(people: StagedPerson[], idMap: Map<string, number>)
       seen.add(key);
       rows.push({
         openstates_person_id: personId,
-        contact_type: contact.contact_type,
-        value: contact.value,
-        note: contact.note,
+        contact_type: (truncate(contact.contact_type, 50) ?? contact.contact_type).slice(0, 50),
+        value: (truncate(contact.value, 500) ?? contact.value).slice(0, 500),
+        note: truncate(contact.note, 255),
       });
     }
   }
@@ -759,54 +777,54 @@ async function main() {
   try {
     peopleRoot = await resolvePeopleRoot();
   } catch (error) {
-    console.error((error as Error).message);
+    logger.error((error as Error).message);
     process.exit(1);
     return;
   }
 
-  console.log(`Loading OpenStates YAML from ${peopleRoot}...`);
+  logger.info(`Loading OpenStates YAML from ${peopleRoot}...`);
   const people = await loadAllPeople(peopleRoot);
-  console.log(`Loaded ${people.length} OpenStates person records.`);
+  logger.info(`Loaded ${people.length} OpenStates person records.`);
 
   if (people.length === 0) {
-    console.log('No records found. Exiting.');
+    logger.info('No records found. Exiting.');
     return;
   }
 
-  console.log('Upserting openstates_people_data...');
+  logger.info('Upserting openstates_people_data...');
   const idMap = await upsertPeopleData(people);
-  console.log(`Mapped ${idMap.size} OpenStates IDs to Supabase IDs.`);
+  logger.info(`Mapped ${idMap.size} OpenStates IDs to Supabase IDs.`);
 
-  console.log('Syncing contacts...');
+  logger.info('Syncing contacts...');
   await stageContacts(people, idMap);
-  console.log('Contacts staged.');
+  logger.info('Contacts staged.');
 
-  console.log('Syncing roles...');
+  logger.info('Syncing roles...');
   await stageRoles(people, idMap);
-  console.log('Roles staged.');
+  logger.info('Roles staged.');
 
-  console.log('Syncing identifiers...');
+  logger.info('Syncing identifiers...');
   await stageIdentifiers(people, idMap);
-  console.log('Identifiers staged.');
+  logger.info('Identifiers staged.');
 
-  console.log('Syncing alternate names...');
+  logger.info('Syncing alternate names...');
   await stageOtherNames(people, idMap);
-  console.log('Other names staged.');
+  logger.info('Other names staged.');
 
-  console.log('Syncing social media handles...');
+  logger.info('Syncing social media handles...');
   await stageSocials(people, idMap);
-  console.log('Social media staged.');
+  logger.info('Social media staged.');
 
-  console.log('Syncing source references...');
+  logger.info('Syncing source references...');
   await stageSources(people, idMap);
-  console.log('Sources staged.');
+  logger.info('Sources staged.');
 
-  console.log('OpenStates staging complete. You can now run:');
-  console.log('  select sync_representatives_from_openstates();');
+  logger.info('OpenStates staging complete. You can now run:');
+  logger.info('  select sync_representatives_from_openstates();');
 }
 
 main().catch((error) => {
-  console.error('OpenStates staging failed:', error);
+  logger.error('OpenStates staging failed', { error: error instanceof Error ? error.message : String(error) });
   process.exit(1);
 });
 

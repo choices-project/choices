@@ -13,15 +13,21 @@ interface SocialInsertRow {
   updated_at: string;
 }
 
-function dedupeProfiles(profiles: CanonicalRepresentative['social']): CanonicalRepresentative['social'] {
-  const map = new Map<string, CanonicalRepresentative['social'][number]>();
+/**
+ * Dedupe by platform only. DB has unique (representative_id, platform) - one row per platform.
+ * Keeps first profile per platform (prefer handle+url, then url-only).
+ */
+function dedupeProfilesByPlatform(
+  profiles: CanonicalRepresentative['social'],
+): CanonicalRepresentative['social'] {
+  const byPlatform = new Map<string, CanonicalRepresentative['social'][number]>();
   for (const profile of profiles) {
-    const key = `${profile.platform}:${profile.handle ?? profile.url ?? ''}`;
-    if (!map.has(key)) {
-      map.set(key, profile);
+    const platform = profile.platform?.toLowerCase() ?? 'unknown';
+    if (!byPlatform.has(platform)) {
+      byPlatform.set(platform, profile);
     }
   }
-  return Array.from(map.values());
+  return Array.from(byPlatform.values());
 }
 
 function normalizeUrl(platform: string, handle: string | null, url: string | null): string | null {
@@ -51,26 +57,19 @@ function buildSocialRows(
   representativeId: number,
   profiles: CanonicalRepresentative['social'],
 ): SocialInsertRow[] {
-  const deduped = dedupeProfiles(profiles);
-  const primaryByPlatform = new Set<string>();
+  const deduped = dedupeProfilesByPlatform(profiles);
 
-  return deduped.map((profile) => {
-    const isPrimary = !primaryByPlatform.has(profile.platform);
-    if (isPrimary) {
-      primaryByPlatform.add(profile.platform);
-    }
-    return {
-      representative_id: representativeId,
-      platform: profile.platform,
-      handle: profile.handle,
-      url: normalizeUrl(profile.platform, profile.handle, profile.url),
-      is_primary: isPrimary,
-      is_verified: profile.isOfficial ?? false,
-      verified: profile.isOfficial ?? false,
-      followers_count: null,
-      updated_at: new Date().toISOString(),
-    };
-  });
+  return deduped.map((profile) => ({
+    representative_id: representativeId,
+    platform: (profile.platform ?? 'unknown').toLowerCase().slice(0, 50),
+    handle: profile.handle,
+    url: normalizeUrl(profile.platform, profile.handle, profile.url),
+    is_primary: true, // One per platform, all primary
+    is_verified: profile.isOfficial ?? false,
+    verified: profile.isOfficial ?? false,
+    followers_count: null,
+    updated_at: new Date().toISOString(),
+  }));
 }
 
 export async function syncRepresentativeSocial(rep: CanonicalRepresentative): Promise<void> {
@@ -81,7 +80,7 @@ export async function syncRepresentativeSocial(rep: CanonicalRepresentative): Pr
 
   // Filter out rows without valid handles
   // Database constraint requires handle to be NOT NULL
-  // We only insert records where we have a legitimate handle (either provided or extractable from URL)
+  // Unique constraint is (representative_id, platform) - one row per platform
   const rows = buildSocialRows(representativeId, rep.social ?? []).filter(
     (row) => {
       // If we already have a handle, keep the row
@@ -123,7 +122,18 @@ export async function syncRepresentativeSocial(rep: CanonicalRepresentative): Pr
     return;
   }
 
-  const { error: insertError } = await client.from('representative_social_media').insert(rows);
+  // Final dedupe by platform (unique constraint) - keep first per platform
+  const seenPlatform = new Set<string>();
+  const uniqueRows = rows.filter((r) => {
+    const key = r.platform.toLowerCase();
+    if (seenPlatform.has(key)) return false;
+    seenPlatform.add(key);
+    return true;
+  });
+
+  const { error: insertError } = await client
+    .from('representative_social_media')
+    .insert(uniqueRows);
   if (insertError) {
     throw new Error(
       `Failed to upsert social media rows for representative ${representativeId}: ${insertError.message}`,

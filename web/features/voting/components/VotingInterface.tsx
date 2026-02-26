@@ -1,11 +1,13 @@
 'use client';
 
-import { Users, Clock, CheckCircle2, Shield, Lock, Unlock } from 'lucide-react'
+import { Users, Clock } from 'lucide-react'
 import React, { useCallback, useEffect, useMemo, useRef } from 'react'
 
 import { useRecordPollEvent } from '@/features/polls/hooks/usePollAnalytics'
 import { useVotingCountdown } from '@/features/voting/hooks/useVotingCountdown'
 import { useVotingIsVoting, useVotingRecords } from '@/features/voting/lib/store'
+
+import { TrustTierBadge } from '@/components/shared/TrustTierBadge'
 
 import { useNotificationActions, useNotificationSettings } from '@/lib/stores/notificationStore'
 
@@ -77,7 +79,7 @@ export default function VotingInterface({
   userQuadraticVote,
   userRangeVote,
   userRankedVote,
-  verificationTier = 'T1',
+  verificationTier = 'T0',
   onAnalyticsEvent,
 }: VotingInterfaceProps) {
   const { t } = useI18n();
@@ -278,37 +280,6 @@ export default function VotingInterface({
     [handleVoteResult, notifyError, notifySuccess, onVote, t]
   );
 
-  // Calculate time remaining with useCallback for optimization
-  const getVerificationTierColor = (tier: string) => {
-    switch (tier) {
-      case 'T3':
-        return 'text-primary bg-primary/10 border-primary/20';
-      case 'T2':
-        return 'text-blue-600 bg-blue-50 border-blue-200';
-      case 'T1':
-        return 'text-green-600 bg-green-50 border-green-200';
-      case 'T0':
-        return 'text-muted-foreground bg-muted border-border';
-      default:
-        return 'text-muted-foreground bg-muted border-border';
-    }
-  };
-
-  const getVerificationTierIcon = (tier: string) => {
-    switch (tier) {
-      case 'T3':
-        return <Shield className="w-4 h-4" />;
-      case 'T2':
-        return <Lock className="w-4 h-4" />;
-      case 'T1':
-        return <CheckCircle2 className="w-4 h-4" />;
-      case 'T0':
-        return <Unlock className="w-4 h-4" />;
-      default:
-        return <Unlock className="w-4 h-4" />;
-    }
-  };
-
   // Normalize voting method to handle variations like 'ranked_choice' -> 'ranked'
   const normalizeVotingMethod = (method: string): string => {
     const normalized = method.toLowerCase();
@@ -497,11 +468,8 @@ export default function VotingInterface({
               </div>
             </div>
 
-            {/* Verification tier badge */}
-            <div className={`flex items-center space-x-2 px-3 py-1 rounded-full border text-sm font-medium ${getVerificationTierColor(verificationTier)}`}>
-              {getVerificationTierIcon(verificationTier)}
-              <span>{t('polls.voting.interface.verificationTier', { tier: String(verificationTier.slice(1)) })}</span>
-            </div>
+            {/* Trust tier badge */}
+            <TrustTierBadge tier={verificationTier} showPasskeyHint size="sm" />
           </div>
         </div>
       )}

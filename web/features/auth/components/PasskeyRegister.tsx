@@ -58,7 +58,15 @@ export function PasskeyRegister({
   const error = useBiometricError();
   const success = useBiometricSuccess();
   const errorRef = React.useRef(error);
+  const errorRegionRef = React.useRef<HTMLDivElement>(null);
   React.useEffect(() => { errorRef.current = error; }, [error]);
+
+  // Focus error region on failure for keyboard/screen-reader users
+  React.useEffect(() => {
+    if (error && errorRegionRef.current) {
+      errorRegionRef.current.focus({ preventScroll: true });
+    }
+  }, [error]);
 
   const {
     setBiometricRegistering,
@@ -202,7 +210,13 @@ export function PasskeyRegister({
 
       <CardContent className="space-y-4">
         {success ? (
-          <div className="text-center space-y-4" data-testid="passkey-register-success">
+          <div
+            className="text-center space-y-4"
+            data-testid="passkey-register-success"
+            role="status"
+            aria-live="polite"
+            aria-atomic="true"
+          >
             <CheckCircle className="h-12 w-12 text-green-500 mx-auto animate-in fade-in zoom-in duration-300" />
             <div className="space-y-2">
               <h3 className="text-lg font-semibold text-green-700">{t('auth.passkey.registrationSuccess')}</h3>
@@ -237,8 +251,9 @@ export function PasskeyRegister({
                       onChange={(e) => setUsername(e.target.value)}
                       placeholder={t('auth.passkey.usernamePlaceholder')}
                       className="mt-1"
+                      aria-describedby="username-hint"
                     />
-                    <p className="text-xs text-gray-500 mt-1">
+                    <p id="username-hint" className="text-xs text-gray-500 mt-1">
                       {t('auth.passkey.usernamelessHint')}
                     </p>
                   </div>
@@ -251,8 +266,9 @@ export function PasskeyRegister({
                       onChange={(e) => setDisplayName(e.target.value)}
                       placeholder={t('auth.passkey.displayNamePlaceholder')}
                       className="mt-1"
+                      aria-describedby="displayName-hint"
                     />
-                    <p className="text-xs text-gray-500 mt-1">
+                    <p id="displayName-hint" className="text-xs text-gray-500 mt-1">
                       {t('auth.passkey.displayNameSignInHint')}
                     </p>
                   </div>
@@ -271,9 +287,18 @@ export function PasskeyRegister({
             </div>
 
             {error && (
-              <Alert variant="destructive" className="animate-in fade-in slide-in-from-top-2 duration-300">
+              <Alert
+                ref={errorRegionRef}
+                variant="destructive"
+                className="animate-in fade-in slide-in-from-top-2 duration-300"
+                role="alert"
+                aria-live="assertive"
+                aria-atomic="true"
+                id="passkey-register-error"
+                tabIndex={-1}
+              >
                 <AlertCircle className="h-4 w-4" />
-                <AlertDescription className="font-medium">{error}</AlertDescription>
+                <AlertDescription className="font-medium" id="passkey-register-error-message">{error}</AlertDescription>
                 <p className="mt-2 text-xs text-red-600">
                   {t('auth.passkey.errorHint')}
                 </p>
@@ -286,6 +311,8 @@ export function PasskeyRegister({
               disabled={isRegistering}
               className="w-full transition-all duration-200 hover:scale-[1.02] active:scale-[0.98]"
               size="lg"
+              aria-busy={isRegistering}
+              aria-describedby={error ? 'passkey-register-error-message' : undefined}
             >
               {isRegistering ? (
                 <>

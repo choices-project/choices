@@ -6,11 +6,13 @@
  * Usage:
  *   npm run federal:enrich:finance
  */
-import 'dotenv/config';
+import { loadEnv } from '../utils/load-env.js';
+loadEnv();
 
 import { determineOfficeCode } from '@choices/civics-shared';
 
 import { getSupabaseClient } from '../clients/supabase.js';
+import { logger } from '../utils/logger.js';
 import {
   fetchCandidateTotals,
   fetchCandidateTopContributors,
@@ -21,6 +23,9 @@ import { findFecCandidateByMultipleStrategies } from '../utils/fec-name-matching
 import { evaluateDataQuality } from '../utils/data-quality.js';
 import type { FederalEnrichment } from '../enrich/federal.js';
 import { upsertFinanceDataQuality } from '../persist/data-quality.js';
+import { saveCheckpoint, loadCheckpoint, deleteCheckpoint } from '../utils/checkpoint.js';
+
+const FEC_CHECKPOINT_OPERATION = 'fec-enrichment-finance';
 
 type RepresentativeRow = {
   id: number;
@@ -98,6 +103,7 @@ type CliOptions = {
   staleDays?: number;
   cycle?: number;
   lookupMissingFecIds?: boolean;
+  resume?: boolean;
 };
 
 const FEC_THROTTLE_MS = Number(process.env.FEC_THROTTLE_MS ?? '1200');
@@ -155,6 +161,9 @@ function parseArgs(): CliOptions {
       case 'lookup-missing-fec-ids':
         options.lookupMissingFecIds = true;
         break;
+      case 'resume':
+        options.resume = true;
+        break;
       default:
         break;
     }
@@ -172,16 +181,21 @@ function getDefaultCycle(): number {
   return year % 2 === 0 ? year : year - 1;
 }
 
-async function fetchRepresentatives(options: CliOptions) {
+async function fetchRepresentatives(
+  options: CliOptions,
+  lastProcessedId?: number,
+) {
   const client = getSupabaseClient();
-  
+
   // Query representatives first, then fetch finance data separately to avoid relationship ambiguity
+  // Order by id for stable resume via lastProcessedId
   let query = client
     .from('representatives_core')
     .select('id,name,office,canonical_id,state,district,level,fec_id,primary_email,primary_phone,primary_website,data_sources')
     .eq('level', 'federal')
     .not('fec_id', 'is', null)
-    .eq('status', 'active');
+    .eq('status', 'active')
+    .order('id', { ascending: true });
 
   if (options.state && options.state.length > 0) {
     query = query.in('state', options.state);
@@ -191,10 +205,14 @@ async function fetchRepresentatives(options: CliOptions) {
     query = query.in('fec_id', options.fec);
   }
 
+  if (typeof lastProcessedId === 'number') {
+    query = query.gt('id', lastProcessedId);
+  }
+
   const baseLimit = options.limit ?? 50;
   const fetchLimit = options.includeExisting ? baseLimit : Math.max(baseLimit * 3, 150);
 
-  if (typeof options.offset === 'number') {
+  if (typeof options.offset === 'number' && lastProcessedId == null) {
     query = query.range(options.offset, options.offset + fetchLimit - 1);
   } else {
     query = query.limit(fetchLimit);
@@ -635,7 +653,22 @@ async function main() {
     if (options.dryRun) {
       console.log('Running in dry-run mode (no Supabase updates will be made).');
     }
+    if (options.resume) {
+      console.log('Resume enabled: will skip already-processed representatives.');
+    }
     console.log(`Using FEC cycle ${options.cycle}.`);
+
+    // Load checkpoint if resuming
+    let lastProcessedId: number | undefined;
+    if (options.resume && !options.dryRun) {
+      const checkpoint = await loadCheckpoint(FEC_CHECKPOINT_OPERATION);
+      if (checkpoint?.lastProcessedId != null) {
+        lastProcessedId = checkpoint.lastProcessedId;
+        console.log(
+          `   Resuming from checkpoint: ${checkpoint.processed}/${checkpoint.total} processed (last id: ${lastProcessedId})`,
+        );
+      }
+    }
 
     // Pre-enrichment: Check FEC ID coverage
     console.log('\n🔍 Pre-enrichment checks...');
@@ -644,7 +677,7 @@ async function main() {
       `   FEC ID coverage: ${coverage.withFecId}/${coverage.total} (${coverage.coveragePercent}%)`,
     );
     // Fetch representatives (will be refreshed after FEC ID lookup if needed)
-    let reps = await fetchRepresentatives(options);
+    let reps = await fetchRepresentatives(options, lastProcessedId);
     
     if (coverage.missingFecId > 0) {
       console.warn(
@@ -783,10 +816,10 @@ async function main() {
             console.log(`   💰 Enriched ${enrichedCount} representatives during lookup (saved ${enrichedCount} API calls!)`);
           }
           
-          // Refresh representatives list after FEC ID lookups
+          // Refresh representatives list after FEC ID lookups (don't use lastProcessedId - we want new reps)
           if (foundCount > 0) {
             console.log('   Refreshing representatives list with newly found FEC IDs...');
-            reps = await fetchRepresentatives(options);
+            reps = await fetchRepresentatives(options, undefined);
             
             // Filter out reps we already enriched during lookup to avoid duplicate API calls
             if (enrichedDuringLookup.size > 0) {
@@ -824,7 +857,21 @@ async function main() {
       const progress = i + 1;
       const elapsed = formatElapsed(startTime);
       const eta = estimateTimeRemaining(progress, reps.length, Date.now() - startTime);
-      
+
+      if (progress % 50 === 0 || progress === reps.length) {
+        logger.progress(progress, reps.length, `FEC enrichment (${elapsed}, ~${eta} remaining)`);
+        // Save checkpoint every 50 reps (for resume on interrupt)
+        if (!options.dryRun && options.resume) {
+          await saveCheckpoint(FEC_CHECKPOINT_OPERATION, {
+            total: reps.length,
+            processed: progress,
+            failed: errorCount,
+            lastProcessedId: rep.id,
+            metadata: { cycle: options.cycle },
+          });
+        }
+      }
+
       process.stdout.write(
         `\r   [${progress}/${reps.length}] ${rep.name}${rep.fec_id ? ` (${rep.fec_id})` : ''}... ${elapsed} elapsed, ${eta} remaining`
       );
@@ -846,6 +893,11 @@ async function main() {
         errors.push(`${rep.name} (${rep.fec_id ?? 'no FEC ID'}): ${errorMsg}`);
         console.error(`\n   ❌ Error enriching ${rep.name}: ${errorMsg}`);
       }
+    }
+
+    // Delete checkpoint on successful completion
+    if (!options.dryRun && options.resume) {
+      await deleteCheckpoint(FEC_CHECKPOINT_OPERATION);
     }
 
     // Clear progress line

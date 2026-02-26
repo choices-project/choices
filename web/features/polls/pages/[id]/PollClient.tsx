@@ -2,11 +2,12 @@
 
 import { AlertCircle, BarChart3, Lock, Printer, Scale, Share2, Shield, Trash2, Trophy } from 'lucide-react';
 import Link from 'next/link';
-import { useRouter } from 'next/navigation';
+import { usePathname, useRouter } from 'next/navigation';
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
 import { formatRepresentativeLocation } from '@/features/civics/utils/formatRepresentativeLocation';
 import ReportModal from '@/features/moderation/components/ReportModal';
+import { IntegrityBadge } from '@/features/polls/components/IntegrityBadge';
 import { useRecordPollEvent } from '@/features/polls/hooks/usePollAnalytics';
 // Vote Milestones - Commented out per user request
 // import { usePollMilestoneNotifications, POLL_MILESTONES, type PollMilestone } from '@/features/polls/hooks/usePollMilestones';
@@ -32,6 +33,8 @@ import {
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Checkbox } from '@/components/ui/checkbox';
+import { Label } from '@/components/ui/label';
 import { Separator } from '@/components/ui/separator';
 
 import { useNotificationActions } from '@/lib/stores';
@@ -123,10 +126,11 @@ export default function PollClient({ poll }: PollClientProps) {
   const { t } = useI18n();
   const { user, isLoading: authLoading } = useAuth();
   const router = useRouter();
-  const { isAdmin } = useProfileDisplay();
+  const { isAdmin, trustTier } = useProfileDisplay();
   const isAdminFlag = isAdmin ?? false;
   const { addNotification } = useNotificationActions();
   const { setCurrentRoute, setSidebarActiveSection, setBreadcrumbs } = useAppActions();
+  const pathname = usePathname();
 
   const [isMounted, setIsMounted] = useState(false);
   const [representativeData, setRepresentativeData] = useState<{
@@ -241,6 +245,7 @@ export default function PollClient({ poll }: PollClientProps) {
   const [showCloseConfirm, setShowCloseConfirm] = useState(false);
   const [isClosing, setIsClosing] = useState(false);
   const [localPollStatus, setLocalPollStatus] = useState(poll.status ?? 'active');
+  const [integrityVerifiedOnly, setIntegrityVerifiedOnly] = useState(false);
 
   const isPollCreator = Boolean(user?.id && poll.createdBy && String(user.id) === String(poll.createdBy));
   const pollStatus = localPollStatus ?? poll.status ?? 'active';
@@ -287,21 +292,28 @@ export default function PollClient({ poll }: PollClientProps) {
 
   useEffect(() => {
     const pollPath = `/polls/${pollId}`;
+    const resultsPath = `${pollPath}/results`;
+    const isOnResults = pathname?.endsWith('/results') ?? false;
+    const currentPath = isOnResults ? resultsPath : pollPath;
 
-    setCurrentRouteRef.current(pollPath);
+    setCurrentRouteRef.current(currentPath);
     setSidebarActiveSectionRef.current('polls');
-    setBreadcrumbsRef.current([
+    const crumbs = [
       { label: tRef.current('polls.view.breadcrumbs.home'), href: '/' },
       { label: tRef.current('polls.view.breadcrumbs.dashboard'), href: '/dashboard' },
       { label: tRef.current('polls.view.breadcrumbs.polls'), href: '/polls' },
       { label: pollTitle ?? tRef.current('polls.view.breadcrumbs.pollDetail'), href: pollPath },
-    ]);
+    ];
+    if (isOnResults) {
+      crumbs.push({ label: tRef.current('polls.view.breadcrumbs.results') ?? 'Results', href: resultsPath });
+    }
+    setBreadcrumbsRef.current(crumbs);
 
     return () => {
       setSidebarActiveSectionRef.current(null);
       setBreadcrumbsRef.current([]);
     };
-  }, [pollId, pollTitle]);
+  }, [pollId, pollTitle, pathname]);
 
   // Extract specific poll fields for memoization stability
   const pollTotalVotesForBallot = typeof poll.totalVotes === 'number' ? poll.totalVotes : (typeof poll.totalvotes === 'number' ? poll.totalvotes : undefined);
@@ -355,7 +367,7 @@ export default function PollClient({ poll }: PollClientProps) {
     };
   }, [pollId]);
 
-  const fetchPollData = useCallback(async (showLoading = true) => {
+  const fetchPollData = useCallback(async (showLoading = true, useVerifiedIntegrity = false) => {
     try {
       const generalError = tRef.current('polls.view.errors.loadResultsFailed');
 
@@ -366,7 +378,8 @@ export default function PollClient({ poll }: PollClientProps) {
       setError(null);
       clearVotingErrorRef.current();
 
-      const resultsResponse = await fetch(`/api/polls/${pollId}/results?t=${Date.now()}`, {
+      const integrityParam = useVerifiedIntegrity ? '&integrity=verified' : '';
+      const resultsResponse = await fetch(`/api/polls/${pollId}/results?t=${Date.now()}${integrityParam}`, {
         cache: 'no-store',
         credentials: 'include',
       });
@@ -402,8 +415,8 @@ export default function PollClient({ poll }: PollClientProps) {
   }, [pollId]);
 
   useEffect(() => {
-    void fetchPollData();
-  }, [fetchPollData]);
+    void fetchPollData(true, integrityVerifiedOnly);
+  }, [fetchPollData, integrityVerifiedOnly]);
 
   // Smart polling: only refresh when needed and adapt to activity
   useEffect(() => {
@@ -427,7 +440,7 @@ export default function PollClient({ poll }: PollClientProps) {
         }
 
         void (async () => {
-          await fetchPollData(false); // false = don't show loading state
+          await fetchPollData(false, integrityVerifiedOnly); // false = don't show loading state
           // Vote count changes are detected in a separate effect that watches results
         })();
       }, pollIntervalMs);
@@ -465,7 +478,7 @@ export default function PollClient({ poll }: PollClientProps) {
         document.removeEventListener('visibilitychange', handleVisibilityChange);
       }
     };
-  }, [pollStatus, fetchPollData, results]);
+  }, [pollStatus, fetchPollData, results, integrityVerifiedOnly]);
 
   useEffect(() => {
     const totalVotesContext =
@@ -1092,6 +1105,7 @@ export default function PollClient({ poll }: PollClientProps) {
               onVote={handleVote}
               isVoting={storeIsVoting}
               hasVoted={hasVoted}
+              verificationTier={trustTier ?? 'T0'}
               onAnalyticsEvent={(action, payload) => {
                 recordPollEvent(action, payload ?? {});
               }}
@@ -1224,32 +1238,31 @@ export default function PollClient({ poll }: PollClientProps) {
       </details>
       */}
 
-      {/* Integrity Check - Moved to bottom (incomplete feature) */}
       {integrityInfo && (
-        <details className="rounded-lg border border-border/40 bg-muted/20" open={false}>
-          <summary className="cursor-pointer p-3 text-sm font-semibold text-foreground hover:bg-muted/30 transition-colors">
-            Integrity Check Applied
-          </summary>
-          <div className="border-t border-border/40 p-4">
-            <div className="flex items-start gap-3">
-              <div className="rounded-full bg-primary/20 p-2">
-                <Shield className="h-5 w-5 text-primary" />
-              </div>
-              <div>
-                <p className="text-sm font-semibold uppercase text-foreground">Integrity check applied</p>
-                <p className="text-sm text-foreground/80">
-                  {integrityInfo.excluded_votes > 0
-                    ? `${integrityInfo.excluded_votes} votes excluded from displayed results.`
-                    : 'No votes excluded from displayed results.'}
-                </p>
-                <p className="text-xs text-foreground/70 mt-1">
-                  Raw total: {isMounted ? integrityInfo.raw_total_votes.toLocaleString() : integrityInfo.raw_total_votes}
-                  {' '}• Scored: {integrityInfo.scored_votes} • Unscored: {integrityInfo.unscored_votes}
-                </p>
-              </div>
-            </div>
+        <div className="mt-4 space-y-3">
+          <div className="flex items-center gap-2">
+            <Checkbox
+              id="integrity-verified-toggle"
+              checked={integrityVerifiedOnly}
+              onCheckedChange={(checked) => {
+                setIntegrityVerifiedOnly(Boolean(checked));
+                // Refetch will happen via useEffect when integrityVerifiedOnly changes
+              }}
+              aria-describedby="integrity-verified-desc"
+            />
+            <Label
+              htmlFor="integrity-verified-toggle"
+              id="integrity-verified-desc"
+              className="text-sm font-medium cursor-pointer"
+            >
+              Show verified results only (exclude low-integrity votes)
+            </Label>
           </div>
-        </details>
+          <IntegrityBadge
+            integrity={integrityInfo}
+            formatNumbers={isMounted}
+          />
+        </div>
       )}
 
       <Separator />
