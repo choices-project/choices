@@ -192,7 +192,7 @@ export const Sidebar: React.FC = () => {
         {!sidebarCollapsed && (
           <div className="mt-8 px-3">
             <div className="bg-gray-50 dark:bg-gray-800 rounded-lg p-4">
-              <h3 className="text-sm font-medium text-gray-900 dark:text-gray-100 mb-2">Quick Stats</h3>
+              <h2 className="text-sm font-medium text-gray-900 dark:text-gray-100 mb-2">Quick Stats</h2>
               <div className="space-y-2 text-sm text-gray-600 dark:text-gray-400">
                 <div className="flex items-center space-x-2 text-sm text-gray-600 dark:text-gray-400">
                   <BarChart3 className="w-4 h-4" aria-hidden="true" />
