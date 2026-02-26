@@ -124,6 +124,7 @@ describe('FeedDataProvider integration', () => {
           }),
         ],
         count: 2,
+        pagination: { hasMore: true, total: 2, offset: 0, limit: 20 },
         filters: {
           category: 'all',
           district: null,
@@ -142,6 +143,7 @@ describe('FeedDataProvider integration', () => {
           }),
         ],
         count: 2,
+        pagination: { hasMore: false, total: 2, offset: 1, limit: 20 },
         filters: {
           category: 'all',
           district: null,
@@ -172,7 +174,7 @@ describe('FeedDataProvider integration', () => {
     });
 
     expect(screen.getByTestId('loading')).toHaveTextContent('loaded');
-    expect(fetchSpy).toHaveBeenCalledWith('/api/feeds', expect.any(Object));
+    expect(fetchSpy).toHaveBeenCalledWith(expect.stringContaining('/api/feeds'), expect.any(Object));
 
     act(() => {
       screen.getByText('Load More').click();
@@ -199,7 +201,7 @@ describe('FeedDataProvider integration', () => {
     );
 
     await waitFor(() => {
-      expect(screen.getByRole('alert')).toHaveTextContent(/failed to load feeds/i);
+      expect(screen.getByRole('alert')).toHaveTextContent(/failed to (load|fetch) feeds/i);
     });
 
     const state = useFeedsStore.getState();

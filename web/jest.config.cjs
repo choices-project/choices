@@ -39,6 +39,7 @@ module.exports = {
         '\\.(css|less|scss|sass)$': 'identity-obj-proxy',
         '^@/app/api/health/civics/route$': '<rootDir>/tests/__mocks__/api-route.js',
         '^@/app/api/v1/civics/address-lookup/route$': '<rootDir>/tests/__mocks__/api-route.js',
+        '^server-only$': '<rootDir>/tests/__mocks__/server-only.js',
       },
       testPathIgnorePatterns: [
         "/node_modules/",
@@ -97,6 +98,7 @@ module.exports = {
         '^@/utils/supabase/server$': '<rootDir>/utils/supabase/server',
         '^@/shared/(.*)$': '<rootDir>/shared/$1',
         '^@/features/(.*)$': '<rootDir>/features/$1',
+        '^server-only$': '<rootDir>/tests/__mocks__/server-only.js',
       },
       testPathIgnorePatterns: [
         "/node_modules/",

@@ -24,6 +24,12 @@ jest.mock('@/lib/stores', () => ({
 
 jest.mock('@/lib/stores/profileStore', () => ({
   useProfileStore: jest.fn(),
+  useProfilePrivacySettings: jest.fn(() => ({})),
+  useProfileActions: jest.fn(() => ({
+    updatePrivacySettings: jest.fn(() => Promise.resolve()),
+    updateProfile: jest.fn(() => Promise.resolve()),
+  })),
+  useProfileLoading: jest.fn(() => ({ isUpdating: false })),
 }));
 
 jest.mock('@/components/shared/DashboardNavigation', () => {

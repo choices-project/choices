@@ -3,6 +3,7 @@
  *
  * Integration tests for agent operations with Supabase
  * These tests require a test database connection
+ * @jest-environment node
  */
 
 import { describe, it, expect, beforeAll, afterAll } from '@jest/globals'

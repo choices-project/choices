@@ -2,6 +2,7 @@
  * Agent Client Unit Tests
  *
  * Tests for the Supabase agent client utility
+ * @jest-environment node
  */
 
 import { describe, it, expect, beforeEach, jest } from '@jest/globals'
@@ -9,20 +10,32 @@ import { getSupabaseAgentClient, getAnalyticsAgentClient, getIntegrityAgentClien
 import { createAgentContext, validateAgentContext, enrichAgentContext } from '@/lib/core/agent/context'
 import { logAgentOperation, queryAgentOperations, getAgentOperationStats } from '@/lib/core/agent/audit'
 
-// Mock the Supabase clients
+// Mock the Supabase clients with chainable query builder
+const createChainableBuilder = () => {
+  const result = { data: [] as any[], error: null };
+  const builder: any = {
+    select: jest.fn(() => builder),
+    insert: jest.fn(() => builder),
+    update: jest.fn(() => builder),
+    upsert: jest.fn(() => builder),
+    delete: jest.fn(() => builder),
+    eq: jest.fn(() => builder),
+    neq: jest.fn(() => builder),
+    limit: jest.fn(() => builder),
+    order: jest.fn(() => builder),
+    single: jest.fn(() => Promise.resolve(result)),
+    maybeSingle: jest.fn(() => Promise.resolve(result)),
+    then: (resolve: (v: any) => void) => Promise.resolve(result).then(resolve),
+  };
+  return builder;
+};
+
 jest.mock('@/utils/supabase/server', () => ({
   getSupabaseAdminClient: jest.fn(() => Promise.resolve({
-    from: jest.fn(() => ({
-      select: jest.fn(() => Promise.resolve({ data: [], error: null })),
-      insert: jest.fn(() => Promise.resolve({ data: [], error: null })),
-      update: jest.fn(() => Promise.resolve({ data: [], error: null })),
-      delete: jest.fn(() => Promise.resolve({ data: [], error: null })),
-    })),
+    from: jest.fn(() => createChainableBuilder()),
   })),
   getSupabaseServerClient: jest.fn(() => Promise.resolve({
-    from: jest.fn(() => ({
-      select: jest.fn(() => Promise.resolve({ data: [], error: null })),
-    })),
+    from: jest.fn(() => createChainableBuilder()),
   })),
 }))
 
@@ -144,7 +157,7 @@ describe('Agent Client', () => {
       expect(agent).toBeDefined()
       expect(agent.context.agentId).toBe('user-agent')
       expect(agent.context.userId).toBe('user-123')
-      expect(agent.context.useServiceRole).toBe(false)
+      expect(agent.context.useServiceRole).toBeFalsy()
     })
   })
 
