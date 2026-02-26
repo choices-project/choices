@@ -47,4 +47,7 @@ Refer to `web/package.json` scripts and `docs/TESTING.md` for the full list.
 - The dev server uses Babel (not SWC) due to a custom `.babelrc` — first compile of a page is slower, but hot reload works.
 - Playwright's `webServer` config auto-starts the dev server with the right env vars. Only start a server manually if you need to debug or use a headed browser.
 - E2E smoke tests use `PLAYWRIGHT_USE_MOCKS=1` and `NEXT_PUBLIC_ENABLE_E2E_HARNESS=1` to run without real external services.
+- When `NEXT_PUBLIC_ENABLE_E2E_HARNESS=1` is set, the middleware bypasses authentication. Tests that verify auth redirects must skip in harness mode (see `auth-redirects.spec.ts` pattern).
+- Tests that require real Supabase (registration, poll creation with credentials) should `test.skip()` when `PLAYWRIGHT_USE_MOCKS=1`.
+- Security audit uses `scripts/audit-high.js` with documented allowlist for known Next.js 14 advisories (mitigated by Vercel deployment). Entries have expiration dates.
 - Some Jest test failures (e.g., in `tests/integration/feeds/`, `tests/unit/supabase/`) are pre-existing and not caused by environment setup.
