@@ -18,8 +18,8 @@ test.describe('App/Admin navigation shell', () => {
       );
       const shell = page.locator('[data-testid="app-shell"]');
       await expect(shell).toBeVisible();
-      await expect(shell).toHaveAttribute('data-theme', /.+/);
-      await expect(shell).toHaveAttribute('data-sidebar-collapsed');
+      await expect(page.locator('html')).toHaveAttribute('data-theme', /.+/);
+      await expect(page.locator('html')).toHaveAttribute('data-sidebar-collapsed');
       await expect(page.locator('[data-testid="current-route"]')).toHaveText(route);
       await expect(page.locator('[data-testid="breadcrumbs"]')).toContainText(label);
     };

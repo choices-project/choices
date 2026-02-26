@@ -211,6 +211,10 @@ test.describe('Biometric Setup Flow', () => {
   });
 
   test('biometric setup page handles authentication requirement', async ({ page }) => {
+    test.skip(
+      process.env.NEXT_PUBLIC_ENABLE_E2E_HARNESS === '1',
+      'E2E harness bypasses authentication — redirect test requires real auth middleware',
+    );
     test.setTimeout(30_000);
 
     // Try to access biometric setup without logging in

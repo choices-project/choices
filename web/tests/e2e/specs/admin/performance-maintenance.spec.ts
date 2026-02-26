@@ -7,16 +7,14 @@
 import { test, expect } from '@playwright/test';
 
 test.describe('Admin Performance Maintenance', () => {
-  test.beforeEach(async ({ page }) => {
-    // Navigate to admin performance page
-    // Note: This requires admin authentication
-    await page.goto('/admin/performance');
+  test.skip(
+    () => process.env.PLAYWRIGHT_USE_MOCKS === '1' || process.env.NEXT_PUBLIC_ENABLE_E2E_HARNESS === '1',
+    'Admin performance tests require a real Supabase backend with admin credentials',
+  );
 
-    // Wait for page to load
-    await page.waitForSelector('[data-testid="performance-dashboard"], .performance-dashboard, h2:has-text("Performance Dashboard")', { timeout: 10000 }).catch(() => {
-      // If not authenticated, we'll skip the test
-      test.skip(true, 'Admin authentication required');
-    });
+  test.beforeEach(async ({ page }) => {
+    await page.goto('/admin/performance');
+    await page.waitForSelector('[data-testid="performance-dashboard"], .performance-dashboard, h2:has-text("Performance Dashboard")', { timeout: 10000 });
   });
 
   test('Refresh Materialized Views button should call API endpoint', async ({ page }) => {

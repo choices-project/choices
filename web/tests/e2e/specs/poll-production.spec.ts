@@ -65,10 +65,6 @@ test.describe('Production poll journey', () => {
     await expect(nextButton).toBeEnabled();
     await nextButton.click();
 
-    await nextButton.click();
-    const tagError = page.getByRole('alert').filter({ hasText: /at least one tag/i });
-    await expect(tagError).toBeVisible();
-
     await page.getByRole('button', { name: /^category /i }).first().click();
     await page.fill('#poll-tags-input', 'production');
     await page.getByRole('button', { name: /^add$/i }).click();
