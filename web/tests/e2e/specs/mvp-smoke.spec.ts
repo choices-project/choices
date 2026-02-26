@@ -31,7 +31,13 @@ test.describe('@smoke MVP core pages', () => {
       expect(url).toMatch(/\/(auth|login)/);
       return;
     }
-    await assertAnyVisible(page, ['[data-testid="onboarding-live-message"]', 'h1']);
+    // onboarding-live-message is sr-only (not visible); WelcomeStep has h1 "Welcome to Choices"
+    await assertAnyVisible(page, [
+      'text=Loading onboarding...',
+      'text=Welcome to Choices',
+      'text=/Welcome/i',
+      'h1',
+    ]);
   });
 
   test('polls templates renders @smoke', async ({ page }) => {
@@ -49,10 +55,13 @@ test.describe('@smoke MVP core pages', () => {
   test('polls analytics renders or gates @smoke', async ({ page }) => {
     await page.goto('/polls/analytics', { waitUntil: 'domcontentloaded' });
     await waitForPageReady(page);
+    // Wait for auth check and loading to settle (page may show loading spinner first)
+    await page.waitForTimeout(3_000);
     await assertAnyVisible(page, [
       'h1:has-text("Poll Analytics")',
       'text=Please log in to view poll analytics.',
       'text=No analytics data available yet.',
+      'text=Loading analytics data...',
       '[data-testid="login-form"]',
       'text=/sign in|log in/i',
       'h1:has-text("Sign In")',

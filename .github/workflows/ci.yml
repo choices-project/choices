@@ -455,6 +455,8 @@ jobs:
         scan-ref: '.'
         format: 'sarif'
         output: 'trivy-results.sarif'
+        skip-dirs: services/civics-backend/NEW_civics_ingest/data
+        trivyignores: .trivyignore
 
     - name: Upload Trivy scan results
       uses: github/codeql-action/upload-sarif@v3

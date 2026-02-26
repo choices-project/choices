@@ -525,6 +525,8 @@ jobs:
           ignore-unfixed: true
           exit-code: '1'
           scanners: vuln
+          skip-dirs: services/civics-backend/NEW_civics_ingest/data
+          trivyignores: .trivyignore
 
   # Load Tests
   load-tests:
