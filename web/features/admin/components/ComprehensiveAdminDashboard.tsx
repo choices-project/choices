@@ -508,7 +508,7 @@ export default function ComprehensiveAdminDashboard({ className = '' }: Comprehe
         <TabsContent value="messages" className="space-y-6">
           <div className="flex items-center justify-between">
             <div>
-              <h3 className="text-lg font-semibold">Site Messages</h3>
+              <h2 className="text-lg font-semibold">Site Messages</h2>
               <p className="text-sm text-gray-600 dark:text-gray-400">Manage announcements and broadcast notices</p>
             </div>
             <div className="flex items-center gap-2">
@@ -659,7 +659,7 @@ export default function ComprehensiveAdminDashboard({ className = '' }: Comprehe
                     <div className="flex items-start justify-between gap-4">
                       <div className="flex-1 space-y-2">
                         <div className="flex items-center gap-2">
-                          <h4 className="font-medium">{message.title}</h4>
+                          <h3 className="font-medium">{message.title}</h3>
                           <Badge variant={message.is_active ? 'default' : 'secondary'}>
                             {message.is_active ? 'Active' : 'Inactive'}
                           </Badge>
