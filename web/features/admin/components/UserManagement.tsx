@@ -205,7 +205,7 @@ export default function UserManagement({ onUserUpdate, onUserDelete }: UserManag
           </svg>
           <div>
             <h1 className="text-lg font-medium text-red-800 dark:text-red-300">Error Loading Users</h1>
-            <p className="text-red-600 dark:text-red-400">{error}</p>
+            <p className="text-red-700 dark:text-red-400">{error}</p>
             <button
               onClick={() => {
                 hasLoadedRef.current = false;

@@ -794,7 +794,7 @@ export default function Civics2Page() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
           <div className="text-center">
             <p className="text-sm text-gray-500 dark:text-gray-400">Powered by FREE APIs: Google Civic, OpenStates, Congress.gov, FEC, Wikipedia</p>
-            <p className="text-xs text-gray-400 dark:text-gray-500 mt-2">Data updated in real-time • Zero API costs • Open source</p>
+            <p className="text-xs text-gray-600 dark:text-gray-400 mt-2">Data updated in real-time • Zero API costs • Open source</p>
           </div>
         </div>
       </div>
