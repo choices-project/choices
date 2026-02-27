@@ -80,6 +80,29 @@ test.describe('@smoke MVP core pages', () => {
     await assertAnyVisible(page, ['h1:has-text("Find Your Representatives")']);
   });
 
+  test('civic-actions create page renders or gates @smoke', async ({ page }) => {
+    await page.goto('/civic-actions/create', { waitUntil: 'domcontentloaded' });
+    await waitForPageReady(page);
+    await assertAnyVisible(page, [
+      'text=/Create|Petition|Campaign|Civic Action/i',
+      '[data-testid="login-form"]',
+      'text=/sign in|log in/i',
+      'h1:has-text("Sign In")',
+    ]);
+  });
+
+  test('contact submissions page renders or gates @smoke', async ({ page }) => {
+    await page.goto('/contact/submissions', { waitUntil: 'domcontentloaded' });
+    await waitForPageReady(page);
+    await assertAnyVisible(page, [
+      'text=/My Submissions|Contact Submissions/i',
+      'text=/No submissions|submissions yet/i',
+      '[data-testid="login-form"]',
+      'text=/sign in|log in/i',
+      'h1:has-text("Sign In")',
+    ]);
+  });
+
   test('account privacy renders or gates @smoke', async ({ page }) => {
     await page.goto('/account/privacy', { waitUntil: 'domcontentloaded' });
     await waitForPageReady(page);

@@ -6,6 +6,8 @@
 
 import { test, expect } from '@playwright/test';
 
+import { getE2EAdminCredentials, loginWithPassword, waitForPageReady } from '../../helpers/e2e-setup';
+
 test.describe('Admin Performance Maintenance', () => {
   test.skip(
     () => process.env.PLAYWRIGHT_USE_MOCKS === '1' || process.env.NEXT_PUBLIC_ENABLE_E2E_HARNESS === '1',
@@ -13,73 +15,81 @@ test.describe('Admin Performance Maintenance', () => {
   );
 
   test.beforeEach(async ({ page }) => {
-    await page.goto('/admin/performance');
-    await page.waitForSelector('[data-testid="performance-dashboard"], .performance-dashboard, h2:has-text("Performance Dashboard")', { timeout: 10000 });
+    const adminCreds = getE2EAdminCredentials();
+    if (!adminCreds) {
+      test.skip(true, 'Admin credentials not available');
+      return;
+    }
+
+    await loginWithPassword(page, adminCreds, { path: '/auth', timeoutMs: 30_000 });
+    await page.waitForTimeout(2_000);
+
+    await page.goto('/admin/performance', { waitUntil: 'domcontentloaded', timeout: 30_000 });
+    await waitForPageReady(page);
+
+    // Wait for dashboard to load: h2, loading skeleton, spinner, or error (valid CSS only for waitForSelector)
+    await page.locator('.animate-pulse, .animate-spin, h2, [role="status"]').first().waitFor({ state: 'visible', timeout: 20_000 });
+    // Extra wait for dynamic PerformanceDashboard to hydrate (ssr: false)
+    await page.waitForTimeout(3_000);
   });
 
   test('Refresh Materialized Views button should call API endpoint', async ({ page }) => {
-    // Intercept the API call
+    test.setTimeout(90_000);
+
     const apiCallPromise = page.waitForResponse(
       (response) =>
         response.url().includes('/api/admin/refresh-materialized-views') &&
         response.request().method() === 'POST',
-      { timeout: 30000 }
+      { timeout: 60_000 }
     );
 
-    // Find and click the "Refresh Views" button
     const refreshButton = page.locator('button:has-text("Refresh Views"), button:has-text("Refresh Materialized Views")').first();
 
-    if (await refreshButton.count() === 0) {
+    if ((await refreshButton.count()) === 0) {
       test.skip(true, 'Refresh Views button not found');
       return;
     }
 
     await refreshButton.click();
 
-    // Wait for API response
     const response = await apiCallPromise;
 
-    // Verify response
-    expect(response.status()).toBeLessThan(500); // Should not be server error
+    expect(response.status()).toBeLessThan(500);
 
     const responseBody = await response.json();
     expect(responseBody).toHaveProperty('success');
 
-    // Should return success even if functions don't exist (graceful degradation)
     if (response.status() === 200) {
       expect(responseBody.success).toBe(true);
     }
   });
 
   test('DB Maintenance button should call API endpoint', async ({ page }) => {
-    // Intercept the API call
+    test.setTimeout(120_000); // Maintenance can take 60s+ in production
+
     const apiCallPromise = page.waitForResponse(
       (response) =>
         response.url().includes('/api/admin/perform-database-maintenance') &&
         response.request().method() === 'POST',
-      { timeout: 60000 } // Maintenance can take longer
+      { timeout: 90_000 }
     );
 
-    // Find and click the "DB Maintenance" button
     const maintenanceButton = page.locator('button:has-text("DB Maintenance"), button:has-text("Database Maintenance")').first();
 
-    if (await maintenanceButton.count() === 0) {
+    if ((await maintenanceButton.count()) === 0) {
       test.skip(true, 'DB Maintenance button not found');
       return;
     }
 
     await maintenanceButton.click();
 
-    // Wait for API response
     const response = await apiCallPromise;
 
-    // Verify response
-    expect(response.status()).toBeLessThan(500); // Should not be server error
+    expect(response.status()).toBeLessThan(500);
 
     const responseBody = await response.json();
     expect(responseBody).toHaveProperty('success');
 
-    // Should return success even if functions don't exist (graceful degradation)
     if (response.status() === 200) {
       expect(responseBody.success).toBe(true);
       expect(responseBody).toHaveProperty('operations');
@@ -87,6 +97,7 @@ test.describe('Admin Performance Maintenance', () => {
   });
 
   test('Endpoints should handle missing database functions gracefully', async ({ page, request }) => {
+    test.setTimeout(90_000);
     // Test refresh-materialized-views endpoint directly
     const refreshResponse = await request.post('/api/admin/refresh-materialized-views', {
       headers: {

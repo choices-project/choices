@@ -21,25 +21,25 @@ import {
   ensureLoggedOut,
 } from '../../helpers/e2e-setup';
 
-/**
- * Authenticate via API and set cookies for API tests
- */
 async function authenticateViaAPI(page: any, email: string, password: string): Promise<void> {
-  // Use the login API endpoint instead of UI form
   const response = await page.request.post('/api/auth/login', {
-    data: {
-      email,
-      password,
-    },
+    data: { email, password },
   });
 
   if (response.status() !== 200) {
     throw new Error(`Login failed with status ${response.status()}`);
   }
-
-  // Cookies are automatically set by the API response
-  // Wait a moment for cookies to be processed
   await page.waitForTimeout(500);
+}
+
+/** Get a valid representative ID from the API; skip test if none found. */
+async function getRepresentativeId(page: any): Promise<number | null> {
+  const res = await page.request.get('/api/civics/representatives?limit=1');
+  if (res.status() !== 200) return null;
+  const body = await res.json();
+  const reps = body.data?.representatives;
+  if (!reps?.length) return null;
+  return reps[0].id;
 }
 
 test.describe('Contact Information Submission Flow', () => {
@@ -164,9 +164,15 @@ test.describe('Contact Information Submission Flow', () => {
     });
 
     test('email is normalized to lowercase', async ({ page }) => {
+      const repId = await getRepresentativeId(page);
+      if (!repId) {
+        test.skip(true, 'No representative found');
+        return;
+      }
+
       const response = await page.request.post('/api/contact/submit', {
         data: {
-          representative_id: 1,
+          representative_id: repId,
           contact_type: 'email',
           value: 'Test@Example.COM',
         },
@@ -175,13 +181,20 @@ test.describe('Contact Information Submission Flow', () => {
       expect(response.status()).toBe(200);
 
       const body = await response.json();
-      expect(body.data.contact.value).toBe('test@example.com');
+      expect(body.success).toBe(true);
+      expect(body.data?.contact?.value).toBe('test@example.com');
     });
 
     test('phone number is normalized', async ({ page }) => {
+      const repId = await getRepresentativeId(page);
+      if (!repId) {
+        test.skip(true, 'No representative found');
+        return;
+      }
+
       const response = await page.request.post('/api/contact/submit', {
         data: {
-          representative_id: 1,
+          representative_id: repId,
           contact_type: 'phone',
           value: '(555) 123-4567',
         },
@@ -190,8 +203,7 @@ test.describe('Contact Information Submission Flow', () => {
       expect(response.status()).toBe(200);
 
       const body = await response.json();
-      // Phone should be normalized (format may vary, but should be consistent)
-      expect(body.data.contact.value).toBeDefined();
+      expect(body.data?.contact?.value).toBeDefined();
       expect(typeof body.data.contact.value).toBe('string');
     });
   });
@@ -309,10 +321,15 @@ test.describe('Contact Information Submission Flow', () => {
     });
 
     test('user can only update own unverified submissions', async ({ page }) => {
-      // First, create a submission
+      const repId = await getRepresentativeId(page);
+      if (!repId) {
+        test.skip(true, 'No representative found');
+        return;
+      }
+
       const submitResponse = await page.request.post('/api/contact/submit', {
         data: {
-          representative_id: 1,
+          representative_id: repId,
           contact_type: 'email',
           value: 'my-email@example.com',
         },
@@ -339,26 +356,21 @@ test.describe('Contact Information Submission Flow', () => {
 
   test.describe('Duplicate Detection', () => {
     test('updates existing unverified submission instead of creating duplicate', async ({ page }) => {
+      const repId = await getRepresentativeId(page);
+      if (!repId) {
+        test.skip(true, 'No representative found');
+        return;
+      }
+
       const email = `duplicate-test-${Date.now()}@example.com`;
 
-      // First submission
       const firstResponse = await page.request.post('/api/contact/submit', {
-        data: {
-          representative_id: 1,
-          contact_type: 'email',
-          value: email,
-        },
+        data: { representative_id: repId, contact_type: 'email', value: email },
       });
-
       expect(firstResponse.status()).toBe(200);
 
-      // Second submission with same data (should update, not create new)
       const secondResponse = await page.request.post('/api/contact/submit', {
-        data: {
-          representative_id: 1,
-          contact_type: 'email',
-          value: email,
-        },
+        data: { representative_id: repId, contact_type: 'email', value: email },
       });
 
       expect(secondResponse.status()).toBe(200);
@@ -372,12 +384,17 @@ test.describe('Contact Information Submission Flow', () => {
 
   test.describe('Rate Limiting', () => {
     test('enforces rate limit on rapid submissions', async ({ page }) => {
-      // Submit 5 contacts rapidly (rate limit is 5/minute)
+      const repId = await getRepresentativeId(page);
+      if (!repId) {
+        test.skip(true, 'No representative found');
+        return;
+      }
+
       const submissions = [];
       for (let i = 0; i < 5; i++) {
         const response = await page.request.post('/api/contact/submit', {
           data: {
-            representative_id: 1,
+            representative_id: repId,
             contact_type: 'email',
             value: `rate-limit-test-${i}-${Date.now()}@example.com`,
           },
@@ -385,15 +402,13 @@ test.describe('Contact Information Submission Flow', () => {
         submissions.push(response);
       }
 
-      // All 5 should succeed
       for (const response of submissions) {
         expect((await response).status()).toBe(200);
       }
 
-      // 6th submission should be rate limited
       const rateLimitedResponse = await page.request.post('/api/contact/submit', {
         data: {
-          representative_id: 1,
+          representative_id: repId,
           contact_type: 'email',
           value: `rate-limit-test-6-${Date.now()}@example.com`,
         },
@@ -412,13 +427,14 @@ test.describe('Contact Information Submission Flow', () => {
 
   test.describe('CRUD Operations', () => {
     test('user can retrieve own contact submission', async ({ page }) => {
-      // Create submission
+      const repId = await getRepresentativeId(page);
+      if (!repId) {
+        test.skip(true, 'No representative found');
+        return;
+      }
+
       const submitResponse = await page.request.post('/api/contact/submit', {
-        data: {
-          representative_id: 1,
-          contact_type: 'email',
-          value: 'retrieve-test@example.com',
-        },
+        data: { representative_id: repId, contact_type: 'email', value: 'retrieve-test@example.com' },
       });
 
       expect(submitResponse.status()).toBe(200);
@@ -436,13 +452,14 @@ test.describe('Contact Information Submission Flow', () => {
     });
 
     test('user can update own unverified submission', async ({ page }) => {
-      // Create submission
+      const repId = await getRepresentativeId(page);
+      if (!repId) {
+        test.skip(true, 'No representative found');
+        return;
+      }
+
       const submitResponse = await page.request.post('/api/contact/submit', {
-        data: {
-          representative_id: 1,
-          contact_type: 'email',
-          value: 'update-test@example.com',
-        },
+        data: { representative_id: repId, contact_type: 'email', value: 'update-test@example.com' },
       });
 
       expect(submitResponse.status()).toBe(200);
@@ -464,13 +481,14 @@ test.describe('Contact Information Submission Flow', () => {
     });
 
     test('user can delete own unverified submission', async ({ page }) => {
-      // Create submission
+      const repId = await getRepresentativeId(page);
+      if (!repId) {
+        test.skip(true, 'No representative found');
+        return;
+      }
+
       const submitResponse = await page.request.post('/api/contact/submit', {
-        data: {
-          representative_id: 1,
-          contact_type: 'email',
-          value: 'delete-test@example.com',
-        },
+        data: { representative_id: repId, contact_type: 'email', value: 'delete-test@example.com' },
       });
 
       expect(submitResponse.status()).toBe(200);
@@ -487,17 +505,17 @@ test.describe('Contact Information Submission Flow', () => {
     });
 
     test('user can retrieve contacts for a representative', async ({ page }) => {
-      // Create a submission
+      const repId = await getRepresentativeId(page);
+      if (!repId) {
+        test.skip(true, 'No representative found');
+        return;
+      }
+
       await page.request.post('/api/contact/submit', {
-        data: {
-          representative_id: 1,
-          contact_type: 'email',
-          value: 'representative-test@example.com',
-        },
+        data: { representative_id: repId, contact_type: 'email', value: 'representative-test@example.com' },
       });
 
-      // Retrieve all contacts for representative
-      const response = await page.request.get('/api/contact/representative/1');
+      const response = await page.request.get(`/api/contact/representative/${repId}`);
       expect(response.status()).toBe(200);
 
       const body = await response.json();

@@ -57,13 +57,13 @@ const changedFiles = getChangedFiles();
 const rules = [
   {
     name: 'store-governance',
-    triggers: [/^web\/lib\/stores\//, /^scratch\/gpt5-codex\/store-roadmaps\//],
+    triggers: [/^web\/lib\/stores\//],
     requireAll: [
-      'scratch/store-modernization-roadmap.md',
+      'docs/ROADMAP_SINGLE_SOURCE.md',
       'docs/STATE_MANAGEMENT.md',
     ],
     message:
-      'Store changes require updating `scratch/store-modernization-roadmap.md` (owner/status) and `docs/STATE_MANAGEMENT.md` (selector contract).',
+      'Store changes require updating `docs/ROADMAP_SINGLE_SOURCE.md` (section C) and `docs/STATE_MANAGEMENT.md` (selector contract).',
   },
   {
     name: 'api-contracts',

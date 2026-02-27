@@ -58,7 +58,7 @@ Archived in `docs/archive/reference/technical/` if historical context is needed.
 
 Out-of-date, historical, or completed work documentation lives under `docs/archive/`. Use these when you need additional context, but treat the files above as the current source of truth.
 
-Note: `docs/ROADMAP.md` is archived-in-place to preserve inbound links and points to `docs/ROADMAP_SINGLE_SOURCE.md`. Do not add new items there.
+Note: `docs/ROADMAP.md` is a redirect stub pointing to `docs/ROADMAP_SINGLE_SOURCE.md`. Do not add new items there.
 
 ```
 docs/archive/

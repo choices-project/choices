@@ -317,7 +317,10 @@ test.describe('Authentication Redirects', () => {
       await page.waitForTimeout(2_000);
 
       // Should see login button, not logout button
-      const loginLink = page.locator('a[href="/login"], a[href="/auth"], button:has-text(/log in|sign in/i)');
+      const loginLink = page
+        .locator('a[href="/login"], a[href="/auth"]')
+        .or(page.getByRole('link', { name: /log in|sign in/i }))
+        .or(page.getByRole('button', { name: /log in|sign in/i }));
       const logoutButtonAfterLogout = page.locator('[data-testid="logout-button"]');
 
       const hasLogin = await loginLink.count();

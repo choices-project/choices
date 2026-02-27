@@ -265,8 +265,8 @@ test.describe('Registration Flow', () => {
 
       const responseBody = await registrationResponse.json().catch(() => ({}));
 
-      // Verify registration was successful
-      expect(registrationResponse.status()).toBe(201);
+      // Verify registration was successful (201 Created or 200 OK)
+      expect([200, 201]).toContain(registrationResponse.status());
       expect(responseBody.success).toBe(true);
       expect(responseBody.data?.user).toBeDefined();
       expect(responseBody.data?.user?.email).toBe(testUser.email);

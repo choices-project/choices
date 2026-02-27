@@ -14,8 +14,9 @@ This file defines the canonical documentation set under `docs/`. Everything else
 
 ### Current status & roadmap
 - `CURRENT_STATUS.md`
-- `ROADMAP_SINGLE_SOURCE.md`
+- `ROADMAP_SINGLE_SOURCE.md` — Single source of truth for roadmap, next steps, and verification
 - `FEATURE_STATUS.md`
+- `FEATURE_FLAGS_AUDIT.md` — Feature flags audit, usage map, and setup guide for new developers
 
 ### Testing & QA
 - `TESTING.md` — Unit, E2E, axe, production testing (merged from PRODUCTION_TESTING)

@@ -77,5 +77,5 @@ Failure examples:
   - `web/tests/contracts/civics-address.contract.test.ts`
   - MSW mocks: `web/tests/msw/api-handlers.ts`
 
-For future changes, update this doc and the roadmap (`scratch/final_work_TODO/ROADMAP.md`) when adding new flows that depend on the address lookup service.
+For future changes, update this doc and `docs/ROADMAP_SINGLE_SOURCE.md` when adding new flows that depend on the address lookup service.
 

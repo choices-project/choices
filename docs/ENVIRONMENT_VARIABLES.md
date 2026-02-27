@@ -57,6 +57,13 @@ This document lists all environment variables required for the Choices applicati
   - Used by: Health checks, Sentry error tracking
   - Default: `1.0.0`
 
+- `FEATURE_FLAGS_OVERRIDE` (optional)
+  - JSON object of flag overrides for production persistence (survives server restart)
+  - Format: `{"CONTACT_INFORMATION_SYSTEM":true,"CIVIC_ENGAGEMENT_V2":true}`
+  - Used by: `web/lib/core/feature-flags.ts` at module load
+  - Security: Server-only; only mutable flags from `FEATURE_FLAGS` are applied
+  - See: `docs/FEATURE_FLAGS_AUDIT.md`
+
 ### Error Monitoring (Sentry)
 - `NEXT_PUBLIC_SENTRY_DSN` (optional)
   - Sentry DSN for error tracking

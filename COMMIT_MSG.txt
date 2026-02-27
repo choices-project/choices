@@ -1,0 +1,28 @@
+feat(mvp): Contact, Push, Civic Engagement v2 GA; feature quarantine; RLS
+
+## GA Features (default on)
+- Contact Information System: RLS on representative_contacts, 5/min rate limit
+- Push Notifications: delivery failure logging
+- Civic Engagement v2: create/sign at /civic-actions/*, rep context from detail page
+
+## New
+- RLS migration 20260226120000: representative_contacts policies
+- /civic-actions/create and /civic-actions/[id] pages
+- CreateCivicActionForm initialTargetRepresentativeId for rep context
+- CivicActionList create links pass representative_id when filtered
+- GET /api/feature-flags/public (no auth)
+
+## Feature Quarantine
+- Document deferred flags: AUTOMATED_POLLS, SOCIAL_SHARING_CIVICS/VISUAL/OG,
+  CIVICS_TESTING_STRATEGY, ADVANCED_PRIVACY, SOCIAL_SIGNUP, Device Flow OAuth,
+  PERFORMANCE_OPTIMIZATION, ACCESSIBILITY, INTERNATIONALIZATION
+- @quarantined JSDoc on flags; FEATURE_STATUS § Feature Quarantine
+
+## Fixes
+- Contact submit rate limit: 5/min (was default 50/15min)
+- FeedDataProvider.test: remove duplicate pagination keys
+
+## Docs
+- FEATURE_STATUS: GA status, quarantine, production checklists
+- FEATURE_FLAGS_AUDIT: current defaults, quarantine ref
+- ROADMAP_SINGLE_SOURCE, CURRENT_STATUS: MVP completion

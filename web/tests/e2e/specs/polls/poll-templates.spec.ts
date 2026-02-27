@@ -12,11 +12,24 @@
 
 import { expect, test } from '@playwright/test';
 
-import { waitForPageReady } from '../../helpers/e2e-setup';
+import { getE2EUserCredentials, loginTestUser, waitForPageReady } from '../../helpers/e2e-setup';
 
 const BASE_URL = process.env.BASE_URL ?? 'http://localhost:3000';
 
 test.describe('Poll Templates', () => {
+  test.beforeEach(async ({ page }) => {
+    // /polls/templates is protected - log in when credentials available
+    const creds = getE2EUserCredentials();
+    const isProduction = BASE_URL.includes('choices-app.com');
+    if (isProduction && creds) {
+      await page.goto(`${BASE_URL}/auth`, { waitUntil: 'domcontentloaded', timeout: 30_000 });
+      await loginTestUser(page, { email: creds.email, password: creds.password, username: creds.username });
+      await page.waitForTimeout(2_000);
+    } else if (isProduction && !creds) {
+      test.skip(true, 'E2E credentials required for production poll templates');
+    }
+  });
+
   test('templates page loads and displays content', async ({ page }) => {
     await page.goto(`${BASE_URL}/polls/templates`, { waitUntil: 'domcontentloaded', timeout: 30_000 });
     await waitForPageReady(page);

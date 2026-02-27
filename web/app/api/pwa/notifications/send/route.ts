@@ -390,6 +390,14 @@ export const POST = withErrorHandling(async (request: NextRequest) => {
   const results = await sendPushNotifications(supabase, subscriptions, payload);
 
   logger.info(`PWA: Push notification send results`, results);
+  if (results.failed > 0) {
+    logger.warn(`PWA: Delivery failures`, {
+      failed: results.failed,
+      successful: results.successful,
+      total: subscriptions.length,
+      sampleErrors: results.errors.slice(0, 5),
+    });
+  }
 
   return successResponse(
     {

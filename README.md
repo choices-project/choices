@@ -49,6 +49,7 @@ See **[docs/DEPLOYMENT.md](./docs/DEPLOYMENT.md)** for the complete guide.
 - **[docs/GETTING_STARTED.md](./docs/GETTING_STARTED.md)** - Quick start guide for new developers
 - **[docs/VISION.md](./docs/VISION.md)** - Project vision and roadmap
 - **[docs/CURRENT_STATUS.md](./docs/CURRENT_STATUS.md)** - Current status and active work
+- **[docs/ROADMAP_SINGLE_SOURCE.md](./docs/ROADMAP_SINGLE_SOURCE.md)** - Roadmap, next steps, and verification (single source of truth)
 - **[docs/DEPLOYMENT.md](./docs/DEPLOYMENT.md)** - Deployment guide
 - **[docs/FEATURE_STATUS.md](./docs/FEATURE_STATUS.md)** - Feature flags and status
 

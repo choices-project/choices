@@ -2819,6 +2819,7 @@
           "viewAccountability": "View accountability"
         },
         "sections": {
+          "civicActions": "Civic Actions",
           "contactInformation": "Contact Information",
           "represents": "Represents",
           "termDetails": "Term Details",

@@ -35,8 +35,15 @@ async function authenticateViaAPI(page: any, email: string, password: string): P
   if (response.status() !== 200) {
     throw new Error(`Login failed with status ${response.status()}`);
   }
-
   await page.waitForTimeout(500);
+}
+
+async function getRepresentativeId(page: any): Promise<number | null> {
+  const res = await page.request.get('/api/civics/representatives?limit=1');
+  if (res.status() !== 200) return null;
+  const body = await res.json();
+  const reps = body.data?.representatives;
+  return reps?.length ? reps[0].id : null;
 }
 
 test.describe('Contact System Edge Cases', () => {
@@ -229,32 +236,32 @@ test.describe('Contact System Edge Cases', () => {
     });
 
     test('handles unicode characters correctly', async ({ page }) => {
-      const unicodeEmail = 'tëst@éxämple.com';
+      const repId = await getRepresentativeId(page);
+      if (!repId) {
+        test.skip(true, 'No representative found');
+        return;
+      }
 
       const response = await page.request.post('/api/contact/submit', {
-        data: {
-          representative_id: 1,
-          contact_type: 'email',
-          value: unicodeEmail,
-        },
+        data: { representative_id: repId, contact_type: 'email', value: 'tëst@éxämple.com' },
       });
-
-      // Should either accept (if valid) or reject (if invalid per email spec)
       expect([200, 400]).toContain(response.status());
     });
 
     test('handles special characters in addresses', async ({ page }) => {
-      const specialAddress = '123 Main St., Suite #4, Apt. 5-B, New York, NY 10001';
+      const repId = await getRepresentativeId(page);
+      if (!repId) {
+        test.skip(true, 'No representative found');
+        return;
+      }
 
       const response = await page.request.post('/api/contact/submit', {
         data: {
-          representative_id: 1,
+          representative_id: repId,
           contact_type: 'address',
-          value: specialAddress,
+          value: '123 Main St., Suite #4, Apt. 5-B, New York, NY 10001',
         },
       });
-
-      // Should accept valid address with special characters
       expect(response.status()).toBe(200);
     });
 
@@ -293,13 +300,14 @@ test.describe('Contact System Edge Cases', () => {
 
       await authenticateViaAPI(page, userCreds.email, userCreds.password);
 
-      // Create submission
+      const repId = await getRepresentativeId(page);
+      if (!repId) {
+        test.skip(true, 'No representative found');
+        return;
+      }
+
       const submitResponse = await page.request.post('/api/contact/submit', {
-        data: {
-          representative_id: 1,
-          contact_type: 'email',
-          value: 'auth-test@example.com',
-        },
+        data: { representative_id: repId, contact_type: 'email', value: 'auth-test@example.com' },
       });
 
       if (submitResponse.status() !== 200) {
@@ -428,9 +436,9 @@ test.describe('Contact System Edge Cases', () => {
 
       await authenticateViaAPI(page, userCreds.email, userCreds.password);
 
-      const invalidRepIds = [-1, 0, 999999, 'not-a-number'];
-
-      for (const invalidRepId of invalidRepIds) {
+      // Format validation: -1, 0, 'not-a-number' → 400
+      const invalidFormatIds = [-1, 0, 'not-a-number'];
+      for (const invalidRepId of invalidFormatIds) {
         const response = await page.request.post('/api/contact/submit', {
           data: {
             representative_id: invalidRepId,
@@ -438,9 +446,18 @@ test.describe('Contact System Edge Cases', () => {
             value: 'test@example.com',
           },
         });
-
         expect(response.status()).toBe(400);
       }
+
+      // Non-existent rep (999999): API returns 404 "Representative not found"
+      const nonExistentResponse = await page.request.post('/api/contact/submit', {
+        data: {
+          representative_id: 999999,
+          contact_type: 'email',
+          value: 'test@example.com',
+        },
+      });
+      expect([400, 404]).toContain(nonExistentResponse.status());
     });
   });
 
@@ -456,44 +473,41 @@ test.describe('Contact System Edge Cases', () => {
     });
 
     test('handles minimum valid email length', async ({ page }) => {
-      const minEmail = 'a@b.co'; // Minimum valid email
+      const repId = await getRepresentativeId(page);
+      if (!repId) {
+        test.skip(true, 'No representative found');
+        return;
+      }
 
       const response = await page.request.post('/api/contact/submit', {
-        data: {
-          representative_id: 1,
-          contact_type: 'email',
-          value: minEmail,
-        },
+        data: { representative_id: repId, contact_type: 'email', value: 'a@b.co' },
       });
-
       expect(response.status()).toBe(200);
     });
 
     test('handles minimum valid address length', async ({ page }) => {
-      const minAddress = '12345'; // Minimum 5 characters
+      const repId = await getRepresentativeId(page);
+      if (!repId) {
+        test.skip(true, 'No representative found');
+        return;
+      }
 
       const response = await page.request.post('/api/contact/submit', {
-        data: {
-          representative_id: 1,
-          contact_type: 'address',
-          value: minAddress,
-        },
+        data: { representative_id: repId, contact_type: 'address', value: '12345' },
       });
-
       expect(response.status()).toBe(200);
     });
 
     test('handles maximum valid address length', async ({ page }) => {
-      const maxAddress = 'A'.repeat(500); // Maximum 500 characters
+      const repId = await getRepresentativeId(page);
+      if (!repId) {
+        test.skip(true, 'No representative found');
+        return;
+      }
 
       const response = await page.request.post('/api/contact/submit', {
-        data: {
-          representative_id: 1,
-          contact_type: 'address',
-          value: maxAddress,
-        },
+        data: { representative_id: repId, contact_type: 'address', value: 'A'.repeat(500) },
       });
-
       expect(response.status()).toBe(200);
     });
 

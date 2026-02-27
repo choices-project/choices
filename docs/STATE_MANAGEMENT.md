@@ -135,7 +135,7 @@ const persistConfig = {
 - Keep payloads small (< 10KB) for performance
 - Test persistence/restoration in both unit tests and E2E harnesses
 
-Store-level tracking: see `scratch/roadmap.md` § Tech Debt & Ops.
+Store-level tracking: see `docs/ROADMAP_SINGLE_SOURCE.md` § C.
 
 ---
 

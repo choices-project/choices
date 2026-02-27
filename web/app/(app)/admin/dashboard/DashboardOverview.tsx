@@ -89,7 +89,7 @@ export const DashboardOverview: React.FC = () => {
         <div>
           <h1 className="text-2xl font-bold text-gray-900 dark:text-gray-100">Dashboard Overview</h1>
           <p className="text-gray-600 dark:text-gray-400 mt-1">
-            Monitor your automated polls system and trending topics
+            Monitor trending topics and system metrics
           </p>
         </div>
         <div className="text-sm text-gray-500 dark:text-gray-400">

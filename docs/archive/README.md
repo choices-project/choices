@@ -19,4 +19,4 @@ If the archived file still contains useful technical insight, consider extractin
 
 ### Archived-in-place (to preserve inbound links)
 
-- `docs/ROADMAP.md` — Marked as [ARCHIVED] and points to `docs/ROADMAP_SINGLE_SOURCE.md`. Kept in place to avoid breaking links; do not add new items.
+- `docs/ROADMAP.md` — Redirect stub pointing to `docs/ROADMAP_SINGLE_SOURCE.md`. Kept in place to avoid breaking links; do not add new items.

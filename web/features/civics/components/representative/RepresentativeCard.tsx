@@ -132,28 +132,29 @@ export function RepresentativeCard({
     }
   };
 
+  // WCAG 2.1 AA: use -900 text on -100 bg for 4.5:1+ contrast
   const getPartyColor = (party: string) => {
     switch (party.toLowerCase()) {
       case 'democratic':
-        return 'bg-blue-100 text-blue-800 border-blue-200';
+        return 'bg-blue-100 text-blue-900 border-blue-200 dark:bg-blue-900/30 dark:text-blue-100 dark:border-blue-700';
       case 'republican':
-        return 'bg-red-100 text-red-800 border-red-200';
+        return 'bg-red-100 text-red-900 border-red-200 dark:bg-red-900/30 dark:text-red-100 dark:border-red-700';
       case 'independent':
-        return 'bg-gray-100 text-gray-800 border-gray-200';
+        return 'bg-gray-100 text-gray-900 border-gray-200 dark:bg-gray-800 dark:text-gray-100 dark:border-gray-600';
       default:
-        return 'bg-gray-100 text-gray-800 border-gray-200';
+        return 'bg-gray-100 text-gray-900 border-gray-200 dark:bg-gray-800 dark:text-gray-100 dark:border-gray-600';
     }
   };
 
   const getOfficeColor = (office: string) => {
     if (office.toLowerCase().includes('senator')) {
-      return 'bg-purple-100 text-purple-800 border-purple-200';
+      return 'bg-purple-100 text-purple-900 border-purple-200 dark:bg-purple-900/30 dark:text-purple-100 dark:border-purple-700';
     } else if (office.toLowerCase().includes('representative')) {
-      return 'bg-green-100 text-green-800 border-green-200';
+      return 'bg-green-100 text-green-900 border-green-200 dark:bg-green-900/30 dark:text-green-100 dark:border-green-700';
     } else if (office.toLowerCase().includes('governor')) {
-      return 'bg-yellow-100 text-yellow-800 border-yellow-200';
+      return 'bg-amber-100 text-amber-900 border-amber-200 dark:bg-amber-900/30 dark:text-amber-100 dark:border-amber-700';
     }
-    return 'bg-gray-100 text-gray-800 border-gray-200';
+    return 'bg-gray-100 text-gray-900 border-gray-200 dark:bg-gray-800 dark:text-gray-100 dark:border-gray-600';
   };
 
   React.useEffect(() => {
@@ -200,10 +201,10 @@ export function RepresentativeCard({
               {representative.name}
             </h3>
             <div className="flex flex-wrap gap-2 mt-1">
-              <Badge className={`text-xs ${getPartyColor(representative.party)} dark:opacity-90`}>
+              <Badge className={`text-xs ${getPartyColor(representative.party)}`}>
                 {representative.party}
               </Badge>
-              <Badge className={`text-xs ${getOfficeColor(representative.office)} dark:opacity-90`}>
+              <Badge className={`text-xs ${getOfficeColor(representative.office)}`}>
                 {representative.office}
               </Badge>
             </div>

@@ -80,7 +80,20 @@ npm run test:e2e:axe
 # Manual Playwright startup (only when you want to reuse an existing server):
 npm run dev                # terminal 1
 NEXT_PUBLIC_ENABLE_E2E_HARNESS=1 npx playwright test --config=playwright.config.ts
+
+# Production smoke (against https://www.choices-app.com)
+cd web && npm run test:e2e:production:smoke   # ~20s: API health, feature flags, ingest, core pages
+cd web && npm run test:e2e:production          # Full suite (skips harness specs; auth/admin tests may fail without credentials)
 ```
+
+### Production Testing
+
+Production tests run against the live site at `https://www.choices-app.com`. Use `test:e2e:production:smoke` for a fast (~20s) check after deployments:
+
+- **API smoke** (`production-api.spec.ts`): `/api/health`, `/api/feature-flags/public`, `/api/health/ingest`
+- **Page smoke** (`mvp-smoke.spec.ts`): auth, civics, representatives, civic-actions create, contact submissions, account pages
+
+The full `test:e2e:production` run excludes harness specs (feeds-store, polls-store, etc.) since those require `/e2e/*` pages not deployed to production. See `docs/PRODUCTION_TESTING_STATUS.md` for current pass/fail breakdown and next steps.
 
 Utilities:
 - `npm run lint` — ESLint (use before submitting PRs).

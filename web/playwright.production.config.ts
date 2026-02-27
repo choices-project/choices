@@ -29,10 +29,23 @@ for (const { path: envFile, override } of envFiles) {
 // Force production defaults regardless of local .env overrides.
 process.env.BASE_URL = 'https://www.choices-app.com';
 process.env.PLAYWRIGHT_USE_MOCKS = '0';
+process.env.E2E_PRODUCTION = '1';
 
 export default defineConfig({
     testDir: './tests/e2e',
-    testIgnore: ['**/_archived/**', '**/archive/**', '**/setup/**'],
+    // Harness specs require E2E harness pages (/e2e/*) which are not deployed to production
+    testIgnore: [
+      '**/_archived/**',
+      '**/archive/**',
+      '**/setup/**',
+      '**/feeds-store.spec.ts',
+      '**/polls-store.spec.ts',
+      '**/profile-store.spec.ts',
+      '**/pwa-store.spec.ts',
+      '**/voting-store.spec.ts',
+      '**/dashboard-journey.spec.ts',
+      '**/poll-production.spec.ts', // Uses /e2e/poll-create harness page
+    ],
     fullyParallel: true,
     forbidOnly: !!process.env.CI,
     // Reduced retries to speed up CI - failures will still be visible with 1 retry

@@ -11,7 +11,7 @@ import {
   SITE_MESSAGE_SELECT_COLUMNS,
   SYSTEM_HEALTH_SELECT_COLUMNS,
 } from '@/lib/api/response-builders';
-import { useAnalyticsActions } from '@/lib/stores/analyticsStore';
+import { useAnalyticsStore } from '@/lib/stores/analyticsStore';
 import { logger } from '@/lib/utils/logger';
 
 import { EnhancedAnalyticsService, toJsonValue } from '../lib/enhanced-analytics-service';
@@ -507,15 +507,12 @@ export function useEnhancedAnalytics(options: UseEnhancedAnalyticsOptions = {}) 
 
   const enhancedAnalytics = useMemo(() => new EnhancedAnalyticsService(supabase), [supabase]);
 
-  const {
-    setDashboard: setAnalyticsDashboard,
-    updateUserBehavior,
-    setLoading: setAnalyticsLoading,
-    setError: setAnalyticsError,
-  } = useAnalyticsActions();
+  // Use getState() for store actions to avoid unstable refs in fetchAnalytics deps (prevents React error #185)
+  const getAnalyticsActions = () => useAnalyticsStore.getState();
 
   // Fetch enhanced analytics data
   const fetchAnalytics = useCallback(async () => {
+    const { setDashboard: setAnalyticsDashboard, updateUserBehavior, setLoading: setAnalyticsLoading, setError: setAnalyticsError } = getAnalyticsActions();
     try {
       setLoading(true);
       setError(null);
@@ -634,13 +631,6 @@ export function useEnhancedAnalytics(options: UseEnhancedAnalyticsOptions = {}) 
     sessionId,
     enableNewSchema,
     enhancedAnalytics,
-    setLoading,
-    setError,
-    setAnalyticsLoading,
-    setAnalyticsError,
-    setAnalyticsDashboard,
-    updateUserBehavior,
-    setLastUpdated,
   ]);
 
   // Track feature usage
