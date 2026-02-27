@@ -8,6 +8,8 @@ The Choices platform MVP is **complete and production-ready**. All core features
 
 All MVP features are implemented, tested, and production-ready. The platform is ready for deployment.
 
+**GA features (default on):** Contact Information System, Push Notifications, Civic Engagement v2. Quarantined features (AUTOMATED_POLLS, SOCIAL_SHARING_CIVICS/VISUAL/OG, CIVICS_TESTING_STRATEGY, etc.) require no active work—see `docs/FEATURE_STATUS.md` § Feature Quarantine.
+
 **Recent Updates (February 2026):**
 - ✅ **WebAuthn trust visibility** — Profile Account & Security shows trust tier (e.g. "Trusted (passkey verified)"); TrustScoreCard displays trust score and recommendations; dynamic "Set Up" vs "Manage Passkeys" button; ARIA on error/success regions; E2E tests for biometric setup flow
 - ✅ **Contact system** — Bulk approve/reject (API + UI), batch notifications; rejected-status storage; admin rep-name search; My Submissions with rejected badge
@@ -76,14 +78,14 @@ All MVP features are implemented, tested, and production-ready. The platform is 
 
 ## Civics Ingest Status (OpenStates)
 
-- Phase 2 — Validation harness: In progress. Staging fixtures and CLI smoke-test template to be added (see `services/civics-backend/ROADMAP.md`).
+- Phase 2 — Validation harness: In progress. Staging fixtures and CLI smoke-test template to be added (see `docs/ROADMAP_SINGLE_SOURCE.md` § E).
 - Phase 3 — Crosswalk + dedupe automation: Planned. API call optimization matrix pending implementation.
 - Phase 4 — Types: Next schema change will trigger Supabase types regeneration (run `cd web && npm run types:generate`).
 - Phase 5 — Documentation: High-level ingest summary will be maintained here; detailed runbooks under `services/supabase-operations-guide.md`.
 
 References:
 - Single-source roadmap entries: `docs/ROADMAP_SINGLE_SOURCE.md` (Section E)
-- Backend plan: `services/civics-backend/ROADMAP.md`
+- Backend plan: `services/civics-backend/NEW_civics_ingest/docs/README.md`
 
 ---
 

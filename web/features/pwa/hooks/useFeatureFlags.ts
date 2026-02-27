@@ -24,7 +24,8 @@ export function useFeatureFlags() {
     setError(null);
     
     try {
-      const response = await fetch('/api/feature-flags');
+      // Use public endpoint so non-admins can fetch flags (admin GET requires auth in production)
+      const response = await fetch('/api/feature-flags/public');
       if (!response.ok) {
         throw new Error(`HTTP error! status: ${response.status}`);
       }
@@ -32,12 +33,24 @@ export function useFeatureFlags() {
       const data = await response.json();
       
       if (data.success) {
-        // Update appStore with fetched flags
+        // API returns { success, data: { flags, flagsSimple, enabledFlags, ... } }
+        // Prefer flagsSimple (Record<id, boolean>) when present; else parse flags (FeatureFlag objects)
+        const payload = data.data ?? data;
+        const flagsSimple = payload?.flagsSimple as Record<string, boolean> | undefined;
+        const flagsData = payload?.flags ?? {};
         const flagUpdates: Record<string, boolean> = {};
-        Object.entries(data.flags).forEach(([key, value]) => {
-          flagUpdates[key] = value as boolean;
-        });
-        
+
+        if (flagsSimple && typeof flagsSimple === 'object') {
+          Object.assign(flagUpdates, flagsSimple);
+        } else {
+          Object.entries(flagsData).forEach(([key, value]) => {
+            const enabled =
+              typeof value === 'object' && value !== null && 'enabled' in value
+                ? (value as { enabled: boolean }).enabled
+                : Boolean(value);
+            flagUpdates[key] = enabled;
+          });
+        }
         setFeatureFlags(flagUpdates);
       } else {
         throw new Error(data.error || 'Failed to fetch feature flags');

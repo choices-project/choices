@@ -54,10 +54,13 @@ export const POST = withErrorHandling(async (request: NextRequest) => {
 
   const startTime = Date.now();
 
-  // Rate limiting: 5 submissions per minute per user
+  // Rate limiting: 5 submissions per minute per IP (stricter than default for contact submissions)
   const ip = request.headers.get('x-forwarded-for') ?? request.headers.get('x-real-ip') ?? 'unknown';
   const userAgent = request.headers.get('user-agent');
-  const rateLimitOptions: any = {};
+  const rateLimitOptions: { maxRequests: number; windowMs: number; userAgent?: string } = {
+    maxRequests: 5,
+    windowMs: 60 * 1000,
+  };
   if (userAgent) rateLimitOptions.userAgent = userAgent;
   const rateLimitResult = await apiRateLimiter.checkLimit(
     ip,

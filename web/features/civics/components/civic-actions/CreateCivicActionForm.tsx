@@ -28,6 +28,8 @@ import { useI18n } from '@/hooks/useI18n';
 type CreateCivicActionFormProps = {
   onSuccess?: (actionId: string) => void;
   onCancel?: () => void;
+  /** Pre-fill when creating from representative detail page */
+  initialTargetRepresentativeId?: number;
   className?: string;
 };
 
@@ -50,6 +52,7 @@ const URGENCY_LEVELS = [
 export function CreateCivicActionForm({
   onSuccess,
   onCancel,
+  initialTargetRepresentativeId,
   className = '',
 }: CreateCivicActionFormProps) {
   const { t } = useI18n();
@@ -151,6 +154,10 @@ export function CreateCivicActionForm({
 
       if (formData.target_district) {
         payload.target_district = formData.target_district;
+      }
+
+      if (initialTargetRepresentativeId) {
+        payload.target_representative_id = initialTargetRepresentativeId;
       }
 
       const response = await fetch('/api/civic-actions', {

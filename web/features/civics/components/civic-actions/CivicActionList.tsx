@@ -31,6 +31,7 @@ type CivicActionListProps = {
     category?: string;
     urgency_level?: 'low' | 'medium' | 'high' | 'critical';
     is_public?: boolean;
+    target_representative_id?: number;
   };
   onSign?: (actionId: string) => Promise<void>;
   onView?: (actionId: string) => void;
@@ -180,6 +181,10 @@ export function CivicActionList({
     );
   }
 
+  const createHref = filters.target_representative_id
+    ? `/civic-actions/create?representative_id=${filters.target_representative_id}`
+    : '/civic-actions/create';
+
   if (actions.length === 0) {
     return (
       <div className={`flex flex-col items-center justify-center py-12 ${className}`}>
@@ -187,7 +192,7 @@ export function CivicActionList({
           {t('civics.actions.list.empty')}
         </p>
         {showCreateButton && (
-          <Link href="/civic-actions/create">
+          <Link href={createHref}>
             <Button>
               <Plus className="w-4 h-4 mr-2" />
               {t('civics.actions.list.buttons.create')}
@@ -202,7 +207,7 @@ export function CivicActionList({
     <div className={className}>
       {showCreateButton && (
         <div className="mb-6 flex justify-end">
-          <Link href="/civic-actions/create">
+          <Link href={createHref}>
             <Button>
               <Plus className="w-4 h-4 mr-2" />
               {t('civics.actions.list.buttons.create')}

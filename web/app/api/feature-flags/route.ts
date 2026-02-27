@@ -34,10 +34,15 @@ export const GET = withErrorHandling(async (_request: NextRequest) => {
   
   // Convert Map to object for JSON serialization
   const flagsObject = Object.fromEntries(allFlags);
-  
+  // flagsSimple: Record<id, boolean> for easy client consumption (avoids parsing FeatureFlag.enabled)
+  const flagsSimple = Object.fromEntries(
+    Array.from(allFlags.entries()).map(([id, flag]) => [id, flag.enabled])
+  ) as Record<string, boolean>;
+
   return successResponse(
     {
       flags: flagsObject,
+      flagsSimple,
       enabledFlags,
       disabledFlags,
       systemInfo

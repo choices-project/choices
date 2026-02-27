@@ -130,7 +130,6 @@ describe('FeedDataProvider integration', () => {
           district: null,
           sort: 'trending',
         },
-        pagination: { hasMore: true, total: 2, limit: 20, offset: 0 },
       },
     };
 
@@ -150,7 +149,6 @@ describe('FeedDataProvider integration', () => {
           district: null,
           sort: 'trending',
         },
-        pagination: { hasMore: false, total: 2, limit: 20, offset: 1 },
       },
     };
 

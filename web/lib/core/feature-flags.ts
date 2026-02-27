@@ -21,6 +21,7 @@ const ALWAYS_ENABLED_FLAGS = [
   'ENHANCED_POLLS',
   'ENHANCED_VOTING',
   'CIVICS_ADDRESS_LOOKUP',
+  // Legacy; no active gate. Representative detail shows campaign finance regardless.
   'CANDIDATE_ACCOUNTABILITY',
   'CANDIDATE_CARDS',
   'ALTERNATIVE_CANDIDATES',
@@ -33,16 +34,21 @@ type AlwaysEnabledFlag = typeof ALWAYS_ENABLED_FLAGS[number];
 const ALWAYS_ENABLED_SET = new Set<string>(ALWAYS_ENABLED_FLAGS);
 
 export const FEATURE_FLAGS = {
+  /** @deprecated @quarantined No implementation. See docs/FEATURE_STATUS.md § Feature Quarantine. */
   AUTOMATED_POLLS: false,
   SOCIAL_SHARING: false,
   SOCIAL_SHARING_POLLS: false,
+  /** @deprecated @quarantined No civics-specific sharing surfaces. See docs/FEATURE_STATUS.md. */
   SOCIAL_SHARING_CIVICS: false,
+  /** @deprecated @quarantined No OG/visual pipeline. See docs/FEATURE_STATUS.md. */
   SOCIAL_SHARING_VISUAL: false,
+  /** @deprecated @quarantined No OG/visual pipeline. See docs/FEATURE_STATUS.md. */
   SOCIAL_SHARING_OG: false,
-  CONTACT_INFORMATION_SYSTEM: false,
+  CONTACT_INFORMATION_SYSTEM: true, // GA: RLS, rate limits, admin UI, My Submissions, bulk approve/reject
+  /** @deprecated @quarantined No automated civics validation. See docs/FEATURE_STATUS.md. */
   CIVICS_TESTING_STRATEGY: false,
   PUSH_NOTIFICATIONS: true, // ✅ ENABLED - Production ready (January 2025)
-  CIVIC_ENGAGEMENT_V2: false,
+  CIVIC_ENGAGEMENT_V2: true, // Shipped: API + UI on rep detail; CivicActionList with create/sign
 } as const;
 
 type MutableFlag = keyof typeof FEATURE_FLAGS;
@@ -81,6 +87,12 @@ export type FeatureFlagSystemInfo = {
   disabledFlags: number;
   environment: string;
   categories: Record<string, number>;
+};
+
+/** Aliases for getFlagsByCategory; maps legacy names to CATEGORY_MAP keys */
+const CATEGORY_ALIASES: Record<string, string> = {
+  optional: 'future',
+  experimental: 'future',
 };
 
 const CATEGORY_MAP: Record<string, ReadonlyArray<FeatureFlagKey>> = {
@@ -161,6 +173,23 @@ function normalize(key: string): FeatureFlagKey | null {
 }
 
 const mutableFlags: Record<MutableFlag, boolean> = { ...FEATURE_FLAGS };
+
+// Apply env overrides for production persistence (survives server restart)
+// Format: FEATURE_FLAGS_OVERRIDE='{"CONTACT_INFORMATION_SYSTEM":true}'
+if (typeof process !== 'undefined' && process.env?.FEATURE_FLAGS_OVERRIDE) {
+  try {
+    const overrides = JSON.parse(process.env.FEATURE_FLAGS_OVERRIDE) as Record<string, boolean>;
+    for (const [key, value] of Object.entries(overrides)) {
+      const resolved = normalize(key);
+      if (resolved && isMutableFlag(resolved) && typeof value === 'boolean') {
+        mutableFlags[resolved] = value;
+      }
+    }
+    logger.info('[FEATURE_FLAGS] Applied env overrides', { count: Object.keys(overrides).length });
+  } catch {
+    logger.warn('[FEATURE_FLAGS] Invalid FEATURE_FLAGS_OVERRIDE JSON, ignoring');
+  }
+}
 
 let cachedSnapshot: Record<string, boolean> | null = null;
 
@@ -332,7 +361,8 @@ export const featureFlagManager = {
         ),
       ),
   getFlagsByCategory: (category: string): FeatureFlag[] => {
-    const flags = CATEGORY_MAP[category] ?? [];
+    const resolved = CATEGORY_ALIASES[category] ?? category;
+    const flags = CATEGORY_MAP[resolved] ?? [];
     return flags.map((flag) =>
       toFeatureFlagDescriptor(
         flag,

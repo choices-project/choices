@@ -34,6 +34,7 @@ import {
   trackCivicsRepresentativeEvent,
   type CivicsRepresentativeEventBase
 } from '@/features/civics/analytics/civicsAnalyticsEvents';
+import { CivicActionList } from '@/features/civics/components/civic-actions';
 import { RepresentativeActivityFeed } from '@/features/civics/components/representative/RepresentativeActivityFeed';
 import { formatElectionDateStable } from '@/features/civics/utils/civicsCountdownUtils';
 import { filterDivisionsForElections } from '@/features/civics/utils/divisions';
@@ -590,6 +591,19 @@ function RepresentativeDetailPageContent() {
               representativeName={representative.name}
               className="mt-6"
             />
+          )}
+
+          {numericRepresentativeId != null && (
+            <div className="mb-8">
+              <h2 className="text-2xl font-bold text-gray-900 dark:text-gray-100 mb-4">
+                {t('civics.representatives.detail.sections.civicActions')}
+              </h2>
+              <CivicActionList
+                filters={{ target_representative_id: numericRepresentativeId, status: 'active' }}
+                showCreateButton
+                className="mt-4"
+              />
+            </div>
           )}
 
           <div className="mb-8">
