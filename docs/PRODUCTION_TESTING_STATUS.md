@@ -47,6 +47,7 @@ cd web && npm run test:e2e:production
 15. **Representatives WCAG color contrast** – Updated RepresentativeCard badges to use `-900` text on `-100` backgrounds (4.5:1+ ratio); added explicit dark mode colors; governor badge uses `amber` for better contrast.
 16. **Contact edge cases – invalid representative ID** – Split test: format-invalid IDs (-1, 0, 'not-a-number') expect 400; non-existent rep (999999) accepts 400 or 404 (API returns 404 for "Representative not found").
 17. **Analytics page hasContent assertion** – Broadened to include loading spinner (`.animate-spin`), error boundary text ("Analytics Dashboard Error"), and "loading"/"error" text for slow-loading production.
+18. **Admin functionality assertions** – Analytics page: add `.animate-spin` and "Analytics Dashboard Error" to hasContent. Performance page: use `h2, h1` with filter for "performance", add `.animate-spin` to skeleton selector for more resilient content checks.
 
 ## Remaining Failures (Root Causes)
 

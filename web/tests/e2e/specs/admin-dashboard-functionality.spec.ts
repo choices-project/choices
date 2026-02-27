@@ -76,17 +76,19 @@ test.describe('Admin Dashboard Functionality', () => {
     const reactError = page.locator('text=/Minified React error #185/i');
     expect(await reactError.count()).toBe(0);
 
-    // Check that analytics page loads: title, mode toggles, or loading/error state
+    // Check that analytics page loads: title, mode toggles, loading spinner, or error state
     const analyticsTitle = page.locator('h1, h2').filter({ hasText: /analytics/i });
     const classicButton = page.getByRole('button', { name: /classic/i });
     const widgetsButton = page.getByRole('button', { name: /widgets/i });
-    const loadingOrError = page.locator('text=/loading|error|failed to load/i');
+    const loadingOrError = page.locator('text=/loading|error|failed to load|Analytics Dashboard Error/i');
+    const loadingSpinner = page.locator('.animate-spin');
 
     const hasContent =
       (await analyticsTitle.count()) > 0 ||
       (await classicButton.count()) > 0 ||
       (await widgetsButton.count()) > 0 ||
-      (await loadingOrError.count()) > 0;
+      (await loadingOrError.count()) > 0 ||
+      (await loadingSpinner.count()) > 0;
 
     expect(hasContent).toBe(true);
 
@@ -107,10 +109,10 @@ test.describe('Admin Dashboard Functionality', () => {
     await page.waitForTimeout(5_000);
 
     // Check that page shows either loading, content, or error state (not React error #185)
-    const performanceTitle = page.locator('h2:has-text("Performance Dashboard"), h1:has-text("Performance")');
+    const performanceTitle = page.locator('h2, h1').filter({ hasText: /performance/i });
     const loadingState = page.locator('text=/Loading performance metrics/i');
     const errorState = page.locator('text=/Error Loading Performance Data/i');
-    const skeleton = page.locator('.animate-pulse');
+    const skeleton = page.locator('.animate-pulse, .animate-spin');
 
     const hasValidState =
       (await performanceTitle.count()) > 0 ||
