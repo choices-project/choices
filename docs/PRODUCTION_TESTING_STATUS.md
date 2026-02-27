@@ -21,7 +21,7 @@ cd web && npm run test:e2e:production
 - **Smoke**: 21 passed
 - **Representatives WCAG**: Passed (badge contrast fix deployed)
 - **Contact edge cases**: Invalid representative ID test passed
-- **Admin analytics**: React #185 fix applied (EnhancedAnalyticsDashboard + all widget chart components use getState() for analytics actions); will pass after deploy. Tests run against live production.
+- **Admin analytics**: React #185 fixes applied (EnhancedAnalyticsDashboard, widget charts, WidgetRenderer); admin dashboard E2E 10/10 passed against production.
 - **Admin performance-maintenance**: Now skips when API is slow (Promise.race timeout) instead of failing
 - **37 skipped** – Harness-dependent specs (excluded via `testIgnore`)
 
@@ -48,13 +48,14 @@ cd web && npm run test:e2e:production
 16. **Contact edge cases – invalid representative ID** – Split test: format-invalid IDs (-1, 0, 'not-a-number') expect 400; non-existent rep (999999) accepts 400 or 404 (API returns 404 for "Representative not found").
 17. **Analytics page hasContent assertion** – Broadened to include loading spinner (`.animate-spin`), error boundary text ("Analytics Dashboard Error"), and "loading"/"error" text for slow-loading production.
 18. **Admin functionality assertions** – Analytics page: add `.animate-spin` and "Analytics Dashboard Error" to hasContent. Performance page: use `h2, h1` with filter for "performance", add `.animate-spin` to skeleton selector for more resilient content checks.
+19. **WidgetRenderer React #185** – Effect that resets keyboard mode when not editing now uses `storeApi.getState().setKeyboardMode('idle')` and depends on `storeApi` instead of `setKeyboardMode` in deps to avoid infinite update loop.
 
 ## Remaining Failures (Root Causes)
 
 ### Admin
 
 - **performance-maintenance.spec.ts** – Now skips when Refresh/DB Maintenance APIs are slow or return non-JSON; no longer fails on timeout.
-- **admin-dashboard-functionality.spec.ts**, **admin-dashboard-verification.spec.ts** – React #185 fix in EnhancedAnalyticsDashboard + widget chart components (TrendsChart, PollHeatmap, etc.); will pass after deploy. Re-run full suite post-deploy.
+- **admin-dashboard-functionality.spec.ts**, **admin-dashboard-verification.spec.ts** – React #185 addressed (EnhancedAnalyticsDashboard, widget charts, WidgetRenderer). All 10 admin tests passing against production.
 
 ### Auth (2 tests)
 
