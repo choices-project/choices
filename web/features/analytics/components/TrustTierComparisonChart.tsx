@@ -48,7 +48,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 
 import ScreenReaderSupport from '@/lib/accessibility/screen-reader';
-import { useAnalyticsActions, useAnalyticsTrustTiers } from '@/lib/stores/analyticsStore';
+import { useAnalyticsStore, useAnalyticsTrustTiers } from '@/lib/stores/analyticsStore';
 
 import { useI18n } from '@/hooks/useI18n';
 
@@ -103,7 +103,6 @@ export default function TrustTierComparisonChart({
   const [activeTab, setActiveTab] = useState(defaultTab);
   const previousSummaryAnnouncementRef = useRef<string | null>(null);
   const previousErrorRef = useRef<string | null>(null);
-  const { fetchTrustTierComparison } = useAnalyticsActions();
   const trustTiers = useAnalyticsTrustTiers();
   const data = trustTiers.data;
   const isLoading = trustTiers.loading;
@@ -128,10 +127,11 @@ export default function TrustTierComparisonChart({
   );
 
   const loadTrustTiers = useCallback(async () => {
-    await fetchTrustTierComparison({
+    const { fetchTrustTierComparison: ftc } = useAnalyticsStore.getState();
+    await ftc({
       fallback: generateMockData,
     });
-  }, [fetchTrustTierComparison]);
+  }, []);
 
   const numberFormatter = useMemo(
     () => new Intl.NumberFormat(currentLanguage),
@@ -278,10 +278,11 @@ export default function TrustTierComparisonChart({
   }, [data, formatNumber, formatPercent, highestEngagementTier, t]);
 
   useEffect(() => {
-    void fetchTrustTierComparison({
+    const { fetchTrustTierComparison: ftc } = useAnalyticsStore.getState();
+    void ftc({
       fallback: generateMockData,
     });
-  }, [fetchTrustTierComparison]);
+  }, []);
 
   const handleTabChange = useCallback(
     (value: typeof activeTab) => {

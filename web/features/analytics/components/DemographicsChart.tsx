@@ -45,7 +45,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 
 import ScreenReaderSupport from '@/lib/accessibility/screen-reader';
 import { useIsMobile } from '@/lib/hooks/useMediaQuery';
-import { useAnalyticsActions, useAnalyticsDemographics } from '@/lib/stores/analyticsStore';
+import { useAnalyticsStore, useAnalyticsDemographics } from '@/lib/stores/analyticsStore';
 
 import { useI18n } from '@/hooks/useI18n';
 
@@ -127,17 +127,17 @@ export default function DemographicsChart({
   const [activeTab, setActiveTab] = useState(defaultTab);
   const previousSummaryAnnouncementRef = useRef<string | null>(null);
   const previousErrorRef = useRef<string | null>(null);
-  const { fetchDemographics } = useAnalyticsActions();
   const demographics = useAnalyticsDemographics();
   const data = demographics.data;
   const isLoading = demographics.loading;
   const error = demographics.error;
 
   const refreshDemographics = useCallback(async () => {
-    await fetchDemographics({
+    const { fetchDemographics: fd } = useAnalyticsStore.getState();
+    await fd({
       fallback: generateMockData,
     });
-  }, [fetchDemographics]);
+  }, []);
 
   const tabLabels = useMemo(
     () => ({

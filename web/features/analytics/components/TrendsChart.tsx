@@ -42,7 +42,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 
 import ScreenReaderSupport from '@/lib/accessibility/screen-reader';
 import { useIsMobile } from '@/lib/hooks/useMediaQuery';
-import { useAnalyticsActions, useAnalyticsTrends } from '@/lib/stores/analyticsStore';
+import { useAnalyticsStore, useAnalyticsTrends } from '@/lib/stores/analyticsStore';
 
 import { useI18n } from '@/hooks/useI18n';
 
@@ -82,7 +82,6 @@ export default function TrendsChart({
   const [chartType, setChartType] = useState<ChartType>(defaultChartType);
   const previousSummaryAnnouncementRef = useRef<string | null>(null);
   const previousErrorRef = useRef<string | null>(null);
-  const { fetchTrends } = useAnalyticsActions();
   const trends = useAnalyticsTrends();
   const data = trends.data;
   const isLoading = trends.loading;
@@ -91,10 +90,11 @@ export default function TrendsChart({
 
   const loadTrends = useCallback(async (range?: DateRange) => {
     const targetRange = range ?? dateRange ?? defaultRange;
-    await fetchTrends(targetRange, {
+    const { fetchTrends: ft } = useAnalyticsStore.getState();
+    await ft(targetRange, {
       fallback: (r) => generateMockData(r as DateRange),
     });
-  }, [dateRange, defaultRange, fetchTrends]);
+  }, [dateRange, defaultRange]);
 
   const rangeLabels: Record<DateRange, string> = useMemo(
     () => ({
@@ -298,10 +298,11 @@ export default function TrendsChart({
   // Removed unused chartAxesDescription to satisfy unused variables lint
 
   useEffect(() => {
-    void fetchTrends(defaultRange, {
+    const { fetchTrends: ft } = useAnalyticsStore.getState();
+    void ft(defaultRange, {
       fallback: (r) => generateMockData(r as DateRange),
     });
-  }, [defaultRange, fetchTrends]);
+  }, [defaultRange]);
 
   
 

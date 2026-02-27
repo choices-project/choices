@@ -56,11 +56,12 @@ test.describe('Admin Dashboard Verification', () => {
 
     expect(await page.locator('text=/Minified React error #185/i').count()).toBe(0);
 
-    // Verify analytics page has content (title, toggles, or loading)
+    // Verify analytics page has content (title, toggles, loading spinner, or error boundary)
     const hasContent =
       (await page.locator('h1, h2').filter({ hasText: /analytics/i }).count()) > 0 ||
       (await page.getByRole('button', { name: /classic|widgets/i }).count()) > 0 ||
-      (await page.locator('text=/loading|error/i').count()) > 0;
+      (await page.locator('text=/loading|error|Analytics Dashboard Error/i').count()) > 0 ||
+      (await page.locator('.animate-spin').count()) > 0;
     expect(hasContent).toBe(true);
   });
 

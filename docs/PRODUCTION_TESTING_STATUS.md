@@ -21,7 +21,7 @@ cd web && npm run test:e2e:production
 - **Smoke**: 21 passed
 - **Representatives WCAG**: Passed (badge contrast fix deployed)
 - **Contact edge cases**: Invalid representative ID test passed
-- **Admin analytics**: React #185 fix applied (EnhancedAnalyticsDashboard ref + empty deps); will pass after deploy. Tests run against live production.
+- **Admin analytics**: React #185 fix applied (EnhancedAnalyticsDashboard + all widget chart components use getState() for analytics actions); will pass after deploy. Tests run against live production.
 - **Admin performance-maintenance**: Now skips when API is slow (Promise.race timeout) instead of failing
 - **37 skipped** – Harness-dependent specs (excluded via `testIgnore`)
 
@@ -42,16 +42,18 @@ cd web && npm run test:e2e:production
 
 11. **Admin analytics React error #185** – Fixed infinite update loop in `useEnhancedAnalytics` by using `useAnalyticsStore.getState()` for store actions instead of `useAnalyticsActions()` in the `fetchAnalytics` callback, preventing unstable refs in deps.
 12. **Admin analytics React error #185 (EnhancedAnalyticsDashboard)** – Added `analyticsActionsRef` to hold `getSystemHealth`, `getActiveSiteMessages`, `trackFeatureUsage`; changed `loadAdditionalData` and `trackFeatureUsage` effects to run once on mount with empty deps, avoiding callback-instability loop.
-13. **Admin performance-maintenance** – Replaced invalid compound `waitForSelector` with `page.locator('.animate-pulse, .animate-spin, h2, [role="status"]').first().waitFor()`; increased timeouts; added `Promise.race` with 30s/45s for `response.json()` to skip when production API is slow or returns non-JSON.
-14. **Representatives WCAG color contrast** – Updated RepresentativeCard badges to use `-900` text on `-100` backgrounds (4.5:1+ ratio); added explicit dark mode colors; governor badge uses `amber` for better contrast.
-15. **Contact edge cases – invalid representative ID** – Split test: format-invalid IDs (-1, 0, 'not-a-number') expect 400; non-existent rep (999999) accepts 400 or 404 (API returns 404 for "Representative not found").
+13. **Admin analytics React error #185 (Widget dashboard charts)** – Replaced `useAnalyticsActions()` with `useAnalyticsStore.getState()` in TrendsChart, PollHeatmap, DemographicsChart, TemporalAnalysisChart, TrustTierComparisonChart for all `useEffect` and `useCallback` deps; prevents unstable action refs that triggered infinite update loops when widgets render.
+14. **Admin performance-maintenance** – Replaced invalid compound `waitForSelector` with `page.locator('.animate-pulse, .animate-spin, h2, [role="status"]').first().waitFor()`; increased timeouts; added `Promise.race` with 30s/45s for `response.json()` to skip when production API is slow or returns non-JSON.
+15. **Representatives WCAG color contrast** – Updated RepresentativeCard badges to use `-900` text on `-100` backgrounds (4.5:1+ ratio); added explicit dark mode colors; governor badge uses `amber` for better contrast.
+16. **Contact edge cases – invalid representative ID** – Split test: format-invalid IDs (-1, 0, 'not-a-number') expect 400; non-existent rep (999999) accepts 400 or 404 (API returns 404 for "Representative not found").
+17. **Analytics page hasContent assertion** – Broadened to include loading spinner (`.animate-spin`), error boundary text ("Analytics Dashboard Error"), and "loading"/"error" text for slow-loading production.
 
 ## Remaining Failures (Root Causes)
 
 ### Admin
 
 - **performance-maintenance.spec.ts** – Now skips when Refresh/DB Maintenance APIs are slow or return non-JSON; no longer fails on timeout.
-- **admin-dashboard-functionality.spec.ts**, **admin-dashboard-verification.spec.ts** – React #185 fix in EnhancedAnalyticsDashboard; will pass after deploy. Re-run full suite post-deploy.
+- **admin-dashboard-functionality.spec.ts**, **admin-dashboard-verification.spec.ts** – React #185 fix in EnhancedAnalyticsDashboard + widget chart components (TrendsChart, PollHeatmap, etc.); will pass after deploy. Re-run full suite post-deploy.
 
 ### Auth (2 tests)
 

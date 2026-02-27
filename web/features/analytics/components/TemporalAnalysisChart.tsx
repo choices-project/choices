@@ -43,7 +43,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 
 import ScreenReaderSupport from '@/lib/accessibility/screen-reader';
-import { useAnalyticsActions, useAnalyticsTemporal } from '@/lib/stores/analyticsStore';
+import { useAnalyticsStore, useAnalyticsTemporal } from '@/lib/stores/analyticsStore';
 
 import { useI18n } from '@/hooks/useI18n';
 
@@ -139,7 +139,6 @@ export default function TemporalAnalysisChart({
   const [activeTab, setActiveTab] = useState(defaultTab);
   const previousSummaryAnnouncementRef = useRef<string | null>(null);
   const previousErrorRef = useRef<string | null>(null);
-  const { fetchTemporal } = useAnalyticsActions();
   const temporal = useAnalyticsTemporal();
   const data = temporal.data;
   const isLoading = temporal.loading;
@@ -151,10 +150,11 @@ export default function TemporalAnalysisChart({
 
   const loadTemporal = useCallback(async (range?: DateRange) => {
     const targetRange = range ?? dateRange ?? defaultDateRange;
-    await fetchTemporal(targetRange, {
+    const { fetchTemporal: ft } = useAnalyticsStore.getState();
+    await ft(targetRange, {
       fallback: (r) => generateMockData(r as DateRange),
     });
-  }, [dateRange, defaultDateRange, fetchTemporal]);
+  }, [dateRange, defaultDateRange]);
 
   const rangeLabels: Record<DateRange, string> = useMemo(
     () => ({
@@ -417,10 +417,11 @@ export default function TemporalAnalysisChart({
   }, [data, formatNumber, t]);
 
   useEffect(() => {
-    void fetchTemporal(defaultDateRange, {
+    const { fetchTemporal: ft } = useAnalyticsStore.getState();
+    void ft(defaultDateRange, {
       fallback: (r) => generateMockData(r as DateRange),
     });
-  }, [defaultDateRange, fetchTemporal]);
+  }, [defaultDateRange]);
 
   useEffect(() => {
     if (isLoading || !summaryIntro) {

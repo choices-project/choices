@@ -47,7 +47,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 
 
 import ScreenReaderSupport from '@/lib/accessibility/screen-reader';
-import { useAnalyticsActions, useAnalyticsPollHeatmap } from '@/lib/stores/analyticsStore';
+import { useAnalyticsStore, useAnalyticsPollHeatmap } from '@/lib/stores/analyticsStore';
 
 import { useI18n } from '@/hooks/useI18n';
 
@@ -131,7 +131,6 @@ export default function PollHeatmap({
   const { t, currentLanguage } = useI18n();
   const summarySectionId = useId();
   const chartRegionId = useId();
-  const { fetchPollHeatmap } = useAnalyticsActions();
   const pollHeatmap = useAnalyticsPollHeatmap();
   const data = pollHeatmap.data;
   const isLoading = pollHeatmap.loading;
@@ -142,10 +141,11 @@ export default function PollHeatmap({
   const previousErrorRef = useRef<string | null>(null);
 
   const loadPollHeatmap = useCallback(async (filters?: Partial<PollHeatmapFilters>) => {
-    await fetchPollHeatmap(filters, {
+    const { fetchPollHeatmap: fp } = useAnalyticsStore.getState();
+    await fp(filters, {
       fallback: (resolvedFilters) => generateMockData(resolvedFilters.limit, resolvedFilters.category),
     });
-  }, [fetchPollHeatmap]);
+  }, []);
 
   const numberFormatter = useMemo(
     () => new Intl.NumberFormat(currentLanguage),
@@ -207,13 +207,14 @@ export default function PollHeatmap({
   );
 
   useEffect(() => {
-    void fetchPollHeatmap(
+    const { fetchPollHeatmap: fp } = useAnalyticsStore.getState();
+    void fp(
       { category: defaultCategory, limit: defaultLimit },
       {
         fallback: (resolvedFilters) => generateMockData(resolvedFilters.limit, resolvedFilters.category),
       }
     );
-  }, [defaultCategory, defaultLimit, fetchPollHeatmap]);
+  }, [defaultCategory, defaultLimit]);
 
   const handleFilterChange = useCallback(
     (filters: Partial<PollHeatmapFilters>, announcement: string) => {
