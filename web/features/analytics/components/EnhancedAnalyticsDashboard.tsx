@@ -149,32 +149,33 @@ export const EnhancedAnalyticsDashboard: React.FC<EnhancedAnalyticsDashboardProp
   const [statusMessage, setStatusMessage] = useState<string>('');
   const [isRefreshing, setIsRefreshing] = useState(false);
 
-  // Load additional data
+  // Ref to avoid unstable callback deps in effects (prevents React error #185)
+  const analyticsActionsRef = useRef({ getSystemHealth, getActiveSiteMessages, trackFeatureUsage });
+  analyticsActionsRef.current = { getSystemHealth, getActiveSiteMessages, trackFeatureUsage };
+
+  // Load additional data (run once on mount; ref always has latest)
   useEffect(() => {
     const loadAdditionalData = async () => {
       try {
-        const [health, messages] = await Promise.all([
-          getSystemHealth(),
-          getActiveSiteMessages()
-        ]);
+        const { getSystemHealth: gsh, getActiveSiteMessages: gasm } = analyticsActionsRef.current;
+        const [health, messages] = await Promise.all([gsh(), gasm()]);
         setSystemHealth(health);
         setSiteMessages(messages);
       } catch (err) {
         logger.error('Error loading additional data:', err);
       }
     };
-
     loadAdditionalData();
-  }, [getSystemHealth, getActiveSiteMessages]);
+  }, []);
 
-  // Track dashboard usage
+  // Track dashboard usage (run once on mount)
   useEffect(() => {
-    trackFeatureUsage('enhanced_analytics_dashboard', 'view', {
+    analyticsActionsRef.current.trackFeatureUsage('enhanced_analytics_dashboard', 'view', {
       pollId,
       userId,
-      enableNewSchema
+      enableNewSchema,
     });
-  }, [trackFeatureUsage, pollId, userId, enableNewSchema]);
+  }, []);
 
   const tabLabels = useMemo(
     () => ({
