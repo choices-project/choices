@@ -30,7 +30,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 
 import ScreenReaderSupport from '@/lib/accessibility/screen-reader';
-import { useWidgetStoreScoped, selectKeyboardMode } from '@/lib/stores/widgetStore';
+import { useWidgetStoreApi, useWidgetStoreScoped, selectKeyboardMode } from '@/lib/stores/widgetStore';
 import { cn } from '@/lib/utils';
 import { logger } from '@/lib/utils/logger';
 
@@ -156,6 +156,7 @@ export const WidgetRenderer: React.FC<WidgetRendererProps> = ({
   className = '',
 }) => {
   const { t } = useI18n();
+  const storeApi = useWidgetStoreApi();
   const [showConfig, setShowConfig] = useState(false);
   const cardRef = useRef<HTMLDivElement>(null);
 
@@ -272,10 +273,11 @@ export const WidgetRenderer: React.FC<WidgetRendererProps> = ({
     setSelectedWidget,
   ]);
 
+  // Use store api in effect to avoid unstable setKeyboardMode ref triggering React #185
   useEffect(() => {
     if (!isEditing) {
       if (keyboardMode !== 'idle') {
-        setKeyboardMode('idle');
+        storeApi.getState().setKeyboardMode('idle');
       }
       return;
     }
@@ -283,7 +285,7 @@ export const WidgetRenderer: React.FC<WidgetRendererProps> = ({
     if ((isMoveMode || isResizeMode) && cardRef.current) {
       focusCard();
     }
-  }, [focusCard, isEditing, isMoveMode, isResizeMode, keyboardMode, setKeyboardMode]);
+  }, [focusCard, isEditing, isMoveMode, isResizeMode, keyboardMode, storeApi]);
 
   const handleFocus = useCallback(() => {
     if (!isEditing) {
