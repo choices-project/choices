@@ -20,10 +20,13 @@ import Image from 'next/image';
 import Link from 'next/link';
 import { useEffect, useState, useMemo, useCallback } from 'react';
 
+import { useFeatureFlag } from '@/features/pwa/hooks/useFeatureFlags';
+
 import { EnhancedEmptyState } from '@/components/shared/EnhancedEmptyState';
 import { EnhancedErrorDisplay } from '@/components/shared/EnhancedErrorDisplay';
+import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 
 import { useAppActions } from '@/lib/stores/appStore';
 import { logger } from '@/lib/utils/logger';
@@ -46,6 +49,7 @@ type Thread = {
 };
 
 export default function ContactHistoryPage() {
+  const { enabled: contactSystemEnabled } = useFeatureFlag('CONTACT_INFORMATION_SYSTEM');
   const { setCurrentRoute, setSidebarActiveSection, setBreadcrumbs } = useAppActions();
   const [threads, setThreads] = useState<Thread[]>([]);
   const [loading, setLoading] = useState(true);
@@ -117,6 +121,28 @@ export default function ContactHistoryPage() {
         return sortBy === 'recent' ? dateB - dateA : dateA - dateB;
       });
   }, [threads, filter, sortBy]);
+
+  if (!contactSystemEnabled) {
+    return (
+      <div className="container mx-auto px-4 py-8">
+        <Card>
+          <CardHeader>
+            <CardTitle>Communication History</CardTitle>
+            <CardDescription>
+              The Contact Information System is currently disabled.
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <Alert>
+              <AlertDescription>
+                This feature is currently unavailable. Please contact an administrator if you believe this is an error.
+              </AlertDescription>
+            </Alert>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
 
   if (loading) {
     return (

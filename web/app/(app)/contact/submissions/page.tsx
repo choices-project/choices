@@ -4,15 +4,19 @@ import { Mail, MapPin, Phone } from 'lucide-react';
 import Link from 'next/link';
 import { useEffect, useState, useCallback } from 'react';
 
+import { useFeatureFlag } from '@/features/pwa/hooks/useFeatureFlags';
+
 import { EnhancedEmptyState } from '@/components/shared/EnhancedEmptyState';
 import { EnhancedErrorDisplay } from '@/components/shared/EnhancedErrorDisplay';
+import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 
 import { logger } from '@/lib/utils/logger';
 
 import { useAuth } from '@/hooks/useAuth';
+
 
 type Submission = {
   id: number;
@@ -52,6 +56,7 @@ function getContactLabel(type: string) {
 }
 
 export default function MySubmissionsPage() {
+  const { enabled: contactSystemEnabled } = useFeatureFlag('CONTACT_INFORMATION_SYSTEM');
   const { user, isLoading: authLoading } = useAuth();
   const [submissions, setSubmissions] = useState<Submission[]>([]);
   const [loading, setLoading] = useState(true);
@@ -122,6 +127,28 @@ export default function MySubmissionsPage() {
             <Button asChild>
               <Link href="/auth?redirect=/contact/submissions">Sign in</Link>
             </Button>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
+
+  if (!contactSystemEnabled) {
+    return (
+      <div className="container max-w-3xl mx-auto px-4 py-8">
+        <Card>
+          <CardHeader>
+            <CardTitle>My Submissions</CardTitle>
+            <CardDescription>
+              The Contact Information System is currently disabled.
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <Alert>
+              <AlertDescription>
+                This feature is currently unavailable. Please contact an administrator if you believe this is an error.
+              </AlertDescription>
+            </Alert>
           </CardContent>
         </Card>
       </div>

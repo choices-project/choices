@@ -265,41 +265,37 @@ test.describe('Registration Flow', () => {
 
       const responseBody = await registrationResponse.json().catch(() => ({}));
 
-      // Verify registration was successful (201 Created or 200 OK)
+      // API returns 201 (created) with data: { user, session, token, message } per web/app/api/auth/register/route.ts
       expect([200, 201]).toContain(registrationResponse.status());
       expect(responseBody.success).toBe(true);
-      expect(responseBody.data?.user).toBeDefined();
-      expect(responseBody.data?.user?.email).toBe(testUser.email);
+      const user = responseBody.data?.user ?? responseBody.user;
+      expect(user).toBeDefined();
+      expect(user.email).toBeDefined();
+      expect(user.email?.toLowerCase()).toBe(testUser.email.toLowerCase());
 
-      // CRITICAL: Verify profile was created (this is what the fix ensures)
-      // Profile creation is verified by checking that user object has profile fields
-      expect(responseBody.data?.user).toBeDefined();
-      expect(responseBody.data?.user?.id).toBeDefined();
-      expect(responseBody.data?.user?.email).toBe(testUser.email.toLowerCase());
+      // CRITICAL: Verify profile was created (user object includes profile fields from API)
+      expect(user.id).toBeDefined();
 
-      // Profile fields may be in different locations depending on API response structure
-      // Check for username (may be in user object or profile object)
-      const username = responseBody.data?.user?.username ||
-                      responseBody.data?.profile?.username ||
-                      responseBody.data?.user?.display_name;
+      // Username may be on user or profile
+      const username = user.username ?? responseBody.data?.profile?.username ?? user.display_name;
       expect(username).toBeDefined();
 
       // Verify profile was created by checking for profile-related fields
       // At minimum, user should have an ID and email, which indicates successful registration
       // Additional profile fields may be populated asynchronously
       console.log('[DIAGNOSTIC] Registration response:', {
-        userId: responseBody.data?.user?.id,
-        email: responseBody.data?.user?.email,
+        userId: user.id,
+        email: user.email,
         username: username,
-        hasProfile: !!(responseBody.data?.profile || responseBody.data?.user?.username),
+        hasProfile: !!(responseBody.data?.profile || user.username),
       });
 
       console.log('[DIAGNOSTIC] Registration successful with profile:', {
-        userId: responseBody.data?.user?.id,
-        email: responseBody.data?.user?.email,
-        username: responseBody.data?.user?.username,
-        trustTier: responseBody.data?.user?.trust_tier,
-        displayName: responseBody.data?.user?.display_name,
+        userId: user.id,
+        email: user.email,
+        username: user.username,
+        trustTier: user.trust_tier,
+        displayName: user.display_name,
       });
 
       // Wait for authentication cookies/session
@@ -445,7 +441,8 @@ test.describe('Registration Flow', () => {
 
       if (errorResponse) {
         const status = errorResponse.status();
-        expect(status).toBeGreaterThanOrEqual(400);
+        // API returns 409 (Conflict) for duplicate email per register/route.ts; 400 for validation
+        expect([400, 409]).toContain(status);
       } else {
         // Check for UI error message - wait a bit for error to appear
         await page.waitForTimeout(2_000);

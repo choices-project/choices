@@ -223,12 +223,17 @@ jobs:
           cd web
           npx playwright install --with-deps chromium
 
-      - name: Run smoke tests against production
+      - name: Run production smoke (post-deploy gate)
         run: |
           cd web
-          npm run test:e2e -- --config=playwright.production.config.ts
+          npm run test:e2e:production:smoke
         env:
           BASE_URL: https://www.choices-app.com
+          PLAYWRIGHT_USE_MOCKS: '0'
+          E2E_USER_EMAIL: ${{ secrets.E2E_USER_EMAIL }}
+          E2E_USER_PASSWORD: ${{ secrets.E2E_USER_PASSWORD }}
+          E2E_ADMIN_EMAIL: ${{ secrets.E2E_ADMIN_EMAIL }}
+          E2E_ADMIN_PASSWORD: ${{ secrets.E2E_ADMIN_PASSWORD }}
 
       - name: Health check
         run: |
@@ -280,6 +285,24 @@ jobs:
         run: |
           cd web
           npm ci
+
+      - name: Install Playwright browsers
+        run: |
+          cd web
+          npx playwright install chromium --with-deps
+
+      - name: Production smoke E2E
+        run: |
+          cd web
+          npm run test:e2e:production:smoke
+        env:
+          BASE_URL: https://www.choices-app.com
+          PLAYWRIGHT_USE_MOCKS: '0'
+          E2E_USER_EMAIL: ${{ secrets.E2E_USER_EMAIL }}
+          E2E_USER_PASSWORD: ${{ secrets.E2E_USER_PASSWORD }}
+          E2E_ADMIN_EMAIL: ${{ secrets.E2E_ADMIN_EMAIL }}
+          E2E_ADMIN_PASSWORD: ${{ secrets.E2E_ADMIN_PASSWORD }}
+        continue-on-error: true
 
       - name: Run performance monitoring
         run: |

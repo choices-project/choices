@@ -27,9 +27,13 @@ import { execSync } from 'child_process';
 import { computeGapReport } from './tools/report-gaps.js';
 import { getOpenStatesUsageStats } from '../clients/openstates.js';
 
-const RESERVE = Number(process.env.OPENSTATES_BUDGET_RESERVE ?? '100');
+const RESERVE = Number(process.env.OPENSTATES_BUDGET_RESERVE ?? '50');
 const DAILY_LIMIT = Number(process.env.OPENSTATES_DAILY_LIMIT ?? '250');
-const COMMITTEES_BUDGET = DAILY_LIMIT < 100 ? 0 : Math.min(60, Math.floor(DAILY_LIMIT * 0.25));
+// When committees API disabled, YAML-only sync uses no API calls — allocate full budget to activity
+const USE_COMMITTEES_API = process.env.OPENSTATES_USE_API_COMMITTEES !== 'false';
+const COMMITTEES_BUDGET = USE_COMMITTEES_API && DAILY_LIMIT >= 100
+  ? Math.min(60, Math.floor(DAILY_LIMIT * 0.25))
+  : 0;
 
 function log(msg: string): void {
   const ts = new Date().toISOString();
@@ -62,6 +66,7 @@ async function main(): Promise<void> {
 
   log('Gap-fill orchestrator starting');
   if (dryRun) log('DRY RUN — no writes');
+  if (!USE_COMMITTEES_API) log('Committees API disabled (YAML only) — full budget for activity');
 
   // 1. Report gaps
   let gaps;
@@ -120,6 +125,13 @@ async function main(): Promise<void> {
   if (!skipFederal && hasKey('FEC_API_KEY') && gaps.finance.total > 0) {
     log('Step 4: Federal campaign finance...');
     run('npm run federal:enrich:finance -- --lookup-missing-fec-ids');
+  }
+
+  // 5. Data integrity verification (smoke-test)
+  log('Step 5: Verifying data integrity...');
+  const verifyOk = run('npm run tools:smoke-test -- --quick');
+  if (!verifyOk) {
+    log('WARN: Smoke test reported issues. Review with: npm run tools:smoke-test');
   }
 
   log('Gap-fill run complete. Run `npm run tools:metrics:dashboard` to verify.');

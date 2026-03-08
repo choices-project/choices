@@ -4,23 +4,25 @@ This directory contains end-to-end (E2E) tests for the Choices application using
 
 ## Test Organization
 
-Tests are organized by feature area in the `specs/` directory:
+Tests are organized by feature area in the `specs/` directory. See `docs/TEST_SUITE_AUDIT.md` for the curated list and CI mapping.
 
 ```
 specs/
-  auth/                    # Authentication-related tests
-    - auth-flow.spec.ts     # Comprehensive authentication flow tests
-    - auth-production.spec.ts  # Production authentication tests
-    - auth-access.spec.ts   # Authentication access control tests
-  production/              # Production environment tests
-    - production-smoke.spec.ts  # Quick smoke tests for critical functionality
-    - production-critical-journeys.spec.ts  # Critical user journey tests
-    - production-expanded.spec.ts  # Expanded production test coverage
-  dashboard/               # Dashboard-related tests
-    - dashboard-feeds.spec.ts
-    - dashboard-journey.spec.ts
-    - dashboard-auth.spec.ts
-  ...                      # Other feature-specific test files
+  auth/                    # Authentication
+    - auth-flow.spec.ts, auth-redirects.spec.ts, password-reset-flow.spec.ts,
+      registration-flow.spec.ts, biometric-setup-flow.spec.ts
+  account/                 # Account settings, export, delete
+  accessibility/           # A11y (@axe): critical-pages-a11y, keyboard-navigation
+  admin/                   # Admin performance-maintenance
+  civics/                  # Civics navigation, representatives
+  contact/                 # Contact submission, admin, edge cases
+  dashboard/               # dashboard-journey (harness)
+  onboarding/
+  polls/                   # poll-templates, poll-analytics-verification
+  representatives/
+  production-api.spec.ts   # Production API smoke (health, feature flags, ingest)
+  mvp-smoke.spec.ts       # @smoke MVP core pages
+  ...                      # Store harnesses: admin-store, app-store, feeds-store, etc.
 ```
 
 ## Authentication Requirements
@@ -92,18 +94,17 @@ npm run test:e2e:headed
 
 ### Production Tests
 
-Production tests run against the live production site (`https://choices-app.com`):
+Production tests run against the live site (`https://www.choices-app.com`) using `playwright.production.config.ts`:
 
 ```bash
-# Run production smoke tests
-BASE_URL=https://choices-app.com npx playwright test tests/e2e/specs/production/production-smoke.spec.ts
+# Fast production smoke (~20s): API health + MVP core pages
+npm run test:e2e:production:smoke
 
-# Run with authentication
-BASE_URL=https://choices-app.com \
-  E2E_USER_EMAIL=your-email@example.com \
-  E2E_USER_PASSWORD=your-password \
-  npx playwright test tests/e2e/specs/production/production-smoke.spec.ts
+# Full production E2E (skips harness-only specs)
+BASE_URL=https://www.choices-app.com PLAYWRIGHT_USE_MOCKS=0 npm run test:e2e:production
 ```
+
+Requires `E2E_USER_EMAIL`, `E2E_USER_PASSWORD` (and admin creds for admin tests). See `docs/PRODUCTION_TESTING_STATUS.md` and `docs/TESTING.md`.
 
 ## Environment Variables
 

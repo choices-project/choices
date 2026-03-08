@@ -1,6 +1,6 @@
 # Project Status — February 2026
 
-_Last updated: February 2026_
+_Last updated: March 2026_
 
 The Choices platform MVP is **complete and production-ready**. All core features are implemented, tested, and documented. Active development continues on enhancements and optimizations.
 
@@ -78,13 +78,15 @@ All MVP features are implemented, tested, and production-ready. The platform is 
 
 ## Civics Ingest Status (OpenStates)
 
-- Phase 2 — Validation harness: In progress. Staging fixtures and CLI smoke-test template to be added (see `docs/ROADMAP_SINGLE_SOURCE.md` § E).
-- Phase 3 — Crosswalk + dedupe automation: Planned. API call optimization matrix pending implementation.
-- Phase 4 — Types: Next schema change will trigger Supabase types regeneration (run `cd web && npm run types:generate`).
-- Phase 5 — Documentation: High-level ingest summary will be maintained here; detailed runbooks under `services/supabase-operations-guide.md`.
+**Summary:** Ingest loads state/local reps from OpenStates (YAML + API) and federal reps from Congress.gov, FEC, and GovInfo into Supabase. Order: baseline (YAML stage + merge) → OpenStates API sync (committees, activity, events) → federal enrichment (Congress IDs, FEC finance). Key commands: `npm run ingest` (full), `npm run ingest:validate` (check + unit tests, no DB), `npm run ingest:qa` (gaps + smoke + metrics). Legacy scripts removed during audit are listed in `services/civics-backend/NEW_civics_ingest/docs/REMOVED_SCRIPTS.md`.
+
+- **Phase 2** — Validation harness: ✅ Staging fixtures in `NEW_civics_ingest/__tests__/fixtures/staging/`; `__tests__/staging-validation.test.ts` validates fixture shape without Supabase; CLI smoke template: `npm run ingest:validate` (runs `ingest:check` + `npm run test`).
+- **Phase 3** — Crosswalk + dedupe: `tools:verify:crosswalk` and `tools:audit:duplicates`; API call optimization matrix in `NEW_civics_ingest/docs/RATE_LIMITS.md` § API call optimization matrix.
+- **Phase 4** — Types: After any Supabase schema change, run `cd web && npm run types:generate` to regenerate types.
+- **Phase 5** — Documentation: This section is the high-level ingest summary; detailed runbooks: `services/civics-backend/NEW_civics_ingest/docs/README.md`, `GETTING_STARTED.md`, `OPERATOR_RUNBOOK.md`; legacy script list: `REMOVED_SCRIPTS.md`.
 
 References:
-- Single-source roadmap entries: `docs/ROADMAP_SINGLE_SOURCE.md` (Section E)
+- Definitive MVP roadmap: `docs/ROADMAP.md` (civics ingest in §2.3)
 - Backend plan: `services/civics-backend/NEW_civics_ingest/docs/README.md`
 
 ---
@@ -95,6 +97,15 @@ References:
 - **Testing coverage**: Analytics dashboards, civic engagement flows, and feature flag toggles have minimal Jest/Playwright coverage.
 - **Docs accuracy**: Several markdown files still advertise “fully complete” features; these are being rewritten or archived.
 - **Analytics accessibility**: Text alternatives and axis summaries still need to be hardened for screen readers despite the real-data rollout.
+- **Known technical debt**: A small number of `TODO`/`FIXME` comments remain in `web/`; tracked below and in `docs/ROADMAP.md` §4 (Code TODOs).
+
+**Code TODOs (on hold / P2):**
+
+| Location | Description |
+| --- | --- |
+| `web/features/polls/components/AdvancedAnalytics.tsx` | Chart visualization (Recharts) – placeholder |
+| `web/features/feeds/components/core/FeedCore.tsx` | Theme actions integration for immediate update |
+| `web/features/admin/components/UserManagement.tsx` | Full edit modal for other fields |
 
 ---
 
@@ -104,7 +115,7 @@ References:
 | --- | --- | --- |
 | Notification docs shipped | Finalize modernization + harness notes in core docs | 🔄 |
 | App/admin store refactor | Apply shared creator/selectors and add smoke tests | 🔄 |
-| OpenStates ingest QA harness | Add fixture-based staging test + Supabase smoke-test script | 🔄 |
+| OpenStates ingest QA harness | Fixture-based staging test + `ingest:validate` CLI (Phase 2) | ✅ |
 | Analytics endpoint audit | Replace mocks with Supabase queries + Redis guardrails | ✅ |
 | Documentation archival pass | Move legacy “perfect completion” docs into `/docs/archive` | 🔄 |
 
@@ -112,15 +123,16 @@ References:
 
 ## References
 
-- Technical roadmap (single source): `docs/ROADMAP_SINGLE_SOURCE.md`
+- Definitive MVP roadmap: `docs/ROADMAP.md`
 - Testing strategy: `docs/TESTING.md`
 - State management standards: `docs/STATE_MANAGEMENT.md`
+- For the full prioritized backlog (including E2E): [ROADMAP.md](ROADMAP.md). E2E detail: [PRODUCTION_TESTING_STATUS.md](PRODUCTION_TESTING_STATUS.md) § Remaining Work.
 
-For ongoing progress updates, track in `docs/ROADMAP_SINGLE_SOURCE.md`.
+For ongoing progress updates, update checkboxes and notes in `docs/ROADMAP.md`.
 
 ## Ownership & Update Cadence
 
 - **Owner:** Core maintainer
 - **Update cadence:** Review on major feature changes and at least monthly
-- **Last verified:** TBD
+- **Last verified:** 2026-02-26
 

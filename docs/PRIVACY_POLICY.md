@@ -565,5 +565,5 @@ At Choices, we believe privacy is not a luxury—it's a right. We've designed ou
 
 - **Owner:** Core maintainer
 - **Update cadence:** Review on major feature changes and at least monthly
-- **Last verified:** TBD
+- **Last verified:** 2026-02-26
 

@@ -2839,10 +2839,14 @@
           "noElection": "No upcoming election on file"
         },
         "committees": {
-          "current": "Current"
+          "current": "Current",
+          "description": "Committee assignments from OpenStates (state/local). Coverage varies by state.",
+          "empty": "Committee data not yet available for this representative. Coverage varies by state.",
+          "more": "+{count} more committees"
         },
         "recentActivity": {
-          "description": "Bill activity from OpenStates (sponsorship, votes when available). Upcoming elections are listed separately below."
+          "description": "Bill activity from OpenStates (state/local; sponsorship, votes when available). Coverage varies by state. Upcoming elections are listed separately below.",
+          "empty": "No bill activity on file. Coverage varies by state."
         },
         "upcomingElections": {
           "description": "Elections in your representative's districts. Dates from OpenStates / Google Civic API.",
@@ -2854,10 +2858,12 @@
           "totalSpent": "Total spent:",
           "cashOnHand": "Cash on hand:",
           "lastFiling": "Last filing:",
-          "source": "Source:"
+          "source": "Source:",
+          "description": "Federal campaign finance data from the FEC. State/local finance not included."
         },
         "activityFeed": {
-          "description": "Polls, bills, and votes related to this representative"
+          "description": "Polls, bills, and votes related to this representative",
+          "emptyHint": "Bill activity comes from OpenStates (state/local); coverage varies by state."
         },
         "externalIdentifiers": {
           "bioguide": "Bioguide:",

@@ -152,7 +152,7 @@ export default function UserManagement({ onUserUpdate, onUserDelete }: UserManag
 
   const getStatusColor = (status: AdminUser['status']) => {
     switch (status) {
-      case 'active': return 'text-green-600 dark:text-green-400 bg-green-100 dark:bg-green-900/30';
+      case 'active': return 'text-green-800 dark:text-green-300 bg-green-100 dark:bg-green-900/30';
       case 'inactive': return 'text-yellow-600 dark:text-yellow-400 bg-yellow-100 dark:bg-yellow-900/30';
       case 'suspended': return 'text-red-600 dark:text-red-400 bg-red-100 dark:bg-red-900/30';
       default: return 'text-gray-600 dark:text-gray-400 bg-gray-100 dark:bg-gray-700';
@@ -259,8 +259,9 @@ export default function UserManagement({ onUserUpdate, onUserDelete }: UserManag
       <div className="bg-white dark:bg-gray-900 p-6 rounded-lg shadow border border-gray-200 dark:border-gray-700">
         <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
           <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Search</label>
+            <label htmlFor="user-management-search" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Search</label>
             <input
+              id="user-management-search"
               type="text"
               value={searchTerm}
               onChange={(e) => setUserFilters({ searchTerm: e.target.value })}
@@ -269,8 +270,9 @@ export default function UserManagement({ onUserUpdate, onUserDelete }: UserManag
             />
           </div>
           <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Role</label>
+            <label htmlFor="user-management-role-filter" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Role</label>
             <select
+              id="user-management-role-filter"
               value={roleFilter}
               onChange={(e) => setUserFilters({ roleFilter: e.target.value as typeof roleFilter })}
               className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-500"
@@ -282,8 +284,9 @@ export default function UserManagement({ onUserUpdate, onUserDelete }: UserManag
             </select>
           </div>
           <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Status</label>
+            <label htmlFor="user-management-status-filter" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Status</label>
             <select
+              id="user-management-status-filter"
               value={statusFilter}
               onChange={(e) => setUserFilters({ statusFilter: e.target.value as typeof statusFilter })}
               className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-500"
@@ -355,6 +358,7 @@ export default function UserManagement({ onUserUpdate, onUserDelete }: UserManag
                     type="checkbox"
                     checked={selectedUsers.length === filteredUsers.length && filteredUsers.length > 0}
                     onChange={handleSelectAll}
+                    aria-label="Select all users"
                     className="h-4 w-4 text-blue-600 dark:text-blue-400 focus:ring-blue-500 border-gray-300 dark:border-gray-600 rounded bg-white dark:bg-gray-800"
                   />
                 </th>
@@ -383,6 +387,7 @@ export default function UserManagement({ onUserUpdate, onUserDelete }: UserManag
                       type="checkbox"
                       checked={selectedUsers.includes(user.id)}
                       onChange={() => handleUserSelect(user.id)}
+                      aria-label={`Select ${user.email}`}
                       className="h-4 w-4 text-blue-600 dark:text-blue-400 focus:ring-blue-500 border-gray-300 dark:border-gray-600 rounded bg-white dark:bg-gray-800"
                     />
                   </td>
@@ -399,6 +404,7 @@ export default function UserManagement({ onUserUpdate, onUserDelete }: UserManag
                     <select
                       value={user.role}
                       onChange={(e) => handleUserRoleChange(user.id, e.target.value)}
+                      aria-label={`Role for ${user.email}`}
                       className={`text-xs font-medium px-2 py-1 rounded-full bg-transparent ${getRoleColor(user.role)}`}
                     >
                       <option value="user">User</option>
@@ -418,8 +424,7 @@ export default function UserManagement({ onUserUpdate, onUserDelete }: UserManag
                     <div className="flex space-x-2">
                       <button
                         onClick={() => {
-                          // For now, allow editing role via dropdown (already implemented)
-                          // TODO: Add full edit modal for other fields
+                          // Role edit via prompt; full edit modal for other fields deferred (see docs/ROADMAP.md §4)
                           const newRole = prompt(`Edit user role for ${user.email}:\n\nCurrent: ${user.role}\n\nEnter new role (user/moderator/admin):`, user.role);
                           if (newRole && newRole !== user.role && ['user', 'moderator', 'admin'].includes(newRole)) {
                             handleUserRoleChange(user.id, newRole);

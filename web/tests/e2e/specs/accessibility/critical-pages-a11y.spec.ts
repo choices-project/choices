@@ -107,7 +107,7 @@ test.describe('@axe Critical Pages Accessibility (WCAG 2.1 AA)', () => {
     });
 
     test(`${pageInfo.name} page has proper heading structure`, async ({ page }) => {
-      test.setTimeout(60000);
+      test.setTimeout(90000);
       const shouldSkipAdmin =
         pageInfo.path.startsWith('/admin') &&
         process.env.NEXT_PUBLIC_ENABLE_E2E_HARNESS !== '1' &&
@@ -125,6 +125,8 @@ test.describe('@axe Critical Pages Accessibility (WCAG 2.1 AA)', () => {
       try {
         await page.goto(pageInfo.path);
         await waitForPageReady(page);
+        // Wait for main content (h1) so heading-structure assertions run on stable DOM; admin pages can load slowly
+        await page.locator('h1').first().waitFor({ state: 'visible', timeout: 15_000 }).catch(() => undefined);
         await page.waitForTimeout(2000);
 
         // Check for h1 element (required for accessibility)
@@ -160,7 +162,7 @@ test.describe('@axe Critical Pages Accessibility (WCAG 2.1 AA)', () => {
     });
 
     test(`${pageInfo.name} page has proper landmark regions`, async ({ page }) => {
-      test.setTimeout(60000);
+      test.setTimeout(90000);
       const shouldSkipAdmin =
         pageInfo.path.startsWith('/admin') &&
         process.env.NEXT_PUBLIC_ENABLE_E2E_HARNESS !== '1' &&
@@ -178,6 +180,7 @@ test.describe('@axe Critical Pages Accessibility (WCAG 2.1 AA)', () => {
       try {
         await page.goto(pageInfo.path);
         await waitForPageReady(page);
+        await page.locator('h1').first().waitFor({ state: 'visible', timeout: 15_000 }).catch(() => undefined);
         await page.waitForTimeout(2000);
 
         // Check for main landmark (required)

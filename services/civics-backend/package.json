@@ -22,6 +22,7 @@
     "federal:test:finance": "npm run build --silent && node build/federal/test-fec-enrichment.js",
     "ingest:full": "npm run openstates:ingest && npm run federal:enrich:congress && npm run federal:enrich:finance",
     "ingest:check": "npm run build --silent && node build/scripts/ingest-check.js",
+    "ingest:validate": "npm run ingest:check && npm run test",
     "ingest:setup": "npm run build --silent && node build/scripts/ingest-setup.js",
     "ingest": "npm run ingest:check && npm run build --silent && node build/scripts/ingest-run.js",
     "tools:report:gaps": "npm run build --silent && node build/scripts/tools/report-gaps.js",

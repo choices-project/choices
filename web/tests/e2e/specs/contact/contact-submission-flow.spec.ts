@@ -34,7 +34,7 @@ async function authenticateViaAPI(page: any, email: string, password: string): P
 
 /** Get a valid representative ID from the API; skip test if none found. */
 async function getRepresentativeId(page: any): Promise<number | null> {
-  const res = await page.request.get('/api/civics/representatives?limit=1');
+  const res = await page.request.get('/api/representatives?limit=1');
   if (res.status() !== 200) return null;
   const body = await res.json();
   const reps = body.data?.representatives;
@@ -61,7 +61,7 @@ test.describe('Contact Information Submission Flow', () => {
     test('user can submit valid email contact information', async ({ page }) => {
       // Try to find a valid representative ID by querying the API
       // If no representative exists, skip the test
-      const repsResponse = await page.request.get('/api/civics/representatives?limit=1');
+      const repsResponse = await page.request.get('/api/representatives?limit=1');
       let representativeId = 1; // Default fallback
       
       if (repsResponse.status() === 200) {
@@ -99,7 +99,7 @@ test.describe('Contact Information Submission Flow', () => {
 
     test('user can submit valid phone contact information', async ({ page }) => {
       // Get a valid representative ID
-      const repsResponse = await page.request.get('/api/civics/representatives?limit=1');
+      const repsResponse = await page.request.get('/api/representatives?limit=1');
       let representativeId = 1;
       
       if (repsResponse.status() === 200) {
@@ -132,7 +132,7 @@ test.describe('Contact Information Submission Flow', () => {
 
     test('user can submit valid address contact information', async ({ page }) => {
       // Get a valid representative ID
-      const repsResponse = await page.request.get('/api/civics/representatives?limit=1');
+      const repsResponse = await page.request.get('/api/representatives?limit=1');
       let representativeId = 1;
       
       if (repsResponse.status() === 200) {

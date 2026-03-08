@@ -6,6 +6,10 @@ import React from 'react';
 
 import ContactHistoryPage from '../page';
 
+jest.mock('@/features/pwa/hooks/useFeatureFlags', () => ({
+  useFeatureFlag: jest.fn(() => ({ enabled: true })),
+}));
+
 jest.mock('@/lib/stores/appStore', () => ({
   useAppActions: jest.fn(),
 }));

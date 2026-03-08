@@ -740,6 +740,22 @@
         "actions": {
           "createBillVotePoll": "Crear encuesta de voto sobre proyecto de ley",
           "viewAccountability": "Ver rendición de cuentas"
+        },
+        "committees": {
+          "current": "Actual",
+          "description": "Asignaciones de comités de OpenStates (estatal/local). La cobertura varía por estado.",
+          "empty": "Datos de comités aún no disponibles para este representante. La cobertura varía por estado.",
+          "more": "+{count} comités más"
+        },
+        "recentActivity": {
+          "description": "Actividad de proyectos de ley de OpenStates (estatal/local; patrocinios, votos cuando estén disponibles). La cobertura varía por estado.",
+          "empty": "No hay actividad de proyectos de ley registrada. La cobertura varía por estado."
+        },
+        "campaignFinance": {
+          "description": "Datos de financiamiento de campaña federal de la FEC. No incluye finanzas estatales/locales."
+        },
+        "activityFeed": {
+          "emptyHint": "La actividad de proyectos de ley proviene de OpenStates (estatal/local); la cobertura varía por estado."
         }
       },
       "accountability": {

@@ -3,6 +3,8 @@
 import { Share2, TrendingUp, BarChart3, RefreshCw } from 'lucide-react';
 import React, { useEffect, useState, useCallback } from 'react';
 
+import { useFeatureFlag } from '@/features/pwa/hooks/useFeatureFlags';
+
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -10,7 +12,6 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Skeleton } from '@/components/ui/skeleton';
 
-import { isFeatureEnabled } from '@/lib/core/feature-flags';
 import { devLog } from '@/lib/utils/logger';
 
 type ShareAnalyticsData = {
@@ -29,6 +30,7 @@ type ShareAnalyticsPanelProps = {
 };
 
 export default function ShareAnalyticsPanel({ refreshInterval = 30000 }: ShareAnalyticsPanelProps) {
+  const { enabled: socialSharingEnabled } = useFeatureFlag('SOCIAL_SHARING');
   const [analytics, setAnalytics] = useState<ShareAnalyticsData | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -37,7 +39,7 @@ export default function ShareAnalyticsPanel({ refreshInterval = 30000 }: ShareAn
   const [isRefreshing, setIsRefreshing] = useState(false);
 
   const fetchAnalytics = useCallback(async () => {
-    if (!isFeatureEnabled('SOCIAL_SHARING')) {
+    if (!socialSharingEnabled) {
       setError('Social sharing is disabled');
       setLoading(false);
       return;
@@ -71,7 +73,7 @@ export default function ShareAnalyticsPanel({ refreshInterval = 30000 }: ShareAn
       setLoading(false);
       setIsRefreshing(false);
     }
-  }, [days, selectedPlatform]);
+  }, [days, selectedPlatform, socialSharingEnabled]);
 
   const handleRefresh = useCallback(async () => {
     setIsRefreshing(true);
@@ -89,7 +91,7 @@ export default function ShareAnalyticsPanel({ refreshInterval = 30000 }: ShareAn
     return () => clearInterval(interval);
   }, [fetchAnalytics, refreshInterval]);
 
-  if (!isFeatureEnabled('SOCIAL_SHARING')) {
+  if (!socialSharingEnabled) {
     return (
       <Card>
         <CardHeader>

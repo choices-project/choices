@@ -58,7 +58,7 @@ Archived in `docs/archive/reference/technical/` if historical context is needed.
 
 Out-of-date, historical, or completed work documentation lives under `docs/archive/`. Use these when you need additional context, but treat the files above as the current source of truth.
 
-Note: `docs/ROADMAP.md` is a redirect stub pointing to `docs/ROADMAP_SINGLE_SOURCE.md`. Do not add new items there.
+Note: `docs/ROADMAP.md` is the **definitive MVP roadmap** (all remaining work). Legacy sections and runbooks: `docs/ROADMAP_SINGLE_SOURCE.md`.
 
 ```
 docs/archive/
@@ -90,7 +90,7 @@ Outdated or superseded documents live under the archive tree above, including th
 
 - Update this README whenever new core docs are added or archived.
 - Keep summary tables in `CURRENT_STATUS.md` and `FEATURE_STATUS.md` realistic—avoid "perfect completion" phrasing.
-- The single source roadmap is `docs/ROADMAP_SINGLE_SOURCE.md`.
+- The definitive MVP roadmap is `docs/ROADMAP.md`.
 - Archive completed work summaries (fix summaries, implementation status) quarterly to keep active docs focused.
 - Keep the canonical set aligned with `DOCS_MANIFEST.md`.
 
@@ -100,5 +100,5 @@ For questions or missing documentation, open an issue or add a note in the relev
 
 - **Owner:** Core maintainer
 - **Update cadence:** Review on major feature changes and at least monthly
-- **Last verified:** TBD
+- **Last verified:** 2026-02-26
 

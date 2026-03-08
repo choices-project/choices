@@ -13,12 +13,14 @@ import { getSupabaseServerClient } from '@/utils/supabase/server';
 import {
   authError,
   errorResponse,
+  forbiddenError,
   notFoundError,
   successResponse,
   validationError,
   withErrorHandling,
   parseBody,
 } from '@/lib/api';
+import { isFeatureEnabled } from '@/lib/core/feature-flags';
 import {
   sanitizeSubject,
   sanitizeMessageContent,
@@ -51,6 +53,10 @@ type CreateThreadRequest = {
 // ============================================================================
 
 export const GET = withErrorHandling(async (request: NextRequest) => {
+    if (!isFeatureEnabled('CONTACT_INFORMATION_SYSTEM')) {
+      return forbiddenError('Contact Information System is currently disabled');
+    }
+
     // Get Supabase client
     const supabase = await getSupabaseServerClient();
     if (!supabase) {
@@ -171,6 +177,10 @@ export const GET = withErrorHandling(async (request: NextRequest) => {
 // ============================================================================
 
 export const POST = withErrorHandling(async (request: NextRequest) => {
+    if (!isFeatureEnabled('CONTACT_INFORMATION_SYSTEM')) {
+      return forbiddenError('Contact Information System is currently disabled');
+    }
+
     // Get Supabase client
     const supabase = await getSupabaseServerClient();
     if (!supabase) {
@@ -360,6 +370,10 @@ export const POST = withErrorHandling(async (request: NextRequest) => {
 // ============================================================================
 
 export const PUT = withErrorHandling(async (request: NextRequest) => {
+  if (!isFeatureEnabled('CONTACT_INFORMATION_SYSTEM')) {
+    return forbiddenError('Contact Information System is currently disabled');
+  }
+
   const supabase = await getSupabaseServerClient();
   if (!supabase) {
     return errorResponse('Database connection not available', 500);

@@ -1,106 +1,26 @@
-<testsuites id="" name="" tests="1" failures="1" skipped="0" errors="0" time="9.390187">
-<testsuite name="specs/accessibility/comprehensive-a11y.spec.ts" timestamp="2025-12-29T09:22:07.645Z" hostname="chromium" tests="1" failures="1" skipped="0" time="7.046" errors="0">
-<testcase name="Comprehensive Accessibility Tests › color contrast meets WCAG standards" classname="specs/accessibility/comprehensive-a11y.spec.ts" time="7.046">
-<failure message="comprehensive-a11y.spec.ts:264:3 color contrast meets WCAG standards" type="FAILURE">
-<![CDATA[  [chromium] › specs/accessibility/comprehensive-a11y.spec.ts:264:3 › Comprehensive Accessibility Tests › color contrast meets WCAG standards 
-
-    Error: expect(received).toBe(expected) // Object.is equality
-
-    Expected: 0
-    Received: 1
-
-      298 |       // Should have no color contrast violations
-      299 |       // Note: This test will fail if violations exist - fix the UI code to resolve
-    > 300 |       expect(contrastViolations.length).toBe(0);
-          |                                         ^
-      301 |
-      302 |     } finally {
-      303 |       await cleanupMocks();
-        at /Users/alaughingkitsune/src/Choices/web/tests/e2e/specs/accessibility/comprehensive-a11y.spec.ts:300:41
-
-    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
-    ../../test-results/specs-accessibility-compre-ec390-ntrast-meets-WCAG-standards-chromium/test-failed-1.png
-    ────────────────────────────────────────────────────────────────────────────────────────────────
-
-    attachment #2: video (video/webm) ──────────────────────────────────────────────────────────────
-    ../../test-results/specs-accessibility-compre-ec390-ntrast-meets-WCAG-standards-chromium/video-1.webm
-    ────────────────────────────────────────────────────────────────────────────────────────────────
-
-    attachment #3: video (video/webm) ──────────────────────────────────────────────────────────────
-    ../../test-results/specs-accessibility-compre-ec390-ntrast-meets-WCAG-standards-chromium/video.webm
-    ────────────────────────────────────────────────────────────────────────────────────────────────
-
-    Error Context: ../../test-results/specs-accessibility-compre-ec390-ntrast-meets-WCAG-standards-chromium/error-context.md
-]]>
-</failure>
-<system-out>
-<![CDATA[Color contrast violations found: [
-  {
-    "id": "color-contrast",
-    "impact": "serious",
-    "tags": [
-      "cat.color",
-      "wcag2aa",
-      "wcag143",
-      "TTv5",
-      "TT13.c",
-      "EN-301-549",
-      "EN-9.1.4.3",
-      "ACT",
-      "RGAAv4",
-      "RGAA-3.2.1"
-    ],
-    "description": "Ensure the contrast between foreground and background colors meets WCAG 2 AA minimum contrast ratio thresholds",
-    "help": "Elements must meet minimum color contrast ratio thresholds",
-    "helpUrl": "https://dequeuniversity.com/rules/axe/4.11/color-contrast?application=playwright",
-    "nodes": [
-      {
-        "any": [
-          {
-            "id": "color-contrast",
-            "data": {
-              "fgColor": "#9ca3af",
-              "bgColor": "#f8fafc",
-              "contrastRatio": 2.42,
-              "fontSize": "9.0pt (12px)",
-              "fontWeight": "normal",
-              "messageKey": null,
-              "expectedContrastRatio": "4.5:1"
-            },
-            "relatedNodes": [
-              {
-                "html": "<div class=\"min-h-screen bg-slate-50 dark:bg-gray-900\" data-testid=\"app-shell\" data-theme=\"light\" data-sidebar-collapsed=\"false\" data-sidebar-width=\"280\" data-sidebar-pinned=\"false\">",
-                "target": [
-                  "div[data-testid=\"app-shell\"]"
-                ]
-              }
-            ],
-            "impact": "serious",
-            "message": "Element has insufficient color contrast of 2.42 (foreground color: #9ca3af, background color: #f8fafc, font size: 9.0pt (12px), font weight: normal). Expected contrast ratio of 4.5:1"
-          }
-        ],
-        "all": [],
-        "none": [],
-        "impact": "serious",
-        "html": "<p class=\"text-xs text-gray-400 dark:text-gray-500 mt-1\">Start voting or creating polls to see your activity here</p>",
-        "target": [
-          ".text-gray-400"
-        ],
-        "failureSummary": "Fix any of the following:\n  Element has insufficient color contrast of 2.42 (foreground color: #9ca3af, background color: #f8fafc, font size: 9.0pt (12px), font weight: normal). Expected contrast ratio of 4.5:1"
-      }
-    ]
-  }
-]
-
-[[ATTACHMENT|../test-results/specs-accessibility-compre-ec390-ntrast-meets-WCAG-standards-chromium/test-failed-1.png]]
-
-[[ATTACHMENT|../test-results/specs-accessibility-compre-ec390-ntrast-meets-WCAG-standards-chromium/video-1.webm]]
-
-[[ATTACHMENT|../test-results/specs-accessibility-compre-ec390-ntrast-meets-WCAG-standards-chromium/video.webm]]
-
-[[ATTACHMENT|../test-results/specs-accessibility-compre-ec390-ntrast-meets-WCAG-standards-chromium/error-context.md]]
-]]>
-</system-out>
+<testsuites id="" name="" tests="10" failures="0" skipped="0" errors="0" time="83.01824">
+<testsuite name="specs/admin-dashboard-functionality.spec.ts" timestamp="2026-02-27T16:40:27.237Z" hostname="chromium" tests="6" failures="0" skipped="0" time="136.95" errors="0">
+<testcase name="Admin Dashboard Functionality › Users page loads without React errors" classname="specs/admin-dashboard-functionality.spec.ts" time="16.599">
+</testcase>
+<testcase name="Admin Dashboard Functionality › Analytics page loads with error boundaries" classname="specs/admin-dashboard-functionality.spec.ts" time="21.28">
+</testcase>
+<testcase name="Admin Dashboard Functionality › Performance page loads with timeout handling" classname="specs/admin-dashboard-functionality.spec.ts" time="20.75">
+</testcase>
+<testcase name="Admin Dashboard Functionality › All admin pages have error boundaries" classname="specs/admin-dashboard-functionality.spec.ts" time="44.066">
+</testcase>
+<testcase name="Admin Dashboard Functionality › Widget dashboard renders without React errors" classname="specs/admin-dashboard-functionality.spec.ts" time="18.268">
+</testcase>
+<testcase name="Admin Dashboard Functionality › No debug agent log code in production" classname="specs/admin-dashboard-functionality.spec.ts" time="15.987">
+</testcase>
+</testsuite>
+<testsuite name="specs/admin-dashboard-verification.spec.ts" timestamp="2026-02-27T16:40:27.237Z" hostname="chromium" tests="4" failures="0" skipped="0" time="93.297" errors="0">
+<testcase name="Admin Dashboard Verification › Users page loads without React error #185" classname="specs/admin-dashboard-verification.spec.ts" time="16.331">
+</testcase>
+<testcase name="Admin Dashboard Verification › Analytics page loads without React error #185" classname="specs/admin-dashboard-verification.spec.ts" time="17.226">
+</testcase>
+<testcase name="Admin Dashboard Verification › Performance page loads without React error #185" classname="specs/admin-dashboard-verification.spec.ts" time="18.621">
+</testcase>
+<testcase name="Admin Dashboard Verification › All admin pages load without React error #185" classname="specs/admin-dashboard-verification.spec.ts" time="41.119">
 </testcase>
 </testsuite>
 </testsuites>

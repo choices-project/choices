@@ -275,5 +275,5 @@ Do not use deprecated paths: `@/lib/utils/http`, `@/lib/utils/cors`, `@/lib/util
 
 - **Owner:** Core maintainer
 - **Update cadence:** Review on major feature changes and at least monthly
-- **Last verified:** TBD
+- **Last verified:** 2026-02-26
 

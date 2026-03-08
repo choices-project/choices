@@ -245,7 +245,7 @@ export default function AdvancedAnalytics({
                 For now, the data is available via the API.
               </p>
             </div>
-            {/* TODO: Add proper chart visualization using Recharts */}
+            {/* Chart visualization deferred; data available via API (docs/ROADMAP.md §4) */}
             <pre className="mt-4 p-3 bg-background rounded text-xs overflow-auto max-h-64">
               {JSON.stringify(results.data, null, 2)}
             </pre>

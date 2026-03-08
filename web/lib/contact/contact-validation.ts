@@ -8,6 +8,9 @@
  * Status: ✅ ACTIVE
  */
 
+/** Max email length (RFC 5321) to reject extremely long values in API */
+const MAX_EMAIL_LENGTH = 254;
+
 /**
  * Basic email validation
  */
@@ -15,10 +18,14 @@ function isValidEmail(email: string): boolean {
   if (!email || typeof email !== 'string') return false;
   const trimmed = email.trim();
   if (trimmed.length === 0) return false;
+  if (trimmed.length > MAX_EMAIL_LENGTH) return false;
   // Basic email regex - matches most valid email formats
   const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
   return emailRegex.test(trimmed);
 }
+
+/** Max phone digit length to reject extremely long values in API */
+const MAX_PHONE_DIGITS = 15;
 
 /**
  * Basic phone validation
@@ -30,6 +37,7 @@ function isValidPhone(phone: string): boolean {
   if (trimmed.length === 0) return false;
   // Remove common phone formatting characters
   const digitsOnly = trimmed.replace(/[\s\-().+]/g, '');
+  if (digitsOnly.length > MAX_PHONE_DIGITS) return false;
   // Must have 10-15 digits (allowing international formats)
   return /^\d{10,15}$/.test(digitsOnly);
 }

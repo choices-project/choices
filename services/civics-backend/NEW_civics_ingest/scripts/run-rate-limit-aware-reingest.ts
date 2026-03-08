@@ -25,9 +25,13 @@ import { execSync } from 'child_process';
 import { getOpenStatesUsageStats } from '../clients/openstates.js';
 import { loadCheckpoint } from '../utils/checkpoint.js';
 
-const RESERVE = Number(process.env.OPENSTATES_BUDGET_RESERVE ?? '100');
+const RESERVE = Number(process.env.OPENSTATES_BUDGET_RESERVE ?? '50');
 const DAILY_LIMIT = Number(process.env.OPENSTATES_DAILY_LIMIT ?? '250');
-const COMMITTEES_BUDGET = DAILY_LIMIT < 100 ? 0 : Math.min(60, Math.floor(DAILY_LIMIT * 0.25)); // ~50 jurisdictions; skip if limit very low
+// When committees API disabled, YAML-only sync uses no API calls — allocate full budget to activity
+const USE_COMMITTEES_API = process.env.OPENSTATES_USE_API_COMMITTEES !== 'false';
+const COMMITTEES_BUDGET = USE_COMMITTEES_API && DAILY_LIMIT >= 100
+  ? Math.min(60, Math.floor(DAILY_LIMIT * 0.25))
+  : 0;
 
 function log(msg: string): void {
   const ts = new Date().toISOString();
@@ -54,6 +58,7 @@ function hasOpenStatesKey(): boolean {
 
 async function main(): Promise<void> {
   log('Rate-limit-aware re-ingest starting');
+  if (!USE_COMMITTEES_API) log('Committees API disabled (YAML only) — full budget for activity');
 
   if (!hasOpenStatesKey()) {
     log('OPENSTATES_API_KEY not set or invalid.');

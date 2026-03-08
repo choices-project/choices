@@ -302,6 +302,7 @@ export default function ComprehensiveAdminDashboard({ className = '' }: Comprehe
         </TabsList>
 
         <TabsContent value="overview" className="space-y-6">
+          <h2 className="sr-only">Overview</h2>
           <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
             {isMetricsLoading ? (
               // Show skeleton loaders while refreshing

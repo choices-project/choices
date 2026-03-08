@@ -228,9 +228,91 @@ async function runSmokeTests(options: { quick?: boolean; json?: boolean }): Prom
     });
   }
   
-  // Test 5: Constraint violations (check for data that violates constraints)
+  // Test 5: Orphan check (enrichment tables reference valid representatives)
   if (!quick) {
-    if (!json) console.log('📊 Test 5: Constraint violations...');
+    if (!json) console.log('📊 Test 5: Orphan check (enrichment → representatives_core)...');
+    try {
+      const { data: repIds } = await client.from('representatives_core').select('id');
+      const validIds = new Set((repIds ?? []).map((r) => r.id));
+      let orphanCount = 0;
+      const { data: committeeRepIds } = await client
+        .from('representative_committees')
+        .select('representative_id');
+      const uniqueCommitteeRepIds = [...new Set((committeeRepIds ?? []).map((r) => r.representative_id))];
+      orphanCount += uniqueCommitteeRepIds.filter((id) => !validIds.has(id)).length;
+      const { data: activityRepIds } = await client
+        .from('representative_activity')
+        .select('representative_id');
+      const uniqueActivityRepIds = [...new Set((activityRepIds ?? []).map((r) => r.representative_id))];
+      orphanCount += uniqueActivityRepIds.filter((id) => !validIds.has(id)).length;
+      const { data: financeRepIds } = await client
+        .from('representative_campaign_finance')
+        .select('representative_id');
+      const uniqueFinanceRepIds = [...new Set((financeRepIds ?? []).map((r) => r.representative_id))];
+      orphanCount += uniqueFinanceRepIds.filter((id) => !validIds.has(id)).length;
+      const status = orphanCount > 0 ? 'fail' : 'pass';
+      results.push({
+        name: 'Orphan check',
+        status,
+        message: orphanCount > 0
+          ? `Found ${orphanCount} enrichment rows referencing non-existent representatives`
+          : 'All enrichment rows reference valid representatives',
+        details: { orphanCount },
+      });
+    } catch (error) {
+      results.push({
+        name: 'Orphan check',
+        status: 'warn',
+        message: `Check skipped: ${(error as Error).message}`,
+      });
+    }
+  }
+
+  // Test 6: Enrichment data presence (committees, activity, finance)
+  if (!quick) {
+    if (!json) console.log('📊 Test 6: Enrichment data presence...');
+    try {
+      const { count: committeesCount } = await client
+        .from('representative_committees')
+        .select('*', { count: 'exact', head: true });
+      const { count: activityCount } = await client
+        .from('representative_activity')
+        .select('*', { count: 'exact', head: true });
+      const { count: financeCount } = await client
+        .from('representative_campaign_finance')
+        .select('*', { count: 'exact', head: true });
+
+      const repsWithCommittees = committeesCount ?? 0;
+      const repsWithActivity = activityCount ?? 0;
+      const repsWithFinance = financeCount ?? 0;
+
+      const status =
+        repsWithCommittees === 0 && repsWithActivity === 0 && repsWithFinance === 0
+          ? 'warn'
+          : 'pass';
+
+      results.push({
+        name: 'Enrichment data presence',
+        status,
+        message: `Committees: ${repsWithCommittees} rows, Activity: ${repsWithActivity} rows, Finance: ${repsWithFinance} reps`,
+        details: {
+          representative_committees: repsWithCommittees,
+          representative_activity: repsWithActivity,
+          representative_campaign_finance: repsWithFinance,
+        },
+      });
+    } catch (error) {
+      results.push({
+        name: 'Enrichment data presence',
+        status: 'warn',
+        message: `Check skipped: ${(error as Error).message}`,
+      });
+    }
+  }
+
+  // Test 7: Constraint violations (check for data that violates constraints)
+  if (!quick) {
+    if (!json) console.log('📊 Test 7: Constraint violations...');
     try {
       // Check for invalid state codes
       const { data: invalidStates } = await client

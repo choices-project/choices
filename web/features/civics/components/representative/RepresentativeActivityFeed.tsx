@@ -19,6 +19,8 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 
 import { logger } from '@/lib/utils/logger';
 
+import { useI18n } from '@/hooks/useI18n';
+
 import type { Representative } from '@/types/representative';
 
 type UnifiedActivity = {
@@ -51,6 +53,7 @@ export function RepresentativeActivityFeed({
   representative: _representative,
   className = ''
 }: RepresentativeActivityFeedProps) {
+  const { t } = useI18n();
   const [activities, setActivities] = useState<UnifiedActivity[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -252,7 +255,8 @@ export function RepresentativeActivityFeed({
           {filteredActivities.length === 0 ? (
             <Card>
               <CardContent className="p-6 text-center text-gray-500 dark:text-gray-400">
-                No {activeTab === 'all' ? 'activities' : activeTab} found for this representative.
+                <p>No {activeTab === 'all' ? 'activities' : activeTab} found for this representative.</p>
+                <p className="text-xs mt-2 opacity-90">{t('civics.representatives.detail.activityFeed.emptyHint')}</p>
               </CardContent>
             </Card>
           ) : (

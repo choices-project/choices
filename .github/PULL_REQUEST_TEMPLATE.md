@@ -19,7 +19,7 @@
 - [ ] Added an entry to `docs/archive/release-notes/CHANGELOG.md` for user-facing changes
 - [ ] Included links to issues / roadmap items (PHASE-* labels) in the PR description
 
-> Need help? See `docs/inclusive-ui-guidelines.md`, `docs/qa/i18n-accessibility-playbook.md`, and `docs/technical/testing-harness-playbooks.md`.
+> Need help? See `docs/TESTING.md`, `docs/STATE_MANAGEMENT.md`, and `docs/API/contracts.md`. For inclusive UI, i18n, and harness playbooks see `docs/archive/` as needed.
 # PR Title
 <!-- Example: feat(analytics): add cache metadata to dashboard API -->
 
@@ -37,10 +37,10 @@
 
 ## ♿ Inclusive UI & 🌐 i18n Checklist
 Confirm the surfaces touched in this PR meet the governance standards:
-- [ ] Followed `docs/inclusive-ui-guidelines.md` (landmarks, focus, announcements, SR helpers).
-- [ ] Translatable copy routed through `useI18n` and snapshots updated via `npm run i18n:extract` (see `docs/technical/i18n-workflow.md`).
+- [ ] Followed inclusive UI guidelines (landmarks, focus, announcements, SR helpers; see `docs/archive/` if needed).
+- [ ] Translatable copy routed through `useI18n` and snapshots updated via `npm run i18n:extract` (see `docs/TESTING.md` or `docs/archive/` for i18n workflow).
 - [ ] Locale + accessibility automation updated or reviewed (`tests/e2e/specs/*@axe`, locale-switch specs, harness bridges).
-- [ ] Manual SR / locale follow-ups captured in `scratch/gpt5-codex/archive/inclusive-platform/manual-*.md` if required.
+- [ ] Manual SR / locale follow-ups documented where required.
 
 ## 🔐 API & Contract Alignment
 - [ ] API responses use shared helpers from `@/lib/api/response-utils` and types from `@/lib/api/types`.

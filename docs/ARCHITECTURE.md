@@ -68,7 +68,7 @@ Recent work (notification store, profile store, etc.) follows a standard pattern
 3. Add dedicated action hooks (`use<Store>Actions`) so features never pull raw `getState()`.
 4. Supply integration harnesses (RTL + Playwright) to validate store behaviour outside app pages.
 
-Reference material lives in `docs/STATE_MANAGEMENT.md` and `docs/ROADMAP_SINGLE_SOURCE.md`.
+Reference material lives in `docs/STATE_MANAGEMENT.md` and `docs/ROADMAP.md` (definitive roadmap).
 
 ---
 
@@ -98,5 +98,5 @@ Reference material lives in `docs/STATE_MANAGEMENT.md` and `docs/ROADMAP_SINGLE_
 
 - **Owner:** Core maintainer
 - **Update cadence:** Review on major feature changes and at least monthly
-- **Last verified:** TBD
+- **Last verified:** 2026-02-26
 

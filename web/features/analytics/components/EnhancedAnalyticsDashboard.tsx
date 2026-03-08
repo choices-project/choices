@@ -168,13 +168,14 @@ export const EnhancedAnalyticsDashboard: React.FC<EnhancedAnalyticsDashboardProp
     loadAdditionalData();
   }, []);
 
-  // Track dashboard usage (run once on mount)
+  // Track dashboard usage (run once on mount; deps omitted to avoid React #185)
   useEffect(() => {
     analyticsActionsRef.current.trackFeatureUsage('enhanced_analytics_dashboard', 'view', {
       pollId,
       userId,
       enableNewSchema,
     });
+  // eslint-disable-next-line react-hooks/exhaustive-deps -- intentional: mount-only to avoid callback loop
   }, []);
 
   const tabLabels = useMemo(

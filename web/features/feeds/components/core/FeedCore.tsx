@@ -35,6 +35,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 
+import { useAppStore } from '@/lib/stores/appStore';
 import { cn } from '@/lib/utils';
 
 import { useI18n } from '@/hooks/useI18n';
@@ -242,24 +243,14 @@ export default function FeedCore({
     };
   }, [isClient, pullDistance, onRefresh]);
 
+  const setTheme = useAppStore((s) => s.setTheme);
   const toggleDarkMode = useCallback(() => {
     if (typeof window === 'undefined') return;
 
-    // CRITICAL: Don't manipulate document.documentElement directly
-    // Use the app store's theme actions instead to ensure consistency
-    // The app store will update ThemeScript/AppShell which will update the DOM
     const newMode = !isDarkMode;
     setIsDarkMode(newMode);
-
-    // Update app store theme (this will trigger ThemeScript/AppShell to update DOM)
-    // For now, just update localStorage - ThemeScript will read it on next page load
-    // TODO: Integrate with app store theme actions for immediate update
-    localStorage.setItem('darkMode', String(newMode));
-
-    // Trigger a page reload to apply theme change via ThemeScript
-    // This ensures ThemeScript/AppShell handle the theme change consistently
-    window.location.reload();
-  }, [isDarkMode]);
+    setTheme(newMode ? 'dark' : 'light');
+  }, [isDarkMode, setTheme]);
 
 
 

@@ -20,6 +20,13 @@ import {
 
 const ACTIVITY_SOURCE = 'openstates';
 const MAX_BILLS = Number(process.env.OPENSTATES_ACTIVITY_LIMIT ?? '8');
+const MAX_TITLE_LEN = 500;
+const MAX_DESCRIPTION_LEN = 2000;
+
+function truncate(s: string, max: number): string {
+  if (s.length <= max) return s;
+  return s.slice(0, max);
+}
 
 interface ActivityInsertRow {
   representative_id: number;
@@ -228,11 +235,12 @@ function buildActivityRows(
     if (seen.has(key)) continue;
     seen.add(key);
 
+    const rawDesc = buildActivityDescription(bill, openstatesId);
     rows.push({
       representative_id: representativeId,
       type: 'bill',
-      title,
-      description: buildActivityDescription(bill, openstatesId),
+      title: truncate(title, MAX_TITLE_LEN),
+      description: rawDesc ? truncate(rawDesc, MAX_DESCRIPTION_LEN) : null,
       date: selectActivityDate(bill),
       source: ACTIVITY_SOURCE,
       source_url: buildBillUrl(bill),

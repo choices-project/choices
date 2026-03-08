@@ -4,6 +4,19 @@
 
 ---
 
+## Data Integrity First
+
+**Data integrity is paramount.** Before filling gaps:
+
+1. **Verify env:** `npm run ingest:check`
+2. **Baseline check:** `npm run tools:smoke-test` — must pass before ingest
+3. **After gap-fill:** Gap-fill runs smoke-test automatically; review any warnings
+4. **Persist layers:** Committees and activity truncate long strings; orphan checks run in smoke-test
+
+If smoke-test fails (orphans, constraint violations), fix before continuing. Never skip integrity checks to "save time."
+
+---
+
 ## ⚠️ CRITICAL: OpenStates = State/Local ONLY
 
 **OpenStates (YAML + API) contains ONLY state and local representatives. There is never and will never be any federal representative data from OpenStates.** Federal data comes from Congress.gov, FEC, and GovInfo. Never process federal reps with OpenStates scripts.
@@ -21,8 +34,8 @@ npm run reingest:scheduled
 ```
 
 - Exits if `OPENSTATES_API_KEY` missing
-- Checks remaining API budget; skips if below `OPENSTATES_BUDGET_RESERVE` (default 100)
-- Committees first (~50 calls), then activity with `--resume`
+- Checks remaining API budget; skips if below `OPENSTATES_BUDGET_RESERVE` (default 50)
+- Committees first (0 API calls when `OPENSTATES_USE_API_COMMITTEES=false`; see [OPENSTATES_COMMITTEES_STATUS.md](OPENSTATES_COMMITTEES_STATUS.md)), then activity with `--resume`
 - Logs to stdout; redirect for cron: `>> /var/log/reingest.log 2>&1`
 
 **Cron example:**
@@ -90,7 +103,7 @@ Before any ingest run:
 | Symptom | Cause | Fix |
 |---------|-------|-----|
 | "No representatives" | Baseline not run | Run `npm run openstates:ingest` first |
-| 0 committees | YAML has no committee roles | Committees come from API. Set `OPENSTATES_API_KEY`. |
+| 0 committees | Committees API returns 0 (see OPENSTATES_COMMITTEES_STATUS.md) | Set `OPENSTATES_USE_API_COMMITTEES=false` to use YAML only; frees ~93 API calls for activity. |
 | Rate limit (429) | API cap reached | Use `--resume`. Run `reingest:scheduled` daily. |
 | FEC `OVER_RATE_LIMIT` | FEC hourly cap | Increase `FEC_THROTTLE_MS`; rerun with `--limit` batches |
 | Federal reps in OpenStates syncs | Bug | **OpenStates has no federal data.** Syncs must exclude federal; processing federal reps wastes API calls and returns nothing. |
@@ -133,10 +146,10 @@ npm run federal:enrich:finance
 
 ```bash
 npm run gap:fill -- --dry-run   # Preview
-npm run gap:fill                # Execute (backs off at rate limits)
+npm run gap:fill                # Execute (backs off at rate limits; runs smoke-test at end)
 ```
 
-Options: `--skip-openstates`, `--skip-federal`.
+Options: `--skip-openstates`, `--skip-federal`. When `OPENSTATES_USE_API_COMMITTEES=false`, committees use YAML only (no API) and full budget goes to activity.
 
 ---
 

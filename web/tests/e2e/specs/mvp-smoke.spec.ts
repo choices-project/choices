@@ -94,9 +94,11 @@ test.describe('@smoke MVP core pages', () => {
   test('contact submissions page renders or gates @smoke', async ({ page }) => {
     await page.goto('/contact/submissions', { waitUntil: 'domcontentloaded' });
     await waitForPageReady(page);
+    // Page may show loading (auth resolving), unauthenticated card, or content
     await assertAnyVisible(page, [
+      '[aria-label="Loading submissions"]',
       'text=/My Submissions|Contact Submissions/i',
-      'text=/No submissions|submissions yet/i',
+      'text=/Sign in to view your contact|submissions yet|No submissions/i',
       '[data-testid="login-form"]',
       'text=/sign in|log in/i',
       'h1:has-text("Sign In")',

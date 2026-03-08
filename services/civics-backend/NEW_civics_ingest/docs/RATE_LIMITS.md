@@ -92,3 +92,19 @@ With 10,000 requests/day (if `OPENSTATES_DAILY_LIMIT=10000`):
 - **Events:** Run after committees/activity
 
 **Strategy:** Committees first (few calls), then activity in batches with checkpoint/resume across days.
+
+---
+
+## API call optimization matrix (Phase 3)
+
+| Script / flow | API | Calls (typical) | Throttle / batching |
+|---------------|-----|----------------|---------------------|
+| `openstates:stage` / `openstates:merge` | None (YAML only) | 0 | N/A |
+| `openstates:sync:committees` | OpenStates | ~50 (by jurisdiction) | ~6.5s default; use `--resume` |
+| `openstates:sync:activity` | OpenStates | 1 per rep (state/local) | Budget-based; use `--resume`, `reingest:scheduled` |
+| `openstates:sync:events` | OpenStates | Varies | Same budget as activity |
+| `federal:enrich:congress` | Congress.gov | 1 per federal rep | 1.5s default |
+| `federal:enrich:finance` | FEC | 1+ per federal rep | 3.6s default; use `--resume` |
+| GovInfo (optional) | GovInfo | 1 per federal rep | 4s; 500s known — use Congress as primary |
+
+**Crosswalk + dedupe automation:** Run `npm run tools:verify:crosswalk` and `npm run tools:audit:duplicates` (e.g. as part of `ingest:qa` or post-ingest validation). No API calls; Supabase only.

@@ -1,11 +1,13 @@
-# Choices – Roadmap & Next Steps (Single Source of Truth)
+# Choices – Roadmap & Next Steps (Legacy Sections + Runbooks)
 
-Last updated: 2026‑02‑26  
-**Canonical location:** `docs/ROADMAP_SINGLE_SOURCE.md`
+Last updated: 2026‑03‑02  
+**Definitive MVP roadmap:** [`docs/ROADMAP.md`](./ROADMAP.md) — all remaining work is consolidated there (no duplication).
 
-This is the **only** roadmap and next-steps document. All other roadmap/next-steps variants are archived. When closing items, link the PR and update status here.
+This document keeps **immediate actions**, **runbooks**, and **sectioned detail (A–H)** for reference. When closing items, update the checkbox in **ROADMAP.md** and link the PR there.
 
 **MVP:** Contact, Push, Civic Engagement v2 are GA. Quarantined features (see `docs/FEATURE_STATUS.md`) require no active work.
+
+**Recent (March 2026):** Definitive roadmap created at `docs/ROADMAP.md`; ROADMAP_SINGLE_SOURCE reconciled to point to it. Doc dates refreshed.
 
 Quick links: [Immediate Actions](#immediate-actions) • [Recurring Runbooks](#recurring-runbooks) • [Ownership & Updates](#ownership--updates)
 
@@ -128,10 +130,10 @@ Cross‑cutting: remove residual `withOptional`; memoize action selectors; docum
 
 See `services/civics-backend/NEW_civics_ingest/docs/README.md` and `docs/CURRENT_STATUS.md`.
 
-- [P1] Phase 2 – Validation harness: staging/merge fixtures (mock Supabase) and CLI smoke‑test template
-- [P1] Phase 3 – Crosswalk + dedupe automation; API call optimization matrix
-- [P1] Phase 4 – Regenerate Supabase types after next schema change (`cd web && npm run types:generate`)
-- [P1] Phase 5 – Summarize ingest in `docs/CURRENT_STATUS.md` and archive legacy scripts
+- [P1] ✅ Phase 2 – Validation harness: staging fixtures, `staging-validation.test.ts` (no Supabase), CLI `ingest:validate`
+- [P1] ✅ Phase 3 – Crosswalk + dedupe: `tools:verify:crosswalk`, `tools:audit:duplicates`; API optimization matrix in RATE_LIMITS.md
+- [P1] ✅ Phase 4 – Regenerate Supabase types after schema change: `cd web && npm run types:generate`
+- [P1] ✅ Phase 5 – Ingest summary in `docs/CURRENT_STATUS.md`; legacy scripts in REMOVED_SCRIPTS.md
 - [P2] Phase 6 – CI ingest smoke tests; metrics/logging for scripts
 
 ---
@@ -139,7 +141,8 @@ See `services/civics-backend/NEW_civics_ingest/docs/README.md` and `docs/CURRENT
 ## F) Testing & CI [P0/P1]
 
 - [P0] CI gates: `tsc --noEmit`, eslint, unit, contracts, critical Playwright smoke
-- [P1] Stabilize Playwright store harnesses; reduce flake; expand admin/app/specs
+- [P1] **Production E2E:** Smoke 21/21 ✅; full suite 193 passed, 12 failed, 5 flaky (see `docs/PRODUCTION_TESTING_STATUS.md`). Remaining: auth, civics, contact, polls, account export, reps load time. E2E remaining items (auth, contact, civics, polls, account export, reps load time, Jest GovInfo, CI smoke gate) are listed in [docs/PRODUCTION_TESTING_STATUS.md](docs/PRODUCTION_TESTING_STATUS.md) § Remaining Work.
+- [P1] Stabilize Playwright store harnesses; reduce flake; expand admin/app/specs. Harness patterns and stability notes: `docs/TESTING.md` § Store modernization and harness stability (ROADMAP C, F).
 - [P1] Contract tests remain green for candidate/civics/admin routes
 - [P1] i18n enforcement: automate `npm run i18n:extract`; promote locale lint to error post soak
 

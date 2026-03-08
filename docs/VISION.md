@@ -1,6 +1,6 @@
 # Choices Platform Vision
 
-_Last updated: January 2026_
+_Last updated: February 2026_
 
 ## Mission
 
@@ -46,22 +46,19 @@ The Choices platform MVP is **complete and production-ready**. All core features
 While the MVP is complete, the platform continues to evolve. Future work is tracked in:
 
 - **Feature Status**: [`FEATURE_STATUS.md`](FEATURE_STATUS.md) - Current feature flags and their states
-- **Roadmap**: `docs/ROADMAP_SINGLE_SOURCE.md` - Detailed outstanding work items
+- **Roadmap**: [`ROADMAP.md`](ROADMAP.md) - Definitive MVP roadmap (all remaining work)
 - **Current Status**: [`CURRENT_STATUS.md`](CURRENT_STATUS.md) - Active workstreams and known gaps
 
 ### Planned Enhancements (Not Blocking MVP)
 
-**Beta Features (In Progress):**
-- 🔄 Push Notifications - Client opt-in + delivery guarantees (see [`docs/archive/reference/push-notifications/push-notifications-audit-2025.md`](archive/reference/push-notifications/push-notifications-audit-2025.md))
-- 🔄 Device Flow Auth - OAuth 2.0 Device Authorization (see [`docs/archive/reference/device-flow/device-flow-auth-2025.md`](archive/reference/device-flow/device-flow-auth-2025.md))
-- 🔄 Internationalization - Expand locale coverage beyond en/es
-- 🔄 Contact Information System - Complete ingestion + notification flows
+**GA (shipped):** Contact Information System, Push Notifications, and Civic Engagement v2 are generally available (default on). See [FEATURE_STATUS.md](FEATURE_STATUS.md) for flags and post-deploy verification steps.
 
-**Experimental Features (Planned):**
-- 📋 Social Sharing - Persist events, expose metrics, admin dashboards
-- 📋 Advanced Privacy - Zero-knowledge proofs, differential privacy
-- 📋 Performance Optimization - Expand adoption of optimization utilities
-- 📋 Civic Engagement v2 - Enhanced integration with Supabase and UI
+**In Progress / Quarantined:**
+- 🔄 Device Flow Auth - Implementation complete; E2E and OAuth provider config on hold (see [FEATURE_STATUS.md](FEATURE_STATUS.md) § Feature Quarantine)
+- 🔄 Internationalization - en/es coverage; extraction and copy freeze not yet wired
+- 📋 Social Sharing - API + poll UI shipped; civics/OG pipelines on hold
+- 📋 Advanced Privacy - Concept only (ZK/DP); quarantined
+- 📋 Performance Optimization - Partially adopted; audit consumers for defaults
 
 **Future Considerations:**
 - 🔮 Automated Poll Generation
@@ -84,16 +81,16 @@ The Choices platform is built with:
 - **License**: MIT - Open source and free to use
 - **Contributing**: DCO-based - See [`CONTRIBUTING.md`](../CONTRIBUTING.md)
 - **Code of Conduct**: See [`CODE_OF_CONDUCT.md`](../CODE_OF_CONDUCT.md)
-- **Security**: Responsible disclosure - See [`SECURITY.md`](SECURITY.md)
+- **Security**: Responsible disclosure - See [SECURITY.md](../SECURITY.md)
 - **Voting Integrity**: "A vote is a vote. Period." - No manipulation, no weighting
 
 ## Getting Involved
 
 **For Developers:**
-- Start with [`GETTING_STARTED.md`](GETTING_STARTED.md)
-- Read [`DEVELOPMENT.md`](DEVELOPMENT.md) for setup
-- Check [`CONTRIBUTING.md`](../CONTRIBUTING.md) for workflow
-- Explore [`CODEBASE_NAVIGATION.md`](CODEBASE_NAVIGATION.md) to understand structure
+- Start with [GETTING_STARTED.md](GETTING_STARTED.md) for setup and runbook
+- Check [CONTRIBUTING.md](../CONTRIBUTING.md) for workflow
+- Explore [CODEBASE_NAVIGATION.md](CODEBASE_NAVIGATION.md) to understand structure
+- Roadmap and next steps: [ROADMAP.md](ROADMAP.md) and [FEATURE_STATUS.md](FEATURE_STATUS.md)
 
 **For Contributors:**
 - Look for `good first issue` labels
@@ -137,5 +134,5 @@ For detailed current status, see [`CURRENT_STATUS.md`](CURRENT_STATUS.md).
 
 - **Owner:** Core maintainer
 - **Update cadence:** Review on major feature changes and at least monthly
-- **Last verified:** TBD
+- **Last verified:** 2026-02-26
 

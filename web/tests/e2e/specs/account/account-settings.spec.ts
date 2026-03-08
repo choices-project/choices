@@ -71,7 +71,6 @@ test.describe('Account Settings', () => {
 
       await page.goto(`${BASE_URL}/account/export`, { waitUntil: 'domcontentloaded', timeout: 30_000 });
       await waitForPageReady(page);
-      await page.waitForTimeout(3_000);
 
       const currentUrl = page.url();
       if (currentUrl.includes('/auth')) {
@@ -81,17 +80,20 @@ test.describe('Account Settings', () => {
 
       expect(currentUrl).toMatch(/\/account\/export/);
 
-      // Should see Data Export heading
-      const exportHeading = page.locator('h1').filter({ hasText: /data export|export data/i });
-      await expect(exportHeading.first()).toBeVisible({ timeout: 10_000 });
+      // Wait for loading to finish (spinner disappears; main content appears)
+      await page.locator('text=Loading your data').waitFor({ state: 'hidden', timeout: 15_000 }).catch(() => undefined);
+      await page.waitForTimeout(2_000);
 
-      // Should see export options (Profile, Polls, etc.)
-      const exportOptions = page.locator('text=/export options|profile information|polls.*votes/i');
-      const hasOptions = (await exportOptions.count()) > 0;
-      expect(hasOptions).toBe(true);
+      // Should see Data Export heading (h1 or main heading)
+      const exportHeading = page.locator('h1').filter({ hasText: /data export|export/i }).first();
+      await expect(exportHeading).toBeVisible({ timeout: 10_000 });
 
-      // Should see export button
-      const exportButton = page.getByRole('button').filter({ hasText: /export data|exporting/i });
+      // Should see export options: Export Options card, Data Types, Profile Information, or Polls & Votes
+      const optionsLocator = page.locator('text=/export options|data types|profile information|polls.*votes/i');
+      await expect(optionsLocator.first()).toBeVisible({ timeout: 10_000 });
+
+      // Should see export button (Export Data (N items) or Exporting...)
+      const exportButton = page.getByRole('button').filter({ hasText: /export data|exporting|\d+ items/i });
       await expect(exportButton.first()).toBeVisible({ timeout: 5_000 });
     });
 
@@ -108,7 +110,7 @@ test.describe('Account Settings', () => {
         return;
       }
 
-      const exportButton = page.getByRole('button').filter({ hasText: /export data/i }).first();
+      const exportButton = page.getByRole('button').filter({ hasText: /export data|exporting|\d+ items/i }).first();
       const isDisabled = await exportButton.isDisabled();
 
       if (!isDisabled) {

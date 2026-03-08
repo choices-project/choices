@@ -241,8 +241,14 @@ See `DATABASE_SCHEMA.md` for column details.
 | [RATE_LIMITS.md](RATE_LIMITS.md) | API limits (OpenStates, FEC, Congress.gov, GovInfo); GovInfo 500s known limitation |
 | [DATABASE_SCHEMA.md](DATABASE_SCHEMA.md) | Table reference |
 | [STANDALONE_SERVICE.md](STANDALONE_SERVICE.md) | Standalone design, rate limits, gap-fill, downstream |
+| [INGEST_OPTIMIZATION_AUDIT.md](INGEST_OPTIMIZATION_AUDIT.md) | Bottleneck analysis, throughput tuning, config recommendations |
+| [DATA_VERIFICATION_AND_DOWNSTREAM_AUDIT.md](DATA_VERIFICATION_AND_DOWNSTREAM_AUDIT.md) | Verification gaps, downstream alignment, recommendations |
 | [OPENSTATES_COMMITTEES_STATUS.md](OPENSTATES_COMMITTEES_STATUS.md) | Committees API data gap (0 results) |
 | [REMOVED_SCRIPTS.md](REMOVED_SCRIPTS.md) | Scripts removed during audit (no active source) |
+
+**Validation (no DB):** `npm run ingest:validate` — runs `ingest:check` and unit tests (staging fixtures, checkpoint, load-env). Use for CI or local verification without Supabase.
+
+**Types (Phase 4):** After any Supabase schema change, run `cd web && npm run types:generate` to regenerate TypeScript types.
 
 **Tools:** Add `--json` to `tools:report:gaps`, `tools:smoke-test`, `tools:metrics:dashboard` for machine-readable output.
 

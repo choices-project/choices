@@ -10,7 +10,7 @@ We welcome contributions! This project is licensed under MIT and uses the Develo
 4. **Make changes**: Follow the patterns in [`docs/GETTING_STARTED.md`](docs/GETTING_STARTED.md)
 5. **Test**: Run `npm run lint`, `npm run type-check`, and `npm run test`
 6. **Sign commits**: Use `git commit -s` (DCO requirement)
-7. **Open a PR**: Fill out the PR template checklist
+7. **Open a PR**: Fill out the PR template checklist (branch protection and workflow docs: [.github/WORKFLOWS_AUDIT.md](.github/WORKFLOWS_AUDIT.md), [.github/BRANCH_PROTECTION.md](.github/BRANCH_PROTECTION.md))
 
 ## Development Workflow
 

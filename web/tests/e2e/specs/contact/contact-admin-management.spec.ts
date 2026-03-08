@@ -24,7 +24,7 @@ import {
 } from '../../helpers/e2e-setup';
 
 async function getRepresentativeId(page: any): Promise<number | null> {
-  const res = await page.request.get('/api/civics/representatives?limit=1');
+  const res = await page.request.get('/api/representatives?limit=1');
   if (res.status() !== 200) return null;
   const body = await res.json();
   const reps = body.data?.representatives;
@@ -120,16 +120,16 @@ test.describe('Contact Admin Management', () => {
       await page.goto('/admin/contact', { waitUntil: 'domcontentloaded', timeout: 30_000 });
       await waitForPageReady(page);
 
-      // Wait for data to load
-      await page.waitForTimeout(3_000);
+      // Wait for data or empty state to load
+      await page.waitForTimeout(5_000);
 
-      // Page should show either submissions or empty state
-      const hasContent = await page
-        .locator('text=/pending|submission|no.*pending|loading/i')
-        .count()
-        .then((count) => count > 0);
-
-      expect(hasContent).toBe(true);
+      // Page must show contact-admin-specific content: pending submissions list, empty state, or loading
+      const contactSpecificText = page.locator('text=/pending|submission|no.*pending|loading|no.*submission|contact.*admin/i');
+      const contactListOrTable = page.locator('table tbody tr, [data-testid*="contact"], .contact-card').filter({ has: page.locator('text=/email|phone|representative|approve|reject/i') });
+      const hasContactContent =
+        (await contactSpecificText.count()) > 0 ||
+        (await contactListOrTable.count()) > 0;
+      expect(hasContactContent).toBe(true);
     });
 
     test('admin contact page has filtering controls', async ({ page }) => {
@@ -173,14 +173,15 @@ test.describe('Contact Admin Management', () => {
 
       await authenticateViaAPI(adminPage, adminCreds.email, adminCreds.password);
 
-      // Login as user and create a submission via API
+      // Login as user and create a submission via API (use dynamic rep ID in production)
       const userCreds = getE2EUserCredentials();
       if (userCreds) {
         await authenticateViaAPI(userPage, userCreds.email, userCreds.password);
 
+        const repId = await getRepresentativeId(userPage) ?? 1;
         const response = await userPage.request.post('/api/contact/submit', {
           data: {
-            representative_id: 1,
+            representative_id: repId,
             contact_type: 'email',
             value: `admin-api-test-${Date.now()}@example.com`,
           },

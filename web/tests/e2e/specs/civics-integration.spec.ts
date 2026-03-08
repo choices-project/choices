@@ -91,8 +91,9 @@ test.describe('Civics Integration Tests', () => {
           console.warn('[civics-integration] ⚠️ Redirected away from dashboard');
         }
 
-        // Wait for personal dashboard to be visible
-        await expect(page.getByTestId('personal-dashboard')).toBeVisible({ timeout: 30_000 });
+        // Wait for personal dashboard to be visible (allow 45s in production)
+        await expect(page.getByTestId('personal-dashboard')).toBeVisible({ timeout: 45_000 });
+        await page.waitForTimeout(3_000); // Allow content to settle (representatives/preferences)
 
         // Check that the page rendered without React errors
         const reactErrors = consoleErrors.filter(err => 
@@ -102,12 +103,15 @@ test.describe('Civics Integration Tests', () => {
         );
         expect(reactErrors.length).toBe(0);
 
-        // Check if representatives section exists (may or may not be visible based on preferences)
-        const representativesSection = await page.locator('text="Your Representatives"').count();
-        
-        // The section should either exist or not exist, but page should render cleanly
-        expect(representativesSection).toBeGreaterThanOrEqual(0);
-        expect(representativesSection).toBeLessThanOrEqual(1);
+        // Dashboard should show some main content: Your Representatives, Quick Actions, or Dashboard Preferences
+        const representativesSection = page.locator('text="Your Representatives"');
+        const quickActionsSection = page.locator('text="Quick Actions"');
+        const prefsSection = page.locator('text="Dashboard Preferences"');
+        const hasDashboardContent =
+          (await representativesSection.count()) > 0 ||
+          (await quickActionsSection.count()) > 0 ||
+          (await prefsSection.count()) > 0;
+        expect(hasDashboardContent).toBe(true);
 
         // Verify no infinite render loops (check render count in console if available)
         const renderCountMessages = consoleErrors.filter(err => 
@@ -148,20 +152,22 @@ test.describe('Civics Integration Tests', () => {
       try {
         await page.goto('/dashboard');
         await waitForPageReady(page);
-        await page.waitForTimeout(2_000);
+        await page.waitForTimeout(3_000);
 
         await expect(page.getByTestId('personal-dashboard')).toBeVisible({ timeout: 45_000 });
-        await page.waitForTimeout(2_000);
+        await page.waitForTimeout(3_000);
 
         // Check for dashboard preferences section or Quick Actions (dashboard has varied layouts)
         const preferencesSection = page.locator('text="Dashboard Preferences"');
         const quickActions = page.locator('text="Quick Actions"');
         const engagementScoreToggle = page.locator('[data-testid="show-engagement-score-toggle"]');
+        const yourReps = page.locator('text="Your Representatives"');
 
         const hasPreferences =
           (await preferencesSection.count()) > 0 ||
           (await quickActions.count()) > 0 ||
-          (await engagementScoreToggle.count()) > 0;
+          (await engagementScoreToggle.count()) > 0 ||
+          (await yourReps.count()) > 0;
         expect(hasPreferences).toBe(true);
 
       } finally {

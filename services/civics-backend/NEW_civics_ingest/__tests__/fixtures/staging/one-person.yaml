@@ -1,0 +1,29 @@
+# Minimal OpenStates person fixture for staging/merge validation (Phase 2).
+# Shape matches RawPerson in stage-openstates.ts.
+id: ocd-person/abc123
+name: Jane Doe
+given_name: Jane
+family_name: Doe
+gender: F
+party:
+  - name: Democratic
+current_party: true
+roles:
+  - type: upper
+    jurisdiction: state:ca
+    district: "7"
+    title: Senator
+    start_date: "2020-01-01"
+    end_date: null
+identifiers:
+  - scheme: openstates
+    identifier: ocd-person/abc123
+contact_details:
+  - type: email
+    value: jane@example.com
+  - type: voice
+    value: "+1-555-0100"
+sources:
+  - url: https://example.com/source
+    note: official
+updated_at: "2024-01-15T00:00:00Z"

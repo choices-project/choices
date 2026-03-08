@@ -163,7 +163,6 @@ export const WidgetRenderer: React.FC<WidgetRendererProps> = ({
   const selectedWidgetId = useWidgetStoreScoped((state) => state.selectedWidgetId);
   const keyboardMode = useWidgetStoreScoped(selectKeyboardMode);
   const setSelectedWidget = useWidgetStoreScoped((state) => state.setSelectedWidget);
-  const setKeyboardMode = useWidgetStoreScoped((state) => state.setKeyboardMode);
   const nudgeWidgetPosition = useWidgetStoreScoped((state) => state.nudgeWidgetPosition);
   const nudgeWidgetSize = useWidgetStoreScoped((state) => state.nudgeWidgetSize);
   const widgetState = useWidgetStoreScoped((state) => state.widgets.get(config.id));
@@ -213,12 +212,12 @@ export const WidgetRenderer: React.FC<WidgetRendererProps> = ({
 
   const exitKeyboardMode = useCallback(
     (messageKey?: string) => {
-      setKeyboardMode('idle');
+      storeApi.getState().setKeyboardMode('idle');
       if (messageKey) {
         announce(messageKey);
       }
     },
-    [announce, setKeyboardMode],
+    [announce, storeApi],
   );
 
   const handleToggleMove = useCallback(() => {
@@ -232,7 +231,7 @@ export const WidgetRenderer: React.FC<WidgetRendererProps> = ({
     }
 
     setSelectedWidget(config.id);
-    setKeyboardMode('move');
+    storeApi.getState().setKeyboardMode('move');
     focusCard();
     announce('analytics.widgets.moveModeOn', { title: activeWidget.title }, 'assertive');
   }, [
@@ -243,7 +242,7 @@ export const WidgetRenderer: React.FC<WidgetRendererProps> = ({
     focusCard,
     isEditing,
     isMoveMode,
-    setKeyboardMode,
+    storeApi,
     setSelectedWidget,
   ]);
 
@@ -258,7 +257,7 @@ export const WidgetRenderer: React.FC<WidgetRendererProps> = ({
     }
 
     setSelectedWidget(config.id);
-    setKeyboardMode('resize');
+    storeApi.getState().setKeyboardMode('resize');
     focusCard();
     announce('analytics.widgets.resizeModeOn', { title: activeWidget.title }, 'assertive');
   }, [
@@ -269,7 +268,7 @@ export const WidgetRenderer: React.FC<WidgetRendererProps> = ({
     focusCard,
     isEditing,
     isResizeMode,
-    setKeyboardMode,
+    storeApi,
     setSelectedWidget,
   ]);
 
@@ -304,11 +303,11 @@ export const WidgetRenderer: React.FC<WidgetRendererProps> = ({
 
       const related = event.relatedTarget as Node | null;
       if (!related || !cardRef.current.contains(related)) {
-        setKeyboardMode('idle');
+        storeApi.getState().setKeyboardMode('idle');
         setSelectedWidget(null);
       }
     },
-    [setKeyboardMode, setSelectedWidget],
+    [storeApi, setSelectedWidget],
   );
 
   const handleKeyDown = useCallback(
@@ -428,7 +427,7 @@ export const WidgetRenderer: React.FC<WidgetRendererProps> = ({
       }
 
       if (event.key === 'Tab') {
-        setKeyboardMode('idle');
+        storeApi.getState().setKeyboardMode('idle');
       }
     },
     [
@@ -442,7 +441,7 @@ export const WidgetRenderer: React.FC<WidgetRendererProps> = ({
       keyboardMode,
       nudgeWidgetPosition,
       nudgeWidgetSize,
-      setKeyboardMode,
+      storeApi,
     ],
   );
 

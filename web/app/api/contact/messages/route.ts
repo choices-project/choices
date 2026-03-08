@@ -22,6 +22,7 @@ import {
   withErrorHandling,
   parseBody,
 } from '@/lib/api';
+import { isFeatureEnabled } from '@/lib/core/feature-flags';
 import { apiRateLimiter } from '@/lib/rate-limiting/api-rate-limiter';
 import {
   sanitizeMessageContent,
@@ -65,6 +66,10 @@ type CreateMessageRequest = {
 // ============================================================================
 
 export const POST = withErrorHandling(async (request: NextRequest) => {
+  if (!isFeatureEnabled('CONTACT_INFORMATION_SYSTEM')) {
+    return forbiddenError('Contact Information System is currently disabled');
+  }
+
   const startTime = Date.now();
 
   // Rate limiting: 10 messages per minute per user
@@ -327,6 +332,10 @@ export const POST = withErrorHandling(async (request: NextRequest) => {
 // ============================================================================
 
 export const GET = withErrorHandling(async (request: NextRequest) => {
+    if (!isFeatureEnabled('CONTACT_INFORMATION_SYSTEM')) {
+      return forbiddenError('Contact Information System is currently disabled');
+    }
+
     // Get Supabase client
     const supabase = await getSupabaseServerClient();
     if (!supabase) {

@@ -1,6 +1,6 @@
 # Feature Readiness Tracker
 
-_Last updated: February 2026 (Contact, Push, Civic Engagement v2 GA; Feature Quarantine; RLS migration 20260226120000)._
+_Last updated: March 2026 (Contact, Push, Civic Engagement v2 GA; Feature Quarantine; RLS migration 20260226120000)._
 
 This table tracks feature readiness. **Flags in code** live in `web/lib/core/feature-flags.ts`. Some rows describe product ideas without flags. See `docs/FEATURE_FLAGS_AUDIT.md` for the full audit.
 
@@ -75,20 +75,27 @@ The following features are **explicitly quarantined**. No active development. Re
 - [ ] **Post-deploy:** Verify admin bulk approve/reject and rep-name search in production
 - [ ] **Post-deploy:** Run E2E contact specs (requires representatives in test DB)
 
+**Post-deploy verification steps (Contact):** (1) Log in as admin → Admin → Contact; (2) Use rep-name search and confirm results; (3) Select pending submissions and use bulk approve and bulk reject; confirm state updates; (4) Run `cd web && npm run test:e2e:production -- --grep contact` (or full production E2E) and ensure contact specs pass. Then check the two boxes above.
+
 ### Push Notifications (GA – post-launch verification)
 
 - [x] Delivery failure logging to `notification_log`
 - [ ] **Post-deploy:** Validate VAPID keys and web-push in production
 
+**Post-deploy verification steps (Push):** (1) Confirm `VAPID_PUBLIC_KEY` and `VAPID_PRIVATE_KEY` (or equivalent) are set in production env; (2) Subscribe to push from the app (e.g. notification preferences) and trigger a test notification; (3) Confirm delivery (browser/device) and that failures (if any) are logged to `notification_log`. Then check the box above.
+
+**Production E2E:** See `docs/PRODUCTION_TESTING_STATUS.md` for full suite status (smoke 21/21 ✅; 193 passed, 12 failed, 5 flaky), remaining failures, and verification summary.
+
 ## Suggested Next Steps
 
-1. **Post-deploy verification** – Run contact E2E; validate push delivery in production.
+1. **Post-deploy verification** – Run contact E2E; validate push delivery in production. Use `docs/PRODUCTION_TESTING_STATUS.md` for current E2E status and commands.
 2. **Quarterly Flag Review** – Delete quarantined placeholders when product deprecates; keep aligned with releases.
 3. **Unquarantine only when scoped** – Device Flow OAuth, Social Sharing civics/OG, etc. require product definition first.
+4. **Backlog and P0/P1/P2 work** – See [docs/ROADMAP.md](docs/ROADMAP.md).
 
 ## Ownership & Update Cadence
 
 - **Owner:** Core maintainer
 - **Update cadence:** Review on major feature changes and at least monthly
-- **Last verified:** 2026-02-26 (types, lint, civic-actions integration tests)
+- **Last verified:** 2026-03-02 (types, lint, Jest 324 tests; civic-actions integration tests)
 

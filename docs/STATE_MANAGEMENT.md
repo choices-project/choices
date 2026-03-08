@@ -1,6 +1,6 @@
 # State Management Guide
 
-_Last updated: January 2026_
+_Last updated: February 2026_
 
 This document summarizes the agreed-on patterns for Zustand stores in the Choices web app. It replaces the scattered checklists under `scratch/gpt5-codex/store-roadmaps/` (see consolidation notes below).
 
@@ -135,7 +135,7 @@ const persistConfig = {
 - Keep payloads small (< 10KB) for performance
 - Test persistence/restoration in both unit tests and E2E harnesses
 
-Store-level tracking: see `docs/ROADMAP_SINGLE_SOURCE.md` § C.
+Store-level tracking: see `docs/ROADMAP.md` §2.2 and `docs/ROADMAP_SINGLE_SOURCE.md` § C for detail.
 
 ---
 
@@ -232,7 +232,7 @@ Current harness coverage: `admin-store`, `analytics-store`, `app-store`, `auth-a
 2. **Refactor core** — pull initial state/actions into helpers, export `use<Store>Actions`, add selectors.
 3. **Update consumers** — migrate components/tests to the new hooks; avoid `getState()` in React components.
 4. **Testing** — add/refresh unit + integration suites; build Playwright harness if the store drives UI interactions.
-5. **Docs & checklist** — mark progress in `docs/STATE_MANAGEMENT.md` (this guide) and `docs/ROADMAP_SINGLE_SOURCE.md` instead of `scratch/*`. Add or update examples here if new patterns emerge.
+5. **Docs & checklist** — mark progress in `docs/STATE_MANAGEMENT.md` (this guide) and `docs/ROADMAP.md` instead of `scratch/*`. Add or update examples here if new patterns emerge.
 6. **Election alerts** — civics features that surface countdowns should call `useElectionCountdown` with `notify`, `notificationSource`, and threshold metadata so the hook can dedupe per election/division and dispatch through `notificationStoreUtils.createElectionNotification`.
 
 ## Migration Guide: Legacy Stores → Modernized Pattern
@@ -408,14 +408,14 @@ function MyComponent() {
   - `scratch/gpt5-codex/store-roadmaps/*` (store checklists and modernization tasks)
   - `scratch/gpt5-codex/roadmaps/*` (web store modernization lines)
 - Action:
-  - Track store modernization in `docs/ROADMAP_SINGLE_SOURCE.md` (Section C) and update this guide with patterns and examples.
+  - Track store modernization in `docs/ROADMAP.md` §2.2 and `docs/ROADMAP_SINGLE_SOURCE.md` (Section C); update this guide with patterns and examples.
   - Treat scratch documents as archived references. Do not add new roadmap items under `scratch/` going forward.
 
-For questions, drop a note in `#web-platform` or annotate the relevant checklist in `/scratch`.
+For questions, use `#web-platform` or add/update items in `docs/ROADMAP.md` or `docs/ROADMAP_SINGLE_SOURCE.md` (Section C).
 
 ## Ownership & Update Cadence
 
 - **Owner:** Core maintainer
 - **Update cadence:** Review on major feature changes and at least monthly
-- **Last verified:** TBD
+- **Last verified:** 2026-02-26
 

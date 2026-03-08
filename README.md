@@ -1,7 +1,7 @@
 # Choices - Participatory Democracy Platform
 
 **Status**: ✅ **MVP Complete - Production Ready**  
-**Last Updated**: January 2026
+**Last Updated**: February 2026
 
 ---
 
@@ -54,11 +54,10 @@ See **[docs/DEPLOYMENT.md](./docs/DEPLOYMENT.md)** for the complete guide.
 - **[docs/FEATURE_STATUS.md](./docs/FEATURE_STATUS.md)** - Feature flags and status
 
 ### For Developers
-- **[docs/GETTING_STARTED.md](./docs/GETTING_STARTED.md)** - Quick start (5 minutes)
-- **[docs/GETTING_STARTED.md](./docs/GETTING_STARTED.md)** - Setup and development runbook
+- **[docs/GETTING_STARTED.md](./docs/GETTING_STARTED.md)** - Quick start (5 minutes) and development runbook
 - **[docs/ARCHITECTURE.md](./docs/ARCHITECTURE.md)** - System architecture
 - **[docs/CODEBASE_NAVIGATION.md](./docs/CODEBASE_NAVIGATION.md)** - Codebase structure guide
-- **[docs/CONTRIBUTING.md](./CONTRIBUTING.md)** - Contribution workflow
+- **[CONTRIBUTING.md](./CONTRIBUTING.md)** - Contribution workflow
 - **[docs/TESTING.md](./docs/TESTING.md)** - Testing strategies
 - **[docs/STATE_MANAGEMENT.md](./docs/STATE_MANAGEMENT.md)** - State management patterns
 - **[docs/DATABASE_SCHEMA.md](./docs/DATABASE_SCHEMA.md)** - Database schema
@@ -68,7 +67,7 @@ See **[docs/DEPLOYMENT.md](./docs/DEPLOYMENT.md)** for the complete guide.
 - **[docs/PRIVACY_POLICY.md](./docs/PRIVACY_POLICY.md)** - Privacy policy
 - **[docs/SECURITY.md](./docs/SECURITY.md)** - Security practices
 - **[docs/VOTING_INTEGRITY_POLICY.md](./docs/VOTING_INTEGRITY_POLICY.md)** - Voting integrity
- - **Security Reporting**: See [SECURITY.md](./SECURITY.md)
+- **Security Reporting**: See [SECURITY.md](./SECURITY.md)
 
 ---
 
@@ -231,7 +230,7 @@ For project vision and roadmap, see [`docs/VISION.md`](docs/VISION.md).
 ---
 
 **Built with** ❤️ **for participatory democracy**  
-**Last Updated**: January 2026  
+**Last Updated**: February 2026  
 **Version**: 1.0.0 (MVP Complete)
 
 🚀 **DEPLOY NOW!**

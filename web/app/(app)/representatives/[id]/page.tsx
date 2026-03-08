@@ -617,43 +617,57 @@ function RepresentativeDetailPageContent() {
             </div>
           </div>
 
-          {representative.committees && representative.committees.length > 0 && (
-            <div className="mb-8">
-              <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-3">{t('civics.representatives.detail.sections.committees')}</h3>
-              <div className="grid gap-2">
-                {representative.committees.slice(0, 8).map((committee) => (
-                  <div key={committee.id} className="text-sm text-gray-600 dark:text-gray-400">
-                    {committee.committee_name} {committee.role ? `• ${committee.role}` : ''}
-                    {committee.is_current ? ` • ${t('civics.representatives.detail.committees.current')}` : ''}
+          <div className="mb-8">
+            <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-3">{t('civics.representatives.detail.sections.committees')}</h3>
+            {representative.committees && representative.committees.length > 0 ? (
+                <>
+                  <p className="text-xs text-gray-500 dark:text-gray-400 mb-2">{t('civics.representatives.detail.committees.description')}</p>
+                  <div className="grid gap-2">
+                    {representative.committees.slice(0, 8).map((committee) => (
+                      <div key={committee.id} className="text-sm text-gray-600 dark:text-gray-400">
+                        {committee.committee_name} {committee.role ? `• ${committee.role}` : ''}
+                        {committee.is_current ? ` • ${t('civics.representatives.detail.committees.current')}` : ''}
+                      </div>
+                    ))}
                   </div>
-                ))}
-              </div>
-            </div>
-          )}
+                  {representative.committees.length > 8 && (
+                    <p className="text-xs text-gray-500 dark:text-gray-400 mt-2">
+                      {t('civics.representatives.detail.committees.more', { count: representative.committees.length - 8 })}
+                    </p>
+                  )}
+                </>
+            ) : (
+              <p className="text-sm text-gray-500 dark:text-gray-400">{t('civics.representatives.detail.committees.empty')}</p>
+            )}
+          </div>
 
           {(() => {
             const billActivities = (representative.activities ?? []).filter((a) => a.type === 'bill');
-            return billActivities.length > 0 ? (
+            return (
               <div className="mb-8">
                 <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-3">{t('civics.representatives.detail.sections.recentActivity')}</h3>
                 <p className="text-xs text-gray-500 dark:text-gray-400 mb-2">{t('civics.representatives.detail.recentActivity.description')}</p>
-                <div className="space-y-3">
-                  {billActivities.slice(0, 5).map((activity) => (
-                    <div key={activity.id} className="p-3 border border-gray-200 dark:border-gray-700 rounded-lg">
-                      <div className="text-sm font-semibold text-gray-900 dark:text-gray-100">{activity.title}</div>
-                      {activity.description && (
-                        <div className="text-sm text-gray-600 dark:text-gray-400">{activity.description}</div>
-                      )}
-                      <div className="text-xs text-gray-500 dark:text-gray-400">
-                        {activity.type}
-                        {activity.date ? ` · ${formatElectionDateStable(activity.date)}` : ''}
-                        {activity.source ? ` · ${activity.source}` : ''}
+                {billActivities.length > 0 ? (
+                  <div className="space-y-3">
+                    {billActivities.slice(0, 5).map((activity) => (
+                      <div key={activity.id} className="p-3 border border-gray-200 dark:border-gray-700 rounded-lg">
+                        <div className="text-sm font-semibold text-gray-900 dark:text-gray-100">{activity.title}</div>
+                        {activity.description && (
+                          <div className="text-sm text-gray-600 dark:text-gray-400">{activity.description}</div>
+                        )}
+                        <div className="text-xs text-gray-500 dark:text-gray-400">
+                          {activity.type}
+                          {activity.date ? ` · ${formatElectionDateStable(activity.date)}` : ''}
+                          {activity.source ? ` · ${activity.source}` : ''}
+                        </div>
                       </div>
-                    </div>
-                  ))}
-                </div>
+                    ))}
+                  </div>
+                ) : (
+                  <p className="text-sm text-gray-500 dark:text-gray-400">{t('civics.representatives.detail.recentActivity.empty')}</p>
+                )}
               </div>
-            ) : null;
+            );
           })()}
 
         {divisionIds.length > 0 && upcomingElections.length > 0 && (
@@ -749,6 +763,7 @@ function RepresentativeDetailPageContent() {
           {campaignFinance && (
             <div className="mb-8 p-4 bg-gray-50 dark:bg-gray-800 rounded-lg">
               <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-2">{t('civics.representatives.detail.sections.campaignFinance')}</h3>
+              <p className="text-xs text-gray-500 dark:text-gray-400 mb-3">{t('civics.representatives.detail.campaignFinance.description')}</p>
               <div className="grid md:grid-cols-2 gap-2 text-sm text-gray-600 dark:text-gray-400">
                 {campaignFinance.cycle && <div>{t('civics.representatives.detail.campaignFinance.cycle')} {campaignFinance.cycle}</div>}
                 {campaignFinance.total_raised != null && <div>{t('civics.representatives.detail.campaignFinance.totalRaised')} ${campaignFinance.total_raised.toLocaleString()}</div>}

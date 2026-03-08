@@ -6,6 +6,9 @@ import {
 } from '../enrich/committees.js';
 
 
+const MAX_COMMITTEE_NAME_LEN = 255;
+const MAX_ROLE_LEN = 255;
+
 interface CommitteeInsertRow {
   representative_id: number;
   committee_name: string;
@@ -15,6 +18,11 @@ interface CommitteeInsertRow {
   is_current: boolean;
   created_at: string;
   updated_at: string;
+}
+
+function truncate(s: string, max: number): string {
+  if (s.length <= max) return s;
+  return s.slice(0, max);
 }
 
 function buildInsertRows(
@@ -35,8 +43,8 @@ function buildInsertRows(
 
     rows.push({
       representative_id: representativeId,
-      committee_name: normalizedName,
-      role: assignment.role?.trim() ?? null,
+      committee_name: truncate(normalizedName, MAX_COMMITTEE_NAME_LEN),
+      role: assignment.role ? truncate(assignment.role.trim(), MAX_ROLE_LEN) : null,
       start_date: assignment.startDate,
       end_date: assignment.endDate,
       is_current: assignment.isCurrent,

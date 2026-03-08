@@ -136,6 +136,8 @@ test.describe('Authentication Flow', () => {
 
   test.describe('Login Flow', () => {
     test.skip(!regularEmail || !regularPassword, 'E2E credentials not available');
+    // Retry once on failure (production timing/hydration)
+    test.describe.configure({ retries: 1 });
 
     test('user can log in with valid credentials', async ({ page }) => {
       test.setTimeout(120_000);
@@ -300,8 +302,9 @@ test.describe('Authentication Flow', () => {
 
       await page.click('[data-testid="login-submit"]');
 
-      // Wait for authentication to complete
-      await page.waitForTimeout(3_000);
+      // Wait for navigation after login (production may take longer)
+      await page.waitForURL(/(dashboard|feed|onboarding|profile|\/auth)/, { timeout: 45_000 }).catch(() => undefined);
+      await page.waitForTimeout(2_000);
 
       // Diagnostic: Check cookies before polling
       const cookiesBefore = await page.context().cookies();

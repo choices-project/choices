@@ -1,6 +1,6 @@
 # Testing Guide
 
-_Last updated: February 2026 (E2E: poll-templates, civics-navigation, contact-admin-management; axe CI)_
+_Last updated: March 2026 (suite audit: TEST_SUITE_AUDIT.md; E2E curated for CI and production)_
 
 This guide explains how we exercise the Choices web app and where to add coverage when working on new features or store refactors.
 
@@ -56,7 +56,18 @@ cd web && npx playwright test --config=playwright.config.ts tests/e2e/specs/user
     - Ensure the CI jobs reference only existing `projects` names.
     - Tag performance-sensitive specs with `@performance` to participate in the `Performance Tests` job.
 
-See also: `docs/ROADMAP_SINGLE_SOURCE.md` for in-flight test gaps and priorities.
+See also: `docs/ROADMAP.md` for remaining test work; `docs/TEST_SUITE_AUDIT.md` for suite curation and CI alignment.
+
+### Pre-launch / expanded coverage (March 2026)
+
+Before go-live, run the full suite plus error-path and critical-journey E2E:
+
+- **Error paths** (`tests/e2e/specs/error-paths.spec.ts`): 404 page content and homepage link, unauthenticated contact submit (401), invalid contact type/email (400/401).
+- **Critical journey** (`tests/e2e/specs/critical-journey.spec.ts`): Landing → auth → dashboard/feed/civics/polls reachable and show expected content.
+- **Unit**: `tests/unit/lib/contact/contact-validation.test.ts` (email/phone/fax/address/edge cases), `tests/unit/lib/security/input-sanitization.test.ts` (validateRepresentativeId, sanitizeText, sanitizeSubject).
+- **Contract**: `tests/contracts/feature-flags-public.contract.test.ts` (GET /api/feature-flags/public shape).
+
+Run with: `npm run test` (Jest), `npm run test:e2e:critical` (error-paths + critical-journey only, ~1 min), or `npm run test:e2e` (full Playwright; includes error-paths and critical-journey). CI runs error-paths and critical-journey in the E2E job.
 
 ### Quick Runbook (Copy/Paste)
 
@@ -100,7 +111,7 @@ Utilities:
 - `npm run lint:hooks` — Focused React Hooks audit (`react-hooks/rules-of-hooks` + `react-hooks/exhaustive-deps` forced to `error`), useful before large refactors.
 - `npm run lint:locale` — FormatJS literal-string enforcement for `/app/(app)/candidates/**` and `features/civics/**`; blocks CI if untranslated copy slips in.
 - `npm run type-check` — TypeScript project references check.
-- `npm run governance:check` — Verifies store/API changes have the required roadmap/doc/changelog updates (CI gate).
+- `npm run governance:check` — Verifies store/API changes have the required roadmap/doc/changelog updates (CI gate). Run from **repository root**, not `web/`.
 
 ## Accessibility Guidelines
 
@@ -167,6 +178,13 @@ We expose store and feature harnesses under `/app/(app)/e2e/*` to keep Playwrigh
 3. Emit readiness markers: set `document.documentElement.dataset.<store>Harness = 'ready'` **and** expose a promise on the harness so `waitForHarnessReady(page, '<store>')` resolves deterministically.
 4. Surface deterministic fixtures: when the harness mirrors Supabase/API behaviour, reuse the MSW handlers that Playwright loads when `PLAYWRIGHT_USE_MOCKS=1`.
 5. Document the harness by adding it to the list above and linking back to the owning feature/stores in the PR description.
+
+### Store modernization and harness stability (ROADMAP C, F)
+
+- **Store harnesses** map to the stores in `docs/ROADMAP.md` §2.2 and `docs/ROADMAP_SINGLE_SOURCE.md` § C: adminStore, appStore, feedsStore, pollsStore, profileStore, pwaStore, etc. Each store that has user-visible behaviour should have (1) unit/RTL coverage, (2) a harness page under `/e2e/*` when needed for Playwright, (3) specs that use `waitForHarnessReady` or equivalent and `findBy*` queries so hydration completes before assertions.
+- **Reducing flake:** Use `data-*-harness="ready"` and `window.__*Harness` readiness before interacting; prefer `page.getByRole` / `getByTestId` with explicit timeouts; keep `beforeEach` state resets (e.g. `reset*State()`) so tests don’t leak. Production config uses `retries: 1` in CI for E2E; avoid relaxing assertions—fix timing or selectors instead.
+- **Production vs harness:** Full production E2E skips specs that depend on `/e2e/*` (harness pages are not deployed). So “51 skipped” in production is expected for harness-only specs. Contract tests and smoke must stay green; store coverage in CI runs against the dev server with `NEXT_PUBLIC_ENABLE_E2E_HARNESS=1`.
+- **Adding coverage:** When modernizing a store (ROADMAP C), add or extend RTL/integration tests and, if the store drives a dedicated UI, ensure the harness page and spec are updated and documented in this section and in `tests/e2e/README.md`.
 
 ### Shared Test Fixtures
 
@@ -364,5 +382,5 @@ Philosophy: tests reveal issues → fix code → better UX. Do not weaken tests 
 
 - **Owner:** Core maintainer
 - **Update cadence:** Review on major feature changes and at least monthly
-- **Last verified:** TBD
+- **Last verified:** 2026-03-02 (suite audit; CI and production workflows aligned with existing specs)
 

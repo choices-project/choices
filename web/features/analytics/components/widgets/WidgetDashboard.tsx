@@ -111,7 +111,6 @@ const WidgetDashboardInner: React.FC<WidgetDashboardInnerProps> = ({
   const {
     setEditing,
     setSelectedWidget,
-    setKeyboardMode,
     loadLayout,
     initializeLayout,
     saveLayout,
@@ -144,10 +143,10 @@ const WidgetDashboardInner: React.FC<WidgetDashboardInnerProps> = ({
             to: mode,
           });
         }
-        setKeyboardMode(mode);
+        storeApi.getState().setKeyboardMode(mode);
       }
     },
-    [setKeyboardMode, storeApi],
+    [storeApi],
   );
 
   const setEditingIfChanged = useCallback(

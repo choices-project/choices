@@ -53,3 +53,11 @@ jobs:
           SUPABASE_URL: ${{ secrets.NEXT_PUBLIC_SUPABASE_URL }}
           SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
           OPENSTATES_API_KEY: ${{ secrets.OPEN_STATES_API_KEY }}
+          # Committees API often returns 0; YAML-only frees ~93 calls for activity (see OPENSTATES_COMMITTEES_STATUS.md)
+          OPENSTATES_USE_API_COMMITTEES: 'false'
+
+      - name: Verify data integrity
+        run: npm run tools:smoke-test -- --quick
+        env:
+          SUPABASE_URL: ${{ secrets.NEXT_PUBLIC_SUPABASE_URL }}
+          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}

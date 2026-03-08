@@ -148,7 +148,7 @@ Troubleshooting tips:
 - `web/lib/cache/analytics-cache.ts` — Redis helpers.
 - `web/features/analytics/lib/privacyFilters.ts` — Privacy enforcement utilities.
 - `docs/archive/reference/guides/ADMIN_GUIDE_ANALYTICS.md` — Admin dashboard usage guide.
-- `docs/ROADMAP.md` / `docs/ROADMAP_SINGLE_SOURCE.md` — Tracking for analytics initiatives.
+- `docs/ROADMAP.md` — Definitive MVP roadmap; analytics store/test work in §2.2. Legacy detail: `docs/ROADMAP_SINGLE_SOURCE.md`.
 
 For questions or follow-ups, tag the Analytics & Admin working group in the roadmap and reference this document.
 

@@ -14,12 +14,16 @@ This file defines the canonical documentation set under `docs/`. Everything else
 
 ### Current status & roadmap
 - `CURRENT_STATUS.md`
-- `ROADMAP_SINGLE_SOURCE.md` — Single source of truth for roadmap, next steps, and verification
+- `ROADMAP.md` — **Definitive MVP roadmap** (all remaining work; reconciled with docs + scratch)
+- `ROADMAP_SINGLE_SOURCE.md` — Legacy sections A–H, immediate actions, runbooks (detail only; remaining work lives in ROADMAP.md)
 - `FEATURE_STATUS.md`
 - `FEATURE_FLAGS_AUDIT.md` — Feature flags audit, usage map, and setup guide for new developers
+- `FEATURE_FLAGS_REMAINING_ISSUES.md` — Remaining feature-flag work: contact API/page gating, SOCIAL_SHARING client consistency, verification checklist
 
 ### Testing & QA
 - `TESTING.md` — Unit, E2E, axe, production testing (merged from PRODUCTION_TESTING)
+- `TEST_SUITE_AUDIT.md` — Suite curation, CI alignment, @smoke/@axe tags, optimization notes
+- `PRODUCTION_TESTING_STATUS.md` — Production E2E status, fixes applied, remaining failures, verification summary
 - `TROUBLESHOOTING.md`
 
 ### Deployment & ops
@@ -55,6 +59,7 @@ This file defines the canonical documentation set under `docs/`. Everything else
 - Planning, summaries, and completion reports (e.g., `*_COMPLETE.md`, `*_SUMMARY.md`, `*_PRIORITY.md`) — see `docs/archive/`
 - One-off implementation notes
 - Guides not referenced by the canonical set
+- Feature-specific notes: `docs/features/*.md` (analytics, civics, device-flow, landing-page, push-notifications) — reference only; canonical status is in FEATURE_STATUS.md and ROADMAP.md
 
 Archived 2026-02: `DEVELOPMENT`, `PRODUCTION_TESTING`, `INTERNATIONALIZATION`, `UTILS_GUIDE`, `STATE_MANAGEMENT_ARCHITECTURE` → `docs/archive/2026-02-docs-consolidation/`
 

@@ -155,14 +155,13 @@ jobs:
           --project=${{ matrix.browser }}
           --reporter=html,junit
           --max-failures=1
-          tests/e2e/specs/dashboard/dashboard-feeds.spec.ts
           tests/e2e/specs/dashboard/dashboard-journey.spec.ts
           tests/e2e/specs/navigation-shell.spec.ts
-          tests/e2e/specs/global-navigation.spec.ts
           tests/e2e/specs/admin-navigation.spec.ts
-          tests/e2e/specs/analytics-dashboard-screen-reader.spec.ts
-          tests/e2e/specs/analytics-dashboard-axe.spec.ts
-          tests/e2e/specs/locale-switch.spec.ts
+          tests/e2e/specs/accessibility/critical-pages-a11y.spec.ts
+          tests/e2e/specs/accessibility/keyboard-navigation.spec.ts
+          tests/e2e/specs/error-paths.spec.ts
+          tests/e2e/specs/critical-journey.spec.ts
         env:
           CI: true
           BASE_URL: http://127.0.0.1:3000

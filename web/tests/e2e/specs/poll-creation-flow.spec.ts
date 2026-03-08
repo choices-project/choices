@@ -2,19 +2,33 @@ import { test, expect } from '@playwright/test';
 import { loginTestUser, getE2EUserCredentials } from '../helpers/e2e-setup';
 
 test.describe('Poll Creation Flow', () => {
+  test.describe.configure({ retries: 1 }); // Production auth/session timing
   const credentials = getE2EUserCredentials();
 
   test.beforeEach(async ({ page }) => {
     test.skip(!credentials, 'E2E_USER_EMAIL and E2E_USER_PASSWORD must be set');
+    const baseUrl = process.env.BASE_URL ?? '';
+    if (baseUrl.includes('choices-app.com')) {
+      await page.goto(`${baseUrl}/auth`, { waitUntil: 'domcontentloaded', timeout: 30_000 });
+    }
     await loginTestUser(page, credentials!);
-    await page.goto('/polls/create');
-    await page.waitForLoadState('networkidle');
+    if (baseUrl.includes('choices-app.com')) {
+      await page.waitForTimeout(3_000);
+      const url = page.url();
+      if (url.includes('/auth')) {
+        throw new Error('Login did not establish session – still on /auth. Fix auth or E2E credentials.');
+      }
+    }
+    await page.goto('/polls/create', { waitUntil: 'domcontentloaded', timeout: 30_000 });
+    await page.waitForLoadState('networkidle').catch(() => undefined);
+    await page.waitForTimeout(1_000);
   });
 
   test('should navigate through all steps using Previous/Next buttons', async ({ page }) => {
-    // Step 1: Details
-    await expect(page.locator('h1:has-text("Create Poll")')).toBeVisible();
-    await expect(page.locator('input[id="title"]')).toBeVisible();
+    // Step 1: Details – fail if we landed on auth (session not established)
+    const createHeading = page.locator('h1').filter({ hasText: /create.*poll/i });
+    await expect(createHeading.first()).toBeVisible({ timeout: 15_000 });
+    await expect(page.locator('input[id="title"]')).toBeVisible({ timeout: 10_000 });
 
     // Fill in details
     await page.fill('input[id="title"]', 'Test Poll Title');

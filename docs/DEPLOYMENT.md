@@ -1,6 +1,6 @@
 # Deployment Guide
 
-_Last updated: November 12, 2025_
+_Last updated: February 2026_
 
 ## Purpose
 Use this guide as the single source of truth for shipping the Choices web application. It covers the required checks, how to move a release from local verification to production, and where to look if something goes wrong.
@@ -97,18 +97,29 @@ If you need to revert or disable a subsystem:
 ## 7. Release Checklist (Governance & Rollout)
 Use this list **before** calling a release done. Link back to the relevant evidence (Playwright runs, docs, issues).
 
-- [ ] **Inclusive UI / A11y** — Automation (`npm run test:e2e -- --grep @axe`, navigation + analytics SR specs) green; manual NVDA/VoiceOver smoke logged in `scratch/gpt5-codex/archive/inclusive-platform/manual-a11y-smoke-*.md`.
-- [ ] **Locale Coverage** — Locale-switch Playwright spec green; `npm run i18n:extract` snapshot committed; copy changes translated per `docs/technical/i18n-workflow.md`.
-- [ ] **Contract & Harness Parity** — `npm run test:contracts` green; any new routes documented in `docs/TESTING/api-contract-plan.md`; MSW fixtures updated.
+- [ ] **Inclusive UI / A11y** — Automation (`npm run test:e2e -- --grep @axe`, navigation + analytics SR specs) green; document manual NVDA/VoiceOver smoke in a repo runbook or under `docs/archive/` as needed.
+- [ ] **Locale Coverage** — Locale-switch Playwright spec green; `npm run i18n:extract` snapshot committed; copy changes translated per `docs/archive/reference/technical/technical/i18n-workflow.md` or workflow documented in `docs/ROADMAP.md` or `docs/ROADMAP_SINGLE_SOURCE.md`.
+- [ ] **Contract & Harness Parity** — `npm run test:contracts` green; any new routes documented in `docs/API/contracts.md` and `docs/archive/reference/testing/TESTING/api-contract-plan.md`; MSW fixtures updated.
 - [ ] **Documentation** — Architecture/API docs reflect new selectors, middleware, or response envelopes (`docs/STATE_MANAGEMENT.md`, `docs/API/contracts.md`, etc.).
 - [ ] **Release Notes & Comms** — `docs/archive/release-notes/CHANGELOG.md` (or relevant release note) updated; support + partner teams notified of API schema or analytics changes.
-- [ ] **Audit Scheduling** — Upcoming SR + locale audit owners/date confirmed in `scratch/gpt5-codex/archive/inclusive-platform/issues.md`.
+- [ ] **Audit Scheduling** — Upcoming SR + locale audit owners/date confirmed in `docs/ROADMAP.md` or a runbook under `docs/archive/` as needed.
 
 Keep this document up to date as the deployment workflow evolves. When processes change, update both the commands above and any linked runbooks.
+
+## 8. Pre-launch / outreach checklist
+
+Use this list **before** social or public outreach (e.g. announcing the repo, inviting collaborators) so the repository and app present a single, professional narrative.
+
+- [ ] **README and CONTRIBUTING** — Root README and CONTRIBUTING.md are up to date; no duplicate or broken doc links.
+- [ ] **VISION and FEATURE_STATUS** — `docs/VISION.md` and `docs/FEATURE_STATUS.md` are aligned (GA vs in-progress vs quarantined); Future Roadmap points to `docs/ROADMAP.md`.
+- [ ] **PR template** — `.github/PULL_REQUEST_TEMPLATE.md` links only to existing paths (canonical docs or `docs/archive/`).
+- [ ] **Status docs** — `docs/CURRENT_STATUS.md` and `docs/ROADMAP.md` have a concrete "Last verified" date (no TBD).
+- [ ] **Production smoke** — `npm run test:e2e:production:smoke` (or equivalent) passes; see `docs/PRODUCTION_TESTING_STATUS.md`.
+- [ ] **Repo essentials** — SECURITY.md, CONTRIBUTING.md, and LICENSE are linked correctly from the README and present at repo root.
 
 ## Ownership & Update Cadence
 
 - **Owner:** Core maintainer
 - **Update cadence:** Review on major feature changes and at least monthly
-- **Last verified:** TBD
+- **Last verified:** 2026-02-26
 
