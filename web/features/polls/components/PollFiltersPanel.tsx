@@ -314,7 +314,7 @@ export function PollFiltersPanel({ actions }: PollFiltersPanelProps) {
           className={cn(
             'rounded-full px-3 py-1 text-sm font-medium transition-colors',
             selectedCategory === 'all'
-              ? 'bg-primary/10 text-primary'
+              ? 'bg-primary text-primary-foreground'
               : 'bg-muted text-foreground/80 hover:bg-muted/80',
           )}
         >

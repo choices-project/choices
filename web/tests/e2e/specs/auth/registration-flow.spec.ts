@@ -20,8 +20,7 @@ import {
  * due to RLS policies. The fix uses admin client to bypass RLS.
  */
 
-const PRODUCTION_URL = process.env.PRODUCTION_URL || 'https://www.choices-app.com';
-const BASE_URL = process.env.BASE_URL || PRODUCTION_URL;
+const useMocks = process.env.PLAYWRIGHT_USE_MOCKS === '1';
 
 test.describe('Registration Flow', () => {
   test.beforeEach(async ({ page }) => {
@@ -31,7 +30,7 @@ test.describe('Registration Flow', () => {
 
   test.describe('Registration Form', () => {
     test('registration form loads and displays correctly', async ({ page }) => {
-      await page.goto(`${BASE_URL}/auth`, { waitUntil: 'domcontentloaded', timeout: 30_000 });
+      await page.goto('/auth', { waitUntil: 'domcontentloaded', timeout: 30_000 });
       await waitForPageReady(page);
 
       // Wait for auth page to be hydrated
@@ -67,7 +66,7 @@ test.describe('Registration Flow', () => {
     });
 
     test('can toggle between login and signup forms', async ({ page }) => {
-      await page.goto(`${BASE_URL}/auth`, { waitUntil: 'domcontentloaded', timeout: 30_000 });
+      await page.goto('/auth', { waitUntil: 'domcontentloaded', timeout: 30_000 });
       await waitForPageReady(page);
 
       await page.waitForSelector('[data-testid="auth-hydrated"]', { state: 'attached', timeout: 30_000 });
@@ -127,7 +126,7 @@ test.describe('Registration Flow', () => {
         });
       });
 
-      await page.goto(`${BASE_URL}/auth`, { waitUntil: 'domcontentloaded', timeout: 30_000 });
+      await page.goto('/auth', { waitUntil: 'domcontentloaded', timeout: 30_000 });
       await waitForPageReady(page);
 
       // Wait for auth page to be hydrated
@@ -324,7 +323,7 @@ test.describe('Registration Flow', () => {
 
       // CRITICAL VERIFICATION: Try to access profile page to verify profile exists
       // This verifies the RLS fix - if profile wasn't created, this would fail
-      await page.goto(`${BASE_URL}/profile`, { waitUntil: 'domcontentloaded', timeout: 30_000 });
+      await page.goto('/profile', { waitUntil: 'domcontentloaded', timeout: 30_000 });
       await page.waitForTimeout(2_000);
 
       // Should not redirect to auth (profile should be accessible)
@@ -354,9 +353,9 @@ test.describe('Registration Flow', () => {
 
   test.describe('Registration Error Handling', () => {
     test('registration fails with duplicate email', async ({ page }) => {
+      test.skip(useMocks, 'Duplicate email check requires real Supabase — skipped in mock mode');
       test.setTimeout(120_000);
 
-      // Use existing test credentials if available
       const regularEmail = process.env.E2E_USER_EMAIL;
       const regularPassword = process.env.E2E_USER_PASSWORD;
 
@@ -365,7 +364,7 @@ test.describe('Registration Flow', () => {
         return;
       }
 
-      await page.goto(`${BASE_URL}/auth`, { waitUntil: 'domcontentloaded', timeout: 30_000 });
+      await page.goto('/auth', { waitUntil: 'domcontentloaded', timeout: 30_000 });
       await waitForPageReady(page);
 
       await page.waitForSelector('[data-testid="auth-hydrated"]', { state: 'attached', timeout: 30_000 });
