@@ -4,7 +4,7 @@ This directory contains end-to-end (E2E) tests for the Choices application using
 
 ## Test Organization
 
-Tests are organized by feature area in the `specs/` directory. See `docs/TEST_SUITE_AUDIT.md` for the curated list and CI mapping.
+Tests are organized by feature area in the `specs/` directory. See `docs/TESTING.md` for the curated list and CI mapping.
 
 ```
 specs/
@@ -104,7 +104,7 @@ npm run test:e2e:production:smoke
 BASE_URL=https://www.choices-app.com PLAYWRIGHT_USE_MOCKS=0 npm run test:e2e:production
 ```
 
-Requires `E2E_USER_EMAIL`, `E2E_USER_PASSWORD` (and admin creds for admin tests). See `docs/PRODUCTION_TESTING_STATUS.md` and `docs/TESTING.md`.
+Requires `E2E_USER_EMAIL`, `E2E_USER_PASSWORD` (and admin creds for admin tests). See `docs/TESTING.md`.
 
 ## Environment Variables
 

@@ -83,19 +83,14 @@ export function EnhancedSearch({ onSearch, loading = false, className = '' }: En
   }, [partyFilter, officeFilter, stateFilter, levelFilter]);
 
   const handleSearch = () => {
-    const query: any = {};
+    const query: RepresentativeSearchQuery = {};
     if (searchQuery) query.query = searchQuery;
     if (partyFilter) query.party = partyFilter;
     if (officeFilter) query.office = officeFilter;
     if (stateFilter) query.state = stateFilter;
     if (levelFilter) query.level = levelFilter as 'federal' | 'state' | 'local';
 
-    // Remove undefined values
-    const cleanQuery = Object.fromEntries(
-      Object.entries(query).filter(([_, value]) => value !== undefined)
-    ) as RepresentativeSearchQuery;
-
-    onSearch(cleanQuery);
+    onSearch(query);
   };
 
   const handleKeyPress = (e: React.KeyboardEvent) => {

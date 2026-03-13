@@ -1,16 +1,16 @@
 # Testing Guide
 
-**Last Updated**: November 7, 2025
+**Last Updated**: March 2026
 
 ---
 
 ## Canonical Testing Docs
 
-- Global auth guidance: [`docs/testing/AUTH.md`](../../docs/testing/AUTH.md)
-- Onboarding harness plan: [`docs/testing/ONBOARDING.md`](../../docs/testing/ONBOARDING.md)
-- Passkey rollback runbook: [`docs/operations/passkey-rollback-playbook.md`](../../docs/operations/passkey-rollback-playbook.md)
+- Testing strategy: [`docs/TESTING.md`](../../docs/TESTING.md)
+- Production E2E status: [`docs/TESTING.md`](../../docs/TESTING.md) § Production Testing
+- WebAuthn/passkey design: [`docs/WEBAUTHN_DESIGN.md`](../../docs/WEBAUTHN_DESIGN.md)
 
-Use this README for quick commands; update the docs above for authoritative instructions.
+Use this README for quick commands; see the docs above for authoritative instructions.
 
 ---
 
@@ -87,9 +87,9 @@ web/tests/
 ## Documentation
 
 - **Canonical references**  
-  - [`docs/testing/AUTH.md`](../../docs/testing/AUTH.md) – Auth/Playwright harness strategy  
-  - [`docs/testing/ONBOARDING.md`](../../docs/testing/ONBOARDING.md) – Upcoming onboarding plan  
-  - [`docs/operations/passkey-rollback-playbook.md`](../../docs/operations/passkey-rollback-playbook.md) – Rollback procedure
+  - [`docs/TESTING.md`](../../docs/TESTING.md) – Testing strategy and patterns  
+  - [`docs/TESTING.md`](../../docs/TESTING.md) – Testing strategy and production E2E status  
+  - [`docs/WEBAUTHN_DESIGN.md`](../../docs/WEBAUTHN_DESIGN.md) – WebAuthn/passkey design and rollback
 
 - **Local indexes**  
   - [`e2e/README.md`](./e2e/README.md) – Playwright configuration & helpers  

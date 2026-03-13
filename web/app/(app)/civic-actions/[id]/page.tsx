@@ -10,14 +10,17 @@
 import { ArrowLeft, Calendar, Flag, Heart, Loader2, Users } from 'lucide-react';
 import Link from 'next/link';
 import { useParams, useRouter } from 'next/navigation';
-import React, { useCallback, useEffect, useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 
 import { EnhancedErrorDisplay } from '@/components/shared/EnhancedErrorDisplay';
+import { CivicActionDetailSkeleton } from '@/components/shared/Skeletons';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 
+import { get, post } from '@/lib/api/client';
 import { isFeatureEnabled } from '@/lib/core/feature-flags';
+import { useNotificationActions } from '@/lib/stores';
 import { useAppActions } from '@/lib/stores/appStore';
 import { logger } from '@/lib/utils/logger';
 
@@ -42,7 +45,7 @@ type CivicAction = {
 };
 
 const URGENCY_COLORS: Record<string, string> = {
-  low: 'bg-gray-100 text-gray-800 dark:bg-gray-800 dark:text-gray-200',
+  low: 'bg-muted text-foreground',
   medium: 'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200',
   high: 'bg-orange-100 text-orange-800 dark:bg-orange-900 dark:text-orange-200',
   critical: 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200',
@@ -53,6 +56,7 @@ export default function CivicActionDetailPage() {
   const params = useParams();
   const router = useRouter();
   const { setCurrentRoute, setSidebarActiveSection, setBreadcrumbs } = useAppActions();
+  const { addNotification } = useNotificationActions();
   const actionId = params?.id as string | undefined;
 
   const [action, setAction] = useState<CivicAction | null>(null);
@@ -61,30 +65,31 @@ export default function CivicActionDetailPage() {
   const [isSigning, setIsSigning] = useState(false);
   const [hasSigned, setHasSigned] = useState(false);
 
-  const fetchAction = useCallback(async () => {
-    if (!actionId) return;
-    setLoading(true);
-    setError(null);
-    try {
-      const res = await fetch(`/api/civic-actions/${actionId}`);
-      const data = await res.json();
-      if (!res.ok || !data.success) {
-        throw new Error(data.error || 'Failed to load civic action');
-      }
-      setAction(data.data);
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to load');
-      logger.error('Civic action fetch failed', err);
-    } finally {
-      setLoading(false);
-    }
-  }, [actionId]);
-
   useEffect(() => {
-    if (actionId) {
-      fetchAction();
-    }
-  }, [actionId, fetchAction]);
+    if (!actionId) return;
+
+    const controller = new AbortController();
+
+    const loadAction = async () => {
+      setLoading(true);
+      setError(null);
+      try {
+        const data = await get<CivicAction>(`/api/civic-actions/${actionId}`, {
+          signal: controller.signal,
+        });
+        setAction(data);
+      } catch (err) {
+        if (err instanceof Error && err.name === 'AbortError') return;
+        setError(err instanceof Error ? err.message : 'Failed to load');
+        logger.error('Civic action fetch failed', err);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    loadAction();
+    return () => controller.abort();
+  }, [actionId]);
 
   useEffect(() => {
     if (action) {
@@ -106,20 +111,24 @@ export default function CivicActionDetailPage() {
     if (!actionId || isSigning || hasSigned) return;
     setIsSigning(true);
     try {
-      const res = await fetch(`/api/civic-actions/${actionId}/sign`, { method: 'POST' });
-      const data = await res.json();
-      if (!res.ok || !data.success) {
-        throw new Error(data.error || 'Failed to sign');
-      }
+      const data = await post<{ signature_count?: number }>(
+        `/api/civic-actions/${actionId}/sign`
+      );
       setHasSigned(true);
       if (action) {
         setAction({
           ...action,
-          current_signatures: data.data?.signature_count ?? (action.current_signatures ?? 0) + 1,
+          current_signatures: data?.signature_count ?? (action.current_signatures ?? 0) + 1,
         });
       }
     } catch (err) {
       logger.error('Sign failed', err);
+      addNotification({
+        type: 'error',
+        title: 'Sign Failed',
+        message: 'Unable to sign this action. Please try again.',
+        duration: 5000,
+      });
     } finally {
       setIsSigning(false);
     }
@@ -146,15 +155,7 @@ export default function CivicActionDetailPage() {
   }
 
   if (loading) {
-    return (
-      <div className="container mx-auto max-w-2xl px-4 py-8">
-        <div className="animate-pulse" role="status" aria-live="polite" aria-busy="true">
-          <div className="h-8 bg-gray-200 dark:bg-gray-700 rounded w-1/4 mb-6" />
-          <div className="h-64 bg-gray-200 dark:bg-gray-700 rounded mb-4" />
-          <div className="h-32 bg-gray-200 dark:bg-gray-700 rounded" />
-        </div>
-      </div>
-    );
+    return <CivicActionDetailSkeleton />;
   }
 
   if (error || !action) {
@@ -176,7 +177,7 @@ export default function CivicActionDetailPage() {
     <div className="container mx-auto max-w-2xl px-4 py-8">
       <button
         onClick={() => router.back()}
-        className="flex items-center text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-300 mb-6 transition-colors"
+        className="flex items-center text-primary hover:text-primary/80 mb-6 transition-colors"
       >
         <ArrowLeft className="w-5 h-5 mr-2" />
         {t('civics.representatives.detail.back')}
@@ -209,29 +210,29 @@ export default function CivicActionDetailPage() {
           {action.action_type === 'petition' && requiredSignatures > 0 && (
             <div>
               <div className="flex items-center justify-between text-sm mb-2">
-                <span className="text-gray-600 dark:text-gray-400 flex items-center gap-1">
+                <span className="text-muted-foreground flex items-center gap-1">
                   <Users className="w-4 h-4" />
                   {t('civics.actions.card.signatures', {
                     current: signatureCount.toLocaleString(),
                     required: requiredSignatures.toLocaleString(),
                   })}
                 </span>
-                <span className="text-gray-500">
+                <span className="text-muted-foreground">
                   {t('civics.actions.card.percentage', {
                     value: Math.round(signatureProgress),
                   })}
                 </span>
               </div>
-              <div className="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-3">
+              <div className="w-full bg-muted rounded-full h-3">
                 <div
-                  className="bg-blue-600 h-3 rounded-full transition-all"
+                  className="bg-primary h-3 rounded-full transition-all"
                   style={{ width: `${signatureProgress}%` }}
                 />
               </div>
             </div>
           )}
 
-          <div className="flex flex-wrap items-center gap-4 text-sm text-gray-600 dark:text-gray-400">
+          <div className="flex flex-wrap items-center gap-4 text-sm text-muted-foreground">
             {action.end_date && (
               <div className="flex items-center gap-1">
                 <Calendar className="w-4 h-4" />
@@ -283,7 +284,7 @@ export default function CivicActionDetailPage() {
       <div className="mt-6">
         <Link
           href="/civics"
-          className="text-sm text-blue-600 dark:text-blue-400 hover:underline"
+          className="text-sm text-primary hover:underline"
         >
           ← {t('civics.representatives.detail.sections.civicActions')}
         </Link>

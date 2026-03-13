@@ -2,6 +2,9 @@
 
 import { useState } from 'react';
 
+import { Input } from '@/components/ui/input';
+import { Textarea } from '@/components/ui/textarea';
+
 export default function RepresentativeOverridesPage() {
   const [representativeId, setRepresentativeId] = useState<string>('');
   const [shortBio, setShortBio] = useState<string>('');
@@ -59,7 +62,7 @@ export default function RepresentativeOverridesPage() {
   return (
     <div className="max-w-2xl mx-auto p-6 space-y-4">
       <h1 className="text-2xl font-semibold">Representative Public Overrides</h1>
-      <p className="text-gray-600 dark:text-gray-400 text-sm">
+      <p className="text-muted-foreground text-sm">
         For fast-tracked representatives only. Edits are limited to public-facing details and are audited. Official records remain immutable.
       </p>
 
@@ -67,8 +70,7 @@ export default function RepresentativeOverridesPage() {
 
       <div className="space-y-1">
         <label className="text-sm font-medium">Representative ID</label>
-        <input
-          className="w-full border rounded p-2"
+        <Input
           placeholder="Enter your representative ID"
           value={representativeId}
           onChange={(e) => setRepresentativeId(e.target.value)}
@@ -77,8 +79,7 @@ export default function RepresentativeOverridesPage() {
       </div>
       <div className="space-y-1">
         <label className="text-sm font-medium">Profile Photo URL</label>
-        <input
-          className="w-full border rounded p-2"
+        <Input
           placeholder="https://example.com/photo.jpg"
           value={photoUrl}
           onChange={(e) => setPhotoUrl(e.target.value)}
@@ -86,8 +87,7 @@ export default function RepresentativeOverridesPage() {
       </div>
       <div className="space-y-1">
         <label className="text-sm font-medium">Campaign Website</label>
-        <input
-          className="w-full border rounded p-2"
+        <Input
           placeholder="https://yourcampaign.com"
           value={campaignWebsite}
           onChange={(e) => setCampaignWebsite(e.target.value)}
@@ -95,8 +95,7 @@ export default function RepresentativeOverridesPage() {
       </div>
       <div className="space-y-1">
         <label className="text-sm font-medium">Press Contact</label>
-        <input
-          className="w-full border rounded p-2"
+        <Input
           placeholder="press@yourcampaign.com or contact details"
           value={pressContact}
           onChange={(e) => setPressContact(e.target.value)}
@@ -104,8 +103,7 @@ export default function RepresentativeOverridesPage() {
       </div>
       <div className="space-y-1">
         <label className="text-sm font-medium">Short Bio</label>
-        <textarea
-          className="w-full border rounded p-2"
+        <Textarea
           rows={4}
           placeholder="Brief public bio"
           value={shortBio}
@@ -114,8 +112,7 @@ export default function RepresentativeOverridesPage() {
       </div>
       <div className="space-y-1">
         <label className="text-sm font-medium">Social Links (key: url per line)</label>
-        <textarea
-          className="w-full border rounded p-2"
+        <Textarea
           rows={4}
           placeholder="twitter: https://x.com/you\nfacebook: https://facebook.com/you"
           value={socialsText}
@@ -125,7 +122,7 @@ export default function RepresentativeOverridesPage() {
 
       <div>
         <button
-          className="px-4 py-2 rounded bg-blue-600 text-white"
+          className="px-4 py-2 rounded bg-primary text-primary-foreground hover:bg-primary/90 transition-colors"
           onClick={onSubmit}
           disabled={saving}
         >

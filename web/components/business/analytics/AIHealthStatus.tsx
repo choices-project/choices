@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect } from 'react';
 
+import { get } from '@/lib/api/client';
 
 type AIHealthStatusProps = {
   className?: string;
@@ -22,31 +23,32 @@ export function AIHealthStatus({ className = '' }: AIHealthStatusProps) {
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    checkHealth();
-    // Check health every 30 seconds
-    const interval = setInterval(checkHealth, 30000);
-    return () => clearInterval(interval);
-  }, []);
+    const controller = new AbortController();
 
-  const checkHealth = async () => {
-    try {
-      const response = await fetch('/api/analytics/unified/health?methods=comprehensive&ai-provider=colab');
-      if (!response.ok) {
-        throw new Error(`Health check failed: ${response.statusText}`);
+    const checkHealth = async () => {
+      try {
+        const data = await get<HealthData>(
+          '/api/analytics/unified/health?methods=comprehensive&ai-provider=colab',
+          { signal: controller.signal }
+        );
+        setHealth(data);
+        setError(null);
+      } catch (err) {
+        if (err instanceof Error && err.name === 'AbortError') return;
+        setError(err instanceof Error ? err.message : 'Health check failed');
+        setHealth(null);
+      } finally {
+        setLoading(false);
       }
-      
-      const result = await response.json();
-      // Handle successResponse wrapper
-      const data = result?.success && result?.data ? result.data : result;
-      setHealth(data);
-      setError(null);
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'Health check failed');
-      setHealth(null);
-    } finally {
-      setLoading(false);
-    }
-  };
+    };
+
+    checkHealth();
+    const interval = setInterval(checkHealth, 30000);
+    return () => {
+      clearInterval(interval);
+      controller.abort();
+    };
+  }, []);
 
   if (loading) {
     return (

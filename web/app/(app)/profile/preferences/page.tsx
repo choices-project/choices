@@ -1,18 +1,39 @@
 'use client';
 
-import { Settings, Heart, Shield, Save, Loader2, Sparkles, Target } from 'lucide-react';
+import { Settings, Heart, Shield, Save, Loader2, Sparkles, Target, LayoutDashboard } from 'lucide-react';
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
 import InterestSelection from '@/features/onboarding/components/InterestSelection';
 import { useProfile, useProfileUpdate } from '@/features/profile/hooks/use-profile';
 
 import DataUsageExplanation from '@/components/shared/DataUsageExplanation';
+import ProfileSubNav from '@/components/shared/ProfileSubNav';
+import { Card, CardContent } from '@/components/ui/card';
+import { Label } from '@/components/ui/label';
+import { Separator } from '@/components/ui/separator';
+import { Switch } from '@/components/ui/switch';
 
 import { useUser, useIsAuthenticated, useUserLoading } from '@/lib/stores';
 import { useAppActions } from '@/lib/stores/appStore';
+import {
+  useProfilePreferences,
+  useProfileActions,
+} from '@/lib/stores/profileStore';
 import logger from '@/lib/utils/logger';
 
 import { useUserType } from '@/hooks/useUserType';
+
+import type { DashboardPreferences } from '@/types/profile';
+
+const REDUCE_MOTION_KEY = 'choices-reduce-motion';
+const HIGH_CONTRAST_KEY = 'choices-high-contrast';
+
+const DEFAULT_DASHBOARD_PREFERENCES: DashboardPreferences = {
+  showElectedOfficials: false,
+  showQuickActions: true,
+  showRecentActivity: true,
+  showEngagementScore: true,
+};
 
 type StatusMessage = {
   type: 'success' | 'error';
@@ -41,9 +62,100 @@ export default function ProfilePreferencesPage() {
   const { setCurrentRoute, setBreadcrumbs, setSidebarActiveSection } = useAppActions();
   const { userType, recommendations, nextMilestone, isLoading: userTypeLoading } = useUserType(user?.id);
 
+  const profilePreferences = useProfilePreferences();
+  const { updatePreferences } = useProfileActions();
+  const updatePreferencesRef = useRef(updatePreferences);
+  useEffect(() => { updatePreferencesRef.current = updatePreferences; }, [updatePreferences]);
+
+  const dashboardPreferences = useMemo(() => {
+    if (!profilePreferences?.dashboard) return DEFAULT_DASHBOARD_PREFERENCES;
+    return {
+      showElectedOfficials: profilePreferences.dashboard.showElectedOfficials ?? DEFAULT_DASHBOARD_PREFERENCES.showElectedOfficials,
+      showQuickActions: profilePreferences.dashboard.showQuickActions ?? DEFAULT_DASHBOARD_PREFERENCES.showQuickActions,
+      showRecentActivity: profilePreferences.dashboard.showRecentActivity ?? DEFAULT_DASHBOARD_PREFERENCES.showRecentActivity,
+      showEngagementScore: profilePreferences.dashboard.showEngagementScore ?? DEFAULT_DASHBOARD_PREFERENCES.showEngagementScore,
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [
+    profilePreferences?.dashboard?.showElectedOfficials,
+    profilePreferences?.dashboard?.showQuickActions,
+    profilePreferences?.dashboard?.showRecentActivity,
+    profilePreferences?.dashboard?.showEngagementScore,
+  ]);
+
+  const handleDashPrefChange = useCallback((key: keyof DashboardPreferences, value: boolean) => {
+    updatePreferencesRef.current?.({
+      dashboard: { ...dashboardPreferences, [key]: value },
+    }).catch((err: unknown) => {
+      logger.error('Failed to update dashboard preference:', err);
+    });
+  }, [dashboardPreferences]);
+
   // Set mounted immediately on client side
   useEffect(() => {
     setIsMounted(true);
+  }, []);
+
+  // Read reduce-motion from localStorage on mount
+  useEffect(() => {
+    if (!isMounted || typeof window === 'undefined') return;
+    try {
+      const stored = localStorage.getItem(REDUCE_MOTION_KEY);
+      const value = stored === 'true';
+      setReduceMotion(value);
+      if (value) {
+        document.documentElement.classList.add('reduce-motion');
+      } else {
+        document.documentElement.classList.remove('reduce-motion');
+      }
+    } catch {
+      // localStorage unavailable
+    }
+  }, [isMounted]);
+
+  // Read high-contrast from localStorage on mount
+  useEffect(() => {
+    if (!isMounted || typeof window === 'undefined') return;
+    try {
+      const stored = localStorage.getItem(HIGH_CONTRAST_KEY);
+      const value = stored === 'true';
+      setHighContrast(value);
+      if (value) {
+        document.documentElement.classList.add('high-contrast');
+      } else {
+        document.documentElement.classList.remove('high-contrast');
+      }
+    } catch {
+      // localStorage unavailable
+    }
+  }, [isMounted]);
+
+  const handleReduceMotionChange = useCallback((checked: boolean) => {
+    setReduceMotion(checked);
+    try {
+      localStorage.setItem(REDUCE_MOTION_KEY, String(checked));
+      if (checked) {
+        document.documentElement.classList.add('reduce-motion');
+      } else {
+        document.documentElement.classList.remove('reduce-motion');
+      }
+    } catch {
+      // localStorage unavailable
+    }
+  }, []);
+
+  const handleHighContrastChange = useCallback((checked: boolean) => {
+    setHighContrast(checked);
+    try {
+      localStorage.setItem(HIGH_CONTRAST_KEY, String(checked));
+      if (checked) {
+        document.documentElement.classList.add('high-contrast');
+      } else {
+        document.documentElement.classList.remove('high-contrast');
+      }
+    } catch {
+      // localStorage unavailable
+    }
   }, []);
 
   // Refs for stable app store actions
@@ -65,6 +177,9 @@ export default function ProfilePreferencesPage() {
 
   const [userInterests, setUserInterests] = useState<string[]>(initialInterests);
   const [statusMessage, setStatusMessage] = useState<StatusMessage | null>(null);
+
+  const [reduceMotion, setReduceMotion] = useState(false);
+  const [highContrast, setHighContrast] = useState(false);
 
   useEffect(() => {
     if (!isMounted) return;
@@ -166,10 +281,10 @@ export default function ProfilePreferencesPage() {
 
   if (!isMounted || isUserLoading) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center" data-testid="preferences-loading-auth" aria-label="Loading preferences" aria-busy="true">
+      <div className="min-h-screen bg-muted flex items-center justify-center" data-testid="preferences-loading-auth" aria-label="Loading preferences" aria-busy="true">
         <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4" />
-          <p className="text-gray-600">Loading...</p>
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto mb-4" />
+          <p className="text-muted-foreground">Loading...</p>
         </div>
       </div>
     );
@@ -177,20 +292,20 @@ export default function ProfilePreferencesPage() {
 
   if (!user || !isAuthenticated) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+      <div className="min-h-screen bg-muted flex items-center justify-center">
         <div className="text-center space-y-4">
-          <h1 className="text-2xl font-bold">Sign in to manage your preferences</h1>
-          <p className="text-gray-600">You need to be logged in to access this page.</p>
+          <h1 className="text-2xl font-bold text-foreground">Sign in to manage your preferences</h1>
+          <p className="text-muted-foreground">You need to be logged in to access this page.</p>
           <div className="flex flex-wrap justify-center gap-3">
             <button
               onClick={() => window.location.href = '/auth?redirectTo=/profile/preferences'}
-              className="px-4 py-2 rounded-md bg-blue-600 text-white hover:bg-blue-700"
+              className="px-4 py-2 rounded-md bg-primary text-primary-foreground hover:bg-primary/90"
             >
               Log in
             </button>
             <button
               onClick={() => window.location.href = '/auth?redirectTo=/profile/preferences'}
-              className="px-4 py-2 rounded-md border border-gray-300 text-gray-700 hover:bg-gray-50"
+              className="px-4 py-2 rounded-md border border-border text-foreground/80 hover:bg-muted"
             >
               Create account
             </button>
@@ -202,20 +317,20 @@ export default function ProfilePreferencesPage() {
 
   if (profileError) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+      <div className="min-h-screen bg-muted flex items-center justify-center">
         <div className="text-center space-y-4">
-          <h1 className="text-2xl font-bold">We couldn&apos;t load your profile</h1>
-          <p className="text-gray-600">Please refresh the page or try again later.</p>
+          <h1 className="text-2xl font-bold text-foreground">We couldn&apos;t load your profile</h1>
+          <p className="text-muted-foreground">Please refresh the page or try again later.</p>
           <div className="flex flex-wrap justify-center gap-3">
             <button
               onClick={() => window.location.reload()}
-              className="px-4 py-2 rounded-md bg-blue-600 text-white hover:bg-blue-700"
+              className="px-4 py-2 rounded-md bg-primary text-primary-foreground hover:bg-primary/90"
             >
               Reload
             </button>
             <button
               onClick={() => window.location.href = '/profile'}
-              className="px-4 py-2 rounded-md border border-gray-300 text-gray-700 hover:bg-gray-50"
+              className="px-4 py-2 rounded-md border border-border text-foreground/80 hover:bg-muted"
             >
               Back to profile
             </button>
@@ -230,17 +345,18 @@ export default function ProfilePreferencesPage() {
     : null);
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+    <div className="min-h-screen bg-muted">
+      <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <ProfileSubNav />
         {/* Header */}
         <div className="mb-8">
           <div className="flex items-center space-x-3 mb-4">
-            <div className="p-2 bg-blue-100 rounded-lg">
-              <Settings className="h-6 w-6 text-blue-600" />
+            <div className="p-2 bg-primary/10 rounded-lg">
+              <Settings className="h-6 w-6 text-primary" />
             </div>
             <div>
-              <h1 className="text-3xl font-bold text-gray-900">Preferences</h1>
-              <p className="text-gray-600">Customize your experience and manage your data</p>
+              <h1 className="text-3xl font-bold text-foreground">Preferences</h1>
+              <p className="text-muted-foreground">Customize your experience and manage your data</p>
             </div>
           </div>
         </div>
@@ -266,11 +382,11 @@ export default function ProfilePreferencesPage() {
           <div>
             <div className="flex items-center space-x-2 mb-4">
               <Heart className="h-5 w-5 text-purple-600" />
-              <h2 className="text-xl font-semibold text-gray-900">Content Preferences</h2>
+              <h2 className="text-xl font-semibold text-foreground">Content Preferences</h2>
             </div>
             <InterestSelection initialInterests={userInterests} onSave={handleSaveInterests} />
             {isUpdating && (
-              <p className="mt-2 text-sm text-gray-500 flex items-center gap-2">
+              <p className="mt-2 text-sm text-muted-foreground flex items-center gap-2">
                 <Loader2 className="h-4 w-4 animate-spin" />
                 Saving your interests...
               </p>
@@ -282,7 +398,7 @@ export default function ProfilePreferencesPage() {
             <div>
               <div className="flex items-center space-x-2 mb-4">
                 <Sparkles className="h-5 w-5 text-amber-500" />
-                <h2 className="text-xl font-semibold text-gray-900">Personalized Tips</h2>
+                <h2 className="text-xl font-semibold text-foreground">Personalized Tips</h2>
                 <span className="text-xs px-2 py-1 bg-amber-100 text-amber-700 rounded-full capitalize">
                   {userType}
                 </span>
@@ -294,7 +410,7 @@ export default function ProfilePreferencesPage() {
                       <div className="flex-shrink-0 w-6 h-6 bg-amber-200 text-amber-700 rounded-full flex items-center justify-center text-sm font-medium">
                         {index + 1}
                       </div>
-                      <span className="text-gray-700">{rec}</span>
+                      <span className="text-foreground/80">{rec}</span>
                     </li>
                   ))}
                 </ul>
@@ -308,11 +424,70 @@ export default function ProfilePreferencesPage() {
             </div>
           )}
 
+          {/* Feed Display Preferences */}
+          <div>
+            <div className="flex items-center space-x-2 mb-4">
+              <LayoutDashboard className="h-5 w-5 text-indigo-600" />
+              <h2 className="text-xl font-semibold text-foreground">Feed Display</h2>
+            </div>
+            <Card className="bg-card">
+              <CardContent className="p-6 space-y-4">
+              <div className="flex items-center justify-between py-1">
+                <div className="space-y-0.5 flex-1">
+                  <Label htmlFor="pref-engagement" className="text-sm font-medium cursor-pointer">Engagement Summary</Label>
+                  <p className="text-xs text-muted-foreground">Show vote and poll metrics at the top of your feed</p>
+                </div>
+                <Switch id="pref-engagement" checked={dashboardPreferences.showEngagementScore} onCheckedChange={(v) => handleDashPrefChange('showEngagementScore', v)} />
+              </div>
+              <Separator />
+              <div className="flex items-center justify-between py-1">
+                <div className="space-y-0.5 flex-1">
+                  <Label htmlFor="pref-activity" className="text-sm font-medium cursor-pointer">Recent Activity</Label>
+                  <p className="text-xs text-muted-foreground">Show your recent votes and poll creations</p>
+                </div>
+                <Switch id="pref-activity" checked={dashboardPreferences.showRecentActivity} onCheckedChange={(v) => handleDashPrefChange('showRecentActivity', v)} />
+              </div>
+              <Separator />
+              <div className="flex items-center justify-between py-1">
+                <div className="space-y-0.5 flex-1">
+                  <Label htmlFor="pref-officials" className="text-sm font-medium cursor-pointer">Elected Officials</Label>
+                  <p className="text-xs text-muted-foreground">Show representatives you&apos;re following</p>
+                </div>
+                <Switch id="pref-officials" checked={dashboardPreferences.showElectedOfficials} onCheckedChange={(v) => handleDashPrefChange('showElectedOfficials', v)} />
+              </div>
+              <Separator />
+              <div className="flex items-center justify-between py-1">
+                <div className="space-y-0.5 flex-1">
+                  <Label htmlFor="pref-quick-actions" className="text-sm font-medium cursor-pointer">Quick Actions</Label>
+                  <p className="text-xs text-muted-foreground">Show shortcut buttons for creating polls and finding reps</p>
+                </div>
+                <Switch id="pref-quick-actions" checked={dashboardPreferences.showQuickActions} onCheckedChange={(v) => handleDashPrefChange('showQuickActions', v)} />
+              </div>
+              <Separator />
+              <div className="flex items-center justify-between py-1">
+                <div className="space-y-0.5 flex-1">
+                  <Label htmlFor="pref-reduce-motion" className="text-sm font-medium cursor-pointer">Reduce Motion</Label>
+                  <p className="text-xs text-muted-foreground">Minimize animations and transitions throughout the app</p>
+                </div>
+                <Switch id="pref-reduce-motion" checked={reduceMotion} onCheckedChange={handleReduceMotionChange} />
+              </div>
+              <Separator />
+              <div className="flex items-center justify-between py-1">
+                <div className="space-y-0.5 flex-1">
+                  <Label htmlFor="pref-high-contrast" className="text-sm font-medium cursor-pointer">High Contrast</Label>
+                  <p className="text-xs text-muted-foreground">Increase color contrast for better readability</p>
+                </div>
+                <Switch id="pref-high-contrast" checked={highContrast} onCheckedChange={handleHighContrastChange} />
+              </div>
+              </CardContent>
+            </Card>
+          </div>
+
           {/* Data Usage Explanation */}
           <div>
             <div className="flex items-center space-x-2 mb-4">
-              <Shield className="h-5 w-5 text-blue-600" />
-              <h2 className="text-xl font-semibold text-gray-900">Data & Privacy</h2>
+              <Shield className="h-5 w-5 text-primary" />
+              <h2 className="text-xl font-semibold text-foreground">Data & Privacy</h2>
             </div>
             <DataUsageExplanation />
           </div>
@@ -322,11 +497,11 @@ export default function ProfilePreferencesPage() {
         <div className="mt-8 flex justify-between">
           <a
             href="/profile"
-            className="flex items-center space-x-2 text-gray-600 hover:text-gray-800 transition-colors"
+            className="flex items-center space-x-2 text-muted-foreground hover:text-foreground transition-colors"
           >
             <span>← Back to Profile</span>
           </a>
-          <div className="text-sm text-gray-500">
+          <div className="text-sm text-muted-foreground">
             Your preferences are automatically saved
           </div>
         </div>

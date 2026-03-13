@@ -1,6 +1,6 @@
 # Getting Started with Choices
 
-_Last updated: January 2026_
+_Last updated: March 2026_
 
 Welcome to the Choices platform! This guide will help you get the project running on your local machine in under 10 minutes.
 
@@ -87,7 +87,7 @@ git checkout -b feature/your-feature-name
 
 ### 2. Make Your Changes
 
-- Write code following the patterns in [`STATE_MANAGEMENT.md`](STATE_MANAGEMENT.md) and [`CODEBASE_NAVIGATION.md`](CODEBASE_NAVIGATION.md)
+- Write code following the patterns in [`STATE_MANAGEMENT.md`](STATE_MANAGEMENT.md) and [`ARCHITECTURE.md`](ARCHITECTURE.md)
 - Follow state management patterns from [`STATE_MANAGEMENT.md`](STATE_MANAGEMENT.md)
 
 ### 3. Run Quality Checks
@@ -95,7 +95,7 @@ git checkout -b feature/your-feature-name
 ```bash
 # From web/ directory
 npm run lint          # Check code style
-npm run type-check     # Verify TypeScript
+npm run types:ci       # Verify TypeScript
 npm run test           # Run unit tests
 npm run test:e2e       # Run E2E tests (optional, takes longer)
 ```
@@ -129,7 +129,7 @@ The `-s` flag adds the required `Signed-off-by` line.
 
 ### Add a Feature
 
-1. Check [`FEATURE_STATUS.md`](FEATURE_STATUS.md) to see what's planned
+1. Check [`ROADMAP.md`](ROADMAP.md) to see what's planned
 2. Discuss in an issue first (if it's a significant feature)
 3. Create a branch and implement
 4. Add tests and documentation
@@ -152,7 +152,7 @@ npm run start            # Start production server
 
 # Quality
 npm run lint             # Run ESLint
-npm run type-check        # TypeScript type checking
+npm run types:ci          # TypeScript type checking
 npm run check            # Run lint + type-check
 
 # Testing
@@ -183,7 +183,7 @@ web/
 └── types/           # TypeScript type definitions
 ```
 
-For detailed structure, see [`CODEBASE_NAVIGATION.md`](CODEBASE_NAVIGATION.md).
+For detailed structure, see [`ARCHITECTURE.md`](ARCHITECTURE.md).
 
 ## Day-to-Day Runbook
 
@@ -207,8 +207,8 @@ npm run governance:check # Before PR (store/API changes require doc updates)
 1. ✅ You've got the app running locally
 2. ✅ You understand the basic workflow
 3. 🎯 **Pick a task**: Look for `good first issue` labels or improve documentation
-4. 🎯 **Read the guides**: [`TESTING.md`](TESTING.md), [`STATE_MANAGEMENT.md`](STATE_MANAGEMENT.md), [`CODEBASE_NAVIGATION.md`](CODEBASE_NAVIGATION.md)
-5. 🎯 **Explore the codebase**: Start with [`CODEBASE_NAVIGATION.md`](CODEBASE_NAVIGATION.md)
+4. 🎯 **Read the guides**: [`TESTING.md`](TESTING.md), [`STATE_MANAGEMENT.md`](STATE_MANAGEMENT.md), [`ARCHITECTURE.md`](ARCHITECTURE.md)
+5. 🎯 **Explore the codebase**: Start with [`ARCHITECTURE.md`](ARCHITECTURE.md)
 
 Welcome to the Choices platform! 🎉
 
@@ -216,5 +216,5 @@ Welcome to the Choices platform! 🎉
 
 - **Owner:** Core maintainer
 - **Update cadence:** Review on major feature changes and at least monthly
-- **Last verified:** 2026-02-26
+- **Last verified:** 2026-03-13
 

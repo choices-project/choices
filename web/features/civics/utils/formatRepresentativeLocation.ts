@@ -1,37 +1,45 @@
 /**
  * Format representative location as "City, ST • District X" for consistent card display.
- * Uses fallbacks when city or district is missing so all cards share the same structure.
- *
- * When "—" appears: city comes from representative_contacts primary address (parseOfficeCityZip);
- * district from representatives_core.district. Upstream ingest/API improvements (e.g. explicit
- * office city, "at-large" for at-large reps) can reduce fallback usage.
+ * Handles at-large (district "0" or "at-large"), statewide offices (senators),
+ * and missing data with meaningful fallbacks.
  */
-
-const FALLBACK_CITY = '—';
-const FALLBACK_DISTRICT = '—';
 
 export type FormatRepresentativeLocationInput = {
   state: string;
   office_city?: string | null;
   district?: string | null;
+  office?: string | null;
 };
 
-/**
- * Produces "City, ST • District X". Handles at-large, numeric districts, and missing data.
- */
 export function formatRepresentativeLocation(input: FormatRepresentativeLocationInput): string {
-  const { state, office_city, district } = input;
-  const city = office_city?.trim() || FALLBACK_CITY;
-  const st = state?.trim() || '—';
-  const location = `${city}, ${st}`;
+  const { state, office_city, district, office } = input;
+  const city = office_city?.trim() || null;
+  const st = state?.trim() || '';
+
+  const locationParts: string[] = [];
+  if (city) locationParts.push(city);
+  if (st) locationParts.push(st);
+  const location = locationParts.length > 0 ? locationParts.join(', ') : state || '';
+
+  const isSenator = office?.toLowerCase().includes('senator') ?? false;
+  const isGovernor = office?.toLowerCase().includes('governor') ?? false;
 
   let districtPart: string;
-  if (district != null && String(district).trim() !== '') {
+  if (isSenator || isGovernor) {
+    districtPart = 'Statewide';
+  } else if (district != null && String(district).trim() !== '') {
     const d = String(district).trim().toLowerCase();
-    districtPart = d === 'at-large' ? 'At-large' : `District ${district.trim()}`;
+    if (d === 'at-large' || d === '0') {
+      districtPart = 'At-large';
+    } else {
+      districtPart = `District ${district.trim()}`;
+    }
   } else {
-    districtPart = FALLBACK_DISTRICT;
+    districtPart = '';
   }
 
-  return `${location} • ${districtPart}`;
+  if (districtPart) {
+    return `${location} • ${districtPart}`;
+  }
+  return location;
 }

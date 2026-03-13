@@ -132,8 +132,8 @@ export const FeedbackDetailModal: React.FC<FeedbackDetailModalProps> = ({
     switch (sentiment) {
       case 'positive': return <Smile className="w-4 h-4 text-green-600 dark:text-green-400" />;
       case 'negative': return <Frown className="w-4 h-4 text-red-600 dark:text-red-400" />;
-      case 'neutral': return <Meh className="w-4 h-4 text-gray-600 dark:text-gray-400" />;
-      default: return <Meh className="w-4 h-4 text-gray-600 dark:text-gray-400" />;
+      case 'neutral': return <Meh className="w-4 h-4 text-muted-foreground" />;
+      default: return <Meh className="w-4 h-4 text-muted-foreground" />;
     }
   };
 
@@ -195,15 +195,15 @@ export const FeedbackDetailModal: React.FC<FeedbackDetailModalProps> = ({
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 dark:bg-opacity-70 flex items-center justify-center z-50 p-4">
-      <div className="bg-white dark:bg-gray-900 rounded-lg shadow-xl max-w-4xl w-full max-h-[90vh] overflow-y-auto border border-gray-200 dark:border-gray-700">
+      <div className="bg-background rounded-lg shadow-xl max-w-4xl w-full max-h-[90vh] overflow-y-auto border border-border">
         {/* Header */}
-        <div className="flex items-center justify-between p-6 border-b border-gray-200 dark:border-gray-700">
+        <div className="flex items-center justify-between p-6 border-b border-border">
           <div className="flex items-center space-x-3">
             <div className={`p-2 rounded-lg ${getTypeColor(feedback.type)}`}>
               {getTypeIcon(feedback.type)}
             </div>
             <div>
-              <h2 className="text-xl font-semibold text-gray-900 dark:text-gray-100">{feedback.title}</h2>
+              <h2 className="text-xl font-semibold text-foreground">{feedback.title}</h2>
               <p className="text-sm text-gray-500 dark:text-gray-400">Feedback #{feedback.id}</p>
             </div>
           </div>
@@ -220,40 +220,40 @@ export const FeedbackDetailModal: React.FC<FeedbackDetailModalProps> = ({
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
             <div className="flex items-center space-x-2">
               <Tag className="h-4 w-4 text-gray-400 dark:text-gray-500" />
-              <span className="text-sm text-gray-600 dark:text-gray-400">Type:</span>
-              <span className="text-sm font-medium capitalize text-gray-900 dark:text-gray-100">{feedback.type}</span>
+              <span className="text-sm text-muted-foreground">Type:</span>
+              <span className="text-sm font-medium capitalize text-foreground">{feedback.type}</span>
             </div>
             <div className="flex items-center space-x-2">
               <Star className="h-4 w-4 text-gray-400 dark:text-gray-500" />
-              <span className="text-sm text-gray-600 dark:text-gray-400">Priority:</span>
+              <span className="text-sm text-muted-foreground">Priority:</span>
               <span className={`text-sm font-medium px-2 py-1 rounded-full ${getPriorityColor(feedback.priority)}`}>
                 {feedback.priority}
               </span>
             </div>
             <div className="flex items-center space-x-2">
               {getSentimentIcon(feedback.sentiment)}
-              <span className="text-sm text-gray-600 dark:text-gray-400">Sentiment:</span>
-              <span className="text-sm font-medium capitalize text-gray-900 dark:text-gray-100">{feedback.sentiment}</span>
+              <span className="text-sm text-muted-foreground">Sentiment:</span>
+              <span className="text-sm font-medium capitalize text-foreground">{feedback.sentiment}</span>
             </div>
             <div className="flex items-center space-x-2">
               <Calendar className="h-4 w-4 text-gray-400 dark:text-gray-500" />
-              <span className="text-sm text-gray-600 dark:text-gray-400">Created:</span>
-              <span className="text-sm font-medium text-gray-900 dark:text-gray-100">{formatDate(feedback.createdat)}</span>
+              <span className="text-sm text-muted-foreground">Created:</span>
+              <span className="text-sm font-medium text-foreground">{formatDate(feedback.createdat)}</span>
             </div>
           </div>
 
           {/* Description */}
           <div>
-            <h3 className="text-lg font-medium text-gray-900 dark:text-gray-100 mb-2">Description</h3>
-            <div className="bg-gray-50 dark:bg-gray-800 rounded-lg p-4 border border-gray-200 dark:border-gray-700">
-              <p className="text-gray-700 dark:text-gray-300 whitespace-pre-wrap">{feedback.description}</p>
+            <h3 className="text-lg font-medium text-foreground mb-2">Description</h3>
+            <div className="bg-muted rounded-lg p-4 border border-border">
+              <p className="text-foreground/80 whitespace-pre-wrap">{feedback.description}</p>
             </div>
           </div>
 
           {/* Tags */}
           {feedback.tags && feedback.tags.length > 0 && (
             <div>
-              <h3 className="text-lg font-medium text-gray-900 dark:text-gray-100 mb-2">Tags</h3>
+              <h3 className="text-lg font-medium text-foreground mb-2">Tags</h3>
               <div className="flex flex-wrap gap-2">
                 {feedback.tags.map((tag) => (
                   <span
@@ -271,9 +271,9 @@ export const FeedbackDetailModal: React.FC<FeedbackDetailModalProps> = ({
           {/* User Journey */}
           {feedback.userjourney && (
             <div>
-              <h3 className="text-lg font-medium text-gray-900 dark:text-gray-100 mb-2">User Journey</h3>
-              <div className="bg-gray-50 dark:bg-gray-800 rounded-lg p-4 border border-gray-200 dark:border-gray-700">
-                <pre className="text-sm text-gray-700 dark:text-gray-300 overflow-x-auto">
+              <h3 className="text-lg font-medium text-foreground mb-2">User Journey</h3>
+              <div className="bg-muted rounded-lg p-4 border border-border">
+                <pre className="text-sm text-foreground/80 overflow-x-auto">
                   {JSON.stringify(feedback.userjourney, null, 2)}
                 </pre>
               </div>
@@ -283,12 +283,12 @@ export const FeedbackDetailModal: React.FC<FeedbackDetailModalProps> = ({
           {/* Metadata */}
           {feedback.metadata && (
             <div>
-              <h3 className="text-lg font-medium text-gray-900 dark:text-gray-100 mb-2">Technical Details</h3>
+              <h3 className="text-lg font-medium text-foreground mb-2">Technical Details</h3>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 {feedback.userjourney.deviceInfo && (
-                  <div className="bg-gray-50 dark:bg-gray-800 rounded-lg p-4 border border-gray-200 dark:border-gray-700">
-                    <h4 className="font-medium text-gray-900 dark:text-gray-100 mb-2">Device Information</h4>
-                    <div className="space-y-1 text-sm text-gray-600 dark:text-gray-400">
+                  <div className="bg-muted rounded-lg p-4 border border-border">
+                    <h4 className="font-medium text-foreground mb-2">Device Information</h4>
+                    <div className="space-y-1 text-sm text-muted-foreground">
                       <div className="flex items-center space-x-2">
                         <Monitor className="h-4 w-4" />
                         <span>OS: {feedback.userjourney.deviceInfo.os}</span>
@@ -305,9 +305,9 @@ export const FeedbackDetailModal: React.FC<FeedbackDetailModalProps> = ({
                   </div>
                 )}
                 {feedback.userjourney.performanceMetrics && (
-                  <div className="bg-gray-50 dark:bg-gray-800 rounded-lg p-4 border border-gray-200 dark:border-gray-700">
-                    <h4 className="font-medium text-gray-900 dark:text-gray-100 mb-2">Performance Metrics</h4>
-                    <div className="space-y-1 text-sm text-gray-600 dark:text-gray-400">
+                  <div className="bg-muted rounded-lg p-4 border border-border">
+                    <h4 className="font-medium text-foreground mb-2">Performance Metrics</h4>
+                    <div className="space-y-1 text-sm text-muted-foreground">
                       <div>CLS: {feedback.userjourney.performanceMetrics.cls}</div>
                       <div>FCP: {feedback.userjourney.performanceMetrics.fcp}ms</div>
                     </div>
@@ -320,9 +320,9 @@ export const FeedbackDetailModal: React.FC<FeedbackDetailModalProps> = ({
           {/* AI Analysis */}
           {feedback.aianalysis && (
             <div>
-              <h3 className="text-lg font-medium text-gray-900 dark:text-gray-100 mb-2">AI Analysis</h3>
-              <div className="bg-gray-50 dark:bg-gray-800 rounded-lg p-4 border border-gray-200 dark:border-gray-700">
-                <pre className="text-sm text-gray-700 dark:text-gray-300 overflow-x-auto">
+              <h3 className="text-lg font-medium text-foreground mb-2">AI Analysis</h3>
+              <div className="bg-muted rounded-lg p-4 border border-border">
+                <pre className="text-sm text-foreground/80 overflow-x-auto">
                   {JSON.stringify(feedback.aianalysis, null, 2)}
                 </pre>
               </div>
@@ -331,7 +331,7 @@ export const FeedbackDetailModal: React.FC<FeedbackDetailModalProps> = ({
 
           {(responseSentText || responseSentAt) && (
             <div>
-              <h3 className="text-lg font-medium text-gray-900 dark:text-gray-100 mb-2">Admin Response</h3>
+              <h3 className="text-lg font-medium text-foreground mb-2">Admin Response</h3>
               <div className="bg-blue-50 dark:bg-blue-900/20 rounded-lg p-4 border border-blue-100 dark:border-blue-800">
                 {responseSentAt && (
                   <p className="text-xs text-blue-700 dark:text-blue-200 mb-2">
@@ -349,7 +349,7 @@ export const FeedbackDetailModal: React.FC<FeedbackDetailModalProps> = ({
 
           {/* Admin Response Composer */}
           <div>
-            <h3 className="text-lg font-medium text-gray-900 dark:text-gray-100 mb-2">
+            <h3 className="text-lg font-medium text-foreground mb-2">
               Respond to User
             </h3>
             <div className="space-y-3">
@@ -357,14 +357,14 @@ export const FeedbackDetailModal: React.FC<FeedbackDetailModalProps> = ({
                 value={adminResponse}
                 onChange={(e) => setAdminResponse(e.target.value)}
                 placeholder="Type your response to the user..."
-                className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 placeholder-gray-400 dark:placeholder-gray-500 focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none"
+                className="w-full px-3 py-2 border border-border rounded-lg bg-card text-foreground placeholder-gray-400 dark:placeholder-gray-500 focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none"
                 rows={4}
               />
               <div className="flex justify-between items-center">
                 <select
                   value={feedback.status}
                   onChange={(e) => onStatusUpdate(feedback.id, e.target.value)}
-                  className="px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  className="px-3 py-2 border border-border rounded-lg bg-card text-foreground focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                 >
                   <option value="open">Open</option>
                   <option value="inprogress">In Progress</option>
@@ -374,7 +374,7 @@ export const FeedbackDetailModal: React.FC<FeedbackDetailModalProps> = ({
                 <button
                   onClick={() => void handleSubmitResponse()}
                   disabled={!adminResponse.trim() || isSubmitting}
-                  className="flex items-center px-4 py-2 bg-blue-600 dark:bg-blue-700 text-white rounded-lg hover:bg-blue-700 dark:hover:bg-blue-600 disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="flex items-center px-4 py-2 bg-primary text-white rounded-lg hover:bg-primary/90 disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   <Send className="h-4 w-4 mr-2" />
                   {isSubmitting ? 'Sending...' : 'Send Response'}

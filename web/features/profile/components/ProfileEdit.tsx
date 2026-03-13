@@ -587,6 +587,7 @@ export default function ProfileEdit({
                   onChange={(e) => handleFieldChange('display_name', e.target.value)}
                   placeholder="Enter your display name"
                   maxLength={100}
+                  autoComplete="name"
                   aria-invalid={Boolean(fieldErrors.display_name)}
                   aria-describedby={fieldErrors.display_name ? 'display_name-error' : undefined}
                 />
@@ -604,6 +605,7 @@ export default function ProfileEdit({
                   onChange={(e) => handleFieldChange('username', e.target.value)}
                   placeholder="Enter your username"
                   maxLength={50}
+                  autoComplete="username"
                   aria-invalid={Boolean(fieldErrors.username)}
                   aria-describedby={fieldErrors.username ? 'username-error' : undefined}
                 />
@@ -623,6 +625,7 @@ export default function ProfileEdit({
                 placeholder="Tell us about yourself"
                 maxLength={500}
                 rows={3}
+                autoComplete="off"
                 aria-invalid={Boolean(fieldErrors.bio)}
                 aria-describedby={fieldErrors.bio ? 'bio-error' : undefined}
               />

@@ -69,20 +69,12 @@ describe('Health API /api/health/ingest contract', () => {
     return routeModule;
   };
 
-  it('returns 200 or 503 with valid structure', async () => {
+  it('returns 401 without auth credentials', async () => {
     const { GET } = loadIngestRoute();
     const response = await GET(createNextRequest('http://localhost/api/health/ingest'));
-    const body = await response.json();
 
-    expect([200, 503]).toContain(response.status);
-    if (body.success) {
-      expect(body.data).toMatchObject({
-        status: 'healthy',
-        timestamp: expect.any(String),
-      });
-    } else {
-      expect(body.success).toBe(false);
-      expect(body.error).toBeDefined();
-    }
+    expect(response.status).toBe(401);
+    const body = await response.json();
+    expect(body.success).toBe(false);
   });
 });

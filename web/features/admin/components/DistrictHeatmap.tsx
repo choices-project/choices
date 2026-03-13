@@ -50,6 +50,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 
 
 import ScreenReaderSupport from '@/lib/accessibility/screen-reader';
+import { ApiError, get } from '@/lib/api/client';
 import logger from '@/lib/utils/logger';
 
 import { useI18n } from '@/hooks/useI18n';
@@ -61,15 +62,6 @@ type HeatmapEntry = {
   level: string;
   engagement_count: number;
   representative_count: number;
-};
-
-type HeatmapData = {
-  success: boolean;
-  data?: {
-    heatmap: HeatmapEntry[];
-    kAnonymity: number;
-    generatedAt?: string;
-  };
 };
 
 type DistrictHeatmapProps = {
@@ -210,7 +202,7 @@ export default function DistrictHeatmap({
     [formatNumber, sortedDistricts],
   );
 
-  const fetchHeatmapData = useCallback(async () => {
+  const fetchHeatmapData = useCallback(async (signal?: AbortSignal) => {
     setIsLoading(true);
     setError(null);
 
@@ -224,27 +216,21 @@ export default function DistrictHeatmap({
       }
       params.append('min_count', String(minCount));
 
-      const response = await fetch(`/api/v1/civics/heatmap?${params.toString()}`);
+      const result = await get<{ heatmap?: HeatmapEntry[]; kAnonymity?: number }>(
+        `/api/v1/civics/heatmap?${params.toString()}`,
+        signal ? { signal } : {}
+      );
 
-      if (response.status === 403) {
-        throw new Error('You need admin analytics access to view this heatmap. Ask an administrator to grant access.');
-      }
-
-      if (!response.ok) {
-        throw new Error(`Failed to fetch heatmap data (${response.status})`);
-      }
-
-      const result: HeatmapData = await response.json();
-
-      if (!result.success || !result.data) {
-        throw new Error('The heatmap service returned an unexpected response.');
-      }
-
-      setData(result.data.heatmap ?? []);
-      setKAnonymity(result.data.kAnonymity ?? minCount);
+      setData(result?.heatmap ?? []);
+      setKAnonymity(result?.kAnonymity ?? minCount);
     } catch (err) {
-      logger.error('Failed to fetch heatmap data:', err);
-      setError(err instanceof Error ? err.message : 'Failed to load heatmap data');
+      if (err instanceof Error && err.name === 'AbortError') return;
+      if (err instanceof ApiError && err.status === 403) {
+        setError('You need admin analytics access to view this heatmap. Ask an administrator to grant access.');
+      } else {
+        logger.error('Failed to fetch heatmap data:', err);
+        setError(err instanceof Error ? err.message : 'Failed to load heatmap data');
+      }
       setData([]);
     } finally {
       setIsLoading(false);
@@ -252,7 +238,9 @@ export default function DistrictHeatmap({
   }, [selectedState, selectedLevel, minCount]);
 
   useEffect(() => {
-    fetchHeatmapData();
+    const controller = new AbortController();
+    fetchHeatmapData(controller.signal);
+    return () => controller.abort();
   }, [fetchHeatmapData]);
 
   useEffect(() => {
@@ -367,7 +355,7 @@ export default function DistrictHeatmap({
               </p>
             )}
             <div className="flex gap-2">
-              <Button onClick={fetchHeatmapData} size="sm" variant="outline">
+              <Button onClick={() => fetchHeatmapData()} size="sm" variant="outline">
                 <RefreshCw className="h-4 w-4 mr-2" />
                 Try again
               </Button>
@@ -443,7 +431,7 @@ export default function DistrictHeatmap({
           </div>
 
           <Button
-            onClick={fetchHeatmapData}
+            onClick={() => fetchHeatmapData()}
             size="sm"
             variant="outline"
           >

@@ -11,7 +11,7 @@ We use **Supabase MCP** for:
 - **Advisors** — `get_advisors` (security, performance), index suggestions
 - **Logs** — `get_logs` (api, postgres, auth, etc.)
 
-Configure in `.cursor/mcp.json`; project rules prefer MCP over hand-written SQL for discovery and migrations. See `docs/RLS_API_ALIGNMENT.md` and project rules.
+Configure in `.cursor/mcp.json`; project rules prefer MCP over hand-written SQL for discovery and migrations. See project rules.
 
 **Removed scripts (replaced by MCP):** `apply-security-fix-direct.ts`, `apply-security-fix.ts`, `execute-migration-via-api.ts` — they targeted a single, since-removed migration and are superseded by MCP `apply_migration`.
 

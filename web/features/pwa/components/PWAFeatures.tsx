@@ -3,6 +3,8 @@
 import React, { useEffect, useMemo, useRef } from 'react';
 
 
+import OfflineIndicator from '@/components/shared/OfflineIndicator'
+
 import { useIsOnline, useDeviceActions } from '@/lib/stores/deviceStore'
 import { 
   usePWAInstallation,
@@ -15,7 +17,6 @@ import { logger } from '@/lib/utils/logger'
 
 import NotificationPermission from './NotificationPermission'
 import NotificationPreferences from './NotificationPreferences'
-import OfflineIndicator from './OfflineIndicator'
 import OfflineQueue from './OfflineQueue'
 import OfflineSync from './OfflineSync'
 import OfflineVoting from './OfflineVoting'

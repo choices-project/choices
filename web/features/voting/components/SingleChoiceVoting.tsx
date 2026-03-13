@@ -5,6 +5,8 @@ import React, { useState, useEffect } from 'react';
 
 import { useVotingIsVoting } from '@/features/voting/lib/store'
 
+import { VoteSubmitButton } from './VoteSubmitButton'
+
 import type { PollOption, SingleChoiceVotingProps } from '../types'
 
 export default function SingleChoiceVoting({
@@ -224,21 +226,13 @@ export default function SingleChoiceVoting({
               <span className="font-medium" data-testid="vote-receipt">Vote submitted successfully!</span>
             </div>
           ) : (
-            <button
+            <VoteSubmitButton
+              isSubmitting={isSubmitting}
+              disabled={hasVoted || effectiveIsVoting || selectedOption === null}
               onClick={handleSubmit}
-              disabled={isDisabled || selectedOption === null}
-              className={`
-                flex items-center space-x-2 px-8 py-3 rounded-lg font-medium transition-colors
-                ${isDisabled || selectedOption === null
-                  ? 'bg-muted text-muted-foreground cursor-not-allowed'
-                  : 'bg-primary text-primary-foreground hover:bg-primary/90'
-                }
-              `}
+              icon={CheckCircle}
               data-testid="submit-vote-button"
-            >
-              <CheckCircle className="w-5 h-5" />
-              <span>{isSubmitting ? 'Submitting Vote...' : 'Submit Vote'}</span>
-            </button>
+            />
           )}
         </div>
 

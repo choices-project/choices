@@ -19,6 +19,13 @@
 
 import dynamicImport from 'next/dynamic';
 
+import type { Metadata } from 'next';
+
+export const metadata: Metadata = {
+  title: 'Feed',
+  description: 'Your personalized civic engagement feed',
+};
+
 // CRITICAL: Load FeedContent only on client to prevent SSR hydration mismatch
 // This component uses hooks and client-side state that cause React Error #185 when rendered during SSR
 const FeedContent = dynamicImport(
@@ -37,10 +44,10 @@ const FeedContent = dynamicImport(
         >
           {[1, 2, 3].map((i) => (
             <div key={i} className="animate-pulse" aria-hidden="true">
-              <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-6">
-                <div className="h-6 bg-gray-200 dark:bg-gray-700 rounded w-3/4 mb-4" />
-                <div className="h-4 bg-gray-200 dark:bg-gray-700 rounded w-full mb-2" />
-                <div className="h-4 bg-gray-200 dark:bg-gray-700 rounded w-5/6" />
+              <div className="bg-card rounded-lg shadow p-6">
+                <div className="h-6 bg-muted rounded w-3/4 mb-4" />
+                <div className="h-4 bg-muted rounded w-full mb-2" />
+                <div className="h-4 bg-muted rounded w-5/6" />
               </div>
             </div>
           ))}

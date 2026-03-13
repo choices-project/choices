@@ -1,6 +1,7 @@
 'use client'
 
-import { Shield, Smartphone, Lock } from 'lucide-react'
+import { Eye, EyeOff, Loader2, Lock, Shield, Smartphone } from 'lucide-react'
+import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import * as React from 'react'
 
@@ -8,13 +9,21 @@ import { register as serverRegister } from '@/app/actions/register'
 
 import { PasskeyButton } from '@/features/auth/components/PasskeyButton'
 
+import { Button } from '@/components/ui/button'
+import { Input } from '@/components/ui/input'
+
 import { logger } from '@/lib/utils/logger'
+
+import { useI18n } from '@/hooks/useI18n'
+
 
 
 export default function RegisterPage() {
   const router = useRouter()
+  const { t } = useI18n()
   const [error, setError] = React.useState<string>('')
   const [success, setSuccess] = React.useState(false)
+  const [isSubmitting, setIsSubmitting] = React.useState(false)
 
   // Read URL parameter directly from window.location (works even during SSR/hydration)
   // This avoids useSearchParams which can cause hydration issues
@@ -43,6 +52,8 @@ export default function RegisterPage() {
   const [registrationMethod, setRegistrationMethod] = React.useState<'password' | 'passkey'>(getInitialMethod())
   const [hydrated, setHydrated] = React.useState(false)
   const [mounted, setMounted] = React.useState(false)
+  const [showPassword, setShowPassword] = React.useState(false)
+  const [showConfirmPassword, setShowConfirmPassword] = React.useState(false)
 
   React.useEffect(() => {
     // Set hydrated and mounted state after component mounts
@@ -84,45 +95,46 @@ export default function RegisterPage() {
   }, [])
 
   async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
-    e.preventDefault()                        // 🔑 stop the GET submit
+    e.preventDefault()
     setError('')
+    setIsSubmitting(true)
 
-    const fd = new FormData(e.currentTarget)  // read from DOM, not React state
-    const username = String(fd.get('username') ?? '').trim()
-    const email = String(fd.get('email') ?? '').trim()
-    const password = String(fd.get('password') ?? '')
-    const confirm = String(fd.get('confirmPassword') ?? '')
+    try {
+      const fd = new FormData(e.currentTarget)
+      const username = String(fd.get('username') ?? '').trim()
+      const email = String(fd.get('email') ?? '').trim()
+      const password = String(fd.get('password') ?? '')
+      const confirm = String(fd.get('confirmPassword') ?? '')
 
-    // Validate inputs
-    if (!username || username.length < 3) {
-      setError('Username must be at least 3 characters')
-      return
-    }
-    if (!email || !email.includes('@')) {
-      setError('Please enter a valid email address')
-      return
-    }
-    if (password !== confirm) {
-      setError('Passwords do not match')
-      return
-    }
-    if (password.length < 8) {
-      setError('Password must be at least 8 characters long')
-      return
-    }
+      if (!username || username.length < 3) {
+        setError(t('auth.register.error.username') || 'Username must be at least 3 characters')
+        return
+      }
+      if (!email || !email.includes('@')) {
+        setError(t('auth.register.error.email') || 'Please enter a valid email address')
+        return
+      }
+      if (password !== confirm) {
+        setError(t('auth.register.error.passwordMismatch') || 'Passwords do not match')
+        return
+      }
+      if (password.length < 8) {
+        setError(t('auth.register.error.passwordLength') || 'Password must be at least 8 characters long')
+        return
+      }
 
-    // Call server action - it will redirect on success
-    const result = await serverRegister(fd, {
-      ipAddress: '',
-      userAgent: '',
-      userId: ''
-    })
-    if (!result.ok) {
-      setError(result.error ?? 'Registration failed')
-      return
+      const result = await serverRegister(fd, {
+        ipAddress: '',
+        userAgent: '',
+        userId: ''
+      })
+      if (!result.ok) {
+        setError(result.error ?? (t('auth.register.error.failed') || 'Registration failed'))
+        return
+      }
+    } finally {
+      setIsSubmitting(false)
     }
-
-    // Server action handles redirect, so we don't need to redirect here
   }
 
   const handlePasskeySuccess = () => {
@@ -155,18 +167,18 @@ export default function RegisterPage() {
         </div>
 
         <div className="text-center">
-          <h1 className="mt-6 text-4xl font-extrabold text-gray-900 dark:text-gray-100">
-            Create your account
+          <h1 className="mt-6 text-4xl font-extrabold text-foreground">
+            {t('auth.register.title') || 'Create your account'}
           </h1>
-          <p className="mt-2 text-sm text-gray-600 dark:text-gray-400">
-            Join Choices and start making better decisions
+          <p className="mt-2 text-sm text-muted-foreground">
+            {t('auth.register.subtitle') || 'Join Choices and start making better decisions'}
           </p>
         </div>
 
         {/* Registration Method Selection */}
         <div className="space-y-4">
           <div className="text-center">
-            <p className="text-sm text-gray-600 dark:text-gray-400 mb-4">Choose how you&apos;d like to sign up:</p>
+            <p className="text-sm text-muted-foreground mb-4">{t('auth.register.chooseMethod') || "Choose how you'd like to sign up:"}</p>
           </div>
 
           <div className="grid grid-cols-1 gap-3">
@@ -177,19 +189,19 @@ export default function RegisterPage() {
               className={`relative p-4 border-2 rounded-lg transition-all duration-200 ${
                 registrationMethod === 'passkey'
                   ? 'border-green-500 bg-green-50 dark:bg-green-900/30'
-                  : 'border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-800 hover:border-gray-300 dark:hover:border-gray-500'
+                  : 'border-border bg-card hover:border-border'
               }`}
             >
               <div className="flex items-center space-x-3">
-                <Smartphone className={`h-5 w-5 ${registrationMethod === 'passkey' ? 'text-green-600' : 'text-gray-400'}`} />
+                <Smartphone className={`h-5 w-5 ${registrationMethod === 'passkey' ? 'text-green-600' : 'text-muted-foreground'}`} />
                 <div className="text-left">
-                  <div className="font-medium text-gray-900 dark:text-gray-100">Passkey Account (Recommended)</div>
-                  <div className="text-sm text-gray-500 dark:text-gray-400">Secure, passwordless authentication with biometrics</div>
+                  <div className="font-medium text-foreground">{t('auth.register.passkeyOption') || 'Passkey Account (Recommended)'}</div>
+                  <div className="text-sm text-muted-foreground">{t('auth.register.passkeyDescription') || 'Secure, passwordless authentication with biometrics'}</div>
                 </div>
                 {registrationMethod === 'passkey' && (
                   <div className="ml-auto">
-                    <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800">
-                      Recommended
+                    <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800 dark:bg-green-900/50 dark:text-green-200">
+                      {t('auth.register.recommended') || 'Recommended'}
                     </span>
                   </div>
                 )}
@@ -216,14 +228,14 @@ export default function RegisterPage() {
               className={`relative p-4 border-2 rounded-lg transition-all duration-200 ${
                 registrationMethod === 'password'
                   ? 'border-blue-500 bg-blue-50 dark:bg-blue-900/30'
-                  : 'border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-800 hover:border-gray-300 dark:hover:border-gray-500'
+                  : 'border-border bg-card hover:border-border'
               }`}
             >
               <div className="flex items-center space-x-3">
-                <Lock className={`h-5 w-5 ${registrationMethod === 'password' ? 'text-blue-600' : 'text-gray-400'}`} />
+                <Lock className={`h-5 w-5 ${registrationMethod === 'password' ? 'text-primary' : 'text-muted-foreground'}`} />
                 <div className="text-left">
-                  <div className="font-medium text-gray-900 dark:text-gray-100">Password Account</div>
-                  <div className="text-sm text-gray-500 dark:text-gray-400">Traditional username and password</div>
+                  <div className="font-medium text-foreground">{t('auth.register.passwordOption') || 'Password Account'}</div>
+                  <div className="text-sm text-muted-foreground">{t('auth.register.passwordDescription') || 'Traditional username and password'}</div>
                 </div>
               </div>
             </button>
@@ -240,11 +252,11 @@ export default function RegisterPage() {
             className="mt-8 space-y-6"
           >
           {error && (
-            <p role="alert" data-testid="register-error" className="text-red-600 text-sm">{error}</p>
+            <p id="register-error" role="alert" data-testid="register-error" className="text-sm text-red-600 dark:text-red-400">{error}</p>
           )}
 
           {success && (
-            <div className="bg-green-50 dark:bg-green-900/30 border border-green-200 dark:border-green-800 text-green-700 dark:text-green-300 px-4 py-3 rounded-md">
+            <div className="rounded-md border border-green-200 bg-green-50 px-4 py-3 text-green-700 dark:border-green-800 dark:bg-green-900/30 dark:text-green-300">
               <div className="flex">
                 <div className="flex-shrink-0">
                   <svg className="h-5 w-5 text-green-400" viewBox="0 0 20 20" fill="currentColor">
@@ -253,7 +265,7 @@ export default function RegisterPage() {
                 </div>
                 <div className="ml-3">
                   <p className="text-sm font-medium text-green-800 dark:text-green-200">
-                    Account created successfully! Redirecting to onboarding...
+                    {t('auth.register.successRedirect') || 'Account created successfully! Redirecting to onboarding...'}
                   </p>
                 </div>
               </div>
@@ -261,36 +273,106 @@ export default function RegisterPage() {
           )}
 
           <div>
-            <label className="block mb-1 text-gray-700 dark:text-gray-300">Username</label>
-            <input name="username" data-testid="username" required className="input dark:bg-gray-800 dark:border-gray-600 dark:text-gray-100" />
+            <label htmlFor="register-username" className="mb-1 block text-foreground/80">{t('auth.register.username') || 'Username'}</label>
+            <Input
+              id="register-username"
+              name="username"
+              data-testid="username"
+              required
+              aria-invalid={!!error}
+              aria-describedby={error ? 'register-error' : undefined}
+              className="border-border bg-card text-foreground"
+            />
           </div>
           <div>
-            <label className="block mb-1 text-gray-700 dark:text-gray-300">Display Name</label>
-            <input name="displayName" data-testid="displayName" required className="input dark:bg-gray-800 dark:border-gray-600 dark:text-gray-100" />
+            <label htmlFor="register-displayName" className="mb-1 block text-foreground/80">{t('auth.register.displayName') || 'Display Name'}</label>
+            <Input
+              id="register-displayName"
+              name="displayName"
+              data-testid="displayName"
+              required
+              aria-invalid={!!error}
+              aria-describedby={error ? 'register-error' : undefined}
+              className="border-border bg-card text-foreground"
+            />
           </div>
           <div>
-            <label className="block mb-1 text-gray-700 dark:text-gray-300">Email</label>
-            <input name="email" type="email" data-testid="email" required className="input dark:bg-gray-800 dark:border-gray-600 dark:text-gray-100" />
+            <label htmlFor="register-email" className="mb-1 block text-foreground/80">{t('auth.register.email') || 'Email'}</label>
+            <Input
+              id="register-email"
+              name="email"
+              type="email"
+              data-testid="email"
+              required
+              aria-invalid={!!error}
+              aria-describedby={error ? 'register-error' : undefined}
+              className="border-border bg-card text-foreground"
+            />
           </div>
           <div>
-            <label className="block mb-1 text-gray-700 dark:text-gray-300">Password</label>
-            <input name="password" type="password" data-testid="password" required className="input dark:bg-gray-800 dark:border-gray-600 dark:text-gray-100" />
+            <label htmlFor="register-password" className="mb-1 block text-foreground/80">{t('auth.register.password') || 'Password'}</label>
+            <div className="relative">
+              <Input
+                id="register-password"
+                name="password"
+                type={showPassword ? 'text' : 'password'}
+                data-testid="password"
+                required
+                aria-invalid={!!error}
+                aria-describedby={error ? 'register-error' : undefined}
+                className="border-border bg-card text-foreground pr-10"
+              />
+              <button
+                type="button"
+                onClick={() => setShowPassword(!showPassword)}
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+                aria-label={showPassword ? 'Hide password' : 'Show password'}
+              >
+                {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+              </button>
+            </div>
           </div>
           <div>
-            <label className="block mb-1 text-gray-700 dark:text-gray-300">Confirm password</label>
-            <input name="confirmPassword" type="password" data-testid="confirmPassword" required className="input dark:bg-gray-800 dark:border-gray-600 dark:text-gray-100" />
+            <label htmlFor="register-confirm-password" className="mb-1 block text-foreground/80">{t('auth.register.confirmPassword') || 'Confirm password'}</label>
+            <div className="relative">
+              <Input
+                id="register-confirm-password"
+                name="confirmPassword"
+                type={showConfirmPassword ? 'text' : 'password'}
+                data-testid="confirmPassword"
+                required
+                aria-invalid={!!error}
+                aria-describedby={error ? 'register-error' : undefined}
+                className="border-border bg-card text-foreground pr-10"
+              />
+              <button
+                type="button"
+                onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+                aria-label={showConfirmPassword ? 'Hide password' : 'Show password'}
+              >
+                {showConfirmPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+              </button>
+            </div>
           </div>
 
-          <button type="submit" data-testid="register-submit" className="btn btn-primary">
-            Create account
-          </button>
+          <Button type="submit" data-testid="register-submit" disabled={isSubmitting} className="w-full">
+            {isSubmitting ? (
+              <>
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" aria-hidden />
+                {t('auth.register.submitting') || 'Creating account...'}
+              </>
+            ) : (
+              t('auth.register.submit') || 'Create account'
+            )}
+          </Button>
 
           <div className="text-center">
-            <p className="text-sm text-gray-600 dark:text-gray-400">
-              Already have an account?{' '}
-              <a href="/login" className="font-medium text-indigo-600 dark:text-indigo-400 hover:text-indigo-500 dark:hover:text-indigo-300">
-                Sign in
-              </a>
+            <p className="text-sm text-muted-foreground">
+              {t('auth.register.alreadyHaveAccount') || 'Already have an account?'}{' '}
+              <Link href="/auth" className="font-medium text-primary hover:text-primary/90">
+                {t('auth.register.signIn') || 'Sign in'}
+              </Link>
             </p>
           </div>
         </form>
@@ -300,39 +382,39 @@ export default function RegisterPage() {
         {registrationMethod === 'passkey' && (
           <div className="mt-8 space-y-6">
             {error && (
-              <div className="bg-red-50 dark:bg-red-900/30 border border-red-200 dark:border-red-800 text-red-700 dark:text-red-300 px-4 py-3 rounded-md" data-testid="register-error">
+              <div className="rounded-md border border-red-200 bg-red-50 px-4 py-3 text-red-700 dark:border-red-800 dark:bg-red-900/30 dark:text-red-300" data-testid="register-error">
                 {error}
               </div>
             )}
 
             {success && (
-              <div className="bg-green-50 dark:bg-green-900/30 border border-green-200 dark:border-green-800 text-green-700 dark:text-green-300 px-4 py-3 rounded-md">
+              <div className="rounded-md border border-green-200 bg-green-50 px-4 py-3 text-green-700 dark:border-green-800 dark:bg-green-900/30 dark:text-green-300">
                 <div className="flex">
                   <div className="flex-shrink-0">
                     <Shield className="h-5 w-5 text-green-400" />
                   </div>
                   <div className="ml-3">
-<p className="text-sm font-medium text-green-800 dark:text-green-200">
-                    Passkey created successfully! Redirecting to onboarding...
-                  </p>
+                    <p className="text-sm font-medium text-green-800 dark:text-green-200">
+                      {t('auth.register.passkeySuccess') || 'Passkey created successfully! Redirecting to onboarding...'}
+                    </p>
                   </div>
                 </div>
               </div>
             )}
 
-            <div className="bg-blue-50 dark:bg-blue-900/30 border border-blue-200 dark:border-blue-800 rounded-lg p-6">
+            <div className="rounded-lg border border-blue-200 bg-blue-50 p-6 dark:border-blue-800 dark:bg-blue-900/30">
               <div className="flex items-start space-x-3">
-                <Smartphone className="h-6 w-6 text-blue-600 dark:text-blue-400 mt-0.5" />
+                <Smartphone className="mt-0.5 h-6 w-6 text-blue-600 dark:text-blue-400" />
                 <div>
-                  <h3 className="font-semibold text-blue-900 dark:text-blue-100 mb-2">What is a Passkey?</h3>
-                  <p className="text-sm text-blue-800 dark:text-blue-200 mb-3">
-                    A passkey is a secure, passwordless way to sign in using your device&apos;s built-in security features like fingerprint, face recognition, or PIN.
+                  <h3 className="mb-2 font-semibold text-blue-900 dark:text-blue-100">{t('auth.register.passkeyWhatIs') || 'What is a Passkey?'}</h3>
+                  <p className="mb-3 text-sm text-blue-800 dark:text-blue-200">
+                    {t('auth.register.passkeyExplanation') || "A passkey is a secure, passwordless way to sign in using your device's built-in security features like fingerprint, face recognition, or PIN."}
                   </p>
-                  <ul className="text-sm text-blue-800 dark:text-blue-200 space-y-1">
-                    <li>• More secure than passwords</li>
-                    <li>• Works across all your devices</li>
-                    <li>• No need to remember complex passwords</li>
-                    <li>• Protected by your device&apos;s security</li>
+                  <ul className="space-y-1 text-sm text-blue-800 dark:text-blue-200">
+                    <li>• {t('auth.register.passkeyBenefit1') || 'More secure than passwords'}</li>
+                    <li>• {t('auth.register.passkeyBenefit2') || 'Works across all your devices'}</li>
+                    <li>• {t('auth.register.passkeyBenefit3') || 'No need to remember complex passwords'}</li>
+                    <li>• {t('auth.register.passkeyBenefit4') || "Protected by your device's security"}</li>
                   </ul>
                 </div>
               </div>
@@ -346,11 +428,11 @@ export default function RegisterPage() {
               />
 
               <div className="text-center">
-                <p className="text-sm text-gray-600">
-                  Already have an account?{' '}
-                  <a href="/login" className="font-medium text-indigo-600 hover:text-indigo-500">
-                    Sign in
-                  </a>
+                <p className="text-sm text-muted-foreground">
+                  {t('auth.register.alreadyHaveAccount') || 'Already have an account?'}{' '}
+                  <Link href="/auth" className="font-medium text-primary hover:text-primary/90">
+                    {t('auth.register.signIn') || 'Sign in'}
+                  </Link>
                 </p>
               </div>
             </div>

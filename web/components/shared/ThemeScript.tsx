@@ -22,10 +22,6 @@ export function ThemeScript() {
   // It must be a Server Component (no 'use client') to use Script with beforeInteractive
   const scriptContent = `
 (function() {
-  // #region agent log
-  const logData={location:'ThemeScript.tsx:24',message:'ThemeScript execution started',data:{timestamp:Date.now(),hasDocument:typeof document!=='undefined',hasDocumentElement:typeof document!=='undefined'&&!!document.documentElement},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'A'};
-  console.log('[DEBUG]',JSON.stringify(logData));
-  // #endregion
   try {
     // CRITICAL: Use defaults that match root layout
     // Root layout sets these defaults, so server and client HTML match initially
@@ -40,25 +36,10 @@ export function ThemeScript() {
     const currentCollapsed = document.documentElement.getAttribute('data-sidebar-collapsed');
     const currentWidth = document.documentElement.getAttribute('data-sidebar-width');
     const currentPinned = document.documentElement.getAttribute('data-sidebar-pinned');
-    
-    // #region agent log - Track attribute state BEFORE any changes
-    const logDataBefore={location:'ThemeScript.tsx:checkAttrs',message:'ThemeScript checking attributes BEFORE changes',data:{currentTheme,currentCollapsed,currentWidth,currentPinned,isNavigation:typeof window!=='undefined'&&window.performance&&window.performance.navigation?window.performance.navigation.type!==0:false},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'H1'};
-    console.log('[DEBUG]',JSON.stringify(logDataBefore));
-    // #endregion
-
-    // #region agent log
-    const beforeLocalStorage=Date.now();
-    const logData1={location:'ThemeScript.tsx:33',message:'Before localStorage read',data:{hasLocalStorage:typeof localStorage!=='undefined',defaultTheme:theme,defaultCollapsed:sidebarCollapsed},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'A'};
-    console.log('[DEBUG]',JSON.stringify(logData1));
-    // #endregion
 
     try {
       // Read app state from localStorage (same key as Zustand persist)
       const stored = localStorage.getItem('app-store');
-      // #region agent log
-      const logData2={location:'ThemeScript.tsx:38',message:'localStorage read result',data:{hasStored:!!stored,storedLength:stored?stored.length:0},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'A'};
-      console.log('[DEBUG]',JSON.stringify(logData2));
-      // #endregion
       if (stored) {
         const parsed = JSON.parse(stored);
         const state = parsed?.state || {};
@@ -72,26 +53,11 @@ export function ThemeScript() {
         sidebarCollapsed = state.sidebarCollapsed || false;
         sidebarWidth = state.sidebarWidth || 280;
         sidebarPinned = state.sidebarPinned || false;
-        // #region agent log
-        const logData3={location:'ThemeScript.tsx:49',message:'After parsing localStorage',data:{theme,sidebarCollapsed,sidebarWidth,sidebarPinned},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'A'};
-        console.log('[DEBUG]',JSON.stringify(logData3));
-        // #endregion
       }
     } catch (e) {
-      // #region agent log
-      const logData4={location:'ThemeScript.tsx:52',message:'localStorage read error',data:{error:e?.message||String(e)},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'D'};
-      console.log('[DEBUG]',JSON.stringify(logData4));
-      // #endregion
       // If localStorage read fails, use defaults (matches server)
       // Values already set above
     }
-
-    // #region agent log
-    const beforeSetAttrs=Date.now();
-    const beforeAttrs={theme:document.documentElement.getAttribute('data-theme'),collapsed:document.documentElement.getAttribute('data-sidebar-collapsed'),width:document.documentElement.getAttribute('data-sidebar-width'),pinned:document.documentElement.getAttribute('data-sidebar-pinned')};
-    const logData5={location:'ThemeScript.tsx:58',message:'Before setting attributes',data:{beforeAttrs,valuesToSet:{theme,sidebarCollapsed,sidebarWidth,sidebarPinned}},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'B'};
-    console.log('[DEBUG]',JSON.stringify(logData5));
-    // #endregion
 
     // CRITICAL: Always ensure attributes are set, even if they match defaults
     // On client-side navigation, ThemeScript doesn't run again, so attributes might be missing
@@ -117,11 +83,6 @@ export function ThemeScript() {
     if (attributesMissing || needsUpdate) {
       // Attributes are missing OR need updating - set them immediately (synchronously)
       // This ensures React sees correct values during hydration, preventing mismatch
-      // #region agent log - Track BEFORE setting
-      const logDataBeforeSet={location:'ThemeScript.tsx:beforeSyncSet',message:'ThemeScript about to set attributes synchronously',data:{theme,sidebarCollapsed,sidebarWidth,sidebarPinned,currentTheme,currentCollapsed,currentWidth,currentPinned,attributesMissing,needsUpdate},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'H2'};
-      console.log('[DEBUG]',JSON.stringify(logDataBeforeSet));
-      // #endregion
-      
       if (theme === 'dark') {
         document.documentElement.classList.add('dark');
         document.documentElement.setAttribute('data-theme', 'dark');
@@ -137,46 +98,8 @@ export function ThemeScript() {
       
       // Force synchronous reflow to ensure attributes are committed before React hydrates
       void document.documentElement.offsetHeight;
-      
-      // #region agent log - Track AFTER setting
-      const afterAttrs={theme:document.documentElement.getAttribute('data-theme'),collapsed:document.documentElement.getAttribute('data-sidebar-collapsed'),width:document.documentElement.getAttribute('data-sidebar-width'),pinned:document.documentElement.getAttribute('data-sidebar-pinned')};
-      const logDataSync={location:'ThemeScript.tsx:syncSet',message:'ThemeScript synchronously set attributes',data:{theme,sidebarCollapsed,sidebarWidth,sidebarPinned,wasMissing:attributesMissing,wasUpdated:needsUpdate,afterAttrs},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'H2'};
-      console.log('[DEBUG]',JSON.stringify(logDataSync));
-      // #endregion
-    } else {
-      // #region agent log
-      const logDataNoUpdate={location:'ThemeScript.tsx:noUpdate',message:'ThemeScript attributes match defaults, no update needed',data:{currentTheme,currentCollapsed,currentWidth,currentPinned,theme,sidebarCollapsed,sidebarWidth,sidebarPinned},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'F'};
-      console.log('[DEBUG]',JSON.stringify(logDataNoUpdate));
-      // #endregion
-    }
-
-    // #region agent log
-    const currentPath = typeof window !== 'undefined' ? window.location.pathname : 'SSR';
-    const afterAttrs={theme:document.documentElement.getAttribute('data-theme'),collapsed:document.documentElement.getAttribute('data-sidebar-collapsed'),width:document.documentElement.getAttribute('data-sidebar-width'),pinned:document.documentElement.getAttribute('data-sidebar-pinned')};
-    const logData6={location:'ThemeScript.tsx:115',message:'After setting attributes',data:{afterAttrs,timeSinceStart:Date.now()-beforeSetAttrs,currentPath},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'A'};
-    console.log('[DEBUG]',JSON.stringify(logData6));
-    // #endregion
-
-    // Debug: Log that script executed (only in development or when explicitly enabled)
-    if (window.location.hostname === 'localhost' || window.localStorage.getItem('debug-theme-script') === '1') {
-      console.log('[ThemeScript] Executed', {
-        theme: theme,
-        sidebarCollapsed: sidebarCollapsed,
-        sidebarWidth: sidebarWidth,
-        sidebarPinned: sidebarPinned,
-        attributesSet: {
-          'data-theme': document.documentElement.getAttribute('data-theme'),
-          'data-sidebar-collapsed': document.documentElement.getAttribute('data-sidebar-collapsed'),
-          'data-sidebar-width': document.documentElement.getAttribute('data-sidebar-width'),
-          'data-sidebar-pinned': document.documentElement.getAttribute('data-sidebar-pinned'),
-        }
-      });
     }
   } catch (e) {
-    // #region agent log
-    const logData7={location:'ThemeScript.tsx:87',message:'ThemeScript execution error',data:{error:e?.message||String(e),stack:e?.stack},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'D'};
-    console.log('[DEBUG]',JSON.stringify(logData7));
-    // #endregion
     // Silently fail - defaults will be used
   }
 })();

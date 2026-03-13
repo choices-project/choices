@@ -1,5 +1,6 @@
+import { getSupabaseServerClient } from '@/utils/supabase/server';
 
-import { withErrorHandling, successResponse, validationError } from '@/lib/api';
+import { withErrorHandling, successResponse, validationError, authError } from '@/lib/api';
 import { RFCManager } from '@/lib/governance/rfcs';
 
 import type { NextRequest } from 'next/server';
@@ -20,6 +21,13 @@ export const GET = withErrorHandling(async (request: NextRequest) => {
 });
 
 export const POST = withErrorHandling(async (request: NextRequest) => {
+  const supabase = await getSupabaseServerClient();
+  const { data: { session }, error: sessionError } = await supabase.auth.getSession();
+
+  if (sessionError || !session?.user) {
+    return authError('Authentication required');
+  }
+
   const body = await request.json();
   const { action, ...data } = body;
 

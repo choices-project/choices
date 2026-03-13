@@ -1,7 +1,7 @@
 'use client'
 
 
-import { motion, AnimatePresence } from 'framer-motion'
+import { motion, AnimatePresence, useReducedMotion } from 'framer-motion'
 import { 
   CheckCircle, 
   AlertCircle, 
@@ -60,6 +60,7 @@ export function PWAVotingInterface({
   showResults = false, 
   offlineMode = false 
 }: PWAVotingInterfaceProps) {
+  const shouldReduceMotion = useReducedMotion()
   const { isEnabled: pwaEnabled } = useFeatureFlags()
   const pwaFeatureEnabled = pwaEnabled('PWA')
   const { utils: pwaUtils } = usePWAUtils()
@@ -245,15 +246,15 @@ export function PWAVotingInterface({
   }
 
   return (
-    <div className="bg-white rounded-lg border border-gray-200 overflow-hidden" data-testid="pwa-voting-interface">
+    <div className="bg-card rounded-lg border border-border overflow-hidden" data-testid="pwa-voting-interface">
       {/* Header */}
-      <div className="p-6 border-b border-gray-200">
+      <div className="p-6 border-b border-border">
         <div className="flex items-start justify-between">
           <div className="flex-1">
-            <h3 className="text-lg font-semibold text-gray-900 mb-2">
+            <h3 className="text-lg font-semibold text-foreground mb-2">
               {poll.question}
             </h3>
-            <div className="flex items-center space-x-4 text-sm text-gray-600">
+            <div className="flex items-center space-x-4 text-sm text-muted-foreground">
               <div className="flex items-center space-x-1">
                 <Users className="w-4 h-4" />
                 <span>{poll.totalVotes.toLocaleString()} votes</span>
@@ -306,14 +307,13 @@ export function PWAVotingInterface({
                 disabled={storeIsVoting}
                 className={`w-full p-4 rounded-lg border-2 transition-all duration-200 text-left ${
                   selectedChoice === index
-                    ? 'border-blue-500 bg-blue-50'
-                    : 'border-gray-200 hover:border-gray-300 hover:bg-gray-50'
+                    ? 'border-primary bg-primary/10'
+                    : 'border-border hover:border-border hover:bg-muted'
                 } ${storeIsVoting ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}`}
-                whileHover={!storeIsVoting ? { scale: 1.02 } : {}}
-                whileTap={!storeIsVoting ? { scale: 0.98 } : {}}
+                {...(!shouldReduceMotion && !storeIsVoting ? { whileHover: { scale: 1.02 }, whileTap: { scale: 0.98 } } : {})}
               >
                 <div className="flex items-center justify-between">
-                  <span className="font-medium text-gray-900">{option}</span>
+                  <span className="font-medium text-foreground">{option}</span>
                   {storeIsVoting && selectedChoice === index && (
                     <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-blue-500" />
                   )}
@@ -324,12 +324,12 @@ export function PWAVotingInterface({
 
           {/* PWA Features Info */}
           {pwaFeatureEnabled && offlineMode && (
-            <div className="mt-4 p-3 bg-blue-50 rounded-lg border border-blue-200">
-              <div className="flex items-center space-x-2 text-blue-800">
+            <div className="mt-4 p-3 bg-primary/10 rounded-lg border border-primary/30">
+              <div className="flex items-center space-x-2 text-primary">
                 <Download className="w-4 h-4" />
                 <span className="text-sm font-medium">Offline Vote</span>
               </div>
-              <p className="text-sm text-blue-700 mt-1">
+              <p className="text-sm text-primary/90 mt-1">
                 Your vote will be stored locally and synced when you&apos;re back online.
               </p>
             </div>
@@ -339,8 +339,8 @@ export function PWAVotingInterface({
 
       {/* Results */}
       {showResults && poll.results && (
-        <div className="p-6 bg-gray-50">
-          <h4 className="text-lg font-semibold text-gray-900 mb-4">Results</h4>
+        <div className="p-6 bg-muted">
+          <h4 className="text-lg font-semibold text-foreground mb-4">Results</h4>
           <div className="space-y-3">
             {poll.options.map((option, index) => {
               const votes = poll.results?.[index] ?? 0
@@ -349,18 +349,22 @@ export function PWAVotingInterface({
               return (
                 <div key={index} className="space-y-2">
                   <div className="flex items-center justify-between">
-                    <span className="text-sm font-medium text-gray-900">{option}</span>
-                    <span className="text-sm text-gray-600">
+                    <span className="text-sm font-medium text-foreground">{option}</span>
+                    <span className="text-sm text-muted-foreground">
                       {votes} votes ({percentage}%)
                     </span>
                   </div>
-                  <div className="w-full bg-gray-200 rounded-full h-2">
-                    <motion.div
-                      className="bg-blue-500 h-2 rounded-full"
-                      initial={{ width: 0 }}
-                      animate={{ width: `${percentage}%` }}
-                      transition={{ duration: 0.5, delay: index * 0.1 }}
-                    />
+                  <div className="w-full bg-muted rounded-full h-2">
+                    {shouldReduceMotion ? (
+                      <div className="bg-blue-500 h-2 rounded-full" style={{ width: `${percentage}%` }} />
+                    ) : (
+                      <motion.div
+                        className="bg-blue-500 h-2 rounded-full"
+                        initial={{ width: 0 }}
+                        animate={{ width: `${percentage}%` }}
+                        transition={{ duration: 0.5, delay: index * 0.1 }}
+                      />
+                    )}
                   </div>
                 </div>
               )
@@ -371,13 +375,13 @@ export function PWAVotingInterface({
 
       {/* Vote Confirmation */}
       {hasVoted && (
-        <div className="p-6 bg-green-50 border-t border-green-200">
-          <div className="flex items-center space-x-2 text-green-800">
+        <div className="p-6 bg-green-50 dark:bg-green-900/30 border-t border-green-200 dark:border-green-800">
+          <div className="flex items-center space-x-2 text-green-800 dark:text-green-200">
             <CheckCircle className="w-5 h-5" />
             <span className="font-medium">Vote recorded successfully!</span>
           </div>
           {offlineMode && (
-            <p className="text-sm text-green-700 mt-1">
+            <p className="text-sm text-green-700 dark:text-green-300 mt-1">
               Your vote has been stored offline and will sync when you&apos;re back online.
             </p>
           )}
@@ -386,12 +390,12 @@ export function PWAVotingInterface({
 
       {/* Expired Poll */}
       {isExpired() && (
-        <div className="p-6 bg-gray-50 border-t border-gray-200">
-          <div className="flex items-center space-x-2 text-gray-600">
+        <div className="p-6 bg-muted border-t border-border">
+          <div className="flex items-center space-x-2 text-muted-foreground">
             <AlertCircle className="w-5 h-5" />
             <span className="font-medium">This poll has expired</span>
           </div>
-          <p className="text-sm text-gray-600 mt-1">
+          <p className="text-sm text-muted-foreground mt-1">
             Voting is no longer available for this poll.
           </p>
         </div>
@@ -399,10 +403,10 @@ export function PWAVotingInterface({
 
       {/* PWA Features Toggle */}
       {pwaFeatureEnabled && (
-        <div className="border-t border-gray-200">
+        <div className="border-t border-border">
           <button
             onClick={() => setShowPWAFeatures(!showPWAFeatures)}
-            className="w-full p-3 text-left text-sm text-gray-600 hover:text-gray-900 hover:bg-gray-50 transition-colors"
+            className="w-full p-3 text-left text-sm text-muted-foreground hover:text-foreground hover:bg-muted transition-colors"
           >
             <div className="flex items-center justify-between">
               <span>PWA Features</span>
@@ -413,35 +417,32 @@ export function PWAVotingInterface({
           <AnimatePresence>
             {showPWAFeatures && (
               <motion.div
-                initial={{ height: 0, opacity: 0 }}
-                animate={{ height: 'auto', opacity: 1 }}
-                exit={{ height: 0, opacity: 0 }}
-                transition={{ duration: 0.2 }}
+                {...(shouldReduceMotion ? {} : { initial: { height: 0, opacity: 0 }, animate: { height: 'auto', opacity: 1 }, exit: { height: 0, opacity: 0 }, transition: { duration: 0.2 } })}
                 className="overflow-hidden"
               >
-                <div className="p-4 bg-gray-50 border-t border-gray-200">
+                <div className="p-4 bg-muted border-t border-border">
                   <div className="grid grid-cols-2 gap-3 text-xs">
                     <div className="flex items-center space-x-2">
                       <div className={`w-2 h-2 rounded-full ${isOnline ? 'bg-green-500' : 'bg-orange-500'}`} />
-                      <span className="text-gray-600">
+                      <span className="text-muted-foreground">
                         {isOnline ? 'Online' : 'Offline'}
                       </span>
                     </div>
                     <div className="flex items-center space-x-2">
-                      <div className={`w-2 h-2 rounded-full ${pwaUtils?.pwaManager.isInstalled() ? 'bg-blue-500' : 'bg-gray-300'}`} />
-                      <span className="text-gray-600">
+                      <div className={`w-2 h-2 rounded-full ${pwaUtils?.pwaManager.isInstalled() ? 'bg-blue-500' : 'bg-gray-300 dark:bg-gray-600'}`} />
+                      <span className="text-muted-foreground">
                         {pwaUtils?.pwaManager.isInstalled() ? 'Installed' : 'Browser'}
                       </span>
                     </div>
                     <div className="flex items-center space-x-2">
                       <div className={`w-2 h-2 rounded-full ${'serviceWorker' in navigator ? 'bg-green-500' : 'bg-red-500'}`} />
-                      <span className="text-gray-600">
+                      <span className="text-muted-foreground">
                         Service Worker
                       </span>
                     </div>
                     <div className="flex items-center space-x-2">
-                      <div className={`w-2 h-2 rounded-full ${(JSON.parse(localStorage.getItem('offlineVotes') ?? '[]').length) > 0 ? 'bg-orange-500' : 'bg-gray-300'}`} />
-                      <span className="text-gray-600">
+                      <div className={`w-2 h-2 rounded-full ${(JSON.parse(localStorage.getItem('offlineVotes') ?? '[]').length) > 0 ? 'bg-orange-500' : 'bg-gray-300 dark:bg-gray-600'}`} />
+                      <span className="text-muted-foreground">
                         {JSON.parse(localStorage.getItem('offlineVotes') ?? '[]').length} offline votes
                       </span>
                     </div>

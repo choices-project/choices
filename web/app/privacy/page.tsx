@@ -11,18 +11,18 @@ export const metadata: Metadata = {
 
 export default function PrivacyPolicyPage() {
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-muted">
       {/* Header */}
-      <div className="bg-white border-b">
+      <div className="bg-card border-b border-border">
         <div className="max-w-4xl mx-auto px-4 py-8">
           <div className="flex items-center space-x-3 mb-4">
-            <Shield className="h-8 w-8 text-blue-600" />
-            <h1 className="text-3xl font-bold text-gray-900">Privacy Policy</h1>
+            <Shield className="h-8 w-8 text-primary" />
+            <h1 className="text-3xl font-bold text-foreground">Privacy Policy</h1>
           </div>
-          <p className="text-lg text-gray-600">
+          <p className="text-lg text-muted-foreground">
             Your privacy matters. Learn how we protect your data and give you control over your information.
           </p>
-          <p className="text-sm text-gray-500 mt-2">
+          <p className="text-sm text-muted-foreground mt-2">
             Last updated: January 15, 2025
           </p>
         </div>
@@ -30,41 +30,41 @@ export default function PrivacyPolicyPage() {
 
       <div className="max-w-4xl mx-auto px-4 py-8">
         {/* Quick Actions */}
-        <div className="bg-blue-50 border border-blue-200 rounded-lg p-6 mb-8">
-          <h2 className="text-lg font-semibold text-blue-900 mb-4 flex items-center">
+        <div className="bg-primary/10 border border-border rounded-lg p-6 mb-8">
+          <h2 className="text-lg font-semibold text-primary mb-4 flex items-center">
             <Settings className="h-5 w-5 mr-2" />
             Your Privacy Controls
           </h2>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <a 
               href="/account/export" 
-              className="flex items-center p-3 bg-white rounded-lg border hover:bg-gray-50 transition-colors"
+              className="flex items-center p-3 bg-card rounded-lg border border-border hover:bg-muted transition-colors"
             >
-              <Download className="h-5 w-5 text-blue-600 mr-3" />
+              <Download className="h-5 w-5 text-primary mr-3" />
               <div>
-                <div className="font-medium text-gray-900">Download Your Data</div>
-                <div className="text-sm text-gray-600">Get a copy of all your data</div>
+                <div className="font-medium text-foreground">Download Your Data</div>
+                <div className="text-sm text-muted-foreground">Get a copy of all your data</div>
               </div>
             </a>
             <a 
               href="/account/delete" 
-              className="flex items-center p-3 bg-white rounded-lg border hover:bg-gray-50 transition-colors"
+              className="flex items-center p-3 bg-card rounded-lg border border-border hover:bg-muted transition-colors"
             >
               <Trash2 className="h-5 w-5 text-red-600 mr-3" />
               <div>
-                <div className="font-medium text-gray-900">Delete Your Account</div>
-                <div className="text-sm text-gray-600">Remove all your data</div>
+                <div className="font-medium text-foreground">Delete Your Account</div>
+                <div className="text-sm text-muted-foreground">Remove all your data</div>
               </div>
             </a>
           </div>
         </div>
 
         {/* Main Content */}
-        <div className="prose prose-lg max-w-none">
+        <div className="prose prose-lg max-w-none dark:prose-invert">
           {/* Introduction */}
           <section className="mb-8">
-            <h2 className="text-2xl font-bold text-gray-900 mb-4">Your Privacy Matters</h2>
-            <p className="text-gray-700 mb-4">
+            <h2 className="text-2xl font-bold text-foreground mb-4">Your Privacy Matters</h2>
+            <p className="text-foreground/80 mb-4">
               We believe in transparent, user-controlled data practices. This policy explains what data we collect, 
               why we collect it, and how you can control it.
             </p>
@@ -84,45 +84,45 @@ export default function PrivacyPolicyPage() {
 
           {/* What We Collect */}
           <section className="mb-8">
-            <h2 className="text-2xl font-bold text-gray-900 mb-4">What Data We Collect</h2>
+            <h2 className="text-2xl font-bold text-foreground mb-4">What Data We Collect</h2>
             
             <div className="space-y-6">
-              <div className="bg-white border rounded-lg p-6">
-                <h3 className="text-lg font-semibold text-gray-900 mb-3 flex items-center">
-                  <Lock className="h-5 w-5 text-blue-600 mr-2" />
+              <div className="bg-card border border-border rounded-lg p-6">
+                <h3 className="text-lg font-semibold text-foreground mb-3 flex items-center">
+                  <Lock className="h-5 w-5 text-primary mr-2" />
                   Essential Data (Required for Platform Function)
                 </h3>
-                <ul className="space-y-2 text-gray-700">
+                <ul className="space-y-2 text-foreground/80">
                   <li>• <strong>Account Information:</strong> Email, username, password (encrypted)</li>
                   <li>• <strong>Voting Records:</strong> Your poll votes and preferences (anonymous)</li>
                   <li>• <strong>Representative Data:</strong> Your elected officials and districts</li>
                 </ul>
               </div>
 
-              <div className="bg-white border rounded-lg p-6">
-                <h3 className="text-lg font-semibold text-gray-900 mb-3 flex items-center">
-                  <Eye className="h-5 w-5 text-blue-600 mr-2" />
+              <div className="bg-card border border-border rounded-lg p-6">
+                <h3 className="text-lg font-semibold text-foreground mb-3 flex items-center">
+                  <Eye className="h-5 w-5 text-primary mr-2" />
                   Analytics Data (Optional - You Control This)
                 </h3>
-                <ul className="space-y-2 text-gray-700">
+                <ul className="space-y-2 text-foreground/80">
                   <li>• <strong>Usage Patterns:</strong> Which pages you visit and how you navigate</li>
                   <li>• <strong>Performance Data:</strong> How fast pages load and any errors</li>
                   <li>• <strong>Device Information:</strong> Browser type and device for accessibility</li>
                   <li>• <strong>Geographic Location:</strong> Your state/region for representative accuracy</li>
                 </ul>
-                <div className="mt-3 p-3 bg-blue-50 rounded-lg">
-                  <p className="text-sm text-blue-800">
+                <div className="mt-3 p-3 bg-primary/10 rounded-lg">
+                  <p className="text-sm text-primary">
                     <strong>You can opt out of analytics data collection at any time</strong> in your account settings.
                   </p>
                 </div>
               </div>
 
-              <div className="bg-white border rounded-lg p-6">
-                <h3 className="text-lg font-semibold text-gray-900 mb-3 flex items-center">
-                  <FileText className="h-5 w-5 text-blue-600 mr-2" />
+              <div className="bg-card border border-border rounded-lg p-6">
+                <h3 className="text-lg font-semibold text-foreground mb-3 flex items-center">
+                  <FileText className="h-5 w-5 text-primary mr-2" />
                   Privacy Data (For Your Rights)
                 </h3>
-                <ul className="space-y-2 text-gray-700">
+                <ul className="space-y-2 text-foreground/80">
                   <li>• <strong>Consent Records:</strong> What you&apos;ve agreed to share</li>
                   <li>• <strong>Data Requests:</strong> When you ask for your data or deletion</li>
                   <li>• <strong>Audit Logs:</strong> Security and access records</li>
@@ -133,27 +133,27 @@ export default function PrivacyPolicyPage() {
 
           {/* Why We Collect */}
           <section className="mb-8">
-            <h2 className="text-2xl font-bold text-gray-900 mb-4">Why We Collect This Data</h2>
+            <h2 className="text-2xl font-bold text-foreground mb-4">Why We Collect This Data</h2>
             
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <div className="bg-white border rounded-lg p-6">
-                <h3 className="text-lg font-semibold text-gray-900 mb-3 flex items-center">
+              <div className="bg-card border border-border rounded-lg p-6">
+                <h3 className="text-lg font-semibold text-foreground mb-3 flex items-center">
                   <Users className="h-5 w-5 text-green-600 mr-2" />
                   For Democracy & Election Integrity
                 </h3>
-                <ul className="space-y-2 text-gray-700">
+                <ul className="space-y-2 text-foreground/80">
                   <li>• <strong>Prevent Bot Manipulation:</strong> Stop automated attacks on polls</li>
                   <li>• <strong>Ensure Fair Representation:</strong> Verify geographic distribution</li>
                   <li>• <strong>Maintain Trust:</strong> Protect the integrity of democratic processes</li>
                 </ul>
               </div>
 
-              <div className="bg-white border rounded-lg p-6">
-                <h3 className="text-lg font-semibold text-gray-900 mb-3 flex items-center">
-                  <Settings className="h-5 w-5 text-blue-600 mr-2" />
+              <div className="bg-card border border-border rounded-lg p-6">
+                <h3 className="text-lg font-semibold text-foreground mb-3 flex items-center">
+                  <Settings className="h-5 w-5 text-primary mr-2" />
                   For Better User Experience
                 </h3>
-                <ul className="space-y-2 text-gray-700">
+                <ul className="space-y-2 text-foreground/80">
                   <li>• <strong>Improve Navigation:</strong> Make the platform easier to use</li>
                   <li>• <strong>Fix Performance Issues:</strong> Speed up slow pages</li>
                   <li>• <strong>Enhance Accessibility:</strong> Support users with different needs</li>
@@ -164,60 +164,60 @@ export default function PrivacyPolicyPage() {
 
           {/* Your Rights */}
           <section className="mb-8">
-            <h2 className="text-2xl font-bold text-gray-900 mb-4">Your Control & Rights</h2>
+            <h2 className="text-2xl font-bold text-foreground mb-4">Your Control & Rights</h2>
             
-            <div className="bg-blue-50 border border-blue-200 rounded-lg p-6 mb-6">
-              <h3 className="text-lg font-semibold text-blue-900 mb-3">Granular Consent</h3>
-              <p className="text-blue-800 mb-3">You can choose exactly what data to share:</p>
+            <div className="bg-primary/10 border border-border rounded-lg p-6 mb-6">
+              <h3 className="text-lg font-semibold text-primary mb-3">Granular Consent</h3>
+              <p className="text-primary mb-3">You can choose exactly what data to share:</p>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                 <div className="flex items-center">
                   <div className="w-2 h-2 bg-green-500 rounded-full mr-3" />
-                  <span className="text-blue-800">Essential Data: Required for platform function</span>
+                  <span className="text-primary">Essential Data: Required for platform function</span>
                 </div>
                 <div className="flex items-center">
                   <div className="w-2 h-2 bg-blue-500 rounded-full mr-3" />
-                  <span className="text-blue-800">Analytics Data: Optional - improve your experience</span>
+                  <span className="text-primary">Analytics Data: Optional - improve your experience</span>
                 </div>
                 <div className="flex items-center">
                   <div className="w-2 h-2 bg-blue-500 rounded-full mr-3" />
-                  <span className="text-blue-800">Location Data: Optional - show relevant representatives</span>
+                  <span className="text-primary">Location Data: Optional - show relevant representatives</span>
                 </div>
                 <div className="flex items-center">
                   <div className="w-2 h-2 bg-blue-500 rounded-full mr-3" />
-                  <span className="text-blue-800">Usage Data: Optional - help us improve the platform</span>
+                  <span className="text-primary">Usage Data: Optional - help us improve the platform</span>
                 </div>
               </div>
             </div>
 
-            <div className="bg-white border rounded-lg p-6">
-              <h3 className="text-lg font-semibold text-gray-900 mb-3">Your Rights (GDPR/CCPA Compliant)</h3>
+            <div className="bg-card border border-border rounded-lg p-6">
+              <h3 className="text-lg font-semibold text-foreground mb-3">Your Rights (GDPR/CCPA Compliant)</h3>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div className="space-y-2">
                   <div className="flex items-center">
-                    <Eye className="h-4 w-4 text-blue-600 mr-2" />
-                    <span className="text-gray-700"><strong>Access:</strong> See all data we have about you</span>
+                    <Eye className="h-4 w-4 text-primary mr-2" />
+                    <span className="text-foreground/80"><strong>Access:</strong> See all data we have about you</span>
                   </div>
                   <div className="flex items-center">
-                    <Settings className="h-4 w-4 text-blue-600 mr-2" />
-                    <span className="text-gray-700"><strong>Correction:</strong> Fix any inaccurate information</span>
+                    <Settings className="h-4 w-4 text-primary mr-2" />
+                    <span className="text-foreground/80"><strong>Correction:</strong> Fix any inaccurate information</span>
                   </div>
                   <div className="flex items-center">
-                    <Trash2 className="h-4 w-4 text-blue-600 mr-2" />
-                    <span className="text-gray-700"><strong>Deletion:</strong> Request complete data removal</span>
+                    <Trash2 className="h-4 w-4 text-primary mr-2" />
+                    <span className="text-foreground/80"><strong>Deletion:</strong> Request complete data removal</span>
                   </div>
                 </div>
                 <div className="space-y-2">
                   <div className="flex items-center">
-                    <Download className="h-4 w-4 text-blue-600 mr-2" />
-                    <span className="text-gray-700"><strong>Portability:</strong> Download your data in standard formats</span>
+                    <Download className="h-4 w-4 text-primary mr-2" />
+                    <span className="text-foreground/80"><strong>Portability:</strong> Download your data in standard formats</span>
                   </div>
                   <div className="flex items-center">
-                    <Lock className="h-4 w-4 text-blue-600 mr-2" />
-                    <span className="text-gray-700"><strong>Restriction:</strong> Limit how we use your data</span>
+                    <Lock className="h-4 w-4 text-primary mr-2" />
+                    <span className="text-foreground/80"><strong>Restriction:</strong> Limit how we use your data</span>
                   </div>
                   <div className="flex items-center">
-                    <Shield className="h-4 w-4 text-blue-600 mr-2" />
-                    <span className="text-gray-700"><strong>Objection:</strong> Opt out of certain data processing</span>
+                    <Shield className="h-4 w-4 text-primary mr-2" />
+                    <span className="text-foreground/80"><strong>Objection:</strong> Opt out of certain data processing</span>
                   </div>
                 </div>
               </div>
@@ -226,15 +226,15 @@ export default function PrivacyPolicyPage() {
 
           {/* Data Protection */}
           <section className="mb-8">
-            <h2 className="text-2xl font-bold text-gray-900 mb-4">Data Protection Measures</h2>
+            <h2 className="text-2xl font-bold text-foreground mb-4">Data Protection Measures</h2>
             
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-              <div className="bg-white border rounded-lg p-6">
-                <h3 className="text-lg font-semibold text-gray-900 mb-3 flex items-center">
+              <div className="bg-card border border-border rounded-lg p-6">
+                <h3 className="text-lg font-semibold text-foreground mb-3 flex items-center">
                   <Lock className="h-5 w-5 text-green-600 mr-2" />
                   Security
                 </h3>
-                <ul className="space-y-2 text-gray-700 text-sm">
+                <ul className="space-y-2 text-foreground/80 text-sm">
                   <li>• Encryption at rest and in transit</li>
                   <li>• Row Level Security (RLS) policies</li>
                   <li>• Access controls and authentication</li>
@@ -242,12 +242,12 @@ export default function PrivacyPolicyPage() {
                 </ul>
               </div>
 
-              <div className="bg-white border rounded-lg p-6">
-                <h3 className="text-lg font-semibold text-gray-900 mb-3 flex items-center">
-                  <Shield className="h-5 w-5 text-blue-600 mr-2" />
+              <div className="bg-card border border-border rounded-lg p-6">
+                <h3 className="text-lg font-semibold text-foreground mb-3 flex items-center">
+                  <Shield className="h-5 w-5 text-primary mr-2" />
                   Data Minimization
                 </h3>
-                <ul className="space-y-2 text-gray-700 text-sm">
+                <ul className="space-y-2 text-foreground/80 text-sm">
                   <li>• Only collect what we need</li>
                   <li>• Data used only for stated purposes</li>
                   <li>• Automatic deletion after specified periods</li>
@@ -255,12 +255,12 @@ export default function PrivacyPolicyPage() {
                 </ul>
               </div>
 
-              <div className="bg-white border rounded-lg p-6">
-                <h3 className="text-lg font-semibold text-gray-900 mb-3 flex items-center">
+              <div className="bg-card border border-border rounded-lg p-6">
+                <h3 className="text-lg font-semibold text-foreground mb-3 flex items-center">
                   <Settings className="h-5 w-5 text-purple-600 mr-2" />
                   Your Privacy Controls
                 </h3>
-                <ul className="space-y-2 text-gray-700 text-sm">
+                <ul className="space-y-2 text-foreground/80 text-sm">
                   <li>• Opt-out anytime</li>
                   <li>• Download your data</li>
                   <li>• Complete account deletion</li>
@@ -272,40 +272,40 @@ export default function PrivacyPolicyPage() {
 
           {/* Data Retention */}
           <section className="mb-8">
-            <h2 className="text-2xl font-bold text-gray-900 mb-4">Data Retention</h2>
+            <h2 className="text-2xl font-bold text-foreground mb-4">Data Retention</h2>
             
-            <div className="bg-white border rounded-lg p-6">
-              <h3 className="text-lg font-semibold text-gray-900 mb-3 flex items-center">
-                <Clock className="h-5 w-5 text-blue-600 mr-2" />
+            <div className="bg-card border border-border rounded-lg p-6">
+              <h3 className="text-lg font-semibold text-foreground mb-3 flex items-center">
+                <Clock className="h-5 w-5 text-primary mr-2" />
                 How Long We Keep Data
               </h3>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div className="space-y-2">
                   <div className="flex justify-between">
-                    <span className="text-gray-700">Analytics Data:</span>
-                    <span className="font-medium text-gray-900">30 days, then deleted</span>
+                    <span className="text-foreground/80">Analytics Data:</span>
+                    <span className="font-medium text-foreground">30 days, then deleted</span>
                   </div>
                   <div className="flex justify-between">
-                    <span className="text-gray-700">User Profiles:</span>
-                    <span className="font-medium text-gray-900">1 year, then anonymized</span>
+                    <span className="text-foreground/80">User Profiles:</span>
+                    <span className="font-medium text-foreground">1 year, then anonymized</span>
                   </div>
                   <div className="flex justify-between">
-                    <span className="text-gray-700">Audit Logs:</span>
-                    <span className="font-medium text-gray-900">90 days, then deleted</span>
+                    <span className="text-foreground/80">Audit Logs:</span>
+                    <span className="font-medium text-foreground">90 days, then deleted</span>
                   </div>
                 </div>
                 <div className="space-y-2">
                   <div className="flex justify-between">
-                    <span className="text-gray-700">Consent Records:</span>
-                    <span className="font-medium text-gray-900">7 years (legal requirement)</span>
+                    <span className="text-foreground/80">Consent Records:</span>
+                    <span className="font-medium text-foreground">7 years (legal requirement)</span>
                   </div>
                   <div className="flex justify-between">
-                    <span className="text-gray-700">Data Requests:</span>
-                    <span className="font-medium text-gray-900">3 years (legal requirement)</span>
+                    <span className="text-foreground/80">Data Requests:</span>
+                    <span className="font-medium text-foreground">3 years (legal requirement)</span>
                   </div>
                   <div className="flex justify-between">
-                    <span className="text-gray-700">Voting Records:</span>
-                    <span className="font-medium text-gray-900">Anonymized immediately</span>
+                    <span className="text-foreground/80">Voting Records:</span>
+                    <span className="font-medium text-foreground">Anonymized immediately</span>
                   </div>
                 </div>
               </div>
@@ -314,21 +314,21 @@ export default function PrivacyPolicyPage() {
 
           {/* Contact */}
           <section className="mb-8">
-            <h2 className="text-2xl font-bold text-gray-900 mb-4">Contact Us</h2>
+            <h2 className="text-2xl font-bold text-foreground mb-4">Contact Us</h2>
             
-            <div className="bg-white border rounded-lg p-6">
+            <div className="bg-card border border-border rounded-lg p-6">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div>
-                  <h3 className="text-lg font-semibold text-gray-900 mb-3">Privacy Questions</h3>
-                  <div className="space-y-2 text-gray-700">
+                  <h3 className="text-lg font-semibold text-foreground mb-3">Privacy Questions</h3>
+                  <div className="space-y-2 text-foreground/80">
                     <div>• <strong>Email:</strong> privacy@rankedchoicedemocracy.org</div>
                     <div>• <strong>Data Rights:</strong> rights@rankedchoicedemocracy.org</div>
                     <div>• <strong>Security Issues:</strong> security@rankedchoicedemocracy.org</div>
                   </div>
                 </div>
                 <div>
-                  <h3 className="text-lg font-semibold text-gray-900 mb-3">Response Times</h3>
-                  <div className="space-y-2 text-gray-700">
+                  <h3 className="text-lg font-semibold text-foreground mb-3">Response Times</h3>
+                  <div className="space-y-2 text-foreground/80">
                     <div>• <strong>General Inquiries:</strong> 48 hours</div>
                     <div>• <strong>Data Rights Requests:</strong> 30 days maximum</div>
                     <div>• <strong>Security Issues:</strong> 24 hours</div>

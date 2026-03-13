@@ -112,14 +112,14 @@ export const FeedbackStats: React.FC<FeedbackStatsProps> = ({ feedback }) => {
       {statCards.map((stat) => {
         const Icon = stat.icon;
         return (
-          <div key={stat.title} className="bg-white dark:bg-gray-900 rounded-lg shadow p-4 border border-gray-200 dark:border-gray-700">
+          <div key={stat.title} className="bg-background rounded-lg shadow p-4 border border-border">
             <div className="flex items-center">
               <div className={`p-2 rounded-lg ${stat.bgColor}`}>
                 <Icon className={`h-5 w-5 ${stat.color}`} />
               </div>
               <div className="ml-3">
-                <p className="text-sm font-medium text-gray-600 dark:text-gray-400">{stat.title}</p>
-                <p className="text-2xl font-bold text-gray-900 dark:text-gray-100">{stat.value}</p>
+                <p className="text-sm font-medium text-muted-foreground">{stat.title}</p>
+                <p className="text-2xl font-bold text-foreground">{stat.value}</p>
               </div>
             </div>
           </div>

@@ -27,7 +27,7 @@ import {
   useProfileDraftActions,
 } from '@/features/profile/hooks/use-profile';
 
-import DashboardNavigation, { MobileDashboardNav } from '@/components/shared/DashboardNavigation';
+import ProfileSubNav from '@/components/shared/ProfileSubNav';
 
 import { useUser } from '@/lib/stores';
 import { useAppActions } from '@/lib/stores/appStore';
@@ -153,13 +153,13 @@ export default function PrivacyPage() {
 
   if (!user && !profileLoading) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+      <div className="min-h-screen bg-muted flex items-center justify-center">
         <div className="text-center">
-          <h1 className="text-2xl font-bold text-gray-900 mb-4">Privacy & Data</h1>
-          <p className="text-gray-600 mb-6">Please log in to manage your privacy settings.</p>
+          <h1 className="text-2xl font-bold text-foreground mb-4">Privacy & Data</h1>
+          <p className="text-muted-foreground mb-6">Please log in to manage your privacy settings.</p>
           <a
             href="/auth?redirectTo=/account/privacy"
-            className="bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700"
+            className="bg-primary text-primary-foreground px-4 py-2 rounded-md hover:bg-primary/90"
             aria-label="Log in to manage privacy settings"
           >
             Log in
@@ -171,10 +171,10 @@ export default function PrivacyPage() {
 
   if (profileLoading || loadingTimeout) {
     return (
-      <div className="min-h-screen bg-gray-50 dark:bg-gray-900 flex items-center justify-center" role="status" aria-busy="true" aria-live="polite" aria-label="Loading privacy settings">
+      <div className="min-h-screen bg-muted flex items-center justify-center" role="status" aria-busy="true" aria-live="polite" aria-label="Loading privacy settings">
         <div className="text-center">
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 dark:border-blue-400 mx-auto mb-4" aria-hidden="true" />
-          <p className="text-gray-600 dark:text-gray-400">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto mb-4" aria-hidden="true" />
+          <p className="text-muted-foreground">
             {loadingTimeout ? 'Loading is taking longer than expected...' : 'Loading privacy settings...'}
           </p>
           {loadingTimeout && (
@@ -183,7 +183,7 @@ export default function PrivacyPage() {
               onClick={() => {
                 window.location.reload();
               }}
-              className="mt-4 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 dark:bg-blue-500 dark:hover:bg-blue-600 min-h-[44px]"
+              className="mt-4 px-4 py-2 bg-primary text-primary-foreground rounded-lg hover:bg-primary/90 min-h-[44px]"
               aria-label="Reload page to retry loading privacy settings"
             >
               Reload Page
@@ -196,21 +196,21 @@ export default function PrivacyPage() {
 
   if (profileError) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+      <div className="min-h-screen bg-muted flex items-center justify-center">
         <div className="text-center space-y-4">
-          <h1 className="text-2xl font-bold">We couldn&apos;t load your privacy settings</h1>
-          <p className="text-gray-600">Please refresh the page or try again later.</p>
+          <h1 className="text-2xl font-bold text-foreground">We couldn&apos;t load your privacy settings</h1>
+          <p className="text-muted-foreground">Please refresh the page or try again later.</p>
           <div className="flex flex-wrap justify-center gap-3">
             <button
               onClick={() => window.location.reload()}
-              className="px-4 py-2 rounded-md bg-blue-600 text-white hover:bg-blue-700"
+              className="px-4 py-2 rounded-md bg-primary text-primary-foreground hover:bg-primary/90"
               aria-label="Reload page to retry loading privacy settings"
             >
               Reload
             </button>
             <a
               href="/dashboard"
-              className="px-4 py-2 rounded-md border border-gray-300 text-gray-700 hover:bg-gray-50"
+              className="px-4 py-2 rounded-md border border-border text-foreground/80 hover:bg-muted"
               aria-label="Navigate back to dashboard"
             >
               Back to dashboard
@@ -226,24 +226,16 @@ export default function PrivacyPage() {
   }
 
   return (
-    <>
-      {/* 🔒 Cohesive Dashboard Navigation */}
-      <DashboardNavigation />
-
-      {/* Root layout SkipNavTarget provides <main>; avoid nested main for a11y */}
-      <div className="min-h-screen bg-gray-50 pb-20 md:pb-8" aria-label="Privacy and data management">
-        <div className="max-w-7xl mx-auto px-4 py-8">
-          <MyDataDashboard
-            userId={userId}
-            privacySettings={privacySettings}
-            onPrivacyUpdate={handlePrivacyUpdate}
-            isSaving={isUpdating}
-          />
-        </div>
+    <div className="min-h-screen bg-muted pb-8" aria-label="Privacy and data management">
+      <div className="max-w-7xl mx-auto px-4 py-8">
+        <ProfileSubNav />
+        <MyDataDashboard
+          userId={userId}
+          privacySettings={privacySettings}
+          onPrivacyUpdate={handlePrivacyUpdate}
+          isSaving={isUpdating}
+        />
       </div>
-
-      {/* 🔒 Mobile Navigation */}
-      <MobileDashboardNav />
-    </>
+    </div>
   );
 }

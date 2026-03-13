@@ -5,9 +5,22 @@
  * It's loaded only when needed to reduce initial bundle size.
  */
 
-import React, { useEffect, useRef, useMemo } from 'react';
+import { Users } from 'lucide-react';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
 
 import type { AdminUser } from '@/features/admin/types';
+
+import { EnhancedEmptyState } from '@/components/shared/EnhancedEmptyState';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from '@/components/ui/alert-dialog';
 
 import { performanceMetrics } from '@/lib/performance/performance-metrics';
 import {
@@ -20,6 +33,7 @@ import {
   useAdminSelectedUsers,
   useAdminShowBulkActions,
   useAdminUserCount,
+  useNotificationActions,
 } from '@/lib/stores';
 import logger from '@/lib/utils/logger';
 
@@ -29,6 +43,7 @@ type UserManagementProps = {
 }
 
 export default function UserManagement({ onUserUpdate, onUserDelete }: UserManagementProps) {
+  const { addNotification } = useNotificationActions();
   // Get state from adminStore
   const { searchTerm, roleFilter, statusFilter } = useAdminUserFilters();
   const filteredUsers = useFilteredAdminUsers();
@@ -56,6 +71,8 @@ export default function UserManagement({ onUserUpdate, onUserDelete }: UserManag
   } = useAdminUserActions();
 
   const { loadUsers, setError } = useAdminActions();
+
+  const [userToDelete, setUserToDelete] = useState<AdminUser | null>(null);
 
   const loadUsersRef = useRef(loadUsers);
   const setErrorRef = useRef(setError);
@@ -155,7 +172,7 @@ export default function UserManagement({ onUserUpdate, onUserDelete }: UserManag
       case 'active': return 'text-green-800 dark:text-green-300 bg-green-100 dark:bg-green-900/30';
       case 'inactive': return 'text-yellow-600 dark:text-yellow-400 bg-yellow-100 dark:bg-yellow-900/30';
       case 'suspended': return 'text-red-600 dark:text-red-400 bg-red-100 dark:bg-red-900/30';
-      default: return 'text-gray-600 dark:text-gray-400 bg-gray-100 dark:bg-gray-700';
+      default: return 'text-muted-foreground bg-muted';
     }
   };
 
@@ -163,8 +180,20 @@ export default function UserManagement({ onUserUpdate, onUserDelete }: UserManag
     switch (role) {
       case 'admin': return 'text-purple-600 dark:text-purple-400 bg-purple-100 dark:bg-purple-900/30';
       case 'moderator': return 'text-blue-600 dark:text-blue-400 bg-blue-100 dark:bg-blue-900/30';
-      case 'user': return 'text-gray-600 dark:text-gray-400 bg-gray-100 dark:bg-gray-700';
-      default: return 'text-gray-600 dark:text-gray-400 bg-gray-100 dark:bg-gray-700';
+      case 'user': return 'text-muted-foreground bg-muted';
+      default: return 'text-muted-foreground bg-muted';
+    }
+  };
+
+  const handleDeleteUserConfirm = async () => {
+    if (!userToDelete) return;
+    try {
+      await deleteUser(userToDelete.id);
+      onUserDelete?.(userToDelete.id);
+      setUserToDelete(null);
+    } catch (error) {
+      logger.error('Failed to delete user', error);
+      addNotification({ type: 'error', title: 'Delete Failed', message: 'Failed to delete user. Please try again.', duration: 5000 });
     }
   };
 
@@ -172,20 +201,20 @@ export default function UserManagement({ onUserUpdate, onUserDelete }: UserManag
     return (
       <div className="space-y-6" data-testid="user-management-loading">
         <div className="animate-pulse">
-          <div className="h-8 bg-gray-200 dark:bg-gray-700 rounded w-1/4 mb-6" />
-          <div className="bg-white dark:bg-gray-900 rounded-lg shadow border border-gray-200 dark:border-gray-700">
-            <div className="p-6 border-b border-gray-200 dark:border-gray-700">
-              <div className="h-10 bg-gray-200 dark:bg-gray-700 rounded w-1/3" />
+          <div className="h-8 bg-muted rounded w-1/4 mb-6" />
+          <div className="bg-background rounded-lg shadow border border-border">
+            <div className="p-6 border-b border-border">
+              <div className="h-10 bg-muted rounded w-1/3" />
             </div>
             <div className="p-6">
               <div className="space-y-4">
                 {[...Array(5)].map((_, i) => (
                   <div key={i} className="flex items-center space-x-4">
-                    <div className="h-4 bg-gray-200 dark:bg-gray-700 rounded w-4" />
-                    <div className="h-4 bg-gray-200 dark:bg-gray-700 rounded w-1/4" />
-                    <div className="h-4 bg-gray-200 dark:bg-gray-700 rounded w-1/6" />
-                    <div className="h-4 bg-gray-200 dark:bg-gray-700 rounded w-1/6" />
-                    <div className="h-4 bg-gray-200 dark:bg-gray-700 rounded w-1/6" />
+                    <div className="h-4 bg-muted rounded w-4" />
+                    <div className="h-4 bg-muted rounded w-1/4" />
+                    <div className="h-4 bg-muted rounded w-1/6" />
+                    <div className="h-4 bg-muted rounded w-1/6" />
+                    <div className="h-4 bg-muted rounded w-1/6" />
                   </div>
                 ))}
               </div>
@@ -242,40 +271,54 @@ export default function UserManagement({ onUserUpdate, onUserDelete }: UserManag
 
   return (
     <div className="space-y-6" data-testid="user-management">
+      <AlertDialog open={!!userToDelete} onOpenChange={(open) => !open && setUserToDelete(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Delete user?</AlertDialogTitle>
+            <AlertDialogDescription>
+              Are you sure you want to delete user {userToDelete?.email}? This action cannot be undone.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction onClick={handleDeleteUserConfirm}>Delete</AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
       {/* Header */}
       <div className="flex items-center justify-between">
-        <h1 className="text-2xl font-bold text-gray-900 dark:text-gray-100" data-testid="user-management-title">User Management</h1>
+        <h1 className="text-2xl font-bold text-foreground" data-testid="user-management-title">User Management</h1>
         <div className="flex items-center space-x-4">
-          <span className="text-sm text-gray-600 dark:text-gray-400">
+          <span className="text-sm text-muted-foreground">
             {visibleUsers.length} of {filteredUsers.length} shown ({totalUsers} total)
           </span>
-          <button className="px-4 py-2 bg-blue-600 dark:bg-blue-700 text-white rounded-lg hover:bg-blue-700 dark:hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-500">
+          <button className="px-4 py-2 bg-primary text-white rounded-lg hover:bg-primary/90 focus:outline-none focus:ring-2 focus:ring-blue-500">
             Add User
           </button>
         </div>
       </div>
 
       {/* Filters */}
-      <div className="bg-white dark:bg-gray-900 p-6 rounded-lg shadow border border-gray-200 dark:border-gray-700">
+      <div className="bg-background p-6 rounded-lg shadow border border-border">
         <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
           <div>
-            <label htmlFor="user-management-search" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Search</label>
+            <label htmlFor="user-management-search" className="block text-sm font-medium text-foreground/80 mb-2">Search</label>
             <input
               id="user-management-search"
               type="text"
               value={searchTerm}
               onChange={(e) => setUserFilters({ searchTerm: e.target.value })}
               placeholder="Search by email..."
-              className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 placeholder-gray-400 dark:placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="w-full px-3 py-2 border border-border rounded-md bg-card text-foreground placeholder-gray-400 dark:placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500"
             />
           </div>
           <div>
-            <label htmlFor="user-management-role-filter" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Role</label>
+            <label htmlFor="user-management-role-filter" className="block text-sm font-medium text-foreground/80 mb-2">Role</label>
             <select
               id="user-management-role-filter"
               value={roleFilter}
               onChange={(e) => setUserFilters({ roleFilter: e.target.value as typeof roleFilter })}
-              className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="w-full px-3 py-2 border border-border rounded-md bg-card text-foreground focus:outline-none focus:ring-2 focus:ring-blue-500"
             >
               <option value="all">All Roles</option>
               <option value="admin">Admin</option>
@@ -284,12 +327,12 @@ export default function UserManagement({ onUserUpdate, onUserDelete }: UserManag
             </select>
           </div>
           <div>
-            <label htmlFor="user-management-status-filter" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Status</label>
+            <label htmlFor="user-management-status-filter" className="block text-sm font-medium text-foreground/80 mb-2">Status</label>
             <select
               id="user-management-status-filter"
               value={statusFilter}
               onChange={(e) => setUserFilters({ statusFilter: e.target.value as typeof statusFilter })}
-              className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="w-full px-3 py-2 border border-border rounded-md bg-card text-foreground focus:outline-none focus:ring-2 focus:ring-blue-500"
             >
               <option value="all">All Status</option>
               <option value="active">Active</option>
@@ -302,7 +345,7 @@ export default function UserManagement({ onUserUpdate, onUserDelete }: UserManag
               onClick={() => {
                 setUserFilters({ searchTerm: '', roleFilter: 'all', statusFilter: 'all' });
               }}
-              className="w-full px-4 py-2 text-gray-600 dark:text-gray-400 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="w-full px-4 py-2 text-muted-foreground border border-border rounded-md bg-card hover:bg-muted focus:outline-none focus:ring-2 focus:ring-blue-500"
             >
               Clear Filters
             </button>
@@ -348,10 +391,10 @@ export default function UserManagement({ onUserUpdate, onUserDelete }: UserManag
       )}
 
       {/* Users Table */}
-      <div className="bg-white dark:bg-gray-900 rounded-lg shadow overflow-hidden border border-gray-200 dark:border-gray-700">
+      <div className="bg-background rounded-lg shadow overflow-hidden border border-border">
         <div className="overflow-x-auto">
-          <table className="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
-            <thead className="bg-gray-50 dark:bg-gray-800">
+          <table className="min-w-full divide-y divide-border">
+            <thead className="bg-muted">
               <tr>
                 <th className="px-6 py-3 text-left">
                   <input
@@ -359,43 +402,43 @@ export default function UserManagement({ onUserUpdate, onUserDelete }: UserManag
                     checked={selectedUsers.length === filteredUsers.length && filteredUsers.length > 0}
                     onChange={handleSelectAll}
                     aria-label="Select all users"
-                    className="h-4 w-4 text-blue-600 dark:text-blue-400 focus:ring-blue-500 border-gray-300 dark:border-gray-600 rounded bg-white dark:bg-gray-800"
+                    className="h-4 w-4 text-primary focus:ring-ring border-border rounded bg-card"
                   />
                 </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                <th className="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">
                   User
                 </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                <th className="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">
                   Role
                 </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                <th className="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">
                   Status
                 </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                <th className="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">
                   Last Login
                 </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                <th className="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">
                   Actions
                 </th>
               </tr>
             </thead>
-            <tbody className="bg-white dark:bg-gray-900 divide-y divide-gray-200 dark:divide-gray-700">
+            <tbody className="bg-background divide-y divide-border">
               {visibleUsers.map((user: AdminUser) => (
-                <tr key={user.id} className="hover:bg-gray-50 dark:hover:bg-gray-800">
+                <tr key={user.id} className="hover:bg-muted">
                   <td className="px-6 py-4 whitespace-nowrap">
                     <input
                       type="checkbox"
                       checked={selectedUsers.includes(user.id)}
                       onChange={() => handleUserSelect(user.id)}
                       aria-label={`Select ${user.email}`}
-                      className="h-4 w-4 text-blue-600 dark:text-blue-400 focus:ring-blue-500 border-gray-300 dark:border-gray-600 rounded bg-white dark:bg-gray-800"
+                      className="h-4 w-4 text-primary focus:ring-ring border-border rounded bg-card"
                     />
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap">
                     <div>
-                      <div className="text-sm font-medium text-gray-900 dark:text-gray-100">{user.name}</div>
-                      <div className="text-sm text-gray-500 dark:text-gray-400">{user.email}</div>
-                      <div className="text-sm text-gray-500 dark:text-gray-400">
+                      <div className="text-sm font-medium text-foreground">{user.name}</div>
+                      <div className="text-sm text-muted-foreground">{user.email}</div>
+                      <div className="text-sm text-muted-foreground">
                         Joined {new Date(user.created_at).toLocaleDateString()}
                       </div>
                     </div>
@@ -417,7 +460,7 @@ export default function UserManagement({ onUserUpdate, onUserDelete }: UserManag
                       {user.status}
                     </span>
                   </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">
+                  <td className="px-6 py-4 whitespace-nowrap text-sm text-muted-foreground">
                     {user.last_login ? new Date(user.last_login).toLocaleDateString() : 'Never'}
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
@@ -438,17 +481,7 @@ export default function UserManagement({ onUserUpdate, onUserDelete }: UserManag
                         Edit
                       </button>
                       <button
-                        onClick={async () => {
-                          if (confirm(`Are you sure you want to delete user ${user.email}? This action cannot be undone.`)) {
-                            try {
-                              await deleteUser(user.id);
-                              onUserDelete?.(user.id);
-                            } catch (error) {
-                              logger.error('Failed to delete user', error);
-                              alert('Failed to delete user. Please try again.');
-                            }
-                          }
-                        }}
+                        onClick={() => setUserToDelete(user)}
                         className="text-red-600 dark:text-red-400 hover:text-red-900 dark:hover:text-red-300"
                         aria-label={`Delete user ${user.email}`}
                       >
@@ -464,15 +497,15 @@ export default function UserManagement({ onUserUpdate, onUserDelete }: UserManag
       </div>
 
       {filteredUsers.length === 0 && (
-        <div className="text-center py-12">
-          <svg className="mx-auto h-12 w-12 text-gray-400 dark:text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197m13.5-9a2.5 2.5 0 11-5 0 2.5 2.5 0 015 0z" />
-          </svg>
-          <h2 className="mt-2 text-sm font-medium text-gray-900 dark:text-gray-100">No users found</h2>
-          <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">
-            Try adjusting your search or filter criteria.
-          </p>
-        </div>
+        <EnhancedEmptyState
+          icon={<Users className="h-12 w-12 text-muted-foreground" />}
+          title="No users found"
+          description="Try adjusting your search or filter criteria."
+          primaryAction={{
+            label: 'Clear filters',
+            onClick: () => setUserFilters({ searchTerm: '', roleFilter: 'all', statusFilter: 'all' }),
+          }}
+        />
       )}
     </div>
   );

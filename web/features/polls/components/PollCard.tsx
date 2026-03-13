@@ -23,17 +23,17 @@ const getStatusColor = (status: PollRow['status']) => {
     case 'active':
       return 'bg-green-100 dark:bg-green-900/30 text-green-800 dark:text-green-300 border-green-200 dark:border-green-700';
     case 'closed':
-      return 'bg-gray-100 dark:bg-gray-800 text-gray-800 dark:text-gray-300 border-gray-200 dark:border-gray-700';
+      return 'bg-muted text-foreground/80 border-border';
     case 'draft':
       return 'bg-yellow-100 dark:bg-yellow-900/30 text-yellow-800 dark:text-yellow-300 border-yellow-200 dark:border-yellow-700';
     case 'archived':
       return 'bg-purple-100 dark:bg-purple-900/30 text-purple-800 dark:text-purple-300 border-purple-200 dark:border-purple-700';
     default:
-      return 'bg-gray-100 dark:bg-gray-800 text-gray-800 dark:text-gray-300 border-gray-200 dark:border-gray-700';
+      return 'bg-muted text-foreground/80 border-border';
   }
 };
 
-const PollCard: React.FC<PollCardProps> = ({ poll, showActions = true, className = '' }) => {
+const PollCard = React.memo<PollCardProps>(function PollCard({ poll, showActions = true, className = '' }) {
   const { t, currentLanguage } = useI18n();
 
   const votingMethodLabels: Record<string, string> = useMemo(() => ({
@@ -165,17 +165,17 @@ const PollCard: React.FC<PollCardProps> = ({ poll, showActions = true, className
       <CardHeader className="pb-3">
         <div className="flex items-start justify-between">
           <div className="flex-1 min-w-0">
-            <CardTitle className="text-lg font-semibold text-gray-900 dark:text-gray-100 line-clamp-2">{displayTitle}</CardTitle>
+            <CardTitle className="text-lg font-semibold text-foreground line-clamp-2">{displayTitle}</CardTitle>
             {poll.description && (
-              <p className="text-sm text-gray-600 dark:text-gray-400 mt-1 line-clamp-2">{poll.description}</p>
+              <p className="text-sm text-muted-foreground mt-1 line-clamp-2">{poll.description}</p>
             )}
             {/* Representative context */}
             {representativeId && (
               <div className="mt-2 flex items-center gap-2">
-                <User className="w-4 h-4 text-blue-600 dark:text-blue-400" />
+                <User className="w-4 h-4 text-primary" />
                 <Link
                   href={`/representatives/${representativeId}`}
-                  className="text-sm text-blue-600 dark:text-blue-400 hover:underline"
+                  className="text-sm text-primary hover:underline"
                   onClick={(e) => e.stopPropagation()}
                 >
                   {representativeName || t('polls.card.representative.fallback', { id: String(representativeId) })}
@@ -193,12 +193,12 @@ const PollCard: React.FC<PollCardProps> = ({ poll, showActions = true, className
                 <FileText className="w-4 h-4 text-purple-600 dark:text-purple-400 mt-0.5" />
                 <div className="flex-1 min-w-0">
                   {billTitle ? (
-                    <p className="text-sm font-medium text-gray-900 dark:text-gray-100">{billTitle}</p>
+                    <p className="text-sm font-medium text-foreground">{billTitle}</p>
                   ) : (
-                    <p className="text-sm text-gray-600 dark:text-gray-400">{t('polls.card.bill.fallback', { id: String(billId) })}</p>
+                    <p className="text-sm text-muted-foreground">{t('polls.card.bill.fallback', { id: String(billId) })}</p>
                   )}
                   {billSummary && (
-                    <p className="text-xs text-gray-500 dark:text-gray-500 mt-1 line-clamp-2">{billSummary}</p>
+                    <p className="text-xs text-muted-foreground mt-1 line-clamp-2">{billSummary}</p>
                   )}
                 </div>
               </div>
@@ -210,48 +210,48 @@ const PollCard: React.FC<PollCardProps> = ({ poll, showActions = true, className
 
       <CardContent className="pt-0">
         <div className="space-y-2 mb-4">
-          <div className="flex items-center text-sm text-gray-600 dark:text-gray-400">
+          <div className="flex items-center text-sm text-muted-foreground">
             <User className="w-4 h-4 mr-2" />
             <span>
               {t('polls.card.createdBy', { name: createdBy ?? t('polls.card.unknownCreator') })}
             </span>
           </div>
 
-          <div className="flex items-center text-sm text-gray-600 dark:text-gray-400">
+          <div className="flex items-center text-sm text-muted-foreground">
             <Calendar className="w-4 h-4 mr-2" />
             <span>{t('polls.card.createdOn', { date: formatDate(createdAt) })}</span>
           </div>
 
           {endTime && (
-            <div className="flex items-center text-sm text-gray-600 dark:text-gray-400">
+            <div className="flex items-center text-sm text-muted-foreground">
               <Clock className="w-4 h-4 mr-2" />
               <span>{t('polls.card.endsOn', { date: formatDate(endTime), time: formatTime(endTime) })}</span>
             </div>
           )}
 
-          <div className="flex items-center text-sm text-gray-600 dark:text-gray-400">
+          <div className="flex items-center text-sm text-muted-foreground">
             <BarChart3 className="w-4 h-4 mr-1" />
             <span>{getVotingMethodLabel(votingMethod)}</span>
           </div>
         </div>
 
         <div className="mb-4">
-          <h4 className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">{t('polls.card.optionsHeading')}</h4>
+          <h4 className="text-sm font-medium text-foreground/80 mb-2">{t('polls.card.optionsHeading')}</h4>
           <div className="space-y-1">
             {optionsPreview.map((option, index) => (
-              <div key={`option-${option}-${index}`} className="text-sm text-gray-600 dark:text-gray-400 truncate">
+              <div key={`option-${option}-${index}`} className="text-sm text-muted-foreground truncate">
                 {t('polls.card.optionItem', { index: index + 1, option })}
               </div>
             ))}
             {optionsCount > 3 && (
-              <div className="text-sm text-gray-500 dark:text-gray-400">
+              <div className="text-sm text-muted-foreground">
                 {t('polls.card.moreOptions', { count: optionsCount - 3 })}
               </div>
             )}
           </div>
         </div>
 
-        <div className="flex items-center justify-between text-sm text-gray-600 dark:text-gray-400 mb-4">
+        <div className="flex items-center justify-between text-sm text-muted-foreground mb-4">
           <div className="flex items-center">
             <Users className="w-4 h-4 mr-1" />
             <span>{t('polls.card.votes', { count: totalVotes, formattedCount: formatNumber(totalVotes) })}</span>
@@ -296,6 +296,7 @@ const PollCard: React.FC<PollCardProps> = ({ poll, showActions = true, className
       </CardContent>
     </Card>
   );
-};
+});
+PollCard.displayName = 'PollCard';
 
 export default PollCard;

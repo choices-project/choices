@@ -3,14 +3,16 @@
 import { BarChart3, Clock, Flame, Hash, Search, TrendingUp } from 'lucide-react';
 import React, { useCallback, useEffect, useMemo, useRef } from 'react';
 
+import { Input } from '@/components/ui/input';
+
 import {
   useHashtagActions,
   useHashtagStats,
   useTrendingHashtags,
-
   usePollFilters,
   usePollSearch,
-  usePollsActions} from '@/lib/stores';
+  usePollsActions,
+} from '@/lib/stores';
 import type { PollsActions } from '@/lib/stores/pollsStore';
 import { cn } from '@/lib/utils';
 import { logger } from '@/lib/utils/logger';
@@ -227,8 +229,8 @@ export function PollFiltersPanel({ actions }: PollFiltersPanelProps) {
     <div className="mb-8 space-y-6">
       <div className="space-y-4">
         <div className="relative">
-          <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 transform text-gray-400" />
-          <input
+          <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 transform text-muted-foreground" />
+          <Input
             type="text"
             placeholder={t('polls.filters.search.placeholder')}
             value={search.query ?? ''}
@@ -239,20 +241,20 @@ export function PollFiltersPanel({ actions }: PollFiltersPanelProps) {
                 handleSearchSubmit((event.target as HTMLInputElement).value);
               }
             }}
-            className="w-full rounded-lg border border-gray-300 py-2 pl-10 pr-4 focus:border-transparent focus:ring-2 focus:ring-blue-500"
+            className="w-full rounded-lg border border-border py-2 pl-10 pr-4 focus:border-transparent focus:ring-2 focus:ring-primary"
             aria-label={t('polls.filters.search.ariaLabel')}
           />
         </div>
 
         <div className="space-y-2">
-          <label className="text-sm font-medium text-gray-700">
+          <label className="text-sm font-medium text-foreground/80">
             {t('polls.filters.hashtags.label')}
           </label>
           <div className="flex flex-wrap gap-2">
             {selectedHashtags.map((hashtag) => (
               <span
                 key={`hashtag-${hashtag}`}
-                className="inline-flex items-center rounded-full bg-blue-100 px-2 py-1 text-xs text-blue-700"
+                className="inline-flex items-center rounded-full bg-blue-100 px-2 py-1 text-xs text-blue-700 dark:bg-blue-900/30 dark:text-blue-300"
               >
                 #{hashtag}
                 <button
@@ -264,7 +266,7 @@ export function PollFiltersPanel({ actions }: PollFiltersPanelProps) {
                 </button>
               </span>
             ))}
-            <input
+            <Input
               type="text"
               placeholder={t('polls.filters.hashtags.addPlaceholder')}
               onKeyDown={(event) => {
@@ -274,14 +276,14 @@ export function PollFiltersPanel({ actions }: PollFiltersPanelProps) {
                   event.currentTarget.value = '';
                 }
               }}
-              className="rounded border border-gray-300 px-2 py-1 text-sm"
+              className="rounded border border-border px-2 py-1 text-sm"
               aria-label={t('polls.filters.hashtags.addAria')}
             />
           </div>
         </div>
       </div>
 
-      <div className="flex space-x-1 rounded-lg bg-gray-100 p-1">
+      <div className="flex space-x-1 rounded-lg bg-muted p-1">
         {[
           { id: 'all', label: t('polls.filters.status.all'), icon: BarChart3 },
           { id: 'active', label: t('polls.filters.status.active'), icon: TrendingUp },
@@ -293,7 +295,7 @@ export function PollFiltersPanel({ actions }: PollFiltersPanelProps) {
             onClick={() => handleFilterChange(id as 'all' | 'active' | 'closed' | 'trending')}
             className={cn(
               'flex items-center rounded-md px-4 py-2 text-sm font-medium transition-colors',
-              activeFilter === id ? 'bg-white text-blue-600 shadow-sm' : 'text-gray-600 hover:text-gray-900',
+              activeFilter === id ? 'bg-card text-primary shadow-sm' : 'text-muted-foreground hover:text-foreground',
             )}
           >
             <Icon className="mr-2 h-4 w-4" />
@@ -303,7 +305,7 @@ export function PollFiltersPanel({ actions }: PollFiltersPanelProps) {
       </div>
 
       <div>
-        <span className="mb-2 block text-sm font-medium text-gray-700">
+        <span className="mb-2 block text-sm font-medium text-foreground/80">
           {t('polls.filters.categories.label')}
         </span>
         <div className="flex flex-wrap gap-2">
@@ -312,8 +314,8 @@ export function PollFiltersPanel({ actions }: PollFiltersPanelProps) {
           className={cn(
             'rounded-full px-3 py-1 text-sm font-medium transition-colors',
             selectedCategory === 'all'
-              ? 'bg-blue-100 text-blue-700'
-              : 'bg-gray-100 text-gray-700 hover:bg-gray-200',
+              ? 'bg-primary/10 text-primary'
+              : 'bg-muted text-foreground/80 hover:bg-muted/80',
           )}
         >
           {t('polls.filters.categories.all')}
@@ -326,7 +328,7 @@ export function PollFiltersPanel({ actions }: PollFiltersPanelProps) {
               'rounded-full px-3 py-1 text-sm font-medium transition-colors',
               selectedCategory === category.id
                 ? category.color
-                : 'bg-gray-100 text-gray-700 hover:bg-gray-200',
+                : 'bg-muted text-foreground/80 hover:bg-muted/80',
             )}
           >
             {category.icon} {t(category.nameKey)}
@@ -336,12 +338,12 @@ export function PollFiltersPanel({ actions }: PollFiltersPanelProps) {
       </div>
 
       {trendingHashtags.length > 0 && (
-        <div className="mt-4 rounded-lg border border-blue-100 bg-gradient-to-r from-blue-50 to-indigo-50 p-4">
+        <div className="mt-4 rounded-lg border border-blue-100 bg-gradient-to-r from-blue-50 to-indigo-50 p-4 dark:border-blue-800 dark:from-blue-900/20 dark:to-indigo-900/20">
           <div className="mb-3 flex items-center gap-2">
             <Flame className="h-5 w-5 text-orange-500" />
-            <h2 className="text-sm font-semibold text-gray-900">{trendingHeading}</h2>
+            <h2 className="text-sm font-semibold text-foreground">{trendingHeading}</h2>
           </div>
-          <div className="mb-2 flex items-center text-sm text-gray-600">
+          <div className="mb-2 flex items-center text-sm text-muted-foreground">
             <BarChart3 className="mr-2 h-4 w-4" />
             <span>{trendingCountLabel}</span>
           </div>
@@ -353,10 +355,10 @@ export function PollFiltersPanel({ actions }: PollFiltersPanelProps) {
                   handleHashtagSelect(typeof hashtag === 'string' ? hashtag : hashtag.name)
                 }
                 className={cn(
-                  'inline-flex items-center rounded-full border border-gray-200 px-3 py-1.5 text-sm font-medium transition-all',
+                  'inline-flex items-center rounded-full border border-border px-3 py-1.5 text-sm font-medium transition-all',
                   selectedHashtags.includes(typeof hashtag === 'string' ? hashtag : hashtag.name)
-                    ? 'bg-blue-600 text-white'
-                    : 'bg-white text-gray-700 hover:bg-blue-50',
+                    ? 'bg-primary text-white'
+                    : 'bg-card text-foreground/80 hover:bg-primary/10',
                 )}
               >
                 <Hash className="mr-1 h-3 w-3" />

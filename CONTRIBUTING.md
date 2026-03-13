@@ -8,9 +8,9 @@ We welcome contributions! This project is licensed under MIT and uses the Develo
 2. **Find a task**: Look for issues labeled `good first issue` or `help wanted`
 3. **Create a branch**: `git checkout -b feature/your-feature-name`
 4. **Make changes**: Follow the patterns in [`docs/GETTING_STARTED.md`](docs/GETTING_STARTED.md)
-5. **Test**: Run `npm run lint`, `npm run type-check`, and `npm run test`
+5. **Test**: Run `npm run lint`, `npm run types:ci`, and `npm run test`
 6. **Sign commits**: Use `git commit -s` (DCO requirement)
-7. **Open a PR**: Fill out the PR template checklist (branch protection and workflow docs: [.github/WORKFLOWS_AUDIT.md](.github/WORKFLOWS_AUDIT.md), [.github/BRANCH_PROTECTION.md](.github/BRANCH_PROTECTION.md))
+7. **Open a PR**: Fill out the PR template checklist
 
 ## Development Workflow
 
@@ -37,7 +37,7 @@ git checkout -b fix/issue-description
 
 **Code Standards:**
 - Follow TypeScript best practices
-- Use the utilities from [`docs/CODEBASE_NAVIGATION.md`](docs/CODEBASE_NAVIGATION.md) § Canonical Utilities
+- Use the utilities from [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md) § Canonical Utilities
 - Follow state management patterns from [`docs/STATE_MANAGEMENT.md`](docs/STATE_MANAGEMENT.md)
 - Write self-documenting code with JSDoc comments
 - Keep functions small and focused
@@ -84,7 +84,7 @@ See [`docs/TESTING.md`](docs/TESTING.md) for detailed testing guidelines.
 ```bash
 cd web
 npm run lint          # Check code style
-npm run type-check     # Verify TypeScript
+npm run types:ci       # Verify TypeScript
 npm run test           # Run unit tests
 npm run governance:check  # Verify roadmap/doc updates (if needed)
 ```
@@ -158,7 +158,7 @@ Closes #123
 
 ## Code Style and Utilities
 
-**Prefer canonical utilities** over ad-hoc implementations. See [`docs/CODEBASE_NAVIGATION.md`](docs/CODEBASE_NAVIGATION.md) § Canonical Utilities for:
+**Prefer canonical utilities** over ad-hoc implementations. See [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md) § Canonical Utilities for:
 - Date helpers (`nowISO`, `formatISODateOnly`)
 - Browser/SSR-safe helpers (`browser-utils`, `ssr-safe`)
 - API response/CORS helpers (`@/lib/api`, `response-utils`)
@@ -204,7 +204,7 @@ By contributing, you agree that your contributions will be licensed under the MI
 - **Architecture**: See [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md) for system design
 - **Development**: See [`docs/GETTING_STARTED.md`](docs/GETTING_STARTED.md) for setup and runbook
 - **Testing**: See [`docs/TESTING.md`](docs/TESTING.md) for testing strategies
-- **Codebase**: See [`docs/CODEBASE_NAVIGATION.md`](docs/CODEBASE_NAVIGATION.md) for structure
+- **Codebase**: See [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md) for structure
 
 ## Common Contribution Types
 
@@ -219,7 +219,7 @@ By contributing, you agree that your contributions will be licensed under the MI
 
 ### New Features
 
-1. Check [`docs/FEATURE_STATUS.md`](docs/FEATURE_STATUS.md) to see if it's planned
+1. Check [`docs/ROADMAP.md`](docs/ROADMAP.md) to see if it's planned
 2. Discuss in an issue first (for significant features)
 3. Create a branch: `git checkout -b feature/feature-name`
 4. Implement the feature

@@ -159,6 +159,76 @@ export type ContactStoreCreator = StateCreator<
   ContactStore
 >;
 
+type RawRepresentativeData = {
+  [key: string]: unknown;
+  id?: string | number;
+  name?: string;
+  office?: string;
+  party?: string | null;
+  party_affiliation?: string | null;
+  district?: string | null;
+  district_name?: string | null;
+  photo?: string | null;
+  avatar?: string | null;
+  division_ids?: unknown[];
+  divisions?: unknown[];
+  representative_divisions?: unknown[];
+  ocdDivisionIds?: unknown[];
+  ocd_division_ids?: unknown[];
+};
+
+type RawThreadData = {
+  [key: string]: unknown;
+  id?: string | number;
+  userId?: string;
+  user_id?: string;
+  representativeId?: string | number;
+  representative_id?: string | number;
+  representative?: RawRepresentativeData | null;
+  representatives_core?: RawRepresentativeData | null;
+  representativeSummary?: RawRepresentativeData | null;
+  subject?: string;
+  status?: string;
+  priority?: string;
+  createdAt?: string;
+  created_at?: string;
+  updatedAt?: string;
+  updated_at?: string;
+  lastMessageAt?: string | null;
+  last_message_at?: string | null;
+  messageCount?: number;
+  message_count?: number;
+};
+
+type RawMessageData = {
+  [key: string]: unknown;
+  id?: string | number;
+  threadId?: string;
+  thread_id?: string;
+  senderId?: string;
+  sender_id?: string;
+  userId?: string;
+  user_id?: string;
+  recipientId?: string | number;
+  recipient_id?: string | number;
+  subject?: string;
+  content?: string;
+  message?: string;
+  status?: string;
+  priority?: string;
+  messageType?: string;
+  message_type?: string;
+  attachments?: unknown[];
+  createdAt?: string;
+  created_at?: string;
+  updatedAt?: string | null;
+  updated_at?: string | null;
+  readAt?: string | null;
+  read_at?: string | null;
+  repliedAt?: string | null;
+  replied_at?: string | null;
+};
+
 const createInitialContactState = (): ContactState => ({
   threads: [],
   threadsById: {},
@@ -174,7 +244,7 @@ const createInitialContactState = (): ContactState => ({
   lastFetchedAt: null,
 });
 
-const normaliseRepresentative = (rep: any): ContactRepresentativeSummary | null => {
+const normaliseRepresentative = (rep: RawRepresentativeData | null | undefined): ContactRepresentativeSummary | null => {
   if (!rep) {
     return null;
   }
@@ -202,14 +272,14 @@ const normaliseRepresentative = (rep: any): ContactRepresentativeSummary | null 
     photo: rep.photo ?? rep.avatar ?? null,
     divisionIds,
     ocdDivisionIds: Array.isArray(rep.ocdDivisionIds)
-      ? rep.ocdDivisionIds
+      ? (rep.ocdDivisionIds as string[])
       : Array.isArray(rep.ocd_division_ids)
-      ? rep.ocd_division_ids
+      ? (rep.ocd_division_ids as string[])
       : divisionIds,
   };
 };
 
-const normaliseThread = (thread: any): ContactThread => {
+const normaliseThread = (thread: RawThreadData): ContactThread => {
   const representative = normaliseRepresentative(
     thread.representative ?? thread.representatives_core ?? thread.representativeSummary,
   );
@@ -235,7 +305,7 @@ const normaliseThread = (thread: any): ContactThread => {
   };
 };
 
-const normaliseMessage = (message: any, fallbackThreadId: string): ContactMessage => {
+const normaliseMessage = (message: RawMessageData, fallbackThreadId: string): ContactMessage => {
   const threadIdRaw = message.threadId ?? message.thread_id ?? fallbackThreadId;
   const senderIdRaw = message.senderId ?? message.sender_id ?? message.userId ?? message.user_id ?? '';
   const recipientIdRaw = message.recipientId ?? message.recipient_id ?? '';
@@ -250,7 +320,7 @@ const normaliseMessage = (message: any, fallbackThreadId: string): ContactMessag
     status: (message.status ?? 'sent') as MessageStatus,
     priority: (message.priority ?? 'normal') as ThreadPriority,
     messageType: (message.messageType ?? message.message_type ?? 'text') as MessageType,
-    attachments: Array.isArray(message.attachments) ? message.attachments : [],
+    attachments: Array.isArray(message.attachments) ? (message.attachments as ContactMessage['attachments']) : [],
     createdAt: message.createdAt ?? message.created_at ?? new Date().toISOString(),
     updatedAt: message.updatedAt ?? message.updated_at ?? null,
     readAt: message.readAt ?? message.read_at ?? null,
@@ -258,8 +328,8 @@ const normaliseMessage = (message: any, fallbackThreadId: string): ContactMessag
   };
 };
 
-const extractPayload = <T = Record<string, unknown>>(raw: any): T =>
-  ((raw && typeof raw === 'object' && 'data' in raw ? raw.data : raw) ?? {}) as T;
+const extractPayload = <T = Record<string, unknown>>(raw: unknown): T =>
+  ((raw && typeof raw === 'object' && 'data' in raw ? (raw as Record<'data', unknown>).data : raw) ?? {}) as T;
 
 const sortThreadsByRecency = (threads: ContactThread[]): void => {
   threads.sort((a, b) => {
@@ -400,14 +470,14 @@ const createContactActions = (
       const query = buildThreadsQuery(restOptions);
       const response = await fetch(`/api/contact/threads${query}`);
       const data = await response.json();
-      const payload = extractPayload<{ threads?: any[]; pagination?: ContactPagination }>(data);
+      const payload = extractPayload<{ threads?: RawThreadData[]; pagination?: ContactPagination }>(data);
 
       if (!response.ok || data?.success !== true) {
         throw new Error(data?.error ?? 'Failed to fetch contact threads');
       }
 
       const normalisedThreads = Array.isArray(payload.threads)
-        ? (payload.threads as any[]).map(normaliseThread)
+        ? payload.threads.map(normaliseThread)
         : [];
 
       setState((draft) => {
@@ -452,7 +522,7 @@ const createContactActions = (
       });
 
       const data = await response.json().catch(() => ({}));
-      const payload = extractPayload<{ thread?: any; threadId?: string; existingThreadId?: string }>(data);
+      const payload = extractPayload<{ thread?: RawThreadData; threadId?: string; existingThreadId?: string }>(data);
 
       if (response.status === 409) {
         await fetchThreads({ force: true });
@@ -521,14 +591,14 @@ const createContactActions = (
       const query = buildMessagesQuery(threadId, restOptions);
       const response = await fetch(`/api/contact/messages${query}`);
       const data = await response.json();
-      const payload = extractPayload<{ messages?: any[]; pagination?: ContactPagination }>(data);
+      const payload = extractPayload<{ messages?: RawMessageData[]; pagination?: ContactPagination }>(data);
 
       if (!response.ok || data?.success !== true) {
         throw new Error(data?.error ?? 'Failed to fetch contact messages');
       }
 
       const normalisedMessages = Array.isArray(payload.messages)
-        ? (payload.messages as any[]).map((message) => normaliseMessage(message, threadId))
+        ? payload.messages.map((message) => normaliseMessage(message, threadId))
         : [];
 
       setState((draft) => {
@@ -625,7 +695,7 @@ const createContactActions = (
       });
 
       const data = await response.json().catch(() => ({}));
-      const payload = extractPayload<{ message?: any; threadId?: string }>(data);
+      const payload = extractPayload<{ message?: RawMessageData; threadId?: string }>(data);
 
       if (!response.ok || data?.success !== true || !payload.message) {
         throw new Error('Failed to send contact message');

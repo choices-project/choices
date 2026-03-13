@@ -1,6 +1,7 @@
 import Image from "next/image"
 import * as React from "react"
 
+import { AVATAR_BLUR_DATA_URL } from "@/lib/constants/image"
 import { cn } from "@/lib/utils"
 
 type AvatarProps = {
@@ -11,6 +12,8 @@ type AvatarImageProps = {
   className?: string
   src?: string
   alt?: string
+  placeholder?: 'blur' | 'empty'
+  blurDataURL?: string
 } & React.ImgHTMLAttributes<HTMLImageElement>
 
 type AvatarFallbackProps = {
@@ -32,13 +35,15 @@ const Avatar = React.forwardRef<HTMLDivElement, AvatarProps>(
 Avatar.displayName = "Avatar"
 
 const AvatarImage = React.forwardRef<HTMLImageElement, AvatarImageProps>(
-  ({ className, src, alt, width, height, ...props }, ref) => (
+  ({ className, src, alt, width, height, placeholder, blurDataURL, ...props }, ref) => (
     <Image
       ref={ref}
       src={src ?? '/default-avatar.png'}
       alt={alt ?? 'Avatar'}
       width={typeof width === 'number' ? width : typeof width === 'string' ? parseInt(width) : 40}
       height={typeof height === 'number' ? height : typeof height === 'string' ? parseInt(height) : 40}
+      placeholder={placeholder ?? 'blur'}
+      blurDataURL={blurDataURL ?? AVATAR_BLUR_DATA_URL}
       className={cn("aspect-square h-full w-full object-cover", className)}
       {...props}
     />

@@ -45,9 +45,6 @@ type CreateThreadRequest = {
   initialMessage?: string;
 }
 
-// ThreadResponse type reserved for future API response standardization
-// Removed unused type to fix build error - can be re-added when needed
-
 // ============================================================================
 // GET - Retrieve User Threads
 // ============================================================================

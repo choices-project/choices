@@ -12,7 +12,7 @@ export default function AdminError({
 }) {
   return (
     <div 
-      className="min-h-screen bg-gray-50 dark:bg-gray-950 flex items-center justify-center p-4" 
+      className="min-h-screen bg-background flex items-center justify-center p-4" 
       role="alert" 
       aria-live="assertive"
     >
@@ -43,7 +43,7 @@ export default function AdminError({
                 </button>
                 <Link
                   href="/dashboard"
-                  className="px-4 py-2 bg-white dark:bg-gray-800 border border-red-300 dark:border-red-700 text-red-700 dark:text-red-300 rounded-lg hover:bg-red-50 dark:hover:bg-red-900/30 transition-colors focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2"
+                  className="px-4 py-2 bg-card border border-red-300 dark:border-red-700 text-red-700 dark:text-red-300 rounded-lg hover:bg-red-50 dark:hover:bg-red-900/30 transition-colors focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2"
                   aria-label="Go back to dashboard"
                 >
                   Back to Dashboard

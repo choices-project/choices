@@ -43,10 +43,10 @@ export default function IntegrityDashboardPage() {
   return (
     <div className="max-w-4xl mx-auto p-6 space-y-6">
       <div className="flex items-center gap-3">
-        <Shield className="h-6 w-6 text-blue-600" />
+        <Shield className="h-6 w-6 text-primary" />
         <div>
-          <h1 className="text-2xl font-semibold text-gray-900 dark:text-gray-100">Integrity Dashboard</h1>
-          <p className="text-sm text-gray-600 dark:text-gray-400">
+          <h1 className="text-2xl font-semibold text-foreground">Integrity Dashboard</h1>
+          <p className="text-sm text-muted-foreground">
             Transparent integrity metrics for poll participation.
           </p>
         </div>
@@ -95,7 +95,7 @@ export default function IntegrityDashboardPage() {
         <CardHeader>
           <CardTitle>How to interpret this</CardTitle>
         </CardHeader>
-        <CardContent className="text-sm text-gray-600 dark:text-gray-400 space-y-2">
+        <CardContent className="text-sm text-muted-foreground space-y-2">
           <p>Votes are never weighted. We only filter out suspicious activity from displayed results.</p>
           <p>Raw vote data is still retained for audit and advanced analytics.</p>
           <p>Advanced detection signals are only collected after explicit opt-in.</p>

@@ -2,15 +2,19 @@
 
 import { Plus, Users, BarChart3, Flame, Eye } from 'lucide-react';
 import Link from 'next/link';
-import React, { useEffect, useCallback, useMemo, useRef } from 'react';
+import React, { Suspense, useEffect, useCallback, useMemo, useRef } from 'react';
 
 import { PollFiltersPanel } from '@/features/polls/components/PollFiltersPanel';
 import { getPollCategoryColor, getPollCategoryIcon } from '@/features/polls/constants/categories';
 
+import { AnimatedCard } from '@/components/shared/AnimatedCard';
 import { EnhancedEmptyState } from '@/components/shared/EnhancedEmptyState';
 import { EnhancedErrorDisplay } from '@/components/shared/EnhancedErrorDisplay';
 import { ErrorBoundary } from '@/components/shared/ErrorBoundary';
-import { Skeleton } from '@/components/ui/skeleton';
+import { useLiveAnnouncer } from '@/components/shared/LiveAnnouncer';
+import { PrefetchLink } from '@/components/shared/PrefetchLink';
+import { PollListSkeleton } from '@/components/shared/Skeletons';
+import { Button } from '@/components/ui/button';
 
 import { useAppActions } from '@/lib/stores/appStore';
 import {
@@ -25,6 +29,15 @@ import {
 import logger from '@/lib/utils/logger';
 
 import { useI18n } from '@/hooks/useI18n';
+import { useUrlFilters } from '@/hooks/useUrlFilters';
+
+// Stable defaults for URL filters to avoid useMemo dependency churn
+const POLLS_URL_FILTER_DEFAULTS = {
+  status: undefined as string | undefined,
+  category: undefined as string | undefined,
+  trending: undefined as string | undefined,
+  q: undefined as string | undefined,
+};
 
 // Prevent static generation since this requires client-side state
 export const dynamic = 'force-dynamic';
@@ -34,8 +47,10 @@ function PollsPageContent() {
   // Set isMounted to false initially, then set to true in useEffect
   // This ensures React has fully mounted before we try to use hooks
   const [isMounted, setIsMounted] = React.useState(false);
+  const prevIsLoadingRef = useRef(true);
 
   const { t, currentLanguage } = useI18n();
+  const { announce } = useLiveAnnouncer();
   const { setCurrentRoute, setSidebarActiveSection, setBreadcrumbs } = useAppActions();
   const polls = useFilteredPollCards();
   const isLoading = usePollsLoading();
@@ -43,15 +58,22 @@ function PollsPageContent() {
   const filters = usePollFilters();
   const search = usePollSearch();
   const pagination = usePollPagination();
+  const urlFilters = useUrlFilters(POLLS_URL_FILTER_DEFAULTS);
   const {
     loadPolls,
     setFilters,
     setTrendingOnly,
     setCurrentPage,
     clearSearch,
+    setSearchQuery,
+    searchPolls,
   } = usePollsActions();
   const clearSearchRef = useRef(clearSearch);
+  const setSearchQueryRef = useRef(setSearchQuery);
+  const searchPollsRef = useRef(searchPolls);
   React.useEffect(() => { clearSearchRef.current = clearSearch; }, [clearSearch]);
+  React.useEffect(() => { setSearchQueryRef.current = setSearchQuery; }, [setSearchQuery]);
+  React.useEffect(() => { searchPollsRef.current = searchPolls; }, [searchPolls]);
 
   const handleClearFilters = useCallback(async () => {
     setFiltersRef.current({ status: [] });
@@ -87,6 +109,49 @@ function PollsPageContent() {
   React.useEffect(() => {
     setIsMounted(true);
   }, []);
+
+  // Sync URL params -> store (on mount and when URL changes via back/forward)
+  useEffect(() => {
+    if (!isMounted) return;
+    const { filters: urlF } = urlFilters;
+    const hasUrlParams = urlF.status || urlF.category || urlF.trending || urlF.q;
+    if (hasUrlParams) {
+      const updates: { status?: string[]; category?: string[] } = {};
+      if (urlF.status) {
+        updates.status =
+          urlF.status === 'active' ? ['active'] : urlF.status === 'closed' ? ['closed'] : urlF.status === 'trending' ? [] : [];
+        setTrendingOnlyRef.current(urlF.status === 'trending');
+      }
+      if (urlF.category) {
+        updates.category = [urlF.category];
+      }
+      if (Object.keys(updates).length > 0) {
+        setFiltersRef.current(updates);
+      }
+      if (urlF.q) {
+        setSearchQueryRef.current(urlF.q);
+        void searchPollsRef.current?.(urlF.q);
+      } else {
+        void loadPollsRef.current();
+      }
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps -- intentional: only run when URL changes, not when urlFilters object ref changes
+  }, [isMounted, urlFilters.filters]);
+
+  // Sync store -> URL when filters change (from PollFiltersPanel)
+  useEffect(() => {
+    if (!isMounted) return;
+    const status =
+      filters.trendingOnly ? 'trending' : filters.status[0] ?? 'all';
+    const category = filters.category[0] ?? undefined;
+    const q = search.query?.trim() || undefined;
+    urlFilters.setFilters({
+      status: status === 'all' ? undefined : status,
+      category,
+      trending: undefined,
+      q,
+    });
+  }, [isMounted, filters.status, filters.category, filters.trendingOnly, search.query, urlFilters]);
 
   const selectedCategory = filters.category[0] ?? 'all';
 
@@ -203,20 +268,28 @@ function PollsPageContent() {
 
     // Use setTimeout to defer store updates until after React has completed the render cycle
     // This prevents store updates from blocking the initial render
+    const hasUrlParams =
+      urlFilters.filters.status || urlFilters.filters.category || urlFilters.filters.trending || urlFilters.filters.q;
     setTimeout(() => {
       if (process.env.DEBUG_DASHBOARD === '1') {
         logger.debug('Polls page executing initialization in setTimeout');
       }
       setCurrentPageRef.current(1);
-      setTrendingOnlyRef.current(false);
-      setFiltersRef.current({ status: [] });
-      if (process.env.DEBUG_DASHBOARD === '1') {
-        logger.debug('Polls page calling loadPolls');
+      if (!hasUrlParams) {
+        setTrendingOnlyRef.current(false);
+        setFiltersRef.current({ status: [] });
       }
-      loadPollsRef.current().catch((error) => {
-        logger.warn('Failed to load polls (non-critical):', error);
-      });
+      // URL sync effect handles load when hasUrlParams; init only loads when no URL params
+      if (!hasUrlParams) {
+        if (process.env.DEBUG_DASHBOARD === '1') {
+          logger.debug('Polls page calling loadPolls');
+        }
+        loadPollsRef.current().catch((error) => {
+          logger.warn('Failed to load polls (non-critical):', error);
+        });
+      }
     }, 0);
+  // eslint-disable-next-line react-hooks/exhaustive-deps -- init effect must only run once on mount
   }, [isMounted]);
 
   const activeFilter: 'all' | 'active' | 'closed' | 'trending' = useMemo(() => {
@@ -232,6 +305,21 @@ function PollsPageContent() {
     return 'all';
   }, [filters.status, filters.trendingOnly]);
 
+  // Announce filter results when loading completes (user-initiated filter changes or initial load)
+  useEffect(() => {
+    if (!isMounted) return;
+    const wasLoading = prevIsLoadingRef.current;
+    prevIsLoadingRef.current = isLoading;
+    if (wasLoading && !isLoading) {
+      const count = polls.length;
+      announce(
+        count === 0
+          ? 'No polls match your filters'
+          : `Showing ${numberFormatter ? numberFormatter.format(count) : count} polls`
+      );
+    }
+  }, [isMounted, isLoading, polls.length, announce, numberFormatter]);
+
   const handlePageChange = useCallback(
     (page: number) => {
       const nextPage = Math.max(1, Math.min(page, pagination.totalPages));
@@ -246,26 +334,7 @@ function PollsPageContent() {
   if (!isMounted) {
     return (
       <div className="container mx-auto px-4 py-8" data-testid="polls-loading-mount" role="status" aria-busy="true" aria-live="polite" aria-label="Loading polls">
-        <div className="mb-8">
-          <Skeleton className="h-10 w-64 mb-2" />
-          <Skeleton className="h-5 w-96" />
-        </div>
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {[1, 2, 3, 4, 5, 6].map((i) => (
-            <div key={i} className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-6">
-              <Skeleton className="h-6 w-3/4 mb-4" />
-              <Skeleton className="h-4 w-full mb-2" />
-              <Skeleton className="h-4 w-5/6 mb-4" />
-              <div className="flex items-center justify-between mb-4">
-                <Skeleton className="h-4 w-24" />
-                <Skeleton className="h-4 w-32" />
-              </div>
-              <Skeleton className="h-4 w-20 mb-4" />
-              <Skeleton className="h-10 w-full mb-2" />
-              <Skeleton className="h-10 w-full" />
-            </div>
-          ))}
-        </div>
+        <PollListSkeleton count={6} />
       </div>
     );
   }
@@ -274,26 +343,9 @@ function PollsPageContent() {
   if (isLoading) {
     return (
       <div className="container mx-auto px-4 py-8" data-testid="polls-loading-data" role="status" aria-busy="true" aria-live="polite" aria-label="Loading polls">
-        <div className="mb-8">
-          <Skeleton className="h-10 w-64 mb-2" />
-          <Skeleton className="h-5 w-96" />
-        </div>
         <PollFiltersPanel />
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mt-6">
-          {[1, 2, 3, 4, 5, 6].map((i) => (
-            <div key={i} className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-6">
-              <Skeleton className="h-6 w-3/4 mb-4" />
-              <Skeleton className="h-4 w-full mb-2" />
-              <Skeleton className="h-4 w-5/6 mb-4" />
-              <div className="flex items-center justify-between mb-4">
-                <Skeleton className="h-4 w-24" />
-                <Skeleton className="h-4 w-32" />
-              </div>
-              <Skeleton className="h-4 w-20 mb-4" />
-              <Skeleton className="h-10 w-full mb-2" />
-              <Skeleton className="h-10 w-full" />
-            </div>
-          ))}
+        <div className="mt-6">
+          <PollListSkeleton count={6} />
         </div>
       </div>
     );
@@ -305,16 +357,16 @@ function PollsPageContent() {
         <div className="mb-8">
           <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4 mb-2">
             <div className="flex-1">
-              <h1 className="text-3xl font-bold text-gray-900 dark:text-gray-100 mb-2">
+              <h1 className="text-3xl font-bold text-foreground mb-2">
                 {tRef.current('polls.page.title')}
               </h1>
-              <p className="text-gray-600 dark:text-gray-400">
+              <p className="text-muted-foreground">
                 {tRef.current('polls.page.subtitle')}
               </p>
             </div>
             <Link
               href="/polls/create"
-              className="inline-flex items-center justify-center px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors whitespace-nowrap self-start sm:self-auto focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 dark:focus:ring-offset-gray-900"
+              className="inline-flex items-center justify-center px-4 py-2 bg-primary text-primary-foreground rounded-lg hover:bg-primary/90 transition-colors whitespace-nowrap self-start sm:self-auto focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 focus:ring-offset-background"
               aria-label="Create a new poll"
             >
               <Plus className="h-4 w-4 mr-2" aria-hidden="true" />
@@ -385,29 +437,29 @@ function PollsPageContent() {
               />
             </div>
           ) : (
-            polls.map((poll) => (
-              <div
-                key={poll.id}
-                className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-6 hover:shadow-md transition-shadow [content-visibility:auto] [contain-intrinsic-size:auto_200px]"
-              >
+            polls.map((poll, index) => (
+              <AnimatedCard key={poll.id} index={index}>
+                <div
+                  className="bg-card rounded-lg border border-border p-6 hover:shadow-md transition-shadow [content-visibility:auto] [contain-intrinsic-size:auto_200px]"
+                >
                 <div className="flex items-start justify-between mb-4">
-                  <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100 line-clamp-2">
+                  <h2 className="text-lg font-semibold text-foreground line-clamp-2">
                     {poll.title}
                   </h2>
                   {typeof poll.trendingPosition === 'number' && (
-                    <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-orange-100 text-orange-700">
+                    <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-orange-100 dark:bg-orange-900/30 text-orange-700 dark:text-orange-300">
                       <Flame className="h-3 w-3 mr-1" />
                       {tRef.current('polls.page.trendingBadge', { position: String(poll.trendingPosition) })}
                     </span>
                   )}
                 </div>
 
-                <p className="text-sm text-gray-600 mb-4 line-clamp-3">
+                <p className="text-sm text-muted-foreground mb-4 line-clamp-3">
                   {poll.description || tRef.current('polls.page.descriptionFallback')}
                 </p>
 
-                <div className="flex items-center justify-between text-sm text-gray-500 mb-4">
-                  <span className="inline-flex items-center">
+                <div className="flex items-center justify-between text-sm text-muted-foreground mb-4">
+                  <span className="inline-flex items-center" aria-live="polite">
                     <Users className="h-4 w-4 mr-1" />
                     {formatVoteCount(typeof poll.totalVotes === 'number' ? poll.totalVotes : 0)}
                   </span>
@@ -425,7 +477,7 @@ function PollsPageContent() {
                   {poll.tags?.slice(0, 3).map((tag, index) => (
                     <span
                       key={`${poll.id}-tag-${index}`}
-                      className="inline-flex items-center px-2 py-1 rounded-full text-xs bg-gray-100 text-gray-700"
+                      className="inline-flex items-center px-2 py-1 rounded-full text-xs bg-muted text-muted-foreground"
                     >
                       #{tag}
                     </span>
@@ -433,55 +485,54 @@ function PollsPageContent() {
                 </div>
 
                 <div className="space-y-2">
-                  <Link
+                  <PrefetchLink
                     href={`/polls/${poll.id}`}
-                    className="inline-flex items-center justify-center w-full px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
+                    className="inline-flex items-center justify-center w-full px-4 py-2 min-h-[44px] bg-primary text-primary-foreground rounded-lg hover:bg-primary/90 transition-colors focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 focus:ring-offset-background"
                     aria-label={`View poll: ${poll.title}`}
                   >
                     <Eye className="h-4 w-4 mr-2" aria-hidden="true" />
                     {tRef.current('polls.page.cta.view')}
-                  </Link>
-                  <Link
+                  </PrefetchLink>
+                  <PrefetchLink
                     href={`/polls/${poll.id}/results`}
-                    className="inline-flex items-center justify-center w-full px-4 py-2 border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-offset-2 dark:focus:ring-offset-gray-900"
+                    className="inline-flex items-center justify-center w-full px-4 py-2 border border-border text-foreground rounded-lg hover:bg-muted transition-colors focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 focus:ring-offset-background"
                     aria-label={`View results for poll: ${poll.title}`}
                   >
                     <BarChart3 className="h-4 w-4 mr-2" aria-hidden="true" />
                     {tRef.current('polls.page.cta.results')}
-                  </Link>
+                  </PrefetchLink>
                 </div>
-              </div>
+                </div>
+              </AnimatedCard>
             ))
           )}
         </div>
 
         {pagination.totalPages > 1 && (
-          <div className="mt-6 flex flex-col gap-2 rounded-lg border border-gray-200 bg-white px-4 py-3 text-sm text-gray-600 md:flex-row md:items-center md:justify-between">
+          <div className="mt-6 flex flex-col gap-2 rounded-lg border border-border bg-card px-4 py-3 text-sm text-muted-foreground md:flex-row md:items-center md:justify-between">
             <span>{paginationLabel}</span>
             <div className="flex items-center gap-2">
-              <button
-                type="button"
+              <Button
+                variant="outline"
                 onClick={() => handlePageChange(pagination.currentPage - 1)}
                 disabled={pagination.currentPage === 1 || isLoading}
-                className="rounded-md border border-gray-200 dark:border-gray-600 px-3 py-1 text-sm font-medium text-gray-600 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-700 disabled:cursor-not-allowed disabled:opacity-50 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 dark:focus:ring-offset-gray-900"
+                className="min-h-[44px]"
                 aria-label={`Go to previous page, page ${pagination.currentPage - 1}`}
-                aria-disabled={pagination.currentPage === 1 || isLoading}
               >
                 {tRef.current('polls.page.pagination.previous')}
-              </button>
-              <span className="text-xs text-gray-500">
+              </Button>
+              <span className="text-xs text-muted-foreground">
                 {paginationPageLabel}
               </span>
-              <button
-                type="button"
+              <Button
+                variant="outline"
                 onClick={() => handlePageChange(pagination.currentPage + 1)}
                 disabled={pagination.currentPage === pagination.totalPages || isLoading}
-                className="rounded-md border border-gray-200 dark:border-gray-600 px-3 py-1 text-sm font-medium text-gray-600 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-700 disabled:cursor-not-allowed disabled:opacity-50 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 dark:focus:ring-offset-gray-900"
+                className="min-h-[44px]"
                 aria-label={`Go to next page, page ${pagination.currentPage + 1}`}
-                aria-disabled={pagination.currentPage === pagination.totalPages || isLoading}
               >
                 {tRef.current('polls.page.pagination.next')}
-              </button>
+              </Button>
             </div>
           </div>
         )}
@@ -491,5 +542,9 @@ function PollsPageContent() {
 }
 
 export default function PollsPage() {
-  return <PollsPageContent />;
+  return (
+    <Suspense fallback={<PollListSkeleton count={6} />}>
+      <PollsPageContent />
+    </Suspense>
+  );
 }

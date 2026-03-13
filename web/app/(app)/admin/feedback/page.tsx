@@ -14,6 +14,32 @@ import { FeedbackFilters } from './FeedbackFilters';
 import { FeedbackList } from './FeedbackList';
 import { FeedbackStats } from './FeedbackStats';
 
+type RawFeedbackApiItem = {
+  id: string;
+  user_id?: string | null;
+  type?: string;
+  feedback_type?: string;
+  title?: string;
+  description?: string;
+  sentiment?: string;
+  screenshot?: string | null;
+  admin_response?: string | null;
+  admin_response_at?: string | null;
+  admin_response_by?: string | null;
+  user_journey?: Feedback['userjourney'];
+  userjourney?: Feedback['userjourney'];
+  status?: string;
+  priority?: string;
+  tags?: string[];
+  ai_analysis?: Feedback['aianalysis'];
+  aianalysis?: Feedback['aianalysis'];
+  metadata?: Record<string, unknown>;
+  created_at?: string;
+  createdat?: string;
+  updated_at?: string;
+  updatedat?: string;
+};
+
 type Feedback = {
   id: string;
   userid: string | null;
@@ -171,7 +197,7 @@ export default function AdminFeedbackPage() {
       // Always set feedback, even if empty - this ensures the component renders
       if (Array.isArray(feedbackData)) {
         // Transform API response to match Feedback type
-        const transformedFeedback: Feedback[] = feedbackData.map((item: any) => ({
+        const transformedFeedback: Feedback[] = feedbackData.map((item: RawFeedbackApiItem) => ({
           id: item.id,
           userid: item.user_id || null,
           type: item.type || item.feedback_type || 'general',
@@ -357,8 +383,8 @@ export default function AdminFeedbackPage() {
     >
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-6" data-testid="admin-feedback-page">
       <div>
-        <h1 className="text-2xl font-bold text-gray-900 dark:text-gray-100">Feedback Management</h1>
-        <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">
+        <h1 className="text-2xl font-bold text-foreground">Feedback Management</h1>
+        <p className="text-sm text-muted-foreground mt-1">
           Manage and triage user feedback, sentiment analysis, and follow-up actions.
         </p>
       </div>

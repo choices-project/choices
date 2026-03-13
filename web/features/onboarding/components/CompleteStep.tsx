@@ -77,10 +77,10 @@ export default function CompleteStep({ data, onComplete, onBack, isLoading = fal
             <CheckCircle className="w-10 h-10 text-white" />
           </div>
         </div>
-        <h2 className="text-3xl font-bold text-gray-900 animate-fade-in">
+        <h2 className="text-3xl font-bold text-foreground animate-fade-in">
           {t('onboarding.complete.success.title')}
         </h2>
-        <p className="text-gray-600 animate-fade-in-delay">
+        <p className="text-muted-foreground animate-fade-in-delay">
           {t('onboarding.complete.success.subtitle')}
         </p>
         
@@ -91,8 +91,8 @@ export default function CompleteStep({ data, onComplete, onBack, isLoading = fal
       </div>
 
       {/* Profile summary */}
-      <div className="bg-white rounded-2xl p-8 shadow-lg border border-gray-100">
-        <h3 className="text-xl font-semibold text-gray-900 mb-6">
+      <div className="bg-card rounded-2xl p-8 shadow-lg border border-border">
+        <h3 className="text-xl font-semibold text-foreground mb-6">
           {t('onboarding.complete.summary.title')}
         </h3>
         
@@ -100,19 +100,19 @@ export default function CompleteStep({ data, onComplete, onBack, isLoading = fal
           {/* Basic info */}
           <div className="flex items-center space-x-4">
             <div className="w-15 h-15 rounded-full bg-blue-100 flex items-center justify-center">
-              <span className="text-blue-600 font-semibold text-lg">
+              <span className="text-primary font-semibold text-lg">
                 {data.displayName ? data.displayName.charAt(0).toUpperCase() : 'U'}
               </span>
             </div>
             <div>
-              <h4 className="font-semibold text-gray-900">{data.displayName || t('onboarding.complete.summary.userFallback')}</h4>
-              <p className="text-gray-600 text-sm">{t('onboarding.complete.summary.ready')}</p>
+              <h4 className="font-semibold text-foreground">{data.displayName || t('onboarding.complete.summary.userFallback')}</h4>
+              <p className="text-muted-foreground text-sm">{t('onboarding.complete.summary.ready')}</p>
             </div>
           </div>
 
           {/* Values */}
           <div>
-            <h4 className="font-semibold text-gray-900 mb-3 flex items-center">
+            <h4 className="font-semibold text-foreground mb-3 flex items-center">
               <Heart className="w-5 h-5 text-red-500 mr-2" />
               {t('onboarding.complete.summary.valuesTitle')}
             </h4>
@@ -120,7 +120,7 @@ export default function CompleteStep({ data, onComplete, onBack, isLoading = fal
               {data.primaryConcerns?.map((concern: string) => (
                 <span
                   key={concern}
-                  className="px-3 py-1 bg-blue-100 text-blue-800 rounded-full text-sm"
+                  className="px-3 py-1 bg-blue-100 dark:bg-blue-900/20 text-blue-800 dark:text-blue-300 rounded-full text-sm"
                 >
                   {concern}
                 </span>
@@ -130,7 +130,7 @@ export default function CompleteStep({ data, onComplete, onBack, isLoading = fal
 
           {/* Community focus */}
           <div>
-            <h4 className="font-semibold text-gray-900 mb-3 flex items-center">
+            <h4 className="font-semibold text-foreground mb-3 flex items-center">
               <Users className="w-5 h-5 text-blue-500 mr-2" />
               {t('onboarding.complete.summary.communityTitle')}
             </h4>
@@ -138,7 +138,7 @@ export default function CompleteStep({ data, onComplete, onBack, isLoading = fal
               {data.communityFocus?.map((focus: string) => (
                 <span
                   key={focus}
-                  className="px-3 py-1 bg-green-100 text-green-800 rounded-full text-sm"
+                  className="px-3 py-1 bg-green-100 dark:bg-green-900/20 text-green-800 dark:text-green-400 rounded-full text-sm"
                 >
                   {focus}
                 </span>
@@ -148,38 +148,38 @@ export default function CompleteStep({ data, onComplete, onBack, isLoading = fal
 
           {/* Participation style */}
           <div>
-            <h4 className="font-semibold text-gray-900 mb-3 flex items-center">
+            <h4 className="font-semibold text-foreground mb-3 flex items-center">
               <TrendingUp className="w-5 h-5 text-purple-500 mr-2" />
               {t('onboarding.complete.summary.participationTitle')}
             </h4>
           <div className="flex items-center space-x-2">
               <span className="text-2xl">{getParticipationIcon(participationStyle)}</span>
-              <span className="text-gray-700">{getParticipationLabel(participationStyle)}</span>
+              <span className="text-foreground/80">{getParticipationLabel(participationStyle)}</span>
             </div>
           </div>
 
           {/* Privacy settings */}
           <div>
-            <h4 className="font-semibold text-gray-900 mb-3 flex items-center">
-              <Shield className="w-5 h-5 text-gray-600 mr-2" />
+            <h4 className="font-semibold text-foreground mb-3 flex items-center">
+              <Shield className="w-5 h-5 text-muted-foreground mr-2" />
               {t('onboarding.complete.summary.privacy.title')}
             </h4>
             <div className="space-y-2 text-sm">
               <div className="flex items-center justify-between">
                 <span>{t('onboarding.complete.summary.privacy.shareProfile')}</span>
-                <span className={data.privacy?.shareProfile ? 'text-green-600' : 'text-gray-400'}>
+                <span className={data.privacy?.shareProfile ? 'text-green-600' : 'text-muted-foreground'}>
                   {data.privacy?.shareProfile ? '✓' : '✗'}
                 </span>
               </div>
               <div className="flex items-center justify-between">
                 <span>{t('onboarding.complete.summary.privacy.shareDemographics')}</span>
-                <span className={data.privacy?.shareDemographics ? 'text-green-600' : 'text-gray-400'}>
+                <span className={data.privacy?.shareDemographics ? 'text-green-600' : 'text-muted-foreground'}>
                   {data.privacy?.shareDemographics ? '✓' : '✗'}
                 </span>
               </div>
               <div className="flex items-center justify-between">
                 <span>{t('onboarding.complete.summary.privacy.allowAnalytics')}</span>
-                <span className={data.privacy?.allowAnalytics ? 'text-green-600' : 'text-gray-400'}>
+                <span className={data.privacy?.allowAnalytics ? 'text-green-600' : 'text-muted-foreground'}>
                   {data.privacy?.allowAnalytics ? '✓' : '✗'}
                 </span>
               </div>
@@ -189,9 +189,9 @@ export default function CompleteStep({ data, onComplete, onBack, isLoading = fal
       </div>
 
       {/* What's next */}
-      <div className="bg-blue-50 rounded-2xl p-6 border border-blue-200">
-        <h3 className="font-semibold text-blue-900 mb-4">{t('onboarding.complete.next.title')}</h3>
-        <div className="space-y-3 text-blue-800 text-sm">
+      <div className="bg-blue-50 dark:bg-blue-900/20 rounded-2xl p-6 border border-blue-200 dark:border-blue-800">
+        <h3 className="font-semibold text-blue-900 dark:text-blue-300 mb-4">{t('onboarding.complete.next.title')}</h3>
+        <div className="space-y-3 text-blue-800 dark:text-blue-300 text-sm">
           {nextSteps.map((step, index) => (
             <div key={step} className="flex items-start space-x-2">
               <span className="text-blue-600">{index + 1}.</span>
@@ -202,25 +202,25 @@ export default function CompleteStep({ data, onComplete, onBack, isLoading = fal
       </div>
 
       {/* Open Source Contribution */}
-      <div className="bg-gradient-to-r from-green-50 to-blue-50 rounded-2xl p-6 border border-green-200">
-        <h3 className="font-semibold text-green-900 mb-4 flex items-center">
+      <div className="bg-gradient-to-r from-green-50 to-blue-50 dark:from-green-900/20 dark:to-blue-900/20 rounded-2xl p-6 border border-green-200 dark:border-green-800">
+        <h3 className="font-semibold text-green-900 dark:text-green-400 mb-4 flex items-center">
           <span className="mr-2">🚀</span>
           {t('onboarding.complete.contribute.title')}
         </h3>
-        <p className="text-green-800 text-sm mb-4">
+        <p className="text-green-800 dark:text-green-400 text-sm mb-4">
           {t('onboarding.complete.contribute.subtitle')}
         </p>
         
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <div className="bg-white rounded-lg p-4 border border-green-200">
-            <h4 className="font-semibold text-green-900 mb-2 flex items-center">
+          <div className="bg-card rounded-lg p-4 border border-green-200 dark:border-green-800">
+            <h4 className="font-semibold text-green-900 dark:text-green-400 mb-2 flex items-center">
               <span className="mr-2">💻</span>
               {t('onboarding.complete.contribute.code.title')}
             </h4>
-            <p className="text-sm text-green-800 mb-3">
+            <p className="text-sm text-green-800 dark:text-green-400 mb-3">
               {t('onboarding.complete.contribute.code.description')}
             </p>
-            <div className="space-y-2 text-xs text-green-700">
+            <div className="space-y-2 text-xs text-green-700 dark:text-green-400">
               {codeDetails.map((detail) => (
                 <div key={detail}>• {detail}</div>
               ))}
@@ -230,15 +230,15 @@ export default function CompleteStep({ data, onComplete, onBack, isLoading = fal
             </button>
           </div>
           
-          <div className="bg-white rounded-lg p-4 border border-green-200">
-            <h4 className="font-semibold text-green-900 mb-2 flex items-center">
+          <div className="bg-card rounded-lg p-4 border border-green-200 dark:border-green-800">
+            <h4 className="font-semibold text-green-900 dark:text-green-400 mb-2 flex items-center">
               <span className="mr-2">🤝</span>
               {t('onboarding.complete.contribute.community.title')}
             </h4>
-            <p className="text-sm text-green-800 mb-3">
+            <p className="text-sm text-green-800 dark:text-green-400 mb-3">
               {t('onboarding.complete.contribute.community.description')}
             </p>
-            <div className="space-y-2 text-xs text-green-700">
+            <div className="space-y-2 text-xs text-green-700 dark:text-green-400">
               {communityDetails.map((detail) => (
                 <div key={detail}>• {detail}</div>
               ))}
@@ -261,7 +261,7 @@ export default function CompleteStep({ data, onComplete, onBack, isLoading = fal
         <button
           onClick={onBack}
           disabled={isLoading}
-          className="px-6 py-2 text-gray-600 hover:text-gray-800 transition-colors disabled:opacity-50"
+          className="px-6 py-2 text-muted-foreground hover:text-foreground/80 transition-colors disabled:opacity-50"
         >
           {t('onboarding.complete.actions.back')}
         </button>
@@ -272,8 +272,8 @@ export default function CompleteStep({ data, onComplete, onBack, isLoading = fal
           className={`
             px-8 py-3 rounded-lg font-semibold transition-all duration-200 flex items-center space-x-2
             ${isLoading 
-              ? 'bg-gray-400 text-white cursor-not-allowed' 
-              : 'bg-blue-600 text-white hover:bg-blue-700 shadow-lg hover:shadow-xl'
+              ? 'bg-muted text-muted-foreground cursor-not-allowed' 
+              : 'bg-primary text-white hover:bg-primary/90 shadow-lg hover:shadow-xl'
             }
           `}
         >

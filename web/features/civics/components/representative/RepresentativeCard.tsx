@@ -19,7 +19,6 @@ import {
   Plus
 } from 'lucide-react';
 import Image from 'next/image';
-import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import React from 'react';
 
@@ -28,16 +27,20 @@ import { useRepresentativeCtaAnalytics } from '@/features/civics/hooks/useRepres
 import { formatElectionDateStable } from '@/features/civics/utils/civicsCountdownUtils';
 import { formatRepresentativeLocation } from '@/features/civics/utils/formatRepresentativeLocation';
 
+import { PrefetchLink } from '@/components/shared/PrefetchLink';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader } from '@/components/ui/card';
+
+import { AVATAR_BLUR_DATA_URL } from '@/lib/constants/image';
+import { logger } from '@/lib/utils/logger';
 
 import { useFollowRepresentative } from '@/hooks/useFollowRepresentative';
 import { useI18n } from '@/hooks/useI18n';
 
 import type { RepresentativeCardProps } from '@/types/representative';
 
-export function RepresentativeCard({
+export const RepresentativeCard = React.memo(function RepresentativeCard({
   representative,
   variant = 'default',
   showActions = true,
@@ -113,7 +116,7 @@ export function RepresentativeCard({
         }
       }
     } catch (error) {
-      console.error('Failed to navigate to create poll:', error);
+      logger.error('Failed to navigate to create poll:', error);
       // Fallback to router if window.location fails
       router.push(`/polls/create?representative_id=${representative.id}`);
     }
@@ -161,35 +164,44 @@ export function RepresentativeCard({
     setPhotoError(false);
   }, [representative.id, representative.primary_photo_url]);
 
-  // Sync ref with state to persist across re-renders
   const locationLine = formatRepresentativeLocation({
     state: representative.state,
     office_city: representative.office_city ?? null,
     district: representative.district ?? null,
+    office: representative.office ?? null,
   });
 
   return (
     <Card
       className={`w-full max-w-md mx-auto cursor-pointer transition-all duration-200 ease-in-out hover:shadow-lg hover:-translate-y-1 focus-within:ring-2 focus-within:ring-blue-500 focus-within:ring-offset-2 ${className}`}
       onClick={handleCardClick}
+      onKeyDown={(e) => {
+        if (e.key === 'Enter' || e.key === ' ') {
+          e.preventDefault();
+          handleCardClick();
+        }
+      }}
       role="article"
+      tabIndex={0}
       aria-label={`Representative ${representative.name}`}
     >
       <CardHeader className="pb-3">
         <div className="flex items-start space-x-4">
           {/* Representative Photo */}
-          <div className="relative w-16 h-16 rounded-full overflow-hidden bg-gray-200 dark:bg-gray-700">
+          <div className="relative w-16 h-16 rounded-full overflow-hidden bg-muted">
             {representative.primary_photo_url && !photoError ? (
               <Image
                 src={representative.primary_photo_url}
                 alt={representative.name}
                 fill
+                placeholder="blur"
+                blurDataURL={AVATAR_BLUR_DATA_URL}
                 className="object-cover"
                 sizes="64px"
                 onError={() => setPhotoError(true)}
               />
             ) : (
-              <div className="w-full h-full bg-gray-300 dark:bg-gray-600 flex items-center justify-center text-gray-700 dark:text-gray-300 text-sm font-medium">
+              <div className="w-full h-full bg-muted flex items-center justify-center text-foreground/80 text-sm font-medium">
                 {representative.name.split(' ').map(n => n[0]).join('')}
               </div>
             )}
@@ -197,23 +209,25 @@ export function RepresentativeCard({
 
           {/* Representative Info */}
           <div className="flex-1 min-w-0">
-            <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100 truncate">
+            <h3 className="text-lg font-semibold text-foreground truncate">
               {representative.name}
             </h3>
             <div className="flex flex-wrap gap-2 mt-1">
-              <Badge className={`text-xs ${getPartyColor(representative.party)}`}>
-                {representative.party}
-              </Badge>
+              {representative.party && representative.party !== '—' && (
+                <Badge className={`text-xs ${getPartyColor(representative.party)}`}>
+                  {representative.party}
+                </Badge>
+              )}
               <Badge className={`text-xs ${getOfficeColor(representative.office)}`}>
                 {representative.office}
               </Badge>
             </div>
-            <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">
+            <p className="text-sm text-muted-foreground mt-1">
               {locationLine}
             </p>
 
             {repNextElectionDate && (
-              <p className="text-xs text-gray-600 dark:text-gray-400 mt-1.5" role="status">
+              <p className="text-xs text-muted-foreground mt-1.5" role="status">
                 Next election: {formatElectionDateStable(repNextElectionDate)}
               </p>
             )}
@@ -235,11 +249,11 @@ export function RepresentativeCard({
       {effectiveVariant === 'detailed' && (
         <CardContent className="pt-0">
           {(representative.primary_email || representative.primary_website) && (
-            <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-sm text-gray-600 dark:text-gray-400 mb-3">
+            <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-sm text-muted-foreground mb-3">
               {representative.primary_email && (
                 <a
                   href={`mailto:${representative.primary_email}`}
-                  className="inline-flex items-center gap-1.5 text-blue-600 dark:text-blue-400 hover:underline"
+                  className="inline-flex items-center gap-1.5 text-primary hover:underline"
                   onClick={(e) => e.stopPropagation()}
                 >
                   <Mail className="w-4 h-4 shrink-0" />
@@ -251,7 +265,7 @@ export function RepresentativeCard({
                   href={representative.primary_website}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="inline-flex items-center gap-1.5 text-blue-600 dark:text-blue-400 hover:underline"
+                  className="inline-flex items-center gap-1.5 text-primary hover:underline"
                   onClick={(e) => e.stopPropagation()}
                 >
                   <Globe className="w-4 h-4 shrink-0" />
@@ -260,13 +274,13 @@ export function RepresentativeCard({
               )}
             </div>
           )}
-          <Link
+          <PrefetchLink
             href={`/representatives/${representative.id}`}
-            className="text-sm font-medium text-blue-600 dark:text-blue-400 hover:underline"
+            className="text-sm font-medium text-primary hover:underline"
             onClick={(e) => e.stopPropagation()}
           >
             View full profile →
-          </Link>
+          </PrefetchLink>
         </CardContent>
       )}
 
@@ -279,7 +293,7 @@ export function RepresentativeCard({
                 size="sm"
                 onClick={handleFollow}
                 disabled={loading}
-                className={`flex-1 ${following ? 'text-gray-700 dark:text-gray-300 border-gray-300 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-700' : 'text-white dark:text-gray-100'}`}
+                className={`flex-1 ${following ? 'text-foreground/80 border-border hover:bg-muted' : 'text-primary-foreground'}`}
               >
                 {loading ? (
                   <>
@@ -330,4 +344,5 @@ export function RepresentativeCard({
       )}
     </Card>
   );
-}
+});
+RepresentativeCard.displayName = 'RepresentativeCard';

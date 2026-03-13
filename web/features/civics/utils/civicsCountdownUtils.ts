@@ -10,6 +10,7 @@ import {
 } from '@/lib/stores';
 import { notificationStoreUtils } from '@/lib/stores/notificationStore';
 import type { ElectionNotificationContext , Notification as NotificationModel } from '@/lib/stores/types';
+import { logger } from '@/lib/utils/logger';
 
 import { useI18n } from '@/hooks/useI18n';
 
@@ -269,7 +270,7 @@ export const useElectionCountdown = (
       timeoutId = setTimeout(() => {
         // Force reset loading state if it's been stuck for too long
         // This is a fallback in case the fetch promise never resolves/rejects
-        console.warn('Election loading timeout - resetting loading state');
+        logger.warn('Election loading timeout - resetting loading state');
       }, 15000);
     }
 

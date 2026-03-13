@@ -17,6 +17,7 @@ import { getSupabaseServerClient } from '@/utils/supabase/server';
 
 import { authError, errorResponse, successResponse, validationError, withErrorHandling, parseBody } from '@/lib/api';
 import { createProfilePayload, PROFILE_SELECT_COLUMNS } from '@/lib/api/response-builders';
+import { apiRateLimiter } from '@/lib/rate-limiting/api-rate-limiter';
 import { undefinedToNull } from '@/lib/util/clean';
 import { logger } from '@/lib/utils/logger';
 
@@ -150,6 +151,20 @@ export const GET = withErrorHandling(async (_request: NextRequest) => {
  * }
  */
 export const POST = withErrorHandling(async (request: NextRequest) => {
+  const ip = request.headers.get('x-forwarded-for')?.split(',')[0]?.trim()
+    || request.headers.get('x-real-ip')
+    || '127.0.0.1';
+  const ua = request.headers.get('user-agent');
+  const rateLimitOptions: { maxRequests: number; windowMs: number; userAgent?: string } = {
+    maxRequests: 10,
+    windowMs: 60 * 1000,
+  };
+  if (ua) rateLimitOptions.userAgent = ua;
+  const rateLimitResult = await apiRateLimiter.checkLimit(ip, '/api/profile', rateLimitOptions);
+  if (!rateLimitResult.allowed) {
+    return errorResponse('Too many requests. Please try again later.', 429);
+  }
+
   const supabase = await getSupabaseServerClient();
   if (!supabase) {
     logger.error('Supabase not configured');
@@ -401,6 +416,20 @@ export const POST = withErrorHandling(async (request: NextRequest) => {
  * }
  */
 export const PUT = withErrorHandling(async (request: NextRequest) => {
+  const ip = request.headers.get('x-forwarded-for')?.split(',')[0]?.trim()
+    || request.headers.get('x-real-ip')
+    || '127.0.0.1';
+  const ua = request.headers.get('user-agent');
+  const rateLimitOptions: { maxRequests: number; windowMs: number; userAgent?: string } = {
+    maxRequests: 10,
+    windowMs: 60 * 1000,
+  };
+  if (ua) rateLimitOptions.userAgent = ua;
+  const rateLimitResult = await apiRateLimiter.checkLimit(ip, '/api/profile', rateLimitOptions);
+  if (!rateLimitResult.allowed) {
+    return errorResponse('Too many requests. Please try again later.', 429);
+  }
+
   const supabase = await getSupabaseServerClient();
   if (!supabase) {
     logger.error('Supabase not configured');
@@ -460,7 +489,21 @@ export const PUT = withErrorHandling(async (request: NextRequest) => {
  * @example
  * DELETE /api/profile
  */
-export const DELETE = withErrorHandling(async (_request: NextRequest) => {
+export const DELETE = withErrorHandling(async (request: NextRequest) => {
+  const ip = request.headers.get('x-forwarded-for')?.split(',')[0]?.trim()
+    || request.headers.get('x-real-ip')
+    || '127.0.0.1';
+  const ua = request.headers.get('user-agent');
+  const rateLimitOptions: { maxRequests: number; windowMs: number; userAgent?: string } = {
+    maxRequests: 10,
+    windowMs: 60 * 1000,
+  };
+  if (ua) rateLimitOptions.userAgent = ua;
+  const rateLimitResult = await apiRateLimiter.checkLimit(ip, '/api/profile', rateLimitOptions);
+  if (!rateLimitResult.allowed) {
+    return errorResponse('Too many requests. Please try again later.', 429);
+  }
+
   const supabase = await getSupabaseServerClient();
   if (!supabase) {
     logger.error('Supabase not configured');
@@ -513,6 +556,20 @@ export const DELETE = withErrorHandling(async (_request: NextRequest) => {
  * }
  */
 export const PATCH = withErrorHandling(async (request: NextRequest) => {
+  const ip = request.headers.get('x-forwarded-for')?.split(',')[0]?.trim()
+    || request.headers.get('x-real-ip')
+    || '127.0.0.1';
+  const ua = request.headers.get('user-agent');
+  const rateLimitOptions: { maxRequests: number; windowMs: number; userAgent?: string } = {
+    maxRequests: 10,
+    windowMs: 60 * 1000,
+  };
+  if (ua) rateLimitOptions.userAgent = ua;
+  const rateLimitResult = await apiRateLimiter.checkLimit(ip, '/api/profile', rateLimitOptions);
+  if (!rateLimitResult.allowed) {
+    return errorResponse('Too many requests. Please try again later.', 429);
+  }
+
   const supabase = await getSupabaseServerClient();
   if (!supabase) {
     logger.error('Supabase not configured');

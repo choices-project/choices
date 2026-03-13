@@ -31,6 +31,7 @@ const nextConfig = {
   output: 'standalone',
 
   experimental: {
+    scrollRestoration: true,
     // Next 14 way to opt packages out of RSC bundling (Node will require them at runtime)
     serverComponentsExternalPackages: [
       '@supabase/ssr',

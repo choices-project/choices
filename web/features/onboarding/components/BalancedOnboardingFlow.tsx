@@ -79,37 +79,37 @@ const WelcomeStep: React.FC<{
 }> = ({ onNext, onSkip }) => {
   const { t } = useI18n();
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 flex items-center justify-center">
+    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 dark:from-gray-900 dark:to-gray-800 flex items-center justify-center">
       <div className="max-w-2xl mx-auto text-center p-8">
         <div className="mb-8">
-          <h1 className="text-5xl font-bold text-gray-900 mb-6">
+          <h1 className="text-5xl font-bold text-foreground mb-6">
             {t('onboarding.welcome.title')}
           </h1>
-          <p className="text-xl text-gray-600 mb-8">
+          <p className="text-xl text-muted-foreground mb-8">
             {t('onboarding.welcome.subtitle')}
           </p>
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-          <div className="bg-white rounded-lg p-6 shadow-sm">
+          <div className="bg-card rounded-lg p-6 shadow-sm">
             <div className="text-4xl mb-4" aria-hidden="true">🗳️</div>
-            <h3 className="text-lg font-semibold text-gray-900 mb-2">{t('onboarding.welcome.features.vote.title')}</h3>
-            <p className="text-gray-600 text-sm">{t('onboarding.welcome.features.vote.description')}</p>
+            <h3 className="text-lg font-semibold text-foreground mb-2">{t('onboarding.welcome.features.vote.title')}</h3>
+            <p className="text-muted-foreground text-sm">{t('onboarding.welcome.features.vote.description')}</p>
           </div>
-          <div className="bg-white rounded-lg p-6 shadow-sm">
+          <div className="bg-card rounded-lg p-6 shadow-sm">
             <div className="text-4xl mb-4" aria-hidden="true">🏛️</div>
-            <h3 className="text-lg font-semibold text-gray-900 mb-2">{t('onboarding.welcome.features.representatives.title')}</h3>
-            <p className="text-gray-600 text-sm">{t('onboarding.welcome.features.representatives.description')}</p>
+            <h3 className="text-lg font-semibold text-foreground mb-2">{t('onboarding.welcome.features.representatives.title')}</h3>
+            <p className="text-muted-foreground text-sm">{t('onboarding.welcome.features.representatives.description')}</p>
           </div>
-          <div className="bg-white rounded-lg p-6 shadow-sm">
+          <div className="bg-card rounded-lg p-6 shadow-sm">
             <div className="text-4xl mb-4" aria-hidden="true">📊</div>
-            <h3 className="text-lg font-semibold text-gray-900 mb-2">{t('onboarding.welcome.features.finance.title')}</h3>
-            <p className="text-gray-600 text-sm">{t('onboarding.welcome.features.finance.description')}</p>
+            <h3 className="text-lg font-semibold text-foreground mb-2">{t('onboarding.welcome.features.finance.title')}</h3>
+            <p className="text-muted-foreground text-sm">{t('onboarding.welcome.features.finance.description')}</p>
           </div>
         </div>
 
-        <div className="bg-blue-50 rounded-lg p-4 mb-8">
-          <p className="text-blue-800 font-medium">
+        <div className="bg-blue-50 dark:bg-blue-900/20 rounded-lg p-4 mb-8">
+          <p className="text-blue-800 dark:text-blue-300 font-medium">
             {t('onboarding.welcome.duration')}
           </p>
         </div>
@@ -118,13 +118,13 @@ const WelcomeStep: React.FC<{
           <button
             onClick={onNext}
             data-testid="welcome-next"
-            className="w-full bg-blue-600 text-white py-4 px-8 rounded-lg font-semibold text-lg hover:bg-blue-700 transition-colors"
+            className="w-full bg-primary text-white py-4 px-8 rounded-lg font-semibold text-lg hover:bg-primary/90 transition-colors"
           >
             {t('onboarding.welcome.cta.next')}
           </button>
           <button
             onClick={onSkip}
-            className="w-full text-gray-500 hover:text-gray-700 transition-colors"
+            className="w-full text-muted-foreground hover:text-foreground/80 transition-colors"
           >
             {t('onboarding.welcome.cta.skip')}
           </button>
@@ -143,51 +143,51 @@ const PrivacyStep: React.FC<{
 }> = ({ onNext, onBack, privacy, setPrivacy }) => {
   const { t } = useI18n();
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 flex items-center justify-center">
+    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 dark:from-gray-900 dark:to-gray-800 flex items-center justify-center">
       <div className="max-w-2xl mx-auto p-8">
         <div className="text-center mb-8">
-          <h2 className="text-4xl font-bold text-gray-900 mb-4">
+          <h2 className="text-4xl font-bold text-foreground mb-4">
             {t('onboarding.privacy.title')}
           </h2>
-          <p className="text-xl text-gray-600">
+          <p className="text-xl text-muted-foreground">
             {t('onboarding.privacy.subtitle')}
           </p>
         </div>
 
         <div className="space-y-6 mb-8">
-          <div className="bg-white rounded-lg p-6 shadow-sm">
+          <div className="bg-card rounded-lg p-6 shadow-sm">
             <div className="flex items-start space-x-4">
               <div className="text-3xl" aria-hidden="true">🔒</div>
               <div>
-                <h3 className="text-lg font-semibold text-gray-900 mb-2">{t('onboarding.privacy.cards.location.title')}</h3>
-                <p className="text-gray-600">{t('onboarding.privacy.cards.location.description')}</p>
+                <h3 className="text-lg font-semibold text-foreground mb-2">{t('onboarding.privacy.cards.location.title')}</h3>
+                <p className="text-muted-foreground">{t('onboarding.privacy.cards.location.description')}</p>
               </div>
             </div>
           </div>
 
-          <div className="bg-white rounded-lg p-6 shadow-sm">
+          <div className="bg-card rounded-lg p-6 shadow-sm">
             <div className="flex items-start space-x-4">
               <div className="text-3xl" aria-hidden="true">📊</div>
               <div>
-                <h3 className="text-lg font-semibold text-gray-900 mb-2">{t('onboarding.privacy.cards.demographics.title')}</h3>
-                <p className="text-gray-600">{t('onboarding.privacy.cards.demographics.description')}</p>
+                <h3 className="text-lg font-semibold text-foreground mb-2">{t('onboarding.privacy.cards.demographics.title')}</h3>
+                <p className="text-muted-foreground">{t('onboarding.privacy.cards.demographics.description')}</p>
               </div>
             </div>
           </div>
 
-          <div className="bg-white rounded-lg p-6 shadow-sm">
+          <div className="bg-card rounded-lg p-6 shadow-sm">
             <div className="flex items-start space-x-4">
               <div className="text-3xl" aria-hidden="true">🛡️</div>
               <div>
-                <h3 className="text-lg font-semibold text-gray-900 mb-2">{t('onboarding.privacy.cards.protection.title')}</h3>
-                <p className="text-gray-600">{t('onboarding.privacy.cards.protection.description')}</p>
+                <h3 className="text-lg font-semibold text-foreground mb-2">{t('onboarding.privacy.cards.protection.title')}</h3>
+                <p className="text-muted-foreground">{t('onboarding.privacy.cards.protection.description')}</p>
               </div>
             </div>
           </div>
         </div>
 
-        <div className="bg-gray-50 rounded-lg p-6 mb-8">
-          <h3 className="text-lg font-semibold text-gray-900 mb-4">{t('onboarding.privacy.controls.title')}</h3>
+        <div className="bg-muted rounded-lg p-6 mb-8">
+          <h3 className="text-lg font-semibold text-foreground mb-4">{t('onboarding.privacy.controls.title')}</h3>
           <div className="space-y-4">
             <label className="flex items-center space-x-3">
               <input
@@ -199,9 +199,9 @@ const PrivacyStep: React.FC<{
                     location_sharing: e.target.checked ? 'quantized' : 'disabled',
                   })
                 }
-                className="w-5 h-5 text-blue-600 rounded"
+                className="w-5 h-5 text-primary rounded"
               />
-              <span className="text-gray-700">
+              <span className="text-foreground/80">
                 {t('onboarding.privacy.controls.location')}
               </span>
             </label>
@@ -215,9 +215,9 @@ const PrivacyStep: React.FC<{
                     demographic_sharing: e.target.checked ? 'enabled' : 'disabled',
                   })
                 }
-                className="w-5 h-5 text-blue-600 rounded"
+                className="w-5 h-5 text-primary rounded"
               />
-              <span className="text-gray-700">
+              <span className="text-foreground/80">
                 {t('onboarding.privacy.controls.demographics')}
               </span>
             </label>
@@ -231,9 +231,9 @@ const PrivacyStep: React.FC<{
                     analytics_sharing: e.target.checked ? 'enabled' : 'limited',
                   })
                 }
-                className="w-5 h-5 text-blue-600 rounded"
+                className="w-5 h-5 text-primary rounded"
               />
-              <span className="text-gray-700">
+              <span className="text-foreground/80">
                 {t('onboarding.privacy.controls.analytics')}
               </span>
             </label>
@@ -243,7 +243,7 @@ const PrivacyStep: React.FC<{
         <div className="flex justify-between">
           <button
             onClick={onBack}
-            className="text-gray-500 hover:text-gray-700 transition-colors"
+            className="text-muted-foreground hover:text-foreground/80 transition-colors"
             aria-label={t('onboarding.privacy.actions.back')}
           >
             {t('onboarding.privacy.actions.back')}
@@ -251,7 +251,7 @@ const PrivacyStep: React.FC<{
           <button
             onClick={onNext}
             data-testid="privacy-next"
-            className="bg-blue-600 text-white py-3 px-6 rounded-lg font-semibold hover:bg-blue-700 transition-colors"
+            className="bg-primary text-white py-3 px-6 rounded-lg font-semibold hover:bg-primary/90 transition-colors"
             aria-label={t('onboarding.privacy.actions.continue')}
           >
             {t('onboarding.privacy.actions.continue')}
@@ -298,25 +298,25 @@ const DemographicsStep: React.FC<{
   ];
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 flex items-center justify-center">
+    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 dark:from-gray-900 dark:to-gray-800 flex items-center justify-center">
       <div className="max-w-2xl mx-auto p-8">
         <div className="text-center mb-8">
-          <h2 className="text-4xl font-bold text-gray-900 mb-4">
+          <h2 className="text-4xl font-bold text-foreground mb-4">
             {t('onboarding.demographics.title')}
           </h2>
-          <p className="text-xl text-gray-600">
+          <p className="text-xl text-muted-foreground">
             {t('onboarding.demographics.subtitle')}
           </p>
         </div>
 
         <div className="space-y-8">
           {/* Location/District Section */}
-          <div className="bg-white rounded-lg p-6 shadow-sm">
-            <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center">
+          <div className="bg-card rounded-lg p-6 shadow-sm">
+            <h3 className="text-lg font-semibold text-foreground mb-4 flex items-center">
               <span className="text-2xl mr-3">📍</span>
               {t('onboarding.demographics.location.title')}
             </h3>
-            <p className="text-gray-600 mb-4">
+            <p className="text-muted-foreground mb-4">
               {t('onboarding.demographics.location.description')}
             </p>
 
@@ -336,12 +336,12 @@ const DemographicsStep: React.FC<{
               }}
             />
 
-            <div className="mt-4 p-4 bg-gray-50 rounded-lg">
-              <p className="text-sm text-gray-700">
+            <div className="mt-4 p-4 bg-muted rounded-lg">
+              <p className="text-sm text-foreground/80">
                 <strong>{t('onboarding.demographics.location.whyLabel')}</strong>{' '}
                 {t('onboarding.demographics.location.whyDescription')}
               </p>
-              <p className="text-sm text-gray-600 mt-2">
+              <p className="text-sm text-muted-foreground mt-2">
                 <strong>{t('onboarding.demographics.location.privacyLabel')}</strong>{' '}
                 {t('onboarding.demographics.location.privacyDescription')}
               </p>
@@ -349,18 +349,18 @@ const DemographicsStep: React.FC<{
           </div>
 
           {/* Demographics Section */}
-          <div className="bg-white rounded-lg p-6 shadow-sm">
-            <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center">
+          <div className="bg-card rounded-lg p-6 shadow-sm">
+            <h3 className="text-lg font-semibold text-foreground mb-4 flex items-center">
               <span className="text-2xl mr-3">👤</span>
               {t('onboarding.demographics.profile.title')}
             </h3>
-            <p className="text-gray-600 mb-4">
+            <p className="text-muted-foreground mb-4">
               {t('onboarding.demographics.profile.description')}
             </p>
 
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
+                <label className="block text-sm font-medium text-foreground/80 mb-2">
                   {t('onboarding.demographics.fields.age.label')}
                 </label>
                 <select
@@ -371,7 +371,7 @@ const DemographicsStep: React.FC<{
                       age_range: e.target.value as UserDemographics['age_range'],
                     })
                   }
-                  className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                  className="w-full p-3 border border-border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                 >
                   {ageOptions.map((option) => (
                     <option key={option.value || 'placeholder'} value={option.value}>
@@ -382,7 +382,7 @@ const DemographicsStep: React.FC<{
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
+                <label className="block text-sm font-medium text-foreground/80 mb-2">
                   {t('onboarding.demographics.fields.education.label')}
                 </label>
                 <select
@@ -393,7 +393,7 @@ const DemographicsStep: React.FC<{
                       education: e.target.value as UserDemographics['education'],
                     })
                   }
-                  className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                  className="w-full p-3 border border-border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                 >
                   {educationOptions.map((option) => (
                     <option key={option.value || 'placeholder'} value={option.value}>
@@ -404,7 +404,7 @@ const DemographicsStep: React.FC<{
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
+                <label className="block text-sm font-medium text-foreground/80 mb-2">
                   {t('onboarding.demographics.fields.engagement.label')}
                 </label>
                 <select
@@ -415,7 +415,7 @@ const DemographicsStep: React.FC<{
                       political_engagement: e.target.value as UserDemographics['political_engagement'],
                     })
                   }
-                  className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                  className="w-full p-3 border border-border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                 >
                   {engagementOptions.map((option) => (
                     <option key={option.value || 'placeholder'} value={option.value}>
@@ -431,7 +431,7 @@ const DemographicsStep: React.FC<{
         <div className="flex justify-between items-center mt-8">
           <button
             onClick={onBack}
-            className="text-gray-500 hover:text-gray-700 transition-colors"
+            className="text-muted-foreground hover:text-foreground/80 transition-colors"
           >
             <span aria-hidden="true" className="mr-1">
               ←
@@ -442,21 +442,21 @@ const DemographicsStep: React.FC<{
           <div className="flex space-x-4">
             <button
               onClick={onSkip}
-              className="text-gray-500 hover:text-gray-700 transition-colors"
+              className="text-muted-foreground hover:text-foreground/80 transition-colors"
             >
               {t('onboarding.demographics.actions.skip')}
             </button>
             <button
               onClick={onNext}
               data-testid="form-submit-button"
-              className="bg-blue-600 text-white py-3 px-6 rounded-lg font-semibold hover:bg-blue-700 transition-colors"
+              className="bg-primary text-white py-3 px-6 rounded-lg font-semibold hover:bg-primary/90 transition-colors"
             >
               {t('onboarding.demographics.actions.continue')}
             </button>
           </div>
         </div>
 
-        <p className="text-sm text-gray-500 text-center mt-4">
+        <p className="text-sm text-muted-foreground text-center mt-4">
           {t('onboarding.demographics.actions.reminder')}
         </p>
       </div>
@@ -521,33 +521,33 @@ const AuthStep: React.FC<{
     const provider = user?.app_metadata?.provider;
     const label = provider === 'google' ? 'Google' : provider === 'github' ? 'GitHub' : user?.email ?? 'your account';
     return (
-      <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 flex items-center justify-center">
+      <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 dark:from-gray-900 dark:to-gray-800 flex items-center justify-center">
         <div className="max-w-2xl mx-auto p-8">
           <div className="text-center mb-8">
-            <h2 className="text-4xl font-bold text-gray-900 mb-4">
+            <h2 className="text-4xl font-bold text-foreground mb-4">
               {t('onboarding.auth.overview.title')}
             </h2>
-            <p className="text-xl text-gray-600">
+            <p className="text-xl text-muted-foreground">
               {t('onboarding.auth.alreadySignedIn.subtitle', { label })}
             </p>
           </div>
-          <div className="bg-white rounded-lg p-6 shadow-sm mb-8">
+          <div className="bg-card rounded-lg p-6 shadow-sm mb-8">
             <div className="flex items-center justify-center gap-3 mb-6">
               <span className="text-4xl">✅</span>
-              <p className="text-lg text-gray-700">
+              <p className="text-lg text-foreground/80">
                 {t('onboarding.auth.alreadySignedIn.continueHint')}
               </p>
             </div>
             <button
               onClick={onNext}
               data-testid="auth-already-signed-in-continue"
-              className="w-full py-4 px-6 bg-blue-600 text-white rounded-lg font-semibold hover:bg-blue-700 transition-colors"
+              className="w-full py-4 px-6 bg-primary text-white rounded-lg font-semibold hover:bg-primary/90 transition-colors"
             >
               {t('onboarding.auth.alreadySignedIn.continue')}
             </button>
           </div>
           <div className="flex justify-between items-center">
-            <button onClick={onBack} className="text-gray-500 hover:text-gray-700 transition-colors">
+            <button onClick={onBack} className="text-muted-foreground hover:text-foreground/80 transition-colors">
               {t('onboarding.auth.actions.back')}
             </button>
           </div>
@@ -559,24 +559,24 @@ const AuthStep: React.FC<{
   // If user has selected a method, show the appropriate interface
   if (authMethod === 'passkey') {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 flex items-center justify-center">
+      <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 dark:from-gray-900 dark:to-gray-800 flex items-center justify-center">
         <div className="max-w-2xl mx-auto p-8">
           <div className="text-center mb-8">
-            <h2 className="text-4xl font-bold text-gray-900 mb-4">
+            <h2 className="text-4xl font-bold text-foreground mb-4">
               {t('onboarding.auth.webauthn.cardTitle')}
             </h2>
-            <p className="text-xl text-gray-600">
+            <p className="text-xl text-muted-foreground">
               {t('onboarding.auth.webauthn.cardDescription')}
             </p>
           </div>
 
-          <div className="bg-white rounded-lg p-6 shadow-sm mb-8">
+          <div className="bg-card rounded-lg p-6 shadow-sm mb-8">
             <div className="text-center mb-6">
-              <div className="w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-4">
+              <div className="w-16 h-16 bg-blue-100 dark:bg-blue-900/20 rounded-full flex items-center justify-center mx-auto mb-4">
                 <span className="text-3xl">🔐</span>
               </div>
-              <h3 className="text-lg font-semibold text-gray-900 mb-2">{t('onboarding.auth.webauthn.benefits.title')}</h3>
-              <ul className="text-gray-600 space-y-2 text-left">
+              <h3 className="text-lg font-semibold text-foreground mb-2">{t('onboarding.auth.webauthn.benefits.title')}</h3>
+              <ul className="text-muted-foreground space-y-2 text-left">
                 <li>• {t('onboarding.auth.webauthn.benefits.biometric')}</li>
                 <li>• {t('onboarding.auth.webauthn.benefits.noPassword')}</li>
                 <li>• {t('onboarding.auth.webauthn.benefits.crossDevice')}</li>
@@ -614,7 +614,7 @@ const AuthStep: React.FC<{
           <div className="flex justify-between items-center">
             <button
               onClick={() => setAuthMethod(null)}
-              className="text-gray-500 hover:text-gray-700 transition-colors"
+              className="text-muted-foreground hover:text-foreground/80 transition-colors"
             >
               {t('onboarding.auth.actions.backToOptions')}
             </button>
@@ -622,7 +622,7 @@ const AuthStep: React.FC<{
             <div className="flex space-x-4">
               <button
                 onClick={onSkip}
-                className="text-gray-500 hover:text-gray-700 transition-colors"
+                className="text-muted-foreground hover:text-foreground/80 transition-colors"
               >
                 {t('onboarding.auth.actions.skip')}
               </button>
@@ -635,13 +635,13 @@ const AuthStep: React.FC<{
 
   // Main authentication method selection
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 flex items-center justify-center">
+    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 dark:from-gray-900 dark:to-gray-800 flex items-center justify-center">
       <div className="max-w-2xl mx-auto p-8">
         <div className="text-center mb-8">
-          <h2 className="text-4xl font-bold text-gray-900 mb-4">
+          <h2 className="text-4xl font-bold text-foreground mb-4">
             {t('onboarding.auth.overview.title')}
           </h2>
-          <p className="text-xl text-gray-600">
+          <p className="text-xl text-muted-foreground">
             {t('onboarding.auth.overview.subtitle')}
           </p>
         </div>
@@ -652,14 +652,14 @@ const AuthStep: React.FC<{
               onClick={() => handleAuthMethodSelect('passkey')}
               disabled={isLoading}
               data-testid="auth-passkey-option"
-              className="w-full flex items-center space-x-4 p-6 border border-gray-200 rounded-lg hover:border-blue-300 hover:bg-blue-50 transition-colors disabled:opacity-50"
+              className="w-full flex items-center space-x-4 p-6 border border-border rounded-lg hover:border-blue-300 dark:hover:border-blue-600 hover:bg-blue-50 dark:hover:bg-blue-900/20 transition-colors disabled:opacity-50"
             >
               <span className="text-3xl">🔐</span>
               <div className="text-left">
                 <div className="text-lg font-semibold">
                   {t('onboarding.auth.options.webauthn.title')} {t('onboarding.auth.options.webauthn.recommended')}
                 </div>
-                <div className="text-gray-500">{t('onboarding.auth.options.webauthn.description')}</div>
+                <div className="text-muted-foreground">{t('onboarding.auth.options.webauthn.description')}</div>
               </div>
             </button>
           </FeatureWrapper>
@@ -668,12 +668,12 @@ const AuthStep: React.FC<{
             onClick={handleEmailAuth}
             disabled={isLoading}
             data-testid="auth-email-option"
-            className="w-full flex items-center space-x-4 p-6 border border-gray-200 rounded-lg hover:border-blue-300 hover:bg-blue-50 transition-colors disabled:opacity-50"
-          >
+className="w-full flex items-center space-x-4 p-6 border border-border rounded-lg hover:border-blue-300 dark:hover:border-blue-600 hover:bg-blue-50 dark:hover:bg-blue-900/20 transition-colors disabled:opacity-50"
+            >
             <span className="text-3xl">📧</span>
             <div className="text-left">
               <div className="text-lg font-semibold">{t('onboarding.auth.options.email.title')}</div>
-              <div className="text-gray-500">{t('onboarding.auth.options.email.description')}</div>
+              <div className="text-muted-foreground">{t('onboarding.auth.options.email.description')}</div>
             </div>
           </button>
 
@@ -681,19 +681,19 @@ const AuthStep: React.FC<{
             onClick={handleGoogleAuth}
             disabled={isLoading}
             data-testid="auth-google-option"
-            className="w-full flex items-center space-x-4 p-6 border border-gray-200 rounded-lg hover:border-blue-300 hover:bg-blue-50 transition-colors disabled:opacity-50"
-          >
+className="w-full flex items-center space-x-4 p-6 border border-border rounded-lg hover:border-blue-300 dark:hover:border-blue-600 hover:bg-blue-50 dark:hover:bg-blue-900/20 transition-colors disabled:opacity-50"
+            >
             <span className="text-3xl">📱</span>
             <div className="text-left">
               <div className="text-lg font-semibold">{t('onboarding.auth.social.actions.continueWithGoogle')}</div>
-              <div className="text-gray-500">{t('onboarding.auth.social.helper')}</div>
+              <div className="text-muted-foreground">{t('onboarding.auth.social.helper')}</div>
             </div>
           </button>
         </div>
 
-        <div className="bg-gray-50 rounded-lg p-6 mb-8">
-          <h3 className="text-lg font-semibold text-gray-900 mb-2">{t('onboarding.auth.reason.title')}</h3>
-          <ul className="text-gray-600 space-y-2">
+        <div className="bg-muted rounded-lg p-6 mb-8">
+          <h3 className="text-lg font-semibold text-foreground mb-2">{t('onboarding.auth.reason.title')}</h3>
+          <ul className="text-muted-foreground space-y-2">
             <li>• {t('onboarding.auth.reason.items.save')}</li>
             <li>• {t('onboarding.auth.reason.items.personalized')}</li>
             <li>• {t('onboarding.auth.reason.items.secure')}</li>
@@ -703,7 +703,7 @@ const AuthStep: React.FC<{
         <div className="flex justify-between items-center">
           <button
             onClick={onBack}
-            className="text-gray-500 hover:text-gray-700 transition-colors"
+            className="text-muted-foreground hover:text-foreground/80 transition-colors"
           >
             {t('onboarding.auth.actions.back')}
           </button>
@@ -711,14 +711,14 @@ const AuthStep: React.FC<{
           <div className="flex space-x-4">
             <button
               onClick={onSkip}
-              className="text-gray-500 hover:text-gray-700 transition-colors"
+              className="text-muted-foreground hover:text-foreground/80 transition-colors"
             >
               {t('onboarding.auth.anonymous.actions.continue')}
             </button>
           </div>
         </div>
 
-        <p className="text-sm text-gray-500 text-center mt-4">
+        <p className="text-sm text-muted-foreground text-center mt-4">
           {t('onboarding.auth.anonymous.note')}
         </p>
       </div>
@@ -756,8 +756,8 @@ const ProfileStep: React.FC<{
   return (
     <div className="max-w-2xl mx-auto">
       <div className="text-center mb-8">
-        <h2 className="text-3xl font-bold text-gray-900 dark:text-white mb-4">{t('onboarding.profile.step.title')}</h2>
-        <p className="text-lg text-gray-600 dark:text-gray-300">
+        <h2 className="text-3xl font-bold text-foreground mb-4">{t('onboarding.profile.step.title')}</h2>
+        <p className="text-lg text-foreground/80">
           {t('onboarding.profile.step.subtitle')}
         </p>
       </div>
@@ -765,7 +765,7 @@ const ProfileStep: React.FC<{
       <div className="space-y-6">
         {/* Display Name */}
         <div>
-          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+          <label className="block text-sm font-medium text-foreground/80 mb-2">
             {t('onboarding.profile.fields.displayName.label')}
           </label>
           <input
@@ -777,14 +777,14 @@ const ProfileStep: React.FC<{
               })
             }
             placeholder={t('onboarding.profile.fields.displayName.placeholder')}
-            className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white dark:bg-gray-800 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400"
+            className="w-full px-3 py-2 border border-border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 bg-card text-foreground placeholder-muted-foreground"
             autoComplete="name"
           />
         </div>
 
         {/* Bio */}
         <div>
-          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+          <label className="block text-sm font-medium text-foreground/80 mb-2">
             {t('onboarding.profile.fields.bio.label')}
           </label>
           <textarea
@@ -796,16 +796,16 @@ const ProfileStep: React.FC<{
             }
             placeholder={t('onboarding.profile.fields.bio.placeholder')}
             rows={3}
-            className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white dark:bg-gray-800 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400"
+            className="w-full px-3 py-2 border border-border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 bg-card text-foreground placeholder-muted-foreground"
           />
         </div>
 
         {/* Participation Style — optional; skip available */}
         <div>
-          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+          <label className="block text-sm font-medium text-foreground/80 mb-2">
             {t('onboarding.profile.participation.label')}
           </label>
-          <p className="text-xs text-gray-500 dark:text-gray-400 mb-3">
+          <p className="text-xs text-muted-foreground mb-3">
             Optional. We use this to tailor your experience; we plan to add more useful demographic questions for analytics later.
           </p>
           <div className="space-y-2">
@@ -826,7 +826,7 @@ const ProfileStep: React.FC<{
                 desc: t('onboarding.profile.participation.options.leader.description'),
               }
             ].map((option) => (
-              <label key={option.value} className="flex items-center space-x-3 p-3 border border-gray-200 dark:border-gray-600 rounded-md cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-800/50 transition-colors">
+              <label key={option.value} className="flex items-center space-x-3 p-3 border border-border rounded-md cursor-pointer hover:bg-muted transition-colors">
                 <input
                   type="radio"
                   name="participation"
@@ -837,11 +837,11 @@ const ProfileStep: React.FC<{
                       participationStyle: e.target.value as 'observer' | 'contributor' | 'leader',
                     })
                   }
-                  className="h-4 w-4 text-blue-600 dark:text-blue-400"
+                  className="h-4 w-4 text-primary"
                 />
                 <div>
-                  <div className="font-medium text-gray-900 dark:text-white">{option.label}</div>
-                  <div className="text-sm text-gray-500 dark:text-gray-400">{option.desc}</div>
+                  <div className="font-medium text-foreground">{option.label}</div>
+                  <div className="text-sm text-muted-foreground">{option.desc}</div>
                 </div>
               </label>
             ))}
@@ -852,20 +852,20 @@ const ProfileStep: React.FC<{
       <div className="flex justify-between mt-8">
         <button
           onClick={onBack}
-          className="px-4 py-2 text-gray-600 dark:text-gray-400 hover:text-gray-800 dark:hover:text-white transition-colors"
+          className="px-4 py-2 text-muted-foreground hover:text-foreground transition-colors"
         >
           {t('onboarding.profile.actions.back')}
         </button>
         <div className="space-x-3">
           <button
             onClick={handleSkip}
-            className="px-4 py-2 text-gray-600 dark:text-gray-400 hover:text-gray-800 dark:hover:text-white transition-colors"
+            className="px-4 py-2 text-muted-foreground hover:text-foreground transition-colors"
           >
             {t('onboarding.profile.actions.skip')}
           </button>
           <button
             onClick={handleNext}
-            className="px-6 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-md transition-colors dark:bg-blue-500 dark:hover:bg-blue-600"
+            className="px-6 py-2 bg-primary hover:bg-primary/90 text-white rounded-md transition-colors"
           >
             {t('onboarding.profile.actions.completeSetup')}
           </button>
@@ -908,25 +908,25 @@ const CompleteStep: React.FC<{
           <div className="w-20 h-20 bg-green-100 dark:bg-green-900/30 rounded-full flex items-center justify-center mx-auto mb-6">
             <span className="text-4xl" aria-hidden="true">🎉</span>
           </div>
-          <h2 className="text-4xl font-bold text-gray-900 dark:text-white mb-4">
+          <h2 className="text-4xl font-bold text-foreground mb-4">
             {t('onboarding.complete.success.title')}
           </h2>
-          <p className="text-xl text-gray-600 dark:text-gray-300">
+          <p className="text-xl text-foreground/80">
             {t('onboarding.complete.success.subtitle')}
           </p>
         </div>
 
-        <div className="bg-white dark:bg-gray-800 rounded-lg p-6 shadow-sm mb-8 border border-gray-200 dark:border-gray-700">
-          <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">
+        <div className="bg-card rounded-lg p-6 shadow-sm mb-8 border border-border">
+          <h3 className="text-lg font-semibold text-foreground mb-4">
             {t('onboarding.complete.dashboard.title')}
           </h3>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             <div className="text-center p-4 bg-blue-50 dark:bg-blue-900/20 rounded-lg">
               <div className="text-2xl mb-2" aria-hidden="true">🏛️</div>
-              <h4 className="font-semibold text-gray-900 dark:text-white">
+              <h4 className="font-semibold text-foreground">
                 {t('onboarding.complete.dashboard.cards.representatives.title')}
               </h4>
-              <p className="text-sm text-gray-600 dark:text-gray-300">
+              <p className="text-sm text-foreground/80">
                 {t('onboarding.complete.dashboard.cards.representatives.description', {
                   state: demographics?.location?.state ?? t('onboarding.complete.dashboard.cards.representatives.fallback'),
                 })}
@@ -934,19 +934,19 @@ const CompleteStep: React.FC<{
             </div>
             <div className="text-center p-4 bg-green-50 dark:bg-green-900/20 rounded-lg">
               <div className="text-2xl mb-2" aria-hidden="true">🗳️</div>
-              <h4 className="font-semibold text-gray-900 dark:text-white">
+              <h4 className="font-semibold text-foreground">
                 {t('onboarding.complete.dashboard.cards.polls.title')}
               </h4>
-              <p className="text-sm text-gray-600 dark:text-gray-300">
+              <p className="text-sm text-foreground/80">
                 {t('onboarding.complete.dashboard.cards.polls.description')}
               </p>
             </div>
             <div className="text-center p-4 bg-purple-50 dark:bg-purple-900/20 rounded-lg">
               <div className="text-2xl mb-2" aria-hidden="true">📊</div>
-              <h4 className="font-semibold text-gray-900 dark:text-white">
+              <h4 className="font-semibold text-foreground">
                 {t('onboarding.complete.dashboard.cards.finance.title')}
               </h4>
-              <p className="text-sm text-gray-600 dark:text-gray-300">
+              <p className="text-sm text-foreground/80">
                 {t('onboarding.complete.dashboard.cards.finance.description')}
               </p>
             </div>
@@ -958,7 +958,7 @@ const CompleteStep: React.FC<{
             onClick={() => handleCta('/civics')}
             disabled={isNavigating}
             data-testid="complete-onboarding"
-            className="w-full bg-blue-600 hover:bg-blue-700 disabled:opacity-60 text-white py-4 px-8 rounded-lg font-semibold text-lg transition-colors dark:bg-blue-500 dark:hover:bg-blue-600"
+            className="w-full bg-primary hover:bg-primary/90 disabled:opacity-60 text-white py-4 px-8 rounded-lg font-semibold text-lg transition-colors"
           >
             {isNavigating ? t('onboarding.loading') : t('onboarding.complete.actions.findRepresentatives')}
           </button>
@@ -978,11 +978,11 @@ const CompleteStep: React.FC<{
           </button>
         </div>
 
-        <div className="bg-gray-50 dark:bg-gray-800/50 rounded-lg p-6 border border-gray-200 dark:border-gray-700">
-          <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">
+        <div className="bg-muted/50 rounded-lg p-6 border border-border">
+          <h3 className="text-lg font-semibold text-foreground mb-4">
             {t('onboarding.complete.next.title')}
           </h3>
-          <ul className="text-left text-gray-600 dark:text-gray-300 space-y-2">
+          <ul className="text-left text-foreground/80 space-y-2">
             <li>• {t('onboarding.complete.next.steps.findCandidates')}</li>
             <li>• {t('onboarding.complete.next.steps.askQuestions')}</li>
             <li>• {t('onboarding.complete.next.steps.followMoney')}</li>
@@ -1285,8 +1285,8 @@ const BalancedOnboardingFlow: React.FC = () => {
     return (
       <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 dark:from-gray-900 dark:to-gray-800 flex items-center justify-center">
         <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 dark:border-blue-400 mx-auto mb-4" aria-hidden="true" />
-          <p className="text-gray-600 dark:text-gray-300">{t('onboarding.loading')}</p>
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto mb-4" aria-hidden="true" />
+          <p className="text-foreground/80">{t('onboarding.loading')}</p>
         </div>
       </div>
     );

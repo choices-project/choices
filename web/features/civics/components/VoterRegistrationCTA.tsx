@@ -59,21 +59,21 @@ export function VoterRegistrationCTA({
   const additionalInfoUrl = moreInfoUrl ?? homepageUrl;
 
   return (
-    <div className="mt-6 rounded-lg border border-blue-100 bg-blue-50 p-4 shadow-sm">
+    <div className="mt-6 rounded-lg border border-border bg-primary/10 dark:bg-muted p-4 shadow-sm">
       <div className="mb-3 flex items-center justify-between">
         <div>
-          <h3 className="text-base font-semibold text-blue-900">
+          <h3 className="text-base font-semibold text-primary">
             {t('civics.registration.heading', { state: formattedState })}
           </h3>
           {lastVerified && (
-            <p className="text-xs text-blue-700">
+            <p className="text-xs text-primary">
               {t('civics.registration.updated', { date: lastVerified })}
             </p>
           )}
         </div>
         {isLoading && (
-          <Loader2
-            className="h-5 w-5 animate-spin text-blue-600"
+            <Loader2
+            className="h-5 w-5 animate-spin text-primary"
             aria-label={t('civics.registration.loadingAria')}
           />
         )}
@@ -128,7 +128,7 @@ export function VoterRegistrationCTA({
               </Button>
             )}
             {resource.status_check_url && (
-              <Button variant="ghost" asChild className="w-full sm:w-auto text-blue-700 hover:text-blue-800">
+              <Button variant="ghost" asChild className="w-full sm:w-auto text-primary hover:text-primary/90">
                 <a
                   href={resource.status_check_url}
                   target="_blank"
@@ -156,24 +156,24 @@ export function VoterRegistrationCTA({
           </div>
 
           {resource.special_instructions && (
-            <p className="rounded-md bg-white px-3 py-2 text-sm text-blue-900 shadow-sm">
+            <p className="rounded-md bg-card px-3 py-2 text-sm text-primary shadow-sm">
               {resource.special_instructions}
             </p>
           )}
 
           {resource.mailing_address && (
-            <div className="rounded-md bg-white px-3 py-2 shadow-sm">
-              <h4 className="text-sm font-semibold text-blue-900">
+            <div className="rounded-md bg-card px-3 py-2 shadow-sm">
+              <h4 className="text-sm font-semibold text-primary">
                 {t('civics.registration.sections.mailingAddress')}
               </h4>
-              <address className="mt-1 whitespace-pre-wrap text-sm not-italic text-blue-800">
+              <address className="mt-1 whitespace-pre-wrap text-sm not-italic text-primary">
                 {resource.mailing_address}
               </address>
             </div>
           )}
 
           {resource.election_office_name && (
-            <p className="text-sm text-blue-900">
+            <p className="text-sm text-primary">
               {t('civics.registration.sections.electionOffice', {
                 office: resource.election_office_name,
               })}
@@ -181,7 +181,7 @@ export function VoterRegistrationCTA({
           )}
 
           {resource.sources && resource.sources.length > 0 && (
-            <p className="text-xs uppercase tracking-wide text-blue-700">
+            <p className="text-xs uppercase tracking-wide text-primary">
               {t('civics.registration.sections.sources', {
                 sources: resource.sources.map((source) => source.replace(/_/g, ' ')).join(', '),
               })}
@@ -191,13 +191,13 @@ export function VoterRegistrationCTA({
       )}
 
       {!isLoading && !error && !resource && (
-        <div className="rounded-md border border-blue-100 bg-white px-3 py-3 text-sm text-blue-900 shadow-sm">
+        <div className="rounded-md border border-border bg-card px-3 py-3 text-sm text-primary shadow-sm">
           {t('civics.registration.empty.prefix', { state: formattedState })}{' '}
           <a
             href="https://vote.gov"
             target="_blank"
             rel="noopener noreferrer"
-            className="font-medium text-blue-700 underline"
+            className="font-medium text-primary underline"
           >
             {t('civics.registration.empty.voteGov')}
           </a>{' '}

@@ -88,7 +88,7 @@ export default function HashtagIntegrationPage() {
               >
                 Refresh
               </button>
-              <button className="p-2 text-gray-400 hover:text-gray-600">
+              <button className="p-2 text-gray-400 hover:text-gray-600" aria-label="Settings">
                 <Settings className="h-5 w-5" />
               </button>
             </div>

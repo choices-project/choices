@@ -13,6 +13,7 @@ import {
 } from '@/lib/api';
 import { getUser } from '@/lib/core/auth/middleware';
 import { recordIntegrityForVote } from '@/lib/integrity/vote-integrity';
+import { apiRateLimiter } from '@/lib/rate-limiting/api-rate-limiter';
 import { AnalyticsService } from '@/lib/services/analytics';
 import { logger } from '@/lib/utils/logger';
 
@@ -98,6 +99,20 @@ const normalizeOptions = (options: PollOptionRow[]) =>
 
 export const POST = withErrorHandling(async (request: NextRequest, { params }: { params: { id: string } }) => {
   const pollId = params.id;
+
+  const ip = request.headers.get('x-forwarded-for')?.split(',')[0]?.trim()
+    || request.headers.get('x-real-ip')
+    || '127.0.0.1';
+  const ua = request.headers.get('user-agent');
+  const rateLimitOptions: { maxRequests: number; windowMs: number; userAgent?: string } = {
+    maxRequests: 10,
+    windowMs: 60 * 1000,
+  };
+  if (ua) rateLimitOptions.userAgent = ua;
+  const rateLimitResult = await apiRateLimiter.checkLimit(ip, '/api/polls/vote', rateLimitOptions);
+  if (!rateLimitResult.allowed) {
+    return errorResponse('Too many requests. Please try again later.', 429);
+  }
 
   if (!pollId) {
     return validationError({ pollId: 'Poll ID is required' });

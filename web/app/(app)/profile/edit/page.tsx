@@ -7,6 +7,7 @@ import { useCallback, useEffect, useRef } from 'react';
 import { ProfileEdit, useProfileLoadingStates } from '@/features/profile';
 import { useProfile } from '@/features/profile/hooks/use-profile';
 
+import ProfileSubNav from '@/components/shared/ProfileSubNav';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Button } from '@/components/ui/button';
 
@@ -74,12 +75,12 @@ export default function EditProfilePage() {
   if (isLoading) {
     return (
       <div
-        className="min-h-screen bg-gray-50 flex items-center justify-center"
+        className="min-h-screen bg-muted flex items-center justify-center"
         data-testid="profile-edit-loading"
       >
         <div className="flex flex-col items-center space-y-3">
-          <Loader2 className="h-10 w-10 animate-spin text-blue-600" />
-          <p className="text-gray-600">Loading profile...</p>
+          <Loader2 className="h-10 w-10 animate-spin text-primary" />
+          <p className="text-muted-foreground">Loading profile...</p>
         </div>
       </div>
     );
@@ -87,7 +88,7 @@ export default function EditProfilePage() {
 
   if (!profile) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center px-4">
+      <div className="min-h-screen bg-muted flex items-center justify-center px-4">
         <div className="max-w-md w-full space-y-4">
           <Alert variant="destructive">
             <AlertDescription>
@@ -103,8 +104,9 @@ export default function EditProfilePage() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 py-8" data-testid="profile-edit-page">
-      <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
+    <div className="min-h-screen bg-muted py-8" data-testid="profile-edit-page">
+      <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
+        <ProfileSubNav />
         <ProfileEdit
           profile={profile}
           onSave={handleSave}

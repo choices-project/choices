@@ -37,16 +37,7 @@ jest.mock('@/lib/stores/profileStore', () => {
   };
 });
 
-jest.mock('@/components/shared/DashboardNavigation', () => {
-  const DashboardNavigation = () => <div data-testid="dashboard-navigation" />;
-  const MobileDashboardNav = () => <div data-testid="mobile-dashboard-nav" />;
-
-  return {
-    __esModule: true,
-    default: DashboardNavigation,
-    MobileDashboardNav,
-  };
-});
+// DashboardNavigation removed during feed consolidation
 
 jest.mock('@/features/profile/components/MyDataDashboard', () => ({
   __esModule: true,
@@ -65,6 +56,7 @@ jest.mock('next/navigation', () => ({
     push: jest.fn(),
     replace: jest.fn(),
   }),
+  usePathname: () => '/account/privacy',
 }));
 
 const mockedAppStore = jest.requireMock('@/lib/stores/appStore') as {

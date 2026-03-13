@@ -196,4 +196,4 @@ Error and success regions use ARIA for screen readers:
 ## Related Docs
 
 - [WEBAUTHN_SUPABASE_AUDIT](archive/2026-02-docs-consolidation/WEBAUTHN_SUPABASE_AUDIT.md) — RLS, indexes, troubleshooting (archived)
-- [RLS_VERIFICATION_GUIDE](../RLS_VERIFICATION_GUIDE.md) — RLS verification
+- [RLS_VERIFICATION_GUIDE (archived)](./archive/2026-03-consolidation/root/RLS_VERIFICATION_GUIDE.md) — RLS verification

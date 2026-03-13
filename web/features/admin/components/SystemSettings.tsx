@@ -16,10 +16,11 @@ useAdminSystemSettings,
   useAdminLoading,
   useAdminError
 } from '@/lib/stores';
+import type { AdminSystemSettings } from '@/lib/stores/adminStore';
 import logger from '@/lib/utils/logger';
 
 type SystemSettingsProps = {
-  onSettingsUpdate?: (settings: any) => void;
+  onSettingsUpdate?: (settings: AdminSystemSettings) => void;
 }
 
 export default function SystemSettings({ onSettingsUpdate }: SystemSettingsProps) {
@@ -77,7 +78,7 @@ export default function SystemSettings({ onSettingsUpdate }: SystemSettingsProps
     }
   };
 
-  const handleSettingChange = (section: 'general' | 'performance' | 'security' | 'notifications', key: string, value: any) => {
+  const handleSettingChange = (section: 'general' | 'performance' | 'security' | 'notifications', key: string, value: string | number | boolean) => {
     updateSystemSetting(section, key, value);
   };
 

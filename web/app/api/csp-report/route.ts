@@ -13,11 +13,12 @@
 
 import { getSupabaseServerClient } from '@/utils/supabase/server';
 
-import { withErrorHandling, successResponse, validationError, corsPreflightResponse } from '@/lib/api';
+import { withErrorHandling, successResponse, validationError, corsPreflightResponse, errorResponse } from '@/lib/api';
+import { apiRateLimiter } from '@/lib/rate-limiting/api-rate-limiter';
 import { stripUndefinedDeep } from '@/lib/util/clean';
 import { logger } from '@/lib/utils/logger';
 
-import type { NextRequest} from 'next/server';
+import type { NextRequest } from 'next/server';
 
 
 type CSPViolation = {
@@ -37,6 +38,20 @@ type CSPReport = {
 };
 
 export const POST = withErrorHandling(async (request: NextRequest) => {
+  const ip = request.headers.get('x-forwarded-for')?.split(',')[0]?.trim()
+    || request.headers.get('x-real-ip')
+    || '127.0.0.1';
+  const rateLimitOptions: { maxRequests: number; windowMs: number; userAgent?: string } = {
+    maxRequests: 30,
+    windowMs: 60 * 1000,
+  };
+  const ua = request.headers.get('user-agent');
+  if (ua) rateLimitOptions.userAgent = ua;
+  const rateLimitResult = await apiRateLimiter.checkLimit(ip, '/api/csp-report', rateLimitOptions);
+  if (!rateLimitResult.allowed) {
+    return errorResponse('Too many requests. Please try again later.', 429);
+  }
+
   const report: CSPReport = await request.json();
   const violation = report['csp-report'];
   

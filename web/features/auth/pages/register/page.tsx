@@ -1,6 +1,6 @@
 'use client'
 
-import { Shield, Smartphone, Lock } from 'lucide-react'
+import { Eye, EyeOff, Lock, Shield, Smartphone } from 'lucide-react'
 import { useRouter } from 'next/navigation'
 import * as React from 'react'
 
@@ -19,6 +19,8 @@ export default function RegisterPage() {
   const [success, setSuccess] = React.useState(false)
   const [registrationMethod, setRegistrationMethod] = React.useState<'password' | 'passkey'>('passkey')
   const [hydrated, setHydrated] = React.useState(false)
+  const [showPassword, setShowPassword] = React.useState(false)
+  const [showConfirmPassword, setShowConfirmPassword] = React.useState(false)
   const { initializeAuth, setSessionAndDerived } = useUserActions()
 
   const initializeAuthRef = React.useRef(initializeAuth)
@@ -194,20 +196,54 @@ export default function RegisterPage() {
           )}
 
           <div>
-            <label className="block mb-1">Username</label>
-            <input name="username" data-testid="username" required className="input" />
+            <label htmlFor="register-username" className="block mb-1">Username</label>
+            <input id="register-username" name="username" data-testid="username" required className="input" />
           </div>
           <div>
-            <label className="block mb-1">Email</label>
-            <input name="email" type="email" data-testid="email" required className="input" />
+            <label htmlFor="register-email" className="block mb-1">Email</label>
+            <input id="register-email" name="email" type="email" data-testid="email" required className="input" />
           </div>
           <div>
-            <label className="block mb-1">Password</label>
-            <input name="password" type="password" data-testid="password" required className="input" />
+            <label htmlFor="register-password" className="block mb-1">Password</label>
+            <div className="relative">
+              <input
+                id="register-password"
+                name="password"
+                type={showPassword ? 'text' : 'password'}
+                data-testid="password"
+                required
+                className="input pr-10"
+              />
+              <button
+                type="button"
+                onClick={() => setShowPassword(!showPassword)}
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+                aria-label={showPassword ? 'Hide password' : 'Show password'}
+              >
+                {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+              </button>
+            </div>
           </div>
           <div>
-            <label className="block mb-1">Confirm password</label>
-            <input name="confirmPassword" type="password" data-testid="confirm-password" required className="input" />
+            <label htmlFor="register-confirm-password" className="block mb-1">Confirm password</label>
+            <div className="relative">
+              <input
+                id="register-confirm-password"
+                name="confirmPassword"
+                type={showConfirmPassword ? 'text' : 'password'}
+                data-testid="confirm-password"
+                required
+                className="input pr-10"
+              />
+              <button
+                type="button"
+                onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+                aria-label={showConfirmPassword ? 'Hide password' : 'Show password'}
+              >
+                {showConfirmPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+              </button>
+            </div>
           </div>
 
           <button type="submit" data-testid="register-button" className="btn btn-primary">

@@ -15,21 +15,24 @@
 'use client';
 
 import {
-  XMarkIcon,
-  PaperAirplaneIcon,
-  ChatBubbleLeftRightIcon,
-  ClockIcon,
-  CheckCircleIcon,
-  ExclamationTriangleIcon,
-  DocumentTextIcon
-} from '@heroicons/react/24/outline';
+  X,
+  Send,
+  MessageCircle,
+  Clock,
+  CheckCircle2,
+  AlertTriangle,
+  FileText
+} from 'lucide-react';
 import React, { useState, useEffect, useMemo, useCallback, useRef } from 'react';
 
 import { useRepresentativeCtaAnalytics } from '@/features/civics/hooks/useRepresentativeCtaAnalytics';
 import { formatElectionDateStable } from '@/features/civics/utils/civicsCountdownUtils';
 import { useFeatureFlag } from '@/features/pwa/hooks/useFeatureFlags';
 
+import { BottomSheet } from '@/components/shared/BottomSheet';
+
 import { useAccessibleDialog } from '@/lib/accessibility/useAccessibleDialog';
+import { useIsMobile } from '@/lib/hooks/useMediaQuery';
 
 import { useI18n } from '@/hooks/useI18n';
 
@@ -59,6 +62,7 @@ export default function ContactModal({
   userId: _userId
 }: ContactModalProps) {
   const { t, currentLanguage } = useI18n();
+  const isMobile = useIsMobile();
   const [message, setMessage] = useState('');
   const [subject, setSubject] = useState('');
   const [isLoading, setIsLoading] = useState(false);
@@ -256,9 +260,9 @@ export default function ContactModal({
         aria-modal="true"
         aria-labelledby="contact-disabled-title"
       >
-        <div className="bg-white rounded-lg p-6 max-w-md mx-4 text-center space-y-4">
+        <div className="bg-card rounded-lg p-6 max-w-md mx-4 text-center space-y-4">
           <div className="flex items-center justify-center">
-            <ExclamationTriangleIcon className="h-8 w-8 text-yellow-600" aria-hidden="true" />
+            <AlertTriangle className="h-8 w-8 text-yellow-600" aria-hidden="true" />
           </div>
           <h2 id="contact-disabled-title" className="text-yellow-800 font-semibold">
             {t('contact.modal.disabled.title')}
@@ -268,7 +272,7 @@ export default function ContactModal({
           </p>
           <button
             onClick={handleClose}
-            className="mt-2 w-full bg-gray-600 text-white py-2 px-4 rounded-lg hover:bg-gray-700"
+            className="mt-2 w-full bg-muted text-foreground py-2 px-4 rounded-lg hover:bg-muted/90"
             type="button"
           >
             {t('contact.modal.actions.close')}
@@ -278,43 +282,35 @@ export default function ContactModal({
     );
   }
 
-  return (
-    <div
-      className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4"
-      role="dialog"
-      aria-modal="true"
-      aria-labelledby="contact-modal-title"
-      aria-describedby="contact-modal-description"
-      ref={dialogRef}
-    >
-      <div className="bg-white rounded-lg max-w-2xl w-full max-h-[90vh] overflow-hidden">
+  const formContent = (
+    <div className="bg-card rounded-lg max-w-2xl w-full max-h-[90vh] overflow-hidden">
         {/* Header */}
-        <div className="flex items-center justify-between p-6 border-b border-gray-200">
+        <div className="flex items-center justify-between p-6 border-b border-border">
           <div className="flex items-center space-x-3">
-            <ChatBubbleLeftRightIcon className="h-6 w-6 text-blue-600" aria-hidden="true" />
+            <MessageCircle className="h-6 w-6 text-primary" aria-hidden="true" />
             <div>
-              <h2 id="contact-modal-title" className="text-lg font-semibold text-gray-900">
+              <h2 id="contact-modal-title" className="text-lg font-semibold text-foreground">
                 {t('contact.modal.header.title', { name: representative.name })}
               </h2>
-              <p id="contact-modal-description" className="text-sm text-gray-600">
+              <p id="contact-modal-description" className="text-sm text-muted-foreground">
                 {t('contact.modal.header.subtitle', { office: representative.office })}
               </p>
             </div>
           </div>
           <button
             onClick={handleClose}
-            className="text-gray-400 hover:text-gray-600"
+            className="text-muted-foreground hover:text-foreground/80"
             aria-label={t('contact.modal.actions.closeAria')}
             type="button"
           >
-            <XMarkIcon className="h-6 w-6" aria-hidden="true" />
+            <X className="h-6 w-6" aria-hidden="true" />
           </button>
         </div>
 
         {/* Content */}
         <div className="p-6 space-y-6 max-h-[60vh] overflow-y-auto">
           {/* Representative Info */}
-          <div className="flex items-center space-x-4 p-4 bg-gray-50 rounded-lg">
+          <div className="flex items-center space-x-4 p-4 bg-muted rounded-lg">
             {representative.photo ? (
               <img
                 src={representative.photo}
@@ -322,17 +318,17 @@ export default function ContactModal({
                 className="w-12 h-12 rounded-full object-cover"
               />
             ) : (
-              <div className="w-12 h-12 rounded-full bg-gray-300 flex items-center justify-center">
-                <span className="text-sm font-medium text-gray-600">
+              <div className="w-12 h-12 rounded-full bg-muted flex items-center justify-center">
+                <span className="text-sm font-medium text-muted-foreground">
                   {representative.name.split(' ').map(n => n[0]).join('')}
                 </span>
               </div>
             )}
             <div>
-              <h3 className="font-medium text-gray-900">{representative.name}</h3>
-              <p className="text-sm text-gray-600">{representative.office}</p>
+              <h3 className="font-medium text-foreground">{representative.name}</h3>
+              <p className="text-sm text-muted-foreground">{representative.office}</p>
               {representative.party && (
-                <p className="text-xs text-gray-500">{representative.party}</p>
+                <p className="text-xs text-muted-foreground">{representative.party}</p>
               )}
             </div>
           </div>
@@ -340,13 +336,13 @@ export default function ContactModal({
           {representativeElections.length > 0 && (
             <div className="bg-blue-50 border border-blue-100 rounded-lg p-4 text-sm text-blue-800 space-y-2">
               <p className="font-semibold flex items-center gap-2">
-                <ClockIcon className="h-5 w-5 text-blue-500" />
+                <Clock className="h-5 w-5 text-blue-500" />
                 {t('contact.modal.elections.title')}
               </p>
               <ul className="space-y-1 text-blue-700">
                 {representativeElections.slice(0, 3).map((election) => (
                   <li key={election.election_id} className="flex items-center gap-2">
-                    <CheckCircleIcon className="h-4 w-4 text-blue-500" />
+                    <CheckCircle2 className="h-4 w-4 text-blue-500" />
                     <span>
                       <span className="font-medium">{election.name}</span>
                       <span className="ml-1">
@@ -382,12 +378,12 @@ export default function ContactModal({
           <div className="space-y-2">
             <button
               onClick={() => setShowTemplates(!showTemplates)}
-              className="flex items-center space-x-2 px-3 py-2 text-sm text-blue-600 hover:text-blue-700 hover:bg-blue-50 rounded-lg transition-colors"
+              className="flex items-center space-x-2 px-3 py-2 text-sm text-primary hover:text-primary/90 hover:bg-muted rounded-lg transition-colors"
               aria-expanded={showTemplates}
               aria-controls="template-selector"
               type="button"
             >
-              <DocumentTextIcon className="h-4 w-4" aria-hidden="true" />
+              <FileText className="h-4 w-4" aria-hidden="true" />
               <span>
                 {selectedTemplate
                   ? t('contact.modal.templates.toggle.active', { title: selectedTemplate.title })
@@ -398,17 +394,17 @@ export default function ContactModal({
             {showTemplates && (
               <div
                 id="template-selector"
-                className="border border-gray-200 rounded-lg p-4 bg-gray-50 max-h-60 overflow-y-auto"
+                className="border border-border rounded-lg p-4 bg-muted max-h-60 overflow-y-auto"
                 role="listbox"
                 aria-label={t('contact.modal.templates.ariaLabel')}
               >
-                <p className="text-xs font-medium text-gray-700 mb-3">
+                <p className="text-xs font-medium text-foreground/80 mb-3">
                   {t('contact.modal.templates.instructions')}
                 </p>
                 <div className="space-y-2">
                   {Object.entries(templatesByCategory).map(([category, templates]) => (
                     <div key={category}>
-                      <p className="text-xs font-semibold text-gray-500 uppercase mb-1">{category}</p>
+                      <p className="text-xs font-semibold text-muted-foreground uppercase mb-1">{category}</p>
                       {templates.map(template => (
                         <button
                           key={template.id}
@@ -420,15 +416,15 @@ export default function ContactModal({
                               templateTitle: template.title,
                             });
                           }}
-                          className={`w-full text-left px-3 py-2 text-sm rounded hover:bg-white transition-colors ${
-                            selectedTemplate?.id === template.id ? 'bg-blue-100 text-blue-900' : 'text-gray-700'
+                          className={`w-full text-left px-3 py-2 text-sm rounded hover:bg-card transition-colors ${
+                            selectedTemplate?.id === template.id ? 'bg-primary/10 text-primary' : 'text-foreground/80'
                           }`}
                           role="option"
                           aria-selected={selectedTemplate?.id === template.id}
                           type="button"
                         >
                           <div className="font-medium">{template.title}</div>
-                          <div className="text-xs text-gray-500">{template.description}</div>
+                          <div className="text-xs text-muted-foreground">{template.description}</div>
                         </button>
                       ))}
                     </div>
@@ -445,7 +441,7 @@ export default function ContactModal({
                         lastTemplateId,
                       });
                     }}
-                    className="mt-3 text-xs text-gray-600 hover:text-gray-800"
+                    className="mt-3 text-xs text-muted-foreground hover:text-foreground"
                   >
                     {t('contact.modal.templates.clear')}
                   </button>
@@ -462,7 +458,7 @@ export default function ContactModal({
                 <div className="space-y-3">
                   {selectedTemplate.placeholders.map(placeholder => (
                     <div key={placeholder.key}>
-                      <label className="block text-xs font-medium text-gray-700 mb-1">
+                      <label className="block text-xs font-medium text-foreground/80 mb-1">
                         {placeholder.label}
                         {placeholder.required && <span className="text-red-500">*</span>}
                       </label>
@@ -475,7 +471,7 @@ export default function ContactModal({
                           setLocalTemplateValues(prev => ({ ...prev, [placeholder.key]: value }));
                         }}
                         placeholder={placeholder.example}
-                        className="w-full px-2 py-1 text-sm border border-gray-300 rounded focus:ring-1 focus:ring-blue-500 focus:border-blue-500"
+                        className="w-full px-2 py-1 text-sm border border-border rounded focus:ring-1 focus:ring-ring focus:border-primary"
                       />
                     </div>
                   ))}
@@ -494,7 +490,7 @@ export default function ContactModal({
           {/* Message Form */}
           <div className="space-y-4">
             <div>
-              <label htmlFor="subject" className="block text-sm font-medium text-gray-700 mb-2">
+              <label htmlFor="subject" className="block text-sm font-medium text-foreground/80 mb-2">
                 {t('contact.modal.form.subject.label')}
               </label>
               <input
@@ -503,7 +499,7 @@ export default function ContactModal({
                 value={subject}
                 onChange={(e) => setSubject(e.target.value)}
                 placeholder={t('contact.modal.form.subject.placeholder')}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                className="w-full px-3 py-2 border border-border rounded-lg focus:ring-2 focus:ring-ring focus:border-primary"
                 disabled={isLoading || !!filledTemplate}
                 aria-required="true"
                 aria-invalid={error && !subject.trim() ? 'true' : 'false'}
@@ -519,7 +515,7 @@ export default function ContactModal({
             </div>
 
             <div>
-              <label htmlFor="message" className="block text-sm font-medium text-gray-700 mb-2">
+              <label htmlFor="message" className="block text-sm font-medium text-foreground/80 mb-2">
                 {t('contact.modal.form.message.label')}
               </label>
               <textarea
@@ -528,7 +524,7 @@ export default function ContactModal({
                 onChange={(e) => setMessage(e.target.value)}
                 placeholder={t('contact.modal.form.message.placeholder')}
                 rows={6}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                className="w-full px-3 py-2 border border-border rounded-lg focus:ring-2 focus:ring-ring focus:border-primary"
                 disabled={isLoading}
                 aria-required="true"
                 aria-invalid={error && !message.trim() ? 'true' : 'false'}
@@ -541,7 +537,7 @@ export default function ContactModal({
                     {t('contact.modal.form.message.required')}
                   </p>
                 )}
-                <span className={`text-xs ml-auto ${message.length > 9500 ? 'text-red-600' : 'text-gray-500'}`}>
+                <span className={`text-xs ml-auto ${message.length > 9500 ? 'text-red-600' : 'text-muted-foreground'}`}>
                   {t('contact.modal.form.message.count', {
                     current: numberFormatter.format(message.length),
                     max: numberFormatter.format(10000),
@@ -558,7 +554,7 @@ export default function ContactModal({
               role="alert"
               aria-live="polite"
             >
-              <ExclamationTriangleIcon className="h-5 w-5" aria-hidden="true" />
+              <AlertTriangle className="h-5 w-5" aria-hidden="true" />
               <span className="text-sm">{error}</span>
             </div>
           )}
@@ -569,22 +565,22 @@ export default function ContactModal({
               role="alert"
               aria-live="polite"
             >
-              <CheckCircleIcon className="h-5 w-5" aria-hidden="true" />
+              <CheckCircle2 className="h-5 w-5" aria-hidden="true" />
               <span className="text-sm">{t('contact.modal.success')}</span>
             </div>
           )}
         </div>
 
         {/* Footer */}
-        <div className="flex items-center justify-between p-6 border-t border-gray-200 bg-gray-50">
-          <div className="flex items-center space-x-2 text-sm text-gray-500">
-            <ClockIcon className="h-4 w-4" />
+        <div className="flex items-center justify-between p-6 border-t border-border bg-muted">
+          <div className="flex items-center space-x-2 text-sm text-muted-foreground">
+            <Clock className="h-4 w-4" />
           <span>{t('contact.modal.footer.responseTime')}</span>
           </div>
           <div className="flex space-x-3">
             <button
             onClick={handleClose}
-              className="px-4 py-2 text-gray-600 hover:text-gray-800"
+              className="px-4 py-2 text-muted-foreground hover:text-foreground"
               disabled={isLoading}
             >
             {t('common.actions.cancel')}
@@ -592,7 +588,7 @@ export default function ContactModal({
             <button
               onClick={handleSendMessage}
               disabled={isLoading || !message.trim() || !subject.trim()}
-              className="flex items-center space-x-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed"
+              className="flex items-center space-x-2 px-4 py-2 bg-primary text-white rounded-lg hover:bg-primary/90 disabled:opacity-50 disabled:cursor-not-allowed"
             aria-busy={isLoading}
             aria-label={
               isLoading
@@ -607,7 +603,7 @@ export default function ContactModal({
                 </>
               ) : (
                 <>
-                  <PaperAirplaneIcon className="h-4 w-4" aria-hidden="true" />
+                  <Send className="h-4 w-4" aria-hidden="true" />
                 <span>{t('contact.modal.actions.send')}</span>
                 </>
               )}
@@ -615,6 +611,34 @@ export default function ContactModal({
           </div>
         </div>
       </div>
+  );
+
+  if (isMobile) {
+    return (
+      <div
+        ref={dialogRef}
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="contact-modal-title"
+        aria-describedby="contact-modal-description"
+      >
+        <BottomSheet open={isOpen} onClose={handleClose}>
+          {formContent}
+        </BottomSheet>
+      </div>
+    );
+  }
+
+  return (
+    <div
+      className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4"
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="contact-modal-title"
+      aria-describedby="contact-modal-description"
+      ref={dialogRef}
+    >
+      {formContent}
     </div>
   );
 }

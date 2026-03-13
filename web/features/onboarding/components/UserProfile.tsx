@@ -1,14 +1,15 @@
 'use client';
 
 import {
-  MapPinIcon,
-  UserGroupIcon,
-  CheckIcon,
-  PencilIcon
-} from '@heroicons/react/24/outline';
+  MapPin,
+  Users,
+  Check,
+  Pencil
+} from 'lucide-react';
 import Image from 'next/image';
 import React, { useEffect, useRef } from 'react';
 
+import { AVATAR_BLUR_DATA_URL } from '@/lib/constants/image';
 import {
   useUserCurrentAddress,
   useUserCurrentState,
@@ -132,7 +133,7 @@ export default function UserProfile({ onRepresentativesUpdate, onClose }: UserPr
     } catch (error) {
       logger.error('Address update failed:', error);
       setAddressLoadingRef.current(false);
-      alert('Failed to update address. Please try again.');
+      import('sonner').then(({ toast }) => toast.error('Failed to update address. Please try again.'));
     } finally {
       setAddressLoadingRef.current(false);
     }
@@ -157,7 +158,7 @@ export default function UserProfile({ onRepresentativesUpdate, onClose }: UserPr
       setTimeout(() => setSavedSuccessfullyRef.current(false), 3000);
     } catch (error) {
       logger.error('State update failed:', error);
-      alert('Failed to update state. Please try again.');
+      import('sonner').then(({ toast }) => toast.error('Failed to update state. Please try again.'));
     } finally {
       setAddressLoadingRef.current(false);
     }
@@ -172,14 +173,14 @@ export default function UserProfile({ onRepresentativesUpdate, onClose }: UserPr
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-      <div className="bg-white rounded-2xl shadow-2xl max-w-2xl w-full mx-4 max-h-[90vh] overflow-y-auto">
+      <div className="bg-card rounded-2xl shadow-2xl max-w-2xl w-full mx-4 max-h-[90vh] overflow-y-auto">
         {/* Header */}
-        <div className="sticky top-0 bg-white border-b border-gray-200 px-6 py-4 rounded-t-2xl">
+        <div className="sticky top-0 bg-card border-b border-border px-6 py-4 rounded-t-2xl">
           <div className="flex items-center justify-between">
-            <h2 className="text-xl font-bold text-gray-900">Your Profile</h2>
+            <h2 className="text-xl font-bold text-foreground">Your Profile</h2>
             <button
               onClick={onClose}
-              className="text-gray-400 hover:text-gray-600 transition-colors"
+              className="text-muted-foreground hover:text-foreground transition-colors"
             >
               <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
@@ -193,15 +194,15 @@ export default function UserProfile({ onRepresentativesUpdate, onClose }: UserPr
           {/* Success Message */}
           {savedSuccessfully && (
             <div className="bg-green-50 border border-green-200 rounded-lg p-4 flex items-center space-x-3">
-              <CheckIcon className="w-5 h-5 text-green-500" />
+              <Check className="w-5 h-5 text-green-500" />
               <span className="text-green-700 font-medium">Settings saved successfully!</span>
             </div>
           )}
 
           {/* Current Location */}
-          <div className="bg-gray-50 rounded-lg p-4">
-            <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center">
-              <MapPinIcon className="w-5 h-5 mr-2 text-blue-500" />
+          <div className="bg-muted rounded-lg p-4">
+            <h3 className="text-lg font-semibold text-foreground mb-4 flex items-center">
+              <MapPin className="w-5 h-5 mr-2 text-primary" />
               Your Location
             </h3>
 
@@ -209,14 +210,14 @@ export default function UserProfile({ onRepresentativesUpdate, onClose }: UserPr
               <div className="space-y-3">
                 <div className="flex items-center justify-between">
                   <div>
-                    <p className="text-sm text-gray-600">District</p>
-                    <p className="font-medium text-gray-900">{currentAddress}</p>
+                    <p className="text-sm text-muted-foreground">District</p>
+                    <p className="font-medium text-foreground">{currentAddress}</p>
                   </div>
                   <button
                     onClick={() => setShowAddressFormRef.current(true)}
-                    className="p-2 text-blue-600 hover:text-blue-800 transition-colors"
+                    className="p-2 text-primary hover:text-primary/90 transition-colors"
                   >
-                    <PencilIcon className="w-4 h-4" />
+                    <Pencil className="w-4 h-4" />
                   </button>
                 </div>
               </div>
@@ -224,23 +225,23 @@ export default function UserProfile({ onRepresentativesUpdate, onClose }: UserPr
               <div className="space-y-3">
                 <div className="flex items-center justify-between">
                   <div>
-                    <p className="text-sm text-gray-600">State</p>
-                    <p className="font-medium text-gray-900">{currentState}</p>
+                    <p className="text-sm text-muted-foreground">State</p>
+                    <p className="font-medium text-foreground">{currentState}</p>
                   </div>
                   <button
                     onClick={() => setShowAddressFormRef.current(true)}
-                    className="p-2 text-blue-600 hover:text-blue-800 transition-colors"
+                    className="p-2 text-primary hover:text-primary/90 transition-colors"
                   >
-                    <PencilIcon className="w-4 h-4" />
+                    <Pencil className="w-4 h-4" />
                   </button>
                 </div>
               </div>
             ) : (
               <div className="text-center py-4">
-                <p className="text-gray-600 mb-4">No location set</p>
+                <p className="text-muted-foreground mb-4">No location set</p>
                 <button
                   onClick={() => setShowAddressForm(true)}
-                  className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors"
+                  className="bg-primary text-primary-foreground px-4 py-2 rounded-lg hover:bg-primary/90 transition-colors"
                 >
                   Set Your Location
                 </button>
@@ -250,40 +251,42 @@ export default function UserProfile({ onRepresentativesUpdate, onClose }: UserPr
 
           {/* Current Representatives */}
           {representatives.length > 0 && (
-            <div className="bg-gray-50 rounded-lg p-4">
-              <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center">
-                <UserGroupIcon className="w-5 h-5 mr-2 text-green-500" />
+<div className="bg-muted rounded-lg p-4">
+            <h3 className="text-lg font-semibold text-foreground mb-4 flex items-center">
+                <Users className="w-5 h-5 mr-2 text-green-500" />
                 Your Representatives ({representatives.length})
               </h3>
 
               <div className="space-y-3">
                 {representatives.slice(0, 5).map((rep: Representative, index: number) => (
-                  <div key={index} className="flex items-center space-x-3 p-3 bg-white rounded-lg">
+                  <div key={index} className="flex items-center space-x-3 p-3 bg-card rounded-lg">
                     {rep.primary_photo_url ? (
                       <Image
                         src={rep.primary_photo_url}
                         alt={rep.name}
                         width={40}
                         height={40}
+                        placeholder="blur"
+                        blurDataURL={AVATAR_BLUR_DATA_URL}
                         className="w-10 h-10 rounded-full object-cover"
                       />
                     ) : (
-                      <div className="w-10 h-10 rounded-full bg-gray-300 flex items-center justify-center">
-                        <span className="text-sm font-medium text-gray-600">
+                      <div className="w-10 h-10 rounded-full bg-muted flex items-center justify-center">
+                        <span className="text-sm font-medium text-muted-foreground">
                           {rep.name.split(' ').map((n) => n[0]).join('')}
                         </span>
                       </div>
                     )}
                     <div className="flex-1 min-w-0">
-                      <p className="font-medium text-gray-900 truncate">{rep.name}</p>
-                      <p className="text-sm text-gray-600">{rep.office}</p>
+                      <p className="font-medium text-foreground truncate">{rep.name}</p>
+                      <p className="text-sm text-muted-foreground">{rep.office}</p>
                     </div>
                     <span className={`px-2 py-1 rounded-full text-xs font-medium ${
                       rep.party === 'Democratic'
-                        ? 'bg-blue-100 text-blue-800'
+                        ? 'bg-primary/20 text-primary'
                         : rep.party === 'Republican'
                         ? 'bg-red-100 text-red-800'
-                        : 'bg-gray-100 text-gray-800'
+                        : 'bg-muted text-foreground'
                     }`}>
                       {rep.party}
                     </span>
@@ -294,8 +297,8 @@ export default function UserProfile({ onRepresentativesUpdate, onClose }: UserPr
           )}
 
           {/* Quick State Selection */}
-          <div className="bg-gray-50 rounded-lg p-4">
-            <h3 className="text-lg font-semibold text-gray-900 mb-4">Quick State Selection</h3>
+          <div className="bg-muted rounded-lg p-4">
+            <h3 className="text-lg font-semibold text-foreground mb-4">Quick State Selection</h3>
             <div className="grid grid-cols-2 gap-2">
               {['CA', 'NY', 'TX', 'FL', 'IL', 'PA'].map((state) => (
                 <button
@@ -304,8 +307,8 @@ export default function UserProfile({ onRepresentativesUpdate, onClose }: UserPr
                   disabled={addressLoading}
                   className={`p-3 rounded-lg text-center font-medium transition-colors ${
                     currentState === state
-                      ? 'bg-blue-600 text-white'
-                      : 'bg-white text-gray-700 hover:bg-gray-100'
+                      ? 'bg-primary text-primary-foreground'
+                      : 'bg-card text-foreground/80 hover:bg-muted'
                   } ${addressLoading ? 'opacity-50 cursor-not-allowed' : ''}`}
                 >
                   {state}
@@ -324,7 +327,7 @@ export default function UserProfile({ onRepresentativesUpdate, onClose }: UserPr
             </button>
             <button
               onClick={onClose}
-              className="flex-1 bg-blue-600 text-white py-2 px-4 rounded-lg hover:bg-blue-700 transition-colors"
+              className="flex-1 bg-primary text-primary-foreground py-2 px-4 rounded-lg hover:bg-primary/90 transition-colors"
             >
               Done
             </button>
@@ -333,12 +336,12 @@ export default function UserProfile({ onRepresentativesUpdate, onClose }: UserPr
 
         {/* District lookup form — address used only for lookup; never stored */}
         {showAddressForm && (
-          <div className="absolute inset-0 bg-white rounded-2xl p-6">
+          <div className="absolute inset-0 bg-card rounded-2xl p-6">
             <div className="flex items-center justify-between mb-6">
-              <h3 className="text-lg font-semibold text-gray-900">Find your district</h3>
+              <h3 className="text-lg font-semibold text-foreground">Find your district</h3>
               <button
                 onClick={() => setShowAddressFormRef.current(false)}
-                className="text-gray-400 hover:text-gray-600"
+                className="text-muted-foreground hover:text-foreground"
               >
                 <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
@@ -351,15 +354,15 @@ export default function UserProfile({ onRepresentativesUpdate, onClose }: UserPr
               handleAddressUpdateLocal();
             }} className="space-y-4">
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Address <span className="text-gray-500 font-normal">(used only to look up district; not stored)</span>
+                <label className="block text-sm font-medium text-foreground/80 mb-2">
+                  Address <span className="text-muted-foreground font-normal">(used only to look up district; not stored)</span>
                 </label>
                 <input
                   type="text"
                   value={newAddress}
                   onChange={(e) => setNewAddressRef.current(e.target.value)}
                   placeholder="123 Main St, City, State 12345"
-                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  className="w-full px-4 py-3 border border-border rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent"
                   required
                 />
               </div>
@@ -368,7 +371,7 @@ export default function UserProfile({ onRepresentativesUpdate, onClose }: UserPr
                 <button
                   type="submit"
                   disabled={addressLoading}
-                  className="flex-1 bg-blue-600 text-white py-3 px-4 rounded-lg hover:bg-blue-700 disabled:opacity-50 transition-colors"
+                  className="flex-1 bg-primary text-primary-foreground py-3 px-4 rounded-lg hover:bg-primary/90 disabled:opacity-50 transition-colors"
                 >
                   {addressLoading ? 'Looking up...' : 'Find district'}
                 </button>
@@ -376,7 +379,7 @@ export default function UserProfile({ onRepresentativesUpdate, onClose }: UserPr
                 <button
                   type="button"
                   onClick={() => setShowAddressFormRef.current(false)}
-                  className="px-4 py-3 text-gray-600 hover:text-gray-800 transition-colors"
+                  className="px-4 py-3 text-muted-foreground hover:text-foreground transition-colors"
                 >
                   Cancel
                 </button>

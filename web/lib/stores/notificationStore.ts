@@ -68,6 +68,7 @@ export type NotificationActions = Pick<BaseStore, 'setLoading' | 'setError' | 'c
 
   updateSettings: (settings: Partial<NotificationSettings>) => void;
   resetSettings: () => void;
+  resetNotificationState: () => void;
 
   setAdding: (adding: boolean) => void;
   setRemoving: (removing: boolean) => void;
@@ -608,6 +609,12 @@ export const createNotificationActions = (
       logger.info('Notification settings reset to defaults');
     },
 
+    resetNotificationState: () => {
+      get().clearAll();
+      get().clearAllAdminNotifications();
+      logger.info('Notification store reset for sign out');
+    },
+
     setAdding: (adding) => {
       setState((state) => {
         state.isAdding = adding;
@@ -693,6 +700,7 @@ const selectNotificationActions = (state: NotificationStore) => ({
   clearAdminNotificationsByType: state.clearAdminNotificationsByType,
   updateSettings: state.updateSettings,
   resetSettings: state.resetSettings,
+  resetNotificationState: state.resetNotificationState,
   setAdding: state.setAdding,
   setRemoving: state.setRemoving,
   getNotification: state.getNotification,

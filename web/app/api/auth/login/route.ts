@@ -15,6 +15,11 @@ import {
 import { apiRateLimiter } from '@/lib/rate-limiting/api-rate-limiter'
 import { logger } from '@/lib/utils/logger'
 
+import {
+  validateCsrfProtection,
+  createCsrfErrorResponse,
+} from '../_shared';
+
 import type { Database } from '@/utils/supabase/types'
 import type { NextRequest} from 'next/server';
 
@@ -30,8 +35,10 @@ const loginSchema = z.object({
 type LoginRequestBody = z.infer<typeof loginSchema>;
 
 export const POST = withErrorHandling(async (request: NextRequest): Promise<NextResponse> => {
-    // CSRF protection is handled by Next.js middleware in production
-    // For now, we'll skip CSRF validation in test environment
+    // Validate CSRF protection for state-changing operation
+    if (!(await validateCsrfProtection(request))) {
+      return createCsrfErrorResponse()
+    }
 
     // Rate limiting: 10 login attempts per 15 minutes per IP.
     // To avoid blocking real users while we refine the UX, this is gated behind

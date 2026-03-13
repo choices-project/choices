@@ -136,8 +136,8 @@ export const FeedbackList: React.FC<FeedbackListProps> = ({
     switch (sentiment) {
       case 'positive': return <Smile className="w-4 h-4 text-green-600 dark:text-green-400" />;
       case 'negative': return <Frown className="w-4 h-4 text-red-600 dark:text-red-400" />;
-      case 'neutral': return <Meh className="w-4 h-4 text-gray-600 dark:text-gray-400" />;
-      default: return <Meh className="w-4 h-4 text-gray-600 dark:text-gray-400" />;
+      case 'neutral': return <Meh className="w-4 h-4 text-muted-foreground" />;
+      default: return <Meh className="w-4 h-4 text-muted-foreground" />;
     }
   };
 
@@ -193,40 +193,40 @@ export const FeedbackList: React.FC<FeedbackListProps> = ({
           className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 dark:border-blue-400 mx-auto"
           aria-hidden="true"
         />
-        <p className="text-gray-600 dark:text-gray-400 mt-2">Loading feedback...</p>
+        <p className="text-muted-foreground mt-2">Loading feedback...</p>
       </div>
     );
   }
 
   return (
     <div className="overflow-x-auto" data-testid="feedback-list-container">
-      <table className="min-w-full divide-y divide-gray-200 dark:divide-gray-700" data-testid="feedback-table">
-        <thead className="bg-gray-50 dark:bg-gray-800">
+      <table className="min-w-full divide-y divide-border" data-testid="feedback-table">
+        <thead className="bg-muted">
           <tr>
-            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+            <th className="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">
               Feedback
             </th>
-            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+            <th className="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">
               Type
             </th>
-            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+            <th className="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">
               Status
             </th>
-            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+            <th className="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">
               Priority
             </th>
-            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+            <th className="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">
               Sentiment
             </th>
-            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+            <th className="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">
               Created
             </th>
-            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+            <th className="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">
               Actions
             </th>
           </tr>
         </thead>
-        <tbody className="bg-white dark:bg-gray-900 divide-y divide-gray-200 dark:divide-gray-700">
+        <tbody className="bg-background divide-y divide-border">
           {feedback.length === 0 ? (
             <tr>
               <td colSpan={7} className="px-6 py-12">
@@ -236,8 +236,8 @@ export const FeedbackList: React.FC<FeedbackListProps> = ({
                   aria-label="No feedback"
                 >
                   <MessageSquare className="w-12 h-12 text-gray-400 dark:text-gray-500 mx-auto mb-4" aria-hidden="true" />
-                  <h2 className="text-lg font-medium text-gray-900 dark:text-gray-100 mb-2">No feedback found</h2>
-                  <p className="text-gray-600 dark:text-gray-400 mb-4">
+                  <h2 className="text-lg font-medium text-foreground mb-2">No feedback found</h2>
+                  <p className="text-muted-foreground mb-4">
                     {hasActiveFilters
                       ? 'No feedback submissions match your current filters.'
                       : 'No feedback has been submitted yet.'}
@@ -247,7 +247,7 @@ export const FeedbackList: React.FC<FeedbackListProps> = ({
                       <Button
                         variant="default"
                         onClick={onClearFilters}
-                        className="bg-blue-600 text-white hover:bg-blue-700 dark:bg-blue-500 dark:hover:bg-blue-600"
+                        className="bg-primary text-white hover:bg-primary/90"
                       >
                         Clear filters
                       </Button>
@@ -255,7 +255,7 @@ export const FeedbackList: React.FC<FeedbackListProps> = ({
                       <Button
                         variant="default"
                         onClick={onRetry}
-                        className="bg-blue-600 text-white hover:bg-blue-700 dark:bg-blue-500 dark:hover:bg-blue-600"
+                        className="bg-primary text-white hover:bg-primary/90"
                       >
                         Refresh
                       </Button>
@@ -266,17 +266,17 @@ export const FeedbackList: React.FC<FeedbackListProps> = ({
             </tr>
           ) : (
             feedback.map((item) => (
-              <tr key={item.id} className="hover:bg-gray-50 dark:hover:bg-gray-800">
+              <tr key={item.id} className="hover:bg-muted">
               <td className="px-6 py-4">
                 <div className="flex items-start space-x-3">
                   <div className={`p-2 rounded-lg ${getTypeColor(item.type)}`}>
                     {getTypeIcon(item.type)}
                   </div>
                   <div className="flex-1 min-w-0">
-                    <p className="text-sm font-medium text-gray-900 dark:text-gray-100 truncate">
+                    <p className="text-sm font-medium text-foreground truncate">
                       {item.title}
                     </p>
-                    <p className="text-sm text-gray-500 dark:text-gray-400 truncate">
+                    <p className="text-sm text-muted-foreground truncate">
                       {truncateText(item.description, 80)}
                     </p>
                     {item.tags && item.tags.length > 0 && (
@@ -326,10 +326,10 @@ export const FeedbackList: React.FC<FeedbackListProps> = ({
               <td className="px-6 py-4 whitespace-nowrap">
                 <div className="flex items-center space-x-2">
                   {getSentimentIcon(item.sentiment)}
-                  <span className="text-sm text-gray-900 dark:text-gray-100 capitalize">{item.sentiment}</span>
+                  <span className="text-sm text-foreground capitalize">{item.sentiment}</span>
                 </div>
               </td>
-              <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">
+              <td className="px-6 py-4 whitespace-nowrap text-sm text-muted-foreground">
                 <div className="flex items-center space-x-2">
                   <Calendar className="w-4 h-4" />
                   <span>{formatDate(item.createdat)}</span>

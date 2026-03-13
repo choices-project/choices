@@ -82,9 +82,7 @@ export async function getSupabaseApiRouteClient(
       try {
         // Determine production status
         const isProduction = process.env.NODE_ENV === 'production'
-        const hostname = request.headers.get('host') || ''
-        const isProductionDomain = hostname.includes('choices-app.com')
-        const requireSecure = isProduction && isProductionDomain
+        const requireSecure = isProduction
 
         // Extract cookie options with secure defaults
         // For auth cookies, always use secure defaults if not explicitly provided
@@ -134,7 +132,6 @@ export async function getSupabaseApiRouteClient(
             secure: cookieOptions.secure,
             path: cookieOptions.path,
             isProduction,
-            isProductionDomain,
             requireSecure,
             optionsReceived: {
               httpOnly: typeof options.httpOnly === 'boolean' ? options.httpOnly : 'not provided',

@@ -16,14 +16,16 @@
 'use client';
 
 import {
-  ChatBubbleLeftRightIcon,
-  ClockIcon,
-  CheckCircleIcon,
-  ExclamationTriangleIcon,
-  UserIcon,
-  EnvelopeIcon,
-} from '@heroicons/react/24/outline';
+  MessageCircle,
+  Clock,
+  CheckCircle2,
+  AlertTriangle,
+  User,
+  Mail,
+} from 'lucide-react';
+import Image from 'next/image';
 import React, { useMemo, useEffect, useState } from 'react';
+
 
 import {
   trackCivicsRepresentativeEvent,
@@ -33,6 +35,7 @@ import { useElectionCountdown, formatElectionDateStable } from '@/features/civic
 import { getRepresentativeDivisionIds } from '@/features/civics/utils/divisions';
 import { useFeatureFlag } from '@/features/pwa/hooks/useFeatureFlags';
 
+import { AVATAR_BLUR_DATA_URL } from '@/lib/constants/image';
 import {
   useAnalyticsActions,
   useContactActions,
@@ -165,9 +168,9 @@ export default function ContactRepresentativesSection({
 
   if (!contactSystemEnabled) {
     return (
-      <div className={`bg-yellow-50 border border-yellow-200 rounded-lg p-6 ${className}`}>
+      <div className={`bg-yellow-50 dark:bg-gray-700 border border-yellow-200 dark:border-gray-600 rounded-lg p-6 ${className}`}>
         <div className="flex items-center justify-center mb-4">
-          <ExclamationTriangleIcon className="h-8 w-8 text-yellow-600" />
+          <AlertTriangle className="h-8 w-8 text-yellow-600" />
         </div>
         <p className="text-yellow-800 text-center">
           {t('contact.representatives.featureDisabled')}
@@ -178,11 +181,11 @@ export default function ContactRepresentativesSection({
 
   if (!user) {
     return (
-      <div className={`bg-gray-50 border border-gray-200 rounded-lg p-6 ${className}`}>
+      <div className={`bg-muted border border-border rounded-lg p-6 ${className}`}>
         <div className="flex items-center justify-center mb-4">
-          <UserIcon className="h-8 w-8 text-gray-400" />
+          <User className="h-8 w-8 text-muted-foreground" />
         </div>
-        <p className="text-gray-600 text-center">
+        <p className="text-muted-foreground text-center">
           {t('contact.representatives.authRequired')}
         </p>
       </div>
@@ -194,15 +197,15 @@ export default function ContactRepresentativesSection({
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h2 className="text-xl font-semibold text-gray-900 flex items-center">
-            <ChatBubbleLeftRightIcon className="h-6 w-6 mr-2 text-blue-600" />
+          <h2 className="text-xl font-semibold text-foreground flex items-center">
+            <MessageCircle className="h-6 w-6 mr-2 text-primary" />
             {t('contact.representatives.header.title')}
           </h2>
-          <p className="text-sm text-gray-600 mt-1">
+          <p className="text-sm text-muted-foreground mt-1">
             {t('contact.representatives.header.subtitle')}
           </p>
         </div>
-        <div className="text-sm text-gray-500">
+        <div className="text-sm text-muted-foreground">
           {representativeCountLabel}
         </div>
       </div>
@@ -210,7 +213,7 @@ export default function ContactRepresentativesSection({
       {/* Upcoming Elections Context */}
       {upcomingElections.length > 0 && (
         <div className="bg-blue-50 border border-blue-100 rounded-lg p-3 text-sm text-blue-800 flex items-start space-x-3">
-          <ClockIcon className="h-5 w-5 flex-shrink-0 mt-0.5" />
+          <Clock className="h-5 w-5 flex-shrink-0 mt-0.5" />
           <div>
             <p className="font-medium">
               {t('contact.representatives.elections.title')}
@@ -218,7 +221,7 @@ export default function ContactRepresentativesSection({
             <ul className="mt-1 space-y-1">
               {upcomingElections.slice(0, 3).map((election) => (
                 <li key={election.election_id} className="flex items-center space-x-2">
-                  <CheckCircleIcon className="h-4 w-4 text-blue-500" />
+                  <CheckCircle2 className="h-4 w-4 text-blue-500" />
                   <span className="flex flex-wrap gap-1">
                     <span className="font-medium">{election.name}</span>
                     <span className="ml-1 text-blue-700">
@@ -259,18 +262,22 @@ export default function ContactRepresentativesSection({
           return (
             <div
               key={rep.id}
-              className="bg-white border border-gray-200 rounded-lg p-4 hover:shadow-md transition-shadow"
+              className="bg-card border border-border rounded-lg p-4 hover:shadow-md transition-shadow"
             >
               <div className="flex items-start space-x-3">
                 {photoUrl ? (
-                  <img
+                  <Image
                     src={photoUrl}
                     alt={rep.name}
+                    width={48}
+                    height={48}
+                    placeholder="blur"
+                    blurDataURL={AVATAR_BLUR_DATA_URL}
                     className="w-12 h-12 rounded-full object-cover"
                   />
                 ) : (
-                  <div className="w-12 h-12 rounded-full bg-gray-300 flex items-center justify-center">
-                    <span className="text-sm font-medium text-gray-600">
+                  <div className="w-12 h-12 rounded-full bg-muted flex items-center justify-center">
+                    <span className="text-sm font-medium text-muted-foreground">
                       {rep.name
                         .split(' ')
                         .map((n) => n[0])
@@ -280,19 +287,19 @@ export default function ContactRepresentativesSection({
                 )}
 
                 <div className="flex-1 min-w-0">
-                  <h3 className="font-medium text-gray-900 truncate">{rep.name}</h3>
-                  <p className="text-sm text-gray-600">{rep.office}</p>
+                  <h3 className="font-medium text-foreground truncate">{rep.name}</h3>
+                  <p className="text-sm text-muted-foreground">{rep.office}</p>
                   {rep.district && (
-                    <p className="text-xs text-gray-500">{rep.district}</p>
+                    <p className="text-xs text-muted-foreground">{rep.district}</p>
                   )}
                   {rep.party && (
                     <span
                       className={`inline-block px-2 py-1 rounded-full text-xs font-medium mt-1 ${
                         rep.party === 'Democratic'
-                          ? 'bg-blue-100 text-blue-800'
+                          ? 'bg-blue-100 dark:bg-gray-700 text-blue-800'
                           : rep.party === 'Republican'
-                          ? 'bg-red-100 text-red-800'
-                          : 'bg-gray-100 text-gray-800'
+                          ? 'bg-red-100 dark:bg-gray-700 text-red-800'
+                          : 'bg-muted text-foreground'
                       }`}
                     >
                       {rep.party}
@@ -302,9 +309,9 @@ export default function ContactRepresentativesSection({
 
                 <button
                   onClick={() => handleContactRepresentative(rep)}
-                  className="flex items-center space-x-1 px-3 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors text-sm"
+                  className="flex items-center space-x-1 px-3 py-2 bg-primary text-white rounded-lg hover:bg-primary/90 transition-colors text-sm"
                 >
-                  <EnvelopeIcon className="h-4 w-4" />
+                  <Mail className="h-4 w-4" />
                   <span>{t('contact.representatives.actions.message')}</span>
                 </button>
               </div>
@@ -315,32 +322,32 @@ export default function ContactRepresentativesSection({
 
       {/* Recent Messages */}
       {threadsLoading && recentThreads.length === 0 && (
-        <div className="bg-white border border-gray-200 rounded-lg p-4 text-sm text-gray-500">
+        <div className="bg-card border border-border rounded-lg p-4 text-sm text-muted-foreground">
           {t('contact.representatives.threads.loading')}
         </div>
       )}
       {recentThreads.length > 0 && (
-        <div className="bg-white border border-gray-200 rounded-lg p-4">
-          <h3 className="font-medium text-gray-900 mb-3 flex items-center">
-            <ClockIcon className="h-5 w-5 mr-2 text-gray-400" />
+        <div className="bg-card border border-border rounded-lg p-4">
+          <h3 className="font-medium text-foreground mb-3 flex items-center">
+            <Clock className="h-5 w-5 mr-2 text-muted-foreground" />
             {t('contact.representatives.threads.title')}
           </h3>
           <div className="space-y-2">
             {recentThreads.map((thread) => (
-              <div key={thread.id} className="flex items-center justify-between p-2 bg-gray-50 rounded">
+              <div key={thread.id} className="flex items-center justify-between p-2 bg-muted rounded">
                 <div className="flex-1 min-w-0">
-                  <p className="text-sm font-medium text-gray-900 truncate">
+                  <p className="text-sm font-medium text-foreground truncate">
                     {thread.subject}
                   </p>
-                  <p className="text-xs text-gray-500">
+                  <p className="text-xs text-muted-foreground">
                     {t('contact.representatives.threads.count', {
                       count: thread.messageCount,
                       formattedCount: numberFormatter.format(thread.messageCount),
                     })}
                   </p>
                 </div>
-                <div className="flex items-center space-x-2 text-xs text-gray-500">
-                  <CheckCircleIcon className="h-4 w-4 text-green-500" />
+                <div className="flex items-center space-x-2 text-xs text-muted-foreground">
+                  <CheckCircle2 className="h-4 w-4 text-green-500" />
                   <span>
                     {thread.lastMessageAt
                       ? lastMessageFormatter.format(new Date(thread.lastMessageAt))

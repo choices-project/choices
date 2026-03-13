@@ -297,6 +297,23 @@ const createInitialHashtagState = (
 });
 
 // -----------------------------------------------------------------------------
+// Request deduplication
+// -----------------------------------------------------------------------------
+
+const inflightRequests = new Map<string, Promise<void>>();
+
+function dedup(key: string, fn: () => Promise<void>): Promise<void> {
+  const existing = inflightRequests.get(key);
+  if (existing) return existing;
+
+  const promise = fn().finally(() => {
+    inflightRequests.delete(key);
+  });
+  inflightRequests.set(key, promise);
+  return promise;
+}
+
+// -----------------------------------------------------------------------------
 // Actions
 // -----------------------------------------------------------------------------
 
@@ -368,28 +385,25 @@ const createHashtagActions = (
       }
     },
     getTrendingHashtags: async (category, limit) => {
-      // Don't set loading state for hashtags - they're optional enhancement
-      // and setting loading/error states can trigger unnecessary re-renders
+      const key = `trending:${category ?? 'all'}:${limit ?? 20}`;
+      return dedup(key, async () => {
+        try {
+          const { getTrendingHashtags: getTrendingService } = await import(
+            '@/features/hashtags/lib/hashtag-service'
+          );
+          const result = await getTrendingService(category, limit);
 
-      try {
-        const { getTrendingHashtags: getTrendingService } = await import(
-          '@/features/hashtags/lib/hashtag-service'
-        );
-        const result = await getTrendingService(category, limit);
-
-        if (result.success && result.data) {
-          setState((state) => {
-            state.trendingHashtags = result.data ?? [];
-          });
-        } else {
-          // Silently fail - hashtags are optional, don't set error state
-          logger.warn('Failed to fetch trending hashtags:', result.error);
+          if (result.success && result.data) {
+            setState((state) => {
+              state.trendingHashtags = result.data ?? [];
+            });
+          } else {
+            logger.warn('Failed to fetch trending hashtags:', result.error);
+          }
+        } catch (error) {
+          logger.warn('Failed to fetch trending hashtags:', error);
         }
-      } catch (error) {
-        // Silently fail - hashtags are optional, don't set error state
-        logger.warn('Failed to fetch trending hashtags:', error);
-      }
-      // No finally block needed - we're not managing loading state for hashtags
+      });
     },
     getSuggestions: async (input, context) => {
       try {
@@ -540,33 +554,35 @@ const createHashtagActions = (
       }
     },
     getUserHashtags: async () => {
-      baseActions.clearError();
-      baseActions.setLoading(true);
+      return dedup('userHashtags', async () => {
+        baseActions.clearError();
+        baseActions.setLoading(true);
 
-      try {
-        const { getUserHashtags: getUserHashtagsService } = await import(
-          '@/features/hashtags/lib/hashtag-service'
-        );
-        const result = await getUserHashtagsService();
+        try {
+          const { getUserHashtags: getUserHashtagsService } = await import(
+            '@/features/hashtags/lib/hashtag-service'
+          );
+          const result = await getUserHashtagsService();
 
-        if (result.success && result.data) {
-          setState((state) => {
-            state.userHashtags = result.data ?? [];
-            state.followedHashtags = (result.data ?? []).map((uh) => uh.hashtag_id);
-            state.primaryHashtags = (result.data ?? [])
-              .filter((uh) => uh.is_primary)
-              .map((uh) => uh.hashtag_id);
-          });
-        } else {
-          baseActions.setError(result.error ?? 'Failed to fetch user hashtags');
+          if (result.success && result.data) {
+            setState((state) => {
+              state.userHashtags = result.data ?? [];
+              state.followedHashtags = (result.data ?? []).map((uh) => uh.hashtag_id);
+              state.primaryHashtags = (result.data ?? [])
+                .filter((uh) => uh.is_primary)
+                .map((uh) => uh.hashtag_id);
+            });
+          } else {
+            baseActions.setError(result.error ?? 'Failed to fetch user hashtags');
+          }
+        } catch (error) {
+          const errorMessage =
+            error instanceof Error ? error.message : 'Failed to fetch user hashtags';
+          baseActions.setError(errorMessage);
+        } finally {
+          baseActions.setLoading(false);
         }
-      } catch (error) {
-        const errorMessage =
-          error instanceof Error ? error.message : 'Failed to fetch user hashtags';
-        baseActions.setError(errorMessage);
-      } finally {
-        baseActions.setLoading(false);
-      }
+      });
     },
     setPrimaryHashtags: (hashtagIds) =>
       setState((state) => {

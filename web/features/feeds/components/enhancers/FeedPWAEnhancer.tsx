@@ -19,11 +19,11 @@ import React, { useEffect, useState, useCallback } from 'react';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Button } from '@/components/ui/button';
 
-import { usePWAOffline } from '@/lib/stores/pwaStore';
 import logger from '@/lib/utils/logger';
 
 type FeedPWAEnhancerProps = {
   children: React.ReactNode;
+  /** @deprecated Offline indicator is now global in layout */
   enableOfflineIndicator?: boolean;
   enableInstallPrompt?: boolean;
   enablePushNotifications?: boolean;
@@ -35,19 +35,16 @@ type FeedPWAEnhancerProps = {
  */
 export default function FeedPWAEnhancer({
   children,
-  enableOfflineIndicator = true,
+  enableOfflineIndicator: _enableOfflineIndicator = true,
   enableInstallPrompt = false,
   enablePushNotifications: _enablePushNotifications = false
 }: FeedPWAEnhancerProps) {
   const [isClient, setIsClient] = useState(false);
   const [showInstallPrompt, setShowInstallPrompt] = useState(false);
-  
-  // Get PWA state
-  const offline = usePWAOffline();
-  const isOnline = offline.isOnline;
   // Check if app is installed (running in standalone mode)
-  const isInstalled = typeof window !== 'undefined' && 
-    window.matchMedia && 
+  const isInstalled =
+    typeof window !== 'undefined' &&
+    window.matchMedia &&
     window.matchMedia('(display-mode: standalone)').matches;
   
   // Client-side only
@@ -93,15 +90,7 @@ export default function FeedPWAEnhancer({
 
   return (
     <div className="relative">
-      {/* Offline Indicator */}
-      {enableOfflineIndicator && !isOnline && (
-        <Alert className="mb-4 bg-amber-50 border-amber-200">
-          <AlertDescription className="flex items-center gap-2">
-            <span className="text-amber-600">⚠️</span>
-            <span>You&rsquo;re offline. Some features may be unavailable.</span>
-          </AlertDescription>
-        </Alert>
-      )}
+      {/* Offline indicator: global banner from layout handles offline state */}
 
       {/* Install Prompt */}
       {enableInstallPrompt && showInstallPrompt && !isInstalled && (

@@ -1,7 +1,7 @@
 'use client'
 
 
-import { motion } from 'framer-motion';
+import { motion, useReducedMotion } from 'framer-motion';
 import { 
   Vote, Users, BarChart3, Shield, 
   Star, Crown, CheckCircle, ArrowRight,
@@ -30,8 +30,12 @@ import type { Tier, TierSystemProps } from '../types';
  * @returns {JSX.Element} Trust level system interface
  */
 export function TierSystem({ tiers, currentTier = 0 }: TierSystemProps) {
+  const shouldReduceMotion = useReducedMotion()
   const [showComparison, setShowComparison] = useState(false)
   const [showAnalytics, setShowAnalytics] = useState(false)
+  const anim = (delay = 0) => shouldReduceMotion
+    ? {}
+    : { initial: { opacity: 0, y: 20 }, animate: { opacity: 1, y: 0 }, transition: { delay } };
 
   return (
     <div className="bg-white rounded-2xl p-8 shadow-lg border border-gray-100">
@@ -39,17 +43,13 @@ export function TierSystem({ tiers, currentTier = 0 }: TierSystemProps) {
       <div className="text-center mb-12">
         <motion.h2 
           className="text-3xl font-bold text-gray-900 mb-4"
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.5 }}
+          {...anim(0)}
         >
           Your Trust Level & Permissions
         </motion.h2>
         <motion.p 
           className="text-lg text-gray-600 max-w-3xl mx-auto mb-6"
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.5, delay: 0.1 }}
+          {...anim(0.1)}
         >
           Higher verification levels unlock more features while maintaining your privacy. 
           Your data stays protected at every level.
@@ -84,10 +84,8 @@ export function TierSystem({ tiers, currentTier = 0 }: TierSystemProps) {
                 ? 'border-blue-500 bg-blue-50' 
                 : 'border-gray-200 hover:border-gray-300'
             } ${currentTier >= tier.level ? 'ring-2 ring-green-500' : ''}`}
-            initial={{ opacity: 0, y: 30 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.5, delay: index * 0.1 }}
-            whileHover={{ y: -5 }}
+            {...anim(index * 0.1)}
+            {...(!shouldReduceMotion ? { whileHover: { y: -5 } } : {})}
           >
             {/* Popular Badge */}
             {tier.popular && (
@@ -132,9 +130,7 @@ export function TierSystem({ tiers, currentTier = 0 }: TierSystemProps) {
                 <motion.div
                   key={featureIndex}
                   className="flex items-center gap-3"
-                  initial={{ opacity: 0, x: -20 }}
-                  animate={{ opacity: 1, x: 0 }}
-                  transition={{ delay: index * 0.1 + featureIndex * 0.05 }}
+                  {...(shouldReduceMotion ? {} : { initial: { opacity: 0, x: -20 }, animate: { opacity: 1, x: 0 }, transition: { delay: index * 0.1 + featureIndex * 0.05 } })}
                 >
                   {currentTier >= tier.level ? (
                     <CheckCircle className="h-5 w-5 text-green-600 flex-shrink-0" />
@@ -165,8 +161,7 @@ export function TierSystem({ tiers, currentTier = 0 }: TierSystemProps) {
                   : 'bg-gray-900 text-white hover:bg-gray-800'
               }`}
               disabled={currentTier > tier.level}
-              whileHover={currentTier <= tier.level ? { scale: 1.02 } : {}}
-              whileTap={currentTier <= tier.level ? { scale: 0.98 } : {}}
+              {...(!shouldReduceMotion && currentTier <= tier.level ? { whileHover: { scale: 1.02 }, whileTap: { scale: 0.98 } } : {})}
             >
               {currentTier === tier.level ? (
                 <>
@@ -193,9 +188,7 @@ export function TierSystem({ tiers, currentTier = 0 }: TierSystemProps) {
       {showComparison && (
         <motion.div
           className="mb-8 p-6 bg-gray-50 rounded-xl border border-gray-200"
-          initial={{ opacity: 0, height: 0 }}
-          animate={{ opacity: 1, height: 'auto' }}
-          exit={{ opacity: 0, height: 0 }}
+          {...(shouldReduceMotion ? {} : { initial: { opacity: 0, height: 0 }, animate: { opacity: 1, height: 'auto' }, exit: { opacity: 0, height: 0 } })}
         >
           <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center gap-2">
             <BarChart3 className="w-5 h-5" />
@@ -223,9 +216,7 @@ export function TierSystem({ tiers, currentTier = 0 }: TierSystemProps) {
       {showAnalytics && (
         <motion.div
           className="mb-8 p-6 bg-blue-50 rounded-xl border border-blue-200"
-          initial={{ opacity: 0, height: 0 }}
-          animate={{ opacity: 1, height: 'auto' }}
-          exit={{ opacity: 0, height: 0 }}
+          {...(shouldReduceMotion ? {} : { initial: { opacity: 0, height: 0 }, animate: { opacity: 1, height: 'auto' }, exit: { opacity: 0, height: 0 } })}
         >
           <h3 className="text-lg font-semibold text-blue-900 mb-4 flex items-center gap-2">
             <Shield className="w-5 h-5" />
@@ -251,9 +242,7 @@ export function TierSystem({ tiers, currentTier = 0 }: TierSystemProps) {
       {/* Trust Message */}
       <motion.div
         className="text-center p-6 bg-gray-50 rounded-xl border border-gray-200"
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.5, delay: 0.8 }}
+        {...anim(0.8)}
       >
         <div className="flex items-center justify-center gap-2 mb-2">
           <Shield className="h-5 w-5 text-green-600" />

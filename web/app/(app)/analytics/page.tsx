@@ -1,18 +1,20 @@
 'use client';
 
 import {
+  Activity,
   BarChart3,
+  Brain,
+  RefreshCw,
+  Shield,
   TrendingUp,
   Users,
-  Activity,
-  RefreshCw,
   Zap,
-  Shield,
-  Brain
 } from 'lucide-react';
 import React, { useState, useEffect } from 'react';
 
 import { EnhancedErrorDisplay } from '@/components/shared/EnhancedErrorDisplay';
+import { AnalyticsSkeleton } from '@/components/shared/Skeletons';
+import { Button } from '@/components/ui/button';
 
 import {
   useAnalyticsDashboard,
@@ -195,15 +197,15 @@ export default function AnalyticsPage() {
 
   if (!analyticsEnabled) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 flex items-center justify-center">
+      <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 dark:from-gray-900 dark:to-gray-800 flex items-center justify-center">
         <div className="text-center max-w-md mx-auto p-8">
-          <Shield className="h-16 w-16 text-gray-400 mx-auto mb-4" />
-          <h1 className="text-2xl font-bold text-gray-900 mb-2">Analytics Disabled</h1>
-          <p className="text-gray-600 mb-4">
+          <Shield className="h-16 w-16 text-muted-foreground mx-auto mb-4" />
+          <h1 className="text-2xl font-bold text-foreground mb-2">Analytics Disabled</h1>
+          <p className="text-muted-foreground mb-4">
             The analytics feature is currently disabled. Please enable it through the feature flags system to access analytics data.
           </p>
-          <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
-            <p className="text-sm text-yellow-800">
+          <div className="bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-800 rounded-lg p-4">
+            <p className="text-sm text-yellow-800 dark:text-yellow-300">
               <strong>Feature Flag:</strong> analytics
             </p>
           </div>
@@ -214,20 +216,9 @@ export default function AnalyticsPage() {
 
   if (loading && !analyticsData) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100" aria-label="Loading analytics" aria-busy="true">
+      <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 dark:from-gray-900 dark:to-gray-800" aria-label="Loading analytics" aria-busy="true">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-          <div className="bg-white rounded-xl shadow-sm border p-6 mb-8">
-            <div className="h-8 bg-gray-200 rounded w-64 mb-2 animate-pulse" />
-            <div className="h-4 bg-gray-200 rounded w-96 animate-pulse" />
-          </div>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {[1, 2, 3, 4, 5, 6].map((i) => (
-              <div key={i} className="bg-white rounded-xl shadow-sm border p-6">
-                <div className="h-6 bg-gray-200 rounded w-3/4 mb-4 animate-pulse" />
-                <div className="h-32 bg-gray-200 rounded animate-pulse" />
-              </div>
-            ))}
-          </div>
+          <AnalyticsSkeleton />
         </div>
       </div>
     );
@@ -235,7 +226,7 @@ export default function AnalyticsPage() {
 
   if (error) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 flex items-center justify-center px-4">
+      <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 dark:from-gray-900 dark:to-gray-800 flex items-center justify-center px-4">
         <EnhancedErrorDisplay
           title="Analytics Error"
           message={error}
@@ -260,25 +251,25 @@ export default function AnalyticsPage() {
   if (!analyticsData) return null;
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100">
+    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 dark:from-gray-900 dark:to-gray-800">
       {/* Header */}
-      <div className="bg-white shadow-sm border-b">
+      <div className="bg-card shadow-sm border-b border-border">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
           <div className="flex items-center justify-between">
             <div>
-              <h1 className="text-3xl font-bold text-gray-900">Analytics Dashboard</h1>
-              <p className="text-gray-600 mt-1">
+              <h1 className="text-3xl font-bold text-foreground">Analytics Dashboard</h1>
+              <p className="text-muted-foreground mt-1">
                 Comprehensive insights and data visualization
               </p>
             </div>
             <div className="flex items-center space-x-4">
               <div className="flex items-center space-x-2">
-                <RefreshCw className="h-4 w-4 text-gray-400" />
-                <span className="text-sm text-gray-600">
+                <RefreshCw className="h-4 w-4 text-muted-foreground" />
+                <span className="text-sm text-muted-foreground">
                   Auto-refresh off
                 </span>
               </div>
-              <button
+              <Button
                 onClick={() => trackEvent({
                   event_type: 'user_action',
                   type: 'user_action',
@@ -290,18 +281,18 @@ export default function AnalyticsPage() {
                   },
                   created_at: new Date().toISOString()
                 })}
-                className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
+                className="bg-primary hover:bg-primary/90"
                 aria-label="Enable auto-refresh for analytics"
               >
                 Enable Auto-refresh
-              </button>
-              <button
+              </Button>
+              <Button
                 onClick={() => exportAnalytics()}
-                className="bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 transition-colors focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2"
+                className="bg-green-600 hover:bg-green-700 dark:bg-green-600 dark:hover:bg-green-700"
                 aria-label="Export analytics data"
               >
                 Export Data
-              </button>
+              </Button>
             </div>
           </div>
         </div>
@@ -309,24 +300,25 @@ export default function AnalyticsPage() {
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* Navigation Tabs */}
-        <div className="bg-white rounded-xl shadow-sm border mb-8">
-          <div className="border-b border-gray-200">
+        <div className="bg-card rounded-xl shadow-sm border border-border mb-8">
+          <div className="border-b border-border">
             <nav className="flex space-x-8 px-6" aria-label="Analytics tabs">
               {analyticsViews
                 .filter(view => view.enabled)
                 .map((view) => (
-                  <button
+                  <Button
                     key={view.id}
+                    variant="ghost"
                     onClick={() => setSelectedView(view.id)}
-                    className={`py-4 px-1 border-b-2 font-medium text-sm flex items-center space-x-2 ${
+                    className={`py-4 px-1 border-b-2 font-medium text-sm flex items-center space-x-2 rounded-none ${
                       selectedView === view.id
-                        ? 'border-blue-500 text-blue-600'
-                        : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                        ? 'border-primary text-primary'
+                        : 'border-transparent text-muted-foreground hover:text-foreground/80 hover:border-border'
                     }`}
                   >
                     {view.icon}
                     <span>{view.name}</span>
-                  </button>
+                  </Button>
                 ))}
             </nav>
           </div>
@@ -409,42 +401,42 @@ function OverviewView({ data }: { data: AnalyticsData }) {
 
       {/* Performance Indicators */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-        <div className="bg-white rounded-xl shadow-sm border p-6">
-          <h3 className="text-lg font-semibold text-gray-900 mb-4">Performance Indicators</h3>
+        <div className="bg-card rounded-xl shadow-sm border border-border p-6">
+          <h3 className="text-lg font-semibold text-foreground mb-4">Performance Indicators</h3>
           <div className="space-y-4">
             <div className="flex items-center justify-between">
-              <span className="text-sm text-gray-600">Session Duration</span>
-              <span className="text-sm font-medium text-gray-900">
+              <span className="text-sm text-muted-foreground">Session Duration</span>
+              <span className="text-sm font-medium text-foreground">
                 {data?.overview?.averageSessionDuration ?? 0} min
               </span>
             </div>
             <div className="flex items-center justify-between">
-              <span className="text-sm text-gray-600">Bounce Rate</span>
-              <span className="text-sm font-medium text-gray-900">
+              <span className="text-sm text-muted-foreground">Bounce Rate</span>
+              <span className="text-sm font-medium text-foreground">
                 {data?.overview?.bounceRate ?? 0}%
               </span>
             </div>
             <div className="flex items-center justify-between">
-              <span className="text-sm text-gray-600">Conversion Rate</span>
-              <span className="text-sm font-medium text-gray-900">
+              <span className="text-sm text-muted-foreground">Conversion Rate</span>
+              <span className="text-sm font-medium text-foreground">
                 {data?.overview?.conversionRate ?? 0}%
               </span>
             </div>
           </div>
         </div>
 
-        <div className="bg-white rounded-xl shadow-sm border p-6">
-          <h3 className="text-lg font-semibold text-gray-900 mb-4">Quick Actions</h3>
+        <div className="bg-card rounded-xl shadow-sm border border-border p-6">
+          <h3 className="text-lg font-semibold text-foreground mb-4">Quick Actions</h3>
           <div className="space-y-3">
-            <button className="w-full bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors">
+            <Button className="w-full bg-primary hover:bg-primary/90">
               Export Report
-            </button>
-            <button className="w-full bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 transition-colors">
+            </Button>
+            <Button className="w-full bg-green-600 hover:bg-green-700 dark:bg-green-600 dark:hover:bg-green-700">
               Generate Insights
-            </button>
-            <button className="w-full bg-purple-600 text-white px-4 py-2 rounded-lg hover:bg-purple-700 transition-colors">
+            </Button>
+            <Button className="w-full bg-purple-600 hover:bg-purple-700 dark:bg-purple-600 dark:hover:bg-purple-700">
               Schedule Report
-            </button>
+            </Button>
           </div>
         </div>
       </div>
@@ -456,10 +448,11 @@ function OverviewView({ data }: { data: AnalyticsData }) {
 function TrendsView({ data: _data }: { data: AnalyticsData }) {
   return (
     <div className="space-y-8">
-      <div className="bg-white rounded-xl shadow-sm border p-6">
-        <h3 className="text-lg font-semibold text-gray-900 mb-4">Voting Trends</h3>
-        <div className="h-64 bg-gray-50 rounded-lg flex items-center justify-center">
-          <p className="text-gray-500">Chart visualization will be implemented here</p>
+      <div className="bg-card rounded-xl shadow-sm border border-border p-6">
+        <h3 className="text-lg font-semibold text-foreground mb-4">Voting Trends</h3>
+        <div className="h-64 bg-muted rounded-lg flex flex-col items-center justify-center gap-2">
+          <BarChart3 className="h-10 w-10 text-muted-foreground" />
+          <p className="text-sm text-muted-foreground">Trend data will appear here as you vote on polls</p>
         </div>
       </div>
     </div>
@@ -471,42 +464,42 @@ function DemographicsView({ data }: { data: AnalyticsData }) {
   return (
     <div className="space-y-8">
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-        <div className="bg-white rounded-xl shadow-sm border p-6">
-          <h3 className="text-lg font-semibold text-gray-900 mb-4">Age Distribution</h3>
+        <div className="bg-card rounded-xl shadow-sm border border-border p-6">
+          <h3 className="text-lg font-semibold text-foreground mb-4">Age Distribution</h3>
           <div className="space-y-3">
             {Object.entries(data?.demographics?.ageGroups ?? {}).map(([age, count]) => (
               <div key={age} className="flex items-center justify-between">
-                <span className="text-sm text-gray-600">{age}</span>
+                <span className="text-sm text-muted-foreground">{age}</span>
                 <div className="flex items-center space-x-2">
-                  <div className="w-16 bg-gray-200 rounded-full h-2">
+                  <div className="w-16 bg-muted rounded-full h-2">
                     <div
-                      className="bg-blue-600 h-2 rounded-full"
+                      className="bg-primary h-2 rounded-full"
                       style={{ width: `${(Number(count) / Math.max(...Object.values(data?.demographics?.ageGroups ?? {}).map(v => Number(v)))) * 100}%` }}
                     />
                   </div>
-                  <span className="text-sm font-medium text-gray-900">{String(count)}</span>
+                  <span className="text-sm font-medium text-foreground">{String(count)}</span>
                 </div>
               </div>
             ))}
           </div>
         </div>
 
-        <div className="bg-white rounded-xl shadow-sm border p-6">
-          <h3 className="text-lg font-semibold text-gray-900 mb-4">Device Types</h3>
+        <div className="bg-card rounded-xl shadow-sm border border-border p-6">
+          <h3 className="text-lg font-semibold text-foreground mb-4">Device Types</h3>
           <div className="space-y-3">
             {Object.entries(data?.demographics?.deviceTypes ?? {}).map(([device, percentage]) => {
               const percentageValue = typeof percentage === 'number' ? percentage : 0;
               return (
                 <div key={device} className="flex items-center justify-between">
-                  <span className="text-sm text-gray-600 capitalize">{device}</span>
+                  <span className="text-sm text-muted-foreground capitalize">{device}</span>
                   <div className="flex items-center space-x-2">
-                    <div className="w-16 bg-gray-200 rounded-full h-2">
+                    <div className="w-16 bg-muted rounded-full h-2">
                       <div
                         className="bg-green-600 h-2 rounded-full"
                         style={{ width: `${percentageValue}%` }}
                       />
                     </div>
-                    <span className="text-sm font-medium text-gray-900">{percentageValue}%</span>
+                    <span className="text-sm font-medium text-foreground">{percentageValue}%</span>
                   </div>
                 </div>
               );
@@ -522,15 +515,15 @@ function DemographicsView({ data }: { data: AnalyticsData }) {
 function PerformanceView({ data }: { data: AnalyticsData }) {
   return (
     <div className="space-y-8">
-      <div className="bg-white rounded-xl shadow-sm border p-6">
-        <h3 className="text-lg font-semibold text-gray-900 mb-4">Page Load Times</h3>
+      <div className="bg-card rounded-xl shadow-sm border border-border p-6">
+        <h3 className="text-lg font-semibold text-foreground mb-4">Page Load Times</h3>
         <div className="space-y-4">
           {data?.performance?.loadTimes?.map((page: { page: string; averageLoadTime: number; p95LoadTime: number }) => (
             <div key={page.page} className="flex items-center justify-between">
-              <span className="text-sm text-gray-600">{page.page}</span>
+              <span className="text-sm text-muted-foreground">{page.page}</span>
               <div className="flex items-center space-x-4">
-                <span className="text-sm text-gray-900">{page.averageLoadTime}ms</span>
-                <span className="text-sm text-gray-500">P95: {page.p95LoadTime}ms</span>
+                <span className="text-sm text-foreground">{page.averageLoadTime}ms</span>
+                <span className="text-sm text-muted-foreground">P95: {page.p95LoadTime}ms</span>
               </div>
             </div>
           ))}
@@ -544,33 +537,33 @@ function PerformanceView({ data }: { data: AnalyticsData }) {
 function PrivacyView({ data }: { data: AnalyticsData }) {
   return (
     <div className="space-y-8">
-      <div className="bg-white rounded-xl shadow-sm border p-6">
-        <h3 className="text-lg font-semibold text-gray-900 mb-4">Privacy Metrics</h3>
+      <div className="bg-card rounded-xl shadow-sm border border-border p-6">
+        <h3 className="text-lg font-semibold text-foreground mb-4">Privacy Metrics</h3>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           <div className="space-y-4">
             <div className="flex items-center justify-between">
-              <span className="text-sm text-gray-600">Data Collected</span>
-              <span className="text-sm font-medium text-gray-900">{data?.privacy?.dataCollected ?? 0} fields</span>
+              <span className="text-sm text-muted-foreground">Data Collected</span>
+              <span className="text-sm font-medium text-foreground">{data?.privacy?.dataCollected ?? 0} fields</span>
             </div>
             <div className="flex items-center justify-between">
-              <span className="text-sm text-gray-600">Data Shared</span>
-              <span className="text-sm font-medium text-gray-900">{data?.privacy?.dataShared ?? 0} fields</span>
+              <span className="text-sm text-muted-foreground">Data Shared</span>
+              <span className="text-sm font-medium text-foreground">{data?.privacy?.dataShared ?? 0} fields</span>
             </div>
             <div className="flex items-center justify-between">
-              <span className="text-sm text-gray-600">Anonymization</span>
-              <span className="text-sm font-medium text-gray-900 capitalize">{data?.privacy?.anonymizationLevel ?? 'N/A'}</span>
+              <span className="text-sm text-muted-foreground">Anonymization</span>
+              <span className="text-sm font-medium text-foreground capitalize">{data?.privacy?.anonymizationLevel ?? 'N/A'}</span>
             </div>
           </div>
           <div className="space-y-4">
             <div className="flex items-center justify-between">
-              <span className="text-sm text-gray-600">Encryption</span>
-              <span className="text-sm font-medium text-gray-900">
+              <span className="text-sm text-muted-foreground">Encryption</span>
+              <span className="text-sm font-medium text-foreground">
                 {data?.privacy?.encryptionEnabled ? 'Enabled' : 'Disabled'}
               </span>
             </div>
             <div className="flex items-center justify-between">
-              <span className="text-sm text-gray-600">Consent Granted</span>
-              <span className="text-sm font-medium text-gray-900">{data?.privacy?.userConsent ? 'Granted' : 'Pending'}</span>
+              <span className="text-sm text-muted-foreground">Consent Granted</span>
+              <span className="text-sm font-medium text-foreground">{data?.privacy?.userConsent ? 'Granted' : 'Pending'}</span>
             </div>
           </div>
         </div>
@@ -584,44 +577,44 @@ function EngagementView({ data }: { data: AnalyticsData }) {
   return (
     <div className="space-y-8">
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-        <div className="bg-white rounded-xl shadow-sm border p-6">
-          <h3 className="text-lg font-semibold text-gray-900 mb-4">User Engagement</h3>
+        <div className="bg-card rounded-xl shadow-sm border border-border p-6">
+          <h3 className="text-lg font-semibold text-foreground mb-4">User Engagement</h3>
           <div className="space-y-4">
             <div className="flex items-center justify-between">
-              <span className="text-sm text-gray-600">Active Users</span>
-              <span className="text-sm font-medium text-gray-900">{data?.engagement?.activeUsers ?? 0}</span>
+              <span className="text-sm text-muted-foreground">Active Users</span>
+              <span className="text-sm font-medium text-foreground">{data?.engagement?.activeUsers ?? 0}</span>
             </div>
             <div className="flex items-center justify-between">
-              <span className="text-sm text-gray-600">Returning Users</span>
-              <span className="text-sm font-medium text-gray-900">{data?.engagement?.returningUsers ?? 0}</span>
+              <span className="text-sm text-muted-foreground">Returning Users</span>
+              <span className="text-sm font-medium text-foreground">{data?.engagement?.returningUsers ?? 0}</span>
             </div>
             <div className="flex items-center justify-between">
-              <span className="text-sm text-gray-600">Session Duration</span>
-              <span className="text-sm font-medium text-gray-900">{data?.engagement?.sessionDuration ?? 0} min</span>
+              <span className="text-sm text-muted-foreground">Session Duration</span>
+              <span className="text-sm font-medium text-foreground">{data?.engagement?.sessionDuration ?? 0} min</span>
             </div>
             <div className="flex items-center justify-between">
-              <span className="text-sm text-gray-600">Pages per Session</span>
-              <span className="text-sm font-medium text-gray-900">{data?.engagement?.pagesPerSession ?? 0}</span>
+              <span className="text-sm text-muted-foreground">Pages per Session</span>
+              <span className="text-sm font-medium text-foreground">{data?.engagement?.pagesPerSession ?? 0}</span>
             </div>
           </div>
         </div>
 
-        <div className="bg-white rounded-xl shadow-sm border p-6">
-          <h3 className="text-lg font-semibold text-gray-900 mb-4">Feature Usage</h3>
+        <div className="bg-card rounded-xl shadow-sm border border-border p-6">
+          <h3 className="text-lg font-semibold text-foreground mb-4">Feature Usage</h3>
           <div className="space-y-3">
             {Object.entries(data?.engagement?.featureUsage ?? {}).map(([feature, percentage]) => {
               const percentageValue = typeof percentage === 'number' ? percentage : 0;
               return (
                 <div key={feature} className="flex items-center justify-between">
-                  <span className="text-sm text-gray-600 capitalize">{feature}</span>
+                  <span className="text-sm text-muted-foreground capitalize">{feature}</span>
                   <div className="flex items-center space-x-2">
-                    <div className="w-16 bg-gray-200 rounded-full h-2">
-                      <div
-                        className="bg-purple-600 h-2 rounded-full"
-                        style={{ width: `${percentageValue}%` }}
+<div className="w-16 bg-muted rounded-full h-2">
+                        <div
+                          className="bg-purple-600 h-2 rounded-full"
+                          style={{ width: `${percentageValue}%` }}
                       />
                     </div>
-                    <span className="text-sm font-medium text-gray-900">{percentageValue}%</span>
+                    <span className="text-sm font-medium text-foreground">{percentageValue}%</span>
                   </div>
                 </div>
               );
@@ -637,9 +630,9 @@ function EngagementView({ data }: { data: AnalyticsData }) {
 function AdvancedView({ data: _data }: { data: AnalyticsData }) {
   return (
     <div className="space-y-8">
-      <div className="bg-white rounded-xl shadow-sm border p-6">
-        <h3 className="text-lg font-semibold text-gray-900 mb-4">Advanced Analytics</h3>
-        <p className="text-gray-600 mb-4">
+      <div className="bg-card rounded-xl shadow-sm border border-border p-6">
+        <h3 className="text-lg font-semibold text-foreground mb-4">Advanced Analytics</h3>
+        <p className="text-muted-foreground mb-4">
           Advanced analytics features including predictive modeling, statistical analysis, and AI-powered insights are available when the AI features flag is enabled.
         </p>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
@@ -678,11 +671,11 @@ function MetricCard({ title, value, icon, color, trend, trendDirection }: {
   };
 
   return (
-    <div className="bg-white rounded-xl shadow-sm border p-6">
+    <div className="bg-card rounded-xl shadow-sm border border-border p-6">
       <div className="flex items-center justify-between">
         <div>
-          <p className="text-sm font-medium text-gray-600">{title}</p>
-          <p className="text-2xl font-bold text-gray-900">{value}</p>
+          <p className="text-sm font-medium text-muted-foreground">{title}</p>
+          <p className="text-2xl font-bold text-foreground">{value}</p>
         </div>
         <div className={`p-3 rounded-lg ${colorClasses[color as keyof typeof colorClasses]}`}>
           {icon}
@@ -694,7 +687,7 @@ function MetricCard({ title, value, icon, color, trend, trendDirection }: {
         }`}>
           {trend}
         </span>
-        <span className="text-sm text-gray-600 ml-1">from last month</span>
+        <span className="text-sm text-muted-foreground ml-1">from last month</span>
       </div>
     </div>
   );

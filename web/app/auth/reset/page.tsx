@@ -1,9 +1,13 @@
 'use client';
 
+import { Loader2 } from 'lucide-react';
 import Link from 'next/link';
 import React from 'react';
 
 import { getSupabaseBrowserClient } from '@/utils/supabase/client';
+
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
 
 import { useI18n } from '@/hooks/useI18n';
 
@@ -53,11 +57,11 @@ export default function ResetPasswordPage() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50 dark:from-gray-900 dark:via-gray-900 dark:to-gray-800 flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8">
+    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50 dark:from-background dark:via-background dark:to-muted flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8">
       <div className="max-w-md w-full space-y-6">
         <div className="text-center">
-          <h1 className="text-3xl font-bold text-gray-900 dark:text-gray-100">{t('auth.reset.heading')}</h1>
-          <p className="mt-2 text-sm text-gray-600 dark:text-gray-400">{t('auth.reset.subheading')}</p>
+          <h1 className="text-3xl font-bold text-foreground">{t('auth.reset.heading')}</h1>
+          <p className="mt-2 text-sm text-muted-foreground">{t('auth.reset.subheading')}</p>
         </div>
 
         {isSuccess ? (
@@ -74,36 +78,37 @@ export default function ResetPasswordPage() {
             ) : null}
 
             <div>
-              <label htmlFor="reset-email" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+              <label htmlFor="reset-email" className="block text-sm font-medium text-foreground/80 mb-1">
                 {t('auth.reset.emailLabel')}
               </label>
-              <input
+              <Input
                 id="reset-email"
                 type="email"
                 name="email"
                 required
                 value={email}
                 onChange={(event) => setEmail(event.currentTarget.value)}
-                className="w-full rounded-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 placeholder-gray-500 dark:placeholder-gray-400 px-3 py-2 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500"
+                className="w-full"
                 placeholder={t('auth.reset.emailPlaceholder')}
                 autoComplete="email"
               />
             </div>
 
-            <button
+            <Button
               type="submit"
-              className="w-full bg-blue-600 text-white py-2 px-4 rounded-md hover:bg-blue-700 focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2 dark:focus-visible:ring-offset-gray-900 disabled:opacity-50"
+              className="w-full min-h-[44px] gap-2"
               disabled={isSubmitting}
             >
+              {isSubmitting && <Loader2 className="h-4 w-4 animate-spin" aria-hidden="true" />}
               {isSubmitting ? t('auth.reset.working') : t('auth.reset.submit')}
-            </button>
+            </Button>
           </form>
         )}
 
         <div className="text-center">
           <Link
             href="/auth"
-            className="text-sm text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300 focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2 dark:focus-visible:ring-offset-gray-900 rounded"
+            className="text-sm text-primary hover:text-primary/90 focus:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 dark:focus-visible:ring-offset-background rounded"
           >
             {t('auth.reset.backToSignIn')}
           </Link>

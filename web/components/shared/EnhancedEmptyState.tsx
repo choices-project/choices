@@ -11,6 +11,8 @@ import { ArrowRight, HelpCircle, Search, Plus } from 'lucide-react';
 import Link from 'next/link';
 import React from 'react';
 
+import { Button } from '@/components/ui/button';
+
 export type EnhancedEmptyStateProps = {
   /** Icon to display (defaults to Search) */
   icon?: React.ReactNode;
@@ -52,7 +54,7 @@ export function EnhancedEmptyState({
   onResetFilters,
   className = '',
 }: EnhancedEmptyStateProps) {
-  const defaultIcon = icon || <Search className="h-12 w-12 text-gray-400" />;
+  const defaultIcon = icon || <Search className="h-12 w-12 text-muted-foreground" />;
 
   return (
     <div
@@ -65,19 +67,19 @@ export function EnhancedEmptyState({
         {defaultIcon}
       </div>
 
-      <h2 className="text-xl font-semibold text-gray-900 dark:text-gray-100 mb-2">
+      <h2 className="text-xl font-semibold text-foreground mb-2">
         {title}
       </h2>
 
-      <p className="text-gray-600 dark:text-gray-400 mb-4 max-w-md">
+      <p className="text-muted-foreground mb-4 max-w-md">
         {description}
       </p>
 
       {tip && (
-        <div className="mb-6 p-3 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg max-w-md">
+        <div className="mb-6 p-3 bg-primary/10 border border-border rounded-lg max-w-md">
           <div className="flex items-start gap-2">
-            <HelpCircle className="h-5 w-5 text-blue-600 dark:text-blue-400 flex-shrink-0 mt-0.5" aria-hidden="true" />
-            <p className="text-sm text-blue-800 dark:text-blue-200 text-left">
+            <HelpCircle className="h-5 w-5 text-primary flex-shrink-0 mt-0.5" aria-hidden="true" />
+            <p className="text-sm text-primary text-left">
               {tip}
             </p>
           </div>
@@ -86,14 +88,15 @@ export function EnhancedEmptyState({
 
       {isFiltered && onResetFilters && (
         <div className="mb-4">
-          <button
+          <Button
             type="button"
+            variant="link"
             onClick={onResetFilters}
-            className="inline-flex items-center min-h-[44px] text-sm text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300 underline focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 dark:focus:ring-offset-gray-900 rounded"
+            className="inline-flex items-center min-h-[44px] text-sm text-primary hover:text-primary/90"
             aria-label="Clear filters to see all items"
           >
             Clear filters to see all items
-          </button>
+          </Button>
         </div>
       )}
 
@@ -101,26 +104,27 @@ export function EnhancedEmptyState({
         {primaryAction && (
           <>
             {primaryAction.href ? (
-              <Link
-                href={primaryAction.href}
-                className="inline-flex items-center min-h-[44px] px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 dark:bg-blue-600 dark:hover:bg-blue-500 transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 dark:focus:ring-offset-gray-900"
-                aria-label={primaryAction.label}
-              >
-                {primaryAction.icon || <Plus className="h-4 w-4 mr-2" aria-hidden="true" />}
-                {primaryAction.label}
-                <ArrowRight className="h-4 w-4 ml-2" aria-hidden="true" />
-              </Link>
+              <Button asChild>
+                <Link
+                  href={primaryAction.href}
+                  className="inline-flex items-center min-h-[44px] px-4 py-2"
+                  aria-label={primaryAction.label}
+                >
+                  {primaryAction.icon || <Plus className="h-4 w-4 mr-2" aria-hidden="true" />}
+                  {primaryAction.label}
+                  <ArrowRight className="h-4 w-4 ml-2" aria-hidden="true" />
+                </Link>
+              </Button>
             ) : (
-              <button
+              <Button
                 type="button"
                 onClick={primaryAction.onClick}
-                className="inline-flex items-center min-h-[44px] px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 dark:bg-blue-600 dark:hover:bg-blue-500 transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 dark:focus:ring-offset-gray-900"
                 aria-label={primaryAction.label}
               >
                 {primaryAction.icon || <Plus className="h-4 w-4 mr-2" aria-hidden="true" />}
                 {primaryAction.label}
                 <ArrowRight className="h-4 w-4 ml-2" aria-hidden="true" />
-              </button>
+              </Button>
             )}
           </>
         )}
@@ -128,22 +132,24 @@ export function EnhancedEmptyState({
         {secondaryAction && (
           <>
             {secondaryAction.href ? (
-              <Link
-                href={secondaryAction.href}
-                className="inline-flex items-center min-h-[44px] px-4 py-2 border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-offset-2 dark:focus:ring-offset-gray-900"
-                aria-label={secondaryAction.label}
-              >
-                {secondaryAction.label}
-              </Link>
+              <Button asChild variant="outline">
+                <Link
+                  href={secondaryAction.href}
+                  className="inline-flex items-center min-h-[44px] px-4 py-2"
+                  aria-label={secondaryAction.label}
+                >
+                  {secondaryAction.label}
+                </Link>
+              </Button>
             ) : (
-              <button
+              <Button
                 type="button"
+                variant="outline"
                 onClick={secondaryAction.onClick}
-                className="inline-flex items-center min-h-[44px] px-4 py-2 border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-offset-2 dark:focus:ring-offset-gray-900"
                 aria-label={secondaryAction.label}
               >
                 {secondaryAction.label}
-              </button>
+              </Button>
             )}
           </>
         )}

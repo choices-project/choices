@@ -131,8 +131,8 @@ export default function DataExportPage() {
     try {
       const response = await fetch('/api/user/export/history')
       if (response.ok) {
-        const data = await response.json()
-        setExportHistory(data.history)
+        const json = await response.json()
+        setExportHistory(json.data?.history ?? json.history ?? [])
       }
     } catch (error) {
       devLog('Error loading export history:', { error })

@@ -3,6 +3,15 @@
 import dynamic from 'next/dynamic'
 import React from 'react';
 
+type PieChartProps = {
+  data: Record<string, unknown>[];
+  dataKey?: string;
+  nameKey?: string;
+  height?: number;
+  width?: number;
+  className?: string;
+  colors?: string[];
+}
 
 // Dynamic import with SSR disabled to keep Recharts out of main bundle
 const RechartsPie = dynamic(() => import('./RechartsPieImpl'), { 
@@ -14,7 +23,7 @@ const RechartsPie = dynamic(() => import('./RechartsPieImpl'), {
   )
 })
 
-export default function Pie(props: any) {
+export default function Pie(props: PieChartProps) {
   return <RechartsPie {...props} />
 }
 

@@ -21,20 +21,22 @@
 
 import { BarChart3, TrendingUp, Vote, Users, Settings2, Zap, ArrowRight, RefreshCw } from 'lucide-react';
 import Image from 'next/image';
-import Link from 'next/link';
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useShallow } from 'zustand/react/shallow';
 
 import { useProfile, useProfileErrorStates, useProfileLoadingStates } from '@/features/profile/hooks/use-profile';
 
+import { AnimatedCard } from '@/components/shared/AnimatedCard';
 import { EnhancedEmptyState } from '@/components/shared/EnhancedEmptyState';
 import { EnhancedErrorDisplay } from '@/components/shared/EnhancedErrorDisplay';
+import { PrefetchLink } from '@/components/shared/PrefetchLink';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Label } from '@/components/ui/label';
 import { Separator } from '@/components/ui/separator';
 import { Switch } from '@/components/ui/switch';
 
+import { AVATAR_BLUR_DATA_URL } from '@/lib/constants/image';
 import {
   usePolls,
   usePollsActions,
@@ -52,6 +54,7 @@ import {
   useRepresentativeStore,
   representativeSelectors,
 } from '@/lib/stores/representativeStore';
+import { logger } from '@/lib/utils/logger';
 
 import type { DashboardPreferences } from '@/types/profile';
 
@@ -142,7 +145,7 @@ function StandardPersonalDashboard({ userId: _fallbackUserId }: PersonalDashboar
   // Load polls on mount to ensure data is available
   useEffect(() => {
     if (isMounted && loadPollsRef.current) {
-      loadPollsRef.current();
+      loadPollsRef.current().catch(() => {});
     }
   }, [isMounted]);
 
@@ -180,7 +183,7 @@ function StandardPersonalDashboard({ userId: _fallbackUserId }: PersonalDashboar
         return { events };
       } catch (error) {
         // If store access fails, return empty array to prevent infinite loops
-        console.error('Analytics store access error:', error);
+        logger.error('Analytics store access error:', error);
         return { events: EMPTY_ANALYTICS_ARRAY };
       }
     })
@@ -379,7 +382,7 @@ function StandardPersonalDashboard({ userId: _fallbackUserId }: PersonalDashboar
           [key]: value,
         },
       }).catch((error) => {
-        console.error('Failed to update preference:', error);
+        logger.error('Failed to update preference:', error);
       });
     },
     [dashboardPreferences]
@@ -389,12 +392,12 @@ function StandardPersonalDashboard({ userId: _fallbackUserId }: PersonalDashboar
     return (
     <div className="space-y-6" data-testid='personal-dashboard'>
       {/* Header - Enhanced with better visual hierarchy */}
-        <div className="border-b border-gray-200 dark:border-gray-700 pb-6">
-        <h1 className="text-3xl font-bold text-gray-900 dark:text-gray-100 mb-2" data-testid="dashboard-title">
+        <div className="border-b border-border pb-6">
+        <h1 className="text-3xl font-bold text-foreground mb-2" data-testid="dashboard-title">
           Dashboard
         </h1>
         <h2 className="sr-only">Dashboard sections</h2>
-        <p className="text-sm text-gray-600 dark:text-gray-400">
+        <p className="text-sm text-muted-foreground">
           Your civic engagement overview and activity
         </p>
           </div>
@@ -414,14 +417,14 @@ function StandardPersonalDashboard({ userId: _fallbackUserId }: PersonalDashboar
             canRetry={true}
             onRetry={() => {
               if (loadPollsRef.current) {
-                loadPollsRef.current();
+                loadPollsRef.current().catch(() => {});
               }
             }}
             primaryAction={{
               label: 'Try Again',
               onClick: () => {
                 if (loadPollsRef.current) {
-                  loadPollsRef.current();
+                  loadPollsRef.current().catch(() => {});
                 }
               },
               icon: <RefreshCw className="h-4 w-4" />,
@@ -433,10 +436,11 @@ function StandardPersonalDashboard({ userId: _fallbackUserId }: PersonalDashboar
       {/* Analytics Metrics Cards - Improved UX with graceful error handling */}
       {dashboardPreferences?.showEngagementScore && isMounted && (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4" role="region" aria-label="Engagement metrics">
-          <Card className="hover:shadow-lg transition-all duration-200 border-gray-200 dark:border-gray-700" role="article" aria-label="Votes in the last 30 days">
+          <AnimatedCard index={0}>
+          <Card className="hover:shadow-lg transition-all duration-200 border-border" role="article" aria-label="Votes in the last 30 days">
             <CardHeader className="pb-3">
               <div className="flex items-center justify-between">
-                <CardTitle className="text-sm font-medium text-gray-600 dark:text-gray-400">
+                <CardTitle className="text-sm font-medium text-muted-foreground">
                   Votes (30 days)
                   </CardTitle>
                 <div className="p-2 rounded-lg bg-blue-50 dark:bg-blue-900/20">
@@ -445,19 +449,21 @@ function StandardPersonalDashboard({ userId: _fallbackUserId }: PersonalDashboar
               </div>
                 </CardHeader>
                 <CardContent>
-              <div className="text-3xl font-bold text-gray-900 dark:text-gray-100" aria-live="polite">
+              <div className="text-3xl font-bold text-foreground" aria-live="polite">
                 {numberFormatter ? numberFormatter.format(votesLast30Days) : votesLast30Days}
                       </div>
-              <p className="text-xs text-gray-600 dark:text-gray-400 mt-1">
+              <p className="text-xs text-muted-foreground mt-1">
                 Total votes cast this month
               </p>
                 </CardContent>
               </Card>
+          </AnimatedCard>
 
-          <Card className="hover:shadow-lg transition-all duration-200 border-gray-200 dark:border-gray-700" role="article" aria-label="Polls created in the last 30 days">
+          <AnimatedCard index={1}>
+          <Card className="hover:shadow-lg transition-all duration-200 border-border" role="article" aria-label="Polls created in the last 30 days">
             <CardHeader className="pb-3">
               <div className="flex items-center justify-between">
-                <CardTitle className="text-sm font-medium text-gray-600 dark:text-gray-400">
+                <CardTitle className="text-sm font-medium text-muted-foreground">
                   Polls Created (30 days)
                     </CardTitle>
                 <div className="p-2 rounded-lg bg-green-50 dark:bg-green-900/20">
@@ -466,19 +472,21 @@ function StandardPersonalDashboard({ userId: _fallbackUserId }: PersonalDashboar
               </div>
                   </CardHeader>
                   <CardContent>
-              <div className="text-3xl font-bold text-gray-900 dark:text-gray-100" aria-live="polite">
+              <div className="text-3xl font-bold text-foreground" aria-live="polite">
                 {numberFormatter ? numberFormatter.format(pollsCreatedLast30Days) : pollsCreatedLast30Days}
                       </div>
-              <p className="text-xs text-gray-600 dark:text-gray-400 mt-1">
+              <p className="text-xs text-muted-foreground mt-1">
                 Polls you&apos;ve created
               </p>
                   </CardContent>
                 </Card>
+          </AnimatedCard>
 
-          <Card className="hover:shadow-lg transition-all duration-200 border-gray-200 dark:border-gray-700" role="article" aria-label="Total polls available">
+          <AnimatedCard index={2}>
+          <Card className="hover:shadow-lg transition-all duration-200 border-border" role="article" aria-label="Total polls available">
             <CardHeader className="pb-3">
               <div className="flex items-center justify-between">
-                <CardTitle className="text-sm font-medium text-gray-600 dark:text-gray-400">
+                <CardTitle className="text-sm font-medium text-muted-foreground">
                   Total Polls
                   </CardTitle>
                 <div className="p-2 rounded-lg bg-purple-50 dark:bg-purple-900/20">
@@ -487,14 +495,15 @@ function StandardPersonalDashboard({ userId: _fallbackUserId }: PersonalDashboar
                     </div>
                 </CardHeader>
             <CardContent>
-              <div className="text-3xl font-bold text-gray-900 dark:text-gray-100" aria-live="polite">
+              <div className="text-3xl font-bold text-foreground" aria-live="polite">
                 {numberFormatter ? numberFormatter.format(polls?.length ?? 0) : (polls?.length ?? 0)}
                     </div>
-              <p className="text-xs text-gray-600 dark:text-gray-400 mt-1">
+              <p className="text-xs text-muted-foreground mt-1">
                 All available polls
               </p>
                 </CardContent>
               </Card>
+          </AnimatedCard>
             </div>
       )}
 
@@ -510,24 +519,24 @@ function StandardPersonalDashboard({ userId: _fallbackUserId }: PersonalDashboar
           </CardHeader>
           <CardContent>
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
-              <Link href="/polls/create">
+              <PrefetchLink href="/polls/create">
                 <Button variant="outline" className="w-full justify-between group">
                   <span>Create Poll</span>
                   <ArrowRight className="h-4 w-4 group-hover:translate-x-1 transition-transform" />
                         </Button>
-              </Link>
-              <Link href="/polls">
+              </PrefetchLink>
+              <PrefetchLink href="/polls">
                 <Button variant="outline" className="w-full justify-between group">
                   <span>Browse Polls</span>
                   <ArrowRight className="h-4 w-4 group-hover:translate-x-1 transition-transform" />
                 </Button>
-              </Link>
-              <Link href="/representatives">
+              </PrefetchLink>
+              <PrefetchLink href="/representatives">
                 <Button variant="outline" className="w-full justify-between group">
                   <span>Find Representatives</span>
                   <ArrowRight className="h-4 w-4 group-hover:translate-x-1 transition-transform" />
                 </Button>
-              </Link>
+              </PrefetchLink>
             </div>
                   </CardContent>
                 </Card>
@@ -543,7 +552,7 @@ function StandardPersonalDashboard({ userId: _fallbackUserId }: PersonalDashboar
           <CardContent>
             {recentActivity.length === 0 ? (
               <EnhancedEmptyState
-                icon={<Vote className="h-12 w-12 text-gray-400" />}
+                icon={<Vote className="h-12 w-12 text-muted-foreground" />}
                 title="No recent activity"
                 description="Start voting or creating polls to see your activity here."
                 tip="Your recent votes and poll creations will appear here to help you track your civic engagement."
@@ -564,7 +573,7 @@ function StandardPersonalDashboard({ userId: _fallbackUserId }: PersonalDashboar
                   return (
                     <div
                       key={`activity-${activity.type}-${pollId ?? index}-${activity.createdAt.getTime()}`}
-                      className="flex items-center justify-between p-3 rounded-lg bg-gray-50 dark:bg-gray-800/50 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors border border-transparent hover:border-gray-200 dark:hover:border-gray-700"
+                      className="flex items-center justify-between p-3 rounded-lg bg-muted hover:bg-muted/80 transition-colors border border-transparent hover:border-border"
                       role="listitem"
                     >
                       <div className="flex items-center gap-3 flex-1 min-w-0">
@@ -575,11 +584,11 @@ function StandardPersonalDashboard({ userId: _fallbackUserId }: PersonalDashboar
                           aria-hidden="true"
                         />
                         <div className="flex-1 min-w-0">
-                          <span className="text-sm font-medium text-gray-900 dark:text-gray-100 block truncate">
+                          <span className="text-sm font-medium text-foreground block truncate">
                             {activity.type === 'vote' ? 'Voted on a poll' : 'Created a poll'}
                           </span>
                           {dateFormatter && (
-                            <p className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">
+                            <p className="text-xs text-muted-foreground mt-0.5">
                               {dateFormatter.format(activity.createdAt)}
                             </p>
                       )}
@@ -618,18 +627,20 @@ function StandardPersonalDashboard({ userId: _fallbackUserId }: PersonalDashboar
                 const repId = (rep as Record<string, unknown>)?.id as number | undefined;
 
                 return (
-                  <Link
+                  <PrefetchLink
                     key={`rep-${repId ?? entry.follow.id}`}
                     href={repId ? `/representatives/${repId}` : '#'}
                     className="block"
                   >
-                    <div className="flex items-center gap-3 p-3 rounded-lg border border-gray-200 dark:border-gray-700 hover:border-indigo-300 dark:hover:border-indigo-600 hover:shadow-md transition-all bg-white dark:bg-gray-800">
+                    <div className="flex items-center gap-3 p-3 rounded-lg border border-border hover:border-indigo-300 dark:hover:border-indigo-600 hover:shadow-md transition-all bg-card">
                       {photoUrl ? (
                         <Image
                           src={photoUrl}
                           alt={name ?? 'Representative'}
                           width={48}
                           height={48}
+                          placeholder="blur"
+                          blurDataURL={AVATAR_BLUR_DATA_URL}
                           className="rounded-full object-cover"
                         />
                       ) : (
@@ -640,31 +651,31 @@ function StandardPersonalDashboard({ userId: _fallbackUserId }: PersonalDashboar
                     </div>
                       )}
                       <div className="flex-1 min-w-0">
-                        <p className="font-medium text-gray-900 dark:text-gray-100 truncate">
+                        <p className="font-medium text-foreground truncate">
                           {name ?? 'Unknown'}
                         </p>
-                        <p className="text-sm text-gray-600 dark:text-gray-400 truncate">
+                        <p className="text-sm text-muted-foreground truncate">
                           {office ?? 'Representative'}
                         </p>
                         {party && (
-                          <p className="text-xs text-gray-600 dark:text-gray-400 mt-0.5">
+                          <p className="text-xs text-muted-foreground mt-0.5">
                             {party}
                           </p>
                         )}
                         </div>
                         </div>
-                  </Link>
+                  </PrefetchLink>
                 );
               })}
                       </div>
             {representativeEntries.length > 6 && (
               <div className="mt-4 text-center">
-                <Link href="/representatives">
+                <PrefetchLink href="/representatives">
                   <Button variant="outline" className="w-full sm:w-auto">
                     View All Representatives
                     <ArrowRight className="ml-2 h-4 w-4" />
                   </Button>
-                </Link>
+                </PrefetchLink>
                     </div>
             )}
                 </CardContent>
@@ -676,7 +687,7 @@ function StandardPersonalDashboard({ userId: _fallbackUserId }: PersonalDashboar
             <Card role="region" aria-label="Dashboard preferences">
               <CardHeader>
             <div className="flex items-center gap-2">
-              <Settings2 className="h-5 w-5 text-gray-500 dark:text-gray-400" aria-hidden="true" />
+              <Settings2 className="h-5 w-5 text-muted-foreground" aria-hidden="true" />
               <CardTitle className="text-lg font-semibold">Dashboard Preferences</CardTitle>
             </div>
             <CardDescription>Customize what appears on your dashboard</CardDescription>
@@ -688,7 +699,7 @@ function StandardPersonalDashboard({ userId: _fallbackUserId }: PersonalDashboar
                   <Label htmlFor="show-engagement-score" className="text-base font-medium cursor-pointer">
                     Engagement Score
                   </Label>
-                  <p className="text-sm text-gray-500 dark:text-gray-400">
+                  <p className="text-sm text-muted-foreground">
                     Show analytics metrics and engagement statistics
                   </p>
                         </div>
@@ -707,7 +718,7 @@ function StandardPersonalDashboard({ userId: _fallbackUserId }: PersonalDashboar
                   <Label htmlFor="show-recent-activity" className="text-base font-medium cursor-pointer">
                     Recent Activity
                   </Label>
-                  <p className="text-sm text-gray-500 dark:text-gray-400">
+                  <p className="text-sm text-muted-foreground">
                     Display your recent votes and poll creations
                   </p>
                       </div>
@@ -726,7 +737,7 @@ function StandardPersonalDashboard({ userId: _fallbackUserId }: PersonalDashboar
                   <Label htmlFor="show-quick-actions" className="text-base font-medium cursor-pointer">
                     Quick Actions
                   </Label>
-                  <p className="text-sm text-gray-500 dark:text-gray-400">
+                  <p className="text-sm text-muted-foreground">
                     Show quick access buttons for common tasks
                   </p>
                         </div>
@@ -745,7 +756,7 @@ function StandardPersonalDashboard({ userId: _fallbackUserId }: PersonalDashboar
                   <Label htmlFor="show-elected-officials" className="text-base font-medium cursor-pointer">
                     Elected Officials
                   </Label>
-                  <p className="text-sm text-gray-500 dark:text-gray-400">
+                  <p className="text-sm text-muted-foreground">
                     Display representatives you&apos;re following
                   </p>
                       </div>

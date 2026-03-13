@@ -299,13 +299,13 @@ export default function NotificationPreferences({ className = '' }: Notification
 
   if (!notificationsSupported) {
     return (
-      <div className="bg-yellow-50 border-l-4 border-yellow-400 p-4 rounded-md" data-testid="notification-preferences-unsupported">
+      <div className="bg-yellow-50 dark:bg-yellow-900/30 border-l-4 border-yellow-400 dark:border-yellow-600 p-4 rounded-md" data-testid="notification-preferences-unsupported">
         <div className="flex">
           <div className="flex-shrink-0">
             <AlertCircle className="h-5 w-5 text-yellow-400" aria-hidden="true" />
           </div>
           <div className="ml-3">
-            <p className="text-sm text-yellow-800">
+            <p className="text-sm text-yellow-800 dark:text-yellow-200">
               Notifications are not supported in your browser.
             </p>
           </div>
@@ -316,13 +316,13 @@ export default function NotificationPreferences({ className = '' }: Notification
 
   if (!user?.id) {
     return (
-      <div className="bg-blue-50 border-l-4 border-blue-400 p-4 rounded-md" data-testid="notification-preferences-login-required">
+      <div className="bg-blue-50 dark:bg-blue-900/30 border-l-4 border-blue-400 dark:border-blue-600 p-4 rounded-md" data-testid="notification-preferences-login-required">
         <div className="flex">
           <div className="flex-shrink-0">
             <AlertCircle className="h-5 w-5 text-blue-400" aria-hidden="true" />
           </div>
           <div className="ml-3">
-            <p className="text-sm text-blue-800">
+            <p className="text-sm text-blue-800 dark:text-blue-200">
               Please log in to manage push notification preferences.
             </p>
           </div>
@@ -332,19 +332,19 @@ export default function NotificationPreferences({ className = '' }: Notification
   }
 
   return (
-    <div className={`bg-white shadow-sm rounded-lg p-6 ${className}`} data-testid="notification-preferences">
-      <h2 className="text-xl font-semibold text-gray-900 mb-4 flex items-center">
-        <Settings className="h-5 w-5 mr-2 text-blue-600" /> Notification Preferences
+    <div className={`bg-card shadow-sm rounded-lg p-6 ${className}`} data-testid="notification-preferences">
+      <h2 className="text-xl font-semibold text-foreground mb-4 flex items-center">
+        <Settings className="h-5 w-5 mr-2 text-primary" /> Notification Preferences
       </h2>
 
       {error && (
-        <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative mb-4" role="alert" data-testid="notification-error">
+        <div className="bg-red-100 dark:bg-red-900/30 border border-red-400 dark:border-red-700 text-red-700 dark:text-red-300 px-4 py-3 rounded relative mb-4" role="alert" data-testid="notification-error">
           <span className="block sm:inline">{error}</span>
         </div>
       )}
       
       {success && (
-        <div className="bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded relative mb-4" role="alert">
+        <div className="bg-green-100 dark:bg-green-900/30 border border-green-400 dark:border-green-700 text-green-700 dark:text-green-300 px-4 py-3 rounded relative mb-4" role="alert">
           <span className="block sm:inline">{success}</span>
         </div>
       )}
@@ -352,8 +352,8 @@ export default function NotificationPreferences({ className = '' }: Notification
       <div className="space-y-4">
         {/* Permission Status */}
         <div>
-          <p className="text-sm text-gray-700 mb-2">
-            Current permission status: <span className={`font-medium ${notificationPermission === 'granted' ? 'text-green-600' : notificationPermission === 'denied' ? 'text-red-600' : 'text-gray-600'}`}>
+          <p className="text-sm text-foreground/80 mb-2">
+            Current permission status: <span className={`font-medium ${notificationPermission === 'granted' ? 'text-green-600 dark:text-green-400' : notificationPermission === 'denied' ? 'text-red-600 dark:text-red-400' : 'text-muted-foreground'}`}>
               {notificationPermission.charAt(0).toUpperCase() + notificationPermission.slice(1)}
             </span>
           </p>
@@ -362,7 +362,7 @@ export default function NotificationPreferences({ className = '' }: Notification
             <button
               onClick={handleRequestPermission}
               disabled={isLoading}
-              className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50"
+              className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-primary hover:bg-primary/90 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary disabled:opacity-50"
               data-testid="request-notification-permission"
             >
               <Bell className="h-5 w-5 mr-2" />
@@ -386,7 +386,7 @@ export default function NotificationPreferences({ className = '' }: Notification
                 <button
                   onClick={handleUnsubscribe}
                   disabled={isLoading || !user?.id}
-                  className="inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md shadow-sm text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 disabled:opacity-50"
+                  className="inline-flex items-center px-4 py-2 border border-border text-sm font-medium rounded-md shadow-sm text-foreground/80 bg-card hover:bg-muted focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary disabled:opacity-50"
                   data-testid="unsubscribe-notifications"
                 >
                   <BellOff className="h-5 w-5 mr-2" />
@@ -406,21 +406,21 @@ export default function NotificationPreferences({ className = '' }: Notification
         {/* Notification Types */}
         {isSubscribed && (
           <div className="space-y-3">
-            <h3 className="text-lg font-medium text-gray-900">Notification Types</h3>
+            <h3 className="text-lg font-medium text-foreground">Notification Types</h3>
             
             <div className="flex items-center justify-between">
               <div className="flex items-center space-x-3">
-                <Bell className="h-5 w-5 text-blue-600" />
+                <Bell className="h-5 w-5 text-primary" />
                 <div>
-                  <label className="text-sm font-medium text-gray-700">New Polls</label>
-                  <p className="text-xs text-gray-500">Get notified about new polls</p>
+                  <label className="text-sm font-medium text-foreground/80">New Polls</label>
+                  <p className="text-xs text-muted-foreground">Get notified about new polls</p>
                 </div>
               </div>
               <button
                 onClick={() => handlePreferenceChange('newPolls')}
                 disabled={isLoading}
                 className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors disabled:opacity-50 ${
-                  localPreferences.newPolls ? 'bg-blue-600' : 'bg-gray-200'
+                  localPreferences.newPolls ? 'bg-primary' : 'bg-muted'
                 }`}
                 data-testid="new-polls-toggle"
               >
@@ -436,15 +436,15 @@ export default function NotificationPreferences({ className = '' }: Notification
               <div className="flex items-center space-x-3">
                 <Bell className="h-5 w-5 text-green-600" />
                 <div>
-                  <label className="text-sm font-medium text-gray-700">Poll Results</label>
-                  <p className="text-xs text-gray-500">Get notified when polls close with results</p>
+                  <label className="text-sm font-medium text-foreground/80">Poll Results</label>
+                  <p className="text-xs text-muted-foreground">Get notified when polls close with results</p>
                 </div>
               </div>
               <button
                 onClick={() => handlePreferenceChange('pollResults')}
                 disabled={isLoading}
                 className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors disabled:opacity-50 ${
-                  localPreferences.pollResults ? 'bg-green-600' : 'bg-gray-200'
+                  localPreferences.pollResults ? 'bg-green-600' : 'bg-muted'
                 }`}
                 data-testid="poll-results-toggle"
               >
@@ -460,15 +460,15 @@ export default function NotificationPreferences({ className = '' }: Notification
               <div className="flex items-center space-x-3">
                 <Bell className="h-5 w-5 text-purple-600" />
                 <div>
-                  <label className="text-sm font-medium text-gray-700">System Updates</label>
-                  <p className="text-xs text-gray-500">Get notified about system updates and maintenance</p>
+                  <label className="text-sm font-medium text-foreground/80">System Updates</label>
+                  <p className="text-xs text-muted-foreground">Get notified about system updates and maintenance</p>
                 </div>
               </div>
               <button
                 onClick={() => handlePreferenceChange('systemUpdates')}
                 disabled={isLoading}
                 className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors disabled:opacity-50 ${
-                  localPreferences.systemUpdates ? 'bg-purple-600' : 'bg-gray-200'
+                  localPreferences.systemUpdates ? 'bg-purple-600' : 'bg-muted'
                 }`}
                 data-testid="system-updates-toggle"
               >
@@ -484,15 +484,15 @@ export default function NotificationPreferences({ className = '' }: Notification
               <div className="flex items-center space-x-3">
                 <Bell className="h-5 w-5 text-orange-600" />
                 <div>
-                  <label className="text-sm font-medium text-gray-700">Weekly Digest</label>
-                  <p className="text-xs text-gray-500">Get a weekly summary of activity</p>
+                  <label className="text-sm font-medium text-foreground/80">Weekly Digest</label>
+                  <p className="text-xs text-muted-foreground">Get a weekly summary of activity</p>
                 </div>
               </div>
               <button
                 onClick={() => handlePreferenceChange('weeklyDigest')}
                 disabled={isLoading}
                 className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors disabled:opacity-50 ${
-                  localPreferences.weeklyDigest ? 'bg-orange-600' : 'bg-gray-200'
+                  localPreferences.weeklyDigest ? 'bg-orange-600' : 'bg-muted'
                 }`}
                 data-testid="weekly-digest-toggle"
               >

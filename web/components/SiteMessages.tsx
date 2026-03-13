@@ -65,6 +65,8 @@ const liveRegionForMessage = (message: SiteMessage) => {
   return { role: 'status' as const, 'aria-live': 'polite' as const };
 };
 
+const MAX_AGE_DAYS = 30;
+
 const loadDismissedFromStorage = (): Set<string> => {
   if (typeof window === 'undefined') {
     return new Set();
@@ -80,6 +82,13 @@ const loadDismissedFromStorage = (): Set<string> => {
     logger.warn('Unable to read dismissed site messages from storage', error);
     return new Set();
   }
+};
+
+const isMessageExpiredByAge = (createdAt: string): boolean => {
+  const created = new Date(createdAt);
+  const cutoff = new Date();
+  cutoff.setDate(cutoff.getDate() - MAX_AGE_DAYS);
+  return created < cutoff;
 };
 
 const persistDismissedToStorage = (dismissed: Set<string>) => {
@@ -216,8 +225,6 @@ export default function SiteMessages({
   }, []);
 
   const activeMessages = useMemo(() => {
-    // Only filter by expiration date after mount to prevent hydration mismatch
-    // During SSR, show all non-dismissed messages
     if (!isMounted) {
       return messages
         .filter((message) => !dismissedMessages.has(message.id))
@@ -228,10 +235,10 @@ export default function SiteMessages({
     return messages
       .filter((message) => !dismissedMessages.has(message.id))
       .filter((message) => {
-        if (!message.expires_at) {
-          return true;
+        if (message.expires_at) {
+          return new Date(message.expires_at) > now;
         }
-        return new Date(message.expires_at) > now;
+        return !isMessageExpiredByAge(message.created_at);
       })
       .slice(0, maxMessages);
   }, [dismissedMessages, maxMessages, messages, isMounted]);
@@ -253,7 +260,7 @@ export default function SiteMessages({
   if (loading && messages.length === 0) {
     return (
       <div className={`space-y-3 ${className}`} role="status" aria-live="polite">
-        <div className="rounded-lg border border-gray-200 bg-gray-50 p-4 text-sm text-gray-600">
+        <div className="rounded-lg border border-border bg-muted p-4 text-sm text-muted-foreground">
           Loading site messages…
         </div>
       </div>
@@ -292,7 +299,7 @@ export default function SiteMessages({
             aria-atomic="true"
           >
             <div className="flex items-start space-x-3">
-              <div className="mt-0.5 flex-shrink-0 p-1.5 rounded-full bg-white dark:bg-gray-800/50">
+              <div className="mt-0.5 flex-shrink-0 p-1.5 rounded-full bg-card/50">
                 {typeToIcon[message.type]}
               </div>
               <div className="min-w-0 flex-1">
@@ -305,7 +312,7 @@ export default function SiteMessages({
                     {showDismiss && (
                       <button
                         onClick={() => handleDismiss(message.id, message.title)}
-                        className="flex-shrink-0 rounded p-1 min-h-[44px] min-w-[44px] flex items-center justify-center text-gray-500 dark:text-gray-400 transition-colors hover:text-gray-700 dark:hover:text-gray-200 hover:bg-white/50 dark:hover:bg-gray-800/50 focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2"
+                        className="flex-shrink-0 rounded p-1 min-h-[44px] min-w-[44px] flex items-center justify-center text-muted-foreground transition-colors hover:text-foreground hover:bg-card/50 focus:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2"
                         aria-label={`Dismiss message titled ${message.title}`}
                       >
                         <X className="h-4 w-4" aria-hidden="true" />
@@ -323,7 +330,7 @@ export default function SiteMessages({
                   {showToggle && (
                     <button
                       onClick={() => handleToggleExpand(message.id, !isExpanded)}
-                      className="mt-2 flex items-center space-x-1 text-xs font-medium text-blue-700 dark:text-blue-400 transition hover:text-blue-900 dark:hover:text-blue-300 focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2 rounded px-1 py-0.5"
+                      className="mt-2 flex items-center space-x-1 text-xs font-medium text-primary transition hover:text-primary/90 focus:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 rounded px-1 py-0.5"
                       aria-expanded={isExpanded}
                       aria-controls={`site-message-${message.id}-body`}
                     >
@@ -342,7 +349,7 @@ export default function SiteMessages({
                   )}
                 </div>
 
-                <div className="mt-3 flex items-center justify-between text-xs text-gray-600 dark:text-gray-400 pt-2 border-t border-current/10">
+                <div className="mt-3 flex items-center justify-between text-xs text-muted-foreground pt-2 border-t border-current/10">
                   <time dateTime={message.created_at} className="flex items-center gap-1">
                     <span>Posted</span>
                     <span className="font-medium">

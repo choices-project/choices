@@ -12,7 +12,7 @@
 
 'use client';
 
-import { ChevronDownIcon, GlobeAltIcon } from '@heroicons/react/24/outline';
+import { ChevronDown, Globe } from 'lucide-react';
 import React, { useCallback, useEffect, useId, useRef, useState } from 'react';
 
 import { LANGUAGE_OPTIONS } from '@/features/profile/utils/profile-constants';
@@ -135,7 +135,7 @@ export default function LanguageSelector({
       <div className={`space-y-2 ${className}`} data-testid="language-selector">
         <LiveRegion />
         {showLabel && (
-          <label className="block text-sm font-medium text-gray-700">
+          <label className="block text-sm font-medium text-foreground/80">
             {t('settings.language')}
           </label>
         )}
@@ -148,8 +148,8 @@ export default function LanguageSelector({
               data-language-option={lang.code}
               className={`px-3 py-2 rounded-lg text-sm font-medium transition-colors ${
                 currentLanguage === lang.code
-                  ? 'bg-blue-600 text-white'
-                  : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                  ? 'bg-primary text-primary-foreground'
+                  : 'bg-muted text-foreground/80 hover:bg-muted'
               } ${isLoading ? 'opacity-50 cursor-not-allowed' : ''}`}
             >
               {showNativeNames ? lang.native : lang.name}
@@ -168,14 +168,14 @@ export default function LanguageSelector({
           ref={toggleRef}
           onClick={() => setIsOpen(!isOpen)}
           disabled={isLoading}
-          className="flex items-center space-x-2 px-3 py-2 text-sm text-gray-700 hover:text-gray-900 transition-colors"
+          className="flex items-center space-x-2 px-3 py-2 text-sm text-foreground/80 hover:text-foreground transition-colors"
           aria-haspopup="listbox"
           aria-expanded={isOpen}
           aria-controls={`${menuId}-menu`}
         >
-          <GlobeAltIcon className="h-4 w-4" />
+          <Globe className="h-4 w-4" />
           <span>{getDisplayName(displayLanguage)}</span>
-          <ChevronDownIcon className="h-4 w-4" />
+          <ChevronDown className="h-4 w-4" />
         </button>
 
         {isOpen && (
@@ -183,17 +183,17 @@ export default function LanguageSelector({
             id={`${menuId}-menu`}
             role="listbox"
             aria-label={t('settings.language')}
-            className="absolute right-0 mt-2 w-48 bg-white dark:bg-gray-800 rounded-lg shadow-lg border border-gray-200 dark:border-gray-700 z-50"
+            className="absolute right-0 mt-2 w-48 bg-card rounded-lg shadow-lg border border-border z-50"
           >
             <div className="py-1">
               {SUPPORTED_LANGUAGE_OPTIONS.map((lang) => (
                 <button
                   key={lang.code}
                   onClick={() => handleLanguageChange(lang.code)}
-                  className={`w-full text-left px-4 py-2 text-sm transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 ${
+                  className={`w-full text-left px-4 py-2 text-sm transition-colors focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 ${
                     currentLanguage === lang.code
-                      ? 'bg-blue-50 dark:bg-blue-900/20 text-blue-700 dark:text-blue-300'
-                      : 'text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700'
+                      ? 'bg-primary/10 text-primary'
+                      : 'text-foreground/80 hover:bg-muted'
                   }`}
                   role="option"
                   aria-selected={currentLanguage === lang.code}
@@ -202,7 +202,7 @@ export default function LanguageSelector({
                   <div className="flex items-center justify-between">
                     <span>{showNativeNames ? lang.native : lang.name}</span>
                     {currentLanguage === lang.code && (
-                      <span className="text-blue-600 dark:text-blue-400" aria-hidden="true">✓</span>
+                      <span className="text-primary" aria-hidden="true">✓</span>
                     )}
                   </div>
                 </button>
@@ -219,7 +219,7 @@ export default function LanguageSelector({
     <div className={`space-y-2 ${className}`} data-testid="language-selector">
       <LiveRegion />
       {showLabel && (
-        <label className="block text-sm font-medium text-gray-700">
+        <label className="block text-sm font-medium text-foreground/80">
           {t('settings.language')}
         </label>
       )}
@@ -228,16 +228,16 @@ export default function LanguageSelector({
             ref={toggleRef}
           onClick={() => setIsOpen(!isOpen)}
           disabled={isLoading}
-          className="w-full flex items-center justify-between px-3 py-2 border border-gray-300 rounded-lg bg-white text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+          className="w-full flex items-center justify-between px-3 py-2 border border-border rounded-lg bg-card text-foreground/80 text-sm focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary"
             aria-haspopup="listbox"
             aria-expanded={isOpen}
             aria-controls={`${menuId}-menu`}
         >
           <div className="flex items-center space-x-2">
-            <GlobeAltIcon className="h-4 w-4 text-gray-400" />
+            <Globe className="h-4 w-4 text-muted-foreground" />
             <span>{getDisplayName(displayLanguage)}</span>
           </div>
-          <ChevronDownIcon className="h-4 w-4 text-gray-400" />
+          <ChevronDown className="h-4 w-4 text-muted-foreground" />
         </button>
 
         {isOpen && (
@@ -245,17 +245,17 @@ export default function LanguageSelector({
               id={`${menuId}-menu`}
               role="listbox"
               aria-label={t('settings.language')}
-              className="absolute z-50 w-full mt-1 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg shadow-lg"
+              className="absolute z-50 w-full mt-1 bg-card border border-border rounded-lg shadow-lg"
             >
             <div className="py-1">
               {SUPPORTED_LANGUAGE_OPTIONS.map((lang) => (
                 <button
                   key={lang.code}
                   onClick={() => handleLanguageChange(lang.code)}
-                  className={`w-full text-left px-4 py-2 text-sm transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 ${
+                  className={`w-full text-left px-4 py-2 text-sm transition-colors focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 ${
                     currentLanguage === lang.code
-                      ? 'bg-blue-50 dark:bg-blue-900/20 text-blue-700 dark:text-blue-300'
-                      : 'text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700'
+                      ? 'bg-primary/10 text-primary'
+                      : 'text-foreground/80 hover:bg-muted'
                   }`}
                     role="option"
                     aria-selected={currentLanguage === lang.code}
@@ -267,13 +267,13 @@ export default function LanguageSelector({
                         {showNativeNames ? lang.native : lang.name}
                       </div>
                       {showNativeNames && (
-                        <div className="text-xs text-gray-500 dark:text-gray-400">
+                        <div className="text-xs text-muted-foreground">
                           {lang.name}
                         </div>
                       )}
                     </div>
                     {currentLanguage === lang.code && (
-                      <span className="text-blue-600 dark:text-blue-400" aria-hidden="true">✓</span>
+                      <span className="text-primary" aria-hidden="true">✓</span>
                     )}
                   </div>
                 </button>

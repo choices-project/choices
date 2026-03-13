@@ -11,8 +11,8 @@
 
 'use client';
 
-import { MoonIcon, SunIcon, ComputerDesktopIcon, ChevronDownIcon } from '@heroicons/react/24/outline';
-import React, { useCallback, useEffect, useId, useRef, useState } from 'react';
+import { Moon, Sun, Monitor, ChevronDown } from 'lucide-react';
+import React, { useCallback, useEffect, useId, useMemo, useRef, useState } from 'react';
 
 import { ScreenReaderSupport } from '@/lib/accessibility/screen-reader';
 import {
@@ -31,30 +31,15 @@ type ThemeSelectorProps = {
   showLabel?: boolean;
 };
 
-const THEME_OPTIONS: Array<{
+const THEME_OPTIONS_CONFIG: Array<{
   value: ThemePreference;
-  label: string;
-  description: string;
   icon: React.ReactNode;
+  labelKey: string;
+  descriptionKey: string;
 }> = [
-  {
-    value: 'light',
-    label: 'Light',
-    description: 'Light theme',
-    icon: <SunIcon className="h-4 w-4" />,
-  },
-  {
-    value: 'dark',
-    label: 'Dark',
-    description: 'Dark theme',
-    icon: <MoonIcon className="h-4 w-4" />,
-  },
-  {
-    value: 'system',
-    label: 'System',
-    description: 'Use system preference',
-    icon: <ComputerDesktopIcon className="h-4 w-4" />,
-  },
+  { value: 'light', icon: <Sun className="h-4 w-4" />, labelKey: 'common.theme.light', descriptionKey: 'common.theme.lightDescription' },
+  { value: 'dark', icon: <Moon className="h-4 w-4" />, labelKey: 'common.theme.dark', descriptionKey: 'common.theme.darkDescription' },
+  { value: 'system', icon: <Monitor className="h-4 w-4" />, labelKey: 'common.theme.system', descriptionKey: 'common.theme.systemDescription' },
 ];
 
 export default function ThemeSelector({
@@ -64,6 +49,16 @@ export default function ThemeSelector({
 }: ThemeSelectorProps) {
   const { t } = useI18n();
   const theme = useTheme();
+  const themeOptions = useMemo(
+    () =>
+      THEME_OPTIONS_CONFIG.map((opt) => ({
+        value: opt.value,
+        label: t(opt.labelKey),
+        description: t(opt.descriptionKey),
+        icon: opt.icon,
+      })),
+    [t]
+  );
   const resolvedTheme = useResolvedTheme();
   const { setTheme } = useAppActions();
   const [isOpen, setIsOpen] = useState(false);
@@ -97,15 +92,15 @@ export default function ThemeSelector({
   }, [isOpen]);
 
   const getCurrentThemeLabel = () => {
-    const option = THEME_OPTIONS.find((opt) => opt.value === theme);
-    return option?.label ?? 'System';
+    const option = themeOptions.find((opt) => opt.value === theme);
+    return option?.label ?? t('common.theme.system');
   };
 
   const handleThemeChange = useCallback(
     (newTheme: ThemePreference) => {
       try {
         setTheme(newTheme);
-        const themeLabel = THEME_OPTIONS.find((opt) => opt.value === newTheme)?.label ?? newTheme;
+        const themeLabel = themeOptions.find((opt) => opt.value === newTheme)?.label ?? newTheme;
         announce(t('common.theme.changed', { theme: themeLabel }), 'polite');
         logger.info('Theme changed', { theme: newTheme });
       } catch (error) {
@@ -115,7 +110,7 @@ export default function ThemeSelector({
         setIsOpen(false);
       }
     },
-    [setTheme, announce, t],
+    [setTheme, announce, t, themeOptions],
   );
 
   const LiveRegion = () => (
@@ -134,20 +129,20 @@ export default function ThemeSelector({
       <div className={`space-y-2 ${className}`} data-testid="theme-selector">
         <LiveRegion />
         {showLabel && (
-          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
-            Theme
+          <label className="block text-sm font-medium text-foreground/80">
+            {t('common.theme.label')}
           </label>
         )}
         <div className="flex flex-wrap gap-2">
-          {THEME_OPTIONS.map((option) => (
+          {themeOptions.map((option) => (
             <button
               key={option.value}
               onClick={() => handleThemeChange(option.value)}
               data-theme-option={option.value}
               className={`flex items-center space-x-2 px-3 py-2 rounded-lg text-sm font-medium transition-colors ${
                 theme === option.value
-                  ? 'bg-blue-600 text-white'
-                  : 'bg-gray-100 text-gray-700 hover:bg-gray-200 dark:bg-gray-800 dark:text-gray-300 dark:hover:bg-gray-700'
+                  ? 'bg-primary text-primary-foreground'
+                  : 'bg-muted text-foreground/80 hover:bg-muted'
               }`}
             >
               {option.icon}
@@ -166,15 +161,15 @@ export default function ThemeSelector({
         <button
           ref={toggleRef}
           onClick={() => setIsOpen(!isOpen)}
-          className="flex items-center space-x-2 px-3 py-2 text-sm text-gray-700 dark:text-gray-300 hover:text-gray-900 dark:hover:text-gray-100 transition-colors"
+          className="flex items-center space-x-2 px-3 py-2 text-sm text-foreground/80 hover:text-foreground transition-colors"
           aria-haspopup="listbox"
           aria-expanded={isOpen}
           aria-controls={`${menuId}-menu`}
           aria-label={t('common.theme.select')}
         >
-          {THEME_OPTIONS.find((opt) => opt.value === theme)?.icon}
+          {themeOptions.find((opt) => opt.value === theme)?.icon}
           <span>{getCurrentThemeLabel()}</span>
-          <ChevronDownIcon className="h-4 w-4" />
+          <ChevronDown className="h-4 w-4" />
         </button>
 
         {isOpen && (
@@ -182,17 +177,17 @@ export default function ThemeSelector({
             id={`${menuId}-menu`}
             role="listbox"
             aria-label={t('common.theme.options')}
-            className="absolute right-0 mt-2 w-48 bg-white dark:bg-gray-800 rounded-lg shadow-lg border border-gray-200 dark:border-gray-700 z-50"
+            className="absolute right-0 mt-2 w-48 bg-card rounded-lg shadow-lg border border-border z-50"
           >
             <div className="py-1">
-              {THEME_OPTIONS.map((option) => (
+              {themeOptions.map((option) => (
                 <button
                   key={option.value}
                   onClick={() => handleThemeChange(option.value)}
-                  className={`w-full flex items-center space-x-3 text-left px-4 py-2 text-sm transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 ${
+                  className={`w-full flex items-center space-x-3 text-left px-4 py-2 text-sm transition-colors focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 ${
                     theme === option.value
-                      ? 'bg-blue-50 dark:bg-blue-900/20 text-blue-700 dark:text-blue-300'
-                      : 'text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700'
+                      ? 'bg-primary/10 text-primary'
+                      : 'text-foreground/80 hover:bg-muted'
                   }`}
                   role="option"
                   aria-selected={theme === option.value}
@@ -202,7 +197,7 @@ export default function ThemeSelector({
                   <div className="flex-1 flex items-center justify-between">
                     <span>{option.label}</span>
                     {theme === option.value && (
-                      <span className="text-blue-600 dark:text-blue-400" aria-hidden="true">✓</span>
+                      <span className="text-primary" aria-hidden="true">✓</span>
                     )}
                   </div>
                 </button>
@@ -219,7 +214,7 @@ export default function ThemeSelector({
     <div className={`space-y-2 ${className}`} data-testid="theme-selector">
       <LiveRegion />
       {showLabel && (
-        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
+        <label className="block text-sm font-medium text-foreground/80">
           {t('common.theme.label')}
         </label>
       )}
@@ -227,22 +222,22 @@ export default function ThemeSelector({
         <button
           ref={toggleRef}
           onClick={() => setIsOpen(!isOpen)}
-          className="w-full flex items-center justify-between px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-sm text-gray-700 dark:text-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+          className="w-full flex items-center justify-between px-3 py-2 border border-border rounded-lg bg-card text-sm text-foreground/80 focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary"
           aria-haspopup="listbox"
           aria-expanded={isOpen}
           aria-controls={`${menuId}-menu`}
           aria-label={t('common.theme.select')}
         >
           <div className="flex items-center space-x-2">
-            {THEME_OPTIONS.find((opt) => opt.value === theme)?.icon}
+            {themeOptions.find((opt) => opt.value === theme)?.icon}
             <span>{getCurrentThemeLabel()}</span>
             {theme === 'system' && (
-              <span className="text-xs text-gray-500 dark:text-gray-400">
+              <span className="text-xs text-muted-foreground">
                 ({resolvedTheme})
               </span>
             )}
           </div>
-          <ChevronDownIcon className="h-4 w-4 text-gray-400" />
+          <ChevronDown className="h-4 w-4 text-muted-foreground" />
         </button>
 
         {isOpen && (
@@ -250,17 +245,17 @@ export default function ThemeSelector({
             id={`${menuId}-menu`}
             role="listbox"
             aria-label={t('common.theme.options')}
-            className="absolute z-50 w-full mt-1 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg shadow-lg"
+            className="absolute z-50 w-full mt-1 bg-card border border-border rounded-lg shadow-lg"
           >
             <div className="py-1">
-              {THEME_OPTIONS.map((option) => (
+              {themeOptions.map((option) => (
                 <button
                   key={option.value}
                   onClick={() => handleThemeChange(option.value)}
-                  className={`w-full flex items-center space-x-3 text-left px-4 py-2 text-sm transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 ${
+                  className={`w-full flex items-center space-x-3 text-left px-4 py-2 text-sm transition-colors focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 ${
                     theme === option.value
-                      ? 'bg-blue-50 dark:bg-blue-900/20 text-blue-700 dark:text-blue-300'
-                      : 'text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700'
+                      ? 'bg-primary/10 text-primary'
+                      : 'text-foreground/80 hover:bg-muted'
                   }`}
                   role="option"
                   aria-selected={theme === option.value}
@@ -269,12 +264,12 @@ export default function ThemeSelector({
                   <span className="flex-shrink-0" aria-hidden="true">{option.icon}</span>
                   <div className="flex-1">
                     <div className="font-medium">{option.label}</div>
-                    <div className="text-xs text-gray-500 dark:text-gray-400">
+                    <div className="text-xs text-muted-foreground">
                       {option.description}
                     </div>
                   </div>
                   {theme === option.value && (
-                    <span className="text-blue-600 dark:text-blue-400" aria-hidden="true">✓</span>
+                    <span className="text-primary" aria-hidden="true">✓</span>
                   )}
                 </button>
               ))}

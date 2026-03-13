@@ -7,10 +7,13 @@
 'use client';
 
 import { CheckCircle2, AlertCircle, ArrowRight } from 'lucide-react';
+import Link from 'next/link';
 import { useRouter, useSearchParams } from 'next/navigation';
 import React, { useEffect, useState } from 'react';
 
 import { getSupabaseBrowserClient } from '@/utils/supabase/client';
+
+import { Input } from '@/components/ui/input';
 
 import { logger } from '@/lib/utils/logger';
 
@@ -161,8 +164,8 @@ export default function DeviceFlowVerifyPage() {
         <div className="max-w-md w-full space-y-8 text-center">
           <CheckCircle2 className="h-16 w-16 text-green-500 mx-auto" />
           <div>
-            <h1 className="text-3xl font-bold text-gray-900 dark:text-gray-100">Authorization Complete!</h1>
-            <p className="mt-2 text-sm text-gray-600 dark:text-gray-400">
+            <h1 className="text-3xl font-bold text-foreground">Authorization Complete!</h1>
+            <p className="mt-2 text-sm text-muted-foreground">
               You can now return to your device.
             </p>
           </div>
@@ -175,20 +178,20 @@ export default function DeviceFlowVerifyPage() {
     <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50 dark:from-gray-900 dark:via-gray-900 dark:to-gray-800 flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8">
       <div className="max-w-md w-full space-y-8">
         <div>
-          <h1 className="mt-6 text-center text-4xl font-extrabold text-gray-900 dark:text-gray-100">
+          <h1 className="mt-6 text-center text-4xl font-extrabold text-foreground">
             Enter Your Code
           </h1>
-          <p className="mt-2 text-center text-sm text-gray-600 dark:text-gray-400">
+          <p className="mt-2 text-center text-sm text-muted-foreground">
             Enter the code displayed on your device to complete authorization.
           </p>
         </div>
 
         <form onSubmit={handleSubmit} className="mt-8 space-y-6">
           <div>
-            <label htmlFor="userCode" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+            <label htmlFor="userCode" className="block text-sm font-medium text-foreground/80 mb-2">
               User Code
             </label>
-            <input
+            <Input
               id="userCode"
               name="userCode"
               type="text"
@@ -197,10 +200,10 @@ export default function DeviceFlowVerifyPage() {
               onChange={(e) => handleCodeChange(e.target.value)}
               placeholder="XXXX-XXXX"
               maxLength={9}
-              className="appearance-none relative block w-full px-3 py-3 border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 placeholder-gray-500 dark:placeholder-gray-400 text-gray-900 dark:text-gray-100 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 focus:z-10 text-center text-2xl font-mono tracking-wider"
+              className="text-center text-2xl font-mono tracking-wider"
               autoComplete="off"
             />
-            <p className="mt-2 text-xs text-gray-500 dark:text-gray-400 text-center">
+            <p className="mt-2 text-xs text-muted-foreground text-center">
               Enter the 8-character code from your device
             </p>
           </div>
@@ -227,7 +230,7 @@ export default function DeviceFlowVerifyPage() {
                   </p>
                   <button
                     onClick={handleOAuthSignIn}
-                    className="w-full px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm font-medium"
+                    className="w-full px-4 py-2 bg-primary text-primary-foreground rounded-md hover:bg-primary/90 focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm font-medium"
                   >
                     Sign in with {provider.charAt(0).toUpperCase() + provider.slice(1)}
                   </button>
@@ -240,7 +243,7 @@ export default function DeviceFlowVerifyPage() {
             <button
               type="submit"
               disabled={isLoading || userCode.length < 8}
-              className="group relative w-full flex justify-center py-3 px-4 border border-transparent text-sm font-medium rounded-lg text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed"
+              className="group relative w-full flex justify-center py-3 px-4 border border-transparent text-sm font-medium rounded-lg text-white bg-primary hover:bg-primary/90 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed"
             >
               {isLoading ? (
                 <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white" />
@@ -255,11 +258,11 @@ export default function DeviceFlowVerifyPage() {
         </form>
 
         <div className="text-center">
-          <p className="text-xs text-gray-500 dark:text-gray-400">
+          <p className="text-xs text-muted-foreground">
             Don&rsquo;t have a code?{' '}
-            <a href="/auth" className="text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300 underline">
+            <Link href="/auth" className="text-primary hover:text-primary/80 underline">
               Sign in normally
-            </a>
+            </Link>
           </p>
         </div>
       </div>

@@ -12,7 +12,7 @@
 
 'use client';
 
-import { ChevronDownIcon, ChevronUpIcon } from '@heroicons/react/24/outline';
+import { ChevronDown, ChevronUp } from 'lucide-react';
 import React, { useState, useRef, useEffect } from 'react';
 
 import { useI18n } from '@/hooks/useI18n';
@@ -88,7 +88,7 @@ export default function ProgressiveDisclosure({
       <button
         onClick={handleToggle}
         onKeyDown={handleKeyDown}
-        className="w-full flex items-center justify-between p-4 text-left hover:bg-gray-50 transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-inset"
+        className="w-full flex items-center justify-between p-4 text-left hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-inset"
         aria-expanded={expanded}
         aria-label={
           ariaLabel ??
@@ -105,9 +105,9 @@ export default function ProgressiveDisclosure({
         {showIcon && (
           <div className={`flex-shrink-0 ml-2 ${iconPosition === 'left' ? 'order-first mr-2 ml-0' : ''}`}>
             {expanded ? (
-              <ChevronUpIcon className="w-5 h-5 text-gray-500 transition-transform duration-200" />
+              <ChevronUp className="w-5 h-5 text-gray-500 dark:text-gray-400 transition-transform duration-200" />
             ) : (
-              <ChevronDownIcon className="w-5 h-5 text-gray-500 transition-transform duration-200" />
+              <ChevronDown className="w-5 h-5 text-gray-500 dark:text-gray-400 transition-transform duration-200" />
             )}
           </div>
         )}

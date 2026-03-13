@@ -178,10 +178,10 @@ export const IssueGenerationPanel: React.FC<IssueGenerationPanelProps> = ({
       {/* Header */}
       <div className="flex items-center justify-between">
         <div className="flex items-center space-x-3">
-          <Github className="h-6 w-6 text-gray-600 dark:text-gray-400" />
+          <Github className="h-6 w-6 text-muted-foreground" />
           <div>
-            <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100">GitHub Issue Generation</h2>
-            <p className="text-sm text-gray-600 dark:text-gray-400">Transform feedback into actionable development tasks</p>
+            <h2 className="text-lg font-semibold text-foreground">GitHub Issue Generation</h2>
+            <p className="text-sm text-muted-foreground">Transform feedback into actionable development tasks</p>
           </div>
         </div>
         <div className="flex items-center space-x-2">
@@ -196,26 +196,26 @@ export const IssueGenerationPanel: React.FC<IssueGenerationPanelProps> = ({
 
       {/* Stats Cards */}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-        <div className="bg-white dark:bg-gray-900 rounded-lg shadow p-4 border border-gray-200 dark:border-gray-700">
+        <div className="bg-background rounded-lg shadow p-4 border border-border">
           <div className="flex items-center">
             <div className="p-2 rounded-lg bg-blue-50 dark:bg-blue-900/30">
-              <Zap className="h-5 w-5 text-blue-600 dark:text-blue-400" />
+              <Zap className="h-5 w-5 text-primary" />
             </div>
             <div className="ml-3">
-              <p className="text-sm font-medium text-gray-600 dark:text-gray-400">Ready to Generate</p>
-              <p className="text-2xl font-bold text-gray-900 dark:text-gray-100">{feedbackWithoutIssues.length}</p>
+              <p className="text-sm font-medium text-muted-foreground">Ready to Generate</p>
+              <p className="text-2xl font-bold text-foreground">{feedbackWithoutIssues.length}</p>
             </div>
           </div>
         </div>
 
-        <div className="bg-white dark:bg-gray-900 rounded-lg shadow p-4 border border-gray-200 dark:border-gray-700">
+        <div className="bg-background rounded-lg shadow p-4 border border-border">
           <div className="flex items-center">
             <div className="p-2 rounded-lg bg-green-50 dark:bg-green-900/30">
               <CheckCircle className="h-5 w-5 text-green-600 dark:text-green-400" />
             </div>
             <div className="ml-3">
-              <p className="text-sm font-medium text-gray-600 dark:text-gray-400">Issues Created</p>
-              <p className="text-2xl font-bold text-gray-900 dark:text-gray-100">{feedbackWithIssues.length}</p>
+              <p className="text-sm font-medium text-muted-foreground">Issues Created</p>
+              <p className="text-2xl font-bold text-foreground">{feedbackWithIssues.length}</p>
             </div>
           </div>
         </div>
@@ -226,8 +226,8 @@ export const IssueGenerationPanel: React.FC<IssueGenerationPanelProps> = ({
               <TrendingUp className="h-5 w-5 text-purple-600" />
             </div>
             <div className="ml-3">
-              <p className="text-sm font-medium text-gray-600">High Priority</p>
-              <p className="text-2xl font-bold text-gray-900">
+              <p className="text-sm font-medium text-muted-foreground">High Priority</p>
+              <p className="text-2xl font-bold text-foreground">
                 {feedbackWithoutIssues.filter(f => f.priority === 'high' || f.priority === 'urgent').length}
               </p>
             </div>
@@ -240,8 +240,8 @@ export const IssueGenerationPanel: React.FC<IssueGenerationPanelProps> = ({
               <BarChart3 className="h-5 w-5 text-orange-600" />
             </div>
             <div className="ml-3">
-              <p className="text-sm font-medium text-gray-600">Bug Reports</p>
-              <p className="text-2xl font-bold text-gray-900">
+              <p className="text-sm font-medium text-muted-foreground">Bug Reports</p>
+              <p className="text-2xl font-bold text-foreground">
                 {feedbackWithoutIssues.filter(f => f.type === 'bug').length}
               </p>
             </div>
@@ -260,14 +260,14 @@ export const IssueGenerationPanel: React.FC<IssueGenerationPanelProps> = ({
                 onChange={handleSelectAll}
                 className="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
               />
-              <span className="text-sm font-medium text-gray-700">
+              <span className="text-sm font-medium text-foreground/80">
                 Select All ({selectedFeedback.length}/{feedbackWithoutIssues.length})
               </span>
             </div>
             <button
               onClick={() => void handleBulkGenerate()}
               disabled={selectedFeedback.length === 0 || isGenerating}
-              className="flex items-center px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed"
+              className="flex items-center px-4 py-2 bg-primary text-white rounded-lg hover:bg-primary/90 disabled:opacity-50 disabled:cursor-not-allowed"
             >
               <Github className="h-4 w-4 mr-2" />
               {isGenerating ? 'Generating...' : `Generate ${selectedFeedback.length} Issues`}
@@ -279,14 +279,14 @@ export const IssueGenerationPanel: React.FC<IssueGenerationPanelProps> = ({
       {/* Feedback List */}
       <div className="bg-white rounded-lg shadow">
         <div className="px-6 py-4 border-b border-gray-200">
-          <h3 className="text-lg font-medium text-gray-900">Feedback Ready for Issue Generation</h3>
+          <h3 className="text-lg font-medium text-foreground">Feedback Ready for Issue Generation</h3>
         </div>
         <div className="divide-y divide-gray-200">
           {feedbackWithoutIssues.length === 0 ? (
             <div className="px-6 py-8 text-center">
               <CheckCircle className="h-12 w-12 text-green-400 mx-auto mb-4" />
-              <h3 className="text-lg font-medium text-gray-900 mb-2">All caught up!</h3>
-              <p className="text-gray-600">All feedback has been converted to GitHub issues.</p>
+              <h3 className="text-lg font-medium text-foreground mb-2">All caught up!</h3>
+              <p className="text-muted-foreground">All feedback has been converted to GitHub issues.</p>
             </div>
           ) : (
             feedbackWithoutIssues.map((item: Feedback) => (
@@ -301,7 +301,7 @@ export const IssueGenerationPanel: React.FC<IssueGenerationPanelProps> = ({
                     />
                     <div className="flex items-center space-x-2">
                       {getTypeIcon(item.type)}
-                      <span className="text-sm font-medium text-gray-900">{item.title}</span>
+                      <span className="text-sm font-medium text-foreground">{item.title}</span>
                     </div>
                   </div>
                   <div className="flex items-center space-x-3">
@@ -311,14 +311,14 @@ export const IssueGenerationPanel: React.FC<IssueGenerationPanelProps> = ({
                     <button
                       onClick={() => void handleGenerateIssue(item.id)}
                       disabled={isGenerating}
-                      className="flex items-center px-3 py-1 text-sm bg-blue-600 text-white rounded hover:bg-blue-700 disabled:opacity-50"
+                      className="flex items-center px-3 py-1 text-sm bg-primary text-white rounded hover:bg-primary/90 disabled:opacity-50"
                     >
                       <Github className="h-3 w-3 mr-1" />
                       Generate
                     </button>
                   </div>
                 </div>
-                <p className="mt-2 text-sm text-gray-600 ml-8">{item.description}</p>
+                <p className="mt-2 text-sm text-muted-foreground ml-8">{item.description}</p>
               </div>
             ))
           )}
@@ -329,7 +329,7 @@ export const IssueGenerationPanel: React.FC<IssueGenerationPanelProps> = ({
       {generationResults.length > 0 && (
         <div className="bg-white rounded-lg shadow">
           <div className="px-6 py-4 border-b border-gray-200">
-            <h3 className="text-lg font-medium text-gray-900">Recently Generated Issues</h3>
+            <h3 className="text-lg font-medium text-foreground">Recently Generated Issues</h3>
           </div>
           <div className="divide-y divide-gray-200">
             {generationResults.slice(-5).map((result: IssueData) => (
@@ -338,24 +338,24 @@ export const IssueGenerationPanel: React.FC<IssueGenerationPanelProps> = ({
                   <div>
                     <div className="flex items-center space-x-2">
                       <CheckCircle className="h-4 w-4 text-green-500" />
-                      <span className="text-sm font-medium text-gray-900">
+                      <span className="text-sm font-medium text-foreground">
                         Issue #{result.issueNumber} created
                       </span>
                     </div>
-                    <p className="text-sm text-gray-600 mt-1">{result.generatedIssue.title}</p>
+                    <p className="text-sm text-muted-foreground mt-1">{result.generatedIssue.title}</p>
                   </div>
                   <div className="flex items-center space-x-2">
                     <a
                       href={result.issueUrl}
                       target="blank"
                       rel="noopener noreferrer"
-                      className="text-sm text-blue-600 hover:text-blue-800"
+                      className="text-sm text-primary hover:text-primary/80"
                     >
                       View on GitHub
                     </a>
                     <button
                       onClick={() => setShowAnalysis(showAnalysis === result.feedbackId ? null : result.feedbackId)}
-                      className="text-sm text-gray-600 hover:text-gray-800"
+                      className="text-sm text-muted-foreground hover:text-foreground"
                     >
                       {showAnalysis === result.feedbackId ? 'Hide' : 'Show'} Analysis
                     </button>

@@ -20,6 +20,7 @@ import {
   errorResponse
 } from '@/lib/api';
 import { isFeatureEnabled } from '@/lib/core/feature-flags';
+import { apiRateLimiter } from '@/lib/rate-limiting/api-rate-limiter';
 import { stripUndefinedDeep } from '@/lib/util/clean';
 import { logger } from '@/lib/utils/logger';
 
@@ -333,6 +334,20 @@ const getNotificationHistory = async (
 export const POST = withErrorHandling(async (request: NextRequest) => {
   const authGate = await requireAdminOr401();
   if (authGate) return authGate;
+
+  const ip = request.headers.get('x-forwarded-for')?.split(',')[0]?.trim()
+    || request.headers.get('x-real-ip')
+    || '127.0.0.1';
+  const ua = request.headers.get('user-agent');
+  const rateLimitOptions: { maxRequests: number; windowMs: number; userAgent?: string } = {
+    maxRequests: 30,
+    windowMs: 60 * 1000,
+  };
+  if (ua) rateLimitOptions.userAgent = ua;
+  const rateLimitResult = await apiRateLimiter.checkLimit(ip, '/api/pwa/notifications/send', rateLimitOptions);
+  if (!rateLimitResult.allowed) {
+    return errorResponse('Too many requests. Please try again later.', 429);
+  }
 
   if (!isFeatureEnabled('PWA')) {
     return forbiddenError('PWA feature is disabled');

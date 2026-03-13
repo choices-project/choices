@@ -13,6 +13,7 @@ import { FileText, Vote, BarChart3, Calendar } from 'lucide-react';
 import Link from 'next/link';
 import React, { useMemo, useState, useEffect } from 'react';
 
+import { EnhancedEmptyState } from '@/components/shared/EnhancedEmptyState';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -23,13 +24,44 @@ import { useI18n } from '@/hooks/useI18n';
 
 import type { Representative } from '@/types/representative';
 
+type RawPollData = {
+  id: string;
+  title: string;
+  description?: string | null;
+  createdAt?: string;
+  created_at?: string;
+  pollType?: string;
+  poll_type?: string;
+  billId?: string;
+  bill_id?: string;
+  billTitle?: string;
+  bill_title?: string;
+  billSummary?: string;
+  bill_summary?: string;
+};
+
+type RawActivityData = {
+  id: string | number;
+  type: string;
+  title?: string;
+  description?: string | null;
+  date?: string;
+  created_at?: string;
+  url?: string;
+  source_url?: string;
+  metadata?: {
+    vote_position?: string;
+    result?: string;
+  };
+};
+
 type UnifiedActivity = {
   id: string;
   type: 'poll' | 'bill' | 'vote';
   date: string;
   title: string;
-  description?: string | null;
-  url?: string | null;
+  description?: string | null | undefined;
+  url?: string | null | undefined;
   metadata?: {
     pollId?: string;
     billId?: string;
@@ -78,7 +110,7 @@ export function RepresentativeActivityFeed({
           const pollsData = await pollsRes.json();
           if (pollsData.success) {
             // Handle different response formats: data.polls (current), data as array (legacy), or data.representatives
-            let polls: any[] = [];
+            let polls: RawPollData[] = [];
             if (Array.isArray(pollsData.data?.polls)) {
               polls = pollsData.data.polls;
             } else if (Array.isArray(pollsData.data)) {
@@ -87,7 +119,7 @@ export function RepresentativeActivityFeed({
               polls = pollsData.data.representatives;
             }
             
-            polls.forEach((poll: any) => {
+            polls.forEach((poll: RawPollData) => {
               activitiesList.push({
                 id: poll.id,
                 type: 'poll',
@@ -97,10 +129,10 @@ export function RepresentativeActivityFeed({
                 url: `/polls/${poll.id}`,
                 metadata: {
                   pollId: poll.id,
-                  pollType: poll.pollType || poll.poll_type,
-                  billId: poll.billId || poll.bill_id,
-                  billTitle: poll.billTitle || poll.bill_title,
-                  billSummary: poll.billSummary || poll.bill_summary,
+                  ...(poll.pollType || poll.poll_type ? { pollType: poll.pollType || poll.poll_type } : {}),
+                  ...(poll.billId || poll.bill_id ? { billId: poll.billId || poll.bill_id } : {}),
+                  ...(poll.billTitle || poll.bill_title ? { billTitle: poll.billTitle || poll.bill_title } : {}),
+                  ...(poll.billSummary || poll.bill_summary ? { billSummary: poll.billSummary || poll.bill_summary } : {}),
                 }
               });
             });
@@ -125,19 +157,19 @@ export function RepresentativeActivityFeed({
         if (activitiesRes.ok) {
           const repData = await activitiesRes.json();
           if (repData.success && repData.data?.representative?.activities) {
-            repData.data.representative.activities.forEach((activity: any) => {
+            repData.data.representative.activities.forEach((activity: RawActivityData) => {
               if (activity.type === 'bill') {
                 activitiesList.push({
                   id: String(activity.id),
                   type: 'bill',
                   date: activity.date || activity.created_at || new Date().toISOString(),
-                  title: activity.title,
+                  title: activity.title || 'Bill',
                   description: activity.description,
                   url: activity.url || activity.source_url,
                   metadata: {
-                    billId: activity.id,
-                    billTitle: activity.title,
-                    billSummary: activity.description,
+                    billId: String(activity.id),
+                    ...(activity.title ? { billTitle: activity.title } : {}),
+                    ...(activity.description ? { billSummary: activity.description } : {}),
                   }
                 });
               } else if (activity.type === 'vote') {
@@ -150,8 +182,8 @@ export function RepresentativeActivityFeed({
                   url: activity.url || activity.source_url,
                   metadata: {
                     voteId: String(activity.id),
-                    votePosition: activity.metadata?.vote_position,
-                    result: activity.metadata?.result,
+                    ...(activity.metadata?.vote_position ? { votePosition: activity.metadata.vote_position } : {}),
+                    ...(activity.metadata?.result ? { result: activity.metadata.result } : {}),
                   }
                 });
               }
@@ -218,7 +250,7 @@ export function RepresentativeActivityFeed({
       <div className={`space-y-4 ${className}`}>
         <div className="animate-pulse space-y-3">
           {[1, 2, 3].map(i => (
-            <Card key={i} className="h-24 bg-gray-200 dark:bg-gray-700" />
+            <Card key={i} className="h-24 bg-muted" />
           ))}
         </div>
       </div>
@@ -254,9 +286,13 @@ export function RepresentativeActivityFeed({
         <TabsContent value={activeTab} className="mt-4">
           {filteredActivities.length === 0 ? (
             <Card>
-              <CardContent className="p-6 text-center text-gray-500 dark:text-gray-400">
-                <p>No {activeTab === 'all' ? 'activities' : activeTab} found for this representative.</p>
-                <p className="text-xs mt-2 opacity-90">{t('civics.representatives.detail.activityFeed.emptyHint')}</p>
+              <CardContent className="p-6">
+                <EnhancedEmptyState
+                  icon={<FileText className="h-12 w-12 text-muted-foreground" />}
+                  title={activeTab === 'all' ? 'No activity yet' : `No ${activeTab} found`}
+                  description={t('civics.representatives.detail.activityFeed.emptyHint')}
+                  primaryAction={{ label: 'Browse Polls', href: '/polls' }}
+                />
               </CardContent>
             </Card>
           ) : (
@@ -270,11 +306,11 @@ export function RepresentativeActivityFeed({
                       </div>
                       <div className="flex-1 min-w-0">
                         <div className="flex items-start justify-between gap-2 mb-1">
-                          <h4 className="font-semibold text-gray-900 dark:text-gray-100 line-clamp-2">
+                          <h4 className="font-semibold text-foreground line-clamp-2">
                             {activity.url ? (
                               <Link
                                 href={activity.url}
-                                className="hover:underline text-blue-600 dark:text-blue-400"
+                                className="hover:underline text-primary"
                                 target={activity.url.startsWith('http') ? '_blank' : undefined}
                                 rel={activity.url.startsWith('http') ? 'noopener noreferrer' : undefined}
                               >
@@ -289,16 +325,16 @@ export function RepresentativeActivityFeed({
                           </Badge>
                         </div>
                         {activity.description && (
-                          <p className="text-sm text-gray-600 dark:text-gray-400 mt-1 line-clamp-2">
+                          <p className="text-sm text-muted-foreground mt-1 line-clamp-2">
                             {activity.description}
                           </p>
                         )}
                         {activity.type === 'poll' && _representative && (
-                          <p className="text-xs text-gray-500 dark:text-gray-500 mt-1">
+                          <p className="text-xs text-muted-foreground mt-1">
                             Poll about <span className="font-medium">{_representative.name}</span>
                           </p>
                         )}
-                        <div className="flex items-center gap-4 mt-2 text-xs text-gray-500 dark:text-gray-500">
+                        <div className="flex items-center gap-4 mt-2 text-xs text-muted-foreground">
                           <div className="flex items-center gap-1">
                             <Calendar className="w-3 h-3" />
                             <span>{formatDate(activity.date)}</span>

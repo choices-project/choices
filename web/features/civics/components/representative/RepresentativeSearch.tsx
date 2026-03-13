@@ -104,7 +104,7 @@ export function RepresentativeSearch({
           {/* Location Search */}
           <div className="flex space-x-2">
             <div className="flex-1 relative">
-              <MapPin className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
+              <MapPin className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-muted-foreground" />
               <Input
                 placeholder={t('civics.representatives.search.inputs.location')}
                 value={locationQuery}
@@ -140,7 +140,7 @@ export function RepresentativeSearch({
               variant="ghost"
               size="sm"
               onClick={clearFilters}
-              className="flex items-center space-x-1 text-gray-500"
+              className="flex items-center space-x-1 text-muted-foreground"
             >
               <X className="w-4 h-4" />
               <span>{t('civics.representatives.search.advanced.clearAll')}</span>
@@ -150,10 +150,10 @@ export function RepresentativeSearch({
 
         {/* Advanced Filters */}
         {showAdvanced && (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-3 pt-3 border-t border-gray-200">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-3 pt-3 border-t border-border">
             {/* State Filter */}
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
+              <label className="block text-sm font-medium text-foreground/80 mb-1">
                 {t('civics.representatives.search.advanced.state.label')}
               </label>
               <Select
@@ -177,7 +177,7 @@ export function RepresentativeSearch({
 
             {/* Party Filter */}
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
+              <label className="block text-sm font-medium text-foreground/80 mb-1">
                 {t('civics.representatives.search.advanced.party.label')}
               </label>
               <Select
@@ -200,7 +200,7 @@ export function RepresentativeSearch({
 
             {/* Office Filter */}
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
+              <label className="block text-sm font-medium text-foreground/80 mb-1">
                 {t('civics.representatives.search.advanced.office.label')}
               </label>
               <Select
@@ -223,7 +223,7 @@ export function RepresentativeSearch({
 
             {/* Level Filter */}
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
+              <label className="block text-sm font-medium text-foreground/80 mb-1">
                 {t('civics.representatives.search.advanced.level.label')}
               </label>
               <Select

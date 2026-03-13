@@ -19,6 +19,7 @@ import {
 } from '@/features/voting/lib/pollAdapters';
 import { useVotingActions, useVotingError, useVotingIsVoting } from '@/features/voting/lib/store';
 
+import { useLiveAnnouncer } from '@/components/shared/LiveAnnouncer';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import {
   AlertDialog,
@@ -37,6 +38,7 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { Label } from '@/components/ui/label';
 import { Separator } from '@/components/ui/separator';
 
+import { haptic } from '@/lib/haptics';
 import { useNotificationActions } from '@/lib/stores';
 import { useAppActions } from '@/lib/stores/appStore';
 import { useProfileDisplay } from '@/lib/stores/profileStore';
@@ -46,6 +48,7 @@ import { logger } from '@/lib/utils/logger';
 
 import { useAuth } from '@/hooks/useAuth';
 import { useI18n } from '@/hooks/useI18n';
+import { useOptimisticVote } from '@/hooks/useOptimisticVote';
 
 type VotingStatusMessage = {
   title: string;
@@ -124,6 +127,7 @@ type NormalizedOption = {
 
 export default function PollClient({ poll }: PollClientProps) {
   const { t } = useI18n();
+  const { announce } = useLiveAnnouncer();
   const { user, isLoading: authLoading } = useAuth();
   const router = useRouter();
   const { isAdmin, trustTier } = useProfileDisplay();
@@ -646,45 +650,6 @@ export default function PollClient({ poll }: PollClientProps) {
     window.print();
   };
 
-  // Vote Milestones - Commented out per user request
-  // const {
-  //   enabledMilestones,
-  //   reachedMilestones,
-  //   nextMilestone,
-  //   preferences: milestonePreferences,
-  //   updatePreference: updateMilestonePreference,
-  // } = usePollMilestoneNotifications({
-  //   pollId: poll.id,
-  //   totalVotes: computedTotalVotes,
-  //   onMilestoneReached: (milestone) => {
-  //     recordPollEvent('milestone_reached', {
-  //       label: poll.id,
-  //       value: milestone,
-  //       metadata: {
-  //         milestone,
-  //         totalVotes: computedTotalVotes,
-  //       },
-  //     });
-  //   },
-  // });
-
-  // const handleMilestoneToggle = useCallback(
-  //   (milestone: PollMilestone, enabled: boolean) => {
-  //     updateMilestonePreference(milestone, enabled);
-  //     recordPollEvent('milestone_pref_updated', {
-  //       label: poll.id,
-  //       value: enabled ? 1 : 0,
-  //       metadata: {
-  //         pollId: poll.id,
-  //         milestone,
-  //         enabled,
-  //         context: 'poll_detail',
-  //       },
-  //     });
-  //   },
-  //   [poll.id, recordPollEvent, updateMilestonePreference],
-  // );
-
   const handleVote = useCallback(async (submission: VoteSubmission): Promise<{ ok: boolean; id?: string; error?: string }> => {
     if (!user || !canVote || pollStatus !== 'active' || storeIsVoting) {
       return { ok: false, error: 'Cannot vote at this time' };
@@ -748,6 +713,8 @@ export default function PollClient({ poll }: PollClientProps) {
       const resultData = payload?.data ?? {};
 
       setHasVoted(true);
+      haptic('success');
+      announce(t('polls.view.notifications.voteRecorded.message') || 'Your vote has been recorded');
       logger.info('Vote submitted successfully', { pollId: poll.id, method: submission.method });
       recordPollEvent('vote_cast', {
         label: poll.id,
@@ -807,7 +774,33 @@ export default function PollClient({ poll }: PollClientProps) {
     } finally {
       setVoting(false);
     }
-  }, [user, canVote, pollStatus, storeIsVoting, poll.id, pollDetailsForBallot, t, addNotification, recordPollEvent, fetchPollData, addVotingRecord, isMounted, setVoting, setError, setHasVoted, setHasVoteAttempted, clearVotingError, setVotingError, router]);
+  }, [user, canVote, pollStatus, storeIsVoting, poll.id, pollDetailsForBallot, t, addNotification, announce, recordPollEvent, fetchPollData, addVotingRecord, isMounted, setVoting, setError, setHasVoted, setHasVoteAttempted, clearVotingError, setVotingError, router]);
+
+  const isSingleChoice = (poll.votingMethod ?? 'single') === 'single';
+  const {
+    optimisticData,
+    vote: optimisticVote,
+    isVoting: isOptimisticVoting,
+  } = useOptimisticVote({
+    pollId: poll.id,
+    options: normalizedOptions,
+    totalVotes: computedTotalVotes,
+    userVote: hasVoted ? (poll.userVote ?? null) : null,
+    submitVote: async (_pollId: string, optionId: string) => {
+      const index = normalizedOptions.findIndex((o) => o.id === optionId);
+      const result = await handleVote({
+        method: 'single',
+        choice: index >= 0 ? index : (parseInt(optionId, 10) || 0),
+      } as VoteSubmission);
+      if (!result.ok) {
+        throw new Error(result.error ?? 'Vote failed');
+      }
+      return { success: true };
+    },
+  });
+
+  const displayTotalVotes =
+    optimisticData.userVote !== null ? optimisticData.totalVotes : computedTotalVotes;
 
   const handleCopyShareLink = async () => {
     if (!shareUrl) return;
@@ -842,8 +835,8 @@ export default function PollClient({ poll }: PollClientProps) {
   };
 
   const getVotePercentage = (votes: number) => {
-    if (computedTotalVotes === 0) return 0;
-    return Math.round((votes / computedTotalVotes) * 100);
+    if (displayTotalVotes === 0) return 0;
+    return Math.round((votes / displayTotalVotes) * 100);
   };
 
   const handleDeletePoll = useCallback(async () => {
@@ -1030,9 +1023,9 @@ export default function PollClient({ poll }: PollClientProps) {
         <div className="rounded-lg border border-border bg-card p-4 shadow-sm">
           <p className="text-xs uppercase font-semibold text-foreground/80">{t('polls.view.stats.totalVotes')}</p>
           <p className="mt-2 text-2xl font-bold text-foreground">
-            {isMounted ? computedTotalVotes.toLocaleString() : computedTotalVotes.toString()}
+            {isMounted ? displayTotalVotes.toLocaleString() : displayTotalVotes.toString()}
           </p>
-          {computedTotalVotes === 0 && pollStatus === 'active' && (
+          {displayTotalVotes === 0 && pollStatus === 'active' && (
             <p className="mt-1 text-xs text-muted-foreground">No votes yet</p>
           )}
         </div>
@@ -1061,7 +1054,7 @@ export default function PollClient({ poll }: PollClientProps) {
               <p className="text-sm font-semibold uppercase text-amber-700 dark:text-amber-400">{t('polls.view.leadingOption.label')}</p>
               <p className="mt-1 text-lg font-semibold text-foreground">{topOption.text}</p>
               <p className="text-sm text-foreground/80">
-                {t('polls.view.leadingOption.votes', { votes: topOption.votes, percentage: getVotePercentage(topOption.votes), total: computedTotalVotes })}
+                {t('polls.view.leadingOption.votes', { votes: topOption.votes, percentage: getVotePercentage(topOption.votes), total: displayTotalVotes })}
               </p>
             </div>
           </div>
@@ -1099,11 +1092,28 @@ export default function PollClient({ poll }: PollClientProps) {
                   text: option.text,
                 })),
                 votingMethod: poll.votingMethod ?? 'single',
-                totalVotes: computedTotalVotes,
+                totalVotes: displayTotalVotes,
                 endtime: poll.endtime ?? new Date(Date.now() + 365 * 24 * 60 * 60 * 1000).toISOString(),
               }}
-              onVote={handleVote}
-              isVoting={storeIsVoting}
+              onVote={
+                isSingleChoice
+                  ? async (submission) => {
+                      if (submission.method === 'single') {
+                        const optionId =
+                          normalizedOptions[submission.choice]?.id ?? String(submission.choice);
+                        try {
+                          await optimisticVote(optionId);
+                          return { ok: true };
+                        } catch (err) {
+                          const msg = err instanceof Error ? err.message : 'Vote failed';
+                          return { ok: false, error: msg };
+                        }
+                      }
+                      return handleVote(submission);
+                    }
+                  : handleVote
+              }
+              isVoting={isSingleChoice ? isOptimisticVoting : storeIsVoting}
               hasVoted={hasVoted}
               verificationTier={trustTier ?? 'T0'}
               onAnalyticsEvent={(action, payload) => {

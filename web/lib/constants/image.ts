@@ -1,0 +1,9 @@
+/**
+ * Tiny 4x4 neutral gray blur placeholder for Next.js Image components.
+ * Provides a smooth blur-up loading effect matching both light and dark themes.
+ */
+export const DEFAULT_BLUR_DATA_URL =
+  'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAQAAAAECAYAAACp8Z5+AAAACXBIWXMAAAsTAAALEwEAmpwYAAAAIGNIUk0AAHolAACAgwAA+f8AAIDpAAB1MAAA6mAAADqYAAAXb5JfxUYAAAAoSURBVHjaYvj//z8DMjCw/P//HwMAAwMDI8P///8ZGBgYGP7//88AADP7B/kKWvFzAAAAAElFTkSuQmCC';
+
+export const AVATAR_BLUR_DATA_URL =
+  'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAQAAAAECAYAAACp8Z5+AAAACXBIWXMAAAsTAAALEwEAmpwYAAAAIGNIUk0AAHolAACAgwAA+f8AAIDpAAB1MAAA6mAAADqYAAAXb5JfxUYAAAAoSURBVHjaYvj//z8DMjCw/P//HwMAAwMDI8P///8ZGBgYGP7//88AADP7B/kKWvFzAAAAAElFTkSuQmCC';

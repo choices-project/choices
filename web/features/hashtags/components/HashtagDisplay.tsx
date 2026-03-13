@@ -47,7 +47,7 @@ export function HashtagDisplay({
     if (hashtag.is_verified) return <Verified className="h-3 w-3 text-blue-500" />;
     if (hashtag.is_trending) return <TrendingUp className="h-3 w-3 text-orange-500" />;
     if (hashtag.is_featured) return <Star className="h-3 w-3 text-yellow-500" />;
-    return <Hash className="h-3 w-3 text-gray-400" />;
+    return <Hash className="h-3 w-3 text-muted-foreground" />;
   };
 
   const getHashtagBadges = (hashtag: Hashtag) => {
@@ -65,13 +65,13 @@ export function HashtagDisplay({
           key={hashtag.id}
           type="button"
           onClick={() => onHashtagClick?.(hashtag)}
-          className="w-full text-left group flex items-center justify-between p-3 bg-white border border-gray-200 rounded-lg hover:border-blue-300 hover:shadow-md transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-blue-500"
+          className="w-full text-left group flex items-center justify-between p-3 bg-card border border-border rounded-lg hover:border-primary/50 hover:shadow-md transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-primary"
         >
           <div className="flex items-center space-x-3">
             {getHashtagIcon(hashtag)}
             <div>
               <div className="flex items-center space-x-2">
-                <span className="font-medium text-gray-900">
+                <span className="font-medium text-foreground">
                   #{hashtag.name}
                 </span>
                 {getHashtagBadges(hashtag).map((badge) => (
@@ -79,10 +79,10 @@ export function HashtagDisplay({
                     key={badge}
                     className={`px-2 py-1 text-xs font-medium rounded-full ${
                       badge === 'verified' 
-                        ? 'bg-blue-100 text-blue-800'
+                        ? 'bg-blue-100 dark:bg-blue-900/50 text-blue-800 dark:text-blue-200'
                         : badge === 'trending'
-                        ? 'bg-orange-100 text-orange-800'
-                        : 'bg-yellow-100 text-yellow-800'
+                        ? 'bg-orange-100 dark:bg-orange-900/50 text-orange-800 dark:text-orange-200'
+                        : 'bg-yellow-100 dark:bg-yellow-900/50 text-yellow-800 dark:text-yellow-200'
                     }`}
                   >
                     {badge}
@@ -90,13 +90,13 @@ export function HashtagDisplay({
                 ))}
               </div>
               {hashtag.description && (
-                <p className="text-sm text-gray-600 mt-1">{hashtag.description}</p>
+                <p className="text-sm text-muted-foreground mt-1">{hashtag.description}</p>
               )}
             </div>
           </div>
 
           {showStats && (
-            <div className="flex items-center space-x-4 text-sm text-gray-500">
+            <div className="flex items-center space-x-4 text-sm text-muted-foreground">
               <div className="flex items-center space-x-1">
                 <Users className="h-4 w-4" />
                 <span>{isMounted ? (hashtag.follower_count ?? 0).toLocaleString() : String(hashtag.follower_count ?? 0)}</span>
@@ -118,7 +118,7 @@ export function HashtagDisplay({
 
       {remainingCount > 0 && (
         <div className="text-center py-2">
-          <span className="text-sm text-gray-500">
+          <span className="text-sm text-muted-foreground">
             +{remainingCount} more hashtag{remainingCount !== 1 ? 's' : ''}
           </span>
         </div>
@@ -155,7 +155,7 @@ export function TrendingHashtagDisplay({
     <div className={`space-y-3 ${className}`}>
       <div className="flex items-center space-x-2 mb-4">
         <TrendingUp className="h-5 w-5 text-orange-500" />
-        <h3 className="text-lg font-semibold text-gray-900">Trending Hashtags</h3>
+        <h3 className="text-lg font-semibold text-foreground">Trending Hashtags</h3>
       </div>
 
       {displayHashtags.map((trending, index) => (
@@ -163,22 +163,22 @@ export function TrendingHashtagDisplay({
           key={trending.hashtag.id}
           type="button"
           onClick={() => onHashtagClick?.(trending.hashtag)}
-          className="w-full text-left group flex items-center justify-between p-4 bg-gradient-to-r from-orange-50 to-red-50 border border-orange-200 rounded-lg hover:border-orange-300 hover:shadow-md transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-orange-500"
+          className="w-full text-left group flex items-center justify-between p-4 bg-gradient-to-r from-orange-50 to-red-50 dark:from-orange-900/30 dark:to-red-900/30 border border-orange-200 dark:border-orange-800 rounded-lg hover:border-orange-300 dark:hover:border-orange-600 hover:shadow-md transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-orange-500"
         >
           <div className="flex items-center space-x-4">
-            <div className="flex items-center justify-center w-8 h-8 bg-orange-100 text-orange-600 rounded-full font-bold">
+            <div className="flex items-center justify-center w-8 h-8 bg-orange-100 dark:bg-orange-900/50 text-orange-600 dark:text-orange-300 rounded-full font-bold">
               {index + 1}
             </div>
             <div>
               <div className="flex items-center space-x-2">
-                <span className="font-medium text-gray-900">
-                  #{trending.hashtag.name}
+<span className="font-medium text-foreground">
+                #{trending.hashtag.name}
                 </span>
-                <span className="px-2 py-1 text-xs font-medium bg-orange-100 text-orange-800 rounded-full">
+                <span className="px-2 py-1 text-xs font-medium bg-orange-100 dark:bg-orange-900/50 text-orange-800 dark:text-orange-200 rounded-full">
                   #{index + 1} trending
                 </span>
               </div>
-              <div className="flex items-center space-x-4 mt-1 text-sm text-gray-600">
+              <div className="flex items-center space-x-4 mt-1 text-sm text-muted-foreground">
                 <span>{isMounted ? trending.hashtag.usage_count.toLocaleString() : String(trending.hashtag.usage_count)} uses</span>
                 <span>{isMounted ? (trending.hashtag.follower_count ?? 0).toLocaleString() : String(trending.hashtag.follower_count ?? 0)} followers</span>
               </div>
@@ -189,7 +189,7 @@ export function TrendingHashtagDisplay({
               {trending.trend_score.toFixed(1)}
             </div>
             {showGrowth && (
-              <div className="flex items-center space-x-1 text-sm text-gray-500">
+              <div className="flex items-center space-x-1 text-sm text-muted-foreground">
                 <TrendingUp className="h-3 w-3" />
                 <span>+{trending.growth_rate.toFixed(1)}%</span>
               </div>

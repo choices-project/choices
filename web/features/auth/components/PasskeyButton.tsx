@@ -165,7 +165,7 @@ export function PasskeyButton({
       </button>
 
       {error && mode === 'register' && (
-        <div className="mt-2 rounded border border-red-400 bg-red-100 p-2 text-sm text-red-700">
+        <div className="mt-2 rounded border border-red-400 dark:border-red-800 bg-red-100 dark:bg-red-900/30 p-2 text-sm text-red-700 dark:text-red-300">
           {error}
         </div>
       )}

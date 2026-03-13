@@ -2,11 +2,13 @@
 
 import React, { useEffect, useMemo, useRef, Suspense } from 'react';
 
+import { EngagementSummary } from '@/features/dashboard';
 import { UnifiedFeedRefactored } from '@/features/feeds';
 import { useFormattedDistrict } from '@/features/profile/hooks/useUserDistrict';
 
 import { AuthGuard } from '@/components/business/auth/AuthGuard';
 import { ErrorBoundary } from '@/components/shared/ErrorBoundary';
+import { FeedSkeleton } from '@/components/shared/Skeletons';
 
 
 import { useUser, useUserProfile } from '@/lib/stores';
@@ -91,25 +93,8 @@ export default function FeedContent() {
   }, []);
 
   const loadingFallback = (
-    <div className="container mx-auto px-4 py-8">
-      <div
-        className="space-y-4"
-        aria-label="Loading feeds"
-        aria-busy="true"
-        aria-live="polite"
-        data-testid="feed-loading-skeleton"
-        role="status"
-      >
-        {[1, 2, 3].map((i) => (
-          <div key={i} className="animate-pulse" aria-hidden="true">
-            <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-6">
-              <div className="h-6 bg-gray-200 dark:bg-gray-700 rounded w-3/4 mb-4" />
-              <div className="h-4 bg-gray-200 dark:bg-gray-700 rounded w-full mb-2" />
-              <div className="h-4 bg-gray-200 dark:bg-gray-700 rounded w-5/6" />
-            </div>
-          </div>
-        ))}
-      </div>
+    <div className="container mx-auto px-4 py-8" aria-label="Loading feeds" aria-busy="true" aria-live="polite" data-testid="feed-loading-skeleton" role="status">
+      <FeedSkeleton count={5} />
     </div>
   );
 
@@ -126,7 +111,7 @@ export default function FeedContent() {
               <h2 className="text-xl font-semibold text-red-600 dark:text-red-400 mb-2">
                 Unable to load feed
               </h2>
-              <p className="text-gray-600 dark:text-gray-400 mb-2">
+              <p className="text-muted-foreground mb-2">
                 We encountered an error while loading your feed. Please try again.
               </p>
               <p className="text-xs text-muted-foreground dark:text-gray-500 mb-4">
@@ -134,7 +119,7 @@ export default function FeedContent() {
               </p>
               <button
                 onClick={() => window.location.reload()}
-                className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 dark:focus:ring-offset-gray-900 transition-colors dark:bg-blue-500 dark:hover:bg-blue-600"
+                className="px-4 py-2 bg-primary text-primary-foreground rounded-lg hover:bg-primary/90 focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 focus:ring-offset-background transition-colors"
                 aria-label="Try again to load feed"
                 data-testid="feed-error-boundary-retry"
               >
@@ -145,7 +130,8 @@ export default function FeedContent() {
         }
       >
         {/* Root layout SkipNavTarget provides <main>; avoid nested main for a11y */}
-        <div className="container mx-auto px-4 py-8 bg-white dark:bg-gray-900 min-h-screen" aria-label="Feed content">
+          <div className="container mx-auto px-4 py-8 bg-background min-h-screen" aria-label="Feed content">
+          <EngagementSummary />
           <Suspense fallback={loadingFallback}>
             <UnifiedFeedRefactored
               {...{

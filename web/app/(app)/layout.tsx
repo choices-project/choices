@@ -7,7 +7,6 @@ import React, { Suspense, useState } from 'react';
 import { AuthProvider } from '@/contexts/AuthContext';
 
 import { usePollCreatedListener } from '@/features/polls/hooks/usePollCreatedListener';
-import PWABackground from '@/features/pwa/components/PWABackground';
 import { ServiceWorkerProvider } from '@/features/pwa/components/ServiceWorkerProvider';
 
 import { AppShell } from '@/components/shared/AppShell';
@@ -21,10 +20,8 @@ import { logger } from '@/lib/utils/logger';
 import { useI18n } from '@/hooks/useI18n';
 
 // H40: Make OfflineIndicator client-only to prevent getServerSnapshot infinite loop
-// OfflineIndicator uses Zustand stores with persist middleware, which internally uses useSyncExternalStore
-// React 18.3.1 requires getServerSnapshot to return a cached value, but Zustand's internal implementation
-// may not cache it properly during SSR. Making it client-only prevents SSR rendering, eliminating the issue.
-const OfflineIndicator = dynamicImport(() => import('@/features/pwa/components/OfflineIndicator'), {
+// OfflineIndicator may use Zustand stores (showDetails mode); making it client-only prevents SSR issues.
+const OfflineIndicator = dynamicImport(() => import('@/components/shared/OfflineIndicator'), {
   ssr: false,
   loading: () => null, // No loading state needed for offline indicator
 });
@@ -232,7 +229,7 @@ export default function AppLayout({
           bodyHtmlLength: bodyHtml.length,
           hasAppShell: Boolean(appShell),
           hasHeader: Boolean(header),
-          headerChildrenCount: header?.children.length ?? 0,
+          headerChildrenCount: header?.children?.length ?? 0,
           hasNavigation: Boolean(navigation),
           navigationDataTestId: navigation?.getAttribute('data-testid'),
           navigationTagName: navigation?.tagName,
@@ -309,7 +306,7 @@ export default function AppLayout({
               },
               appShell: document.querySelector('[data-testid="app-shell"]') ? {
                 className: document.querySelector('[data-testid="app-shell"]')?.className,
-                children: document.querySelector('[data-testid="app-shell"]')?.children.length,
+                children: document.querySelector('[data-testid="app-shell"]')?.children?.length ?? 0,
               } : null,
               globalNav: document.querySelector('[data-testid="global-nav-loading"]') ? 'loading' : document.querySelector('nav') ? 'rendered' : 'none',
             }
@@ -386,10 +383,10 @@ export default function AppLayout({
   }, []);
   // #endregion
 
-  // DIAGNOSTIC: Log when AppLayout renders AppShell (must be before early returns)
+  // DIAGNOSTIC: Log when AppLayout renders AppShell (gated behind DEBUG_DASHBOARD)
   React.useEffect(() => {
     if (process.env.DEBUG_DASHBOARD === '1' || (typeof window !== 'undefined' && window.localStorage.getItem('e2e-dashboard-bypass') === '1')) {
-      console.warn('[DIAGNOSTIC] AppLayout: Rendering AppShell', {
+      logger.warn('AppLayout: Rendering AppShell', {
         IS_E2E_HARNESS,
         bypassFlag: typeof window !== 'undefined' ? window.localStorage.getItem('e2e-dashboard-bypass') : 'SSR',
         currentUrl: typeof window !== 'undefined' ? window.location.href : 'SSR',
@@ -437,8 +434,7 @@ export default function AppLayout({
                 <ErrorBoundary>
                   {children}
                 </ErrorBoundary>
-                {/* Offline and network status indicators */}
-                <PWABackground />
+                {/* Unified offline indicator (replaces PWABackground + OfflineIndicator) */}
                 <OfflineIndicator />
               </AppShell>
             </ServiceWorkerProvider>

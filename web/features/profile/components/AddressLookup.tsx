@@ -20,6 +20,8 @@ import React, { useCallback, useEffect, useRef, useState } from 'react';
 
 import { useProfileUpdate } from '@/features/profile/hooks/use-profile';
 
+import { Button } from '@/components/ui/button';
+
 import { logger } from '@/lib/utils/logger';
 
 import type { ProfileDemographics } from '@/types/profile';
@@ -208,10 +210,10 @@ export function AddressLookup({
               className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent disabled:bg-gray-100 disabled:cursor-not-allowed"
             />
           </div>
-          <button
+          <Button
             onClick={handleLookup}
             disabled={isLoading || !address.trim()}
-            className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 disabled:bg-gray-300 disabled:cursor-not-allowed flex items-center space-x-2 transition-colors"
+            className="px-6 py-2 bg-blue-600 hover:bg-blue-700 dark:bg-blue-600 dark:hover:bg-blue-700 flex items-center space-x-2"
           >
             {isLoading ? (
               <>
@@ -227,7 +229,7 @@ export function AddressLookup({
                 <span>Lookup District</span>
               </>
             )}
-          </button>
+          </Button>
         </div>
       </div>
 
@@ -266,12 +268,13 @@ export function AddressLookup({
               </div>
 
               {!autoSave && !isSaved && (
-                <button
+                <Button
                   onClick={handleManualSave}
-                  className="mt-3 px-4 py-2 bg-green-600 text-white text-sm rounded-lg hover:bg-green-700 focus:ring-2 focus:ring-green-500 focus:ring-offset-2 transition-colors"
+                  size="sm"
+                  className="mt-3 bg-green-600 hover:bg-green-700 dark:bg-green-600 dark:hover:bg-green-700"
                 >
                   Save to Profile
-                </button>
+                </Button>
               )}
 
               {isSaved && (

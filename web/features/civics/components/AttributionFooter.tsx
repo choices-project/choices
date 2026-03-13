@@ -60,13 +60,13 @@ export function AttributionFooter({ sources, className = '' }: AttributionFooter
       case 'manual_verification_la':
         return 'text-emerald-600';
       default:
-        return 'text-gray-600';
+        return 'text-muted-foreground';
     }
   };
 
   return (
-    <div className={`mt-4 pt-3 border-t border-gray-200 ${className}`}>
-      <div className="flex items-center justify-between text-xs text-gray-500">
+    <div className={`mt-4 pt-3 border-t border-border ${className}`}>
+      <div className="flex items-center justify-between text-xs text-muted-foreground">
         <div className="flex items-center gap-2">
           <span className="font-medium">
             {t('civics.attribution.footer.heading')}
@@ -82,7 +82,7 @@ export function AttributionFooter({ sources, className = '' }: AttributionFooter
                     href={source.url}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="hover:text-gray-700 transition-colors flex items-center gap-1"
+                    className="hover:text-foreground transition-colors flex items-center gap-1"
                   >
                     {source.name}
                     <ExternalLink className="h-2 w-2" />
@@ -94,7 +94,7 @@ export function AttributionFooter({ sources, className = '' }: AttributionFooter
             ))}
           </div>
         </div>
-        <div className="text-xs text-gray-400">{lastUpdatedLabel}</div>
+        <div className="text-xs text-muted-foreground">{lastUpdatedLabel}</div>
       </div>
     </div>
   );
@@ -122,7 +122,7 @@ export function AttributionBadge({ sources, className = '' }: AttributionFooterP
       case 'manual_verification_la':
         return 'bg-emerald-100 text-emerald-800';
       default:
-        return 'bg-gray-100 text-gray-800';
+        return 'bg-muted text-foreground';
     }
   };
 
@@ -135,7 +135,7 @@ export function AttributionBadge({ sources, className = '' }: AttributionFooterP
         </span>
       )}
       {sources.length > 1 && (
-        <span className="text-xs text-gray-500">
+        <span className="text-xs text-muted-foreground">
           {t('civics.attribution.badge.more', {
             count: sources.length - 1,
           })}
@@ -153,7 +153,7 @@ export function APIAttribution({ sources, className = '' }: AttributionFooterPro
   }
 
   return (
-    <div className={`text-xs text-gray-500 ${className}`}>
+    <div className={`text-xs text-muted-foreground ${className}`}>
       <div className="font-medium mb-1">
         {t('civics.attribution.footer.heading')}
       </div>
@@ -166,7 +166,7 @@ export function APIAttribution({ sources, className = '' }: AttributionFooterPro
                 href={source.url}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="hover:text-gray-700 transition-colors flex items-center gap-1"
+                className="hover:text-foreground transition-colors flex items-center gap-1"
               >
                 {source.name}
                 <ExternalLink className="h-2 w-2" />

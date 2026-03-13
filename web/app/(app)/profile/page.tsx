@@ -12,11 +12,12 @@ import { useProfileData, useProfileExport } from '@/features/profile/hooks/use-p
 import { AuthGuard } from '@/components/business/auth/AuthGuard';
 import { EnhancedErrorDisplay } from '@/components/shared/EnhancedErrorDisplay';
 import { ErrorBoundary } from '@/components/shared/ErrorBoundary';
+import ProfileSubNav from '@/components/shared/ProfileSubNav';
+import { ProfileSkeleton } from '@/components/shared/Skeletons';
 import { TrustTierBadge } from '@/components/shared/TrustTierBadge';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/components/ui/card';
-import { Skeleton } from '@/components/ui/skeleton';
 
 
 import { useUser, useIsAuthenticated, useUserLoading } from '@/lib/stores';
@@ -79,7 +80,7 @@ function ProfilePageContent() {
   }, []);
 
   const handlePrivacySettings = useCallback(() => {
-    routerRef.current.push('/profile/preferences');
+    routerRef.current.push('/account/privacy');
   }, []);
 
   const handleBiometricSetup = useCallback(() => {
@@ -168,40 +169,8 @@ function ProfilePageContent() {
   if (!isMounted || isUserLoading || profileLoading) {
     return (
       <div className="container mx-auto px-4 py-8" data-testid="profile-loading" aria-label="Loading profile" aria-busy="true">
-        <div className="max-w-4xl mx-auto space-y-8">
-          <Card className="bg-card dark:bg-card border-border">
-            <CardHeader className="text-center">
-              <Skeleton className="h-24 w-24 rounded-full mx-auto mb-4 bg-muted" />
-              <Skeleton className="h-8 w-48 mx-auto mb-2 bg-muted" />
-              <Skeleton className="h-5 w-64 mx-auto bg-muted" />
-              <div className="flex justify-center gap-4 mt-4">
-                <Skeleton className="h-10 w-32 bg-muted" />
-                <Skeleton className="h-10 w-32 bg-muted" />
-              </div>
-            </CardHeader>
-          </Card>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <Card className="bg-card dark:bg-card border-border">
-              <CardHeader>
-                <Skeleton className="h-6 w-48 bg-muted" />
-              </CardHeader>
-              <CardContent>
-                <Skeleton className="h-4 w-full mb-4 bg-muted" />
-                <Skeleton className="h-4 w-3/4 mb-4 bg-muted" />
-                <Skeleton className="h-4 w-5/6 bg-muted" />
-              </CardContent>
-            </Card>
-            <Card className="bg-card dark:bg-card border-border">
-              <CardHeader>
-                <Skeleton className="h-6 w-40 bg-muted" />
-              </CardHeader>
-              <CardContent>
-                <Skeleton className="h-4 w-full mb-4 bg-muted" />
-                <Skeleton className="h-4 w-3/4 mb-4 bg-muted" />
-                <Skeleton className="h-4 w-5/6 bg-muted" />
-              </CardContent>
-            </Card>
-          </div>
+        <div className="max-w-6xl mx-auto">
+          <ProfileSkeleton />
         </div>
       </div>
     );
@@ -249,7 +218,7 @@ function ProfilePageContent() {
                 <div className="flex justify-center gap-4">
                   <Button
                     onClick={handleCompleteOnboarding}
-                    className="bg-blue-600 hover:bg-blue-700 text-white dark:bg-blue-600 dark:hover:bg-blue-700"
+                    className="bg-primary hover:bg-primary/90 text-primary-foreground"
                   >
                     {!profile ? 'Complete Onboarding' : 'Finish Onboarding'}
                   </Button>
@@ -279,7 +248,7 @@ function ProfilePageContent() {
       <ErrorBoundary>
         <div className="flex items-center justify-center min-h-screen" aria-label="Loading profile" aria-busy="true">
           <div className="text-center space-y-4 max-w-md">
-            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto" aria-hidden="true" />
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto" aria-hidden="true" />
             <p className="text-muted-foreground">
               {loadingTimeout ? 'Loading is taking longer than expected...' : 'Loading profile...'}
             </p>
@@ -329,7 +298,7 @@ function ProfilePageContent() {
                   <div className="flex justify-center gap-4">
                     <Button
                       onClick={handleCompleteOnboarding}
-                      className="bg-blue-600 hover:bg-blue-700 text-white dark:bg-blue-600 dark:hover:bg-blue-700"
+                      className="bg-primary hover:bg-primary/90 text-primary-foreground"
                     >
                       Start Onboarding
                     </Button>
@@ -370,7 +339,8 @@ function ProfilePageContent() {
     <AuthGuard redirectTo="/auth">
       <ErrorBoundary>
         <div className="container mx-auto px-4 py-8">
-          <div className="max-w-4xl mx-auto space-y-6">
+          <div className="max-w-6xl mx-auto space-y-6">
+            <ProfileSubNav />
             {/* Profile Header */}
             <Card className="bg-card dark:bg-card border-border">
               <CardHeader className="text-center">
@@ -426,7 +396,7 @@ function ProfilePageContent() {
                     <Button
                       onClick={handleCompleteOnboarding}
                       size="sm"
-                      className="bg-blue-600 hover:bg-blue-700 text-white dark:bg-blue-600 dark:hover:bg-blue-700"
+                      className="bg-primary hover:bg-primary/90 text-primary-foreground"
                     >
                       Complete Setup
                       <ArrowRight className="h-4 w-4 ml-2" />
@@ -492,7 +462,7 @@ function ProfilePageContent() {
                   {isAdmin && (
                     <div className="flex items-center justify-between">
                       <div className="flex items-center">
-                        <Shield className="h-5 w-5 text-blue-500 dark:text-blue-400 mr-2" />
+                        <Shield className="h-5 w-5 text-primary mr-2" />
                         <span className="text-foreground">Admin Access</span>
                       </div>
                     </div>

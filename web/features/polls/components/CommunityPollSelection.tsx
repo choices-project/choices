@@ -215,7 +215,7 @@ export default function CommunityPollSelection() {
       case 'low': return 'text-green-600 bg-green-100';
       case 'medium': return 'text-yellow-600 bg-yellow-100';
       case 'high': return 'text-red-600 bg-red-100';
-      default: return 'text-gray-600 bg-gray-100';
+      default: return 'text-muted-foreground bg-muted';
     }
   };
 
@@ -224,16 +224,16 @@ export default function CommunityPollSelection() {
       case 'high': return 'text-green-600 bg-green-100';
       case 'medium': return 'text-yellow-600 bg-yellow-100';
       case 'low': return 'text-red-600 bg-red-100';
-      default: return 'text-gray-600 bg-gray-100';
+      default: return 'text-muted-foreground bg-muted';
     }
   };
 
   const renderTrendingView = () => (
     <div className="space-y-6">
       {/* Selection Criteria */}
-      <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
-        <h3 className="font-semibold text-blue-900 mb-2">{t('polls.community.selection.title')}</h3>
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm text-blue-800">
+      <div className="bg-muted border border-border rounded-lg p-4">
+        <h3 className="font-semibold text-foreground mb-2">{t('polls.community.selection.title')}</h3>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm text-foreground/80">
           <div>
             <h4 className="font-medium mb-1">{t('polls.community.selection.engagement.title')}</h4>
             <ul className="space-y-1">
@@ -255,24 +255,24 @@ export default function CommunityPollSelection() {
 
       {/* Trending Suggestions */}
       <div className="space-y-4">
-        <h3 className="text-lg font-semibold text-gray-900">{t('polls.community.trending.title')}</h3>
+        <h3 className="text-lg font-semibold text-foreground">{t('polls.community.trending.title')}</h3>
         {pollSuggestions
           .slice()
           .sort((a, b) => b.trendingScore - a.trendingScore)
           .map((suggestion) => (
-            <div key={suggestion.id} className="bg-white rounded-lg border border-gray-200 p-4">
+            <div key={suggestion.id} className="bg-card rounded-lg border border-border p-4">
               <div className="flex items-start justify-between mb-3">
                 <div className="flex-1">
                   <div className="flex items-center space-x-2 mb-2">
-                    <h4 className="font-semibold text-gray-900">{suggestion.title}</h4>
+                    <h4 className="font-semibold text-foreground">{suggestion.title}</h4>
                     <div className="flex items-center space-x-1 bg-orange-100 text-orange-700 px-2 py-1 rounded-full text-xs font-medium">
                       <TrendingUp className="w-3 h-3" />
                       <span>#{suggestion.trendingScore}</span>
                     </div>
                   </div>
-                  <p className="text-sm text-gray-600 mb-3">{suggestion.description}</p>
+                  <p className="text-sm text-muted-foreground mb-3">{suggestion.description}</p>
 
-                  <div className="flex items-center space-x-4 text-xs text-gray-500 mb-3">
+                  <div className="flex items-center space-x-4 text-xs text-muted-foreground mb-3">
                     <span>{t('polls.community.suggestion.suggestedBy', { name: suggestion.suggestedBy })}</span>
                     <span>•</span>
                     <span>{t('polls.community.suggestion.votes', { count: suggestion.votes })}</span>
@@ -283,7 +283,7 @@ export default function CommunityPollSelection() {
                   <div className="flex items-center space-x-2">
                     <span
                       className={`px-2 py-1 rounded text-xs font-medium ${
-                        categories.find((c) => c.id === suggestion.category)?.color ?? 'bg-gray-100 text-gray-700'
+                        categories.find((c) => c.id === suggestion.category)?.color ?? 'bg-muted text-foreground/80'
                       }`}
                     >
                       {categories.find((c) => c.id === suggestion.category)?.icon ?? '🗳️'}{' '}
@@ -301,7 +301,7 @@ export default function CommunityPollSelection() {
                 </div>
 
                 <div className="flex flex-col space-y-2">
-                  <button className="flex items-center space-x-1 px-3 py-1 bg-blue-100 text-blue-700 rounded-lg hover:bg-blue-200 transition-colors">
+                  <button className="flex items-center space-x-1 px-3 py-1 bg-primary/10 text-primary rounded-lg hover:bg-primary/20 transition-colors">
                     <Heart className="w-4 h-4" />
                     <span>{t('polls.community.actions.vote')}</span>
                   </button>
@@ -320,20 +320,20 @@ export default function CommunityPollSelection() {
   const renderSelectedView = () => (
     <div className="space-y-6">
       {weeklySelections.map((selection) => (
-        <div key={selection.week} className="bg-white rounded-lg border border-gray-200 p-6">
+        <div key={selection.week} className="bg-card rounded-lg border border-border p-6">
           <div className="flex items-center justify-between mb-4">
-            <h3 className="text-lg font-semibold text-gray-900">
+            <h3 className="text-lg font-semibold text-foreground">
                 {t('polls.community.selected.weekOf', { week: formatWeek(selection.week) })}
             </h3>
-            <div className="flex items-center space-x-1 text-sm text-gray-500">
+            <div className="flex items-center space-x-1 text-sm text-muted-foreground">
               <Users className="w-4 h-4" />
               <span>{t('polls.community.selected.totalVotes', { count: selection.totalVotes })}</span>
             </div>
           </div>
 
           <div className="mb-4">
-            <h4 className="font-medium text-gray-900 mb-2">{t('polls.community.selected.criteria.title')}</h4>
-            <ul className="text-sm text-gray-600 space-y-1">
+            <h4 className="font-medium text-foreground mb-2">{t('polls.community.selected.criteria.title')}</h4>
+            <ul className="text-sm text-muted-foreground space-y-1">
               {selection.selectionCriteria.map((criteria, index) => (
                 <li key={`criteria-${criteria}-${index}`}>• {criteria}</li>
               ))}
@@ -341,7 +341,7 @@ export default function CommunityPollSelection() {
           </div>
 
           <div className="space-y-4">
-            <h4 className="font-medium text-gray-900">{t('polls.community.selected.polls.title')}</h4>
+            <h4 className="font-medium text-foreground">{t('polls.community.selected.polls.title')}</h4>
             {selection.selectedPolls.map((poll) => (
               <div
                 key={poll.id}
@@ -351,12 +351,12 @@ export default function CommunityPollSelection() {
                   <CheckCircle className="w-5 h-5 text-green-600" />
                 </div>
                 <div className="flex-1">
-                  <h5 className="font-medium text-gray-900">{poll.title}</h5>
-                  <p className="text-sm text-gray-600">{t('polls.community.selected.polls.votes', { count: poll.votes })}</p>
+                  <h5 className="font-medium text-foreground">{poll.title}</h5>
+                  <p className="text-sm text-muted-foreground">{t('polls.community.selected.polls.votes', { count: poll.votes })}</p>
                 </div>
                 <div className="text-right">
                   <div className="text-sm font-medium text-green-600">{t('polls.community.selected.polls.featured')}</div>
-                  <div className="text-xs text-gray-500">{t('polls.community.selected.polls.liveNow')}</div>
+                  <div className="text-xs text-muted-foreground">{t('polls.community.selected.polls.liveNow')}</div>
                 </div>
               </div>
             ))}
@@ -375,38 +375,38 @@ export default function CommunityPollSelection() {
     return (
       <div className="space-y-6">
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-        <div className="bg-white rounded-lg border border-gray-200 p-4">
+        <div className="bg-card rounded-lg border border-border p-4">
           <div className="flex items-center space-x-2 mb-2">
             <TrendingUp className="w-5 h-5 text-blue-600" />
-            <span className="font-semibold text-gray-900">{t('polls.community.analytics.totalSuggestions')}</span>
+            <span className="font-semibold text-foreground">{t('polls.community.analytics.totalSuggestions')}</span>
           </div>
           <div className="text-2xl font-bold text-blue-600">{analytics.total ?? pollSuggestions.length}</div>
-          <div className="text-sm text-gray-500">{t('polls.community.analytics.currentlyPublished')}</div>
+          <div className="text-sm text-muted-foreground">{t('polls.community.analytics.currentlyPublished')}</div>
         </div>
 
-        <div className="bg-white rounded-lg border border-gray-200 p-4">
+        <div className="bg-card rounded-lg border border-border p-4">
           <div className="flex items-center space-x-2 mb-2">
             <Users className="w-5 h-5 text-green-600" />
-            <span className="font-semibold text-gray-900">{t('polls.community.analytics.communityVotes')}</span>
+            <span className="font-semibold text-foreground">{t('polls.community.analytics.communityVotes')}</span>
           </div>
           <div className="text-2xl font-bold text-green-600">
             {(analytics.totalVotes ?? pollSuggestions.reduce((sum, poll) => sum + poll.votes, 0)).toLocaleString()}
           </div>
-          <div className="text-sm text-gray-500">{t('polls.community.analytics.acrossFeatured')}</div>
+          <div className="text-sm text-muted-foreground">{t('polls.community.analytics.acrossFeatured')}</div>
         </div>
 
-        <div className="bg-white rounded-lg border border-gray-200 p-4">
+        <div className="bg-card rounded-lg border border-border p-4">
           <div className="flex items-center space-x-2 mb-2">
             <Award className="w-5 h-5 text-purple-600" />
-            <span className="font-semibold text-gray-900">{t('polls.community.analytics.featuredPolls')}</span>
+            <span className="font-semibold text-foreground">{t('polls.community.analytics.featuredPolls')}</span>
           </div>
           <div className="text-2xl font-bold text-purple-600">{featuredPollCount}</div>
-          <div className="text-sm text-gray-500">{t('polls.community.analytics.thisWeek')}</div>
+          <div className="text-sm text-muted-foreground">{t('polls.community.analytics.thisWeek')}</div>
         </div>
       </div>
 
-      <div className="bg-white rounded-lg border border-gray-200 p-6">
-        <h3 className="text-lg font-semibold text-gray-900 mb-4">{t('polls.community.analytics.categoryBreakdown')}</h3>
+      <div className="bg-card rounded-lg border border-border p-6">
+        <h3 className="text-lg font-semibold text-foreground mb-4">{t('polls.community.analytics.categoryBreakdown')}</h3>
         <div className="space-y-3">
           {categories.map((category) => {
             const count = pollSuggestions.filter((poll) => poll.category === category.id).length;
@@ -416,16 +416,16 @@ export default function CommunityPollSelection() {
               <div key={category.id} className="flex items-center justify-between">
                 <div className="flex items-center space-x-2">
                   <span className="text-lg">{category.icon}</span>
-                  <span className="font-medium text-gray-900">{category.name}</span>
+                  <span className="font-medium text-foreground">{category.name}</span>
                 </div>
                 <div className="flex items-center space-x-3">
-                  <div className="w-32 bg-gray-200 rounded-full h-2">
+                  <div className="w-32 bg-muted rounded-full h-2">
                     <div
                       className="bg-blue-600 h-2 rounded-full"
                       style={{ width: `${percentage}%` }}
                     />
                   </div>
-                  <span className="text-sm text-gray-600 w-12 text-right">{count}</span>
+                  <span className="text-sm text-muted-foreground w-12 text-right">{count}</span>
                 </div>
               </div>
             );
@@ -440,24 +440,24 @@ export default function CommunityPollSelection() {
     <div className="max-w-6xl mx-auto p-4">
       {/* Header */}
       <div className="text-center mb-8">
-        <h1 className="text-3xl font-bold text-gray-900 mb-2">
+        <h1 className="text-3xl font-bold text-foreground mb-2">
           {t('polls.community.title')}
         </h1>
-        <p className="text-gray-600">
+        <p className="text-muted-foreground">
           {t('polls.community.subtitle')}
         </p>
       </div>
 
       {/* Week Selection */}
       <div className="mb-6">
-        <label htmlFor="week-select" className="block text-sm font-medium text-gray-700 mb-2">
+        <label htmlFor="week-select" className="block text-sm font-medium text-foreground/80 mb-2">
           {t('polls.community.week.select')}
         </label>
         <select
           id="week-select"
           value={selectedWeek}
           onChange={(e) => setSelectedWeek(e.target.value)}
-          className="block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+          className="block w-full px-3 py-2 border border-border rounded-md shadow-sm focus:outline-none focus:ring-ring focus:border-primary"
         >
           <option value="current">{t('polls.community.week.current')}</option>
           <option value="last">{t('polls.community.week.last')}</option>
@@ -467,13 +467,13 @@ export default function CommunityPollSelection() {
       </div>
 
       {/* View Mode Tabs */}
-      <div className="flex space-x-1 mb-6 bg-gray-100 p-1 rounded-lg">
+      <div className="flex space-x-1 mb-6 bg-muted p-1 rounded-lg">
         <button
           onClick={() => setViewMode('trending')}
           className={`flex-1 py-2 px-4 rounded-md text-sm font-medium transition-colors ${
             viewMode === 'trending'
-              ? 'bg-white text-blue-600 shadow-sm'
-              : 'text-gray-600 hover:text-gray-900'
+              ? 'bg-card text-primary shadow-sm'
+              : 'text-muted-foreground hover:text-foreground'
           }`}
         >
           <TrendingUp className="w-4 h-4 inline mr-2" />
@@ -483,8 +483,8 @@ export default function CommunityPollSelection() {
           onClick={() => setViewMode('selected')}
           className={`flex-1 py-2 px-4 rounded-md text-sm font-medium transition-colors ${
             viewMode === 'selected'
-              ? 'bg-white text-blue-600 shadow-sm'
-              : 'text-gray-600 hover:text-gray-900'
+              ? 'bg-card text-primary shadow-sm'
+              : 'text-muted-foreground hover:text-foreground'
           }`}
         >
           <CheckCircle className="w-4 h-4 inline mr-2" />
@@ -494,8 +494,8 @@ export default function CommunityPollSelection() {
           onClick={() => setViewMode('analytics')}
           className={`flex-1 py-2 px-4 rounded-md text-sm font-medium transition-colors ${
             viewMode === 'analytics'
-              ? 'bg-white text-blue-600 shadow-sm'
-              : 'text-gray-600 hover:text-gray-900'
+              ? 'bg-card text-primary shadow-sm'
+              : 'text-muted-foreground hover:text-foreground'
           }`}
         >
           <Zap className="w-4 h-4 inline mr-2" />

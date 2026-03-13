@@ -1,8 +1,13 @@
 'use client';
 
+import { usePathname } from 'next/navigation';
 import { useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
 
+import CommandPalette from '@/components/shared/CommandPalette';
 import GlobalNavigation from '@/components/shared/GlobalNavigation';
+import GlobalToastProvider from '@/components/shared/GlobalToastProvider';
+import { LiveAnnouncerProvider, useLiveAnnouncer } from '@/components/shared/LiveAnnouncer';
+import { PageTransition } from '@/components/shared/PageTransition';
 
 import {
   appStoreUtils,
@@ -14,9 +19,53 @@ import {
 import { useDeviceActions } from '@/lib/stores/deviceStore';
 import { logger } from '@/lib/utils/logger';
 
+import { useI18n } from '@/hooks/useI18n';
+import { useKeyboardShortcuts } from '@/hooks/useKeyboardShortcuts';
 import { useSystemThemeSync } from '@/hooks/useSystemThemeSync';
 
 import type { ReactNode } from 'react';
+
+const REDUCE_MOTION_KEY = 'choices-reduce-motion';
+
+const PATHNAME_TO_KEY: Record<string, string> = {
+  '/': 'navigation.home',
+  '/dashboard': 'navigation.dashboard',
+  '/polls': 'navigation.polls',
+  '/civics': 'navigation.civics',
+  '/feed': 'navigation.feed',
+  '/profile': 'navigation.profile',
+  '/analytics': 'navigation.analytics',
+  '/account': 'navigation.account',
+  '/auth': 'navigation.signIn',
+  '/representatives': 'navigation.representatives',
+};
+
+function getPageTitle(pathname: string | null, t: (key: string) => string): string {
+  if (!pathname) return t('pages.default');
+  const key = PATHNAME_TO_KEY[pathname];
+  if (key) return t(key);
+  if (pathname.startsWith('/polls/')) return t('pages.pollDetails');
+  if (pathname.startsWith('/representatives/')) return t('pages.representative');
+  if (pathname.startsWith('/civic-actions/')) return t('pages.civicAction');
+  const segment = pathname.split('/').filter(Boolean)[0];
+  return segment ? segment.charAt(0).toUpperCase() + segment.slice(1) : t('pages.default');
+}
+
+function RouteChangeAnnouncer() {
+  const pathname = usePathname();
+  const { t } = useI18n();
+  const { announce } = useLiveAnnouncer();
+  const prevPathnameRef = useRef<string | null>(null);
+
+  useEffect(() => {
+    if (pathname && pathname !== prevPathnameRef.current) {
+      prevPathnameRef.current = pathname;
+      announce(`${getPageTitle(pathname, t)} page`);
+    }
+  }, [pathname, announce, t]);
+
+  return null;
+}
 
 // CRITICAL: GlobalNavigation is imported directly (see imports above)
 
@@ -164,6 +213,24 @@ export function AppShell({ navigation, siteMessages, feedback, children }: AppSh
   // Sync system theme preference
   useSystemThemeSync();
 
+  // Sync reduce-motion from localStorage on mount (preferences page updates it when toggled)
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    try {
+      const stored = localStorage.getItem(REDUCE_MOTION_KEY);
+      if (stored === 'true') {
+        document.documentElement.classList.add('reduce-motion');
+      } else {
+        document.documentElement.classList.remove('reduce-motion');
+      }
+    } catch {
+      // localStorage unavailable
+    }
+  }, []);
+
+  // Global keyboard shortcuts (navigation; / opens CommandPalette via its own listener)
+  useKeyboardShortcuts();
+
   // CRITICAL: Track if this is the initial hydration to prevent attribute changes during hydration
   // React hydration happens synchronously, and changing attributes during hydration causes error #185
   const isHydratingRef = useRef(true);
@@ -268,10 +335,10 @@ export function AppShell({ navigation, siteMessages, feedback, children }: AppSh
     }
   }, [theme, collapsed, width, pinned]);
 
-  // DIAGNOSTIC: Log when AppShell renders
+  // DIAGNOSTIC: Log when AppShell renders (gated behind DEBUG_DASHBOARD)
   useEffect(() => {
     if (process.env.DEBUG_DASHBOARD === '1' || (typeof window !== 'undefined' && window.localStorage.getItem('e2e-dashboard-bypass') === '1')) {
-      console.warn('[DIAGNOSTIC] AppShell: Rendering', {
+      logger.warn('AppShell: Rendering', {
         theme,
         sidebarCollapsed: collapsed,
         sidebarWidth: width,
@@ -345,39 +412,47 @@ export function AppShell({ navigation, siteMessages, feedback, children }: AppSh
   // #endregion
 
   return (
-    <div
-      className="min-h-screen bg-slate-50 dark:bg-gray-900"
-      data-testid="app-shell"
-      suppressHydrationWarning
-    >
-      {/* CRITICAL: GlobalNavigation is dynamically imported with ssr: false
-          Next.js inserts BAILOUT_TO_CLIENT_SIDE_RENDERING template when dynamically imported
-          components with ssr: false are rendered. This template causes React hydration mismatch.
-          suppressHydrationWarning on AppShell root div tells React to ignore hydration mismatches
-          for this element and all children, allowing the bailout template to be present without error.
-          H25: Render GlobalNavigation directly (no wrapper) - suppressHydrationWarning on parent should handle it */}
-      <GlobalNavigation />
+    <LiveAnnouncerProvider>
+      <RouteChangeAnnouncer />
+      <div
+        className="min-h-screen bg-background"
+        data-testid="app-shell"
+        suppressHydrationWarning
+      >
+        {/* CRITICAL: GlobalNavigation is dynamically imported with ssr: false
+            Next.js inserts BAILOUT_TO_CLIENT_SIDE_RENDERING template when dynamically imported
+            components with ssr: false are rendered. This template causes React hydration mismatch.
+            suppressHydrationWarning on AppShell root div tells React to ignore hydration mismatches
+            for this element and all children, allowing the bailout template to be present without error.
+            H25: Render GlobalNavigation directly (no wrapper) - suppressHydrationWarning on parent should handle it */}
+        <GlobalNavigation />
 
-      {/* Always render container to maintain consistent DOM structure */}
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-2">
-        {siteMessages}
+        {/* Always render container to maintain consistent DOM structure */}
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-2">
+          {siteMessages}
+        </div>
+
+        {/* CRITICAL: Use div instead of main to prevent nested <main> tags */}
+        {/* SkipNavTarget in root layout provides <main id="main-content"> */}
+        {/* Don't duplicate id="main-content" here - duplicate IDs are invalid HTML */}
+        {/* H31: Add suppressHydrationWarning to children container to suppress bailout template from DashboardContent */}
+        {/* DashboardContent is dynamically imported with ssr: false, causing Next.js to insert bailout template */}
+        {/* suppressHydrationWarning on AppShell root doesn't suppress children's bailout templates */}
+        <div className="min-h-[60vh] pb-16 md:pb-0" suppressHydrationWarning>
+          <PageTransition>
+            {children}
+          </PageTransition>
+        </div>
+
+        {/* Always render footer container to maintain consistent DOM structure */}
+        <footer className="mt-8">
+          {feedback}
+        </footer>
+
+        <CommandPalette />
+        <GlobalToastProvider />
       </div>
-
-      {/* CRITICAL: Use div instead of main to prevent nested <main> tags */}
-      {/* SkipNavTarget in root layout provides <main id="main-content"> */}
-      {/* Don't duplicate id="main-content" here - duplicate IDs are invalid HTML */}
-      {/* H31: Add suppressHydrationWarning to children container to suppress bailout template from DashboardContent */}
-      {/* DashboardContent is dynamically imported with ssr: false, causing Next.js to insert bailout template */}
-      {/* suppressHydrationWarning on AppShell root doesn't suppress children's bailout templates */}
-      <div className="min-h-[60vh]" suppressHydrationWarning>
-        {children}
-      </div>
-
-      {/* Always render footer container to maintain consistent DOM structure */}
-      <footer className="mt-8">
-        {feedback}
-      </footer>
-    </div>
+    </LiveAnnouncerProvider>
   );
 }
 

@@ -1,10 +1,14 @@
 'use client';
 
+import { Eye, EyeOff, Loader2 } from 'lucide-react';
 import Link from 'next/link';
 import { useRouter, useSearchParams } from 'next/navigation';
 import React from 'react';
 
 import { getSupabaseBrowserClient } from '@/utils/supabase/client';
+
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
 
 import { useI18n } from '@/hooks/useI18n';
 
@@ -20,6 +24,8 @@ export default function ResetPasswordConfirmPage() {
   const [isSuccess, setIsSuccess] = React.useState(false);
   const [password, setPassword] = React.useState('');
   const [confirmPassword, setConfirmPassword] = React.useState('');
+  const [showPassword, setShowPassword] = React.useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = React.useState(false);
 
   React.useEffect(() => {
     let isMounted = true;
@@ -111,7 +117,7 @@ export default function ResetPasswordConfirmPage() {
 
   if (isLoading) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50 dark:from-gray-900 dark:via-gray-900 dark:to-gray-800 flex items-center justify-center text-sm text-gray-600 dark:text-gray-400">
+      <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50 dark:from-background dark:via-background dark:to-muted flex items-center justify-center text-sm text-muted-foreground">
         {t('auth.reset.confirm.loading') || t('auth.reset.confirm.working') || t('auth.reset.working')}
       </div>
     );
@@ -119,12 +125,12 @@ export default function ResetPasswordConfirmPage() {
 
   if (error && !isSuccess) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50 dark:from-gray-900 dark:via-gray-900 dark:to-gray-800 flex items-center justify-center py-12 px-4">
+      <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50 dark:from-background dark:via-background dark:to-muted flex items-center justify-center py-12 px-4">
         <div className="max-w-md w-full space-y-4 text-center">
           <p className="text-sm text-red-700 dark:text-red-400">{error}</p>
           <Link
             href="/auth/reset"
-            className="text-sm text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300 focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2 dark:focus-visible:ring-offset-gray-900 rounded"
+            className="text-sm text-primary hover:text-primary/90 focus:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 dark:focus-visible:ring-offset-background rounded"
           >
             {t('auth.reset.confirm.requestNewLink')}
           </Link>
@@ -135,28 +141,28 @@ export default function ResetPasswordConfirmPage() {
 
   if (isSuccess) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50 dark:from-gray-900 dark:via-gray-900 dark:to-gray-800 flex items-center justify-center py-12 px-4">
+      <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50 dark:from-background dark:via-background dark:to-muted flex items-center justify-center py-12 px-4">
         <div className="max-w-md w-full space-y-4 text-center">
-          <h1 className="text-2xl font-semibold text-gray-900 dark:text-gray-100">{t('auth.reset.confirm.successTitle')}</h1>
-          <p className="text-sm text-gray-600 dark:text-gray-400">{t('auth.reset.confirm.successBody')}</p>
-          <button
+          <h1 className="text-2xl font-semibold text-foreground">{t('auth.reset.confirm.successTitle')}</h1>
+          <p className="text-sm text-muted-foreground">{t('auth.reset.confirm.successBody')}</p>
+          <Button
             type="button"
             onClick={() => router.push('/auth')}
-            className="inline-flex items-center justify-center rounded-md bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2 dark:focus-visible:ring-offset-gray-900"
+            className="min-h-[44px]"
           >
             {t('auth.reset.backToSignIn')}
-          </button>
+          </Button>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50 dark:from-gray-900 dark:via-gray-900 dark:to-gray-800 flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8">
+    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50 dark:from-background dark:via-background dark:to-muted flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8">
       <div className="max-w-md w-full space-y-6">
         <div className="text-center">
-          <h1 className="text-3xl font-bold text-gray-900 dark:text-gray-100">{t('auth.reset.confirm.heading')}</h1>
-          <p className="mt-2 text-sm text-gray-600 dark:text-gray-400">{t('auth.reset.confirm.subheading')}</p>
+          <h1 className="text-3xl font-bold text-foreground">{t('auth.reset.confirm.heading')}</h1>
+          <p className="mt-2 text-sm text-muted-foreground">{t('auth.reset.confirm.subheading')}</p>
         </div>
 
         <form onSubmit={handleUpdate} className="space-y-4">
@@ -167,44 +173,65 @@ export default function ResetPasswordConfirmPage() {
           ) : null}
 
           <div>
-            <label htmlFor="new-password" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+            <label htmlFor="reset-password" className="block text-sm font-medium text-foreground/80 mb-1">
               {t('auth.reset.confirm.newPasswordLabel')}
             </label>
-            <input
-              id="new-password"
-              type="password"
-              required
-              value={password}
-              onChange={(event) => setPassword(event.currentTarget.value)}
-              className="w-full rounded-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 placeholder-gray-500 dark:placeholder-gray-400 px-3 py-2 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500"
-              placeholder={t('auth.reset.confirm.newPasswordPlaceholder')}
-              autoComplete="new-password"
-            />
+            <div className="relative">
+              <Input
+                id="reset-password"
+                type={showPassword ? 'text' : 'password'}
+                required
+                value={password}
+                onChange={(event) => setPassword(event.currentTarget.value)}
+                className="w-full pr-10"
+                placeholder={t('auth.reset.confirm.newPasswordPlaceholder')}
+                autoComplete="new-password"
+              />
+              <button
+                type="button"
+                onClick={() => setShowPassword(!showPassword)}
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+                aria-label={showPassword ? 'Hide password' : 'Show password'}
+              >
+                {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+              </button>
+            </div>
           </div>
 
           <div>
-            <label htmlFor="confirm-password" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+            <label htmlFor="reset-confirm-password" className="block text-sm font-medium text-foreground/80 mb-1">
               {t('auth.reset.confirm.confirmPasswordLabel')}
             </label>
-            <input
-              id="confirm-password"
-              type="password"
-              required
-              value={confirmPassword}
-              onChange={(event) => setConfirmPassword(event.currentTarget.value)}
-              className="w-full rounded-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 placeholder-gray-500 dark:placeholder-gray-400 px-3 py-2 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500"
-              placeholder={t('auth.form.passwordPlaceholder')}
-              autoComplete="new-password"
-            />
+            <div className="relative">
+              <Input
+                id="reset-confirm-password"
+                type={showConfirmPassword ? 'text' : 'password'}
+                required
+                value={confirmPassword}
+                onChange={(event) => setConfirmPassword(event.currentTarget.value)}
+                className="w-full pr-10"
+                placeholder={t('auth.form.passwordPlaceholder')}
+                autoComplete="new-password"
+              />
+              <button
+                type="button"
+                onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+                aria-label={showConfirmPassword ? 'Hide password' : 'Show password'}
+              >
+                {showConfirmPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+              </button>
+            </div>
           </div>
 
-          <button
+          <Button
             type="submit"
-            className="w-full bg-blue-600 text-white py-2 px-4 rounded-md hover:bg-blue-700 focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2 dark:focus-visible:ring-offset-gray-900 disabled:opacity-50"
+            className="w-full min-h-[44px] gap-2"
             disabled={isUpdating}
           >
+            {isUpdating && <Loader2 className="h-4 w-4 animate-spin" aria-hidden="true" />}
             {isUpdating ? t('auth.reset.confirm.working') : t('auth.reset.confirm.updateButton')}
-          </button>
+          </Button>
         </form>
       </div>
     </div>

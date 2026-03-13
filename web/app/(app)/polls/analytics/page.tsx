@@ -6,6 +6,7 @@ import { useRouter } from 'next/navigation'
 import React, { useState, useEffect, useCallback } from 'react';
 
 import { EnhancedErrorDisplay } from '@/components/shared/EnhancedErrorDisplay'
+import { AnalyticsSkeleton } from '@/components/shared/Skeletons'
 import { Alert, AlertDescription } from '@/components/ui/alert'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
@@ -253,10 +254,9 @@ export default function PollAnalyticsPage() {
 
   if (isLoading) {
     return (
-      <div className="min-h-screen bg-gray-50 dark:bg-gray-900 flex items-center justify-center" role="status" aria-busy="true" aria-live="polite" aria-label="Loading analytics">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 dark:border-blue-400 mx-auto" aria-hidden="true" />
-          <p className="mt-4 text-gray-600 dark:text-gray-400">Loading analytics data...</p>
+      <div className="min-h-screen bg-gray-50">
+        <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+          <AnalyticsSkeleton />
         </div>
       </div>
     )
@@ -264,7 +264,7 @@ export default function PollAnalyticsPage() {
 
   if (error) {
     return (
-      <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
+      <div className="min-h-screen bg-muted">
         <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
           <EnhancedErrorDisplay
             title="Unable to load analytics"
@@ -515,8 +515,8 @@ export default function PollAnalyticsPage() {
                   </CardHeader>
                   <CardContent>
                     <div className="space-y-3">
-                      {currentPoll.topperformers.map((option, index) => (
-                        <div key={index} className="space-y-2">
+                      {currentPoll.topperformers.map((option) => (
+                        <div key={option.option} className="space-y-2">
                           <div className="flex items-center justify-between">
                             <span className="text-sm font-medium">{option.option}</span>
                             <span className="text-sm text-gray-600">
@@ -543,8 +543,8 @@ export default function PollAnalyticsPage() {
                     </CardHeader>
                     <CardContent>
                       <div className="space-y-3">
-                        {currentPoll.insights.map((insight, index) => (
-                          <div key={index} className="flex items-start space-x-3 p-3 bg-blue-50 rounded-lg">
+                        {currentPoll.insights.map((insight) => (
+                          <div key={insight} className="flex items-start space-x-3 p-3 bg-blue-50 rounded-lg">
                             <Eye className="h-4 w-4 text-blue-600 mt-0.5 flex-shrink-0" />
                             <p className="text-sm text-blue-900">{insight}</p>
                           </div>
@@ -559,8 +559,8 @@ export default function PollAnalyticsPage() {
                     </CardHeader>
                     <CardContent>
                       <div className="space-y-3">
-                        {currentPoll.recommendations.map((recommendation, index) => (
-                          <div key={index} className="flex items-start space-x-3 p-3 bg-green-50 rounded-lg">
+                        {currentPoll.recommendations.map((recommendation) => (
+                          <div key={recommendation} className="flex items-start space-x-3 p-3 bg-green-50 rounded-lg">
                             <Target className="h-4 w-4 text-green-600 mt-0.5 flex-shrink-0" />
                             <p className="text-sm text-green-900">{recommendation}</p>
                           </div>

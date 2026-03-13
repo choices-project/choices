@@ -30,6 +30,8 @@ import React, { useEffect, useState } from 'react';
 
 import { cn } from '@/lib/utils';
 
+import { useI18n } from '@/hooks/useI18n';
+
 type NavItem = {
   id: string;
   label: string;
@@ -40,6 +42,7 @@ type NavItem = {
 };
 
 export default function DashboardNavigation() {
+  const { t } = useI18n();
   // CRITICAL: Store pathname in state to prevent hydration mismatch
   // usePathname() can return different values during SSR vs client hydration
   // Store in state and only update after mount to ensure stable initial value
@@ -59,51 +62,51 @@ export default function DashboardNavigation() {
   const navItems: NavItem[] = [
     {
       id: 'dashboard',
-      label: 'Dashboard',
+      label: t('dashboard.nav.dashboard'),
       href: '/dashboard',
       icon: LayoutDashboard,
-      description: 'Your personal hub'
+      description: t('dashboard.nav.dashboardDescription')
     },
     {
       id: 'profile',
-      label: 'Profile',
+      label: t('dashboard.nav.profile'),
       href: '/profile',
       icon: User,
-      description: 'Manage your profile'
+      description: t('dashboard.nav.profileDescription')
     },
     {
       id: 'privacy',
-      label: 'Privacy & Data',
+      label: t('dashboard.nav.privacy'),
       href: '/account/privacy',
       icon: Shield,
-      description: '🔒 Your data, your control',
-      badge: 'Privacy'
+      description: t('dashboard.nav.privacyDescription'),
+      badge: t('dashboard.nav.privacyBadge')
     },
     {
       id: 'polls',
-      label: 'My Polls',
+      label: t('dashboard.nav.myPolls'),
       href: '/polls',
       icon: Vote,
-      description: 'Polls you created'
+      description: t('dashboard.nav.myPollsDescription')
     },
     {
       id: 'hashtags',
-      label: 'Hashtags',
+      label: t('dashboard.nav.hashtags'),
       href: '/hashtags',
       icon: Hash,
-      description: 'Your interests'
+      description: t('dashboard.nav.hashtagsDescription')
     },
     {
       id: 'preferences',
-      label: 'Preferences',
+      label: t('dashboard.nav.preferences'),
       href: '/profile/preferences',
       icon: Settings,
-      description: 'App settings'
+      description: t('dashboard.nav.preferencesDescription')
     }
   ];
 
   return (
-    <nav className="bg-white border-b" data-testid="dashboard-navigation">
+    <nav className="bg-background border-b border-border" data-testid="dashboard-navigation">
       <div className="max-w-7xl mx-auto px-4">
         <div className="flex items-center overflow-x-auto">
           {navItems.map((item) => {
@@ -120,15 +123,15 @@ export default function DashboardNavigation() {
                 className={cn(
                   'flex items-center gap-2 px-4 py-3 border-b-2 transition-colors whitespace-nowrap',
                   isActive
-                    ? 'border-blue-600 text-blue-600 font-medium'
-                    : 'border-transparent text-gray-600 hover:text-gray-900 hover:border-gray-300'
+                    ? 'border-primary text-primary font-medium'
+                    : 'border-transparent text-muted-foreground hover:text-foreground hover:border-border'
                 )}
                 data-testid={`nav-${item.id}`}
               >
                 <Icon className="w-4 h-4" />
                 <span className="text-sm">{item.label}</span>
                 {item.badge && (
-                  <span className="text-xs px-2 py-0.5 bg-blue-100 text-blue-700 rounded-full">
+                  <span className="text-xs px-2 py-0.5 bg-primary/20 text-primary rounded-full">
                     {item.badge}
                   </span>
                 )}
@@ -188,7 +191,7 @@ export function MobileDashboardNav() {
   ];
 
   return (
-    <nav className="fixed bottom-0 left-0 right-0 bg-white border-t md:hidden z-50">
+    <nav className="fixed bottom-0 left-0 right-0 bg-background border-t border-border md:hidden z-50">
       <div className="flex items-center justify-around">
         {mobileNavItems.map((item) => {
           const Icon = item.icon;
@@ -204,8 +207,8 @@ export function MobileDashboardNav() {
               className={cn(
                 'flex flex-col items-center gap-1 py-3 px-4 flex-1',
                 isActive
-                  ? 'text-blue-600'
-                  : 'text-gray-600'
+                  ? 'text-primary'
+                  : 'text-muted-foreground'
               )}
             >
               <Icon className="w-5 h-5" />

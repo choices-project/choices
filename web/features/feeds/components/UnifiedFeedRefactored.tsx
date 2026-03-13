@@ -62,18 +62,12 @@ export default function UnifiedFeedRefactored({
   logger.debug('[UnifiedFeedRefactored] Rendering', { userId, userDistrict, interestsCount: profileInterests?.length ?? 0 });
 
   return (
-    <FeedDataProvider 
+    <FeedDataProvider
       {...(userId ? { userId } : {})}
       {...(userDistrict !== undefined ? { userDistrict } : {})}
       {...(profileInterests?.length ? { profileInterests } : {})}
     >
-      {(dataProps) => (
-        <FeedCore
-          {...dataProps}
-          className={className}
-          userDistrict={userDistrict ?? null}
-        />
-      )}
+      <FeedCore className={className} />
     </FeedDataProvider>
   );
 }

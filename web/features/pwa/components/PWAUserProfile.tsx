@@ -1,7 +1,6 @@
 'use client'
 
-
-import { motion, AnimatePresence } from 'framer-motion'
+import { motion, AnimatePresence, useReducedMotion } from 'framer-motion'
 import {
   User,
   Shield,
@@ -14,6 +13,20 @@ import {
   Lock
 } from 'lucide-react'
 import React, { useState, useEffect, useMemo } from 'react';
+
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from '@/components/ui/alert-dialog'
+
+import { useNotificationActions } from '@/lib/stores';
 
 import { pwaManager, pwaWebAuthn, privacyStorage } from '../lib/pwa-utils'
 
@@ -57,6 +70,8 @@ const VISIBILITY_META: Record<PWAUser['profileVisibility'], VisibilityDisplayMet
 };
 
 export function PWAUserProfile({ user, onUpdate: _onUpdate }: PWAUserProfileProps) {
+  const { addNotification } = useNotificationActions();
+  const shouldReduceMotion = useReducedMotion()
   const [isEditing, setIsEditing] = useState(false)
   const [showAdvanced, setShowAdvanced] = useState(false)
   const [deviceFingerprint, setDeviceFingerprint] = useState<DeviceFingerprint | null>(null)
@@ -70,6 +85,7 @@ export function PWAUserProfile({ user, onUpdate: _onUpdate }: PWAUserProfileProp
   })
   const [notificationPermission, setNotificationPermission] = useState<string>('default')
   const [isOnline, setIsOnline] = useState(true)
+  const [showClearConfirm, setShowClearConfirm] = useState(false)
 
   useEffect(() => {
     // Get device fingerprint
@@ -125,25 +141,24 @@ export function PWAUserProfile({ user, onUpdate: _onUpdate }: PWAUserProfileProp
 
   const handleTestWebAuthn = async () => {
     if (!pwaFeatures.webAuthn) {
-      alert('WebAuthn is not supported in this browser')
+      addNotification({ type: 'info', title: 'Not Supported', message: 'WebAuthn is not supported in this browser', duration: 5000 });
       return
     }
 
     try {
       const credential = await pwaWebAuthn.registerUser(user?.pseudonym ?? 'user')
       if (credential) {
-        alert('WebAuthn registration successful!')
+        addNotification({ type: 'success', title: 'Success', message: 'WebAuthn registration successful!', duration: 3000 });
       }
     } catch (error) {
-      alert(`WebAuthn registration failed: ${error instanceof Error ? error.message : String(error)}`)
+      addNotification({ type: 'error', title: 'Registration Failed', message: `WebAuthn registration failed: ${error instanceof Error ? error.message : String(error)}`, duration: 5000 });
     }
   }
 
   const handleClearEncryptedData = () => {
-    if (confirm('Are you sure you want to clear all encrypted data? This cannot be undone.')) {
-      privacyStorage.clearAllEncryptedData()
-      alert('All encrypted data has been cleared.')
-    }
+    privacyStorage.clearAllEncryptedData()
+    addNotification({ type: 'success', title: 'Cleared', message: 'All encrypted data has been cleared.', duration: 3000 });
+    setShowClearConfirm(false)
   }
 
   const handleExportData = () => {
@@ -163,7 +178,7 @@ export function PWAUserProfile({ user, onUpdate: _onUpdate }: PWAUserProfileProp
       a.click()
       URL.revokeObjectURL(url)
     } catch (error) {
-      alert(`Failed to export data: ${error instanceof Error ? error.message : String(error)}`)
+      addNotification({ type: 'error', title: 'Export Failed', message: `Failed to export data: ${error instanceof Error ? error.message : String(error)}`, duration: 5000 });
     }
   }
 
@@ -310,7 +325,7 @@ export function PWAUserProfile({ user, onUpdate: _onUpdate }: PWAUserProfileProp
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
           {/* WebAuthn */}
           <motion.div
-            whileHover={{ scale: 1.02 }}
+            {...(!shouldReduceMotion ? { whileHover: { scale: 1.02 } } : {})}
             className="p-4 rounded-lg border border-gray-200 hover:border-blue-300 transition-colors"
           >
         <div className="flex items-center space-x-3 mb-3">
@@ -331,7 +346,7 @@ export function PWAUserProfile({ user, onUpdate: _onUpdate }: PWAUserProfileProp
 
           {/* Push Notifications */}
           <motion.div
-            whileHover={{ scale: 1.02 }}
+            {...(!shouldReduceMotion ? { whileHover: { scale: 1.02 } } : {})}
             className="p-4 rounded-lg border border-gray-200 hover:border-orange-300 transition-colors"
           >
             <div className="flex items-center space-x-3 mb-3">
@@ -352,7 +367,7 @@ export function PWAUserProfile({ user, onUpdate: _onUpdate }: PWAUserProfileProp
 
           {/* Encrypted Storage */}
           <motion.div
-            whileHover={{ scale: 1.02 }}
+            {...(!shouldReduceMotion ? { whileHover: { scale: 1.02 } } : {})}
             className="p-4 rounded-lg border border-gray-200 hover:border-purple-300 transition-colors"
           >
             <div className="flex items-center space-x-3 mb-3">
@@ -362,12 +377,27 @@ export function PWAUserProfile({ user, onUpdate: _onUpdate }: PWAUserProfileProp
             <p className="text-sm text-gray-600 mb-3">
               Local encrypted data protection
             </p>
-            <button
-              onClick={handleClearEncryptedData}
-              className="w-full bg-purple-600 hover:bg-purple-700 text-white px-3 py-2 rounded-md text-sm transition-colors"
-            >
-              Clear Data
-            </button>
+            <AlertDialog open={showClearConfirm} onOpenChange={setShowClearConfirm}>
+              <AlertDialogTrigger asChild>
+                <button
+                  className="w-full bg-purple-600 hover:bg-purple-700 text-white px-3 py-2 rounded-md text-sm transition-colors"
+                >
+                  Clear Data
+                </button>
+              </AlertDialogTrigger>
+              <AlertDialogContent>
+                <AlertDialogHeader>
+                  <AlertDialogTitle>Clear encrypted data?</AlertDialogTitle>
+                  <AlertDialogDescription>
+                    Are you sure you want to clear all encrypted data? This cannot be undone.
+                  </AlertDialogDescription>
+                </AlertDialogHeader>
+                <AlertDialogFooter>
+                  <AlertDialogCancel>Cancel</AlertDialogCancel>
+                  <AlertDialogAction onClick={handleClearEncryptedData}>Clear Data</AlertDialogAction>
+                </AlertDialogFooter>
+              </AlertDialogContent>
+            </AlertDialog>
           </motion.div>
         </div>
 
@@ -375,9 +405,7 @@ export function PWAUserProfile({ user, onUpdate: _onUpdate }: PWAUserProfileProp
         <AnimatePresence>
           {showAdvanced && (
             <motion.div
-              initial={{ opacity: 0, height: 0 }}
-              animate={{ opacity: 1, height: 'auto' }}
-              exit={{ opacity: 0, height: 0 }}
+              {...(shouldReduceMotion ? {} : { initial: { opacity: 0, height: 0 }, animate: { opacity: 1, height: 'auto' }, exit: { opacity: 0, height: 0 } })}
               className="mt-6 pt-6 border-t border-gray-200"
             >
               <h4 className="font-medium text-gray-900 mb-4">Advanced Settings</h4>

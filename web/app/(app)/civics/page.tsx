@@ -11,24 +11,34 @@
  */
 
 import {
-  MagnifyingGlassIcon,
-  UserGroupIcon,
-  HeartIcon
-} from '@heroicons/react/24/outline';
+  Loader2,
+  Search,
+  Users,
+} from 'lucide-react';
 import dynamic from 'next/dynamic';
-import React, { useMemo, useState, useEffect, useCallback } from 'react';
+import React, { Suspense, useMemo, useState, useEffect, useCallback } from 'react';
 
 import type { SuperiorRepresentativeData } from '@/features/civics/lib/types/superior-types';
 
+import { AnimatedCard } from '@/components/shared/AnimatedCard';
 import { EnhancedEmptyState } from '@/components/shared/EnhancedEmptyState';
 import { EnhancedErrorDisplay } from '@/components/shared/EnhancedErrorDisplay';
+import { useLiveAnnouncer } from '@/components/shared/LiveAnnouncer';
+import { RepresentativeCardSkeleton, RepresentativeListSkeleton } from '@/components/shared/Skeletons';
 
+import { haptic } from '@/lib/haptics';
 import { useIsMobile, useAppActions } from '@/lib/stores/appStore';
 import { logger } from '@/lib/utils/logger';
 
 import { useDebounce } from '@/hooks/useDebounce';
+import { useUrlFilters } from '@/hooks/useUrlFilters';
 
 import type { Representative } from '@/types/representative';
+
+const CIVICS_URL_FILTER_DEFAULTS = {
+  state: 'CA' as string,
+  level: 'all' as string,
+};
 
 // Lazy load heavy components to reduce initial bundle size
 const RepresentativeCard = dynamic(
@@ -37,15 +47,10 @@ const RepresentativeCard = dynamic(
       default: mod.RepresentativeCard,
     })),
   {
-  loading: () => <div className="animate-pulse bg-gray-200 h-32 rounded-lg" />,
-  ssr: false
+    loading: () => <RepresentativeCardSkeleton />,
+    ssr: false,
   }
 );
-
-const UnifiedFeed = dynamic(() => import('@/features/feeds').then(mod => ({ default: mod.UnifiedFeedRefactored })), {
-  loading: () => <div className="animate-pulse bg-gray-200 h-64 rounded-lg" />,
-  ssr: false
-});
 
 const CIVICS_STATES = [
   { code: 'AL', name: 'Alabama' },
@@ -101,13 +106,15 @@ const CIVICS_STATES = [
   { code: 'WY', name: 'Wyoming' },
 ];
 
-export default function Civics2Page() {
-  // UI state (local)
-  const [activeTab, setActiveTab] = useState<'representatives' | 'feed'>('representatives');
+function CivicsPageContent() {
+  const { announce } = useLiveAnnouncer();
+  const prevIsLoadingRef = React.useRef(true);
+  const urlFilters = useUrlFilters(CIVICS_URL_FILTER_DEFAULTS);
+  const selectedState = urlFilters.filters.state ?? 'CA';
+  const selectedLevel = (urlFilters.filters.level ?? 'all') as 'all' | 'federal' | 'state' | 'local';
+
   const [searchQuery, setSearchQuery] = useState('');
   const debouncedSearchQuery = useDebounce(searchQuery, 300);
-  const [selectedState, setSelectedState] = useState<string>('CA');
-  const [selectedLevel, setSelectedLevel] = useState<'all' | 'federal' | 'state' | 'local'>('all');
   const [selectedCity, setSelectedCity] = useState<string>('');
   const [selectedZip, setSelectedZip] = useState<string>('');
   const debouncedCity = useDebounce(selectedCity, 400);
@@ -380,16 +387,19 @@ export default function Civics2Page() {
       const newSet = new Set(prev);
       if (newSet.has(id)) {
         newSet.delete(id);
+        import('sonner').then(({ toast }) => toast.info('Unfollowed representative'));
       } else {
         newSet.add(id);
+        import('sonner').then(({ toast }) => toast.success('Following representative'));
       }
       return newSet;
     });
+    haptic('light');
   };
 
   const handleContact = (id: string, type: string) => {
-    // Contact functionality
     logger.info('Contacting representative', { id, type });
+    import('sonner').then(({ toast }) => toast.info('Contact feature coming soon'));
   };
 
   // Filter representatives - API already filters by state/level/city/zip, so only filter by search query client-side
@@ -405,6 +415,19 @@ export default function Civics2Page() {
     });
   }, [representatives, debouncedSearchQuery]);
 
+  // Announce result count when filter/load completes
+  useEffect(() => {
+    const wasLoading = prevIsLoadingRef.current;
+    prevIsLoadingRef.current = isLoading;
+    if (wasLoading && !isLoading) {
+      const count = filteredRepresentatives.length;
+      announce(
+        count === 0
+          ? 'No representatives found'
+          : `Showing ${count} of ${total} representatives`
+      );
+    }
+  }, [isLoading, filteredRepresentatives.length, total, announce]);
 
   const selectedStateName = useMemo(() => {
     return CIVICS_STATES.find((state) => state.code === selectedState)?.name ?? selectedState;
@@ -412,113 +435,47 @@ export default function Civics2Page() {
 
 
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
-      {/* Beautiful Header */}
-      <div className="bg-gradient-to-r from-blue-600 via-blue-700 to-indigo-800 shadow-lg sticky top-0 z-10">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex items-center justify-between h-20">
-            <div className="flex items-center space-x-6">
-              <div className="flex items-center space-x-3">
-                <div className="w-10 h-10 bg-white dark:bg-gray-800 rounded-full flex items-center justify-center">
-                  <svg className="w-6 h-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-                  </svg>
-                </div>
-                <div>
-                  <h1 className="text-2xl font-bold text-white">Civics</h1>
-                  <p className="text-blue-50 text-sm">Your Democratic Voice</p>
-                </div>
-              </div>
-            </div>
-            <div className="flex items-center space-x-4">
-              <div className="hidden sm:flex items-center space-x-3 text-white">
-                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
-                </svg>
-                <div>
-                  <p className="text-sm font-medium">{selectedStateName}</p>
-                  <p className="text-xs text-blue-50">Your State</p>
-                </div>
-              </div>
-            </div>
+    <div className="min-h-screen bg-muted">
+      {/* Page Header */}
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-8 pb-4">
+        <div className="flex items-center justify-between">
+          <div>
+            <h1 className="text-3xl font-bold text-foreground mb-1">Civics</h1>
+            <p className="text-muted-foreground">Your democratic voice &mdash; find and follow your representatives</p>
           </div>
-        </div>
-      </div>
-
-      {/* Beautiful Navigation Tabs */}
-      <div className="bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 shadow-sm">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex space-x-8" role="tablist" aria-label="Civics sections">
-            <button
-              onClick={() => setActiveTab('representatives')}
-              data-testid="civics-tab-representatives"
-              role="tab"
-              aria-selected={activeTab === 'representatives'}
-              aria-controls="civics-representatives-panel"
-              className={`py-4 px-1 border-b-3 font-semibold text-sm transition-all duration-200 ${
-                activeTab === 'representatives'
-                  ? 'border-blue-500 text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-900/30'
-                  : 'border-transparent text-gray-600 dark:text-gray-400 hover:text-gray-800 dark:hover:text-gray-200 hover:border-gray-300 dark:hover:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-700'
-              }`}
-            >
-              <div className="flex items-center space-x-2">
-                <UserGroupIcon className="w-5 h-5" />
-                <span>Representatives</span>
-                {activeTab === 'representatives' && (
-                  <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
-                    {filteredRepresentatives.length}
-                  </span>
-                )}
-              </div>
-            </button>
-
-            <button
-              onClick={() => setActiveTab('feed')}
-              data-testid="civics-tab-feed"
-              role="tab"
-              aria-selected={activeTab === 'feed'}
-              aria-controls="civics-feed-panel"
-              className={`py-4 px-1 border-b-3 font-semibold text-sm transition-all duration-200 ${
-                activeTab === 'feed'
-                  ? 'border-blue-500 text-blue-600 bg-blue-50'
-                  : 'border-transparent text-gray-600 hover:text-gray-800 hover:border-gray-300 hover:bg-gray-50'
-              }`}
-            >
-              <div className="flex items-center space-x-2">
-                <HeartIcon className="w-5 h-5" />
-                <span>Feed</span>
-              </div>
-            </button>
-          </div>
+          {selectedStateName && selectedState !== 'all' && (
+            <div className="hidden sm:flex items-center gap-2 text-sm text-muted-foreground">
+              <Users className="h-4 w-4" />
+              <span>{selectedStateName}</span>
+            </div>
+          )}
         </div>
       </div>
 
       {/* Main Content */}
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        <h2 className="sr-only">Civics content</h2>
-        {activeTab === 'representatives' && (
-          <div id="civics-representatives-panel" role="tabpanel" className="space-y-6">
+        <h2 className="sr-only">Representatives</h2>
+        <div className="space-y-6">
             {/* Search and Filters */}
-            <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-gray-200 dark:border-gray-700 p-6">
+            <div className="bg-card rounded-2xl shadow-sm border border-border p-6">
               <form
                 onSubmit={(e) => {
                   e.preventDefault();
                   void loadRepresentatives(false);
                 }}
-                className="flex flex-col sm:flex-row gap-4"
+                className="flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:gap-4"
               >
                 <div className="flex-1">
                   <label className="sr-only" htmlFor="civics-search">
                     Search representatives
                   </label>
                   <div className="relative">
-                    <MagnifyingGlassIcon className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400 dark:text-gray-500" />
+                    <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-muted-foreground" />
                     <input
                       id="civics-search"
                       type="text"
                       placeholder="Search representatives..."
-                      className="w-full pl-10 pr-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 placeholder-gray-500 dark:placeholder-gray-400 focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 focus:border-transparent"
+                      className="w-full pl-10 pr-4 py-2 border border-border rounded-lg bg-background text-foreground placeholder:text-muted-foreground focus:ring-2 focus:ring-ring focus:ring-offset-2 focus:ring-offset-background focus:border-transparent"
                       value={searchQuery}
                       onChange={(e) => setSearchQuery(e.target.value)}
                     />
@@ -531,16 +488,15 @@ export default function Civics2Page() {
                   <select
                     id="civics-state-filter"
                     data-testid="state-filter"
-                    className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 focus:border-transparent"
+                    className="w-full px-3 py-2 border border-border rounded-lg bg-background text-foreground focus:ring-2 focus:ring-ring focus:ring-offset-2 focus:ring-offset-background focus:border-transparent"
                     value={selectedState}
                     onChange={(e) => {
                       const newState = e.target.value;
-                      setSelectedState(newState);
+                      urlFilters.setFilter('state', newState);
                       setSelectedCity('');
                       setSelectedZip('');
                       setIsLoading(true);
                     }}
-                    disabled={isLoading}
                   >
                     {CIVICS_STATES.map((state) => (
                       <option key={state.code} value={state.code}>
@@ -556,11 +512,11 @@ export default function Civics2Page() {
                   <select
                     id="civics-level-filter"
                     data-testid="level-filter"
-                    className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 focus:border-transparent"
+                    className="w-full px-3 py-2 border border-border rounded-lg bg-background text-foreground focus:ring-2 focus:ring-ring focus:ring-offset-2 focus:ring-offset-background focus:border-transparent"
                     value={selectedLevel}
                     onChange={(e) => {
                       const newLevel = e.target.value as 'all' | 'federal' | 'state' | 'local';
-                      setSelectedLevel(newLevel);
+                      urlFilters.setFilter('level', newLevel);
                       setIsLoading(true);
                     }}
                   >
@@ -579,7 +535,7 @@ export default function Civics2Page() {
                     type="text"
                     placeholder="City"
                     aria-label="Filter by office city"
-                    className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 placeholder-gray-500 dark:placeholder-gray-400 focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 focus:border-transparent"
+                    className="w-full px-3 py-2 border border-border rounded-lg bg-background text-foreground placeholder:text-muted-foreground focus:ring-2 focus:ring-ring focus:ring-offset-2 focus:ring-offset-background focus:border-transparent"
                     value={selectedCity}
                     onChange={(e) => setSelectedCity(e.target.value)}
                   />
@@ -595,7 +551,7 @@ export default function Civics2Page() {
                     placeholder="ZIP"
                     aria-label="Filter by ZIP code"
                     maxLength={5}
-                    className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 placeholder-gray-500 dark:placeholder-gray-400 focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 focus:border-transparent"
+                    className="w-full px-3 py-2 border border-border rounded-lg bg-background text-foreground placeholder:text-muted-foreground focus:ring-2 focus:ring-ring focus:ring-offset-2 focus:ring-offset-background focus:border-transparent"
                     value={selectedZip}
                     onChange={(e) => {
                       const v = e.target.value.replace(/\D/g, '').slice(0, 5);
@@ -610,7 +566,7 @@ export default function Civics2Page() {
                   <select
                     id="civics-card-variant"
                     data-testid="civics-card-variant"
-                    className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 focus:border-transparent"
+                    className="w-full px-3 py-2 border border-border rounded-lg bg-background text-foreground focus:ring-2 focus:ring-ring focus:ring-offset-2 focus:ring-offset-background focus:border-transparent"
                     value={cardVariant}
                     onChange={(e) => setCardVariant(e.target.value as 'default' | 'compact' | 'detailed')}
                   >
@@ -623,10 +579,11 @@ export default function Civics2Page() {
                   <button
                     type="submit"
                     disabled={isLoading}
-                    className="px-4 py-2 rounded-lg bg-blue-600 dark:bg-blue-700 text-white font-medium hover:bg-blue-700 dark:hover:bg-blue-600 disabled:opacity-60 disabled:cursor-not-allowed transition-colors shrink-0"
+                    className="px-4 py-2 rounded-lg bg-primary text-primary-foreground font-medium hover:bg-primary/90 disabled:opacity-60 disabled:cursor-not-allowed transition-colors shrink-0 flex items-center gap-2"
                     data-testid="civics-search-button"
                   >
-                    Search
+                    {isLoading && <Loader2 className="h-4 w-4 animate-spin" aria-hidden="true" />}
+                    {isLoading ? 'Loading…' : 'Search'}
                   </button>
                   <button
                     type="button"
@@ -635,7 +592,7 @@ export default function Civics2Page() {
                       setSelectedCity('');
                       setSelectedZip('');
                     }}
-                    className="px-4 py-2 rounded-lg border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 font-medium hover:bg-gray-50 dark:hover:bg-gray-700 disabled:opacity-60 transition-colors shrink-0"
+                    className="px-4 py-2 rounded-lg border border-border text-foreground/80 font-medium hover:bg-muted disabled:opacity-60 transition-colors shrink-0"
                   >
                     Clear
                   </button>
@@ -645,12 +602,8 @@ export default function Civics2Page() {
 
             {/* Representatives Grid */}
             {isLoading ? (
-              <div className="flex items-center justify-center py-16" role="status" aria-live="polite" aria-busy="true">
-                <div className="text-center">
-                  <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500 dark:border-blue-400 mx-auto mb-4" />
-                  <p className="text-lg text-gray-600 dark:text-gray-400 font-medium">Loading your representatives...</p>
-                  <p className="text-sm text-gray-600 dark:text-gray-400 mt-2">Gathering the most current information</p>
-                </div>
+              <div className="py-8" role="status" aria-live="polite" aria-busy="true">
+                <RepresentativeListSkeleton count={8} />
               </div>
             ) : errorMessage ? (
               <div className="flex items-center justify-center py-12">
@@ -667,7 +620,7 @@ export default function Civics2Page() {
               </div>
             ) : filteredRepresentatives.length === 0 ? (
               <EnhancedEmptyState
-                icon={<UserGroupIcon className="h-12 w-12 text-blue-500 dark:text-blue-400" />}
+                icon={<Users className="h-12 w-12 text-primary" />}
                 title="No representatives found"
                 description="Try adjusting your search criteria or check back later for updated information."
                 primaryAction={{
@@ -683,14 +636,14 @@ export default function Civics2Page() {
               <div className="space-y-8">
                 {/* Results Header */}
                 <div className="text-center">
-                  <h2 className="text-2xl font-bold text-gray-900 dark:text-gray-100 mb-2">
+                  <h2 className="text-2xl font-bold text-foreground mb-2">
                     Your {selectedStateName} Representatives
                   </h2>
-                  <p className="text-gray-600 dark:text-gray-400">
+                  <p className="text-muted-foreground">
                     Current elected officials serving your community
                   </p>
                   {total > 0 && (
-                    <p className="text-sm text-gray-600 dark:text-gray-400 mt-1" role="status">
+                    <p className="text-sm text-muted-foreground mt-1" role="status">
                       Showing {representatives.length} of {total} representatives
                     </p>
                   )}
@@ -705,7 +658,7 @@ export default function Civics2Page() {
                         ? 'grid-cols-1 max-w-lg mx-auto'
                         : 'grid-cols-1 lg:grid-cols-2 xl:grid-cols-3'
               }`}>
-                {filteredRepresentatives.map((representative) => {
+                {filteredRepresentatives.map((representative, index) => {
                   // Transform SuperiorRepresentativeData to Representative
                   const transformedRep: Representative = {
                     id: parseInt(representative.id) ?? 0,
@@ -738,14 +691,15 @@ export default function Civics2Page() {
                   };
 
                   return (
-                    <RepresentativeCard
-                      key={representative.id}
-                      representative={transformedRep}
-                      variant={cardVariant === 'default' ? 'default' : cardVariant}
-                      onFollow={(rep: Representative) => handleFollow(rep.id.toString())}
-                      onContact={(rep: Representative) => handleContact(rep.id.toString(), 'email')}
-                      className="group bg-white dark:bg-gray-800 rounded-2xl shadow-lg hover:shadow-xl transition-all duration-300 overflow-hidden border border-gray-100 dark:border-gray-700"
-                    />
+                    <AnimatedCard key={representative.id} index={index}>
+                      <RepresentativeCard
+                        representative={transformedRep}
+                        variant={cardVariant === 'default' ? 'default' : cardVariant}
+                        onFollow={(rep: Representative) => handleFollow(rep.id.toString())}
+                        onContact={(rep: Representative) => handleContact(rep.id.toString(), 'email')}
+                        className="group bg-card rounded-2xl shadow-lg hover:shadow-xl transition-all duration-300 overflow-hidden border border-border"
+                      />
+                    </AnimatedCard>
                   );
                 })}
               </div>
@@ -757,7 +711,7 @@ export default function Civics2Page() {
                         type="button"
                         onClick={() => void loadRepresentatives(true)}
                         disabled={isLoadingMore}
-                        className="px-6 py-3 rounded-lg bg-blue-600 dark:bg-blue-700 text-white font-medium hover:bg-blue-700 dark:hover:bg-blue-600 disabled:opacity-60 disabled:cursor-not-allowed transition-colors"
+                        className="px-6 py-3 rounded-lg bg-primary text-primary-foreground font-medium hover:bg-primary/90 disabled:opacity-60 disabled:cursor-not-allowed transition-colors"
                         data-testid="civics-load-more"
                       >
                         {isLoadingMore ? 'Loading...' : 'Load more'}
@@ -767,25 +721,26 @@ export default function Civics2Page() {
                 </div>
               </div>
             )}
-          </div>
-        )}
-
-        {activeTab === 'feed' && (
-          <div id="civics-feed-panel" role="tabpanel" data-testid="mobile-feed">
-            <UnifiedFeed userId="test-user" />
-          </div>
-        )}
+        </div>
       </div>
 
       {/* Footer */}
-      <div className="bg-white dark:bg-gray-800 border-t border-gray-200 dark:border-gray-700 mt-12">
+      <div className="bg-card border-t border-border mt-12">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
           <div className="text-center">
-            <p className="text-sm text-gray-600 dark:text-gray-400">Powered by FREE APIs: Google Civic, OpenStates, Congress.gov, FEC, Wikipedia</p>
-            <p className="text-xs text-gray-500 dark:text-gray-400 mt-2">Data updated periodically from official sources • Open source</p>
+            <p className="text-sm text-muted-foreground">Powered by FREE APIs: Google Civic, OpenStates, Congress.gov, FEC, Wikipedia</p>
+            <p className="text-xs text-muted-foreground mt-2">Data updated periodically from official sources • Open source</p>
           </div>
         </div>
       </div>
     </div>
+  );
+}
+
+export default function CivicsPage() {
+  return (
+    <Suspense fallback={<RepresentativeListSkeleton count={8} />}>
+      <CivicsPageContent />
+    </Suspense>
   );
 }

@@ -1,5 +1,7 @@
 # Feeds Feature Module
 
+**March 2026:** FeedContext introduced to replace 22-prop FeedCore interface with React context-based data flow. See `web/features/feeds/context/FeedContext.tsx`.
+
 ## Overview
 
 Modern, production-grade feed system with comprehensive features:
@@ -418,6 +420,6 @@ See repository root for license information.
 ---
 
 **Status:** ✅ Production Ready  
-**Last Updated:** November 10, 2025  
+**Last Updated:** March 2026  
 **Maintainer:** See CODEOWNERS
 

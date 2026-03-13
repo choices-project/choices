@@ -19,13 +19,54 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 
 import { logger } from '@/lib/utils/logger';
 
+type RawPollData = {
+  id: string;
+  title: string;
+  description?: string | null;
+  createdAt?: string;
+  created_at?: string;
+  pollType?: string;
+  poll_type?: string;
+  billId?: string;
+  bill_id?: string;
+  billTitle?: string;
+  bill_title?: string;
+  billSummary?: string;
+  bill_summary?: string;
+};
+
+type RawActivityData = {
+  id: string | number;
+  type: string;
+  title?: string;
+  description?: string | null;
+  date?: string;
+  created_at?: string;
+  url?: string;
+  source_url?: string;
+  metadata?: {
+    vote_position?: string;
+    result?: string;
+  };
+};
+
+type RepresentativeApiResponse = {
+  success: boolean;
+  data?: {
+    representative?: {
+      name?: string;
+      activities?: RawActivityData[];
+    };
+  };
+};
+
 type UnifiedActivity = {
   id: string;
   type: 'poll' | 'bill' | 'vote';
   date: string;
   title: string;
-  description?: string | null;
-  url?: string | null;
+  description?: string | null | undefined;
+  url?: string | null | undefined;
   representativeId?: number;
   representativeName?: string;
   metadata?: {
@@ -74,12 +115,12 @@ export function DistrictActivityFeed({
 
           const repActivities: UnifiedActivity[] = [];
           let repName = `Representative #${repId}`;
-          let repData: any = null;
+          let repData: RepresentativeApiResponse | null = null;
 
           // Get representative data (only read once!)
           if (activitiesRes.ok) {
             repData = await activitiesRes.json();
-            if (repData.success && repData.data?.representative) {
+            if (repData && repData.success && repData.data?.representative) {
               repName = repData.data.representative.name || repName;
             }
           }
@@ -88,7 +129,7 @@ export function DistrictActivityFeed({
           if (pollsRes.ok) {
             const pollsData = await pollsRes.json();
             if (pollsData.success && Array.isArray(pollsData.data)) {
-              pollsData.data.forEach((poll: any) => {
+              pollsData.data.forEach((poll: RawPollData) => {
                 repActivities.push({
                   id: `poll-${poll.id}`,
                   type: 'poll',
@@ -100,10 +141,10 @@ export function DistrictActivityFeed({
                   representativeName: repName,
                   metadata: {
                     pollId: poll.id,
-                    pollType: poll.pollType || poll.poll_type,
-                    billId: poll.billId || poll.bill_id,
-                    billTitle: poll.billTitle || poll.bill_title,
-                    billSummary: poll.billSummary || poll.bill_summary,
+                    ...(poll.pollType || poll.poll_type ? { pollType: poll.pollType || poll.poll_type } : {}),
+                    ...(poll.billId || poll.bill_id ? { billId: poll.billId || poll.bill_id } : {}),
+                    ...(poll.billTitle || poll.bill_title ? { billTitle: poll.billTitle || poll.bill_title } : {}),
+                    ...(poll.billSummary || poll.bill_summary ? { billSummary: poll.billSummary || poll.bill_summary } : {}),
                   }
                 });
               });
@@ -113,21 +154,21 @@ export function DistrictActivityFeed({
           // Process bills/activities (use already-read repData)
           if (activitiesRes.ok && repData) {
             if (repData.success && repData.data?.representative?.activities) {
-              repData.data.representative.activities.forEach((activity: any) => {
+              repData.data.representative.activities.forEach((activity: RawActivityData) => {
                 if (activity.type === 'bill') {
                   repActivities.push({
                     id: `bill-${activity.id}`,
                     type: 'bill',
                     date: activity.date || activity.created_at || new Date().toISOString(),
-                    title: activity.title,
+                    title: activity.title || 'Bill',
                     description: activity.description,
                     url: activity.url || activity.source_url,
                     representativeId: repId,
                     representativeName: repName,
                     metadata: {
                       billId: String(activity.id),
-                      billTitle: activity.title,
-                      billSummary: activity.description,
+                      ...(activity.title ? { billTitle: activity.title } : {}),
+                      ...(activity.description ? { billSummary: activity.description } : {}),
                     }
                   });
                 } else if (activity.type === 'vote') {
@@ -142,8 +183,8 @@ export function DistrictActivityFeed({
                     representativeName: repName,
                     metadata: {
                       voteId: String(activity.id),
-                      votePosition: activity.metadata?.vote_position,
-                      result: activity.metadata?.result,
+                      ...(activity.metadata?.vote_position ? { votePosition: activity.metadata.vote_position } : {}),
+                      ...(activity.metadata?.result ? { result: activity.metadata.result } : {}),
                     }
                   });
                 }
@@ -214,7 +255,7 @@ export function DistrictActivityFeed({
       <div className={`space-y-4 ${className}`}>
         <div className="animate-pulse space-y-3">
           {[1, 2, 3].map(i => (
-            <Card key={i} className="h-24 bg-gray-200 dark:bg-gray-700" />
+            <Card key={i} className="h-24 bg-muted" />
           ))}
         </div>
       </div>
@@ -234,7 +275,7 @@ export function DistrictActivityFeed({
   if (activities.length === 0) {
     return (
       <Card className={className}>
-        <CardContent className="p-6 text-center text-gray-500 dark:text-gray-400">
+        <CardContent className="p-6 text-center text-muted-foreground">
           No activities found for district representatives.
         </CardContent>
       </Card>
@@ -269,7 +310,7 @@ export function DistrictActivityFeed({
                     <div className="flex-1 min-w-0">
                       <div className="flex items-start justify-between gap-2 mb-1">
                         <div className="flex-1 min-w-0">
-                          <h4 className="font-semibold text-gray-900 dark:text-gray-100 line-clamp-2">
+                          <h4 className="font-semibold text-foreground line-clamp-2">
                             {activity.url ? (
                               <Link
                                 href={activity.url}
@@ -286,7 +327,7 @@ export function DistrictActivityFeed({
                           {activity.representativeName && activity.representativeId && (
                             <Link
                               href={`/representatives/${activity.representativeId}`}
-                              className="text-xs text-blue-600 dark:text-blue-400 hover:underline mt-1 block"
+                              className="text-xs text-primary hover:underline mt-1 block"
                             >
                               {activity.representativeName}
                             </Link>
@@ -297,11 +338,11 @@ export function DistrictActivityFeed({
                         </Badge>
                       </div>
                       {activity.description && (
-                        <p className="text-sm text-gray-600 dark:text-gray-400 mt-1 line-clamp-2">
+                        <p className="text-sm text-muted-foreground mt-1 line-clamp-2">
                           {activity.description}
                         </p>
                       )}
-                      <div className="flex items-center gap-4 mt-2 text-xs text-gray-500 dark:text-gray-500">
+                      <div className="flex items-center gap-4 mt-2 text-xs text-muted-foreground">
                         <div className="flex items-center gap-1">
                           <Calendar className="w-3 h-3" />
                           <span>{formatDate(activity.date)}</span>
@@ -326,7 +367,7 @@ export function DistrictActivityFeed({
               <div className="text-center pt-2">
                 <Link
                   href="/civics"
-                  className="text-sm text-blue-600 dark:text-blue-400 hover:underline"
+                  className="text-sm text-primary hover:underline"
                 >
                   View all {filteredActivities.length} activities →
                 </Link>

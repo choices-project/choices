@@ -8,7 +8,6 @@ import {
   AlertTriangle,
   Users,
   Zap,
-  Clock
 } from 'lucide-react';
 import React from 'react';
 
@@ -17,6 +16,7 @@ import { useTrendingTopics, useGeneratedPolls, useSystemMetrics, useRealTimeSubs
 import { mockChartData } from '@/features/admin/lib/mock-data';
 import type { ActivityItem } from '@/features/admin/types';
 
+import { EnhancedEmptyState } from '@/components/shared/EnhancedEmptyState';
 import { Skeleton } from '@/components/ui/skeleton';
 
 import { useActivityFeed } from '@/lib/stores';
@@ -87,12 +87,12 @@ export const DashboardOverview: React.FC = () => {
       {/* Page Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900 dark:text-gray-100">Dashboard Overview</h1>
-          <p className="text-gray-600 dark:text-gray-400 mt-1">
+          <h1 className="text-2xl font-bold text-foreground">Dashboard Overview</h1>
+          <p className="text-muted-foreground mt-1">
             Monitor trending topics and system metrics
           </p>
         </div>
-        <div className="text-sm text-gray-500 dark:text-gray-400">
+        <div className="text-sm text-muted-foreground">
           Last updated: {new Date().toLocaleString()}
         </div>
       </div>
@@ -103,7 +103,7 @@ export const DashboardOverview: React.FC = () => {
           // Show skeleton loaders while metrics are loading
           <>
             {[1, 2, 3, 4].map((i) => (
-              <div key={i} className="p-6 rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 shadow-sm">
+              <div key={i} className="p-6 rounded-lg border border-border bg-background shadow-sm">
                 <Skeleton className="h-4 w-24 mb-2" />
                 <Skeleton className="h-8 w-16 mb-2" />
                 <Skeleton className="h-3 w-20" />
@@ -184,16 +184,17 @@ export const DashboardOverview: React.FC = () => {
       <ChartWrapper title="Recent Activity Feed">
         <div className="space-y-4">
           {activityFeed.length === 0 ? (
-            <div className="text-center py-8 text-gray-500 dark:text-gray-400">
-              <Clock className="h-12 w-12 mx-auto mb-4 opacity-50" />
-              <p>No recent activity</p>
-              <p className="text-sm">Activity will appear here as you use the system</p>
-            </div>
+            <EnhancedEmptyState
+              icon={<Activity className="h-12 w-12 text-muted-foreground" />}
+              title="No recent activity"
+              description="Activity will appear here as users interact with the platform."
+              tip="Check back later or review the analytics dashboard for trends."
+            />
           ) : (
             activityFeed.slice(0, 10).map((activity: ActivityItem) => (
               <div
                 key={activity.id}
-                className="flex items-start space-x-3 p-4 bg-gray-50 dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700"
+                className="flex items-start space-x-3 p-4 bg-muted rounded-lg border border-border"
               >
                 <div className="flex-shrink-0">
                   {activity.type === 'topic_created' && (
@@ -210,10 +211,10 @@ export const DashboardOverview: React.FC = () => {
                   )}
                 </div>
                 <div className="flex-1 min-w-0">
-                  <p className="text-sm font-medium text-gray-900 dark:text-gray-100">
+                  <p className="text-sm font-medium text-foreground">
                     {activity.title}
                   </p>
-                  <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">
+                  <p className="text-sm text-muted-foreground mt-1">
                     {activity.description}
                   </p>
                   <p className="text-xs text-gray-400 dark:text-gray-500 mt-2">

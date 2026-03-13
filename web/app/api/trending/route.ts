@@ -15,7 +15,8 @@
 
 import { getSupabaseServerClient } from '@/utils/supabase/server';
 
-import { withErrorHandling, validationError, successResponse, errorResponse } from '@/lib/api';
+import { withErrorHandling, validationError, successResponse, errorResponse, authError } from '@/lib/api';
+import { getUser } from '@/lib/core/auth/middleware';
 import { trendingHashtagsTracker } from '@/lib/trending/TrendingHashtags';
 import { nowISO } from '@/lib/utils/format-utils';
 import { logger, devLog } from '@/lib/utils/logger';
@@ -294,6 +295,11 @@ async function getTrendingTopics(limit: number) {
 
 async function trackHashtags(request: NextRequest) {
   try {
+    const user = await getUser();
+    if (!user) {
+      return authError('Authentication required');
+    }
+
     const body = await request.json();
     const { hashtags, userId, source, metadata } = body;
 
@@ -303,6 +309,10 @@ async function trackHashtags(request: NextRequest) {
         hashtags: 'hashtags array is required',
         userId: 'userId is required'
       }, 'Invalid input. hashtags array and userId are required.');
+    }
+
+    if (userId !== user.id) {
+      return authError('userId does not match authenticated user');
     }
 
     // Track multiple hashtags

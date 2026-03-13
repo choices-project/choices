@@ -11,6 +11,7 @@ import {
   parseBody,
 } from '@/lib/api';
 import { FEEDBACK_SELECT_COLUMNS } from '@/lib/api/response-builders';
+import { apiRateLimiter } from '@/lib/rate-limiting/api-rate-limiter';
 import { stripUndefinedDeep } from '@/lib/util/clean';
 import { devLog, logger } from '@/lib/utils/logger';
 
@@ -74,6 +75,20 @@ function validateRequestSize(request: NextRequest): { valid: boolean; reason?: s
 }
 
 export const POST = withErrorHandling(async (request: NextRequest) => {
+  const ip = request.headers.get('x-forwarded-for')?.split(',')[0]?.trim()
+    || request.headers.get('x-real-ip')
+    || '127.0.0.1';
+  const ua = request.headers.get('user-agent');
+  const rateLimitOptions: { maxRequests: number; windowMs: number; userAgent?: string } = {
+    maxRequests: 10,
+    windowMs: 60 * 1000,
+  };
+  if (ua) rateLimitOptions.userAgent = ua;
+  const rateLimitResult = await apiRateLimiter.checkLimit(ip, '/api/feedback', rateLimitOptions);
+  if (!rateLimitResult.allowed) {
+    return errorResponse('Too many requests. Please try again later.', 429);
+  }
+
   const sizeValidation = validateRequestSize(request);
   if (!sizeValidation.valid) {
     return errorResponse(

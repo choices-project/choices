@@ -13,6 +13,8 @@ import React, { useState, useRef, useEffect, useCallback } from 'react';
 
 import { getSupabaseBrowserClient } from '@/utils/supabase/client';
 
+import { Input } from '@/components/ui/input';
+
 import {
   useUser,
   useUserActions,
@@ -91,7 +93,7 @@ export const Header: React.FC = () => {
 
   return (
     <header
-      className="bg-white dark:bg-gray-900 border-b border-gray-200 dark:border-gray-700 h-16 flex items-center justify-between px-6"
+      className="bg-background border-b border-border h-16 flex items-center justify-between px-6"
       role="banner"
     >
       {/* Left side */}
@@ -110,10 +112,10 @@ export const Header: React.FC = () => {
         <div className="hidden md:flex items-center space-x-2">
           <div className="relative">
             <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400 dark:text-gray-500" />
-            <input
+            <Input
               type="text"
               placeholder="Search..."
-              className="pl-10 pr-4 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 placeholder-gray-400 dark:placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              className="pl-10"
             />
           </div>
         </div>
@@ -139,9 +141,9 @@ export const Header: React.FC = () => {
 
           {/* Notifications dropdown */}
           {notifications.length > 0 && (
-            <div className="absolute right-0 mt-2 w-80 bg-white dark:bg-gray-800 rounded-md shadow-lg border border-gray-200 dark:border-gray-700 z-50">
+            <div className="absolute right-0 mt-2 w-80 bg-card rounded-md shadow-lg border border-border z-50">
               <div className="p-4">
-                <h3 className="text-sm font-medium text-gray-900 dark:text-gray-100 mb-3">Notifications</h3>
+                <h3 className="text-sm font-medium text-foreground mb-3">Notifications</h3>
                 <div className="space-y-2 max-h-64 overflow-y-auto">
                   {notifications.slice(0, 5).map((notification) => (
                     <button
@@ -157,7 +159,7 @@ export const Header: React.FC = () => {
                     >
                       <div className="flex items-start justify-between">
                         <div className="flex-1">
-                          <p className="text-sm font-medium text-gray-900 dark:text-gray-100">
+                          <p className="text-sm font-medium text-foreground">
                             {notification.title}
                           </p>
                           <p className="text-sm text-gray-600 dark:text-gray-300 mt-1">
@@ -189,20 +191,20 @@ export const Header: React.FC = () => {
             aria-expanded={isUserMenuOpen}
           >
             <User className="h-5 w-5" aria-hidden="true" />
-            <span className="hidden md:block text-sm font-medium text-gray-700 dark:text-gray-300">
+            <span className="hidden md:block text-sm font-medium text-foreground/80">
               {user?.email ?? 'Admin'}
             </span>
           </button>
 
           {isUserMenuOpen && (
             <div
-              className="absolute right-0 mt-2 w-48 bg-white dark:bg-gray-800 rounded-md shadow-lg border border-gray-200 dark:border-gray-700 z-50"
+              className="absolute right-0 mt-2 w-48 bg-card rounded-md shadow-lg border border-border z-50"
               role="menu"
               aria-label="Account options"
             >
               <div role="none">
                 <button
-                  className="flex w-full items-center px-4 py-2 text-left text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700"
+                  className="flex w-full items-center px-4 py-2 text-left text-sm text-foreground/80 hover:bg-muted"
                   onClick={closeUserMenu}
                   role="menuitem"
                 >
@@ -212,7 +214,7 @@ export const Header: React.FC = () => {
               </div>
               <div role="none">
                 <button
-                  className="flex w-full items-center px-4 py-2 text-left text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700"
+                  className="flex w-full items-center px-4 py-2 text-left text-sm text-foreground/80 hover:bg-muted"
                   onClick={closeUserMenu}
                   role="menuitem"
                 >
@@ -220,10 +222,10 @@ export const Header: React.FC = () => {
                   Settings
                 </button>
               </div>
-              <div role="separator" className="my-1 border-t border-gray-200 dark:border-gray-700" />
+              <div role="separator" className="my-1 border-t border-border" />
               <div role="none">
                 <button
-                  className="flex w-full items-center px-4 py-2 text-left text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700"
+                  className="flex w-full items-center px-4 py-2 text-left text-sm text-foreground/80 hover:bg-muted"
                   onClick={handleLogout}
                   role="menuitem"
                 >

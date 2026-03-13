@@ -371,7 +371,7 @@ export default function CivicsLure({ userLocation, onEngage }: CivicsLureProps) 
   };
 
   return (
-    <div className="bg-gradient-to-br from-blue-50 via-white to-purple-50 border border-blue-200 rounded-2xl p-6 mb-8">
+    <div className="bg-gradient-to-br from-blue-50 via-white to-purple-50 dark:from-gray-800 dark:via-gray-800 dark:to-gray-800 border border-blue-200 dark:border-border rounded-2xl p-6 mb-8">
       <div aria-live="polite" role="status" className="sr-only" data-testid="civics-lure-live-message">
         {liveMessage}
       </div>
@@ -379,28 +379,28 @@ export default function CivicsLure({ userLocation, onEngage }: CivicsLureProps) 
       <div className="text-center mb-6">
         <div className="flex justify-center mb-4">
           <div className="p-3 bg-blue-100 rounded-full">
-            <MapPin className="w-8 h-8 text-blue-600" />
+            <MapPin className="w-8 h-8 text-primary" />
           </div>
         </div>
-        <h2 className="text-2xl font-bold text-gray-900 mb-2">
+        <h2 className="text-2xl font-bold text-foreground mb-2">
           {t('civics.lure.header.title')}
         </h2>
-        <p className="text-gray-600">
+        <p className="text-muted-foreground">
           {t('civics.lure.header.subtitle')}
         </p>
       </div>
 
       {/* Location Display */}
       {locationLabel && (
-        <div className="bg-white border border-gray-200 rounded-lg p-4 mb-6">
+        <div className="bg-card border border-border rounded-lg p-4 mb-6">
           <div className="flex items-center space-x-2 text-sm">
-            <MapPin className="w-5 h-5 text-blue-600" />
-            <span className="font-medium text-gray-900">
+            <MapPin className="w-5 h-5 text-primary" />
+            <span className="font-medium text-foreground">
               {t('civics.lure.location.label')}
             </span>
-            <span className="text-gray-600">{locationLabel}</span>
+            <span className="text-muted-foreground">{locationLabel}</span>
             {isLoading && (
-              <span className="ml-auto text-xs text-gray-400">
+              <span className="ml-auto text-xs text-muted-foreground">
                 {t('civics.lure.location.updating')}
               </span>
             )}
@@ -416,17 +416,17 @@ export default function CivicsLure({ userLocation, onEngage }: CivicsLureProps) 
 
       {/* Quick Stats */}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
-        <div className="bg-white rounded-lg p-4 border border-gray-200">
+        <div className="bg-card rounded-lg p-4 border border-border">
           <div className="flex items-center space-x-2 mb-2">
-            <Users className="w-5 h-5 text-blue-600" />
-            <span className="font-semibold text-gray-900">
+            <Users className="w-5 h-5 text-primary" />
+            <span className="font-semibold text-foreground">
               {t('civics.lure.stats.candidates.title')}
             </span>
           </div>
-          <div className="text-2xl font-bold text-blue-600">
+          <div className="text-2xl font-bold text-primary">
             {isLoading ? dashPlaceholder : numberFormatter.format(totalLocalRepresentatives)}
           </div>
-          <div className="text-sm text-gray-500">
+          <div className="text-sm text-muted-foreground">
             {t('civics.lure.stats.candidates.caption', {
               count: String(totalLocalRepresentatives),
               formattedCount: numberFormatter.format(totalLocalRepresentatives),
@@ -434,45 +434,45 @@ export default function CivicsLure({ userLocation, onEngage }: CivicsLureProps) 
           </div>
         </div>
 
-        <div className="bg-white rounded-lg p-4 border border-gray-200">
+        <div className="bg-card rounded-lg p-4 border border-border">
           <div className="flex items-center space-x-2 mb-2">
             <TrendingUp className="w-5 h-5 text-green-600" />
-            <span className="font-semibold text-gray-900">
+            <span className="font-semibold text-foreground">
               {t('civics.lure.stats.activities.title')}
             </span>
           </div>
           <div className="text-2xl font-bold text-green-600">
             {isLoading ? dashPlaceholder : numberFormatter.format(totalActivities)}
           </div>
-          <div className="text-sm text-gray-500">
+          <div className="text-sm text-muted-foreground">
             {t('civics.lure.stats.activities.caption')}
           </div>
         </div>
 
-        <div className="bg-white rounded-lg p-4 border border-gray-200">
+        <div className="bg-card rounded-lg p-4 border border-border">
           <div className="flex items-center space-x-2 mb-2">
             <Heart className="w-5 h-5 text-red-600" />
-            <span className="font-semibold text-gray-900">
+            <span className="font-semibold text-foreground">
               {t('civics.lure.stats.following.title')}
             </span>
           </div>
           <div className="text-2xl font-bold text-red-600">
             {numberFormatter.format(followedCount)}
           </div>
-          <div className="text-sm text-gray-500">
+          <div className="text-sm text-muted-foreground">
             {t('civics.lure.stats.following.caption')}
           </div>
         </div>
 
-        <div className="bg-white rounded-lg p-4 border border-gray-200">
+        <div className="bg-card rounded-lg p-4 border border-border">
           <div className="flex items-center space-x-2 mb-2">
             <CalendarClock className="w-5 h-5 text-purple-600" />
-            <span className="font-semibold text-gray-900">
+            <span className="font-semibold text-foreground">
               {t('civics.lure.stats.election.title')}
             </span>
           </div>
           {divisionIds.length === 0 ? (
-            <div className="text-sm text-gray-500">
+            <div className="text-sm text-muted-foreground">
               {t('civics.lure.stats.election.addAddress')}
             </div>
           ) : (
@@ -489,7 +489,7 @@ export default function CivicsLure({ userLocation, onEngage }: CivicsLureProps) 
                 errorMessage={t('civics.lure.stats.election.badge.error')}
               />
               {daysUntilNextElection != null && daysUntilNextElection > 90 && (
-                <p className="text-xs text-gray-500">
+                <p className="text-xs text-muted-foreground">
                   {t('civics.lure.stats.election.future', {
                     count: String(daysUntilNextElection),
                     formattedCount: numberFormatter.format(daysUntilNextElection),
@@ -517,47 +517,47 @@ export default function CivicsLure({ userLocation, onEngage }: CivicsLureProps) 
       )}
 
       {/* Candidate Preview */}
-      <div className="bg-white rounded-lg border border-gray-200 overflow-hidden mb-6">
-        <div className="p-4 border-b border-gray-100">
-          <h3 className="font-semibold text-gray-900 mb-2">
+      <div className="bg-card rounded-lg border border-border overflow-hidden mb-6">
+        <div className="p-4 border-b border-border">
+          <h3 className="font-semibold text-foreground mb-2">
             {t('civics.lure.candidates.section.title')}
           </h3>
-          <p className="text-sm text-gray-600">
+          <p className="text-sm text-muted-foreground">
             {t('civics.lure.candidates.section.subtitle')}
           </p>
         </div>
 
         <div className="p-4 space-y-4">
           {isLoading && candidateSummaries.length === 0 && (
-            <div className="py-6 text-center text-sm text-gray-500">
+            <div className="py-6 text-center text-sm text-muted-foreground">
               {t('civics.lure.candidates.loading')}
             </div>
           )}
           {!isLoading && candidateSummaries.length === 0 && (
-            <div className="py-6 text-center text-sm text-gray-500">
+            <div className="py-6 text-center text-sm text-muted-foreground">
               {t('civics.lure.candidates.empty')}
             </div>
           )}
           {candidateSummaries.map((candidate) => (
-            <div key={candidate.id} className="flex items-center space-x-4 p-3 bg-gray-50 rounded-lg">
-              <div className="w-12 h-12 bg-gray-200 rounded-full flex items-center justify-center">
-                <span className="text-lg font-bold text-gray-600">
+            <div key={candidate.id} className="flex items-center space-x-4 p-3 bg-muted rounded-lg">
+              <div className="w-12 h-12 bg-muted rounded-full flex items-center justify-center">
+                <span className="text-lg font-bold text-muted-foreground">
                   {candidate.name.split(' ').map(n => n[0]).join('')}
                 </span>
               </div>
 
               <div className="flex-1">
                 <div className="flex items-center space-x-2 mb-1">
-                  <h4 className="font-semibold text-gray-900">{candidate.name}</h4>
+                  <h4 className="font-semibold text-foreground">{candidate.name}</h4>
                   {!candidate.isIncumbent && (
                     <span className="px-2 py-1 bg-blue-100 text-blue-800 text-xs rounded-full">
                       {t('civics.lure.candidates.challengerBadge')}
                     </span>
                   )}
                 </div>
-                <p className="text-sm text-gray-600 mb-2">{candidate.office}</p>
+                <p className="text-sm text-muted-foreground mb-2">{candidate.office}</p>
 
-                <p className="text-xs uppercase tracking-wide text-gray-500 mb-2">{candidate.party}</p>
+                <p className="text-xs uppercase tracking-wide text-muted-foreground mb-2">{candidate.party}</p>
 
                 <div className="flex flex-wrap items-center gap-3">
                   <div className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${getScoreColor(candidate.dataQualityScore)}`}>
@@ -577,7 +577,7 @@ export default function CivicsLure({ userLocation, onEngage }: CivicsLureProps) 
               </div>
 
               <div className="text-right">
-                <div className="text-sm text-gray-500 mb-1">
+                <div className="text-sm text-muted-foreground mb-1">
                   {t('civics.lure.candidates.keyIssues')}
                 </div>
                 <div className="flex flex-wrap gap-1">
@@ -588,12 +588,12 @@ export default function CivicsLure({ userLocation, onEngage }: CivicsLureProps) 
                       </span>
                     ))
                   ) : (
-                    <span className="px-2 py-1 bg-gray-100 text-gray-600 text-xs rounded">
+                    <span className="px-2 py-1 bg-muted text-muted-foreground text-xs rounded">
                       {t('civics.lure.candidates.keyIssuesFallback')}
                     </span>
                   )}
                 </div>
-                <div className="mt-2 text-xs text-gray-500 max-w-xs">
+                <div className="mt-2 text-xs text-muted-foreground max-w-xs">
                   {candidate.mostRecentActivity}
                 </div>
               </div>
@@ -608,7 +608,7 @@ export default function CivicsLure({ userLocation, onEngage }: CivicsLureProps) 
           <div className="flex items-start space-x-3">
             <Star className="w-5 h-5 text-yellow-600 mt-0.5 flex-shrink-0" />
             <div>
-              <h4 className="font-semibold text-yellow-900 mb-1">
+              <h4 className="font-semibold text-yellow-900 dark:text-yellow-300 mb-1">
                 {t('civics.lure.engagement.didYouKnow.title')}
               </h4>
               <p className="text-sm text-yellow-800">{didYouKnowMessage}</p>
@@ -620,7 +620,7 @@ export default function CivicsLure({ userLocation, onEngage }: CivicsLureProps) 
           <div className="flex items-start space-x-3">
             <AlertTriangle className="w-5 h-5 text-red-600 mt-0.5 flex-shrink-0" />
             <div>
-              <h4 className="font-semibold text-red-900 mb-1">
+              <h4 className="font-semibold text-red-900 dark:text-red-300 mb-1">
                 {t('civics.lure.engagement.dataQualityWatch.title')}
               </h4>
               <p className="text-sm text-red-800">{dataQualityWatchMessage}</p>
@@ -633,21 +633,21 @@ export default function CivicsLure({ userLocation, onEngage }: CivicsLureProps) 
       <div className="text-center mt-6">
         <button
           onClick={handleEngage}
-          className="px-8 py-3 bg-blue-600 text-white rounded-lg font-medium hover:bg-blue-700 transition-colors flex items-center mx-auto"
+          className="px-8 py-3 bg-primary text-primary-foreground rounded-lg font-medium hover:bg-primary/90 transition-colors flex items-center mx-auto"
           type="button"
           aria-label={t('civics.lure.cta.button') || 'See All My Local Candidates'}
         >
           <span>{t('civics.lure.cta.button') || 'See All My Local Candidates'}</span>
           <ArrowRight className="w-5 h-5 ml-2" />
         </button>
-        <p className="text-sm text-gray-500 mt-2">
+        <p className="text-sm text-muted-foreground mt-2">
           {t('civics.lure.cta.caption') || 'Discover and engage with your local representatives'}
         </p>
       </div>
 
       {/* Social Proof */}
       <div className="mt-6 text-center">
-        <div className="flex items-center justify-center space-x-6 text-sm text-gray-500">
+        <div className="flex items-center justify-center space-x-6 text-sm text-muted-foreground">
           <div className="flex items-center">
             <Users className="w-4 h-4 mr-1" />
             <span>{t('civics.lure.social.voters')}</span>

@@ -273,8 +273,8 @@ export default function ComprehensiveAdminDashboard({ className = '' }: Comprehe
       <div className={`space-y-6 ${className}`} data-testid="comprehensive-admin-dashboard">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-bold text-gray-900 dark:text-gray-100">Comprehensive Admin Dashboard</h1>
-          <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">
+          <h1 className="text-3xl font-bold text-foreground">Comprehensive Admin Dashboard</h1>
+          <p className="text-sm text-muted-foreground mt-1">
             Unified oversight for analytics, messaging, system monitoring, and admin workflows
           </p>
         </div>
@@ -334,7 +334,7 @@ export default function ComprehensiveAdminDashboard({ className = '' }: Comprehe
                   </CardHeader>
                   <CardContent>
                     <div className="text-3xl font-bold">{analytics.totalUsers.toLocaleString()}</div>
-                    <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">Active platform accounts</p>
+                    <p className="text-sm text-muted-foreground mt-1">Active platform accounts</p>
                   </CardContent>
                 </Card>
 
@@ -347,7 +347,7 @@ export default function ComprehensiveAdminDashboard({ className = '' }: Comprehe
                   </CardHeader>
                   <CardContent>
                     <div className="text-3xl font-bold">{analytics.totalPolls}</div>
-                    <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">Polls currently live</p>
+                    <p className="text-sm text-muted-foreground mt-1">Polls currently live</p>
                   </CardContent>
                 </Card>
 
@@ -360,7 +360,7 @@ export default function ComprehensiveAdminDashboard({ className = '' }: Comprehe
                   </CardHeader>
                   <CardContent>
                     <div className="text-3xl font-bold">{notifications.length}</div>
-                    <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">Admin messages and alerts</p>
+                    <p className="text-sm text-muted-foreground mt-1">Admin messages and alerts</p>
                   </CardContent>
                 </Card>
 
@@ -419,7 +419,7 @@ export default function ComprehensiveAdminDashboard({ className = '' }: Comprehe
                   }
                 />
               ) : (
-                <p className="text-sm text-gray-600 dark:text-gray-400">No trending topics detected yet.</p>
+                <p className="text-sm text-muted-foreground">No trending topics detected yet.</p>
               )}
               <div className="flex items-center gap-2">
                 <Button variant="outline" className="flex-1" onClick={() => window.open('/feed', '_blank')}>
@@ -510,7 +510,7 @@ export default function ComprehensiveAdminDashboard({ className = '' }: Comprehe
           <div className="flex items-center justify-between">
             <div>
               <h2 className="text-lg font-semibold">Site Messages</h2>
-              <p className="text-sm text-gray-600 dark:text-gray-400">Manage announcements and broadcast notices</p>
+              <p className="text-sm text-muted-foreground">Manage announcements and broadcast notices</p>
             </div>
             <div className="flex items-center gap-2">
               <Button
@@ -652,7 +652,7 @@ export default function ComprehensiveAdminDashboard({ className = '' }: Comprehe
 
           <div className="grid grid-cols-1 gap-4">
             {siteMessages.length === 0 ? (
-              <p className="text-sm text-gray-600 dark:text-gray-400">No site messages yet.</p>
+              <p className="text-sm text-muted-foreground">No site messages yet.</p>
             ) : (
               siteMessages.map((message) => (
                 <Card key={message.id}>
@@ -667,8 +667,8 @@ export default function ComprehensiveAdminDashboard({ className = '' }: Comprehe
                           <Badge variant="outline">{message.type}</Badge>
                           <Badge variant="outline">{message.priority}</Badge>
                         </div>
-                        <p className="text-sm text-gray-600 dark:text-gray-400">{message.message}</p>
-                        <div className="text-xs text-gray-500 dark:text-gray-400">
+                        <p className="text-sm text-muted-foreground">{message.message}</p>
+                        <div className="text-xs text-muted-foreground">
                           Created:{' '}
                           {message.created_at ? new Date(message.created_at).toLocaleString() : '—'}
                           {message.updated_at &&
@@ -727,10 +727,10 @@ export default function ComprehensiveAdminDashboard({ className = '' }: Comprehe
             </CardHeader>
             <CardContent>
               <div className="space-y-4">
-                <p className="text-sm text-gray-600 dark:text-gray-400">
+                <p className="text-sm text-muted-foreground">
                   Access the dedicated performance dashboard for real-time monitoring.
                 </p>
-                <ul className="list-disc list-inside space-y-2 text-sm text-gray-700 dark:text-gray-300 ml-2">
+                <ul className="list-disc list-inside space-y-2 text-sm text-foreground/80 ml-2">
                   <li>Live system metrics and alerts</li>
                   <li>Slowest operations tracking</li>
                   <li>Optimisation recommendations</li>
@@ -741,7 +741,7 @@ export default function ComprehensiveAdminDashboard({ className = '' }: Comprehe
                     href="/admin/performance"
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="inline-flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors"
+                    className="inline-flex items-center gap-2 px-4 py-2 bg-primary text-white rounded-md hover:bg-primary/90 transition-colors"
                   >
                     <Zap className="h-4 w-4" />
                     Open Performance Dashboard
@@ -761,7 +761,7 @@ export default function ComprehensiveAdminDashboard({ className = '' }: Comprehe
                   Platform Totals
                 </CardTitle>
               </CardHeader>
-              <CardContent className="space-y-2 text-sm text-gray-700 dark:text-gray-300">
+              <CardContent className="space-y-2 text-sm text-foreground/80">
                 {systemMetricsLoading ? (
                   <div className="space-y-2">
                     {[1, 2, 3, 4].map((i) => (
@@ -858,7 +858,7 @@ export default function ComprehensiveAdminDashboard({ className = '' }: Comprehe
                   Performance Metrics
                 </CardTitle>
               </CardHeader>
-              <CardContent className="space-y-3 text-sm text-gray-700">
+              <CardContent className="space-y-3 text-sm text-foreground/80">
                 {systemMetricsLoading ? (
                   <div className="space-y-3">
                     {[1, 2, 3, 4, 5].map((i) => (
@@ -919,23 +919,23 @@ export default function ComprehensiveAdminDashboard({ className = '' }: Comprehe
             <CardContent className="space-y-4">
               {recentActivity.length ? (
                 recentActivity.map((activity) => (
-                  <div key={activity.id} className="border border-gray-100 dark:border-gray-700 rounded-lg p-4 bg-white dark:bg-gray-900">
+                  <div key={activity.id} className="border border-border rounded-lg p-4 bg-background">
                     <div className="flex items-center justify-between">
-                      <div className="flex items-center gap-2 text-sm font-medium text-gray-900 dark:text-gray-100">
+                      <div className="flex items-center gap-2 text-sm font-medium text-foreground">
                         <span className="h-2 w-2 rounded-full bg-blue-500" />
                         {activity.title ?? activity.type}
                       </div>
-                      <span className="text-xs text-gray-500 dark:text-gray-400">
+                      <span className="text-xs text-muted-foreground">
                         {activity.timestamp ? new Date(activity.timestamp).toLocaleString() : ''}
                       </span>
                     </div>
                     {activity.description && (
-                      <p className="text-sm text-gray-600 dark:text-gray-400 mt-2">{activity.description}</p>
+                      <p className="text-sm text-muted-foreground mt-2">{activity.description}</p>
                     )}
                   </div>
                 ))
               ) : (
-                <p className="text-sm text-gray-600 dark:text-gray-400">No recent activity recorded.</p>
+                <p className="text-sm text-muted-foreground">No recent activity recorded.</p>
               )}
             </CardContent>
           </Card>

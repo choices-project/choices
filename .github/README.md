@@ -5,4 +5,4 @@ The **canonical project README** and documentation live at the repository root a
 - **Project overview, quick start, and documentation index:** [../README.md](../README.md)
 - **Documentation:** [../docs/README.md](../docs/README.md) (index) and [../docs/](../docs/)
 
-This `.github/` directory contains workflows, branch protection notes, and the PR template. See [WORKFLOWS_AUDIT.md](WORKFLOWS_AUDIT.md) and [BRANCH_PROTECTION.md](BRANCH_PROTECTION.md) for details.
+This `.github/` directory contains workflows and the PR template. Branch protection and workflow audit docs have been archived to `docs/archive/2026-03-consolidation/github/`.

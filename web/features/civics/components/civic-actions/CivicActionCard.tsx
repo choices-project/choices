@@ -55,7 +55,7 @@ const URGENCY_COLORS = {
   critical: 'bg-red-100 text-red-800',
 };
 
-export function CivicActionCard({
+export const CivicActionCard = React.memo(function CivicActionCard({
   action,
   onSign,
   onView,
@@ -255,5 +255,6 @@ export function CivicActionCard({
       </CardFooter>
     </Card>
   );
-}
+});
+CivicActionCard.displayName = 'CivicActionCard';
 

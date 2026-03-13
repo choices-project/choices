@@ -29,6 +29,7 @@ import {
   Flame,
   Clock
 } from 'lucide-react';
+import dynamic from 'next/dynamic';
 import React, {
   Suspense,
   useCallback,
@@ -53,17 +54,36 @@ import { logger } from '@/lib/utils/logger';
 
 import { useI18n } from '@/hooks/useI18n';
 
-
-
-import DemographicsChart from './DemographicsChart';
-import PollHeatmap from './PollHeatmap';
-import TemporalAnalysisChart from './TemporalAnalysisChart';
-import TrendsChart from './TrendsChart';
-import TrustTierComparisonChart from './TrustTierComparisonChart';
-import DistrictHeatmap from '../../admin/components/DistrictHeatmap';
 import { useEnhancedAnalytics } from '../hooks/useEnhancedAnalytics';
 
 import type { Database } from '@/types/database';
+
+
+
+const DemographicsChart = dynamic(() => import('./DemographicsChart'), {
+  ssr: false,
+  loading: () => <div className="h-64 animate-pulse bg-muted rounded-lg" />,
+});
+const PollHeatmap = dynamic(() => import('./PollHeatmap'), {
+  ssr: false,
+  loading: () => <div className="h-64 animate-pulse bg-muted rounded-lg" />,
+});
+const TemporalAnalysisChart = dynamic(() => import('./TemporalAnalysisChart'), {
+  ssr: false,
+  loading: () => <div className="h-64 animate-pulse bg-muted rounded-lg" />,
+});
+const TrendsChart = dynamic(() => import('./TrendsChart'), {
+  ssr: false,
+  loading: () => <div className="h-64 animate-pulse bg-muted rounded-lg" />,
+});
+const TrustTierComparisonChart = dynamic(() => import('./TrustTierComparisonChart'), {
+  ssr: false,
+  loading: () => <div className="h-64 animate-pulse bg-muted rounded-lg" />,
+});
+const DistrictHeatmap = dynamic(() => import('../../admin/components/DistrictHeatmap'), {
+  ssr: false,
+  loading: () => <div className="h-64 animate-pulse bg-muted rounded-lg" />,
+});
 
 type SystemHealthRow = Database['public']['Tables']['system_health']['Row'];
 type SiteMessageRow = Database['public']['Tables']['site_messages']['Row'];

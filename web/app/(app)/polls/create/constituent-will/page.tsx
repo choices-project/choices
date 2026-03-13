@@ -1,5 +1,6 @@
 'use client';
 
+import Link from 'next/link';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { useCallback, useEffect, useState } from 'react';
 
@@ -343,9 +344,9 @@ export default function CreateConstituentWillPollPage() {
         )}
 
         <p className="text-sm text-muted-foreground">
-          <a href="/polls/create" className="underline hover:no-underline">
+          <Link href="/polls/create" className="underline hover:no-underline">
             ← Back to standard poll creation
-          </a>
+          </Link>
         </p>
       </div>
     </div>

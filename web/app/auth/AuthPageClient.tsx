@@ -2,7 +2,7 @@
 
 import { Eye, EyeOff, Lock, Mail, UserPlus, CheckCircle2, AlertCircle, Loader2 } from 'lucide-react';
 import Link from 'next/link';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import React, { useState } from 'react';
 
 import { getSupabaseBrowserClient } from '@/utils/supabase/client';
@@ -13,6 +13,8 @@ import { getAvailableProviders } from '@/features/auth/lib/social-auth-config';
 import { useUserActions, useUserLoading, useUserError } from '@/features/auth/lib/store';
 
 import { EnhancedErrorDisplay } from '@/components/shared/EnhancedErrorDisplay';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
 
 import { logger } from '@/lib/utils/logger';
 
@@ -28,7 +30,8 @@ export default function AuthPageClient() {
       .replace(/[^a-z0-9_-]+/g, '_')
       .replace(/^_+|_+$/g, '');
   }, []);
-  const [isSignUp, setIsSignUp] = useState(false);
+  const searchParams = useSearchParams();
+  const [isSignUp, setIsSignUp] = useState(searchParams.get('mode') === 'signup');
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [message, setMessage] = useState<string | null>(null);
@@ -285,16 +288,16 @@ export default function AuthPageClient() {
       emailInput.addEventListener('focus', syncEmail);
       passwordInput.addEventListener('focus', syncPassword);
 
-      // Also sync periodically to catch any direct DOM manipulation (E2E tests)
-      // Increased frequency and extended duration for better E2E test compatibility
-      // Keep syncing for 30 seconds to handle slower test environments
-      const interval = setInterval(() => {
-        syncEmail();
-        syncPassword();
-      }, 100); // Check every 100ms (reduced frequency slightly for performance)
-
-      // Extended to 30 seconds to catch late DOM updates in production/test environments
-      const timeout = setTimeout(() => clearInterval(interval), 30000);
+      // Periodic DOM sync for E2E tests only
+      let interval: ReturnType<typeof setInterval> | undefined;
+      let timeout: ReturnType<typeof setTimeout> | undefined;
+      if (process.env.NEXT_PUBLIC_ENABLE_E2E_HARNESS === '1') {
+        interval = setInterval(() => {
+          syncEmail();
+          syncPassword();
+        }, 100);
+        timeout = setTimeout(() => clearInterval(interval), 30000);
+      }
 
       // Set cleanup function
       cleanup = () => {
@@ -552,30 +555,31 @@ export default function AuthPageClient() {
         <div data-testid="auth-hydrated" hidden>{'1'}</div>
 
         <div className="text-center">
-          <h1 className="text-3xl font-bold text-gray-900 dark:text-gray-100">
+          <h1 className="text-3xl font-bold text-foreground">
             {isSignUp ? t('auth.heading.signUp') : t('auth.heading.signIn')}
           </h1>
-          <p className="mt-2 text-sm text-gray-600 dark:text-gray-400">
+          <p className="mt-2 text-sm text-muted-foreground">
             {isSignUp ? t('auth.subheading.signUp') : t('auth.subheading.signIn')}
           </p>
         </div>
 
         {/* Toggle between Sign In and Sign Up */}
         <div className="text-center">
-          <button
+          <Button
             type="button"
+            variant="link"
             ref={(button) => {
               if (button) {
                 button.removeEventListener('click', handleToggle);
                 button.addEventListener('click', handleToggle);
               }
             }}
-            className="text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300 text-sm font-medium focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 dark:focus:ring-offset-gray-900 rounded px-2 py-1"
+            className="min-h-[44px] text-primary hover:text-primary/90"
             data-testid="auth-toggle"
             tabIndex={0}
           >
             {isSignUp ? t('auth.toggle.toSignIn') : t('auth.toggle.toSignUp')}
-          </button>
+          </Button>
         </div>
 
           <form
@@ -584,8 +588,10 @@ export default function AuthPageClient() {
             className="mt-6 space-y-5 transition-all duration-300 ease-in-out"
             data-testid="login-form"
           >
-          {/* CSRF Token */}
-          <input type="hidden" name="csrf-token" value="test-csrf-token" data-testid="csrf-token" />
+          {/* CSRF Token - only in E2E/dev mode */}
+          {process.env.NEXT_PUBLIC_ENABLE_E2E_HARNESS === '1' && (
+            <input type="hidden" name="csrf-token" value="test-csrf-token" data-testid="csrf-token" />
+          )}
               {safeUserError && (
                 <EnhancedErrorDisplay
                   message={safeUserError}
@@ -603,12 +609,6 @@ export default function AuthPageClient() {
                   className="mb-4"
                 />
               )}
-
-              {/* Error Summary */}
-              <div data-testid="error-summary" className="bg-red-50 dark:bg-red-900/30 border border-red-200 dark:border-red-800 rounded-md p-4 hidden" role="alert">
-                <p className="text-sm text-red-700 dark:text-red-300">{t('auth.form.errorSummaryTitle')}</p>
-                <div data-testid="error-count" className="text-xs text-red-600 dark:text-red-400 mt-1">{t('auth.form.errorSummaryCount', { count: '3' })}</div>
-              </div>
 
               {/* Rate Limit Message */}
               <div
@@ -659,11 +659,11 @@ export default function AuthPageClient() {
                 {/* Display Name (Sign Up only) */}
                 {isSignUp && (
             <div>
-                    <label htmlFor="displayName" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                    <label htmlFor="displayName" className="block text-sm font-medium text-foreground/80 mb-1">
                       {t('auth.form.displayNameLabel')}
                     </label>
                     <div className="relative">
-                      <input
+                      <Input
                         type="text"
                         id="displayName"
                         name="displayName"
@@ -681,13 +681,13 @@ export default function AuthPageClient() {
                         }}
                         onKeyDown={handleKeySubmit}
                         required={isSignUp}
-                        className="w-full pl-10 pr-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 placeholder-gray-500 dark:placeholder-gray-400 focus:ring-blue-500 focus:border-blue-500 focus-visible:ring-2 focus-visible:ring-blue-500"
+                        className="w-full pl-10"
                         placeholder={t('auth.form.displayNamePlaceholder')}
                         data-testid="auth-display-name"
                         aria-label={t('auth.form.displayNameAria')}
-                  autoComplete="name"
+                        autoComplete="name"
                       />
-                      <UserPlus className="absolute left-3 top-2.5 h-5 w-5 text-gray-400" />
+                      <UserPlus className="absolute left-3 top-2.5 h-5 w-5 text-muted-foreground" />
                     </div>
                     {formData.displayName && (
                       <div data-testid="display-name-validation" className="mt-1 text-xs text-green-600 dark:text-green-400">
@@ -702,12 +702,12 @@ export default function AuthPageClient() {
 
             {/* Email */}
             <div>
-              <label htmlFor="email" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+              <label htmlFor="email" className="block text-sm font-medium text-foreground/80 mb-1">
                 {t('auth.form.emailLabel')}
                 <span className="text-red-500 ml-1" aria-label="required">*</span>
               </label>
               <div className="relative">
-                <input
+                <Input
                   type="email"
                   id="email"
                   name="email"
@@ -725,12 +725,12 @@ export default function AuthPageClient() {
                   }}
                   onKeyDown={handleKeySubmit}
                   required
-                  className={`w-full pl-10 pr-3 py-2 border rounded-md bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 placeholder-gray-500 dark:placeholder-gray-400 focus:ring-blue-500 focus:border-blue-500 focus-visible:ring-2 focus-visible:ring-blue-500 transition-colors ${
+                  className={`w-full pl-10 transition-colors ${
                     formData.email && !formData.email.includes('@')
-                      ? 'border-red-300 dark:border-red-600 focus:border-red-500 focus:ring-red-500'
+                      ? 'border-red-300 dark:border-red-600 focus-visible:ring-red-500'
                       : formData.email && formData.email.includes('@')
                       ? 'border-green-300 dark:border-green-600'
-                      : 'border-gray-300 dark:border-gray-600'
+                      : ''
                   }`}
                   placeholder={t('auth.form.emailPlaceholder')}
                   data-testid="login-email"
@@ -743,7 +743,7 @@ export default function AuthPageClient() {
                   }
                   aria-describedby={formData.email ? (formData.email.includes('@') ? 'email-success' : 'email-error') : undefined}
                 />
-                <Mail className="absolute left-3 top-2.5 h-5 w-5 text-gray-400" />
+                <Mail className="absolute left-3 top-2.5 h-5 w-5 text-muted-foreground" />
               </div>
               {formData.email && formData.email.includes('@') && (
                 <div id="email-success" data-testid="email-validation" className="mt-1 text-xs text-green-600 dark:text-green-400 flex items-center gap-1" role="status">
@@ -761,12 +761,12 @@ export default function AuthPageClient() {
 
             {/* Password */}
             <div>
-              <label htmlFor="password" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+              <label htmlFor="password" className="block text-sm font-medium text-foreground/80 mb-1">
                 {t('auth.form.passwordLabel')}
                 <span className="text-red-500 ml-1" aria-label="required">*</span>
               </label>
               <div className="relative">
-                <input
+                <Input
                   type={showPassword ? 'text' : 'password'}
                   id="password"
                   name="password"
@@ -784,12 +784,12 @@ export default function AuthPageClient() {
                   }}
                   onKeyDown={handleKeySubmit}
                   required
-                  className={`w-full pl-10 pr-10 py-2 border rounded-md bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 placeholder-gray-500 dark:placeholder-gray-400 focus:ring-blue-500 focus:border-blue-500 focus-visible:ring-2 focus-visible:ring-blue-500 transition-colors ${
+                  className={`w-full pl-10 pr-10 transition-colors ${
                     formData.password && formData.password.length < minPasswordLength
-                      ? 'border-red-300 dark:border-red-600 focus:border-red-500 focus:ring-red-500'
+                      ? 'border-red-300 dark:border-red-600 focus-visible:ring-red-500'
                       : formData.password && formData.password.length >= minPasswordLength
                       ? 'border-green-300 dark:border-green-600'
-                      : 'border-gray-300 dark:border-gray-600'
+                      : ''
                   }`}
                   placeholder={t('auth.form.passwordPlaceholder')}
                   data-testid="login-password"
@@ -802,18 +802,20 @@ export default function AuthPageClient() {
                   }
                   aria-describedby={formData.password ? (formData.password.length >= minPasswordLength ? 'password-success' : 'password-error') : undefined}
                 />
-                <Lock className="absolute left-3 top-2.5 h-5 w-5 text-gray-400" />
-                    <button
+                <Lock className="absolute left-3 top-2.5 h-5 w-5 text-muted-foreground" />
+                    <Button
                       type="button"
+                      variant="ghost"
+                      size="icon"
                       onClick={() => setShowPassword(!showPassword)}
-                      className="absolute right-3 top-2.5 rounded-full p-1 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2 dark:focus-visible:ring-offset-gray-800"
+                      className="absolute right-3 top-2.5 min-h-[44px] min-w-[44px] rounded-full text-muted-foreground hover:text-foreground"
                       aria-label={t(showPassword ? 'auth.form.hidePassword' : 'auth.form.showPassword')}
                       aria-pressed={showPassword}
                       aria-controls="password"
                       data-testid="password-toggle"
                     >
                       {showPassword ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
-                    </button>
+                    </Button>
               </div>
               {formData.password && formData.password.length >= minPasswordLength && (
                 <div id="password-success" data-testid="password-validation" className="mt-1 text-xs text-green-600 dark:text-green-400 flex items-center gap-1" role="status">
@@ -831,11 +833,11 @@ export default function AuthPageClient() {
             {/* Confirm Password (Sign Up only) */}
             {isSignUp && (
               <div>
-                <label htmlFor="confirmPassword" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                <label htmlFor="confirmPassword" className="block text-sm font-medium text-foreground/80 mb-1">
                   {t('auth.form.confirmPasswordLabel')}
                 </label>
                 <div className="relative">
-                  <input
+                  <Input
                     type={showConfirmPassword ? 'text' : 'password'}
                     id="confirmPassword"
                     name="confirmPassword"
@@ -853,24 +855,26 @@ export default function AuthPageClient() {
                     }}
                     onKeyDown={handleKeySubmit}
                     required={isSignUp}
-                    className="w-full pl-10 pr-10 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 placeholder-gray-500 dark:placeholder-gray-400 focus:ring-blue-500 focus:border-blue-500 focus-visible:ring-2 focus-visible:ring-blue-500"
+                    className="w-full pl-10 pr-10"
                     placeholder={t('auth.form.passwordPlaceholder')}
                     data-testid="auth-confirm-password"
                     aria-label={t('auth.form.confirmPasswordAria')}
                     autoComplete="new-password"
                   />
-                  <Lock className="absolute left-3 top-2.5 h-5 w-5 text-gray-400" />
-                      <button
+                  <Lock className="absolute left-3 top-2.5 h-5 w-5 text-muted-foreground" />
+                      <Button
                         type="button"
+                        variant="ghost"
+                        size="icon"
                         onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-                        className="absolute right-3 top-2.5 rounded-full p-1 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2 dark:focus-visible:ring-offset-gray-800"
+                        className="absolute right-3 top-2.5 min-h-[44px] min-w-[44px] rounded-full text-muted-foreground hover:text-foreground"
                         aria-label={t(showConfirmPassword ? 'auth.form.hidePassword' : 'auth.form.showPassword')}
                         aria-pressed={showConfirmPassword}
                         aria-controls="confirmPassword"
                         data-testid="confirm-password-toggle"
                       >
                         {showConfirmPassword ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
-                      </button>
+                      </Button>
                 </div>
                 {formData.confirmPassword && formData.password === formData.confirmPassword && (
                   <div data-testid="password-match" className="mt-1 text-xs text-green-600 dark:text-green-400">
@@ -892,9 +896,9 @@ export default function AuthPageClient() {
             const isDisabled = safeIsLoading || !hasEmail || !hasPassword || !hasDisplayName || !confirmMatches;
 
             return (
-              <button
+              <Button
                 type="button"
-                className="w-full bg-blue-600 text-white py-2 px-4 rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 dark:focus:ring-offset-gray-900 transition duration-150 ease-in-out disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                className="w-full min-h-[44px] flex items-center justify-center gap-2"
                 data-testid="login-submit"
                 aria-busy={safeIsLoading}
                 disabled={isDisabled}
@@ -903,7 +907,7 @@ export default function AuthPageClient() {
               >
                 {safeIsLoading && <Loader2 className="h-4 w-4 animate-spin" aria-hidden="true" />}
                 <span>{safeIsLoading ? t('auth.form.working') : isSignUp ? t('auth.form.submit.signUp') : t('auth.form.submit.signIn')}</span>
-              </button>
+              </Button>
             );
           })()}
           {!formData.email || !formData.email.includes('@') || !formData.password || formData.password.length < minPasswordLength ? (
@@ -918,10 +922,10 @@ export default function AuthPageClient() {
           <div className="mt-6">
             <div className="relative">
               <div className="absolute inset-0 flex items-center">
-                <div className="w-full border-t border-gray-300 dark:border-gray-600" />
+                <div className="w-full border-t border-border" />
               </div>
               <div className="relative flex justify-center text-sm">
-                <span className="px-2 bg-gradient-to-br from-blue-50 via-white to-purple-50 dark:from-gray-800 dark:via-gray-900 dark:to-gray-800 text-gray-500 dark:text-gray-400">
+                <span className="px-2 bg-gradient-to-br from-blue-50 via-white to-purple-50 dark:from-gray-800 dark:via-gray-900 dark:to-gray-800 text-muted-foreground">
                   {t('auth.form.orContinueWith') || 'Or continue with'}
                 </span>
               </div>
@@ -929,12 +933,13 @@ export default function AuthPageClient() {
 
             <div className="mt-6 space-y-3">
               {availableProviders.map((provider) => (
-                <button
+                <Button
                   key={provider.provider}
                   type="button"
+                  variant="outline"
                   onClick={() => handleSocialAuth(provider.provider as any)}
                   disabled={safeIsLoading}
-                  className={`w-full inline-flex justify-center items-center py-2.5 px-4 border rounded-md shadow-sm text-sm font-medium transition-colors focus:outline-none focus:ring-2 focus:ring-offset-2 dark:focus:ring-offset-gray-900 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed ${provider.bgColor} ${provider.borderColor} ${provider.textColor} ${provider.hoverBgColor} ${provider.hoverTextColor}`}
+                  className={`w-full min-h-[44px] ${provider.bgColor} ${provider.borderColor} ${provider.textColor} ${provider.hoverBgColor} ${provider.hoverTextColor}`}
                   data-testid={`social-auth-${provider.provider}`}
                   aria-label={provider.label}
                 >
@@ -957,14 +962,14 @@ export default function AuthPageClient() {
                     </svg>
                   )}
                   <span>{provider.label}</span>
-                </button>
+                </Button>
               ))}
             </div>
             {!isSignUp && (
               <div className="mt-2 flex justify-end">
                 <Link
                   href={resetPasswordHref}
-                  className="text-sm text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300 focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2 dark:focus-visible:ring-offset-gray-900 rounded"
+                  className="text-sm text-primary hover:text-primary/90 focus:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 dark:focus-visible:ring-offset-gray-900 rounded"
                   data-testid="auth-reset-link"
                 >
                   {t('auth.form.forgotPassword')}
@@ -975,13 +980,13 @@ export default function AuthPageClient() {
         )}
 
         {/* Passkey Authentication */}
-        <div className="border-t border-gray-200 dark:border-gray-700 pt-6 mt-6">
+        <div className="border-t border-border pt-6 mt-6">
           <div className="relative mb-4">
             <div className="absolute inset-0 flex items-center">
-              <div className="w-full border-t border-gray-200 dark:border-gray-700" />
+              <div className="w-full border-t border-border" />
             </div>
             <div className="relative flex justify-center text-sm">
-              <span className="px-3 bg-gradient-to-br from-blue-50 via-white to-purple-50 dark:from-gray-900 dark:via-gray-900 dark:to-gray-800 text-gray-500 dark:text-gray-400">
+                <span className="px-3 bg-gradient-to-br from-blue-50 via-white to-purple-50 dark:from-gray-900 dark:via-gray-900 dark:to-gray-800 text-muted-foreground">
                 {t('auth.form.altSignInDivider')}
               </span>
             </div>

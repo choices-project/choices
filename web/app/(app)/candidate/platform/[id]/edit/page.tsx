@@ -26,7 +26,13 @@ export default function EditPlatformPage() {
   useEffect(() => {
     // Fetch platform data
     fetch(`/api/candidate/platform?userId=current`)
-      .then(res => res.json())
+      .then(async res => {
+        if (!res.ok) {
+          const errorText = await res.text().catch(() => 'Failed to load platform')
+          throw new Error(errorText)
+        }
+        return res.json()
+      })
       .then(data => {
         if (data.success && data.platforms) {
           const found = data.platforms.find((p: CandidatePlatformRow) => p.id === platformId)
@@ -63,6 +69,11 @@ export default function EditPlatformPage() {
           visibility: platform.visibility
         })
       })
+
+      if (!response.ok) {
+        const errorText = await response.text().catch(() => 'Save failed')
+        throw new Error(errorText)
+      }
 
       const data = await response.json()
       if (data.success) {

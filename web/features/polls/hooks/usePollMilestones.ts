@@ -1,7 +1,5 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
-import { useNotificationActions } from '@/lib/stores';
-
 const STORAGE_KEY = 'choices.poll.milestones';
 const DEFAULT_MILESTONES = [10, 25, 50, 100, 250, 500] as const;
 
@@ -178,48 +176,14 @@ type UsePollMilestoneNotificationsParams = {
 export const usePollMilestoneNotifications = ({
   pollId,
   totalVotes,
-  onMilestoneReached,
 }: UsePollMilestoneNotificationsParams) => {
   const {
     pollId: activePollId,
     milestones,
     preferences,
-    acknowledged,
     isReady,
-    acknowledgeMilestone,
     updatePreference,
   } = usePollMilestoneState(pollId);
-  const { addNotification } = useNotificationActions();
-
-  // Use refs for stable callbacks to prevent unnecessary re-renders
-  const addNotificationRef = useRef(addNotification);
-  useEffect(() => { addNotificationRef.current = addNotification; }, [addNotification]);
-  const onMilestoneReachedRef = useRef(onMilestoneReached);
-  useEffect(() => { onMilestoneReachedRef.current = onMilestoneReached; }, [onMilestoneReached]);
-
-  // Disabled milestone notifications by default per user request
-  // Can be re-enabled via user settings in the future
-  useEffect(() => {
-    // Commented out - milestone notifications disabled
-    // if (!activePollId || !isReady) return;
-
-    // milestones.forEach((milestone) => {
-    //   const thresholdMet = totalVotes >= milestone;
-    //   const optedIn = preferences[milestone];
-    //   const alreadyAcknowledged = acknowledged.includes(milestone);
-
-    //   if (thresholdMet && optedIn && !alreadyAcknowledged) {
-    //     acknowledgeMilestone(milestone);
-    //     addNotificationRef.current({
-    //       type: 'success',
-    //       title: `Milestone reached: ${milestone} votes`,
-    //       message: `Your poll just crossed ${milestone.toLocaleString()} votes. Keep momentum going by sharing again.`,
-    //       duration: 6000,
-    //     });
-    //     onMilestoneReachedRef.current?.(milestone);
-    //   }
-    // });
-  }, [acknowledgeMilestone, acknowledged, isReady, milestones, preferences, totalVotes, activePollId]);
 
   const reachedMilestones = useMemo(
     () => milestones.filter((milestone) => totalVotes >= milestone),

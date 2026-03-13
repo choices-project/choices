@@ -12,7 +12,7 @@
 
 'use client';
 
-import { ChevronUpIcon, ArrowPathIcon } from '@heroicons/react/24/outline';
+import { ChevronUp, RefreshCw } from 'lucide-react';
 import React, { useRef, useEffect, useCallback, useState } from 'react';
 
 import { useI18n } from '@/hooks/useI18n';
@@ -156,14 +156,14 @@ export default function InfiniteScroll({
   // Default loading component
   const defaultLoadingComponent = (
     <div className="flex items-center justify-center py-8">
-      <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500" />
-      <span className="ml-3 text-gray-500">{t('feeds.infiniteScroll.loadingMore')}</span>
+      <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary" />
+      <span className="ml-3 text-muted-foreground">{t('feeds.infiniteScroll.loadingMore')}</span>
     </div>
   );
 
   // Default end component
   const defaultEndComponent = (
-    <div className="text-center py-8 text-gray-500">
+    <div className="text-center py-8 text-muted-foreground">
       <p>{t('feeds.infiniteScroll.end.heading')}</p>
       <p className="text-sm mt-1">{t('feeds.infiniteScroll.end.body')}</p>
     </div>
@@ -174,7 +174,7 @@ export default function InfiniteScroll({
       {/* Pull-to-refresh indicator */}
       {enablePullToRefresh && isPulling && (
         <div 
-          className="absolute top-0 left-0 right-0 z-10 bg-white border-b border-gray-200 transition-transform duration-200"
+          className="absolute top-0 left-0 right-0 z-10 bg-card border-b border-border transition-transform duration-200"
           style={{ 
             transform: `translateY(${Math.max(0, pullDistance - 50)}px)`,
             height: `${Math.min(pullDistance, 100)}px`
@@ -183,12 +183,12 @@ export default function InfiniteScroll({
           <div className="flex items-center justify-center h-full">
             {pullDistance > 50 ? (
               <div className="flex items-center space-x-2 text-blue-500">
-                <ArrowPathIcon className="w-5 h-5 animate-spin" />
+                <RefreshCw className="w-5 h-5 animate-spin" />
                 <span className="text-sm font-medium">{t('feeds.infiniteScroll.pull.release')}</span>
               </div>
             ) : (
-              <div className="flex items-center space-x-2 text-gray-500">
-                <ArrowPathIcon className="w-5 h-5" />
+              <div className="flex items-center space-x-2 text-muted-foreground">
+                <RefreshCw className="w-5 h-5" />
                 <span className="text-sm">{t('feeds.infiniteScroll.pull.hint')}</span>
               </div>
             )}
@@ -198,10 +198,10 @@ export default function InfiniteScroll({
 
       {/* Refreshing indicator */}
       {isRefreshing && (
-        <div className="absolute top-0 left-0 right-0 z-10 bg-white border-b border-gray-200 py-4">
+        <div className="absolute top-0 left-0 right-0 z-10 bg-card border-b border-border py-4">
           <div className="flex items-center justify-center">
-            <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-blue-500" />
-            <span className="ml-2 text-gray-500">{t('feeds.infiniteScroll.refreshing')}</span>
+            <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-primary" />
+            <span className="ml-2 text-muted-foreground">{t('feeds.infiniteScroll.refreshing')}</span>
           </div>
         </div>
       )}
@@ -246,10 +246,10 @@ export default function InfiniteScroll({
         <button
           type="button"
           onClick={handleScrollToTop}
-          className="fixed bottom-4 right-4 flex items-center justify-center min-h-[44px] min-w-[44px] p-3 bg-blue-500 text-white rounded-full shadow-lg hover:bg-blue-600 dark:bg-blue-600 dark:hover:bg-blue-500 transition-all duration-200 z-20 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 dark:focus:ring-offset-gray-900"
+          className="fixed bottom-4 right-4 flex items-center justify-center min-h-[44px] min-w-[44px] p-3 bg-primary text-white rounded-full shadow-lg hover:bg-primary/90 transition-all duration-200 z-20 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 dark:focus:ring-offset-gray-900"
           aria-label={t('feeds.infiniteScroll.scrollToTopAria')}
         >
-          <ChevronUpIcon className="w-6 h-6" aria-hidden="true" />
+          <ChevronUp className="w-6 h-6" aria-hidden="true" />
         </button>
       )}
     </div>

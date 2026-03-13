@@ -54,7 +54,7 @@ export function RepresentativeList({
       <div className={className}>
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6" role="status" aria-live="polite" aria-busy="true">
           {Array.from({ length: 6 }).map((_, index) => (
-            <div key={index} className="rounded-lg border border-gray-200 dark:border-gray-700 p-4 bg-white dark:bg-gray-900">
+            <div key={index} className="rounded-lg border border-border p-4 bg-card">
               <div className="flex items-start space-x-4 mb-4">
                 <Skeleton className="h-16 w-16 rounded-full" />
                 <div className="flex-1 space-y-2">
@@ -73,7 +73,7 @@ export function RepresentativeList({
             </div>
           ))}
         </div>
-        <p className="mt-4 text-center text-sm text-gray-500 dark:text-gray-400" aria-hidden="true">
+        <p className="mt-4 text-center text-sm text-muted-foreground" aria-hidden="true">
           {t('civics.representatives.list.loading') || 'Loading representatives...'}
         </p>
       </div>
@@ -94,7 +94,7 @@ export function RepresentativeList({
           {...(suggestion && { details: suggestion })}
           canRetry={!!onRetry}
           onRetry={onRetry}
-          {...(onRetry && { primaryAction: { label: 'Try again', onClick: onRetry } })}
+          {...(onRetry && { primaryAction: { label: t('common.actions.tryAgain'), onClick: onRetry } })}
         />
       </div>
     );
@@ -104,10 +104,10 @@ export function RepresentativeList({
     return (
       <div className={className}>
         <EnhancedEmptyState
-          icon={<Users className="h-12 w-12 text-gray-400 dark:text-gray-500" />}
+          icon={<Users className="h-12 w-12 text-muted-foreground" />}
           title={t('civics.representatives.list.empty.title') || 'No representatives found'}
           description={t('civics.representatives.list.empty.subtitle') || 'Try adjusting your search or filters to find representatives.'}
-          {...(onRetry && { primaryAction: { label: 'Try again', onClick: onRetry } })}
+          {...(onRetry && { primaryAction: { label: t('common.actions.tryAgain'), onClick: onRetry } })}
         />
       </div>
     );
@@ -120,7 +120,7 @@ export function RepresentativeList({
           <Suspense
             key={representative.id}
             fallback={
-              <div className="rounded-lg border border-gray-200 dark:border-gray-700 p-4 bg-white dark:bg-gray-900 animate-pulse">
+              <div className="rounded-lg border border-border p-4 bg-card animate-pulse">
                 <div className="flex items-start space-x-4 mb-4">
                   <Skeleton className="h-16 w-16 rounded-full" />
                   <div className="flex-1 space-y-2">
@@ -182,7 +182,7 @@ export function RepresentativeGrid({
       <div className={`grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 ${className}`}>
         {Array.from({ length: 8 }).map((_, index) => (
           <div key={index} className="animate-pulse">
-            <div className="bg-gray-200 rounded-lg h-64 w-full" />
+            <div className="bg-muted rounded-lg h-64 w-full" />
           </div>
         ))}
       </div>
@@ -203,7 +203,7 @@ export function RepresentativeGrid({
           {...(suggestion && { details: suggestion })}
           canRetry={!!onRetry}
           onRetry={onRetry}
-          {...(onRetry && { primaryAction: { label: 'Try again', onClick: onRetry } })}
+          {...(onRetry && { primaryAction: { label: t('common.actions.tryAgain'), onClick: onRetry } })}
         />
       </div>
     );
@@ -213,10 +213,10 @@ export function RepresentativeGrid({
     return (
       <div className={className}>
         <EnhancedEmptyState
-          icon={<Users className="h-12 w-12 text-gray-400 dark:text-gray-500" />}
+          icon={<Users className="h-12 w-12 text-muted-foreground" />}
           title={t('civics.representatives.list.empty.title') || 'No representatives found'}
           description={t('civics.representatives.list.empty.subtitle') || 'Try adjusting your search or filters to find representatives.'}
-          {...(onRetry && { primaryAction: { label: 'Try again', onClick: onRetry } })}
+          {...(onRetry && { primaryAction: { label: t('common.actions.tryAgain'), onClick: onRetry } })}
         />
       </div>
     );
@@ -228,7 +228,7 @@ export function RepresentativeGrid({
         <Suspense
           key={representative.id}
           fallback={
-            <div className="rounded-lg border border-gray-200 dark:border-gray-700 p-4 bg-white dark:bg-gray-900 animate-pulse">
+            <div className="rounded-lg border border-border p-4 bg-card animate-pulse">
               <Skeleton className="h-32 w-full" />
             </div>
           }

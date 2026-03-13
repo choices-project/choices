@@ -5,11 +5,12 @@ import { useRouter } from 'next/navigation'
 import { useState, useEffect, useRef } from 'react'
 
 import { JourneyProgress } from '@/components/candidate/JourneyProgress'
+import { CandidateDashboardSkeleton } from '@/components/shared/Skeletons'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 
-import { useIsAuthenticated } from '@/lib/stores'
+import { useIsAuthenticated, useNotificationActions } from '@/lib/stores'
 import logger from '@/lib/utils/logger'
 
 import type { CandidatePlatformRow } from '@/types/candidate'
@@ -19,8 +20,10 @@ export default function CandidateDashboardPage() {
   const routerRef = useRef(router)
   useEffect(() => { routerRef.current = router }, [router])
   const isAuthenticated = useIsAuthenticated()
+  const { addNotification } = useNotificationActions()
   const [platforms, setPlatforms] = useState<CandidatePlatformRow[]>([])
   const [loading, setLoading] = useState(true)
+  const [fetchError, setFetchError] = useState<string | null>(null)
   const [verifying, setVerifying] = useState<string | null>(null) // Platform ID being verified
 
   useEffect(() => {
@@ -29,6 +32,7 @@ export default function CandidateDashboardPage() {
       return
     }
 
+    setFetchError(null)
     fetch('/api/candidate/platform')
       .then(res => {
         if (!res.ok) {
@@ -51,13 +55,14 @@ export default function CandidateDashboardPage() {
           'Failed to load candidate platforms',
           error instanceof Error ? error : new Error(String(error))
         )
+        setFetchError('Failed to load platforms')
       })
       .finally(() => setLoading(false))
   }, [isAuthenticated]) // Removed router
 
   const handleVerifyFEC = async (platformId: string, fecId: string) => {
     if (!fecId) {
-      alert('Please enter a FEC ID in the official filing section first')
+      addNotification({ type: 'info', title: 'FEC ID Required', message: 'Please enter a FEC ID in the official filing section first', duration: 5000 });
       return
     }
 
@@ -78,24 +83,20 @@ export default function CandidateDashboardPage() {
         if (refreshData.success) {
           setPlatforms(refreshData.platforms || [])
         }
-        alert(`✅ Verified! ${result.candidate.name} is ${result.candidate.active ? 'active' : 'registered'} in FEC database.`)
+        addNotification({ type: 'success', title: 'Verified', message: `${result.candidate.name} is ${result.candidate.active ? 'active' : 'registered'} in FEC database.`, duration: 5000 });
       } else {
-        alert(`❌ ${result.message || 'Verification failed'}`)
+        addNotification({ type: 'error', title: 'Verification Failed', message: result.message || 'Verification failed', duration: 5000 });
       }
     } catch (error) {
       logger.error('FEC verification error:', error)
-      alert('Failed to verify with FEC. Please try again.')
+      addNotification({ type: 'error', title: 'Verification Failed', message: 'Failed to verify with FEC. Please try again.', duration: 5000 });
     } finally {
       setVerifying(null)
     }
   }
 
   if (loading) {
-    return (
-      <div className="container mx-auto py-8">
-        <div className="text-center">Loading...</div>
-      </div>
-    )
+    return <CandidateDashboardSkeleton />
   }
 
   if (!isAuthenticated) {
@@ -104,6 +105,22 @@ export default function CandidateDashboardPage() {
 
   return (
     <div className="container mx-auto py-8 max-w-6xl">
+      {fetchError && (
+        <div
+          className="mb-6 rounded-lg border border-red-200 bg-red-50 dark:border-red-800 dark:bg-red-900/20 p-4"
+          role="alert"
+        >
+          <div className="flex items-start gap-3">
+            <AlertCircle className="h-5 w-5 flex-shrink-0 text-red-600 dark:text-red-400 mt-0.5" />
+            <div>
+              <p className="font-medium text-red-800 dark:text-red-200">{fetchError}</p>
+              <p className="mt-1 text-sm text-red-700 dark:text-red-300">
+                Please refresh the page or try again later.
+              </p>
+            </div>
+          </div>
+        </div>
+      )}
       <div className="mb-8 flex justify-between items-center">
         <div>
           <h1 className="text-3xl font-bold mb-2">Candidate Dashboard</h1>

@@ -42,27 +42,27 @@ function shouldBypassForE2E(req: NextRequest): boolean {
   const E2E_HEADER = 'x-e2e-bypass';
   const E2E_COOKIE = 'E2E';
 
-  // Environment-based bypass
+  // Environment-based bypass - NEVER in production
   const isDev = process.env.NODE_ENV !== 'production';
-  const bypass = process.env.NODE_ENV === 'test' || process.env.E2E === '1'
+  const bypass = isDev && (process.env.NODE_ENV === 'test' || process.env.E2E === '1');
 
-  // Multiple bypass methods for browser compatibility
-  const byHeader = req.headers.get(E2E_HEADER) === '1';
-  const byQuery = req.nextUrl.searchParams.get('e2e') === '1';
-  const byCookie = req.cookies.get(E2E_COOKIE)?.value === '1';
+  // Multiple bypass methods for browser compatibility - ONLY in non-production
+  const byHeader = isDev && req.headers.get(E2E_HEADER) === '1';
+  const byQuery = isDev && req.nextUrl.searchParams.get('e2e') === '1';
+  const byCookie = isDev && req.cookies.get(E2E_COOKIE)?.value === '1';
 
   // Local development bypass
-  const isLocal = isDev || req.ip === '127.0.0.1' || req.ip === '::1' || req.ip?.endsWith(':127.0.0.1')
-  const isLocalAuth = isLocal && (req.nextUrl.pathname.startsWith('/login') || req.nextUrl.pathname.startsWith('/register'))
+  const isLocal = isDev || req.ip === '127.0.0.1' || req.ip === '::1' || req.ip?.endsWith(':127.0.0.1');
+  const isLocalAuth = isLocal && (req.nextUrl.pathname.startsWith('/login') || req.nextUrl.pathname.startsWith('/register'));
 
-  const rateLimitEnabled = Boolean(SECURITY_CONFIG.rateLimit.enabled)
+  const rateLimitEnabled = Boolean(SECURITY_CONFIG.rateLimit.enabled);
 
   return Boolean(!rateLimitEnabled ||
          bypass ||
          byHeader ||
          byQuery ||
          byCookie ||
-         isLocalAuth)
+         isLocalAuth);
 }
 
 /**
@@ -559,8 +559,8 @@ export async function middleware(request: NextRequest) {
     // Add cache headers to help with redirect performance
     redirectResponse.headers.set('Cache-Control', 'public, max-age=3600, stale-while-revalidate=86400')
 
-    // Add diagnostic headers for debugging (always add for now to see what's happening)
-    if (diagnostics) {
+    // Add diagnostic headers for debugging (non-production only - never expose in production)
+    if (process.env.NODE_ENV !== 'production' && diagnostics) {
       redirectResponse.headers.set('X-Auth-Debug-IsAuthenticated', String(isAuthenticated))
       redirectResponse.headers.set('X-Auth-Debug-RedirectPath', redirectPath)
       redirectResponse.headers.set('X-Auth-Debug-CookieHeaderPresent', String(diagnostics.cookieHeaderPresent))
@@ -581,9 +581,9 @@ export async function middleware(request: NextRequest) {
   // SECURITY: Protect routes that require authentication
   // This is a critical security check - unauthenticated users must be blocked
   if (isProtectedRoute) {
-    // SECURITY: E2E bypasses are ONLY allowed in non-production environments
-    // or when explicitly enabled via a server-side flag.
-    const allowE2EBypass = process.env.NODE_ENV !== 'production' || process.env.ALLOW_E2E_BYPASS === '1';
+    // SECURITY: E2E bypasses are ONLY allowed in non-production environments.
+    // NEVER allow bypass in production - no env var override.
+    const allowE2EBypass = process.env.NODE_ENV !== 'production';
     // Check for PLAYWRIGHT_USE_MOCKS env var (even if 0, presence indicates test scenario)
     const isPlaywrightTest = allowE2EBypass && typeof process.env.PLAYWRIGHT_USE_MOCKS !== 'undefined';
     // Check for E2E bypass cookie - if present, allow bypass (cookie is only set by tests)

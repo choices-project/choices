@@ -3,6 +3,8 @@
 import Image from 'next/image'
 import React, { useState, useCallback, useRef, useEffect } from 'react'
 
+import { DEFAULT_BLUR_DATA_URL } from '@/lib/constants/image'
+
 type OptimizedImageProps = {
   src: string
   alt: string
@@ -13,6 +15,8 @@ type OptimizedImageProps = {
   onLoad?: () => void
   className?: string
   priority?: boolean
+  placeholder?: 'blur' | 'empty'
+  blurDataURL?: string
 }
 
 export const OptimizedImage: React.FC<OptimizedImageProps> = ({
@@ -25,6 +29,8 @@ export const OptimizedImage: React.FC<OptimizedImageProps> = ({
   onLoad,
   className = '',
   priority = false,
+  placeholder = 'blur',
+  blurDataURL = DEFAULT_BLUR_DATA_URL,
 }) => {
   const [isLoading, setIsLoading] = useState(true)
   const [hasError, setHasError] = useState(false)
@@ -94,6 +100,8 @@ export const OptimizedImage: React.FC<OptimizedImageProps> = ({
           height={height}
           loading={lazy ? 'lazy' : 'eager'}
           priority={priority}
+          placeholder={placeholder}
+          blurDataURL={blurDataURL}
           onLoad={handleLoad}
           onError={handleError}
           className={`${isLoading ? 'hidden' : ''}`}

@@ -1,13 +1,15 @@
 'use client';
 
 import {
-  MapPinIcon,
-  UserGroupIcon,
-  Cog6ToothIcon,
-  XMarkIcon,
-  Bars3Icon,
-} from '@heroicons/react/24/outline';
+  MapPin,
+  Users,
+  Settings,
+  X,
+  Menu,
+} from 'lucide-react';
 import React, { useCallback, useEffect, useId, useRef, useState } from 'react';
+
+import { Input } from '@/components/ui/input';
 
 import {
   useUserActions,
@@ -162,7 +164,7 @@ export default function CivicsNavigation({
   return (
     <>
       {/* Main Navigation */}
-      <div className="bg-white border-b border-gray-200 shadow-sm">
+      <div className="bg-card border-b border-border shadow-sm">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex items-center justify-between h-16">
             {/* Left side - Logo and main nav */}
@@ -174,10 +176,10 @@ export default function CivicsNavigation({
                   </svg>
                 </div>
                 <div>
-                  <h1 className="text-xl font-bold text-gray-900">
+                  <h1 className="text-xl font-bold text-foreground">
                     {t('civics.navigation.header.title')}
                   </h1>
-                  <p className="text-sm text-gray-500">
+                  <p className="text-sm text-muted-foreground">
                     {t('civics.navigation.header.subtitle')}
                   </p>
                 </div>
@@ -188,18 +190,18 @@ export default function CivicsNavigation({
                 <button
                   type="button"
                   onClick={onRepresentativesClick}
-                  className="flex items-center space-x-2 text-gray-700 hover:text-blue-600 transition-colors"
+                  className="flex items-center space-x-2 text-foreground/80 hover:text-primary transition-colors"
                 >
-                  <UserGroupIcon className="w-5 h-5" />
+                  <Users className="w-5 h-5" />
                   <span>{t('civics.navigation.links.representatives')}</span>
                 </button>
 
                 <button
                   type="button"
                   onClick={openAddressForm}
-                  className="flex items-center space-x-2 text-gray-700 hover:text-blue-600 transition-colors"
+                  className="flex items-center space-x-2 text-foreground/80 hover:text-primary transition-colors"
                 >
-                  <MapPinIcon className="w-5 h-5" />
+                  <MapPin className="w-5 h-5" />
                   <span>{t('civics.navigation.links.updateLocation')}</span>
                 </button>
               </nav>
@@ -209,8 +211,8 @@ export default function CivicsNavigation({
             <div className="flex items-center space-x-4">
               {/* Current Location Display */}
               {displayAddress && (
-                <div className="hidden sm:flex items-center space-x-2 text-sm text-gray-600">
-                  <MapPinIcon className="w-4 h-4" />
+                <div className="hidden sm:flex items-center space-x-2 text-sm text-muted-foreground">
+                  <MapPin className="w-4 h-4" />
                   <span className="truncate max-w-32">{displayAddress}</span>
                 </div>
               )}
@@ -218,10 +220,10 @@ export default function CivicsNavigation({
               {/* Settings Button */}
               <button
                 type="button"
-                className="p-2 text-gray-400 hover:text-gray-600 transition-colors"
+                className="p-2 text-muted-foreground hover:text-foreground transition-colors"
                 aria-label={t('civics.navigation.links.settings')}
               >
-                <Cog6ToothIcon className="w-5 h-5" />
+                <Settings className="w-5 h-5" />
               </button>
 
             {/* Mobile menu toggle */}
@@ -230,7 +232,7 @@ export default function CivicsNavigation({
                 type="button"
                 ref={mobileMenuButtonRef}
                 onClick={toggleMobileMenu}
-                className="inline-flex items-center justify-center rounded-md p-2 text-gray-500 hover:text-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 dark:focus:ring-offset-gray-900"
+                className="inline-flex items-center justify-center rounded-md p-2 text-muted-foreground hover:text-primary focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 dark:focus:ring-offset-background"
                 aria-label={
                   isMobileMenuOpen
                     ? t('civics.navigation.mobileMenu.close')
@@ -246,9 +248,9 @@ export default function CivicsNavigation({
                     : t('civics.navigation.mobileMenu.open')}
                 </span>
                 {isMobileMenuOpen ? (
-                  <XMarkIcon className="h-6 w-6" aria-hidden="true" />
+                  <X className="h-6 w-6" aria-hidden="true" />
                 ) : (
-                  <Bars3Icon className="h-6 w-6" aria-hidden="true" />
+                  <Menu className="h-6 w-6" aria-hidden="true" />
                 )}
               </button>
             </div>
@@ -260,7 +262,7 @@ export default function CivicsNavigation({
     {/* Mobile navigation drawer */}
     {isMobileMenuOpen && (
       <div
-        className="md:hidden border-b border-gray-200 bg-white shadow-sm"
+        className="md:hidden border-b border-border bg-card shadow-sm"
         id={mobileMenuId}
         role="region"
         aria-label={t('civics.navigation.mobileMenu.regionLabel')}
@@ -274,10 +276,10 @@ export default function CivicsNavigation({
                 onRepresentativesClickRef.current();
                 closeMobileMenu();
               }}
-              className="flex w-full items-center justify-between rounded-lg border border-gray-200 px-4 py-3 text-left text-sm font-semibold text-gray-800 focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="flex w-full items-center justify-between rounded-lg border border-border px-4 py-3 text-left text-sm font-semibold text-foreground focus:outline-none focus:ring-2 focus:ring-primary"
             >
               <span className="flex items-center space-x-2">
-                <UserGroupIcon className="h-5 w-5" aria-hidden="true" />
+                <Users className="h-5 w-5" aria-hidden="true" />
                 <span>{t('civics.navigation.links.representatives')}</span>
               </span>
               <span aria-hidden="true">›</span>
@@ -289,21 +291,21 @@ export default function CivicsNavigation({
                 openAddressForm();
                 closeMobileMenu();
               }}
-              className="flex w-full items-center justify-between rounded-lg border border-gray-200 px-4 py-3 text-left text-sm font-semibold text-gray-800 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 dark:focus:ring-offset-gray-900"
+              className="flex w-full items-center justify-between rounded-lg border border-border px-4 py-3 text-left text-sm font-semibold text-foreground focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 dark:focus:ring-offset-background"
             >
               <span className="flex items-center space-x-2">
-                <MapPinIcon className="h-5 w-5" aria-hidden="true" />
+                <MapPin className="h-5 w-5" aria-hidden="true" />
                 <span>{t('civics.navigation.links.updateLocation')}</span>
               </span>
               <span aria-hidden="true">›</span>
             </button>
           </div>
 
-          <div className="rounded-lg bg-gray-50 p-4 space-y-2">
-            <p className="text-sm font-medium text-gray-700">
+          <div className="rounded-lg bg-muted p-4 space-y-2">
+            <p className="text-sm font-medium text-foreground/80">
               {t('civics.navigation.mobileMenu.currentLocation')}
             </p>
-            <p className="text-sm text-gray-600">
+            <p className="text-sm text-muted-foreground">
               {displayAddress ?? t('civics.navigation.mobileMenu.unknownLocation')}
             </p>
             <button
@@ -312,13 +314,13 @@ export default function CivicsNavigation({
                 openAddressForm();
                 closeMobileMenu();
               }}
-              className="text-sm font-semibold text-blue-600 hover:text-blue-700 underline-offset-2"
+              className="text-sm font-semibold text-primary hover:text-primary/90 underline-offset-2"
             >
               {t('civics.navigation.mobileMenu.editAddress')}
             </button>
           </div>
 
-          <div className="text-xs text-gray-500">
+          <div className="text-xs text-muted-foreground">
             {t('civics.navigation.mobileMenu.accessibilityHint')}
           </div>
         </div>
@@ -342,20 +344,20 @@ export default function CivicsNavigation({
             aria-labelledby={modalTitleId}
             aria-describedby={modalDescriptionId}
           >
-            <div className="relative bg-white rounded-2xl shadow-2xl max-w-md w-full p-8">
+            <div className="relative bg-card rounded-2xl shadow-2xl max-w-md w-full p-8">
               <button
                 type="button"
                 onClick={closeAddressForm}
                 aria-label={t('civics.navigation.modal.close')}
-                className="absolute right-4 top-4 rounded-full p-2 text-gray-500 hover:text-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 dark:focus:ring-offset-gray-900"
+                className="absolute right-4 top-4 rounded-full p-2 text-muted-foreground hover:text-foreground focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 dark:focus:ring-offset-background"
               >
-                <XMarkIcon className="h-5 w-5" />
+                <X className="h-5 w-5" />
               </button>
               <div className="text-center mb-6">
-                <h2 id={modalTitleId} className="text-xl font-bold text-gray-900 mb-2">
+                <h2 id={modalTitleId} className="text-xl font-bold text-foreground mb-2">
                   {t('civics.navigation.modal.title')}
                 </h2>
-                <p id={modalDescriptionId} className="text-gray-600">
+                <p id={modalDescriptionId} className="text-muted-foreground">
                   {t('civics.navigation.modal.description')}
                 </p>
               </div>
@@ -365,16 +367,16 @@ export default function CivicsNavigation({
                 void handleAddressSubmit();
               }} className="space-y-4">
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                  <label className="block text-sm font-medium text-foreground/80 mb-2">
                     {t('civics.navigation.modal.addressLabel')}
                   </label>
-                  <input
+                  <Input
                     ref={addressInputRef}
                     type="text"
                     value={newAddress}
                     onChange={(e) => setNewAddress(e.target.value)}
                     placeholder={t('civics.navigation.modal.addressPlaceholder')}
-                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    className="w-full"
                     required
                   />
                 </div>
@@ -383,7 +385,7 @@ export default function CivicsNavigation({
                   <button
                     type="submit"
                     disabled={isUpdatingAddress || newAddress.trim().length === 0}
-                    className="flex-1 bg-blue-600 text-white py-3 px-4 rounded-lg hover:bg-blue-700 disabled:opacity-50 transition-colors"
+                    className="flex-1 bg-primary text-white py-3 px-4 rounded-lg hover:bg-primary/90 disabled:opacity-50 transition-colors"
                   >
                     {isUpdatingAddress
                       ? t('civics.navigation.modal.submitLoading')
@@ -393,7 +395,7 @@ export default function CivicsNavigation({
                   <button
                     type="button"
                     onClick={closeAddressForm}
-                    className="px-4 py-3 text-gray-600 hover:text-gray-800 transition-colors"
+                    className="px-4 py-3 text-muted-foreground hover:text-foreground transition-colors"
                   >
                     {t('common.actions.cancel')}
                   </button>

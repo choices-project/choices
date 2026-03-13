@@ -41,6 +41,17 @@ import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { useProfileDelete, useProfileExport } from '@/features/profile/hooks/use-profile';
 
 import { Alert, AlertDescription } from '@/components/ui/alert';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from '@/components/ui/alert-dialog';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Switch } from '@/components/ui/switch';
@@ -636,30 +647,45 @@ export default function MyDataDashboard({
             </p>
           </div>
 
-          <Button
-            variant="destructive"
-            onClick={() => {
-              if (confirm('Are you ABSOLUTELY SURE you want to delete your account? This cannot be undone.')) {
-                if (confirm('Final confirmation: Delete all my data and close my account permanently?')) {
-                  handleDeleteAccount();
-                }
-              }
-            }}
-            disabled={isDeleting}
-            className="w-full"
-          >
-            {isDeleting ? (
-              <>
-                <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                Deleting Account...
-              </>
-            ) : (
-              <>
-                <Trash2 className="w-4 h-4 mr-2" />
+          <AlertDialog>
+            <AlertDialogTrigger asChild>
+              <Button
+                variant="destructive"
+                disabled={isDeleting}
+                className="w-full"
+              >
+                {isDeleting ? (
+                  <>
+                    <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                    Deleting Account...
+                  </>
+                ) : (
+                  <>
+                    <Trash2 className="w-4 h-4 mr-2" />
                 Delete My Account and All Data
               </>
             )}
           </Button>
+            </AlertDialogTrigger>
+            <AlertDialogContent>
+              <AlertDialogHeader>
+                <AlertDialogTitle>Delete your account?</AlertDialogTitle>
+                <AlertDialogDescription>
+                  This will permanently delete your account and all associated data including polls,
+                  votes, profile information, and analytics. This action cannot be undone.
+                </AlertDialogDescription>
+              </AlertDialogHeader>
+              <AlertDialogFooter>
+                <AlertDialogCancel>Cancel</AlertDialogCancel>
+                <AlertDialogAction
+                  onClick={handleDeleteAccount}
+                  className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                >
+                  Yes, delete my account permanently
+                </AlertDialogAction>
+              </AlertDialogFooter>
+            </AlertDialogContent>
+          </AlertDialog>
         </CardContent>
       </Card>
 

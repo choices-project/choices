@@ -239,13 +239,13 @@ export const CreatePollForm: React.FC<CreatePollFormProps> = ({ onSubmit, onCanc
   };
 
   return (
-    <div className="bg-white rounded-lg shadow-lg p-6 max-w-2xl mx-auto">
+    <div className="bg-card rounded-lg shadow-lg p-6 max-w-2xl mx-auto">
       <div className="flex items-center justify-between mb-6">
-        <h2 className="text-2xl font-bold text-gray-900">{t('polls.create.form.title')}</h2>
+        <h2 className="text-2xl font-bold text-foreground">{t('polls.create.form.title')}</h2>
         {onCancel && (
           <button
             onClick={handleCancel}
-            className="text-gray-400 hover:text-gray-600"
+            className="text-muted-foreground hover:text-foreground/80"
             aria-label={t('polls.create.form.closeAria')}
           >
             <X className="h-6 w-6" />
@@ -257,7 +257,7 @@ export const CreatePollForm: React.FC<CreatePollFormProps> = ({ onSubmit, onCanc
 
       <form ref={formRef} onSubmit={handleSubmit} className="space-y-6" noValidate>
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-2" htmlFor="create-poll-title">
+          <label className="block text-sm font-medium text-foreground/80 mb-2" htmlFor="create-poll-title">
             {t('polls.create.form.fields.title.label')} <span className="text-red-500">*</span>
           </label>
           <input
@@ -266,8 +266,8 @@ export const CreatePollForm: React.FC<CreatePollFormProps> = ({ onSubmit, onCanc
             value={data.title}
             onChange={(event) => handleTitleChange(event.target.value)}
             ref={titleRef}
-            className={`w-full px-3 py-2 border rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent ${
-              errors.title ? 'border-red-300' : 'border-gray-300'
+            className={`w-full px-3 py-2 border rounded-md focus:ring-2 focus:ring-ring focus:border-transparent bg-muted text-foreground ${
+              errors.title ? 'border-red-300 dark:border-red-500' : 'border-border'
             }`}
             placeholder={t('polls.create.form.fields.title.placeholder')}
             maxLength={200}
@@ -284,13 +284,13 @@ export const CreatePollForm: React.FC<CreatePollFormProps> = ({ onSubmit, onCanc
               {errors.title}
             </p>
           )}
-          <p id="create-poll-title-count" className="mt-1 text-sm text-gray-500">
+          <p id="create-poll-title-count" className="mt-1 text-sm text-muted-foreground">
             {t('polls.create.form.fields.title.counter', { current: data.title.length, max: 200 })}
           </p>
         </div>
 
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-2" htmlFor="create-poll-description">
+          <label className="block text-sm font-medium text-foreground/80 mb-2" htmlFor="create-poll-description">
             {t('polls.create.form.fields.description.label')}
           </label>
           <textarea
@@ -298,8 +298,8 @@ export const CreatePollForm: React.FC<CreatePollFormProps> = ({ onSubmit, onCanc
             value={data.description}
             onChange={(event) => handleDescriptionChange(event.target.value)}
             ref={descriptionRef}
-            className={`w-full px-3 py-2 border rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent ${
-              errors.description ? 'border-red-300' : 'border-gray-300'
+            className={`w-full px-3 py-2 border rounded-md focus:ring-2 focus:ring-ring focus:border-transparent bg-muted text-foreground ${
+              errors.description ? 'border-red-300 dark:border-red-500' : 'border-border'
             }`}
             placeholder={t('polls.create.form.fields.description.placeholder')}
             rows={3}
@@ -317,13 +317,13 @@ export const CreatePollForm: React.FC<CreatePollFormProps> = ({ onSubmit, onCanc
               {errors.description}
             </p>
           )}
-          <p id="create-poll-description-count" className="mt-1 text-sm text-gray-500">
+          <p id="create-poll-description-count" className="mt-1 text-sm text-muted-foreground">
             {t('polls.create.form.fields.description.counter', { current: data.description.length, max: 1000 })}
           </p>
         </div>
 
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-2" htmlFor="create-poll-category">
+          <label className="block text-sm font-medium text-foreground/80 mb-2" htmlFor="create-poll-category">
             {t('polls.create.form.fields.category.label')}
           </label>
           <input
@@ -332,8 +332,8 @@ export const CreatePollForm: React.FC<CreatePollFormProps> = ({ onSubmit, onCanc
             value={data.category}
             onChange={(event) => handleCategoryChange(event.target.value)}
             ref={categoryRef}
-            className={`w-full px-3 py-2 border rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent ${
-              errors.category ? 'border-red-300' : 'border-gray-300'
+            className={`w-full px-3 py-2 border rounded-md focus:ring-2 focus:ring-ring focus:border-transparent bg-muted text-foreground ${
+              errors.category ? 'border-red-300 dark:border-red-500' : 'border-border'
             }`}
             placeholder={t('polls.create.form.fields.category.placeholder')}
             maxLength={50}
@@ -354,11 +354,11 @@ export const CreatePollForm: React.FC<CreatePollFormProps> = ({ onSubmit, onCanc
 
         <div>
           <div className="flex items-center justify-between mb-2">
-            <label className="block text-sm font-medium text-gray-700">{t('polls.create.form.fields.privacy.label')}</label>
+            <label className="block text-sm font-medium text-foreground/80">{t('polls.create.form.fields.privacy.label')}</label>
             <button
               type="button"
               onClick={handlePrivacyRecommendation}
-              className="text-sm text-blue-600 hover:text-blue-700 flex items-center gap-1"
+              className="text-sm text-primary hover:text-primary/90 flex items-center gap-1"
             >
               <Shield className="h-4 w-4" />
               {t('polls.create.form.fields.privacy.getRecommendation')}
@@ -384,7 +384,7 @@ export const CreatePollForm: React.FC<CreatePollFormProps> = ({ onSubmit, onCanc
         </div>
 
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-2" htmlFor="create-poll-option-0">
+          <label className="block text-sm font-medium text-foreground/80 mb-2" htmlFor="create-poll-option-0">
             {t('polls.create.form.fields.options.label')} <span className="text-red-500">*</span>
           </label>
           <div className="space-y-2">
@@ -398,8 +398,8 @@ export const CreatePollForm: React.FC<CreatePollFormProps> = ({ onSubmit, onCanc
                   ref={(element) => {
                     optionRefs.current[index] = element;
                   }}
-                  className={`flex-1 px-3 py-2 border rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent ${
-                    errors[`option-${index}`] ? 'border-red-300' : 'border-gray-300'
+                  className={`flex-1 px-3 py-2 border rounded-md focus:ring-2 focus:ring-ring focus:border-transparent bg-muted text-foreground ${
+                    errors[`option-${index}`] ? 'border-red-300 dark:border-red-500' : 'border-border'
                   }`}
                   placeholder={t('polls.create.form.fields.options.optionPlaceholder', { number: index + 1 })}
                   maxLength={100}
@@ -420,14 +420,14 @@ export const CreatePollForm: React.FC<CreatePollFormProps> = ({ onSubmit, onCanc
               </div>
             ))}
           </div>
-          <div className="mt-1 text-xs text-gray-500" id="create-poll-options-meta">
+          <div className="mt-1 text-xs text-muted-foreground" id="create-poll-options-meta">
             {t('polls.create.form.fields.options.counter', { current: data.options.length, max: 10 })}
           </div>
           {data.options.map((option, index) => (
             <div
               key={`option-meta-${index}`}
               id={`create-poll-option-${index}-meta`}
-              className="flex justify-between text-xs text-gray-500"
+              className="flex justify-between text-xs text-muted-foreground"
             >
               <span>{t('polls.create.form.fields.options.optionCounter', { current: option.length, max: 100 })}</span>
               {option.length > 80 && <span className="text-orange-500">{t('polls.create.form.fields.options.approachingLimit')}</span>}
@@ -457,7 +457,7 @@ export const CreatePollForm: React.FC<CreatePollFormProps> = ({ onSubmit, onCanc
             <button
               type="button"
               onClick={handleAddOption}
-              className="mt-2 flex items-center gap-1 text-blue-600 hover:text-blue-700 text-sm"
+              className="mt-2 flex items-center gap-1 text-primary hover:text-primary/90 text-sm"
               aria-describedby="create-poll-options-meta"
             >
               <Plus className="h-4 w-4" />
@@ -467,7 +467,7 @@ export const CreatePollForm: React.FC<CreatePollFormProps> = ({ onSubmit, onCanc
         </div>
 
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-2" htmlFor="create-poll-tag-input">
+          <label className="block text-sm font-medium text-foreground/80 mb-2" htmlFor="create-poll-tag-input">
             {t('polls.create.form.fields.tags.label')}
           </label>
           <div className="flex items-center gap-2 mb-2">
@@ -477,7 +477,7 @@ export const CreatePollForm: React.FC<CreatePollFormProps> = ({ onSubmit, onCanc
               value={newTag}
               onChange={(event) => setNewTag(event.target.value)}
               ref={tagInputRef}
-              className="flex-1 px-3 py-2 border rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              className="flex-1 px-3 py-2 border border-border rounded-md focus:ring-2 focus:ring-ring focus:border-transparent bg-muted text-foreground"
               placeholder={t('polls.create.form.fields.tags.placeholder')}
               maxLength={20}
               aria-describedby={`create-poll-tags-limit${
@@ -494,7 +494,7 @@ export const CreatePollForm: React.FC<CreatePollFormProps> = ({ onSubmit, onCanc
               type="button"
               onClick={handleAddTag}
               disabled={!newTag.trim() || data.tags.length >= 5}
-              className="px-3 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed"
+              className="px-3 py-2 bg-primary text-white rounded-md hover:bg-primary/90 disabled:opacity-50 disabled:cursor-not-allowed"
             >
               {t('polls.create.form.fields.tags.add')}
             </button>
@@ -514,7 +514,7 @@ export const CreatePollForm: React.FC<CreatePollFormProps> = ({ onSubmit, onCanc
               {data.tags.map((tag) => (
                 <span
                   key={tag}
-                  className="inline-flex items-center gap-1 px-2 py-1 bg-blue-100 text-blue-800 rounded-full text-sm"
+                  className="inline-flex items-center gap-1 px-2 py-1 bg-blue-100 dark:bg-blue-900/50 text-blue-800 dark:text-blue-200 rounded-full text-sm"
                 >
                   {tag}
                   <button
@@ -528,24 +528,24 @@ export const CreatePollForm: React.FC<CreatePollFormProps> = ({ onSubmit, onCanc
               ))}
             </div>
           )}
-          <p id="create-poll-tags-limit" className="text-xs text-gray-500">
+          <p id="create-poll-tags-limit" className="text-xs text-muted-foreground">
             {t('polls.create.form.fields.tags.counter', { current: data.tags.length, max: 5 })}
           </p>
         </div>
 
         {errors._form && (
-          <div className="flex items-center gap-2 rounded-md border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700">
+          <div className="flex items-center gap-2 rounded-md border border-red-200 dark:border-red-800 bg-red-50 dark:bg-red-900/30 px-3 py-2 text-sm text-red-700 dark:text-red-300">
             <AlertCircle className="h-4 w-4" />
             <span>{errors._form}</span>
           </div>
         )}
 
-        <div className="flex items-center justify-end gap-3 pt-4 border-t border-gray-200">
+        <div className="flex items-center justify-end gap-3 pt-4 border-t border-border">
           {onCancel && (
             <button
               type="button"
               onClick={handleCancel}
-              className="px-4 py-2 border border-gray-300 rounded-md text-gray-700 hover:bg-gray-50"
+              className="px-4 py-2 border border-border rounded-md text-foreground/80 hover:bg-muted"
             >
               {t('common.actions.cancel')}
             </button>
@@ -553,7 +553,7 @@ export const CreatePollForm: React.FC<CreatePollFormProps> = ({ onSubmit, onCanc
           <button
             type="submit"
             disabled={isLoading}
-            className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
+            className="px-4 py-2 bg-primary text-white rounded-md hover:bg-primary/90 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
           >
             <Save className="h-4 w-4" />
             {isLoading ? t('polls.create.form.buttons.creating') : t('polls.create.form.buttons.create')}

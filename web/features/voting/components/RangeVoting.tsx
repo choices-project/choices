@@ -5,6 +5,8 @@ import React, { useState, useEffect } from 'react';
 
 import { useVotingIsVoting } from '@/features/voting/lib/store'
 
+import { VoteSubmitButton } from './VoteSubmitButton'
+
 import type { PollOption } from '../types'
 
 type RangeVotingProps = {
@@ -129,7 +131,7 @@ export default function RangeVoting({
   return (
     <div className="max-w-2xl mx-auto">
       {/* Header */}
-      <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6 mb-6">
+      <div className="bg-card rounded-xl shadow-sm border border-border p-6 mb-6">
         <div className="flex items-start justify-between mb-4">
           <div>
             <h1 className="text-2xl font-bold text-gray-900 mb-2">{title}</h1>
@@ -181,7 +183,7 @@ export default function RangeVoting({
       )}
 
       {/* Voting Interface */}
-      <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
+      <div className="bg-card rounded-xl shadow-sm border border-border p-6">
         <div className="space-y-6">
           {options.map((option: PollOption) => {
             const optionId = String(option.id)
@@ -274,21 +276,14 @@ export default function RangeVoting({
               <span className="font-medium">Vote submitted successfully!</span>
             </div>
           ) : (
-            <button
+            <VoteSubmitButton
+              isSubmitting={isSubmitting}
+              disabled={hasVoted || effectiveIsVoting}
               onClick={handleSubmit}
-              disabled={isDisabled}
+              icon={Star}
+              variant="yellow"
               data-testid="start-voting-button"
-              className={`
-                flex items-center space-x-2 px-8 py-3 rounded-lg font-medium transition-colors
-                ${isDisabled
-                  ? 'bg-gray-300 text-gray-500 cursor-not-allowed'
-                  : 'bg-yellow-600 text-white hover:bg-yellow-700'
-                }
-              `}
-            >
-              <Star className="w-5 h-5" />
-              <span>{isSubmitting ? 'Submitting Vote...' : 'Submit Vote'}</span>
-            </button>
+            />
           )}
         </div>
 
@@ -311,7 +306,7 @@ export default function RangeVoting({
       </div>
 
       {/* Best Practices */}
-      <div className="mt-6 bg-white rounded-xl shadow-sm border border-gray-200 p-6">
+      <div className="mt-6 bg-card rounded-xl shadow-sm border border-border p-6">
         <h3 className="font-semibold text-gray-900 mb-3">When to Use Range Voting</h3>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm text-gray-600">
           <div>

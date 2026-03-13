@@ -1,8 +1,6 @@
-import { NextResponse } from 'next/server';
-
 import { getSupabaseServerClient } from '@/utils/supabase/server';
 
-import { authError, errorResponse } from '@/lib/api';
+import { authError, errorResponse, successResponse } from '@/lib/api';
 import { logger } from '@/lib/utils/logger';
 
 import type { NextRequest } from 'next/server';
@@ -48,7 +46,7 @@ export const GET = async (_request: NextRequest) => {
   const polls = pollsResult.data ?? [];
   const votes = votesResult.data ?? [];
 
-  return NextResponse.json({
+  const data = {
     profile: {
       displayname: profile?.display_name ?? profile?.username ?? 'User',
       email: profile?.email ?? user.email ?? '',
@@ -69,6 +67,8 @@ export const GET = async (_request: NextRequest) => {
       votedat: vote.created_at,
       optionselected: '',
     })),
-    comments: [],
-  });
+    comments: [] as Array<{ pollid: string; polltitle: string; comment: string; createdat: string }>,
+  };
+
+  return successResponse(data);
 };

@@ -26,6 +26,7 @@ import type { FeedbackContext, UserJourney } from '@/features/admin/types'
 
 import { motion, AnimatePresence } from '@/components/motion/Motion'
 
+import { useAccessibleDialog } from '@/lib/accessibility/useAccessibleDialog'
 import { isFeatureEnabled } from '@/lib/core/feature-flags'
 import {
   useAnalyticsActions,
@@ -156,6 +157,7 @@ const EnhancedFeedbackWidget: React.FC = () => {
   const dialogId = useId()
   const dialogTitleId = useId()
   const dialogDescriptionId = useId()
+  const dialogRef = useRef<HTMLDivElement | null>(null)
   const triggerRef = useRef<HTMLButtonElement | null>(null)
   const typeButtonRefs = useRef<Array<HTMLButtonElement | null>>([])
   const titleInputRef = useRef<HTMLInputElement | null>(null)
@@ -245,6 +247,12 @@ const EnhancedFeedbackWidget: React.FC = () => {
     triggerRef.current?.focus()
   }
 
+  useAccessibleDialog({
+    isOpen,
+    dialogRef,
+    onClose: () => step !== 'success' && handleClose(),
+  })
+
   // Focus management and keyboard navigation
   useEffect(() => {
     if (!isOpen) {
@@ -264,53 +272,6 @@ const EnhancedFeedbackWidget: React.FC = () => {
       focusNextFrame(sentimentButtonRefs.current[0])
     }
   }, [isOpen, step])
-
-  // Focus trap for modal - keep focus within dialog
-  useEffect(() => {
-    if (!isOpen) return
-
-    const dialog = document.getElementById(dialogId)
-    if (!dialog) return
-
-    const focusableElements = dialog.querySelectorAll<HTMLElement>(
-      'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])'
-    )
-    const firstElement = focusableElements[0] as HTMLElement | null
-    const lastElement = focusableElements[focusableElements.length - 1] as HTMLElement | null
-
-    const handleTabKey = (e: KeyboardEvent) => {
-      if (e.key !== 'Tab') return
-
-      if (e.shiftKey) {
-        // Shift + Tab
-        if (document.activeElement === firstElement) {
-          e.preventDefault()
-          lastElement?.focus()
-        }
-      } else {
-        // Tab
-        if (document.activeElement === lastElement) {
-          e.preventDefault()
-          firstElement?.focus()
-        }
-      }
-    }
-
-    const handleEscape = (e: KeyboardEvent) => {
-      if (e.key === 'Escape' && step !== 'success') {
-        e.preventDefault()
-        handleClose()
-      }
-    }
-
-    document.addEventListener('keydown', handleTabKey)
-    document.addEventListener('keydown', handleEscape)
-
-    return () => {
-      document.removeEventListener('keydown', handleTabKey)
-      document.removeEventListener('keydown', handleEscape)
-    }
-  }, [isOpen, step, dialogId])
 
   // Keyboard navigation for type buttons (arrow keys)
   useEffect(() => {
@@ -649,12 +610,12 @@ const EnhancedFeedbackWidget: React.FC = () => {
     { key: 'performance', label: 'Performance', icon: Zap, color: 'text-yellow-600', bgColor: 'bg-yellow-100' },
     { key: 'accessibility', label: 'Accessibility', icon: Accessibility, color: 'text-purple-600', bgColor: 'bg-purple-100' },
     { key: 'security', label: 'Security', icon: Shield, color: 'text-green-600', bgColor: 'bg-green-100' },
-    { key: 'general', label: 'General', icon: MessageCircle, color: 'text-gray-600', bgColor: 'bg-gray-100' }
+    { key: 'general', label: 'General', icon: MessageCircle, color: 'text-muted-foreground', bgColor: 'bg-muted' }
   ]
 
   const sentimentOptions = [
     { key: 'positive', label: 'Positive', icon: Smile, color: 'text-green-600', bgColor: 'bg-green-100' },
-    { key: 'neutral', label: 'Neutral', icon: Meh, color: 'text-gray-600', bgColor: 'bg-gray-100' },
+    { key: 'neutral', label: 'Neutral', icon: Meh, color: 'text-muted-foreground', bgColor: 'bg-muted' },
     { key: 'negative', label: 'Negative', icon: Frown, color: 'text-red-600', bgColor: 'bg-red-100' },
     { key: 'mixed', label: 'Mixed', icon: AlertTriangle, color: 'text-yellow-600', bgColor: 'bg-yellow-100' }
   ]
@@ -666,7 +627,7 @@ const EnhancedFeedbackWidget: React.FC = () => {
         ref={triggerRef}
         type="button"
         onClick={handleOpen}
-        className="fixed bottom-6 right-6 z-40 p-4 bg-blue-600 text-white rounded-full shadow-lg hover:bg-blue-700 transition-colors"
+        className="fixed bottom-6 right-6 z-40 p-4 bg-primary text-white rounded-full shadow-lg hover:bg-primary/90 transition-colors"
         data-testid="feedback-widget-button"
         aria-label="Open feedback"
         aria-haspopup="dialog"
@@ -698,12 +659,13 @@ const EnhancedFeedbackWidget: React.FC = () => {
             }}
           >
             <motion.div
+              ref={dialogRef}
               id={dialogId}
               role="dialog"
               aria-modal="true"
               aria-labelledby={dialogTitleId}
               aria-describedby={dialogDescriptionId}
-              className="bg-white dark:bg-gray-800 rounded-2xl shadow-2xl max-w-md w-full max-h-[90vh] overflow-hidden"
+              className="bg-card rounded-2xl shadow-2xl max-w-md w-full max-h-[90vh] overflow-hidden"
               initial={prefersReducedMotion ? { scale: 1, opacity: 1 } : { scale: 0.8, opacity: 0 }}
               animate={{ scale: 1, opacity: 1 }}
               exit={prefersReducedMotion ? { scale: 1, opacity: 1 } : { scale: 0.8, opacity: 0 }}
@@ -711,26 +673,26 @@ const EnhancedFeedbackWidget: React.FC = () => {
               onClick={(e: React.MouseEvent) => e.stopPropagation()}
             >
               {/* Header */}
-              <div className="flex items-center justify-between p-6 border-b border-gray-100 dark:border-gray-700">
+              <div className="flex items-center justify-between p-6 border-b border-border">
                 <div className="flex items-center gap-3">
                   <div className="p-2 bg-blue-100 dark:bg-blue-900/20 rounded-lg">
-                    <MessageCircle className="w-5 h-5 text-blue-600 dark:text-blue-400" aria-hidden="true" />
+                    <MessageCircle className="w-5 h-5 text-primary" aria-hidden="true" />
                   </div>
                   <div>
-                    <h3 id={dialogTitleId} className="text-lg font-semibold text-gray-900 dark:text-gray-100">Enhanced Feedback</h3>
-                    <p id={dialogDescriptionId} className="text-sm text-gray-500 dark:text-gray-400">Help us improve with detailed context</p>
+                    <h3 id={dialogTitleId} className="text-lg font-semibold text-foreground">Enhanced Feedback</h3>
+                    <p id={dialogDescriptionId} className="text-sm text-muted-foreground">Help us improve with detailed context</p>
                   </div>
                 </div>
                 <button
                   type="button"
                   onClick={handleClose}
-                  className="p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
+                  className="p-2 hover:bg-muted rounded-lg transition-colors focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2"
                   aria-label="Dismiss feedback form"
                   aria-hidden={step === 'success'}
                   tabIndex={step === 'success' ? -1 : 0}
                   disabled={step === 'success'}
                 >
-                  <X className="w-5 h-5 text-gray-500 dark:text-gray-400" aria-hidden="true" />
+                  <X className="w-5 h-5 text-muted-foreground" aria-hidden="true" />
                 </button>
               </div>
 
@@ -746,7 +708,7 @@ const EnhancedFeedbackWidget: React.FC = () => {
                       transition={prefersReducedMotion ? { duration: 0 } : {}}
                       className="space-y-4"
                     >
-                      <h4 className="text-lg font-semibold text-gray-900 dark:text-gray-100">What type of feedback?</h4>
+                      <h4 className="text-lg font-semibold text-foreground">What type of feedback?</h4>
                       <div className="grid grid-cols-2 gap-3" role="group" aria-label="Feedback type selection">
                         {feedbackTypes.map(({ key, label, icon: Icon, color, bgColor }, index) => (
                           <button
@@ -756,12 +718,12 @@ const EnhancedFeedbackWidget: React.FC = () => {
                               typeButtonRefs.current[index] = el
                             }}
                             onClick={() => handleTypeSelect(key as FeedbackData['type'])}
-                            className={`p-4 rounded-lg border-2 border-transparent hover:border-blue-300 dark:hover:border-blue-600 transition-all focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 ${bgColor} dark:bg-opacity-20`}
+                            className={`p-4 rounded-lg border-2 border-transparent hover:border-blue-300 dark:hover:border-blue-600 transition-all focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 ${bgColor} dark:bg-opacity-20`}
                             aria-pressed={feedback.type === key}
                             aria-label={`${label} feedback type`}
                           >
                             <Icon className={`w-6 h-6 mx-auto mb-2 ${color}`} aria-hidden="true" />
-                            <span className="text-sm font-medium text-gray-700 dark:text-gray-300">{label}</span>
+                            <span className="text-sm font-medium text-foreground/80">{label}</span>
                           </button>
                         ))}
                       </div>
@@ -777,9 +739,9 @@ const EnhancedFeedbackWidget: React.FC = () => {
                       transition={prefersReducedMotion ? { duration: 0 } : {}}
                       className="space-y-4"
                     >
-                      <h4 className="text-lg font-semibold text-gray-900 dark:text-gray-100">Tell us more</h4>
+                      <h4 className="text-lg font-semibold text-foreground">Tell us more</h4>
                       <div className="space-y-3">
-                        <label htmlFor={titleFieldId} className="text-sm font-medium text-gray-700 dark:text-gray-300">
+                        <label htmlFor={titleFieldId} className="text-sm font-medium text-foreground/80">
                           Brief title
                         </label>
                         <input
@@ -789,11 +751,11 @@ const EnhancedFeedbackWidget: React.FC = () => {
                           placeholder="Brief title"
                           value={feedback.title}
                           onChange={(e) => setFeedback(prev => ({ ...prev, title: e.target.value }))}
-                          className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                          className="w-full px-3 py-2 border border-border rounded-lg bg-background text-foreground focus:ring-2 focus:ring-ring focus:border-transparent"
                           aria-required="true"
                           aria-label="Feedback title"
                         />
-                        <label htmlFor={descriptionFieldId} className="text-sm font-medium text-gray-700 dark:text-gray-300">
+                        <label htmlFor={descriptionFieldId} className="text-sm font-medium text-foreground/80">
                           Detailed description
                         </label>
                         <textarea
@@ -803,7 +765,7 @@ const EnhancedFeedbackWidget: React.FC = () => {
                           value={feedback.description}
                           onChange={(e) => setFeedback(prev => ({ ...prev, description: e.target.value }))}
                           rows={4}
-                          className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none"
+                          className="w-full px-3 py-2 border border-border rounded-lg bg-background text-foreground focus:ring-2 focus:ring-ring focus:border-transparent resize-none"
                           aria-required="true"
                           aria-label="Feedback description"
                         />
@@ -813,7 +775,7 @@ const EnhancedFeedbackWidget: React.FC = () => {
                           type="button"
                           onClick={() => setStep('sentiment')}
                           disabled={!feedback.title.trim() || !feedback.description.trim()}
-                          className="px-4 py-2 bg-blue-600 dark:bg-blue-500 text-white rounded-lg hover:bg-blue-700 dark:hover:bg-blue-600 disabled:opacity-50 disabled:cursor-not-allowed focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition-colors"
+                          className="px-4 py-2 bg-primary text-white rounded-lg hover:bg-primary/90 disabled:opacity-50 disabled:cursor-not-allowed focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 transition-colors"
                           aria-label="Continue to sentiment selection"
                         >
                           Next
@@ -831,7 +793,7 @@ const EnhancedFeedbackWidget: React.FC = () => {
                       transition={prefersReducedMotion ? { duration: 0 } : {}}
                       className="space-y-4"
                     >
-                      <h4 className="text-lg font-semibold text-gray-900 dark:text-gray-100">How do you feel?</h4>
+                      <h4 className="text-lg font-semibold text-foreground">How do you feel?</h4>
                       <div className="grid grid-cols-2 gap-3" role="group" aria-label="Sentiment selection">
                         {sentimentOptions.map(({ key, label, icon: Icon, color, bgColor }, index) => (
                           <button
@@ -841,12 +803,12 @@ const EnhancedFeedbackWidget: React.FC = () => {
                               sentimentButtonRefs.current[index] = el
                             }}
                             onClick={() => handleSentimentSelect(key as FeedbackData['sentiment'])}
-                            className={`p-4 rounded-lg border-2 border-transparent hover:border-blue-300 dark:hover:border-blue-600 transition-all focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 ${bgColor} dark:bg-opacity-20`}
+                            className={`p-4 rounded-lg border-2 border-transparent hover:border-blue-300 dark:hover:border-blue-600 transition-all focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 ${bgColor} dark:bg-opacity-20`}
                             aria-pressed={feedback.sentiment === key}
                             aria-label={`${label} sentiment`}
                           >
                             <Icon className={`w-6 h-6 mx-auto mb-2 ${color}`} aria-hidden="true" />
-                            <span className="text-sm font-medium text-gray-700 dark:text-gray-300">{label}</span>
+                            <span className="text-sm font-medium text-foreground/80">{label}</span>
                           </button>
                         ))}
                       </div>
@@ -855,14 +817,14 @@ const EnhancedFeedbackWidget: React.FC = () => {
                           type="button"
                           onClick={handleSubmit}
                           disabled={isSubmitting || isProcessing}
-                          className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50"
+                          className="px-4 py-2 bg-primary text-white rounded-lg hover:bg-primary/90 disabled:opacity-50"
                         >
                           {isSubmitting ? 'Submitting...' : 'Submit Feedback'}
                         </button>
                         <button
                           type="button"
                           onClick={() => setStep('screenshot')}
-                          className="px-4 py-2 text-gray-600 border border-gray-300 rounded-lg hover:bg-gray-50"
+                          className="px-4 py-2 text-muted-foreground border border-border rounded-lg hover:bg-muted"
                         >
                           Add Screenshot
                         </button>
@@ -878,19 +840,19 @@ const EnhancedFeedbackWidget: React.FC = () => {
                       exit={{ opacity: 0, x: -20 }}
                       className="space-y-4"
                     >
-                      <h4 className="text-lg font-semibold text-gray-900">Add a screenshot?</h4>
-                      <p className="text-sm text-gray-600">This helps us understand the context better</p>
+                      <h4 className="text-lg font-semibold text-foreground">Add a screenshot?</h4>
+                      <p className="text-sm text-muted-foreground">This helps us understand the context better</p>
 
                       <div className="space-y-3">
                         <button
                           type="button"
                           onClick={handleScreenshotCapture}
                           disabled={capturingScreenshot}
-                          className="w-full p-4 border-2 border-dashed border-gray-300 dark:border-gray-600 rounded-lg hover:border-blue-400 dark:hover:border-blue-500 transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
+                          className="w-full p-4 border-2 border-dashed border-border rounded-lg hover:border-blue-400 dark:hover:border-blue-500 transition-colors focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2"
                           aria-label="Capture screenshot"
                         >
-                          <Camera className="w-8 h-8 mx-auto mb-2 text-gray-400 dark:text-gray-500" aria-hidden="true" />
-                          <span className="text-sm text-gray-600 dark:text-gray-400">
+                          <Camera className="w-8 h-8 mx-auto mb-2 text-muted-foreground" aria-hidden="true" />
+                          <span className="text-sm text-muted-foreground">
                             {capturingScreenshot ? 'Capturing...' : 'Capture Screenshot'}
                           </span>
                         </button>
@@ -898,11 +860,11 @@ const EnhancedFeedbackWidget: React.FC = () => {
                         <button
                           type="button"
                           onClick={handleFileUpload}
-                          className="w-full p-4 border-2 border-dashed border-gray-300 dark:border-gray-600 rounded-lg hover:border-blue-400 dark:hover:border-blue-500 transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
+                          className="w-full p-4 border-2 border-dashed border-border rounded-lg hover:border-blue-400 dark:hover:border-blue-500 transition-colors focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2"
                           aria-label="Upload screenshot file"
                         >
-                          <Upload className="w-8 h-8 mx-auto mb-2 text-gray-400 dark:text-gray-500" aria-hidden="true" />
-                          <span className="text-sm text-gray-600 dark:text-gray-400">Upload Screenshot</span>
+                          <Upload className="w-8 h-8 mx-auto mb-2 text-muted-foreground" aria-hidden="true" />
+                          <span className="text-sm text-muted-foreground">Upload Screenshot</span>
                         </button>
 
                         <input
@@ -917,7 +879,7 @@ const EnhancedFeedbackWidget: React.FC = () => {
                           type="button"
                           onClick={handleSubmit}
                           disabled={isSubmitting || isProcessing}
-                          className="w-full p-3 text-sm text-gray-600 hover:text-gray-800 disabled:opacity-50"
+                          className="w-full p-3 text-sm text-muted-foreground hover:text-foreground disabled:opacity-50"
                         >
                           {isSubmitting ? 'Submitting...' : 'Submit Feedback'}
                         </button>
@@ -958,10 +920,10 @@ const EnhancedFeedbackWidget: React.FC = () => {
                         <CheckCircle className="w-8 h-8 text-green-600 dark:text-green-400" />
                       </motion.div>
 
-                      <h4 className="text-xl font-semibold text-gray-900 dark:text-gray-100 mb-2">
+                      <h4 className="text-xl font-semibold text-foreground mb-2">
                         Thank You! 🎉
                       </h4>
-                      <p className="text-gray-600 dark:text-gray-400 mb-4">
+                      <p className="text-muted-foreground mb-4">
                         Your detailed feedback has been captured with full context. We&apos;ll analyze it and get back to you soon!
                       </p>
 
@@ -970,14 +932,14 @@ const EnhancedFeedbackWidget: React.FC = () => {
                           <Star key={star} className="w-5 h-5 fill-current" />
                         ))}
                       </div>
-                      <p className="text-sm text-gray-500 dark:text-gray-400 mt-2">
+                      <p className="text-sm text-muted-foreground mt-2">
                         Your feedback helps us create something amazing!
                       </p>
 
                       <button
                         type="button"
                         onClick={handleClose}
-                        className="mt-4 px-6 py-2 bg-blue-600 dark:bg-blue-500 text-white rounded-lg hover:bg-blue-700 dark:hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition-colors"
+                        className="mt-4 px-6 py-2 bg-primary text-white rounded-lg hover:bg-primary/90 focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 transition-colors"
                         aria-label="Close feedback widget"
                       >
                         Close

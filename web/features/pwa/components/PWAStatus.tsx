@@ -103,9 +103,9 @@ export default function PWAStatus({ showDetails = false, className = '' }: PWASt
       return <CheckCircle className="w-5 h-5 text-green-500" />;
     }
     if (installation.canInstall) {
-      return <Download className="w-5 h-5 text-blue-500" />;
+      return <Download className="w-5 h-5 text-primary" />;
     }
-    return <Smartphone className="w-5 h-5 text-gray-400" />;
+    return <Smartphone className="w-5 h-5 text-muted-foreground" />;
   };
 
   const getStatusText = () => {
@@ -127,7 +127,7 @@ export default function PWAStatus({ showDetails = false, className = '' }: PWASt
   const getNotificationIcon = () => {
     return notifications.length > 0 ?
       <Bell className="w-4 h-4 text-green-500" /> :
-      <BellOff className="w-4 h-4 text-gray-400" />;
+      <BellOff className="w-4 h-4 text-muted-foreground" />;
   };
 
   if (!showDetails) {
@@ -149,7 +149,7 @@ export default function PWAStatus({ showDetails = false, className = '' }: PWASt
 
   return (
     <section
-      className={`bg-white rounded-lg border border-gray-200 p-4 ${className}`}
+      className={`bg-card rounded-lg border border-border p-4 ${className}`}
       data-testid="pwa-status"
       aria-live="polite"
       aria-busy={loading}
@@ -157,10 +157,10 @@ export default function PWAStatus({ showDetails = false, className = '' }: PWASt
       aria-label="Progressive web app status"
     >
       <div className="flex items-center justify-between mb-4">
-        <h3 className="text-lg font-semibold text-gray-900">PWA Status</h3>
+        <h3 className="text-lg font-semibold text-foreground">PWA Status</h3>
         <button
           onClick={() => window.location.reload()}
-          className="p-2 text-gray-400 hover:text-gray-600 transition-colors"
+          className="p-2 text-muted-foreground hover:text-foreground transition-colors"
           title="Refresh PWA status"
           aria-label="Refresh PWA status"
         >
@@ -173,18 +173,18 @@ export default function PWAStatus({ showDetails = false, className = '' }: PWASt
         <div className="flex items-center justify-between" data-testid="installation-status">
           <div className="flex items-center space-x-2">
             <span aria-hidden="true">{getStatusIcon()}</span>
-            <span className="text-sm font-medium text-gray-700">Installation</span>
+            <span className="text-sm font-medium text-foreground/80">Installation</span>
           </div>
-          <span className="text-sm text-gray-600">{getStatusText()}</span>
+          <span className="text-sm text-muted-foreground">{getStatusText()}</span>
         </div>
 
         {/* Connection Status */}
         <div className="flex items-center justify-between" data-testid="offline-status">
           <div className="flex items-center space-x-2">
             <span aria-hidden="true">{getConnectionIcon()}</span>
-            <span className="text-sm font-medium text-gray-700">Connection</span>
+            <span className="text-sm font-medium text-foreground/80">Connection</span>
           </div>
-          <span className="text-sm text-gray-600">
+          <span className="text-sm text-muted-foreground">
             {offline.isOnline ? 'Online' : 'Offline'}
           </span>
         </div>
@@ -193,9 +193,9 @@ export default function PWAStatus({ showDetails = false, className = '' }: PWASt
         <div className="flex items-center justify-between" data-testid="notification-status">
           <div className="flex items-center space-x-2">
             <span aria-hidden="true">{getNotificationIcon()}</span>
-            <span className="text-sm font-medium text-gray-700">Notifications</span>
+            <span className="text-sm font-medium text-foreground/80">Notifications</span>
           </div>
-          <span className="text-sm text-gray-600">
+          <span className="text-sm text-muted-foreground">
             {notifications.length > 0 ? 'Enabled' : 'Disabled'}
           </span>
         </div>
@@ -205,10 +205,10 @@ export default function PWAStatus({ showDetails = false, className = '' }: PWASt
           <div className="flex items-center justify-between" data-testid="offline-data-status">
             <div className="flex items-center space-x-2">
               <Settings className="w-4 h-4 text-yellow-500" aria-hidden="true" />
-              <span className="text-sm font-medium text-gray-700">Offline Data</span>
+              <span className="text-sm font-medium text-foreground/80">Offline Data</span>
             </div>
-            <span className="text-sm text-gray-600">
-              {offline.offlineData.queuedActions.length} action{offline.offlineData.queuedActions.length !== 1 ? 's' : ''} pending
+<span className="text-sm text-muted-foreground">
+            {offline.offlineData.queuedActions.length} action{offline.offlineData.queuedActions.length !== 1 ? 's' : ''} pending
             </span>
           </div>
         )}
@@ -217,20 +217,20 @@ export default function PWAStatus({ showDetails = false, className = '' }: PWASt
         <div className="flex items-center justify-between">
           <div className="flex items-center space-x-2">
             <CheckCircle className="w-4 h-4 text-green-500" aria-hidden="true" />
-            <span className="text-sm font-medium text-gray-700">Service Worker</span>
+            <span className="text-sm font-medium text-foreground/80">Service Worker</span>
           </div>
-          <span className="text-sm text-gray-600">
+          <span className="text-sm text-muted-foreground">
             Active
           </span>
         </div>
       </div>
 
       {/* Action Buttons */}
-      <div className="mt-4 pt-4 border-t border-gray-200 space-y-2">
+      <div className="mt-4 pt-4 border-t border-border space-y-2">
         {installation.canInstall && !installation.isInstalled && (
           <button
             onClick={() => installPWA()}
-            className="w-full px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors text-sm font-medium"
+            className="w-full px-4 py-2 bg-primary text-primary-foreground rounded-lg hover:bg-primary/90 transition-colors text-sm font-medium"
             data-testid="pwa-status-install-button"
             aria-label="Install app"
           >

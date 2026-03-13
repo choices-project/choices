@@ -9,6 +9,9 @@
  */
 
 // Base store interface for common patterns
+// PWA types
+import type { BeforeInstallPromptEvent } from '@/types/pwa';
+
 export type BaseStore = {
   // Common loading states
   isLoading: boolean;
@@ -122,12 +125,11 @@ export type Breadcrumb = {
   active?: boolean;
 }
 
-// PWA types
 export type PWAState = {
   isInstalled: boolean;
   isOnline: boolean;
   isUpdateAvailable: boolean;
-  installPrompt: any;
+  installPrompt: BeforeInstallPromptEvent | null;
   canInstall: boolean;
   isStandalone: boolean;
 }
@@ -166,10 +168,10 @@ export type StoreSubscription<T> = (state: T, prevState: T) => void;
 // Store persistence types
 export type PersistOptions = {
   name: string;
-  storage?: any;
-  partialize?: (state: any) => any;
+  storage?: { getItem: (name: string) => string | null | Promise<string | null>; setItem: (name: string, value: string) => void | Promise<void>; removeItem: (name: string) => void | Promise<void> };
+  partialize?: (state: unknown) => unknown;
   version?: number;
-  migrate?: (persistedState: any, version: number) => any;
+  migrate?: (persistedState: unknown, version: number) => unknown;
 }
 
 // Store devtools types
@@ -213,14 +215,14 @@ export type StoreValidator<T> = {
 // Store middleware chain types
 export type MiddlewareChain = {
   middlewares: StoreMiddleware[];
-  config: any;
+  config: StoreConfig;
 }
 
 // Store subscription types
 export type StoreSubscriptionConfig = {
   id: string;
-  selector: (state: any) => any;
-  callback: (value: any, prevValue: any) => void;
+  selector: (state: unknown) => unknown;
+  callback: (value: unknown, prevValue: unknown) => void;
   active: boolean;
 }
 
@@ -228,7 +230,7 @@ export type StoreSubscriptionConfig = {
 export type BatchUpdate = {
   actions: Array<{
     type: string;
-    payload: any;
+    payload: unknown;
   }>;
   timestamp: string;
   id: string;
@@ -237,7 +239,7 @@ export type BatchUpdate = {
 // Store cache types
 export type StoreCache = {
   key: string;
-  value: any;
+  value: unknown;
   timestamp: number;
   ttl: number;
   stale: boolean;
@@ -267,7 +269,7 @@ export type StoreTest = {
   teardown: () => void;
   assertions: Array<{
     description: string;
-    test: (state: any) => boolean;
+    test: (state: unknown) => boolean;
   }>;
 }
 

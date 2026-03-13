@@ -43,6 +43,11 @@ export const GET = withErrorHandling(async (req: NextRequest) => {
     return authError('Admin authorization required');
   }
 
+  const token = authHeader.startsWith('Bearer ') ? authHeader.slice(7) : '';
+  if (!token || token !== process.env.ADMIN_MONITORING_KEY) {
+    return authError('Invalid admin authorization token');
+  }
+
     const url = new URL(req.url);
     const refresh = url.searchParams.get('refresh') === 'true';
 

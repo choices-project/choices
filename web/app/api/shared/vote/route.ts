@@ -1,12 +1,28 @@
 import { createClient } from '@supabase/supabase-js';
 
-
 import { withErrorHandling, successResponse, validationError, notFoundError, errorResponse } from '@/lib/api';
+import { apiRateLimiter } from '@/lib/rate-limiting/api-rate-limiter';
 import { logger } from '@/lib/utils/logger';
 
 import type { NextRequest } from 'next/server';
 
+const UUID_V4_REGEX = /^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
+
 export const POST = withErrorHandling(async (request: NextRequest) => {
+  const ip = request.headers.get('x-forwarded-for')?.split(',')[0]?.trim()
+    || request.headers.get('x-real-ip')
+    || '127.0.0.1';
+  const ua = request.headers.get('user-agent');
+  const rateLimitOptions: { maxRequests: number; windowMs: number; userAgent?: string } = {
+    maxRequests: 10,
+    windowMs: 60 * 1000,
+  };
+  if (ua) rateLimitOptions.userAgent = ua;
+  const rateLimitResult = await apiRateLimiter.checkLimit(ip, '/api/shared/vote', rateLimitOptions);
+  if (!rateLimitResult.allowed) {
+    return errorResponse('Too many requests. Please try again later.', 429);
+  }
+
   const { poll_id, option_id, voter_session } = await request.json();
   
   if (!poll_id || !option_id || !voter_session) {
@@ -15,6 +31,10 @@ export const POST = withErrorHandling(async (request: NextRequest) => {
       option_id: !option_id ? 'Option ID is required' : '',
       voter_session: !voter_session ? 'Voter session is required' : ''
     });
+  }
+
+  if (typeof voter_session !== 'string' || !UUID_V4_REGEX.test(voter_session)) {
+    return validationError({ voter_session: 'Voter session must be a valid UUID v4' });
   }
 
     const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;

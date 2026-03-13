@@ -26,6 +26,8 @@ import {
   validationError,
 } from '@/lib/api';
 import type { PaginationMetadata } from '@/lib/api/types';
+import { sanitizeInput } from '@/lib/core/auth/server-actions';
+import { apiRateLimiter } from '@/lib/rate-limiting/api-rate-limiter';
 import { logger } from '@/lib/utils/logger';
 
 import type { NextRequest } from 'next/server';
@@ -540,6 +542,20 @@ export const GET = withErrorHandling(async (request: NextRequest) => {
  * }
  */
 export const POST = withErrorHandling(async (request: NextRequest) => {
+  const ip = request.headers.get('x-forwarded-for')?.split(',')[0]?.trim()
+    || request.headers.get('x-real-ip')
+    || '127.0.0.1';
+  const ua = request.headers.get('user-agent');
+  const rateLimitOptions: { maxRequests: number; windowMs: number; userAgent?: string } = {
+    maxRequests: 10,
+    windowMs: 60 * 1000,
+  };
+  if (ua) rateLimitOptions.userAgent = ua;
+  const rateLimitResult = await apiRateLimiter.checkLimit(ip, '/api/polls', rateLimitOptions);
+  if (!rateLimitResult.allowed) {
+    return errorResponse('Too many requests. Please try again later.', 429);
+  }
+
   const supabase = await getSupabaseServerClient();
   if (!supabase) {
     logger.error('Supabase not configured');
@@ -613,6 +629,15 @@ export const POST = withErrorHandling(async (request: NextRequest) => {
       poll_type,
     } = validationResult.data;
 
+    // Sanitize user-provided string fields before insertion
+    const sanitizedTitle = sanitizeInput(title.trim());
+    const sanitizedDescription = description ? sanitizeInput(description.trim()) : '';
+    const sanitizedQuestion = sanitizeInput(question.trim());
+    const sanitizedCategory = category ? sanitizeInput(category.trim()) : 'general';
+    const sanitizedTags = (tags ?? []).map((tag) => sanitizeInput(tag.trim()));
+    const sanitizedBillTitle = bill_title ? sanitizeInput(bill_title.trim()) : undefined;
+    const sanitizedBillSummary = bill_summary ? sanitizeInput(bill_summary.trim()) : undefined;
+
     const resolveVotingMethod = () => {
       const method = (metadata?.votingMethod ?? settings?.votingMethod ?? 'single').toString().toLowerCase();
       switch (method) {
@@ -648,11 +673,11 @@ export const POST = withErrorHandling(async (request: NextRequest) => {
     const endTime = endDate ? new Date(endDate).toISOString() : null;
 
     const pollData = {
-      title: title.trim(),
-      description: description?.trim() ?? '',
-      question: question.trim(),
-      category: category ?? 'general',
-      tags: tags ?? [],
+      title: sanitizedTitle,
+      description: sanitizedDescription,
+      question: sanitizedQuestion,
+      category: sanitizedCategory,
+      tags: sanitizedTags,
       created_by: user.id,
       status: 'active',
       voting_method: normalizedVotingMethod,
@@ -712,8 +737,8 @@ export const POST = withErrorHandling(async (request: NextRequest) => {
         // Representative and bill metadata
         ...(representative_id ? { representative_id } : {}),
         ...(bill_id ? { bill_id } : {}),
-        ...(bill_title ? { bill_title } : {}),
-        ...(bill_summary ? { bill_summary } : {}),
+        ...(sanitizedBillTitle ? { bill_title: sanitizedBillTitle } : {}),
+        ...(sanitizedBillSummary ? { bill_summary: sanitizedBillSummary } : {}),
         poll_type: poll_type ?? 'standard',
     };
 
@@ -730,12 +755,13 @@ export const POST = withErrorHandling(async (request: NextRequest) => {
 
     // Normalize options (Zod already validated structure, but we normalize for database)
     const normalizedOptions = options.map((option, index: number) => {
-      const value =
+      const rawValue =
         typeof option === 'string'
           ? option.trim()
           : typeof option === 'object' && option !== null && 'text' in option && typeof option.text === 'string'
             ? option.text.trim()
             : '';
+      const value = sanitizeInput(rawValue);
       return { value, order: index };
     });
 

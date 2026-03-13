@@ -174,7 +174,7 @@ export default function ShareAnalyticsPanel({ refreshInterval = 30000 }: ShareAn
         {/* Filters */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div>
-            <label className="text-sm font-medium text-gray-700 mb-2 block">Time Period</label>
+            <label className="text-sm font-medium text-foreground/80 mb-2 block">Time Period</label>
             <Select value={days.toString()} onValueChange={(value) => setDays(parseInt(value, 10))}>
               <SelectTrigger>
                 <SelectValue />
@@ -188,7 +188,7 @@ export default function ShareAnalyticsPanel({ refreshInterval = 30000 }: ShareAn
             </Select>
           </div>
           <div>
-            <label className="text-sm font-medium text-gray-700 mb-2 block">Platform</label>
+            <label className="text-sm font-medium text-foreground/80 mb-2 block">Platform</label>
             <Select value={selectedPlatform} onValueChange={setSelectedPlatform}>
               <SelectTrigger>
                 <SelectValue />
@@ -220,8 +220,8 @@ export default function ShareAnalyticsPanel({ refreshInterval = 30000 }: ShareAn
             <CardContent className="pt-6">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-sm font-medium text-gray-600 dark:text-gray-400">Total Shares</p>
-                  <p className="text-2xl font-bold text-gray-900 dark:text-gray-100">{totalShares.toLocaleString()}</p>
+                  <p className="text-sm font-medium text-muted-foreground">Total Shares</p>
+                  <p className="text-2xl font-bold text-foreground">{totalShares.toLocaleString()}</p>
                 </div>
                 <Share2 className="h-8 w-8 text-blue-600 dark:text-blue-400" />
               </div>
@@ -231,8 +231,8 @@ export default function ShareAnalyticsPanel({ refreshInterval = 30000 }: ShareAn
             <CardContent className="pt-6">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-sm font-medium text-gray-600 dark:text-gray-400">Platforms</p>
-                  <p className="text-2xl font-bold text-gray-900 dark:text-gray-100">{platformEntries.length}</p>
+                  <p className="text-sm font-medium text-muted-foreground">Platforms</p>
+                  <p className="text-2xl font-bold text-foreground">{platformEntries.length}</p>
                 </div>
                 <BarChart3 className="h-8 w-8 text-green-600 dark:text-green-400" />
               </div>
@@ -242,9 +242,9 @@ export default function ShareAnalyticsPanel({ refreshInterval = 30000 }: ShareAn
             <CardContent className="pt-6">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-sm font-medium text-gray-600 dark:text-gray-400">Top Polls</p>
-                  <p className="text-2xl font-bold text-gray-900 dark:text-gray-100">
-                    {analytics?.topPolls.length ?? 0}
+                  <p className="text-sm font-medium text-muted-foreground">Top Polls</p>
+                  <p className="text-2xl font-bold text-foreground">
+                    {analytics?.topPolls?.length ?? 0}
                   </p>
                 </div>
                 <TrendingUp className="h-8 w-8 text-purple-600 dark:text-purple-400" />
@@ -256,7 +256,7 @@ export default function ShareAnalyticsPanel({ refreshInterval = 30000 }: ShareAn
         {/* Platform Breakdown */}
         {platformEntries.length > 0 && (
           <div>
-            <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-4">Platform Breakdown</h3>
+            <h3 className="text-lg font-semibold text-foreground mb-4">Platform Breakdown</h3>
             <div className="space-y-3">
               {platformEntries.map(([platform, count]) => {
                 const percentage = totalShares > 0 ? ((count / totalShares) * 100).toFixed(1) : '0';
@@ -266,7 +266,7 @@ export default function ShareAnalyticsPanel({ refreshInterval = 30000 }: ShareAn
                       <Badge variant="outline" className="capitalize min-w-[100px]">
                         {platform}
                       </Badge>
-                      <div className="flex-1 bg-gray-200 dark:bg-gray-700 rounded-full h-2">
+                      <div className="flex-1 bg-muted rounded-full h-2">
                         <div
                           className="bg-blue-600 dark:bg-blue-500 h-2 rounded-full transition-all"
                           style={{ width: `${percentage}%` }}
@@ -274,10 +274,10 @@ export default function ShareAnalyticsPanel({ refreshInterval = 30000 }: ShareAn
                       </div>
                     </div>
                     <div className="text-right min-w-[120px]">
-                      <span className="text-sm font-semibold text-gray-900 dark:text-gray-100">
+                      <span className="text-sm font-semibold text-foreground">
                         {count.toLocaleString()}
                       </span>
-                      <span className="text-sm text-gray-600 dark:text-gray-400 ml-2">({percentage}%)</span>
+                      <span className="text-sm text-muted-foreground ml-2">({percentage}%)</span>
                     </div>
                   </div>
                 );
@@ -289,22 +289,22 @@ export default function ShareAnalyticsPanel({ refreshInterval = 30000 }: ShareAn
         {/* Top Polls */}
         {analytics && analytics.topPolls.length > 0 && (
           <div>
-            <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-4">Most Shared Polls</h3>
+            <h3 className="text-lg font-semibold text-foreground mb-4">Most Shared Polls</h3>
             <div className="space-y-2">
               {analytics.topPolls.map(({ pollId, shares }, index) => (
                 <div
                   key={pollId}
-                  className="flex items-center justify-between p-3 bg-gray-50 dark:bg-gray-800 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors border border-gray-200 dark:border-gray-700"
+                  className="flex items-center justify-between p-3 bg-muted rounded-lg hover:bg-muted/80 transition-colors border border-border"
                 >
                   <div className="flex items-center gap-3">
                     <Badge variant="secondary" className="w-8 h-8 flex items-center justify-center">
                       {index + 1}
                     </Badge>
-                    <span className="text-sm font-mono text-gray-700 dark:text-gray-300">{pollId}</span>
+                    <span className="text-sm font-mono text-foreground/80">{pollId}</span>
                   </div>
                   <div className="flex items-center gap-2">
                     <Share2 className="h-4 w-4 text-gray-500 dark:text-gray-400" />
-                    <span className="text-sm font-semibold text-gray-900 dark:text-gray-100">
+                    <span className="text-sm font-semibold text-foreground">
                       {shares.toLocaleString()}
                     </span>
                     <span className="text-xs text-gray-500 dark:text-gray-400">shares</span>

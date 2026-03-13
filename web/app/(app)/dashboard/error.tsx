@@ -12,12 +12,12 @@ export default function DashboardError({
 }) {
   return (
     <div 
-      className="min-h-screen bg-gray-50 flex items-center justify-center p-4" 
+      className="min-h-screen bg-background flex items-center justify-center p-4" 
       role="alert" 
       aria-live="assertive"
     >
       <div className="max-w-md mx-auto">
-        <div className="bg-red-50 border border-red-200 rounded-lg p-6">
+        <div className="bg-red-50 dark:bg-red-900/30 border border-red-200 dark:border-red-800 rounded-lg p-6">
           <div className="flex items-start gap-4">
             <svg 
               className="h-6 w-6 text-red-600 flex-shrink-0 mt-0.5" 
@@ -30,7 +30,7 @@ export default function DashboardError({
             </svg>
             <div className="flex-1">
               <h2 className="text-xl font-semibold text-red-900 mb-2">Dashboard Error</h2>
-              <p className="text-red-700 mb-4">
+              <p className="text-red-700 dark:text-red-300 mb-4">
                 {error.message || 'An error occurred while loading the dashboard. Please try again.'}
               </p>
               <div className="flex gap-3">
@@ -43,7 +43,7 @@ export default function DashboardError({
                 </button>
                 <Link
                   href="/feed"
-                  className="px-4 py-2 bg-white border border-red-300 text-red-700 rounded-lg hover:bg-red-50 transition-colors focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2"
+                  className="px-4 py-2 bg-card border border-red-300 dark:border-red-700 text-red-700 dark:text-red-300 rounded-lg hover:bg-red-50 dark:hover:bg-red-900/30 transition-colors focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2"
                   aria-label="Go to feed page"
                 >
                   Go to Feed

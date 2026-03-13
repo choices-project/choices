@@ -1,7 +1,7 @@
 # Security System - Comprehensive Guide
 
 **Created:** 2025-01-17  
-**Updated:** 2025-01-21  
+**Updated:** 2026-03-13  
 **Status:** ✅ Production Ready  
 **Purpose:** Complete guide to the Choices platform security model, implementation, and best practices
 
@@ -17,6 +17,23 @@ The Choices platform implements a comprehensive, multi-layered security model de
 3. **Defense in Depth** - Multiple security layers
 4. **Least Privilege** - Minimal required permissions
 5. **Transparency** - Open security practices and auditability
+
+### Recent Security Hardening (March 2026)
+
+The following security improvements were implemented across the application:
+
+- **Rate limiting** — Applied to 20+ API routes via Upstash Redis (`apiRateLimiter`): polls (create/vote), feedback, profile (all mutations), poll close/lock, push notifications, CSP reports, health ingest
+- **CSRF protection** — Double-submit token validation on the login endpoint via `validateCsrfProtection`
+- **E2E bypass hardening** — Test authentication bypasses are locked out when `NODE_ENV === 'production'`; debug headers (`X-Auth-Debug-*`) only set in non-production
+- **Input sanitization** — `sanitizeInput()` applied to all user-generated fields in poll creation (title, description, question, category, tags, options)
+- **UUID validation** — `UUID_REGEX` validation on OG image routes to prevent injection via poll IDs
+- **Webhook security** — Resend webhook endpoint rejects requests (403) when `RESEND_WEBHOOK_SECRET` is not configured
+- **API authentication** — Analytics user endpoints require session auth with self-only access (or admin override); health ingest protected with `ADMIN_MONITORING_KEY`
+- **Cookie security** — Secure flag on cookies uses `isProduction` directly, not domain string matching
+- **PWA data sanitization** — Demographics data (ageRange, educationLevel, incomeBracket, regionCode) removed from user data stored in localStorage
+- **Environment validation** — Zod-based validation module (`lib/config/env.ts`) validates all required environment variables at startup with CI-safe fallbacks
+- **Console cleanup** — All `console.log`/`console.warn`/`console.error` in production code replaced with structured `logger` utility
+- **Alert/confirm replacement** — All `window.alert()` and `window.confirm()` calls replaced with toast notifications and shadcn AlertDialog components
 
 ---
 

@@ -147,6 +147,7 @@ export default function PWAStatus({ showDetails = false, className = '' }: PWASt
         <button
           onClick={() => window.location.reload()}
           className="p-2 text-gray-400 hover:text-gray-600 transition-colors"
+          aria-label="Refresh PWA status"
           title="Refresh PWA status"
         >
           <RefreshCw className="w-4 h-4" />

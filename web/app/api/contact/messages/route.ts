@@ -58,9 +58,6 @@ type CreateMessageRequest = {
   }>;
 }
 
-// MessageResponse type reserved for future API response standardization
-// Removed unused type to fix build error - can be re-added when needed
-
 // ============================================================================
 // POST - Create New Message
 // ============================================================================

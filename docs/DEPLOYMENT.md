@@ -98,7 +98,7 @@ If you need to revert or disable a subsystem:
 Use this list **before** calling a release done. Link back to the relevant evidence (Playwright runs, docs, issues).
 
 - [ ] **Inclusive UI / A11y** — Automation (`npm run test:e2e -- --grep @axe`, navigation + analytics SR specs) green; document manual NVDA/VoiceOver smoke in a repo runbook or under `docs/archive/` as needed.
-- [ ] **Locale Coverage** — Locale-switch Playwright spec green; `npm run i18n:extract` snapshot committed; copy changes translated per `docs/archive/reference/technical/technical/i18n-workflow.md` or workflow documented in `docs/ROADMAP.md` or `docs/ROADMAP_SINGLE_SOURCE.md`.
+- [ ] **Locale Coverage** — Locale-switch Playwright spec green; `npm run i18n:extract` snapshot committed; copy changes translated per `docs/archive/reference/technical/technical/i18n-workflow.md` or workflow documented in `docs/ROADMAP.md`.
 - [ ] **Contract & Harness Parity** — `npm run test:contracts` green; any new routes documented in `docs/API/contracts.md` and `docs/archive/reference/testing/TESTING/api-contract-plan.md`; MSW fixtures updated.
 - [ ] **Documentation** — Architecture/API docs reflect new selectors, middleware, or response envelopes (`docs/STATE_MANAGEMENT.md`, `docs/API/contracts.md`, etc.).
 - [ ] **Release Notes & Comms** — `docs/archive/release-notes/CHANGELOG.md` (or relevant release note) updated; support + partner teams notified of API schema or analytics changes.
@@ -111,10 +111,10 @@ Keep this document up to date as the deployment workflow evolves. When processes
 Use this list **before** social or public outreach (e.g. announcing the repo, inviting collaborators) so the repository and app present a single, professional narrative.
 
 - [ ] **README and CONTRIBUTING** — Root README and CONTRIBUTING.md are up to date; no duplicate or broken doc links.
-- [ ] **VISION and FEATURE_STATUS** — `docs/VISION.md` and `docs/FEATURE_STATUS.md` are aligned (GA vs in-progress vs quarantined); Future Roadmap points to `docs/ROADMAP.md`.
+- [ ] **VISION and ROADMAP** — `docs/VISION.md` and `docs/ROADMAP.md` are aligned (GA vs in-progress vs quarantined).
 - [ ] **PR template** — `.github/PULL_REQUEST_TEMPLATE.md` links only to existing paths (canonical docs or `docs/archive/`).
-- [ ] **Status docs** — `docs/CURRENT_STATUS.md` and `docs/ROADMAP.md` have a concrete "Last verified" date (no TBD).
-- [ ] **Production smoke** — `npm run test:e2e:production:smoke` (or equivalent) passes; see `docs/PRODUCTION_TESTING_STATUS.md`.
+- [ ] **Status docs** — `docs/ROADMAP.md` has a concrete "Last verified" date (no TBD).
+- [ ] **Production smoke** — `npm run test:e2e:production:smoke` (or equivalent) passes; see `docs/TESTING.md` § Production Testing.
 - [ ] **Repo essentials** — SECURITY.md, CONTRIBUTING.md, and LICENSE are linked correctly from the README and present at repo root.
 
 ## Ownership & Update Cadence

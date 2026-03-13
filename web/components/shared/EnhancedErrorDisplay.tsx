@@ -11,6 +11,8 @@ import { AlertCircle, RefreshCw, ArrowLeft, HelpCircle } from 'lucide-react';
 import Link from 'next/link';
 import React from 'react';
 
+import { Button } from '@/components/ui/button';
+
 export type EnhancedErrorDisplayProps = {
   /** Error title/heading */
   title?: string;
@@ -119,36 +121,38 @@ export function EnhancedErrorDisplay({
 
           <div className="flex flex-wrap gap-2 mt-4">
             {canRetry && onRetry && (
-              <button
+              <Button
+                variant="destructive"
                 onClick={onRetry}
-                className={`inline-flex items-center px-3 py-1.5 text-sm font-medium rounded ${styles.button} transition-colors focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-current`}
+                className="inline-flex items-center px-4 py-2 min-h-[44px]"
                 aria-label="Retry the operation"
               >
                 <RefreshCw className="h-4 w-4 mr-1.5" aria-hidden="true" />
                 Try Again
-              </button>
+              </Button>
             )}
 
             {primaryAction && (
               <>
                 {primaryAction.href ? (
-                  <Link
-                    href={primaryAction.href}
-                    className={`inline-flex items-center px-3 py-1.5 text-sm font-medium rounded ${styles.button} transition-colors focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-current`}
-                    aria-label={primaryAction.label}
-                  >
-                    {primaryAction.icon && <span className="mr-1.5">{primaryAction.icon}</span>}
-                    {primaryAction.label}
-                  </Link>
+                  <Button asChild>
+                    <Link
+                      href={primaryAction.href}
+                      className="inline-flex items-center px-4 py-2 min-h-[44px]"
+                      aria-label={primaryAction.label}
+                    >
+                      {primaryAction.icon && <span className="mr-1.5">{primaryAction.icon}</span>}
+                      {primaryAction.label}
+                    </Link>
+                  </Button>
                 ) : (
-                  <button
+                  <Button
                     onClick={primaryAction.onClick}
-                    className={`inline-flex items-center px-3 py-1.5 text-sm font-medium rounded ${styles.button} transition-colors focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-current`}
                     aria-label={primaryAction.label}
                   >
                     {primaryAction.icon && <span className="mr-1.5">{primaryAction.icon}</span>}
                     {primaryAction.label}
-                  </button>
+                  </Button>
                 )}
               </>
             )}
@@ -156,23 +160,26 @@ export function EnhancedErrorDisplay({
             {secondaryAction && (
               <>
                 {secondaryAction.href ? (
-                  <Link
-                    href={secondaryAction.href}
-                    className="inline-flex items-center px-3 py-1.5 text-sm font-medium text-gray-700 dark:text-gray-300 border border-gray-300 dark:border-gray-600 rounded hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-offset-2"
-                    aria-label={secondaryAction.label}
-                  >
-                    <ArrowLeft className="h-4 w-4 mr-1.5" aria-hidden="true" />
-                    {secondaryAction.label}
-                  </Link>
+                  <Button asChild variant="outline">
+                    <Link
+                      href={secondaryAction.href}
+                      className="inline-flex items-center px-4 py-2 min-h-[44px]"
+                      aria-label={secondaryAction.label}
+                    >
+                      <ArrowLeft className="h-4 w-4 mr-1.5" aria-hidden="true" />
+                      {secondaryAction.label}
+                    </Link>
+                  </Button>
                 ) : (
-                  <button
+                  <Button
+                    variant="outline"
                     onClick={secondaryAction.onClick}
-                    className="inline-flex items-center px-3 py-1.5 text-sm font-medium text-gray-700 dark:text-gray-300 border border-gray-300 dark:border-gray-600 rounded hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-offset-2"
+                    className="inline-flex items-center px-4 py-2 min-h-[44px]"
                     aria-label={secondaryAction.label}
                   >
                     <ArrowLeft className="h-4 w-4 mr-1.5" aria-hidden="true" />
                     {secondaryAction.label}
-                  </button>
+                  </Button>
                 )}
               </>
             )}

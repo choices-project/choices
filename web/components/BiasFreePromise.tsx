@@ -1,5 +1,5 @@
 
-import { motion } from 'framer-motion';
+import { motion, useReducedMotion } from 'framer-motion';
 import { 
   Shield, Users, TrendingUp, Eye, 
   Building2, Globe, Zap, CheckCircle,
@@ -22,23 +22,24 @@ type BiasFreePromiseProps = {
 }
 
 export function BiasFreePromise({ title, promises }: BiasFreePromiseProps) {
+  const shouldReduceMotion = useReducedMotion();
+  const anim = (delay = 0) => shouldReduceMotion
+    ? {}
+    : { initial: { opacity: 0, y: 20 }, animate: { opacity: 1, y: 0 }, transition: { delay } };
+
   return (
-    <div className="bg-white rounded-2xl p-8 shadow-lg border border-gray-100">
+    <div className="bg-card rounded-2xl p-8 shadow-lg border border-border">
       {/* Header */}
       <div className="text-center mb-12">
         <motion.h2 
-          className="text-3xl font-bold text-gray-900 mb-4"
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.5 }}
+          className="text-3xl font-bold text-foreground mb-4"
+          {...anim(0)}
         >
           {title}
         </motion.h2>
         <motion.p 
-          className="text-lg text-gray-600 max-w-3xl mx-auto"
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.5, delay: 0.1 }}
+          className="text-lg text-muted-foreground max-w-3xl mx-auto"
+          {...anim(0.1)}
         >
           Our platform is built on principles of transparency, data integrity, and unbiased methodology.
         </motion.p>
@@ -49,11 +50,9 @@ export function BiasFreePromise({ title, promises }: BiasFreePromiseProps) {
         {promises.map((promise: any, index: any) => (
           <motion.div
             key={index}
-            className="relative p-6 rounded-xl border-2 border-gray-100 hover:border-blue-200 transition-all duration-300 hover:shadow-lg"
-            initial={{ opacity: 0, y: 30 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.5, delay: index * 0.1 }}
-            whileHover={{ y: -5 }}
+            className="relative p-6 rounded-xl border-2 border-border hover:border-primary/30 transition-all duration-300 hover:shadow-lg"
+            {...anim(index * 0.1)}
+            {...(!shouldReduceMotion ? { whileHover: { y: -5 } } : {})}
           >
             {/* Icon */}
             <div 
@@ -66,10 +65,10 @@ export function BiasFreePromise({ title, promises }: BiasFreePromiseProps) {
             </div>
 
             {/* Content */}
-            <h3 className="text-xl font-bold text-gray-900 mb-2">
+            <h3 className="text-xl font-bold text-foreground mb-2">
               {promise.title}
             </h3>
-            <p className="text-gray-600 mb-3">
+            <p className="text-muted-foreground mb-3">
               {promise.description}
             </p>
 
@@ -80,32 +79,30 @@ export function BiasFreePromise({ title, promises }: BiasFreePromiseProps) {
 
       {/* Comparison Section */}
       <motion.div
-        className="bg-gradient-to-r from-blue-50 to-purple-50 rounded-xl p-6 border border-blue-200"
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.5, delay: 0.6 }}
+        className="bg-gradient-to-r from-muted to-muted rounded-xl p-6 border border-border"
+        {...anim(0.6)}
       >
         <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
           {/* What We Do */}
           <div>
-            <h3 className="text-lg font-bold text-gray-900 mb-4 flex items-center gap-2">
+            <h3 className="text-lg font-bold text-foreground mb-4 flex items-center gap-2">
               <CheckCircle className="h-5 w-5 text-green-600" />
               What We Actually Do
             </h3>
             <ul className="space-y-2">
-              <li className="flex items-center gap-2 text-sm text-gray-700">
+              <li className="flex items-center gap-2 text-sm text-foreground/80">
                 <Heart className="h-4 w-4 text-green-600" />
                 Community-driven question creation
               </li>
-              <li className="flex items-center gap-2 text-sm text-gray-700">
+              <li className="flex items-center gap-2 text-sm text-foreground/80">
                 <Eye className="h-4 w-4 text-green-600" />
                 Transparent demographic breakdowns
               </li>
-              <li className="flex items-center gap-2 text-sm text-gray-700">
+              <li className="flex items-center gap-2 text-sm text-foreground/80">
                 <Shield className="h-4 w-4 text-green-600" />
                 Privacy protection with encryption
               </li>
-              <li className="flex items-center gap-2 text-sm text-gray-700">
+              <li className="flex items-center gap-2 text-sm text-foreground/80">
                 <TrendingUp className="h-4 w-4 text-green-600" />
                 Real-time, unfiltered results
               </li>
@@ -114,24 +111,24 @@ export function BiasFreePromise({ title, promises }: BiasFreePromiseProps) {
 
           {/* What Others Do */}
           <div>
-            <h3 className="text-lg font-bold text-gray-900 mb-4 flex items-center gap-2">
+            <h3 className="text-lg font-bold text-foreground mb-4 flex items-center gap-2">
               <XCircle className="h-5 w-5 text-red-600" />
               What &quot;Other&quot; Sites Do
             </h3>
             <ul className="space-y-2">
-              <li className="flex items-center gap-2 text-sm text-gray-700">
+              <li className="flex items-center gap-2 text-sm text-foreground/80">
                 <Building2 className="h-4 w-4 text-red-600" />
                 Corporate-driven question creation
               </li>
-              <li className="flex items-center gap-2 text-sm text-gray-700">
+              <li className="flex items-center gap-2 text-sm text-foreground/80">
                 <Eye className="h-4 w-4 text-red-600" />
                 Obscured funding and methodology
               </li>
-              <li className="flex items-center gap-2 text-sm text-gray-700">
+              <li className="flex items-center gap-2 text-sm text-foreground/80">
                 <Zap className="h-4 w-4 text-red-600" />
                 Algorithmic result manipulation
               </li>
-              <li className="flex items-center gap-2 text-sm text-gray-700">
+              <li className="flex items-center gap-2 text-sm text-foreground/80">
                 <TrendingUp className="h-4 w-4 text-red-600" />
                 Curated data presentation
               </li>
@@ -143,9 +140,7 @@ export function BiasFreePromise({ title, promises }: BiasFreePromiseProps) {
       {/* Trust Indicators */}
       <motion.div
         className="mt-8 text-center"
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.5, delay: 0.8 }}
+        {...anim(0.8)}
       >
         <div className="inline-flex items-center gap-2 px-4 py-2 bg-green-100 text-green-800 rounded-full text-sm font-medium">
           <Shield className="h-4 w-4" />

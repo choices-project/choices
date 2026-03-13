@@ -143,7 +143,7 @@ export const DeviceList: React.FC<DeviceListProps> = ({
         aria-busy="true"
       >
         <div className="flex items-center justify-center p-8">
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500" aria-hidden="true" />
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary" aria-hidden="true" />
           <span className="ml-2">{t('common.devices.loading')}</span>
         </div>
       </div>
@@ -184,7 +184,7 @@ export const DeviceList: React.FC<DeviceListProps> = ({
         <EnhancedEmptyState
           icon={
             <svg
-              className="h-12 w-12 text-gray-400"
+              className="h-12 w-12 text-muted-foreground"
               fill="none"
               stroke="currentColor"
               viewBox="0 0 24 24"
@@ -221,7 +221,7 @@ export const DeviceList: React.FC<DeviceListProps> = ({
         {onAddDevice && (
           <button
             onClick={handleAddDevice}
-            className="flex items-center px-3 py-1 bg-blue-500 text-white rounded text-sm hover:bg-blue-600"
+            className="flex items-center px-3 py-1 bg-primary text-primary-foreground rounded text-sm hover:bg-primary/90"
             data-testid="add-device-button"
           >
             <Plus className="w-4 h-4 mr-1" />
@@ -235,7 +235,7 @@ export const DeviceList: React.FC<DeviceListProps> = ({
         {memoizedDevices.map((device) => (
           <div
             key={device.id}
-            className="flex items-center justify-between p-4 border border-gray-200 dark:border-gray-700 rounded-lg transition-colors focus-within:ring-2 focus-within:ring-blue-500 focus-within:ring-offset-2 hover:border-gray-300 dark:hover:border-gray-600"
+            className="flex items-center justify-between p-4 border border-border rounded-lg transition-colors focus-within:ring-2 focus-within:ring-primary focus-within:ring-offset-2 hover:border-border"
             data-testid="device-item"
             role="listitem"
             aria-label={`${device.name}, ${device.type}, ${device.isActive ? t('common.devices.active') : t('common.devices.inactive')}`}
@@ -246,8 +246,8 @@ export const DeviceList: React.FC<DeviceListProps> = ({
                 {getDeviceIcon(device.type)}
               </div>
               <div className="flex-1">
-                <h4 className="font-medium text-gray-900 dark:text-gray-100">{device.name}</h4>
-                <p className="text-sm text-gray-500 dark:text-gray-400">
+                <h4 className="font-medium text-foreground">{device.name}</h4>
+                <p className="text-sm text-muted-foreground">
                   {t('common.devices.lastUsed')}: {new Date(device.lastUsed).toLocaleDateString()}
                 </p>
                 {device.isActive && (
@@ -268,7 +268,7 @@ export const DeviceList: React.FC<DeviceListProps> = ({
                     e.stopPropagation()
                     handleGenerateQR(device.id)
                   }}
-                  className="p-2 text-gray-500 dark:text-gray-400 hover:text-blue-500 dark:hover:text-blue-400 hover:bg-blue-50 dark:hover:bg-blue-900/20 rounded focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition-colors"
+                  className="p-2 text-muted-foreground hover:text-primary hover:bg-primary/10 rounded focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 transition-colors"
                   aria-label={t('common.devices.generateQR', { deviceName: device.name })}
                   data-testid="qr-code-button"
                   type="button"
@@ -283,7 +283,7 @@ export const DeviceList: React.FC<DeviceListProps> = ({
                     e.stopPropagation()
                     handleRemoveDevice(device.id)
                   }}
-                  className="p-2 text-gray-500 dark:text-gray-400 hover:text-red-500 dark:hover:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 rounded focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2 transition-colors"
+                  className="p-2 text-muted-foreground hover:text-red-500 dark:hover:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 rounded focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2 transition-colors"
                   aria-label={t('common.devices.remove', { deviceName: device.name })}
                   data-testid="remove-device-button"
                   type="button"
@@ -309,17 +309,17 @@ export const DeviceList: React.FC<DeviceListProps> = ({
           }}
         >
           <div
-            className="bg-white dark:bg-gray-800 p-6 rounded-lg max-w-sm w-full mx-4 shadow-xl"
+            className="bg-card p-6 rounded-lg max-w-sm w-full mx-4 shadow-xl"
             role="dialog"
             aria-modal="true"
             aria-labelledby="qr-code-modal-title"
             aria-describedby="qr-code-modal-description"
           >
-            <h3 id="qr-code-modal-title" className="text-lg font-semibold mb-4 text-gray-900 dark:text-gray-100">
+            <h3 id="qr-code-modal-title" className="text-lg font-semibold mb-4 text-foreground">
               {t('common.devices.qrCodeTitle')}
             </h3>
-            <div className="bg-gray-100 dark:bg-gray-700 p-4 rounded text-center">
-              <div className="w-32 h-32 bg-white dark:bg-gray-800 mx-auto mb-4 flex items-center justify-center" role="img" aria-label={t('common.devices.qrCode')}>
+            <div className="bg-muted p-4 rounded text-center">
+              <div className="w-32 h-32 bg-card mx-auto mb-4 flex items-center justify-center" role="img" aria-label={t('common.devices.qrCode')}>
                 {qrCodeDataUrl ? (
                   <Image
                     src={qrCodeDataUrl}
@@ -330,18 +330,18 @@ export const DeviceList: React.FC<DeviceListProps> = ({
                     className="w-full h-full object-contain"
                   />
                 ) : (
-                  <span className="text-gray-500 dark:text-gray-400" role="status" aria-live="polite" aria-busy="true">
+                  <span className="text-muted-foreground" role="status" aria-live="polite" aria-busy="true">
                     {t('common.devices.generatingQR')}
                   </span>
                 )}
               </div>
-              <p id="qr-code-modal-description" className="text-sm text-gray-600 dark:text-gray-400">
+              <p id="qr-code-modal-description" className="text-sm text-muted-foreground">
                 {t('common.devices.qrCodeDescription')}
               </p>
             </div>
             <button
               onClick={() => setShowQRCode(null)}
-              className="mt-4 w-full px-4 py-2 bg-gray-500 dark:bg-gray-600 text-white rounded hover:bg-gray-600 dark:hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-offset-2 transition-colors"
+              className="mt-4 w-full px-4 py-2 bg-muted text-foreground rounded hover:bg-muted/80 focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 transition-colors"
               aria-label={t('common.actions.close')}
             >
               {t('common.actions.close')}

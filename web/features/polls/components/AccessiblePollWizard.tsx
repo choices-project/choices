@@ -589,17 +589,17 @@ export function AccessiblePollWizard() {
   const renderDetailsStep = () => (
     <div className="space-y-6" aria-labelledby="poll-details-heading">
       <header>
-        <h3 id="poll-details-heading" className="text-lg font-semibold text-gray-900 dark:text-gray-100">
+        <h3 id="poll-details-heading" className="text-lg font-semibold text-foreground">
           Poll details
         </h3>
-        <p className="text-sm text-gray-600 dark:text-gray-400">Describe what you want people to vote on.</p>
+        <p className="text-sm text-muted-foreground">Describe what you want people to vote on.</p>
       </header>
 
       <div>
-        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2" htmlFor="poll-title-input">
+        <label className="block text-sm font-medium text-foreground/80 mb-2" htmlFor="poll-title-input">
           Poll Title <span className="text-red-500 dark:text-red-400">*</span>
         </label>
-        <p id="poll-title-help" className="text-xs text-gray-500 dark:text-gray-400">
+        <p id="poll-title-help" className="text-xs text-muted-foreground">
           Provide a clear question voters can understand at a glance.
         </p>
         <input
@@ -608,15 +608,15 @@ export function AccessiblePollWizard() {
           value={data.title}
           onChange={(event) => handleTitleChange(event.target.value)}
           ref={registerFieldRef<HTMLInputElement>('title')}
-          className={`w-full rounded-md border bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 px-3 py-2 focus:border-transparent focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 ${
-            errors.title ? 'border-red-300 dark:border-red-600' : 'border-gray-300 dark:border-gray-600'
+          className={`w-full rounded-md border bg-card text-foreground px-3 py-2 focus:border-transparent focus:ring-2 focus:ring-primary ${
+            errors.title ? 'border-red-300 dark:border-red-600' : 'border-border'
           }`}
           placeholder="e.g., Should our town invest in renewable energy projects?"
           maxLength={200}
           aria-invalid={Boolean(errors.title)}
           aria-describedby={`poll-title-help poll-title-count${errors.title ? ' poll-title-error' : ''}`}
         />
-        <p id="poll-title-count" className="mt-1 text-sm text-gray-500 dark:text-gray-400" aria-live="polite">
+        <p id="poll-title-count" className="mt-1 text-sm text-muted-foreground" aria-live="polite">
           {data.title.length}/200 characters
         </p>
         {errors.title && (
@@ -628,10 +628,10 @@ export function AccessiblePollWizard() {
       </div>
 
       <div>
-        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2" htmlFor="poll-description-input">
+        <label className="block text-sm font-medium text-foreground/80 mb-2" htmlFor="poll-description-input">
           Description
         </label>
-        <p id="poll-description-help" className="text-xs text-gray-500 dark:text-gray-400">
+        <p id="poll-description-help" className="text-xs text-muted-foreground">
           Give voters context, background, or links that help them make an informed choice.
         </p>
         <textarea
@@ -639,8 +639,8 @@ export function AccessiblePollWizard() {
           value={data.description}
           onChange={(event) => handleDescriptionChange(event.target.value)}
           ref={registerFieldRef<HTMLTextAreaElement>('description')}
-          className={`w-full rounded-md border bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 px-3 py-2 focus:border-transparent focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 ${
-            errors.description ? 'border-red-300 dark:border-red-600' : 'border-gray-300 dark:border-gray-600'
+          className={`w-full rounded-md border bg-card text-foreground px-3 py-2 focus:border-transparent focus:ring-2 focus:ring-primary ${
+            errors.description ? 'border-red-300 dark:border-red-600' : 'border-border'
           }`}
           placeholder="Give voters helpful context to make an informed decision."
           rows={4}
@@ -648,7 +648,7 @@ export function AccessiblePollWizard() {
           aria-invalid={Boolean(errors.description)}
           aria-describedby={`poll-description-help poll-description-count${errors.description ? ' poll-description-error' : ''}`}
         />
-        <p id="poll-description-count" className="mt-1 text-sm text-gray-500 dark:text-gray-400" aria-live="polite">
+        <p id="poll-description-count" className="mt-1 text-sm text-muted-foreground" aria-live="polite">
           {data.description.length}/1000 characters
         </p>
         {errors.description && (
@@ -668,10 +668,10 @@ export function AccessiblePollWizard() {
   const renderOptionsStep = () => (
     <div className="space-y-4" aria-labelledby="poll-options-heading">
       <header>
-        <h3 id="poll-options-heading" className="text-lg font-semibold text-gray-900 dark:text-gray-100">
+        <h3 id="poll-options-heading" className="text-lg font-semibold text-foreground">
           Response options
         </h3>
-        <p className="text-sm text-gray-600 dark:text-gray-400">Provide at least two clear, concise options for voters.</p>
+        <p className="text-sm text-muted-foreground">Provide at least two clear, concise options for voters.</p>
       </header>
 
       {errors.options && (
@@ -680,7 +680,7 @@ export function AccessiblePollWizard() {
         </div>
       )}
 
-      <p id="poll-options-help" className="text-xs text-gray-500 dark:text-gray-400">
+      <p id="poll-options-help" className="text-xs text-muted-foreground">
         Keep option labels short and unique. Avoid duplicating choices.
       </p>
 
@@ -695,8 +695,8 @@ export function AccessiblePollWizard() {
                 placeholder={`Option ${index + 1}`}
                 maxLength={100}
                 ref={registerFieldRef<HTMLInputElement>(`option-${index}`)}
-                className={`flex-1 rounded-md border bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 px-3 py-2 focus:border-transparent focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 ${
-                  errors[`option-${index}`] ? 'border-red-300 dark:border-red-600' : 'border-gray-300 dark:border-gray-600'
+                className={`flex-1 rounded-md border bg-card text-foreground px-3 py-2 focus:border-transparent focus:ring-2 focus:ring-primary ${
+                  errors[`option-${index}`] ? 'border-red-300 dark:border-red-600' : 'border-border'
                 }`}
                 aria-invalid={Boolean(errors[`option-${index}`])}
                 aria-describedby={`poll-option-${index}-helper${errors[`option-${index}`] ? ` poll-option-${index}-error` : ''}`}
@@ -705,14 +705,14 @@ export function AccessiblePollWizard() {
                 <button
                   type="button"
                   onClick={() => handleRemoveOption(index)}
-                  className="rounded-md border border-gray-200 dark:border-gray-700 px-3 py-2 text-sm text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700"
+                  className="rounded-md border border-border px-3 py-2 text-sm text-muted-foreground hover:bg-muted"
                   aria-label={`Remove option ${index + 1}`}
                 >
                   Remove
                 </button>
               )}
             </div>
-            <div id={`poll-option-${index}-helper`} className="flex justify-between text-xs text-gray-500 dark:text-gray-400">
+            <div id={`poll-option-${index}-helper`} className="flex justify-between text-xs text-muted-foreground">
               <span>{option.length}/100 characters</span>
               {option.length > 80 && <span className="text-orange-500 dark:text-orange-400">Approaching limit</span>}
             </div>
@@ -725,7 +725,7 @@ export function AccessiblePollWizard() {
         ))}
       </div>
 
-      <p id="poll-options-meta" className="text-xs text-gray-500 dark:text-gray-400">
+      <p id="poll-options-meta" className="text-xs text-muted-foreground">
         {data.options.length}/{MAX_OPTIONS} options configured
       </p>
 
@@ -733,7 +733,7 @@ export function AccessiblePollWizard() {
         <button
           type="button"
           onClick={handleAddOption}
-          className="inline-flex items-center gap-2 rounded-md border border-blue-200 dark:border-blue-800 px-3 py-2 text-sm text-blue-700 dark:text-blue-300 hover:bg-blue-50 dark:hover:bg-blue-900/30"
+          className="inline-flex items-center gap-2 rounded-md border border-primary/30 px-3 py-2 text-sm text-primary hover:bg-primary/10"
           aria-describedby="poll-options-meta"
         >
           <Plus className="h-4 w-4" />
@@ -746,8 +746,8 @@ export function AccessiblePollWizard() {
   const renderAudienceStep = () => (
     <div className="space-y-6">
       <div>
-        <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100">Select a category</h3>
-        <p className="text-sm text-gray-600 dark:text-gray-400">Categories help the right audience discover your poll.</p>
+        <h3 className="text-lg font-semibold text-foreground">Select a category</h3>
+        <p className="text-sm text-muted-foreground">Categories help the right audience discover your poll.</p>
       </div>
 
       {errors.category && (
@@ -756,7 +756,7 @@ export function AccessiblePollWizard() {
         </div>
       )}
 
-      <p id="poll-category-help" className="text-xs text-gray-500 dark:text-gray-400">
+      <p id="poll-category-help" className="text-xs text-muted-foreground">
         Pick the option that best describes your topic. Only one category can be active at a time.
       </p>
       <ul className="grid gap-3 sm:grid-cols-2" aria-describedby="poll-category-help">
@@ -769,8 +769,8 @@ export function AccessiblePollWizard() {
                 onClick={() => handleCategorySelect(category.id)}
                 className={`w-full rounded-lg border p-4 text-left transition ${
                   isSelected 
-                    ? 'border-blue-500 dark:border-blue-400 bg-blue-50 dark:bg-blue-900/30' 
-                    : 'border-gray-200 dark:border-gray-700 hover:border-gray-300 dark:hover:border-gray-600 bg-white dark:bg-gray-800'
+                    ? 'border-primary bg-primary/10' 
+                    : 'border-border hover:border-border bg-card'
                 }`}
                 aria-pressed={isSelected}
                 aria-label={`Category ${category.name}`}
@@ -779,8 +779,8 @@ export function AccessiblePollWizard() {
                 <div className="text-2xl" aria-hidden="true">
                   {category.icon}
                 </div>
-                <div className="mt-2 font-medium text-gray-900 dark:text-gray-100">{category.name}</div>
-                <p id={`category-${category.id}-description`} className="text-sm text-gray-600 dark:text-gray-400">
+                <div className="mt-2 font-medium text-foreground">{category.name}</div>
+                <p id={`category-${category.id}-description`} className="text-sm text-muted-foreground">
                   {category.description}
                 </p>
               </button>
@@ -791,10 +791,10 @@ export function AccessiblePollWizard() {
 
       <div aria-labelledby="poll-tags-label">
         <div className="mb-2 flex items-center justify-between">
-          <label id="poll-tags-label" className="text-sm font-medium text-gray-700 dark:text-gray-300" htmlFor="poll-tags-input">
+          <label id="poll-tags-label" className="text-sm font-medium text-foreground/80" htmlFor="poll-tags-input">
             Tags
           </label>
-          <span className="text-xs text-gray-500 dark:text-gray-400">
+          <span className="text-xs text-muted-foreground">
             {data.tags.length}/5 selected
           </span>
         </div>
@@ -819,7 +819,7 @@ export function AccessiblePollWizard() {
             }}
             placeholder="Add a tag (e.g., climate, budget)"
             maxLength={MAX_TAG_LENGTH}
-            className="flex-1 rounded-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 px-3 py-2 focus:border-transparent focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400"
+            className="flex-1 rounded-md border border-border bg-card text-foreground px-3 py-2 focus:border-transparent focus:ring-2 focus:ring-primary"
             ref={registerFieldRef<HTMLInputElement>('tagInput')}
             aria-describedby={`poll-tags-help poll-tags-limit${errors.tags ? ' poll-tags-error' : ''}`}
             aria-invalid={Boolean(errors.tags)}
@@ -834,16 +834,16 @@ export function AccessiblePollWizard() {
             type="button"
             onClick={handleAddTag}
             disabled={!newTag.trim() || data.tags.length >= 5}
-            className="rounded-md bg-blue-600 dark:bg-blue-500 px-3 py-2 text-sm text-white hover:bg-blue-700 dark:hover:bg-blue-600 disabled:opacity-50"
+            className="rounded-md bg-primary px-3 py-2 text-sm text-primary-foreground hover:bg-primary/90 disabled:opacity-50"
             aria-describedby="poll-tags-limit"
           >
             Add
           </button>
         </div>
-        <p id="poll-tags-help" className="mt-1 text-xs text-gray-500 dark:text-gray-400">
+        <p id="poll-tags-help" className="mt-1 text-xs text-muted-foreground">
           Tags help people discover your poll. Use up to five keywords.
         </p>
-        <div id="poll-tags-limit" className="mt-1 text-xs text-gray-500 dark:text-gray-400">
+        <div id="poll-tags-limit" className="mt-1 text-xs text-muted-foreground">
           {newTag.length}/{MAX_TAG_LENGTH} characters — {data.tags.length}/5 selected
         </div>
 
@@ -852,13 +852,13 @@ export function AccessiblePollWizard() {
             {data.tags.map((tag) => (
               <span
                 key={tag}
-                className="inline-flex items-center gap-1 rounded-full bg-blue-100 dark:bg-blue-900/50 px-2 py-1 text-sm text-blue-800 dark:text-blue-300"
+                className="inline-flex items-center gap-1 rounded-full bg-primary/20 px-2 py-1 text-sm text-primary"
               >
                 {tag}
                 <button
                   type="button"
                   onClick={() => handleRemoveTag(tag)}
-                  className="text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-200"
+                  className="text-primary hover:text-primary/80"
                   aria-label={`Remove tag ${tag}`}
                 >
                   <X className="h-3 w-3" />
@@ -873,19 +873,19 @@ export function AccessiblePollWizard() {
 
   const renderReviewStep = () => (
     <div className="space-y-6">
-      <section className="space-y-4 rounded-lg border border-gray-200 dark:border-gray-700 p-4 bg-white dark:bg-gray-800" aria-labelledby="poll-settings-heading">
+      <section className="space-y-4 rounded-lg border border-border p-4 bg-card" aria-labelledby="poll-settings-heading">
         <header>
-          <h3 id="poll-settings-heading" className="text-lg font-semibold text-gray-900 dark:text-gray-100">Voting & privacy settings</h3>
-          <p className="text-sm text-gray-600 dark:text-gray-400">Decide how people participate and what they can see.</p>
+          <h3 id="poll-settings-heading" className="text-lg font-semibold text-foreground">Voting & privacy settings</h3>
+          <p className="text-sm text-muted-foreground">Decide how people participate and what they can see.</p>
         </header>
 
         <div className="grid gap-4 sm:grid-cols-2">
-          <label className="flex flex-col gap-2 text-sm text-gray-700 dark:text-gray-300">
+          <label className="flex flex-col gap-2 text-sm text-foreground/80">
             Privacy level
             <select
               value={data.settings.privacyLevel}
               onChange={(event) => handlePrivacyLevelChange(event.target.value)}
-              className="rounded-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 px-3 py-2 focus:border-transparent focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400"
+              className="rounded-md border border-border bg-card text-foreground px-3 py-2 focus:border-transparent focus:ring-2 focus:ring-primary"
               ref={registerFieldRef<HTMLSelectElement>('privacyLevel')}
               aria-invalid={Boolean(errors.privacyLevel)}
             >
@@ -900,12 +900,12 @@ export function AccessiblePollWizard() {
             )}
           </label>
 
-          <label className="flex flex-col gap-2 text-sm text-gray-700 dark:text-gray-300">
+          <label className="flex flex-col gap-2 text-sm text-foreground/80">
             Voting method
             <select
               value={data.settings.votingMethod}
               onChange={(event) => handleVotingMethodChange(event.target.value)}
-              className="rounded-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 px-3 py-2 focus:border-transparent focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400"
+              className="rounded-md border border-border bg-card text-foreground px-3 py-2 focus:border-transparent focus:ring-2 focus:ring-primary"
             >
               <option value="single">Single choice</option>
               <option value="multiple">Multiple choice</option>
@@ -922,7 +922,7 @@ export function AccessiblePollWizard() {
               <label
                 key={key}
                 htmlFor={inputId}
-                className="flex items-center justify-between rounded-md border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 px-3 py-2 text-sm text-gray-700 dark:text-gray-300"
+                className="flex items-center justify-between rounded-md border border-border bg-card px-3 py-2 text-sm text-foreground/80"
               >
                 <span>{label}</span>
                 <input
@@ -940,33 +940,33 @@ export function AccessiblePollWizard() {
         </div>
       </section>
 
-      <section className="rounded-lg border border-gray-200 dark:border-gray-700 p-4 bg-white dark:bg-gray-800" aria-labelledby="poll-preview-heading">
-        <h3 id="poll-preview-heading" className="text-lg font-semibold text-gray-900 dark:text-gray-100">Preview</h3>
-        <p className="text-sm text-gray-600 dark:text-gray-400">This is what voters will see.</p>
+      <section className="rounded-lg border border-border p-4 bg-card" aria-labelledby="poll-preview-heading">
+        <h3 id="poll-preview-heading" className="text-lg font-semibold text-foreground">Preview</h3>
+        <p className="text-sm text-muted-foreground">This is what voters will see.</p>
 
         <div className="mt-4 space-y-3">
           <div>
-            <h4 className="text-xl font-semibold text-gray-900 dark:text-gray-100">{data.title || 'Untitled poll'}</h4>
-            <p className="mt-1 text-sm text-gray-600 dark:text-gray-400">{data.description || 'Add context to help voters decide.'}</p>
+            <h4 className="text-xl font-semibold text-foreground">{data.title || 'Untitled poll'}</h4>
+            <p className="mt-1 text-sm text-muted-foreground">{data.description || 'Add context to help voters decide.'}</p>
           </div>
 
           <div className="space-y-2" aria-label="Preview options">
             {data.options
               .filter((option) => option.trim().length > 0)
               .map((option, index) => (
-                <div key={`preview-option-${index}`} className="flex items-center gap-2 text-sm text-gray-700 dark:text-gray-300">
-                  <input type="radio" disabled className="text-blue-600 dark:text-blue-400 focus:ring-0" aria-hidden="true" />
+                <div key={`preview-option-${index}`} className="flex items-center gap-2 text-sm text-foreground/80">
+                  <input type="radio" disabled className="text-primary focus:ring-0" aria-hidden="true" />
                   <span>{option}</span>
                 </div>
               ))}
           </div>
 
-          <div className="flex flex-wrap gap-2 text-xs text-gray-600 dark:text-gray-400">
+          <div className="flex flex-wrap gap-2 text-xs text-muted-foreground">
             {data.category && (
-              <span className="rounded-full bg-gray-100 dark:bg-gray-700 px-2 py-1 text-gray-800 dark:text-gray-200">#{data.category}</span>
+              <span className="rounded-full bg-muted px-2 py-1 text-foreground">#{data.category}</span>
             )}
             {data.tags.map((tag) => (
-              <span key={tag} className="rounded-full bg-blue-100 dark:bg-blue-900/50 px-2 py-1 text-blue-700 dark:text-blue-300">
+              <span key={tag} className="rounded-full bg-primary/20 px-2 py-1 text-primary">
                 #{tag}
               </span>
             ))}
@@ -1004,22 +1004,22 @@ export function AccessiblePollWizard() {
 
       <a
         href="#poll-step-content"
-        className="sr-only focus:not-sr-only focus:absolute focus:top-4 focus:left-4 focus:z-50 focus:rounded focus:bg-blue-600 focus:px-4 focus:py-2 focus:text-white"
+        className="sr-only focus:not-sr-only focus:absolute focus:top-4 focus:left-4 focus:z-50 focus:rounded focus:bg-primary focus:px-4 focus:py-2 focus:text-primary-foreground"
       >
         Skip to current step
       </a>
 
       <main
         id="accessible-poll-main"
-        className="min-h-screen bg-gray-50 dark:bg-gray-900 py-10"
+        className="min-h-screen bg-background py-10"
         aria-labelledby="poll-wizard-title"
       >
         <div className="mx-auto max-w-4xl px-4">
           <header className="mb-8 space-y-2">
-            <h1 id="poll-wizard-title" className="text-3xl font-bold text-gray-900 dark:text-gray-100">
+            <h1 id="poll-wizard-title" className="text-3xl font-bold text-foreground">
               Create a new poll
             </h1>
-            <p className="text-gray-600 dark:text-gray-400">Walk through the steps to shape your question, options, and audience.</p>
+            <p className="text-muted-foreground">Walk through the steps to shape your question, options, and audience.</p>
           </header>
 
           {submissionResult && submissionResult.success && (
@@ -1039,15 +1039,15 @@ export function AccessiblePollWizard() {
           )}
 
           <section className="mb-8" aria-labelledby="poll-progress-heading">
-            <div className="flex items-center justify-between text-sm text-gray-600 dark:text-gray-400">
+            <div className="flex items-center justify-between text-sm text-muted-foreground">
               <span id="poll-progress-heading">
                 Step {currentStep + 1} of {totalSteps}
               </span>
               <span>{progressPercent}% complete</span>
             </div>
-            <div className="mt-2 h-2 w-full overflow-hidden rounded-full bg-gray-200 dark:bg-gray-700">
+            <div className="mt-2 h-2 w-full overflow-hidden rounded-full bg-muted">
               <div
-                className="h-full rounded-full bg-blue-500 dark:bg-blue-600 transition-all"
+                className="h-full rounded-full bg-primary transition-all"
                 role="progressbar"
                 aria-labelledby="poll-progress-heading"
                 aria-valuenow={progressPercent}
@@ -1064,10 +1064,10 @@ export function AccessiblePollWizard() {
                     <span
                       className={`flex items-center gap-2 rounded-full border px-3 py-1 text-sm ${
                         step.isCurrent
-                          ? 'border-blue-500 dark:border-blue-400 bg-blue-50 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300'
+                          ? 'border-primary bg-primary/10 text-primary'
                           : step.isCompleted
                           ? 'border-green-500 dark:border-green-400 bg-green-50 dark:bg-green-900/30 text-green-700 dark:text-green-300'
-                          : 'border-gray-200 dark:border-gray-700 text-gray-600 dark:text-gray-400'
+                          : 'border-border text-muted-foreground'
                       }`}
                       aria-current={step.isCurrent ? 'step' : undefined}
                     >
@@ -1088,20 +1088,20 @@ export function AccessiblePollWizard() {
 
           {currentTip && (
             <aside
-              className="mb-6 flex items-start gap-3 rounded-lg border border-blue-100 dark:border-blue-900 bg-blue-50 dark:bg-blue-900/30 p-4 text-sm text-blue-900 dark:text-blue-200"
+              className="mb-6 flex items-start gap-3 rounded-lg border border-primary/40 bg-primary/10 p-4 text-sm text-primary"
               role="note"
               aria-live="polite"
             >
-              <Lightbulb className="mt-0.5 h-5 w-5 flex-shrink-0 text-blue-500 dark:text-blue-400" aria-hidden="true" />
+              <Lightbulb className="mt-0.5 h-5 w-5 flex-shrink-0 text-primary" aria-hidden="true" />
               <div>
                 <p className="font-semibold">{currentTip.heading}</p>
-                <p className="mt-1 text-blue-800 dark:text-blue-300">{currentTip.body}</p>
+                <p className="mt-1 text-primary">{currentTip.body}</p>
               </div>
             </aside>
           )}
 
           <section
-            className="mb-8 rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 p-6 shadow-sm"
+            className="mb-8 rounded-lg border border-border bg-card p-6 shadow-sm"
             aria-labelledby="poll-step-heading"
             id="poll-step-content"
           >
@@ -1129,7 +1129,7 @@ export function AccessiblePollWizard() {
                 goToPreviousStep();
               }}
               disabled={!canGoBack || isLoading}
-              className="border-gray-300 dark:border-gray-600 text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 disabled:opacity-50"
+              className="border-border text-muted-foreground hover:bg-muted disabled:opacity-50"
             >
               Previous
             </Button>
@@ -1141,7 +1141,7 @@ export function AccessiblePollWizard() {
                   onClick={handleSubmit}
                   disabled={!canProceed || isLoading}
                   ref={registerFieldRef<HTMLButtonElement>('submit')}
-                  className="bg-blue-600 text-white hover:bg-blue-700 disabled:opacity-50"
+                  className="bg-primary text-primary-foreground hover:bg-primary/90 disabled:opacity-50"
                 >
                   {isLoading ? 'Publishing…' : 'Publish poll'}
                 </Button>
@@ -1153,7 +1153,7 @@ export function AccessiblePollWizard() {
                     goToNextStep();
                   }}
                   disabled={!canProceed || isLoading}
-                  className="bg-blue-600 text-white hover:bg-blue-700 disabled:opacity-50"
+                  className="bg-primary text-primary-foreground hover:bg-primary/90 disabled:opacity-50"
                 >
                   Next
                 </Button>
@@ -1184,7 +1184,7 @@ export function AccessiblePollWizard() {
 
           <div className="space-y-4">
             <div className="space-y-2">
-              <label className="text-sm font-medium text-gray-700 dark:text-gray-300" htmlFor="share-link-input">
+              <label className="text-sm font-medium text-foreground/80" htmlFor="share-link-input">
                 Share link
               </label>
               <div className="flex gap-2">
@@ -1195,7 +1195,7 @@ export function AccessiblePollWizard() {
               </div>
             </div>
 
-            <div className="space-y-1 text-sm text-gray-600 dark:text-gray-400">
+            <div className="space-y-1 text-sm text-muted-foreground">
               <p>
                 Visibility: <strong>{shareInfo?.privacyLevel ?? 'public'}</strong>
               </p>

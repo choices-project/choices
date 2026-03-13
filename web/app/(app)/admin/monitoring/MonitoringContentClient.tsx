@@ -105,7 +105,7 @@ export function MonitoringContentClient({
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-8">
       <div className="flex items-center justify-between">
-        <h1 className="text-2xl font-semibold text-gray-900 dark:text-gray-100">
+        <h1 className="text-2xl font-semibold text-foreground">
           Security & System Monitoring
         </h1>
         <Button
@@ -121,15 +121,15 @@ export function MonitoringContentClient({
 
       {/* System Health Section */}
       {(healthLoading && !health) ? (
-        <section className="rounded-lg border border-gray-200 dark:border-gray-700 p-4 bg-gray-50 dark:bg-gray-800">
+        <section className="rounded-lg border border-border p-4 bg-muted">
           <Skeleton className="h-32 w-full" />
         </section>
       ) : health && (
-        <section className="rounded-lg border border-gray-200 dark:border-gray-700 p-4 bg-gray-50 dark:bg-gray-800">
-          <h2 className="text-lg font-semibold mb-4 text-gray-900 dark:text-gray-100">System Health</h2>
+        <section className="rounded-lg border border-border p-4 bg-muted">
+          <h2 className="text-lg font-semibold mb-4 text-foreground">System Health</h2>
           <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-4">
-            <div className="rounded-lg border border-gray-200 dark:border-gray-700 p-3 bg-white dark:bg-gray-900">
-              <div className="text-xs text-gray-500 dark:text-gray-400">Overall Status</div>
+            <div className="rounded-lg border border-border p-3 bg-background">
+              <div className="text-xs text-muted-foreground">Overall Status</div>
               <div className={`text-2xl font-bold ${
                 health.status === 'healthy' ? 'text-green-600 dark:text-green-400' :
                 health.status === 'degraded' ? 'text-yellow-600 dark:text-yellow-400' : 'text-red-600 dark:text-red-400'
@@ -137,33 +137,33 @@ export function MonitoringContentClient({
                 {health.status?.toUpperCase() ?? 'UNKNOWN'}
               </div>
             </div>
-            <div className="rounded-lg border border-gray-200 dark:border-gray-700 p-3 bg-white dark:bg-gray-900">
-              <div className="text-xs text-gray-500 dark:text-gray-400">Database</div>
+            <div className="rounded-lg border border-border p-3 bg-background">
+              <div className="text-xs text-muted-foreground">Database</div>
               <div className={`text-2xl font-bold ${
                 health.checks?.database?.status === 'healthy' ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400'
               }`}>
                 {health.checks?.database?.status?.toUpperCase() ?? 'UNKNOWN'}
               </div>
               {health.checks?.database?.responseTime && (
-                <div className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+                <div className="text-xs text-muted-foreground mt-1">
                   {health.checks.database.responseTime}ms
                 </div>
               )}
             </div>
-            <div className="rounded-lg border border-gray-200 dark:border-gray-700 p-3 bg-white dark:bg-gray-900">
-              <div className="text-xs text-gray-500 dark:text-gray-400">Supabase</div>
+            <div className="rounded-lg border border-border p-3 bg-background">
+              <div className="text-xs text-muted-foreground">Supabase</div>
               <div className={`text-2xl font-bold ${
                 health.checks?.supabase?.status === 'healthy' ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400'
               }`}>
                 {health.checks?.supabase?.status?.toUpperCase() ?? 'UNKNOWN'}
               </div>
             </div>
-            <div className="rounded-lg border border-gray-200 dark:border-gray-700 p-3 bg-white dark:bg-gray-900">
-              <div className="text-xs text-gray-500 dark:text-gray-400">Memory Usage</div>
-              <div className="text-2xl font-bold text-gray-900 dark:text-gray-100">
+            <div className="rounded-lg border border-border p-3 bg-background">
+              <div className="text-xs text-muted-foreground">Memory Usage</div>
+              <div className="text-2xl font-bold text-foreground">
                 {health.system?.memory?.used ?? 0}MB
               </div>
-              <div className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+              <div className="text-xs text-muted-foreground mt-1">
                 of {health.system?.memory?.total ?? 0}MB
               </div>
             </div>
@@ -197,38 +197,38 @@ export function MonitoringContentClient({
         </section>
       ) : (
         <section className="grid grid-cols-1 md:grid-cols-3 gap-4">
-          <div className="rounded-lg border border-gray-200 dark:border-gray-700 p-4 bg-white dark:bg-gray-900">
-            <div className="text-sm text-gray-500 dark:text-gray-400">Total Violations</div>
-            <div className="text-3xl font-bold text-gray-900 dark:text-gray-100">{data?.metrics?.totalViolations ?? 0}</div>
+          <div className="rounded-lg border border-border p-4 bg-background">
+            <div className="text-sm text-muted-foreground">Total Violations</div>
+            <div className="text-3xl font-bold text-foreground">{data?.metrics?.totalViolations ?? 0}</div>
           </div>
-          <div className="rounded-lg border border-gray-200 dark:border-gray-700 p-4 bg-white dark:bg-gray-900">
-            <div className="text-sm text-gray-500 dark:text-gray-400">Violations (Last Hour)</div>
-            <div className="text-3xl font-bold text-gray-900 dark:text-gray-100">{data?.metrics?.violationsLastHour ?? 0}</div>
+          <div className="rounded-lg border border-border p-4 bg-background">
+            <div className="text-sm text-muted-foreground">Violations (Last Hour)</div>
+            <div className="text-3xl font-bold text-foreground">{data?.metrics?.violationsLastHour ?? 0}</div>
           </div>
-          <div className="rounded-lg border border-gray-200 dark:border-gray-700 p-4 bg-white dark:bg-gray-900">
-            <div className="text-sm text-gray-500 dark:text-gray-400">Violations (Last 24h)</div>
-            <div className="text-3xl font-bold text-gray-900 dark:text-gray-100">{data?.metrics?.violationsLast24Hours ?? 0}</div>
+          <div className="rounded-lg border border-border p-4 bg-background">
+            <div className="text-sm text-muted-foreground">Violations (Last 24h)</div>
+            <div className="text-3xl font-bold text-foreground">{data?.metrics?.violationsLast24Hours ?? 0}</div>
           </div>
         </section>
       )}
 
       {/* Top IPs Section */}
       {monitoringLoading && !data ? (
-        <section className="rounded-lg border border-gray-200 dark:border-gray-700 p-4 bg-white dark:bg-gray-900">
+        <section className="rounded-lg border border-border p-4 bg-background">
           <Skeleton className="h-32 w-full" />
         </section>
       ) : (
-        <section className="rounded-lg border border-gray-200 dark:border-gray-700 p-4 bg-white dark:bg-gray-900">
-          <h2 className="text-lg font-semibold mb-2 text-gray-900 dark:text-gray-100">Top IPs</h2>
-          <ul className="divide-y divide-gray-200 dark:divide-gray-700">
+        <section className="rounded-lg border border-border p-4 bg-background">
+          <h2 className="text-lg font-semibold mb-2 text-foreground">Top IPs</h2>
+          <ul className="divide-y divide-border">
             {(data?.metrics?.topViolatingIPs ?? []).map((item: { ip: string; count: number }) => (
               <li key={item.ip} className="py-2 flex items-center justify-between">
-                <span className="font-mono text-gray-900 dark:text-gray-100">{item.ip}</span>
-                <span className="text-sm text-gray-600 dark:text-gray-400">{item.count}</span>
+                <span className="font-mono text-foreground">{item.ip}</span>
+                <span className="text-sm text-muted-foreground">{item.count}</span>
               </li>
             ))}
             {(!data?.metrics?.topViolatingIPs || data.metrics.topViolatingIPs.length === 0) && (
-              <li className="py-4 text-sm text-gray-500 dark:text-gray-400 text-center">No violations recorded</li>
+              <li className="py-4 text-sm text-muted-foreground text-center">No violations recorded</li>
             )}
           </ul>
         </section>
@@ -236,12 +236,12 @@ export function MonitoringContentClient({
 
       {/* Violations Trend Section */}
       {monitoringLoading && !data ? (
-        <section className="rounded-lg border border-gray-200 dark:border-gray-700 p-4 bg-white dark:bg-gray-900">
+        <section className="rounded-lg border border-border p-4 bg-background">
           <Skeleton className="h-32 w-full" />
         </section>
       ) : (
-        <section className="rounded-lg border border-gray-200 dark:border-gray-700 p-4 bg-white dark:bg-gray-900">
-          <h2 className="text-lg font-semibold mb-2 text-gray-900 dark:text-gray-100">Violations Trend</h2>
+        <section className="rounded-lg border border-border p-4 bg-background">
+          <h2 className="text-lg font-semibold mb-2 text-foreground">Violations Trend</h2>
           <div className="flex items-end gap-1 h-20">
             {bucketValues.map((v, i) => (
               <div
@@ -252,14 +252,14 @@ export function MonitoringContentClient({
               />
             ))}
           </div>
-          <div className="mt-2 text-xs text-gray-500 dark:text-gray-400">
+          <div className="mt-2 text-xs text-muted-foreground">
             Showing {range === '1h' ? '10-minute' : 'hourly'} buckets for {range}
           </div>
         </section>
       )}
 
       {/* Filters and Violations by Endpoint Section */}
-      <section className="rounded-lg border border-gray-200 dark:border-gray-700 p-4 bg-white dark:bg-gray-900">
+      <section className="rounded-lg border border-border p-4 bg-background">
         <form
           className="flex flex-wrap items-end gap-3 mb-4"
           action=""
@@ -275,14 +275,14 @@ export function MonitoringContentClient({
           }}
         >
           <div>
-            <label htmlFor="range" className="block text-xs text-gray-500 dark:text-gray-400 mb-1">
+            <label htmlFor="range" className="block text-xs text-muted-foreground mb-1">
               Timeframe
             </label>
             <select
               id="range"
               name="range"
               defaultValue={range}
-              className="border border-gray-300 dark:border-gray-600 rounded px-2 py-1 text-sm bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100"
+              className="border border-border rounded px-2 py-1 text-sm bg-card text-foreground"
             >
               <option value="1h">Last hour</option>
               <option value="24h">Last 24h</option>
@@ -290,7 +290,7 @@ export function MonitoringContentClient({
             </select>
           </div>
           <div>
-            <label htmlFor="endpoint" className="block text-xs text-gray-500 dark:text-gray-400 mb-1">
+            <label htmlFor="endpoint" className="block text-xs text-muted-foreground mb-1">
               Endpoint
             </label>
             <input
@@ -298,36 +298,36 @@ export function MonitoringContentClient({
               name="endpoint"
               defaultValue={endpointFilter}
               placeholder="/api/feeds"
-              className="border border-gray-300 dark:border-gray-600 rounded px-2 py-1 text-sm min-w-[200px] bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 placeholder-gray-400 dark:placeholder-gray-500"
+              className="border border-border rounded px-2 py-1 text-sm min-w-[200px] bg-card text-foreground placeholder-gray-400 dark:placeholder-gray-500"
             />
           </div>
           <div>
             <button
               type="submit"
-              className="px-3 py-1 rounded border border-gray-300 dark:border-gray-600 text-xs bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
+              className="px-3 py-1 rounded border border-border text-xs bg-card text-foreground hover:bg-muted transition-colors"
             >
               Apply
             </button>
           </div>
         </form>
-        <h2 className="text-lg font-semibold mb-2 text-gray-900 dark:text-gray-100">Violations by Endpoint</h2>
+        <h2 className="text-lg font-semibold mb-2 text-foreground">Violations by Endpoint</h2>
         {monitoringLoading && !data ? (
           <Skeleton className="h-48 w-full" />
         ) : (
-          <ul className="divide-y divide-gray-200 dark:divide-gray-700">
+          <ul className="divide-y divide-border">
             {Object.entries(data?.metrics?.violationsByEndpoint ?? {})
               .filter(([endpoint]) => !endpointFilter || endpoint === endpointFilter)
               .map(([endpoint, count]) => {
                 const violationCount = typeof count === 'number' ? count : 0;
                 return (
                   <li key={endpoint} className="py-2 flex items-center justify-between">
-                    <span className="font-mono text-gray-900 dark:text-gray-100">{endpoint}</span>
-                    <span className="text-sm text-gray-600 dark:text-gray-400">{violationCount}</span>
+                    <span className="font-mono text-foreground">{endpoint}</span>
+                    <span className="text-sm text-muted-foreground">{violationCount}</span>
                   </li>
                 );
               })}
             {(!data?.metrics?.violationsByEndpoint || Object.keys(data.metrics.violationsByEndpoint).length === 0) && (
-              <li className="py-4 text-sm text-gray-500 dark:text-gray-400 text-center">No violations recorded</li>
+              <li className="py-4 text-sm text-muted-foreground text-center">No violations recorded</li>
             )}
           </ul>
         )}
@@ -335,15 +335,15 @@ export function MonitoringContentClient({
 
       {/* System Performance Metrics */}
       {health?.system && (
-        <section className="rounded-lg border border-gray-200 dark:border-gray-700 p-4 bg-white dark:bg-gray-900">
-          <h2 className="text-lg font-semibold mb-4 text-gray-900 dark:text-gray-100">System Performance</h2>
+        <section className="rounded-lg border border-border p-4 bg-background">
+          <h2 className="text-lg font-semibold mb-4 text-foreground">System Performance</h2>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             <div>
-              <div className="text-sm text-gray-500 dark:text-gray-400 mb-1">Memory Usage</div>
-              <div className="text-lg font-semibold text-gray-900 dark:text-gray-100">
+              <div className="text-sm text-muted-foreground mb-1">Memory Usage</div>
+              <div className="text-lg font-semibold text-foreground">
                 {health.system.memory?.used ?? 0} MB / {health.system.memory?.total ?? 0} MB
               </div>
-              <div className="mt-2 w-full bg-gray-200 dark:bg-gray-700 rounded-full h-2">
+              <div className="mt-2 w-full bg-muted rounded-full h-2">
                 <div
                   className="bg-blue-500 dark:bg-blue-600 h-2 rounded-full transition-all duration-300"
                   style={{
@@ -357,45 +357,45 @@ export function MonitoringContentClient({
               </div>
             </div>
             <div>
-              <div className="text-sm text-gray-500 dark:text-gray-400 mb-1">Uptime</div>
-              <div className="text-lg font-semibold text-gray-900 dark:text-gray-100">
+              <div className="text-sm text-muted-foreground mb-1">Uptime</div>
+              <div className="text-lg font-semibold text-foreground">
                 {health.uptime ? `${Math.floor(health.uptime / 60)}m ${Math.floor(health.uptime % 60)}s` : 'N/A'}
               </div>
             </div>
             <div>
-              <div className="text-sm text-gray-500 dark:text-gray-400 mb-1">Environment</div>
-              <div className="text-lg font-semibold text-gray-900 dark:text-gray-100">{health.environment ?? 'unknown'}</div>
+              <div className="text-sm text-muted-foreground mb-1">Environment</div>
+              <div className="text-lg font-semibold text-foreground">{health.environment ?? 'unknown'}</div>
             </div>
           </div>
         </section>
       )}
 
       {/* Recent Violations Table */}
-      <section className="rounded-lg border border-gray-200 dark:border-gray-700 p-4 bg-white dark:bg-gray-900">
-        <h2 className="text-lg font-semibold mb-3 text-gray-900 dark:text-gray-100">Recent Violations (last 24h)</h2>
+      <section className="rounded-lg border border-border p-4 bg-background">
+        <h2 className="text-lg font-semibold mb-3 text-foreground">Recent Violations (last 24h)</h2>
         {monitoringLoading && !data ? (
           <Skeleton className="h-64 w-full" />
         ) : (
           <div className="overflow-x-auto">
             <table className="min-w-full text-sm">
               <thead>
-                <tr className="text-left border-b border-gray-200 dark:border-gray-700">
-                  <th className="py-2 pr-4 text-gray-900 dark:text-gray-100">Time</th>
-                  <th className="py-2 pr-4 text-gray-900 dark:text-gray-100">IP</th>
-                  <th className="py-2 pr-4 text-gray-900 dark:text-gray-100">Endpoint</th>
-                  <th className="py-2 pr-4 text-gray-900 dark:text-gray-100">Count</th>
-                  <th className="py-2 pr-4 text-gray-900 dark:text-gray-100">Action</th>
+                <tr className="text-left border-b border-border">
+                  <th className="py-2 pr-4 text-foreground">Time</th>
+                  <th className="py-2 pr-4 text-foreground">IP</th>
+                  <th className="py-2 pr-4 text-foreground">Endpoint</th>
+                  <th className="py-2 pr-4 text-foreground">Count</th>
+                  <th className="py-2 pr-4 text-foreground">Action</th>
                 </tr>
               </thead>
               <tbody>
                 {recent.slice(0, 50).map((v: any, idx: number) => (
-                  <tr key={idx} className="border-t border-gray-200 dark:border-gray-700">
-                    <td className="py-2 pr-4 text-gray-900 dark:text-gray-100">
+                  <tr key={idx} className="border-t border-border">
+                    <td className="py-2 pr-4 text-foreground">
                       {new Date(v.timestamp).toLocaleString()}
                     </td>
-                    <td className="py-2 pr-4 font-mono text-gray-900 dark:text-gray-100">{v.ip}</td>
-                    <td className="py-2 pr-4 font-mono text-gray-900 dark:text-gray-100">{v.endpoint}</td>
-                    <td className="py-2 pr-4 text-gray-900 dark:text-gray-100">{v.count}</td>
+                    <td className="py-2 pr-4 font-mono text-foreground">{v.ip}</td>
+                    <td className="py-2 pr-4 font-mono text-foreground">{v.endpoint}</td>
+                    <td className="py-2 pr-4 text-foreground">{v.count}</td>
                     <td className="py-2 pr-4">
                       <ClearLimitButton
                         ip={v.ip}
@@ -407,7 +407,7 @@ export function MonitoringContentClient({
                 ))}
                 {recent.length === 0 && (
                   <tr>
-                    <td colSpan={5} className="py-8 text-center text-sm text-gray-500 dark:text-gray-400">
+                    <td colSpan={5} className="py-8 text-center text-sm text-muted-foreground">
                       No recent violations recorded
                     </td>
                   </tr>

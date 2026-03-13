@@ -182,7 +182,7 @@ export function PasskeyRegister({
             <AlertCircle className="h-5 w-5 text-red-500 dark:text-red-400" aria-hidden="true" />
             <span>WebAuthn Not Supported</span>
           </CardTitle>
-          <CardDescription className="text-gray-600 dark:text-gray-400">
+          <CardDescription className="text-muted-foreground">
             Your browser does not support WebAuthn. Please use a modern browser or try a different authentication method.
           </CardDescription>
         </CardHeader>
@@ -194,10 +194,10 @@ export function PasskeyRegister({
     <Card className={className}>
       <CardHeader>
         <CardTitle className="flex items-center space-x-2">
-          <Fingerprint className="h-5 w-5 text-blue-600 dark:text-blue-400" aria-hidden="true" />
+          <Fingerprint className="h-5 w-5 text-primary" aria-hidden="true" />
           <span>Register Passkey</span>
         </CardTitle>
-        <CardDescription className="text-gray-600 dark:text-gray-400">
+        <CardDescription className="text-muted-foreground">
           Create a secure passkey using your device&apos;s biometric authentication or security key
         </CardDescription>
       </CardHeader>
@@ -208,7 +208,7 @@ export function PasskeyRegister({
             <CheckCircle className="h-12 w-12 text-green-500 dark:text-green-400 mx-auto" aria-hidden="true" />
             <div>
               <h3 className="text-lg font-semibold text-green-700 dark:text-green-300">Registration Successful!</h3>
-              <p className="text-gray-600 dark:text-gray-400">
+              <p className="text-muted-foreground">
                 Your passkey has been created and you can now use it to sign in.
               </p>
             </div>
@@ -228,7 +228,7 @@ export function PasskeyRegister({
               </Button>
 
               {showAdvanced && (
-                <div className="space-y-4 p-4 bg-gray-50 rounded-lg">
+                <div className="space-y-4 p-4 bg-muted rounded-lg">
                   <div>
                     <Label htmlFor="username">Username (Optional)</Label>
                     <Input
@@ -238,7 +238,7 @@ export function PasskeyRegister({
                       placeholder="Enter a username"
                       className="mt-1"
                     />
-                    <p className="text-xs text-gray-500 mt-1">
+                    <p className="text-xs text-muted-foreground mt-1">
                       Leave empty for usernameless authentication
                     </p>
                   </div>
@@ -252,7 +252,7 @@ export function PasskeyRegister({
                       placeholder="Enter a display name"
                       className="mt-1"
                     />
-                    <p className="text-xs text-gray-500 mt-1">
+                    <p className="text-xs text-muted-foreground mt-1">
                       This will be shown when you sign in
                     </p>
                   </div>
@@ -283,7 +283,7 @@ export function PasskeyRegister({
             <Button
               onClick={handleRegister}
               disabled={isRegistering}
-              className="w-full focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
+              className="w-full focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2"
               size="lg"
               aria-label="Create passkey"
               aria-busy={isRegistering}
@@ -302,7 +302,7 @@ export function PasskeyRegister({
             </Button>
 
             {/* Security Information */}
-            <div className="text-xs text-gray-500 dark:text-gray-400 space-y-1">
+            <div className="text-xs text-muted-foreground space-y-1">
               <p>• Your passkey is stored securely on your device</p>
               <p>• No passwords are transmitted or stored</p>
               <p>• Works with Touch ID, Face ID, Windows Hello, and security keys</p>

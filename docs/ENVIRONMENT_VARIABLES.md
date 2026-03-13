@@ -1,7 +1,7 @@
 # Environment Variables Documentation
 
-**Last Updated:** December 2024  
-**Status:** ✅ **ALL CRITICAL VARIABLES CONFIGURED** (Production Ready)
+**Last Updated:** March 2026  
+**Status:** ✅ **ALL CRITICAL VARIABLES CONFIGURED** (Production Ready — validated by Zod schema at startup)
 
 This document lists all environment variables required for the Choices application.
 
@@ -62,7 +62,34 @@ This document lists all environment variables required for the Choices applicati
   - Format: `{"CONTACT_INFORMATION_SYSTEM":true,"CIVIC_ENGAGEMENT_V2":true}`
   - Used by: `web/lib/core/feature-flags.ts` at module load
   - Security: Server-only; only mutable flags from `FEATURE_FLAGS` are applied
-  - See: `docs/FEATURE_FLAGS_AUDIT.md`
+  - See: `docs/archive/2026-03-consolidation/FEATURE_FLAGS_AUDIT.md` (archived)
+
+### Environment Validation
+
+As of March 2026, environment variables are validated at startup using a Zod schema defined in `web/lib/config/env.ts`. This provides:
+
+- **Type-safe access** via the `env` proxy object
+- **Startup validation** — missing or invalid variables throw descriptive errors before the app starts
+- **CI-safe defaults** — when `CI=true` or `NODE_ENV=test`, placeholder values are used automatically
+- **Server + client separation** — separate schemas for server-only and public client variables
+
+Import and use:
+```typescript
+import { env } from '@/lib/config/env';
+const url = env.NEXT_PUBLIC_SUPABASE_URL; // typed and validated
+```
+
+### Security-Sensitive Variables
+
+| Variable | Security | Notes |
+|----------|----------|-------|
+| `SUPABASE_SERVICE_ROLE_KEY` | Server-only | Full DB access; never expose to client |
+| `ADMIN_MONITORING_KEY` | Server-only | Protects health ingest and admin endpoints |
+| `RESEND_API_KEY` | Server-only | Email service authentication |
+| `RESEND_WEBHOOK_SECRET` | Server-only | Webhook signature verification; endpoint returns 403 if unset |
+| `WEB_PUSH_PRIVATE_KEY` | Server-only | VAPID signing key for push notifications |
+| `UPSTASH_REDIS_REST_TOKEN` | Server-only | Rate limiting backend |
+| `CRON_SECRET` | Server-only | Cron job authentication |
 
 ### Error Monitoring (Sentry)
 - `NEXT_PUBLIC_SENTRY_DSN` (optional)

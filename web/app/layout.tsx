@@ -4,6 +4,7 @@ import React from 'react';
 
 import { SkipNavLink, SkipNavTarget } from '@/components/accessibility/SkipNavLink';
 import SiteFooter from '@/components/layout/SiteFooter';
+import { ScrollRestoration } from '@/components/shared/ScrollRestoration';
 import { ThemeScript } from '@/components/shared/ThemeScript';
 
 import {
@@ -177,9 +178,23 @@ export default async function RootLayout({
         {/* Performance optimizations */}
         <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
         <meta name="format-detection" content="telephone=no" />
-      </head>
-      <body className="bg-slate-50 text-gray-900">
 
+        {/* JSON-LD Organization schema for SEO */}
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{
+            __html: JSON.stringify({
+              '@context': 'https://schema.org',
+              '@type': 'Organization',
+              name: 'Choices',
+              description: 'Privacy-first participatory democracy platform',
+              url: process.env.NEXT_PUBLIC_BASE_URL || process.env.NEXT_PUBLIC_SITE_URL || 'https://choices.app',
+            }),
+          }}
+        />
+      </head>
+      <body className="bg-background text-foreground">
+        <ScrollRestoration />
         <SkipNavLink />
         <Providers locale={locale} messages={messages}>
           <SkipNavTarget>

@@ -15,22 +15,20 @@
 /// <reference types="node" />
 
 import { 
-  HeartIcon, 
-  ChatBubbleLeftIcon, 
-  ShareIcon, 
-  BookmarkIcon,
-  EllipsisHorizontalIcon,
-  CalendarIcon,
-  MapPinIcon
-} from '@heroicons/react/24/outline';
-import { 
-  HeartIcon as HeartSolidIcon,
-  BookmarkIcon as BookmarkSolidIcon
-} from '@heroicons/react/24/solid';
+  Heart, 
+  MessageSquare, 
+  Share2, 
+  Bookmark,
+  MoreHorizontal,
+  Calendar,
+  MapPin
+} from 'lucide-react';
 import Image from 'next/image';
 import React, { useState, useRef, useCallback, memo, useLayoutEffect } from 'react';
 
 import type { FeedItemData } from '@/features/civics/lib/types/civics-types';
+
+import { AVATAR_BLUR_DATA_URL, DEFAULT_BLUR_DATA_URL } from '@/lib/constants/image';
 
 type FeedItemProps = {
   item: FeedItemData;
@@ -272,28 +270,28 @@ const FeedItem = memo(({
     
     switch (type) {
       case 'vote':
-        return <div className={`${iconClass} bg-green-100 rounded-full flex items-center justify-center`}>
+        return <div className={`${iconClass} bg-green-100 dark:bg-green-900/30 rounded-full flex items-center justify-center`}>
           <span className="text-green-600 text-xs font-bold">V</span>
         </div>;
       case 'bill':
-        return <div className={`${iconClass} bg-blue-100 rounded-full flex items-center justify-center`}>
+        return <div className={`${iconClass} bg-blue-100 dark:bg-blue-900/30 rounded-full flex items-center justify-center`}>
           <span className="text-blue-600 text-xs font-bold">B</span>
         </div>;
       case 'statement':
-        return <div className={`${iconClass} bg-purple-100 rounded-full flex items-center justify-center`}>
+        return <div className={`${iconClass} bg-purple-100 dark:bg-purple-900/30 rounded-full flex items-center justify-center`}>
           <span className="text-purple-600 text-xs font-bold">S</span>
         </div>;
       case 'social_media':
-        return <div className={`${iconClass} bg-pink-100 rounded-full flex items-center justify-center`}>
+        return <div className={`${iconClass} bg-pink-100 dark:bg-pink-900/30 rounded-full flex items-center justify-center`}>
           <span className="text-pink-600 text-xs font-bold">@</span>
         </div>;
       case 'photo':
-        return <div className={`${iconClass} bg-gray-100 rounded-full flex items-center justify-center`}>
-          <span className="text-gray-600 text-xs font-bold">📷</span>
+        return <div className={`${iconClass} bg-muted rounded-full flex items-center justify-center`}>
+          <span className="text-muted-foreground text-xs font-bold">📷</span>
         </div>;
       default:
-        return <div className={`${iconClass} bg-gray-100 rounded-full flex items-center justify-center`}>
-          <span className="text-gray-600 text-xs font-bold">?</span>
+        return <div className={`${iconClass} bg-muted rounded-full flex items-center justify-center`}>
+          <span className="text-muted-foreground text-xs font-bold">?</span>
         </div>;
     }
   };
@@ -301,27 +299,27 @@ const FeedItem = memo(({
   // Get party color
   const getPartyColor = (party: string) => {
     const partyColors: Record<string, string> = {
-      'Republican': 'text-red-600 bg-red-50 border-red-200',
-      'Democrat': 'text-blue-600 bg-blue-50 border-blue-200',
-      'Independent': 'text-gray-600 bg-gray-50 border-gray-200',
+      'Republican': 'text-red-600 bg-red-50 dark:bg-red-900/20 border-red-200',
+      'Democrat': 'text-blue-600 bg-blue-50 dark:bg-blue-900/20 border-blue-200',
+      'Independent': 'text-gray-600 bg-gray-50 dark:bg-gray-800 border-gray-200',
       'Green': 'text-green-600 bg-green-50 border-green-200',
       'Libertarian': 'text-yellow-600 bg-yellow-50 border-yellow-200'
     };
     
-    return partyColors[party] ?? 'text-gray-600 bg-gray-50 border-gray-200';
+    return partyColors[party] ?? 'text-gray-600 bg-gray-50 dark:bg-gray-800 border-gray-200';
   };
 
   return (
     <div 
       ref={itemRef}
       data-testid="feed-item"
-      className={`bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-gray-200 dark:border-gray-700 overflow-hidden transition-all duration-200 hover:shadow-md ${className}`}
+      className={`bg-card rounded-2xl shadow-sm border border-border overflow-hidden transition-all duration-200 hover:shadow-md ${className}`}
       onTouchStart={handleTouchStart}
       onTouchMove={handleTouchMove}
       onTouchEnd={handleTouchEnd}
     >
       {/* Header */}
-      <div className="p-4 border-b border-gray-100 dark:border-gray-700">
+      <div className="p-4 border-b border-border">
         <div className="flex items-center space-x-3">
           <div className="relative">
             {item.representativePhoto ? (
@@ -330,11 +328,13 @@ const FeedItem = memo(({
                 alt={item.representativeName}
                 width={40}
                 height={40}
+                placeholder="blur"
+                blurDataURL={AVATAR_BLUR_DATA_URL}
                 className="rounded-full object-cover"
               />
             ) : (
-              <div className="w-10 h-10 bg-gray-200 rounded-full flex items-center justify-center">
-                <span className="text-gray-500 text-sm font-medium">
+              <div className="w-10 h-10 bg-muted rounded-full flex items-center justify-center">
+                <span className="text-muted-foreground text-sm font-medium">
                   {item.representativeName?.charAt(0) || '?'}
                 </span>
               </div>
@@ -346,20 +346,20 @@ const FeedItem = memo(({
           
           <div className="flex-1">
             <div className="flex items-center space-x-2">
-              <h3 className="font-semibold text-gray-900 dark:text-gray-100">{item.representativeName}</h3>
+              <h3 className="font-semibold text-foreground">{item.representativeName}</h3>
               <span className={`px-2 py-1 rounded-full text-xs font-medium border ${getPartyColor(item.representativeParty)}`}>
                 {item.representativeParty}
               </span>
             </div>
-            <div className="flex items-center space-x-2 text-sm text-gray-500 dark:text-gray-400">
-              <MapPinIcon className="w-4 h-4" />
+            <div className="flex items-center space-x-2 text-sm text-muted-foreground">
+              <MapPin className="w-4 h-4" />
               <span>{item.representativeOffice}</span>
             </div>
           </div>
           
           <div className="text-right">
-            <div className="flex items-center space-x-2 text-sm text-gray-500 dark:text-gray-400">
-              <CalendarIcon className="w-4 h-4" />
+            <div className="flex items-center space-x-2 text-sm text-muted-foreground">
+              <Calendar className="w-4 h-4" />
               <span>{formatDate(item.date)}</span>
             </div>
           </div>
@@ -368,9 +368,9 @@ const FeedItem = memo(({
 
       {/* Content */}
       <div className="p-4">
-        <h4 className="font-semibold text-gray-900 dark:text-gray-100 mb-2">{item.title}</h4>
+        <h4 className="font-semibold text-foreground mb-2">{item.title}</h4>
         {item.description && (
-          <div className="text-gray-600 dark:text-gray-300 mb-4">
+          <div className="text-foreground/80 mb-4">
             {isExpanded ? (
               <p>{item.description}</p>
             ) : (
@@ -379,7 +379,7 @@ const FeedItem = memo(({
             {item.description.length > 100 && (
               <button
                 onClick={() => setIsExpanded(!isExpanded)}
-                className="text-blue-500 text-sm font-medium mt-2 hover:text-blue-600"
+                className="text-primary text-sm font-medium mt-2 hover:text-primary/90"
               >
                 {isExpanded ? 'Show less' : 'Show more'}
               </button>
@@ -394,6 +394,9 @@ const FeedItem = memo(({
               alt={item.title}
               width={400}
               height={300}
+              placeholder="blur"
+              blurDataURL={DEFAULT_BLUR_DATA_URL}
+              sizes="(max-width: 640px) 100vw, 400px"
               className="w-full h-64 object-cover rounded-lg"
             />
           </div>
@@ -407,7 +410,7 @@ const FeedItem = memo(({
                 <button
                   key={index}
                   onClick={() => handleHashtagClick(tag)}
-                  className="text-blue-500 hover:text-blue-700 text-sm font-medium hover:underline"
+                  className="text-primary hover:text-primary/90 text-sm font-medium hover:underline"
                   aria-label={`Click hashtag ${tag}`}
                 >
                   #{tag}
@@ -420,7 +423,7 @@ const FeedItem = memo(({
 
       {/* Engagement */}
       {showEngagement && (
-        <div className="px-4 py-3 border-t border-gray-100 dark:border-gray-700">
+        <div className="px-4 py-3 border-t border-border">
           <div className="flex items-center justify-between">
             <div className="flex items-center space-x-6">
               <button
@@ -429,16 +432,16 @@ const FeedItem = memo(({
                 className={`flex items-center space-x-2 transition-colors ${
                   isLiked 
                     ? 'text-red-500' 
-                    : 'text-gray-500 hover:text-red-500'
+                    : 'text-muted-foreground hover:text-red-500'
                 } ${isLoading ? 'opacity-50 cursor-not-allowed' : ''}`}
                 aria-label={`${isLiked ? 'Unlike' : 'Like'} ${item.title}`}
               >
                 {isLiked ? (
-                  <HeartSolidIcon className="w-5 h-5" />
+                  <Heart className="w-5 h-5" fill="currentColor" />
                 ) : (
-                  <HeartIcon className="w-5 h-5" />
+                  <Heart className="w-5 h-5" />
                 )}
-                <span className="text-sm font-medium text-gray-900 dark:text-gray-100">
+                <span className="text-sm font-medium text-foreground">
                   {item.engagementMetrics?.likes ?? 0}
                 </span>
               </button>
@@ -446,13 +449,13 @@ const FeedItem = memo(({
               <button
                 onClick={handleComment}
                 disabled={isLoading}
-                className={`flex items-center space-x-2 text-gray-500 hover:text-blue-500 transition-colors ${
+                className={`flex items-center space-x-2 text-muted-foreground hover:text-primary transition-colors ${
                   isLoading ? 'opacity-50 cursor-not-allowed' : ''
                 }`}
                 aria-label={`Comment on ${item.title}`}
               >
-                <ChatBubbleLeftIcon className="w-5 h-5" />
-                <span className="text-sm font-medium text-gray-900 dark:text-gray-100">
+                <MessageSquare className="w-5 h-5" />
+                <span className="text-sm font-medium text-foreground">
                   {item.engagementMetrics?.comments ?? 0}
                 </span>
               </button>
@@ -461,12 +464,12 @@ const FeedItem = memo(({
                 onClick={handleShare}
                 disabled={isLoading}
                 data-testid="share-button"
-                className={`flex items-center space-x-2 text-gray-500 hover:text-green-500 transition-colors ${
+                className={`flex items-center space-x-2 text-muted-foreground hover:text-green-500 transition-colors ${
                   isLoading ? 'opacity-50 cursor-not-allowed' : ''
                 }`}
                 aria-label={`Share ${item.title}`}
               >
-                <ShareIcon className="w-5 h-5" />
+                <Share2 className="w-5 h-5" />
                 <span className="text-sm font-medium" data-testid="share-count">
                   {item.engagementMetrics?.shares ?? 0}
                 </span>
@@ -479,24 +482,24 @@ const FeedItem = memo(({
                 disabled={isLoading}
                 className={`transition-colors ${
                   isBookmarked 
-                    ? 'text-blue-500' 
-                    : 'text-gray-500 hover:text-blue-500'
+                    ? 'text-primary' 
+                    : 'text-muted-foreground hover:text-primary'
                 } ${isLoading ? 'opacity-50 cursor-not-allowed' : ''}`}
                 aria-label={`${isBookmarked ? 'Remove from' : 'Add to'} bookmarks`}
               >
                 {isBookmarked ? (
-                  <BookmarkSolidIcon className="w-5 h-5" />
+                  <Bookmark className="w-5 h-5" fill="currentColor" />
                 ) : (
-                  <BookmarkIcon className="w-5 h-5" />
+                  <Bookmark className="w-5 h-5" />
                 )}
               </button>
               
               <button
                 onClick={() => setShowActions(!showActions)}
-                className="text-gray-500 hover:text-gray-700 transition-colors"
+                className="text-muted-foreground hover:text-foreground transition-colors"
                 aria-label="More options"
               >
-                <EllipsisHorizontalIcon className="w-5 h-5" />
+                <MoreHorizontal className="w-5 h-5" />
               </button>
             </div>
           </div>
@@ -505,14 +508,14 @@ const FeedItem = memo(({
 
       {/* Action Menu */}
       {showActions && (
-        <div className="px-4 py-2 border-t border-gray-100 bg-gray-50">
+        <div className="px-4 py-2 border-t border-border bg-muted">
           <div className="flex items-center space-x-4">
             <button
               onClick={() => {
                 onViewDetails?.(item.id);
                 setShowActions(false);
               }}
-              className="text-sm text-blue-600 hover:text-blue-700 font-medium"
+              className="text-sm text-primary hover:text-primary/90 font-medium"
             >
               View Details
             </button>
@@ -527,7 +530,7 @@ const FeedItem = memo(({
             </button>
             <button
               onClick={() => setShowActions(false)}
-              className="text-sm text-gray-600 hover:text-gray-700 font-medium"
+              className="text-sm text-muted-foreground hover:text-foreground font-medium"
             >
               Close
             </button>

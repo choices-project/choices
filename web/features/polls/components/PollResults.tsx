@@ -3,6 +3,7 @@
 import { RefreshCw } from 'lucide-react';
 import React, { useState, useEffect, useCallback, useMemo, useId, useRef } from 'react';
 
+import { AnimatedVoteBar } from '@/components/shared/AnimatedVoteBar';
 import { EnhancedEmptyState } from '@/components/shared/EnhancedEmptyState';
 import { EnhancedErrorDisplay } from '@/components/shared/EnhancedErrorDisplay';
 
@@ -142,10 +143,10 @@ export default function OptimizedPollResults({
     return (
       <div className="space-y-4">
         <div className="animate-pulse">
-          <div className="h-8 bg-gray-200 dark:bg-gray-700 rounded w-1/3 mb-4" />
+          <div className="h-8 bg-muted rounded w-1/3 mb-4" />
           <div className="space-y-3">
             {[1, 2, 3].map((i) => (
-              <div key={i} className="h-16 bg-gray-200 dark:bg-gray-700 rounded" />
+              <div key={i} className="h-16 bg-muted rounded" />
             ))}
           </div>
         </div>
@@ -175,7 +176,7 @@ export default function OptimizedPollResults({
     return (
       <EnhancedEmptyState
         icon={
-          <svg className="h-12 w-12 text-gray-400 dark:text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <svg className="h-12 w-12 text-muted-foreground" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
           </svg>
         }
@@ -195,21 +196,21 @@ export default function OptimizedPollResults({
           <div className="grid grid-cols-2 gap-4 text-sm">
             <div>
               <span className="text-blue-800 dark:text-blue-300">{t('polls.view.results.performance.loadTime')}:</span>
-              <span className="ml-2 font-mono text-gray-700 dark:text-gray-300">{performanceMetrics.loadTime.toFixed(2)}ms</span>
+              <span className="ml-2 font-mono text-foreground/80">{performanceMetrics.loadTime.toFixed(2)}ms</span>
             </div>
             <div>
               <span className="text-blue-800 dark:text-blue-300">{t('polls.view.results.performance.cacheHit')}:</span>
-              <span className="ml-2 text-gray-700 dark:text-gray-300">{performanceMetrics.cacheHit ? t('polls.view.results.performance.yes') : t('polls.view.results.performance.no')}</span>
+              <span className="ml-2 text-foreground/80">{performanceMetrics.cacheHit ? t('polls.view.results.performance.yes') : t('polls.view.results.performance.no')}</span>
             </div>
             {cacheStats && (
               <>
                 <div>
                   <span className="text-blue-800 dark:text-blue-300">{t('polls.view.results.performance.cacheSize')}:</span>
-                  <span className="ml-2 text-gray-700 dark:text-gray-300">{t('polls.view.results.performance.items', { count: cacheStats.size })}</span>
+                  <span className="ml-2 text-foreground/80">{t('polls.view.results.performance.items', { count: cacheStats.size })}</span>
                 </div>
                 <div>
                   <span className="text-blue-800 dark:text-blue-300">{t('polls.view.results.performance.hitRate')}:</span>
-                  <span className="ml-2 text-gray-700 dark:text-gray-300">{(cacheStats.hitRate * 100).toFixed(1)}%</span>
+                  <span className="ml-2 text-foreground/80">{(cacheStats.hitRate * 100).toFixed(1)}%</span>
                 </div>
               </>
             )}
@@ -219,8 +220,8 @@ export default function OptimizedPollResults({
 
       {/* Poll Header */}
       <div className="space-y-2">
-        <h2 className="text-2xl font-bold text-gray-900 dark:text-gray-100">{results.pollTitle}</h2>
-        <div className="flex items-center space-x-4 text-sm text-gray-600 dark:text-gray-400">
+        <h2 className="text-2xl font-bold text-foreground">{results.pollTitle}</h2>
+        <div className="flex items-center space-x-4 text-sm text-muted-foreground">
           <span>Type: {results.pollType}</span>
           {pollStatusDisplay && (
             <span className={`px-2 py-1 rounded-full text-xs font-medium ${pollStatusDisplay.bgColor} ${pollStatusDisplay.color}`}>
@@ -233,20 +234,20 @@ export default function OptimizedPollResults({
       </div>
 
       {/* Privacy Status */}
-      <div className="bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg p-4">
+      <div className="bg-muted border border-border rounded-lg p-4">
         <div className="flex items-center justify-between">
           <div className="flex items-center space-x-2">
-            <svg className="h-5 w-5 text-gray-400 dark:text-gray-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <svg className="h-5 w-5 text-muted-foreground" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
             </svg>
-            <span className="text-sm font-medium text-gray-700 dark:text-gray-300">{t('polls.view.results.privacy.title')}</span>
+            <span className="text-sm font-medium text-foreground/80">{t('polls.view.results.privacy.title')}</span>
           </div>
           <div className="flex items-center space-x-4 text-sm">
             <span className={`px-2 py-1 rounded-full ${results.kAnonymitySatisfied ? 'bg-green-100 dark:bg-green-900/30 text-green-800 dark:text-green-300' : 'bg-yellow-100 dark:bg-yellow-900/30 text-yellow-800 dark:text-yellow-300'}`}>
               {t('polls.view.results.privacy.kAnonymity', { status: results.kAnonymitySatisfied ? t('polls.view.results.privacy.satisfied') : t('polls.view.results.privacy.notMet') })}
             </span>
             {userId && (
-              <span className="text-gray-600 dark:text-gray-400">
+              <span className="text-muted-foreground">
                 {t('polls.view.results.privacy.budget', { value: results.privacyBudgetRemaining?.toFixed(2) ?? '0.00' })}
               </span>
             )}
@@ -264,10 +265,10 @@ export default function OptimizedPollResults({
             <span className="text-sm font-medium text-blue-900 dark:text-blue-200">{t('polls.view.results.votingStatus.title')}</span>
           </div>
           <div className="flex items-center space-x-4 text-sm">
-            <span className={`px-2 py-1 rounded-full ${results.canVote ? 'bg-green-100 dark:bg-green-900/30 text-green-800 dark:text-green-300' : 'bg-gray-100 dark:bg-gray-700 text-gray-800 dark:text-gray-300'}`}>
+            <span className={`px-2 py-1 rounded-full ${results.canVote ? 'bg-green-100 dark:bg-green-900/30 text-green-800 dark:text-green-300' : 'bg-muted text-foreground/80'}`}>
               {results.canVote ? t('polls.view.results.votingStatus.canVote') : t('polls.view.results.votingStatus.cannotVote')}
             </span>
-            <span className={`px-2 py-1 rounded-full ${results.hasVoted ? 'bg-blue-100 dark:bg-blue-900/30 text-blue-800 dark:text-blue-300' : 'bg-gray-100 dark:bg-gray-700 text-gray-800 dark:text-gray-300'}`}>
+            <span className={`px-2 py-1 rounded-full ${results.hasVoted ? 'bg-blue-100 dark:bg-blue-900/30 text-blue-800 dark:text-blue-300' : 'bg-muted text-foreground/80'}`}>
               {results.hasVoted ? t('polls.view.results.votingStatus.hasVoted') : t('polls.view.results.votingStatus.notVoted')}
             </span>
           </div>
@@ -279,7 +280,7 @@ export default function OptimizedPollResults({
         aria-labelledby={resultsHeadingId}
         className="space-y-4"
       >
-        <h2 id={resultsHeadingId} className="text-lg font-semibold text-gray-900 dark:text-gray-100">
+        <h2 id={resultsHeadingId} className="text-lg font-semibold text-foreground">
           {t('polls.view.results.heading')}
         </h2>
         <div className="space-y-3">
@@ -294,28 +295,16 @@ export default function OptimizedPollResults({
             return (
               <article
                 key={optionId}
-                className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg p-4"
+                className="bg-card border border-border rounded-lg p-4"
+                aria-describedby={optionSummaryId}
               >
-                <div className="flex items-center justify-between mb-2">
-                  <h3 className="font-medium text-gray-900 dark:text-gray-100">{optionLabel}</h3>
-                  <span className="text-sm text-gray-600 dark:text-gray-400">
-                    {t('polls.view.results.optionVotes', { votes, percentage })}
-                  </span>
-                </div>
-                <div
-                  className="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-2"
-                  role="progressbar"
-                  aria-labelledby={`${resultsRegionId}-option-${index}-label`}
-                  aria-valuenow={parseFloat(percentage)}
-                  aria-valuemin={0}
-                  aria-valuemax={100}
-                  aria-describedby={optionSummaryId}
-                >
-                  <div
-                    className="bg-blue-600 dark:bg-blue-500 h-2 rounded-full transition-all duration-300"
-                    style={{ width: `${percentage}%` }}
-                  />
-                </div>
+                <AnimatedVoteBar
+                  percentage={parseFloat(percentage)}
+                  label={optionLabel}
+                  voteCount={votes}
+                  color="bg-primary"
+                  isWinner={index === 0 && totalVotes > 0}
+                />
                 <p id={optionSummaryId} className="sr-only">
                   {t('polls.view.results.optionSummary', {
                     option: optionLabel,
@@ -327,7 +316,7 @@ export default function OptimizedPollResults({
                 <p id={`${resultsRegionId}-option-${index}-label`} className="sr-only">
                   {optionLabel}
                 </p>
-                <div className="mt-2 text-xs text-gray-500 dark:text-gray-400">
+                <div className="mt-2 text-xs text-muted-foreground">
                   {t('polls.view.results.uniqueVoters', { count: uniqueVoters })}
                 </div>
               </article>
@@ -340,7 +329,7 @@ export default function OptimizedPollResults({
       <div className="flex justify-end">
         <button
           onClick={() => void handleRefresh()}
-          className="bg-blue-600 dark:bg-blue-500 text-white px-4 py-2 rounded-md text-sm font-medium hover:bg-blue-700 dark:hover:bg-blue-600 transition-colors"
+          className="bg-primary text-white px-4 py-2 rounded-md text-sm font-medium hover:bg-primary/90 transition-colors"
           aria-label={t('polls.view.results.refreshLabel')}
         >
           {t('polls.view.results.refresh')}

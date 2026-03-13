@@ -51,8 +51,9 @@ export { default as HashtagPollsFeed } from './components/HashtagPollsFeed';
 
 // Unified Feed Component (RECOMMENDED)
 export { default as UnifiedFeedRefactored } from './components/UnifiedFeedRefactored';
-export { default as FeedCore } from './components/core/FeedCore';
-export { default as FeedDataProvider, type ElectoralFeedUI } from './components/providers/FeedDataProvider';
+export { default as FeedCore, type FeedCoreProps } from './components/core/FeedCore';
+export { default as FeedDataProvider, type ElectoralFeedUI, type FeedDataProviderRenderProps } from './components/providers/FeedDataProvider';
+export { FeedProvider, useFeedContext, useFeedContextOptional, type FeedContextValue } from './context/FeedContext';
 
 // Optional enhancers
 export { default as FeedPWAEnhancer } from './components/enhancers/FeedPWAEnhancer';

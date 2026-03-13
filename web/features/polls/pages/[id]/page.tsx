@@ -24,9 +24,9 @@ const PollClient = dynamicImport(() => import('./PollClient'), {
     <div className="flex min-h-screen items-center justify-center px-4">
       <div className="text-center space-y-4 max-w-md">
         <div className="animate-pulse" role="status" aria-live="polite" aria-busy="true">
-          <div className="h-8 bg-gray-200 dark:bg-gray-700 rounded w-3/4 mx-auto mb-4" />
-          <div className="h-4 bg-gray-200 dark:bg-gray-700 rounded w-full mb-2" />
-          <div className="h-4 bg-gray-200 dark:bg-gray-700 rounded w-5/6 mx-auto" />
+          <div className="h-8 bg-muted rounded w-3/4 mx-auto mb-4" />
+          <div className="h-4 bg-muted rounded w-full mb-2" />
+          <div className="h-4 bg-muted rounded w-5/6 mx-auto" />
         </div>
       </div>
     </div>
@@ -196,9 +196,9 @@ export default async function PollPage({ params }: { params: { id: string } }) {
         <div className="flex min-h-screen items-center justify-center px-4">
           <div className="text-center space-y-4 max-w-md">
             <div className="animate-pulse" role="status" aria-live="polite" aria-busy="true">
-              <div className="h-8 bg-gray-200 dark:bg-gray-700 rounded w-3/4 mx-auto mb-4" />
-              <div className="h-4 bg-gray-200 dark:bg-gray-700 rounded w-full mb-2" />
-              <div className="h-4 bg-gray-200 dark:bg-gray-700 rounded w-5/6 mx-auto" />
+              <div className="h-8 bg-muted rounded w-3/4 mx-auto mb-4" />
+              <div className="h-4 bg-muted rounded w-full mb-2" />
+              <div className="h-4 bg-muted rounded w-5/6 mx-auto" />
             </div>
           </div>
         </div>
@@ -217,10 +217,10 @@ export default async function PollPage({ params }: { params: { id: string } }) {
     return (
       <div className="flex min-h-screen items-center justify-center px-4" data-testid="poll-error">
         <div className="text-center space-y-4 max-w-md">
-          <h1 className="text-2xl font-bold text-gray-900 dark:text-gray-100">
+          <h1 className="text-2xl font-bold text-foreground">
             {isNotFound ? 'Poll Not Found' : 'Unable to load poll'}
           </h1>
-          <p className="text-gray-600 dark:text-gray-400" role="alert">
+          <p className="text-muted-foreground" role="alert">
             {isNotFound
               ? `The poll you're looking for doesn't exist or has been deleted.`
               : `We couldn't find or load this poll. It may have been deleted or you may not have permission to view it.`
@@ -228,7 +228,7 @@ export default async function PollPage({ params }: { params: { id: string } }) {
           </p>
           <a
             href="/polls"
-            className="inline-block rounded-md bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700 dark:bg-blue-500 dark:hover:bg-blue-600"
+            className="inline-block rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground hover:bg-primary/90"
           >
             Browse all polls
           </a>

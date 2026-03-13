@@ -1,6 +1,6 @@
 # Testing Guide
 
-_Last updated: March 2026 (suite audit: TEST_SUITE_AUDIT.md; E2E curated for CI and production)_
+_Last updated: March 2026 (E2E curated for CI and production)_
 
 This guide explains how we exercise the Choices web app and where to add coverage when working on new features or store refactors.
 
@@ -56,7 +56,7 @@ cd web && npx playwright test --config=playwright.config.ts tests/e2e/specs/user
     - Ensure the CI jobs reference only existing `projects` names.
     - Tag performance-sensitive specs with `@performance` to participate in the `Performance Tests` job.
 
-See also: `docs/ROADMAP.md` for remaining test work; `docs/TEST_SUITE_AUDIT.md` for suite curation and CI alignment.
+See also: `docs/ROADMAP.md` for remaining test work.
 
 ### Pre-launch / expanded coverage (March 2026)
 
@@ -104,7 +104,7 @@ Production tests run against the live site at `https://www.choices-app.com`. Use
 - **API smoke** (`production-api.spec.ts`): `/api/health`, `/api/feature-flags/public`, `/api/health/ingest`
 - **Page smoke** (`mvp-smoke.spec.ts`): auth, civics, representatives, civic-actions create, contact submissions, account pages
 
-The full `test:e2e:production` run excludes harness specs (feeds-store, polls-store, etc.) since those require `/e2e/*` pages not deployed to production. See `docs/PRODUCTION_TESTING_STATUS.md` for current pass/fail breakdown and next steps.
+The full `test:e2e:production` run excludes harness specs (feeds-store, polls-store, etc.) since those require `/e2e/*` pages not deployed to production.
 
 Utilities:
 - `npm run lint` — ESLint (use before submitting PRs).
@@ -181,7 +181,7 @@ We expose store and feature harnesses under `/app/(app)/e2e/*` to keep Playwrigh
 
 ### Store modernization and harness stability (ROADMAP C, F)
 
-- **Store harnesses** map to the stores in `docs/ROADMAP.md` §2.2 and `docs/ROADMAP_SINGLE_SOURCE.md` § C: adminStore, appStore, feedsStore, pollsStore, profileStore, pwaStore, etc. Each store that has user-visible behaviour should have (1) unit/RTL coverage, (2) a harness page under `/e2e/*` when needed for Playwright, (3) specs that use `waitForHarnessReady` or equivalent and `findBy*` queries so hydration completes before assertions.
+- **Store harnesses** map to the stores in `docs/ROADMAP.md` §2.2: adminStore, appStore, feedsStore, pollsStore, profileStore, pwaStore, etc. Each store that has user-visible behaviour should have (1) unit/RTL coverage, (2) a harness page under `/e2e/*` when needed for Playwright, (3) specs that use `waitForHarnessReady` or equivalent and `findBy*` queries so hydration completes before assertions.
 - **Reducing flake:** Use `data-*-harness="ready"` and `window.__*Harness` readiness before interacting; prefer `page.getByRole` / `getByTestId` with explicit timeouts; keep `beforeEach` state resets (e.g. `reset*State()`) so tests don’t leak. Production config uses `retries: 1` in CI for E2E; avoid relaxing assertions—fix timing or selectors instead.
 - **Production vs harness:** Full production E2E skips specs that depend on `/e2e/*` (harness pages are not deployed). So “51 skipped” in production is expected for harness-only specs. Contract tests and smoke must stay green; store coverage in CI runs against the dev server with `NEXT_PUBLIC_ENABLE_E2E_HARNESS=1`.
 - **Adding coverage:** When modernizing a store (ROADMAP C), add or extend RTL/integration tests and, if the store drives a dedicated UI, ensure the harness page and spec are updated and documented in this section and in `tests/e2e/README.md`.

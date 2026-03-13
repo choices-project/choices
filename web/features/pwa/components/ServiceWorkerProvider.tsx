@@ -7,7 +7,6 @@
  * Features:
  * - Automatic service worker registration
  * - Update detection and user notification
- * - Offline/online status tracking
  *
  * @author Choices Platform Team
  */
@@ -82,7 +81,6 @@ export function ServiceWorkerProvider({
   // Client checks actual state after mount to prevent hydration mismatch
   // Use function initializer and useLayoutEffect to ensure stable initial state
   const [isUpdateAvailable, setIsUpdateAvailable] = useState(() => false);
-  const [isOffline, setIsOffline] = useState(() => false);
   const [isRegistered, setIsRegistered] = useState(() => false);
   const [isMounted, setIsMounted] = useState(() => false);
 
@@ -152,28 +150,8 @@ export function ServiceWorkerProvider({
       debug,
     });
 
-    // Set up online/offline listeners
-    const handleOnline = () => {
-      setIsOffline(false);
-      logger.info('App is online');
-    };
-
-    const handleOffline = () => {
-      setIsOffline(true);
-      logger.warn('App is offline');
-    };
-
-    window.addEventListener('online', handleOnline);
-    window.addEventListener('offline', handleOffline);
-
-    // Set initial offline state
-    setIsOffline(!navigator.onLine);
-
-    // Cleanup
-    return () => {
-      window.removeEventListener('online', handleOnline);
-      window.removeEventListener('offline', handleOffline);
-    };
+    // Offline/online status is now handled by unified OfflineIndicator in layout
+    return undefined;
   }, [debug, isMounted]);
 
   useEffect(() => {
@@ -260,15 +238,7 @@ export function ServiceWorkerProvider({
         </div>
       </div>
 
-      {/* Offline Indicator - Always render container to prevent hydration mismatch */}
-      <div
-        className="fixed top-0 left-0 right-0 bg-yellow-500 text-yellow-900 px-4 py-2 text-center text-sm font-medium z-50"
-        role="alert"
-        aria-live="polite"
-        style={{ display: isMounted && isOffline ? 'block' : 'none' }}
-      >
-        📡 You&apos;re offline. Some features may be limited.
-      </div>
+      {/* Offline indicator is now handled by unified OfflineIndicator in layout */}
     </>
   );
 }

@@ -25,6 +25,7 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 
+import { useAccessibleDialog } from '@/lib/accessibility/useAccessibleDialog';
 import { useIsAuthenticated, useUserLoading } from '@/lib/stores';
 import logger from '@/lib/utils/logger';
 
@@ -90,7 +91,12 @@ export default function ProfilePage({
   const exportDialogTitleId = useId();
   const exportDialogDescriptionId = useId();
   const exportDialogRef = useRef<HTMLDivElement | null>(null);
-  const previouslyFocusedElement = useRef<HTMLElement | null>(null);
+
+  useAccessibleDialog({
+    isOpen: showExportConfirm,
+    dialogRef: exportDialogRef,
+    onClose: () => setShowExportConfirm(false),
+  });
 
   // Use ref for router to prevent infinite re-renders
   const routerRef = useRef(router);
@@ -139,31 +145,6 @@ export default function ProfilePage({
       logger.error('Profile export failed', err instanceof Error ? err : new Error(String(err)));
     }
   }, []);
-
-  useEffect(() => {
-    if (!showExportConfirm) {
-      previouslyFocusedElement.current?.focus();
-      return undefined;
-    }
-
-    previouslyFocusedElement.current = document.activeElement as HTMLElement | null;
-    const handleKeyDown = (event: KeyboardEvent) => {
-      if (event.key === 'Escape') {
-        event.preventDefault();
-        setShowExportConfirm(false);
-      }
-    };
-
-    document.addEventListener('keydown', handleKeyDown);
-    const focusable = exportDialogRef.current?.querySelector<HTMLElement>(
-      'button:not([disabled]), [href], input, select, textarea, [tabindex]:not([tabindex="-1"])',
-    );
-    focusable?.focus();
-
-    return () => {
-      document.removeEventListener('keydown', handleKeyDown);
-    };
-  }, [showExportConfirm]);
 
   if (!isAuthenticated && _isOwnProfile && !isUserLoading) {
     return (

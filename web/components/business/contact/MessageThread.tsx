@@ -10,8 +10,10 @@
 
 'use client';
 
-import { Send, Paperclip, Clock, CheckCircle, CheckCircle2, AlertCircle, User, Building2 } from 'lucide-react';
+import { Send, Paperclip, Clock, CheckCircle, CheckCircle2, AlertCircle, MessageSquare, Building2 } from 'lucide-react';
 import React, { useState, useEffect, useRef } from 'react';
+
+import { EnhancedEmptyState } from '@/components/shared/EnhancedEmptyState';
 
 import { contactMessagingService } from '@/lib/contact/real-time-messaging';
 import type { Message } from '@/lib/contact/real-time-messaging';
@@ -56,9 +58,9 @@ function MessageBubble({ message, isCurrentUser, representative }: MessageBubble
     const status = (message as any).status as 'sent' | 'delivered' | 'read' | 'failed' | undefined;
     switch (status) {
       case 'sent':
-        return <Clock className="w-3 h-3 text-gray-400" />;
+        return <Clock className="w-3 h-3 text-muted-foreground" />;
       case 'delivered':
-        return <CheckCircle className="w-3 h-3 text-gray-400" />;
+        return <CheckCircle className="w-3 h-3 text-muted-foreground" />;
       case 'read':
         return <CheckCircle2 className="w-3 h-3 text-blue-500" />;
       case 'failed':
@@ -103,11 +105,11 @@ function MessageBubble({ message, isCurrentUser, representative }: MessageBubble
         {!isCurrentUser && (
           <div className="flex items-center space-x-2 mb-1">
             <div className="flex items-center space-x-1">
-              <Building2 className="w-3 h-3 text-gray-500" />
-              <span className="text-xs text-gray-600">{representative.name}</span>
+              <Building2 className="w-3 h-3 text-muted-foreground" />
+              <span className="text-xs text-muted-foreground">{representative.name}</span>
             </div>
-            <span className="text-xs text-gray-400">•</span>
-            <span className="text-xs text-gray-500">{representative.office}</span>
+            <span className="text-xs text-muted-foreground">•</span>
+            <span className="text-xs text-muted-foreground">{representative.office}</span>
           </div>
         )}
 
@@ -115,8 +117,8 @@ function MessageBubble({ message, isCurrentUser, representative }: MessageBubble
         <div
           className={`px-4 py-2 rounded-lg ${
             isCurrentUser
-              ? 'bg-blue-600 text-white'
-              : 'bg-gray-200 text-gray-900'
+              ? 'bg-primary text-white'
+              : 'bg-muted text-foreground'
           }`}
         >
           <p className="text-sm whitespace-pre-wrap">{message.content}</p>
@@ -136,15 +138,15 @@ function MessageBubble({ message, isCurrentUser, representative }: MessageBubble
 
         {/* Message Status */}
         <div className={`flex items-center space-x-1 mt-1 ${isCurrentUser ? 'justify-end' : 'justify-start'}`}>
-          <span className="text-xs text-gray-500">
+          <span className="text-xs text-muted-foreground">
             {formatTimestamp(message.timestamp)}
           </span>
           {isCurrentUser && (
             <>
-              <span className="text-xs text-gray-400">•</span>
+              <span className="text-xs text-muted-foreground">•</span>
               <div className="flex items-center space-x-1">
                 {getStatusIcon()}
-                <span className="text-xs text-gray-500">{getStatusText()}</span>
+                <span className="text-xs text-muted-foreground">{getStatusText()}</span>
               </div>
             </>
           )}
@@ -297,18 +299,18 @@ export function MessageThread({
   return (
     <div className={`flex flex-col h-full ${className}`}>
       {/* Thread Header */}
-      <div className="border-b border-gray-200 dark:border-gray-700 p-4 bg-gray-50 dark:bg-gray-800">
+      <div className="border-b border-border p-4 bg-muted">
         <div className="flex items-center justify-between">
           <div>
-            <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100">
+            <h3 className="text-lg font-semibold text-foreground">
               {representative.name}
             </h3>
-            <p className="text-sm text-gray-600 dark:text-gray-400">
+            <p className="text-sm text-muted-foreground">
               {representative.office} • {representative.party}
             </p>
           </div>
           {!isLoading && (
-            <div className="text-sm text-gray-500 dark:text-gray-400">
+            <div className="text-sm text-muted-foreground">
               {messages.length} message{messages.length !== 1 ? 's' : ''}
             </div>
           )}
@@ -321,8 +323,8 @@ export function MessageThread({
         {isLoading && (
           <div className="flex items-center justify-center h-32" role="status" aria-live="polite" aria-busy="true">
             <div className="text-center">
-              <div className="w-8 h-8 mx-auto mb-2 border-2 border-blue-600 border-t-transparent rounded-full animate-spin" aria-hidden="true" />
-              <p className="text-sm text-gray-600 dark:text-gray-400">Loading messages...</p>
+              <div className="w-8 h-8 mx-auto mb-2 border-2 border-primary border-t-transparent rounded-full animate-spin" aria-hidden="true" />
+              <p className="text-sm text-muted-foreground">Loading messages...</p>
             </div>
           </div>
         )}
@@ -347,15 +349,12 @@ export function MessageThread({
 
         {/* Empty state */}
         {!isLoading && !error && messages.length === 0 && (
-          <div className="flex items-center justify-center h-32 text-gray-500 dark:text-gray-400" role="status">
-            <div className="text-center">
-              <div className="w-12 h-12 mx-auto mb-2 bg-gray-100 dark:bg-gray-800 rounded-full flex items-center justify-center">
-                <User className="w-6 h-6 text-gray-400 dark:text-gray-500" aria-hidden="true" />
-              </div>
-              <p className="text-sm font-medium">No messages yet</p>
-              <p className="text-xs text-gray-400 dark:text-gray-500 mt-1">Start the conversation below</p>
-            </div>
-          </div>
+          <EnhancedEmptyState
+            icon={<MessageSquare className="h-12 w-12 text-muted-foreground" />}
+            title="No messages yet"
+            description="Start a conversation with your representative."
+            tip="Type your message in the box below and press Enter to send."
+          />
         )}
         
         {/* Messages list */}
@@ -376,7 +375,7 @@ export function MessageThread({
       </div>
 
       {/* Message Input */}
-      <div className="border-t border-gray-200 p-4 bg-white">
+      <div className="border-t border-border p-4 bg-background">
         <form onSubmit={handleSendMessage} className="flex space-x-2">
           <div className="flex-1">
             <textarea
@@ -385,16 +384,16 @@ export function MessageThread({
               onChange={(e) => setNewMessage(e.target.value)}
               onKeyPress={handleKeyPress}
               placeholder="Type your message..."
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 resize-none"
+              className="w-full px-3 py-2 border border-border rounded-lg focus:ring-2 focus:ring-primary focus:border-primary resize-none"
               rows={2}
               maxLength={MAX_MESSAGE_LENGTH}
               disabled={isSending}
             />
             <div className="flex justify-between items-center mt-1">
-              <span className="text-xs text-gray-500">
+              <span className="text-xs text-muted-foreground">
                 {newMessage.length} / {MAX_MESSAGE_LENGTH} characters
               </span>
-              <span className="text-xs text-gray-400">
+              <span className="text-xs text-muted-foreground">
                 Press Enter to send, Shift+Enter for new line
               </span>
             </div>
@@ -403,7 +402,8 @@ export function MessageThread({
           <button
             type="submit"
             disabled={!newMessage.trim() || isSending || newMessage.length > MAX_MESSAGE_LENGTH}
-            className="flex items-center justify-center w-12 h-12 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed"
+            className="flex items-center justify-center w-12 h-12 bg-primary text-white rounded-lg hover:bg-primary/90 disabled:opacity-50 disabled:cursor-not-allowed"
+            aria-label="Send message"
           >
             {isSending ? (
               <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />

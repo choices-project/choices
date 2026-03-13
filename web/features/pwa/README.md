@@ -40,7 +40,6 @@ web/features/pwa/
 │   └── PWAAnalytics.ts             # Analytics bridge for PWA events
 ├── components/
 │   ├── InstallPrompt.tsx
-│   ├── OfflineIndicator.tsx
 │   ├── OfflineQueue.tsx
 │   ├── OfflineVoting.tsx
 │   ├── NotificationPreferences.tsx
@@ -88,7 +87,7 @@ web/features/pwa/
 
 ### React Integration
 
-- Components (`PWAUserProfile`, `OfflineQueue`, `PWAStatus`, etc.) consume the typed utilities and Zustand selectors without local casts.
+- Components (`PWAUserProfile`, `OfflineQueue`, `PWAStatus`, etc.) consume the typed utilities and Zustand selectors without local casts. `OfflineIndicator` is unified at `web/components/shared/OfflineIndicator.tsx`.
 - Hooks (`usePWAUtils`, `useFeatureFlags`) memoize typed instances and expose friendly loading/error states for UI composition.
 
 ## 🗄️ Database Schema Requirements

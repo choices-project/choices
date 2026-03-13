@@ -506,7 +506,20 @@ export class PWAAuth {
     }
 
     try {
-      window.localStorage.setItem(PWA_USER_STORAGE_KEY, JSON.stringify(user));
+      // Store only non-sensitive fields needed for PWA; exclude demographics and other PII
+      const safeUserData = {
+        stableId: user.stableId,
+        pseudonym: user.pseudonym,
+        trustTier: user.trustTier,
+        verificationScore: user.verificationScore,
+        profileVisibility: user.profileVisibility,
+        dataSharingLevel: user.dataSharingLevel,
+        lastActivity: user.lastActivity,
+        pwaFeatures: user.pwaFeatures,
+        createdAt: user.createdAt,
+        lastActive: user.lastActive,
+      };
+      window.localStorage.setItem(PWA_USER_STORAGE_KEY, JSON.stringify(safeUserData));
     } catch (error) {
       devLog('PWA: Failed to save user to storage:', { error });
     }

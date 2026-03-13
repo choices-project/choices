@@ -1,104 +1,51 @@
-# Choices Platform — Documentation Index
+# Documentation
 
-_Last updated: February 2026_
+_Last updated: March 2026_
 
-This index lists the canonical documentation set. Historical fix summaries, completed work documentation, and outdated status files are archived under `docs/archive/`. The files below reflect the current, essential documentation.
-
----
-
-## Quick Start
+## Getting Started
 
 | Need | Read |
-| --- | --- |
-| **New to the project?** | [`GETTING_STARTED.md`](GETTING_STARTED.md) - 5-minute quick start |
-| Project vision & roadmap | [`VISION.md`](VISION.md) - MVP status and future plans |
-| Project status snapshot | [`CURRENT_STATUS.md`](CURRENT_STATUS.md) - Current work and status |
-| High-level architecture | [`ARCHITECTURE.md`](ARCHITECTURE.md) - System design |
-| Development setup | [`GETTING_STARTED.md`](GETTING_STARTED.md) - Quick start + runbook |
-| Codebase navigation | [`CODEBASE_NAVIGATION.md`](CODEBASE_NAVIGATION.md) - Find code quickly |
-| Testing strategy | [`TESTING.md`](TESTING.md) - Testing guide |
-| State management standards | [`STATE_MANAGEMENT.md`](STATE_MANAGEMENT.md) - Zustand patterns |
-| Troubleshooting | [`TROUBLESHOOTING.md`](TROUBLESHOOTING.md) - Common issues |
-| Canonical utilities | [`CODEBASE_NAVIGATION.md`](CODEBASE_NAVIGATION.md) § Canonical Utilities |
-| Security & privacy references | [`SECURITY.md`](SECURITY.md), [`PRIVACY_POLICY.md`](PRIVACY_POLICY.md) |
-| Agent setup (Cursor skills, MCP) | [`AGENT_SETUP.md`](AGENT_SETUP.md) |
-| **Civics data ingest** | [`services/civics-backend/NEW_civics_ingest/docs/GETTING_STARTED.md`](../services/civics-backend/NEW_civics_ingest/docs/GETTING_STARTED.md) — 3 steps to load representative data |
+|------|------|
+| **New contributor?** | [GETTING_STARTED.md](GETTING_STARTED.md) |
+| Project vision | [VISION.md](VISION.md) |
+| System architecture | [ARCHITECTURE.md](ARCHITECTURE.md) |
+| Contributing workflow | [../CONTRIBUTING.md](../CONTRIBUTING.md) |
 
----
+## Developer Reference
 
-## Operational Docs
+| Topic | Doc |
+|-------|-----|
+| Architecture & codebase structure | [ARCHITECTURE.md](ARCHITECTURE.md) |
+| State management (Zustand) | [STATE_MANAGEMENT.md](STATE_MANAGEMENT.md) |
+| Testing guide | [TESTING.md](TESTING.md) |
+| Environment variables | [ENVIRONMENT_VARIABLES.md](ENVIRONMENT_VARIABLES.md) |
+| Database schema | [DATABASE_SCHEMA.md](DATABASE_SCHEMA.md) |
+| API documentation | [API/README.md](API/README.md) |
+| Troubleshooting | [TROUBLESHOOTING.md](TROUBLESHOOTING.md) |
 
-- [`ENVIRONMENT_VARIABLES.md`](ENVIRONMENT_VARIABLES.md) — Required configuration keys.
-- [`WEBAUTHN_DESIGN.md`](WEBAUTHN_DESIGN.md) — Passkey architecture, trust tier, proof-of-personhood.
-- [`DEPLOYMENT.md`](DEPLOYMENT.md) — Deployment checklist and process.
-- Production testing — See [`TESTING.md`](TESTING.md) § Production Testing.
-- [`DATABASE_SCHEMA.md`](DATABASE_SCHEMA.md) — Table & function summary.
-- [`SECURITY.md`](SECURITY.md) / [`PRIVACY_POLICY.md`](PRIVACY_POLICY.md) — Compliance references.
-- [`TROUBLESHOOTING.md`](TROUBLESHOOTING.md) — General troubleshooting guide.
-- `docs/archive/` contains legacy or feature-specific troubleshooting notes as needed.
+## Operations
 
----
+| Topic | Doc |
+|-------|-----|
+| Deployment | [DEPLOYMENT.md](DEPLOYMENT.md) |
+| Security model | [SECURITY.md](SECURITY.md) |
+| WebAuthn / passkeys | [WEBAUTHN_DESIGN.md](WEBAUTHN_DESIGN.md) |
+| Roadmap & remaining work | [ROADMAP.md](ROADMAP.md) |
 
-## Feature Notes
+## Compliance
 
-Feature-specific docs should be added only when they are actively maintained and referenced by the core docs. Otherwise, keep them in `docs/archive/`.
+| Topic | Doc |
+|-------|-----|
+| Privacy policy | [PRIVACY_POLICY.md](PRIVACY_POLICY.md) |
+| Security practices | [SECURITY.md](SECURITY.md) |
 
-## API Documentation
+## API Reference
 
-- [`API/README.md`](API/README.md) — API overview and authentication.
-- [`API/contracts.md`](API/contracts.md) — API contract standards and response formats.
-- [`API/civic-actions.md`](API/civic-actions.md) — Civic actions API reference.
-
-## Technical Highlights
-Archived in `docs/archive/reference/technical/` if historical context is needed.
-
----
-
-## Archive Index
-
-Out-of-date, historical, or completed work documentation lives under `docs/archive/`. Use these when you need additional context, but treat the files above as the current source of truth.
-
-Note: `docs/ROADMAP.md` is the **definitive MVP roadmap** (all remaining work). Legacy sections and runbooks: `docs/ROADMAP_SINGLE_SOURCE.md`.
-
-```
-docs/archive/
-├─ 2026-02-docs-consolidation/  # Non-canonical docs (audits, GovInfo, constituent will, etc.)
-├─ 2026-01-24-docs-consolidation/  # Agent implementation, Security Advisor refs, completion reports (Jan 2026)
-├─ release-notes/          # Changelog, API change logs, one-off status memos
-├─ reference/              # Legacy guides, completed work summaries, historical docs
-│  ├─ fixes/               # Historical fix summaries (2025)
-│  ├─ lint/                # Lint repair plans (completed)
-│  ├─ production/          # Production readiness summaries (completed)
-│  ├─ stores/              # Store testing status (superseded by STATE_MANAGEMENT.md)
-│  ├─ device-flow/         # Device flow implementation summaries
-│  ├─ push-notifications/  # Historical testing and review docs
-│  ├─ civics/              # Civics backend + ingest documentation
-│  ├─ guides/              # User/admin guides
-│  └─ testing/             # Playwright/Jest playbooks
-└─ runbooks/               # Operational runbooks and emergency procedures
-```
-
----
+- [API/README.md](API/README.md) — Overview and authentication
+- [API/contracts.md](API/contracts.md) — Response format standards
+- [API/civic-actions.md](API/civic-actions.md) — Civic actions API
+- [API/response-guide.md](API/response-guide.md) — Response patterns
 
 ## Archive
 
-Outdated or superseded documents live under the archive tree above, including the older status narratives in `archive/legacy-status/`. When archiving additional files, move them into the appropriate subdirectory and update this index.
-
----
-
-## Maintenance Checklist
-
-- Update this README whenever new core docs are added or archived.
-- Keep summary tables in `CURRENT_STATUS.md` and `FEATURE_STATUS.md` realistic—avoid "perfect completion" phrasing.
-- The definitive MVP roadmap is `docs/ROADMAP.md`.
-- Archive completed work summaries (fix summaries, implementation status) quarterly to keep active docs focused.
-- Keep the canonical set aligned with `DOCS_MANIFEST.md`.
-
-For questions or missing documentation, open an issue or add a note in the relevant doc.
-
-## Ownership & Update Cadence
-
-- **Owner:** Core maintainer
-- **Update cadence:** Review on major feature changes and at least monthly
-- **Last verified:** 2026-02-26
-
+Historical documentation (completed audits, legacy status trackers, feature-specific docs) lives under `docs/archive/`. See [archive/README.md](archive/README.md) for the index.

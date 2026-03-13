@@ -179,7 +179,7 @@ export function PasskeyLogin({
             <AlertCircle className="h-5 w-5 text-red-500 dark:text-red-400" aria-hidden="true" />
             <span>WebAuthn Not Supported</span>
           </CardTitle>
-          <CardDescription className="text-gray-600 dark:text-gray-400">
+          <CardDescription className="text-muted-foreground">
             Your browser does not support WebAuthn. Please use a modern browser or try a different authentication method.
           </CardDescription>
         </CardHeader>
@@ -191,10 +191,10 @@ export function PasskeyLogin({
     <Card className={className}>
       <CardHeader>
         <CardTitle className="flex items-center space-x-2">
-          <Fingerprint className="h-5 w-5 text-blue-600 dark:text-blue-400" aria-hidden="true" />
+          <Fingerprint className="h-5 w-5 text-primary" aria-hidden="true" />
           <span>Sign In with Passkey</span>
         </CardTitle>
-        <CardDescription className="text-gray-600 dark:text-gray-400">
+        <CardDescription className="text-muted-foreground">
           Use your registered passkey to sign in securely
         </CardDescription>
       </CardHeader>
@@ -205,7 +205,7 @@ export function PasskeyLogin({
             <CheckCircle className="h-12 w-12 text-green-500 dark:text-green-400 mx-auto" aria-hidden="true" />
             <div>
               <h3 className="text-lg font-semibold text-green-700 dark:text-green-300">Authentication Successful!</h3>
-              <p className="text-gray-600 dark:text-gray-400">
+              <p className="text-muted-foreground">
                 You have been signed in successfully.
               </p>
             </div>
@@ -246,7 +246,7 @@ export function PasskeyLogin({
             <Button
               onClick={handleLogin}
               disabled={isAuthenticating}
-              className="w-full focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
+              className="w-full focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2"
               size="lg"
               aria-label="Sign in with passkey"
               aria-busy={isAuthenticating}
@@ -265,7 +265,7 @@ export function PasskeyLogin({
             </Button>
 
             {/* Security Information */}
-            <div className="text-xs text-gray-500 space-y-1">
+            <div className="text-xs text-muted-foreground space-y-1">
               <p>• Your passkey is verified on your device</p>
               <p>• No passwords or personal data are transmitted</p>
               <p>• Works with Touch ID, Face ID, Windows Hello, and security keys</p>

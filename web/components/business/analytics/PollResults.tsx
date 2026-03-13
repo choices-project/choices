@@ -2,10 +2,12 @@
 
 import React, { useState, useEffect, useCallback } from 'react';
 
+import { AnimatedVoteBar } from '@/components/shared/AnimatedVoteBar';
 import { EnhancedEmptyState } from '@/components/shared/EnhancedEmptyState';
 import { EnhancedErrorDisplay } from '@/components/shared/EnhancedErrorDisplay';
 
 import { getErrorMessageWithFallback, ERROR_MESSAGES, type ErrorMessageConfig } from '@/lib/constants/error-messages';
+import { logger } from '@/lib/utils/logger';
 
 type PollResult = {
   option_id: string;
@@ -94,7 +96,7 @@ export function PollResults({ pollId, trustTiers }: PollResultsProps) {
       };
       const errorConfig = getErrorMessageWithFallback(errorKey, fallback);
       setError(errorConfig.message);
-      console.error('Poll results fetch error:', err);
+      logger.error('Poll results fetch error:', err);
     } finally {
       setLoading(false);
     }
@@ -113,8 +115,8 @@ export function PollResults({ pollId, trustTiers }: PollResultsProps) {
       <div className="space-y-3" role="status" aria-live="polite" aria-busy="true">
         {[1, 2, 3].map(i => (
           <div key={i} className="animate-pulse">
-            <div className="h-4 bg-gray-200 dark:bg-gray-700 rounded mb-2" />
-            <div className="h-2 bg-gray-200 dark:bg-gray-700 rounded" />
+            <div className="h-4 bg-muted rounded mb-2" />
+            <div className="h-2 bg-muted rounded" />
           </div>
         ))}
         <span className="sr-only">Loading poll results...</span>
@@ -163,7 +165,7 @@ export function PollResults({ pollId, trustTiers }: PollResultsProps) {
     return (
       <EnhancedEmptyState
         icon={
-          <svg className="h-12 w-12 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <svg className="h-12 w-12 text-muted-foreground" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
           </svg>
         }
@@ -178,7 +180,7 @@ export function PollResults({ pollId, trustTiers }: PollResultsProps) {
 
   return (
     <div className="space-y-3" role="region" aria-label="Poll results">
-      {results.map((result) => {
+      {results.map((result, index) => {
         const percentage = result.percentage ?? (totalVotes > 0 ? (result.vote_count / totalVotes) * 100 : 0);
         const hasTrustDistribution = result.trust_distribution &&
           (result.trust_distribution.verified_votes > 0 ||
@@ -189,61 +191,45 @@ export function PollResults({ pollId, trustTiers }: PollResultsProps) {
         return (
           <div
             key={result.option_id}
-            className="border border-gray-200 dark:border-gray-700 rounded-lg p-4 bg-white dark:bg-gray-800 hover:shadow-md transition-shadow"
+            className="border border-border rounded-lg p-4 bg-card hover:shadow-md transition-shadow"
             role="article"
             aria-label={`${result.option_text}: ${result.vote_count} votes, ${percentage.toFixed(1)}%`}
           >
-            <div className="flex justify-between items-center mb-2">
-              <span className="font-medium text-gray-900 dark:text-gray-100">{result.option_text}</span>
-              <span className="text-lg font-bold text-gray-900 dark:text-gray-100">{result.vote_count} {result.vote_count === 1 ? 'vote' : 'votes'}</span>
-            </div>
-
-            {/* Progress Bar */}
-            <div
-              className="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-3 mb-3"
-              role="progressbar"
-              aria-valuenow={percentage}
-              aria-valuemin={0}
-              aria-valuemax={100}
-              aria-label={`${result.option_text} has ${percentage.toFixed(1)}% of votes`}
-            >
-              <div
-                className="bg-blue-500 dark:bg-blue-600 h-3 rounded-full transition-all duration-300 ease-out"
-                style={{ width: `${percentage}%` }}
-              />
-            </div>
-
-            <div className="text-sm text-gray-600 dark:text-gray-400">
-              {percentage.toFixed(1)}% of total votes
-            </div>
+            <AnimatedVoteBar
+              percentage={percentage}
+              label={result.option_text}
+              voteCount={result.vote_count}
+              color="bg-primary"
+              isWinner={index === 0 && totalVotes > 0}
+            />
 
             {/* Trust Distribution - Only show if data exists */}
             {hasTrustDistribution && result.trust_distribution && (
-              <div className="mt-3 pt-3 border-t border-gray-200 dark:border-gray-700">
-                <div className="text-xs font-medium text-gray-500 dark:text-gray-400 mb-2">Trust Distribution:</div>
+              <div className="mt-3 pt-3 border-t border-border">
+                <div className="text-xs font-medium text-muted-foreground mb-2">Trust Distribution:</div>
                 <div className="grid grid-cols-2 gap-2 text-xs">
                   {result.trust_distribution.verified_votes > 0 && (
                     <div className="flex items-center space-x-1">
                       <span className="w-2 h-2 bg-green-500 rounded-full" aria-hidden="true" />
-                      <span className="text-gray-700 dark:text-gray-300">Verified: {result.trust_distribution.verified_votes}</span>
+                      <span className="text-foreground/80">Verified: {result.trust_distribution.verified_votes}</span>
                     </div>
                   )}
                   {result.trust_distribution.established_votes > 0 && (
                     <div className="flex items-center space-x-1">
                       <span className="w-2 h-2 bg-blue-500 rounded-full" aria-hidden="true" />
-                      <span className="text-gray-700 dark:text-gray-300">Established: {result.trust_distribution.established_votes}</span>
+                      <span className="text-foreground/80">Established: {result.trust_distribution.established_votes}</span>
                     </div>
                   )}
                   {result.trust_distribution.new_user_votes > 0 && (
                     <div className="flex items-center space-x-1">
                       <span className="w-2 h-2 bg-yellow-500 rounded-full" aria-hidden="true" />
-                      <span className="text-gray-700 dark:text-gray-300">New: {result.trust_distribution.new_user_votes}</span>
+                      <span className="text-foreground/80">New: {result.trust_distribution.new_user_votes}</span>
                     </div>
                   )}
                   {result.trust_distribution.anonymous_votes > 0 && (
                     <div className="flex items-center space-x-1">
                       <span className="w-2 h-2 bg-gray-500 rounded-full" aria-hidden="true" />
-                      <span className="text-gray-700 dark:text-gray-300">Anonymous: {result.trust_distribution.anonymous_votes}</span>
+                      <span className="text-foreground/80">Anonymous: {result.trust_distribution.anonymous_votes}</span>
                     </div>
                   )}
                 </div>
@@ -254,9 +240,9 @@ export function PollResults({ pollId, trustTiers }: PollResultsProps) {
       })}
 
       {/* Total Votes Summary */}
-      <div className="mt-4 pt-4 border-t border-gray-200 dark:border-gray-700 text-center">
-        <p className="text-sm font-medium text-gray-600 dark:text-gray-400">
-          Total: <span className="font-bold text-gray-900 dark:text-gray-100">{totalVotes}</span> {totalVotes === 1 ? 'vote' : 'votes'}
+      <div className="mt-4 pt-4 border-t border-border text-center">
+        <p className="text-sm font-medium text-muted-foreground">
+          Total: <span className="font-bold text-foreground">{totalVotes}</span> {totalVotes === 1 ? 'vote' : 'votes'}
         </p>
       </div>
     </div>

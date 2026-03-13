@@ -113,14 +113,14 @@ export default function PerformanceDashboard() {
     return (
       <div className="space-y-4" role="status" aria-live="polite" aria-busy="true">
         <div className="animate-pulse">
-          <div className="h-8 bg-gray-200 dark:bg-gray-700 rounded w-1/4 mb-4" />
+          <div className="h-8 bg-muted rounded w-1/4 mb-4" />
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             {[1, 2, 3].map((i) => (
-              <div key={i} className="h-32 bg-gray-200 dark:bg-gray-700 rounded" />
+              <div key={i} className="h-32 bg-muted rounded" />
             ))}
           </div>
         </div>
-        <p className="text-sm text-gray-600 dark:text-gray-400 text-center">
+        <p className="text-sm text-muted-foreground text-center">
           Loading performance metrics...
         </p>
       </div>
@@ -156,8 +156,8 @@ export default function PerformanceDashboard() {
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h2 className="text-2xl font-bold text-gray-900">Performance Dashboard</h2>
-          <p className="text-gray-600">Monitor and optimize system performance</p>
+          <h2 className="text-2xl font-bold text-foreground">Performance Dashboard</h2>
+          <p className="text-muted-foreground">Monitor and optimize system performance</p>
         </div>
         <div className="flex items-center space-x-4">
           <div className="flex items-center space-x-2">
@@ -168,7 +168,7 @@ export default function PerformanceDashboard() {
               onChange={(e) => setAutoRefresh(e.target.checked)}
               className="rounded border-gray-300"
             />
-            <label htmlFor="autoRefresh" className="text-sm text-gray-700">
+            <label htmlFor="autoRefresh" className="text-sm text-foreground/80">
               Auto-refresh
             </label>
           </div>
@@ -176,7 +176,7 @@ export default function PerformanceDashboard() {
             onClick={() => {
               loadPerformanceStats()
             }}
-            className="bg-blue-600 text-white px-4 py-2 rounded-md text-sm font-medium hover:bg-blue-700"
+            className="bg-primary text-white px-4 py-2 rounded-md text-sm font-medium hover:bg-primary/90"
           >
             Refresh
           </button>
@@ -232,21 +232,21 @@ export default function PerformanceDashboard() {
 
       {/* Performance Overview */}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
-        <div className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg p-6">
+        <div className="bg-card border border-border rounded-lg p-6">
           <div className="flex items-center">
             <div className="flex-shrink-0">
-              <svg className="h-8 w-8 text-blue-600 dark:text-blue-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <svg className="h-8 w-8 text-primary" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
               </svg>
             </div>
             <div className="ml-4">
-              <p className="text-sm font-medium text-gray-500 dark:text-gray-400">Avg Query Time</p>
-              <p className="text-2xl font-semibold text-gray-900 dark:text-gray-100">{performanceInsights.avgQueryTime.toFixed(2)}ms</p>
+              <p className="text-sm font-medium text-muted-foreground">Avg Query Time</p>
+              <p className="text-2xl font-semibold text-foreground">{performanceInsights.avgQueryTime.toFixed(2)}ms</p>
             </div>
           </div>
         </div>
 
-        <div className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg p-6">
+        <div className="bg-card border border-border rounded-lg p-6">
           <div className="flex items-center">
             <div className="flex-shrink-0">
               <svg className="h-8 w-8 text-green-600 dark:text-green-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -254,13 +254,13 @@ export default function PerformanceDashboard() {
               </svg>
             </div>
             <div className="ml-4">
-              <p className="text-sm font-medium text-gray-500 dark:text-gray-400">Max Query Time</p>
-              <p className="text-2xl font-semibold text-gray-900 dark:text-gray-100">{performanceInsights.maxQueryTime.toFixed(2)}ms</p>
+              <p className="text-sm font-medium text-muted-foreground">Max Query Time</p>
+              <p className="text-2xl font-semibold text-foreground">{performanceInsights.maxQueryTime.toFixed(2)}ms</p>
             </div>
           </div>
         </div>
 
-        <div className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg p-6">
+        <div className="bg-card border border-border rounded-lg p-6">
           <div className="flex items-center">
             <div className="flex-shrink-0">
               <svg className="h-8 w-8 text-purple-600 dark:text-purple-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -268,13 +268,13 @@ export default function PerformanceDashboard() {
               </svg>
             </div>
             <div className="ml-4">
-              <p className="text-sm font-medium text-gray-500 dark:text-gray-400">Total Queries</p>
-              <p className="text-2xl font-semibold text-gray-900 dark:text-gray-100">{performanceInsights.totalQueries}</p>
+              <p className="text-sm font-medium text-muted-foreground">Total Queries</p>
+              <p className="text-2xl font-semibold text-foreground">{performanceInsights.totalQueries}</p>
             </div>
           </div>
         </div>
 
-        <div className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg p-6">
+        <div className="bg-card border border-border rounded-lg p-6">
           <div className="flex items-center">
             <div className="flex-shrink-0">
               <svg className="h-8 w-8 text-yellow-600 dark:text-yellow-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -282,22 +282,22 @@ export default function PerformanceDashboard() {
               </svg>
             </div>
             <div className="ml-4">
-              <p className="text-sm font-medium text-gray-500 dark:text-gray-400">Cache Hit Rate</p>
-              <p className="text-2xl font-semibold text-gray-900 dark:text-gray-100">{performanceInsights.cacheHitRate.toFixed(1)}%</p>
+              <p className="text-sm font-medium text-muted-foreground">Cache Hit Rate</p>
+              <p className="text-2xl font-semibold text-foreground">{performanceInsights.cacheHitRate.toFixed(1)}%</p>
             </div>
           </div>
         </div>
       </div>
 
       {/* Performance Status */}
-      <div className="bg-white border border-gray-200 rounded-lg p-6">
-        <h3 className="text-lg font-semibold text-gray-900 mb-4">Performance Status</h3>
+      <div className="bg-card border border-border rounded-lg p-6">
+        <h3 className="text-lg font-semibold text-foreground mb-4">Performance Status</h3>
         <div className="flex items-center justify-between">
           <div className="flex items-center space-x-4">
             <span className={`px-3 py-1 rounded-full text-sm font-medium ${performanceStatus.bgColor} ${performanceStatus.color}`}>
               {performanceStatus.status}
             </span>
-            <span className="text-sm text-gray-600 dark:text-gray-400">
+            <span className="text-sm text-muted-foreground">
               Last updated: {lastRefresh?.toLocaleTimeString() ?? 'Never'}
             </span>
           </div>
@@ -305,7 +305,7 @@ export default function PerformanceDashboard() {
             <button
               onClick={handleRefreshMaterializedViews}
               disabled={loading}
-              className="bg-blue-600 text-white px-4 py-2 rounded-md text-sm font-medium hover:bg-blue-700 disabled:opacity-50"
+              className="bg-primary text-white px-4 py-2 rounded-md text-sm font-medium hover:bg-primary/90 disabled:opacity-50"
             >
               {loading ? 'Refreshing...' : 'Refresh Views'}
             </button>
@@ -322,31 +322,31 @@ export default function PerformanceDashboard() {
 
       {/* Cache Statistics */}
       {cacheStats && (
-        <div className="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg p-6">
-          <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-4">Cache Statistics</h3>
+        <div className="bg-background border border-border rounded-lg p-6">
+          <h3 className="text-lg font-semibold text-foreground mb-4">Cache Statistics</h3>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             <div>
-              <p className="text-sm font-medium text-gray-500 dark:text-gray-400">Cache Size</p>
-              <p className="text-xl font-semibold text-gray-900 dark:text-gray-100">{cacheStats.size} items</p>
+              <p className="text-sm font-medium text-muted-foreground">Cache Size</p>
+              <p className="text-xl font-semibold text-foreground">{cacheStats.size} items</p>
             </div>
             <div>
-              <p className="text-sm font-medium text-gray-500 dark:text-gray-400">Cache Keys</p>
-              <p className="text-xl font-semibold text-gray-900 dark:text-gray-100">{cacheStats.keys.length}</p>
+              <p className="text-sm font-medium text-muted-foreground">Cache Keys</p>
+              <p className="text-xl font-semibold text-foreground">{cacheStats.keys.length}</p>
             </div>
             <div>
-              <p className="text-sm font-medium text-gray-500 dark:text-gray-400">Memory Usage</p>
-              <p className="text-xl font-semibold text-gray-900 dark:text-gray-100">
+              <p className="text-sm font-medium text-muted-foreground">Memory Usage</p>
+              <p className="text-xl font-semibold text-foreground">
                 {(cacheStats.memoryUsage / 1024).toFixed(2)} KB
               </p>
             </div>
           </div>
           {cacheStats.keys.length > 0 && (
             <div className="mt-4">
-              <p className="text-sm font-medium text-gray-500 dark:text-gray-400 mb-2">Recent Cache Keys:</p>
-              <div className="bg-gray-50 dark:bg-gray-800 rounded-lg p-3 border border-gray-200 dark:border-gray-700">
+              <p className="text-sm font-medium text-muted-foreground mb-2">Recent Cache Keys:</p>
+              <div className="bg-muted rounded-lg p-3 border border-border">
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
                   {cacheStats.keys.slice(0, 10).map((key: string, index: number) => (
-                    <div key={index} className="text-xs font-mono text-gray-600 dark:text-gray-400 truncate">
+                    <div key={index} className="text-xs font-mono text-muted-foreground truncate">
                       {key}
                     </div>
                   ))}
@@ -358,45 +358,45 @@ export default function PerformanceDashboard() {
       )}
 
       {/* Detailed Performance Metrics */}
-      <div className="bg-white border border-gray-200 rounded-lg p-6">
-        <h3 className="text-lg font-semibold text-gray-900 mb-4">Detailed Performance Metrics</h3>
+      <div className="bg-card border border-border rounded-lg p-6">
+        <h3 className="text-lg font-semibold text-foreground mb-4">Detailed Performance Metrics</h3>
         <div className="overflow-x-auto">
-          <table className="min-w-full divide-y divide-gray-200">
-            <thead className="bg-gray-50">
+          <table className="min-w-full divide-y divide-border">
+            <thead className="bg-muted">
               <tr>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                <th className="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">
                   Metric
                 </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                <th className="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">
                   Average
                 </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                <th className="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">
                   Min
                 </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                <th className="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">
                   Max
                 </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                <th className="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">
                   Count
                 </th>
               </tr>
             </thead>
-            <tbody className="bg-white divide-y divide-gray-200">
+            <tbody className="bg-card divide-y divide-border">
               {performanceStats.map((metric: any) => (
                 <tr key={metric.metricName}>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
+                  <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-foreground">
                     {metric.metricName}
                   </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                  <td className="px-6 py-4 whitespace-nowrap text-sm text-muted-foreground">
                     {metric.avgValue.toFixed(2)}
                   </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                  <td className="px-6 py-4 whitespace-nowrap text-sm text-muted-foreground">
                     {metric.minValue.toFixed(2)}
                   </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                  <td className="px-6 py-4 whitespace-nowrap text-sm text-muted-foreground">
                     {metric.maxValue.toFixed(2)}
                   </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                  <td className="px-6 py-4 whitespace-nowrap text-sm text-muted-foreground">
                     {metric.countMeasurements}
                   </td>
                 </tr>

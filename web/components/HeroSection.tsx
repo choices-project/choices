@@ -119,7 +119,7 @@ export const HeroSection: React.FC<HeroSectionProps> = ({
   };
 
   return (
-    <section className="relative bg-gradient-to-br from-blue-50 via-white to-purple-50 overflow-hidden">
+    <section className="relative bg-gradient-to-br from-muted via-card to-muted overflow-hidden">
       {/* Background Pattern */}
       <div className="absolute inset-0 opacity-5" style={gridPatternStyle} />
 
@@ -135,13 +135,13 @@ export const HeroSection: React.FC<HeroSectionProps> = ({
 
             {/* Main Heading */}
             <div className="space-y-4">
-              <h1 className="text-4xl lg:text-6xl font-bold text-gray-900 leading-tight">
+              <h1 className="text-4xl lg:text-6xl font-bold text-foreground leading-tight">
                 Vote with{' '}
                 <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-600 to-purple-600">
                   Confidence
                 </span>
               </h1>
-              <p className="text-xl lg:text-2xl text-gray-600 leading-relaxed">
+              <p className="text-xl lg:text-2xl text-muted-foreground leading-relaxed">
                 Participate in democratic decision-making with privacy, security, and transparency.
                 Your voice matters, and we ensure it&apos;s heard.
               </p>
@@ -154,19 +154,19 @@ export const HeroSection: React.FC<HeroSectionProps> = ({
                   <div className="text-2xl font-bold text-blue-600">
                     {userStats.totalVotes.toLocaleString()}
                   </div>
-                  <div className="text-sm text-gray-600">Total Votes</div>
+                  <div className="text-sm text-muted-foreground">Total Votes</div>
                 </div>
                 <div className="text-center">
                   <div className="text-2xl font-bold text-purple-600">
                     {userStats.activePolls}
                   </div>
-                  <div className="text-sm text-gray-600">Active Polls</div>
+                  <div className="text-sm text-muted-foreground">Active Polls</div>
                 </div>
                 <div className="text-center">
                   <div className="text-2xl font-bold text-green-600">
                     {userStats.participationRate}%
                   </div>
-                  <div className="text-sm text-gray-600">Participation</div>
+                  <div className="text-sm text-muted-foreground">Participation</div>
                 </div>
               </div>
             )}
@@ -185,7 +185,7 @@ export const HeroSection: React.FC<HeroSectionProps> = ({
                   </Link>
                   <Link
                     href="/dashboard"
-                    className="inline-flex items-center justify-center px-8 py-4 border-2 border-gray-300 text-gray-700 font-semibold rounded-lg hover:border-gray-400 hover:bg-gray-50 transition-colors duration-200"
+                    className="inline-flex items-center justify-center px-8 py-4 border-2 border-border text-foreground/80 font-semibold rounded-lg hover:border-primary hover:bg-muted transition-colors duration-200"
                   >
                     View Dashboard
                   </Link>
@@ -202,7 +202,7 @@ export const HeroSection: React.FC<HeroSectionProps> = ({
                   </Link>
                   <Link
                     href="/login"
-                    className="inline-flex items-center justify-center px-8 py-4 border-2 border-gray-300 text-gray-700 font-semibold rounded-lg hover:border-gray-400 hover:bg-gray-50 transition-colors duration-200"
+                    className="inline-flex items-center justify-center px-8 py-4 border-2 border-border text-foreground/80 font-semibold rounded-lg hover:border-primary hover:bg-muted transition-colors duration-200"
                   >
                     Sign In
                   </Link>
@@ -211,7 +211,7 @@ export const HeroSection: React.FC<HeroSectionProps> = ({
             </div>
 
             {/* Trust Indicators */}
-            <div className="flex items-center gap-6 text-sm text-gray-500">
+            <div className="flex items-center gap-6 text-sm text-muted-foreground">
               <div className="flex items-center gap-2">
                 <CheckCircle2 className="w-4 h-4 text-green-500" />
                 <span>Open Source</span>
@@ -230,7 +230,7 @@ export const HeroSection: React.FC<HeroSectionProps> = ({
           {/* Right Column - Visual */}
           <div className="relative">
             {/* Main Card */}
-            <div className="relative bg-white rounded-2xl shadow-2xl p-8 border border-gray-100">
+            <div className="relative bg-card rounded-2xl shadow-2xl p-8 border border-border">
               {/* Header */}
               <div className="flex items-center justify-between mb-6">
                 <div className="flex items-center gap-3">
@@ -238,10 +238,10 @@ export const HeroSection: React.FC<HeroSectionProps> = ({
                     <Vote className="w-5 h-5 text-blue-600" />
                   </div>
                   <div>
-                    <h3 className="font-semibold text-gray-900">
+                    <h3 className="font-semibold text-foreground">
                       {isLoadingTrending ? 'Loading trending poll...' : trendingPoll?.title ?? 'Climate Action 2024'}
                     </h3>
-                    <p className="text-sm text-gray-500">
+                    <p className="text-sm text-muted-foreground">
                       Active • {trendingPoll?.totalVotes.toLocaleString() ?? '2,847'} votes
                     </p>
                   </div>
@@ -259,7 +259,7 @@ export const HeroSection: React.FC<HeroSectionProps> = ({
                     <TrendingUp className="w-3 h-3" />
                     Trending #{trendingPoll.trendingScore}
                   </div>
-                  <p className="text-xs text-gray-500 mt-1">
+                  <p className="text-xs text-muted-foreground mt-1">
                     Source: {trendingPoll.source} • {trendingPoll.category.join(', ')}
                   </p>
                 </div>
@@ -272,11 +272,11 @@ export const HeroSection: React.FC<HeroSectionProps> = ({
                   Array.from({ length: 5 }).map((_, index: any) => (
                     <div key={index} className="animate-pulse">
                       <div className="flex items-center justify-between text-sm mb-1">
-                        <div className="h-4 bg-gray-200 rounded w-3/4" />
-                        <div className="h-4 bg-gray-200 rounded w-8" />
+                        <div className="h-4 bg-muted rounded w-3/4" />
+                        <div className="h-4 bg-muted rounded w-8" />
                       </div>
-                      <div className="w-full bg-gray-200 rounded-full h-2">
-                        <div className="bg-gray-300 h-2 rounded-full" style={{ width: `${Math.random() * 100}%` }} />
+                      <div className="w-full bg-muted rounded-full h-2">
+                        <div className="bg-muted-foreground/60 h-2 rounded-full" style={{ width: `${Math.random() * 100}%` }} />
                       </div>
                     </div>
                   ))
@@ -290,10 +290,10 @@ export const HeroSection: React.FC<HeroSectionProps> = ({
                   ]).map((option: any, index: any) => (
                     <div key={index} className="relative">
                       <div className="flex items-center justify-between text-sm mb-1">
-                        <span className="text-gray-700">{option.text}</span>
-                        <span className="text-gray-500">{option.votes}%</span>
+                        <span className="text-foreground/80">{option.text}</span>
+                        <span className="text-muted-foreground">{option.votes}%</span>
                       </div>
-                      <div className="w-full bg-gray-200 rounded-full h-2">
+                      <div className="w-full bg-muted rounded-full h-2">
                         <div
                           className={`h-2 rounded-full transition-all duration-1000 ${option.color}`}
                           style={{ width: `${option.votes}%` }}
@@ -340,10 +340,10 @@ export const HeroSection: React.FC<HeroSectionProps> = ({
         {/* Features Section */}
         <div className="mt-20">
           <div className="text-center mb-12">
-            <h2 className="text-3xl font-bold text-gray-900 mb-4">
+            <h2 className="text-3xl font-bold text-foreground mb-4">
               Why Choose Our Platform?
             </h2>
-            <p className="text-xl text-gray-600 max-w-3xl mx-auto">
+            <p className="text-xl text-muted-foreground max-w-3xl mx-auto">
               We combine cutting-edge cryptography with user-friendly design to create
               the most secure and accessible voting experience.
             </p>
@@ -353,15 +353,15 @@ export const HeroSection: React.FC<HeroSectionProps> = ({
             {features.map((feature: any, index: any) => (
               <div
                 key={index}
-                className="text-center p-6 bg-white rounded-xl shadow-sm hover:shadow-md transition-shadow duration-200 border border-gray-100"
+                className="text-center p-6 bg-card rounded-xl shadow-sm hover:shadow-md transition-shadow duration-200 border border-border"
               >
                 <div className="inline-flex items-center justify-center w-12 h-12 bg-blue-100 rounded-lg mb-4 text-blue-600">
                   {feature.icon}
                 </div>
-                <h3 className="text-lg font-semibold text-gray-900 mb-2">
+                <h3 className="text-lg font-semibold text-foreground mb-2">
                   {feature.title}
                 </h3>
-                <p className="text-gray-600 text-sm leading-relaxed">
+                <p className="text-muted-foreground text-sm leading-relaxed">
                   {feature.description}
                 </p>
               </div>
@@ -370,12 +370,12 @@ export const HeroSection: React.FC<HeroSectionProps> = ({
         </div>
 
         {/* Global Stats */}
-        <div className="mt-20 bg-white rounded-2xl shadow-lg p-8 border border-gray-100">
+        <div className="mt-20 bg-card rounded-2xl shadow-lg p-8 border border-border">
           <div className="text-center mb-8">
-            <h3 className="text-2xl font-bold text-gray-900 mb-2">
+            <h3 className="text-2xl font-bold text-foreground mb-2">
               Global Impact
             </h3>
-            <p className="text-gray-600">
+            <p className="text-muted-foreground">
               Join thousands of users making a difference worldwide
             </p>
           </div>
@@ -383,19 +383,19 @@ export const HeroSection: React.FC<HeroSectionProps> = ({
           <div className="grid grid-cols-2 md:grid-cols-4 gap-8">
             <div className="text-center">
               <div className="text-3xl font-bold text-blue-600 mb-2">50K+</div>
-              <div className="text-sm text-gray-600">Active Users</div>
+              <div className="text-sm text-muted-foreground">Active Users</div>
             </div>
             <div className="text-center">
               <div className="text-3xl font-bold text-purple-600 mb-2">1.2M</div>
-              <div className="text-sm text-gray-600">Votes Cast</div>
+              <div className="text-sm text-muted-foreground">Votes Cast</div>
             </div>
             <div className="text-center">
               <div className="text-3xl font-bold text-green-600 mb-2">500+</div>
-              <div className="text-sm text-gray-600">Polls Created</div>
+              <div className="text-sm text-muted-foreground">Polls Created</div>
             </div>
             <div className="text-center">
               <div className="text-3xl font-bold text-orange-600 mb-2">99.9%</div>
-              <div className="text-sm text-gray-600">Uptime</div>
+              <div className="text-sm text-muted-foreground">Uptime</div>
             </div>
           </div>
         </div>

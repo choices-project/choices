@@ -13,19 +13,15 @@
 'use client';
 
 import {
-  HeartIcon,
-  ChatBubbleLeftIcon,
-  ShareIcon,
-  BookmarkIcon,
-  ChartBarIcon,
-  EyeIcon,
-  ClockIcon,
-  ArrowTrendingUpIcon
-} from '@heroicons/react/24/outline';
-import {
-  HeartIcon as HeartSolidIcon,
-  BookmarkIcon as BookmarkSolidIcon
-} from '@heroicons/react/24/solid';
+  Heart,
+  MessageSquare,
+  Share2,
+  Bookmark,
+  BarChart3,
+  Eye,
+  Clock,
+  TrendingUp
+} from 'lucide-react';
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 
 import { useAnalyticsActions, useFeedsActions, useFeedById } from '@/lib/stores';
@@ -350,14 +346,14 @@ export default function EngagementMetrics({
             className={`flex items-center space-x-2 transition-colors ${
               isLiked 
                 ? 'text-red-500' 
-                : 'text-gray-500 hover:text-red-500'
+                : 'text-muted-foreground hover:text-red-500'
             } ${mutationPending ? 'opacity-50 cursor-not-allowed' : ''}`}
             aria-label={isLiked ? t('civics.engagement.actions.unlike') : t('civics.engagement.actions.like')}
           >
             {isLiked ? (
-              <HeartSolidIcon className="w-5 h-5" />
+              <Heart className="w-5 h-5" fill="currentColor" />
             ) : (
-              <HeartIcon className="w-5 h-5" />
+              <Heart className="w-5 h-5" />
             )}
             <span className="text-sm font-medium">
               {formatNumber(metrics.likes)}
@@ -367,12 +363,12 @@ export default function EngagementMetrics({
           <button
             onClick={handleComment}
             disabled={mutationPending}
-            className={`flex items-center space-x-2 text-gray-500 hover:text-blue-500 transition-colors ${
+            className={`flex items-center space-x-2 text-muted-foreground hover:text-primary transition-colors ${
               mutationPending ? 'opacity-50 cursor-not-allowed' : ''
             }`}
             aria-label={t('civics.engagement.actions.comment')}
           >
-            <ChatBubbleLeftIcon className="w-5 h-5" />
+            <MessageSquare className="w-5 h-5" />
             <span className="text-sm font-medium">
               {formatNumber(metrics.comments)}
             </span>
@@ -381,12 +377,12 @@ export default function EngagementMetrics({
           <button
             onClick={handleShare}
             disabled={mutationPending}
-            className={`flex items-center space-x-2 text-gray-500 hover:text-green-500 transition-colors ${
+            className={`flex items-center space-x-2 text-muted-foreground hover:text-green-500 transition-colors ${
               mutationPending ? 'opacity-50 cursor-not-allowed' : ''
             }`}
             aria-label={t('civics.engagement.actions.share')}
           >
-            <ShareIcon className="w-5 h-5" />
+            <Share2 className="w-5 h-5" />
             <span className="text-sm font-medium">
               {formatNumber(metrics.shares)}
             </span>
@@ -399,8 +395,8 @@ export default function EngagementMetrics({
             disabled={mutationPending}
             className={`transition-colors ${
               isBookmarked 
-                ? 'text-blue-500' 
-                : 'text-gray-500 hover:text-blue-500'
+                ? 'text-primary' 
+                : 'text-muted-foreground hover:text-primary'
             } ${mutationPending ? 'opacity-50 cursor-not-allowed' : ''}`}
             aria-label={
               isBookmarked
@@ -409,9 +405,9 @@ export default function EngagementMetrics({
             }
           >
             {isBookmarked ? (
-              <BookmarkSolidIcon className="w-5 h-5" />
+              <Bookmark className="w-5 h-5" fill="currentColor" />
             ) : (
-              <BookmarkIcon className="w-5 h-5" />
+              <Bookmark className="w-5 h-5" />
             )}
           </button>
         </div>
@@ -419,27 +415,27 @@ export default function EngagementMetrics({
 
       {/* Analytics Section */}
       {showAnalytics && (
-        <div className="border-t border-gray-100 pt-4">
+        <div className="border-t border-border pt-4">
           <div className="grid grid-cols-2 gap-4">
             <div className="text-center">
-              <div className="flex items-center justify-center space-x-1 text-sm text-gray-500">
-                <EyeIcon className="w-4 h-4" />
+              <div className="flex items-center justify-center space-x-1 text-sm text-muted-foreground">
+                <Eye className="w-4 h-4" />
                 <span>{t('civics.engagement.analytics.views')}</span>
               </div>
-              <p className="text-lg font-semibold text-gray-900">
+              <p className="text-lg font-semibold text-foreground">
                 {formatNumber(metrics.views ?? 0)}
               </p>
             </div>
             
             <div className="text-center">
-              <div className="flex items-center justify-center space-x-1 text-sm text-gray-500">
-                <ChartBarIcon className="w-4 h-4" />
+              <div className="flex items-center justify-center space-x-1 text-sm text-muted-foreground">
+                <BarChart3 className="w-4 h-4" />
                 <span>{t('civics.engagement.analytics.engagement')}</span>
               </div>
               <p className={`text-lg font-semibold ${
                 metrics.engagementRate 
                   ? getEngagementRateColor(metrics.engagementRate)
-                  : 'text-gray-900'
+                  : 'text-foreground'
               }`}>
                 {metrics.engagementRate != null
                   ? `${percentFormatter.format(metrics.engagementRate)}%`
@@ -452,9 +448,9 @@ export default function EngagementMetrics({
 
       {/* Trending Section */}
       {showTrending && trending && (
-        <div className="border-t border-gray-100 pt-4">
+        <div className="border-t border-border pt-4">
           <div className="flex items-center justify-center space-x-2">
-            <ArrowTrendingUpIcon className={`w-4 h-4 ${
+            <TrendingUp className={`w-4 h-4 ${
               trending.direction === 'up' ? 'text-green-500' : 'text-red-500'
             }`} />
             <span className={`text-sm font-medium ${
@@ -473,8 +469,8 @@ export default function EngagementMetrics({
       )}
 
       {/* Last Updated */}
-      <div className="flex items-center justify-center space-x-1 text-xs text-gray-400">
-        <ClockIcon className="w-3 h-3" />
+      <div className="flex items-center justify-center space-x-1 text-xs text-muted-foreground">
+        <Clock className="w-3 h-3" />
         <span>
           {t('civics.engagement.lastUpdated', {
             time: timeFormatter.format(new Date(metrics.lastUpdated)),

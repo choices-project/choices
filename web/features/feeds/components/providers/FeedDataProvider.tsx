@@ -18,6 +18,7 @@
 
 import { useEffect, useState, useCallback, useRef, useMemo } from 'react';
 
+import { FeedProvider } from '@/features/feeds/context/FeedContext';
 import { useFeedAnalytics } from '@/features/feeds/hooks/useFeedAnalytics';
 import FeedShareDialog from '@/features/share/components/FeedShareDialog';
 
@@ -44,6 +45,7 @@ const IS_E2E_HARNESS = process.env.NEXT_PUBLIC_ENABLE_E2E_HARNESS === '1';
 
 function HarnessFeedDataProvider({
   userId,
+  userDistrict,
   profileInterests,
   enableInfiniteScroll = true,
   maxItems = 50,
@@ -325,6 +327,7 @@ function HarnessFeedDataProvider({
     onHashtagAdd: handleHashtagAdd,
     onHashtagRemove: handleHashtagRemove,
     trendingHashtags,
+    userDistrict: userDistrict ?? null,
     districtFilterEnabled,
     onDistrictFilterToggle: handleDistrictToggle,
     hasMore: showLoadMore,
@@ -334,9 +337,9 @@ function HarnessFeedDataProvider({
     onElectoralRefresh: () => Promise.resolve(),
   };
 
-  const renderedChildren = children(
-    showLoadMore ? { ...childProps, onLoadMore: handleLoadMore } : childProps,
-  );
+  const feedContextValue = showLoadMore ? { ...childProps, onLoadMore: handleLoadMore } : childProps;
+  const renderedChildren =
+    typeof children === 'function' ? children(feedContextValue) : children;
 
   // Announce feed changes for screen readers - stable deps only
   const feedsLengthRef = useRef(feeds.length);
@@ -372,7 +375,9 @@ function HarnessFeedDataProvider({
 
   return (
     <>
-      {renderedChildren}
+      <FeedProvider value={feedContextValue}>
+        {renderedChildren}
+      </FeedProvider>
       <LiveRegion />
       <FeedShareDialog item={shareItem} isOpen={Boolean(shareItem)} onClose={handleCloseShareDialog} />
     </>
@@ -391,33 +396,36 @@ export type ElectoralFeedUI = {
   engagementOpportunities: Array<{ type: string; target: string; description: string; urgency: string }>;
 };
 
+export type FeedDataProviderRenderProps = {
+  feeds: FeedItem[];
+  isLoading: boolean;
+  error: string | null;
+  onLike: (id: string) => Promise<void>;
+  onBookmark: (id: string) => Promise<void>;
+  onShare: (id: string) => void;
+  onRefresh: () => Promise<void>;
+  selectedHashtags: string[];
+  onHashtagAdd: (tag: string) => void;
+  onHashtagRemove: (tag: string) => void;
+  trendingHashtags: string[];
+  userDistrict?: string | null;
+  districtFilterEnabled: boolean;
+  onDistrictFilterToggle: () => void;
+  onLoadMore?: () => Promise<void>;
+  hasMore?: boolean;
+  electoralFeed: ElectoralFeedUI | null;
+  electoralLoading: boolean;
+  electoralError: string | null;
+  onElectoralRefresh: () => Promise<void>;
+};
+
 type FeedDataProviderProps = {
   userId?: string | null | undefined;
   userDistrict?: string | null;
   profileInterests?: string[];
   enableInfiniteScroll?: boolean;
   maxItems?: number;
-  children: (props: {
-    feeds: FeedItem[];
-    isLoading: boolean;
-    error: string | null;
-    onLike: (id: string) => Promise<void>;
-    onBookmark: (id: string) => Promise<void>;
-    onShare: (id: string) => void;
-    onRefresh: () => Promise<void>;
-    selectedHashtags: string[];
-    onHashtagAdd: (tag: string) => void;
-    onHashtagRemove: (tag: string) => void;
-    trendingHashtags: string[];
-    districtFilterEnabled: boolean;
-    onDistrictFilterToggle: () => void;
-    onLoadMore?: () => Promise<void>;
-    hasMore?: boolean;
-    electoralFeed: ElectoralFeedUI | null;
-    electoralLoading: boolean;
-    electoralError: string | null;
-    onElectoralRefresh: () => Promise<void>;
-  }) => React.ReactNode;
+  children: ((props: FeedDataProviderRenderProps) => React.ReactNode) | React.ReactNode;
 };
 
 /**
@@ -831,7 +839,7 @@ function StandardFeedDataProvider({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [feeds.length]); // Only depend on length
 
-  const childNode = children({
+  const feedContextValue = {
     feeds: filteredFeeds,
     isLoading,
     error: storeError,
@@ -843,6 +851,7 @@ function StandardFeedDataProvider({
     onHashtagAdd: handleHashtagAdd,
     onHashtagRemove: handleHashtagRemove,
     trendingHashtags,
+    userDistrict: userDistrict ?? null,
     districtFilterEnabled,
     onDistrictFilterToggle: handleDistrictFilterToggle,
     ...(enableInfiniteScroll ? { onLoadMore: handleLoadMore } : {}),
@@ -851,7 +860,10 @@ function StandardFeedDataProvider({
     electoralLoading,
     electoralError,
     onElectoralRefresh,
-  });
+  };
+
+  const childNode =
+    typeof children === 'function' ? children(feedContextValue) : children;
 
   const LiveRegion = () => (
     <div aria-live="polite" role="status" className="sr-only" data-testid="feeds-live-message">
@@ -861,7 +873,9 @@ function StandardFeedDataProvider({
 
   return (
     <>
-      {childNode}
+      <FeedProvider value={feedContextValue}>
+        {childNode}
+      </FeedProvider>
       <LiveRegion />
       <FeedShareDialog item={shareItem} isOpen={Boolean(shareItem)} onClose={handleCloseShareDialog} />
     </>
@@ -881,6 +895,7 @@ export default function FeedDataProvider(props: FeedDataProviderProps) {
     return (
       <HarnessFeedDataProvider
         userId={userId}
+        {...(props.userDistrict !== undefined ? { userDistrict: props.userDistrict } : {})}
         profileInterests={profileInterests ?? []}
         enableInfiniteScroll={enableInfiniteScroll}
         maxItems={maxItems}

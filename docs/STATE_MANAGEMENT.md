@@ -1,6 +1,6 @@
 # State Management Guide
 
-_Last updated: February 2026_
+_Last updated: March 2026_
 
 This document summarizes the agreed-on patterns for Zustand stores in the Choices web app. It replaces the scattered checklists under `scratch/gpt5-codex/store-roadmaps/` (see consolidation notes below).
 
@@ -135,7 +135,7 @@ const persistConfig = {
 - Keep payloads small (< 10KB) for performance
 - Test persistence/restoration in both unit tests and E2E harnesses
 
-Store-level tracking: see `docs/ROADMAP.md` §2.2 and `docs/ROADMAP_SINGLE_SOURCE.md` § C for detail.
+Store-level tracking: see `docs/ROADMAP.md` §2.2 for detail.
 
 ---
 
@@ -199,7 +199,7 @@ If a store has only a few actions, you can return them directly without `useMemo
 When a user logs out or transitions to an unauthenticated state, related stores should reset to prevent stale data from persisting. The `userStore` orchestrates this cascade:
 
 - **User store actions that trigger cascade**: `setAuthenticated(false)`, `setUserAndAuth(..., false)`, `setSessionAndDerived(null)`, `initializeAuth(..., false)`, and `signOut()` all reset the user store and then call `useProfileStore.getState().resetProfile()` and `useAdminStore.getState().resetAdminState()`.
-- **Why this matters**: Without the cascade, profile preferences, admin notifications, and other user-specific state can persist after logout, causing confusion when a new user signs in or when testing auth flows.
+- **Why this matters**: Without the cascade, profile preferences, admin notifications, and other user-specific state can persist after logout, causing confusion when a new user signs in or when testing auth flows. As of March 2026, the cascade resets **17 stores**: profile, admin, polls, feeds, analytics, hashtag, voting, contact, notification, onboarding, representative, election, PWA, widget, pollWizard, voterRegistration, and hashtagModeration — each with individual try/catch isolation.
 - **Testing**: The cascade is covered by `web/tests/unit/stores/authCascade.test.ts` and end-to-end in `web/tests/e2e/specs/dashboard-auth.spec.ts`. When adding new stores that depend on user authentication, ensure they either:
   1. Subscribe to `userStoreSubscriptions.onAuthChange()` and reset when `isAuthenticated` becomes `false`, or
   2. Are explicitly reset by the user store's logout/sign-out actions if they contain user-specific data.
@@ -398,7 +398,7 @@ function MyComponent() {
 - Voter registration store example — see `web/lib/stores/voterRegistrationStore.ts` and `tests/unit/stores/voter-registration.store.test.ts` for a fetch-centric pattern that still fits the shared helpers.
 - Development setup & testing commands — `docs/GETTING_STARTED.md`, `docs/TESTING.md`.
 - Technical backlog — `docs/ROADMAP.md`.  
-- Canonical utilities — `docs/CODEBASE_NAVIGATION.md` § Canonical Utilities.
+- Canonical utilities — `docs/ARCHITECTURE.md` § Canonical Utilities.
 
 ---
 
@@ -408,14 +408,14 @@ function MyComponent() {
   - `scratch/gpt5-codex/store-roadmaps/*` (store checklists and modernization tasks)
   - `scratch/gpt5-codex/roadmaps/*` (web store modernization lines)
 - Action:
-  - Track store modernization in `docs/ROADMAP.md` §2.2 and `docs/ROADMAP_SINGLE_SOURCE.md` (Section C); update this guide with patterns and examples.
+  - Track store modernization in `docs/ROADMAP.md` §2.2; update this guide with patterns and examples.
   - Treat scratch documents as archived references. Do not add new roadmap items under `scratch/` going forward.
 
-For questions, use `#web-platform` or add/update items in `docs/ROADMAP.md` or `docs/ROADMAP_SINGLE_SOURCE.md` (Section C).
+For questions, use `#web-platform` or add/update items in `docs/ROADMAP.md`.
 
 ## Ownership & Update Cadence
 
 - **Owner:** Core maintainer
 - **Update cadence:** Review on major feature changes and at least monthly
-- **Last verified:** 2026-02-26
+- **Last verified:** 2026-03-13
 

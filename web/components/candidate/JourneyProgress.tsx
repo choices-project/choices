@@ -16,6 +16,7 @@ import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Progress } from '@/components/ui/progress'
 
+import { get } from '@/lib/api/client'
 import logger from '@/lib/utils/logger'
 
 type JourneyProgressProps = {
@@ -23,39 +24,63 @@ type JourneyProgressProps = {
   className?: string
 }
 
+type JourneyStageProgress = {
+  currentStage: string;
+  daysUntilDeadline?: number;
+  daysSinceDeclaration: number;
+  lastActiveAt?: string;
+}
+
+type ChecklistItem = {
+  id: string;
+  label: string;
+  completed: boolean;
+  actionUrl?: string;
+  actionLabel?: string;
+}
+
+type NextActionItem = {
+  urgency: string;
+  action: string;
+  description: string;
+  actionUrl?: string;
+  actionLabel?: string;
+  dueDate?: string;
+}
+
 export function JourneyProgress({ platformId, className = '' }: JourneyProgressProps) {
-  const [progress, setProgress] = useState<any>(null)
-  const [checklist, setChecklist] = useState<any[]>([])
-  const [nextAction, setNextAction] = useState<any>(null)
+  const [progress, setProgress] = useState<JourneyStageProgress | null>(null)
+  const [checklist, setChecklist] = useState<ChecklistItem[]>([])
+  const [nextAction, setNextAction] = useState<NextActionItem | null>(null)
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
-    const fetchProgress = async () => {
+    if (!platformId) return
+
+    const controller = new AbortController()
+
+    const loadProgress = async () => {
       setLoading(true)
       try {
-        const response = await fetch(`/api/candidate/journey/progress?platformId=${platformId}`)
-        if (!response.ok) {
-          throw new Error(`Failed to fetch journey progress: ${response.statusText}`)
-        }
-        const result = await response.json()
-        // API returns { success: true, data: { progress, checklist, nextAction, ... } } structure
-        const data = result?.success && result?.data ? result.data : result
-        
+        const data = await get<{ progress?: JourneyStageProgress; checklist?: ChecklistItem[]; nextAction?: NextActionItem }>(
+          `/api/candidate/journey/progress?platformId=${platformId}`,
+          { signal: controller.signal }
+        )
         if (data?.progress) {
           setProgress(data.progress)
           setChecklist(data.checklist ?? [])
-          setNextAction(data.nextAction)
+          setNextAction(data.nextAction ?? null)
         }
       } catch (error) {
+        if (error instanceof Error && error.name === 'AbortError') return
         logger.error('Failed to fetch journey progress:', error)
       } finally {
         setLoading(false)
       }
     }
 
-    if (platformId) {
-      fetchProgress()
-    }
+    loadProgress()
+    return () => controller.abort()
   }, [platformId])
 
   if (loading) {
@@ -76,7 +101,7 @@ export function JourneyProgress({ platformId, className = '' }: JourneyProgressP
     return null
   }
 
-  const progressPercent = checklist.filter((item: any) => item.completed).length / checklist.length * 100
+  const progressPercent = checklist.filter((item) => item.completed).length / checklist.length * 100
   const urgencyColors: Record<string, string> = {
     low: 'bg-blue-100 text-blue-800 border-blue-200',
     medium: 'bg-yellow-100 text-yellow-800 border-yellow-200',
@@ -178,7 +203,7 @@ export function JourneyProgress({ platformId, className = '' }: JourneyProgressP
             Your Action Items
           </h4>
           <div className="space-y-2">
-            {checklist.map((item: any) => (
+            {checklist.map((item) => (
               <div
                 key={item.id}
                 className={`flex items-start p-3 rounded-lg border ${

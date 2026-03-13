@@ -1,6 +1,6 @@
 import { getSupabaseServerClient } from '@/utils/supabase/server';
 
-import { withErrorHandling, successResponse, errorResponse, validationError } from '@/lib/api';
+import { withErrorHandling, successResponse, errorResponse, validationError, authError } from '@/lib/api';
 import { HASHTAG_FLAG_SELECT_COLUMNS } from '@/lib/api/response-builders';
 import { logger } from '@/lib/utils/logger';
 
@@ -20,8 +20,13 @@ export const GET = withErrorHandling(async (request: NextRequest) => {
     return errorResponse('Supabase not configured', 500);
   }
 
-    // Get moderation queue
+    // Get moderation queue (requires authentication)
     if (action === 'moderation-queue') {
+      const { data: { session }, error: sessionError } = await supabase.auth.getSession();
+      if (sessionError || !session?.user) {
+        return authError('Authentication required');
+      }
+
       const { data: flags, error } = await supabase
         .from('hashtag_flags')
         .select(HASHTAG_FLAG_SELECT_COLUMNS)
@@ -68,6 +73,11 @@ export const POST = withErrorHandling(async (request: NextRequest) => {
 
   if (!supabase) {
     return errorResponse('Supabase not configured', 500);
+  }
+
+  const { data: { session }, error: sessionError } = await supabase.auth.getSession();
+  if (sessionError || !session?.user) {
+    return authError('Authentication required');
   }
 
     // Flag a hashtag

@@ -356,8 +356,9 @@ export default function ProfileHashtagIntegration({
                 <div className="space-y-2">
                   <p className="text-sm font-medium">Your Custom Hashtags:</p>
                   <div className="flex flex-wrap gap-2">
-                    {hashtagIntegration.custom_hashtags.map((hashtag: string, index: number) => (
-                      <Badge key={index} variant="secondary" className="flex items-center gap-1">
+                    {hashtagIntegration.custom_hashtags.map((hashtag: string) => (
+                      <Badge key={hashtag} variant="secondary" className="flex items-center gap-1">
+
                         <Hash className="h-3 w-3" />
                         {hashtag}
                         {isEditing && (
@@ -367,7 +368,7 @@ export default function ProfileHashtagIntegration({
                             size="sm"
                             className="h-4 w-4 p-0 ml-1"
                             onClick={() => {
-                              const newCustom = hashtagIntegration.custom_hashtags.filter((_, i) => i !== index);
+                              const newCustom = hashtagIntegration.custom_hashtags.filter((h) => h !== hashtag);
                               handleCustomInterestsUpdate(newCustom);
                             }}
                           >

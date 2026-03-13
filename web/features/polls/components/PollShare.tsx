@@ -1,12 +1,15 @@
 'use client'
 
-
 import { Share2, Copy, Link, Twitter, Facebook, Linkedin, Mail, Instagram, QrCode, Download } from 'lucide-react'
 import Image from 'next/image'
 import QRCode from 'qrcode'
 import React, { useState, useEffect, useCallback } from 'react';
 
+import { BottomSheet } from '@/components/shared/BottomSheet';
+import { Button } from '@/components/ui/button'
+
 import { isFeatureEnabled } from '@/lib/core/feature-flags'
+import { haptic } from '@/lib/haptics';
 import { useNotificationActions } from '@/lib/stores';
 import { devLog } from '@/lib/utils/logger';
 
@@ -24,6 +27,7 @@ export default function PollShare({ pollId, poll }: PollShareProps) {
   const { t } = useI18n();
   const [copied, setCopied] = useState(false)
   const [showQR, setShowQR] = useState(false)
+  const [showMobileSheet, setShowMobileSheet] = useState(false)
   const notificationActions = useNotificationActions();
   const [pollUrl, setPollUrl] = useState('')
   const [qrCodeDataUrl, setQrCodeDataUrl] = useState('')
@@ -58,7 +62,7 @@ export default function PollShare({ pollId, poll }: PollShareProps) {
 
   const trackShare = useCallback(async (platform: string, placement: string) => {
     try {
-      await fetch('/api/share', {
+      const res = await fetch('/api/share', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -68,10 +72,17 @@ export default function PollShare({ pollId, poll }: PollShareProps) {
           content_type: 'poll'
         })
       });
+      if (!res.ok) throw new Error('Failed to share');
     } catch (error) {
       devLog('Failed to track share event', { error, platform, placement });
+      notificationActions.addNotification({
+        type: 'error',
+        title: 'Share failed',
+        message: 'Failed to share poll. Please try again.',
+        source: 'system',
+      });
     }
-  }, [pollId])
+  }, [pollId, notificationActions])
 
   const handleCopyLink = useCallback(async () => {
     try {
@@ -187,15 +198,77 @@ export default function PollShare({ pollId, poll }: PollShareProps) {
     }
   }, [socialSharingEnabled, pollUrl, pollTitle, t, trackShare, notificationActions])
 
+  const shareButtons = (
+    <div className="grid grid-cols-2 gap-3">
+      <Button
+        onClick={() => { void handleCopyLink(); haptic('light'); }}
+        variant="outline"
+        className="flex items-center justify-center gap-2 min-h-[44px]"
+      >
+        <Copy className="w-4 h-4" />
+        <span>{copied ? t('polls.share.copied') : t('polls.share.copy')}</span>
+      </Button>
+      {typeof navigator !== 'undefined' && 'share' in navigator && (
+        <Button
+          onClick={() => { void handleNativeShare(); haptic('light'); }}
+          className="flex items-center justify-center gap-2 min-h-[44px] bg-green-600 hover:bg-green-700 text-white"
+        >
+          <Share2 className="w-4 h-4" />
+          <span>{t('polls.share.nativeShare')}</span>
+        </Button>
+      )}
+      {socialSharingEnabled && (
+        <>
+          <Button onClick={() => handleSocialShare('twitter')} className="flex items-center justify-center gap-2 min-h-[44px] bg-primary hover:bg-primary/90 text-primary-foreground">
+            <Twitter className="w-4 h-4" />
+            <span className="text-sm">{t('polls.share.social.twitter')}</span>
+          </Button>
+          <Button onClick={() => handleSocialShare('facebook')} className="flex items-center justify-center gap-2 min-h-[44px] bg-primary hover:bg-primary/90 text-primary-foreground">
+            <Facebook className="w-4 h-4" />
+            <span className="text-sm">{t('polls.share.social.facebook')}</span>
+          </Button>
+          <Button onClick={() => handleSocialShare('email')} className="flex items-center justify-center gap-2 min-h-[44px] bg-gray-600 hover:bg-gray-700 text-white">
+            <Mail className="w-4 h-4" />
+            <span className="text-sm">{t('polls.share.social.email')}</span>
+          </Button>
+          <Button onClick={() => handleSocialShare('instagram')} className="flex items-center justify-center gap-2 min-h-[44px] bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 text-white">
+            <Instagram className="w-4 h-4" />
+            <span className="text-sm">Instagram</span>
+          </Button>
+        </>
+      )}
+    </div>
+  );
+
   return (
     <div className="space-y-6">
-      {/* Share Options */}
-      <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
-        <h3 className="text-xl font-semibold text-gray-900 mb-4">{t('polls.share.title')}</h3>
+      {/* Mobile: Share trigger button that opens BottomSheet */}
+      <div className="md:hidden">
+        <Button
+          onClick={() => { setShowMobileSheet(true); haptic('light'); }}
+          className="w-full flex items-center justify-center gap-2"
+        >
+          <Share2 className="w-5 h-5" />
+          <span>{t('polls.share.title')}</span>
+        </Button>
+        <BottomSheet
+          open={showMobileSheet}
+          onClose={() => setShowMobileSheet(false)}
+          title={t('polls.share.title')}
+        >
+          <div className="space-y-4">
+            {shareButtons}
+          </div>
+        </BottomSheet>
+      </div>
+
+      {/* Desktop: Inline share options */}
+      <div className="hidden md:block bg-card rounded-xl shadow-sm border border-border p-6">
+        <h3 className="text-xl font-semibold text-foreground mb-4">{t('polls.share.title')}</h3>
 
         {/* Direct Link */}
         <div className="mb-6">
-          <label htmlFor="poll-share-url-input" className="block text-sm font-medium text-gray-700 mb-2">
+          <label htmlFor="poll-share-url-input" className="block text-sm font-medium text-foreground/80 mb-2">
             {t('polls.share.directLink.label')}
           </label>
           <div className="flex">
@@ -204,95 +277,96 @@ export default function PollShare({ pollId, poll }: PollShareProps) {
               type="text"
               value={pollUrl}
               readOnly
-              className="flex-1 px-3 py-2 border border-gray-300 rounded-l-lg bg-gray-50 text-gray-900"
+              className="flex-1 px-3 py-2 border border-border rounded-l-lg bg-muted text-foreground"
               aria-label={t('polls.share.directLink.label')}
             />
-            <button
+            <Button
               onClick={() => void handleCopyLink()}
-              className="px-4 py-2 bg-blue-600 text-white rounded-r-lg hover:bg-blue-700 transition-colors flex items-center space-x-2"
+              className="px-4 py-2 bg-primary text-primary-foreground rounded-r-lg hover:bg-primary/90 transition-colors flex items-center space-x-2"
             >
               <Copy className="w-4 h-4" />
               <span>{copied ? t('polls.share.copied') : t('polls.share.copy')}</span>
-            </button>
+            </Button>
           </div>
         </div>
 
         {/* Social Media Buttons - Only show when social sharing is enabled */}
         {socialSharingEnabled && (
           <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-            <button
+            <Button
               onClick={() => handleSocialShare('twitter')}
-              className="flex items-center justify-center space-x-2 p-3 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors"
+              className="flex items-center justify-center space-x-2 p-3 bg-primary text-primary-foreground rounded-lg hover:bg-primary/90 transition-colors"
             >
               <Twitter className="w-5 h-5" />
               <span className="text-sm font-medium">{t('polls.share.social.twitter')}</span>
-            </button>
+            </Button>
 
-            <button
+            <Button
               onClick={() => handleSocialShare('facebook')}
-              className="flex items-center justify-center space-x-2 p-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+              className="flex items-center justify-center space-x-2 p-3 bg-primary text-primary-foreground rounded-lg hover:bg-primary/90 transition-colors"
             >
               <Facebook className="w-5 h-5" />
               <span className="text-sm font-medium">{t('polls.share.social.facebook')}</span>
-            </button>
+            </Button>
 
-            <button
+            <Button
               onClick={() => handleSocialShare('linkedin')}
-              className="flex items-center justify-center space-x-2 p-3 bg-blue-700 text-white rounded-lg hover:bg-blue-800 transition-colors"
+              className="flex items-center justify-center space-x-2 p-3 bg-primary text-primary-foreground rounded-lg hover:bg-primary/90 transition-colors"
             >
               <Linkedin className="w-5 h-5" />
               <span className="text-sm font-medium">{t('polls.share.social.linkedin')}</span>
-            </button>
+            </Button>
 
-            <button
+            <Button
               onClick={() => handleSocialShare('email')}
               className="flex items-center justify-center space-x-2 p-3 bg-gray-600 text-white rounded-lg hover:bg-gray-700 transition-colors"
             >
               <Mail className="w-5 h-5" />
               <span className="text-sm font-medium">{t('polls.share.social.email')}</span>
-            </button>
+            </Button>
 
-            <button
+            <Button
               onClick={() => handleSocialShare('instagram')}
               className="flex items-center justify-center space-x-2 p-3 bg-gradient-to-r from-purple-500 to-pink-500 text-white rounded-lg hover:from-purple-600 hover:to-pink-600 transition-colors"
             >
               <Instagram className="w-5 h-5" />
               <span className="text-sm font-medium">Instagram</span>
-            </button>
+            </Button>
           </div>
         )}
 
         {/* Native Share (Mobile) */}
         {typeof navigator !== 'undefined' && 'share' in navigator && (
           <div className="mt-4">
-            <button
+            <Button
               onClick={() => void handleNativeShare()}
               className="w-full flex items-center justify-center space-x-2 p-3 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors"
             >
               <Share2 className="w-5 h-5" />
               <span className="font-medium">{t('polls.share.nativeShare')}</span>
-            </button>
+            </Button>
           </div>
         )}
       </div>
 
       {/* QR Code */}
-      <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
+      <div className="bg-card rounded-xl shadow-sm border border-border p-6">
         <div className="flex items-center justify-between mb-4">
-          <h3 className="text-lg font-semibold text-gray-900">{t('polls.share.qrCode.title')}</h3>
-          <button
+          <h3 className="text-lg font-semibold text-foreground">{t('polls.share.qrCode.title')}</h3>
+          <Button
+            variant="ghost"
             onClick={() => setShowQR(!showQR)}
-            className="flex items-center space-x-2 text-blue-600 hover:text-blue-700 transition-colors"
+            className="flex items-center space-x-2 text-primary hover:text-primary/90 transition-colors"
           >
             <QrCode className="w-5 h-5" />
             <span className="text-sm font-medium">{showQR ? t('polls.share.qrCode.hide') : t('polls.share.qrCode.show')}</span>
-          </button>
+          </Button>
         </div>
 
         {showQR && (
           <div className="text-center">
-            <div className="inline-block p-4 bg-gray-100 rounded-lg">
-              <div className="w-48 h-48 bg-white border-2 border-gray-300 rounded-lg flex items-center justify-center">
+            <div className="inline-block p-4 bg-muted rounded-lg">
+                <div className="w-48 h-48 bg-card border-2 border-border rounded-lg flex items-center justify-center">
                 {qrCodeDataUrl ? (
                   <Image
                     src={qrCodeDataUrl}
@@ -302,56 +376,56 @@ export default function PollShare({ pollId, poll }: PollShareProps) {
                     className="w-full h-full object-contain"
                   />
                 ) : (
-                  <div className="text-center text-gray-500">
+                  <div className="text-center text-muted-foreground">
                     <QrCode className="w-16 h-16 mx-auto mb-2" />
                     <p className="text-sm">{t('polls.share.qrCode.generating')}</p>
                   </div>
                 )}
               </div>
             </div>
-            <p className="mt-2 text-sm text-gray-600">
+            <p className="mt-2 text-sm text-muted-foreground">
               {t('polls.share.qrCode.scanHint')}
             </p>
             <div className="mt-4 flex justify-center space-x-3">
-              <button
+              <Button
                 onClick={() => void handleDownloadQR()}
-                className="flex items-center space-x-2 px-3 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors text-sm"
+                className="flex items-center space-x-2 px-3 py-2 bg-primary text-primary-foreground rounded-lg hover:bg-primary/90 transition-colors text-sm"
               >
                 <Download className="w-4 h-4" />
                 <span>{t('polls.share.qrCode.download')}</span>
-              </button>
-              <button
+              </Button>
+              <Button
                 onClick={handleCopyLink}
                 className="flex items-center space-x-2 px-3 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-700 transition-colors text-sm"
               >
                 <Link className="w-4 h-4" />
                 <span>{t('polls.share.qrCode.copyLink')}</span>
-              </button>
+              </Button>
             </div>
           </div>
         )}
       </div>
 
-      {/* Embed Options */}
-      <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
-        <h3 className="text-lg font-semibold text-gray-900 mb-4">{t('polls.share.embed.title')}</h3>
+      {/* Embed Options (desktop only) */}
+      <div className="hidden md:block bg-card rounded-xl shadow-sm border border-border p-6">
+        <h3 className="text-lg font-semibold text-foreground mb-4">{t('polls.share.embed.title')}</h3>
 
         <div className="space-y-3">
           <div>
-            <label htmlFor="embed-code-textarea" className="block text-sm font-medium text-gray-700 mb-2">
+            <label htmlFor="embed-code-textarea" className="block text-sm font-medium text-foreground/80 mb-2">
               {t('polls.share.embed.codeLabel')}
             </label>
             <textarea
               id="embed-code-textarea"
               readOnly
               value={`<iframe src="${pollUrl}/embed" width="100%" height="600" frameborder="0"></iframe>`}
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg bg-gray-50 text-gray-900 text-sm font-mono"
+              className="w-full px-3 py-2 border border-border rounded-lg bg-muted text-foreground text-sm font-mono"
               rows={3}
               aria-label={t('polls.share.embed.codeLabel')}
             />
           </div>
 
-          <button
+          <Button
             onClick={() => {
               void navigator.clipboard.writeText(`<iframe src="${pollUrl}/embed" width="100%" height="600" frameborder="0"></iframe>`)
               setCopied(true)
@@ -361,7 +435,7 @@ export default function PollShare({ pollId, poll }: PollShareProps) {
           >
             <Copy className="w-4 h-4" />
             <span>{copied ? t('polls.share.copied') : t('polls.share.embed.copyCode')}</span>
-          </button>
+          </Button>
         </div>
       </div>
 

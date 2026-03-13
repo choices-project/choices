@@ -282,21 +282,20 @@ async function handleComplaint(
 }
 
 export const POST = withErrorHandling(async (request: NextRequest) => {
+  if (!RESEND_WEBHOOK_SECRET) {
+    return forbiddenError('Webhook not configured');
+  }
+
   // Get raw body for signature verification
   const rawBody = await request.text();
   const signature = request.headers.get('resend-signature') ?? request.headers.get('x-resend-signature');
 
-  // Verify webhook signature if secret is configured
-  if (RESEND_WEBHOOK_SECRET) {
-    if (!verifyWebhookSignature(rawBody, signature, RESEND_WEBHOOK_SECRET)) {
-      logger.warn('Resend webhook signature verification failed', {
-        hasSignature: !!signature,
-        hasSecret: !!RESEND_WEBHOOK_SECRET,
-      });
-      return forbiddenError('Invalid webhook signature');
-    }
-  } else {
-    logger.warn('RESEND_WEBHOOK_SECRET not configured; webhook signature verification disabled');
+  if (!verifyWebhookSignature(rawBody, signature, RESEND_WEBHOOK_SECRET)) {
+    logger.warn('Resend webhook signature verification failed', {
+      hasSignature: !!signature,
+      hasSecret: !!RESEND_WEBHOOK_SECRET,
+    });
+    return forbiddenError('Invalid webhook signature');
   }
 
   // Parse payload

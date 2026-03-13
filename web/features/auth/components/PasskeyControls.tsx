@@ -2,6 +2,8 @@
 
 import * as React from 'react';
 
+import { Button } from '@/components/ui/button';
+
 import { useAccessibleDialog } from '@/lib/accessibility/useAccessibleDialog';
 import { useIsAuthenticated } from '@/lib/stores';
 
@@ -232,7 +234,7 @@ export function PasskeyControls({ onLoginSuccess }: PasskeyControlsProps) {
         />
         <button
           data-testid="cancel-webauthn"
-          className="w-full px-4 py-2 text-sm text-gray-600 hover:text-gray-800 focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-offset-2 rounded-md transition-colors"
+          className="w-full px-4 py-2 text-sm text-muted-foreground hover:text-foreground focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-offset-2 rounded-md transition-colors"
           onClick={handleCancel}
         >
           {t('auth.passkey.cancel')}
@@ -254,7 +256,7 @@ export function PasskeyControls({ onLoginSuccess }: PasskeyControlsProps) {
         />
         <button
           data-testid="cancel-webauthn"
-          className="w-full px-4 py-2 text-sm text-gray-600 hover:text-gray-800 focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-offset-2 rounded-md transition-colors"
+          className="w-full px-4 py-2 text-sm text-muted-foreground hover:text-foreground focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-offset-2 rounded-md transition-colors"
           onClick={handleCancel}
         >
           {t('auth.passkey.cancel')}
@@ -266,13 +268,13 @@ export function PasskeyControls({ onLoginSuccess }: PasskeyControlsProps) {
   return (
     <div className="space-y-4">
       {/* Simplified, cleaner interface */}
-      <div className="rounded-lg border border-gray-200 bg-white p-4 shadow-sm">
+      <div className="rounded-lg border border-border bg-card p-4 shadow-sm">
         <div className={`flex flex-col ${isAuthenticated ? 'sm:flex-row' : ''} gap-3`}>
           {/* Only show "Create Passkey" button if user is authenticated */}
           {isAuthenticated && (
             <button
               data-testid="webauthn-register"
-              className="flex-1 px-4 py-3 text-sm font-medium text-white bg-blue-600 border border-blue-600 rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition-all duration-200 hover:scale-[1.02] active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed"
+              className="flex-1 px-4 py-3 text-sm font-medium text-white bg-primary border border-primary rounded-md hover:bg-primary/90 focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 transition-all duration-200 hover:scale-[1.02] active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed"
               onClick={handleRegister}
             >
               <span className="flex items-center justify-center gap-2">
@@ -283,7 +285,7 @@ export function PasskeyControls({ onLoginSuccess }: PasskeyControlsProps) {
           )}
           <button
             data-testid="webauthn-login"
-            className={`${isAuthenticated ? 'flex-1' : 'w-full'} px-4 py-3 text-sm font-medium text-blue-600 bg-white border border-blue-600 rounded-md hover:bg-blue-50 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition-all duration-200 hover:scale-[1.02] active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed`}
+            className={`${isAuthenticated ? 'flex-1' : 'w-full'} px-4 py-3 text-sm font-medium text-primary bg-card border border-primary rounded-md hover:bg-primary/5 focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 transition-all duration-200 hover:scale-[1.02] active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed`}
             onClick={handleLogin}
           >
             <span className="flex items-center justify-center gap-2">
@@ -294,7 +296,7 @@ export function PasskeyControls({ onLoginSuccess }: PasskeyControlsProps) {
         </div>
 
         {/* Helpful info text */}
-        <p className="mt-3 text-xs text-gray-500 text-center">
+        <p className="mt-3 text-xs text-muted-foreground text-center">
           {t('auth.passkey.hint')}
         </p>
       </div>
@@ -302,20 +304,20 @@ export function PasskeyControls({ onLoginSuccess }: PasskeyControlsProps) {
       {/* Advanced options - collapsible, less prominent */}
       {isAuthenticated && (
         <details className="text-sm">
-          <summary className="cursor-pointer text-gray-500 hover:text-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 rounded px-2 py-1 text-xs">
+          <summary className="cursor-pointer text-muted-foreground hover:text-foreground/80 focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 rounded px-2 py-1 text-xs">
             {t('auth.passkey.advancedOptions')}
           </summary>
           <div className="mt-2 space-y-2 pl-4">
             <button
               data-testid="register-additional-passkey-button"
-              className="block w-full text-left px-3 py-2 text-sm text-gray-700 hover:bg-gray-50 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition-colors"
+              className="block w-full text-left px-3 py-2 text-sm text-foreground/80 hover:bg-muted rounded-md focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 transition-colors"
               onClick={handleRegister}
             >
               {t('auth.passkey.registerAdditional')}
             </button>
             <button
               data-testid="view-credentials-button"
-              className="block w-full text-left px-3 py-2 text-sm text-gray-700 hover:bg-gray-50 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition-colors"
+              className="block w-full text-left px-3 py-2 text-sm text-foreground/80 hover:bg-muted rounded-md focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 transition-colors"
               onClick={handleViewCredentials}
             >
               {t('auth.passkey.viewCredentials')}
@@ -336,17 +338,17 @@ export function PasskeyControls({ onLoginSuccess }: PasskeyControlsProps) {
             Biometric authentication…
           </p>
           <div className="space-x-2 mt-4">
-            <button
+            <Button
               data-testid="complete-biometric-auth"
-              className="btn"
+              variant="default"
               onClick={handleCompleteAuthentication}
               ref={biometricPrimaryButtonRef}
             >
               Complete biometric auth
-            </button>
-            <button data-testid="cancel-webauthn" className="btn" onClick={handleCancel}>
+            </Button>
+            <Button data-testid="cancel-webauthn" variant="outline" onClick={handleCancel}>
               {t('auth.passkey.cancel')}
-            </button>
+            </Button>
           </div>
         </div>
       )}
@@ -364,24 +366,28 @@ export function PasskeyControls({ onLoginSuccess }: PasskeyControlsProps) {
           </p>
           <div data-testid="webauthn-qr" className="qr-placeholder mt-4 h-32 w-32 bg-gray-200" />
           <div className="mt-4 space-x-2">
-            <button data-testid="simulate-qr-scan" className="btn">
-              Simulate QR scan
-            </button>
-            <button
+            {process.env.NEXT_PUBLIC_ENABLE_E2E_HARNESS === '1' && (
+              <Button data-testid="simulate-qr-scan" variant="outline">
+                Simulate QR scan
+              </Button>
+            )}
+            <Button
               data-testid="complete-cross-device-auth"
-              className="btn"
+              variant="default"
               onClick={handleCompleteAuthentication}
               ref={crossDevicePrimaryButtonRef}
             >
               Complete cross-device auth
-            </button>
-            <button data-testid="cancel-webauthn" className="btn" onClick={handleCancel}>
+            </Button>
+            <Button data-testid="cancel-webauthn" variant="outline" onClick={handleCancel}>
               {t('auth.passkey.cancel')}
-            </button>
+            </Button>
           </div>
-          <div data-testid="cross-device-prompt" className="mt-4 rounded bg-blue-50 p-2">
-            Cross-device authentication prompt
-          </div>
+          {process.env.NEXT_PUBLIC_ENABLE_E2E_HARNESS === '1' && (
+            <div data-testid="cross-device-prompt" className="mt-4 rounded bg-blue-50 p-2">
+              Cross-device authentication prompt
+            </div>
+          )}
         </div>
       )}
 
@@ -395,7 +401,7 @@ export function PasskeyControls({ onLoginSuccess }: PasskeyControlsProps) {
         >
           <h3 id="passkey-credential-title">{t('auth.passkey.manageCredentials')}</h3>
           {credentialsLoading ? (
-            <p className="mt-4 text-sm text-gray-600">{t('auth.passkey.loading')}</p>
+            <p className="mt-4 text-sm text-muted-foreground">{t('auth.passkey.loading')}</p>
           ) : credentialsError ? (
             <p
               className="mt-4 text-sm text-red-600"
@@ -420,7 +426,7 @@ export function PasskeyControls({ onLoginSuccess }: PasskeyControlsProps) {
                     aria-label={`${t('auth.passkey.remove')} ${cred.name}`}
                     disabled={removingId === cred.id}
                     onClick={() => handleRemoveCredential(cred.id)}
-                    className="rounded px-2 py-1 text-sm text-red-600 transition-colors hover:bg-red-50 disabled:opacity-50"
+                    className="rounded px-2 py-1 text-sm text-red-600 transition-colors hover:bg-red-50 dark:hover:bg-red-900/20 disabled:opacity-50"
                   >
                     {removingId === cred.id ? t('auth.passkey.removing') : t('auth.passkey.remove')}
                   </button>
@@ -430,14 +436,14 @@ export function PasskeyControls({ onLoginSuccess }: PasskeyControlsProps) {
             </div>
           )}
           <div className="mt-4 space-x-2">
-            <button
+            <Button
               data-testid="view-credentials-close"
-              className="btn"
+              variant="default"
               onClick={handleCloseDialog}
               ref={credentialPrimaryButtonRef}
             >
               {t('auth.passkey.close')}
-            </button>
+            </Button>
           </div>
         </div>
       )}
@@ -445,7 +451,7 @@ export function PasskeyControls({ onLoginSuccess }: PasskeyControlsProps) {
       {success === 'registration-success' && (
         <div
           data-testid="registration-success"
-          className="rounded-lg border border-green-300 bg-green-50 p-4 animate-in fade-in slide-in-from-top-2 duration-300"
+          className="rounded-lg border border-green-300 dark:border-green-800 bg-green-50 dark:bg-green-900/20 p-4 animate-in fade-in slide-in-from-top-2 duration-300"
           role="status"
           aria-live="polite"
           aria-atomic="true"
@@ -453,8 +459,8 @@ export function PasskeyControls({ onLoginSuccess }: PasskeyControlsProps) {
           <div className="flex items-center gap-2">
             <span className="text-green-600 text-xl">✓</span>
             <div>
-              <p className="font-semibold text-green-800">{t('auth.passkey.registrationSuccess')}</p>
-              <p className="text-sm text-green-700">{t('auth.passkey.registrationSuccessBody')}</p>
+              <p className="font-semibold text-green-800 dark:text-green-400">{t('auth.passkey.registrationSuccess')}</p>
+              <p className="text-sm text-green-700 dark:text-green-300">{t('auth.passkey.registrationSuccessBody')}</p>
             </div>
           </div>
         </div>
@@ -462,7 +468,7 @@ export function PasskeyControls({ onLoginSuccess }: PasskeyControlsProps) {
       {success === 'login-success' && (
         <div
           data-testid="login-success"
-          className="rounded-lg border border-green-300 bg-green-50 p-4 animate-in fade-in slide-in-from-top-2 duration-300"
+          className="rounded-lg border border-green-300 dark:border-green-800 bg-green-50 dark:bg-green-900/20 p-4 animate-in fade-in slide-in-from-top-2 duration-300"
           role="status"
           aria-live="polite"
           aria-atomic="true"
@@ -470,8 +476,8 @@ export function PasskeyControls({ onLoginSuccess }: PasskeyControlsProps) {
           <div className="flex items-center gap-2">
             <span className="text-green-600 text-xl">✓</span>
             <div>
-              <p className="font-semibold text-green-800">{t('auth.passkey.loginSuccess')}</p>
-              <p className="text-sm text-green-700">{t('auth.passkey.loginSuccessBody')}</p>
+              <p className="font-semibold text-green-800 dark:text-green-400">{t('auth.passkey.loginSuccess')}</p>
+              <p className="text-sm text-green-700 dark:text-green-300">{t('auth.passkey.loginSuccessBody')}</p>
             </div>
           </div>
         </div>
@@ -479,7 +485,7 @@ export function PasskeyControls({ onLoginSuccess }: PasskeyControlsProps) {
       {success === 'biometric-success' && (
         <div
           data-testid="biometric-success"
-          className="rounded border border-green-200 bg-green-50 p-4"
+          className="rounded border border-green-200 dark:border-green-800 bg-green-50 dark:bg-green-900/20 p-4"
         >
           Biometric authentication successful!
         </div>
@@ -487,7 +493,7 @@ export function PasskeyControls({ onLoginSuccess }: PasskeyControlsProps) {
       {success === 'cross-device-success' && (
         <div
           data-testid="cross-device-success"
-          className="rounded border border-green-200 bg-green-50 p-4"
+          className="rounded border border-green-200 dark:border-green-800 bg-green-50 dark:bg-green-900/20 p-4"
         >
           Cross-device authentication successful!
         </div>
@@ -506,13 +512,13 @@ export function PasskeyControls({ onLoginSuccess }: PasskeyControlsProps) {
       {error === 'operation-timeout' && (
         <div
           data-testid="operation-timeout"
-          className="rounded-lg border border-red-300 bg-red-50 p-4 animate-in fade-in slide-in-from-top-2 duration-300"
+          className="rounded-lg border border-red-300 dark:border-red-800 bg-red-50 dark:bg-red-900/20 p-4 animate-in fade-in slide-in-from-top-2 duration-300"
         >
           <div className="flex items-center gap-2">
             <span className="text-red-600">✗</span>
             <div>
               <p className="text-sm font-medium text-red-800">{t('auth.passkey.operationTimeout')}</p>
-              <p className="text-xs text-red-700 mt-1">{t('auth.passkey.operationTimeoutHelp')}</p>
+              <p className="text-xs text-red-700 dark:text-red-300 mt-1">{t('auth.passkey.operationTimeoutHelp')}</p>
             </div>
           </div>
         </div>
@@ -520,13 +526,13 @@ export function PasskeyControls({ onLoginSuccess }: PasskeyControlsProps) {
       {error === 'authentication-error' && (
         <div
           data-testid="authentication-error"
-          className="rounded-lg border border-red-300 bg-red-50 p-4 animate-in fade-in slide-in-from-top-2 duration-300"
+          className="rounded-lg border border-red-300 dark:border-red-800 bg-red-50 dark:bg-red-900/20 p-4 animate-in fade-in slide-in-from-top-2 duration-300"
         >
           <div className="flex items-center gap-2">
             <span className="text-red-600">✗</span>
             <div>
               <p className="text-sm font-medium text-red-800">{t('auth.passkey.authenticationError')}</p>
-              <p className="text-xs text-red-700 mt-1">{t('auth.passkey.authenticationErrorHelp')}</p>
+              <p className="text-xs text-red-700 dark:text-red-300 mt-1">{t('auth.passkey.authenticationErrorHelp')}</p>
             </div>
           </div>
         </div>
@@ -534,13 +540,13 @@ export function PasskeyControls({ onLoginSuccess }: PasskeyControlsProps) {
       {error === 'network-error' && (
         <div
           data-testid="webauthn-network-error"
-          className="rounded-lg border border-red-300 bg-red-50 p-4 animate-in fade-in slide-in-from-top-2 duration-300"
+          className="rounded-lg border border-red-300 dark:border-red-800 bg-red-50 dark:bg-red-900/20 p-4 animate-in fade-in slide-in-from-top-2 duration-300"
         >
           <div className="flex items-center gap-2">
             <span className="text-red-600">✗</span>
             <div>
               <p className="text-sm font-medium text-red-800">{t('auth.passkey.networkError')}</p>
-              <p className="text-xs text-red-700 mt-1">{t('auth.passkey.networkErrorHelp')}</p>
+              <p className="text-xs text-red-700 dark:text-red-300 mt-1">{t('auth.passkey.networkErrorHelp')}</p>
             </div>
           </div>
         </div>
@@ -548,13 +554,13 @@ export function PasskeyControls({ onLoginSuccess }: PasskeyControlsProps) {
       {error === 'server-error' && (
         <div
           data-testid="webauthn-server-error"
-          className="rounded-lg border border-red-300 bg-red-50 p-4 animate-in fade-in slide-in-from-top-2 duration-300"
+          className="rounded-lg border border-red-300 dark:border-red-800 bg-red-50 dark:bg-red-900/20 p-4 animate-in fade-in slide-in-from-top-2 duration-300"
         >
           <div className="flex items-center gap-2">
             <span className="text-red-600">✗</span>
             <div>
               <p className="text-sm font-medium text-red-800">{t('auth.passkey.serverError')}</p>
-              <p className="text-xs text-red-700 mt-1">{t('auth.passkey.serverErrorHelp')}</p>
+              <p className="text-xs text-red-700 dark:text-red-300 mt-1">{t('auth.passkey.serverErrorHelp')}</p>
             </div>
           </div>
         </div>
@@ -563,15 +569,15 @@ export function PasskeyControls({ onLoginSuccess }: PasskeyControlsProps) {
       {/* Simulation buttons - only show in development */}
       {(process.env.NODE_ENV === 'development' || process.env.NEXT_PUBLIC_ENABLE_E2E_HARNESS === '1') && (
         <div className="mt-4 space-x-2">
-          <button className="btn btn-sm" onClick={handleNetworkError}>
+          <Button variant="outline" size="sm" onClick={handleNetworkError}>
             Simulate Network Error
-          </button>
-          <button className="btn btn-sm" onClick={handleServerError}>
+          </Button>
+          <Button variant="outline" size="sm" onClick={handleServerError}>
             Simulate Server Error
-          </button>
-          <button className="btn btn-sm" onClick={() => updateError('operation-timeout')}>
+          </Button>
+          <Button variant="outline" size="sm" onClick={() => updateError('operation-timeout')}>
             Simulate Timeout
-          </button>
+          </Button>
         </div>
       )}
     </div>

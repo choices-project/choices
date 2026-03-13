@@ -17,9 +17,24 @@ import { logger } from '@/lib/utils/logger';
 
 
 import { useAdminStore } from './adminStore';
+import { useAnalyticsStore } from './analyticsStore';
 import { createBaseStoreActions } from './baseStoreActions';
+import { useContactStore } from './contactStore';
+import { useElectionStore } from './electionStore';
+import { useFeedsStore } from './feedsStore';
+import { useHashtagModerationStore } from './hashtagModerationStore';
+import { useHashtagStore } from './hashtagStore';
+import { useNotificationStore } from './notificationStore';
+import { useOnboardingStore } from './onboardingStore';
+import { usePollsStore } from './pollsStore';
+import { usePollWizardStore } from './pollWizardStore';
 import { useProfileStore } from './profileStore';
+import { usePWAStore } from './pwaStore';
+import { useRepresentativeStore } from './representativeStore';
 import { createSafeStorage } from './storage';
+import { useVoterRegistrationStore } from './voterRegistrationStore';
+import { votingStore } from './votingStore';
+import { useWidgetStore } from './widgetStore';
 
 import type { BaseStore } from './types';
 import type {
@@ -77,16 +92,32 @@ const assignDefined = <T extends object>(
 };
 
 const cascadeDependentStoreReset = () => {
-  try {
-    useProfileStore.getState().resetProfile();
-  } catch (error) {
-    logger.warn('Failed to reset profile store during auth cascade', error);
-  }
+  const stores: Array<{ name: string; reset: () => void }> = [
+    { name: 'profile', reset: () => useProfileStore.getState().resetProfile() },
+    { name: 'admin', reset: () => useAdminStore.getState().resetAdminState() },
+    { name: 'polls', reset: () => usePollsStore.getState().resetPollsState() },
+    { name: 'feeds', reset: () => useFeedsStore.getState().resetFeedsState() },
+    { name: 'analytics', reset: () => useAnalyticsStore.getState().resetAnalyticsState() },
+    { name: 'hashtag', reset: () => useHashtagStore.getState().resetHashtagStore() },
+    { name: 'voting', reset: () => votingStore.getState().reset() },
+    { name: 'contact', reset: () => useContactStore.getState().resetContactState() },
+    { name: 'notification', reset: () => useNotificationStore.getState().resetNotificationState() },
+    { name: 'onboarding', reset: () => useOnboardingStore.getState().restartOnboarding() },
+    { name: 'representative', reset: () => useRepresentativeStore.getState().resetRepresentativeState() },
+    { name: 'election', reset: () => useElectionStore.getState().clearElections() },
+    { name: 'pwa', reset: () => { const s = usePWAStore.getState(); s.resetPreferences(); s.clearNotifications(); } },
+    { name: 'widget', reset: () => useWidgetStore.getState().resetLayout() },
+    { name: 'pollWizard', reset: () => usePollWizardStore.getState().resetWizard() },
+    { name: 'voterRegistration', reset: () => useVoterRegistrationStore.getState().clearResources() },
+    { name: 'hashtagModeration', reset: () => useHashtagModerationStore.getState().resetHashtagModerationState() },
+  ];
 
-  try {
-    useAdminStore.getState().resetAdminState();
-  } catch (error) {
-    logger.warn('Failed to reset admin store during auth cascade', error);
+  for (const { name, reset } of stores) {
+    try {
+      reset();
+    } catch (error) {
+      logger.warn(`Failed to reset ${name} store during auth cascade`, error);
+    }
   }
 };
 

@@ -2,7 +2,7 @@
 
 
 import * as Tooltip from '@radix-ui/react-tooltip'
-import { motion } from 'framer-motion'
+import { motion, useReducedMotion } from 'framer-motion'
 import { TrendingUp, TrendingDown, Minus } from 'lucide-react'
 import React, { useState, useEffect, useCallback, useMemo, useRef } from 'react';
 
@@ -64,6 +64,7 @@ export function ProfessionalChart({
   showConfidence = false,
   maxValue
 }: ProfessionalChartProps) {
+  const shouldReduceMotion = useReducedMotion()
   const [hoveredItem, setHoveredItem] = useState<string | null>(null)
   const summaryAnnouncementRef = useRef<string | null>(null);
   
@@ -139,28 +140,26 @@ export function ProfessionalChart({
     summaryAnnouncementRef.current = summaryMessage
   }, [summaryMessage])
 
-  const containerVariants: Variants = {
-    hidden: { opacity: 0 },
-    visible: {
-      opacity: 1,
-      transition: {
-        duration: 0.5,
-        staggerChildren: 0.1
+  const containerVariants: Variants = shouldReduceMotion
+    ? { hidden: { opacity: 1 }, visible: { opacity: 1 } }
+    : {
+        hidden: { opacity: 0 },
+        visible: {
+          opacity: 1,
+          transition: { duration: 0.5, staggerChildren: 0.1 }
+        }
       }
-    }
-  }
 
-  const itemVariants: Variants = {
-    hidden: { opacity: 0, x: -20 },
-    visible: {
-      opacity: 1,
-      x: 0,
-      transition: {
-        duration: 0.4,
-        ease: "easeOut"
+  const itemVariants: Variants = shouldReduceMotion
+    ? { hidden: { opacity: 1, x: 0 }, visible: { opacity: 1, x: 0 } }
+    : {
+        hidden: { opacity: 0, x: -20 },
+        visible: {
+          opacity: 1,
+          x: 0,
+          transition: { duration: 0.4, ease: "easeOut" }
+        }
       }
-    }
-  }
 
   const renderBarChart = () => (
     <div className="space-y-4">
@@ -216,24 +215,20 @@ export function ProfessionalChart({
                   <div className="relative">
                     <motion.div
                       className="h-3 bg-gray-100 rounded-full overflow-hidden"
-                      initial={{ width: 0 }}
-                      animate={{ width: '100%' }}
-                      transition={{ duration: 0.8, delay: index * 0.1 }}
+                      {...(shouldReduceMotion ? {} : { initial: { width: 0 }, animate: { width: '100%' }, transition: { duration: 0.8, delay: index * 0.1 } })}
                     >
                       <motion.div
                         className="h-full rounded-full relative"
-                        style={{ backgroundColor: item.color }}
-                        initial={{ width: 0 }}
-                        animate={{ width: `${percentage}%` }}
-                        transition={{ 
-                          duration: 1.2, 
-                          delay: index * 0.1 + 0.3,
-                          ease: "easeOut"
-                        }}
-                        whileHover={{ 
-                          scale: 1.02,
-                          transition: { duration: 0.2 }
-                        }}
+                        {...(shouldReduceMotion
+                          ? { style: { backgroundColor: item.color, width: `${percentage}%` } }
+                          : {
+                              style: { backgroundColor: item.color },
+                              initial: { width: 0 },
+                              animate: { width: `${percentage}%` },
+                              transition: { duration: 1.2, delay: index * 0.1 + 0.3, ease: "easeOut" },
+                              whileHover: { scale: 1.02, transition: { duration: 0.2 } },
+                            }
+                        )}
                       >
                         <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent" />
                       </motion.div>
@@ -285,18 +280,16 @@ export function ProfessionalChart({
             <div className="h-4 bg-gray-100 rounded-full overflow-hidden">
               <motion.div
                 className="h-full rounded-full relative"
-                style={{ backgroundColor: item.color }}
-                initial={{ width: 0 }}
-                animate={{ width: `${item.value}%` }}
-                transition={{ 
-                  duration: 1.2, 
-                  delay: index * 0.1,
-                  ease: "easeOut"
-                }}
-                whileHover={{ 
-                  scale: 1.02,
-                  transition: { duration: 0.2 }
-                }}
+                {...(shouldReduceMotion
+                  ? { style: { backgroundColor: item.color, width: `${item.value}%` } }
+                  : {
+                      style: { backgroundColor: item.color },
+                      initial: { width: 0 },
+                      animate: { width: `${item.value}%` },
+                      transition: { duration: 1.2, delay: index * 0.1, ease: "easeOut" },
+                      whileHover: { scale: 1.02, transition: { duration: 0.2 } },
+                    }
+                )}
               >
                 <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent" />
               </motion.div>

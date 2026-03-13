@@ -5,7 +5,19 @@
  * Provides runtime control over feature availability without code changes.
  */
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
+
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from '@/components/ui/alert-dialog';
 
 import {
   useAdminFeatureFlagActions,
@@ -136,13 +148,9 @@ export default function FeatureFlags({ onFlagChange }: FeatureFlagsProps) {
     reader.readAsText(file);
   };
 
-  const handleResetFlags = () => {
-    // Use a proper confirmation dialog instead of browser confirm
-    const confirmed = window.confirm('Are you sure you want to reset all feature flags to their default values?');
-    if (confirmed) {
-      resetFeatureFlags();
-    }
-  };
+  const handleResetFlags = useCallback(() => {
+    resetFeatureFlags();
+  }, [resetFeatureFlags]);
 
   const filteredFlags = flags.filter(flag => {
     const matchesCategory = selectedCategory === 'all' || flag.category === selectedCategory;
@@ -243,13 +251,30 @@ export default function FeatureFlags({ onFlagChange }: FeatureFlagsProps) {
             />
           </label>
 
-          <button
-            onClick={handleResetFlags}
-            className="btn btn-warning"
-            disabled={featureFlags.isLoading}
-          >
-            Reset to Defaults
-          </button>
+          <AlertDialog>
+            <AlertDialogTrigger asChild>
+              <button
+                className="btn btn-warning"
+                disabled={featureFlags.isLoading}
+              >
+                Reset to Defaults
+              </button>
+            </AlertDialogTrigger>
+            <AlertDialogContent>
+              <AlertDialogHeader>
+                <AlertDialogTitle>Reset Feature Flags</AlertDialogTitle>
+                <AlertDialogDescription>
+                  Are you sure you want to reset all feature flags to their default values? This action cannot be undone.
+                </AlertDialogDescription>
+              </AlertDialogHeader>
+              <AlertDialogFooter>
+                <AlertDialogCancel>Cancel</AlertDialogCancel>
+                <AlertDialogAction onClick={handleResetFlags}>
+                  Reset All
+                </AlertDialogAction>
+              </AlertDialogFooter>
+            </AlertDialogContent>
+          </AlertDialog>
         </div>
       </div>
 

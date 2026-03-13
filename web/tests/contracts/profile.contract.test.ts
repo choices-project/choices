@@ -42,6 +42,12 @@ jest.mock('@/lib/utils/logger', () => ({
   default: mockLogger,
 }));
 
+jest.mock('@/lib/rate-limiting/api-rate-limiter', () => ({
+  apiRateLimiter: {
+    checkLimit: jest.fn().mockResolvedValue({ allowed: true, remaining: 99 }),
+  },
+}));
+
 describe('Profile API contract', () => {
   const loadRoutes = () => {
     let routeModule: any;

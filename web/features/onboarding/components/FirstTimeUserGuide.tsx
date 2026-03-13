@@ -72,7 +72,7 @@ const FirstTimeUserGuide: React.FC<FirstTimeUserGuideProps> = ({ isOpen, onClose
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
-      <div className="bg-white rounded-xl shadow-2xl max-w-2xl w-full p-6">
+      <div className="bg-card rounded-xl shadow-2xl max-w-2xl w-full p-6">
         {/* Header */}
         <div className="flex justify-between items-center mb-6">
           <div>
@@ -120,7 +120,7 @@ const FirstTimeUserGuide: React.FC<FirstTimeUserGuideProps> = ({ isOpen, onClose
               >
                 <div className="flex items-start space-x-4">
                   <div className={`p-2 rounded-lg ${
-                    isCompleted ? 'bg-green-100' : 'bg-white'
+                    isCompleted ? 'bg-green-100' : 'bg-card'
                   }`}>
                     {isCompleted ? (
                       <CheckCircle className="h-6 w-6 text-green-600" />

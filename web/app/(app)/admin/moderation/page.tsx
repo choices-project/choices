@@ -193,8 +193,8 @@ export default function ModerationPage() {
       <div className="max-w-6xl mx-auto px-6 py-8 space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-semibold text-gray-900 dark:text-gray-100">Moderation Queue</h1>
-          <p className="text-sm text-gray-600 dark:text-gray-400">
+          <h1 className="text-2xl font-semibold text-foreground">Moderation Queue</h1>
+          <p className="text-sm text-muted-foreground">
             Review community reports, manage actions, and resolve appeals.
           </p>
         </div>
@@ -217,7 +217,7 @@ export default function ModerationPage() {
             <CardTitle>Open Reports</CardTitle>
             <Badge variant="secondary">{openReports}</Badge>
           </CardHeader>
-          <CardContent className="text-sm text-gray-600 dark:text-gray-400">
+          <CardContent className="text-sm text-muted-foreground">
             Reports awaiting review or triage.
           </CardContent>
         </Card>
@@ -226,7 +226,7 @@ export default function ModerationPage() {
             <CardTitle>Open Appeals</CardTitle>
             <Badge variant="secondary">{openAppeals}</Badge>
           </CardHeader>
-          <CardContent className="text-sm text-gray-600 dark:text-gray-400">
+          <CardContent className="text-sm text-muted-foreground">
             Appeals awaiting a moderation decision.
           </CardContent>
         </Card>
@@ -241,16 +241,16 @@ export default function ModerationPage() {
         </CardHeader>
         <CardContent>
           {isLoading ? (
-            <p className="text-sm text-gray-600 dark:text-gray-400">Loading reports...</p>
+            <p className="text-sm text-muted-foreground">Loading reports...</p>
           ) : reports.length === 0 ? (
-            <p className="text-sm text-gray-600 dark:text-gray-400">No reports yet.</p>
+            <p className="text-sm text-muted-foreground">No reports yet.</p>
           ) : (
             <div className="space-y-3">
               {reports.map((report) => (
-                <div key={report.id} className="rounded-lg border border-gray-200 dark:border-gray-700 p-4">
+                <div key={report.id} className="rounded-lg border border-border p-4">
                   <div className="flex items-center justify-between">
                     <div>
-                      <p className="text-sm font-semibold text-gray-900 dark:text-gray-100">
+                      <p className="text-sm font-semibold text-foreground">
                         {report.target_type} • {report.reason}
                       </p>
                       <p className="text-xs text-gray-500">
@@ -274,7 +274,7 @@ export default function ModerationPage() {
                     </Select>
                   </div>
                   {report.details && (
-                    <p className="mt-2 text-sm text-gray-600 dark:text-gray-400">{report.details}</p>
+                    <p className="mt-2 text-sm text-muted-foreground">{report.details}</p>
                   )}
                   <p className="mt-2 text-xs text-gray-500">Target ID: {report.target_id}</p>
                 </div>
@@ -291,7 +291,7 @@ export default function ModerationPage() {
         <CardContent className="space-y-3">
           <div className="grid gap-3 sm:grid-cols-2">
             <div>
-              <label className="text-sm font-medium text-gray-700 dark:text-gray-300">Target type</label>
+              <label className="text-sm font-medium text-foreground/80">Target type</label>
               <select
                 value={actionTargetType}
                 onChange={(event) => setActionTargetType(event.target.value)}
@@ -303,7 +303,7 @@ export default function ModerationPage() {
               </select>
             </div>
             <div>
-              <label className="text-sm font-medium text-gray-700 dark:text-gray-300">Target ID</label>
+              <label className="text-sm font-medium text-foreground/80">Target ID</label>
               <input
                 value={actionTargetId}
                 onChange={(event) => setActionTargetId(event.target.value)}
@@ -314,7 +314,7 @@ export default function ModerationPage() {
           </div>
           <div className="grid gap-3 sm:grid-cols-2">
             <div>
-              <label className="text-sm font-medium text-gray-700 dark:text-gray-300">Action</label>
+              <label className="text-sm font-medium text-foreground/80">Action</label>
               <select
                 value={actionType}
                 onChange={(event) => setActionType(event.target.value)}
@@ -328,7 +328,7 @@ export default function ModerationPage() {
               </select>
             </div>
             <div>
-              <label className="text-sm font-medium text-gray-700 dark:text-gray-300">Reason (optional)</label>
+              <label className="text-sm font-medium text-foreground/80">Reason (optional)</label>
               <input
                 value={actionReason}
                 onChange={(event) => setActionReason(event.target.value)}
@@ -349,16 +349,16 @@ export default function ModerationPage() {
         </CardHeader>
         <CardContent>
           {isLoading ? (
-            <p className="text-sm text-gray-600 dark:text-gray-400">Loading appeals...</p>
+            <p className="text-sm text-muted-foreground">Loading appeals...</p>
           ) : appeals.length === 0 ? (
-            <p className="text-sm text-gray-600 dark:text-gray-400">No appeals submitted.</p>
+            <p className="text-sm text-muted-foreground">No appeals submitted.</p>
           ) : (
             <div className="space-y-3">
               {appeals.map((appeal) => (
-                <div key={appeal.id} className="rounded-lg border border-gray-200 dark:border-gray-700 p-4">
+                <div key={appeal.id} className="rounded-lg border border-border p-4">
                   <div className="flex items-center justify-between">
                     <div>
-                      <p className="text-sm font-semibold text-gray-900 dark:text-gray-100">Appeal</p>
+                      <p className="text-sm font-semibold text-foreground">Appeal</p>
                       <p className="text-xs text-gray-500">
                         {appeal.created_at ? new Date(appeal.created_at).toLocaleString() : 'Unknown time'}
                       </p>
@@ -379,7 +379,7 @@ export default function ModerationPage() {
                       </SelectContent>
                     </Select>
                   </div>
-                  <p className="mt-2 text-sm text-gray-600 dark:text-gray-400">{appeal.message}</p>
+                  <p className="mt-2 text-sm text-muted-foreground">{appeal.message}</p>
                   <p className="mt-2 text-xs text-gray-500">Action ID: {appeal.action_id}</p>
                 </div>
               ))}

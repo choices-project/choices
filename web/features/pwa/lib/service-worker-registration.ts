@@ -54,6 +54,9 @@ type RegistrationState = {
   isOffline: boolean;
 }
 
+// Interval ID for update checks; cleared on unregister
+let updateIntervalId: ReturnType<typeof setInterval> | null = null;
+
 // Global state
 const state: RegistrationState = {
   registration: null,
@@ -184,7 +187,7 @@ export async function register(config: ServiceWorkerConfig = {}): Promise<Servic
     });
     
     // Check for updates periodically (every hour)
-    setInterval(() => {
+    updateIntervalId = setInterval(() => {
       if (config.debug) logger.info('[SW] Checking for updates...');
       registration.update();
     }, 60 * 60 * 1000);
@@ -322,6 +325,10 @@ export async function unregister(): Promise<boolean> {
     
     if (success) {
       logger.info('[SW] Unregistered successfully');
+      if (updateIntervalId) {
+        clearInterval(updateIntervalId);
+        updateIntervalId = null;
+      }
       state.registration = null;
       state.isRegistered = false;
       state.isUpdateAvailable = false;

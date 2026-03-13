@@ -30,6 +30,16 @@ jest.mock('next/dynamic', () => {
   return () => () => <div data-testid="dynamic-component" />;
 });
 
+jest.mock('next/navigation', () => ({
+  useRouter: () => ({
+    push: jest.fn(),
+    replace: jest.fn(),
+    back: jest.fn(),
+  }),
+  usePathname: () => '/civics',
+  useSearchParams: () => new URLSearchParams(),
+}));
+
 const mockedAppStore = jest.requireMock('@/lib/stores/appStore') as {
   useAppActions: jest.Mock;
   useIsMobile: jest.Mock;

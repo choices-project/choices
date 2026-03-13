@@ -14,7 +14,7 @@
 
 import { getSupabaseServerClient } from '@/utils/supabase/server';
 
-import { withErrorHandling, successResponse } from '@/lib/api';
+import { withErrorHandling, successResponse, authError } from '@/lib/api';
 import { upstashRateLimiter } from '@/lib/rate-limiting/upstash-rate-limiter';
 
 import type { NextRequest } from 'next/server';
@@ -24,6 +24,29 @@ import type { NextRequest } from 'next/server';
 export const dynamic = 'force-dynamic';
 
 export const GET = withErrorHandling(async (_request: NextRequest) => {
+    const authHeader = _request.headers.get('authorization');
+    const bearerToken = authHeader?.startsWith('Bearer ') ? authHeader.slice(7) : '';
+    const hasValidKey = bearerToken && bearerToken === process.env.ADMIN_MONITORING_KEY;
+
+    if (!hasValidKey) {
+      const supabase = await getSupabaseServerClient();
+      const { data: { user }, error: userError } = await supabase.auth.getUser();
+
+      if (userError || !user) {
+        return authError('Authentication required: provide a valid admin session or monitoring key');
+      }
+
+      const { data: profile } = await supabase
+        .from('user_profiles')
+        .select('is_admin')
+        .eq('user_id', user.id)
+        .single();
+
+      if (!profile || !(profile as any).is_admin) {
+        return authError('Admin access required');
+      }
+    }
+
     const timestamp = new Date().toISOString();
     const environment = process.env.NODE_ENV ?? 'development';
 

@@ -10,6 +10,7 @@
 
 // Dashboard Components
 export { default as PersonalDashboard } from './components/PersonalDashboard';
+export { default as EngagementSummary } from './components/EngagementSummary';
 
 // Dashboard Types - Now using centralized types
 export type { PersonalAnalytics } from '@/types/features/dashboard/personal';

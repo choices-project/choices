@@ -1,6 +1,6 @@
 # Choices Platform Vision
 
-_Last updated: February 2026_
+_Last updated: March 2026_
 
 ## Mission
 
@@ -41,20 +41,26 @@ The Choices platform MVP is **complete and production-ready**. All core features
 - ✅ Production deployment ready
 - ✅ Complete documentation
 
+**UX/UI Elevation (March 2026):**
+- ✅ Design token system — HSL-based CSS custom properties with light, dark, and high-contrast modes
+- ✅ Animation system — Framer Motion with reduced motion support
+- ✅ Accessibility — Focus traps, LiveAnnouncer, keyboard navigation, ARIA labels
+- ✅ Security hardening — Rate limiting, CSRF, input sanitization, env validation
+- ✅ Production error handling — Global and route-level error boundaries
+- ✅ Performance — React.memo, dynamic imports, FeedContext, scroll restoration
+
 ## Future Roadmap
 
 While the MVP is complete, the platform continues to evolve. Future work is tracked in:
 
-- **Feature Status**: [`FEATURE_STATUS.md`](FEATURE_STATUS.md) - Current feature flags and their states
 - **Roadmap**: [`ROADMAP.md`](ROADMAP.md) - Definitive MVP roadmap (all remaining work)
-- **Current Status**: [`CURRENT_STATUS.md`](CURRENT_STATUS.md) - Active workstreams and known gaps
 
 ### Planned Enhancements (Not Blocking MVP)
 
-**GA (shipped):** Contact Information System, Push Notifications, and Civic Engagement v2 are generally available (default on). See [FEATURE_STATUS.md](FEATURE_STATUS.md) for flags and post-deploy verification steps.
+**GA (shipped):** Contact Information System, Push Notifications, and Civic Engagement v2 are generally available (default on). See [ROADMAP.md](ROADMAP.md) for remaining work and post-deploy verification steps.
 
 **In Progress / Quarantined:**
-- 🔄 Device Flow Auth - Implementation complete; E2E and OAuth provider config on hold (see [FEATURE_STATUS.md](FEATURE_STATUS.md) § Feature Quarantine)
+- 🔄 Device Flow Auth - Implementation complete; E2E and OAuth provider config on hold (see [ROADMAP.md](ROADMAP.md) §5 Quarantined)
 - 🔄 Internationalization - en/es coverage; extraction and copy freeze not yet wired
 - 📋 Social Sharing - API + poll UI shipped; civics/OG pipelines on hold
 - 📋 Advanced Privacy - Concept only (ZK/DP); quarantined
@@ -89,8 +95,8 @@ The Choices platform is built with:
 **For Developers:**
 - Start with [GETTING_STARTED.md](GETTING_STARTED.md) for setup and runbook
 - Check [CONTRIBUTING.md](../CONTRIBUTING.md) for workflow
-- Explore [CODEBASE_NAVIGATION.md](CODEBASE_NAVIGATION.md) to understand structure
-- Roadmap and next steps: [ROADMAP.md](ROADMAP.md) and [FEATURE_STATUS.md](FEATURE_STATUS.md)
+- Explore [ARCHITECTURE.md](ARCHITECTURE.md) to understand structure
+- Roadmap and next steps: [ROADMAP.md](ROADMAP.md)
 
 **For Contributors:**
 - Look for `good first issue` labels
@@ -124,7 +130,7 @@ The platform is successful when:
 - Production deployment ready
 - Active development continues on enhancements
 
-For detailed current status, see [`CURRENT_STATUS.md`](CURRENT_STATUS.md).
+For detailed current status, see [`ROADMAP.md`](ROADMAP.md).
 
 ---
 

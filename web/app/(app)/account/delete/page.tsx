@@ -110,8 +110,8 @@ export default function AccountDeletionPage() {
         throw new Error('Failed to load user data')
       }
 
-      const data = await response.json()
-      setUserData(data)
+      const json = await response.json()
+      setUserData(json.data ?? json)
     } catch (error) {
       devLog('Error loading user data:', { error })
       setError('Failed to load user data')

@@ -10,21 +10,24 @@
 'use client';
 
 import {
-  XMarkIcon,
-  PaperAirplaneIcon,
-  UsersIcon,
-  CheckCircleIcon,
-  ExclamationTriangleIcon,
-  DocumentTextIcon,
-  ClockIcon
-} from '@heroicons/react/24/outline';
+  X,
+  Send,
+  Users,
+  CheckCircle2,
+  AlertTriangle,
+  FileText,
+  Clock
+} from 'lucide-react';
 import React, { useState, useEffect, useMemo, useCallback, useRef } from 'react';
 
 import { trackCivicsRepresentativeEvent } from '@/features/civics/analytics/civicsAnalyticsEvents';
 import { useElectionCountdown, formatElectionDateStable } from '@/features/civics/utils/civicsCountdownUtils';
 import { useFeatureFlag } from '@/features/pwa/hooks/useFeatureFlags';
 
+import { BottomSheet } from '@/components/shared/BottomSheet';
+
 import { useAccessibleDialog } from '@/lib/accessibility/useAccessibleDialog';
+import { useIsMobile } from '@/lib/hooks/useMediaQuery';
 import { useAnalyticsActions, useContactActions } from '@/lib/stores';
 
 import { useI18n } from '@/hooks/useI18n';
@@ -58,6 +61,7 @@ export default function BulkContactModal({
   userId: _userId
 }: BulkContactModalProps) {
   const { t, currentLanguage } = useI18n();
+  const isMobile = useIsMobile();
   const [message, setMessage] = useState('');
   const [subject, setSubject] = useState('');
   const [isSending, setIsSending] = useState(false);
@@ -410,9 +414,9 @@ export default function BulkContactModal({
         aria-labelledby="bulk-disabled-title"
         ref={dialogRef}
       >
-        <div className="bg-white rounded-lg p-6 max-w-md mx-4">
+        <div className="bg-card rounded-lg p-6 max-w-md mx-4">
           <div className="flex items-center justify-center mb-4">
-            <ExclamationTriangleIcon className="h-8 w-8 text-yellow-600" aria-hidden="true" />
+            <AlertTriangle className="h-8 w-8 text-yellow-600" aria-hidden="true" />
           </div>
           <h2 id="bulk-disabled-title" className="text-yellow-800 text-center font-semibold mb-2">
             {t('contact.bulkModal.disabled.title')}
@@ -422,7 +426,7 @@ export default function BulkContactModal({
           </p>
           <button
             onClick={handleClose}
-            className="mt-4 w-full bg-gray-600 text-white py-2 px-4 rounded-lg hover:bg-gray-700"
+            className="mt-4 w-full bg-muted text-foreground py-2 px-4 rounded-lg hover:bg-muted/80"
             aria-label={t('contact.bulkModal.actions.closeAria')}
             type="button"
           >
@@ -433,28 +437,20 @@ export default function BulkContactModal({
     );
   }
 
-  return (
-    <div
-      className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4"
-      role="dialog"
-      aria-modal="true"
-      aria-labelledby="bulk-contact-title"
-      aria-describedby="bulk-contact-description"
-      ref={dialogRef}
-    >
-      <div className="bg-white rounded-lg max-w-4xl w-full max-h-[90vh] overflow-hidden flex flex-col">
+  const formContent = (
+    <div className="bg-card rounded-lg max-w-4xl w-full max-h-[90vh] overflow-hidden flex flex-col">
         {/* Header */}
-        <div className="flex items-center justify-between p-6 border-b border-gray-200">
+        <div className="flex items-center justify-between p-6 border-b border-border">
           <div className="flex items-center space-x-3">
-            <UsersIcon className="h-6 w-6 text-blue-600" aria-hidden="true" />
+            <Users className="h-6 w-6 text-primary" aria-hidden="true" />
             <div>
-              <h2 id="bulk-contact-title" className="text-lg font-semibold text-gray-900">
+              <h2 id="bulk-contact-title" className="text-lg font-semibold text-foreground">
                 {t('contact.bulkModal.header.title', {
                   count: selectedRepresentatives.size,
                   formattedCount: formattedSelectedCount,
                 })}
               </h2>
-              <p id="bulk-contact-description" className="text-sm text-gray-600">
+              <p id="bulk-contact-description" className="text-sm text-muted-foreground">
                 {t('contact.bulkModal.header.description', {
                   count: selectedRepresentatives.size,
                   formattedCount: formattedSelectedCount,
@@ -464,11 +460,11 @@ export default function BulkContactModal({
           </div>
           <button
             onClick={handleClose}
-            className="text-gray-400 hover:text-gray-600"
+            className="text-muted-foreground hover:text-foreground"
             aria-label={t('contact.bulkModal.actions.closeAria')}
             type="button"
           >
-            <XMarkIcon className="h-6 w-6" aria-hidden="true" />
+            <X className="h-6 w-6" aria-hidden="true" />
           </button>
         </div>
 
@@ -476,40 +472,40 @@ export default function BulkContactModal({
         <div className="flex-1 overflow-y-auto p-6 space-y-6">
           {/* Representative Selection */}
           <div>
-            <h3 className="text-sm font-medium text-gray-700 mb-3">
+            <h3 className="text-sm font-medium text-foreground/80 mb-3">
               {t('contact.bulkModal.selection.heading', {
                 count: selectedRepresentatives.size,
                 formattedCount: formattedSelectedCount,
               })}
             </h3>
-            <div className="grid grid-cols-2 md:grid-cols-3 gap-2 max-h-40 overflow-y-auto border border-gray-200 rounded-lg p-3">
+            <div className="grid grid-cols-2 md:grid-cols-3 gap-2 max-h-40 overflow-y-auto border border-border rounded-lg p-3">
               {representatives.map(rep => (
                 <label
                   key={rep.id}
-                  className="flex items-center space-x-2 p-2 hover:bg-gray-50 rounded cursor-pointer"
+                  className="flex items-center space-x-2 p-2 hover:bg-muted rounded cursor-pointer"
                 >
                   <input
                     type="checkbox"
                     checked={selectedRepresentatives.has(rep.id)}
                     onChange={() => toggleRepresentative(rep.id)}
-                    className="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+                    className="rounded border-border text-primary focus:ring-primary"
                   />
-                  <span className="text-sm text-gray-700 truncate">{rep.name}</span>
+                  <span className="text-sm text-foreground/80 truncate">{rep.name}</span>
                 </label>
               ))}
             </div>
           </div>
 
           {upcomingElections.length > 0 && (
-            <div className="bg-blue-50 border border-blue-100 rounded-lg p-4 text-sm text-blue-800 space-y-2">
+            <div className="bg-primary/10 border border-border rounded-lg p-4 text-sm text-primary space-y-2">
               <p className="font-semibold flex items-center gap-2">
-                <ClockIcon className="h-5 w-5 text-blue-500" />
+                <Clock className="h-5 w-5 text-primary" />
                 {t('contact.bulkModal.elections.title')}
               </p>
-              <ul className="space-y-1 text-blue-700">
+              <ul className="space-y-1 text-primary">
                 {upcomingElections.slice(0, 4).map((election) => (
                   <li key={election.election_id} className="flex items-center gap-2">
-                    <CheckCircleIcon className="h-4 w-4 text-blue-500" />
+                    <CheckCircle2 className="h-4 w-4 text-primary" />
                     <span>
                       <span className="font-medium">{election.name}</span>
                       <span className="ml-1">
@@ -528,7 +524,7 @@ export default function BulkContactModal({
                   </li>
                 )}
                 {daysUntilNextElection != null && (
-                  <li className="text-xs text-blue-700">
+                  <li className="text-xs text-primary">
                     {daysUntilNextElection === 0
                       ? t('contact.bulkModal.elections.countdown.today')
                       : t('contact.bulkModal.elections.countdown.inDays', {
@@ -545,12 +541,12 @@ export default function BulkContactModal({
           <div className="space-y-2">
             <button
               onClick={() => setShowTemplates(!showTemplates)}
-              className="flex items-center space-x-2 px-3 py-2 text-sm text-blue-600 hover:text-blue-700 hover:bg-blue-50 rounded-lg transition-colors"
+              className="flex items-center space-x-2 px-3 py-2 text-sm text-primary hover:text-primary/90 hover:bg-primary/10 rounded-lg transition-colors"
               aria-expanded={showTemplates}
               aria-controls="bulk-template-selector"
               type="button"
             >
-              <DocumentTextIcon className="h-4 w-4" aria-hidden="true" />
+              <FileText className="h-4 w-4" aria-hidden="true" />
               <span>
                 {selectedTemplate
                   ? t('contact.bulkModal.templates.toggle.active', { title: selectedTemplate.title })
@@ -561,17 +557,17 @@ export default function BulkContactModal({
             {showTemplates && (
               <div
                 id="bulk-template-selector"
-                className="border border-gray-200 rounded-lg p-4 bg-gray-50 max-h-60 overflow-y-auto"
+                className="border border-border rounded-lg p-4 bg-muted max-h-60 overflow-y-auto"
                 role="listbox"
                 aria-label={t('contact.bulkModal.templates.ariaLabel')}
               >
-                <p className="text-xs font-medium text-gray-700 mb-3">
+                <p className="text-xs font-medium text-foreground/80 mb-3">
                   {t('contact.bulkModal.templates.instructions')}
                 </p>
                 <div className="space-y-2">
                   {Object.entries(templatesByCategory).map(([category, templates]) => (
                     <div key={category}>
-                      <p className="text-xs font-semibold text-gray-500 uppercase mb-1">{category}</p>
+                      <p className="text-xs font-semibold text-muted-foreground uppercase mb-1">{category}</p>
                       {templates.map(template => (
                         <button
                           key={template.id}
@@ -591,15 +587,15 @@ export default function BulkContactModal({
                               },
                             });
                           }}
-                          className={`w-full text-left px-3 py-2 text-sm rounded hover:bg-white transition-colors ${
-                            selectedTemplate?.id === template.id ? 'bg-blue-100 text-blue-900' : 'text-gray-700'
+                          className={`w-full text-left px-3 py-2 text-sm rounded hover:bg-muted transition-colors ${
+                            selectedTemplate?.id === template.id ? 'bg-primary/20 text-primary' : 'text-foreground/80'
                           }`}
                           role="option"
                           aria-selected={selectedTemplate?.id === template.id}
                           type="button"
                         >
                           <div className="font-medium">{template.title}</div>
-                          <div className="text-xs text-gray-500">{template.description}</div>
+                          <div className="text-xs text-muted-foreground">{template.description}</div>
                         </button>
                       ))}
                     </div>
@@ -625,7 +621,7 @@ export default function BulkContactModal({
                         },
                       });
                     }}
-                    className="mt-3 text-xs text-gray-600 hover:text-gray-800"
+                    className="mt-3 text-xs text-muted-foreground hover:text-foreground"
                   >
                     {t('contact.bulkModal.templates.clear')}
                   </button>
@@ -635,14 +631,14 @@ export default function BulkContactModal({
 
             {/* Template Placeholders Form */}
             {selectedTemplate && showTemplates && (
-              <div className="border border-blue-200 rounded-lg p-4 bg-blue-50">
-                <p className="text-sm font-medium text-blue-900 mb-3">
+              <div className="border border-border rounded-lg p-4 bg-primary/10">
+                <p className="text-sm font-medium text-primary mb-3">
                   {t('contact.bulkModal.templates.fillLabel')}
                 </p>
                 <div className="space-y-3">
                   {selectedTemplate.placeholders.map(placeholder => (
                     <div key={placeholder.key}>
-                      <label className="block text-xs font-medium text-gray-700 mb-1">
+                      <label className="block text-xs font-medium text-foreground/80 mb-1">
                         {placeholder.label}
                         {placeholder.required && <span className="text-red-500">*</span>}
                       </label>
@@ -655,7 +651,7 @@ export default function BulkContactModal({
                           setLocalTemplateValues(prev => ({ ...prev, [placeholder.key]: value }));
                         }}
                         placeholder={placeholder.example}
-                        className="w-full px-2 py-1 text-sm border border-gray-300 rounded focus:ring-1 focus:ring-blue-500 focus:border-blue-500"
+                        className="w-full px-2 py-1 text-sm border border-border rounded focus:ring-1 focus:ring-primary focus:border-primary"
                       />
                     </div>
                   ))}
@@ -674,7 +670,7 @@ export default function BulkContactModal({
           {/* Message Form */}
           <div className="space-y-4">
             <div>
-              <label htmlFor="bulk-subject" className="block text-sm font-medium text-gray-700 mb-2">
+              <label htmlFor="bulk-subject" className="block text-sm font-medium text-foreground/80 mb-2">
                 {t('contact.bulkModal.form.subject.label')}
               </label>
               <input
@@ -683,7 +679,7 @@ export default function BulkContactModal({
                 value={subject}
                 onChange={(e) => setSubject(e.target.value)}
                 placeholder={t('contact.bulkModal.form.subject.placeholder')}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                className="w-full px-3 py-2 border border-border rounded-lg focus:ring-2 focus:ring-primary focus:border-primary"
                 disabled={isSending || !!filledTemplate}
                 aria-required="true"
                 aria-invalid={error && !subject.trim() ? 'true' : 'false'}
@@ -699,7 +695,7 @@ export default function BulkContactModal({
             </div>
 
             <div>
-              <label htmlFor="bulk-message" className="block text-sm font-medium text-gray-700 mb-2">
+              <label htmlFor="bulk-message" className="block text-sm font-medium text-foreground/80 mb-2">
                 {t('contact.bulkModal.form.message.label')}
               </label>
               <textarea
@@ -708,7 +704,7 @@ export default function BulkContactModal({
                 onChange={(e) => setMessage(e.target.value)}
                 placeholder={t('contact.bulkModal.form.message.placeholder')}
                 rows={8}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                className="w-full px-3 py-2 border border-border rounded-lg focus:ring-2 focus:ring-primary focus:border-primary"
                 disabled={isSending || !!filledTemplate}
                 aria-required="true"
                 aria-invalid={error && !message.trim() ? 'true' : 'false'}
@@ -721,7 +717,7 @@ export default function BulkContactModal({
                     {t('contact.bulkModal.form.message.required')}
                   </p>
                 )}
-                <span className={`text-xs ml-auto ${message.length > 9500 ? 'text-red-600' : 'text-gray-500'}`}>
+                <span className={`text-xs ml-auto ${message.length > 9500 ? 'text-red-600' : 'text-muted-foreground'}`}>
                   {t('contact.bulkModal.form.message.count', {
                     current: numberFormatter.format(message.length),
                     max: numberFormatter.format(10000),
@@ -733,8 +729,8 @@ export default function BulkContactModal({
 
           {/* Send Results */}
           {sendResults.length > 0 && (
-            <div className="border border-gray-200 rounded-lg p-4">
-              <h3 className="text-sm font-medium text-gray-700 mb-3">
+            <div className="border border-border rounded-lg p-4">
+              <h3 className="text-sm font-medium text-foreground/80 mb-3">
                 {t('contact.bulkModal.results.title')}
               </h3>
               <div className="space-y-2 max-h-40 overflow-y-auto">
@@ -742,17 +738,17 @@ export default function BulkContactModal({
                   <div
                     key={index}
                     className={`flex items-center justify-between p-2 rounded ${
-                      result.success ? 'bg-green-50' : 'bg-red-50'
+                      result.success ? 'bg-green-50 dark:bg-green-900/20' : 'bg-red-50 dark:bg-red-900/20'
                     }`}
                   >
-                    <span className="text-sm font-medium text-gray-700">
+                    <span className="text-sm font-medium text-foreground/80">
                       {result.representativeName}
                     </span>
                     {result.success ? (
-                      <CheckCircleIcon className="h-5 w-5 text-green-600" />
+                      <CheckCircle2 className="h-5 w-5 text-green-600" />
                     ) : (
                       <div className="flex items-center space-x-2">
-                        <ExclamationTriangleIcon className="h-5 w-5 text-red-600" />
+                        <AlertTriangle className="h-5 w-5 text-red-600" />
                           <span className="text-xs text-red-600">
                             {result.error ?? t('contact.bulkModal.results.failureFallback')}
                           </span>
@@ -771,7 +767,7 @@ export default function BulkContactModal({
               role="alert"
               aria-live="polite"
             >
-              <ExclamationTriangleIcon className="h-5 w-5" aria-hidden="true" />
+              <AlertTriangle className="h-5 w-5" aria-hidden="true" />
               <span className="text-sm">{error}</span>
             </div>
           )}
@@ -782,7 +778,7 @@ export default function BulkContactModal({
               role="alert"
               aria-live="polite"
             >
-              <CheckCircleIcon className="h-5 w-5" aria-hidden="true" />
+              <CheckCircle2 className="h-5 w-5" aria-hidden="true" />
               <span className="text-sm">
                 {t('contact.bulkModal.success', {
                   count: totalSelectedCount,
@@ -794,12 +790,12 @@ export default function BulkContactModal({
         </div>
 
         {/* Footer */}
-        <div className="flex items-center justify-between p-6 border-t border-gray-200 bg-gray-50">
-          <div className="text-sm text-gray-500">{footerSelectionText}</div>
+        <div className="flex items-center justify-between p-6 border-t border-border bg-muted">
+          <div className="text-sm text-muted-foreground">{footerSelectionText}</div>
           <div className="flex space-x-3">
             <button
               onClick={handleClose}
-              className="px-4 py-2 text-gray-600 hover:text-gray-800"
+              className="px-4 py-2 text-muted-foreground hover:text-foreground"
               disabled={isSending}
             >
               {t('common.actions.cancel')}
@@ -807,7 +803,7 @@ export default function BulkContactModal({
             <button
               onClick={handleBulkSend}
               disabled={isSending || !message.trim() || !subject.trim() || selectedRepresentatives.size === 0}
-              className="flex items-center space-x-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed"
+              className="flex items-center space-x-2 px-4 py-2 bg-primary text-primary-foreground rounded-lg hover:bg-primary/90 disabled:opacity-50 disabled:cursor-not-allowed"
               aria-busy={isSending}
               aria-label={isSending ? sendingButtonAria : sendButtonAria}
             >
@@ -818,7 +814,7 @@ export default function BulkContactModal({
                 </>
               ) : (
                 <>
-                  <PaperAirplaneIcon className="h-4 w-4" aria-hidden="true" />
+                  <Send className="h-4 w-4" aria-hidden="true" />
                   <span>{sendButtonLabel}</span>
                 </>
               )}
@@ -826,6 +822,34 @@ export default function BulkContactModal({
           </div>
         </div>
       </div>
+  );
+
+  if (isMobile) {
+    return (
+      <div
+        ref={dialogRef}
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="bulk-contact-title"
+        aria-describedby="bulk-contact-description"
+      >
+        <BottomSheet open={isOpen} onClose={handleClose}>
+          {formContent}
+        </BottomSheet>
+      </div>
+    );
+  }
+
+  return (
+    <div
+      className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4"
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="bulk-contact-title"
+      aria-describedby="bulk-contact-description"
+      ref={dialogRef}
+    >
+      {formContent}
     </div>
   );
 }

@@ -10,12 +10,7 @@
 
 'use client';
 
-import {
-  ChatBubbleLeftRightIcon,
-  ClockIcon,
-  ExclamationTriangleIcon
-} from '@heroicons/react/24/outline';
-import { RefreshCw } from 'lucide-react';
+import { MessageCircle, Clock, AlertTriangle, RefreshCw } from 'lucide-react';
 import Image from 'next/image';
 import Link from 'next/link';
 import { useEffect, useState, useMemo, useCallback } from 'react';
@@ -28,6 +23,7 @@ import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 
+import { AVATAR_BLUR_DATA_URL } from '@/lib/constants/image';
 import { useAppActions } from '@/lib/stores/appStore';
 import { logger } from '@/lib/utils/logger';
 
@@ -149,7 +145,7 @@ export default function ContactHistoryPage() {
       <div className="container mx-auto px-4 py-8">
         <div className="flex items-center justify-center min-h-[400px]">
           <div className="text-center">
-            <ClockIcon className="w-8 h-8 animate-pulse mx-auto mb-4 text-gray-400" />
+            <Clock className="w-8 h-8 animate-pulse mx-auto mb-4 text-gray-400" />
             <p className="text-gray-600">Loading message history...</p>
           </div>
         </div>
@@ -186,7 +182,7 @@ export default function ContactHistoryPage() {
       <div className="mb-6 flex flex-wrap items-start justify-between gap-4">
         <div>
           <h1 className="text-3xl font-bold text-gray-900 mb-2 flex items-center space-x-2">
-            <ChatBubbleLeftRightIcon className="w-8 h-8 text-blue-600" />
+            <MessageCircle className="w-8 h-8 text-blue-600" />
             <span>Communication History</span>
           </h1>
           <p className="text-gray-600">
@@ -238,7 +234,7 @@ export default function ContactHistoryPage() {
 
       {filteredThreads.length === 0 ? (
         <EnhancedEmptyState
-          icon={<ChatBubbleLeftRightIcon className="h-12 w-12 text-gray-400" />}
+          icon={<MessageCircle className="h-12 w-12 text-gray-400" />}
           title="No messages yet"
           description="Start a conversation with your representatives to see it here."
           tip="Browse your representatives and send them a message to start a conversation thread."
@@ -263,6 +259,8 @@ export default function ContactHistoryPage() {
                             alt={thread.representative.name}
                             width={24}
                             height={24}
+                            placeholder="blur"
+                            blurDataURL={AVATAR_BLUR_DATA_URL}
                             className="w-6 h-6 rounded-full object-cover"
                           />
                         ) : (
@@ -287,7 +285,7 @@ export default function ContactHistoryPage() {
                       {thread.status}
                     </span>
                     {thread.priority === 'high' && (
-                      <ExclamationTriangleIcon className="w-5 h-5 text-yellow-500" />
+                      <AlertTriangle className="w-5 h-5 text-yellow-500" />
                     )}
                   </div>
                 </div>
@@ -296,12 +294,12 @@ export default function ContactHistoryPage() {
                 <div className="flex items-center justify-between">
                   <div className="flex items-center space-x-4 text-sm text-gray-500">
                     <div className="flex items-center space-x-1">
-                      <ChatBubbleLeftRightIcon className="w-4 h-4" />
+                      <MessageCircle className="w-4 h-4" />
                       <span>{thread.message_count} {thread.message_count === 1 ? 'message' : 'messages'}</span>
                     </div>
                     {thread.last_message_at && (
                       <div className="flex items-center space-x-1">
-                        <ClockIcon className="w-4 h-4" />
+                        <Clock className="w-4 h-4" />
                         <span>
                           Last message: {new Date(thread.last_message_at).toLocaleDateString()}
                         </span>

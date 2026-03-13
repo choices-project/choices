@@ -850,12 +850,12 @@ export default function DashboardContent() {
               <h2 className="text-xl font-semibold text-red-600 dark:text-red-400 mb-2">
                 Unable to load dashboard
               </h2>
-              <p className="text-gray-600 dark:text-gray-400 mb-4">
+              <p className="text-muted-foreground mb-4">
                 We encountered an error while loading your dashboard. Please try again.
               </p>
               <button
                 onClick={() => window.location.reload()}
-                className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 dark:focus:ring-offset-gray-900 transition-colors"
+                className="px-4 py-2 bg-primary text-white rounded-lg hover:bg-primary/90 focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 dark:focus:ring-offset-background transition-colors"
                 aria-label="Try again to load dashboard"
                 data-testid="dashboard-error-boundary-retry"
               >
@@ -888,7 +888,7 @@ export default function DashboardContent() {
               </div>
               <Button
                 onClick={() => routerRef.current.push('/admin/dashboard')}
-                className="bg-blue-600 hover:bg-blue-700 text-white"
+                className="bg-primary hover:bg-primary/90 text-white"
               >
                 <Shield className="h-4 w-4 mr-2" />
                 Go to Admin Dashboard
@@ -903,8 +903,8 @@ export default function DashboardContent() {
         <Suspense fallback={
           <div className="space-y-6" aria-label="Loading dashboard" aria-busy="true" aria-live="polite" data-testid="personal-dashboard-loading">
             <div className="animate-pulse">
-              <div className="h-8 bg-gray-200 dark:bg-gray-700 rounded w-1/4 mb-3" />
-              <div className="h-4 bg-gray-200 dark:bg-gray-700 rounded w-1/2" />
+              <div className="h-8 bg-muted rounded w-1/4 mb-3" />
+              <div className="h-4 bg-muted rounded w-1/2" />
             </div>
           </div>
         }>

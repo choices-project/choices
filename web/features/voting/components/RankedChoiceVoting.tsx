@@ -8,6 +8,8 @@ import { useVotingIsVoting } from '@/features/voting/lib/store';
 import ScreenReaderSupport from '@/lib/accessibility/screen-reader';
 import { cn } from '@/lib/utils';
 
+import { VoteSubmitButton } from './VoteSubmitButton';
+
 import type { PollOption } from '../types';
 
 type RankedChoiceVotingProps = {
@@ -356,18 +358,14 @@ export default function RankedChoiceVoting({
               <span className="font-medium">Vote submitted successfully!</span>
             </div>
           ) : (
-            <button
-              type="button"
+            <VoteSubmitButton
+              isSubmitting={isSubmitting}
+              disabled={hasVoted || effectiveIsVoting}
               onClick={handleSubmit}
-              disabled={isDisabled}
+              icon={CheckCircle}
+              label="Submit vote"
               data-testid="start-voting-button"
-              className={`flex items-center space-x-2 rounded-lg px-8 py-3 font-medium transition-colors ${
-                isDisabled ? 'cursor-not-allowed bg-muted text-muted-foreground' : 'bg-primary text-primary-foreground hover:bg-primary/90'
-              }`}
-            >
-              <CheckCircle className="h-5 w-5" aria-hidden="true" />
-              <span>{isSubmitting ? 'Submitting vote…' : 'Submit vote'}</span>
-            </button>
+            />
           )}
         </div>
       </div>

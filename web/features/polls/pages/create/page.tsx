@@ -41,6 +41,7 @@ import { Switch } from "@/components/ui/switch"
 import { Textarea } from "@/components/ui/textarea"
 
 import { useAccessibleDialog } from '@/lib/accessibility/useAccessibleDialog';
+import { haptic } from '@/lib/haptics';
 import { useNotificationActions } from "@/lib/stores"
 import { cn } from "@/lib/utils"
 import logger from '@/lib/utils/logger';
@@ -94,59 +95,53 @@ export default function CreatePollPage() {
     actionsRef.current = actions;
   }, [actions]);
 
-  // Fetch representative data if representative_id is in query params
+  // Apply representative_id from URL and fetch representative after first paint to avoid
+  // blocking the main thread and triggering "Page Unresponsive" (deferred work).
+  const representativeIdParam = searchParams?.get('representative_id') ?? '';
   useEffect(() => {
-    const representativeIdParam = searchParams?.get('representative_id')
-    if (representativeIdParam) {
-      const repId = parseInt(representativeIdParam, 10)
-      if (!isNaN(repId)) {
-        // Only update if representative_id hasn't been set yet to prevent infinite loops
-        const currentRepId = data.representative_id;
-        if (currentRepId !== repId) {
-          // Store representative_id in wizard data
-          actionsRef.current.updateData({ representative_id: repId })
-        }
+    if (!representativeIdParam) return;
+    const repId = parseInt(representativeIdParam, 10);
+    if (isNaN(repId)) return;
 
-        // Only fetch if we don't already have representative data
-        if (!representative || representative.id !== repId) {
-          setRepresentativeLoading(true)
-          fetch(`/api/v1/civics/representative/${repId}?fields=id,name,office,party`)
-            .then(async (res) => {
-              if (!res.ok) {
-                const errorText = await res.text().catch(() => 'Unknown error');
-                throw new Error(`API error (${res.status}): ${errorText}`);
-              }
-              return res.json();
-            })
-            .then(result => {
-              if (result.success && result.data?.representative) {
-                const rep = result.data.representative
-                setRepresentative({
-                  id: parseInt(String(rep.id), 10),
-                  name: rep.name,
-                  office: rep.office,
-                  party: rep.party
-                })
-              } else {
-                logger.warn('Representative fetch returned unsuccessful result', { result, repId });
-              }
-            })
-            .catch(err => {
-              logger.error('Failed to fetch representative', {
-                error: err instanceof Error ? err.message : String(err),
-                repId,
-                stack: err instanceof Error ? err.stack : undefined
-              });
-              // Don't crash - just log the error and continue without representative data
-              // The poll can still be created without the representative info pre-filled
-            })
-            .finally(() => {
-              setRepresentativeLoading(false)
-            })
-        }
+    const rafId = requestAnimationFrame(() => {
+      if (actionsRef.current) {
+        actionsRef.current.updateData({ representative_id: repId });
       }
-    }
-  }, [searchParams, data.representative_id, representative])
+      setRepresentativeLoading(true);
+      fetch(`/api/v1/civics/representative/${repId}?fields=id,name,office,party`)
+        .then(async (res) => {
+          if (!res.ok) {
+            const errorText = await res.text().catch(() => 'Unknown error');
+            throw new Error(`API error (${res.status}): ${errorText}`);
+          }
+          return res.json();
+        })
+        .then((result: { success?: boolean; data?: { representative?: { id: unknown; name: string; office: string; party?: string } } }) => {
+          if (result.success && result.data?.representative) {
+            const rep = result.data.representative;
+            setRepresentative({
+              id: parseInt(String(rep.id), 10),
+              name: rep.name,
+              office: rep.office,
+              ...(rep.party != null && rep.party !== '' ? { party: rep.party } : {}),
+            });
+          } else {
+            logger.warn('Representative fetch returned unsuccessful result', { result, repId });
+          }
+        })
+        .catch((err: unknown) => {
+          logger.error('Failed to fetch representative', {
+            error: err instanceof Error ? err.message : String(err),
+            repId,
+            stack: err instanceof Error ? err.stack : undefined,
+          });
+        })
+        .finally(() => {
+          setRepresentativeLoading(false);
+        });
+    });
+    return () => cancelAnimationFrame(rafId);
+  }, [representativeIdParam]);
 
   // Helper function to safely get translations with fallback
   const safeT = useCallback((key: string, fallback: string, params?: Record<string, string | number>): string => {
@@ -189,18 +184,6 @@ export default function CreatePollPage() {
 
   const recordPollEvent = useRecordPollEvent();
 
-  // Vote Milestones - Commented out per user request
-  // const {
-  //   milestones,
-  //   preferences: milestonePreferences,
-  //   enabledMilestones,
-  //   nextMilestone,
-  //   updatePreference: updateMilestonePreference,
-  // } = usePollMilestoneNotifications({
-  //   pollId: shareInfo?.pollId ?? null,
-  //   totalVotes: 0,
-  // });
-
   useEffect(() => {
     if (shareInfo) {
       const payload: PollEventOptions = {
@@ -218,23 +201,6 @@ export default function CreatePollPage() {
       recordPollEvent('share_modal_opened', payload);
     }
   }, [recordPollEvent, shareInfo]);
-
-  // Vote Milestones - Commented out per user request
-  // useEffect(() => {
-  //   if (!shareInfo) return;
-  //   const payload: PollEventOptions = {
-  //     metadata: {
-  //       enabledMilestones,
-  //       nextMilestone,
-  //     },
-  //   }
-
-  //   if (shareInfo.pollId) {
-  //     payload.label = shareInfo.pollId
-  //   }
-
-  //   recordPollEvent('milestone_pref_summary', payload);
-  // }, [enabledMilestones, nextMilestone, recordPollEvent, shareInfo]);
 
   const hasErrors = Object.keys(errors ?? {}).length > 0
 
@@ -311,25 +277,6 @@ export default function CreatePollPage() {
       }
     }
   }, []);
-
-  // Vote Milestones - Commented out per user request
-  // const handleMilestoneToggle = (milestone: PollMilestone, enabled: boolean) => {
-  //   updateMilestonePreference(milestone, enabled)
-  //   const payload: PollEventOptions = {
-  //     value: enabled ? 1 : 0,
-  //     metadata: {
-  //       pollId: shareInfo?.pollId,
-  //       milestone,
-  //       enabled,
-  //     },
-  //   }
-
-  //   if (shareInfo?.pollId) {
-  //     payload.label = shareInfo.pollId
-  //   }
-
-  //   recordPollEvent('milestone_pref_updated', payload)
-  // }
 
   const handleCopyShareLink = async () => {
     if (!shareUrl) return
@@ -841,6 +788,8 @@ export default function CreatePollPage() {
       duration: 4000,
     });
 
+    haptic('success');
+
     recordPollEvent('poll_created', {
       category: 'poll_creation',
       label: pollData.pollId,
@@ -885,14 +834,14 @@ export default function CreatePollPage() {
         return (
           <div className="space-y-6">
             {representative && (
-              <Alert className="bg-blue-50 border-blue-200 dark:bg-blue-900/20 dark:border-blue-800">
+              <Alert className="bg-primary/10 border-primary/30">
                 <div className="flex items-start gap-3">
-                  <User className="h-5 w-5 text-blue-600 dark:text-blue-400 mt-0.5" />
+                  <User className="h-5 w-5 text-primary mt-0.5" />
                   <div className="flex-1">
-                    <AlertTitle className="text-blue-900 dark:text-blue-100 font-semibold mb-1">
+                    <AlertTitle className="text-foreground font-semibold mb-1">
                       {t('polls.create.representative.creatingAbout', { name: representative.name })}
                     </AlertTitle>
-                    <AlertDescription className="text-blue-800 dark:text-blue-200 text-sm">
+                    <AlertDescription className="text-foreground/80 text-sm">
                       {representative.office}
                       {representative.party && ` • ${representative.party}`}
                     </AlertDescription>
@@ -901,8 +850,8 @@ export default function CreatePollPage() {
               </Alert>
             )}
             {representativeLoading && (
-              <Alert className="bg-gray-50 border-gray-200">
-                <AlertDescription className="text-sm text-gray-600">
+              <Alert className="bg-muted border-border">
+                <AlertDescription className="text-sm text-muted-foreground">
                   {t('polls.create.representative.loading')}
                 </AlertDescription>
               </Alert>
@@ -1447,7 +1396,14 @@ export default function CreatePollPage() {
         )}
 
         <Card className="mb-8">
-          <CardContent className="p-6">{renderStep()}</CardContent>
+          <CardContent className="p-6">
+            <div
+              key={POLL_CREATION_STEPS[currentStep]?.id ?? currentStep}
+              className="animate-in fade-in slide-in-from-right-2 duration-300"
+            >
+              {renderStep()}
+            </div>
+          </CardContent>
         </Card>
 
         <footer className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
@@ -1874,13 +1830,13 @@ const InteractivePreview = ({ votingMethod, options }: InteractivePreviewProps) 
                 onKeyDown={(e) => {
                   if (e.key === 'Enter' || e.key === ' ') e.preventDefault();
                 }}
-                className="flex items-center gap-3 p-4 rounded-lg border-2 border-purple-200 bg-white dark:bg-gray-800 shadow-sm hover:shadow-md transition-all cursor-move hover:border-purple-300 active:scale-[0.98]"
+                className="flex items-center gap-3 p-4 rounded-lg border-2 border-purple-200 bg-card shadow-sm hover:shadow-md transition-all cursor-move hover:border-purple-300 active:scale-[0.98]"
               >
                 <div className="flex-shrink-0 flex items-center justify-center w-10 h-10 rounded-full bg-gradient-to-br from-purple-100 to-purple-200 text-purple-700 font-bold text-sm shadow-sm">
                   {displayIndex + 1}
                 </div>
                 <div className="flex-1">
-                  <span className="text-base font-semibold text-gray-900 dark:text-gray-100">{option}</span>
+                  <span className="text-base font-semibold text-foreground">{option}</span>
                 </div>
                 <div className="flex-shrink-0 flex items-center gap-2">
                   <GripVertical className="h-4 w-4 text-purple-400" />
@@ -1910,7 +1866,7 @@ const InteractivePreview = ({ votingMethod, options }: InteractivePreviewProps) 
         {options.map((option, index) => (
           <label
             key={`preview-single-${index}`}
-            className="flex items-center gap-3 p-4 rounded-lg border-2 border-border bg-card dark:bg-gray-800 shadow-sm hover:shadow-md transition-all cursor-pointer hover:border-primary/60"
+            className="flex items-center gap-3 p-4 rounded-lg border-2 border-border bg-card shadow-sm hover:shadow-md transition-all cursor-pointer hover:border-primary/60"
           >
             <input
               type="radio"
@@ -1922,7 +1878,7 @@ const InteractivePreview = ({ votingMethod, options }: InteractivePreviewProps) 
             <span className="flex h-8 w-8 items-center justify-center rounded-full border-2 border-primary bg-primary/10 text-primary text-sm font-bold shrink-0 shadow-sm" aria-hidden>
               {index + 1}
             </span>
-            <span className="text-base font-semibold text-gray-900 dark:text-gray-100 flex-1">{option}</span>
+            <span className="text-base font-semibold text-foreground flex-1">{option}</span>
           </label>
         ))}
         {options.length === 0 && (
@@ -1938,7 +1894,7 @@ const InteractivePreview = ({ votingMethod, options }: InteractivePreviewProps) 
         {options.map((option, index) => (
           <label
             key={`preview-multiple-${index}`}
-            className="flex items-center gap-3 p-4 rounded-lg border-2 border-border bg-card dark:bg-gray-800 shadow-sm hover:shadow-md transition-all cursor-pointer hover:border-primary/60"
+            className="flex items-center gap-3 p-4 rounded-lg border-2 border-border bg-card shadow-sm hover:shadow-md transition-all cursor-pointer hover:border-primary/60"
           >
             <input
               type="checkbox"
@@ -1955,7 +1911,7 @@ const InteractivePreview = ({ votingMethod, options }: InteractivePreviewProps) 
             <span className="flex h-8 w-8 items-center justify-center rounded-full border-2 border-primary bg-primary/10 text-primary text-sm font-bold shrink-0 shadow-sm" aria-hidden>
               {index + 1}
             </span>
-            <span className="text-base font-semibold text-gray-900 dark:text-gray-100 flex-1">{option}</span>
+            <span className="text-base font-semibold text-foreground flex-1">{option}</span>
           </label>
         ))}
         {options.length === 0 && (
@@ -1971,7 +1927,7 @@ const InteractivePreview = ({ votingMethod, options }: InteractivePreviewProps) 
         {options.map((option, index) => (
           <label
             key={`preview-approval-${index}`}
-            className="flex items-center gap-3 p-4 rounded-lg border-2 border-border bg-card dark:bg-gray-800 shadow-sm hover:shadow-md transition-all cursor-pointer hover:border-primary/60"
+            className="flex items-center gap-3 p-4 rounded-lg border-2 border-border bg-card shadow-sm hover:shadow-md transition-all cursor-pointer hover:border-primary/60"
           >
             <input
               type="checkbox"
@@ -1988,7 +1944,7 @@ const InteractivePreview = ({ votingMethod, options }: InteractivePreviewProps) 
             <span className="flex h-8 w-8 items-center justify-center rounded-full border-2 border-primary bg-primary/10 text-primary text-sm font-bold shrink-0 shadow-sm" aria-hidden>
               {index + 1}
             </span>
-            <span className="text-base font-semibold text-gray-900 dark:text-gray-100 flex-1">{option}</span>
+            <span className="text-base font-semibold text-foreground flex-1">{option}</span>
           </label>
         ))}
         {options.length === 0 && (
@@ -2002,11 +1958,11 @@ const InteractivePreview = ({ votingMethod, options }: InteractivePreviewProps) 
   return (
     <div className="space-y-3">
       {options.map((option, index) => (
-        <div key={`preview-default-${index}`} className="flex items-center gap-3 p-4 rounded-lg border-2 border-border bg-card dark:bg-gray-800 shadow-sm hover:shadow-md transition-shadow">
+        <div key={`preview-default-${index}`} className="flex items-center gap-3 p-4 rounded-lg border-2 border-border bg-card shadow-sm hover:shadow-md transition-shadow">
           <span className="flex h-8 w-8 items-center justify-center rounded-full border-2 border-primary bg-primary/10 text-primary text-sm font-bold shrink-0 shadow-sm" aria-hidden>
             {index + 1}
           </span>
-          <span className="text-base font-semibold text-gray-900 dark:text-gray-100">{option}</span>
+          <span className="text-base font-semibold text-foreground">{option}</span>
         </div>
       ))}
       {options.length === 0 && (

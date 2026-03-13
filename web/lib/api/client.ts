@@ -8,7 +8,7 @@
  * Status: ✅ ACTIVE
  */
 
-import type { ApiResponse, ApiSuccessResponse, ApiErrorResponse } from './types';
+import type { ApiResponse, ApiSuccessResponse, ApiErrorResponse, ProfileUpdateRequest, FeedbackSubmitRequest, RegisterRequest } from './types';
 
 // ============================================================================
 // API CLIENT ERROR
@@ -19,7 +19,7 @@ export class ApiError extends Error {
     message: string,
     public status: number,
     public code?: string,
-    public details?: any
+    public details?: unknown
   ) {
     super(message);
     this.name = 'ApiError';
@@ -78,7 +78,7 @@ export type ApiClientOptions = {
   retries?: number;
   retryDelay?: number;
   onError?: (error: ApiError) => void;
-  onSuccess?: (response: any) => void;
+  onSuccess?: (response: unknown) => void;
 } & RequestInit
 
 // ============================================================================
@@ -92,7 +92,7 @@ export type ApiClientOptions = {
  * const user = await apiClient<UserProfile>('/api/profile');
  * const polls = await apiClient<Poll[]>('/api/polls', { method: 'GET' });
  */
-export async function apiClient<T = any>(
+export async function apiClient<T = unknown>(
   url: string,
   options: ApiClientOptions = {}
 ): Promise<T> {
@@ -108,6 +108,18 @@ export async function apiClient<T = any>(
 
   const controller = new AbortController();
   const timeoutId = setTimeout(() => controller.abort(), timeout);
+
+  // Support external signal for cleanup (e.g. component unmount).
+  // When external signal aborts, abort our controller so request is cancelled.
+  const externalSignal = fetchOptions.signal;
+  if (externalSignal) {
+    if (externalSignal.aborted) {
+      clearTimeout(timeoutId);
+      const e = new DOMException('Request aborted', 'AbortError');
+      throw e;
+    }
+    externalSignal.addEventListener('abort', () => controller.abort(), { once: true });
+  }
 
   try {
     const headers = new Headers({ 'Content-Type': 'application/json' });
@@ -179,10 +191,11 @@ export async function apiClient<T = any>(
       throw error;
     }
 
+    if (error instanceof Error && error.name === 'AbortError') {
+      throw error;
+    }
+
     if (error instanceof Error) {
-      if (error.name === 'AbortError') {
-        throw new ApiError('Request timeout', 408);
-      }
       throw new ApiError(error.message, 500);
     }
 
@@ -218,7 +231,7 @@ async function fetchWithRetry(
 /**
  * Make a GET request
  */
-export async function get<T = any>(
+export async function get<T = unknown>(
   url: string,
   options?: Omit<ApiClientOptions, 'method' | 'body'>
 ): Promise<T> {
@@ -228,9 +241,9 @@ export async function get<T = any>(
 /**
  * Make a POST request
  */
-export async function post<T = any>(
+export async function post<T = unknown>(
   url: string,
-  body?: any,
+  body?: unknown,
   options?: Omit<ApiClientOptions, 'method' | 'body'>
 ): Promise<T> {
   return apiClient<T>(url, mergeClientOptions(options, buildMethodOptions('POST', body)));
@@ -239,9 +252,9 @@ export async function post<T = any>(
 /**
  * Make a PUT request
  */
-export async function put<T = any>(
+export async function put<T = unknown>(
   url: string,
-  body?: any,
+  body?: unknown,
   options?: Omit<ApiClientOptions, 'method' | 'body'>
 ): Promise<T> {
   return apiClient<T>(url, mergeClientOptions(options, buildMethodOptions('PUT', body)));
@@ -250,9 +263,9 @@ export async function put<T = any>(
 /**
  * Make a PATCH request
  */
-export async function patch<T = any>(
+export async function patch<T = unknown>(
   url: string,
-  body?: any,
+  body?: unknown,
   options?: Omit<ApiClientOptions, 'method' | 'body'>
 ): Promise<T> {
   return apiClient<T>(url, mergeClientOptions(options, buildMethodOptions('PATCH', body)));
@@ -261,7 +274,7 @@ export async function patch<T = any>(
 /**
  * Make a DELETE request
  */
-export async function del<T = any>(
+export async function del<T = unknown>(
   url: string,
   options?: Omit<ApiClientOptions, 'method' | 'body'>
 ): Promise<T> {
@@ -345,7 +358,7 @@ const buildMethodOptions = (method: string, body?: unknown): Record<string, unkn
  */
 export const profileApi = {
   get: () => get('/api/profile'),
-  update: (data: any) => post('/api/profile', { profile: data }),
+  update: (data: ProfileUpdateRequest) => post('/api/profile', { profile: data }),
   delete: () => del('/api/profile'),
   export: () => get('/api/profile/export'),
 };
@@ -361,7 +374,7 @@ export const dashboardApi = {
  * Feedback API client
  */
 export const feedbackApi = {
-  submit: (feedback: any) => post('/api/feedback', feedback),
+  submit: (feedback: FeedbackSubmitRequest) => post('/api/feedback', feedback),
   list: (filters?: Record<string, string>) => {
     const params = filters ? `?${new URLSearchParams(filters)}` : '';
     return get(`/api/feedback${params}`);
@@ -392,7 +405,7 @@ export const healthApi = {
  */
 export const authApi = {
   login: (email: string, password: string) => post('/api/auth/login', { email, password }),
-  register: (data: any) => post('/api/auth/register', data),
+  register: (data: RegisterRequest) => post('/api/auth/register', data),
   logout: () => post('/api/auth/logout'),
   me: () => get('/api/auth/me'),
 };

@@ -3,6 +3,8 @@
 import { Heart, Save, RotateCcw } from 'lucide-react';
 import React, { useEffect, useMemo, useState } from 'react';
 
+import { Button } from '@/components/ui/button';
+
 import { useI18n } from '@/hooks/useI18n';
 
 import type { InterestSelectionProps } from '../types';
@@ -88,15 +90,15 @@ const InterestSelection: React.FC<InterestSelectionProps> = ({
   }, [initialInterests]);
 
   return (
-    <div className={`bg-white rounded-lg border border-gray-200 p-6 ${className}`}>
+    <div className={`bg-card rounded-lg border border-border p-6 ${className}`}>
       <div className="flex items-center justify-between mb-6">
         <div className="flex items-center space-x-3">
-          <div className="p-2 bg-purple-100 rounded-lg">
-            <Heart className="h-6 w-6 text-purple-600" />
+          <div className="p-2 bg-purple-100 dark:bg-purple-900/30 rounded-lg">
+            <Heart className="h-6 w-6 text-purple-600 dark:text-purple-400" />
           </div>
           <div>
-            <h3 className="text-lg font-semibold text-gray-900">{t('onboarding.interests.title')}</h3>
-            <p className="text-sm text-gray-600">
+            <h3 className="text-lg font-semibold text-foreground">{t('onboarding.interests.title')}</h3>
+            <p className="text-sm text-muted-foreground">
               {t('onboarding.interests.subtitle')}
             </p>
           </div>
@@ -104,46 +106,50 @@ const InterestSelection: React.FC<InterestSelectionProps> = ({
         
         {hasChanges && (
           <div className="flex space-x-2">
-            <button
+            <Button
+              variant="ghost"
               onClick={handleReset}
-              className="flex items-center space-x-1 px-3 py-1 text-gray-600 hover:text-gray-800 transition-colors"
+              size="sm"
+              className="flex items-center space-x-1 text-muted-foreground hover:text-foreground"
             >
               <RotateCcw className="h-4 w-4" />
               <span className="text-sm">{t('onboarding.interests.actions.reset')}</span>
-            </button>
-            <button
+            </Button>
+            <Button
               onClick={handleSave}
-              className="flex items-center space-x-1 px-4 py-1 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+              size="sm"
+              className="flex items-center space-x-1 bg-primary hover:bg-primary/90"
             >
               <Save className="h-4 w-4" />
               <span className="text-sm">{t('onboarding.interests.actions.save')}</span>
-            </button>
+            </Button>
           </div>
         )}
       </div>
 
       <div className="grid grid-cols-2 md:grid-cols-3 gap-3 mb-6">
         {interests.map((interest) => (
-          <button
+          <Button
             key={interest.key}
+            variant="outline"
             onClick={() => toggleInterest(interest.value)}
-            className={`p-3 rounded-lg border-2 transition-all duration-200 ${
+            className={`p-3 min-h-[44px] rounded-lg border-2 transition-all duration-200 justify-start ${
               selectedInterests.includes(interest.value)
-                ? 'border-purple-500 bg-purple-50 text-purple-700 shadow-sm'
-                : 'border-gray-200 hover:border-gray-300 hover:bg-gray-50'
+                ? 'border-purple-500 bg-purple-50 dark:bg-purple-900/30 text-purple-700 dark:text-purple-300 shadow-sm hover:bg-purple-50 dark:hover:bg-purple-900/30'
+                : 'border-border hover:border-border hover:bg-muted'
             }`}
           >
-            <div className="flex items-center justify-between">
+            <div className="flex items-center justify-between w-full">
               <span className="text-sm font-medium">{interest.label}</span>
               {selectedInterests.includes(interest.value) && (
                 <Heart className="h-4 w-4 text-purple-600 fill-current" />
               )}
             </div>
-          </button>
+          </Button>
         ))}
       </div>
 
-      <div className="flex items-center justify-between text-sm text-gray-600">
+      <div className="flex items-center justify-between text-sm text-muted-foreground">
         <div className="flex items-center space-x-4">
           <span>
             {t('onboarding.interests.summary.count', {
