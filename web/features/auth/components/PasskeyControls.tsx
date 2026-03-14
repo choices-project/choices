@@ -259,7 +259,7 @@ export function PasskeyControls({ onLoginSuccess }: PasskeyControlsProps) {
           className="w-full px-4 py-2 text-sm text-muted-foreground hover:text-foreground focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-offset-2 rounded-md transition-colors"
           onClick={handleCancel}
         >
-          {t('auth.passkey.cancel')}
+          {t('auth.passkey.useEmailInstead')}
         </button>
       </div>
     );

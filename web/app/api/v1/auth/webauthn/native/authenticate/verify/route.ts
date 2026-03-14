@@ -49,10 +49,10 @@ export const POST = withErrorHandling(async (req: NextRequest) => {
     const body = await req.json();
     const challengeId = body?.challengeId as string | undefined;
     if (!challengeId) {
-      return validationError({ challengeId: 'Challenge ID is required' });
+      return validationError({ challengeId: 'Challenge ID is required' }, 'Session expired. Please try again.');
     }
     if (!body?.id || typeof body.id !== 'string') {
-      return validationError({ id: 'Credential ID is required' });
+      return validationError({ id: 'Credential ID is required' }, 'Invalid response from your device. Please try again.');
     }
 
     const supabase = await getSupabaseAdminClient();
@@ -113,12 +113,18 @@ export const POST = withErrorHandling(async (req: NextRequest) => {
       .limit(1);
 
     if (credsErr || !creds?.length) {
-      return validationError({ credential: 'Unknown credential' });
+      return validationError(
+        { credential: 'Unknown credential' },
+        'Passkey not recognized. Add a passkey from this device or use email/password.'
+      );
     }
 
     const cred = creds[0];
     if (!cred) {
-      return validationError({ credential: 'Credential not found' });
+      return validationError(
+        { credential: 'Credential not found' },
+        'Passkey not found. Add a passkey first or use email/password.'
+      );
     }
 
     const { verified, authenticationInfo } = await verifyAuthenticationResponse({
@@ -134,9 +140,10 @@ export const POST = withErrorHandling(async (req: NextRequest) => {
     });
 
     if (!verified || !authenticationInfo) {
-      return validationError({
-        verification: 'Authentication verification failed',
-      });
+      return validationError(
+        { verification: 'Authentication verification failed' },
+        'Verification failed. Please try again or use email/password.'
+      );
     }
 
     const newCounter = authenticationInfo.newCounter ?? 0;
@@ -148,7 +155,10 @@ export const POST = withErrorHandling(async (req: NextRequest) => {
         oldCounter: cred.counter,
         newCounter
       });
-      return validationError({ counter: 'Counter anomaly detected' });
+      return validationError(
+        { counter: 'Counter anomaly detected' },
+        'Security check failed. Please try again or use email/password.'
+      );
     }
 
     // Update counter

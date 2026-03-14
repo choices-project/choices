@@ -2179,6 +2179,13 @@
         "votesCount": "{count, plural, one {# vote} other {# votes}}",
         "verificationTier": "Tier {tier}"
       },
+      "confirm": {
+        "title": "Confirm your vote",
+        "summary": "You selected:",
+        "cancel": "Cancel",
+        "submit": "Confirm Vote",
+        "customRatings": "Custom ratings"
+      },
       "notifications": {
         "submitted": {
           "title": "Vote submitted",
@@ -3794,6 +3801,7 @@
       "registeredPasskeys": "Registered Passkeys",
       "registeredPasskeysDesc": "We'll automatically detect and use your registered passkeys",
       "errorHint": "If this problem persists, try using email/password authentication instead.",
+      "useEmailInstead": "Use email instead",
       "authenticating": "Authenticating...",
       "followPrompt": "Follow your device prompt",
       "verifiedOnDevice": "Your passkey is verified on your device",

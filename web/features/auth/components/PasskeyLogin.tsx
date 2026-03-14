@@ -4,11 +4,7 @@ import {
   AlertCircle,
   CheckCircle,
   Fingerprint,
-  Key,
-  Laptop,
   Loader2,
-  Shield,
-  Smartphone,
 } from 'lucide-react';
 import React from 'react';
 
@@ -152,16 +148,6 @@ export function PasskeyLogin({
     }
   }, [checkPlatformAuthenticator, isWebAuthnSupported, onError, onSuccess, setBiometricError, setBiometricSuccess]);
 
-  const getAuthenticatorIcon = React.useCallback(() => {
-    if (typeof window === 'undefined') return <Shield className="h-6 w-6" />;
-
-    const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(
-      navigator.userAgent
-    );
-
-    return isMobile ? <Smartphone className="h-6 w-6" /> : <Laptop className="h-6 w-6" />;
-  }, []);
-
   if (isSupported === false) {
     return (
       <Card className={className}>
@@ -212,25 +198,9 @@ export function PasskeyLogin({
           </div>
         ) : (
           <>
-            <div className="flex items-center space-x-3 p-3 bg-blue-50 rounded-lg">
-              {getAuthenticatorIcon()}
-              <div className="flex-1">
-                <p className="text-sm font-medium text-blue-900">{t('auth.passkey.deviceAuth')}</p>
-                <p className="text-xs text-blue-700">
-                  {t('auth.passkey.deviceAuthDesc')}
-                </p>
-              </div>
-            </div>
-
-            <div className="flex items-center space-x-3 p-3 bg-green-50 rounded-lg">
-              <Key className="h-5 w-5 text-green-600" />
-              <div className="flex-1">
-                <p className="text-sm font-medium text-green-900">{t('auth.passkey.registeredPasskeys')}</p>
-                <p className="text-xs text-green-700">
-                  {t('auth.passkey.registeredPasskeysDesc')}
-                </p>
-              </div>
-            </div>
+            <p className="text-sm text-muted-foreground">
+              {t('auth.passkey.loginDescription')}
+            </p>
 
             {error && (
               <Alert
@@ -245,7 +215,7 @@ export function PasskeyLogin({
               >
                 <AlertCircle className="h-4 w-4" />
                 <AlertDescription className="font-medium" id="passkey-login-error-message">{error}</AlertDescription>
-                <p className="mt-2 text-xs text-red-600">
+                <p className="mt-2 text-xs text-muted-foreground">
                   {t('auth.passkey.errorHint')}
                 </p>
               </Alert>

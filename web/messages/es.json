@@ -3525,6 +3525,7 @@
       "registeredPasskeys": "Llaves de acceso registradas",
       "registeredPasskeysDesc": "Detectaremos y usaremos automáticamente tus llaves registradas",
       "errorHint": "Si el problema continúa, prueba con correo y contraseña.",
+      "useEmailInstead": "Usar correo en su lugar",
       "authenticating": "Autenticando...",
       "followPrompt": "Sigue las instrucciones del dispositivo",
       "verifiedOnDevice": "Tu llave se verifica en tu dispositivo",
@@ -3845,6 +3846,13 @@
         "titleFallback": "Votar",
         "votesCount": "{count, plural, one {# voto} other {# votos}}",
         "verificationTier": "Nivel {tier}"
+      },
+      "confirm": {
+        "title": "Confirmar tu voto",
+        "summary": "Seleccionaste:",
+        "cancel": "Cancelar",
+        "submit": "Confirmar voto",
+        "customRatings": "Valoraciones personalizadas"
       },
       "notifications": {
         "submitted": {
