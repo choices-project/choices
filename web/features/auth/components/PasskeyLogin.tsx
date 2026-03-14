@@ -72,17 +72,6 @@ export function PasskeyLogin({
     );
   }, []);
 
-  const checkPlatformAuthenticator = React.useCallback(async () => {
-    if (!isWebAuthnSupported()) return false;
-
-    try {
-      return await window.PublicKeyCredential.isUserVerifyingPlatformAuthenticatorAvailable();
-    } catch (err) {
-      logger.error('Error checking platform authenticator:', err);
-      return false;
-    }
-  }, [isWebAuthnSupported]);
-
   const handleLogin = React.useCallback(async () => {
     if (!isWebAuthnSupported()) {
       const message = 'WebAuthn is not supported in this browser';
@@ -100,10 +89,13 @@ export function PasskeyLogin({
     setBiometricSuccess(false);
 
     try {
-      const hasPlatformAuth = await checkPlatformAuthenticator();
-
+      // CRITICAL: Do NOT await checkPlatformAuthenticator() here.
+      // WebAuthn requires navigator.credentials.get() to run within a user gesture.
+      // Only one async operation (the options fetch) is allowed before the prompt.
+      // An extra await breaks the gesture chain on Safari/iOS and the biometric
+      // prompt never appears. Use 'platform' by default; browser falls back if needed.
       const result = await beginAuthenticate({
-        authenticatorAttachment: hasPlatformAuth ? 'platform' : 'cross-platform',
+        authenticatorAttachment: 'platform',
         userVerification: 'required',
       });
 
@@ -146,7 +138,7 @@ export function PasskeyLogin({
     } finally {
       setIsAuthenticating(false);
     }
-  }, [checkPlatformAuthenticator, isWebAuthnSupported, onError, onSuccess, setBiometricError, setBiometricSuccess]);
+  }, [isWebAuthnSupported, onError, onSuccess, setBiometricError, setBiometricSuccess]);
 
   if (isSupported === false) {
     return (
