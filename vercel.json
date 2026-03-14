@@ -1,4 +1,6 @@
 {
   "rootDirectory": "web",
-  "framework": "nextjs"
+  "framework": "nextjs",
+  "buildCommand": "./scripts/vercel-build.sh",
+  "installCommand": "npm install"
 }
