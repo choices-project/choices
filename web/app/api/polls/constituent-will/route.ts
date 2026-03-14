@@ -91,7 +91,7 @@ export const POST = withErrorHandling(async (request: NextRequest) => {
         created_by: user.id,
         status: 'active',
         privacy_level: 'public',
-        voting_method: 'single',
+        voting_method: 'single_choice',
         poll_type: 'constituent_will',
         bill_id: billId,
         representative_id: representativeId,

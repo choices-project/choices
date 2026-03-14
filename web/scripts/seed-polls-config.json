@@ -1,0 +1,40 @@
+{
+  "narrative": "Key Votes in the 119th Congress",
+  "polls": [
+    {
+      "representativeId": 55168,
+      "representativeName": "Cotton, Tom",
+      "billId": "BILLS-119hr29ih",
+      "billTitle": "Laken Riley Act",
+      "description": "Immigration enforcement bill requiring detention of certain noncitizens. Should your representative support this bill?"
+    },
+    {
+      "representativeId": 55173,
+      "representativeName": "Britt, Katie Boyd",
+      "billId": "BILLS-119hr1195ih",
+      "billTitle": "Protect Medicaid Act",
+      "description": "Healthcare legislation affecting Medicaid funding and eligibility. Should your representative support this bill?"
+    },
+    {
+      "representativeId": 55239,
+      "representativeName": "Figures, Shomari",
+      "billId": "BILLS-119s2149is",
+      "billTitle": "Health Equity and Access Act",
+      "description": "Senate bill to improve health equity and access to care. Should your representative support this bill?"
+    },
+    {
+      "representativeId": 55555,
+      "representativeName": "Sewell, Terri A.",
+      "billId": "BILLS-119hr29ih",
+      "billTitle": "Laken Riley Act",
+      "description": "Immigration enforcement bill requiring detention of certain noncitizens. Should your representative support this bill?"
+    },
+    {
+      "representativeId": 55126,
+      "representativeName": "Murkowski, Lisa",
+      "billId": "BILLS-119sjres31es",
+      "billTitle": "S.J.Res.31 - EPA Major Sources Reclassification CRA",
+      "description": "Congressional Review Act resolution disapproving EPA rule on reclassification of major sources as area sources under the Clean Air Act. Should your representative support this resolution?"
+    }
+  ]
+}
