@@ -1,6 +1,8 @@
 import { ImageResponse } from 'next/og';
 
-export const runtime = 'edge';
+// Use Node.js runtime to avoid sharing Edge bundle with middleware.
+// Middleware + OG Edge would pull resvg/yoga WASM into middleware, causing Vercel deploy failure.
+export const runtime = 'nodejs';
 export const alt = 'Poll on Choices';
 export const size = { width: 1200, height: 630 };
 export const contentType = 'image/png';

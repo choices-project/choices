@@ -77,7 +77,7 @@ const nextConfig = {
     ]
   },
 
-  webpack: (config, { isServer, webpack }) => {
+  webpack: (config, { isServer, webpack, nextRuntime }) => {
     const isDev = process.env.NODE_ENV === 'development'
 
     // Exclude test files from compilation
@@ -116,13 +116,15 @@ const nextConfig = {
     }
 
     if (isServer) {
-      // Handle @vercel/og for OG image generation in Edge Runtime
-      // Exclude it from webpack bundling since it's used in Edge Runtime
-      // Also exclude from middleware bundle to prevent WASM dependency issues
-      config.resolve.alias = {
-        ...config.resolve.alias,
-        '@vercel/og': false,
-      };
+      // Exclude @vercel/og from Edge bundle only - middleware shares Edge runtime with OG routes.
+      // resvg/yoga WASM in @vercel/og causes "unsupported modules" on Vercel deploy.
+      // OG images use nodejs runtime (opengraph-image, api/og) so they get @vercel/og in Node build.
+      if (nextRuntime === 'edge') {
+        config.resolve.alias = {
+          ...config.resolve.alias,
+          '@vercel/og': false,
+        };
+      }
 
       // Exclude Supabase packages from middleware bundle (Edge Runtime incompatible)
       // These should only be used in API routes with Node.js runtime
