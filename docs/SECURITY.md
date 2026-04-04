@@ -158,6 +158,31 @@ If a row says **default**, the effective cap is **50 / 15 min** until the route 
 
 ---
 
+## Service role (`getSupabaseAdminClient`) in API routes
+
+`SUPABASE_SERVICE_ROLE_KEY` feeds **`getSupabaseAdminClient()`** (see `web/utils/supabase/server.ts`). That client **bypasses RLS**. It must run **only** in trusted Route Handlers (or server actions)—never in browser bundles, and never logged or returned to clients.
+
+**Find every handler that imports it:**
+
+```bash
+rg -l "getSupabaseAdminClient" web/app/api --glob '**/route.ts' | sort
+```
+
+_(Snapshot: **~29** `route.ts` files in this repo used the admin client—re-run the command after adding routes.)_
+
+**Dominant patterns:**
+
+| Area | Examples | Why admin |
+|------|-----------|-----------|
+| **`api/admin/**`** | `dashboard`, `users`, `site-messages`, moderation, `perform-database-maintenance`, `refresh-materialized-views`, `system-metrics`, `health` | Operations beyond normal user RLS |
+| **Auth** | `auth/login`, `auth/register`, WebAuthn `authenticate/*`, `authenticate/verify` | `auth.admin` / provisioning tasks |
+| **Polls** | `[id]/vote`, `[id]/close`, `[id]/results`, `[id]/activity`, admin `polls/[id]/vote-audit` | Server-side integrity / aggregates with session checks in-handler |
+| **Other** | `feedback`, `contact/submissions`, `analytics`, `representatives/[id]/follow`, `integrity/summary`, `diagnostics` | Case-by-case; each file must still enforce **session**, **admin**, or **internal** gates before using admin SQL |
+
+**When adding a new admin-client call:** document in code **why** RLS bypass is needed, enforce auth at the boundary, and prefer user-scoped `getSupabaseServerClient()` when policies already allow the operation.
+
+---
+
 ## 🔐 **Authentication Security**
 
 ### **WebAuthn Implementation**

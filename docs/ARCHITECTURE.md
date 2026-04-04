@@ -171,7 +171,8 @@ All API routes live under `web/app/api/*` and follow consistent patterns:
 
 ### Security
 
-- Rate limiting on all mutation endpoints
+- Rate limiting on sensitive and mutation-heavy endpoints; inventory in **[`SECURITY.md`](SECURITY.md)** (*Upstash API rate limits*)
+- **Service role** (`getSupabaseAdminClient`) bypasses RLS—see **[`SECURITY.md`](SECURITY.md)** (*Service role in API routes*) and `rg` maintenance command there
 - E2E test bypasses locked out of production (`NODE_ENV !== 'production'`)
 - Environment validation at startup (Zod schema in `lib/config/env.ts`)
 - `global-error.tsx` root boundary + 6 route-level `error.tsx` + 7 `loading.tsx` files
@@ -209,6 +210,7 @@ Do not use deprecated paths: `@/lib/utils/http`, `@/lib/utils/cors`, `@/lib/util
 | Feature gating | `web/lib/core/feature-flags.ts`, [`docs/FEATURE_FLAGS.md`](FEATURE_FLAGS.md), `GET /api/feature-flags` |
 | API response shape | `@/lib/api`, [`docs/API/contracts.md`](API/contracts.md), `web/tests/contracts/` |
 | DB schema / types | `supabase/migrations/`, then `npm run types:generate` in `web/`; generated lists: `npm run docs:public-schema-index` (repo root) |
+| Service role / RLS bypass | [`docs/SECURITY.md`](SECURITY.md) § Service role; `rg -l getSupabaseAdminClient web/app/api --glob '**/route.ts'` |
 
 ---
 
